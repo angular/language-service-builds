@@ -1,5 +1,5 @@
 /**
- * @license Angular v2.3.0-beta.1-4553948
+ * @license Angular v2.3.0-beta.0-2a3ca7b
  * (c) 2010-2016 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -118,6 +118,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
 	 * @return {?}
 	 */
 	function print(obj) {
+	    // tslint:disable-next-line:no-console
 	    console.log(obj);
 	}
 	/**
@@ -39900,7 +39901,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
 	    files.filter(function (fileName) { return _filterFileByPatterns(fileName, options); }).forEach(function (sourceFile) {
 	        var /** @type {?} */ moduleMetadata = staticReflector.getModuleMetadata(sourceFile);
 	        if (!moduleMetadata) {
-	            console.log("WARNING: no metadata found for " + sourceFile);
+	            console.error("WARNING: no metadata found for " + sourceFile);
 	            return;
 	        }
 	        var /** @type {?} */ metadata = moduleMetadata['metadata'];
@@ -40144,7 +40145,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
 	            return parameters_1;
 	        }
 	        catch (e) {
-	            console.log("Failed on type " + JSON.stringify(type) + " with error " + e);
+	            console.error("Failed on type " + JSON.stringify(type) + " with error " + e);
 	            throw e;
 	        }
 	    };
