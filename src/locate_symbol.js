@@ -5,6 +5,7 @@
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
+import { tokenReference } from '@angular/compiler';
 import { Attribute } from '@angular/compiler/src/ml_parser/ast';
 import { ElementAst } from '@angular/compiler/src/template_parser/template_ast';
 import { getExpressionScope, getExpressionSymbol } from './expressions';
@@ -55,7 +56,7 @@ export function locateSymbol(info) {
                 }
             },
             visitReference: function (ast) {
-                symbol_1 = info.template.query.getTypeSymbol(ast.value.reference);
+                symbol_1 = info.template.query.getTypeSymbol(tokenReference(ast.value));
                 span_1 = spanOf(ast);
             },
             visitVariable: function (ast) { },

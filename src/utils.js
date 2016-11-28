@@ -5,6 +5,7 @@
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
+import { identifierName } from '@angular/compiler';
 import { CssSelector } from '@angular/compiler/src/selector';
 export function isParseSourceSpan(value) {
     return value && !!value.start;
@@ -42,7 +43,7 @@ export function hasTemplateReference(type) {
     if (type.diDeps) {
         for (var _i = 0, _a = type.diDeps; _i < _a.length; _i++) {
             var diDep = _a[_i];
-            if (diDep.token.identifier && diDep.token.identifier.name == 'TemplateRef')
+            if (diDep.token.identifier && identifierName(diDep.token.identifier) == 'TemplateRef')
                 return true;
         }
     }

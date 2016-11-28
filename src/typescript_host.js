@@ -5,7 +5,7 @@
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-import { CompilerConfig, StaticReflector, StaticSymbolCache, createOfflineCompileUrlResolver } from '@angular/compiler';
+import { CompilerConfig, StaticReflector, StaticSymbolCache, componentModuleUrl, createOfflineCompileUrlResolver } from '@angular/compiler';
 import { analyzeNgModules, extractProgramSymbols } from '@angular/compiler/src/aot/compiler';
 import { DirectiveNormalizer } from '@angular/compiler/src/directive_normalizer';
 import { DirectiveResolver } from '@angular/compiler/src/directive_resolver';
@@ -210,10 +210,9 @@ export var TypeScriptServiceHost = (function () {
                 var module_1 = _a[_i];
                 for (var _b = 0, _c = module_1.declaredDirectives; _b < _c.length; _b++) {
                     var directive = _c[_b];
-                    var directiveMetadata = this.resolver.getNonNormalizedDirectiveMetadata(directive.reference);
-                    if (directiveMetadata.isComponent && directiveMetadata.template &&
-                        directiveMetadata.template.templateUrl) {
-                        var templateName = urlResolver.resolve(directive.moduleUrl, directiveMetadata.template.templateUrl);
+                    var _d = this.resolver.getNonNormalizedDirectiveMetadata(directive.reference), metadata = _d.metadata, annotation = _d.annotation;
+                    if (metadata.isComponent && metadata.template && metadata.template.templateUrl) {
+                        var templateName = urlResolver.resolve(componentModuleUrl(this.reflector, directive.reference, annotation), metadata.template.templateUrl);
                         fileToComponent.set(templateName, directive.reference);
                         templateReference.push(templateName);
                     }
@@ -384,7 +383,7 @@ export var TypeScriptServiceHost = (function () {
                             var staticSymbol = this._reflector.getStaticSymbol(sourceFile.fileName, classDeclaration.name.text);
                             try {
                                 if (this.resolver.isDirective(staticSymbol)) {
-                                    var metadata = this.resolver.getNonNormalizedDirectiveMetadata(staticSymbol);
+                                    var metadata = this.resolver.getNonNormalizedDirectiveMetadata(staticSymbol).metadata;
                                     return { type: staticSymbol, declarationSpan: spanOf(target), metadata: metadata };
                                 }
                             }

@@ -94,8 +94,8 @@ var LanguageServiceImpl = (function () {
         var _this = this;
         var result;
         try {
-            var directive = this.metadataResolver.getNonNormalizedDirectiveMetadata(template.type);
-            if (directive) {
+            var metadata = this.metadataResolver.getNonNormalizedDirectiveMetadata(template.type).metadata;
+            if (metadata) {
                 var rawHtmlParser = new HtmlParser();
                 var htmlParser = new I18NHtmlParser(rawHtmlParser);
                 var expressionParser = new Parser(new Lexer());
@@ -109,13 +109,15 @@ var LanguageServiceImpl = (function () {
                     ngModule = findSuitableDefaultModule(analyzedModules);
                 }
                 if (ngModule) {
-                    var directives = ngModule.transitiveModule.directives.map(function (d) { return _this.host.resolver.getNonNormalizedDirectiveMetadata(d.reference).toSummary(); });
+                    var directives = ngModule.transitiveModule.directives.map(function (d) { return _this.host.resolver.getNonNormalizedDirectiveMetadata(d.reference)
+                        .metadata.toSummary(); });
                     var pipes = ngModule.transitiveModule.pipes.map(function (p) { return _this.host.resolver.getOrLoadPipeMetadata(p.reference).toSummary(); });
                     var schemas = ngModule.schemas;
-                    var parseResult = parser.tryParseHtml(htmlResult, directive, template.source, directives, pipes, schemas, '');
+                    var parseResult = parser.tryParseHtml(htmlResult, metadata, template.source, directives, pipes, schemas, '');
                     result = {
                         htmlAst: htmlResult.rootNodes,
-                        templateAst: parseResult.templateAst, directive: directive, directives: directives, pipes: pipes,
+                        templateAst: parseResult.templateAst,
+                        directive: metadata, directives: directives, pipes: pipes,
                         parseErrors: parseResult.errors, expressionParser: expressionParser, errors: errors
                     };
                 }

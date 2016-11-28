@@ -10,6 +10,7 @@ var __extends = (this && this.__extends) || function (d, b) {
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
+import { identifierName, tokenReference } from '@angular/compiler';
 import { ASTWithSource } from '@angular/compiler/src/expression_parser/ast';
 import { EmbeddedTemplateAst, templateVisitAll } from '@angular/compiler/src/template_parser/template_ast';
 import { AstPath as AstPathBase } from './ast_path';
@@ -636,7 +637,7 @@ function getReferences(info) {
         var _loop_1 = function(reference) {
             var type = void 0;
             if (reference.value) {
-                type = info.template.query.getTypeSymbol(reference.value.reference);
+                type = info.template.query.getTypeSymbol(tokenReference(reference.value));
             }
             result.push({
                 name: reference.name,
@@ -711,7 +712,7 @@ function getVarDeclarations(info, path) {
 }
 function refinedVariableType(type, info, templateElement) {
     // Special case the ngFor directive
-    var ngForDirective = templateElement.directives.find(function (d) { return d.directive.type.name == 'NgFor'; });
+    var ngForDirective = templateElement.directives.find(function (d) { return identifierName(d.directive.type) == 'NgFor'; });
     if (ngForDirective) {
         var ngForOfBinding = ngForDirective.inputs.find(function (i) { return i.directiveName == 'ngForOf'; });
         if (ngForOfBinding) {
