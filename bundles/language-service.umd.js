@@ -1,5 +1,5 @@
 /**
- * @license Angular v2.3.0-beta.0-e628b66
+ * @license Angular v2.3.0-beta.0-f275f36
  * (c) 2010-2016 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -988,7 +988,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
 	        /**
 	         * @return {?}
 	         */
-	        get: function () { return this.full.split('.')[2]; },
+	        get: function () { return this.full.split('.').slice(2).join('.'); },
 	        enumerable: true,
 	        configurable: true
 	    });
@@ -13491,7 +13491,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('2.3.0-beta.0-e628b66');
+	var /** @type {?} */ VERSION$1 = new Version('2.3.0-beta.0-f275f36');
 
 	/**
 	 * @license
@@ -39757,7 +39757,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$2 = new Version('2.3.0-beta.0-e628b66');
+	var /** @type {?} */ VERSION$2 = new Version('2.3.0-beta.0-f275f36');
 
 	/**
 	 * @license
@@ -45049,7 +45049,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
 	/**
 	 * @stable
 	 */
-	var VERSION = new Version('2.3.0-beta.0-e628b66');
+	var VERSION = new Version('2.3.0-beta.0-f275f36');
 
 	exports.VERSION = VERSION;
 	exports['default'] = LanguageServicePlugin;

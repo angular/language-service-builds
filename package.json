@@ -1,6 +1,6 @@
 {
   "name": "@angular/language-service",
-  "version": "2.3.0-beta.0-e628b66",
+  "version": "2.3.0-beta.0-f275f36",
   "description": "Angular 2 - language services",
   "main": "bundles/language-service.umd.js",
   "module": "index.js",
