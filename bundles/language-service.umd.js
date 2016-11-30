@@ -1,5 +1,5 @@
 /**
- * @license Angular v2.3.0-beta.0-3e73bea
+ * @license Angular v2.3.0-beta.0-e628b66
  * (c) 2010-2016 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -956,6 +956,43 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
 	        this.interpolation = interpolation;
 	    }
 	    return ViewMetadata;
+	}());
+
+	/**
+	 *  *
+	 */
+	var Version = (function () {
+	    /**
+	     * @param {?} full
+	     */
+	    function Version(full) {
+	        this.full = full;
+	    }
+	    Object.defineProperty(Version.prototype, "major", {
+	        /**
+	         * @return {?}
+	         */
+	        get: function () { return this.full.split('.')[0]; },
+	        enumerable: true,
+	        configurable: true
+	    });
+	    Object.defineProperty(Version.prototype, "minor", {
+	        /**
+	         * @return {?}
+	         */
+	        get: function () { return this.full.split('.')[1]; },
+	        enumerable: true,
+	        configurable: true
+	    });
+	    Object.defineProperty(Version.prototype, "patch", {
+	        /**
+	         * @return {?}
+	         */
+	        get: function () { return this.full.split('.')[2]; },
+	        enumerable: true,
+	        configurable: true
+	    });
+	    return Version;
 	}());
 
 	/**
@@ -13450,6 +13487,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
 	    isPromise: isPromise,
 	    AnimationTransition: AnimationTransition
 	};
+
+	/**
+	 * @stable
+	 */
+	var /** @type {?} */ VERSION$1 = new Version('2.3.0-beta.0-e628b66');
 
 	/**
 	 * @license
@@ -39713,6 +39755,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
 	}
 
 	/**
+	 * @stable
+	 */
+	var /** @type {?} */ VERSION$2 = new Version('2.3.0-beta.0-e628b66');
+
+	/**
 	 * @license
 	 * Copyright Google Inc. All Rights Reserved.
 	 *
@@ -42279,7 +42326,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
 	// leave VERSION the same. If possible, as many versions of the metadata that can represent the
 	// semantics of the file in an array. For example, when generating a version 2 file, if version 1
 	// can accurately represent the metadata, generate both version 1 and version 2 in an array.
-	var VERSION = 2;
+	var VERSION$3 = 2;
 	function isModuleMetadata(value) {
 	    return value && value.__symbolic === 'module';
 	}
@@ -42385,7 +42432,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
 	var isMetadataError_1 = isMetadataError;
 
 	var __moduleExports$17 = {
-		VERSION: VERSION,
+		VERSION: VERSION$3,
 		isModuleMetadata: isModuleMetadata_1,
 		isClassMetadata: isClassMetadata_1,
 		isMemberMetadata: isMemberMetadata_1,
@@ -44999,6 +45046,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
 	    return LanguageServicePlugin;
 	}());
 
+	/**
+	 * @stable
+	 */
+	var VERSION = new Version('2.3.0-beta.0-e628b66');
+
+	exports.VERSION = VERSION;
 	exports['default'] = LanguageServicePlugin;
 	exports.createLanguageService = createLanguageService;
 	exports.TypeScriptServiceHost = TypeScriptServiceHost;
