@@ -1,5 +1,5 @@
 /**
- * @license Angular v2.3.0-beta.0-f275f36
+ * @license Angular v2.3.0-beta.0-2975d89
  * (c) 2010-2016 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -13491,7 +13491,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('2.3.0-beta.0-f275f36');
+	var /** @type {?} */ VERSION$1 = new Version('2.3.0-beta.0-2975d89');
 
 	/**
 	 * @license
@@ -31386,7 +31386,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
 	            return normalizedDirMeta;
 	        };
 	        if (metadata.isComponent) {
-	            var /** @type {?} */ templateMeta = this._directiveNormalizer.normalizeTemplate({
+	            var /** @type {?} */ templateMeta_1 = this._directiveNormalizer.normalizeTemplate({
 	                componentType: directiveType,
 	                moduleUrl: componentModuleUrl(this._reflector, directiveType, annotation),
 	                encapsulation: metadata.template.encapsulation,
@@ -31397,15 +31397,15 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
 	                animations: metadata.template.animations,
 	                interpolation: metadata.template.interpolation
 	            });
-	            if (templateMeta.syncResult) {
-	                createDirectiveMetadata(templateMeta.syncResult);
+	            if (templateMeta_1.syncResult) {
+	                createDirectiveMetadata(templateMeta_1.syncResult);
 	                return null;
 	            }
 	            else {
 	                if (isSync) {
 	                    throw new ComponentStillLoadingError$1(directiveType);
 	                }
-	                return templateMeta.asyncResult.then(createDirectiveMetadata);
+	                return function () { return templateMeta_1.asyncResult.then(createDirectiveMetadata); };
 	            }
 	        }
 	        else {
@@ -31664,7 +31664,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
 	                    transitiveModule.directives.push(declaredIdentifier);
 	                    declaredDirectives.push(declaredIdentifier);
 	                    _this._addTypeToModule(declaredType, moduleType);
-	                    transitiveModule.directiveLoaders.push(function () { return _this._loadDirectiveMetadata(declaredType, isSync); });
+	                    var /** @type {?} */ loader = _this._loadDirectiveMetadata(declaredType, isSync);
+	                    if (loader) {
+	                        transitiveModule.directiveLoaders.push(loader);
+	                    }
 	                }
 	                else if (_this._pipeResolver.isPipe(declaredType)) {
 	                    transitiveModule.pipesSet.add(declaredType);
@@ -39757,7 +39760,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$2 = new Version('2.3.0-beta.0-f275f36');
+	var /** @type {?} */ VERSION$2 = new Version('2.3.0-beta.0-2975d89');
 
 	/**
 	 * @license
@@ -43815,6 +43818,18 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
 	}());
 
 	/**
+	 * @license
+	 * Copyright Google Inc. All Rights Reserved.
+	 *
+	 * Use of this source code is governed by an MIT-style license that can be
+	 * found in the LICENSE file at https://angular.io/license
+	 */
+	var __extends$50 = (this && this.__extends) || function (d, b) {
+	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+	    function __() { this.constructor = d; }
+	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+	};
+	/**
 	 * Create a `LanguageServiceHost`
 	 */
 	function createLanguageServiceFromTypescript(typescript, host, service) {
@@ -43823,6 +43838,35 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
 	    ngHost.setSite(ngServer);
 	    return ngServer;
 	}
+	/**
+	 * The language service never needs the normalized versions of the metadata. To avoid parsing
+	 * the content and resolving references, return an empty file. This also allows normalizing
+	 * template that are syntatically incorrect which is required to provide completions in
+	 * syntatically incorrect templates.
+	 */
+	var DummyHtmlParser = (function (_super) {
+	    __extends$50(DummyHtmlParser, _super);
+	    function DummyHtmlParser() {
+	        _super.call(this);
+	    }
+	    DummyHtmlParser.prototype.parse = function (source, url, parseExpansionForms, interpolationConfig) {
+	        if (parseExpansionForms === void 0) { parseExpansionForms = false; }
+	        if (interpolationConfig === void 0) { interpolationConfig = DEFAULT_INTERPOLATION_CONFIG; }
+	        return new ParseTreeResult([], []);
+	    };
+	    return DummyHtmlParser;
+	}(HtmlParser));
+	/**
+	 * Avoid loading resources in the language servcie by using a dummy loader.
+	 */
+	var DummyResourceLoader = (function (_super) {
+	    __extends$50(DummyResourceLoader, _super);
+	    function DummyResourceLoader() {
+	        _super.apply(this, arguments);
+	    }
+	    DummyResourceLoader.prototype.get = function (url) { return Promise.resolve(''); };
+	    return DummyResourceLoader;
+	}(ResourceLoader));
 	/**
 	 * An implemntation of a `LanguageSerivceHost` for a TypeScript project.
 	 *
@@ -43853,8 +43897,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
 	                var directiveResolver = new DirectiveResolver(this.reflector);
 	                var pipeResolver = new PipeResolver(this.reflector);
 	                var elementSchemaRegistry = new DomElementSchemaRegistry();
-	                var resourceLoader = new ResourceLoader();
+	                var resourceLoader = new DummyResourceLoader();
 	                var urlResolver = createOfflineCompileUrlResolver();
+	                var htmlParser = new DummyHtmlParser();
 	                // This tracks the CompileConfig in codegen.ts. Currently these options
 	                // are hard-coded except for genDebugInfo which is not applicable as we
 	                // never generate code.
@@ -43864,7 +43909,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
 	                    logBindingUpdate: false,
 	                    useJit: false
 	                });
-	                var directiveNormalizer = new DirectiveNormalizer(resourceLoader, urlResolver, null, config);
+	                var directiveNormalizer = new DirectiveNormalizer(resourceLoader, urlResolver, htmlParser, config);
 	                result = this._resolver = new CompileMetadataResolver(moduleResolver, directiveResolver, pipeResolver, elementSchemaRegistry, directiveNormalizer, this.reflector);
 	            }
 	            return result;
@@ -45049,7 +45094,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
 	/**
 	 * @stable
 	 */
-	var VERSION = new Version('2.3.0-beta.0-f275f36');
+	var VERSION = new Version('2.3.0-beta.0-2975d89');
 
 	exports.VERSION = VERSION;
 	exports['default'] = LanguageServicePlugin;

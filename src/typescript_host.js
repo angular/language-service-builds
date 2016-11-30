@@ -5,11 +5,19 @@
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 import { CompilerConfig, StaticReflector, StaticSymbolCache, componentModuleUrl, createOfflineCompileUrlResolver } from '@angular/compiler';
 import { analyzeNgModules, extractProgramSymbols } from '@angular/compiler/src/aot/compiler';
 import { DirectiveNormalizer } from '@angular/compiler/src/directive_normalizer';
 import { DirectiveResolver } from '@angular/compiler/src/directive_resolver';
 import { CompileMetadataResolver } from '@angular/compiler/src/metadata_resolver';
+import { HtmlParser } from '@angular/compiler/src/ml_parser/html_parser';
+import { DEFAULT_INTERPOLATION_CONFIG } from '@angular/compiler/src/ml_parser/interpolation_config';
+import { ParseTreeResult } from '@angular/compiler/src/ml_parser/parser';
 import { NgModuleResolver } from '@angular/compiler/src/ng_module_resolver';
 import { PipeResolver } from '@angular/compiler/src/pipe_resolver';
 import { ResourceLoader } from '@angular/compiler/src/resource_loader';
@@ -30,6 +38,35 @@ export function createLanguageServiceFromTypescript(typescript, host, service) {
     ngHost.setSite(ngServer);
     return ngServer;
 }
+/**
+ * The language service never needs the normalized versions of the metadata. To avoid parsing
+ * the content and resolving references, return an empty file. This also allows normalizing
+ * template that are syntatically incorrect which is required to provide completions in
+ * syntatically incorrect templates.
+ */
+export var DummyHtmlParser = (function (_super) {
+    __extends(DummyHtmlParser, _super);
+    function DummyHtmlParser() {
+        _super.call(this);
+    }
+    DummyHtmlParser.prototype.parse = function (source, url, parseExpansionForms, interpolationConfig) {
+        if (parseExpansionForms === void 0) { parseExpansionForms = false; }
+        if (interpolationConfig === void 0) { interpolationConfig = DEFAULT_INTERPOLATION_CONFIG; }
+        return new ParseTreeResult([], []);
+    };
+    return DummyHtmlParser;
+}(HtmlParser));
+/**
+ * Avoid loading resources in the language servcie by using a dummy loader.
+ */
+export var DummyResourceLoader = (function (_super) {
+    __extends(DummyResourceLoader, _super);
+    function DummyResourceLoader() {
+        _super.apply(this, arguments);
+    }
+    DummyResourceLoader.prototype.get = function (url) { return Promise.resolve(''); };
+    return DummyResourceLoader;
+}(ResourceLoader));
 /**
  * An implemntation of a `LanguageSerivceHost` for a TypeScript project.
  *
@@ -60,8 +97,9 @@ export var TypeScriptServiceHost = (function () {
                 var directiveResolver = new DirectiveResolver(this.reflector);
                 var pipeResolver = new PipeResolver(this.reflector);
                 var elementSchemaRegistry = new DomElementSchemaRegistry();
-                var resourceLoader = new ResourceLoader();
+                var resourceLoader = new DummyResourceLoader();
                 var urlResolver = createOfflineCompileUrlResolver();
+                var htmlParser = new DummyHtmlParser();
                 // This tracks the CompileConfig in codegen.ts. Currently these options
                 // are hard-coded except for genDebugInfo which is not applicable as we
                 // never generate code.
@@ -71,7 +109,7 @@ export var TypeScriptServiceHost = (function () {
                     logBindingUpdate: false,
                     useJit: false
                 });
-                var directiveNormalizer = new DirectiveNormalizer(resourceLoader, urlResolver, null, config);
+                var directiveNormalizer = new DirectiveNormalizer(resourceLoader, urlResolver, htmlParser, config);
                 result = this._resolver = new CompileMetadataResolver(moduleResolver, directiveResolver, pipeResolver, elementSchemaRegistry, directiveNormalizer, this.reflector);
             }
             return result;

@@ -1,11 +1,31 @@
 import { NgAnalyzedModules } from '@angular/compiler/src/aot/compiler';
 import { CompileMetadataResolver } from '@angular/compiler/src/metadata_resolver';
+import { HtmlParser } from '@angular/compiler/src/ml_parser/html_parser';
+import { InterpolationConfig } from '@angular/compiler/src/ml_parser/interpolation_config';
+import { ParseTreeResult } from '@angular/compiler/src/ml_parser/parser';
+import { ResourceLoader } from '@angular/compiler/src/resource_loader';
 import * as ts from 'typescript';
 import { Declarations, LanguageService, LanguageServiceHost, TemplateSource, TemplateSources } from './types';
 /**
  * Create a `LanguageServiceHost`
  */
 export declare function createLanguageServiceFromTypescript(typescript: typeof ts, host: ts.LanguageServiceHost, service: ts.LanguageService): LanguageService;
+/**
+ * The language service never needs the normalized versions of the metadata. To avoid parsing
+ * the content and resolving references, return an empty file. This also allows normalizing
+ * template that are syntatically incorrect which is required to provide completions in
+ * syntatically incorrect templates.
+ */
+export declare class DummyHtmlParser extends HtmlParser {
+    constructor();
+    parse(source: string, url: string, parseExpansionForms?: boolean, interpolationConfig?: InterpolationConfig): ParseTreeResult;
+}
+/**
+ * Avoid loading resources in the language servcie by using a dummy loader.
+ */
+export declare class DummyResourceLoader extends ResourceLoader {
+    get(url: string): Promise<string>;
+}
 /**
  * An implemntation of a `LanguageSerivceHost` for a TypeScript project.
  *
