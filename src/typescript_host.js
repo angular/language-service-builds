@@ -22,6 +22,7 @@ import { NgModuleResolver } from '@angular/compiler/src/ng_module_resolver';
 import { PipeResolver } from '@angular/compiler/src/pipe_resolver';
 import { ResourceLoader } from '@angular/compiler/src/resource_loader';
 import { DomElementSchemaRegistry } from '@angular/compiler/src/schema/dom_element_schema_registry';
+import { SummaryResolver } from '@angular/compiler/src/summary_resolver';
 import { ViewEncapsulation } from '@angular/core';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -110,7 +111,7 @@ export var TypeScriptServiceHost = (function () {
                     useJit: false
                 });
                 var directiveNormalizer = new DirectiveNormalizer(resourceLoader, urlResolver, htmlParser, config);
-                result = this._resolver = new CompileMetadataResolver(moduleResolver, directiveResolver, pipeResolver, elementSchemaRegistry, directiveNormalizer, this.reflector);
+                result = this._resolver = new CompileMetadataResolver(moduleResolver, directiveResolver, pipeResolver, new SummaryResolver(), elementSchemaRegistry, directiveNormalizer, this.reflector);
             }
             return result;
         },
