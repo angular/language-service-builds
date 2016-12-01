@@ -1,5 +1,5 @@
 /**
- * @license Angular v2.3.0-rc.0-12959f4
+ * @license Angular v2.3.0-rc.0-82c81cd
  * (c) 2010-2016 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -13491,7 +13491,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('2.3.0-rc.0-12959f4');
+	var /** @type {?} */ VERSION$1 = new Version('2.3.0-rc.0-82c81cd');
 
 	/**
 	 * @license
@@ -39760,7 +39760,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$2 = new Version('2.3.0-rc.0-12959f4');
+	var /** @type {?} */ VERSION$2 = new Version('2.3.0-rc.0-82c81cd');
 
 	/**
 	 * @license
@@ -45094,7 +45094,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
 	/**
 	 * @stable
 	 */
-	var VERSION = new Version('2.3.0-rc.0-12959f4');
+	var VERSION = new Version('2.3.0-rc.0-82c81cd');
 
 	exports.VERSION = VERSION;
 	exports['default'] = LanguageServicePlugin;
