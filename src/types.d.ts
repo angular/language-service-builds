@@ -76,6 +76,23 @@ export interface TemplateSource {
  */
 export declare type TemplateSources = TemplateSource[];
 /**
+ * Error information found getting declaration information
+ *
+ * A host type; see `LanagueServiceHost`.
+ *
+ * @experimental
+ */
+export interface DeclarationError {
+    /**
+     * The span of the error in the declaration's module.
+     */
+    span: Span;
+    /**
+     * The message to display describing the error.
+     */
+    message: string;
+}
+/**
  * Information about the component declarations.
  *
  * A file might contain a declaration without a template because the file contains only
@@ -105,7 +122,7 @@ export interface Declaration {
     /**
      * Error reported trying to get the metadata.
      */
-    error?: string;
+    errors: DeclarationError[];
 }
 /**
  * A sequence of declarations.

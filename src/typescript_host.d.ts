@@ -51,6 +51,7 @@ export declare class TypeScriptServiceHost implements LanguageServiceHost {
     private service;
     private fileToComponent;
     private templateReferences;
+    private collectedErrors;
     constructor(typescript: typeof ts, host: ts.LanguageServiceHost, tsService: ts.LanguageService);
     setSite(service: LanguageService): void;
     /**
@@ -60,6 +61,7 @@ export declare class TypeScriptServiceHost implements LanguageServiceHost {
     getTemplateReferences(): string[];
     getTemplateAt(fileName: string, position: number): TemplateSource | undefined;
     getAnalyzedModules(): NgAnalyzedModules;
+    private ensureAnalyzedModules();
     getTemplates(fileName: string): TemplateSources;
     getDeclarations(fileName: string): Declarations;
     getSourceFile(fileName: string): ts.SourceFile;
@@ -73,6 +75,7 @@ export declare class TypeScriptServiceHost implements LanguageServiceHost {
     private getSourceFromNode(fileName, version, node);
     private getSourceFromType(fileName, version, type);
     private reflectorHost;
+    private collectError(error, filePath);
     private reflector;
     private getTemplateClassFromStaticSymbol(type);
     private static missingTemplate;
@@ -81,6 +84,7 @@ export declare class TypeScriptServiceHost implements LanguageServiceHost {
      * containing class.
      */
     private getTemplateClassDeclFromNode(currentToken);
+    private getCollectedErrors(defaultSpan, sourceFile);
     private getDeclarationFromNode(sourceFile, node);
     private stringOf(node);
     private findNode(sourceFile, position);

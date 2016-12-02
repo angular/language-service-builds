@@ -48,11 +48,15 @@ export function getDeclarationDiagnostics(declarations, modules) {
     var results = [];
     var directives = undefined;
     var _loop_2 = function(declaration) {
-        var report = function (message) {
-            results.push({ kind: DiagnosticKind.Error, span: declaration.declarationSpan, message: message });
+        var report = function (message, span) {
+            results.push({
+                kind: DiagnosticKind.Error,
+                span: span || declaration.declarationSpan, message: message
+            });
         };
-        if (declaration.error) {
-            report(declaration.error);
+        for (var _i = 0, _a = declaration.errors; _i < _a.length; _i++) {
+            var error = _a[_i];
+            report(error.message, error.span);
         }
         if (declaration.metadata) {
             if (declaration.metadata.isComponent) {
@@ -77,8 +81,8 @@ export function getDeclarationDiagnostics(declarations, modules) {
             }
         }
     };
-    for (var _i = 0, declarations_1 = declarations; _i < declarations_1.length; _i++) {
-        var declaration = declarations_1[_i];
+    for (var _b = 0, declarations_1 = declarations; _b < declarations_1.length; _b++) {
+        var declaration = declarations_1[_b];
         _loop_2(declaration);
     }
     return results;

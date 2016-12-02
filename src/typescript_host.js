@@ -142,6 +142,9 @@ export var TypeScriptServiceHost = (function () {
     };
     TypeScriptServiceHost.prototype.getAnalyzedModules = function () {
         this.validate();
+        return this.ensureAnalyzedModules();
+    };
+    TypeScriptServiceHost.prototype.ensureAnalyzedModules = function () {
         var analyzedModules = this.analyzedModules;
         if (!analyzedModules) {
             var programSymbols = extractProgramSymbols(this.reflector, this.program.getSourceFiles().map(function (sf) { return sf.fileName; }), {});
@@ -202,9 +205,14 @@ export var TypeScriptServiceHost = (function () {
         return this.tsService.getProgram().getSourceFile(fileName);
     };
     TypeScriptServiceHost.prototype.updateAnalyzedModules = function () {
+        this.validate();
         if (this.modulesOutOfDate) {
             this.analyzedModules = null;
-            this.getAnalyzedModules();
+            this._reflector = null;
+            this.templateReferences = null;
+            this.fileToComponent = null;
+            this.ensureAnalyzedModules();
+            this.modulesOutOfDate = false;
         }
     };
     Object.defineProperty(TypeScriptServiceHost.prototype, "program", {
@@ -234,10 +242,8 @@ export var TypeScriptServiceHost = (function () {
         this._checker = null;
         this._typeCache = [];
         this._resolver = null;
-        this._reflector = null;
+        this.collectedErrors = null;
         this.modulesOutOfDate = true;
-        this.templateReferences = null;
-        this.fileToComponent = null;
     };
     TypeScriptServiceHost.prototype.ensureTemplateMap = function () {
         if (!this.fileToComponent || !this.templateReferences) {
@@ -333,20 +339,33 @@ export var TypeScriptServiceHost = (function () {
                 if (!source) {
                     throw new Error('Internal error: no context could be determined');
                 }
-                var tsConfigPath = findTsConfig(source.path);
+                var tsConfigPath = findTsConfig(source.fileName);
                 var basePath = path.dirname(tsConfigPath || this.context);
-                result = this._reflectorHost = new ReflectorHost(function () { return _this.tsService.getProgram(); }, this.host, this.host.getCompilationSettings(), basePath);
+                result = this._reflectorHost = new ReflectorHost(function () { return _this.tsService.getProgram(); }, this.host, { basePath: basePath, genDir: basePath });
             }
             return result;
         },
         enumerable: true,
         configurable: true
     });
+    TypeScriptServiceHost.prototype.collectError = function (error, filePath) {
+        var errorMap = this.collectedErrors;
+        if (!errorMap) {
+            errorMap = this.collectedErrors = new Map();
+        }
+        var errors = errorMap.get(filePath);
+        if (!errors) {
+            errors = [];
+            this.collectedErrors.set(filePath, errors);
+        }
+        errors.push(error);
+    };
     Object.defineProperty(TypeScriptServiceHost.prototype, "reflector", {
         get: function () {
+            var _this = this;
             var result = this._reflector;
             if (!result) {
-                result = this._reflector = new StaticReflector(this.reflectorHost, this._staticSymbolCache);
+                result = this._reflector = new StaticReflector(this.reflectorHost, this._staticSymbolCache, [], [], function (e, filePath) { return _this.collectError(e, filePath); });
             }
             return result;
         },
@@ -407,6 +426,13 @@ export var TypeScriptServiceHost = (function () {
         }
         return [declaration, callTarget];
     };
+    TypeScriptServiceHost.prototype.getCollectedErrors = function (defaultSpan, sourceFile) {
+        var errors = (this.collectedErrors && this.collectedErrors.get(sourceFile.fileName));
+        return (errors && errors.map(function (e) {
+            return { message: e.message, span: spanAt(sourceFile, e.line, e.column) || defaultSpan };
+        })) ||
+            [];
+    };
     TypeScriptServiceHost.prototype.getDeclarationFromNode = function (sourceFile, node) {
         if (node.kind == ts.SyntaxKind.ClassDeclaration && node.decorators &&
             node.name) {
@@ -423,15 +449,23 @@ export var TypeScriptServiceHost = (function () {
                             try {
                                 if (this.resolver.isDirective(staticSymbol)) {
                                     var metadata = this.resolver.getNonNormalizedDirectiveMetadata(staticSymbol).metadata;
-                                    return { type: staticSymbol, declarationSpan: spanOf(target), metadata: metadata };
+                                    var declarationSpan = spanOf(target);
+                                    return {
+                                        type: staticSymbol,
+                                        declarationSpan: declarationSpan,
+                                        metadata: metadata,
+                                        errors: this.getCollectedErrors(declarationSpan, sourceFile)
+                                    };
                                 }
                             }
                             catch (e) {
                                 if (e.message) {
+                                    this.collectError(e, sourceFile.fileName);
+                                    var declarationSpan = spanOf(target);
                                     return {
                                         type: staticSymbol,
-                                        declarationSpan: spanAt(sourceFile, e.line, e.column) || spanOf(target),
-                                        error: e.message
+                                        declarationSpan: declarationSpan,
+                                        errors: this.getCollectedErrors(declarationSpan, sourceFile)
                                     };
                                 }
                             }
