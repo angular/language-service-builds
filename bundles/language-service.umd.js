@@ -1,5 +1,5 @@
 /**
- * @license Angular v2.3.0-rc.0-d2e5198
+ * @license Angular v2.3.0-rc.0-b8c839b
  * (c) 2010-2016 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -13491,7 +13491,7 @@ define(['exports', 'fs', 'path', 'typescript', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('2.3.0-rc.0-d2e5198');
+	var /** @type {?} */ VERSION$1 = new Version('2.3.0-rc.0-b8c839b');
 
 	/**
 	 * @license
@@ -39841,7 +39841,7 @@ define(['exports', 'fs', 'path', 'typescript', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$2 = new Version('2.3.0-rc.0-d2e5198');
+	var /** @type {?} */ VERSION$2 = new Version('2.3.0-rc.0-b8c839b');
 
 	/**
 	 * @license
@@ -44161,7 +44161,7 @@ define(['exports', 'fs', 'path', 'typescript', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$3 = new Version('2.3.0-rc.0-d2e5198');
+	var VERSION$3 = new Version('2.3.0-rc.0-b8c839b');
 
 	/**
 	 * @license
@@ -45519,7 +45519,7 @@ define(['exports', 'fs', 'path', 'typescript', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION = new Version('2.3.0-rc.0-d2e5198');
+	var VERSION = new Version('2.3.0-rc.0-b8c839b');
 
 	exports.VERSION = VERSION;
 	exports['default'] = LanguageServicePlugin;
