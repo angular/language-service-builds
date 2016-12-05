@@ -1,5 +1,5 @@
 /**
- * @license Angular v2.3.0-rc.0-c767df0
+ * @license Angular v2.3.0-rc.0-5614c4f
  * (c) 2010-2016 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -13491,7 +13491,7 @@ define(['exports', 'fs', 'path', 'typescript', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('2.3.0-rc.0-c767df0');
+	var /** @type {?} */ VERSION$1 = new Version('2.3.0-rc.0-5614c4f');
 
 	/**
 	 * @license
@@ -21448,18 +21448,6 @@ define(['exports', 'fs', 'path', 'typescript', 'reflect-metadata'], function (ex
 	}
 
 	/**
-	 * @license undefined
-	  * Copyright Google Inc. All Rights Reserved.
-	  * *
-	  * Use of this source code is governed by an MIT-style license that can be
-	  * found in the LICENSE file at https://angular.io/license
-	 * @param {?} value
-	 * @return {?}
-	 */
-	function isStaticSymbol(value) {
-	    return typeof value === 'object' && value !== null && value['name'] && value['filePath'];
-	}
-	/**
 	 *  A token representing the a reference to a static type.
 	  * *
 	  * This token is unique for a filePath and name and can be used as a hash table key.
@@ -22206,7 +22194,7 @@ define(['exports', 'fs', 'path', 'typescript', 'reflect-metadata'], function (ex
 	        return null;
 	    }
 	    var /** @type {?} */ ref = compileIdentifier.reference;
-	    if (isStaticSymbol(ref)) {
+	    if (ref instanceof StaticSymbol) {
 	        return ref.name;
 	    }
 	    if (ref['__anonymousType']) {
@@ -22229,7 +22217,7 @@ define(['exports', 'fs', 'path', 'typescript', 'reflect-metadata'], function (ex
 	 */
 	function identifierModuleUrl(compileIdentifier) {
 	    var /** @type {?} */ ref = compileIdentifier.reference;
-	    if (isStaticSymbol(ref)) {
+	    if (ref instanceof StaticSymbol) {
 	        return ref.filePath;
 	    }
 	    return reflector$1.importUri(ref);
@@ -32233,7 +32221,7 @@ define(['exports', 'fs', 'path', 'typescript', 'reflect-metadata'], function (ex
 	 * @return {?}
 	 */
 	function isValidType(value) {
-	    return isStaticSymbol(value) || (value instanceof Type);
+	    return (value instanceof StaticSymbol) || (value instanceof Type);
 	}
 	/**
 	 * @param {?} reflector
@@ -32242,7 +32230,7 @@ define(['exports', 'fs', 'path', 'typescript', 'reflect-metadata'], function (ex
 	 * @return {?}
 	 */
 	function componentModuleUrl(reflector, type, cmpMetadata) {
-	    if (isStaticSymbol(type)) {
+	    if (type instanceof StaticSymbol) {
 	        return type.filePath;
 	    }
 	    var /** @type {?} */ moduleId = cmpMetadata.moduleId;
@@ -39841,7 +39829,7 @@ define(['exports', 'fs', 'path', 'typescript', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$2 = new Version('2.3.0-rc.0-c767df0');
+	var /** @type {?} */ VERSION$2 = new Version('2.3.0-rc.0-5614c4f');
 
 	/**
 	 * @license
@@ -44161,7 +44149,7 @@ define(['exports', 'fs', 'path', 'typescript', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$3 = new Version('2.3.0-rc.0-c767df0');
+	var VERSION$3 = new Version('2.3.0-rc.0-5614c4f');
 
 	/**
 	 * @license
@@ -45519,7 +45507,7 @@ define(['exports', 'fs', 'path', 'typescript', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION = new Version('2.3.0-rc.0-c767df0');
+	var VERSION = new Version('2.3.0-rc.0-5614c4f');
 
 	exports.VERSION = VERSION;
 	exports['default'] = LanguageServicePlugin;
