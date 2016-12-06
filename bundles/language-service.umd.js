@@ -1,5 +1,5 @@
 /**
- * @license Angular v2.3.0-rc.0-4bd8f58
+ * @license Angular v2.3.0-rc.0-f31c947
  * (c) 2010-2016 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -13491,7 +13491,7 @@ define(['exports', 'fs', 'path', 'typescript', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('2.3.0-rc.0-4bd8f58');
+	var /** @type {?} */ VERSION$1 = new Version('2.3.0-rc.0-f31c947');
 
 	/**
 	 * @license
@@ -29904,7 +29904,13 @@ define(['exports', 'fs', 'path', 'typescript', 'reflect-metadata'], function (ex
 	     * @return {?}
 	     */
 	    _AstToIrVisitor.prototype.visitKeyedRead = function (ast, mode) {
-	        return convertToStatementIfNeeded(mode, this.visit(ast.obj, _Mode.Expression).key(this.visit(ast.key, _Mode.Expression)));
+	        var /** @type {?} */ leftMostSafe = this.leftMostSafeNode(ast);
+	        if (leftMostSafe) {
+	            return this.convertSafeAccess(ast, leftMostSafe, mode);
+	        }
+	        else {
+	            return convertToStatementIfNeeded(mode, this.visit(ast.obj, _Mode.Expression).key(this.visit(ast.key, _Mode.Expression)));
+	        }
 	    };
 	    /**
 	     * @param {?} ast
@@ -39829,7 +39835,7 @@ define(['exports', 'fs', 'path', 'typescript', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$2 = new Version('2.3.0-rc.0-4bd8f58');
+	var /** @type {?} */ VERSION$2 = new Version('2.3.0-rc.0-f31c947');
 
 	/**
 	 * @license
@@ -44149,7 +44155,7 @@ define(['exports', 'fs', 'path', 'typescript', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$3 = new Version('2.3.0-rc.0-4bd8f58');
+	var VERSION$3 = new Version('2.3.0-rc.0-f31c947');
 
 	/**
 	 * @license
@@ -45507,7 +45513,7 @@ define(['exports', 'fs', 'path', 'typescript', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION = new Version('2.3.0-rc.0-4bd8f58');
+	var VERSION = new Version('2.3.0-rc.0-f31c947');
 
 	exports.VERSION = VERSION;
 	exports['default'] = LanguageServicePlugin;
