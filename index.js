@@ -10,7 +10,7 @@ import { LanguageServicePlugin } from './src/ts_plugin';
 /**
  * @stable
  */
-export var VERSION = new Version('2.3.0-rc.0-93556a5');
+export var VERSION = new Version('2.3.0-rc.0-4bd8f58');
 export { createLanguageService } from './src/language_service';
 export { TypeScriptServiceHost, createLanguageServiceFromTypescript } from './src/typescript_host';
 export default LanguageServicePlugin;
