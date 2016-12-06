@@ -1,5 +1,5 @@
 /**
- * @license Angular v2.3.0-rc.0-5614c4f
+ * @license Angular v2.3.0-rc.0-93556a5
  * (c) 2010-2016 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -13491,7 +13491,7 @@ define(['exports', 'fs', 'path', 'typescript', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('2.3.0-rc.0-5614c4f');
+	var /** @type {?} */ VERSION$1 = new Version('2.3.0-rc.0-93556a5');
 
 	/**
 	 * @license
@@ -39829,7 +39829,7 @@ define(['exports', 'fs', 'path', 'typescript', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$2 = new Version('2.3.0-rc.0-5614c4f');
+	var /** @type {?} */ VERSION$2 = new Version('2.3.0-rc.0-93556a5');
 
 	/**
 	 * @license
@@ -44149,7 +44149,7 @@ define(['exports', 'fs', 'path', 'typescript', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$3 = new Version('2.3.0-rc.0-5614c4f');
+	var VERSION$3 = new Version('2.3.0-rc.0-93556a5');
 
 	/**
 	 * @license
@@ -44482,7 +44482,7 @@ define(['exports', 'fs', 'path', 'typescript', 'reflect-metadata'], function (ex
 	            case this.ts.SyntaxKind.StringLiteral:
 	                var _a = this.getTemplateClassDeclFromNode(node), declaration = _a[0], decorator = _a[1];
 	                var queryCache = undefined;
-	                if (declaration) {
+	                if (declaration && declaration.name) {
 	                    var sourceFile = this.getSourceFile(fileName);
 	                    return this.getSourceFromDeclaration(fileName, version, this.stringOf(node), shrink(spanOf$1(node)), this.reflector.getStaticSymbol(sourceFile.fileName, declaration.name.text), declaration, node, sourceFile);
 	                }
@@ -45507,7 +45507,7 @@ define(['exports', 'fs', 'path', 'typescript', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION = new Version('2.3.0-rc.0-5614c4f');
+	var VERSION = new Version('2.3.0-rc.0-93556a5');
 
 	exports.VERSION = VERSION;
 	exports['default'] = LanguageServicePlugin;

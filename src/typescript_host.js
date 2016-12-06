@@ -304,7 +304,7 @@ export var TypeScriptServiceHost = (function () {
             case this.ts.SyntaxKind.StringLiteral:
                 var _a = this.getTemplateClassDeclFromNode(node), declaration = _a[0], decorator = _a[1];
                 var queryCache = undefined;
-                if (declaration) {
+                if (declaration && declaration.name) {
                     var sourceFile = this.getSourceFile(fileName);
                     return this.getSourceFromDeclaration(fileName, version, this.stringOf(node), shrink(spanOf(node)), this.reflector.getStaticSymbol(sourceFile.fileName, declaration.name.text), declaration, node, sourceFile);
                 }
