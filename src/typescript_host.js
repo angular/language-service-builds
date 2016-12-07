@@ -90,6 +90,7 @@ export var TypeScriptServiceHost = (function () {
          * Angular LanguageServiceHost implementation
          */
         get: function () {
+            var _this = this;
             this.validate();
             var result = this._resolver;
             if (!result) {
@@ -110,7 +111,7 @@ export var TypeScriptServiceHost = (function () {
                     useJit: false
                 });
                 var directiveNormalizer = new DirectiveNormalizer(resourceLoader, urlResolver, htmlParser, config);
-                result = this._resolver = new CompileMetadataResolver(moduleResolver, directiveResolver, pipeResolver, new SummaryResolver(), elementSchemaRegistry, directiveNormalizer, this.reflector);
+                result = this._resolver = new CompileMetadataResolver(moduleResolver, directiveResolver, pipeResolver, new SummaryResolver(), elementSchemaRegistry, directiveNormalizer, this.reflector, function (error, type) { return _this.collectError(error, type && type.filePath); });
             }
             return result;
         },

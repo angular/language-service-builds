@@ -1,5 +1,5 @@
 /**
- * @license Angular v2.3.0-rc.0-16efb13
+ * @license Angular v2.3.0-rc.0-4a09c81
  * (c) 2010-2016 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -997,7 +997,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('2.3.0-rc.0-16efb13');
+	var /** @type {?} */ VERSION = new Version('2.3.0-rc.0-4a09c81');
 
 	/**
 	 *  Allows to refer to references which are not yet defined.
@@ -25773,7 +25773,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('2.3.0-rc.0-16efb13');
+	var /** @type {?} */ VERSION$1 = new Version('2.3.0-rc.0-4a09c81');
 
 	/**
 	 * @return {?}
@@ -31296,6 +31296,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
+	var /** @type {?} */ ERROR_COLLECTOR_TOKEN = new OpaqueToken('ErrorCollector');
 	// Design notes:
 	// - don't lazily create metadata:
 	//   For some metadata, we need to do async work sometimes,
@@ -31312,8 +31313,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @param {?} _schemaRegistry
 	     * @param {?} _directiveNormalizer
 	     * @param {?=} _reflector
+	     * @param {?=} _errorCollector
 	     */
-	    function CompileMetadataResolver(_ngModuleResolver, _directiveResolver, _pipeResolver, _summaryResolver, _schemaRegistry, _directiveNormalizer, _reflector) {
+	    function CompileMetadataResolver(_ngModuleResolver, _directiveResolver, _pipeResolver, _summaryResolver, _schemaRegistry, _directiveNormalizer, _reflector, _errorCollector) {
 	        if (_reflector === void 0) { _reflector = reflector$1; }
 	        this._ngModuleResolver = _ngModuleResolver;
 	        this._directiveResolver = _directiveResolver;
@@ -31322,6 +31324,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        this._schemaRegistry = _schemaRegistry;
 	        this._directiveNormalizer = _directiveNormalizer;
 	        this._reflector = _reflector;
+	        this._errorCollector = _errorCollector;
 	        this._directiveCache = new Map();
 	        this._summaryCache = new Map();
 	        this._pipeCache = new Map();
@@ -31477,7 +31480,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            }
 	            else {
 	                if (isSync) {
-	                    throw new ComponentStillLoadingError$1(directiveType);
+	                    this._reportError(new ComponentStillLoadingError$1(directiveType), directiveType);
+	                    return null;
 	                }
 	                return templateMeta.asyncResult.then(createDirectiveMetadata);
 	            }
@@ -31526,7 +31530,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            // Component
 	            changeDetectionStrategy = dirMeta.changeDetection;
 	            if (dirMeta.viewProviders) {
-	                viewProviders = this._getProvidersMetadata(dirMeta.viewProviders, entryComponentMetadata, "viewProviders for \"" + stringify$1(directiveType) + "\"");
+	                viewProviders = this._getProvidersMetadata(dirMeta.viewProviders, entryComponentMetadata, "viewProviders for \"" + stringify$1(directiveType) + "\"", [], directiveType);
 	            }
 	            if (dirMeta.entryComponents) {
 	                entryComponentMetadata = flattenAndDedupeArray(dirMeta.entryComponents)
@@ -31540,12 +31544,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        else {
 	            // Directive
 	            if (!selector) {
-	                throw new Error("Directive " + stringify$1(directiveType) + " has no selector, please add it!");
+	                this._reportError(new Error("Directive " + stringify$1(directiveType) + " has no selector, please add it!"), directiveType);
+	                selector = 'error';
 	            }
 	        }
 	        var /** @type {?} */ providers = [];
 	        if (isPresent$1(dirMeta.providers)) {
-	            providers = this._getProvidersMetadata(dirMeta.providers, entryComponentMetadata, "providers for \"" + stringify$1(directiveType) + "\"");
+	            providers = this._getProvidersMetadata(dirMeta.providers, entryComponentMetadata, "providers for \"" + stringify$1(directiveType) + "\"", [], directiveType);
 	        }
 	        var /** @type {?} */ queries = [];
 	        var /** @type {?} */ viewQueries = [];
@@ -31580,7 +31585,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    CompileMetadataResolver.prototype.getDirectiveMetadata = function (directiveType) {
 	        var /** @type {?} */ dirMeta = this._directiveCache.get(directiveType);
 	        if (!dirMeta) {
-	            throw new Error("Illegal state: getDirectiveMetadata can only be called after loadNgModuleMetadata for a module that declares it. Directive " + stringify$1(directiveType) + ".");
+	            this._reportError(new Error("Illegal state: getDirectiveMetadata can only be called after loadNgModuleMetadata for a module that declares it. Directive " + stringify$1(directiveType) + "."), directiveType);
 	        }
 	        return dirMeta;
 	    };
@@ -31591,7 +31596,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    CompileMetadataResolver.prototype.getDirectiveSummary = function (dirType) {
 	        var /** @type {?} */ dirSummary = (this._loadSummary(dirType, CompileSummaryKind.Directive));
 	        if (!dirSummary) {
-	            throw new Error("Illegal state: Could not load the summary for directive " + stringify$1(dirType) + ".");
+	            this._reportError(new Error("Illegal state: Could not load the summary for directive " + stringify$1(dirType) + "."), dirType);
 	        }
 	        return dirSummary;
 	    };
@@ -31679,25 +31684,28 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                    var /** @type {?} */ moduleWithProviders = importedType;
 	                    importedModuleType = moduleWithProviders.ngModule;
 	                    if (moduleWithProviders.providers) {
-	                        providers.push.apply(providers, _this._getProvidersMetadata(moduleWithProviders.providers, entryComponents, "provider for the NgModule '" + stringify$1(importedModuleType) + "'"));
+	                        providers.push.apply(providers, _this._getProvidersMetadata(moduleWithProviders.providers, entryComponents, "provider for the NgModule '" + stringify$1(importedModuleType) + "'", [], importedType));
 	                    }
 	                }
 	                if (importedModuleType) {
 	                    var /** @type {?} */ importedModuleSummary = _this.getNgModuleSummary(importedModuleType);
 	                    if (!importedModuleSummary) {
-	                        throw new Error("Unexpected " + _this._getTypeDescriptor(importedType) + " '" + stringify$1(importedType) + "' imported by the module '" + stringify$1(moduleType) + "'");
+	                        _this._reportError(new Error("Unexpected " + _this._getTypeDescriptor(importedType) + " '" + stringify$1(importedType) + "' imported by the module '" + stringify$1(moduleType) + "'"), moduleType);
+	                        return;
 	                    }
 	                    importedModules.push(importedModuleSummary);
 	                }
 	                else {
-	                    throw new Error("Unexpected value '" + stringify$1(importedType) + "' imported by the module '" + stringify$1(moduleType) + "'");
+	                    _this._reportError(new Error("Unexpected value '" + stringify$1(importedType) + "' imported by the module '" + stringify$1(moduleType) + "'"), moduleType);
+	                    return;
 	                }
 	            });
 	        }
 	        if (meta.exports) {
 	            flattenAndDedupeArray(meta.exports).forEach(function (exportedType) {
 	                if (!isValidType(exportedType)) {
-	                    throw new Error("Unexpected value '" + stringify$1(exportedType) + "' exported by the module '" + stringify$1(moduleType) + "'");
+	                    _this._reportError(new Error("Unexpected value '" + stringify$1(exportedType) + "' exported by the module '" + stringify$1(moduleType) + "'"), moduleType);
+	                    return;
 	                }
 	                var /** @type {?} */ exportedModuleSummary = _this.getNgModuleSummary(exportedType);
 	                if (exportedModuleSummary) {
@@ -31714,7 +31722,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        if (meta.declarations) {
 	            flattenAndDedupeArray(meta.declarations).forEach(function (declaredType) {
 	                if (!isValidType(declaredType)) {
-	                    throw new Error("Unexpected value '" + stringify$1(declaredType) + "' declared by the module '" + stringify$1(moduleType) + "'");
+	                    _this._reportError(new Error("Unexpected value '" + stringify$1(declaredType) + "' declared by the module '" + stringify$1(moduleType) + "'"), moduleType);
+	                    return;
 	                }
 	                var /** @type {?} */ declaredIdentifier = _this._getIdentifierMetadata(declaredType);
 	                if (_this._directiveResolver.isDirective(declaredType)) {
@@ -31729,7 +31738,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                    _this._addTypeToModule(declaredType, moduleType);
 	                }
 	                else {
-	                    throw new Error("Unexpected " + _this._getTypeDescriptor(declaredType) + " '" + stringify$1(declaredType) + "' declared by the module '" + stringify$1(moduleType) + "'");
+	                    _this._reportError(new Error("Unexpected " + _this._getTypeDescriptor(declaredType) + " '" + stringify$1(declaredType) + "' declared by the module '" + stringify$1(moduleType) + "'"), moduleType);
+	                    return;
 	                }
 	            });
 	        }
@@ -31745,25 +31755,25 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                transitiveModule.addExportedPipe(exportedId);
 	            }
 	            else {
-	                throw new Error("Can't export " + _this._getTypeDescriptor(exportedId.reference) + " " + stringify$1(exportedId.reference) + " from " + stringify$1(moduleType) + " as it was neither declared nor imported!");
+	                _this._reportError(new Error("Can't export " + _this._getTypeDescriptor(exportedId.reference) + " " + stringify$1(exportedId.reference) + " from " + stringify$1(moduleType) + " as it was neither declared nor imported!"), moduleType);
 	            }
 	        });
 	        // The providers of the module have to go last
 	        // so that they overwrite any other provider we already added.
 	        if (meta.providers) {
-	            providers.push.apply(providers, this._getProvidersMetadata(meta.providers, entryComponents, "provider for the NgModule '" + stringify$1(moduleType) + "'"));
+	            providers.push.apply(providers, this._getProvidersMetadata(meta.providers, entryComponents, "provider for the NgModule '" + stringify$1(moduleType) + "'", [], moduleType));
 	        }
 	        if (meta.entryComponents) {
 	            entryComponents.push.apply(entryComponents, flattenAndDedupeArray(meta.entryComponents).map(function (type) { return _this._getTypeMetadata(type); }));
 	        }
 	        if (meta.bootstrap) {
-	            var /** @type {?} */ typeMetadata = flattenAndDedupeArray(meta.bootstrap).map(function (type) {
+	            flattenAndDedupeArray(meta.bootstrap).forEach(function (type) {
 	                if (!isValidType(type)) {
-	                    throw new Error("Unexpected value '" + stringify$1(type) + "' used in the bootstrap property of module '" + stringify$1(moduleType) + "'");
+	                    _this._reportError(new Error("Unexpected value '" + stringify$1(type) + "' used in the bootstrap property of module '" + stringify$1(moduleType) + "'"), moduleType);
+	                    return;
 	                }
-	                return _this._getTypeMetadata(type);
+	                bootstrapComponents.push(_this._getTypeMetadata(type));
 	            });
-	            bootstrapComponents.push.apply(bootstrapComponents, typeMetadata);
 	        }
 	        entryComponents.push.apply(entryComponents, bootstrapComponents);
 	        if (meta.schemas) {
@@ -31817,9 +31827,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    CompileMetadataResolver.prototype._addTypeToModule = function (type, moduleType) {
 	        var /** @type {?} */ oldModule = this._ngModuleOfTypes.get(type);
 	        if (oldModule && oldModule !== moduleType) {
-	            throw new Error(("Type " + stringify$1(type) + " is part of the declarations of 2 modules: " + stringify$1(oldModule) + " and " + stringify$1(moduleType) + "! ") +
+	            this._reportError(new Error(("Type " + stringify$1(type) + " is part of the declarations of 2 modules: " + stringify$1(oldModule) + " and " + stringify$1(moduleType) + "! ") +
 	                ("Please consider moving " + stringify$1(type) + " to a higher module that imports " + stringify$1(oldModule) + " and " + stringify$1(moduleType) + ". ") +
-	                ("You can also create a new NgModule that exports and includes " + stringify$1(type) + " then import that NgModule in " + stringify$1(oldModule) + " and " + stringify$1(moduleType) + "."));
+	                ("You can also create a new NgModule that exports and includes " + stringify$1(type) + " then import that NgModule in " + stringify$1(oldModule) + " and " + stringify$1(moduleType) + ".")), moduleType);
 	        }
 	        this._ngModuleOfTypes.set(type, moduleType);
 	    };
@@ -31904,7 +31914,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    CompileMetadataResolver.prototype.getPipeMetadata = function (pipeType) {
 	        var /** @type {?} */ pipeMeta = this._pipeCache.get(pipeType);
 	        if (!pipeMeta) {
-	            throw new Error("Illegal state: getPipeMetadata can only be called after loadNgModuleMetadata for a module that declares it. Pipe " + stringify$1(pipeType) + ".");
+	            this._reportError(new Error("Illegal state: getPipeMetadata can only be called after loadNgModuleMetadata for a module that declares it. Pipe " + stringify$1(pipeType) + "."), pipeType);
 	        }
 	        return pipeMeta;
 	    };
@@ -31915,7 +31925,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    CompileMetadataResolver.prototype.getPipeSummary = function (pipeType) {
 	        var /** @type {?} */ pipeSummary = (this._loadSummary(pipeType, CompileSummaryKind.Pipe));
 	        if (!pipeSummary) {
-	            throw new Error("Illegal state: Could not load the summary for pipe " + stringify$1(pipeType) + ".");
+	            this._reportError(new Error("Illegal state: Could not load the summary for pipe " + stringify$1(pipeType) + "."), pipeType);
 	        }
 	        return pipeSummary;
 	    };
@@ -32006,7 +32016,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        });
 	        if (hasUnknownDeps) {
 	            var /** @type {?} */ depsTokens = dependenciesMetadata.map(function (dep) { return dep ? stringify$1(dep.token) : '?'; }).join(', ');
-	            throw new Error("Can't resolve all parameters for " + stringify$1(typeOrFunc) + ": (" + depsTokens + ").");
+	            this._reportError(new Error("Can't resolve all parameters for " + stringify$1(typeOrFunc) + ": (" + depsTokens + ")."), typeOrFunc);
 	        }
 	        return dependenciesMetadata;
 	    };
@@ -32030,9 +32040,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @param {?} targetEntryComponents
 	     * @param {?=} debugInfo
 	     * @param {?=} compileProviders
+	     * @param {?=} type
 	     * @return {?}
 	     */
-	    CompileMetadataResolver.prototype._getProvidersMetadata = function (providers, targetEntryComponents, debugInfo, compileProviders) {
+	    CompileMetadataResolver.prototype._getProvidersMetadata = function (providers, targetEntryComponents, debugInfo, compileProviders, type) {
 	        var _this = this;
 	        if (compileProviders === void 0) { compileProviders = []; }
 	        providers.forEach(function (provider, providerIdx) {
@@ -32062,10 +32073,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                        return soFar;
 	                    }, [])))
 	                        .join(', ');
-	                    throw new Error("Invalid " + (debugInfo ? debugInfo : 'provider') + " - only instances of Provider and Type are allowed, got: [" + providersInfo + "]");
+	                    _this._reportError(new Error("Invalid " + (debugInfo ? debugInfo : 'provider') + " - only instances of Provider and Type are allowed, got: [" + providersInfo + "]"), type);
 	                }
 	                if (providerMeta.token === resolveIdentifier(Identifiers.ANALYZE_FOR_ENTRY_COMPONENTS)) {
-	                    targetEntryComponents.push.apply(targetEntryComponents, _this._getEntryComponentsFromProvider(providerMeta));
+	                    targetEntryComponents.push.apply(targetEntryComponents, _this._getEntryComponentsFromProvider(providerMeta, type));
 	                }
 	                else {
 	                    compileProviders.push(_this.getProviderMetadata(providerMeta));
@@ -32076,17 +32087,20 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    };
 	    /**
 	     * @param {?} provider
+	     * @param {?=} type
 	     * @return {?}
 	     */
-	    CompileMetadataResolver.prototype._getEntryComponentsFromProvider = function (provider) {
+	    CompileMetadataResolver.prototype._getEntryComponentsFromProvider = function (provider, type) {
 	        var _this = this;
 	        var /** @type {?} */ components = [];
 	        var /** @type {?} */ collectedIdentifiers = [];
 	        if (provider.useFactory || provider.useExisting || provider.useClass) {
-	            throw new Error("The ANALYZE_FOR_ENTRY_COMPONENTS token only supports useValue!");
+	            this._reportError(new Error("The ANALYZE_FOR_ENTRY_COMPONENTS token only supports useValue!"), type);
+	            return [];
 	        }
 	        if (!provider.multi) {
-	            throw new Error("The ANALYZE_FOR_ENTRY_COMPONENTS token only supports 'multi = true'!");
+	            this._reportError(new Error("The ANALYZE_FOR_ENTRY_COMPONENTS token only supports 'multi = true'!"), type);
+	            return [];
 	        }
 	        extractIdentifiers(provider.useValue, collectedIdentifiers);
 	        collectedIdentifiers.forEach(function (identifier) {
@@ -32164,7 +32178,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        }
 	        else {
 	            if (!q.selector) {
-	                throw new Error("Can't construct a query for the property \"" + propertyName + "\" of \"" + stringify$1(typeOrFunc) + "\" since the query selector wasn't defined.");
+	                this._reportError(new Error("Can't construct a query for the property \"" + propertyName + "\" of \"" + stringify$1(typeOrFunc) + "\" since the query selector wasn't defined."), typeOrFunc);
 	            }
 	            selectors = [this._getTokenMetadata(q.selector)];
 	        }
@@ -32174,6 +32188,23 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            descendants: q.descendants, propertyName: propertyName,
 	            read: q.read ? this._getTokenMetadata(q.read) : null
 	        };
+	    };
+	    /**
+	     * @param {?} error
+	     * @param {?=} type
+	     * @param {?=} otherType
+	     * @return {?}
+	     */
+	    CompileMetadataResolver.prototype._reportError = function (error, type, otherType) {
+	        if (this._errorCollector) {
+	            this._errorCollector(error, type);
+	            if (otherType) {
+	                this._errorCollector(error, otherType);
+	            }
+	        }
+	        else {
+	            throw error;
+	        }
 	    };
 	    CompileMetadataResolver.decorators = [
 	        { type: Injectable },
@@ -32187,6 +32218,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        { type: ElementSchemaRegistry, },
 	        { type: DirectiveNormalizer, },
 	        { type: ReflectorReader$1, },
+	        { type: undefined, decorators: [{ type: Optional }, { type: Inject, args: [ERROR_COLLECTOR_TOKEN,] },] },
 	    ]; };
 	    return CompileMetadataResolver;
 	}());
@@ -44155,7 +44187,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$3 = new Version('2.3.0-rc.0-16efb13');
+	var VERSION$3 = new Version('2.3.0-rc.0-4a09c81');
 
 	/**
 	 * @license
@@ -44274,6 +44306,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	         * Angular LanguageServiceHost implementation
 	         */
 	        get: function () {
+	            var _this = this;
 	            this.validate();
 	            var result = this._resolver;
 	            if (!result) {
@@ -44294,7 +44327,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                    useJit: false
 	                });
 	                var directiveNormalizer = new DirectiveNormalizer(resourceLoader, urlResolver, htmlParser, config);
-	                result = this._resolver = new CompileMetadataResolver(moduleResolver, directiveResolver, pipeResolver, new SummaryResolver(), elementSchemaRegistry, directiveNormalizer, this.reflector);
+	                result = this._resolver = new CompileMetadataResolver(moduleResolver, directiveResolver, pipeResolver, new SummaryResolver(), elementSchemaRegistry, directiveNormalizer, this.reflector, function (error, type) { return _this.collectError(error, type && type.filePath); });
 	            }
 	            return result;
 	        },
@@ -45511,7 +45544,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$4 = new Version('2.3.0-rc.0-16efb13');
+	var VERSION$4 = new Version('2.3.0-rc.0-4a09c81');
 
 	exports['default'] = LanguageServicePlugin;
 	exports.createLanguageService = createLanguageService;
