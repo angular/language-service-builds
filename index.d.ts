@@ -10,13 +10,9 @@
  * @description
  * Entry point for all public APIs of the language service package.
  */
-import { Version } from '@angular/core';
 import { LanguageServicePlugin } from './src/ts_plugin';
-/**
- * @stable
- */
-export declare const VERSION: Version;
 export { createLanguageService } from './src/language_service';
 export { Completion, Completions, Declaration, Declarations, Definition, Diagnostic, Diagnostics, Hover, HoverTextSection, LanguageService, LanguageServiceHost, Location, Span, TemplateSource, TemplateSources } from './src/types';
 export { TypeScriptServiceHost, createLanguageServiceFromTypescript } from './src/typescript_host';
+export { VERSION } from './src/version';
 export default LanguageServicePlugin;
