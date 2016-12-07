@@ -5,6 +5,7 @@
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
+import * as ts from 'typescript';
 import { createLanguageService } from './language_service';
 import { TypeScriptServiceHost } from './typescript_host';
 /** A plugin to TypeScript's langauge service that provide language services for
@@ -14,9 +15,8 @@ import { TypeScriptServiceHost } from './typescript_host';
  */
 export var LanguageServicePlugin = (function () {
     function LanguageServicePlugin(config) {
-        this.ts = config.ts;
         this.host = config.host;
-        this.serviceHost = new TypeScriptServiceHost(this.ts, config.host, config.service);
+        this.serviceHost = new TypeScriptServiceHost(config.host, config.service);
         this.service = createLanguageService(this.serviceHost);
         this.serviceHost.setSite(this.service);
     }
@@ -35,7 +35,7 @@ export var LanguageServicePlugin = (function () {
                     start: error.span.start,
                     length: error.span.end - error.span.start,
                     messageText: error.message,
-                    category: this.ts.DiagnosticCategory.Error,
+                    category: ts.DiagnosticCategory.Error,
                     code: 0
                 });
             }

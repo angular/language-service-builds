@@ -1,5 +1,5 @@
 /**
- * @license Angular v2.3.0-rc.0-393c100
+ * @license Angular v2.3.0-rc.0-25c2141
  * (c) 2010-2016 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -16,7 +16,7 @@ module.exports = function(provided) {
   return result;
 }
 
-define(['exports', 'fs', 'path', 'typescript', 'reflect-metadata'], function (exports, fs, path, ts, reflectMetadata) { 'use strict';
+define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (exports, ts, fs, path, reflectMetadata) { 'use strict';
 
 	ts = 'default' in ts ? ts['default'] : ts;
 
@@ -13491,7 +13491,7 @@ define(['exports', 'fs', 'path', 'typescript', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('2.3.0-rc.0-393c100');
+	var /** @type {?} */ VERSION$1 = new Version('2.3.0-rc.0-25c2141');
 
 	/**
 	 * @license
@@ -39835,7 +39835,7 @@ define(['exports', 'fs', 'path', 'typescript', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$2 = new Version('2.3.0-rc.0-393c100');
+	var /** @type {?} */ VERSION$2 = new Version('2.3.0-rc.0-25c2141');
 
 	/**
 	 * @license
@@ -44155,7 +44155,7 @@ define(['exports', 'fs', 'path', 'typescript', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$3 = new Version('2.3.0-rc.0-393c100');
+	var VERSION$3 = new Version('2.3.0-rc.0-25c2141');
 
 	/**
 	 * @license
@@ -44217,8 +44217,8 @@ define(['exports', 'fs', 'path', 'typescript', 'reflect-metadata'], function (ex
 	/**
 	 * Create a `LanguageServiceHost`
 	 */
-	function createLanguageServiceFromTypescript(typescript, host, service) {
-	    var ngHost = new TypeScriptServiceHost(typescript, host, service);
+	function createLanguageServiceFromTypescript(host, service) {
+	    var ngHost = new TypeScriptServiceHost(host, service);
 	    var ngServer = createLanguageService(ngHost);
 	    ngHost.setSite(ngServer);
 	    return ngServer;
@@ -44261,13 +44261,12 @@ define(['exports', 'fs', 'path', 'typescript', 'reflect-metadata'], function (ex
 	 * @expermental
 	 */
 	var TypeScriptServiceHost = (function () {
-	    function TypeScriptServiceHost(typescript, host, tsService) {
+	    function TypeScriptServiceHost(host, tsService) {
 	        this.host = host;
 	        this.tsService = tsService;
 	        this._staticSymbolCache = new StaticSymbolCache();
 	        this._typeCache = [];
 	        this.modulesOutOfDate = true;
-	        this.ts = typescript;
 	    }
 	    TypeScriptServiceHost.prototype.setSite = function (service) { this.service = service; };
 	    Object.defineProperty(TypeScriptServiceHost.prototype, "resolver", {
@@ -44356,13 +44355,13 @@ define(['exports', 'fs', 'path', 'typescript', 'reflect-metadata'], function (ex
 	                    result_1.push(templateSource);
 	                }
 	                else {
-	                    _this.ts.forEachChild(child, visit_1);
+	                    ts.forEachChild(child, visit_1);
 	                }
 	            };
 	            var sourceFile = this.getSourceFile(fileName);
 	            if (sourceFile) {
 	                this.context = sourceFile.path;
-	                this.ts.forEachChild(sourceFile, visit_1);
+	                ts.forEachChild(sourceFile, visit_1);
 	            }
 	            return result_1.length ? result_1 : undefined;
 	        }
@@ -44468,7 +44467,7 @@ define(['exports', 'fs', 'path', 'typescript', 'reflect-metadata'], function (ex
 	                },
 	                get query() {
 	                    if (!queryCache) {
-	                        queryCache = new TypeScriptSymbolQuery(t.ts, t.program, t.checker, sourceFile, function () {
+	                        queryCache = new TypeScriptSymbolQuery(t.program, t.checker, sourceFile, function () {
 	                            var pipes = t.service.getPipesAt(fileName, node.getStart());
 	                            var checker = t.checker;
 	                            var program = t.program;
@@ -44484,8 +44483,8 @@ define(['exports', 'fs', 'path', 'typescript', 'reflect-metadata'], function (ex
 	        var result = undefined;
 	        var t = this;
 	        switch (node.kind) {
-	            case this.ts.SyntaxKind.NoSubstitutionTemplateLiteral:
-	            case this.ts.SyntaxKind.StringLiteral:
+	            case ts.SyntaxKind.NoSubstitutionTemplateLiteral:
+	            case ts.SyntaxKind.StringLiteral:
 	                var _a = this.getTemplateClassDeclFromNode(node), declaration = _a[0], decorator = _a[1];
 	                var queryCache = undefined;
 	                if (declaration && declaration.name) {
@@ -44559,7 +44558,7 @@ define(['exports', 'fs', 'path', 'typescript', 'reflect-metadata'], function (ex
 	    TypeScriptServiceHost.prototype.getTemplateClassFromStaticSymbol = function (type) {
 	        var source = this.getSourceFile(type.filePath);
 	        if (source) {
-	            var declarationNode = this.ts.forEachChild(source, function (child) {
+	            var declarationNode = ts.forEachChild(source, function (child) {
 	                if (child.kind === ts.SyntaxKind.ClassDeclaration) {
 	                    var classDeclaration = child;
 	                    if (classDeclaration.name.text === type.name) {
@@ -44582,7 +44581,7 @@ define(['exports', 'fs', 'path', 'typescript', 'reflect-metadata'], function (ex
 	        if (!parentNode) {
 	            return TypeScriptServiceHost.missingTemplate;
 	        }
-	        if (parentNode.kind !== this.ts.SyntaxKind.PropertyAssignment) {
+	        if (parentNode.kind !== ts.SyntaxKind.PropertyAssignment) {
 	            return TypeScriptServiceHost.missingTemplate;
 	        }
 	        else {
@@ -44592,20 +44591,20 @@ define(['exports', 'fs', 'path', 'typescript', 'reflect-metadata'], function (ex
 	            }
 	        }
 	        parentNode = parentNode.parent; // ObjectLiteralExpression
-	        if (!parentNode || parentNode.kind !== this.ts.SyntaxKind.ObjectLiteralExpression) {
+	        if (!parentNode || parentNode.kind !== ts.SyntaxKind.ObjectLiteralExpression) {
 	            return TypeScriptServiceHost.missingTemplate;
 	        }
 	        parentNode = parentNode.parent; // CallExpression
-	        if (!parentNode || parentNode.kind !== this.ts.SyntaxKind.CallExpression) {
+	        if (!parentNode || parentNode.kind !== ts.SyntaxKind.CallExpression) {
 	            return TypeScriptServiceHost.missingTemplate;
 	        }
 	        var callTarget = parentNode.expression;
 	        var decorator = parentNode.parent; // Decorator
-	        if (!decorator || decorator.kind !== this.ts.SyntaxKind.Decorator) {
+	        if (!decorator || decorator.kind !== ts.SyntaxKind.Decorator) {
 	            return TypeScriptServiceHost.missingTemplate;
 	        }
 	        var declaration = decorator.parent; // ClassDeclaration
-	        if (!declaration || declaration.kind !== this.ts.SyntaxKind.ClassDeclaration) {
+	        if (!declaration || declaration.kind !== ts.SyntaxKind.ClassDeclaration) {
 	            return TypeScriptServiceHost.missingTemplate;
 	        }
 	        return [declaration, callTarget];
@@ -44661,9 +44660,9 @@ define(['exports', 'fs', 'path', 'typescript', 'reflect-metadata'], function (ex
 	    };
 	    TypeScriptServiceHost.prototype.stringOf = function (node) {
 	        switch (node.kind) {
-	            case this.ts.SyntaxKind.NoSubstitutionTemplateLiteral:
+	            case ts.SyntaxKind.NoSubstitutionTemplateLiteral:
 	                return node.text;
-	            case this.ts.SyntaxKind.StringLiteral:
+	            case ts.SyntaxKind.StringLiteral:
 	                return node.text;
 	        }
 	    };
@@ -44671,7 +44670,7 @@ define(['exports', 'fs', 'path', 'typescript', 'reflect-metadata'], function (ex
 	        var _this = this;
 	        function find(node) {
 	            if (position >= node.getStart() && position < node.getEnd()) {
-	                return _this.ts.forEachChild(node, find) || node;
+	                return ts.forEachChild(node, find) || node;
 	            }
 	        }
 	        return find(sourceFile);
@@ -44682,25 +44681,26 @@ define(['exports', 'fs', 'path', 'typescript', 'reflect-metadata'], function (ex
 	        switch (kind) {
 	            case BuiltinType$1.Any:
 	                type = checker.getTypeAtLocation({
-	                    kind: this.ts.SyntaxKind.AsExpression,
-	                    expression: { kind: this.ts.SyntaxKind.TrueKeyword },
-	                    type: { kind: this.ts.SyntaxKind.AnyKeyword }
+	                    kind: ts.SyntaxKind.AsExpression,
+	                    expression: { kind: ts.SyntaxKind.TrueKeyword },
+	                    type: { kind: ts.SyntaxKind.AnyKeyword }
 	                });
 	                break;
 	            case BuiltinType$1.Boolean:
-	                type = checker.getTypeAtLocation({ kind: this.ts.SyntaxKind.TrueKeyword });
+	                type = checker.getTypeAtLocation({ kind: ts.SyntaxKind.TrueKeyword });
 	                break;
 	            case BuiltinType$1.Null:
-	                type = checker.getTypeAtLocation({ kind: this.ts.SyntaxKind.NullKeyword });
+	                type = checker.getTypeAtLocation({ kind: ts.SyntaxKind.NullKeyword });
 	                break;
 	            case BuiltinType$1.Number:
-	                type = checker.getTypeAtLocation({ kind: this.ts.SyntaxKind.NumericLiteral });
+	                type = checker.getTypeAtLocation({ kind: ts.SyntaxKind.NumericLiteral });
 	                break;
 	            case BuiltinType$1.String:
-	                type = checker.getTypeAtLocation({ kind: this.ts.SyntaxKind.NoSubstitutionTemplateLiteral });
+	                type =
+	                    checker.getTypeAtLocation({ kind: ts.SyntaxKind.NoSubstitutionTemplateLiteral });
 	                break;
 	            case BuiltinType$1.Undefined:
-	                type = checker.getTypeAtLocation({ kind: this.ts.SyntaxKind.VoidExpression });
+	                type = checker.getTypeAtLocation({ kind: ts.SyntaxKind.VoidExpression });
 	                break;
 	            default:
 	                throw new Error("Internal error, unhandled literal kind " + kind + ":" + BuiltinType$1[kind]);
@@ -44711,31 +44711,30 @@ define(['exports', 'fs', 'path', 'typescript', 'reflect-metadata'], function (ex
 	    return TypeScriptServiceHost;
 	}());
 	var TypeScriptSymbolQuery = (function () {
-	    function TypeScriptSymbolQuery(typescript, program, checker, source, fetchPipes) {
+	    function TypeScriptSymbolQuery(program, checker, source, fetchPipes) {
 	        this.program = program;
 	        this.checker = checker;
 	        this.source = source;
 	        this.fetchPipes = fetchPipes;
 	        this.typeCache = new Map();
-	        this.ts = typescript;
 	    }
 	    TypeScriptSymbolQuery.prototype.getTypeKind = function (symbol) {
 	        var type = this.getTsTypeOf(symbol);
 	        if (type) {
-	            if (type.flags & this.ts.TypeFlags.Any) {
+	            if (type.flags & ts.TypeFlags.Any) {
 	                return BuiltinType$1.Any;
 	            }
-	            else if (type.flags & (this.ts.TypeFlags.String | this.ts.TypeFlags.StringLike |
-	                this.ts.TypeFlags.StringLiteral)) {
+	            else if (type.flags &
+	                (ts.TypeFlags.String | ts.TypeFlags.StringLike | ts.TypeFlags.StringLiteral)) {
 	                return BuiltinType$1.String;
 	            }
-	            else if (type.flags & (this.ts.TypeFlags.Number | this.ts.TypeFlags.NumberLike)) {
+	            else if (type.flags & (ts.TypeFlags.Number | ts.TypeFlags.NumberLike)) {
 	                return BuiltinType$1.Number;
 	            }
-	            else if (type.flags & (this.ts.TypeFlags.Undefined)) {
+	            else if (type.flags & (ts.TypeFlags.Undefined)) {
 	                return BuiltinType$1.Undefined;
 	            }
-	            else if (type.flags & (this.ts.TypeFlags.Null)) {
+	            else if (type.flags & (ts.TypeFlags.Null)) {
 	                return BuiltinType$1.Null;
 	            }
 	        }
@@ -45463,9 +45462,8 @@ define(['exports', 'fs', 'path', 'typescript', 'reflect-metadata'], function (ex
 	 */
 	var LanguageServicePlugin = (function () {
 	    function LanguageServicePlugin(config) {
-	        this.ts = config.ts;
 	        this.host = config.host;
-	        this.serviceHost = new TypeScriptServiceHost(this.ts, config.host, config.service);
+	        this.serviceHost = new TypeScriptServiceHost(config.host, config.service);
 	        this.service = createLanguageService(this.serviceHost);
 	        this.serviceHost.setSite(this.service);
 	    }
@@ -45484,7 +45482,7 @@ define(['exports', 'fs', 'path', 'typescript', 'reflect-metadata'], function (ex
 	                    start: error.span.start,
 	                    length: error.span.end - error.span.start,
 	                    messageText: error.message,
-	                    category: this.ts.DiagnosticCategory.Error,
+	                    category: ts.DiagnosticCategory.Error,
 	                    code: 0
 	                });
 	            }
@@ -45513,7 +45511,7 @@ define(['exports', 'fs', 'path', 'typescript', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION = new Version('2.3.0-rc.0-393c100');
+	var VERSION = new Version('2.3.0-rc.0-25c2141');
 
 	exports.VERSION = VERSION;
 	exports['default'] = LanguageServicePlugin;

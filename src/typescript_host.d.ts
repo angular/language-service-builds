@@ -9,7 +9,7 @@ import { Declarations, LanguageService, LanguageServiceHost, TemplateSource, Tem
 /**
  * Create a `LanguageServiceHost`
  */
-export declare function createLanguageServiceFromTypescript(typescript: typeof ts, host: ts.LanguageServiceHost, service: ts.LanguageService): LanguageService;
+export declare function createLanguageServiceFromTypescript(host: ts.LanguageServiceHost, service: ts.LanguageService): LanguageService;
 /**
  * The language service never needs the normalized versions of the metadata. To avoid parsing
  * the content and resolving references, return an empty file. This also allows normalizing
@@ -37,7 +37,6 @@ export declare class DummyResourceLoader extends ResourceLoader {
 export declare class TypeScriptServiceHost implements LanguageServiceHost {
     private host;
     private tsService;
-    private ts;
     private _resolver;
     private _staticSymbolCache;
     private _reflector;
@@ -52,7 +51,7 @@ export declare class TypeScriptServiceHost implements LanguageServiceHost {
     private fileToComponent;
     private templateReferences;
     private collectedErrors;
-    constructor(typescript: typeof ts, host: ts.LanguageServiceHost, tsService: ts.LanguageService);
+    constructor(host: ts.LanguageServiceHost, tsService: ts.LanguageService);
     setSite(service: LanguageService): void;
     /**
      * Angular LanguageServiceHost implementation

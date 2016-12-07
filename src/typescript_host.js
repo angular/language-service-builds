@@ -33,8 +33,8 @@ import { BuiltinType } from './types';
 /**
  * Create a `LanguageServiceHost`
  */
-export function createLanguageServiceFromTypescript(typescript, host, service) {
-    var ngHost = new TypeScriptServiceHost(typescript, host, service);
+export function createLanguageServiceFromTypescript(host, service) {
+    var ngHost = new TypeScriptServiceHost(host, service);
     var ngServer = createLanguageService(ngHost);
     ngHost.setSite(ngServer);
     return ngServer;
@@ -77,13 +77,12 @@ export var DummyResourceLoader = (function (_super) {
  * @expermental
  */
 export var TypeScriptServiceHost = (function () {
-    function TypeScriptServiceHost(typescript, host, tsService) {
+    function TypeScriptServiceHost(host, tsService) {
         this.host = host;
         this.tsService = tsService;
         this._staticSymbolCache = new StaticSymbolCache();
         this._typeCache = [];
         this.modulesOutOfDate = true;
-        this.ts = typescript;
     }
     TypeScriptServiceHost.prototype.setSite = function (service) { this.service = service; };
     Object.defineProperty(TypeScriptServiceHost.prototype, "resolver", {
@@ -172,13 +171,13 @@ export var TypeScriptServiceHost = (function () {
                     result_1.push(templateSource);
                 }
                 else {
-                    _this.ts.forEachChild(child, visit_1);
+                    ts.forEachChild(child, visit_1);
                 }
             };
             var sourceFile = this.getSourceFile(fileName);
             if (sourceFile) {
                 this.context = sourceFile.path;
-                this.ts.forEachChild(sourceFile, visit_1);
+                ts.forEachChild(sourceFile, visit_1);
             }
             return result_1.length ? result_1 : undefined;
         }
@@ -284,7 +283,7 @@ export var TypeScriptServiceHost = (function () {
                 },
                 get query() {
                     if (!queryCache) {
-                        queryCache = new TypeScriptSymbolQuery(t.ts, t.program, t.checker, sourceFile, function () {
+                        queryCache = new TypeScriptSymbolQuery(t.program, t.checker, sourceFile, function () {
                             var pipes = t.service.getPipesAt(fileName, node.getStart());
                             var checker = t.checker;
                             var program = t.program;
@@ -300,8 +299,8 @@ export var TypeScriptServiceHost = (function () {
         var result = undefined;
         var t = this;
         switch (node.kind) {
-            case this.ts.SyntaxKind.NoSubstitutionTemplateLiteral:
-            case this.ts.SyntaxKind.StringLiteral:
+            case ts.SyntaxKind.NoSubstitutionTemplateLiteral:
+            case ts.SyntaxKind.StringLiteral:
                 var _a = this.getTemplateClassDeclFromNode(node), declaration = _a[0], decorator = _a[1];
                 var queryCache = undefined;
                 if (declaration && declaration.name) {
@@ -375,7 +374,7 @@ export var TypeScriptServiceHost = (function () {
     TypeScriptServiceHost.prototype.getTemplateClassFromStaticSymbol = function (type) {
         var source = this.getSourceFile(type.filePath);
         if (source) {
-            var declarationNode = this.ts.forEachChild(source, function (child) {
+            var declarationNode = ts.forEachChild(source, function (child) {
                 if (child.kind === ts.SyntaxKind.ClassDeclaration) {
                     var classDeclaration = child;
                     if (classDeclaration.name.text === type.name) {
@@ -398,7 +397,7 @@ export var TypeScriptServiceHost = (function () {
         if (!parentNode) {
             return TypeScriptServiceHost.missingTemplate;
         }
-        if (parentNode.kind !== this.ts.SyntaxKind.PropertyAssignment) {
+        if (parentNode.kind !== ts.SyntaxKind.PropertyAssignment) {
             return TypeScriptServiceHost.missingTemplate;
         }
         else {
@@ -408,20 +407,20 @@ export var TypeScriptServiceHost = (function () {
             }
         }
         parentNode = parentNode.parent; // ObjectLiteralExpression
-        if (!parentNode || parentNode.kind !== this.ts.SyntaxKind.ObjectLiteralExpression) {
+        if (!parentNode || parentNode.kind !== ts.SyntaxKind.ObjectLiteralExpression) {
             return TypeScriptServiceHost.missingTemplate;
         }
         parentNode = parentNode.parent; // CallExpression
-        if (!parentNode || parentNode.kind !== this.ts.SyntaxKind.CallExpression) {
+        if (!parentNode || parentNode.kind !== ts.SyntaxKind.CallExpression) {
             return TypeScriptServiceHost.missingTemplate;
         }
         var callTarget = parentNode.expression;
         var decorator = parentNode.parent; // Decorator
-        if (!decorator || decorator.kind !== this.ts.SyntaxKind.Decorator) {
+        if (!decorator || decorator.kind !== ts.SyntaxKind.Decorator) {
             return TypeScriptServiceHost.missingTemplate;
         }
         var declaration = decorator.parent; // ClassDeclaration
-        if (!declaration || declaration.kind !== this.ts.SyntaxKind.ClassDeclaration) {
+        if (!declaration || declaration.kind !== ts.SyntaxKind.ClassDeclaration) {
             return TypeScriptServiceHost.missingTemplate;
         }
         return [declaration, callTarget];
@@ -477,9 +476,9 @@ export var TypeScriptServiceHost = (function () {
     };
     TypeScriptServiceHost.prototype.stringOf = function (node) {
         switch (node.kind) {
-            case this.ts.SyntaxKind.NoSubstitutionTemplateLiteral:
+            case ts.SyntaxKind.NoSubstitutionTemplateLiteral:
                 return node.text;
-            case this.ts.SyntaxKind.StringLiteral:
+            case ts.SyntaxKind.StringLiteral:
                 return node.text;
         }
     };
@@ -487,7 +486,7 @@ export var TypeScriptServiceHost = (function () {
         var _this = this;
         function find(node) {
             if (position >= node.getStart() && position < node.getEnd()) {
-                return _this.ts.forEachChild(node, find) || node;
+                return ts.forEachChild(node, find) || node;
             }
         }
         return find(sourceFile);
@@ -498,25 +497,26 @@ export var TypeScriptServiceHost = (function () {
         switch (kind) {
             case BuiltinType.Any:
                 type = checker.getTypeAtLocation({
-                    kind: this.ts.SyntaxKind.AsExpression,
-                    expression: { kind: this.ts.SyntaxKind.TrueKeyword },
-                    type: { kind: this.ts.SyntaxKind.AnyKeyword }
+                    kind: ts.SyntaxKind.AsExpression,
+                    expression: { kind: ts.SyntaxKind.TrueKeyword },
+                    type: { kind: ts.SyntaxKind.AnyKeyword }
                 });
                 break;
             case BuiltinType.Boolean:
-                type = checker.getTypeAtLocation({ kind: this.ts.SyntaxKind.TrueKeyword });
+                type = checker.getTypeAtLocation({ kind: ts.SyntaxKind.TrueKeyword });
                 break;
             case BuiltinType.Null:
-                type = checker.getTypeAtLocation({ kind: this.ts.SyntaxKind.NullKeyword });
+                type = checker.getTypeAtLocation({ kind: ts.SyntaxKind.NullKeyword });
                 break;
             case BuiltinType.Number:
-                type = checker.getTypeAtLocation({ kind: this.ts.SyntaxKind.NumericLiteral });
+                type = checker.getTypeAtLocation({ kind: ts.SyntaxKind.NumericLiteral });
                 break;
             case BuiltinType.String:
-                type = checker.getTypeAtLocation({ kind: this.ts.SyntaxKind.NoSubstitutionTemplateLiteral });
+                type =
+                    checker.getTypeAtLocation({ kind: ts.SyntaxKind.NoSubstitutionTemplateLiteral });
                 break;
             case BuiltinType.Undefined:
-                type = checker.getTypeAtLocation({ kind: this.ts.SyntaxKind.VoidExpression });
+                type = checker.getTypeAtLocation({ kind: ts.SyntaxKind.VoidExpression });
                 break;
             default:
                 throw new Error("Internal error, unhandled literal kind " + kind + ":" + BuiltinType[kind]);
@@ -527,31 +527,30 @@ export var TypeScriptServiceHost = (function () {
     return TypeScriptServiceHost;
 }());
 var TypeScriptSymbolQuery = (function () {
-    function TypeScriptSymbolQuery(typescript, program, checker, source, fetchPipes) {
+    function TypeScriptSymbolQuery(program, checker, source, fetchPipes) {
         this.program = program;
         this.checker = checker;
         this.source = source;
         this.fetchPipes = fetchPipes;
         this.typeCache = new Map();
-        this.ts = typescript;
     }
     TypeScriptSymbolQuery.prototype.getTypeKind = function (symbol) {
         var type = this.getTsTypeOf(symbol);
         if (type) {
-            if (type.flags & this.ts.TypeFlags.Any) {
+            if (type.flags & ts.TypeFlags.Any) {
                 return BuiltinType.Any;
             }
-            else if (type.flags & (this.ts.TypeFlags.String | this.ts.TypeFlags.StringLike |
-                this.ts.TypeFlags.StringLiteral)) {
+            else if (type.flags &
+                (ts.TypeFlags.String | ts.TypeFlags.StringLike | ts.TypeFlags.StringLiteral)) {
                 return BuiltinType.String;
             }
-            else if (type.flags & (this.ts.TypeFlags.Number | this.ts.TypeFlags.NumberLike)) {
+            else if (type.flags & (ts.TypeFlags.Number | ts.TypeFlags.NumberLike)) {
                 return BuiltinType.Number;
             }
-            else if (type.flags & (this.ts.TypeFlags.Undefined)) {
+            else if (type.flags & (ts.TypeFlags.Undefined)) {
                 return BuiltinType.Undefined;
             }
-            else if (type.flags & (this.ts.TypeFlags.Null)) {
+            else if (type.flags & (ts.TypeFlags.Null)) {
                 return BuiltinType.Null;
             }
         }

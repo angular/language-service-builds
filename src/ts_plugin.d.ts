@@ -12,13 +12,11 @@ import * as ts from 'typescript';
  * @experimental
  */
 export declare class LanguageServicePlugin {
-    private ts;
     private serviceHost;
     private service;
     private host;
     static 'extension-kind': string;
     constructor(config: {
-        ts: typeof ts;
         host: ts.LanguageServiceHost;
         service: ts.LanguageService;
         registry?: ts.DocumentRegistry;
