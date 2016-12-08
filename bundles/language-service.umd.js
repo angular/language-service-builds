@@ -1,5 +1,5 @@
 /**
- * @license Angular v2.3.0-1b54788
+ * @license Angular v2.3.0-4398056
  * (c) 2010-2016 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -997,7 +997,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('2.3.0-1b54788');
+	var /** @type {?} */ VERSION = new Version('2.3.0-4398056');
 
 	/**
 	 *  Allows to refer to references which are not yet defined.
@@ -25773,7 +25773,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('2.3.0-1b54788');
+	var /** @type {?} */ VERSION$1 = new Version('2.3.0-4398056');
 
 	/**
 	 * @return {?}
@@ -39443,17 +39443,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        if (!compiledTemplate) {
 	            var /** @type {?} */ compMeta = this._metadataResolver.getDirectiveMetadata(compType);
 	            assertComponent(compMeta);
-	            var HostClass_1 = (function () {
-	                function HostClass_1() {
-	                }
-	                HostClass_1.overriddenName = identifierName(compMeta.type) + "_Host";
-	                return HostClass_1;
-	            }());
-	            function HostClass_tsickle_Closure_declarations() {
-	                /** @type {?} */
-	                HostClass_1.overriddenName;
-	            }
-	            var /** @type {?} */ hostMeta = createHostComponentMeta(HostClass_1, compMeta);
+	            var /** @type {?} */ hostClass = {
+	                overriddenName: identifierName(compMeta.type) + "_Host",
+	            };
+	            var /** @type {?} */ hostMeta = createHostComponentMeta(hostClass, compMeta);
 	            compiledTemplate = new CompiledTemplate(true, compMeta.selector, compMeta.type, hostMeta, ngModule, [compMeta.type]);
 	            this._compiledHostTemplateCache.set(compType, compiledTemplate);
 	        }
@@ -44187,7 +44180,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$3 = new Version('2.3.0-1b54788');
+	var VERSION$3 = new Version('2.3.0-4398056');
 
 	/**
 	 * @license
@@ -45544,7 +45537,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$4 = new Version('2.3.0-1b54788');
+	var VERSION$4 = new Version('2.3.0-4398056');
 
 	exports['default'] = LanguageServicePlugin;
 	exports.createLanguageService = createLanguageService;
