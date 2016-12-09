@@ -1,5 +1,5 @@
 /**
- * @license Angular v2.3.0-4022173
+ * @license Angular v2.3.0-aaf6e05
  * (c) 2010-2016 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -997,7 +997,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('2.3.0-4022173');
+	var /** @type {?} */ VERSION = new Version('2.3.0-aaf6e05');
 
 	/**
 	 *  Allows to refer to references which are not yet defined.
@@ -24528,17 +24528,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        }
 	        var /** @type {?} */ unit = null;
 	        var /** @type {?} */ bindingType;
-	        var /** @type {?} */ boundPropertyName;
+	        var /** @type {?} */ boundPropertyName = null;
 	        var /** @type {?} */ parts = boundProp.name.split(PROPERTY_PARTS_SEPARATOR);
 	        var /** @type {?} */ securityContexts;
-	        if (parts.length === 1) {
-	            var /** @type {?} */ partValue = parts[0];
-	            boundPropertyName = this._schemaRegistry.getMappedPropName(partValue);
-	            securityContexts = calcPossibleSecurityContexts(this._schemaRegistry, elementSelector, boundPropertyName, false);
-	            bindingType = PropertyBindingType.Property;
-	            this._validatePropertyOrAttributeName(boundPropertyName, boundProp.sourceSpan, false);
-	        }
-	        else {
+	        // Check check for special cases (prefix style, attr, class)
+	        if (parts.length > 1) {
 	            if (parts[0] == ATTRIBUTE_PREFIX) {
 	                boundPropertyName = parts[1];
 	                this._validatePropertyOrAttributeName(boundPropertyName, boundProp.sourceSpan, true);
@@ -24562,11 +24556,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                bindingType = PropertyBindingType.Style;
 	                securityContexts = [SecurityContext.STYLE];
 	            }
-	            else {
-	                this._reportError("Invalid property name '" + boundProp.name + "'", boundProp.sourceSpan);
-	                bindingType = null;
-	                securityContexts = [];
-	            }
+	        }
+	        // If not a special case, use the full property name
+	        if (boundPropertyName === null) {
+	            boundPropertyName = this._schemaRegistry.getMappedPropName(boundProp.name);
+	            securityContexts = calcPossibleSecurityContexts(this._schemaRegistry, elementSelector, boundPropertyName, false);
+	            bindingType = PropertyBindingType.Property;
+	            this._validatePropertyOrAttributeName(boundPropertyName, boundProp.sourceSpan, false);
 	        }
 	        return new BoundElementPropertyAst(boundPropertyName, bindingType, securityContexts.length === 1 ? securityContexts[0] : null, securityContexts.length > 1, boundProp.expression, unit, boundProp.sourceSpan);
 	    };
@@ -25788,7 +25784,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('2.3.0-4022173');
+	var /** @type {?} */ VERSION$1 = new Version('2.3.0-aaf6e05');
 
 	/**
 	 * @return {?}
@@ -44195,7 +44191,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$3 = new Version('2.3.0-4022173');
+	var VERSION$3 = new Version('2.3.0-aaf6e05');
 
 	/**
 	 * @license
@@ -45552,7 +45548,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$4 = new Version('2.3.0-4022173');
+	var VERSION$4 = new Version('2.3.0-aaf6e05');
 
 	exports['default'] = LanguageServicePlugin;
 	exports.createLanguageService = createLanguageService;
