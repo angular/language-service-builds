@@ -1,5 +1,5 @@
 /**
- * @license Angular v2.3.0-b5c4bf1
+ * @license Angular v2.3.0-f0b0762
  * (c) 2010-2016 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -997,7 +997,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('2.3.0-b5c4bf1');
+	var /** @type {?} */ VERSION = new Version('2.3.0-f0b0762');
 
 	/**
 	 *  Allows to refer to references which are not yet defined.
@@ -12545,17 +12545,21 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    /**
 	     * @param {?} element
 	     * @param {?} animationName
+	     * @param {?=} targetPlayer
 	     * @return {?}
 	     */
-	    ViewAnimationMap.prototype.remove = function (element, animationName) {
+	    ViewAnimationMap.prototype.remove = function (element, animationName, targetPlayer) {
+	        if (targetPlayer === void 0) { targetPlayer = null; }
 	        var /** @type {?} */ playersByAnimation = this._map.get(element);
 	        if (playersByAnimation) {
 	            var /** @type {?} */ player = playersByAnimation[animationName];
-	            delete playersByAnimation[animationName];
-	            var /** @type {?} */ index = this._allPlayers.indexOf(player);
-	            this._allPlayers.splice(index, 1);
-	            if (Object.keys(playersByAnimation).length === 0) {
-	                this._map.delete(element);
+	            if (!targetPlayer || player === targetPlayer) {
+	                delete playersByAnimation[animationName];
+	                var /** @type {?} */ index = this._allPlayers.indexOf(player);
+	                this._allPlayers.splice(index, 1);
+	                if (Object.keys(playersByAnimation).length === 0) {
+	                    this._map.delete(element);
+	                }
 	            }
 	        }
 	    };
@@ -12588,26 +12592,27 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @return {?}
 	     */
 	    AnimationViewContext.prototype.queueAnimation = function (element, animationName, player) {
+	        var _this = this;
 	        queueAnimationGlobally(player);
 	        this._players.set(element, animationName, player);
+	        player.onDone(function () { return _this._players.remove(element, animationName, player); });
 	    };
 	    /**
 	     * @param {?} element
-	     * @param {?} animationName
-	     * @param {?=} removeAllAnimations
+	     * @param {?=} animationName
 	     * @return {?}
 	     */
-	    AnimationViewContext.prototype.getAnimationPlayers = function (element, animationName, removeAllAnimations) {
-	        if (removeAllAnimations === void 0) { removeAllAnimations = false; }
+	    AnimationViewContext.prototype.getAnimationPlayers = function (element, animationName) {
+	        if (animationName === void 0) { animationName = null; }
 	        var /** @type {?} */ players = [];
-	        if (removeAllAnimations) {
-	            this._players.findAllPlayersByElement(element).forEach(function (player) { _recursePlayers(player, players); });
-	        }
-	        else {
+	        if (animationName) {
 	            var /** @type {?} */ currentPlayer = this._players.find(element, animationName);
 	            if (currentPlayer) {
 	                _recursePlayers(currentPlayer, players);
 	            }
+	        }
+	        else {
+	            this._players.findAllPlayersByElement(element).forEach(function (player) { return _recursePlayers(player, players); });
 	        }
 	        return players;
 	    };
@@ -25783,7 +25788,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('2.3.0-b5c4bf1');
+	var /** @type {?} */ VERSION$1 = new Version('2.3.0-f0b0762');
 
 	/**
 	 * @return {?}
@@ -37110,8 +37115,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        var /** @type {?} */ statements = [];
 	        statements.push(_PREVIOUS_ANIMATION_PLAYERS
 	            .set(_ANIMATION_FACTORY_VIEW_CONTEXT.callMethod('getAnimationPlayers', [
-	            _ANIMATION_FACTORY_ELEMENT_VAR, literal(this.animationName),
+	            _ANIMATION_FACTORY_ELEMENT_VAR,
 	            _ANIMATION_NEXT_STATE_VAR.equals(literal(EMPTY_STATE$1))
+	                .conditional(NULL_EXPR, literal(this.animationName))
 	        ]))
 	            .toDeclStmt());
 	        statements.push(_ANIMATION_COLLECTED_STYLES.set(_EMPTY_MAP).toDeclStmt());
@@ -44197,7 +44203,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$3 = new Version('2.3.0-b5c4bf1');
+	var VERSION$3 = new Version('2.3.0-f0b0762');
 
 	/**
 	 * @license
@@ -45554,7 +45560,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$4 = new Version('2.3.0-b5c4bf1');
+	var VERSION$4 = new Version('2.3.0-f0b0762');
 
 	exports['default'] = LanguageServicePlugin;
 	exports.createLanguageService = createLanguageService;
