@@ -1,5 +1,5 @@
 /**
- * @license Angular v2.3.0-f0b0762
+ * @license Angular v2.3.0-9a8423d
  * (c) 2010-2016 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -997,7 +997,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('2.3.0-f0b0762');
+	var /** @type {?} */ VERSION = new Version('2.3.0-9a8423d');
 
 	/**
 	 *  Allows to refer to references which are not yet defined.
@@ -21959,12 +21959,12 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        if (!map || typeof name !== 'string') {
 	            return false;
 	        }
-	        var /** @type {?} */ selectables = map.get(name);
+	        var /** @type {?} */ selectables = map.get(name) || [];
 	        var /** @type {?} */ starSelectables = map.get('*');
 	        if (starSelectables) {
 	            selectables = selectables.concat(starSelectables);
 	        }
-	        if (!selectables) {
+	        if (selectables.length === 0) {
 	            return false;
 	        }
 	        var /** @type {?} */ selectable;
@@ -25788,7 +25788,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('2.3.0-f0b0762');
+	var /** @type {?} */ VERSION$1 = new Version('2.3.0-9a8423d');
 
 	/**
 	 * @return {?}
@@ -44203,7 +44203,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$3 = new Version('2.3.0-f0b0762');
+	var VERSION$3 = new Version('2.3.0-9a8423d');
 
 	/**
 	 * @license
@@ -45560,7 +45560,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$4 = new Version('2.3.0-f0b0762');
+	var VERSION$4 = new Version('2.3.0-9a8423d');
 
 	exports['default'] = LanguageServicePlugin;
 	exports.createLanguageService = createLanguageService;
