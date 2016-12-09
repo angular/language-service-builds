@@ -1,5 +1,5 @@
 /**
- * @license Angular v2.3.0-72361fb
+ * @license Angular v2.3.0-56c361f
  * (c) 2010-2016 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -997,7 +997,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('2.3.0-72361fb');
+	var /** @type {?} */ VERSION = new Version('2.3.0-56c361f');
 
 	/**
 	 *  Allows to refer to references which are not yet defined.
@@ -18005,13 +18005,15 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @param {?} placeholderToMessage maps placeholder names to messages (used for nested ICU messages)
 	     * @param {?} meaning
 	     * @param {?} description
+	     * @param {?} id
 	     */
-	    function Message(nodes, placeholders, placeholderToMessage, meaning, description) {
+	    function Message(nodes, placeholders, placeholderToMessage, meaning, description, id) {
 	        this.nodes = nodes;
 	        this.placeholders = placeholders;
 	        this.placeholderToMessage = placeholderToMessage;
 	        this.meaning = meaning;
 	        this.description = description;
+	        this.id = id;
 	    }
 	    return Message;
 	}());
@@ -18388,8 +18390,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 */
 	function createI18nMessageFactory(interpolationConfig) {
 	    var /** @type {?} */ visitor = new _I18nVisitor(_expParser, interpolationConfig);
-	    return function (nodes, meaning, description) {
-	        return visitor.toI18nMessage(nodes, meaning, description);
+	    return function (nodes, meaning, description, id) {
+	        return visitor.toI18nMessage(nodes, meaning, description, id);
 	    };
 	}
 	var _I18nVisitor = (function () {
@@ -18405,16 +18407,17 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @param {?} nodes
 	     * @param {?} meaning
 	     * @param {?} description
+	     * @param {?} id
 	     * @return {?}
 	     */
-	    _I18nVisitor.prototype.toI18nMessage = function (nodes, meaning, description) {
+	    _I18nVisitor.prototype.toI18nMessage = function (nodes, meaning, description, id) {
 	        this._isIcu = nodes.length == 1 && nodes[0] instanceof Expansion;
 	        this._icuDepth = 0;
 	        this._placeholderRegistry = new PlaceholderRegistry();
 	        this._placeholderToContent = {};
 	        this._placeholderToMessage = {};
 	        var /** @type {?} */ i18nodes = visitAll(this, nodes, {});
-	        return new Message(i18nodes, this._placeholderToContent, this._placeholderToMessage, meaning, description);
+	        return new Message(i18nodes, this._placeholderToContent, this._placeholderToMessage, meaning, description, id);
 	    };
 	    /**
 	     * @param {?} el
@@ -18490,7 +18493,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        // TODO(vicb): add a html.Node -> i18n.Message cache to avoid having to re-create the msg
 	        var /** @type {?} */ phName = this._placeholderRegistry.getPlaceholderName('ICU', icu.sourceSpan.toString());
 	        var /** @type {?} */ visitor = new _I18nVisitor(this._expressionParser, this._interpolationConfig);
-	        this._placeholderToMessage[phName] = visitor.toI18nMessage([icu], '', '');
+	        this._placeholderToMessage[phName] = visitor.toI18nMessage([icu], '', '', '');
 	        return new IcuPlaceholder(i18nIcu, phName, icu.sourceSpan);
 	    };
 	    /**
@@ -18575,6 +18578,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	var /** @type {?} */ _I18N_ATTR = 'i18n';
 	var /** @type {?} */ _I18N_ATTR_PREFIX = 'i18n-';
 	var /** @type {?} */ _I18N_COMMENT_PREFIX_REGEXP = /^i18n:?/;
+	var /** @type {?} */ MEANING_SEPARATOR = '|';
+	var /** @type {?} */ ID_SEPARATOR = '@@';
 	/**
 	 * @param {?} nodes
 	 * @param {?} translations
@@ -18872,17 +18877,17 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    };
 	    /**
 	     * @param {?} ast
-	     * @param {?=} meaningAndDesc
+	     * @param {?=} msgMeta
 	     * @return {?}
 	     */
-	    _Visitor.prototype._addMessage = function (ast, meaningAndDesc) {
+	    _Visitor.prototype._addMessage = function (ast, msgMeta) {
 	        if (ast.length == 0 ||
 	            ast.length == 1 && ast[0] instanceof Attribute$1 && !((ast[0])).value) {
 	            // Do not create empty messages
 	            return;
 	        }
-	        var _a = _splitMeaningAndDesc(meaningAndDesc), meaning = _a[0], description = _a[1];
-	        var /** @type {?} */ message = this._createI18nMessage(ast, meaning, description);
+	        var _a = _parseMessageMeta(msgMeta), meaning = _a.meaning, description = _a.description, id = _a.id;
+	        var /** @type {?} */ message = this._createI18nMessage(ast, meaning, description, id);
 	        this._messages.push(message);
 	        return message;
 	    };
@@ -18912,7 +18917,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        attributes.forEach(function (attr) {
 	            if (attr.name.startsWith(_I18N_ATTR_PREFIX)) {
 	                i18nAttributeMeanings[attr.name.slice(_I18N_ATTR_PREFIX.length)] =
-	                    _splitMeaningAndDesc(attr.value)[0];
+	                    _parseMessageMeta(attr.value).meaning;
 	            }
 	        });
 	        var /** @type {?} */ translatedAttributes = [];
@@ -18923,7 +18928,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            }
 	            if (attr.value && attr.value != '' && i18nAttributeMeanings.hasOwnProperty(attr.name)) {
 	                var /** @type {?} */ meaning = i18nAttributeMeanings[attr.name];
-	                var /** @type {?} */ message = _this._createI18nMessage([attr], meaning, '');
+	                var /** @type {?} */ message = _this._createI18nMessage([attr], meaning, '', '');
 	                var /** @type {?} */ nodes = _this._translations.get(message);
 	                if (nodes) {
 	                    if (nodes[0] instanceof Text) {
@@ -19055,11 +19060,16 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @param {?} i18n
 	 * @return {?}
 	 */
-	function _splitMeaningAndDesc(i18n) {
+	function _parseMessageMeta(i18n) {
 	    if (!i18n)
-	        return ['', ''];
-	    var /** @type {?} */ pipeIndex = i18n.indexOf('|');
-	    return pipeIndex == -1 ? ['', i18n] : [i18n.slice(0, pipeIndex), i18n.slice(pipeIndex + 1)];
+	        return { meaning: '', description: '', id: '' };
+	    var /** @type {?} */ idIndex = i18n.indexOf(ID_SEPARATOR);
+	    var /** @type {?} */ descIndex = i18n.indexOf(MEANING_SEPARATOR);
+	    var _a = (idIndex > -1) ? [i18n.slice(0, idIndex), i18n.slice(idIndex + 2)] :
+	        [i18n, ''], meaningAndDesc = _a[0], id = _a[1];
+	    var _b = (descIndex > -1) ? [meaningAndDesc.slice(0, descIndex), meaningAndDesc.slice(descIndex + 1)] :
+	        ['', meaningAndDesc], meaning = _b[0], description = _b[1];
+	    return { meaning: meaning, description: description, id: id };
 	}
 
 	var XmlTagDefinition = (function () {
@@ -19138,7 +19148,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @return {?}
 	 */
 	function digest(message) {
-	    return sha1(serializeNodes(message.nodes).join('') + ("[" + message.meaning + "]"));
+	    return message.id || sha1(serializeNodes(message.nodes).join('') + ("[" + message.meaning + "]"));
 	}
 	/**
 	 * @param {?} message
@@ -19147,7 +19157,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	function decimalDigest(message) {
 	    var /** @type {?} */ visitor = new _SerializerIgnoreIcuExpVisitor();
 	    var /** @type {?} */ parts = message.nodes.map(function (a) { return a.visit(visitor, null); });
-	    return computeMsgId(parts.join(''), message.meaning);
+	    return message.id || computeMsgId(parts.join(''), message.meaning);
 	}
 	/**
 	 *  Serialize the i18n ast to something xml-like in order to generate an UID.
@@ -25773,7 +25783,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('2.3.0-72361fb');
+	var /** @type {?} */ VERSION$1 = new Version('2.3.0-56c361f');
 
 	/**
 	 * @return {?}
@@ -44187,7 +44197,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$3 = new Version('2.3.0-72361fb');
+	var VERSION$3 = new Version('2.3.0-56c361f');
 
 	/**
 	 * @license
@@ -45544,7 +45554,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$4 = new Version('2.3.0-72361fb');
+	var VERSION$4 = new Version('2.3.0-56c361f');
 
 	exports['default'] = LanguageServicePlugin;
 	exports.createLanguageService = createLanguageService;
