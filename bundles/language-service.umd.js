@@ -1,5 +1,5 @@
 /**
- * @license Angular v2.3.0-9ec0a4e
+ * @license Angular v2.3.0-2b90cd5
  * (c) 2010-2016 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -997,7 +997,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('2.3.0-9ec0a4e');
+	var /** @type {?} */ VERSION = new Version('2.3.0-2b90cd5');
 
 	/**
 	 *  Allows to refer to references which are not yet defined.
@@ -15460,7 +15460,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                while (this.optionalCharacter($COLON)) {
 	                    args.push(this.parseExpression());
 	                }
-	                result = new BindingPipe(this.span(result.span.start - this.offset), result, name_1, args);
+	                result = new BindingPipe(this.span(result.span.start), result, name_1, args);
 	            } while (this.optionalOperator('|'));
 	        }
 	        return result;
@@ -16073,6 +16073,43 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     */
 	    ParseLocation.prototype.toString = function () {
 	        return isPresent$1(this.offset) ? this.file.url + "@" + this.line + ":" + this.col : this.file.url;
+	    };
+	    /**
+	     * @param {?} delta
+	     * @return {?}
+	     */
+	    ParseLocation.prototype.moveBy = function (delta) {
+	        var /** @type {?} */ source = this.file.content;
+	        var /** @type {?} */ len = source.length;
+	        var /** @type {?} */ offset = this.offset;
+	        var /** @type {?} */ line = this.line;
+	        var /** @type {?} */ col = this.col;
+	        while (offset > 0 && delta < 0) {
+	            offset--;
+	            delta++;
+	            var /** @type {?} */ ch = source.charCodeAt(offset);
+	            if (ch == $LF) {
+	                line--;
+	                var /** @type {?} */ priorLine = source.substr(0, offset - 1).lastIndexOf(String.fromCharCode($LF));
+	                col = priorLine > 0 ? offset - priorLine : offset;
+	            }
+	            else {
+	                col--;
+	            }
+	        }
+	        while (offset < len && delta > 0) {
+	            var /** @type {?} */ ch = source.charCodeAt(offset);
+	            offset++;
+	            delta--;
+	            if (ch == $LF) {
+	                line++;
+	                col = 0;
+	            }
+	            else {
+	                col++;
+	            }
+	        }
+	        return new ParseLocation(this.file, offset, line, col);
 	    };
 	    return ParseLocation;
 	}());
@@ -24686,9 +24723,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        if (isPresent$1(ast)) {
 	            var /** @type {?} */ collector = new PipeCollector();
 	            ast.visit(collector);
-	            collector.pipes.forEach(function (pipeName) {
+	            collector.pipes.forEach(function (ast, pipeName) {
 	                if (!_this.pipesByName.has(pipeName)) {
-	                    _this._reportError("The pipe '" + pipeName + "' could not be found", sourceSpan);
+	                    _this._reportError("The pipe '" + pipeName + "' could not be found", new ParseSourceSpan(sourceSpan.start.moveBy(ast.span.start), sourceSpan.start.moveBy(ast.span.end)));
 	                }
 	            });
 	        }
@@ -24712,7 +24749,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    __extends$34(PipeCollector, _super);
 	    function PipeCollector() {
 	        _super.apply(this, arguments);
-	        this.pipes = new Set();
+	        this.pipes = new Map();
 	    }
 	    /**
 	     * @param {?} ast
@@ -24720,7 +24757,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @return {?}
 	     */
 	    PipeCollector.prototype.visitPipe = function (ast, context) {
-	        this.pipes.add(ast.name);
+	        this.pipes.set(ast.name, ast);
 	        ast.exp.visit(this);
 	        this.visitAll(ast.args, context);
 	        return null;
@@ -25788,7 +25825,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('2.3.0-9ec0a4e');
+	var /** @type {?} */ VERSION$1 = new Version('2.3.0-2b90cd5');
 
 	/**
 	 * @return {?}
@@ -40389,20 +40426,23 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    };
 	    AstType.prototype.visitBinary = function (ast) {
 	        // Treat undefined and null as other.
-	        function normalize(kind) {
+	        function normalize(kind, other) {
 	            switch (kind) {
 	                case BuiltinType$1.Undefined:
 	                case BuiltinType$1.Null:
-	                    return BuiltinType$1.Other;
+	                    return normalize(other, BuiltinType$1.Other);
 	            }
 	            return kind;
 	        }
 	        var leftType = this.getType(ast.left);
 	        var rightType = this.getType(ast.right);
-	        var leftKind = normalize(this.query.getTypeKind(leftType));
-	        var rightKind = normalize(this.query.getTypeKind(rightType));
+	        var leftRawKind = this.query.getTypeKind(leftType);
+	        var rightRawKind = this.query.getTypeKind(rightType);
+	        var leftKind = normalize(leftRawKind, rightRawKind);
+	        var rightKind = normalize(rightRawKind, leftRawKind);
 	        // The following swtich implements operator typing similar to the
 	        // type production tables in the TypeScript specification.
+	        // https://github.com/Microsoft/TypeScript/blob/v1.8.10/doc/spec.md#4.19
 	        var operKind = leftKind << 8 | rightKind;
 	        switch (ast.operation) {
 	            case '*':
@@ -40582,6 +40622,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                return this.query.getBuiltinType(BuiltinType$1.Boolean);
 	            case null:
 	                return this.query.getBuiltinType(BuiltinType$1.Null);
+	            case undefined:
+	                return this.query.getBuiltinType(BuiltinType$1.Undefined);
 	            default:
 	                switch (typeof ast.value) {
 	                    case 'string':
@@ -44201,7 +44243,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$3 = new Version('2.3.0-9ec0a4e');
+	var VERSION$3 = new Version('2.3.0-2b90cd5');
 
 	/**
 	 * @license
@@ -45572,7 +45614,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$4 = new Version('2.3.0-9ec0a4e');
+	var VERSION$4 = new Version('2.3.0-2b90cd5');
 
 	exports['default'] = LanguageServicePlugin;
 	exports.createLanguageService = createLanguageService;

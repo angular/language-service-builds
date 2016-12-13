@@ -194,20 +194,23 @@ var AstType = (function () {
     };
     AstType.prototype.visitBinary = function (ast) {
         // Treat undefined and null as other.
-        function normalize(kind) {
+        function normalize(kind, other) {
             switch (kind) {
                 case BuiltinType.Undefined:
                 case BuiltinType.Null:
-                    return BuiltinType.Other;
+                    return normalize(other, BuiltinType.Other);
             }
             return kind;
         }
         var leftType = this.getType(ast.left);
         var rightType = this.getType(ast.right);
-        var leftKind = normalize(this.query.getTypeKind(leftType));
-        var rightKind = normalize(this.query.getTypeKind(rightType));
+        var leftRawKind = this.query.getTypeKind(leftType);
+        var rightRawKind = this.query.getTypeKind(rightType);
+        var leftKind = normalize(leftRawKind, rightRawKind);
+        var rightKind = normalize(rightRawKind, leftRawKind);
         // The following swtich implements operator typing similar to the
         // type production tables in the TypeScript specification.
+        // https://github.com/Microsoft/TypeScript/blob/v1.8.10/doc/spec.md#4.19
         var operKind = leftKind << 8 | rightKind;
         switch (ast.operation) {
             case '*':
@@ -387,6 +390,8 @@ var AstType = (function () {
                 return this.query.getBuiltinType(BuiltinType.Boolean);
             case null:
                 return this.query.getBuiltinType(BuiltinType.Null);
+            case undefined:
+                return this.query.getBuiltinType(BuiltinType.Undefined);
             default:
                 switch (typeof ast.value) {
                     case 'string':
