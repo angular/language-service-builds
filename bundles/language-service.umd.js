@@ -1,5 +1,5 @@
 /**
- * @license Angular v2.3.0-e23076f
+ * @license Angular v2.3.0-6f330a5
  * (c) 2010-2016 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -997,7 +997,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('2.3.0-e23076f');
+	var /** @type {?} */ VERSION = new Version('2.3.0-6f330a5');
 
 	/**
 	 *  Allows to refer to references which are not yet defined.
@@ -25784,7 +25784,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('2.3.0-e23076f');
+	var /** @type {?} */ VERSION$1 = new Version('2.3.0-6f330a5');
 
 	/**
 	 * @return {?}
@@ -44191,7 +44191,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$3 = new Version('2.3.0-e23076f');
+	var VERSION$3 = new Version('2.3.0-6f330a5');
 
 	/**
 	 * @license
@@ -44755,28 +44755,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        this.fetchPipes = fetchPipes;
 	        this.typeCache = new Map();
 	    }
-	    TypeScriptSymbolQuery.prototype.getTypeKind = function (symbol) {
-	        var type = this.getTsTypeOf(symbol);
-	        if (type) {
-	            if (type.flags & ts.TypeFlags.Any) {
-	                return BuiltinType$1.Any;
-	            }
-	            else if (type.flags &
-	                (ts.TypeFlags.String | ts.TypeFlags.StringLike | ts.TypeFlags.StringLiteral)) {
-	                return BuiltinType$1.String;
-	            }
-	            else if (type.flags & (ts.TypeFlags.Number | ts.TypeFlags.NumberLike)) {
-	                return BuiltinType$1.Number;
-	            }
-	            else if (type.flags & (ts.TypeFlags.Undefined)) {
-	                return BuiltinType$1.Undefined;
-	            }
-	            else if (type.flags & (ts.TypeFlags.Null)) {
-	                return BuiltinType$1.Null;
-	            }
-	        }
-	        return BuiltinType$1.Other;
-	    };
+	    TypeScriptSymbolQuery.prototype.getTypeKind = function (symbol) { return typeKindOf(this.getTsTypeOf(symbol)); };
 	    TypeScriptSymbolQuery.prototype.getBuiltinType = function (kind) {
 	        // TODO: Replace with typeChecker API when available.
 	        var result = this.typeCache.get(kind);
@@ -45491,6 +45470,41 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        }
 	    }
 	}
+	function typeKindOf(type) {
+	    if (type) {
+	        if (type.flags & ts.TypeFlags.Any) {
+	            return BuiltinType$1.Any;
+	        }
+	        else if (type.flags & (ts.TypeFlags.String | ts.TypeFlags.StringLike | ts.TypeFlags.StringLiteral)) {
+	            return BuiltinType$1.String;
+	        }
+	        else if (type.flags & (ts.TypeFlags.Number | ts.TypeFlags.NumberLike)) {
+	            return BuiltinType$1.Number;
+	        }
+	        else if (type.flags & (ts.TypeFlags.Undefined)) {
+	            return BuiltinType$1.Undefined;
+	        }
+	        else if (type.flags & (ts.TypeFlags.Null)) {
+	            return BuiltinType$1.Null;
+	        }
+	        else if (type.flags & ts.TypeFlags.Union) {
+	            // If all the constituent types of a union are the same kind, it is also that kind.
+	            var candidate = void 0;
+	            var unionType = type;
+	            if (unionType.types.length > 0) {
+	                candidate = typeKindOf(unionType.types[0]);
+	                for (var _i = 0, _a = unionType.types; _i < _a.length; _i++) {
+	                    var subType = _a[_i];
+	                    if (candidate != typeKindOf(subType)) {
+	                        return BuiltinType$1.Other;
+	                    }
+	                }
+	            }
+	            return candidate;
+	        }
+	    }
+	    return BuiltinType$1.Other;
+	}
 
 	/** A plugin to TypeScript's langauge service that provide language services for
 	 * templates in string literals.
@@ -45548,7 +45562,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$4 = new Version('2.3.0-e23076f');
+	var VERSION$4 = new Version('2.3.0-6f330a5');
 
 	exports['default'] = LanguageServicePlugin;
 	exports.createLanguageService = createLanguageService;

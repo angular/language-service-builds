@@ -535,28 +535,7 @@ var TypeScriptSymbolQuery = (function () {
         this.fetchPipes = fetchPipes;
         this.typeCache = new Map();
     }
-    TypeScriptSymbolQuery.prototype.getTypeKind = function (symbol) {
-        var type = this.getTsTypeOf(symbol);
-        if (type) {
-            if (type.flags & ts.TypeFlags.Any) {
-                return BuiltinType.Any;
-            }
-            else if (type.flags &
-                (ts.TypeFlags.String | ts.TypeFlags.StringLike | ts.TypeFlags.StringLiteral)) {
-                return BuiltinType.String;
-            }
-            else if (type.flags & (ts.TypeFlags.Number | ts.TypeFlags.NumberLike)) {
-                return BuiltinType.Number;
-            }
-            else if (type.flags & (ts.TypeFlags.Undefined)) {
-                return BuiltinType.Undefined;
-            }
-            else if (type.flags & (ts.TypeFlags.Null)) {
-                return BuiltinType.Null;
-            }
-        }
-        return BuiltinType.Other;
-    };
+    TypeScriptSymbolQuery.prototype.getTypeKind = function (symbol) { return typeKindOf(this.getTsTypeOf(symbol)); };
     TypeScriptSymbolQuery.prototype.getBuiltinType = function (kind) {
         // TODO: Replace with typeChecker API when available.
         var result = this.typeCache.get(kind);
@@ -1270,5 +1249,40 @@ function getTypeParameterOf(type, name) {
             return typeArguments[0];
         }
     }
+}
+function typeKindOf(type) {
+    if (type) {
+        if (type.flags & ts.TypeFlags.Any) {
+            return BuiltinType.Any;
+        }
+        else if (type.flags & (ts.TypeFlags.String | ts.TypeFlags.StringLike | ts.TypeFlags.StringLiteral)) {
+            return BuiltinType.String;
+        }
+        else if (type.flags & (ts.TypeFlags.Number | ts.TypeFlags.NumberLike)) {
+            return BuiltinType.Number;
+        }
+        else if (type.flags & (ts.TypeFlags.Undefined)) {
+            return BuiltinType.Undefined;
+        }
+        else if (type.flags & (ts.TypeFlags.Null)) {
+            return BuiltinType.Null;
+        }
+        else if (type.flags & ts.TypeFlags.Union) {
+            // If all the constituent types of a union are the same kind, it is also that kind.
+            var candidate = void 0;
+            var unionType = type;
+            if (unionType.types.length > 0) {
+                candidate = typeKindOf(unionType.types[0]);
+                for (var _i = 0, _a = unionType.types; _i < _a.length; _i++) {
+                    var subType = _a[_i];
+                    if (candidate != typeKindOf(subType)) {
+                        return BuiltinType.Other;
+                    }
+                }
+            }
+            return candidate;
+        }
+    }
+    return BuiltinType.Other;
 }
 //# sourceMappingURL=typescript_host.js.map
