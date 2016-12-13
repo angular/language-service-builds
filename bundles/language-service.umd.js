@@ -1,5 +1,5 @@
 /**
- * @license Angular v2.3.0-4b3d135
+ * @license Angular v2.3.0-9ec0a4e
  * (c) 2010-2016 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -997,7 +997,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('2.3.0-4b3d135');
+	var /** @type {?} */ VERSION = new Version('2.3.0-9ec0a4e');
 
 	/**
 	 *  Allows to refer to references which are not yet defined.
@@ -25788,7 +25788,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('2.3.0-4b3d135');
+	var /** @type {?} */ VERSION$1 = new Version('2.3.0-9ec0a4e');
 
 	/**
 	 * @return {?}
@@ -40212,8 +40212,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	function getExpressionDiagnostics(scope, ast, query) {
-	    var analyzer = new AstType(scope, query);
+	function getExpressionDiagnostics(scope, ast, query, context) {
+	    if (context === void 0) { context = {}; }
+	    var analyzer = new AstType(scope, query, context);
 	    analyzer.getDiagnostics(ast);
 	    return analyzer.diagnostics;
 	}
@@ -40223,7 +40224,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        return undefined;
 	    var tail = path.tail;
 	    var result = scope;
-	    function getType(ast) { return new AstType(scope, query).getType(ast); }
+	    function getType(ast) { return new AstType(scope, query, {}).getType(ast); }
 	    // If the completion request is in a not in a pipe or property access then the global scope
 	    // (that is the scope of the implicit receiver) is the right scope as the user is typing the
 	    // beginning of an expression.
@@ -40276,7 +40277,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    if (path.empty)
 	        return undefined;
 	    var tail = path.tail;
-	    function getType(ast) { return new AstType(scope, query).getType(ast); }
+	    function getType(ast) { return new AstType(scope, query, {}).getType(ast); }
 	    var symbol = undefined;
 	    var span = undefined;
 	    // If the completion request is in a not in a pipe or property access then the global scope
@@ -40372,14 +40373,18 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	}());
 	// AstType calculatetype of the ast given AST element.
 	var AstType = (function () {
-	    function AstType(scope, query) {
+	    function AstType(scope, query, context) {
 	        this.scope = scope;
 	        this.query = query;
+	        this.context = context;
 	    }
 	    AstType.prototype.getType = function (ast) { return ast.visit(this); };
 	    AstType.prototype.getDiagnostics = function (ast) {
 	        this.diagnostics = [];
-	        ast.visit(this);
+	        var type = ast.visit(this);
+	        if (this.context.event && type.callable) {
+	            this.reportWarning('Unexpected callable expression. Expected a method call', ast);
+	        }
 	        return this.diagnostics;
 	    };
 	    AstType.prototype.visitBinary = function (ast) {
@@ -40911,7 +40916,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    if (ngForDirective) {
 	        var ngForOfBinding = ngForDirective.inputs.find(function (i) { return i.directiveName == 'ngForOf'; });
 	        if (ngForOfBinding) {
-	            var bindingType = new AstType(info.template.members, info.template.query).getType(ngForOfBinding.value);
+	            var bindingType = new AstType(info.template.members, info.template.query, {}).getType(ngForOfBinding.value);
 	            if (bindingType) {
 	                return info.template.query.getElementType(bindingType);
 	            }
@@ -42237,8 +42242,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    ExpressionDiagnosticsVisitor.prototype.diagnoseExpression = function (ast, offset, includeEvent) {
 	        var _this = this;
 	        var scope = this.getExpressionScope(this.path, includeEvent);
-	        (_a = this.diagnostics).push.apply(_a, getExpressionDiagnostics(scope, ast, this.info.template.query)
-	            .map(function (d) { return ({
+	        (_a = this.diagnostics).push.apply(_a, getExpressionDiagnostics(scope, ast, this.info.template.query, {
+	            event: includeEvent
+	        }).map(function (d) { return ({
 	            span: offsetSpan(d.ast.span, offset + _this.info.template.span.start),
 	            kind: d.kind,
 	            message: d.message
@@ -44195,7 +44201,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$3 = new Version('2.3.0-4b3d135');
+	var VERSION$3 = new Version('2.3.0-9ec0a4e');
 
 	/**
 	 * @license
@@ -45566,7 +45572,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$4 = new Version('2.3.0-4b3d135');
+	var VERSION$4 = new Version('2.3.0-9ec0a4e');
 
 	exports['default'] = LanguageServicePlugin;
 	exports.createLanguageService = createLanguageService;
