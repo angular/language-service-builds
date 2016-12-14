@@ -1,5 +1,5 @@
 /**
- * @license Angular v2.3.0-c65b4fa
+ * @license Angular v2.3.0-fa9e21e
  * (c) 2010-2016 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -997,7 +997,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('2.3.0-c65b4fa');
+	var /** @type {?} */ VERSION = new Version('2.3.0-fa9e21e');
 
 	/**
 	 *  Allows to refer to references which are not yet defined.
@@ -25875,7 +25875,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('2.3.0-c65b4fa');
+	var /** @type {?} */ VERSION$1 = new Version('2.3.0-fa9e21e');
 
 	/**
 	 * @return {?}
@@ -37562,7 +37562,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	var /** @type {?} */ SUPPORTED_SCHEMA_VERSION = 2;
+	var /** @type {?} */ SUPPORTED_SCHEMA_VERSION = 3;
 	var /** @type {?} */ ANGULAR_IMPORT_LOCATIONS = {
 	    coreDecorators: '@angular/core/src/metadata',
 	    diDecorators: '@angular/core/src/di/metadata',
@@ -38358,7 +38358,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                    { __symbolic: 'module', version: SUPPORTED_SCHEMA_VERSION, module: module, metadata: {} };
 	            }
 	            if (moduleMetadata['version'] != SUPPORTED_SCHEMA_VERSION) {
-	                this.reportError(new Error("Metadata version mismatch for module " + module + ", found version " + moduleMetadata['version'] + ", expected " + SUPPORTED_SCHEMA_VERSION), null);
+	                var /** @type {?} */ errorMessage = moduleMetadata['version'] == 2 ?
+	                    "Unsupported metadata version " + moduleMetadata['version'] + " for module " + module + ". This module should be compiled with a newer version of ngc" :
+	                    "Metadata version mismatch for module " + module + ", found version " + moduleMetadata['version'] + ", expected " + SUPPORTED_SCHEMA_VERSION;
+	                this.reportError(new Error(errorMessage), null);
 	            }
 	            this.metadataCache.set(module, moduleMetadata);
 	        }
@@ -42602,7 +42605,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	// leave VERSION the same. If possible, as many versions of the metadata that can represent the
 	// semantics of the file in an array. For example, when generating a version 2 file, if version 1
 	// can accurately represent the metadata, generate both version 1 and version 2 in an array.
-	var VERSION$2 = 2;
+	var VERSION$2 = 3;
 	function isModuleMetadata(value) {
 	    return value && value.__symbolic === 'module';
 	}
@@ -43791,7 +43794,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            else if (strict) {
 	                validateMetadata(sourceFile, nodeMap, metadata);
 	            }
-	            var result = { __symbolic: 'module', version: schema_1.VERSION, metadata: metadata };
+	            var result = {
+	                __symbolic: 'module',
+	                version: this.options.version || schema_1.VERSION, metadata: metadata
+	            };
 	            if (exports)
 	                result.exports = exports;
 	            return result;
@@ -44153,30 +44159,30 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                (Array.isArray(metadataOrMetadatas) ? metadataOrMetadatas : [metadataOrMetadatas]) :
 	                [];
 	            var v1Metadata = metadatas_1.find(function (m) { return m['version'] === 1; });
-	            var v2Metadata = metadatas_1.find(function (m) { return m['version'] === 2; });
-	            if (!v2Metadata && v1Metadata) {
-	                // patch up v1 to v2 by merging the metadata with metadata collected from the d.ts file
+	            var v3Metadata = metadatas_1.find(function (m) { return m['version'] === 3; });
+	            if (!v3Metadata && v1Metadata) {
+	                // patch up v1 to v3 by merging the metadata with metadata collected from the d.ts file
 	                // as the only difference between the versions is whether all exports are contained in
 	                // the metadata and the `extends` clause.
-	                v2Metadata = { '__symbolic': 'module', 'version': 2, 'metadata': {} };
+	                v3Metadata = { '__symbolic': 'module', 'version': 3, 'metadata': {} };
 	                if (v1Metadata.exports) {
-	                    v2Metadata.exports = v1Metadata.exports;
+	                    v3Metadata.exports = v1Metadata.exports;
 	                }
 	                for (var prop in v1Metadata.metadata) {
-	                    v2Metadata.metadata[prop] = v1Metadata.metadata[prop];
+	                    v3Metadata.metadata[prop] = v1Metadata.metadata[prop];
 	                }
 	                var exports_1 = this.metadataCollector.getMetadata(this.getSourceFile(dtsFilePath));
 	                if (exports_1) {
 	                    for (var prop in exports_1.metadata) {
-	                        if (!v2Metadata.metadata[prop]) {
-	                            v2Metadata.metadata[prop] = exports_1.metadata[prop];
+	                        if (!v3Metadata.metadata[prop]) {
+	                            v3Metadata.metadata[prop] = exports_1.metadata[prop];
 	                        }
 	                    }
 	                    if (exports_1.exports) {
-	                        v2Metadata.exports = exports_1.exports;
+	                        v3Metadata.exports = exports_1.exports;
 	                    }
 	                }
-	                metadatas_1.push(v2Metadata);
+	                metadatas_1.push(v3Metadata);
 	            }
 	            this.resolverCache.set(filePath, metadatas_1);
 	            return metadatas_1;
@@ -44384,7 +44390,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$3 = new Version('2.3.0-c65b4fa');
+	var VERSION$3 = new Version('2.3.0-fa9e21e');
 
 	/**
 	 * @license
@@ -45781,7 +45787,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$4 = new Version('2.3.0-c65b4fa');
+	var VERSION$4 = new Version('2.3.0-fa9e21e');
 
 	exports['default'] = LanguageServicePlugin;
 	exports.createLanguageService = createLanguageService;
