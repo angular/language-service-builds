@@ -1,5 +1,5 @@
 /**
- * @license Angular v2.3.0-5031adc
+ * @license Angular v2.3.0-d4ddb60
  * (c) 2010-2016 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -997,7 +997,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('2.3.0-5031adc');
+	var /** @type {?} */ VERSION = new Version('2.3.0-d4ddb60');
 
 	/**
 	 *  Allows to refer to references which are not yet defined.
@@ -3800,6 +3800,15 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        throw _throwError();
 	    };
 	    /**
+	     *  Exposes the CSS-style selectors that have been used in `ngContent` directives within
+	      * the template of the given component.
+	      * This is used by the `upgrade` library to compile the appropriate transclude content
+	      * in the Angular 1 wrapper component.
+	     * @param {?} component
+	     * @return {?}
+	     */
+	    Compiler.prototype.getNgContentSelectors = function (component) { throw _throwError(); };
+	    /**
 	     *  Clears all caches.
 	     * @return {?}
 	     */
@@ -3865,6 +3874,1454 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        this.nativeElement = nativeElement;
 	    }
 	    return ElementRef;
+	}());
+
+	var commonjsGlobal = typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
+
+	function createCommonjsModule(fn, module) {
+		return module = { exports: {} }, fn(module, module.exports), module.exports;
+	}
+
+	var __moduleExports$1 = createCommonjsModule(function (module, exports) {
+	"use strict";
+	/**
+	 * window: browser in DOM main thread
+	 * self: browser in WebWorker
+	 * global: Node.js/other
+	 */
+	exports.root = (typeof window == 'object' && window.window === window && window
+	    || typeof self == 'object' && self.self === self && self
+	    || typeof commonjsGlobal == 'object' && commonjsGlobal.global === commonjsGlobal && commonjsGlobal);
+	if (!exports.root) {
+	    throw new Error('RxJS could not find any global context (window, self, global)');
+	}
+	});
+
+	var root_1$1 = __moduleExports$1.root;
+
+	function isFunction(x) {
+	    return typeof x === 'function';
+	}
+	var isFunction_2 = isFunction;
+
+	var __moduleExports$4 = {
+		isFunction: isFunction_2
+	};
+
+	var isArray_1$1 = Array.isArray || (function (x) { return x && typeof x.length === 'number'; });
+
+	var __moduleExports$6 = {
+		isArray: isArray_1$1
+	};
+
+	function isObject(x) {
+	    return x != null && typeof x === 'object';
+	}
+	var isObject_2 = isObject;
+
+	var __moduleExports$7 = {
+		isObject: isObject_2
+	};
+
+	// typeof any so that it we don't have to cast when comparing a result to the error object
+	var errorObject_1$2 = { e: {} };
+
+	var __moduleExports$9 = {
+		errorObject: errorObject_1$2
+	};
+
+	var errorObject_1$1 = __moduleExports$9;
+	var tryCatchTarget;
+	function tryCatcher() {
+	    try {
+	        return tryCatchTarget.apply(this, arguments);
+	    }
+	    catch (e) {
+	        errorObject_1$1.errorObject.e = e;
+	        return errorObject_1$1.errorObject;
+	    }
+	}
+	function tryCatch(fn) {
+	    tryCatchTarget = fn;
+	    return tryCatcher;
+	}
+	var tryCatch_2 = tryCatch;
+	;
+
+	var __moduleExports$8 = {
+		tryCatch: tryCatch_2
+	};
+
+	var __extends$9 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
+	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+	    function __() { this.constructor = d; }
+	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+	};
+	/**
+	 * An error thrown when one or more errors have occurred during the
+	 * `unsubscribe` of a {@link Subscription}.
+	 */
+	var UnsubscriptionError = (function (_super) {
+	    __extends$9(UnsubscriptionError, _super);
+	    function UnsubscriptionError(errors) {
+	        _super.call(this);
+	        this.errors = errors;
+	        var err = Error.call(this, errors ?
+	            errors.length + " errors occurred during unsubscription:\n  " + errors.map(function (err, i) { return ((i + 1) + ") " + err.toString()); }).join('\n  ') : '');
+	        this.name = err.name = 'UnsubscriptionError';
+	        this.stack = err.stack;
+	        this.message = err.message;
+	    }
+	    return UnsubscriptionError;
+	}(Error));
+	var UnsubscriptionError_2 = UnsubscriptionError;
+
+	var __moduleExports$10 = {
+		UnsubscriptionError: UnsubscriptionError_2
+	};
+
+	var isArray_1 = __moduleExports$6;
+	var isObject_1 = __moduleExports$7;
+	var isFunction_1$1 = __moduleExports$4;
+	var tryCatch_1 = __moduleExports$8;
+	var errorObject_1 = __moduleExports$9;
+	var UnsubscriptionError_1 = __moduleExports$10;
+	/**
+	 * Represents a disposable resource, such as the execution of an Observable. A
+	 * Subscription has one important method, `unsubscribe`, that takes no argument
+	 * and just disposes the resource held by the subscription.
+	 *
+	 * Additionally, subscriptions may be grouped together through the `add()`
+	 * method, which will attach a child Subscription to the current Subscription.
+	 * When a Subscription is unsubscribed, all its children (and its grandchildren)
+	 * will be unsubscribed as well.
+	 *
+	 * @class Subscription
+	 */
+	var Subscription = (function () {
+	    /**
+	     * @param {function(): void} [unsubscribe] A function describing how to
+	     * perform the disposal of resources when the `unsubscribe` method is called.
+	     */
+	    function Subscription(unsubscribe) {
+	        /**
+	         * A flag to indicate whether this Subscription has already been unsubscribed.
+	         * @type {boolean}
+	         */
+	        this.closed = false;
+	        if (unsubscribe) {
+	            this._unsubscribe = unsubscribe;
+	        }
+	    }
+	    /**
+	     * Disposes the resources held by the subscription. May, for instance, cancel
+	     * an ongoing Observable execution or cancel any other type of work that
+	     * started when the Subscription was created.
+	     * @return {void}
+	     */
+	    Subscription.prototype.unsubscribe = function () {
+	        var hasErrors = false;
+	        var errors;
+	        if (this.closed) {
+	            return;
+	        }
+	        this.closed = true;
+	        var _a = this, _unsubscribe = _a._unsubscribe, _subscriptions = _a._subscriptions;
+	        this._subscriptions = null;
+	        if (isFunction_1$1.isFunction(_unsubscribe)) {
+	            var trial = tryCatch_1.tryCatch(_unsubscribe).call(this);
+	            if (trial === errorObject_1.errorObject) {
+	                hasErrors = true;
+	                (errors = errors || []).push(errorObject_1.errorObject.e);
+	            }
+	        }
+	        if (isArray_1.isArray(_subscriptions)) {
+	            var index = -1;
+	            var len = _subscriptions.length;
+	            while (++index < len) {
+	                var sub = _subscriptions[index];
+	                if (isObject_1.isObject(sub)) {
+	                    var trial = tryCatch_1.tryCatch(sub.unsubscribe).call(sub);
+	                    if (trial === errorObject_1.errorObject) {
+	                        hasErrors = true;
+	                        errors = errors || [];
+	                        var err = errorObject_1.errorObject.e;
+	                        if (err instanceof UnsubscriptionError_1.UnsubscriptionError) {
+	                            errors = errors.concat(err.errors);
+	                        }
+	                        else {
+	                            errors.push(err);
+	                        }
+	                    }
+	                }
+	            }
+	        }
+	        if (hasErrors) {
+	            throw new UnsubscriptionError_1.UnsubscriptionError(errors);
+	        }
+	    };
+	    /**
+	     * Adds a tear down to be called during the unsubscribe() of this
+	     * Subscription.
+	     *
+	     * If the tear down being added is a subscription that is already
+	     * unsubscribed, is the same reference `add` is being called on, or is
+	     * `Subscription.EMPTY`, it will not be added.
+	     *
+	     * If this subscription is already in an `closed` state, the passed
+	     * tear down logic will be executed immediately.
+	     *
+	     * @param {TeardownLogic} teardown The additional logic to execute on
+	     * teardown.
+	     * @return {Subscription} Returns the Subscription used or created to be
+	     * added to the inner subscriptions list. This Subscription can be used with
+	     * `remove()` to remove the passed teardown logic from the inner subscriptions
+	     * list.
+	     */
+	    Subscription.prototype.add = function (teardown) {
+	        if (!teardown || (teardown === Subscription.EMPTY)) {
+	            return Subscription.EMPTY;
+	        }
+	        if (teardown === this) {
+	            return this;
+	        }
+	        var sub = teardown;
+	        switch (typeof teardown) {
+	            case 'function':
+	                sub = new Subscription(teardown);
+	            case 'object':
+	                if (sub.closed || typeof sub.unsubscribe !== 'function') {
+	                    break;
+	                }
+	                else if (this.closed) {
+	                    sub.unsubscribe();
+	                }
+	                else {
+	                    (this._subscriptions || (this._subscriptions = [])).push(sub);
+	                }
+	                break;
+	            default:
+	                throw new Error('unrecognized teardown ' + teardown + ' added to Subscription.');
+	        }
+	        return sub;
+	    };
+	    /**
+	     * Removes a Subscription from the internal list of subscriptions that will
+	     * unsubscribe during the unsubscribe process of this Subscription.
+	     * @param {Subscription} subscription The subscription to remove.
+	     * @return {void}
+	     */
+	    Subscription.prototype.remove = function (subscription) {
+	        // HACK: This might be redundant because of the logic in `add()`
+	        if (subscription == null || (subscription === this) || (subscription === Subscription.EMPTY)) {
+	            return;
+	        }
+	        var subscriptions = this._subscriptions;
+	        if (subscriptions) {
+	            var subscriptionIndex = subscriptions.indexOf(subscription);
+	            if (subscriptionIndex !== -1) {
+	                subscriptions.splice(subscriptionIndex, 1);
+	            }
+	        }
+	    };
+	    Subscription.EMPTY = (function (empty) {
+	        empty.closed = true;
+	        return empty;
+	    }(new Subscription()));
+	    return Subscription;
+	}());
+	var Subscription_2 = Subscription;
+
+	var __moduleExports$5 = {
+		Subscription: Subscription_2
+	};
+
+	var empty = {
+	    closed: true,
+	    next: function (value) { },
+	    error: function (err) { throw err; },
+	    complete: function () { }
+	};
+
+	var __moduleExports$11 = {
+		empty: empty
+	};
+
+	var root_1$2 = __moduleExports$1;
+	var Symbol$1 = root_1$2.root.Symbol;
+	var $$rxSubscriber = (typeof Symbol$1 === 'function' && typeof Symbol$1.for === 'function') ?
+	    Symbol$1.for('rxSubscriber') : '@@rxSubscriber';
+
+	var __moduleExports$12 = {
+		$$rxSubscriber: $$rxSubscriber
+	};
+
+	var __extends$8 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
+	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+	    function __() { this.constructor = d; }
+	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+	};
+	var isFunction_1 = __moduleExports$4;
+	var Subscription_1$1 = __moduleExports$5;
+	var Observer_1$1 = __moduleExports$11;
+	var rxSubscriber_1$2 = __moduleExports$12;
+	/**
+	 * Implements the {@link Observer} interface and extends the
+	 * {@link Subscription} class. While the {@link Observer} is the public API for
+	 * consuming the values of an {@link Observable}, all Observers get converted to
+	 * a Subscriber, in order to provide Subscription-like capabilities such as
+	 * `unsubscribe`. Subscriber is a common type in RxJS, and crucial for
+	 * implementing operators, but it is rarely used as a public API.
+	 *
+	 * @class Subscriber<T>
+	 */
+	var Subscriber = (function (_super) {
+	    __extends$8(Subscriber, _super);
+	    /**
+	     * @param {Observer|function(value: T): void} [destinationOrNext] A partially
+	     * defined Observer or a `next` callback function.
+	     * @param {function(e: ?any): void} [error] The `error` callback of an
+	     * Observer.
+	     * @param {function(): void} [complete] The `complete` callback of an
+	     * Observer.
+	     */
+	    function Subscriber(destinationOrNext, error, complete) {
+	        _super.call(this);
+	        this.syncErrorValue = null;
+	        this.syncErrorThrown = false;
+	        this.syncErrorThrowable = false;
+	        this.isStopped = false;
+	        switch (arguments.length) {
+	            case 0:
+	                this.destination = Observer_1$1.empty;
+	                break;
+	            case 1:
+	                if (!destinationOrNext) {
+	                    this.destination = Observer_1$1.empty;
+	                    break;
+	                }
+	                if (typeof destinationOrNext === 'object') {
+	                    if (destinationOrNext instanceof Subscriber) {
+	                        this.destination = destinationOrNext;
+	                        this.destination.add(this);
+	                    }
+	                    else {
+	                        this.syncErrorThrowable = true;
+	                        this.destination = new SafeSubscriber(this, destinationOrNext);
+	                    }
+	                    break;
+	                }
+	            default:
+	                this.syncErrorThrowable = true;
+	                this.destination = new SafeSubscriber(this, destinationOrNext, error, complete);
+	                break;
+	        }
+	    }
+	    Subscriber.prototype[rxSubscriber_1$2.$$rxSubscriber] = function () { return this; };
+	    /**
+	     * A static factory for a Subscriber, given a (potentially partial) definition
+	     * of an Observer.
+	     * @param {function(x: ?T): void} [next] The `next` callback of an Observer.
+	     * @param {function(e: ?any): void} [error] The `error` callback of an
+	     * Observer.
+	     * @param {function(): void} [complete] The `complete` callback of an
+	     * Observer.
+	     * @return {Subscriber<T>} A Subscriber wrapping the (partially defined)
+	     * Observer represented by the given arguments.
+	     */
+	    Subscriber.create = function (next, error, complete) {
+	        var subscriber = new Subscriber(next, error, complete);
+	        subscriber.syncErrorThrowable = false;
+	        return subscriber;
+	    };
+	    /**
+	     * The {@link Observer} callback to receive notifications of type `next` from
+	     * the Observable, with a value. The Observable may call this method 0 or more
+	     * times.
+	     * @param {T} [value] The `next` value.
+	     * @return {void}
+	     */
+	    Subscriber.prototype.next = function (value) {
+	        if (!this.isStopped) {
+	            this._next(value);
+	        }
+	    };
+	    /**
+	     * The {@link Observer} callback to receive notifications of type `error` from
+	     * the Observable, with an attached {@link Error}. Notifies the Observer that
+	     * the Observable has experienced an error condition.
+	     * @param {any} [err] The `error` exception.
+	     * @return {void}
+	     */
+	    Subscriber.prototype.error = function (err) {
+	        if (!this.isStopped) {
+	            this.isStopped = true;
+	            this._error(err);
+	        }
+	    };
+	    /**
+	     * The {@link Observer} callback to receive a valueless notification of type
+	     * `complete` from the Observable. Notifies the Observer that the Observable
+	     * has finished sending push-based notifications.
+	     * @return {void}
+	     */
+	    Subscriber.prototype.complete = function () {
+	        if (!this.isStopped) {
+	            this.isStopped = true;
+	            this._complete();
+	        }
+	    };
+	    Subscriber.prototype.unsubscribe = function () {
+	        if (this.closed) {
+	            return;
+	        }
+	        this.isStopped = true;
+	        _super.prototype.unsubscribe.call(this);
+	    };
+	    Subscriber.prototype._next = function (value) {
+	        this.destination.next(value);
+	    };
+	    Subscriber.prototype._error = function (err) {
+	        this.destination.error(err);
+	        this.unsubscribe();
+	    };
+	    Subscriber.prototype._complete = function () {
+	        this.destination.complete();
+	        this.unsubscribe();
+	    };
+	    return Subscriber;
+	}(Subscription_1$1.Subscription));
+	var Subscriber_2 = Subscriber;
+	/**
+	 * We need this JSDoc comment for affecting ESDoc.
+	 * @ignore
+	 * @extends {Ignored}
+	 */
+	var SafeSubscriber = (function (_super) {
+	    __extends$8(SafeSubscriber, _super);
+	    function SafeSubscriber(_parent, observerOrNext, error, complete) {
+	        _super.call(this);
+	        this._parent = _parent;
+	        var next;
+	        var context = this;
+	        if (isFunction_1.isFunction(observerOrNext)) {
+	            next = observerOrNext;
+	        }
+	        else if (observerOrNext) {
+	            context = observerOrNext;
+	            next = observerOrNext.next;
+	            error = observerOrNext.error;
+	            complete = observerOrNext.complete;
+	            if (isFunction_1.isFunction(context.unsubscribe)) {
+	                this.add(context.unsubscribe.bind(context));
+	            }
+	            context.unsubscribe = this.unsubscribe.bind(this);
+	        }
+	        this._context = context;
+	        this._next = next;
+	        this._error = error;
+	        this._complete = complete;
+	    }
+	    SafeSubscriber.prototype.next = function (value) {
+	        if (!this.isStopped && this._next) {
+	            var _parent = this._parent;
+	            if (!_parent.syncErrorThrowable) {
+	                this.__tryOrUnsub(this._next, value);
+	            }
+	            else if (this.__tryOrSetError(_parent, this._next, value)) {
+	                this.unsubscribe();
+	            }
+	        }
+	    };
+	    SafeSubscriber.prototype.error = function (err) {
+	        if (!this.isStopped) {
+	            var _parent = this._parent;
+	            if (this._error) {
+	                if (!_parent.syncErrorThrowable) {
+	                    this.__tryOrUnsub(this._error, err);
+	                    this.unsubscribe();
+	                }
+	                else {
+	                    this.__tryOrSetError(_parent, this._error, err);
+	                    this.unsubscribe();
+	                }
+	            }
+	            else if (!_parent.syncErrorThrowable) {
+	                this.unsubscribe();
+	                throw err;
+	            }
+	            else {
+	                _parent.syncErrorValue = err;
+	                _parent.syncErrorThrown = true;
+	                this.unsubscribe();
+	            }
+	        }
+	    };
+	    SafeSubscriber.prototype.complete = function () {
+	        if (!this.isStopped) {
+	            var _parent = this._parent;
+	            if (this._complete) {
+	                if (!_parent.syncErrorThrowable) {
+	                    this.__tryOrUnsub(this._complete);
+	                    this.unsubscribe();
+	                }
+	                else {
+	                    this.__tryOrSetError(_parent, this._complete);
+	                    this.unsubscribe();
+	                }
+	            }
+	            else {
+	                this.unsubscribe();
+	            }
+	        }
+	    };
+	    SafeSubscriber.prototype.__tryOrUnsub = function (fn, value) {
+	        try {
+	            fn.call(this._context, value);
+	        }
+	        catch (err) {
+	            this.unsubscribe();
+	            throw err;
+	        }
+	    };
+	    SafeSubscriber.prototype.__tryOrSetError = function (parent, fn, value) {
+	        try {
+	            fn.call(this._context, value);
+	        }
+	        catch (err) {
+	            parent.syncErrorValue = err;
+	            parent.syncErrorThrown = true;
+	            return true;
+	        }
+	        return false;
+	    };
+	    SafeSubscriber.prototype._unsubscribe = function () {
+	        var _parent = this._parent;
+	        this._context = null;
+	        this._parent = null;
+	        _parent.unsubscribe();
+	    };
+	    return SafeSubscriber;
+	}(Subscriber));
+
+	var __moduleExports$3 = {
+		Subscriber: Subscriber_2
+	};
+
+	var Subscriber_1$1 = __moduleExports$3;
+	var rxSubscriber_1$1 = __moduleExports$12;
+	var Observer_1 = __moduleExports$11;
+	function toSubscriber(nextOrObserver, error, complete) {
+	    if (nextOrObserver) {
+	        if (nextOrObserver instanceof Subscriber_1$1.Subscriber) {
+	            return nextOrObserver;
+	        }
+	        if (nextOrObserver[rxSubscriber_1$1.$$rxSubscriber]) {
+	            return nextOrObserver[rxSubscriber_1$1.$$rxSubscriber]();
+	        }
+	    }
+	    if (!nextOrObserver && !error && !complete) {
+	        return new Subscriber_1$1.Subscriber(Observer_1.empty);
+	    }
+	    return new Subscriber_1$1.Subscriber(nextOrObserver, error, complete);
+	}
+	var toSubscriber_2 = toSubscriber;
+
+	var __moduleExports$2 = {
+		toSubscriber: toSubscriber_2
+	};
+
+	var root_1$3 = __moduleExports$1;
+	function getSymbolObservable(context) {
+	    var $$observable;
+	    var Symbol = context.Symbol;
+	    if (typeof Symbol === 'function') {
+	        if (Symbol.observable) {
+	            $$observable = Symbol.observable;
+	        }
+	        else {
+	            $$observable = Symbol('observable');
+	            Symbol.observable = $$observable;
+	        }
+	    }
+	    else {
+	        $$observable = '@@observable';
+	    }
+	    return $$observable;
+	}
+	var getSymbolObservable_1 = getSymbolObservable;
+	var $$observable = getSymbolObservable(root_1$3.root);
+
+	var __moduleExports$13 = {
+		getSymbolObservable: getSymbolObservable_1,
+		$$observable: $$observable
+	};
+
+	var root_1 = __moduleExports$1;
+	var toSubscriber_1 = __moduleExports$2;
+	var observable_1 = __moduleExports$13;
+	/**
+	 * A representation of any set of values over any amount of time. This the most basic building block
+	 * of RxJS.
+	 *
+	 * @class Observable<T>
+	 */
+	var Observable = (function () {
+	    /**
+	     * @constructor
+	     * @param {Function} subscribe the function that is  called when the Observable is
+	     * initially subscribed to. This function is given a Subscriber, to which new values
+	     * can be `next`ed, or an `error` method can be called to raise an error, or
+	     * `complete` can be called to notify of a successful completion.
+	     */
+	    function Observable(subscribe) {
+	        this._isScalar = false;
+	        if (subscribe) {
+	            this._subscribe = subscribe;
+	        }
+	    }
+	    /**
+	     * Creates a new Observable, with this Observable as the source, and the passed
+	     * operator defined as the new observable's operator.
+	     * @method lift
+	     * @param {Operator} operator the operator defining the operation to take on the observable
+	     * @return {Observable} a new observable with the Operator applied
+	     */
+	    Observable.prototype.lift = function (operator) {
+	        var observable = new Observable();
+	        observable.source = this;
+	        observable.operator = operator;
+	        return observable;
+	    };
+	    Observable.prototype.subscribe = function (observerOrNext, error, complete) {
+	        var operator = this.operator;
+	        var sink = toSubscriber_1.toSubscriber(observerOrNext, error, complete);
+	        if (operator) {
+	            operator.call(sink, this);
+	        }
+	        else {
+	            sink.add(this._subscribe(sink));
+	        }
+	        if (sink.syncErrorThrowable) {
+	            sink.syncErrorThrowable = false;
+	            if (sink.syncErrorThrown) {
+	                throw sink.syncErrorValue;
+	            }
+	        }
+	        return sink;
+	    };
+	    /**
+	     * @method forEach
+	     * @param {Function} next a handler for each value emitted by the observable
+	     * @param {PromiseConstructor} [PromiseCtor] a constructor function used to instantiate the Promise
+	     * @return {Promise} a promise that either resolves on observable completion or
+	     *  rejects with the handled error
+	     */
+	    Observable.prototype.forEach = function (next, PromiseCtor) {
+	        var _this = this;
+	        if (!PromiseCtor) {
+	            if (root_1.root.Rx && root_1.root.Rx.config && root_1.root.Rx.config.Promise) {
+	                PromiseCtor = root_1.root.Rx.config.Promise;
+	            }
+	            else if (root_1.root.Promise) {
+	                PromiseCtor = root_1.root.Promise;
+	            }
+	        }
+	        if (!PromiseCtor) {
+	            throw new Error('no Promise impl found');
+	        }
+	        return new PromiseCtor(function (resolve, reject) {
+	            var subscription = _this.subscribe(function (value) {
+	                if (subscription) {
+	                    // if there is a subscription, then we can surmise
+	                    // the next handling is asynchronous. Any errors thrown
+	                    // need to be rejected explicitly and unsubscribe must be
+	                    // called manually
+	                    try {
+	                        next(value);
+	                    }
+	                    catch (err) {
+	                        reject(err);
+	                        subscription.unsubscribe();
+	                    }
+	                }
+	                else {
+	                    // if there is NO subscription, then we're getting a nexted
+	                    // value synchronously during subscription. We can just call it.
+	                    // If it errors, Observable's `subscribe` will ensure the
+	                    // unsubscription logic is called, then synchronously rethrow the error.
+	                    // After that, Promise will trap the error and send it
+	                    // down the rejection path.
+	                    next(value);
+	                }
+	            }, reject, resolve);
+	        });
+	    };
+	    Observable.prototype._subscribe = function (subscriber) {
+	        return this.source.subscribe(subscriber);
+	    };
+	    /**
+	     * An interop point defined by the es7-observable spec https://github.com/zenparsing/es-observable
+	     * @method Symbol.observable
+	     * @return {Observable} this instance of the observable
+	     */
+	    Observable.prototype[observable_1.$$observable] = function () {
+	        return this;
+	    };
+	    // HACK: Since TypeScript inherits static properties too, we have to
+	    // fight against TypeScript here so Subject can have a different static create signature
+	    /**
+	     * Creates a new cold Observable by calling the Observable constructor
+	     * @static true
+	     * @owner Observable
+	     * @method create
+	     * @param {Function} subscribe? the subscriber function to be passed to the Observable constructor
+	     * @return {Observable} a new cold observable
+	     */
+	    Observable.create = function (subscribe) {
+	        return new Observable(subscribe);
+	    };
+	    return Observable;
+	}());
+	var Observable_2 = Observable;
+
+	var __moduleExports = {
+		Observable: Observable_2
+	};
+
+	var __extends$10 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
+	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+	    function __() { this.constructor = d; }
+	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+	};
+	/**
+	 * An error thrown when an action is invalid because the object has been
+	 * unsubscribed.
+	 *
+	 * @see {@link Subject}
+	 * @see {@link BehaviorSubject}
+	 *
+	 * @class ObjectUnsubscribedError
+	 */
+	var ObjectUnsubscribedError = (function (_super) {
+	    __extends$10(ObjectUnsubscribedError, _super);
+	    function ObjectUnsubscribedError() {
+	        var err = _super.call(this, 'object unsubscribed');
+	        this.name = err.name = 'ObjectUnsubscribedError';
+	        this.stack = err.stack;
+	        this.message = err.message;
+	    }
+	    return ObjectUnsubscribedError;
+	}(Error));
+	var ObjectUnsubscribedError_2 = ObjectUnsubscribedError;
+
+	var __moduleExports$14 = {
+		ObjectUnsubscribedError: ObjectUnsubscribedError_2
+	};
+
+	var __extends$11 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
+	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+	    function __() { this.constructor = d; }
+	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+	};
+	var Subscription_1$2 = __moduleExports$5;
+	/**
+	 * We need this JSDoc comment for affecting ESDoc.
+	 * @ignore
+	 * @extends {Ignored}
+	 */
+	var SubjectSubscription = (function (_super) {
+	    __extends$11(SubjectSubscription, _super);
+	    function SubjectSubscription(subject, subscriber) {
+	        _super.call(this);
+	        this.subject = subject;
+	        this.subscriber = subscriber;
+	        this.closed = false;
+	    }
+	    SubjectSubscription.prototype.unsubscribe = function () {
+	        if (this.closed) {
+	            return;
+	        }
+	        this.closed = true;
+	        var subject = this.subject;
+	        var observers = subject.observers;
+	        this.subject = null;
+	        if (!observers || observers.length === 0 || subject.isStopped || subject.closed) {
+	            return;
+	        }
+	        var subscriberIndex = observers.indexOf(this.subscriber);
+	        if (subscriberIndex !== -1) {
+	            observers.splice(subscriberIndex, 1);
+	        }
+	    };
+	    return SubjectSubscription;
+	}(Subscription_1$2.Subscription));
+	var SubjectSubscription_2 = SubjectSubscription;
+
+	var __moduleExports$15 = {
+		SubjectSubscription: SubjectSubscription_2
+	};
+
+	var __extends$7 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
+	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+	    function __() { this.constructor = d; }
+	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+	};
+	var Observable_1 = __moduleExports;
+	var Subscriber_1 = __moduleExports$3;
+	var Subscription_1 = __moduleExports$5;
+	var ObjectUnsubscribedError_1 = __moduleExports$14;
+	var SubjectSubscription_1 = __moduleExports$15;
+	var rxSubscriber_1 = __moduleExports$12;
+	/**
+	 * @class SubjectSubscriber<T>
+	 */
+	var SubjectSubscriber = (function (_super) {
+	    __extends$7(SubjectSubscriber, _super);
+	    function SubjectSubscriber(destination) {
+	        _super.call(this, destination);
+	        this.destination = destination;
+	    }
+	    return SubjectSubscriber;
+	}(Subscriber_1.Subscriber));
+	var SubjectSubscriber_1 = SubjectSubscriber;
+	/**
+	 * @class Subject<T>
+	 */
+	var Subject = (function (_super) {
+	    __extends$7(Subject, _super);
+	    function Subject() {
+	        _super.call(this);
+	        this.observers = [];
+	        this.closed = false;
+	        this.isStopped = false;
+	        this.hasError = false;
+	        this.thrownError = null;
+	    }
+	    Subject.prototype[rxSubscriber_1.$$rxSubscriber] = function () {
+	        return new SubjectSubscriber(this);
+	    };
+	    Subject.prototype.lift = function (operator) {
+	        var subject = new AnonymousSubject(this, this);
+	        subject.operator = operator;
+	        return subject;
+	    };
+	    Subject.prototype.next = function (value) {
+	        if (this.closed) {
+	            throw new ObjectUnsubscribedError_1.ObjectUnsubscribedError();
+	        }
+	        if (!this.isStopped) {
+	            var observers = this.observers;
+	            var len = observers.length;
+	            var copy = observers.slice();
+	            for (var i = 0; i < len; i++) {
+	                copy[i].next(value);
+	            }
+	        }
+	    };
+	    Subject.prototype.error = function (err) {
+	        if (this.closed) {
+	            throw new ObjectUnsubscribedError_1.ObjectUnsubscribedError();
+	        }
+	        this.hasError = true;
+	        this.thrownError = err;
+	        this.isStopped = true;
+	        var observers = this.observers;
+	        var len = observers.length;
+	        var copy = observers.slice();
+	        for (var i = 0; i < len; i++) {
+	            copy[i].error(err);
+	        }
+	        this.observers.length = 0;
+	    };
+	    Subject.prototype.complete = function () {
+	        if (this.closed) {
+	            throw new ObjectUnsubscribedError_1.ObjectUnsubscribedError();
+	        }
+	        this.isStopped = true;
+	        var observers = this.observers;
+	        var len = observers.length;
+	        var copy = observers.slice();
+	        for (var i = 0; i < len; i++) {
+	            copy[i].complete();
+	        }
+	        this.observers.length = 0;
+	    };
+	    Subject.prototype.unsubscribe = function () {
+	        this.isStopped = true;
+	        this.closed = true;
+	        this.observers = null;
+	    };
+	    Subject.prototype._subscribe = function (subscriber) {
+	        if (this.closed) {
+	            throw new ObjectUnsubscribedError_1.ObjectUnsubscribedError();
+	        }
+	        else if (this.hasError) {
+	            subscriber.error(this.thrownError);
+	            return Subscription_1.Subscription.EMPTY;
+	        }
+	        else if (this.isStopped) {
+	            subscriber.complete();
+	            return Subscription_1.Subscription.EMPTY;
+	        }
+	        else {
+	            this.observers.push(subscriber);
+	            return new SubjectSubscription_1.SubjectSubscription(this, subscriber);
+	        }
+	    };
+	    Subject.prototype.asObservable = function () {
+	        var observable = new Observable_1.Observable();
+	        observable.source = this;
+	        return observable;
+	    };
+	    Subject.create = function (destination, source) {
+	        return new AnonymousSubject(destination, source);
+	    };
+	    return Subject;
+	}(Observable_1.Observable));
+	var Subject_2 = Subject;
+	/**
+	 * @class AnonymousSubject<T>
+	 */
+	var AnonymousSubject = (function (_super) {
+	    __extends$7(AnonymousSubject, _super);
+	    function AnonymousSubject(destination, source) {
+	        _super.call(this);
+	        this.destination = destination;
+	        this.source = source;
+	    }
+	    AnonymousSubject.prototype.next = function (value) {
+	        var destination = this.destination;
+	        if (destination && destination.next) {
+	            destination.next(value);
+	        }
+	    };
+	    AnonymousSubject.prototype.error = function (err) {
+	        var destination = this.destination;
+	        if (destination && destination.error) {
+	            this.destination.error(err);
+	        }
+	    };
+	    AnonymousSubject.prototype.complete = function () {
+	        var destination = this.destination;
+	        if (destination && destination.complete) {
+	            this.destination.complete();
+	        }
+	    };
+	    AnonymousSubject.prototype._subscribe = function (subscriber) {
+	        var source = this.source;
+	        if (source) {
+	            return this.source.subscribe(subscriber);
+	        }
+	        else {
+	            return Subscription_1.Subscription.EMPTY;
+	        }
+	    };
+	    return AnonymousSubject;
+	}(Subject));
+	var AnonymousSubject_1 = AnonymousSubject;
+
+	var Subject_1 = {
+		SubjectSubscriber: SubjectSubscriber_1,
+		Subject: Subject_2,
+		AnonymousSubject: AnonymousSubject_1
+	};
+
+	/**
+	 * @license
+	 * Copyright Google Inc. All Rights Reserved.
+	 *
+	 * Use of this source code is governed by an MIT-style license that can be
+	 * found in the LICENSE file at https://angular.io/license
+	 */
+	var __extends$6 = (this && this.__extends) || function (d, b) {
+	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+	    function __() { this.constructor = d; }
+	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+	};
+	/**
+	 *  Use by directives and components to emit custom Events.
+	  * *
+	  * ### Examples
+	  * *
+	  * In the following example, `Zippy` alternatively emits `open` and `close` events when its
+	  * title gets clicked:
+	  * *
+	  * ```
+	  * selector: 'zippy',
+	  * template: `
+	  * <div class="zippy">
+	  * <div (click)="toggle()">Toggle</div>
+	  * <div [hidden]="!visible">
+	  * <ng-content></ng-content>
+	  * </div>
+	  * </div>`})
+	  * export class Zippy {
+	  * visible: boolean = true;
+	  * @Output() open: EventEmitter<any> = new EventEmitter();
+	  * @Output() close: EventEmitter<any> = new EventEmitter();
+	  * *
+	  * toggle() {
+	  * this.visible = !this.visible;
+	  * if (this.visible) {
+	  * this.open.emit(null);
+	  * } else {
+	  * this.close.emit(null);
+	  * }
+	  * }
+	  * }
+	  * ```
+	  * *
+	  * The events payload can be accessed by the parameter `$event` on the components output event
+	  * handler:
+	  * *
+	  * ```
+	  * <zippy (open)="onOpen($event)" (close)="onClose($event)"></zippy>
+	  * ```
+	  * *
+	  * Uses Rx.Observable but provides an adapter to make it work as specified here:
+	  * https://github.com/jhusain/observable-spec
+	  * *
+	  * Once a reference implementation of the spec is available, switch to it.
+	 */
+	var EventEmitter = (function (_super) {
+	    __extends$6(EventEmitter, _super);
+	    /**
+	     *  Creates an instance of [EventEmitter], which depending on [isAsync],
+	      * delivers events synchronously or asynchronously.
+	     * @param {?=} isAsync
+	     */
+	    function EventEmitter(isAsync) {
+	        if (isAsync === void 0) { isAsync = false; }
+	        _super.call(this);
+	        this.__isAsync = isAsync;
+	    }
+	    /**
+	     * @param {?=} value
+	     * @return {?}
+	     */
+	    EventEmitter.prototype.emit = function (value) { _super.prototype.next.call(this, value); };
+	    /**
+	     * @param {?=} generatorOrNext
+	     * @param {?=} error
+	     * @param {?=} complete
+	     * @return {?}
+	     */
+	    EventEmitter.prototype.subscribe = function (generatorOrNext, error, complete) {
+	        var /** @type {?} */ schedulerFn;
+	        var /** @type {?} */ errorFn = function (err) { return null; };
+	        var /** @type {?} */ completeFn = function () { return null; };
+	        if (generatorOrNext && typeof generatorOrNext === 'object') {
+	            schedulerFn = this.__isAsync ? function (value) {
+	                setTimeout(function () { return generatorOrNext.next(value); });
+	            } : function (value) { generatorOrNext.next(value); };
+	            if (generatorOrNext.error) {
+	                errorFn = this.__isAsync ? function (err) { setTimeout(function () { return generatorOrNext.error(err); }); } :
+	                    function (err) { generatorOrNext.error(err); };
+	            }
+	            if (generatorOrNext.complete) {
+	                completeFn = this.__isAsync ? function () { setTimeout(function () { return generatorOrNext.complete(); }); } :
+	                    function () { generatorOrNext.complete(); };
+	            }
+	        }
+	        else {
+	            schedulerFn = this.__isAsync ? function (value) { setTimeout(function () { return generatorOrNext(value); }); } :
+	                function (value) { generatorOrNext(value); };
+	            if (error) {
+	                errorFn =
+	                    this.__isAsync ? function (err) { setTimeout(function () { return error(err); }); } : function (err) { error(err); };
+	            }
+	            if (complete) {
+	                completeFn =
+	                    this.__isAsync ? function () { setTimeout(function () { return complete(); }); } : function () { complete(); };
+	            }
+	        }
+	        return _super.prototype.subscribe.call(this, schedulerFn, errorFn, completeFn);
+	    };
+	    return EventEmitter;
+	}(Subject_2));
+
+	/**
+	 *  An injectable service for executing work inside or outside of the Angular zone.
+	  * *
+	  * The most common use of this service is to optimize performance when starting a work consisting of
+	  * one or more asynchronous tasks that don't require UI updates or error handling to be handled by
+	  * Angular. Such tasks can be kicked off via {@link runOutsideAngular} and if needed, these tasks
+	  * can reenter the Angular zone via {@link run}.
+	  * *
+	  * <!-- TODO: add/fix links to:
+	  * - docs explaining zones and the use of zones in Angular and change-detection
+	  * - link to runOutsideAngular/run (throughout this file!)
+	  * -->
+	  * *
+	  * ### Example
+	  * ```
+	  * import {Component, NgZone} from '@angular/core';
+	  * import {NgIf} from '@angular/common';
+	  * *
+	  * selector: 'ng-zone-demo'.
+	  * template: `
+	  * <h2>Demo: NgZone</h2>
+	  * *
+	  * <p>Progress: {{progress}}%</p>
+	  * <p *ngIf="progress >= 100">Done processing {{label}} of Angular zone!</p>
+	  * *
+	  * <button (click)="processWithinAngularZone()">Process within Angular zone</button>
+	  * <button (click)="processOutsideOfAngularZone()">Process outside of Angular zone</button>
+	  * `,
+	  * })
+	  * export class NgZoneDemo {
+	  * progress: number = 0;
+	  * label: string;
+	  * *
+	  * constructor(private _ngZone: NgZone) {}
+	  * *
+	  * // Loop inside the Angular zone
+	  * // so the UI DOES refresh after each setTimeout cycle
+	  * processWithinAngularZone() {
+	  * this.label = 'inside';
+	  * this.progress = 0;
+	  * this._increaseProgress(() => console.log('Inside Done!'));
+	  * }
+	  * *
+	  * // Loop outside of the Angular zone
+	  * // so the UI DOES NOT refresh after each setTimeout cycle
+	  * processOutsideOfAngularZone() {
+	  * this.label = 'outside';
+	  * this.progress = 0;
+	  * this._ngZone.runOutsideAngular(() => {
+	  * this._increaseProgress(() => {
+	  * // reenter the Angular zone and display done
+	  * this._ngZone.run(() => {console.log('Outside Done!') });
+	  * }}));
+	  * }
+	  * *
+	  * _increaseProgress(doneCallback: () => void) {
+	  * this.progress += 1;
+	  * console.log(`Current progress: ${this.progress}%`);
+	  * *
+	  * if (this.progress < 100) {
+	  * window.setTimeout(() => this._increaseProgress(doneCallback)), 10)
+	  * } else {
+	  * doneCallback();
+	  * }
+	  * }
+	  * }
+	  * ```
+	 */
+	var NgZone = (function () {
+	    /**
+	     * @param {?} __0
+	     */
+	    function NgZone(_a) {
+	        var _b = _a.enableLongStackTrace, enableLongStackTrace = _b === void 0 ? false : _b;
+	        this._hasPendingMicrotasks = false;
+	        this._hasPendingMacrotasks = false;
+	        this._isStable = true;
+	        this._nesting = 0;
+	        this._onUnstable = new EventEmitter(false);
+	        this._onMicrotaskEmpty = new EventEmitter(false);
+	        this._onStable = new EventEmitter(false);
+	        this._onErrorEvents = new EventEmitter(false);
+	        if (typeof Zone == 'undefined') {
+	            throw new Error('Angular requires Zone.js prolyfill.');
+	        }
+	        Zone.assertZonePatched();
+	        this.outer = this.inner = Zone.current;
+	        if (Zone['wtfZoneSpec']) {
+	            this.inner = this.inner.fork(Zone['wtfZoneSpec']);
+	        }
+	        if (enableLongStackTrace && Zone['longStackTraceZoneSpec']) {
+	            this.inner = this.inner.fork(Zone['longStackTraceZoneSpec']);
+	        }
+	        this.forkInnerZoneWithAngularBehavior();
+	    }
+	    /**
+	     * @return {?}
+	     */
+	    NgZone.isInAngularZone = function () { return Zone.current.get('isAngularZone') === true; };
+	    /**
+	     * @return {?}
+	     */
+	    NgZone.assertInAngularZone = function () {
+	        if (!NgZone.isInAngularZone()) {
+	            throw new Error('Expected to be in Angular Zone, but it is not!');
+	        }
+	    };
+	    /**
+	     * @return {?}
+	     */
+	    NgZone.assertNotInAngularZone = function () {
+	        if (NgZone.isInAngularZone()) {
+	            throw new Error('Expected to not be in Angular Zone, but it is!');
+	        }
+	    };
+	    /**
+	     *  Executes the `fn` function synchronously within the Angular zone and returns value returned by
+	      * the function.
+	      * *
+	      * Running functions via `run` allows you to reenter Angular zone from a task that was executed
+	      * outside of the Angular zone (typically started via {@link runOutsideAngular}).
+	      * *
+	      * Any future tasks or microtasks scheduled from within this function will continue executing from
+	      * within the Angular zone.
+	      * *
+	      * If a synchronous error happens it will be rethrown and not reported via `onError`.
+	     * @param {?} fn
+	     * @return {?}
+	     */
+	    NgZone.prototype.run = function (fn) { return this.inner.run(fn); };
+	    /**
+	     *  Same as `run`, except that synchronous errors are caught and forwarded via `onError` and not
+	      * rethrown.
+	     * @param {?} fn
+	     * @return {?}
+	     */
+	    NgZone.prototype.runGuarded = function (fn) { return this.inner.runGuarded(fn); };
+	    /**
+	     *  Executes the `fn` function synchronously in Angular's parent zone and returns value returned by
+	      * the function.
+	      * *
+	      * Running functions via `runOutsideAngular` allows you to escape Angular's zone and do work that
+	      * doesn't trigger Angular change-detection or is subject to Angular's error handling.
+	      * *
+	      * Any future tasks or microtasks scheduled from within this function will continue executing from
+	      * outside of the Angular zone.
+	      * *
+	      * Use {@link run} to reenter the Angular zone and do work that updates the application model.
+	     * @param {?} fn
+	     * @return {?}
+	     */
+	    NgZone.prototype.runOutsideAngular = function (fn) { return this.outer.run(fn); };
+	    Object.defineProperty(NgZone.prototype, "onUnstable", {
+	        /**
+	         *  Notifies when code enters Angular Zone. This gets fired first on VM Turn.
+	         * @return {?}
+	         */
+	        get: function () { return this._onUnstable; },
+	        enumerable: true,
+	        configurable: true
+	    });
+	    Object.defineProperty(NgZone.prototype, "onMicrotaskEmpty", {
+	        /**
+	         *  Notifies when there is no more microtasks enqueue in the current VM Turn.
+	          * This is a hint for Angular to do change detection, which may enqueue more microtasks.
+	          * For this reason this event can fire multiple times per VM Turn.
+	         * @return {?}
+	         */
+	        get: function () { return this._onMicrotaskEmpty; },
+	        enumerable: true,
+	        configurable: true
+	    });
+	    Object.defineProperty(NgZone.prototype, "onStable", {
+	        /**
+	         *  Notifies when the last `onMicrotaskEmpty` has run and there are no more microtasks, which
+	          * implies we are about to relinquish VM turn.
+	          * This event gets called just once.
+	         * @return {?}
+	         */
+	        get: function () { return this._onStable; },
+	        enumerable: true,
+	        configurable: true
+	    });
+	    Object.defineProperty(NgZone.prototype, "onError", {
+	        /**
+	         *  Notify that an error has been delivered.
+	         * @return {?}
+	         */
+	        get: function () { return this._onErrorEvents; },
+	        enumerable: true,
+	        configurable: true
+	    });
+	    Object.defineProperty(NgZone.prototype, "isStable", {
+	        /**
+	         *  Whether there are no outstanding microtasks or macrotasks.
+	         * @return {?}
+	         */
+	        get: function () { return this._isStable; },
+	        enumerable: true,
+	        configurable: true
+	    });
+	    Object.defineProperty(NgZone.prototype, "hasPendingMicrotasks", {
+	        /**
+	         * @return {?}
+	         */
+	        get: function () { return this._hasPendingMicrotasks; },
+	        enumerable: true,
+	        configurable: true
+	    });
+	    Object.defineProperty(NgZone.prototype, "hasPendingMacrotasks", {
+	        /**
+	         * @return {?}
+	         */
+	        get: function () { return this._hasPendingMacrotasks; },
+	        enumerable: true,
+	        configurable: true
+	    });
+	    /**
+	     * @return {?}
+	     */
+	    NgZone.prototype.checkStable = function () {
+	        var _this = this;
+	        if (this._nesting == 0 && !this._hasPendingMicrotasks && !this._isStable) {
+	            try {
+	                this._nesting++;
+	                this._onMicrotaskEmpty.emit(null);
+	            }
+	            finally {
+	                this._nesting--;
+	                if (!this._hasPendingMicrotasks) {
+	                    try {
+	                        this.runOutsideAngular(function () { return _this._onStable.emit(null); });
+	                    }
+	                    finally {
+	                        this._isStable = true;
+	                    }
+	                }
+	            }
+	        }
+	    };
+	    /**
+	     * @return {?}
+	     */
+	    NgZone.prototype.forkInnerZoneWithAngularBehavior = function () {
+	        var _this = this;
+	        this.inner = this.inner.fork({
+	            name: 'angular',
+	            properties: /** @type {?} */ ({ 'isAngularZone': true }),
+	            onInvokeTask: function (delegate, current, target, task, applyThis, applyArgs) {
+	                try {
+	                    _this.onEnter();
+	                    return delegate.invokeTask(target, task, applyThis, applyArgs);
+	                }
+	                finally {
+	                    _this.onLeave();
+	                }
+	            },
+	            onInvoke: function (delegate, current, target, callback, applyThis, applyArgs, source) {
+	                try {
+	                    _this.onEnter();
+	                    return delegate.invoke(target, callback, applyThis, applyArgs, source);
+	                }
+	                finally {
+	                    _this.onLeave();
+	                }
+	            },
+	            onHasTask: function (delegate, current, target, hasTaskState) {
+	                delegate.hasTask(target, hasTaskState);
+	                if (current === target) {
+	                    // We are only interested in hasTask events which originate from our zone
+	                    // (A child hasTask event is not interesting to us)
+	                    if (hasTaskState.change == 'microTask') {
+	                        _this.setHasMicrotask(hasTaskState.microTask);
+	                    }
+	                    else if (hasTaskState.change == 'macroTask') {
+	                        _this.setHasMacrotask(hasTaskState.macroTask);
+	                    }
+	                }
+	            },
+	            onHandleError: function (delegate, current, target, error) {
+	                delegate.handleError(target, error);
+	                _this.triggerError(error);
+	                return false;
+	            }
+	        });
+	    };
+	    /**
+	     * @return {?}
+	     */
+	    NgZone.prototype.onEnter = function () {
+	        this._nesting++;
+	        if (this._isStable) {
+	            this._isStable = false;
+	            this._onUnstable.emit(null);
+	        }
+	    };
+	    /**
+	     * @return {?}
+	     */
+	    NgZone.prototype.onLeave = function () {
+	        this._nesting--;
+	        this.checkStable();
+	    };
+	    /**
+	     * @param {?} hasMicrotasks
+	     * @return {?}
+	     */
+	    NgZone.prototype.setHasMicrotask = function (hasMicrotasks) {
+	        this._hasPendingMicrotasks = hasMicrotasks;
+	        this.checkStable();
+	    };
+	    /**
+	     * @param {?} hasMacrotasks
+	     * @return {?}
+	     */
+	    NgZone.prototype.setHasMacrotask = function (hasMacrotasks) { this._hasPendingMacrotasks = hasMacrotasks; };
+	    /**
+	     * @param {?} error
+	     * @return {?}
+	     */
+	    NgZone.prototype.triggerError = function (error) { this._onErrorEvents.emit(error); };
+	    return NgZone;
+	}());
+
+	var AnimationQueue = (function () {
+	    /**
+	     * @param {?} _zone
+	     */
+	    function AnimationQueue(_zone) {
+	        this._zone = _zone;
+	        this.entries = [];
+	    }
+	    /**
+	     * @param {?} player
+	     * @return {?}
+	     */
+	    AnimationQueue.prototype.enqueue = function (player) { this.entries.push(player); };
+	    /**
+	     * @return {?}
+	     */
+	    AnimationQueue.prototype.flush = function () {
+	        var _this = this;
+	        // given that each animation player may set aside
+	        // microtasks and rely on DOM-based events, this
+	        // will cause Angular to run change detection after
+	        // each request. This sidesteps the issue. If a user
+	        // hooks into an animation via (@anim.start) or (@anim.done)
+	        // then those methods will automatically trigger change
+	        // detection by wrapping themselves inside of a zone
+	        if (this.entries.length) {
+	            this._zone.runOutsideAngular(function () {
+	                // this code is wrapped into a single promise such that the
+	                // onStart and onDone player callbacks are triggered outside
+	                // of the digest cycle of animations
+	                Promise.resolve(null).then(function () { return _this._triggerAnimations(); });
+	            });
+	        }
+	    };
+	    /**
+	     * @return {?}
+	     */
+	    AnimationQueue.prototype._triggerAnimations = function () {
+	        NgZone.assertNotInAngularZone();
+	        while (this.entries.length) {
+	            var /** @type {?} */ player = this.entries.shift();
+	            // in the event that an animation throws an error then we do
+	            // not want to re-run animations on any previous animations
+	            // if they have already been kicked off beforehand
+	            if (!player.hasStarted()) {
+	                player.play();
+	            }
+	        }
+	    };
+	    AnimationQueue.decorators = [
+	        { type: Injectable },
+	    ];
+	    /** @nocollapse */
+	    AnimationQueue.ctorParameters = function () { return [
+	        { type: NgZone, },
+	    ]; };
+	    return AnimationQueue;
 	}());
 
 	var DefaultIterableDifferFactory = (function () {
@@ -5842,7 +7299,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
-	var __extends$6 = (this && this.__extends) || function (d, b) {
+	var __extends$12 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -5876,7 +7333,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	  * ```
 	 */
 	var ExpressionChangedAfterItHasBeenCheckedError = (function (_super) {
-	    __extends$6(ExpressionChangedAfterItHasBeenCheckedError, _super);
+	    __extends$12(ExpressionChangedAfterItHasBeenCheckedError, _super);
 	    /**
 	     * @param {?} oldValue
 	     * @param {?} currValue
@@ -5899,7 +7356,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	  * be useful for debugging.
 	 */
 	var ViewWrappedError = (function (_super) {
-	    __extends$6(ViewWrappedError, _super);
+	    __extends$12(ViewWrappedError, _super);
 	    /**
 	     * @param {?} originalError
 	     * @param {?} context
@@ -5918,7 +7375,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	  * This is an internal Angular error.
 	 */
 	var ViewDestroyedError = (function (_super) {
-	    __extends$6(ViewDestroyedError, _super);
+	    __extends$12(ViewDestroyedError, _super);
 	    /**
 	     * @param {?} details
 	     */
@@ -5932,9 +7389,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    /**
 	     * @param {?} _renderer
 	     * @param {?} sanitizer
+	     * @param {?} animationQueue
 	     */
-	    function ViewUtils(_renderer, sanitizer) {
+	    function ViewUtils(_renderer, sanitizer, animationQueue) {
 	        this._renderer = _renderer;
+	        this.animationQueue = animationQueue;
 	        this._nextCompTypeId = 0;
 	        this.sanitizer = sanitizer;
 	    }
@@ -5952,6 +7411,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    ViewUtils.ctorParameters = function () { return [
 	        { type: RootRenderer, },
 	        { type: Sanitizer, },
+	        { type: AnimationQueue, },
 	    ]; };
 	    return ViewUtils;
 	}());
@@ -7053,7 +8513,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
-	var __extends$7 = (this && this.__extends) || function (d, b) {
+	var __extends$13 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -7062,7 +8522,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @stable
 	 */
 	var NoComponentFactoryError = (function (_super) {
-	    __extends$7(NoComponentFactoryError, _super);
+	    __extends$13(NoComponentFactoryError, _super);
 	    /**
 	     * @param {?} component
 	     */
@@ -7214,1395 +8674,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @experimental
 	 */
 	var /** @type {?} */ wtfLeave = wtfEnabled ? leave : function (s, r) { return r; };
-
-	var commonjsGlobal = typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
-
-	function createCommonjsModule(fn, module) {
-		return module = { exports: {} }, fn(module, module.exports), module.exports;
-	}
-
-	var __moduleExports$1 = createCommonjsModule(function (module, exports) {
-	"use strict";
-	/**
-	 * window: browser in DOM main thread
-	 * self: browser in WebWorker
-	 * global: Node.js/other
-	 */
-	exports.root = (typeof window == 'object' && window.window === window && window
-	    || typeof self == 'object' && self.self === self && self
-	    || typeof commonjsGlobal == 'object' && commonjsGlobal.global === commonjsGlobal && commonjsGlobal);
-	if (!exports.root) {
-	    throw new Error('RxJS could not find any global context (window, self, global)');
-	}
-	});
-
-	var root_1$1 = __moduleExports$1.root;
-
-	function isFunction(x) {
-	    return typeof x === 'function';
-	}
-	var isFunction_2 = isFunction;
-
-	var __moduleExports$4 = {
-		isFunction: isFunction_2
-	};
-
-	var isArray_1$1 = Array.isArray || (function (x) { return x && typeof x.length === 'number'; });
-
-	var __moduleExports$6 = {
-		isArray: isArray_1$1
-	};
-
-	function isObject(x) {
-	    return x != null && typeof x === 'object';
-	}
-	var isObject_2 = isObject;
-
-	var __moduleExports$7 = {
-		isObject: isObject_2
-	};
-
-	// typeof any so that it we don't have to cast when comparing a result to the error object
-	var errorObject_1$2 = { e: {} };
-
-	var __moduleExports$9 = {
-		errorObject: errorObject_1$2
-	};
-
-	var errorObject_1$1 = __moduleExports$9;
-	var tryCatchTarget;
-	function tryCatcher() {
-	    try {
-	        return tryCatchTarget.apply(this, arguments);
-	    }
-	    catch (e) {
-	        errorObject_1$1.errorObject.e = e;
-	        return errorObject_1$1.errorObject;
-	    }
-	}
-	function tryCatch(fn) {
-	    tryCatchTarget = fn;
-	    return tryCatcher;
-	}
-	var tryCatch_2 = tryCatch;
-	;
-
-	var __moduleExports$8 = {
-		tryCatch: tryCatch_2
-	};
-
-	var __extends$11 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
-	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-	    function __() { this.constructor = d; }
-	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-	};
-	/**
-	 * An error thrown when one or more errors have occurred during the
-	 * `unsubscribe` of a {@link Subscription}.
-	 */
-	var UnsubscriptionError = (function (_super) {
-	    __extends$11(UnsubscriptionError, _super);
-	    function UnsubscriptionError(errors) {
-	        _super.call(this);
-	        this.errors = errors;
-	        var err = Error.call(this, errors ?
-	            errors.length + " errors occurred during unsubscription:\n  " + errors.map(function (err, i) { return ((i + 1) + ") " + err.toString()); }).join('\n  ') : '');
-	        this.name = err.name = 'UnsubscriptionError';
-	        this.stack = err.stack;
-	        this.message = err.message;
-	    }
-	    return UnsubscriptionError;
-	}(Error));
-	var UnsubscriptionError_2 = UnsubscriptionError;
-
-	var __moduleExports$10 = {
-		UnsubscriptionError: UnsubscriptionError_2
-	};
-
-	var isArray_1 = __moduleExports$6;
-	var isObject_1 = __moduleExports$7;
-	var isFunction_1$1 = __moduleExports$4;
-	var tryCatch_1 = __moduleExports$8;
-	var errorObject_1 = __moduleExports$9;
-	var UnsubscriptionError_1 = __moduleExports$10;
-	/**
-	 * Represents a disposable resource, such as the execution of an Observable. A
-	 * Subscription has one important method, `unsubscribe`, that takes no argument
-	 * and just disposes the resource held by the subscription.
-	 *
-	 * Additionally, subscriptions may be grouped together through the `add()`
-	 * method, which will attach a child Subscription to the current Subscription.
-	 * When a Subscription is unsubscribed, all its children (and its grandchildren)
-	 * will be unsubscribed as well.
-	 *
-	 * @class Subscription
-	 */
-	var Subscription = (function () {
-	    /**
-	     * @param {function(): void} [unsubscribe] A function describing how to
-	     * perform the disposal of resources when the `unsubscribe` method is called.
-	     */
-	    function Subscription(unsubscribe) {
-	        /**
-	         * A flag to indicate whether this Subscription has already been unsubscribed.
-	         * @type {boolean}
-	         */
-	        this.closed = false;
-	        if (unsubscribe) {
-	            this._unsubscribe = unsubscribe;
-	        }
-	    }
-	    /**
-	     * Disposes the resources held by the subscription. May, for instance, cancel
-	     * an ongoing Observable execution or cancel any other type of work that
-	     * started when the Subscription was created.
-	     * @return {void}
-	     */
-	    Subscription.prototype.unsubscribe = function () {
-	        var hasErrors = false;
-	        var errors;
-	        if (this.closed) {
-	            return;
-	        }
-	        this.closed = true;
-	        var _a = this, _unsubscribe = _a._unsubscribe, _subscriptions = _a._subscriptions;
-	        this._subscriptions = null;
-	        if (isFunction_1$1.isFunction(_unsubscribe)) {
-	            var trial = tryCatch_1.tryCatch(_unsubscribe).call(this);
-	            if (trial === errorObject_1.errorObject) {
-	                hasErrors = true;
-	                (errors = errors || []).push(errorObject_1.errorObject.e);
-	            }
-	        }
-	        if (isArray_1.isArray(_subscriptions)) {
-	            var index = -1;
-	            var len = _subscriptions.length;
-	            while (++index < len) {
-	                var sub = _subscriptions[index];
-	                if (isObject_1.isObject(sub)) {
-	                    var trial = tryCatch_1.tryCatch(sub.unsubscribe).call(sub);
-	                    if (trial === errorObject_1.errorObject) {
-	                        hasErrors = true;
-	                        errors = errors || [];
-	                        var err = errorObject_1.errorObject.e;
-	                        if (err instanceof UnsubscriptionError_1.UnsubscriptionError) {
-	                            errors = errors.concat(err.errors);
-	                        }
-	                        else {
-	                            errors.push(err);
-	                        }
-	                    }
-	                }
-	            }
-	        }
-	        if (hasErrors) {
-	            throw new UnsubscriptionError_1.UnsubscriptionError(errors);
-	        }
-	    };
-	    /**
-	     * Adds a tear down to be called during the unsubscribe() of this
-	     * Subscription.
-	     *
-	     * If the tear down being added is a subscription that is already
-	     * unsubscribed, is the same reference `add` is being called on, or is
-	     * `Subscription.EMPTY`, it will not be added.
-	     *
-	     * If this subscription is already in an `closed` state, the passed
-	     * tear down logic will be executed immediately.
-	     *
-	     * @param {TeardownLogic} teardown The additional logic to execute on
-	     * teardown.
-	     * @return {Subscription} Returns the Subscription used or created to be
-	     * added to the inner subscriptions list. This Subscription can be used with
-	     * `remove()` to remove the passed teardown logic from the inner subscriptions
-	     * list.
-	     */
-	    Subscription.prototype.add = function (teardown) {
-	        if (!teardown || (teardown === Subscription.EMPTY)) {
-	            return Subscription.EMPTY;
-	        }
-	        if (teardown === this) {
-	            return this;
-	        }
-	        var sub = teardown;
-	        switch (typeof teardown) {
-	            case 'function':
-	                sub = new Subscription(teardown);
-	            case 'object':
-	                if (sub.closed || typeof sub.unsubscribe !== 'function') {
-	                    break;
-	                }
-	                else if (this.closed) {
-	                    sub.unsubscribe();
-	                }
-	                else {
-	                    (this._subscriptions || (this._subscriptions = [])).push(sub);
-	                }
-	                break;
-	            default:
-	                throw new Error('unrecognized teardown ' + teardown + ' added to Subscription.');
-	        }
-	        return sub;
-	    };
-	    /**
-	     * Removes a Subscription from the internal list of subscriptions that will
-	     * unsubscribe during the unsubscribe process of this Subscription.
-	     * @param {Subscription} subscription The subscription to remove.
-	     * @return {void}
-	     */
-	    Subscription.prototype.remove = function (subscription) {
-	        // HACK: This might be redundant because of the logic in `add()`
-	        if (subscription == null || (subscription === this) || (subscription === Subscription.EMPTY)) {
-	            return;
-	        }
-	        var subscriptions = this._subscriptions;
-	        if (subscriptions) {
-	            var subscriptionIndex = subscriptions.indexOf(subscription);
-	            if (subscriptionIndex !== -1) {
-	                subscriptions.splice(subscriptionIndex, 1);
-	            }
-	        }
-	    };
-	    Subscription.EMPTY = (function (empty) {
-	        empty.closed = true;
-	        return empty;
-	    }(new Subscription()));
-	    return Subscription;
-	}());
-	var Subscription_2 = Subscription;
-
-	var __moduleExports$5 = {
-		Subscription: Subscription_2
-	};
-
-	var empty = {
-	    closed: true,
-	    next: function (value) { },
-	    error: function (err) { throw err; },
-	    complete: function () { }
-	};
-
-	var __moduleExports$11 = {
-		empty: empty
-	};
-
-	var root_1$2 = __moduleExports$1;
-	var Symbol$1 = root_1$2.root.Symbol;
-	var $$rxSubscriber = (typeof Symbol$1 === 'function' && typeof Symbol$1.for === 'function') ?
-	    Symbol$1.for('rxSubscriber') : '@@rxSubscriber';
-
-	var __moduleExports$12 = {
-		$$rxSubscriber: $$rxSubscriber
-	};
-
-	var __extends$10 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
-	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-	    function __() { this.constructor = d; }
-	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-	};
-	var isFunction_1 = __moduleExports$4;
-	var Subscription_1$1 = __moduleExports$5;
-	var Observer_1$1 = __moduleExports$11;
-	var rxSubscriber_1$2 = __moduleExports$12;
-	/**
-	 * Implements the {@link Observer} interface and extends the
-	 * {@link Subscription} class. While the {@link Observer} is the public API for
-	 * consuming the values of an {@link Observable}, all Observers get converted to
-	 * a Subscriber, in order to provide Subscription-like capabilities such as
-	 * `unsubscribe`. Subscriber is a common type in RxJS, and crucial for
-	 * implementing operators, but it is rarely used as a public API.
-	 *
-	 * @class Subscriber<T>
-	 */
-	var Subscriber = (function (_super) {
-	    __extends$10(Subscriber, _super);
-	    /**
-	     * @param {Observer|function(value: T): void} [destinationOrNext] A partially
-	     * defined Observer or a `next` callback function.
-	     * @param {function(e: ?any): void} [error] The `error` callback of an
-	     * Observer.
-	     * @param {function(): void} [complete] The `complete` callback of an
-	     * Observer.
-	     */
-	    function Subscriber(destinationOrNext, error, complete) {
-	        _super.call(this);
-	        this.syncErrorValue = null;
-	        this.syncErrorThrown = false;
-	        this.syncErrorThrowable = false;
-	        this.isStopped = false;
-	        switch (arguments.length) {
-	            case 0:
-	                this.destination = Observer_1$1.empty;
-	                break;
-	            case 1:
-	                if (!destinationOrNext) {
-	                    this.destination = Observer_1$1.empty;
-	                    break;
-	                }
-	                if (typeof destinationOrNext === 'object') {
-	                    if (destinationOrNext instanceof Subscriber) {
-	                        this.destination = destinationOrNext;
-	                        this.destination.add(this);
-	                    }
-	                    else {
-	                        this.syncErrorThrowable = true;
-	                        this.destination = new SafeSubscriber(this, destinationOrNext);
-	                    }
-	                    break;
-	                }
-	            default:
-	                this.syncErrorThrowable = true;
-	                this.destination = new SafeSubscriber(this, destinationOrNext, error, complete);
-	                break;
-	        }
-	    }
-	    Subscriber.prototype[rxSubscriber_1$2.$$rxSubscriber] = function () { return this; };
-	    /**
-	     * A static factory for a Subscriber, given a (potentially partial) definition
-	     * of an Observer.
-	     * @param {function(x: ?T): void} [next] The `next` callback of an Observer.
-	     * @param {function(e: ?any): void} [error] The `error` callback of an
-	     * Observer.
-	     * @param {function(): void} [complete] The `complete` callback of an
-	     * Observer.
-	     * @return {Subscriber<T>} A Subscriber wrapping the (partially defined)
-	     * Observer represented by the given arguments.
-	     */
-	    Subscriber.create = function (next, error, complete) {
-	        var subscriber = new Subscriber(next, error, complete);
-	        subscriber.syncErrorThrowable = false;
-	        return subscriber;
-	    };
-	    /**
-	     * The {@link Observer} callback to receive notifications of type `next` from
-	     * the Observable, with a value. The Observable may call this method 0 or more
-	     * times.
-	     * @param {T} [value] The `next` value.
-	     * @return {void}
-	     */
-	    Subscriber.prototype.next = function (value) {
-	        if (!this.isStopped) {
-	            this._next(value);
-	        }
-	    };
-	    /**
-	     * The {@link Observer} callback to receive notifications of type `error` from
-	     * the Observable, with an attached {@link Error}. Notifies the Observer that
-	     * the Observable has experienced an error condition.
-	     * @param {any} [err] The `error` exception.
-	     * @return {void}
-	     */
-	    Subscriber.prototype.error = function (err) {
-	        if (!this.isStopped) {
-	            this.isStopped = true;
-	            this._error(err);
-	        }
-	    };
-	    /**
-	     * The {@link Observer} callback to receive a valueless notification of type
-	     * `complete` from the Observable. Notifies the Observer that the Observable
-	     * has finished sending push-based notifications.
-	     * @return {void}
-	     */
-	    Subscriber.prototype.complete = function () {
-	        if (!this.isStopped) {
-	            this.isStopped = true;
-	            this._complete();
-	        }
-	    };
-	    Subscriber.prototype.unsubscribe = function () {
-	        if (this.closed) {
-	            return;
-	        }
-	        this.isStopped = true;
-	        _super.prototype.unsubscribe.call(this);
-	    };
-	    Subscriber.prototype._next = function (value) {
-	        this.destination.next(value);
-	    };
-	    Subscriber.prototype._error = function (err) {
-	        this.destination.error(err);
-	        this.unsubscribe();
-	    };
-	    Subscriber.prototype._complete = function () {
-	        this.destination.complete();
-	        this.unsubscribe();
-	    };
-	    return Subscriber;
-	}(Subscription_1$1.Subscription));
-	var Subscriber_2 = Subscriber;
-	/**
-	 * We need this JSDoc comment for affecting ESDoc.
-	 * @ignore
-	 * @extends {Ignored}
-	 */
-	var SafeSubscriber = (function (_super) {
-	    __extends$10(SafeSubscriber, _super);
-	    function SafeSubscriber(_parent, observerOrNext, error, complete) {
-	        _super.call(this);
-	        this._parent = _parent;
-	        var next;
-	        var context = this;
-	        if (isFunction_1.isFunction(observerOrNext)) {
-	            next = observerOrNext;
-	        }
-	        else if (observerOrNext) {
-	            context = observerOrNext;
-	            next = observerOrNext.next;
-	            error = observerOrNext.error;
-	            complete = observerOrNext.complete;
-	            if (isFunction_1.isFunction(context.unsubscribe)) {
-	                this.add(context.unsubscribe.bind(context));
-	            }
-	            context.unsubscribe = this.unsubscribe.bind(this);
-	        }
-	        this._context = context;
-	        this._next = next;
-	        this._error = error;
-	        this._complete = complete;
-	    }
-	    SafeSubscriber.prototype.next = function (value) {
-	        if (!this.isStopped && this._next) {
-	            var _parent = this._parent;
-	            if (!_parent.syncErrorThrowable) {
-	                this.__tryOrUnsub(this._next, value);
-	            }
-	            else if (this.__tryOrSetError(_parent, this._next, value)) {
-	                this.unsubscribe();
-	            }
-	        }
-	    };
-	    SafeSubscriber.prototype.error = function (err) {
-	        if (!this.isStopped) {
-	            var _parent = this._parent;
-	            if (this._error) {
-	                if (!_parent.syncErrorThrowable) {
-	                    this.__tryOrUnsub(this._error, err);
-	                    this.unsubscribe();
-	                }
-	                else {
-	                    this.__tryOrSetError(_parent, this._error, err);
-	                    this.unsubscribe();
-	                }
-	            }
-	            else if (!_parent.syncErrorThrowable) {
-	                this.unsubscribe();
-	                throw err;
-	            }
-	            else {
-	                _parent.syncErrorValue = err;
-	                _parent.syncErrorThrown = true;
-	                this.unsubscribe();
-	            }
-	        }
-	    };
-	    SafeSubscriber.prototype.complete = function () {
-	        if (!this.isStopped) {
-	            var _parent = this._parent;
-	            if (this._complete) {
-	                if (!_parent.syncErrorThrowable) {
-	                    this.__tryOrUnsub(this._complete);
-	                    this.unsubscribe();
-	                }
-	                else {
-	                    this.__tryOrSetError(_parent, this._complete);
-	                    this.unsubscribe();
-	                }
-	            }
-	            else {
-	                this.unsubscribe();
-	            }
-	        }
-	    };
-	    SafeSubscriber.prototype.__tryOrUnsub = function (fn, value) {
-	        try {
-	            fn.call(this._context, value);
-	        }
-	        catch (err) {
-	            this.unsubscribe();
-	            throw err;
-	        }
-	    };
-	    SafeSubscriber.prototype.__tryOrSetError = function (parent, fn, value) {
-	        try {
-	            fn.call(this._context, value);
-	        }
-	        catch (err) {
-	            parent.syncErrorValue = err;
-	            parent.syncErrorThrown = true;
-	            return true;
-	        }
-	        return false;
-	    };
-	    SafeSubscriber.prototype._unsubscribe = function () {
-	        var _parent = this._parent;
-	        this._context = null;
-	        this._parent = null;
-	        _parent.unsubscribe();
-	    };
-	    return SafeSubscriber;
-	}(Subscriber));
-
-	var __moduleExports$3 = {
-		Subscriber: Subscriber_2
-	};
-
-	var Subscriber_1$1 = __moduleExports$3;
-	var rxSubscriber_1$1 = __moduleExports$12;
-	var Observer_1 = __moduleExports$11;
-	function toSubscriber(nextOrObserver, error, complete) {
-	    if (nextOrObserver) {
-	        if (nextOrObserver instanceof Subscriber_1$1.Subscriber) {
-	            return nextOrObserver;
-	        }
-	        if (nextOrObserver[rxSubscriber_1$1.$$rxSubscriber]) {
-	            return nextOrObserver[rxSubscriber_1$1.$$rxSubscriber]();
-	        }
-	    }
-	    if (!nextOrObserver && !error && !complete) {
-	        return new Subscriber_1$1.Subscriber(Observer_1.empty);
-	    }
-	    return new Subscriber_1$1.Subscriber(nextOrObserver, error, complete);
-	}
-	var toSubscriber_2 = toSubscriber;
-
-	var __moduleExports$2 = {
-		toSubscriber: toSubscriber_2
-	};
-
-	var root_1$3 = __moduleExports$1;
-	function getSymbolObservable(context) {
-	    var $$observable;
-	    var Symbol = context.Symbol;
-	    if (typeof Symbol === 'function') {
-	        if (Symbol.observable) {
-	            $$observable = Symbol.observable;
-	        }
-	        else {
-	            $$observable = Symbol('observable');
-	            Symbol.observable = $$observable;
-	        }
-	    }
-	    else {
-	        $$observable = '@@observable';
-	    }
-	    return $$observable;
-	}
-	var getSymbolObservable_1 = getSymbolObservable;
-	var $$observable = getSymbolObservable(root_1$3.root);
-
-	var __moduleExports$13 = {
-		getSymbolObservable: getSymbolObservable_1,
-		$$observable: $$observable
-	};
-
-	var root_1 = __moduleExports$1;
-	var toSubscriber_1 = __moduleExports$2;
-	var observable_1 = __moduleExports$13;
-	/**
-	 * A representation of any set of values over any amount of time. This the most basic building block
-	 * of RxJS.
-	 *
-	 * @class Observable<T>
-	 */
-	var Observable = (function () {
-	    /**
-	     * @constructor
-	     * @param {Function} subscribe the function that is  called when the Observable is
-	     * initially subscribed to. This function is given a Subscriber, to which new values
-	     * can be `next`ed, or an `error` method can be called to raise an error, or
-	     * `complete` can be called to notify of a successful completion.
-	     */
-	    function Observable(subscribe) {
-	        this._isScalar = false;
-	        if (subscribe) {
-	            this._subscribe = subscribe;
-	        }
-	    }
-	    /**
-	     * Creates a new Observable, with this Observable as the source, and the passed
-	     * operator defined as the new observable's operator.
-	     * @method lift
-	     * @param {Operator} operator the operator defining the operation to take on the observable
-	     * @return {Observable} a new observable with the Operator applied
-	     */
-	    Observable.prototype.lift = function (operator) {
-	        var observable = new Observable();
-	        observable.source = this;
-	        observable.operator = operator;
-	        return observable;
-	    };
-	    Observable.prototype.subscribe = function (observerOrNext, error, complete) {
-	        var operator = this.operator;
-	        var sink = toSubscriber_1.toSubscriber(observerOrNext, error, complete);
-	        if (operator) {
-	            operator.call(sink, this);
-	        }
-	        else {
-	            sink.add(this._subscribe(sink));
-	        }
-	        if (sink.syncErrorThrowable) {
-	            sink.syncErrorThrowable = false;
-	            if (sink.syncErrorThrown) {
-	                throw sink.syncErrorValue;
-	            }
-	        }
-	        return sink;
-	    };
-	    /**
-	     * @method forEach
-	     * @param {Function} next a handler for each value emitted by the observable
-	     * @param {PromiseConstructor} [PromiseCtor] a constructor function used to instantiate the Promise
-	     * @return {Promise} a promise that either resolves on observable completion or
-	     *  rejects with the handled error
-	     */
-	    Observable.prototype.forEach = function (next, PromiseCtor) {
-	        var _this = this;
-	        if (!PromiseCtor) {
-	            if (root_1.root.Rx && root_1.root.Rx.config && root_1.root.Rx.config.Promise) {
-	                PromiseCtor = root_1.root.Rx.config.Promise;
-	            }
-	            else if (root_1.root.Promise) {
-	                PromiseCtor = root_1.root.Promise;
-	            }
-	        }
-	        if (!PromiseCtor) {
-	            throw new Error('no Promise impl found');
-	        }
-	        return new PromiseCtor(function (resolve, reject) {
-	            var subscription = _this.subscribe(function (value) {
-	                if (subscription) {
-	                    // if there is a subscription, then we can surmise
-	                    // the next handling is asynchronous. Any errors thrown
-	                    // need to be rejected explicitly and unsubscribe must be
-	                    // called manually
-	                    try {
-	                        next(value);
-	                    }
-	                    catch (err) {
-	                        reject(err);
-	                        subscription.unsubscribe();
-	                    }
-	                }
-	                else {
-	                    // if there is NO subscription, then we're getting a nexted
-	                    // value synchronously during subscription. We can just call it.
-	                    // If it errors, Observable's `subscribe` will ensure the
-	                    // unsubscription logic is called, then synchronously rethrow the error.
-	                    // After that, Promise will trap the error and send it
-	                    // down the rejection path.
-	                    next(value);
-	                }
-	            }, reject, resolve);
-	        });
-	    };
-	    Observable.prototype._subscribe = function (subscriber) {
-	        return this.source.subscribe(subscriber);
-	    };
-	    /**
-	     * An interop point defined by the es7-observable spec https://github.com/zenparsing/es-observable
-	     * @method Symbol.observable
-	     * @return {Observable} this instance of the observable
-	     */
-	    Observable.prototype[observable_1.$$observable] = function () {
-	        return this;
-	    };
-	    // HACK: Since TypeScript inherits static properties too, we have to
-	    // fight against TypeScript here so Subject can have a different static create signature
-	    /**
-	     * Creates a new cold Observable by calling the Observable constructor
-	     * @static true
-	     * @owner Observable
-	     * @method create
-	     * @param {Function} subscribe? the subscriber function to be passed to the Observable constructor
-	     * @return {Observable} a new cold observable
-	     */
-	    Observable.create = function (subscribe) {
-	        return new Observable(subscribe);
-	    };
-	    return Observable;
-	}());
-	var Observable_2 = Observable;
-
-	var __moduleExports = {
-		Observable: Observable_2
-	};
-
-	var __extends$12 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
-	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-	    function __() { this.constructor = d; }
-	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-	};
-	/**
-	 * An error thrown when an action is invalid because the object has been
-	 * unsubscribed.
-	 *
-	 * @see {@link Subject}
-	 * @see {@link BehaviorSubject}
-	 *
-	 * @class ObjectUnsubscribedError
-	 */
-	var ObjectUnsubscribedError = (function (_super) {
-	    __extends$12(ObjectUnsubscribedError, _super);
-	    function ObjectUnsubscribedError() {
-	        var err = _super.call(this, 'object unsubscribed');
-	        this.name = err.name = 'ObjectUnsubscribedError';
-	        this.stack = err.stack;
-	        this.message = err.message;
-	    }
-	    return ObjectUnsubscribedError;
-	}(Error));
-	var ObjectUnsubscribedError_2 = ObjectUnsubscribedError;
-
-	var __moduleExports$14 = {
-		ObjectUnsubscribedError: ObjectUnsubscribedError_2
-	};
-
-	var __extends$13 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
-	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-	    function __() { this.constructor = d; }
-	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-	};
-	var Subscription_1$2 = __moduleExports$5;
-	/**
-	 * We need this JSDoc comment for affecting ESDoc.
-	 * @ignore
-	 * @extends {Ignored}
-	 */
-	var SubjectSubscription = (function (_super) {
-	    __extends$13(SubjectSubscription, _super);
-	    function SubjectSubscription(subject, subscriber) {
-	        _super.call(this);
-	        this.subject = subject;
-	        this.subscriber = subscriber;
-	        this.closed = false;
-	    }
-	    SubjectSubscription.prototype.unsubscribe = function () {
-	        if (this.closed) {
-	            return;
-	        }
-	        this.closed = true;
-	        var subject = this.subject;
-	        var observers = subject.observers;
-	        this.subject = null;
-	        if (!observers || observers.length === 0 || subject.isStopped || subject.closed) {
-	            return;
-	        }
-	        var subscriberIndex = observers.indexOf(this.subscriber);
-	        if (subscriberIndex !== -1) {
-	            observers.splice(subscriberIndex, 1);
-	        }
-	    };
-	    return SubjectSubscription;
-	}(Subscription_1$2.Subscription));
-	var SubjectSubscription_2 = SubjectSubscription;
-
-	var __moduleExports$15 = {
-		SubjectSubscription: SubjectSubscription_2
-	};
-
-	var __extends$9 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
-	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-	    function __() { this.constructor = d; }
-	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-	};
-	var Observable_1 = __moduleExports;
-	var Subscriber_1 = __moduleExports$3;
-	var Subscription_1 = __moduleExports$5;
-	var ObjectUnsubscribedError_1 = __moduleExports$14;
-	var SubjectSubscription_1 = __moduleExports$15;
-	var rxSubscriber_1 = __moduleExports$12;
-	/**
-	 * @class SubjectSubscriber<T>
-	 */
-	var SubjectSubscriber = (function (_super) {
-	    __extends$9(SubjectSubscriber, _super);
-	    function SubjectSubscriber(destination) {
-	        _super.call(this, destination);
-	        this.destination = destination;
-	    }
-	    return SubjectSubscriber;
-	}(Subscriber_1.Subscriber));
-	var SubjectSubscriber_1 = SubjectSubscriber;
-	/**
-	 * @class Subject<T>
-	 */
-	var Subject = (function (_super) {
-	    __extends$9(Subject, _super);
-	    function Subject() {
-	        _super.call(this);
-	        this.observers = [];
-	        this.closed = false;
-	        this.isStopped = false;
-	        this.hasError = false;
-	        this.thrownError = null;
-	    }
-	    Subject.prototype[rxSubscriber_1.$$rxSubscriber] = function () {
-	        return new SubjectSubscriber(this);
-	    };
-	    Subject.prototype.lift = function (operator) {
-	        var subject = new AnonymousSubject(this, this);
-	        subject.operator = operator;
-	        return subject;
-	    };
-	    Subject.prototype.next = function (value) {
-	        if (this.closed) {
-	            throw new ObjectUnsubscribedError_1.ObjectUnsubscribedError();
-	        }
-	        if (!this.isStopped) {
-	            var observers = this.observers;
-	            var len = observers.length;
-	            var copy = observers.slice();
-	            for (var i = 0; i < len; i++) {
-	                copy[i].next(value);
-	            }
-	        }
-	    };
-	    Subject.prototype.error = function (err) {
-	        if (this.closed) {
-	            throw new ObjectUnsubscribedError_1.ObjectUnsubscribedError();
-	        }
-	        this.hasError = true;
-	        this.thrownError = err;
-	        this.isStopped = true;
-	        var observers = this.observers;
-	        var len = observers.length;
-	        var copy = observers.slice();
-	        for (var i = 0; i < len; i++) {
-	            copy[i].error(err);
-	        }
-	        this.observers.length = 0;
-	    };
-	    Subject.prototype.complete = function () {
-	        if (this.closed) {
-	            throw new ObjectUnsubscribedError_1.ObjectUnsubscribedError();
-	        }
-	        this.isStopped = true;
-	        var observers = this.observers;
-	        var len = observers.length;
-	        var copy = observers.slice();
-	        for (var i = 0; i < len; i++) {
-	            copy[i].complete();
-	        }
-	        this.observers.length = 0;
-	    };
-	    Subject.prototype.unsubscribe = function () {
-	        this.isStopped = true;
-	        this.closed = true;
-	        this.observers = null;
-	    };
-	    Subject.prototype._subscribe = function (subscriber) {
-	        if (this.closed) {
-	            throw new ObjectUnsubscribedError_1.ObjectUnsubscribedError();
-	        }
-	        else if (this.hasError) {
-	            subscriber.error(this.thrownError);
-	            return Subscription_1.Subscription.EMPTY;
-	        }
-	        else if (this.isStopped) {
-	            subscriber.complete();
-	            return Subscription_1.Subscription.EMPTY;
-	        }
-	        else {
-	            this.observers.push(subscriber);
-	            return new SubjectSubscription_1.SubjectSubscription(this, subscriber);
-	        }
-	    };
-	    Subject.prototype.asObservable = function () {
-	        var observable = new Observable_1.Observable();
-	        observable.source = this;
-	        return observable;
-	    };
-	    Subject.create = function (destination, source) {
-	        return new AnonymousSubject(destination, source);
-	    };
-	    return Subject;
-	}(Observable_1.Observable));
-	var Subject_2 = Subject;
-	/**
-	 * @class AnonymousSubject<T>
-	 */
-	var AnonymousSubject = (function (_super) {
-	    __extends$9(AnonymousSubject, _super);
-	    function AnonymousSubject(destination, source) {
-	        _super.call(this);
-	        this.destination = destination;
-	        this.source = source;
-	    }
-	    AnonymousSubject.prototype.next = function (value) {
-	        var destination = this.destination;
-	        if (destination && destination.next) {
-	            destination.next(value);
-	        }
-	    };
-	    AnonymousSubject.prototype.error = function (err) {
-	        var destination = this.destination;
-	        if (destination && destination.error) {
-	            this.destination.error(err);
-	        }
-	    };
-	    AnonymousSubject.prototype.complete = function () {
-	        var destination = this.destination;
-	        if (destination && destination.complete) {
-	            this.destination.complete();
-	        }
-	    };
-	    AnonymousSubject.prototype._subscribe = function (subscriber) {
-	        var source = this.source;
-	        if (source) {
-	            return this.source.subscribe(subscriber);
-	        }
-	        else {
-	            return Subscription_1.Subscription.EMPTY;
-	        }
-	    };
-	    return AnonymousSubject;
-	}(Subject));
-	var AnonymousSubject_1 = AnonymousSubject;
-
-	var Subject_1 = {
-		SubjectSubscriber: SubjectSubscriber_1,
-		Subject: Subject_2,
-		AnonymousSubject: AnonymousSubject_1
-	};
-
-	/**
-	 * @license
-	 * Copyright Google Inc. All Rights Reserved.
-	 *
-	 * Use of this source code is governed by an MIT-style license that can be
-	 * found in the LICENSE file at https://angular.io/license
-	 */
-	var __extends$8 = (this && this.__extends) || function (d, b) {
-	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-	    function __() { this.constructor = d; }
-	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-	};
-	/**
-	 *  Use by directives and components to emit custom Events.
-	  * *
-	  * ### Examples
-	  * *
-	  * In the following example, `Zippy` alternatively emits `open` and `close` events when its
-	  * title gets clicked:
-	  * *
-	  * ```
-	  * selector: 'zippy',
-	  * template: `
-	  * <div class="zippy">
-	  * <div (click)="toggle()">Toggle</div>
-	  * <div [hidden]="!visible">
-	  * <ng-content></ng-content>
-	  * </div>
-	  * </div>`})
-	  * export class Zippy {
-	  * visible: boolean = true;
-	  * @Output() open: EventEmitter<any> = new EventEmitter();
-	  * @Output() close: EventEmitter<any> = new EventEmitter();
-	  * *
-	  * toggle() {
-	  * this.visible = !this.visible;
-	  * if (this.visible) {
-	  * this.open.emit(null);
-	  * } else {
-	  * this.close.emit(null);
-	  * }
-	  * }
-	  * }
-	  * ```
-	  * *
-	  * The events payload can be accessed by the parameter `$event` on the components output event
-	  * handler:
-	  * *
-	  * ```
-	  * <zippy (open)="onOpen($event)" (close)="onClose($event)"></zippy>
-	  * ```
-	  * *
-	  * Uses Rx.Observable but provides an adapter to make it work as specified here:
-	  * https://github.com/jhusain/observable-spec
-	  * *
-	  * Once a reference implementation of the spec is available, switch to it.
-	 */
-	var EventEmitter = (function (_super) {
-	    __extends$8(EventEmitter, _super);
-	    /**
-	     *  Creates an instance of [EventEmitter], which depending on [isAsync],
-	      * delivers events synchronously or asynchronously.
-	     * @param {?=} isAsync
-	     */
-	    function EventEmitter(isAsync) {
-	        if (isAsync === void 0) { isAsync = false; }
-	        _super.call(this);
-	        this.__isAsync = isAsync;
-	    }
-	    /**
-	     * @param {?=} value
-	     * @return {?}
-	     */
-	    EventEmitter.prototype.emit = function (value) { _super.prototype.next.call(this, value); };
-	    /**
-	     * @param {?=} generatorOrNext
-	     * @param {?=} error
-	     * @param {?=} complete
-	     * @return {?}
-	     */
-	    EventEmitter.prototype.subscribe = function (generatorOrNext, error, complete) {
-	        var /** @type {?} */ schedulerFn;
-	        var /** @type {?} */ errorFn = function (err) { return null; };
-	        var /** @type {?} */ completeFn = function () { return null; };
-	        if (generatorOrNext && typeof generatorOrNext === 'object') {
-	            schedulerFn = this.__isAsync ? function (value) {
-	                setTimeout(function () { return generatorOrNext.next(value); });
-	            } : function (value) { generatorOrNext.next(value); };
-	            if (generatorOrNext.error) {
-	                errorFn = this.__isAsync ? function (err) { setTimeout(function () { return generatorOrNext.error(err); }); } :
-	                    function (err) { generatorOrNext.error(err); };
-	            }
-	            if (generatorOrNext.complete) {
-	                completeFn = this.__isAsync ? function () { setTimeout(function () { return generatorOrNext.complete(); }); } :
-	                    function () { generatorOrNext.complete(); };
-	            }
-	        }
-	        else {
-	            schedulerFn = this.__isAsync ? function (value) { setTimeout(function () { return generatorOrNext(value); }); } :
-	                function (value) { generatorOrNext(value); };
-	            if (error) {
-	                errorFn =
-	                    this.__isAsync ? function (err) { setTimeout(function () { return error(err); }); } : function (err) { error(err); };
-	            }
-	            if (complete) {
-	                completeFn =
-	                    this.__isAsync ? function () { setTimeout(function () { return complete(); }); } : function () { complete(); };
-	            }
-	        }
-	        return _super.prototype.subscribe.call(this, schedulerFn, errorFn, completeFn);
-	    };
-	    return EventEmitter;
-	}(Subject_2));
-
-	/**
-	 *  An injectable service for executing work inside or outside of the Angular zone.
-	  * *
-	  * The most common use of this service is to optimize performance when starting a work consisting of
-	  * one or more asynchronous tasks that don't require UI updates or error handling to be handled by
-	  * Angular. Such tasks can be kicked off via {@link runOutsideAngular} and if needed, these tasks
-	  * can reenter the Angular zone via {@link run}.
-	  * *
-	  * <!-- TODO: add/fix links to:
-	  * - docs explaining zones and the use of zones in Angular and change-detection
-	  * - link to runOutsideAngular/run (throughout this file!)
-	  * -->
-	  * *
-	  * ### Example
-	  * ```
-	  * import {Component, NgZone} from '@angular/core';
-	  * import {NgIf} from '@angular/common';
-	  * *
-	  * selector: 'ng-zone-demo'.
-	  * template: `
-	  * <h2>Demo: NgZone</h2>
-	  * *
-	  * <p>Progress: {{progress}}%</p>
-	  * <p *ngIf="progress >= 100">Done processing {{label}} of Angular zone!</p>
-	  * *
-	  * <button (click)="processWithinAngularZone()">Process within Angular zone</button>
-	  * <button (click)="processOutsideOfAngularZone()">Process outside of Angular zone</button>
-	  * `,
-	  * })
-	  * export class NgZoneDemo {
-	  * progress: number = 0;
-	  * label: string;
-	  * *
-	  * constructor(private _ngZone: NgZone) {}
-	  * *
-	  * // Loop inside the Angular zone
-	  * // so the UI DOES refresh after each setTimeout cycle
-	  * processWithinAngularZone() {
-	  * this.label = 'inside';
-	  * this.progress = 0;
-	  * this._increaseProgress(() => console.log('Inside Done!'));
-	  * }
-	  * *
-	  * // Loop outside of the Angular zone
-	  * // so the UI DOES NOT refresh after each setTimeout cycle
-	  * processOutsideOfAngularZone() {
-	  * this.label = 'outside';
-	  * this.progress = 0;
-	  * this._ngZone.runOutsideAngular(() => {
-	  * this._increaseProgress(() => {
-	  * // reenter the Angular zone and display done
-	  * this._ngZone.run(() => {console.log('Outside Done!') });
-	  * }}));
-	  * }
-	  * *
-	  * _increaseProgress(doneCallback: () => void) {
-	  * this.progress += 1;
-	  * console.log(`Current progress: ${this.progress}%`);
-	  * *
-	  * if (this.progress < 100) {
-	  * window.setTimeout(() => this._increaseProgress(doneCallback)), 10)
-	  * } else {
-	  * doneCallback();
-	  * }
-	  * }
-	  * }
-	  * ```
-	 */
-	var NgZone = (function () {
-	    /**
-	     * @param {?} __0
-	     */
-	    function NgZone(_a) {
-	        var _b = _a.enableLongStackTrace, enableLongStackTrace = _b === void 0 ? false : _b;
-	        this._hasPendingMicrotasks = false;
-	        this._hasPendingMacrotasks = false;
-	        this._isStable = true;
-	        this._nesting = 0;
-	        this._onUnstable = new EventEmitter(false);
-	        this._onMicrotaskEmpty = new EventEmitter(false);
-	        this._onStable = new EventEmitter(false);
-	        this._onErrorEvents = new EventEmitter(false);
-	        if (typeof Zone == 'undefined') {
-	            throw new Error('Angular requires Zone.js prolyfill.');
-	        }
-	        Zone.assertZonePatched();
-	        this.outer = this.inner = Zone.current;
-	        if (Zone['wtfZoneSpec']) {
-	            this.inner = this.inner.fork(Zone['wtfZoneSpec']);
-	        }
-	        if (enableLongStackTrace && Zone['longStackTraceZoneSpec']) {
-	            this.inner = this.inner.fork(Zone['longStackTraceZoneSpec']);
-	        }
-	        this.forkInnerZoneWithAngularBehavior();
-	    }
-	    /**
-	     * @return {?}
-	     */
-	    NgZone.isInAngularZone = function () { return Zone.current.get('isAngularZone') === true; };
-	    /**
-	     * @return {?}
-	     */
-	    NgZone.assertInAngularZone = function () {
-	        if (!NgZone.isInAngularZone()) {
-	            throw new Error('Expected to be in Angular Zone, but it is not!');
-	        }
-	    };
-	    /**
-	     * @return {?}
-	     */
-	    NgZone.assertNotInAngularZone = function () {
-	        if (NgZone.isInAngularZone()) {
-	            throw new Error('Expected to not be in Angular Zone, but it is!');
-	        }
-	    };
-	    /**
-	     *  Executes the `fn` function synchronously within the Angular zone and returns value returned by
-	      * the function.
-	      * *
-	      * Running functions via `run` allows you to reenter Angular zone from a task that was executed
-	      * outside of the Angular zone (typically started via {@link runOutsideAngular}).
-	      * *
-	      * Any future tasks or microtasks scheduled from within this function will continue executing from
-	      * within the Angular zone.
-	      * *
-	      * If a synchronous error happens it will be rethrown and not reported via `onError`.
-	     * @param {?} fn
-	     * @return {?}
-	     */
-	    NgZone.prototype.run = function (fn) { return this.inner.run(fn); };
-	    /**
-	     *  Same as `run`, except that synchronous errors are caught and forwarded via `onError` and not
-	      * rethrown.
-	     * @param {?} fn
-	     * @return {?}
-	     */
-	    NgZone.prototype.runGuarded = function (fn) { return this.inner.runGuarded(fn); };
-	    /**
-	     *  Executes the `fn` function synchronously in Angular's parent zone and returns value returned by
-	      * the function.
-	      * *
-	      * Running functions via `runOutsideAngular` allows you to escape Angular's zone and do work that
-	      * doesn't trigger Angular change-detection or is subject to Angular's error handling.
-	      * *
-	      * Any future tasks or microtasks scheduled from within this function will continue executing from
-	      * outside of the Angular zone.
-	      * *
-	      * Use {@link run} to reenter the Angular zone and do work that updates the application model.
-	     * @param {?} fn
-	     * @return {?}
-	     */
-	    NgZone.prototype.runOutsideAngular = function (fn) { return this.outer.run(fn); };
-	    Object.defineProperty(NgZone.prototype, "onUnstable", {
-	        /**
-	         *  Notifies when code enters Angular Zone. This gets fired first on VM Turn.
-	         * @return {?}
-	         */
-	        get: function () { return this._onUnstable; },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    Object.defineProperty(NgZone.prototype, "onMicrotaskEmpty", {
-	        /**
-	         *  Notifies when there is no more microtasks enqueue in the current VM Turn.
-	          * This is a hint for Angular to do change detection, which may enqueue more microtasks.
-	          * For this reason this event can fire multiple times per VM Turn.
-	         * @return {?}
-	         */
-	        get: function () { return this._onMicrotaskEmpty; },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    Object.defineProperty(NgZone.prototype, "onStable", {
-	        /**
-	         *  Notifies when the last `onMicrotaskEmpty` has run and there are no more microtasks, which
-	          * implies we are about to relinquish VM turn.
-	          * This event gets called just once.
-	         * @return {?}
-	         */
-	        get: function () { return this._onStable; },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    Object.defineProperty(NgZone.prototype, "onError", {
-	        /**
-	         *  Notify that an error has been delivered.
-	         * @return {?}
-	         */
-	        get: function () { return this._onErrorEvents; },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    Object.defineProperty(NgZone.prototype, "isStable", {
-	        /**
-	         *  Whether there are no outstanding microtasks or macrotasks.
-	         * @return {?}
-	         */
-	        get: function () { return this._isStable; },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    Object.defineProperty(NgZone.prototype, "hasPendingMicrotasks", {
-	        /**
-	         * @return {?}
-	         */
-	        get: function () { return this._hasPendingMicrotasks; },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    Object.defineProperty(NgZone.prototype, "hasPendingMacrotasks", {
-	        /**
-	         * @return {?}
-	         */
-	        get: function () { return this._hasPendingMacrotasks; },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    /**
-	     * @return {?}
-	     */
-	    NgZone.prototype.checkStable = function () {
-	        var _this = this;
-	        if (this._nesting == 0 && !this._hasPendingMicrotasks && !this._isStable) {
-	            try {
-	                this._nesting++;
-	                this._onMicrotaskEmpty.emit(null);
-	            }
-	            finally {
-	                this._nesting--;
-	                if (!this._hasPendingMicrotasks) {
-	                    try {
-	                        this.runOutsideAngular(function () { return _this._onStable.emit(null); });
-	                    }
-	                    finally {
-	                        this._isStable = true;
-	                    }
-	                }
-	            }
-	        }
-	    };
-	    /**
-	     * @return {?}
-	     */
-	    NgZone.prototype.forkInnerZoneWithAngularBehavior = function () {
-	        var _this = this;
-	        this.inner = this.inner.fork({
-	            name: 'angular',
-	            properties: /** @type {?} */ ({ 'isAngularZone': true }),
-	            onInvokeTask: function (delegate, current, target, task, applyThis, applyArgs) {
-	                try {
-	                    _this.onEnter();
-	                    return delegate.invokeTask(target, task, applyThis, applyArgs);
-	                }
-	                finally {
-	                    _this.onLeave();
-	                }
-	            },
-	            onInvoke: function (delegate, current, target, callback, applyThis, applyArgs, source) {
-	                try {
-	                    _this.onEnter();
-	                    return delegate.invoke(target, callback, applyThis, applyArgs, source);
-	                }
-	                finally {
-	                    _this.onLeave();
-	                }
-	            },
-	            onHasTask: function (delegate, current, target, hasTaskState) {
-	                delegate.hasTask(target, hasTaskState);
-	                if (current === target) {
-	                    // We are only interested in hasTask events which originate from our zone
-	                    // (A child hasTask event is not interesting to us)
-	                    if (hasTaskState.change == 'microTask') {
-	                        _this.setHasMicrotask(hasTaskState.microTask);
-	                    }
-	                    else if (hasTaskState.change == 'macroTask') {
-	                        _this.setHasMacrotask(hasTaskState.macroTask);
-	                    }
-	                }
-	            },
-	            onHandleError: function (delegate, current, target, error) {
-	                delegate.handleError(target, error);
-	                _this.triggerError(error);
-	                return false;
-	            }
-	        });
-	    };
-	    /**
-	     * @return {?}
-	     */
-	    NgZone.prototype.onEnter = function () {
-	        this._nesting++;
-	        if (this._isStable) {
-	            this._isStable = false;
-	            this._onUnstable.emit(null);
-	        }
-	    };
-	    /**
-	     * @return {?}
-	     */
-	    NgZone.prototype.onLeave = function () {
-	        this._nesting--;
-	        this.checkStable();
-	    };
-	    /**
-	     * @param {?} hasMicrotasks
-	     * @return {?}
-	     */
-	    NgZone.prototype.setHasMicrotask = function (hasMicrotasks) {
-	        this._hasPendingMicrotasks = hasMicrotasks;
-	        this.checkStable();
-	    };
-	    /**
-	     * @param {?} hasMacrotasks
-	     * @return {?}
-	     */
-	    NgZone.prototype.setHasMacrotask = function (hasMacrotasks) { this._hasPendingMacrotasks = hasMacrotasks; };
-	    /**
-	     * @param {?} error
-	     * @return {?}
-	     */
-	    NgZone.prototype.triggerError = function (error) { this._onErrorEvents.emit(error); };
-	    return NgZone;
-	}());
 
 	/**
 	 *  The Testability service provides testing hooks that can be accessed from
@@ -10161,43 +10232,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
-	var /** @type {?} */ _queuedAnimations = [];
-	/**
-	 * @param {?} player
-	 * @return {?}
-	 */
-	function queueAnimationGlobally(player) {
-	    _queuedAnimations.push(player);
-	}
-	/**
-	 * @return {?}
-	 */
-	function triggerQueuedAnimations() {
-	    // this code is wrapped into a single promise such that the
-	    // onStart and onDone player callbacks are triggered outside
-	    // of the digest cycle of animations
-	    if (_queuedAnimations.length) {
-	        Promise.resolve(null).then(_triggerAnimations);
-	    }
-	}
-	/**
-	 * @return {?}
-	 */
-	function _triggerAnimations() {
-	    for (var /** @type {?} */ i = 0; i < _queuedAnimations.length; i++) {
-	        var /** @type {?} */ player = _queuedAnimations[i];
-	        player.play();
-	    }
-	    _queuedAnimations = [];
-	}
-
-	/**
-	 * @license
-	 * Copyright Google Inc. All Rights Reserved.
-	 *
-	 * Use of this source code is governed by an MIT-style license that can be
-	 * found in the LICENSE file at https://angular.io/license
-	 */
 	var __extends$16 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
@@ -10314,9 +10348,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	var ViewRef_ = (function () {
 	    /**
 	     * @param {?} _view
+	     * @param {?} animationQueue
 	     */
-	    function ViewRef_(_view) {
+	    function ViewRef_(_view, animationQueue) {
 	        this._view = _view;
+	        this.animationQueue = animationQueue;
 	        this._view = _view;
 	        this._originalMode = this._view.cdMode;
 	    }
@@ -10365,7 +10401,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     */
 	    ViewRef_.prototype.detectChanges = function () {
 	        this._view.detectChanges(false);
-	        triggerQueuedAnimations();
+	        this.animationQueue.flush();
 	    };
 	    /**
 	     * @return {?}
@@ -12087,16 +12123,18 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @return {?}
 	     */
 	    AnimationTransition.prototype.onStart = function (callback) {
-	        var /** @type {?} */ event = this._createEvent('start');
-	        this._player.onStart(function () { return callback(event); });
+	        var _this = this;
+	        var /** @type {?} */ fn = (Zone.current.wrap(function () { return callback(_this._createEvent('start')); }, 'player.onStart'));
+	        this._player.onStart(fn);
 	    };
 	    /**
 	     * @param {?} callback
 	     * @return {?}
 	     */
 	    AnimationTransition.prototype.onDone = function (callback) {
-	        var /** @type {?} */ event = this._createEvent('done');
-	        this._player.onDone(function () { return callback(event); });
+	        var _this = this;
+	        var /** @type {?} */ fn = (Zone.current.wrap(function () { return callback(_this._createEvent('done')); }, 'player.onDone'));
+	        this._player.onDone(fn);
 	    };
 	    return AnimationTransition;
 	}());
@@ -12570,7 +12608,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	}());
 
 	var AnimationViewContext = (function () {
-	    function AnimationViewContext() {
+	    /**
+	     * @param {?} _animationQueue
+	     */
+	    function AnimationViewContext(_animationQueue) {
+	        this._animationQueue = _animationQueue;
 	        this._players = new ViewAnimationMap();
 	    }
 	    /**
@@ -12596,7 +12638,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     */
 	    AnimationViewContext.prototype.queueAnimation = function (element, animationName, player) {
 	        var _this = this;
-	        queueAnimationGlobally(player);
+	        this._animationQueue.enqueue(player);
 	        this._players.set(element, animationName, player);
 	        player.onDone(function () { return _this._players.remove(element, animationName, player); });
 	    };
@@ -12717,7 +12759,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        this.cdMode = cdMode;
 	        this.declaredViewContainer = declaredViewContainer;
 	        this.numberOfChecks = 0;
-	        this.ref = new ViewRef_(this);
+	        this.ref = new ViewRef_(this, viewUtils.animationQueue);
 	        if (type === ViewType.COMPONENT || type === ViewType.HOST) {
 	            this.renderer = viewUtils.renderComponent(componentType);
 	        }
@@ -12732,7 +12774,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	         */
 	        get: function () {
 	            if (!this._animationContext) {
-	                this._animationContext = new AnimationViewContext();
+	                this._animationContext = new AnimationViewContext(this.viewUtils.animationQueue);
 	            }
 	            return this._animationContext;
 	        },
@@ -13066,11 +13108,19 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @param {?} throwOnChange
 	     * @return {?}
 	     */
+	    AppView.prototype.internalDetectChanges = function (throwOnChange) {
+	        if (this.cdMode !== ChangeDetectorStatus.Detached) {
+	            this.detectChanges(throwOnChange);
+	        }
+	    };
+	    /**
+	     * @param {?} throwOnChange
+	     * @return {?}
+	     */
 	    AppView.prototype.detectChanges = function (throwOnChange) {
 	        var /** @type {?} */ s = _scope_check(this.clazz);
 	        if (this.cdMode === ChangeDetectorStatus.Checked ||
-	            this.cdMode === ChangeDetectorStatus.Errored ||
-	            this.cdMode === ChangeDetectorStatus.Detached)
+	            this.cdMode === ChangeDetectorStatus.Errored)
 	            return;
 	        if (this.cdMode === ChangeDetectorStatus.Destroyed) {
 	            this.throwDestroyedError('detectChanges');
@@ -19694,8 +19744,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        var _this = this;
 	        var /** @type {?} */ strAttrs = this._serializeAttributes(tag.attrs);
 	        if (tag.children.length == 0) {
-	            return tag.canSelfClose ? "<" + tag.name + strAttrs + "/>" :
-	                "<" + tag.name + strAttrs + "></" + tag.name + ">";
+	            return "<" + tag.name + strAttrs + "/>";
 	        }
 	        var /** @type {?} */ strChildren = tag.children.map(function (node) { return node.visit(_this); });
 	        return "<" + tag.name + strAttrs + ">" + strChildren.join('') + "</" + tag.name + ">";
@@ -19777,16 +19826,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @param {?} name
 	     * @param {?=} unescapedAttrs
 	     * @param {?=} children
-	     * @param {?=} canSelfClose
 	     */
-	    function Tag(name, unescapedAttrs, children, canSelfClose) {
+	    function Tag(name, unescapedAttrs, children) {
 	        var _this = this;
 	        if (unescapedAttrs === void 0) { unescapedAttrs = {}; }
 	        if (children === void 0) { children = []; }
-	        if (canSelfClose === void 0) { canSelfClose = true; }
 	        this.name = name;
 	        this.children = children;
-	        this.canSelfClose = canSelfClose;
 	        this.attrs = {};
 	        Object.keys(unescapedAttrs).forEach(function (k) {
 	            _this.attrs[k] = _escapeXml(unescapedAttrs[k]);
@@ -20298,7 +20344,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @return {?}
 	     */
 	    _Visitor.prototype.visitPlaceholder = function (ph, context) {
-	        return [new Tag(_PLACEHOLDER_TAG$1, { name: ph.name }, [], false)];
+	        return [new Tag(_PLACEHOLDER_TAG$1, { name: ph.name })];
 	    };
 	    /**
 	     * @param {?} ph
@@ -20306,7 +20352,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @return {?}
 	     */
 	    _Visitor.prototype.visitIcuPlaceholder = function (ph, context) {
-	        return [new Tag(_PLACEHOLDER_TAG$1, { name: ph.name }, [], false)];
+	        return [new Tag(_PLACEHOLDER_TAG$1, { name: ph.name })];
 	    };
 	    /**
 	     * @param {?} nodes
@@ -25829,7 +25875,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('2.3.0-5031adc');
+	var /** @type {?} */ VERSION$1 = new Version('2.3.0-d4ddb60');
 
 	/**
 	 * @return {?}
@@ -26469,6 +26515,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @return {?}
 	 */
 	function _normalizeStyleMetadata(entry, stateStyles, schema, errors, permitStateReferences) {
+	    var /** @type {?} */ offset = entry.offset;
+	    if (offset > 1 || offset < 0) {
+	        errors.push(new AnimationParseError("Offset values for animations must be between 0 and 1"));
+	    }
 	    var /** @type {?} */ normalizedStyles = [];
 	    entry.styles.forEach(function (styleEntry) {
 	        if (typeof styleEntry === 'string') {
@@ -28530,6 +28580,20 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    };
 	    return LiteralArrayExpr;
 	}(Expression));
+	var LiteralMapEntry = (function () {
+	    /**
+	     * @param {?} key
+	     * @param {?} value
+	     * @param {?=} quoted
+	     */
+	    function LiteralMapEntry(key, value, quoted) {
+	        if (quoted === void 0) { quoted = false; }
+	        this.key = key;
+	        this.value = value;
+	        this.quoted = quoted;
+	    }
+	    return LiteralMapEntry;
+	}());
 	var LiteralMapExpr = (function (_super) {
 	    __extends$39(LiteralMapExpr, _super);
 	    /**
@@ -29013,7 +29077,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     */
 	    ExpressionTransformer.prototype.visitLiteralMapExpr = function (ast, context) {
 	        var _this = this;
-	        var /** @type {?} */ entries = ast.entries.map(function (entry) { return [entry[0], entry[1].visitExpression(_this, context),]; });
+	        var /** @type {?} */ entries = ast.entries.map(function (entry) { return new LiteralMapEntry(entry.key, entry.value.visitExpression(_this, context), entry.quoted); });
 	        return new LiteralMapExpr(entries);
 	    };
 	    /**
@@ -29269,7 +29333,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     */
 	    RecursiveExpressionVisitor.prototype.visitLiteralMapExpr = function (ast, context) {
 	        var _this = this;
-	        ast.entries.forEach(function (entry) { return ((entry[1])).visitExpression(_this, context); });
+	        ast.entries.forEach(function (entry) { return entry.value.visitExpression(_this, context); });
 	        return ast;
 	    };
 	    /**
@@ -29486,7 +29550,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 */
 	function literalMap(values, type) {
 	    if (type === void 0) { type = null; }
-	    return new LiteralMapExpr(values, type);
+	    return new LiteralMapExpr(values.map(function (entry) { return new LiteralMapEntry(entry[0], entry[1]); }), type);
 	}
 	/**
 	 * @param {?} expr
@@ -30633,13 +30697,14 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @param {?} view
 	 * @param {?} componentView
 	 * @param {?} boundProp
+	 * @param {?} boundOutputs
 	 * @param {?} eventListener
 	 * @param {?} renderElement
 	 * @param {?} renderValue
 	 * @param {?} lastRenderValue
 	 * @return {?}
 	 */
-	function triggerAnimation(view, componentView, boundProp, eventListener, renderElement, renderValue, lastRenderValue) {
+	function triggerAnimation(view, componentView, boundProp, boundOutputs, eventListener, renderElement, renderValue, lastRenderValue) {
 	    var /** @type {?} */ detachStmts = [];
 	    var /** @type {?} */ updateStmts = [];
 	    var /** @type {?} */ animationName = boundProp.name;
@@ -30659,14 +30724,19 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    detachStmts.push(animationTransitionVar
 	        .set(animationFnExpr.callFn([view, renderElement, lastRenderValue, emptyStateValue]))
 	        .toDeclStmt());
-	    var /** @type {?} */ registerStmts = [
-	        animationTransitionVar
+	    var /** @type {?} */ registerStmts = [];
+	    var /** @type {?} */ animationStartMethodExists = boundOutputs.find(function (event) { return event.isAnimation && event.name == animationName && event.phase == 'start'; });
+	    if (animationStartMethodExists) {
+	        registerStmts.push(animationTransitionVar
 	            .callMethod('onStart', [eventListener.callMethod(BuiltinMethod.Bind, [view, literal(BoundEventAst.calcFullName(animationName, null, 'start'))])])
-	            .toStmt(),
-	        animationTransitionVar
+	            .toStmt());
+	    }
+	    var /** @type {?} */ animationDoneMethodExists = boundOutputs.find(function (event) { return event.isAnimation && event.name == animationName && event.phase == 'done'; });
+	    if (animationDoneMethodExists) {
+	        registerStmts.push(animationTransitionVar
 	            .callMethod('onDone', [eventListener.callMethod(BuiltinMethod.Bind, [view, literal(BoundEventAst.calcFullName(animationName, null, 'done'))])])
-	            .toStmt(),
-	    ];
+	            .toStmt());
+	    }
 	    updateStmts.push.apply(updateStmts, registerStmts);
 	    detachStmts.push.apply(detachStmts, registerStmts);
 	    return { updateStmts: updateStmts, detachStmts: detachStmts };
@@ -30761,7 +30831,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            addCheckInputMethod(inputFieldName, builder);
 	        });
 	        addNgDoCheckMethod(builder);
-	        addCheckHostMethod(hostParseResult.hostProps, builder);
+	        addCheckHostMethod(hostParseResult.hostProps, hostParseResult.hostListeners, builder);
 	        addHandleEventMethod(hostParseResult.hostListeners, builder);
 	        addSubscribeMethod(dirMeta, builder);
 	        var /** @type {?} */ classStmt = builder.build();
@@ -30911,10 +30981,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	}
 	/**
 	 * @param {?} hostProps
+	 * @param {?} hostEvents
 	 * @param {?} builder
 	 * @return {?}
 	 */
-	function addCheckHostMethod(hostProps, builder) {
+	function addCheckHostMethod(hostProps, hostEvents, builder) {
 	    var /** @type {?} */ stmts = [];
 	    var /** @type {?} */ methodParams = [
 	        new FnParam(VIEW_VAR.name, importType(createIdentifier(Identifiers.AppView), [DYNAMIC_TYPE])),
@@ -30935,7 +31006,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        }
 	        var /** @type {?} */ checkBindingStmts;
 	        if (hostProp.isAnimation) {
-	            var _a = triggerAnimation(VIEW_VAR, COMPONENT_VIEW_VAR, hostProp, THIS_EXPR.prop(EVENT_HANDLER_FIELD_NAME)
+	            var _a = triggerAnimation(VIEW_VAR, COMPONENT_VIEW_VAR, hostProp, hostEvents, THIS_EXPR.prop(EVENT_HANDLER_FIELD_NAME)
 	                .or(importExpr(createIdentifier(Identifiers.noop))), RENDER_EL_VAR, evalResult.currValExpr, field.expression), updateStmts = _a.updateStmts, detachStmts = _a.detachStmts;
 	            checkBindingStmts = updateStmts;
 	            (_b = builder.detachStmts).push.apply(_b, detachStmts);
@@ -32367,6 +32438,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return _CompileValueConverter;
 	}(ValueTransformer));
 
+	var /** @type {?} */ QUOTED_KEYS = '$quoted$';
 	/**
 	 * @param {?} value
 	 * @param {?=} type
@@ -32396,8 +32468,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    _ValueOutputAstTransformer.prototype.visitStringMap = function (map, type) {
 	        var _this = this;
 	        var /** @type {?} */ entries = [];
-	        Object.keys(map).forEach(function (key) { entries.push([key, visitValue(map[key], _this, null)]); });
-	        return literalMap(entries, type);
+	        var /** @type {?} */ quotedSet = new Set(map && map[QUOTED_KEYS]);
+	        Object.keys(map).forEach(function (key) {
+	            entries.push(new LiteralMapEntry(key, visitValue(map[key], _this, null), quotedSet.has(key)));
+	        });
+	        return new LiteralMapExpr(entries, type);
 	    };
 	    /**
 	     * @param {?} value
@@ -33220,8 +33295,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        ctx.print("{", useNewLine);
 	        ctx.incIndent();
 	        this.visitAllObjects(function (entry) {
-	            ctx.print(escapeIdentifier(entry[0], _this._escapeDollarInStrings, false) + ": ");
-	            entry[1].visitExpression(_this, ctx);
+	            ctx.print(escapeIdentifier(entry.key, _this._escapeDollarInStrings, entry.quoted) + ": ");
+	            entry.value.visitExpression(_this, ctx);
 	        }, ast.entries, ctx, ',', useNewLine);
 	        ctx.decIndent();
 	        ctx.print("}", useNewLine);
@@ -35922,11 +35997,12 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	}
 	/**
 	 * @param {?} boundProps
+	 * @param {?} boundOutputs
 	 * @param {?} hasEvents
 	 * @param {?} compileElement
 	 * @return {?}
 	 */
-	function bindRenderInputs(boundProps, hasEvents, compileElement) {
+	function bindRenderInputs(boundProps, boundOutputs, hasEvents, compileElement) {
 	    var /** @type {?} */ view = compileElement.view;
 	    var /** @type {?} */ renderNode = compileElement.renderNode;
 	    boundProps.forEach(function (boundProp) {
@@ -35947,7 +36023,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                break;
 	            case PropertyBindingType.Animation:
 	                compileMethod = view.animationBindingsMethod;
-	                var _a = triggerAnimation(THIS_EXPR, THIS_EXPR, boundProp, (hasEvents ? THIS_EXPR.prop(getHandleEventMethodName(compileElement.nodeIndex)) :
+	                var _a = triggerAnimation(THIS_EXPR, THIS_EXPR, boundProp, boundOutputs, (hasEvents ? THIS_EXPR.prop(getHandleEventMethodName(compileElement.nodeIndex)) :
 	                    importExpr(createIdentifier(Identifiers.noop)))
 	                    .callMethod(BuiltinMethod.Bind, [THIS_EXPR]), compileElement.renderNode, evalResult.currValExpr, bindingField.expression), updateStmts = _a.updateStmts, detachStmts = _a.detachStmts;
 	                checkBindingStmts.push.apply(checkBindingStmts, updateStmts);
@@ -36075,7 +36151,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        var _this = this;
 	        var /** @type {?} */ compileElement = (this.view.nodes[this._nodeIndex++]);
 	        var /** @type {?} */ hasEvents = bindOutputs(ast.outputs, ast.directives, compileElement, true);
-	        bindRenderInputs(ast.inputs, hasEvents, compileElement);
+	        bindRenderInputs(ast.inputs, ast.outputs, hasEvents, compileElement);
 	        ast.directives.forEach(function (directiveAst, dirIndex) {
 	            var /** @type {?} */ directiveWrapperInstance = compileElement.directiveWrapperInstance.get(directiveAst.directive.type.reference);
 	            bindDirectiveInputs(directiveAst, directiveWrapperInstance, dirIndex, compileElement);
@@ -36749,7 +36825,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    }
 	    stmts.push.apply(stmts, view.detectChangesRenderPropertiesMethod.finish());
 	    view.viewChildren.forEach(function (viewChild) {
-	        stmts.push(viewChild.callMethod('detectChanges', [DetectChangesVars.throwOnChange]).toStmt());
+	        stmts.push(viewChild.callMethod('internalDetectChanges', [DetectChangesVars.throwOnChange]).toStmt());
 	    });
 	    var /** @type {?} */ afterViewStmts = view.updateViewQueriesMethod.finish().concat(view.afterViewLifecycleCallbacksMethod.finish());
 	    if (afterViewStmts.length > 0) {
@@ -37495,6 +37571,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    animationMetadata: '@angular/core/src/animation/metadata',
 	    provider: '@angular/core/src/di/provider'
 	};
+	var /** @type {?} */ HIDDEN_KEY = /^\$.*\$$/;
 	/**
 	 *  A cache of static symbol used by the StaticReflector to return the same symbol for the
 	  * same symbol values.
@@ -38345,7 +38422,12 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    Object.keys(input).forEach(function (key) {
 	        var /** @type {?} */ value = transform(input[key], key);
 	        if (!shouldIgnore(value)) {
-	            result[key] = value;
+	            if (HIDDEN_KEY.test(key)) {
+	                Object.defineProperty(result, key, { enumerable: false, configurable: true, value: value });
+	            }
+	            else {
+	                result[key] = value;
+	            }
 	        }
 	    });
 	    return result;
@@ -38904,8 +38986,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    StatementInterpreter.prototype.visitLiteralMapExpr = function (ast, ctx) {
 	        var _this = this;
 	        var /** @type {?} */ result = {};
-	        ast.entries.forEach(function (entry) { return ((result))[(entry[0])] =
-	            ((entry[1])).visitExpression(_this, ctx); });
+	        ast.entries.forEach(function (entry) { return ((result))[entry.key] = entry.value.visitExpression(_this, ctx); });
 	        return result;
 	    };
 	    /**
@@ -39338,6 +39419,17 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        return this._compileModuleAndAllComponents(moduleType, false).asyncResult;
 	    };
 	    /**
+	     * @param {?} component
+	     * @return {?}
+	     */
+	    JitCompiler.prototype.getNgContentSelectors = function (component) {
+	        var /** @type {?} */ template = this._compiledTemplateCache.get(component);
+	        if (!template) {
+	            throw new Error("The component " + stringify$1(component) + " is not yet compiled!");
+	        }
+	        return template.compMeta.template.ngContentSelectors;
+	    };
+	    /**
 	     * @param {?} moduleType
 	     * @param {?} isSync
 	     * @return {?}
@@ -39751,6 +39843,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     */
 	    ModuleBoundCompiler.prototype.compileModuleAndAllComponentsAsync = function (moduleType) {
 	        return this._delegate.compileModuleAndAllComponentsAsync(moduleType);
+	    };
+	    /**
+	     * @param {?} component
+	     * @return {?}
+	     */
+	    ModuleBoundCompiler.prototype.getNgContentSelectors = function (component) {
+	        return this._delegate.getNgContentSelectors(component);
 	    };
 	    /**
 	     *  Clears all caches
@@ -42696,9 +42795,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * possible.
 	 */
 	var Evaluator = (function () {
-	    function Evaluator(symbols, nodeMap) {
+	    function Evaluator(symbols, nodeMap, options) {
+	        if (options === void 0) { options = {}; }
 	        this.symbols = symbols;
 	        this.nodeMap = nodeMap;
+	        this.options = options;
 	    }
 	    Evaluator.prototype.nameOf = function (node) {
 	        if (node.kind == ts$2.SyntaxKind.Identifier) {
@@ -42821,11 +42922,16 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        switch (node.kind) {
 	            case ts$2.SyntaxKind.ObjectLiteralExpression:
 	                var obj_1 = {};
+	                var quoted_1 = [];
 	                ts$2.forEachChild(node, function (child) {
 	                    switch (child.kind) {
 	                        case ts$2.SyntaxKind.ShorthandPropertyAssignment:
 	                        case ts$2.SyntaxKind.PropertyAssignment:
 	                            var assignment = child;
+	                            if (assignment.name.kind == ts$2.SyntaxKind.StringLiteral) {
+	                                var name_2 = assignment.name.text;
+	                                quoted_1.push(name_2);
+	                            }
 	                            var propertyName = _this.nameOf(assignment.name);
 	                            if (schema_1$1.isMetadataError(propertyName)) {
 	                                error = propertyName;
@@ -42845,6 +42951,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                });
 	                if (error)
 	                    return error;
+	                if (this.options.quotedNames && quoted_1.length) {
+	                    obj_1['$quoted$'] = quoted_1;
+	                }
 	                return obj_1;
 	            case ts$2.SyntaxKind.ArrayLiteralExpression:
 	                var arr_1 = [];
@@ -42959,11 +43068,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            }
 	            case ts$2.SyntaxKind.Identifier:
 	                var identifier = node;
-	                var name_2 = identifier.text;
-	                var reference = this.symbols.resolve(name_2);
+	                var name_3 = identifier.text;
+	                var reference = this.symbols.resolve(name_3);
 	                if (reference === undefined) {
 	                    // Encode as a global reference. StaticReflector will check the reference.
-	                    return recordEntry({ __symbolic: 'reference', name: name_2 }, node);
+	                    return recordEntry({ __symbolic: 'reference', name: name_3 }, node);
 	                }
 	                return reference;
 	            case ts$2.SyntaxKind.TypeReference:
@@ -43272,10 +43381,21 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	var schema_1 = __moduleExports$17;
 	var symbols_1 = __moduleExports$18;
 	/**
+	 * A set of collector options to use when collecting metadata.
+	 */
+	var CollectorOptions = (function () {
+	    function CollectorOptions() {
+	    }
+	    return CollectorOptions;
+	}());
+	var CollectorOptions_1 = CollectorOptions;
+	/**
 	 * Collect decorator metadata from a TypeScript module.
 	 */
 	var MetadataCollector = (function () {
-	    function MetadataCollector() {
+	    function MetadataCollector(options) {
+	        if (options === void 0) { options = {}; }
+	        this.options = options;
 	    }
 	    /**
 	     * Returns a JSON.stringify friendly form describing the decorators of the exported classes from
@@ -43285,7 +43405,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        if (strict === void 0) { strict = false; }
 	        var locals = new symbols_1.Symbols(sourceFile);
 	        var nodeMap = new Map();
-	        var evaluator = new evaluator_1.Evaluator(locals, nodeMap);
+	        var evaluator = new evaluator_1.Evaluator(locals, nodeMap, this.options);
 	        var metadata;
 	        var exports;
 	        function objFromDecorator(decoratorNode) {
@@ -43854,6 +43974,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	}
 
 	var collector = {
+		CollectorOptions: CollectorOptions_1,
 		MetadataCollector: MetadataCollector_1
 	};
 
@@ -44247,7 +44368,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$3 = new Version('2.3.0-5031adc');
+	var VERSION$3 = new Version('2.3.0-d4ddb60');
 
 	/**
 	 * @license
@@ -45644,7 +45765,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$4 = new Version('2.3.0-5031adc');
+	var VERSION$4 = new Version('2.3.0-d4ddb60');
 
 	exports['default'] = LanguageServicePlugin;
 	exports.createLanguageService = createLanguageService;
