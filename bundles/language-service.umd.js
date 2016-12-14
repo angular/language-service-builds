@@ -1,5 +1,5 @@
 /**
- * @license Angular v2.3.0-aa3769b
+ * @license Angular v2.3.0-aa40366
  * (c) 2010-2016 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -997,7 +997,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('2.3.0-aa3769b');
+	var /** @type {?} */ VERSION = new Version('2.3.0-aa40366');
 
 	/**
 	 *  Allows to refer to references which are not yet defined.
@@ -25875,7 +25875,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('2.3.0-aa3769b');
+	var /** @type {?} */ VERSION$1 = new Version('2.3.0-aa40366');
 
 	/**
 	 * @return {?}
@@ -38248,6 +38248,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                                    return simplifyInContext(selectContext, selectTarget[member], depth + 1);
 	                                return null;
 	                            case 'reference':
+	                                if (!expression['name']) {
+	                                    return context;
+	                                }
 	                                if (!expression.module) {
 	                                    var /** @type {?} */ name_1 = expression['name'];
 	                                    var /** @type {?} */ localValue = scope.resolve(name_1);
@@ -43605,16 +43608,28 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                case ts$1.SyntaxKind.ExportDeclaration:
 	                    // Record export declarations
 	                    var exportDeclaration = node;
-	                    var moduleSpecifier = exportDeclaration.moduleSpecifier;
+	                    var moduleSpecifier = exportDeclaration.moduleSpecifier, exportClause = exportDeclaration.exportClause;
+	                    if (!moduleSpecifier) {
+	                        // no module specifier -> export {propName as name};
+	                        if (exportClause) {
+	                            exportClause.elements.forEach(function (spec) {
+	                                var name = spec.name.text;
+	                                var propNode = spec.propertyName || spec.name;
+	                                var value = evaluator.evaluateNode(propNode);
+	                                if (!metadata)
+	                                    metadata = {};
+	                                metadata[name] = recordEntry(value, node);
+	                            });
+	                        }
+	                    }
 	                    if (moduleSpecifier && moduleSpecifier.kind == ts$1.SyntaxKind.StringLiteral) {
 	                        // Ignore exports that don't have string literals as exports.
 	                        // This is allowed by the syntax but will be flagged as an error by the type checker.
 	                        var from = moduleSpecifier.text;
 	                        var moduleExport = { from: from };
-	                        if (exportDeclaration.exportClause) {
-	                            moduleExport.export = exportDeclaration.exportClause.elements.map(function (element) { return element.propertyName ?
-	                                { name: element.propertyName.text, as: element.name.text } :
-	                                element.name.text; });
+	                        if (exportClause) {
+	                            moduleExport.export = exportClause.elements.map(function (spec) { return spec.propertyName ? { name: spec.propertyName.text, as: spec.name.text } :
+	                                spec.name.text; });
 	                        }
 	                        if (!exports)
 	                            exports = [];
@@ -43691,7 +43706,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                                nextDefaultValue =
 	                                    recordEntry(errorSym('Unsuppported enum member name', member.name), node);
 	                            }
-	                            ;
 	                        }
 	                        if (writtenMembers) {
 	                            if (!metadata)
@@ -43734,7 +43748,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                        }
 	                        else {
 	                            // Destructuring (or binding) declarations are not supported,
-	                            // var {<identifier>[, <identifer>]+} = <expression>;
+	                            // var {<identifier>[, <identifier>]+} = <expression>;
 	                            //   or
 	                            // var [<identifier>[, <identifier}+] = <expression>;
 	                            // are not supported.
@@ -44151,13 +44165,15 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                for (var prop in v1Metadata.metadata) {
 	                    v2Metadata.metadata[prop] = v1Metadata.metadata[prop];
 	                }
-	                var sourceText = this.context.readFile(dtsFilePath);
 	                var exports_1 = this.metadataCollector.getMetadata(this.getSourceFile(dtsFilePath));
 	                if (exports_1) {
 	                    for (var prop in exports_1.metadata) {
 	                        if (!v2Metadata.metadata[prop]) {
 	                            v2Metadata.metadata[prop] = exports_1.metadata[prop];
 	                        }
+	                    }
+	                    if (exports_1.exports) {
+	                        v2Metadata.exports = exports_1.exports;
 	                    }
 	                }
 	                metadatas_1.push(v2Metadata);
@@ -44368,7 +44384,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$3 = new Version('2.3.0-aa3769b');
+	var VERSION$3 = new Version('2.3.0-aa40366');
 
 	/**
 	 * @license
@@ -45765,7 +45781,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$4 = new Version('2.3.0-aa3769b');
+	var VERSION$4 = new Version('2.3.0-aa40366');
 
 	exports['default'] = LanguageServicePlugin;
 	exports.createLanguageService = createLanguageService;
