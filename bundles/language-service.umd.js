@@ -1,5 +1,5 @@
 /**
- * @license Angular v2.3.0-d62d893
+ * @license Angular v2.3.0-a0a0504
  * (c) 2010-2016 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -997,7 +997,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('2.3.0-d62d893');
+	var /** @type {?} */ VERSION = new Version('2.3.0-a0a0504');
 
 	/**
 	 *  Allows to refer to references which are not yet defined.
@@ -25825,7 +25825,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('2.3.0-d62d893');
+	var /** @type {?} */ VERSION$1 = new Version('2.3.0-a0a0504');
 
 	/**
 	 * @return {?}
@@ -44243,7 +44243,33 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$3 = new Version('2.3.0-d62d893');
+	var VERSION$3 = new Version('2.3.0-a0a0504');
+
+	/**
+	 * @license
+	 * Copyright Google Inc. All Rights Reserved.
+	 *
+	 * Use of this source code is governed by an MIT-style license that can be
+	 * found in the LICENSE file at https://angular.io/license
+	 */
+	var __extends$54 = (this && this.__extends) || function (d, b) {
+	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+	    function __() { this.constructor = d; }
+	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+	};
+	/**
+	 * A ModuleResolutionHostAdapter that overrides the readResource() method with the one
+	 * passed in the interface.
+	 */
+	var CustomLoaderModuleResolutionHostAdapter = (function (_super) {
+	    __extends$54(CustomLoaderModuleResolutionHostAdapter, _super);
+	    function CustomLoaderModuleResolutionHostAdapter(_readResource, host) {
+	        _super.call(this, host);
+	        this._readResource = _readResource;
+	    }
+	    CustomLoaderModuleResolutionHostAdapter.prototype.readResource = function (path) { return this._readResource(path); };
+	    return CustomLoaderModuleResolutionHostAdapter;
+	}(ModuleResolutionHostAdapter));
 
 	/**
 	 * @license
@@ -45614,7 +45640,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$4 = new Version('2.3.0-d62d893');
+	var VERSION$4 = new Version('2.3.0-a0a0504');
 
 	exports['default'] = LanguageServicePlugin;
 	exports.createLanguageService = createLanguageService;
