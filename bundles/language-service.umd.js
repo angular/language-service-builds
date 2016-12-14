@@ -1,5 +1,5 @@
 /**
- * @license Angular v2.3.0-a8d2375
+ * @license Angular v2.3.0-42203ea
  * (c) 2010-2016 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -997,7 +997,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('2.3.0-a8d2375');
+	var /** @type {?} */ VERSION = new Version('2.3.0-42203ea');
 
 	/**
 	 *  Allows to refer to references which are not yet defined.
@@ -13065,8 +13065,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    AppView.prototype.detectChanges = function (throwOnChange) {
 	        var /** @type {?} */ s = _scope_check(this.clazz);
 	        if (this.cdMode === ChangeDetectorStatus.Checked ||
-	            this.cdMode === ChangeDetectorStatus.Errored ||
-	            this.cdMode === ChangeDetectorStatus.Detached)
+	            this.cdMode === ChangeDetectorStatus.Errored)
 	            return;
 	        if (this.cdMode === ChangeDetectorStatus.Destroyed) {
 	            this.throwDestroyedError('detectChanges');
@@ -25825,7 +25824,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('2.3.0-a8d2375');
+	var /** @type {?} */ VERSION$1 = new Version('2.3.0-42203ea');
 
 	/**
 	 * @return {?}
@@ -44243,7 +44242,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$3 = new Version('2.3.0-a8d2375');
+	var VERSION$3 = new Version('2.3.0-42203ea');
 
 	/**
 	 * @license
@@ -45614,7 +45613,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$4 = new Version('2.3.0-a8d2375');
+	var VERSION$4 = new Version('2.3.0-42203ea');
 
 	exports['default'] = LanguageServicePlugin;
 	exports.createLanguageService = createLanguageService;
