@@ -1,5 +1,5 @@
 /**
- * @license Angular v2.3.0-42203ea
+ * @license Angular v2.3.0-f5f1d5f
  * (c) 2010-2016 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -89,10 +89,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        return '' + token;
 	    }
 	    if (token.overriddenName) {
-	        return token.overriddenName;
+	        return "" + token.overriddenName;
 	    }
 	    if (token.name) {
-	        return token.name;
+	        return "" + token.name;
 	    }
 	    var /** @type {?} */ res = token.toString();
 	    var /** @type {?} */ newLineIndex = res.indexOf('\n');
@@ -997,7 +997,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('2.3.0-42203ea');
+	var /** @type {?} */ VERSION = new Version('2.3.0-f5f1d5f');
 
 	/**
 	 *  Allows to refer to references which are not yet defined.
@@ -13065,7 +13065,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    AppView.prototype.detectChanges = function (throwOnChange) {
 	        var /** @type {?} */ s = _scope_check(this.clazz);
 	        if (this.cdMode === ChangeDetectorStatus.Checked ||
-	            this.cdMode === ChangeDetectorStatus.Errored)
+	            this.cdMode === ChangeDetectorStatus.Errored ||
+	            this.cdMode === ChangeDetectorStatus.Detached)
 	            return;
 	        if (this.cdMode === ChangeDetectorStatus.Destroyed) {
 	            this.throwDestroyedError('detectChanges');
@@ -13622,10 +13623,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        return '' + token;
 	    }
 	    if (token.overriddenName) {
-	        return token.overriddenName;
+	        return "" + token.overriddenName;
 	    }
 	    if (token.name) {
-	        return token.name;
+	        return "" + token.name;
 	    }
 	    var /** @type {?} */ res = token.toString();
 	    var /** @type {?} */ newLineIndex = res.indexOf('\n');
@@ -25824,7 +25825,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('2.3.0-42203ea');
+	var /** @type {?} */ VERSION$1 = new Version('2.3.0-f5f1d5f');
 
 	/**
 	 * @return {?}
@@ -44242,7 +44243,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$3 = new Version('2.3.0-42203ea');
+	var VERSION$3 = new Version('2.3.0-f5f1d5f');
 
 	/**
 	 * @license
@@ -45613,7 +45614,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$4 = new Version('2.3.0-42203ea');
+	var VERSION$4 = new Version('2.3.0-f5f1d5f');
 
 	exports['default'] = LanguageServicePlugin;
 	exports.createLanguageService = createLanguageService;
