@@ -1,5 +1,5 @@
 /**
- * @license Angular v2.3.0-f5f1d5f
+ * @license Angular v2.3.0-7256d0e
  * (c) 2010-2016 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -997,7 +997,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('2.3.0-f5f1d5f');
+	var /** @type {?} */ VERSION = new Version('2.3.0-7256d0e');
 
 	/**
 	 *  Allows to refer to references which are not yet defined.
@@ -25825,7 +25825,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('2.3.0-f5f1d5f');
+	var /** @type {?} */ VERSION$1 = new Version('2.3.0-7256d0e');
 
 	/**
 	 * @return {?}
@@ -39632,7 +39632,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            return interpretStatements(result.statements, result.stylesVar);
 	        }
 	        else {
-	            return jitStatements("/" + result.meta.moduleUrl + ".css.js", result.statements, result.stylesVar);
+	            return jitStatements("/" + result.meta.moduleUrl + ".ngstyle.js", result.statements, result.stylesVar);
 	        }
 	    };
 	    JitCompiler.decorators = [
@@ -43868,7 +43868,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	var EXT = /(\.ts|\.d\.ts|\.js|\.jsx|\.tsx)$/;
 	var DTS = /\.d\.ts$/;
 	var NODE_MODULES = '/node_modules/';
-	var IS_GENERATED = /\.(ngfactory|css(\.shim)?)$/;
+	var IS_GENERATED = /\.(ngfactory|ngstyle)$/;
 	var CompilerHost = (function () {
 	    function CompilerHost(program, options, context) {
 	        this.program = program;
@@ -44243,7 +44243,34 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$3 = new Version('2.3.0-f5f1d5f');
+	var VERSION$3 = new Version('2.3.0-7256d0e');
+
+	/**
+	 * This is a private API for the ngtools toolkit.
+	 *
+	 * This API should be stable for NG 2. It can be removed in NG 4..., but should be replaced by
+	 * something else.
+	 */
+	var __extends$54 = (this && this.__extends) || function (d, b) {
+	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+	    function __() { this.constructor = d; }
+	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+	};
+	/**
+	 * A ModuleResolutionHostAdapter that overrides the readResource() method with the one
+	 * passed in the interface.
+	 */
+	var CustomLoaderModuleResolutionHostAdapter = (function (_super) {
+	    __extends$54(CustomLoaderModuleResolutionHostAdapter, _super);
+	    function CustomLoaderModuleResolutionHostAdapter(_readResource, host) {
+	        _super.call(this, host);
+	        this._readResource = _readResource;
+	    }
+	    CustomLoaderModuleResolutionHostAdapter.prototype.readResource = function (path) {
+	        return this._readResource(path);
+	    };
+	    return CustomLoaderModuleResolutionHostAdapter;
+	}(ModuleResolutionHostAdapter));
 
 	/**
 	 * @license
@@ -45614,7 +45641,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$4 = new Version('2.3.0-f5f1d5f');
+	var VERSION$4 = new Version('2.3.0-7256d0e');
 
 	exports['default'] = LanguageServicePlugin;
 	exports.createLanguageService = createLanguageService;
