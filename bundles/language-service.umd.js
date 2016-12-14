@@ -1,5 +1,5 @@
 /**
- * @license Angular v2.3.0-d4ddb60
+ * @license Angular v2.3.0-aa3769b
  * (c) 2010-2016 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -997,7 +997,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('2.3.0-d4ddb60');
+	var /** @type {?} */ VERSION = new Version('2.3.0-aa3769b');
 
 	/**
 	 *  Allows to refer to references which are not yet defined.
@@ -25875,7 +25875,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('2.3.0-d4ddb60');
+	var /** @type {?} */ VERSION$1 = new Version('2.3.0-aa3769b');
 
 	/**
 	 * @return {?}
@@ -27628,8 +27628,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                    outputs.push(propName);
 	                }
 	            }
-	            var /** @type {?} */ hostBinding = ListWrapper$1.findLast(propertyMetadata[propName], function (a) { return a instanceof HostBinding; });
-	            if (hostBinding) {
+	            var /** @type {?} */ hostBindings = propertyMetadata[propName].filter(function (a) { return a && a instanceof HostBinding; });
+	            hostBindings.forEach(function (hostBinding) {
 	                if (hostBinding.hostPropertyName) {
 	                    var /** @type {?} */ startWith = hostBinding.hostPropertyName[0];
 	                    if (startWith === '(') {
@@ -27643,12 +27643,12 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                else {
 	                    host[("[" + propName + "]")] = propName;
 	                }
-	            }
-	            var /** @type {?} */ hostListener = ListWrapper$1.findLast(propertyMetadata[propName], function (a) { return a instanceof HostListener; });
-	            if (hostListener) {
+	            });
+	            var /** @type {?} */ hostListeners = propertyMetadata[propName].filter(function (a) { return a && a instanceof HostListener; });
+	            hostListeners.forEach(function (hostListener) {
 	                var /** @type {?} */ args = hostListener.args || [];
 	                host[("(" + hostListener.eventName + ")")] = propName + "(" + args.join(',') + ")";
-	            }
+	            });
 	            var /** @type {?} */ query = ListWrapper$1.findLast(propertyMetadata[propName], function (a) { return a instanceof Query; });
 	            if (query) {
 	                queries[propName] = query;
@@ -44368,7 +44368,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$3 = new Version('2.3.0-d4ddb60');
+	var VERSION$3 = new Version('2.3.0-aa3769b');
 
 	/**
 	 * @license
@@ -45765,7 +45765,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$4 = new Version('2.3.0-d4ddb60');
+	var VERSION$4 = new Version('2.3.0-aa3769b');
 
 	exports['default'] = LanguageServicePlugin;
 	exports.createLanguageService = createLanguageService;
