@@ -1,5 +1,5 @@
 /**
- * @license Angular v2.3.0-7256d0e
+ * @license Angular v2.3.0-d62d893
  * (c) 2010-2016 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -997,7 +997,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('2.3.0-7256d0e');
+	var /** @type {?} */ VERSION = new Version('2.3.0-d62d893');
 
 	/**
 	 *  Allows to refer to references which are not yet defined.
@@ -25825,7 +25825,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('2.3.0-7256d0e');
+	var /** @type {?} */ VERSION$1 = new Version('2.3.0-d62d893');
 
 	/**
 	 * @return {?}
@@ -44243,34 +44243,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$3 = new Version('2.3.0-7256d0e');
-
-	/**
-	 * This is a private API for the ngtools toolkit.
-	 *
-	 * This API should be stable for NG 2. It can be removed in NG 4..., but should be replaced by
-	 * something else.
-	 */
-	var __extends$54 = (this && this.__extends) || function (d, b) {
-	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-	    function __() { this.constructor = d; }
-	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-	};
-	/**
-	 * A ModuleResolutionHostAdapter that overrides the readResource() method with the one
-	 * passed in the interface.
-	 */
-	var CustomLoaderModuleResolutionHostAdapter = (function (_super) {
-	    __extends$54(CustomLoaderModuleResolutionHostAdapter, _super);
-	    function CustomLoaderModuleResolutionHostAdapter(_readResource, host) {
-	        _super.call(this, host);
-	        this._readResource = _readResource;
-	    }
-	    CustomLoaderModuleResolutionHostAdapter.prototype.readResource = function (path) {
-	        return this._readResource(path);
-	    };
-	    return CustomLoaderModuleResolutionHostAdapter;
-	}(ModuleResolutionHostAdapter));
+	var VERSION$3 = new Version('2.3.0-d62d893');
 
 	/**
 	 * @license
@@ -45641,7 +45614,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$4 = new Version('2.3.0-7256d0e');
+	var VERSION$4 = new Version('2.3.0-d62d893');
 
 	exports['default'] = LanguageServicePlugin;
 	exports.createLanguageService = createLanguageService;
