@@ -180,8 +180,9 @@ var ExpressionDiagnosticsVisitor = (function (_super) {
     ExpressionDiagnosticsVisitor.prototype.diagnoseExpression = function (ast, offset, includeEvent) {
         var _this = this;
         var scope = this.getExpressionScope(this.path, includeEvent);
-        (_a = this.diagnostics).push.apply(_a, getExpressionDiagnostics(scope, ast, this.info.template.query)
-            .map(function (d) { return ({
+        (_a = this.diagnostics).push.apply(_a, getExpressionDiagnostics(scope, ast, this.info.template.query, {
+            event: includeEvent
+        }).map(function (d) { return ({
             span: offsetSpan(d.ast.span, offset + _this.info.template.span.start),
             kind: d.kind,
             message: d.message
