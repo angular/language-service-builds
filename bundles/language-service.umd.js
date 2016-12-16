@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.0.0-beta.0-e785085
+ * @license Angular v4.0.0-beta.0-0e3981a
  * (c) 2010-2016 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1700,7 +1700,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('4.0.0-beta.0-e785085');
+	var /** @type {?} */ VERSION = new Version('4.0.0-beta.0-0e3981a');
 
 	/**
 	 *  Allows to refer to references which are not yet defined.
@@ -26124,7 +26124,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.0-e785085');
+	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.0-0e3981a');
 
 	/**
 	 * @return {?}
@@ -44357,6 +44357,32 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            }
 	            return recordEntry(result, classDeclaration);
 	        }
+	        // Collect all exported symbols from an exports clause.
+	        var exportMap = new Map();
+	        ts$1.forEachChild(sourceFile, function (node) {
+	            switch (node.kind) {
+	                case ts$1.SyntaxKind.ExportDeclaration:
+	                    var exportDeclaration = node;
+	                    var moduleSpecifier = exportDeclaration.moduleSpecifier, exportClause = exportDeclaration.exportClause;
+	                    if (!moduleSpecifier) {
+	                        exportClause.elements.forEach(function (spec) {
+	                            var exportedAs = spec.name.text;
+	                            var name = (spec.propertyName || spec.name).text;
+	                            exportMap.set(name, exportedAs);
+	                        });
+	                    }
+	            }
+	        });
+	        var isExportedIdentifier = function (identifier) { return exportMap.has(identifier.text); };
+	        var isExported = function (node) {
+	            return (node.flags & ts$1.NodeFlags.Export) || isExportedIdentifier(node.name);
+	        };
+	        var exportedIdentifierName = function (identifier) {
+	            return exportMap.get(identifier.text) || identifier.text;
+	        };
+	        var exportedName = function (node) {
+	            return exportedIdentifierName(node.name);
+	        };
 	        // Predeclare classes and functions
 	        ts$1.forEachChild(sourceFile, function (node) {
 	            switch (node.kind) {
@@ -44364,8 +44390,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                    var classDeclaration = node;
 	                    if (classDeclaration.name) {
 	                        var className = classDeclaration.name.text;
-	                        if (node.flags & ts$1.NodeFlags.Export) {
-	                            locals.define(className, { __symbolic: 'reference', name: className });
+	                        if (isExported(classDeclaration)) {
+	                            locals.define(className, { __symbolic: 'reference', name: exportedName(classDeclaration) });
 	                        }
 	                        else {
 	                            locals.define(className, errorSym('Reference to non-exported class', node, { className: className }));
@@ -44373,9 +44399,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                    }
 	                    break;
 	                case ts$1.SyntaxKind.FunctionDeclaration:
-	                    if (!(node.flags & ts$1.NodeFlags.Export)) {
+	                    var functionDeclaration = node;
+	                    if (!isExported(functionDeclaration)) {
 	                        // Report references to this function as an error.
-	                        var functionDeclaration = node;
 	                        var nameNode = functionDeclaration.name;
 	                        if (nameNode && nameNode.text) {
 	                            locals.define(nameNode.text, errorSym('Reference to a non-exported function', nameNode, { name: nameNode.text }));
@@ -44395,11 +44421,15 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                        if (exportClause) {
 	                            exportClause.elements.forEach(function (spec) {
 	                                var name = spec.name.text;
-	                                var propNode = spec.propertyName || spec.name;
-	                                var value = evaluator.evaluateNode(propNode);
-	                                if (!metadata)
-	                                    metadata = {};
-	                                metadata[name] = recordEntry(value, node);
+	                                // If the symbol was not already exported, export a reference since it is a
+	                                // reference to an import
+	                                if (!metadata || !metadata[name]) {
+	                                    var propNode = spec.propertyName || spec.name;
+	                                    var value = evaluator.evaluateNode(propNode);
+	                                    if (!metadata)
+	                                        metadata = {};
+	                                    metadata[name] = recordEntry(value, node);
+	                                }
 	                            });
 	                        }
 	                    }
@@ -44421,10 +44451,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                    var classDeclaration = node;
 	                    if (classDeclaration.name) {
 	                        var className = classDeclaration.name.text;
-	                        if (node.flags & ts$1.NodeFlags.Export) {
+	                        if (isExported(classDeclaration)) {
 	                            if (!metadata)
 	                                metadata = {};
-	                            metadata[className] = classMetadataOf(classDeclaration);
+	                            metadata[exportedName(classDeclaration)] = classMetadataOf(classDeclaration);
 	                        }
 	                    }
 	                    // Otherwise don't record metadata for the class.
@@ -44433,25 +44463,20 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                    // Record functions that return a single value. Record the parameter
 	                    // names substitution will be performed by the StaticReflector.
 	                    var functionDeclaration = node;
-	                    if (node.flags & ts$1.NodeFlags.Export) {
+	                    if (isExported(functionDeclaration)) {
 	                        if (!metadata)
 	                            metadata = {};
+	                        var name_4 = exportedName(functionDeclaration);
 	                        var maybeFunc = maybeGetSimpleFunction(functionDeclaration);
-	                        if (maybeFunc) {
-	                            metadata[maybeFunc.name] = recordEntry(maybeFunc.func, node);
-	                        }
-	                        else if (functionDeclaration.name.kind == ts$1.SyntaxKind.Identifier) {
-	                            var nameNode = functionDeclaration.name;
-	                            var functionName = nameNode.text;
-	                            metadata[functionName] = { __symbolic: 'function' };
-	                        }
+	                        metadata[name_4] =
+	                            maybeFunc ? recordEntry(maybeFunc.func, node) : { __symbolic: 'function' };
 	                    }
 	                    break;
 	                case ts$1.SyntaxKind.EnumDeclaration:
-	                    if (node.flags & ts$1.NodeFlags.Export) {
-	                        var enumDeclaration = node;
+	                    var enumDeclaration = node;
+	                    if (isExported(enumDeclaration)) {
 	                        var enumValueHolder = {};
-	                        var enumName = enumDeclaration.name.text;
+	                        var enumName = exportedName(enumDeclaration);
 	                        var nextDefaultValue = 0;
 	                        var writtenMembers = 0;
 	                        for (var _i = 0, _a = enumDeclaration.members; _i < _a.length; _i++) {
@@ -44463,23 +44488,23 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                            else {
 	                                enumValue = evaluator.evaluateNode(member.initializer);
 	                            }
-	                            var name_4 = undefined;
+	                            var name_5 = undefined;
 	                            if (member.name.kind == ts$1.SyntaxKind.Identifier) {
 	                                var identifier = member.name;
-	                                name_4 = identifier.text;
-	                                enumValueHolder[name_4] = enumValue;
+	                                name_5 = identifier.text;
+	                                enumValueHolder[name_5] = enumValue;
 	                                writtenMembers++;
 	                            }
 	                            if (typeof enumValue === 'number') {
 	                                nextDefaultValue = enumValue + 1;
 	                            }
-	                            else if (name_4) {
+	                            else if (name_5) {
 	                                nextDefaultValue = {
 	                                    __symbolic: 'binary',
 	                                    operator: '+',
 	                                    left: {
 	                                        __symbolic: 'select',
-	                                        expression: recordEntry({ __symbolic: 'reference', name: enumName }, node), name: name_4
+	                                        expression: recordEntry({ __symbolic: 'reference', name: enumName }, node), name: name_5
 	                                    }
 	                                };
 	                            }
@@ -44509,10 +44534,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                            }
 	                            var exported = false;
 	                            if (variableStatement.flags & ts$1.NodeFlags.Export ||
-	                                variableDeclaration.flags & ts$1.NodeFlags.Export) {
+	                                variableDeclaration.flags & ts$1.NodeFlags.Export ||
+	                                isExportedIdentifier(nameNode)) {
 	                                if (!metadata)
 	                                    metadata = {};
-	                                metadata[nameNode.text] = recordEntry(varValue, node);
+	                                metadata[exportedIdentifierName(nameNode)] = recordEntry(varValue, node);
 	                                exported = true;
 	                            }
 	                            if (evaluator_1.isPrimitive(varValue)) {
@@ -44536,13 +44562,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                            var report_1 = function (nameNode) {
 	                                switch (nameNode.kind) {
 	                                    case ts$1.SyntaxKind.Identifier:
-	                                        var name_5 = nameNode;
+	                                        var name_6 = nameNode;
 	                                        var varValue = errorSym('Destructuring not supported', nameNode);
-	                                        locals.define(name_5.text, varValue);
+	                                        locals.define(name_6.text, varValue);
 	                                        if (node.flags & ts$1.NodeFlags.Export) {
 	                                            if (!metadata)
 	                                                metadata = {};
-	                                            metadata[name_5.text] = varValue;
+	                                            metadata[name_6.text] = varValue;
 	                                        }
 	                                        break;
 	                                    case ts$1.SyntaxKind.BindingElement:
@@ -44940,6 +44966,12 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            if (this.context.fileExists(metadataPath)) {
 	                return this.readMetadata(metadataPath, filePath);
 	            }
+	            else {
+	                // If there is a .d.ts file but no metadata file we need to produce a
+	                // v3 metadata from the .d.ts file as v3 includes the exports we need
+	                // to resolve symbols.
+	                return [this.upgradeVersion1Metadata({ '__symbolic': 'module', 'version': 1, 'metadata': {} }, filePath)];
+	            }
 	        }
 	        else {
 	            var sf = this.getSourceFile(filePath);
@@ -44957,31 +44989,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            var metadatas_1 = metadataOrMetadatas ?
 	                (Array.isArray(metadataOrMetadatas) ? metadataOrMetadatas : [metadataOrMetadatas]) :
 	                [];
-	            var v1Metadata = metadatas_1.find(function (m) { return m['version'] === 1; });
-	            var v3Metadata = metadatas_1.find(function (m) { return m['version'] === 3; });
+	            var v1Metadata = metadatas_1.find(function (m) { return m.version === 1; });
+	            var v3Metadata = metadatas_1.find(function (m) { return m.version === 3; });
 	            if (!v3Metadata && v1Metadata) {
-	                // patch up v1 to v3 by merging the metadata with metadata collected from the d.ts file
-	                // as the only difference between the versions is whether all exports are contained in
-	                // the metadata and the `extends` clause.
-	                v3Metadata = { '__symbolic': 'module', 'version': 3, 'metadata': {} };
-	                if (v1Metadata.exports) {
-	                    v3Metadata.exports = v1Metadata.exports;
-	                }
-	                for (var prop in v1Metadata.metadata) {
-	                    v3Metadata.metadata[prop] = v1Metadata.metadata[prop];
-	                }
-	                var exports_1 = this.metadataCollector.getMetadata(this.getSourceFile(dtsFilePath));
-	                if (exports_1) {
-	                    for (var prop in exports_1.metadata) {
-	                        if (!v3Metadata.metadata[prop]) {
-	                            v3Metadata.metadata[prop] = exports_1.metadata[prop];
-	                        }
-	                    }
-	                    if (exports_1.exports) {
-	                        v3Metadata.exports = exports_1.exports;
-	                    }
-	                }
-	                metadatas_1.push(v3Metadata);
+	                metadatas_1.push(this.upgradeVersion1Metadata(v1Metadata, dtsFilePath));
 	            }
 	            this.resolverCache.set(filePath, metadatas_1);
 	            return metadatas_1;
@@ -44990,6 +45001,30 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            console.error("Failed to read JSON file " + filePath);
 	            throw e;
 	        }
+	    };
+	    CompilerHost.prototype.upgradeVersion1Metadata = function (v1Metadata, dtsFilePath) {
+	        // patch up v1 to v3 by merging the metadata with metadata collected from the d.ts file
+	        // as the only difference between the versions is whether all exports are contained in
+	        // the metadata and the `extends` clause.
+	        var v3Metadata = { '__symbolic': 'module', 'version': 3, 'metadata': {} };
+	        if (v1Metadata.exports) {
+	            v3Metadata.exports = v1Metadata.exports;
+	        }
+	        for (var prop in v1Metadata.metadata) {
+	            v3Metadata.metadata[prop] = v1Metadata.metadata[prop];
+	        }
+	        var exports = this.metadataCollector.getMetadata(this.getSourceFile(dtsFilePath));
+	        if (exports) {
+	            for (var prop in exports.metadata) {
+	                if (!v3Metadata.metadata[prop]) {
+	                    v3Metadata.metadata[prop] = exports.metadata[prop];
+	                }
+	            }
+	            if (exports.exports) {
+	                v3Metadata.exports = exports.exports;
+	            }
+	        }
+	        return v3Metadata;
 	    };
 	    CompilerHost.prototype.loadResource = function (filePath) { return this.context.readResource(filePath); };
 	    CompilerHost.prototype.loadSummary = function (filePath) {
@@ -45197,7 +45232,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$3 = new Version('4.0.0-beta.0-e785085');
+	var VERSION$3 = new Version('4.0.0-beta.0-0e3981a');
 
 	/**
 	 * @license
@@ -46613,7 +46648,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$4 = new Version('4.0.0-beta.0-e785085');
+	var VERSION$4 = new Version('4.0.0-beta.0-0e3981a');
 
 	exports['default'] = LanguageServicePlugin;
 	exports.createLanguageService = createLanguageService;
