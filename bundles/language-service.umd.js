@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.0.0-beta.0-c6e8939
+ * @license Angular v4.0.0-beta.0-4568d5d
  * (c) 2010-2016 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1700,7 +1700,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('4.0.0-beta.0-c6e8939');
+	var /** @type {?} */ VERSION = new Version('4.0.0-beta.0-4568d5d');
 
 	/**
 	 *  Allows to refer to references which are not yet defined.
@@ -9632,19 +9632,19 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 *  Creates a factory for a platform
 	  * *
-	 * @param {?} parentPlaformFactory
+	 * @param {?} parentPlatformFactory
 	 * @param {?} name
 	 * @param {?=} providers
 	 * @return {?}
 	 */
-	function createPlatformFactory(parentPlaformFactory, name, providers) {
+	function createPlatformFactory(parentPlatformFactory, name, providers) {
 	    if (providers === void 0) { providers = []; }
 	    var /** @type {?} */ marker = new OpaqueToken("Platform: " + name);
 	    return function (extraProviders) {
 	        if (extraProviders === void 0) { extraProviders = []; }
 	        if (!getPlatform()) {
-	            if (parentPlaformFactory) {
-	                parentPlaformFactory(providers.concat(extraProviders).concat({ provide: marker, useValue: true }));
+	            if (parentPlatformFactory) {
+	                parentPlatformFactory(providers.concat(extraProviders).concat({ provide: marker, useValue: true }));
 	            }
 	            else {
 	                createPlatform(ReflectiveInjector.resolveAndCreate(providers.concat(extraProviders).concat({ provide: marker, useValue: true })));
@@ -26124,7 +26124,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.0-c6e8939');
+	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.0-4568d5d');
 
 	/**
 	 * @return {?}
@@ -45197,7 +45197,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$3 = new Version('4.0.0-beta.0-c6e8939');
+	var VERSION$3 = new Version('4.0.0-beta.0-4568d5d');
 
 	/**
 	 * @license
@@ -46613,7 +46613,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$4 = new Version('4.0.0-beta.0-c6e8939');
+	var VERSION$4 = new Version('4.0.0-beta.0-4568d5d');
 
 	exports['default'] = LanguageServicePlugin;
 	exports.createLanguageService = createLanguageService;
