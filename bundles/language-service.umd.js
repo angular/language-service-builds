@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.0.0-beta.0-a23fa94
+ * @license Angular v4.0.0-beta.0-e785085
  * (c) 2010-2016 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1700,7 +1700,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('4.0.0-beta.0-a23fa94');
+	var /** @type {?} */ VERSION = new Version('4.0.0-beta.0-e785085');
 
 	/**
 	 *  Allows to refer to references which are not yet defined.
@@ -16947,7 +16947,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                        this._consumeTagOpen(start);
 	                    }
 	                }
-	                else if (!this._tokenizeIcu || !this._tokenizeExpansionForm()) {
+	                else if (!(this._tokenizeIcu && this._tokenizeExpansionForm())) {
 	                    this._consumeText();
 	                }
 	            }
@@ -17493,8 +17493,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                parts.push(this._interpolationConfig.start);
 	                this._inInterpolation = true;
 	            }
-	            else if (this._interpolationConfig && this._attemptStr(this._interpolationConfig.end) &&
-	                this._inInterpolation) {
+	            else if (this._interpolationConfig && this._inInterpolation &&
+	                this._attemptStr(this._interpolationConfig.end)) {
 	                parts.push(this._interpolationConfig.end);
 	                this._inInterpolation = false;
 	            }
@@ -23360,9 +23360,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	  * *
 	  * ```
 	  * <ng-container [ngPlural]="messages.length">
-	  * <template ngPluralCase="=0">zero</ng-container>
-	  * <template ngPluralCase="=1">one</ng-container>
-	  * <template ngPluralCase="other">more than one</ng-container>
+	  * <template ngPluralCase="=0">zero</template>
+	  * <template ngPluralCase="=1">one</template>
+	  * <template ngPluralCase="other">more than one</template>
 	  * </ng-container>
 	  * ```
 	 * @param {?} nodes
@@ -26124,7 +26124,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.0-a23fa94');
+	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.0-e785085');
 
 	/**
 	 * @return {?}
@@ -45197,7 +45197,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$3 = new Version('4.0.0-beta.0-a23fa94');
+	var VERSION$3 = new Version('4.0.0-beta.0-e785085');
 
 	/**
 	 * @license
@@ -46613,7 +46613,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$4 = new Version('4.0.0-beta.0-a23fa94');
+	var VERSION$4 = new Version('4.0.0-beta.0-e785085');
 
 	exports['default'] = LanguageServicePlugin;
 	exports.createLanguageService = createLanguageService;
