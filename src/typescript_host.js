@@ -10,7 +10,7 @@ var __extends = (this && this.__extends) || function (d, b) {
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-import { CompilerConfig, StaticReflector, StaticSymbolCache, componentModuleUrl, createOfflineCompileUrlResolver } from '@angular/compiler';
+import { AotSummaryResolver, CompilerConfig, StaticReflector, StaticSymbolCache, StaticSymbolResolver, componentModuleUrl, createOfflineCompileUrlResolver } from '@angular/compiler';
 import { analyzeNgModules, extractProgramSymbols } from '@angular/compiler/src/aot/compiler';
 import { DirectiveNormalizer } from '@angular/compiler/src/directive_normalizer';
 import { DirectiveResolver } from '@angular/compiler/src/directive_resolver';
@@ -147,8 +147,10 @@ export var TypeScriptServiceHost = (function () {
     TypeScriptServiceHost.prototype.ensureAnalyzedModules = function () {
         var analyzedModules = this.analyzedModules;
         if (!analyzedModules) {
-            var programSymbols = extractProgramSymbols(this.reflector, this.program.getSourceFiles().map(function (sf) { return sf.fileName; }), {});
-            analyzedModules = this.analyzedModules = analyzeNgModules(programSymbols, {}, this.resolver);
+            var analyzeHost = { isSourceFile: function (filePath) { return true; } };
+            var programSymbols = extractProgramSymbols(this.staticSymbolResolver, this.program.getSourceFiles().map(function (sf) { return sf.fileName; }), analyzeHost);
+            analyzedModules = this.analyzedModules =
+                analyzeNgModules(programSymbols, analyzeHost, this.resolver);
         }
         return analyzedModules;
     };
@@ -209,6 +211,7 @@ export var TypeScriptServiceHost = (function () {
         if (this.modulesOutOfDate) {
             this.analyzedModules = null;
             this._reflector = null;
+            this._staticSymbolResolver = null;
             this.templateReferences = null;
             this.fileToComponent = null;
             this.ensureAnalyzedModules();
@@ -360,12 +363,28 @@ export var TypeScriptServiceHost = (function () {
         }
         errors.push(error);
     };
+    Object.defineProperty(TypeScriptServiceHost.prototype, "staticSymbolResolver", {
+        get: function () {
+            var _this = this;
+            var result = this._staticSymbolResolver;
+            if (!result) {
+                var summaryResolver = new AotSummaryResolver({
+                    loadSummary: function (filePath) { return null; },
+                    isSourceFile: function (sourceFilePath) { return true; }
+                }, this._staticSymbolCache);
+                result = this._staticSymbolResolver = new StaticSymbolResolver(this.reflectorHost, this._staticSymbolCache, summaryResolver, function (e, filePath) { return _this.collectError(e, filePath); });
+            }
+            return result;
+        },
+        enumerable: true,
+        configurable: true
+    });
     Object.defineProperty(TypeScriptServiceHost.prototype, "reflector", {
         get: function () {
             var _this = this;
             var result = this._reflector;
             if (!result) {
-                result = this._reflector = new StaticReflector(this.reflectorHost, this._staticSymbolCache, [], [], function (e, filePath) { return _this.collectError(e, filePath); });
+                result = this._reflector = new StaticReflector(this.staticSymbolResolver, [], [], function (e, filePath) { return _this.collectError(e, filePath); });
             }
             return result;
         },
