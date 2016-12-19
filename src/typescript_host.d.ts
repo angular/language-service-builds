@@ -39,7 +39,6 @@ export declare class TypeScriptServiceHost implements LanguageServiceHost {
     private tsService;
     private _resolver;
     private _staticSymbolCache;
-    private _staticSymbolResolver;
     private _reflector;
     private _reflectorHost;
     private _checker;
@@ -76,7 +75,6 @@ export declare class TypeScriptServiceHost implements LanguageServiceHost {
     private getSourceFromType(fileName, version, type);
     private reflectorHost;
     private collectError(error, filePath);
-    private staticSymbolResolver;
     private reflector;
     private getTemplateClassFromStaticSymbol(type);
     private static missingTemplate;
