@@ -17,8 +17,9 @@ import { AstPath as AstPathBase } from './ast_path';
 import { TemplateAstChildVisitor } from './template_path';
 import { BuiltinType, DiagnosticKind } from './types';
 import { inSpan } from './utils';
-export function getExpressionDiagnostics(scope, ast, query) {
-    var analyzer = new AstType(scope, query);
+export function getExpressionDiagnostics(scope, ast, query, context) {
+    if (context === void 0) { context = {}; }
+    var analyzer = new AstType(scope, query, context);
     analyzer.getDiagnostics(ast);
     return analyzer.diagnostics;
 }
@@ -28,7 +29,7 @@ export function getExpressionCompletions(scope, ast, position, query) {
         return undefined;
     var tail = path.tail;
     var result = scope;
-    function getType(ast) { return new AstType(scope, query).getType(ast); }
+    function getType(ast) { return new AstType(scope, query, {}).getType(ast); }
     // If the completion request is in a not in a pipe or property access then the global scope
     // (that is the scope of the implicit receiver) is the right scope as the user is typing the
     // beginning of an expression.
@@ -81,7 +82,7 @@ export function getExpressionSymbol(scope, ast, position, query) {
     if (path.empty)
         return undefined;
     var tail = path.tail;
-    function getType(ast) { return new AstType(scope, query).getType(ast); }
+    function getType(ast) { return new AstType(scope, query, {}).getType(ast); }
     var symbol = undefined;
     var span = undefined;
     // If the completion request is in a not in a pipe or property access then the global scope
@@ -177,14 +178,18 @@ export var TypeDiagnostic = (function () {
 }());
 // AstType calculatetype of the ast given AST element.
 var AstType = (function () {
-    function AstType(scope, query) {
+    function AstType(scope, query, context) {
         this.scope = scope;
         this.query = query;
+        this.context = context;
     }
     AstType.prototype.getType = function (ast) { return ast.visit(this); };
     AstType.prototype.getDiagnostics = function (ast) {
         this.diagnostics = [];
-        ast.visit(this);
+        var type = ast.visit(this);
+        if (this.context.event && type.callable) {
+            this.reportWarning('Unexpected callable expression. Expected a method call', ast);
+        }
         return this.diagnostics;
     };
     AstType.prototype.visitBinary = function (ast) {
@@ -721,7 +726,7 @@ function refinedVariableType(type, info, templateElement) {
     if (ngForDirective) {
         var ngForOfBinding = ngForDirective.inputs.find(function (i) { return i.directiveName == 'ngForOf'; });
         if (ngForOfBinding) {
-            var bindingType = new AstType(info.template.members, info.template.query).getType(ngForOfBinding.value);
+            var bindingType = new AstType(info.template.members, info.template.query, {}).getType(ngForOfBinding.value);
             if (bindingType) {
                 return info.template.query.getElementType(bindingType);
             }
