@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.0.0-beta.0-bcd37f5
+ * @license Angular v4.0.0-beta.0-c0f750a
  * (c) 2010-2016 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1700,7 +1700,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('4.0.0-beta.0-bcd37f5');
+	var /** @type {?} */ VERSION = new Version('4.0.0-beta.0-c0f750a');
 
 	/**
 	 *  Allows to refer to references which are not yet defined.
@@ -24495,6 +24495,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    });
 	}
 
+	/**
+	 * @license
+	 * Copyright Google Inc. All Rights Reserved.
+	 *
+	 * Use of this source code is governed by an MIT-style license that can be
+	 * found in the LICENSE file at https://angular.io/license
+	 */
 	var StyleWithImports = (function () {
 	    /**
 	     * @param {?} style
@@ -24511,9 +24518,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @return {?}
 	 */
 	function isStyleUrlResolvable(url) {
-	    if (isBlank(url) || url.length === 0 || url[0] == '/')
+	    if (url == null || url.length === 0 || url[0] == '/')
 	        return false;
-	    var /** @type {?} */ schemeMatch = url.match(_urlWithSchemaRe);
+	    var /** @type {?} */ schemeMatch = url.match(URL_WITH_SCHEMA_REGEXP);
 	    return schemeMatch === null || schemeMatch[1] == 'package' || schemeMatch[1] == 'asset';
 	}
 	/**
@@ -24526,7 +24533,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 */
 	function extractStyleUrls(resolver, baseUrl, cssText) {
 	    var /** @type {?} */ foundUrls = [];
-	    var /** @type {?} */ modifiedCssText = cssText.replace(_cssImportRe, function () {
+	    var /** @type {?} */ modifiedCssText = cssText.replace(CSS_COMMENT_REGEXP, '').replace(CSS_IMPORT_REGEXP, function () {
 	        var m = [];
 	        for (var _i = 0; _i < arguments.length; _i++) {
 	            m[_i - 0] = arguments[_i];
@@ -24541,8 +24548,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    });
 	    return new StyleWithImports(modifiedCssText, foundUrls);
 	}
-	var /** @type {?} */ _cssImportRe = /@import\s+(?:url\()?\s*(?:(?:['"]([^'"]*))|([^;\)\s]*))[^;]*;?/g;
-	var /** @type {?} */ _urlWithSchemaRe = /^([^:/?#]+):/;
+	var /** @type {?} */ CSS_IMPORT_REGEXP = /@import\s+(?:url\()?\s*(?:(?:['"]([^'"]*))|([^;\)\s]*))[^;]*;?/g;
+	var /** @type {?} */ CSS_COMMENT_REGEXP = /\/\*.+?\*\//g;
+	var /** @type {?} */ URL_WITH_SCHEMA_REGEXP = /^([^:/?#]+):/;
 
 	/**
 	 * @license
@@ -26124,7 +26132,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.0-bcd37f5');
+	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.0-c0f750a');
 
 	/**
 	 * @return {?}
@@ -45232,7 +45240,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$3 = new Version('4.0.0-beta.0-bcd37f5');
+	var VERSION$3 = new Version('4.0.0-beta.0-c0f750a');
 
 	/**
 	 * @license
@@ -46648,7 +46656,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$4 = new Version('4.0.0-beta.0-bcd37f5');
+	var VERSION$4 = new Version('4.0.0-beta.0-c0f750a');
 
 	exports['default'] = LanguageServicePlugin;
 	exports.createLanguageService = createLanguageService;
