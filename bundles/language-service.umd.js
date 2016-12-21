@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.0.0-beta.0-c0f750a
+ * @license Angular v4.0.0-beta.0-f49ab56
  * (c) 2010-2016 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1700,7 +1700,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('4.0.0-beta.0-c0f750a');
+	var /** @type {?} */ VERSION = new Version('4.0.0-beta.0-f49ab56');
 
 	/**
 	 *  Allows to refer to references which are not yet defined.
@@ -26132,7 +26132,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.0-c0f750a');
+	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.0-f49ab56');
 
 	/**
 	 * @return {?}
@@ -29849,11 +29849,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @param {?} values
 	 * @param {?=} type
+	 * @param {?=} quoted
 	 * @return {?}
 	 */
-	function literalMap(values, type) {
+	function literalMap(values, type, quoted) {
 	    if (type === void 0) { type = null; }
-	    return new LiteralMapExpr(values.map(function (entry) { return new LiteralMapEntry(entry[0], entry[1]); }), type);
+	    if (quoted === void 0) { quoted = false; }
+	    return new LiteralMapExpr(values.map(function (entry) { return new LiteralMapEntry(entry[0], entry[1], quoted); }), type);
 	}
 	/**
 	 * @param {?} expr
@@ -37534,7 +37536,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        }
 	        ast.styles.forEach(function (entry) {
 	            var /** @type {?} */ entries = Object.keys(entry).map(function (key) { return [key, literal(entry[key])]; });
-	            stylesArr.push(literalMap(entries));
+	            stylesArr.push(literalMap(entries, null, true));
 	        });
 	        return importExpr(createIdentifier(Identifiers.AnimationStyles)).instantiate([
 	            importExpr(createIdentifier(Identifiers.collectAndResolveStyles)).callFn([
@@ -37767,11 +37769,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            if (isPresent(value)) {
 	                var /** @type {?} */ styleMap_1 = [];
 	                Object.keys(value).forEach(function (key) { styleMap_1.push([key, literal(value[key])]); });
-	                variableValue = literalMap(styleMap_1);
+	                variableValue = literalMap(styleMap_1, null, true);
 	            }
 	            lookupMap.push([stateName, variableValue]);
 	        });
-	        var /** @type {?} */ compiledStatesMapStmt = this._statesMapVar.set(literalMap(lookupMap)).toDeclStmt();
+	        var /** @type {?} */ compiledStatesMapStmt = this._statesMapVar.set(literalMap(lookupMap, null, true)).toDeclStmt();
 	        var /** @type {?} */ statements = [compiledStatesMapStmt, fnStatement];
 	        return new AnimationEntryCompileResult(this.animationName, statements, fnVariable);
 	    };
@@ -45240,7 +45242,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$3 = new Version('4.0.0-beta.0-c0f750a');
+	var VERSION$3 = new Version('4.0.0-beta.0-f49ab56');
 
 	/**
 	 * @license
@@ -46656,7 +46658,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$4 = new Version('4.0.0-beta.0-c0f750a');
+	var VERSION$4 = new Version('4.0.0-beta.0-f49ab56');
 
 	exports['default'] = LanguageServicePlugin;
 	exports.createLanguageService = createLanguageService;
