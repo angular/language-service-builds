@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.0.0-beta.1-6976903
+ * @license Angular v4.0.0-beta.1-9c69703
  * (c) 2010-2016 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -724,6 +724,41 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	}
 
 	/**
+	 *  Creates a token that can be used in a DI Provider.
+	  * *
+	  * ### Example ([live demo](http://plnkr.co/edit/Ys9ezXpj2Mnoy3Uc8KBp?p=preview))
+	  * *
+	  * ```typescript
+	  * var t = new OpaqueToken("value");
+	  * *
+	  * var injector = Injector.resolveAndCreate([
+	  * {provide: t, useValue: "bindingValue"}
+	  * ]);
+	  * *
+	  * expect(injector.get(t)).toEqual("bindingValue");
+	  * ```
+	  * *
+	  * Using an `OpaqueToken` is preferable to using strings as tokens because of possible collisions
+	  * caused by multiple providers using the same string as two different tokens.
+	  * *
+	  * Using an `OpaqueToken` is preferable to using an `Object` as tokens because it provides better
+	  * error messages.
+	 */
+	var OpaqueToken = (function () {
+	    /**
+	     * @param {?} _desc
+	     */
+	    function OpaqueToken(_desc) {
+	        this._desc = _desc;
+	    }
+	    /**
+	     * @return {?}
+	     */
+	    OpaqueToken.prototype.toString = function () { return "Token " + this._desc; };
+	    return OpaqueToken;
+	}());
+
+	/**
 	 * @license
 	 * Copyright Google Inc. All Rights Reserved.
 	 *
@@ -1189,93 +1224,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	}
 
 	/**
-	 * Inject decorator and metadata.
-	 *
-	 * @stable
-	 * @Annotation
-	 */
-	var /** @type {?} */ Inject = makeParamDecorator('Inject', [['token', undefined]]);
-	/**
-	 * Optional decorator and metadata.
-	 *
-	 * @stable
-	 * @Annotation
-	 */
-	var /** @type {?} */ Optional = makeParamDecorator('Optional', []);
-	/**
-	 * Injectable decorator and metadata.
-	 *
-	 * @stable
-	 * @Annotation
-	 */
-	var /** @type {?} */ Injectable = (makeDecorator('Injectable', []));
-	/**
-	 * Self decorator and metadata.
-	 *
-	 * @stable
-	 * @Annotation
-	 */
-	var /** @type {?} */ Self = makeParamDecorator('Self', []);
-	/**
-	 * SkipSelf decorator and metadata.
-	 *
-	 * @stable
-	 * @Annotation
-	 */
-	var /** @type {?} */ SkipSelf = makeParamDecorator('SkipSelf', []);
-	/**
-	 * Host decorator and metadata.
-	 *
-	 * @stable
-	 * @Annotation
-	 */
-	var /** @type {?} */ Host = makeParamDecorator('Host', []);
-
-	/**
-	 * Creates a token that can be used in a DI Provider.
-	 *
-	 * ### Example ([live demo](http://plnkr.co/edit/Ys9ezXpj2Mnoy3Uc8KBp?p=preview))
-	 *
-	 * ```typescript
-	 * var t = new OpaqueToken("value");
-	 *
-	 * var injector = Injector.resolveAndCreate([
-	 *   {provide: t, useValue: "bindingValue"}
-	 * ]);
-	 *
-	 * expect(injector.get(t)).toEqual("bindingValue");
-	 * ```
-	 *
-	 * Using an `OpaqueToken` is preferable to using strings as tokens because of possible collisions
-	 * caused by multiple providers using the same string as two different tokens.
-	 *
-	 * Using an `OpaqueToken` is preferable to using an `Object` as tokens because it provides better
-	 * error messages.
-	 * @stable
-	 */
-	// so that metadata is gathered for this class
-	var OpaqueToken = (function () {
-	    /**
-	     * @param {?} _desc
-	     */
-	    function OpaqueToken(_desc) {
-	        this._desc = _desc;
-	    }
-	    /**
-	     * @return {?}
-	     */
-	    OpaqueToken.prototype.toString = function () { return "Token " + this._desc; };
-	    OpaqueToken.decorators = [
-	        { type: Injectable },
-	    ];
-	    /** @nocollapse */
-	    OpaqueToken.ctorParameters = function () { return [
-	        null,
-	    ]; };
-	    return OpaqueToken;
-	}());
-
-	/**
 	 * This token can be used to create a virtual provider that will populate the
 	 * `entryComponents` fields of components and ng modules based on its `useValue`.
 	 * All components that are referenced in the `useValue` value (either directly
@@ -1700,7 +1648,50 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('4.0.0-beta.1-6976903');
+	var /** @type {?} */ VERSION = new Version('4.0.0-beta.1-9c69703');
+
+	/**
+	 * Inject decorator and metadata.
+	 *
+	 * @stable
+	 * @Annotation
+	 */
+	var /** @type {?} */ Inject = makeParamDecorator('Inject', [['token', undefined]]);
+	/**
+	 * Optional decorator and metadata.
+	 *
+	 * @stable
+	 * @Annotation
+	 */
+	var /** @type {?} */ Optional = makeParamDecorator('Optional', []);
+	/**
+	 * Injectable decorator and metadata.
+	 *
+	 * @stable
+	 * @Annotation
+	 */
+	var /** @type {?} */ Injectable = (makeDecorator('Injectable', []));
+	/**
+	 * Self decorator and metadata.
+	 *
+	 * @stable
+	 * @Annotation
+	 */
+	var /** @type {?} */ Self = makeParamDecorator('Self', []);
+	/**
+	 * SkipSelf decorator and metadata.
+	 *
+	 * @stable
+	 * @Annotation
+	 */
+	var /** @type {?} */ SkipSelf = makeParamDecorator('SkipSelf', []);
+	/**
+	 * Host decorator and metadata.
+	 *
+	 * @stable
+	 * @Annotation
+	 */
+	var /** @type {?} */ Host = makeParamDecorator('Host', []);
 
 	/**
 	 *  Allows to refer to references which are not yet defined.
@@ -8965,6 +8956,14 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return InlineArrayDynamic;
 	}());
 	var /** @type {?} */ EMPTY_INLINE_ARRAY = new InlineArray0();
+	/**
+	 *  This is a private API only used by the compiler to read the view class.
+	 * @param {?} componentFactory
+	 * @return {?}
+	 */
+	function getComponentFactoryViewClass(componentFactory) {
+	    return componentFactory._viewClass;
+	}
 
 
 	var view_utils = Object.freeze({
@@ -8998,7 +8997,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    InlineArray8: InlineArray8,
 	    InlineArray16: InlineArray16,
 	    InlineArrayDynamic: InlineArrayDynamic,
-	    EMPTY_INLINE_ARRAY: EMPTY_INLINE_ARRAY
+	    EMPTY_INLINE_ARRAY: EMPTY_INLINE_ARRAY,
+	    getComponentFactoryViewClass: getComponentFactoryViewClass
 	});
 
 	/**
@@ -9183,8 +9183,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     */
 	    function ComponentFactory(selector, _viewClass, _componentType) {
 	        this.selector = selector;
-	        this._viewClass = _viewClass;
 	        this._componentType = _componentType;
+	        this._viewClass = _viewClass;
 	    }
 	    Object.defineProperty(ComponentFactory.prototype, "componentType", {
 	        /**
@@ -21775,13 +21775,21 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    /**
 	     * @param {?} filePath
 	     * @param {?} name
-	     * @param {?=} members
+	     * @param {?} members
 	     */
 	    function StaticSymbol(filePath, name, members) {
 	        this.filePath = filePath;
 	        this.name = name;
 	        this.members = members;
 	    }
+	    /**
+	     * @return {?}
+	     */
+	    StaticSymbol.prototype.assertNoMembers = function () {
+	        if (this.members.length) {
+	            throw new Error("Illegal state: symbol without members expected, but got " + JSON.stringify(this) + ".");
+	        }
+	    };
 	    return StaticSymbol;
 	}());
 	/**
@@ -22568,6 +22576,35 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    }
 	    return reflector$1.importUri(ref);
 	}
+	/**
+	 * @param {?} compType
+	 * @param {?} embeddedTemplateIndex
+	 * @return {?}
+	 */
+	function viewClassName(compType, embeddedTemplateIndex) {
+	    return "View_" + identifierName({ reference: compType }) + "_" + embeddedTemplateIndex;
+	}
+	/**
+	 * @param {?} compType
+	 * @return {?}
+	 */
+	function hostViewClassName(compType) {
+	    return "HostView_" + identifierName({ reference: compType });
+	}
+	/**
+	 * @param {?} dirType
+	 * @return {?}
+	 */
+	function dirWrapperClassName(dirType) {
+	    return "Wrapper_" + identifierName({ reference: dirType });
+	}
+	/**
+	 * @param {?} compType
+	 * @return {?}
+	 */
+	function componentFactoryName(compType) {
+	    return identifierName({ reference: compType }) + "NgFactory";
+	}
 	var CompileSummaryKind = {};
 	CompileSummaryKind.Pipe = 0;
 	CompileSummaryKind.Directive = 1;
@@ -22641,7 +22678,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        return {
 	            animations: this.animations.map(function (anim) { return anim.name; }),
 	            ngContentSelectors: this.ngContentSelectors,
-	            encapsulation: this.encapsulation
+	            encapsulation: this.encapsulation,
 	        };
 	    };
 	    return CompileTemplateMetadata;
@@ -22654,7 +22691,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @param {?=} __0
 	     */
 	    function CompileDirectiveMetadata(_a) {
-	        var _b = _a === void 0 ? {} : _a, isHost = _b.isHost, type = _b.type, isComponent = _b.isComponent, selector = _b.selector, exportAs = _b.exportAs, changeDetection = _b.changeDetection, inputs = _b.inputs, outputs = _b.outputs, hostListeners = _b.hostListeners, hostProperties = _b.hostProperties, hostAttributes = _b.hostAttributes, providers = _b.providers, viewProviders = _b.viewProviders, queries = _b.queries, viewQueries = _b.viewQueries, entryComponents = _b.entryComponents, template = _b.template;
+	        var _b = _a === void 0 ? {} : _a, isHost = _b.isHost, type = _b.type, isComponent = _b.isComponent, selector = _b.selector, exportAs = _b.exportAs, changeDetection = _b.changeDetection, inputs = _b.inputs, outputs = _b.outputs, hostListeners = _b.hostListeners, hostProperties = _b.hostProperties, hostAttributes = _b.hostAttributes, providers = _b.providers, viewProviders = _b.viewProviders, queries = _b.queries, viewQueries = _b.viewQueries, entryComponents = _b.entryComponents, template = _b.template, wrapperType = _b.wrapperType, componentViewType = _b.componentViewType, componentFactory = _b.componentFactory;
 	        this.isHost = !!isHost;
 	        this.type = type;
 	        this.isComponent = isComponent;
@@ -22672,13 +22709,16 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        this.viewQueries = _normalizeArray(viewQueries);
 	        this.entryComponents = _normalizeArray(entryComponents);
 	        this.template = template;
+	        this.wrapperType = wrapperType;
+	        this.componentViewType = componentViewType;
+	        this.componentFactory = componentFactory;
 	    }
 	    /**
 	     * @param {?=} __0
 	     * @return {?}
 	     */
 	    CompileDirectiveMetadata.create = function (_a) {
-	        var _b = _a === void 0 ? {} : _a, isHost = _b.isHost, type = _b.type, isComponent = _b.isComponent, selector = _b.selector, exportAs = _b.exportAs, changeDetection = _b.changeDetection, inputs = _b.inputs, outputs = _b.outputs, host = _b.host, providers = _b.providers, viewProviders = _b.viewProviders, queries = _b.queries, viewQueries = _b.viewQueries, entryComponents = _b.entryComponents, template = _b.template;
+	        var _b = _a === void 0 ? {} : _a, isHost = _b.isHost, type = _b.type, isComponent = _b.isComponent, selector = _b.selector, exportAs = _b.exportAs, changeDetection = _b.changeDetection, inputs = _b.inputs, outputs = _b.outputs, host = _b.host, providers = _b.providers, viewProviders = _b.viewProviders, queries = _b.queries, viewQueries = _b.viewQueries, entryComponents = _b.entryComponents, template = _b.template, wrapperType = _b.wrapperType, componentViewType = _b.componentViewType, componentFactory = _b.componentFactory;
 	        var /** @type {?} */ hostListeners = {};
 	        var /** @type {?} */ hostProperties = {};
 	        var /** @type {?} */ hostAttributes = {};
@@ -22730,6 +22770,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            viewQueries: viewQueries,
 	            entryComponents: entryComponents,
 	            template: template,
+	            wrapperType: wrapperType,
+	            componentViewType: componentViewType,
+	            componentFactory: componentFactory,
 	        });
 	    };
 	    /**
@@ -22752,22 +22795,26 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            queries: this.queries,
 	            entryComponents: this.entryComponents,
 	            changeDetection: this.changeDetection,
-	            template: this.template && this.template.toSummary()
+	            template: this.template && this.template.toSummary(),
+	            wrapperType: this.wrapperType,
+	            componentViewType: this.componentViewType,
+	            componentFactory: this.componentFactory
 	        };
 	    };
 	    return CompileDirectiveMetadata;
 	}());
 	/**
 	 *  Construct {@link CompileDirectiveMetadata} from {@link ComponentTypeMetadata} and a selector.
-	 * @param {?} typeReference
+	 * @param {?} hostTypeReference
 	 * @param {?} compMeta
+	 * @param {?} hostViewType
 	 * @return {?}
 	 */
-	function createHostComponentMeta(typeReference, compMeta) {
+	function createHostComponentMeta(hostTypeReference, compMeta, hostViewType) {
 	    var /** @type {?} */ template = CssSelector.parse(compMeta.selector)[0].getMatchingElementTemplate();
 	    return CompileDirectiveMetadata.create({
 	        isHost: true,
-	        type: { reference: typeReference, diDeps: [], lifecycleHooks: [] },
+	        type: { reference: hostTypeReference, diDeps: [], lifecycleHooks: [] },
 	        template: new CompileTemplateMetadata({
 	            encapsulation: ViewEncapsulation.None,
 	            template: template,
@@ -22786,7 +22833,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        providers: [],
 	        viewProviders: [],
 	        queries: [],
-	        viewQueries: []
+	        viewQueries: [],
+	        componentViewType: hostViewType
 	    });
 	}
 	var CompilePipeMetadata = (function () {
@@ -22926,13 +22974,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        }
 	    };
 	    /**
-	     * @param {?} id
+	     * @param {?} ec
 	     * @return {?}
 	     */
-	    TransitiveCompileNgModuleMetadata.prototype.addEntryComponent = function (id) {
-	        if (!this.entryComponentsSet.has(id.reference)) {
-	            this.entryComponentsSet.add(id.reference);
-	            this.entryComponents.push(id);
+	    TransitiveCompileNgModuleMetadata.prototype.addEntryComponent = function (ec) {
+	        if (!this.entryComponentsSet.has(ec.componentType)) {
+	            this.entryComponentsSet.add(ec.componentType);
+	            this.entryComponents.push(ec);
 	        }
 	    };
 	    return TransitiveCompileNgModuleMetadata;
@@ -26132,7 +26180,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.1-6976903');
+	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.1-9c69703');
 
 	/**
 	 * @return {?}
@@ -31134,13 +31182,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        this._console = _console;
 	    }
 	    /**
-	     * @param {?} id
-	     * @return {?}
-	     */
-	    DirectiveWrapperCompiler.dirWrapperClassName = function (id) {
-	        return "Wrapper_" + identifierName(id);
-	    };
-	    /**
 	     * @param {?} dirMeta
 	     * @return {?}
 	     */
@@ -31220,7 +31261,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            .instantiate(dirDepParamNames.map(function (paramName) { return variable(paramName); })))
 	            .toStmt());
 	        return createClassStmt({
-	            name: DirectiveWrapperCompiler.dirWrapperClassName(this.dirMeta.type),
+	            name: dirWrapperClassName(this.dirMeta.type.reference),
 	            ctorParams: dirDepParamNames.map(function (paramName) { return new FnParam(paramName, DYNAMIC_TYPE); }),
 	            builders: [{ fields: fields, ctorStmts: ctorStmts, methods: methods }, this]
 	        });
@@ -31567,6 +31608,52 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	}());
 
 	/**
+	 * @license
+	 * Copyright Google Inc. All Rights Reserved.
+	 *
+	 * Use of this source code is governed by an MIT-style license that can be
+	 * found in the LICENSE file at https://angular.io/license
+	 */
+	var /** @type {?} */ STRIP_SRC_FILE_SUFFIXES = /(\.ts|\.d\.ts|\.js|\.jsx|\.tsx)$/;
+	/**
+	 * @param {?} filePath
+	 * @return {?}
+	 */
+	function ngfactoryFilePath(filePath) {
+	    var /** @type {?} */ urlWithSuffix = splitTypescriptSuffix(filePath);
+	    return urlWithSuffix[0] + ".ngfactory" + urlWithSuffix[1];
+	}
+	/**
+	 * @param {?} filePath
+	 * @return {?}
+	 */
+	function stripNgFactory(filePath) {
+	    return filePath.replace(/\.ngfactory\./, '.');
+	}
+	/**
+	 * @param {?} path
+	 * @return {?}
+	 */
+	function splitTypescriptSuffix(path) {
+	    if (path.endsWith('.d.ts')) {
+	        return [path.slice(0, -5), '.ts'];
+	    }
+	    var /** @type {?} */ lastDot = path.lastIndexOf('.');
+	    if (lastDot !== -1) {
+	        return [path.substring(0, lastDot), path.substring(lastDot)];
+	    }
+	    return [path, ''];
+	}
+	/**
+	 * @param {?} fileName
+	 * @return {?}
+	 */
+	function summaryFileName(fileName) {
+	    var /** @type {?} */ fileNameWithoutSuffix = fileName.replace(STRIP_SRC_FILE_SUFFIXES, '');
+	    return fileNameWithoutSuffix + ".ngsummary.json";
+	}
+
+	/**
 	 * @param {?} hook
 	 * @param {?} token
 	 * @return {?}
@@ -31749,6 +31836,17 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    function SummaryResolver() {
 	    }
 	    /**
+	     * @param {?} fileName
+	     * @return {?}
+	     */
+	    SummaryResolver.prototype.isLibraryFile = function (fileName) { return false; };
+	    ;
+	    /**
+	     * @param {?} fileName
+	     * @return {?}
+	     */
+	    SummaryResolver.prototype.getLibraryFileName = function (fileName) { return null; };
+	    /**
 	     * @param {?} reference
 	     * @return {?}
 	     */
@@ -31759,6 +31857,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @return {?}
 	     */
 	    SummaryResolver.prototype.getSymbolsOf = function (filePath) { return []; };
+	    /**
+	     * @param {?} reference
+	     * @return {?}
+	     */
+	    SummaryResolver.prototype.getImportAs = function (reference) { return reference; };
 	    SummaryResolver = __decorate$13([
 	        CompilerInjectable(), 
 	        __metadata$13('design:paramtypes', [])
@@ -31803,10 +31906,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @param {?} _summaryResolver
 	     * @param {?} _schemaRegistry
 	     * @param {?} _directiveNormalizer
+	     * @param {?} _staticSymbolCache
 	     * @param {?=} _reflector
 	     * @param {?=} _errorCollector
 	     */
-	    function CompileMetadataResolver(_ngModuleResolver, _directiveResolver, _pipeResolver, _summaryResolver, _schemaRegistry, _directiveNormalizer, _reflector, _errorCollector) {
+	    function CompileMetadataResolver(_ngModuleResolver, _directiveResolver, _pipeResolver, _summaryResolver, _schemaRegistry, _directiveNormalizer, _staticSymbolCache, _reflector, _errorCollector) {
 	        if (_reflector === void 0) { _reflector = reflector$1; }
 	        this._ngModuleResolver = _ngModuleResolver;
 	        this._directiveResolver = _directiveResolver;
@@ -31814,8 +31918,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        this._summaryResolver = _summaryResolver;
 	        this._schemaRegistry = _schemaRegistry;
 	        this._directiveNormalizer = _directiveNormalizer;
+	        this._staticSymbolCache = _staticSymbolCache;
 	        this._reflector = _reflector;
 	        this._errorCollector = _errorCollector;
+	        this._nonNormalizedDirectiveCache = new Map();
 	        this._directiveCache = new Map();
 	        this._summaryCache = new Map();
 	        this._pipeCache = new Map();
@@ -31829,6 +31935,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    CompileMetadataResolver.prototype.clearCacheFor = function (type) {
 	        var /** @type {?} */ dirMeta = this._directiveCache.get(type);
 	        this._directiveCache.delete(type);
+	        this._nonNormalizedDirectiveCache.delete(type);
 	        this._summaryCache.delete(type);
 	        this._pipeCache.delete(type);
 	        this._ngModuleOfTypes.delete(type);
@@ -31843,11 +31950,96 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     */
 	    CompileMetadataResolver.prototype.clearCache = function () {
 	        this._directiveCache.clear();
+	        this._nonNormalizedDirectiveCache.clear();
 	        this._summaryCache.clear();
 	        this._pipeCache.clear();
 	        this._ngModuleCache.clear();
 	        this._ngModuleOfTypes.clear();
 	        this._directiveNormalizer.clearCache();
+	    };
+	    /**
+	     * @param {?} baseType
+	     * @param {?} name
+	     * @return {?}
+	     */
+	    CompileMetadataResolver.prototype._createProxyClass = function (baseType, name) {
+	        var /** @type {?} */ delegate = null;
+	        var /** @type {?} */ proxyClass = (function () {
+	            if (!delegate) {
+	                throw new Error("Illegal state: Class " + name + " for type " + stringify(baseType) + " is not compiled yet!");
+	            }
+	            return delegate.apply(this, arguments);
+	        });
+	        proxyClass.setDelegate = function (d) {
+	            delegate = d;
+	            ((proxyClass)).prototype = d.prototype;
+	        };
+	        // Make stringify work correctly
+	        ((proxyClass)).overriddenName = name;
+	        return proxyClass;
+	    };
+	    /**
+	     * @param {?} dirType
+	     * @param {?} name
+	     * @return {?}
+	     */
+	    CompileMetadataResolver.prototype.getGeneratedClass = function (dirType, name) {
+	        if (dirType instanceof StaticSymbol) {
+	            return this._staticSymbolCache.get(ngfactoryFilePath(dirType.filePath), name);
+	        }
+	        else {
+	            return this._createProxyClass(dirType, name);
+	        }
+	    };
+	    /**
+	     * @param {?} dirType
+	     * @return {?}
+	     */
+	    CompileMetadataResolver.prototype.getDirectiveWrapperClass = function (dirType) {
+	        return this.getGeneratedClass(dirType, dirWrapperClassName(dirType));
+	    };
+	    /**
+	     * @param {?} dirType
+	     * @return {?}
+	     */
+	    CompileMetadataResolver.prototype.getComponentViewClass = function (dirType) {
+	        return this.getGeneratedClass(dirType, viewClassName(dirType, 0));
+	    };
+	    /**
+	     * @param {?} dirType
+	     * @return {?}
+	     */
+	    CompileMetadataResolver.prototype.getHostComponentViewClass = function (dirType) {
+	        return this.getGeneratedClass(dirType, hostViewClassName(dirType));
+	    };
+	    /**
+	     * @param {?} dirType
+	     * @return {?}
+	     */
+	    CompileMetadataResolver.prototype.getHostComponentType = function (dirType) {
+	        var /** @type {?} */ name = identifierName({ reference: dirType }) + "_Host";
+	        if (dirType instanceof StaticSymbol) {
+	            return this._staticSymbolCache.get(dirType.filePath, name);
+	        }
+	        else {
+	            var /** @type {?} */ HostClass = (function HostClass() { });
+	            HostClass.overriddenName = name;
+	            return HostClass;
+	        }
+	    };
+	    /**
+	     * @param {?} selector
+	     * @param {?} dirType
+	     * @return {?}
+	     */
+	    CompileMetadataResolver.prototype.getComponentFactory = function (selector, dirType) {
+	        if (dirType instanceof StaticSymbol) {
+	            return this._staticSymbolCache.get(ngfactoryFilePath(dirType.filePath), componentFactoryName(dirType));
+	        }
+	        else {
+	            var /** @type {?} */ hostView = this.getHostComponentViewClass(dirType);
+	            return new ComponentFactory(selector, /** @type {?} */ (hostView), dirType);
+	        }
 	    };
 	    /**
 	     * @param {?} entry
@@ -31948,6 +32140,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                queries: metadata.queries,
 	                viewQueries: metadata.viewQueries,
 	                entryComponents: metadata.entryComponents,
+	                wrapperType: metadata.wrapperType,
+	                componentViewType: metadata.componentViewType,
+	                componentFactory: metadata.componentFactory,
 	                template: templateMetadata
 	            });
 	            _this._directiveCache.set(directiveType, normalizedDirMeta);
@@ -31991,7 +32186,14 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    CompileMetadataResolver.prototype.getNonNormalizedDirectiveMetadata = function (directiveType) {
 	        var _this = this;
 	        directiveType = resolveForwardRef(directiveType);
-	        var /** @type {?} */ dirMeta = this._directiveResolver.resolve(directiveType);
+	        if (!directiveType) {
+	            return null;
+	        }
+	        var /** @type {?} */ cacheEntry = this._nonNormalizedDirectiveCache.get(directiveType);
+	        if (cacheEntry) {
+	            return cacheEntry;
+	        }
+	        var /** @type {?} */ dirMeta = this._directiveResolver.resolve(directiveType, false);
 	        if (!dirMeta) {
 	            return null;
 	        }
@@ -32026,7 +32228,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            }
 	            if (dirMeta.entryComponents) {
 	                entryComponentMetadata = flattenAndDedupeArray(dirMeta.entryComponents)
-	                    .map(function (type) { return _this._getIdentifierMetadata(type); })
+	                    .map(function (type) { return _this._getEntryComponentMetadata(type); })
 	                    .concat(entryComponentMetadata);
 	            }
 	            if (!selector) {
@@ -32064,9 +32266,17 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            viewProviders: viewProviders,
 	            queries: queries,
 	            viewQueries: viewQueries,
-	            entryComponents: entryComponentMetadata
+	            entryComponents: entryComponentMetadata,
+	            wrapperType: this.getDirectiveWrapperClass(directiveType),
+	            componentViewType: nonNormalizedTemplateMetadata ? this.getComponentViewClass(directiveType) :
+	                undefined,
+	            componentFactory: nonNormalizedTemplateMetadata ?
+	                this.getComponentFactory(selector, directiveType) :
+	                undefined
 	        });
-	        return { metadata: metadata, annotation: dirMeta };
+	        cacheEntry = { metadata: metadata, annotation: dirMeta };
+	        this._nonNormalizedDirectiveCache.set(directiveType, cacheEntry);
+	        return cacheEntry;
 	    };
 	    /**
 	     *  Gets the metadata for the given directive.
@@ -32257,7 +32467,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        }
 	        if (meta.entryComponents) {
 	            entryComponents.push.apply(entryComponents, flattenAndDedupeArray(meta.entryComponents)
-	                .map(function (type) { return _this._getIdentifierMetadata(type); }));
+	                .map(function (type) { return _this._getEntryComponentMetadata(type); }));
 	        }
 	        if (meta.bootstrap) {
 	            flattenAndDedupeArray(meta.bootstrap).forEach(function (type) {
@@ -32268,7 +32478,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                bootstrapComponents.push(_this._getIdentifierMetadata(type));
 	            });
 	        }
-	        entryComponents.push.apply(entryComponents, bootstrapComponents);
+	        entryComponents.push.apply(entryComponents, bootstrapComponents.map(function (type) { return _this._getEntryComponentMetadata(type.reference); }));
 	        if (meta.schemas) {
 	            schemas.push.apply(schemas, flattenAndDedupeArray(meta.schemas));
 	        }
@@ -32627,12 +32837,28 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        }
 	        extractIdentifiers(provider.useValue, collectedIdentifiers);
 	        collectedIdentifiers.forEach(function (identifier) {
-	            if (_this._directiveResolver.isDirective(identifier.reference) ||
-	                _this._loadSummary(identifier.reference, CompileSummaryKind.Directive)) {
-	                components.push(identifier);
+	            var /** @type {?} */ entry = _this._getEntryComponentMetadata(identifier.reference);
+	            if (entry) {
+	                components.push(entry);
 	            }
 	        });
 	        return components;
+	    };
+	    /**
+	     * @param {?} dirType
+	     * @return {?}
+	     */
+	    CompileMetadataResolver.prototype._getEntryComponentMetadata = function (dirType) {
+	        var /** @type {?} */ dirMeta = this.getNonNormalizedDirectiveMetadata(dirType);
+	        if (dirMeta) {
+	            return { componentType: dirType, componentFactory: dirMeta.metadata.componentFactory };
+	        }
+	        else {
+	            var /** @type {?} */ dirSummary = (this._loadSummary(dirType, CompileSummaryKind.Directive));
+	            if (dirSummary) {
+	                return { componentType: dirType, componentFactory: dirSummary.componentFactory };
+	            }
+	        }
 	    };
 	    /**
 	     * @param {?} provider
@@ -32738,12 +32964,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        { type: SummaryResolver, },
 	        { type: ElementSchemaRegistry, },
 	        { type: DirectiveNormalizer, },
+	        { type: StaticSymbolCache, decorators: [{ type: Optional },] },
 	        { type: ReflectorReader$1, },
 	        { type: undefined, decorators: [{ type: Optional }, { type: Inject, args: [ERROR_COLLECTOR_TOKEN,] },] },
 	    ]; };
 	    CompileMetadataResolver = __decorate$10([
 	        CompilerInjectable(), 
-	        __metadata$10('design:paramtypes', [NgModuleResolver, DirectiveResolver, PipeResolver, SummaryResolver, ElementSchemaRegistry, DirectiveNormalizer, ReflectorReader$1, Function])
+	        __metadata$10('design:paramtypes', [NgModuleResolver, DirectiveResolver, PipeResolver, SummaryResolver, ElementSchemaRegistry, DirectiveNormalizer, StaticSymbolCache, ReflectorReader$1, Function])
 	    ], CompileMetadataResolver);
 	    return CompileMetadataResolver;
 	}());
@@ -32922,14 +33149,16 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	var __metadata$14 = (this && this.__metadata) || function (k, v) {
 	    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 	};
+	/**
+	 *  This is currently not read, but will probably be used in the future.
+	  * We keep it as we already pass it through all the rigth places...
+	 */
 	var ComponentFactoryDependency = (function () {
 	    /**
-	     * @param {?} comp
-	     * @param {?} placeholder
+	     * @param {?} compType
 	     */
-	    function ComponentFactoryDependency(comp, placeholder) {
-	        this.comp = comp;
-	        this.placeholder = placeholder;
+	    function ComponentFactoryDependency(compType) {
+	        this.compType = compType;
 	    }
 	    return ComponentFactoryDependency;
 	}());
@@ -32964,12 +33193,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        var /** @type {?} */ deps = [];
 	        var /** @type {?} */ bootstrapComponentFactories = [];
 	        var /** @type {?} */ entryComponentFactories = ngModuleMeta.transitiveModule.entryComponents.map(function (entryComponent) {
-	            var /** @type {?} */ id = { reference: null };
-	            if (ngModuleMeta.bootstrapComponents.some(function (id) { return id.reference === entryComponent.reference; })) {
-	                bootstrapComponentFactories.push(id);
+	            if (ngModuleMeta.bootstrapComponents.some(function (id) { return id.reference === entryComponent.componentType; })) {
+	                bootstrapComponentFactories.push({ reference: entryComponent.componentFactory });
 	            }
-	            deps.push(new ComponentFactoryDependency(entryComponent, id));
-	            return id;
+	            deps.push(new ComponentFactoryDependency(entryComponent.componentType));
+	            return { reference: entryComponent.componentFactory };
 	        });
 	        var /** @type {?} */ builder = new _InjectorBuilder(ngModuleMeta, entryComponentFactories, bootstrapComponentFactories, sourceSpan);
 	        var /** @type {?} */ providerParser = new NgModuleProviderAnalyzer(ngModuleMeta, extraProviders, sourceSpan);
@@ -33826,13 +34054,25 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	var /** @type {?} */ _debugModuleUrl = '/debug/lib';
+	var /** @type {?} */ _debugFilePath = '/debug/lib';
 	/**
 	 * @param {?} ast
 	 * @return {?}
 	 */
 	function debugOutputAstAsTypeScript(ast) {
-	    var /** @type {?} */ converter = new _TsEmitterVisitor(_debugModuleUrl);
+	    var /** @type {?} */ converter = new _TsEmitterVisitor(_debugFilePath, {
+	        /**
+	         * @param {?} filePath
+	         * @param {?} containingFilePath
+	         * @return {?}
+	         */
+	        fileNameToModuleName: function (filePath, containingFilePath) { return filePath; },
+	        /**
+	         * @param {?} symbol
+	         * @return {?}
+	         */
+	        getImportAs: function (symbol) { return null; }
+	    });
 	    var /** @type {?} */ ctx = EmitterVisitorContext.createRoot([]);
 	    var /** @type {?} */ asts = Array.isArray(ast) ? ast : [ast];
 	    asts.forEach(function (ast) {
@@ -33854,12 +34094,15 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	var _TsEmitterVisitor = (function (_super) {
 	    __extends$43(_TsEmitterVisitor, _super);
 	    /**
-	     * @param {?} _moduleUrl
+	     * @param {?} _genFilePath
+	     * @param {?} _importResolver
 	     */
-	    function _TsEmitterVisitor(_moduleUrl) {
+	    function _TsEmitterVisitor(_genFilePath, _importResolver) {
 	        _super.call(this, false);
-	        this._moduleUrl = _moduleUrl;
+	        this._genFilePath = _genFilePath;
+	        this._importResolver = _importResolver;
 	        this.importsWithPrefixes = new Map();
+	        this.reexports = new Map();
 	    }
 	    /**
 	     * @param {?} t
@@ -33919,6 +34162,19 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @return {?}
 	     */
 	    _TsEmitterVisitor.prototype.visitDeclareVarStmt = function (stmt, ctx) {
+	        if (ctx.isExportedVar(stmt.name) && stmt.value instanceof ExternalExpr && !stmt.type) {
+	            // check for a reexport
+	            var _a = this._resolveStaticSymbol(stmt.value.value), name_1 = _a.name, filePath = _a.filePath, members = _a.members;
+	            if (members.length === 0 && filePath !== this._genFilePath) {
+	                var /** @type {?} */ reexports = this.reexports.get(filePath);
+	                if (!reexports) {
+	                    reexports = [];
+	                    this.reexports.set(filePath, reexports);
+	                }
+	                reexports.push({ name: name_1, as: stmt.name });
+	                return null;
+	            }
+	        }
 	        if (ctx.isExportedVar(stmt.name)) {
 	            ctx.print("export ");
 	        }
@@ -34204,29 +34460,36 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    };
 	    /**
 	     * @param {?} value
+	     * @return {?}
+	     */
+	    _TsEmitterVisitor.prototype._resolveStaticSymbol = function (value) {
+	        var /** @type {?} */ reference = value.reference;
+	        if (!(reference instanceof StaticSymbol)) {
+	            throw new Error("Internal error: unknown identifier " + JSON.stringify(value));
+	        }
+	        return this._importResolver.getImportAs(reference) || reference;
+	    };
+	    /**
+	     * @param {?} value
 	     * @param {?} typeParams
 	     * @param {?} ctx
 	     * @return {?}
 	     */
 	    _TsEmitterVisitor.prototype._visitIdentifier = function (value, typeParams, ctx) {
 	        var _this = this;
-	        var /** @type {?} */ name = identifierName(value);
-	        var /** @type {?} */ moduleUrl = identifierModuleUrl(value);
-	        if (isBlank(name)) {
-	            throw new Error("Internal error: unknown identifier " + value);
-	        }
-	        if (isPresent(moduleUrl) && moduleUrl != this._moduleUrl) {
-	            var /** @type {?} */ prefix = this.importsWithPrefixes.get(moduleUrl);
+	        var _a = this._resolveStaticSymbol(value), name = _a.name, filePath = _a.filePath, members = _a.members;
+	        if (filePath != this._genFilePath) {
+	            var /** @type {?} */ prefix = this.importsWithPrefixes.get(filePath);
 	            if (isBlank(prefix)) {
 	                prefix = "import" + this.importsWithPrefixes.size;
-	                this.importsWithPrefixes.set(moduleUrl, prefix);
+	                this.importsWithPrefixes.set(filePath, prefix);
 	            }
 	            ctx.print(prefix + ".");
 	        }
-	        if (value.reference && value.reference.members && value.reference.members.length) {
-	            ctx.print(value.reference.name);
+	        if (members.length) {
+	            ctx.print(name);
 	            ctx.print('.');
-	            ctx.print(value.reference.members.join('.'));
+	            ctx.print(members.join('.'));
 	        }
 	        else {
 	            ctx.print(name);
@@ -35217,14 +35480,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return viewExpr.callMethod('injectorGet', args);
 	}
 	/**
-	 * @param {?} component
-	 * @param {?} embeddedTemplateIndex
-	 * @return {?}
-	 */
-	function getViewClassName(component, embeddedTemplateIndex) {
-	    return "View_" + identifierName(component.type) + embeddedTemplateIndex;
-	}
-	/**
 	 * @param {?} elementIndex
 	 * @return {?}
 	 */
@@ -35456,40 +35711,42 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
-	var ViewClassDependency = (function () {
+	/**
+	 *  This is currently not read, but will probably be used in the future.
+	  * We keep it as we already pass it through all the rigth places...
+	 */
+	var ComponentViewDependency = (function () {
 	    /**
-	     * @param {?} comp
-	     * @param {?} name
-	     * @param {?} placeholder
+	     * @param {?} compType
 	     */
-	    function ViewClassDependency(comp, name, placeholder) {
-	        this.comp = comp;
-	        this.name = name;
-	        this.placeholder = placeholder;
+	    function ComponentViewDependency(compType) {
+	        this.compType = compType;
 	    }
-	    return ViewClassDependency;
+	    return ComponentViewDependency;
 	}());
+	/**
+	 *  This is currently not read, but will probably be used in the future.
+	  * We keep it as we already pass it through all the rigth places...
+	 */
 	var ComponentFactoryDependency$1 = (function () {
 	    /**
-	     * @param {?} comp
-	     * @param {?} placeholder
+	     * @param {?} compType
 	     */
-	    function ComponentFactoryDependency(comp, placeholder) {
-	        this.comp = comp;
-	        this.placeholder = placeholder;
+	    function ComponentFactoryDependency(compType) {
+	        this.compType = compType;
 	    }
 	    return ComponentFactoryDependency;
 	}());
+	/**
+	 *  This is currently not read, but will probably be used in the future.
+	  * We keep it as we already pass it through all the rigth places...
+	 */
 	var DirectiveWrapperDependency = (function () {
 	    /**
-	     * @param {?} dir
-	     * @param {?} name
-	     * @param {?} placeholder
+	     * @param {?} dirType
 	     */
-	    function DirectiveWrapperDependency(dir, name, placeholder) {
-	        this.dir = dir;
-	        this.name = name;
-	        this.placeholder = placeholder;
+	    function DirectiveWrapperDependency(dirType) {
+	        this.dirType = dirType;
 	    }
 	    return DirectiveWrapperDependency;
 	}());
@@ -35604,9 +35861,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    CompileElement.prototype._createComponentFactoryResolver = function () {
 	        var _this = this;
 	        var /** @type {?} */ entryComponents = this.component.entryComponents.map(function (entryComponent) {
-	            var /** @type {?} */ id = { reference: null };
-	            _this.view.targetDependencies.push(new ComponentFactoryDependency$1(entryComponent, id));
-	            return id;
+	            _this.view.targetDependencies.push(new ComponentFactoryDependency$1(entryComponent.componentType));
+	            return { reference: entryComponent.componentFactory };
 	        });
 	        if (!entryComponents || entryComponents.length === 0) {
 	            return;
@@ -35682,9 +35938,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                    var /** @type {?} */ deps = provider.deps || provider.useClass.diDeps;
 	                    var /** @type {?} */ depsExpr = deps.map(function (dep) { return _this._getDependency(resolvedProvider.providerType, dep); });
 	                    if (isDirectiveWrapper) {
-	                        var /** @type {?} */ directiveWrapperIdentifier = { reference: null };
-	                        _this.view.targetDependencies.push(new DirectiveWrapperDependency(provider.useClass, DirectiveWrapperCompiler.dirWrapperClassName(provider.useClass), directiveWrapperIdentifier));
-	                        return DirectiveWrapperExpressions.create(directiveWrapperIdentifier, depsExpr);
+	                        var /** @type {?} */ dirMeta = _this._directives.find(function (dir) { return dir.type.reference === provider.useClass.reference; });
+	                        _this.view.targetDependencies.push(new DirectiveWrapperDependency(dirMeta.type.reference));
+	                        return DirectiveWrapperExpressions.create({ reference: dirMeta.wrapperType }, depsExpr);
 	                    }
 	                    else {
 	                        return importExpr(provider.useClass)
@@ -36141,7 +36397,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        this.destroyMethod = new CompileMethod(this);
 	        this.detachMethod = new CompileMethod(this);
 	        this.viewType = getViewType(component, viewIndex);
-	        this.className = getViewClassName(component, viewIndex);
+	        this.className = viewClassName(component.type.reference, viewIndex);
 	        this.classType = expressionType(variable(this.className));
 	        this.classExpr = variable(this.className);
 	        if (this.viewType === ViewType$1.COMPONENT || this.viewType === ViewType$1.HOST) {
@@ -36892,14 +37148,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        this.view.nodes.push(compileElement);
 	        var /** @type {?} */ compViewExpr = null;
 	        if (isPresent(component)) {
-	            var /** @type {?} */ nestedComponentIdentifier = { reference: null };
-	            this.targetDependencies.push(new ViewClassDependency(component.type, getViewClassName(component, 0), nestedComponentIdentifier));
+	            this.targetDependencies.push(new ComponentViewDependency(component.type.reference));
 	            compViewExpr = THIS_EXPR.prop("compView_" + nodeIndex); // fix highlighting: `
 	            this.view.fields.push(new ClassField(compViewExpr.name, importType(createIdentifier(Identifiers.AppView), [importType(component.type)])));
 	            this.view.viewChildren.push(compViewExpr);
 	            compileElement.setComponentView(compViewExpr);
 	            this.view.createMethod.addStmt(compViewExpr
-	                .set(importExpr(nestedComponentIdentifier).instantiate([
+	                .set(importExpr({ reference: component.componentViewType }).instantiate([
 	                ViewProperties.viewUtils, THIS_EXPR, literal(nodeIndex), renderNode
 	            ]))
 	                .toStmt());
@@ -37858,7 +38113,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	var /** @type {?} */ STRIP_SRC_FILE_SUFFIXES = /(\.ts|\.d\.ts|\.js|\.jsx|\.tsx)$/;
 	/**
 	 * @param {?} symbolCache
 	 * @param {?} json
@@ -37868,22 +38122,17 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    var /** @type {?} */ deserializer = new Deserializer(symbolCache);
 	    return deserializer.deserialize(json);
 	}
-	/**
-	 * @param {?} fileName
-	 * @return {?}
-	 */
-	function summaryFileName(fileName) {
-	    var /** @type {?} */ fileNameWithoutSuffix = fileName.replace(STRIP_SRC_FILE_SUFFIXES, '');
-	    return fileNameWithoutSuffix + ".ngsummary.json";
-	}
 	var Serializer = (function (_super) {
 	    __extends$46(Serializer, _super);
 	    /**
-	     * @param {?} host
+	     * @param {?} symbolResolver
+	     * @param {?} summaryResolver
 	     */
-	    function Serializer(host) {
+	    function Serializer(symbolResolver, summaryResolver) {
 	        _super.call(this);
-	        this.host = host;
+	        this.symbolResolver = symbolResolver;
+	        this.summaryResolver = summaryResolver;
+	        // Note: This only contains symbols without members.
 	        this.symbols = [];
 	        this.indexBySymbol = new Map();
 	        this.processedSummaryBySymbol = new Map();
@@ -37921,19 +38170,28 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     */
 	    Serializer.prototype.serialize = function () {
 	        var _this = this;
-	        return JSON.stringify({
+	        var /** @type {?} */ exportAs = [];
+	        var /** @type {?} */ json = JSON.stringify({
 	            summaries: this.processedSummaries,
 	            symbols: this.symbols.map(function (symbol, index) {
+	                symbol.assertNoMembers();
+	                var /** @type {?} */ importAs;
+	                if (_this.summaryResolver.isLibraryFile(symbol.filePath)) {
+	                    importAs = symbol.name + "_" + index;
+	                    exportAs.push({ symbol: symbol, exportAs: importAs });
+	                }
 	                return {
 	                    __symbol: index,
 	                    name: symbol.name,
 	                    // We convert the source filenames tinto output filenames,
 	                    // as the generated summary file will be used when teh current
 	                    // compilation unit is used as a library
-	                    filePath: _this.host.getOutputFileName(symbol.filePath)
+	                    filePath: _this.summaryResolver.getLibraryFileName(symbol.filePath),
+	                    importAs: importAs
 	                };
 	            })
 	        });
+	        return { json: json, exportAs: exportAs };
 	    };
 	    /**
 	     * @param {?} value
@@ -37947,14 +38205,15 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     */
 	    Serializer.prototype.visitOther = function (value, context) {
 	        if (value instanceof StaticSymbol) {
-	            var /** @type {?} */ index = this.indexBySymbol.get(value);
+	            var /** @type {?} */ baseSymbol = this.symbolResolver.getStaticSymbol(value.filePath, value.name);
+	            var /** @type {?} */ index = this.indexBySymbol.get(baseSymbol);
 	            // Note: == by purpose to compare with undefined!
 	            if (index == null) {
 	                index = this.indexBySymbol.size;
-	                this.indexBySymbol.set(value, index);
-	                this.symbols.push(value);
+	                this.indexBySymbol.set(baseSymbol, index);
+	                this.symbols.push(baseSymbol);
 	            }
-	            return { __symbol: index };
+	            return { __symbol: index, members: value.members };
 	        }
 	    };
 	    return Serializer;
@@ -37975,8 +38234,17 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    Deserializer.prototype.deserialize = function (json) {
 	        var _this = this;
 	        var /** @type {?} */ data = JSON.parse(json);
-	        this.symbols = data.symbols.map(function (serializedSymbol) { return _this.symbolCache.get(serializedSymbol.filePath, serializedSymbol.name); });
-	        return visitValue(data.summaries, this, null);
+	        var /** @type {?} */ importAs = [];
+	        this.symbols = [];
+	        data.symbols.forEach(function (serializedSymbol) {
+	            var /** @type {?} */ symbol = _this.symbolCache.get(serializedSymbol.filePath, serializedSymbol.name);
+	            _this.symbols.push(symbol);
+	            if (serializedSymbol.importAs) {
+	                importAs.push({ symbol: symbol, importAs: serializedSymbol.importAs });
+	            }
+	        });
+	        var /** @type {?} */ summaries = visitValue(data.summaries, this, null);
+	        return { summaries: summaries, importAs: importAs };
 	    };
 	    /**
 	     * @param {?} map
@@ -37985,7 +38253,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     */
 	    Deserializer.prototype.visitStringMap = function (map, context) {
 	        if ('__symbol' in map) {
-	            return this.symbols[map['__symbol']];
+	            var /** @type {?} */ baseSymbol = this.symbols[map['__symbol']];
+	            var /** @type {?} */ members = map['members'];
+	            return members.length ? this.symbolCache.get(baseSymbol.filePath, baseSymbol.name, members) :
+	                baseSymbol;
 	        }
 	        else {
 	            return _super.prototype.visitStringMap.call(this, map, context);
@@ -38227,8 +38498,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            annotations = [];
 	            var /** @type {?} */ classMetadata = this.getTypeMetadata(type);
 	            if (classMetadata['extends']) {
-	                var /** @type {?} */ parentAnnotations = this.annotations(this.simplify(type, classMetadata['extends']));
-	                annotations.push.apply(annotations, parentAnnotations);
+	                var /** @type {?} */ parentType = this.simplify(type, classMetadata['extends']);
+	                if (parentType instanceof StaticSymbol) {
+	                    var /** @type {?} */ parentAnnotations = this.annotations(parentType);
+	                    annotations.push.apply(annotations, parentAnnotations);
+	                }
 	            }
 	            if (classMetadata['decorators']) {
 	                var /** @type {?} */ ownAnnotations = this.simplify(type, classMetadata['decorators']);
@@ -38249,10 +38523,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            var /** @type {?} */ classMetadata = this.getTypeMetadata(type);
 	            propMetadata = {};
 	            if (classMetadata['extends']) {
-	                var /** @type {?} */ parentPropMetadata_1 = this.propMetadata(this.simplify(type, classMetadata['extends']));
-	                Object.keys(parentPropMetadata_1).forEach(function (parentProp) {
-	                    propMetadata[parentProp] = parentPropMetadata_1[parentProp];
-	                });
+	                var /** @type {?} */ parentType = this.simplify(type, classMetadata['extends']);
+	                if (parentType instanceof StaticSymbol) {
+	                    var /** @type {?} */ parentPropMetadata_1 = this.propMetadata(parentType);
+	                    Object.keys(parentPropMetadata_1).forEach(function (parentProp) {
+	                        propMetadata[parentProp] = parentPropMetadata_1[parentProp];
+	                    });
+	                }
 	            }
 	            var /** @type {?} */ members_1 = classMetadata['members'] || {};
 	            Object.keys(members_1).forEach(function (propName) {
@@ -38305,7 +38582,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                    });
 	                }
 	                else if (classMetadata['extends']) {
-	                    parameters_1 = this.parameters(this.simplify(type, classMetadata['extends']));
+	                    var /** @type {?} */ parentType = this.simplify(type, classMetadata['extends']);
+	                    if (parentType instanceof StaticSymbol) {
+	                        parameters_1 = this.parameters(parentType);
+	                    }
 	                }
 	                if (!parameters_1) {
 	                    parameters_1 = [];
@@ -38329,10 +38609,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            var /** @type {?} */ classMetadata = this.getTypeMetadata(type);
 	            methodNames = {};
 	            if (classMetadata['extends']) {
-	                var /** @type {?} */ parentMethodNames_1 = this._methodNames(this.simplify(type, classMetadata['extends']));
-	                Object.keys(parentMethodNames_1).forEach(function (parentProp) {
-	                    methodNames[parentProp] = parentMethodNames_1[parentProp];
-	                });
+	                var /** @type {?} */ parentType = this.simplify(type, classMetadata['extends']);
+	                if (parentType instanceof StaticSymbol) {
+	                    var /** @type {?} */ parentMethodNames_1 = this._methodNames(parentType);
+	                    Object.keys(parentMethodNames_1).forEach(function (parentProp) {
+	                        methodNames[parentProp] = parentMethodNames_1[parentProp];
+	                    });
+	                }
 	            }
 	            var /** @type {?} */ members_2 = classMetadata['members'] || {};
 	            Object.keys(members_2).forEach(function (propName) {
@@ -38916,6 +39199,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 *  This class is responsible for loading metadata per symbol,
 	  * and normalizing references between symbols.
+	  * *
+	  * Internally, it only uses symbols without members,
+	  * and deduces the values for symbols with members based
+	  * on these symbols.
 	 */
 	var StaticSymbolResolver = (function () {
 	    /**
@@ -38932,6 +39219,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        this.metadataCache = new Map();
 	        this.resolvedSymbols = new Map();
 	        this.resolvedFilePaths = new Set();
+	        this.importAs = new Map();
 	    }
 	    /**
 	     * @param {?} staticSymbol
@@ -38941,13 +39229,36 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        if (staticSymbol.members.length > 0) {
 	            return this._resolveSymbolMembers(staticSymbol);
 	        }
-	        var /** @type {?} */ result = this._resolveSymbolFromSummary(staticSymbol);
+	        var /** @type {?} */ result = this.resolvedSymbols.get(staticSymbol);
+	        if (result) {
+	            return result;
+	        }
+	        result = this._resolveSymbolFromSummary(staticSymbol);
+	        if (result) {
+	            return result;
+	        }
+	        // Note: Some users use libraries that were not compiled with ngc, i.e. they don't
+	        // have summaries, only .d.ts files. So we always need to check both, the summary
+	        // and metadata.
+	        this._createSymbolsOf(staticSymbol.filePath);
+	        result = this.resolvedSymbols.get(staticSymbol);
+	        return result;
+	    };
+	    /**
+	     * @param {?} staticSymbol
+	     * @return {?}
+	     */
+	    StaticSymbolResolver.prototype.getImportAs = function (staticSymbol) {
+	        if (staticSymbol.members.length) {
+	            var /** @type {?} */ baseSymbol = this.getStaticSymbol(staticSymbol.filePath, staticSymbol.name);
+	            var /** @type {?} */ baseImportAs = this.getImportAs(baseSymbol);
+	            return baseImportAs ?
+	                this.getStaticSymbol(baseImportAs.filePath, baseImportAs.name, staticSymbol.members) :
+	                null;
+	        }
+	        var /** @type {?} */ result = this.summaryResolver.getImportAs(staticSymbol);
 	        if (!result) {
-	            // Note: Some users use libraries that were not compiled with ngc, i.e. they don't
-	            // have summaries, only .d.ts files. So we always need to check both, the summary
-	            // and metadata.
-	            this._createSymbolsOf(staticSymbol.filePath);
-	            result = this.resolvedSymbols.get(staticSymbol);
+	            result = this.importAs.get(staticSymbol);
 	        }
 	        return result;
 	    };
@@ -39030,9 +39341,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        var /** @type {?} */ metadata = this.getModuleMetadata(filePath);
 	        if (metadata['metadata']) {
 	            // handle direct declarations of the symbol
-	            Object.keys(metadata['metadata']).forEach(function (symbolName) {
-	                var /** @type {?} */ symbolMeta = metadata['metadata'][symbolName];
-	                resolvedSymbols.push(_this.createResolvedSymbol(_this.getStaticSymbol(filePath, symbolName), symbolMeta));
+	            var /** @type {?} */ topLevelSymbolNames_1 = new Set(Object.keys(metadata['metadata']).map(unescapeIdentifier));
+	            Object.keys(metadata['metadata']).forEach(function (metadataKey) {
+	                var /** @type {?} */ symbolMeta = metadata['metadata'][metadataKey];
+	                resolvedSymbols.push(_this.createResolvedSymbol(_this.getStaticSymbol(filePath, unescapeIdentifier(metadataKey)), topLevelSymbolNames_1, symbolMeta));
 	            });
 	        }
 	        // handle the symbols in one of the re-export location
@@ -39048,15 +39360,16 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                        else {
 	                            symbolName = exportSymbol.as;
 	                        }
+	                        symbolName = unescapeIdentifier(symbolName);
 	                        var /** @type {?} */ symName = symbolName;
 	                        if (typeof exportSymbol !== 'string') {
-	                            symName = exportSymbol.name;
+	                            symName = unescapeIdentifier(exportSymbol.name);
 	                        }
 	                        var /** @type {?} */ resolvedModule = _this.resolveModule(moduleExport.from, filePath);
 	                        if (resolvedModule) {
 	                            var /** @type {?} */ targetSymbol = _this.getStaticSymbol(resolvedModule, symName);
 	                            var /** @type {?} */ sourceSymbol = _this.getStaticSymbol(filePath, symbolName);
-	                            resolvedSymbols.push(new ResolvedStaticSymbol(sourceSymbol, targetSymbol));
+	                            resolvedSymbols.push(_this.createExport(sourceSymbol, targetSymbol));
 	                        }
 	                    });
 	                }
@@ -39067,7 +39380,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                        var /** @type {?} */ nestedExports = this_1.getSymbolsOf(resolvedModule);
 	                        nestedExports.forEach(function (targetSymbol) {
 	                            var /** @type {?} */ sourceSymbol = _this.getStaticSymbol(filePath, targetSymbol.name);
-	                            resolvedSymbols.push(new ResolvedStaticSymbol(sourceSymbol, targetSymbol));
+	                            resolvedSymbols.push(_this.createExport(sourceSymbol, targetSymbol));
 	                        });
 	                    }
 	                }
@@ -39082,10 +39395,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    };
 	    /**
 	     * @param {?} sourceSymbol
+	     * @param {?} topLevelSymbolNames
 	     * @param {?} metadata
 	     * @return {?}
 	     */
-	    StaticSymbolResolver.prototype.createResolvedSymbol = function (sourceSymbol, metadata) {
+	    StaticSymbolResolver.prototype.createResolvedSymbol = function (sourceSymbol, topLevelSymbolNames, metadata) {
 	        var /** @type {?} */ self = this;
 	        var ReferenceTransformer = (function (_super) {
 	            __extends$48(ReferenceTransformer, _super);
@@ -39108,7 +39422,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                }
 	                else if (symbolic === 'reference') {
 	                    var /** @type {?} */ module_1 = map['module'];
-	                    var /** @type {?} */ name_1 = map['name'];
+	                    var /** @type {?} */ name_1 = map['name'] ? unescapeIdentifier(map['name']) : map['name'];
 	                    if (!name_1) {
 	                        return null;
 	                    }
@@ -39121,19 +39435,18 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                                message: "Could not resolve " + module_1 + " relative to " + sourceSymbol.filePath + "."
 	                            };
 	                        }
-	                    }
-	                    else {
-	                        var /** @type {?} */ isFunctionParam = functionParams.indexOf(name_1) >= 0;
-	                        if (!isFunctionParam) {
-	                            filePath = sourceSymbol.filePath;
-	                        }
-	                    }
-	                    if (filePath) {
 	                        return self.getStaticSymbol(filePath, name_1);
 	                    }
-	                    else {
+	                    else if (functionParams.indexOf(name_1) >= 0) {
 	                        // reference to a function parameter
 	                        return { __symbolic: 'reference', name: name_1 };
+	                    }
+	                    else {
+	                        if (topLevelSymbolNames.has(name_1)) {
+	                            return self.getStaticSymbol(sourceSymbol.filePath, name_1);
+	                        }
+	                        // ambient value
+	                        null;
 	                    }
 	                }
 	                else {
@@ -39143,7 +39456,27 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            return ReferenceTransformer;
 	        }(ValueTransformer));
 	        var /** @type {?} */ transformedMeta = visitValue(metadata, new ReferenceTransformer(), []);
+	        if (transformedMeta instanceof StaticSymbol) {
+	            return this.createExport(sourceSymbol, transformedMeta);
+	        }
 	        return new ResolvedStaticSymbol(sourceSymbol, transformedMeta);
+	    };
+	    /**
+	     * @param {?} sourceSymbol
+	     * @param {?} targetSymbol
+	     * @return {?}
+	     */
+	    StaticSymbolResolver.prototype.createExport = function (sourceSymbol, targetSymbol) {
+	        sourceSymbol.assertNoMembers();
+	        targetSymbol.assertNoMembers();
+	        if (this.summaryResolver.isLibraryFile(sourceSymbol.filePath)) {
+	            // This case is for an ng library importing symbols from a plain ts library
+	            // transitively.
+	            // Note: We rely on the fact that we discover symbols in the direction
+	            // from source files to library files
+	            this.importAs.set(targetSymbol, this.getImportAs(sourceSymbol) || sourceSymbol);
+	        }
+	        return new ResolvedStaticSymbol(sourceSymbol, targetSymbol);
 	    };
 	    /**
 	     * @param {?} error
@@ -39219,6 +39552,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    };
 	    return StaticSymbolResolver;
 	}());
+	/**
+	 * @param {?} identifier
+	 * @return {?}
+	 */
+	function unescapeIdentifier(identifier) {
+	    return identifier.startsWith('___') ? identifier.substr(1) : identifier;
+	}
 
 	var AotSummaryResolver = (function () {
 	    /**
@@ -39230,22 +39570,29 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        this.staticSymbolCache = staticSymbolCache;
 	        this.summaryCache = new Map();
 	        this.loadedFilePaths = new Set();
+	        this.importAs = new Map();
 	    }
 	    /**
-	     * @param {?} symbol
+	     * @param {?} filePath
 	     * @return {?}
 	     */
-	    AotSummaryResolver.prototype._assertNoMembers = function (symbol) {
-	        if (symbol.members.length) {
-	            throw new Error("Internal state: StaticSymbols in summaries can't have members! " + JSON.stringify(symbol));
-	        }
+	    AotSummaryResolver.prototype.isLibraryFile = function (filePath) {
+	        // Note: We need to strip the .ngfactory. file path,
+	        // so this method also works for generated files
+	        // (for which host.isSourceFile will always return false).
+	        return !this.host.isSourceFile(stripNgFactory(filePath));
 	    };
+	    /**
+	     * @param {?} filePath
+	     * @return {?}
+	     */
+	    AotSummaryResolver.prototype.getLibraryFileName = function (filePath) { return this.host.getOutputFileName(filePath); };
 	    /**
 	     * @param {?} staticSymbol
 	     * @return {?}
 	     */
 	    AotSummaryResolver.prototype.resolveSummary = function (staticSymbol) {
-	        this._assertNoMembers(staticSymbol);
+	        staticSymbol.assertNoMembers();
 	        var /** @type {?} */ summary = this.summaryCache.get(staticSymbol);
 	        if (!summary) {
 	            this._loadSummaryFile(staticSymbol.filePath);
@@ -39262,6 +39609,14 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        return Array.from(this.summaryCache.keys()).filter(function (symbol) { return symbol.filePath === filePath; });
 	    };
 	    /**
+	     * @param {?} staticSymbol
+	     * @return {?}
+	     */
+	    AotSummaryResolver.prototype.getImportAs = function (staticSymbol) {
+	        staticSymbol.assertNoMembers();
+	        return this.importAs.get(staticSymbol);
+	    };
+	    /**
 	     * @param {?} filePath
 	     * @return {?}
 	     */
@@ -39271,7 +39626,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            return;
 	        }
 	        this.loadedFilePaths.add(filePath);
-	        if (!this.host.isSourceFile(filePath)) {
+	        if (this.isLibraryFile(filePath)) {
 	            var /** @type {?} */ summaryFilePath = summaryFileName(filePath);
 	            var /** @type {?} */ json = void 0;
 	            try {
@@ -39282,8 +39637,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                throw e;
 	            }
 	            if (json) {
-	                var /** @type {?} */ readSummaries = deserializeSummaries(this.staticSymbolCache, json);
-	                readSummaries.forEach(function (summary) { _this.summaryCache.set(summary.symbol, summary); });
+	                var _a = deserializeSummaries(this.staticSymbolCache, json), summaries = _a.summaries, importAs = _a.importAs;
+	                summaries.forEach(function (summary) { return _this.summaryCache.set(summary.symbol, summary); });
+	                importAs.forEach(function (importAs) {
+	                    _this.importAs.set(importAs.symbol, _this.staticSymbolCache.get(ngfactoryFilePath(filePath), importAs.importAs));
+	                });
 	            }
 	        }
 	    };
@@ -40286,10 +40644,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            // Always provide a bound Compiler
 	            var /** @type {?} */ extraProviders = [this._metadataResolver.getProviderMetadata(new ProviderMeta(Compiler, { useFactory: function () { return new ModuleBoundCompiler(_this, moduleMeta_1.type.reference); } }))];
 	            var /** @type {?} */ compileResult = this._ngModuleCompiler.compile(moduleMeta_1, extraProviders);
-	            compileResult.dependencies.forEach(function (dep) {
-	                dep.placeholder.reference =
-	                    _this._assertComponentKnown(dep.comp.reference, true).proxyComponentFactory;
-	            });
 	            if (!this._compilerConfig.useJit) {
 	                ngModuleFactory =
 	                    interpretStatements(compileResult.statements, compileResult.ngModuleFactoryVar);
@@ -40322,7 +40676,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                    if (allComponentFactories) {
 	                        var /** @type {?} */ template = _this._createCompiledHostTemplate(dirMeta.type.reference, localModuleMeta);
 	                        templates.add(template);
-	                        allComponentFactories.push(template.proxyComponentFactory);
+	                        allComponentFactories.push(/** @type {?} */ (dirMeta.componentFactory));
 	                    }
 	                }
 	            });
@@ -40333,14 +40687,14 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                var /** @type {?} */ dirMeta = _this._metadataResolver.getDirectiveMetadata(dirIdentifier.reference);
 	                if (dirMeta.isComponent) {
 	                    dirMeta.entryComponents.forEach(function (entryComponentType) {
-	                        var /** @type {?} */ moduleMeta = moduleByDirective.get(entryComponentType.reference);
-	                        templates.add(_this._createCompiledHostTemplate(entryComponentType.reference, moduleMeta));
+	                        var /** @type {?} */ moduleMeta = moduleByDirective.get(entryComponentType.componentType);
+	                        templates.add(_this._createCompiledHostTemplate(entryComponentType.componentType, moduleMeta));
 	                    });
 	                }
 	            });
 	            localModuleMeta.entryComponents.forEach(function (entryComponentType) {
-	                var /** @type {?} */ moduleMeta = moduleByDirective.get(entryComponentType.reference);
-	                templates.add(_this._createCompiledHostTemplate(entryComponentType.reference, moduleMeta));
+	                var /** @type {?} */ moduleMeta = moduleByDirective.get(entryComponentType.componentType);
+	                templates.add(_this._createCompiledHostTemplate(entryComponentType.componentType, moduleMeta));
 	            });
 	        });
 	        templates.forEach(function (template) { return _this._compileTemplate(template); });
@@ -40380,10 +40734,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        if (!compiledTemplate) {
 	            var /** @type {?} */ compMeta = this._metadataResolver.getDirectiveMetadata(compType);
 	            assertComponent(compMeta);
-	            var /** @type {?} */ HostClass = function HostClass() { };
-	            ((HostClass)).overriddenName = identifierName(compMeta.type) + "_Host";
-	            var /** @type {?} */ hostMeta = createHostComponentMeta(HostClass, compMeta);
-	            compiledTemplate = new CompiledTemplate(true, compMeta.selector, compMeta.type, hostMeta, ngModule, [compMeta.type]);
+	            var /** @type {?} */ componentFactory = (compMeta.componentFactory);
+	            var /** @type {?} */ hostClass = this._metadataResolver.getHostComponentType(compType);
+	            var /** @type {?} */ hostMeta = createHostComponentMeta(hostClass, compMeta, /** @type {?} */ (view_utils$1.getComponentFactoryViewClass(componentFactory)));
+	            compiledTemplate =
+	                new CompiledTemplate(true, compMeta.type, hostMeta, ngModule, [compMeta.type]);
 	            this._compiledHostTemplateCache.set(compType, compiledTemplate);
 	        }
 	        return compiledTemplate;
@@ -40397,7 +40752,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        var /** @type {?} */ compiledTemplate = this._compiledTemplateCache.get(compMeta.type.reference);
 	        if (!compiledTemplate) {
 	            assertComponent(compMeta);
-	            compiledTemplate = new CompiledTemplate(false, compMeta.selector, compMeta.type, compMeta, ngModule, ngModule.transitiveModule.directives);
+	            compiledTemplate = new CompiledTemplate(false, compMeta.type, compMeta, ngModule, ngModule.transitiveModule.directives);
 	            this._compiledTemplateCache.set(compMeta.type.reference, compiledTemplate);
 	        }
 	        return compiledTemplate;
@@ -40441,6 +40796,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        else {
 	            directiveWrapperClass = jitStatements("/" + identifierName(moduleMeta.type) + "/" + identifierName(dirMeta.type) + "/wrapper.ngfactory.js", statements, compileResult.dirWrapperClassVar);
 	        }
+	        ((dirMeta.wrapperType)).setDelegate(directiveWrapperClass);
 	        this._compiledDirectiveWrapperCache.set(dirMeta.type.reference, directiveWrapperClass);
 	    };
 	    /**
@@ -40463,23 +40819,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        var /** @type {?} */ parsedTemplate = this._templateParser.parse(compMeta, compMeta.template.template, directives, pipes, template.ngModule.schemas, identifierName(compMeta.type));
 	        var /** @type {?} */ compiledAnimations = this._animationCompiler.compile(identifierName(compMeta.type), parsedAnimations);
 	        var /** @type {?} */ compileResult = this._viewCompiler.compileComponent(compMeta, parsedTemplate, variable(stylesCompileResult.componentStylesheet.stylesVar), pipes, compiledAnimations);
-	        compileResult.dependencies.forEach(function (dep) {
-	            var /** @type {?} */ depTemplate;
-	            if (dep instanceof ViewClassDependency) {
-	                var /** @type {?} */ vfd = (dep);
-	                depTemplate = _this._assertComponentKnown(vfd.comp.reference, false);
-	                vfd.placeholder.reference = depTemplate.proxyViewClass;
-	            }
-	            else if (dep instanceof ComponentFactoryDependency$1) {
-	                var /** @type {?} */ cfd = (dep);
-	                depTemplate = _this._assertComponentKnown(cfd.comp.reference, true);
-	                cfd.placeholder.reference = depTemplate.proxyComponentFactory;
-	            }
-	            else if (dep instanceof DirectiveWrapperDependency) {
-	                var /** @type {?} */ dwd = (dep);
-	                dwd.placeholder.reference = _this._assertDirectiveWrapper(dwd.dir.reference);
-	            }
-	        });
 	        var /** @type {?} */ statements = (_a = stylesCompileResult.componentStylesheet.statements).concat.apply(_a, compiledAnimations.map(function (ca) { return ca.statements; }))
 	            .concat(compileResult.statements);
 	        var /** @type {?} */ viewClass;
@@ -40528,13 +40867,12 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	var CompiledTemplate = (function () {
 	    /**
 	     * @param {?} isHost
-	     * @param {?} selector
 	     * @param {?} compType
 	     * @param {?} compMeta
 	     * @param {?} ngModule
 	     * @param {?} directives
 	     */
-	    function CompiledTemplate(isHost, selector, compType, compMeta, ngModule, directives) {
+	    function CompiledTemplate(isHost, compType, compMeta, ngModule, directives) {
 	        this.isHost = isHost;
 	        this.compType = compType;
 	        this.compMeta = compMeta;
@@ -40543,15 +40881,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        this._viewClass = null;
 	        this.isCompiled = false;
 	        var self = this;
-	        this.proxyViewClass = function () {
-	            if (!self._viewClass) {
-	                throw new Error("Illegal state: CompiledTemplate for " + stringify(self.compType) + " is not compiled yet!");
-	            }
-	            return self._viewClass.apply(this, arguments);
-	        };
-	        this.proxyComponentFactory = isHost ?
-	            new ComponentFactory(selector, this.proxyViewClass, compType.reference) :
-	            null;
 	    }
 	    /**
 	     * @param {?} viewClass
@@ -40559,7 +40888,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     */
 	    CompiledTemplate.prototype.compiled = function (viewClass) {
 	        this._viewClass = viewClass;
-	        this.proxyViewClass.prototype = viewClass.prototype;
+	        ((this.compMeta.componentViewType)).setDelegate(viewClass);
 	        this.isCompiled = true;
 	    };
 	    return CompiledTemplate;
@@ -45242,7 +45571,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$3 = new Version('4.0.0-beta.1-6976903');
+	var VERSION$3 = new Version('4.0.0-beta.1-9c69703');
 
 	/**
 	 * @license
@@ -45408,7 +45737,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                    useJit: false
 	                });
 	                var directiveNormalizer = new DirectiveNormalizer(resourceLoader, urlResolver, htmlParser, config);
-	                result = this._resolver = new CompileMetadataResolver(moduleResolver, directiveResolver, pipeResolver, new SummaryResolver(), elementSchemaRegistry, directiveNormalizer, this.reflector, function (error, type) { return _this.collectError(error, type && type.filePath); });
+	                result = this._resolver = new CompileMetadataResolver(moduleResolver, directiveResolver, pipeResolver, new SummaryResolver(), elementSchemaRegistry, directiveNormalizer, this._staticSymbolCache, this.reflector, function (error, type) { return _this.collectError(error, type && type.filePath); });
 	            }
 	            return result;
 	        },
@@ -45667,7 +45996,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            if (!result) {
 	                var summaryResolver = new AotSummaryResolver({
 	                    loadSummary: function (filePath) { return null; },
-	                    isSourceFile: function (sourceFilePath) { return true; }
+	                    isSourceFile: function (sourceFilePath) { return true; },
+	                    getOutputFileName: function (sourceFilePath) { return null; }
 	                }, this._staticSymbolCache);
 	                result = this._staticSymbolResolver = new StaticSymbolResolver(this.reflectorHost, this._staticSymbolCache, summaryResolver, function (e, filePath) { return _this.collectError(e, filePath); });
 	            }
@@ -46658,7 +46988,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$4 = new Version('4.0.0-beta.1-6976903');
+	var VERSION$4 = new Version('4.0.0-beta.1-9c69703');
 
 	exports['default'] = LanguageServicePlugin;
 	exports.createLanguageService = createLanguageService;
