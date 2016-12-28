@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.0.0-beta.1-2c0c86e
+ * @license Angular v4.0.0-beta.1-6b02b80
  * (c) 2010-2016 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1602,7 +1602,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('4.0.0-beta.1-2c0c86e');
+	var /** @type {?} */ VERSION = new Version('4.0.0-beta.1-6b02b80');
 
 	/**
 	 * Inject decorator and metadata.
@@ -26162,7 +26162,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.1-2c0c86e');
+	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.1-6b02b80');
 
 	/**
 	 * @return {?}
@@ -32776,12 +32776,15 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            else {
 	                provider = resolveForwardRef(provider);
 	                var /** @type {?} */ providerMeta = void 0;
-	                if (provider && typeof provider == 'object' && provider.hasOwnProperty('provide')) {
+	                if (provider && typeof provider === 'object' && provider.hasOwnProperty('provide')) {
 	                    _this._validateProvider(provider);
 	                    providerMeta = new ProviderMeta(provider.provide, provider);
 	                }
 	                else if (isValidType(provider)) {
 	                    providerMeta = new ProviderMeta(provider, { useClass: provider });
+	                }
+	                else if (provider === void 0) {
+	                    _this._reportError(new SyntaxError("Encountered undefined provider! Usually this means you have a circular dependencies (might be caused by using 'barrel' index.ts files."));
 	                }
 	                else {
 	                    var /** @type {?} */ providersInfo = ((providers.reduce(function (soFar, seenProvider, seenProviderIdx) {
@@ -45598,7 +45601,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$3 = new Version('4.0.0-beta.1-2c0c86e');
+	var VERSION$3 = new Version('4.0.0-beta.1-6b02b80');
 
 	/**
 	 * @license
@@ -47015,7 +47018,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$4 = new Version('4.0.0-beta.1-2c0c86e');
+	var VERSION$4 = new Version('4.0.0-beta.1-6b02b80');
 
 	exports['default'] = LanguageServicePlugin;
 	exports.createLanguageService = createLanguageService;
