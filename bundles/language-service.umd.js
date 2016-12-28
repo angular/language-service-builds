@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.0.0-beta.1-07e0fce
+ * @license Angular v4.0.0-beta.1-7c21064
  * (c) 2010-2016 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1648,7 +1648,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('4.0.0-beta.1-07e0fce');
+	var /** @type {?} */ VERSION = new Version('4.0.0-beta.1-7c21064');
 
 	/**
 	 * Inject decorator and metadata.
@@ -26181,7 +26181,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.1-07e0fce');
+	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.1-7c21064');
 
 	/**
 	 * @return {?}
@@ -35567,7 +35567,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @param {?} targetDynamicMethod
 	     * @return {?}
 	     */
-	    CompileQuery.prototype.afterChildren = function (targetStaticMethod, targetDynamicMethod) {
+	    CompileQuery.prototype.generateStatements = function (targetStaticMethod, targetDynamicMethod) {
 	        var /** @type {?} */ values = createQueryValues(this._values);
 	        var /** @type {?} */ updateStmts = [this.queryList.callMethod('reset', [literalArr(values)]).toStmt()];
 	        if (isPresent(this.ownerDirectiveExpression)) {
@@ -35983,11 +35983,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        for (var /** @type {?} */ i = 0; i < this._directives.length; i++) {
 	            _loop_1(i);
 	        }
-	        var /** @type {?} */ queriesWithReads = [];
-	        Array.from(this._resolvedProviders.values()).forEach(function (resolvedProvider) {
-	            var /** @type {?} */ queriesForProvider = _this._getQueriesFor(resolvedProvider.token);
-	            queriesWithReads.push.apply(queriesWithReads, queriesForProvider.map(function (query) { return new _QueryWithRead(query, resolvedProvider.token); }));
-	        });
 	        Object.keys(this.referenceTokens).forEach(function (varName) {
 	            var /** @type {?} */ token = _this.referenceTokens[varName];
 	            var /** @type {?} */ varValue;
@@ -35998,28 +35993,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                varValue = _this.renderNode;
 	            }
 	            _this.view.locals.set(varName, varValue);
-	            var /** @type {?} */ varToken = { value: varName };
-	            queriesWithReads.push.apply(queriesWithReads, _this._getQueriesFor(varToken).map(function (query) { return new _QueryWithRead(query, varToken); }));
-	        });
-	        queriesWithReads.forEach(function (queryWithRead) {
-	            var /** @type {?} */ value;
-	            if (isPresent(queryWithRead.read.identifier)) {
-	                // query for an identifier
-	                value = _this.instances.get(tokenReference(queryWithRead.read));
-	            }
-	            else {
-	                // query for a reference
-	                var /** @type {?} */ token = _this.referenceTokens[queryWithRead.read.value];
-	                if (isPresent(token)) {
-	                    value = _this.instances.get(tokenReference(token));
-	                }
-	                else {
-	                    value = _this.elementRef;
-	                }
-	            }
-	            if (isPresent(value)) {
-	                queryWithRead.query.addValue(value, _this.view);
-	            }
 	        });
 	    };
 	    /**
@@ -36040,10 +36013,14 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            var /** @type {?} */ providerChildNodeCount = resolvedProvider.providerType === ProviderAstType.PrivateService ? 0 : childNodeCount;
 	            _this.view.injectorGetMethod.addStmt(createInjectInternalCondition(_this.nodeIndex, providerChildNodeCount, resolvedProvider, providerExpr));
 	        });
+	    };
+	    /**
+	     * @return {?}
+	     */
+	    CompileElement.prototype.finish = function () {
+	        var _this = this;
 	        Array.from(this._queries.values())
-	            .forEach(function (queries) { return queries.forEach(function (q) {
-	            return q.afterChildren(_this.view.createMethod, _this.view.updateContentQueriesMethod);
-	        }); });
+	            .forEach(function (queries) { return queries.forEach(function (q) { return q.generateStatements(_this.view.createMethod, _this.view.updateContentQueriesMethod); }); });
 	    };
 	    /**
 	     * @param {?} ngContentIndex
@@ -36065,14 +36042,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @return {?}
 	     */
 	    CompileElement.prototype.getProviderTokens = function () {
-	        return Array.from(this._resolvedProviders.values())
-	            .map(function (resolvedProvider) { return createDiTokenExpression(resolvedProvider.token); });
+	        return Array.from(this._resolvedProviders.values()).map(function (provider) { return provider.token; });
 	    };
 	    /**
 	     * @param {?} token
 	     * @return {?}
 	     */
-	    CompileElement.prototype._getQueriesFor = function (token) {
+	    CompileElement.prototype.getQueriesFor = function (token) {
 	        var /** @type {?} */ result = [];
 	        var /** @type {?} */ currentEl = this;
 	        var /** @type {?} */ distance = 0;
@@ -36227,17 +36203,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    }
 	    return THIS_EXPR.prop(propName);
 	}
-	var _QueryWithRead = (function () {
-	    /**
-	     * @param {?} query
-	     * @param {?} match
-	     */
-	    function _QueryWithRead(query, match) {
-	        this.query = query;
-	        this.read = query.meta.read || match;
-	    }
-	    return _QueryWithRead;
-	}());
 
 	var CompilePipe = (function () {
 	    /**
@@ -36470,10 +36435,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    /**
 	     * @return {?}
 	     */
-	    CompileView.prototype.afterNodes = function () {
+	    CompileView.prototype.finish = function () {
 	        var _this = this;
 	        Array.from(this.viewQueries.values())
-	            .forEach(function (queries) { return queries.forEach(function (q) { return q.afterChildren(_this.createMethod, _this.updateViewQueriesMethod); }); });
+	            .forEach(function (queries) { return queries.forEach(function (q) { return q.generateStatements(_this.createMethod, _this.updateViewQueriesMethod); }); });
 	    };
 	    return CompileView;
 	}());
@@ -36804,6 +36769,54 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	}
 
 	/**
+	 * @param {?} ce
+	 * @return {?}
+	 */
+	function bindQueryValues(ce) {
+	    var /** @type {?} */ queriesWithReads = [];
+	    ce.getProviderTokens().forEach(function (token) {
+	        var /** @type {?} */ queriesForProvider = ce.getQueriesFor(token);
+	        queriesWithReads.push.apply(queriesWithReads, queriesForProvider.map(function (query) { return new _QueryWithRead(query, token); }));
+	    });
+	    Object.keys(ce.referenceTokens).forEach(function (varName) {
+	        var /** @type {?} */ token = ce.referenceTokens[varName];
+	        var /** @type {?} */ varToken = { value: varName };
+	        queriesWithReads.push.apply(queriesWithReads, ce.getQueriesFor(varToken).map(function (query) { return new _QueryWithRead(query, varToken); }));
+	    });
+	    queriesWithReads.forEach(function (queryWithRead) {
+	        var /** @type {?} */ value;
+	        if (queryWithRead.read.identifier) {
+	            // query for an identifier
+	            value = ce.instances.get(tokenReference(queryWithRead.read));
+	        }
+	        else {
+	            // query for a reference
+	            var /** @type {?} */ token = ce.referenceTokens[queryWithRead.read.value];
+	            if (token) {
+	                value = ce.instances.get(tokenReference(token));
+	            }
+	            else {
+	                value = ce.elementRef;
+	            }
+	        }
+	        if (value) {
+	            queryWithRead.query.addValue(value, ce.view);
+	        }
+	    });
+	}
+	var _QueryWithRead = (function () {
+	    /**
+	     * @param {?} query
+	     * @param {?} match
+	     */
+	    function _QueryWithRead(query, match) {
+	        this.query = query;
+	        this.read = query.meta.read || match;
+	    }
+	    return _QueryWithRead;
+	}());
+
+	/**
 	 * @param {?} view
 	 * @param {?} parsedTemplate
 	 * @param {?} schemaRegistry
@@ -36857,6 +36870,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    ViewBinderVisitor.prototype.visitElement = function (ast, parent) {
 	        var _this = this;
 	        var /** @type {?} */ compileElement = (this.view.nodes[this._nodeIndex++]);
+	        bindQueryValues(compileElement);
 	        var /** @type {?} */ hasEvents = bindOutputs(ast.outputs, ast.directives, compileElement, true);
 	        bindRenderInputs(ast.inputs, ast.outputs, hasEvents, compileElement);
 	        ast.directives.forEach(function (directiveAst, dirIndex) {
@@ -36887,6 +36901,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     */
 	    ViewBinderVisitor.prototype.visitEmbeddedTemplate = function (ast, parent) {
 	        var /** @type {?} */ compileElement = (this.view.nodes[this._nodeIndex++]);
+	        bindQueryValues(compileElement);
 	        bindOutputs(ast.outputs, ast.directives, compileElement, false);
 	        ast.directives.forEach(function (directiveAst, dirIndex) {
 	            var /** @type {?} */ directiveInstance = compileElement.instances.get(directiveAst.directive.type.reference);
@@ -36977,13 +36992,16 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @return {?}
 	 */
 	function finishView(view, targetStatements) {
-	    view.afterNodes();
-	    createViewTopLevelStmts(view, targetStatements);
 	    view.nodes.forEach(function (node) {
-	        if (node instanceof CompileElement && node.hasEmbeddedView) {
-	            finishView(node.embeddedView, targetStatements);
+	        if (node instanceof CompileElement) {
+	            node.finish();
+	            if (node.hasEmbeddedView) {
+	                finishView(node.embeddedView, targetStatements);
+	            }
 	        }
 	    });
+	    view.finish();
+	    createViewTopLevelStmts(view, targetStatements);
 	}
 	var ViewBuilderVisitor = (function () {
 	    /**
@@ -37386,7 +37404,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    var /** @type {?} */ componentToken = NULL_EXPR;
 	    var /** @type {?} */ varTokenEntries = [];
 	    if (isPresent(compileElement)) {
-	        providerTokens = compileElement.getProviderTokens();
+	        providerTokens =
+	            compileElement.getProviderTokens().map(function (token) { return createDiTokenExpression(token); });
 	        if (isPresent(compileElement.component)) {
 	            componentToken = createDiTokenExpression(identifierToken(compileElement.component.type));
 	        }
@@ -45592,7 +45611,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$3 = new Version('4.0.0-beta.1-07e0fce');
+	var VERSION$3 = new Version('4.0.0-beta.1-7c21064');
 
 	/**
 	 * @license
@@ -47009,7 +47028,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$4 = new Version('4.0.0-beta.1-07e0fce');
+	var VERSION$4 = new Version('4.0.0-beta.1-7c21064');
 
 	exports['default'] = LanguageServicePlugin;
 	exports.createLanguageService = createLanguageService;
