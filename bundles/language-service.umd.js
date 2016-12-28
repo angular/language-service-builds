@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.0.0-beta.1-b2ae7b6
+ * @license Angular v4.0.0-beta.1-2c0c86e
  * (c) 2010-2016 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1602,7 +1602,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('4.0.0-beta.1-b2ae7b6');
+	var /** @type {?} */ VERSION = new Version('4.0.0-beta.1-2c0c86e');
 
 	/**
 	 * Inject decorator and metadata.
@@ -2270,6 +2270,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @stable
 	 */
 	var /** @type {?} */ Type = Function;
+	/**
+	 * @param {?} v
+	 * @return {?}
+	 */
+	function isType(v) {
+	    return typeof v === 'function';
+	}
 
 	/**
 	 * Attention: This regex has to hold even if the code is minified!
@@ -2382,7 +2389,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    ReflectionCapabilities.prototype.parameters = function (type) {
 	        // Note: only report metadata if we have at least one class decorator
 	        // to stay in sync with the static reflector.
-	        var /** @type {?} */ parentCtor = Object.getPrototypeOf(type.prototype).constructor;
+	        if (!isType(type)) {
+	            return [];
+	        }
+	        var /** @type {?} */ parentCtor = getParentCtor(type);
 	        var /** @type {?} */ parameters = this._ownParameters(type, parentCtor);
 	        if (!parameters && parentCtor !== Object) {
 	            parameters = this.parameters(parentCtor);
@@ -2417,7 +2427,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @return {?}
 	     */
 	    ReflectionCapabilities.prototype.annotations = function (typeOrFunc) {
-	        var /** @type {?} */ parentCtor = Object.getPrototypeOf(typeOrFunc.prototype).constructor;
+	        if (!isType(typeOrFunc)) {
+	            return [];
+	        }
+	        var /** @type {?} */ parentCtor = getParentCtor(typeOrFunc);
 	        var /** @type {?} */ ownAnnotations = this._ownAnnotations(typeOrFunc, parentCtor) || [];
 	        var /** @type {?} */ parentAnnotations = parentCtor !== Object ? this.annotations(parentCtor) : [];
 	        return parentAnnotations.concat(ownAnnotations);
@@ -2457,7 +2470,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @return {?}
 	     */
 	    ReflectionCapabilities.prototype.propMetadata = function (typeOrFunc) {
-	        var /** @type {?} */ parentCtor = Object.getPrototypeOf(typeOrFunc.prototype).constructor;
+	        if (!isType(typeOrFunc)) {
+	            return {};
+	        }
+	        var /** @type {?} */ parentCtor = getParentCtor(typeOrFunc);
 	        var /** @type {?} */ propMetadata = {};
 	        if (parentCtor !== Object) {
 	            var /** @type {?} */ parentPropMetadata_1 = this.propMetadata(parentCtor);
@@ -2547,6 +2563,17 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        var /** @type {?} */ annotationArgs = decoratorInvocation.args ? decoratorInvocation.args : [];
 	        return new (annotationCls.bind.apply(annotationCls, [void 0].concat(annotationArgs)))();
 	    });
+	}
+	/**
+	 * @param {?} ctor
+	 * @return {?}
+	 */
+	function getParentCtor(ctor) {
+	    var /** @type {?} */ parentProto = Object.getPrototypeOf(ctor.prototype);
+	    var /** @type {?} */ parentCtor = parentProto ? parentProto.constructor : null;
+	    // Note: We always use `Object` as the null value
+	    // to simplify checking later on.
+	    return parentCtor || Object;
 	}
 
 	/**
@@ -26135,7 +26162,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.1-b2ae7b6');
+	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.1-2c0c86e');
 
 	/**
 	 * @return {?}
@@ -27638,11 +27665,17 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        var _this = this;
 	        var /** @type {?} */ normalizedTemplateSync = null;
 	        var /** @type {?} */ normalizedTemplateAsync;
-	        if (isPresent(prenormData.template)) {
+	        if (prenormData.template != null) {
+	            if (typeof prenormData.template !== 'string') {
+	                throw new SyntaxError("The template specified for component " + stringify(prenormData.componentType) + " is not a string");
+	            }
 	            normalizedTemplateSync = this.normalizeTemplateSync(prenormData);
 	            normalizedTemplateAsync = Promise.resolve(normalizedTemplateSync);
 	        }
 	        else if (prenormData.templateUrl) {
+	            if (typeof prenormData.templateUrl !== 'string') {
+	                throw new SyntaxError("The templateUrl specified for component " + stringify(prenormData.componentType) + " is not a string");
+	            }
 	            normalizedTemplateAsync = this.normalizeTemplateAsync(prenormData);
 	        }
 	        else {
@@ -27696,7 +27729,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        visitAll(visitor, rootNodesAndErrors.rootNodes);
 	        var /** @type {?} */ templateStyles = this.normalizeStylesheet(new CompileStylesheetMetadata({ styles: visitor.styles, styleUrls: visitor.styleUrls, moduleUrl: templateAbsUrl }));
 	        var /** @type {?} */ encapsulation = prenomData.encapsulation;
-	        if (isBlank(encapsulation)) {
+	        if (encapsulation == null) {
 	            encapsulation = this._config.defaultEncapsulation;
 	        }
 	        var /** @type {?} */ styles = templateMetadataStyles.styles.concat(templateStyles.styles);
@@ -45565,7 +45598,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$3 = new Version('4.0.0-beta.1-b2ae7b6');
+	var VERSION$3 = new Version('4.0.0-beta.1-2c0c86e');
 
 	/**
 	 * @license
@@ -46982,7 +47015,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$4 = new Version('4.0.0-beta.1-b2ae7b6');
+	var VERSION$4 = new Version('4.0.0-beta.1-2c0c86e');
 
 	exports['default'] = LanguageServicePlugin;
 	exports.createLanguageService = createLanguageService;
