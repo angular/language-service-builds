@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.0.0-beta.1-c5c53f3
+ * @license Angular v4.0.0-beta.1-465516b
  * (c) 2010-2016 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1602,7 +1602,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('4.0.0-beta.1-c5c53f3');
+	var /** @type {?} */ VERSION = new Version('4.0.0-beta.1-465516b');
 
 	/**
 	 * Inject decorator and metadata.
@@ -7387,9 +7387,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return KeyValueDiffers;
 	}());
 
-	var /** @type {?} */ UNINITIALIZED = {
-	    toString: function () { return 'CD_INIT_VALUE'; }
-	};
 	/**
 	 * @param {?} a
 	 * @param {?} b
@@ -7469,16 +7466,18 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    /**
 	     * @param {?} previousValue
 	     * @param {?} currentValue
+	     * @param {?} firstChange
 	     */
-	    function SimpleChange(previousValue, currentValue) {
+	    function SimpleChange(previousValue, currentValue, firstChange) {
 	        this.previousValue = previousValue;
 	        this.currentValue = currentValue;
+	        this.firstChange = firstChange;
 	    }
 	    /**
 	     *  Check whether the new value is the first value assigned.
 	     * @return {?}
 	     */
-	    SimpleChange.prototype.isFirstChange = function () { return this.previousValue === UNINITIALIZED; };
+	    SimpleChange.prototype.isFirstChange = function () { return this.firstChange; };
 	    return SimpleChange;
 	}());
 
@@ -8017,10 +8016,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    /**
 	     * @param {?} oldValue
 	     * @param {?} currValue
+	     * @param {?} isFirstCheck
 	     */
-	    function ExpressionChangedAfterItHasBeenCheckedError(oldValue, currValue) {
+	    function ExpressionChangedAfterItHasBeenCheckedError(oldValue, currValue, isFirstCheck) {
 	        var msg = "Expression has changed after it was checked. Previous value: '" + oldValue + "'. Current value: '" + currValue + "'.";
-	        if (oldValue === UNINITIALIZED) {
+	        if (isFirstCheck) {
 	            msg +=
 	                " It seems like the view has been created after its parent and its children have been dirty checked." +
 	                    " Has it been created in a change detection hook ?";
@@ -8192,20 +8192,120 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return v != null ? v.toString() : '';
 	}
 	/**
-	 * @param {?} throwOnChange
+	 * @param {?} view
 	 * @param {?} oldValue
 	 * @param {?} newValue
+	 * @param {?} forceUpdate
 	 * @return {?}
 	 */
-	function checkBinding(throwOnChange, oldValue, newValue) {
-	    if (throwOnChange) {
-	        if (!devModeEqual(oldValue, newValue)) {
-	            throw new ExpressionChangedAfterItHasBeenCheckedError(oldValue, newValue);
+	function checkBinding(view, oldValue, newValue, forceUpdate) {
+	    var /** @type {?} */ isFirstCheck = view.numberOfChecks === 0;
+	    if (view.throwOnChange) {
+	        if (isFirstCheck || !devModeEqual(oldValue, newValue)) {
+	            throw new ExpressionChangedAfterItHasBeenCheckedError(oldValue, newValue, isFirstCheck);
 	        }
 	        return false;
 	    }
 	    else {
-	        return !looseIdentical$1(oldValue, newValue);
+	        return isFirstCheck || forceUpdate || !looseIdentical$1(oldValue, newValue);
+	    }
+	}
+	/**
+	 * @param {?} view
+	 * @param {?} oldValue
+	 * @param {?} newValue
+	 * @param {?} forceUpdate
+	 * @return {?}
+	 */
+	function checkBindingChange(view, oldValue, newValue, forceUpdate) {
+	    if (checkBinding(view, oldValue, newValue, forceUpdate)) {
+	        return new SimpleChange(oldValue, newValue, view.numberOfChecks === 0);
+	    }
+	}
+	/**
+	 * @param {?} view
+	 * @param {?} renderElement
+	 * @param {?} oldValue
+	 * @param {?} newValue
+	 * @param {?} forceUpdate
+	 * @return {?}
+	 */
+	function checkRenderText(view, renderElement, oldValue, newValue, forceUpdate) {
+	    if (checkBinding(view, oldValue, newValue, forceUpdate)) {
+	        view.renderer.setText(renderElement, newValue);
+	    }
+	}
+	/**
+	 * @param {?} view
+	 * @param {?} renderElement
+	 * @param {?} propName
+	 * @param {?} oldValue
+	 * @param {?} newValue
+	 * @param {?} forceUpdate
+	 * @param {?} securityContext
+	 * @return {?}
+	 */
+	function checkRenderProperty(view, renderElement, propName, oldValue, newValue, forceUpdate, securityContext) {
+	    if (checkBinding(view, oldValue, newValue, forceUpdate)) {
+	        var /** @type {?} */ renderValue = securityContext ? view.viewUtils.sanitizer.sanitize(securityContext, newValue) : newValue;
+	        view.renderer.setElementProperty(renderElement, propName, renderValue);
+	    }
+	}
+	/**
+	 * @param {?} view
+	 * @param {?} renderElement
+	 * @param {?} attrName
+	 * @param {?} oldValue
+	 * @param {?} newValue
+	 * @param {?} forceUpdate
+	 * @param {?} securityContext
+	 * @return {?}
+	 */
+	function checkRenderAttribute(view, renderElement, attrName, oldValue, newValue, forceUpdate, securityContext) {
+	    if (checkBinding(view, oldValue, newValue, forceUpdate)) {
+	        var /** @type {?} */ renderValue = securityContext ? view.viewUtils.sanitizer.sanitize(securityContext, newValue) : newValue;
+	        renderValue = renderValue != null ? renderValue.toString() : null;
+	        view.renderer.setElementAttribute(renderElement, attrName, renderValue);
+	    }
+	}
+	/**
+	 * @param {?} view
+	 * @param {?} renderElement
+	 * @param {?} className
+	 * @param {?} oldValue
+	 * @param {?} newValue
+	 * @param {?} forceUpdate
+	 * @return {?}
+	 */
+	function checkRenderClass(view, renderElement, className, oldValue, newValue, forceUpdate) {
+	    if (checkBinding(view, oldValue, newValue, forceUpdate)) {
+	        view.renderer.setElementClass(renderElement, className, newValue);
+	    }
+	}
+	/**
+	 * @param {?} view
+	 * @param {?} renderElement
+	 * @param {?} styleName
+	 * @param {?} unit
+	 * @param {?} oldValue
+	 * @param {?} newValue
+	 * @param {?} forceUpdate
+	 * @param {?} securityContext
+	 * @return {?}
+	 */
+	function checkRenderStyle(view, renderElement, styleName, unit, oldValue, newValue, forceUpdate, securityContext) {
+	    if (checkBinding(view, oldValue, newValue, forceUpdate)) {
+	        var /** @type {?} */ renderValue = securityContext ? view.viewUtils.sanitizer.sanitize(securityContext, newValue) : newValue;
+	        if (renderValue != null) {
+	            renderValue = renderValue.toString();
+	            if (unit != null) {
+	                renderValue = renderValue + unit;
+	            }
+	        }
+	        else {
+	            renderValue = null;
+	        }
+	        view.renderer.setElementStyle(renderElement, styleName, renderValue);
 	    }
 	}
 	/**
@@ -8223,10 +8323,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @return {?}
 	 */
 	function pureProxy1(fn) {
+	    var /** @type {?} */ numberOfChecks = 0;
 	    var /** @type {?} */ result;
-	    var /** @type {?} */ v0 = UNINITIALIZED;
+	    var /** @type {?} */ v0;
 	    return function (p0) {
-	        if (!looseIdentical$1(v0, p0)) {
+	        if (!numberOfChecks++ || !looseIdentical$1(v0, p0)) {
 	            v0 = p0;
 	            result = fn(p0);
 	        }
@@ -8238,11 +8339,12 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @return {?}
 	 */
 	function pureProxy2(fn) {
+	    var /** @type {?} */ numberOfChecks = 0;
 	    var /** @type {?} */ result;
-	    var /** @type {?} */ v0 = UNINITIALIZED;
-	    var /** @type {?} */ v1 = UNINITIALIZED;
+	    var /** @type {?} */ v0;
+	    var /** @type {?} */ v1;
 	    return function (p0, p1) {
-	        if (!looseIdentical$1(v0, p0) || !looseIdentical$1(v1, p1)) {
+	        if (!numberOfChecks++ || !looseIdentical$1(v0, p0) || !looseIdentical$1(v1, p1)) {
 	            v0 = p0;
 	            v1 = p1;
 	            result = fn(p0, p1);
@@ -8255,12 +8357,14 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @return {?}
 	 */
 	function pureProxy3(fn) {
+	    var /** @type {?} */ numberOfChecks = 0;
 	    var /** @type {?} */ result;
-	    var /** @type {?} */ v0 = UNINITIALIZED;
-	    var /** @type {?} */ v1 = UNINITIALIZED;
-	    var /** @type {?} */ v2 = UNINITIALIZED;
+	    var /** @type {?} */ v0;
+	    var /** @type {?} */ v1;
+	    var /** @type {?} */ v2;
 	    return function (p0, p1, p2) {
-	        if (!looseIdentical$1(v0, p0) || !looseIdentical$1(v1, p1) || !looseIdentical$1(v2, p2)) {
+	        if (!numberOfChecks++ || !looseIdentical$1(v0, p0) || !looseIdentical$1(v1, p1) ||
+	            !looseIdentical$1(v2, p2)) {
 	            v0 = p0;
 	            v1 = p1;
 	            v2 = p2;
@@ -8274,12 +8378,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @return {?}
 	 */
 	function pureProxy4(fn) {
+	    var /** @type {?} */ numberOfChecks = 0;
 	    var /** @type {?} */ result;
 	    var /** @type {?} */ v0, /** @type {?} */ v1, /** @type {?} */ v2, /** @type {?} */ v3;
-	    v0 = v1 = v2 = v3 = UNINITIALIZED;
+	    v0 = v1 = v2 = v3;
 	    return function (p0, p1, p2, p3) {
-	        if (!looseIdentical$1(v0, p0) || !looseIdentical$1(v1, p1) || !looseIdentical$1(v2, p2) ||
-	            !looseIdentical$1(v3, p3)) {
+	        if (!numberOfChecks++ || !looseIdentical$1(v0, p0) || !looseIdentical$1(v1, p1) ||
+	            !looseIdentical$1(v2, p2) || !looseIdentical$1(v3, p3)) {
 	            v0 = p0;
 	            v1 = p1;
 	            v2 = p2;
@@ -8294,12 +8399,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @return {?}
 	 */
 	function pureProxy5(fn) {
+	    var /** @type {?} */ numberOfChecks = 0;
 	    var /** @type {?} */ result;
 	    var /** @type {?} */ v0, /** @type {?} */ v1, /** @type {?} */ v2, /** @type {?} */ v3, /** @type {?} */ v4;
-	    v0 = v1 = v2 = v3 = v4 = UNINITIALIZED;
+	    v0 = v1 = v2 = v3 = v4;
 	    return function (p0, p1, p2, p3, p4) {
-	        if (!looseIdentical$1(v0, p0) || !looseIdentical$1(v1, p1) || !looseIdentical$1(v2, p2) ||
-	            !looseIdentical$1(v3, p3) || !looseIdentical$1(v4, p4)) {
+	        if (!numberOfChecks++ || !looseIdentical$1(v0, p0) || !looseIdentical$1(v1, p1) ||
+	            !looseIdentical$1(v2, p2) || !looseIdentical$1(v3, p3) || !looseIdentical$1(v4, p4)) {
 	            v0 = p0;
 	            v1 = p1;
 	            v2 = p2;
@@ -8315,12 +8421,14 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @return {?}
 	 */
 	function pureProxy6(fn) {
+	    var /** @type {?} */ numberOfChecks = 0;
 	    var /** @type {?} */ result;
 	    var /** @type {?} */ v0, /** @type {?} */ v1, /** @type {?} */ v2, /** @type {?} */ v3, /** @type {?} */ v4, /** @type {?} */ v5;
-	    v0 = v1 = v2 = v3 = v4 = v5 = UNINITIALIZED;
+	    v0 = v1 = v2 = v3 = v4 = v5;
 	    return function (p0, p1, p2, p3, p4, p5) {
-	        if (!looseIdentical$1(v0, p0) || !looseIdentical$1(v1, p1) || !looseIdentical$1(v2, p2) ||
-	            !looseIdentical$1(v3, p3) || !looseIdentical$1(v4, p4) || !looseIdentical$1(v5, p5)) {
+	        if (!numberOfChecks++ || !looseIdentical$1(v0, p0) || !looseIdentical$1(v1, p1) ||
+	            !looseIdentical$1(v2, p2) || !looseIdentical$1(v3, p3) || !looseIdentical$1(v4, p4) ||
+	            !looseIdentical$1(v5, p5)) {
 	            v0 = p0;
 	            v1 = p1;
 	            v2 = p2;
@@ -8337,13 +8445,14 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @return {?}
 	 */
 	function pureProxy7(fn) {
+	    var /** @type {?} */ numberOfChecks = 0;
 	    var /** @type {?} */ result;
 	    var /** @type {?} */ v0, /** @type {?} */ v1, /** @type {?} */ v2, /** @type {?} */ v3, /** @type {?} */ v4, /** @type {?} */ v5, /** @type {?} */ v6;
-	    v0 = v1 = v2 = v3 = v4 = v5 = v6 = UNINITIALIZED;
+	    v0 = v1 = v2 = v3 = v4 = v5 = v6;
 	    return function (p0, p1, p2, p3, p4, p5, p6) {
-	        if (!looseIdentical$1(v0, p0) || !looseIdentical$1(v1, p1) || !looseIdentical$1(v2, p2) ||
-	            !looseIdentical$1(v3, p3) || !looseIdentical$1(v4, p4) || !looseIdentical$1(v5, p5) ||
-	            !looseIdentical$1(v6, p6)) {
+	        if (!numberOfChecks++ || !looseIdentical$1(v0, p0) || !looseIdentical$1(v1, p1) ||
+	            !looseIdentical$1(v2, p2) || !looseIdentical$1(v3, p3) || !looseIdentical$1(v4, p4) ||
+	            !looseIdentical$1(v5, p5) || !looseIdentical$1(v6, p6)) {
 	            v0 = p0;
 	            v1 = p1;
 	            v2 = p2;
@@ -8361,13 +8470,14 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @return {?}
 	 */
 	function pureProxy8(fn) {
+	    var /** @type {?} */ numberOfChecks = 0;
 	    var /** @type {?} */ result;
 	    var /** @type {?} */ v0, /** @type {?} */ v1, /** @type {?} */ v2, /** @type {?} */ v3, /** @type {?} */ v4, /** @type {?} */ v5, /** @type {?} */ v6, /** @type {?} */ v7;
-	    v0 = v1 = v2 = v3 = v4 = v5 = v6 = v7 = UNINITIALIZED;
+	    v0 = v1 = v2 = v3 = v4 = v5 = v6 = v7;
 	    return function (p0, p1, p2, p3, p4, p5, p6, p7) {
-	        if (!looseIdentical$1(v0, p0) || !looseIdentical$1(v1, p1) || !looseIdentical$1(v2, p2) ||
-	            !looseIdentical$1(v3, p3) || !looseIdentical$1(v4, p4) || !looseIdentical$1(v5, p5) ||
-	            !looseIdentical$1(v6, p6) || !looseIdentical$1(v7, p7)) {
+	        if (!numberOfChecks++ || !looseIdentical$1(v0, p0) || !looseIdentical$1(v1, p1) ||
+	            !looseIdentical$1(v2, p2) || !looseIdentical$1(v3, p3) || !looseIdentical$1(v4, p4) ||
+	            !looseIdentical$1(v5, p5) || !looseIdentical$1(v6, p6) || !looseIdentical$1(v7, p7)) {
 	            v0 = p0;
 	            v1 = p1;
 	            v2 = p2;
@@ -8386,13 +8496,15 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @return {?}
 	 */
 	function pureProxy9(fn) {
+	    var /** @type {?} */ numberOfChecks = 0;
 	    var /** @type {?} */ result;
 	    var /** @type {?} */ v0, /** @type {?} */ v1, /** @type {?} */ v2, /** @type {?} */ v3, /** @type {?} */ v4, /** @type {?} */ v5, /** @type {?} */ v6, /** @type {?} */ v7, /** @type {?} */ v8;
-	    v0 = v1 = v2 = v3 = v4 = v5 = v6 = v7 = v8 = UNINITIALIZED;
+	    v0 = v1 = v2 = v3 = v4 = v5 = v6 = v7 = v8;
 	    return function (p0, p1, p2, p3, p4, p5, p6, p7, p8) {
-	        if (!looseIdentical$1(v0, p0) || !looseIdentical$1(v1, p1) || !looseIdentical$1(v2, p2) ||
-	            !looseIdentical$1(v3, p3) || !looseIdentical$1(v4, p4) || !looseIdentical$1(v5, p5) ||
-	            !looseIdentical$1(v6, p6) || !looseIdentical$1(v7, p7) || !looseIdentical$1(v8, p8)) {
+	        if (!numberOfChecks++ || !looseIdentical$1(v0, p0) || !looseIdentical$1(v1, p1) ||
+	            !looseIdentical$1(v2, p2) || !looseIdentical$1(v3, p3) || !looseIdentical$1(v4, p4) ||
+	            !looseIdentical$1(v5, p5) || !looseIdentical$1(v6, p6) || !looseIdentical$1(v7, p7) ||
+	            !looseIdentical$1(v8, p8)) {
 	            v0 = p0;
 	            v1 = p1;
 	            v2 = p2;
@@ -8412,14 +8524,15 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @return {?}
 	 */
 	function pureProxy10(fn) {
+	    var /** @type {?} */ numberOfChecks = 0;
 	    var /** @type {?} */ result;
 	    var /** @type {?} */ v0, /** @type {?} */ v1, /** @type {?} */ v2, /** @type {?} */ v3, /** @type {?} */ v4, /** @type {?} */ v5, /** @type {?} */ v6, /** @type {?} */ v7, /** @type {?} */ v8, /** @type {?} */ v9;
-	    v0 = v1 = v2 = v3 = v4 = v5 = v6 = v7 = v8 = v9 = UNINITIALIZED;
+	    v0 = v1 = v2 = v3 = v4 = v5 = v6 = v7 = v8 = v9;
 	    return function (p0, p1, p2, p3, p4, p5, p6, p7, p8, p9) {
-	        if (!looseIdentical$1(v0, p0) || !looseIdentical$1(v1, p1) || !looseIdentical$1(v2, p2) ||
-	            !looseIdentical$1(v3, p3) || !looseIdentical$1(v4, p4) || !looseIdentical$1(v5, p5) ||
-	            !looseIdentical$1(v6, p6) || !looseIdentical$1(v7, p7) || !looseIdentical$1(v8, p8) ||
-	            !looseIdentical$1(v9, p9)) {
+	        if (!numberOfChecks++ || !looseIdentical$1(v0, p0) || !looseIdentical$1(v1, p1) ||
+	            !looseIdentical$1(v2, p2) || !looseIdentical$1(v3, p3) || !looseIdentical$1(v4, p4) ||
+	            !looseIdentical$1(v5, p5) || !looseIdentical$1(v6, p6) || !looseIdentical$1(v7, p7) ||
+	            !looseIdentical$1(v8, p8) || !looseIdentical$1(v9, p9)) {
 	            v0 = p0;
 	            v1 = p1;
 	            v2 = p2;
@@ -8954,6 +9067,12 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    interpolate: interpolate,
 	    inlineInterpolate: inlineInterpolate,
 	    checkBinding: checkBinding,
+	    checkBindingChange: checkBindingChange,
+	    checkRenderText: checkRenderText,
+	    checkRenderProperty: checkRenderProperty,
+	    checkRenderAttribute: checkRenderAttribute,
+	    checkRenderClass: checkRenderClass,
+	    checkRenderStyle: checkRenderStyle,
 	    castByValue: castByValue,
 	    EMPTY_ARRAY: EMPTY_ARRAY,
 	    EMPTY_MAP: EMPTY_MAP,
@@ -13448,6 +13567,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        this.cdMode = cdMode;
 	        this.declaredViewContainer = declaredViewContainer;
 	        this.numberOfChecks = 0;
+	        this.throwOnChange = false;
 	        this.ref = new ViewRef_(this, viewUtils.animationQueue);
 	        if (type === ViewType.COMPONENT || type === ViewType.HOST) {
 	            this.renderer = viewUtils.renderComponent(componentType);
@@ -13814,7 +13934,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        if (this.cdMode === ChangeDetectorStatus.Destroyed) {
 	            this.throwDestroyedError('detectChanges');
 	        }
-	        this.detectChangesInternal(throwOnChange);
+	        this.throwOnChange = throwOnChange;
+	        this.detectChangesInternal();
 	        if (this.cdMode === ChangeDetectorStatus.CheckOnce)
 	            this.cdMode = ChangeDetectorStatus.Checked;
 	        this.numberOfChecks++;
@@ -13822,10 +13943,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    };
 	    /**
 	     *  Overwritten by implementations
-	     * @param {?} throwOnChange
 	     * @return {?}
 	     */
-	    AppView.prototype.detectChangesInternal = function (throwOnChange) { };
+	    AppView.prototype.detectChangesInternal = function () { };
 	    /**
 	     * @return {?}
 	     */
@@ -14209,7 +14329,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    DebugContext: DebugContext,
 	    StaticNodeDebugInfo: StaticNodeDebugInfo,
 	    devModeEqual: devModeEqual,
-	    UNINITIALIZED: UNINITIALIZED,
 	    ValueUnwrapper: ValueUnwrapper,
 	    RenderDebugInfo: RenderDebugInfo,
 	    TemplateRef_: TemplateRef_,
@@ -21931,7 +22050,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	var /** @type {?} */ DebugContext$1 = r.DebugContext;
 	var /** @type {?} */ StaticNodeDebugInfo$1 = r.StaticNodeDebugInfo;
 	var /** @type {?} */ devModeEqual$1 = r.devModeEqual;
-	var /** @type {?} */ UNINITIALIZED$1 = r.UNINITIALIZED;
 	var /** @type {?} */ ValueUnwrapper$1 = r.ValueUnwrapper;
 	var /** @type {?} */ TemplateRef_$1 = r.TemplateRef_;
 	var /** @type {?} */ Console$1 = r.Console;
@@ -23131,7 +23249,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        runtime: Renderer
 	    };
 	    Identifiers.SimpleChange = { name: 'SimpleChange', moduleUrl: CD_MODULE_URL, runtime: SimpleChange };
-	    Identifiers.UNINITIALIZED = { name: 'UNINITIALIZED', moduleUrl: CD_MODULE_URL, runtime: UNINITIALIZED$1 };
 	    Identifiers.ChangeDetectorStatus = {
 	        name: 'ChangeDetectorStatus',
 	        moduleUrl: CD_MODULE_URL,
@@ -23141,6 +23258,36 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        name: 'checkBinding',
 	        moduleUrl: VIEW_UTILS_MODULE_URL,
 	        runtime: view_utils$1.checkBinding
+	    };
+	    Identifiers.checkBindingChange = {
+	        name: 'checkBindingChange',
+	        moduleUrl: VIEW_UTILS_MODULE_URL,
+	        runtime: view_utils$1.checkBindingChange
+	    };
+	    Identifiers.checkRenderText = {
+	        name: 'checkRenderText',
+	        moduleUrl: VIEW_UTILS_MODULE_URL,
+	        runtime: view_utils$1.checkRenderText
+	    };
+	    Identifiers.checkRenderProperty = {
+	        name: 'checkRenderProperty',
+	        moduleUrl: VIEW_UTILS_MODULE_URL,
+	        runtime: view_utils$1.checkRenderProperty
+	    };
+	    Identifiers.checkRenderAttribute = {
+	        name: 'checkRenderAttribute',
+	        moduleUrl: VIEW_UTILS_MODULE_URL,
+	        runtime: view_utils$1.checkRenderAttribute
+	    };
+	    Identifiers.checkRenderClass = {
+	        name: 'checkRenderClass',
+	        moduleUrl: VIEW_UTILS_MODULE_URL,
+	        runtime: view_utils$1.checkRenderClass
+	    };
+	    Identifiers.checkRenderStyle = {
+	        name: 'checkRenderStyle',
+	        moduleUrl: VIEW_UTILS_MODULE_URL,
+	        runtime: view_utils$1.checkRenderStyle
 	    };
 	    Identifiers.devModeEqual = { name: 'devModeEqual', moduleUrl: CD_MODULE_URL, runtime: devModeEqual$1 };
 	    Identifiers.inlineInterpolate = {
@@ -26162,7 +26309,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.1-c5c53f3');
+	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.1-465516b');
 
 	/**
 	 * @return {?}
@@ -29942,29 +30089,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    var /** @type {?} */ fieldExpr = createBindFieldExpr(bindingId);
 	    // private is fine here as no child view will reference the cached value...
 	    builder.fields.push(new ClassField(fieldExpr.name, null, [StmtModifier.Private]));
-	    builder.ctorStmts.push(THIS_EXPR.prop(fieldExpr.name)
-	        .set(importExpr(createIdentifier(Identifiers.UNINITIALIZED)))
-	        .toStmt());
+	    builder.ctorStmts.push(THIS_EXPR.prop(fieldExpr.name).set(literal(undefined)).toStmt());
 	    return new CheckBindingField(fieldExpr, bindingId);
-	}
-	/**
-	 * @param {?} evalResult
-	 * @param {?} fieldExpr
-	 * @param {?} throwOnChangeVar
-	 * @param {?} actions
-	 * @return {?}
-	 */
-	function createCheckBindingStmt(evalResult, fieldExpr, throwOnChangeVar, actions) {
-	    var /** @type {?} */ condition = importExpr(createIdentifier(Identifiers.checkBinding)).callFn([
-	        throwOnChangeVar, fieldExpr, evalResult.currValExpr
-	    ]);
-	    if (evalResult.forceUpdate) {
-	        condition = evalResult.forceUpdate.or(condition);
-	    }
-	    return evalResult.stmts.concat([
-	        new IfStmt(condition, actions.concat([(THIS_EXPR.prop(fieldExpr.name).set(evalResult.currValExpr).toStmt())
-	        ]))
-	    ]);
 	}
 	/**
 	 * @param {?} bindingId
@@ -29972,6 +30098,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 */
 	function createBindFieldExpr(bindingId) {
 	    return THIS_EXPR.prop("_expr_" + bindingId);
+	}
+	/**
+	 * @param {?} view
+	 * @return {?}
+	 */
+	function isFirstViewCheck(view) {
+	    return not(view.prop('numberOfChecks'));
 	}
 
 	/**
@@ -30965,65 +31098,65 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 
 	/**
 	 * @param {?} view
-	 * @param {?} boundProp
 	 * @param {?} renderElement
-	 * @param {?} renderValue
-	 * @param {?} logBindingUpdate
+	 * @param {?} boundProp
+	 * @param {?} oldValue
+	 * @param {?} evalResult
 	 * @param {?=} securityContextExpression
 	 * @return {?}
 	 */
-	function writeToRenderer(view, boundProp, renderElement, renderValue, logBindingUpdate, securityContextExpression) {
-	    var /** @type {?} */ updateStmts = [];
-	    var /** @type {?} */ renderer = view.prop('renderer');
-	    renderValue = sanitizedValue(view, boundProp, renderValue, securityContextExpression);
+	function createCheckRenderBindingStmt(view, renderElement, boundProp, oldValue, evalResult, securityContextExpression) {
+	    var /** @type {?} */ checkStmts = evalResult.stmts.slice();
+	    var /** @type {?} */ securityContext = calcSecurityContext(boundProp, securityContextExpression);
 	    switch (boundProp.type) {
 	        case PropertyBindingType.Property:
-	            if (logBindingUpdate) {
-	                updateStmts.push(importExpr(createIdentifier(Identifiers.setBindingDebugInfo))
-	                    .callFn([renderer, renderElement, literal(boundProp.name), renderValue])
-	                    .toStmt());
-	            }
-	            updateStmts.push(renderer
-	                .callMethod('setElementProperty', [renderElement, literal(boundProp.name), renderValue])
+	            checkStmts.push(importExpr(createIdentifier(Identifiers.checkRenderProperty))
+	                .callFn([
+	                view, renderElement, literal(boundProp.name), oldValue,
+	                oldValue.set(evalResult.currValExpr),
+	                evalResult.forceUpdate || literal(false), securityContext
+	            ])
 	                .toStmt());
 	            break;
 	        case PropertyBindingType.Attribute:
-	            renderValue =
-	                renderValue.isBlank().conditional(NULL_EXPR, renderValue.callMethod('toString', []));
-	            updateStmts.push(renderer
-	                .callMethod('setElementAttribute', [renderElement, literal(boundProp.name), renderValue])
+	            checkStmts.push(importExpr(createIdentifier(Identifiers.checkRenderAttribute))
+	                .callFn([
+	                view, renderElement, literal(boundProp.name), oldValue,
+	                oldValue.set(evalResult.currValExpr),
+	                evalResult.forceUpdate || literal(false), securityContext
+	            ])
 	                .toStmt());
 	            break;
 	        case PropertyBindingType.Class:
-	            updateStmts.push(renderer
-	                .callMethod('setElementClass', [renderElement, literal(boundProp.name), renderValue])
+	            checkStmts.push(importExpr(createIdentifier(Identifiers.checkRenderClass))
+	                .callFn([
+	                view, renderElement, literal(boundProp.name), oldValue,
+	                oldValue.set(evalResult.currValExpr), evalResult.forceUpdate || literal(false)
+	            ])
 	                .toStmt());
 	            break;
 	        case PropertyBindingType.Style:
-	            var /** @type {?} */ strValue = renderValue.callMethod('toString', []);
-	            if (isPresent(boundProp.unit)) {
-	                strValue = strValue.plus(literal(boundProp.unit));
-	            }
-	            renderValue = renderValue.isBlank().conditional(NULL_EXPR, strValue);
-	            updateStmts.push(renderer
-	                .callMethod('setElementStyle', [renderElement, literal(boundProp.name), renderValue])
+	            checkStmts.push(importExpr(createIdentifier(Identifiers.checkRenderStyle))
+	                .callFn([
+	                view, renderElement, literal(boundProp.name), literal(boundProp.unit), oldValue,
+	                oldValue.set(evalResult.currValExpr), evalResult.forceUpdate || literal(false),
+	                securityContext
+	            ])
 	                .toStmt());
 	            break;
 	        case PropertyBindingType.Animation:
 	            throw new Error('Illegal state: Should not come here!');
 	    }
-	    return updateStmts;
+	    return checkStmts;
 	}
 	/**
-	 * @param {?} view
 	 * @param {?} boundProp
-	 * @param {?} renderValue
 	 * @param {?=} securityContextExpression
 	 * @return {?}
 	 */
-	function sanitizedValue(view, boundProp, renderValue, securityContextExpression) {
+	function calcSecurityContext(boundProp, securityContextExpression) {
 	    if (boundProp.securityContext === SecurityContext.NONE) {
-	        return renderValue; // No sanitization needed.
+	        return NULL_EXPR; // No sanitization needed.
 	    }
 	    if (!boundProp.needsRuntimeSecurityContext) {
 	        securityContextExpression =
@@ -31032,9 +31165,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    if (!securityContextExpression) {
 	        throw new Error("internal error, no SecurityContext given " + boundProp.name);
 	    }
-	    var /** @type {?} */ ctx = view.prop('viewUtils').prop('sanitizer');
-	    var /** @type {?} */ args = [securityContextExpression, renderValue];
-	    return ctx.callMethod('sanitize', args);
+	    return securityContextExpression;
 	}
 	/**
 	 * @param {?} view
@@ -31043,11 +31174,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @param {?} boundOutputs
 	 * @param {?} eventListener
 	 * @param {?} renderElement
-	 * @param {?} renderValue
-	 * @param {?} lastRenderValue
+	 * @param {?} oldValue
+	 * @param {?} evalResult
 	 * @return {?}
 	 */
-	function triggerAnimation(view, componentView, boundProp, boundOutputs, eventListener, renderElement, renderValue, lastRenderValue) {
+	function createCheckAnimationBindingStmts(view, componentView, boundProp, boundOutputs, eventListener, renderElement, oldValue, evalResult) {
 	    var /** @type {?} */ detachStmts = [];
 	    var /** @type {?} */ updateStmts = [];
 	    var /** @type {?} */ animationName = boundProp.name;
@@ -31055,17 +31186,16 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    // it's important to normalize the void value as `void` explicitly
 	    // so that the styles data can be obtained from the stringmap
 	    var /** @type {?} */ emptyStateValue = literal(EMPTY_STATE$1);
-	    var /** @type {?} */ unitializedValue = importExpr(createIdentifier(Identifiers.UNINITIALIZED));
 	    var /** @type {?} */ animationTransitionVar = variable('animationTransition_' + animationName);
 	    updateStmts.push(animationTransitionVar
 	        .set(animationFnExpr.callFn([
-	        view, renderElement,
-	        lastRenderValue.equals(unitializedValue).conditional(emptyStateValue, lastRenderValue),
-	        renderValue.equals(unitializedValue).conditional(emptyStateValue, renderValue)
+	        view, renderElement, isFirstViewCheck(view).conditional(emptyStateValue, oldValue),
+	        evalResult.currValExpr
 	    ]))
 	        .toDeclStmt());
+	    updateStmts.push(oldValue.set(evalResult.currValExpr).toStmt());
 	    detachStmts.push(animationTransitionVar
-	        .set(animationFnExpr.callFn([view, renderElement, lastRenderValue, emptyStateValue]))
+	        .set(animationFnExpr.callFn([view, renderElement, evalResult.currValExpr, emptyStateValue]))
 	        .toDeclStmt());
 	    var /** @type {?} */ registerStmts = [];
 	    var /** @type {?} */ animationStartMethodExists = boundOutputs.find(function (event) { return event.isAnimation && event.name == animationName && event.phase == 'start'; });
@@ -31082,7 +31212,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    }
 	    updateStmts.push.apply(updateStmts, registerStmts);
 	    detachStmts.push.apply(detachStmts, registerStmts);
-	    return { updateStmts: updateStmts, detachStmts: detachStmts };
+	    var /** @type {?} */ checkUpdateStmts = evalResult.stmts.concat([
+	        new IfStmt(importExpr(createIdentifier(Identifiers.checkBinding)).callFn([
+	            view, oldValue, evalResult.currValExpr, evalResult.forceUpdate || literal(false)
+	        ]), updateStmts)
+	    ]);
+	    var /** @type {?} */ checkDetachStmts = evalResult.stmts.concat(detachStmts);
+	    return { checkUpdateStmts: checkUpdateStmts, checkDetachStmts: checkDetachStmts };
 	}
 
 	/**
@@ -31142,8 +31278,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	var /** @type {?} */ CHANGES_FIELD_NAME = '_changes';
 	var /** @type {?} */ CHANGED_FIELD_NAME = '_changed';
 	var /** @type {?} */ EVENT_HANDLER_FIELD_NAME = '_eventHandler';
+	var /** @type {?} */ CHANGE_VAR = variable('change');
 	var /** @type {?} */ CURR_VALUE_VAR = variable('currValue');
-	var /** @type {?} */ THROW_ON_CHANGE_VAR = variable('throwOnChange');
 	var /** @type {?} */ FORCE_UPDATE_VAR = variable('forceUpdate');
 	var /** @type {?} */ VIEW_VAR = variable('view');
 	var /** @type {?} */ COMPONENT_VIEW_VAR = variable('componentView');
@@ -31241,7 +31377,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            new ClassField(CONTEXT_FIELD_NAME, importType(this.dirMeta.type)),
 	            new ClassField(CHANGED_FIELD_NAME, BOOL_TYPE, [StmtModifier.Private]),
 	        ];
-	        var /** @type {?} */ ctorStmts = [THIS_EXPR.prop(CHANGED_FIELD_NAME).set(literal(false)).toStmt()];
+	        var /** @type {?} */ ctorStmts = [
+	            THIS_EXPR.prop(CHANGED_FIELD_NAME).set(literal(false)).toStmt(),
+	        ];
 	        if (this.genChanges) {
 	            fields.push(new ClassField(CHANGES_FIELD_NAME, new MapType(DYNAMIC_TYPE), [StmtModifier.Private]));
 	            ctorStmts.push(RESET_CHANGES_STMT);
@@ -31285,19 +31423,18 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        lifecycleStmts.push(new IfStmt(changedVar, onChangesStmts));
 	    }
 	    if (builder.ngOnInit) {
-	        lifecycleStmts.push(new IfStmt(VIEW_VAR.prop('numberOfChecks').identical(new LiteralExpr(0)), [THIS_EXPR.prop(CONTEXT_FIELD_NAME).callMethod('ngOnInit', []).toStmt()]));
+	        lifecycleStmts.push(new IfStmt(isFirstViewCheck(VIEW_VAR), [THIS_EXPR.prop(CONTEXT_FIELD_NAME).callMethod('ngOnInit', []).toStmt()]));
 	    }
 	    if (builder.ngDoCheck) {
 	        lifecycleStmts.push(THIS_EXPR.prop(CONTEXT_FIELD_NAME).callMethod('ngDoCheck', []).toStmt());
 	    }
 	    if (lifecycleStmts.length > 0) {
-	        stmts.push(new IfStmt(not(THROW_ON_CHANGE_VAR), lifecycleStmts));
+	        stmts.push(new IfStmt(not(VIEW_VAR.prop('throwOnChange')), lifecycleStmts));
 	    }
 	    stmts.push(new ReturnStatement(changedVar));
 	    builder.methods.push(new ClassMethod('ngDoCheck', [
 	        new FnParam(VIEW_VAR.name, importType(createIdentifier(Identifiers.AppView), [DYNAMIC_TYPE])),
 	        new FnParam(RENDER_EL_VAR.name, DYNAMIC_TYPE),
-	        new FnParam(THROW_ON_CHANGE_VAR.name, BOOL_TYPE),
 	    ], stmts, BOOL_TYPE));
 	}
 	/**
@@ -31310,19 +31447,29 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    var /** @type {?} */ onChangeStatements = [
 	        THIS_EXPR.prop(CHANGED_FIELD_NAME).set(literal(true)).toStmt(),
 	        THIS_EXPR.prop(CONTEXT_FIELD_NAME).prop(input).set(CURR_VALUE_VAR).toStmt(),
+	        field.expression.set(CURR_VALUE_VAR).toStmt()
 	    ];
+	    var /** @type {?} */ methodBody;
 	    if (builder.genChanges) {
-	        onChangeStatements.push(THIS_EXPR.prop(CHANGES_FIELD_NAME)
-	            .key(literal(input))
-	            .set(importExpr(createIdentifier(Identifiers.SimpleChange))
-	            .instantiate([field.expression, CURR_VALUE_VAR]))
-	            .toStmt());
+	        onChangeStatements.push(THIS_EXPR.prop(CHANGES_FIELD_NAME).key(literal(input)).set(CHANGE_VAR).toStmt());
+	        methodBody = [
+	            CHANGE_VAR
+	                .set(importExpr(createIdentifier(Identifiers.checkBindingChange)).callFn([
+	                VIEW_VAR, field.expression, CURR_VALUE_VAR, FORCE_UPDATE_VAR
+	            ]))
+	                .toDeclStmt(),
+	            new IfStmt(CHANGE_VAR, onChangeStatements)
+	        ];
 	    }
-	    var /** @type {?} */ methodBody = createCheckBindingStmt({ currValExpr: CURR_VALUE_VAR, forceUpdate: FORCE_UPDATE_VAR, stmts: [] }, field.expression, THROW_ON_CHANGE_VAR, onChangeStatements);
+	    else {
+	        methodBody = [new IfStmt(importExpr(createIdentifier(Identifiers.checkBinding)).callFn([
+	                VIEW_VAR, field.expression, CURR_VALUE_VAR, FORCE_UPDATE_VAR
+	            ]), onChangeStatements)];
+	    }
 	    builder.methods.push(new ClassMethod("check_" + input, [
+	        new FnParam(VIEW_VAR.name, importType(createIdentifier(Identifiers.AppView), [DYNAMIC_TYPE])),
 	        new FnParam(CURR_VALUE_VAR.name, DYNAMIC_TYPE),
-	        new FnParam(THROW_ON_CHANGE_VAR.name, BOOL_TYPE),
-	        new FnParam(FORCE_UPDATE_VAR.name, BOOL_TYPE),
+	        new FnParam(FORCE_UPDATE_VAR.name, BOOL_TYPE)
 	    ], methodBody));
 	}
 	/**
@@ -31337,7 +31484,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        new FnParam(VIEW_VAR.name, importType(createIdentifier(Identifiers.AppView), [DYNAMIC_TYPE])),
 	        new FnParam(COMPONENT_VIEW_VAR.name, importType(createIdentifier(Identifiers.AppView), [DYNAMIC_TYPE])),
 	        new FnParam(RENDER_EL_VAR.name, DYNAMIC_TYPE),
-	        new FnParam(THROW_ON_CHANGE_VAR.name, BOOL_TYPE),
 	    ];
 	    hostProps.forEach(function (hostProp, hostPropIdx) {
 	        var /** @type {?} */ field = createCheckBindingField(builder);
@@ -31350,17 +31496,15 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            securityContextExpr = variable("secCtx_" + methodParams.length);
 	            methodParams.push(new FnParam(securityContextExpr.name, importType(createIdentifier(Identifiers.SecurityContext))));
 	        }
-	        var /** @type {?} */ checkBindingStmts;
 	        if (hostProp.isAnimation) {
-	            var _a = triggerAnimation(VIEW_VAR, COMPONENT_VIEW_VAR, hostProp, hostEvents, THIS_EXPR.prop(EVENT_HANDLER_FIELD_NAME)
-	                .or(importExpr(createIdentifier(Identifiers.noop))), RENDER_EL_VAR, evalResult.currValExpr, field.expression), updateStmts = _a.updateStmts, detachStmts = _a.detachStmts;
-	            checkBindingStmts = updateStmts;
-	            (_b = builder.detachStmts).push.apply(_b, detachStmts);
+	            var _a = createCheckAnimationBindingStmts(VIEW_VAR, COMPONENT_VIEW_VAR, hostProp, hostEvents, THIS_EXPR.prop(EVENT_HANDLER_FIELD_NAME)
+	                .or(importExpr(createIdentifier(Identifiers.noop))), RENDER_EL_VAR, field.expression, evalResult), checkUpdateStmts = _a.checkUpdateStmts, checkDetachStmts = _a.checkDetachStmts;
+	            (_b = builder.detachStmts).push.apply(_b, checkDetachStmts);
+	            stmts.push.apply(stmts, checkUpdateStmts);
 	        }
 	        else {
-	            checkBindingStmts = writeToRenderer(VIEW_VAR, hostProp, RENDER_EL_VAR, evalResult.currValExpr, builder.compilerConfig.logBindingUpdate, securityContextExpr);
+	            stmts.push.apply(stmts, createCheckRenderBindingStmt(VIEW_VAR, RENDER_EL_VAR, hostProp, field.expression, evalResult, securityContextExpr));
 	        }
-	        stmts.push.apply(stmts, createCheckBindingStmt(evalResult, field.expression, THROW_ON_CHANGE_VAR, checkBindingStmts));
 	        var _b;
 	    });
 	    builder.methods.push(new ClassMethod('checkHost', methodParams, stmts));
@@ -31490,11 +31634,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @param {?} dirWrapper
 	     * @param {?} view
 	     * @param {?} renderElement
-	     * @param {?} throwOnChange
 	     * @return {?}
 	     */
-	    DirectiveWrapperExpressions.ngDoCheck = function (dirWrapper, view, renderElement, throwOnChange) {
-	        return dirWrapper.callMethod('ngDoCheck', [view, renderElement, throwOnChange]);
+	    DirectiveWrapperExpressions.ngDoCheck = function (dirWrapper, view, renderElement) {
+	        return dirWrapper.callMethod('ngDoCheck', [view, renderElement]);
 	    };
 	    /**
 	     * @param {?} hostProps
@@ -31502,14 +31645,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @param {?} view
 	     * @param {?} componentView
 	     * @param {?} renderElement
-	     * @param {?} throwOnChange
 	     * @param {?} runtimeSecurityContexts
 	     * @return {?}
 	     */
-	    DirectiveWrapperExpressions.checkHost = function (hostProps, dirWrapper, view, componentView, renderElement, throwOnChange, runtimeSecurityContexts) {
+	    DirectiveWrapperExpressions.checkHost = function (hostProps, dirWrapper, view, componentView, renderElement, runtimeSecurityContexts) {
 	        if (hostProps.length) {
 	            return [dirWrapper
-	                    .callMethod('checkHost', [view, componentView, renderElement, throwOnChange].concat(runtimeSecurityContexts))
+	                    .callMethod('checkHost', [view, componentView, renderElement].concat(runtimeSecurityContexts))
 	                    .toStmt()];
 	        }
 	        else {
@@ -35688,6 +35830,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    }
 	    ViewProperties.renderer = THIS_EXPR.prop('renderer');
 	    ViewProperties.viewUtils = THIS_EXPR.prop('viewUtils');
+	    ViewProperties.throwOnChange = THIS_EXPR.prop('throwOnChange');
 	    return ViewProperties;
 	}());
 	var InjectMethodVars$1 = (function () {
@@ -35697,14 +35840,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    InjectMethodVars.requestNodeIndex = variable('requestNodeIndex');
 	    InjectMethodVars.notFoundResult = variable('notFoundResult');
 	    return InjectMethodVars;
-	}());
-	var DetectChangesVars = (function () {
-	    function DetectChangesVars() {
-	    }
-	    DetectChangesVars.throwOnChange = variable("throwOnChange");
-	    DetectChangesVars.changes = variable("changes");
-	    DetectChangesVars.changed = variable("changed");
-	    return DetectChangesVars;
 	}());
 
 	/**
@@ -36564,8 +36699,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return THIS_EXPR.callMethod('eventHandler', [THIS_EXPR.prop(handleEventMethodName)]);
 	}
 
-	var /** @type {?} */ STATE_IS_NEVER_CHECKED = THIS_EXPR.prop('numberOfChecks').identical(new LiteralExpr(0));
-	var /** @type {?} */ NOT_THROW_ON_CHANGES = not(DetectChangesVars.throwOnChange);
 	/**
 	 * @param {?} directiveMeta
 	 * @param {?} directiveInstance
@@ -36578,7 +36711,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    var /** @type {?} */ afterContentLifecycleCallbacksMethod = view.afterContentLifecycleCallbacksMethod;
 	    afterContentLifecycleCallbacksMethod.resetDebugInfo(compileElement.nodeIndex, compileElement.sourceAst);
 	    if (lifecycleHooks.indexOf(LifecycleHooks$1.AfterContentInit) !== -1) {
-	        afterContentLifecycleCallbacksMethod.addStmt(new IfStmt(STATE_IS_NEVER_CHECKED, [directiveInstance.callMethod('ngAfterContentInit', []).toStmt()]));
+	        afterContentLifecycleCallbacksMethod.addStmt(new IfStmt(isFirstViewCheck(THIS_EXPR), [directiveInstance.callMethod('ngAfterContentInit', []).toStmt()]));
 	    }
 	    if (lifecycleHooks.indexOf(LifecycleHooks$1.AfterContentChecked) !== -1) {
 	        afterContentLifecycleCallbacksMethod.addStmt(directiveInstance.callMethod('ngAfterContentChecked', []).toStmt());
@@ -36596,7 +36729,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    var /** @type {?} */ afterViewLifecycleCallbacksMethod = view.afterViewLifecycleCallbacksMethod;
 	    afterViewLifecycleCallbacksMethod.resetDebugInfo(compileElement.nodeIndex, compileElement.sourceAst);
 	    if (lifecycleHooks.indexOf(LifecycleHooks$1.AfterViewInit) !== -1) {
-	        afterViewLifecycleCallbacksMethod.addStmt(new IfStmt(STATE_IS_NEVER_CHECKED, [directiveInstance.callMethod('ngAfterViewInit', []).toStmt()]));
+	        afterViewLifecycleCallbacksMethod.addStmt(new IfStmt(isFirstViewCheck(THIS_EXPR), [directiveInstance.callMethod('ngAfterViewInit', []).toStmt()]));
 	    }
 	    if (lifecycleHooks.indexOf(LifecycleHooks$1.AfterViewChecked) !== -1) {
 	        afterViewLifecycleCallbacksMethod.addStmt(directiveInstance.callMethod('ngAfterViewChecked', []).toStmt());
@@ -36653,9 +36786,14 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        return null;
 	    }
 	    view.detectChangesRenderPropertiesMethod.resetDebugInfo(compileNode.nodeIndex, boundText);
-	    view.detectChangesRenderPropertiesMethod.addStmts(createCheckBindingStmt(evalResult, valueField.expression, DetectChangesVars.throwOnChange, [THIS_EXPR.prop('renderer')
-	            .callMethod('setText', [compileNode.renderNode, evalResult.currValExpr])
-	            .toStmt()]));
+	    view.detectChangesRenderPropertiesMethod.addStmts(evalResult.stmts);
+	    view.detectChangesRenderPropertiesMethod.addStmt(importExpr(createIdentifier(Identifiers.checkRenderText))
+	        .callFn([
+	        THIS_EXPR, compileNode.renderNode, valueField.expression,
+	        valueField.expression.set(evalResult.currValExpr),
+	        evalResult.forceUpdate || literal(false)
+	    ])
+	        .toStmt());
 	}
 	/**
 	 * @param {?} boundProps
@@ -36674,25 +36812,23 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        if (!evalResult) {
 	            return;
 	        }
-	        var /** @type {?} */ checkBindingStmts = [];
 	        var /** @type {?} */ compileMethod = view.detectChangesRenderPropertiesMethod;
 	        switch (boundProp.type) {
 	            case PropertyBindingType.Property:
 	            case PropertyBindingType.Attribute:
 	            case PropertyBindingType.Class:
 	            case PropertyBindingType.Style:
-	                checkBindingStmts.push.apply(checkBindingStmts, writeToRenderer(THIS_EXPR, boundProp, renderNode, evalResult.currValExpr, view.genConfig.logBindingUpdate));
+	                compileMethod.addStmts(createCheckRenderBindingStmt(THIS_EXPR, renderNode, boundProp, bindingField.expression, evalResult));
 	                break;
 	            case PropertyBindingType.Animation:
 	                compileMethod = view.animationBindingsMethod;
-	                var _a = triggerAnimation(THIS_EXPR, THIS_EXPR, boundProp, boundOutputs, (hasEvents ? THIS_EXPR.prop(getHandleEventMethodName(compileElement.nodeIndex)) :
+	                var _a = createCheckAnimationBindingStmts(THIS_EXPR, THIS_EXPR, boundProp, boundOutputs, (hasEvents ? THIS_EXPR.prop(getHandleEventMethodName(compileElement.nodeIndex)) :
 	                    importExpr(createIdentifier(Identifiers.noop)))
-	                    .callMethod(BuiltinMethod.Bind, [THIS_EXPR]), compileElement.renderNode, evalResult.currValExpr, bindingField.expression), updateStmts = _a.updateStmts, detachStmts = _a.detachStmts;
-	                checkBindingStmts.push.apply(checkBindingStmts, updateStmts);
-	                view.detachMethod.addStmts(detachStmts);
+	                    .callMethod(BuiltinMethod.Bind, [THIS_EXPR]), compileElement.renderNode, bindingField.expression, evalResult), checkUpdateStmts = _a.checkUpdateStmts, checkDetachStmts = _a.checkDetachStmts;
+	                view.detachMethod.addStmts(checkDetachStmts);
+	                compileMethod.addStmts(checkUpdateStmts);
 	                break;
 	        }
-	        compileMethod.addStmts(createCheckBindingStmt(evalResult, bindingField.expression, DetectChangesVars.throwOnChange, checkBindingStmts));
 	    });
 	}
 	/**
@@ -36720,7 +36856,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        }
 	        return createEnumExpression(Identifiers.SecurityContext, ctx);
 	    });
-	    compileElement.view.detectChangesRenderPropertiesMethod.addStmts(DirectiveWrapperExpressions.checkHost(directiveAst.hostProperties, directiveWrapperInstance, THIS_EXPR, compileElement.compViewExpr || THIS_EXPR, compileElement.renderNode, DetectChangesVars.throwOnChange, runtimeSecurityCtxExprs));
+	    compileElement.view.detectChangesRenderPropertiesMethod.addStmts(DirectiveWrapperExpressions.checkHost(directiveAst.hostProperties, directiveWrapperInstance, THIS_EXPR, compileElement.compViewExpr || THIS_EXPR, compileElement.renderNode, runtimeSecurityCtxExprs));
 	}
 	/**
 	 * @param {?} directiveAst
@@ -36743,15 +36879,12 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        }
 	        detectChangesInInputsMethod.addStmts(evalResult.stmts);
 	        detectChangesInInputsMethod.addStmt(directiveWrapperInstance
-	            .callMethod("check_" + input.directiveName, [
-	            evalResult.currValExpr, DetectChangesVars.throwOnChange,
-	            evalResult.forceUpdate || literal(false)
-	        ])
+	            .callMethod("check_" + input.directiveName, [THIS_EXPR, evalResult.currValExpr, evalResult.forceUpdate || literal(false)])
 	            .toStmt());
 	    });
 	    var /** @type {?} */ isOnPushComp = directiveAst.directive.isComponent &&
 	        !isDefaultChangeDetectionStrategy$1(directiveAst.directive.changeDetection);
-	    var /** @type {?} */ directiveDetectChangesExpr = DirectiveWrapperExpressions.ngDoCheck(directiveWrapperInstance, THIS_EXPR, compileElement.renderNode, DetectChangesVars.throwOnChange);
+	    var /** @type {?} */ directiveDetectChangesExpr = DirectiveWrapperExpressions.ngDoCheck(directiveWrapperInstance, THIS_EXPR, compileElement.renderNode);
 	    var /** @type {?} */ directiveDetectChangesStmt = isOnPushComp ?
 	        new IfStmt(directiveDetectChangesExpr, [compileElement.compViewExpr.callMethod('markAsCheckOnce', []).toStmt()]) :
 	        directiveDetectChangesExpr.toStmt();
@@ -37445,7 +37578,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            new FnParam(InjectMethodVars$1.requestNodeIndex.name, NUMBER_TYPE),
 	            new FnParam(InjectMethodVars$1.notFoundResult.name, DYNAMIC_TYPE)
 	        ], addReturnValuefNotEmpty(view.injectorGetMethod.finish(), InjectMethodVars$1.notFoundResult), DYNAMIC_TYPE),
-	        new ClassMethod('detectChangesInternal', [new FnParam(DetectChangesVars.throwOnChange.name, BOOL_TYPE)], generateDetectChangesMethod(view)),
+	        new ClassMethod('detectChangesInternal', [], generateDetectChangesMethod(view)),
 	        new ClassMethod('dirtyParentQueriesInternal', [], view.dirtyParentQueriesMethod.finish()),
 	        new ClassMethod('destroyInternal', [], generateDestroyMethod(view)),
 	        new ClassMethod('detachInternal', [], view.detachMethod.finish()),
@@ -37531,31 +37664,22 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    stmts.push.apply(stmts, view.animationBindingsMethod.finish());
 	    stmts.push.apply(stmts, view.detectChangesInInputsMethod.finish());
 	    view.viewContainers.forEach(function (viewContainer) {
-	        stmts.push(viewContainer.callMethod('detectChangesInNestedViews', [DetectChangesVars.throwOnChange])
+	        stmts.push(viewContainer.callMethod('detectChangesInNestedViews', [ViewProperties.throwOnChange])
 	            .toStmt());
 	    });
 	    var /** @type {?} */ afterContentStmts = view.updateContentQueriesMethod.finish().concat(view.afterContentLifecycleCallbacksMethod.finish());
 	    if (afterContentStmts.length > 0) {
-	        stmts.push(new IfStmt(not(DetectChangesVars.throwOnChange), afterContentStmts));
+	        stmts.push(new IfStmt(not(ViewProperties.throwOnChange), afterContentStmts));
 	    }
 	    stmts.push.apply(stmts, view.detectChangesRenderPropertiesMethod.finish());
 	    view.viewChildren.forEach(function (viewChild) {
-	        stmts.push(viewChild.callMethod('internalDetectChanges', [DetectChangesVars.throwOnChange]).toStmt());
+	        stmts.push(viewChild.callMethod('internalDetectChanges', [ViewProperties.throwOnChange]).toStmt());
 	    });
 	    var /** @type {?} */ afterViewStmts = view.updateViewQueriesMethod.finish().concat(view.afterViewLifecycleCallbacksMethod.finish());
 	    if (afterViewStmts.length > 0) {
-	        stmts.push(new IfStmt(not(DetectChangesVars.throwOnChange), afterViewStmts));
+	        stmts.push(new IfStmt(not(ViewProperties.throwOnChange), afterViewStmts));
 	    }
-	    var /** @type {?} */ varStmts = [];
-	    var /** @type {?} */ readVars = findReadVarNames(stmts);
-	    if (readVars.has(DetectChangesVars.changed.name)) {
-	        varStmts.push(DetectChangesVars.changed.set(literal(true)).toDeclStmt(BOOL_TYPE));
-	    }
-	    if (readVars.has(DetectChangesVars.changes.name)) {
-	        varStmts.push(DetectChangesVars.changes.set(NULL_EXPR)
-	            .toDeclStmt(new MapType(importType(createIdentifier(Identifiers.SimpleChange)))));
-	    }
-	    varStmts.push.apply(varStmts, createSharedBindingVariablesIfNeeded(stmts));
+	    var /** @type {?} */ varStmts = createSharedBindingVariablesIfNeeded(stmts);
 	    return varStmts.concat(stmts);
 	}
 	/**
@@ -45601,7 +45725,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$3 = new Version('4.0.0-beta.1-c5c53f3');
+	var VERSION$3 = new Version('4.0.0-beta.1-465516b');
 
 	/**
 	 * @license
@@ -47018,7 +47142,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$4 = new Version('4.0.0-beta.1-c5c53f3');
+	var VERSION$4 = new Version('4.0.0-beta.1-465516b');
 
 	exports['default'] = LanguageServicePlugin;
 	exports.createLanguageService = createLanguageService;
