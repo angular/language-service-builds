@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.0.0-beta.1-bb0d23f
+ * @license Angular v4.0.0-beta.1-c5c53f3
  * (c) 2010-2016 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1602,7 +1602,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('4.0.0-beta.1-bb0d23f');
+	var /** @type {?} */ VERSION = new Version('4.0.0-beta.1-c5c53f3');
 
 	/**
 	 * Inject decorator and metadata.
@@ -10081,7 +10081,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        }
 	        this._loadComponent(compRef);
 	        if (isDevMode()) {
-	            this._console.log("Angular 2 is running in the development mode. Call enableProdMode() to enable the production mode.");
+	            this._console.log("Angular is running in the development mode. Call enableProdMode() to enable the production mode.");
 	        }
 	        return compRef;
 	    };
@@ -26162,7 +26162,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.1-bb0d23f');
+	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.1-c5c53f3');
 
 	/**
 	 * @return {?}
@@ -45601,7 +45601,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$3 = new Version('4.0.0-beta.1-bb0d23f');
+	var VERSION$3 = new Version('4.0.0-beta.1-c5c53f3');
 
 	/**
 	 * @license
@@ -47018,7 +47018,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$4 = new Version('4.0.0-beta.1-bb0d23f');
+	var VERSION$4 = new Version('4.0.0-beta.1-c5c53f3');
 
 	exports['default'] = LanguageServicePlugin;
 	exports.createLanguageService = createLanguageService;
