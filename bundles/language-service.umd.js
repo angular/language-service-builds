@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.0.0-beta.1-21030e9
+ * @license Angular v4.0.0-beta.1-8063b0d
  * (c) 2010-2016 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1602,7 +1602,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('4.0.0-beta.1-21030e9');
+	var /** @type {?} */ VERSION = new Version('4.0.0-beta.1-8063b0d');
 
 	/**
 	 * Inject decorator and metadata.
@@ -26361,7 +26361,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.1-21030e9');
+	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.1-8063b0d');
 
 	/**
 	 * @return {?}
@@ -44059,6 +44059,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 
 	var ts$2 = ts;
 	var schema_1$1 = __moduleExports$17;
+	// In TypeScript 2.1 the spread element kind was renamed.
+	var spreadElementSyntaxKind = ts$2.SyntaxKind.SpreadElement || ts$2.SyntaxKind.SpreadElementExpression;
 	function isMethodCallOf(callExpression, memberName) {
 	    var expression = callExpression.expression;
 	    if (expression.kind === ts$2.SyntaxKind.PropertyAccessExpression) {
@@ -44308,9 +44310,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                if (error)
 	                    return error;
 	                return arr_1;
-	            case ts$2.SyntaxKind.SpreadElementExpression:
-	                var spread = node;
-	                var spreadExpression = this.evaluateNode(spread.expression);
+	            case spreadElementSyntaxKind:
+	                var spreadExpression = this.evaluateNode(node.expression);
 	                return recordEntry({ __symbolic: 'spread', expression: spreadExpression }, node);
 	            case ts$2.SyntaxKind.CallExpression:
 	                var callExpression = node;
@@ -44709,6 +44710,18 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	var evaluator_1 = __moduleExports$16;
 	var schema_1 = __moduleExports$17;
 	var symbols_1 = __moduleExports$18;
+	// In TypeScript 2.1 these flags moved
+	// These helpers work for both 2.0 and 2.1.
+	var isExport = ts$1.ModifierFlags ?
+	    (function (node) {
+	        return !!(ts$1.getCombinedModifierFlags(node) & ts$1.ModifierFlags.Export);
+	    }) :
+	    (function (node) { return !!((node.flags & ts$1.NodeFlags.Export)); });
+	var isStatic = ts$1.ModifierFlags ?
+	    (function (node) {
+	        return !!(ts$1.getCombinedModifierFlags(node) & ts$1.ModifierFlags.Static);
+	    }) :
+	    (function (node) { return !!((node.flags & ts$1.NodeFlags.Static)); });
 	/**
 	 * A set of collector options to use when collecting metadata.
 	 */
@@ -44825,7 +44838,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                    case ts$1.SyntaxKind.MethodDeclaration:
 	                        isConstructor = member.kind === ts$1.SyntaxKind.Constructor;
 	                        var method = member;
-	                        if (method.flags & ts$1.NodeFlags.Static) {
+	                        if (isStatic(method)) {
 	                            var maybeFunc = maybeGetSimpleFunction(method);
 	                            if (maybeFunc) {
 	                                recordStaticMember(maybeFunc.name, maybeFunc.func);
@@ -44872,7 +44885,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                    case ts$1.SyntaxKind.GetAccessor:
 	                    case ts$1.SyntaxKind.SetAccessor:
 	                        var property = member;
-	                        if (property.flags & ts$1.NodeFlags.Static) {
+	                        if (isStatic(property)) {
 	                            var name_2 = evaluator.nameOf(property.name);
 	                            if (!schema_1.isMetadataError(name_2)) {
 	                                if (property.initializer) {
@@ -44920,7 +44933,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        });
 	        var isExportedIdentifier = function (identifier) { return exportMap.has(identifier.text); };
 	        var isExported = function (node) {
-	            return (node.flags & ts$1.NodeFlags.Export) || isExportedIdentifier(node.name);
+	            return isExport(node) || isExportedIdentifier(node.name);
 	        };
 	        var exportedIdentifierName = function (identifier) {
 	            return exportMap.get(identifier.text) || identifier.text;
@@ -45078,8 +45091,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                                varValue = recordEntry(errorSym('Variable not initialized', nameNode), nameNode);
 	                            }
 	                            var exported = false;
-	                            if (variableStatement.flags & ts$1.NodeFlags.Export ||
-	                                variableDeclaration.flags & ts$1.NodeFlags.Export ||
+	                            if (isExport(variableStatement) || isExport(variableDeclaration) ||
 	                                isExportedIdentifier(nameNode)) {
 	                                if (!metadata)
 	                                    metadata = {};
@@ -45108,9 +45120,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                                switch (nameNode.kind) {
 	                                    case ts$1.SyntaxKind.Identifier:
 	                                        var name_6 = nameNode;
-	                                        var varValue = errorSym('Destructuring not supported', nameNode);
+	                                        var varValue = errorSym('Destructuring not supported', name_6);
 	                                        locals.define(name_6.text, varValue);
-	                                        if (node.flags & ts$1.NodeFlags.Export) {
+	                                        if (isExport(node)) {
 	                                            if (!metadata)
 	                                                metadata = {};
 	                                            metadata[name_6.text] = varValue;
@@ -45304,7 +45316,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            var bindingPattern = name;
 	            for (var _i = 0, _a = bindingPattern.elements; _i < _a.length; _i++) {
 	                var element = _a[_i];
-	                addNamesOf(element.name);
+	                var name_7 = element.name;
+	                if (name_7) {
+	                    addNamesOf(name_7);
+	                }
 	            }
 	        }
 	    }
@@ -45777,7 +45792,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$3 = new Version('4.0.0-beta.1-21030e9');
+	var VERSION$3 = new Version('4.0.0-beta.1-8063b0d');
 
 	/**
 	 * @license
@@ -45862,6 +45877,19 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
+	// In TypeScript 2.1 these flags moved
+	// These helpers work for both 2.0 and 2.1.
+	var isPrivate = ts.ModifierFlags ?
+	    (function (node) {
+	        return !!(ts.getCombinedModifierFlags(node) & ts.ModifierFlags.Private);
+	    }) :
+	    (function (node) { return !!(node.flags & ts.NodeFlags.Private); });
+	var isReferenceType = ts.ObjectFlags ?
+	    (function (type) {
+	        return !!(type.flags & ts.TypeFlags.Object &&
+	            type.objectFlags & ts.ObjectFlags.Reference);
+	    }) :
+	    (function (type) { return !!(type.flags & ts.TypeFlags.Reference); });
 	/**
 	 * Create a `LanguageServiceHost`
 	 */
@@ -46467,7 +46495,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            for (var _i = 0, _a = constructorDeclaration.parameters; _i < _a.length; _i++) {
 	                var parameter = _a[_i];
 	                var type_1 = this.checker.getTypeAtLocation(parameter.type);
-	                if (type_1.symbol.name == 'TemplateRef' && type_1.flags & ts.TypeFlags.Reference) {
+	                if (type_1.symbol.name == 'TemplateRef' && isReferenceType(type_1)) {
 	                    var typeReference = type_1;
 	                    if (typeReference.typeArguments.length === 1) {
 	                        return typeReference.typeArguments[0].symbol;
@@ -46619,7 +46647,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    Object.defineProperty(SymbolWrapper.prototype, "public", {
 	        get: function () {
 	            // Symbols that are not explicitly made private are public.
-	            return !(getDeclarationFlagsFromSymbol(this.symbol) & ts.NodeFlags.Private);
+	            return !isSymbolPrivate(this.symbol);
 	        },
 	        enumerable: true,
 	        configurable: true
@@ -46959,35 +46987,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        dir = path.dirname(dir);
 	    }
 	}
-	function isBindingPattern(node) {
-	    return !!node && (node.kind === ts.SyntaxKind.ArrayBindingPattern ||
-	        node.kind === ts.SyntaxKind.ObjectBindingPattern);
-	}
-	function walkUpBindingElementsAndPatterns(node) {
-	    while (node && (node.kind === ts.SyntaxKind.BindingElement || isBindingPattern(node))) {
-	        node = node.parent;
-	    }
-	    return node;
-	}
-	function getCombinedNodeFlags(node) {
-	    node = walkUpBindingElementsAndPatterns(node);
-	    var flags = node.flags;
-	    if (node.kind === ts.SyntaxKind.VariableDeclaration) {
-	        node = node.parent;
-	    }
-	    if (node && node.kind === ts.SyntaxKind.VariableDeclarationList) {
-	        flags |= node.flags;
-	        node = node.parent;
-	    }
-	    if (node && node.kind === ts.SyntaxKind.VariableStatement) {
-	        flags |= node.flags;
-	    }
-	    return flags;
-	}
-	function getDeclarationFlagsFromSymbol(s) {
-	    return s.valueDeclaration ?
-	        getCombinedNodeFlags(s.valueDeclaration) :
-	        s.flags & ts.SymbolFlags.Prototype ? ts.NodeFlags.Public | ts.NodeFlags.Static : 0;
+	function isSymbolPrivate(s) {
+	    return s.valueDeclaration && isPrivate(s.valueDeclaration);
 	}
 	function getBuiltinTypeFromTs(kind, context) {
 	    var type;
@@ -47194,7 +47195,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$4 = new Version('4.0.0-beta.1-21030e9');
+	var VERSION$4 = new Version('4.0.0-beta.1-8063b0d');
 
 	exports['default'] = LanguageServicePlugin;
 	exports.createLanguageService = createLanguageService;
