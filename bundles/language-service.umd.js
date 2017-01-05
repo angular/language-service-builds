@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.0.0-beta.1-35f9a1c
+ * @license Angular v4.0.0-beta.1-2dd6280
  * (c) 2010-2016 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1602,7 +1602,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('4.0.0-beta.1-35f9a1c');
+	var /** @type {?} */ VERSION = new Version('4.0.0-beta.1-2dd6280');
 
 	/**
 	 * Inject decorator and metadata.
@@ -11536,6 +11536,58 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @experimental i18n support is experimental.
 	 */
 	var /** @type {?} */ TRANSLATIONS_FORMAT = new OpaqueToken('TranslationsFormat');
+
+	/**
+	 * @return {?}
+	 */
+	function _iterableDiffersFactory() {
+	    return defaultIterableDiffers;
+	}
+	/**
+	 * @return {?}
+	 */
+	function _keyValueDiffersFactory() {
+	    return defaultKeyValueDiffers;
+	}
+	/**
+	 * @param {?=} locale
+	 * @return {?}
+	 */
+	function _localeFactory(locale) {
+	    return locale || 'en-US';
+	}
+	/**
+	 *  This module includes the providers of @angular/core that are needed
+	  * to bootstrap components via `ApplicationRef`.
+	  * *
+	 */
+	var ApplicationModule = (function () {
+	    function ApplicationModule() {
+	    }
+	    ApplicationModule.decorators = [
+	        { type: NgModule, args: [{
+	                    providers: [
+	                        ApplicationRef_,
+	                        { provide: ApplicationRef, useExisting: ApplicationRef_ },
+	                        ApplicationInitStatus,
+	                        Compiler,
+	                        APP_ID_RANDOM_PROVIDER,
+	                        ViewUtils,
+	                        AnimationQueue,
+	                        { provide: IterableDiffers, useFactory: _iterableDiffersFactory },
+	                        { provide: KeyValueDiffers, useFactory: _keyValueDiffersFactory },
+	                        {
+	                            provide: LOCALE_ID,
+	                            useFactory: _localeFactory,
+	                            deps: [[new Inject(LOCALE_ID), new Optional(), new SkipSelf()]]
+	                        },
+	                    ]
+	                },] },
+	    ];
+	    /** @nocollapse */
+	    ApplicationModule.ctorParameters = function () { return []; };
+	    return ApplicationModule;
+	}());
 
 	/**
 	 * @license
@@ -26309,7 +26361,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.1-35f9a1c');
+	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.1-2dd6280');
 
 	/**
 	 * @return {?}
@@ -45725,7 +45777,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$3 = new Version('4.0.0-beta.1-35f9a1c');
+	var VERSION$3 = new Version('4.0.0-beta.1-2dd6280');
 
 	/**
 	 * @license
@@ -47142,7 +47194,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$4 = new Version('4.0.0-beta.1-35f9a1c');
+	var VERSION$4 = new Version('4.0.0-beta.1-2dd6280');
 
 	exports['default'] = LanguageServicePlugin;
 	exports.createLanguageService = createLanguageService;
