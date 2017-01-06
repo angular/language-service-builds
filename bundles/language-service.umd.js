@@ -1,5 +1,5 @@
 /**
- * @license Angular v2.4.1-28a92b2
+ * @license Angular v2.4.1-56b4296
  * (c) 2010-2016 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1345,30 +1345,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    }
 	], Query));
 	/**
-	 * @whatItDoes Configures a content query.
-	 *
-	 * @howToUse
-	 *
-	 * {@example core/di/ts/contentChild/content_child_howto.ts region='HowTo'}
-	 *
-	 * @description
-	 *
-	 * You can use ContentChild to get the first element or the directive matching the selector from the
-	 * content DOM. If the content DOM changes, and a new child matches the selector,
-	 * the property will be updated.
-	 *
-	 * Content queries are set before the `ngAfterContentInit` callback is called.
-	 *
-	 * **Metadata Properties**:
-	 *
-	 * * **selector** - the directive type or the name used for querying.
-	 * * **read** - read a different token from the queried element.
-	 *
-	 * Let's look at an example:
-	 *
-	 * {@example core/di/ts/contentChild/content_child_example.ts region='Component'}
-	 *
-	 * **npm package**: `@angular/core`
+	 * ContentChild decorator and metadata.
 	 *
 	 * @stable
 	 * @Annotation
@@ -1382,30 +1359,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    }
 	], Query);
 	/**
-	 * @whatItDoes Configures a view query.
-	 *
-	 * @howToUse
-	 *
-	 * {@example core/di/ts/viewChildren/view_children_howto.ts region='HowTo'}
-	 *
-	 * @description
-	 *
-	 * You can use ViewChildren to get the {@link QueryList} of elements or directives from the
-	 * view DOM. Any time a child element is added, removed, or moved, the query list will be updated,
-	 * and the changes observable of the query list will emit a new value.
-	 *
-	 * View queries are set before the `ngAfterViewInit` callback is called.
-	 *
-	 * **Metadata Properties**:
-	 *
-	 * * **selector** - the directive type or the name used for querying.
-	 * * **read** - read a different token from the queried elements.
-	 *
-	 * Let's look at an example:
-	 *
-	 * {@example core/di/ts/viewChildren/view_children_example.ts region='Component'}
-	 *
-	 * **npm package**: `@angular/core`
+	 * ViewChildren decorator and metadata.
 	 *
 	 * @stable
 	 * @Annotation
@@ -1700,7 +1654,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('2.4.1-28a92b2');
+	var /** @type {?} */ VERSION = new Version('2.4.1-56b4296');
 
 	/**
 	 *  Allows to refer to references which are not yet defined.
@@ -2325,6 +2279,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @stable
 	 */
 	var /** @type {?} */ Type = Function;
+	/**
+	 * @param {?} v
+	 * @return {?}
+	 */
+	function isType(v) {
+	    return typeof v === 'function';
+	}
 
 	/**
 	 * Attention: This regex has to hold even if the code is minified!
@@ -2437,7 +2398,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    ReflectionCapabilities.prototype.parameters = function (type) {
 	        // Note: only report metadata if we have at least one class decorator
 	        // to stay in sync with the static reflector.
-	        var /** @type {?} */ parentCtor = Object.getPrototypeOf(type.prototype).constructor;
+	        if (!isType(type)) {
+	            return [];
+	        }
+	        var /** @type {?} */ parentCtor = getParentCtor(type);
 	        var /** @type {?} */ parameters = this._ownParameters(type, parentCtor);
 	        if (!parameters && parentCtor !== Object) {
 	            parameters = this.parameters(parentCtor);
@@ -2472,7 +2436,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @return {?}
 	     */
 	    ReflectionCapabilities.prototype.annotations = function (typeOrFunc) {
-	        var /** @type {?} */ parentCtor = Object.getPrototypeOf(typeOrFunc.prototype).constructor;
+	        if (!isType(typeOrFunc)) {
+	            return [];
+	        }
+	        var /** @type {?} */ parentCtor = getParentCtor(typeOrFunc);
 	        var /** @type {?} */ ownAnnotations = this._ownAnnotations(typeOrFunc, parentCtor) || [];
 	        var /** @type {?} */ parentAnnotations = parentCtor !== Object ? this.annotations(parentCtor) : [];
 	        return parentAnnotations.concat(ownAnnotations);
@@ -2512,7 +2479,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @return {?}
 	     */
 	    ReflectionCapabilities.prototype.propMetadata = function (typeOrFunc) {
-	        var /** @type {?} */ parentCtor = Object.getPrototypeOf(typeOrFunc.prototype).constructor;
+	        if (!isType(typeOrFunc)) {
+	            return {};
+	        }
+	        var /** @type {?} */ parentCtor = getParentCtor(typeOrFunc);
 	        var /** @type {?} */ propMetadata = {};
 	        if (parentCtor !== Object) {
 	            var /** @type {?} */ parentPropMetadata_1 = this.propMetadata(parentCtor);
@@ -2602,6 +2572,17 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        var /** @type {?} */ annotationArgs = decoratorInvocation.args ? decoratorInvocation.args : [];
 	        return new (annotationCls.bind.apply(annotationCls, [void 0].concat(annotationArgs)))();
 	    });
+	}
+	/**
+	 * @param {?} ctor
+	 * @return {?}
+	 */
+	function getParentCtor(ctor) {
+	    var /** @type {?} */ parentProto = Object.getPrototypeOf(ctor.prototype);
+	    var /** @type {?} */ parentCtor = parentProto ? parentProto.constructor : null;
+	    // Note: We always use `Object` as the null value
+	    // to simplify checking later on.
+	    return parentCtor || Object;
 	}
 
 	/**
@@ -10100,7 +10081,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        }
 	        this._loadComponent(compRef);
 	        if (isDevMode()) {
-	            this._console.log("Angular 2 is running in the development mode. Call enableProdMode() to enable the production mode.");
+	            this._console.log("Angular is running in the development mode. Call enableProdMode() to enable the production mode.");
 	        }
 	        return compRef;
 	    };
@@ -11436,6 +11417,58 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @experimental i18n support is experimental.
 	 */
 	var /** @type {?} */ TRANSLATIONS_FORMAT = new OpaqueToken('TranslationsFormat');
+
+	/**
+	 * @return {?}
+	 */
+	function _iterableDiffersFactory() {
+	    return defaultIterableDiffers;
+	}
+	/**
+	 * @return {?}
+	 */
+	function _keyValueDiffersFactory() {
+	    return defaultKeyValueDiffers;
+	}
+	/**
+	 * @param {?=} locale
+	 * @return {?}
+	 */
+	function _localeFactory(locale) {
+	    return locale || 'en-US';
+	}
+	/**
+	 *  This module includes the providers of @angular/core that are needed
+	  * to bootstrap components via `ApplicationRef`.
+	  * *
+	 */
+	var ApplicationModule = (function () {
+	    function ApplicationModule() {
+	    }
+	    ApplicationModule.decorators = [
+	        { type: NgModule, args: [{
+	                    providers: [
+	                        ApplicationRef_,
+	                        { provide: ApplicationRef, useExisting: ApplicationRef_ },
+	                        ApplicationInitStatus,
+	                        Compiler,
+	                        APP_ID_RANDOM_PROVIDER,
+	                        ViewUtils,
+	                        AnimationQueue,
+	                        { provide: IterableDiffers, useFactory: _iterableDiffersFactory },
+	                        { provide: KeyValueDiffers, useFactory: _keyValueDiffersFactory },
+	                        {
+	                            provide: LOCALE_ID,
+	                            useFactory: _localeFactory,
+	                            deps: [[new Inject(LOCALE_ID), new Optional(), new SkipSelf()]]
+	                        },
+	                    ]
+	                },] },
+	    ];
+	    /** @nocollapse */
+	    ApplicationModule.ctorParameters = function () { return []; };
+	    return ApplicationModule;
+	}());
 
 	/**
 	 * @license
@@ -21959,7 +21992,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	var /** @type {?} */ _SELECTOR_REGEXP = new RegExp('(\\:not\\()|' +
 	    '([-\\w]+)|' +
 	    '(?:\\.([-\\w]+))|' +
-	    '(?:\\[([-\\w*]+)(?:=([^\\]]*))?\\])|' +
+	    '(?:\\[([.-\\w*]+)(?:=([^\\]]*))?\\])|' +
 	    '(\\))|' +
 	    '(\\s*,\\s*)', // ","
 	'g');
@@ -25336,7 +25369,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        if (errors.length > 0) {
 	            return new TemplateParseResult(result, errors);
 	        }
-	        if (isPresent(this.transforms)) {
+	        if (this.transforms) {
 	            this.transforms.forEach(function (transform) { result = templateVisitAll(transform, result); });
 	        }
 	        return new TemplateParseResult(result, errors);
@@ -25444,7 +25477,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    TemplateParseVisitor.prototype.visitText = function (text, parent) {
 	        var /** @type {?} */ ngContentIndex = parent.findNgContentIndex(TEXT_CSS_SELECTOR);
 	        var /** @type {?} */ expr = this._bindingParser.parseInterpolation(text.value, text.sourceSpan);
-	        if (isPresent(expr)) {
+	        if (expr) {
 	            return new BoundTextAst(expr, ngContentIndex, text.sourceSpan);
 	        }
 	        else {
@@ -25501,14 +25534,15 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        var /** @type {?} */ isTemplateElement = lcElName == TEMPLATE_ELEMENT;
 	        element.attrs.forEach(function (attr) {
 	            var /** @type {?} */ hasBinding = _this._parseAttr(isTemplateElement, attr, matchableAttrs, elementOrDirectiveProps, events, elementOrDirectiveRefs, elementVars);
-	            var /** @type {?} */ templateBindingsSource = undefined;
-	            var /** @type {?} */ prefixToken = undefined;
-	            if (_this._normalizeAttributeName(attr.name) == TEMPLATE_ATTR) {
+	            var /** @type {?} */ templateBindingsSource;
+	            var /** @type {?} */ prefixToken;
+	            var /** @type {?} */ normalizedName = _this._normalizeAttributeName(attr.name);
+	            if (normalizedName == TEMPLATE_ATTR) {
 	                templateBindingsSource = attr.value;
 	            }
-	            else if (attr.name.startsWith(TEMPLATE_ATTR_PREFIX)) {
+	            else if (normalizedName.startsWith(TEMPLATE_ATTR_PREFIX)) {
 	                templateBindingsSource = attr.value;
-	                prefixToken = attr.name.substring(TEMPLATE_ATTR_PREFIX.length); // remove the star
+	                prefixToken = normalizedName.substring(TEMPLATE_ATTR_PREFIX.length);
 	            }
 	            var /** @type {?} */ hasTemplateBinding = isPresent(templateBindingsSource);
 	            if (hasTemplateBinding) {
@@ -25775,7 +25809,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                }
 	                targetReferences.push(new ReferenceAst(elOrDirRef.name, refToken, elOrDirRef.sourceSpan));
 	            }
-	        }); // fix syntax highlighting issue: `
+	        });
 	        return directiveAsts;
 	    };
 	    /**
@@ -25960,7 +25994,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            // in the StyleCompiler
 	            return null;
 	        }
-	        var /** @type {?} */ attrNameAndValues = ast.attrs.map(function (attrAst) { return [attrAst.name, attrAst.value]; });
+	        var /** @type {?} */ attrNameAndValues = ast.attrs.map(function (attr) { return [attr.name, attr.value]; });
 	        var /** @type {?} */ selector = createElementCssSelector(ast.name, attrNameAndValues);
 	        var /** @type {?} */ ngContentIndex = parent.findNgContentIndex(selector);
 	        var /** @type {?} */ children = visitAll(this, ast.children, EMPTY_ELEMENT_CONTEXT);
@@ -26077,17 +26111,17 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	}());
 	/**
 	 * @param {?} elementName
-	 * @param {?} matchableAttrs
+	 * @param {?} attributes
 	 * @return {?}
 	 */
-	function createElementCssSelector(elementName, matchableAttrs) {
+	function createElementCssSelector(elementName, attributes) {
 	    var /** @type {?} */ cssSelector = new CssSelector();
 	    var /** @type {?} */ elNameNoNs = splitNsName(elementName)[1];
 	    cssSelector.setElement(elNameNoNs);
-	    for (var /** @type {?} */ i = 0; i < matchableAttrs.length; i++) {
-	        var /** @type {?} */ attrName = matchableAttrs[i][0];
+	    for (var /** @type {?} */ i = 0; i < attributes.length; i++) {
+	        var /** @type {?} */ attrName = attributes[i][0];
 	        var /** @type {?} */ attrNameNoNs = splitNsName(attrName)[1];
-	        var /** @type {?} */ attrValue = matchableAttrs[i][1];
+	        var /** @type {?} */ attrValue = attributes[i][1];
 	        cssSelector.addAttribute(attrNameNoNs, attrValue);
 	        if (attrName.toLowerCase() == CLASS_ATTR) {
 	            var /** @type {?} */ classes = splitClasses(attrValue);
@@ -26122,7 +26156,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('2.4.1-28a92b2');
+	var /** @type {?} */ VERSION$1 = new Version('2.4.1-56b4296');
 
 	/**
 	 * @return {?}
@@ -35289,7 +35323,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @param {?} targetDynamicMethod
 	     * @return {?}
 	     */
-	    CompileQuery.prototype.afterChildren = function (targetStaticMethod, targetDynamicMethod) {
+	    CompileQuery.prototype.generateStatements = function (targetStaticMethod, targetDynamicMethod) {
 	        var /** @type {?} */ values = createQueryValues(this._values);
 	        var /** @type {?} */ updateStmts = [this.queryList.callMethod('reset', [literalArr(values)]).toStmt()];
 	        if (isPresent(this.ownerDirectiveExpression)) {
@@ -35704,11 +35738,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        for (var /** @type {?} */ i = 0; i < this._directives.length; i++) {
 	            _loop_1(i);
 	        }
-	        var /** @type {?} */ queriesWithReads = [];
-	        Array.from(this._resolvedProviders.values()).forEach(function (resolvedProvider) {
-	            var /** @type {?} */ queriesForProvider = _this._getQueriesFor(resolvedProvider.token);
-	            queriesWithReads.push.apply(queriesWithReads, queriesForProvider.map(function (query) { return new _QueryWithRead(query, resolvedProvider.token); }));
-	        });
 	        Object.keys(this.referenceTokens).forEach(function (varName) {
 	            var /** @type {?} */ token = _this.referenceTokens[varName];
 	            var /** @type {?} */ varValue;
@@ -35719,28 +35748,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                varValue = _this.renderNode;
 	            }
 	            _this.view.locals.set(varName, varValue);
-	            var /** @type {?} */ varToken = { value: varName };
-	            queriesWithReads.push.apply(queriesWithReads, _this._getQueriesFor(varToken).map(function (query) { return new _QueryWithRead(query, varToken); }));
-	        });
-	        queriesWithReads.forEach(function (queryWithRead) {
-	            var /** @type {?} */ value;
-	            if (isPresent(queryWithRead.read.identifier)) {
-	                // query for an identifier
-	                value = _this.instances.get(tokenReference(queryWithRead.read));
-	            }
-	            else {
-	                // query for a reference
-	                var /** @type {?} */ token = _this.referenceTokens[queryWithRead.read.value];
-	                if (isPresent(token)) {
-	                    value = _this.instances.get(tokenReference(token));
-	                }
-	                else {
-	                    value = _this.elementRef;
-	                }
-	            }
-	            if (isPresent(value)) {
-	                queryWithRead.query.addValue(value, _this.view);
-	            }
 	        });
 	    };
 	    /**
@@ -35761,10 +35768,14 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            var /** @type {?} */ providerChildNodeCount = resolvedProvider.providerType === ProviderAstType.PrivateService ? 0 : childNodeCount;
 	            _this.view.injectorGetMethod.addStmt(createInjectInternalCondition(_this.nodeIndex, providerChildNodeCount, resolvedProvider, providerExpr));
 	        });
+	    };
+	    /**
+	     * @return {?}
+	     */
+	    CompileElement.prototype.finish = function () {
+	        var _this = this;
 	        Array.from(this._queries.values())
-	            .forEach(function (queries) { return queries.forEach(function (q) {
-	            return q.afterChildren(_this.view.createMethod, _this.view.updateContentQueriesMethod);
-	        }); });
+	            .forEach(function (queries) { return queries.forEach(function (q) { return q.generateStatements(_this.view.createMethod, _this.view.updateContentQueriesMethod); }); });
 	    };
 	    /**
 	     * @param {?} ngContentIndex
@@ -35786,14 +35797,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @return {?}
 	     */
 	    CompileElement.prototype.getProviderTokens = function () {
-	        return Array.from(this._resolvedProviders.values())
-	            .map(function (resolvedProvider) { return createDiTokenExpression(resolvedProvider.token); });
+	        return Array.from(this._resolvedProviders.values()).map(function (provider) { return provider.token; });
 	    };
 	    /**
 	     * @param {?} token
 	     * @return {?}
 	     */
-	    CompileElement.prototype._getQueriesFor = function (token) {
+	    CompileElement.prototype.getQueriesFor = function (token) {
 	        var /** @type {?} */ result = [];
 	        var /** @type {?} */ currentEl = this;
 	        var /** @type {?} */ distance = 0;
@@ -35948,17 +35958,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    }
 	    return THIS_EXPR.prop(propName);
 	}
-	var _QueryWithRead = (function () {
-	    /**
-	     * @param {?} query
-	     * @param {?} match
-	     */
-	    function _QueryWithRead(query, match) {
-	        this.query = query;
-	        this.read = query.meta.read || match;
-	    }
-	    return _QueryWithRead;
-	}());
 
 	var CompilePipe = (function () {
 	    /**
@@ -36191,10 +36190,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    /**
 	     * @return {?}
 	     */
-	    CompileView.prototype.afterNodes = function () {
+	    CompileView.prototype.finish = function () {
 	        var _this = this;
 	        Array.from(this.viewQueries.values())
-	            .forEach(function (queries) { return queries.forEach(function (q) { return q.afterChildren(_this.createMethod, _this.updateViewQueriesMethod); }); });
+	            .forEach(function (queries) { return queries.forEach(function (q) { return q.generateStatements(_this.createMethod, _this.updateViewQueriesMethod); }); });
 	    };
 	    return CompileView;
 	}());
@@ -36525,6 +36524,54 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	}
 
 	/**
+	 * @param {?} ce
+	 * @return {?}
+	 */
+	function bindQueryValues(ce) {
+	    var /** @type {?} */ queriesWithReads = [];
+	    ce.getProviderTokens().forEach(function (token) {
+	        var /** @type {?} */ queriesForProvider = ce.getQueriesFor(token);
+	        queriesWithReads.push.apply(queriesWithReads, queriesForProvider.map(function (query) { return new _QueryWithRead(query, token); }));
+	    });
+	    Object.keys(ce.referenceTokens).forEach(function (varName) {
+	        var /** @type {?} */ token = ce.referenceTokens[varName];
+	        var /** @type {?} */ varToken = { value: varName };
+	        queriesWithReads.push.apply(queriesWithReads, ce.getQueriesFor(varToken).map(function (query) { return new _QueryWithRead(query, varToken); }));
+	    });
+	    queriesWithReads.forEach(function (queryWithRead) {
+	        var /** @type {?} */ value;
+	        if (queryWithRead.read.identifier) {
+	            // query for an identifier
+	            value = ce.instances.get(tokenReference(queryWithRead.read));
+	        }
+	        else {
+	            // query for a reference
+	            var /** @type {?} */ token = ce.referenceTokens[queryWithRead.read.value];
+	            if (token) {
+	                value = ce.instances.get(tokenReference(token));
+	            }
+	            else {
+	                value = ce.elementRef;
+	            }
+	        }
+	        if (value) {
+	            queryWithRead.query.addValue(value, ce.view);
+	        }
+	    });
+	}
+	var _QueryWithRead = (function () {
+	    /**
+	     * @param {?} query
+	     * @param {?} match
+	     */
+	    function _QueryWithRead(query, match) {
+	        this.query = query;
+	        this.read = query.meta.read || match;
+	    }
+	    return _QueryWithRead;
+	}());
+
+	/**
 	 * @param {?} view
 	 * @param {?} parsedTemplate
 	 * @param {?} schemaRegistry
@@ -36578,6 +36625,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    ViewBinderVisitor.prototype.visitElement = function (ast, parent) {
 	        var _this = this;
 	        var /** @type {?} */ compileElement = (this.view.nodes[this._nodeIndex++]);
+	        bindQueryValues(compileElement);
 	        var /** @type {?} */ hasEvents = bindOutputs(ast.outputs, ast.directives, compileElement, true);
 	        bindRenderInputs(ast.inputs, ast.outputs, hasEvents, compileElement);
 	        ast.directives.forEach(function (directiveAst, dirIndex) {
@@ -36608,6 +36656,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     */
 	    ViewBinderVisitor.prototype.visitEmbeddedTemplate = function (ast, parent) {
 	        var /** @type {?} */ compileElement = (this.view.nodes[this._nodeIndex++]);
+	        bindQueryValues(compileElement);
 	        bindOutputs(ast.outputs, ast.directives, compileElement, false);
 	        ast.directives.forEach(function (directiveAst, dirIndex) {
 	            var /** @type {?} */ directiveInstance = compileElement.instances.get(directiveAst.directive.type.reference);
@@ -36698,13 +36747,16 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @return {?}
 	 */
 	function finishView(view, targetStatements) {
-	    view.afterNodes();
-	    createViewTopLevelStmts(view, targetStatements);
 	    view.nodes.forEach(function (node) {
-	        if (node instanceof CompileElement && node.hasEmbeddedView) {
-	            finishView(node.embeddedView, targetStatements);
+	        if (node instanceof CompileElement) {
+	            node.finish();
+	            if (node.hasEmbeddedView) {
+	                finishView(node.embeddedView, targetStatements);
+	            }
 	        }
 	    });
+	    view.finish();
+	    createViewTopLevelStmts(view, targetStatements);
 	}
 	var ViewBuilderVisitor = (function () {
 	    /**
@@ -37108,7 +37160,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    var /** @type {?} */ componentToken = NULL_EXPR;
 	    var /** @type {?} */ varTokenEntries = [];
 	    if (isPresent(compileElement)) {
-	        providerTokens = compileElement.getProviderTokens();
+	        providerTokens =
+	            compileElement.getProviderTokens().map(function (token) { return createDiTokenExpression(token); });
 	        if (isPresent(compileElement.component)) {
 	            componentToken = createDiTokenExpression(identifierToken(compileElement.component.type));
 	        }
@@ -43508,6 +43561,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 
 	var ts$2 = ts;
 	var schema_1$1 = __moduleExports$17;
+	// In TypeScript 2.1 the spread element kind was renamed.
+	var spreadElementSyntaxKind = ts$2.SyntaxKind.SpreadElement || ts$2.SyntaxKind.SpreadElementExpression;
 	function isMethodCallOf(callExpression, memberName) {
 	    var expression = callExpression.expression;
 	    if (expression.kind === ts$2.SyntaxKind.PropertyAccessExpression) {
@@ -43757,9 +43812,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                if (error)
 	                    return error;
 	                return arr_1;
-	            case ts$2.SyntaxKind.SpreadElementExpression:
-	                var spread = node;
-	                var spreadExpression = this.evaluateNode(spread.expression);
+	            case spreadElementSyntaxKind:
+	                var spreadExpression = this.evaluateNode(node.expression);
 	                return recordEntry({ __symbolic: 'spread', expression: spreadExpression }, node);
 	            case ts$2.SyntaxKind.CallExpression:
 	                var callExpression = node;
@@ -44158,6 +44212,18 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	var evaluator_1 = __moduleExports$16;
 	var schema_1 = __moduleExports$17;
 	var symbols_1 = __moduleExports$18;
+	// In TypeScript 2.1 these flags moved
+	// These helpers work for both 2.0 and 2.1.
+	var isExport = ts$1.ModifierFlags ?
+	    (function (node) {
+	        return !!(ts$1.getCombinedModifierFlags(node) & ts$1.ModifierFlags.Export);
+	    }) :
+	    (function (node) { return !!((node.flags & ts$1.NodeFlags.Export)); });
+	var isStatic = ts$1.ModifierFlags ?
+	    (function (node) {
+	        return !!(ts$1.getCombinedModifierFlags(node) & ts$1.ModifierFlags.Static);
+	    }) :
+	    (function (node) { return !!((node.flags & ts$1.NodeFlags.Static)); });
 	/**
 	 * A set of collector options to use when collecting metadata.
 	 */
@@ -44274,7 +44340,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                    case ts$1.SyntaxKind.MethodDeclaration:
 	                        isConstructor = member.kind === ts$1.SyntaxKind.Constructor;
 	                        var method = member;
-	                        if (method.flags & ts$1.NodeFlags.Static) {
+	                        if (isStatic(method)) {
 	                            var maybeFunc = maybeGetSimpleFunction(method);
 	                            if (maybeFunc) {
 	                                recordStaticMember(maybeFunc.name, maybeFunc.func);
@@ -44321,7 +44387,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                    case ts$1.SyntaxKind.GetAccessor:
 	                    case ts$1.SyntaxKind.SetAccessor:
 	                        var property = member;
-	                        if (property.flags & ts$1.NodeFlags.Static) {
+	                        if (isStatic(property)) {
 	                            var name_2 = evaluator.nameOf(property.name);
 	                            if (!schema_1.isMetadataError(name_2)) {
 	                                if (property.initializer) {
@@ -44369,7 +44435,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        });
 	        var isExportedIdentifier = function (identifier) { return exportMap.has(identifier.text); };
 	        var isExported = function (node) {
-	            return (node.flags & ts$1.NodeFlags.Export) || isExportedIdentifier(node.name);
+	            return isExport(node) || isExportedIdentifier(node.name);
 	        };
 	        var exportedIdentifierName = function (identifier) {
 	            return exportMap.get(identifier.text) || identifier.text;
@@ -44527,8 +44593,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                                varValue = recordEntry(errorSym('Variable not initialized', nameNode), nameNode);
 	                            }
 	                            var exported = false;
-	                            if (variableStatement.flags & ts$1.NodeFlags.Export ||
-	                                variableDeclaration.flags & ts$1.NodeFlags.Export ||
+	                            if (isExport(variableStatement) || isExport(variableDeclaration) ||
 	                                isExportedIdentifier(nameNode)) {
 	                                if (!metadata)
 	                                    metadata = {};
@@ -44557,9 +44622,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                                switch (nameNode.kind) {
 	                                    case ts$1.SyntaxKind.Identifier:
 	                                        var name_6 = nameNode;
-	                                        var varValue = errorSym('Destructuring not supported', nameNode);
+	                                        var varValue = errorSym('Destructuring not supported', name_6);
 	                                        locals.define(name_6.text, varValue);
-	                                        if (node.flags & ts$1.NodeFlags.Export) {
+	                                        if (isExport(node)) {
 	                                            if (!metadata)
 	                                                metadata = {};
 	                                            metadata[name_6.text] = varValue;
@@ -44753,7 +44818,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            var bindingPattern = name;
 	            for (var _i = 0, _a = bindingPattern.elements; _i < _a.length; _i++) {
 	                var element = _a[_i];
-	                addNamesOf(element.name);
+	                var name_7 = element.name;
+	                if (name_7) {
+	                    addNamesOf(name_7);
+	                }
 	            }
 	        }
 	    }
@@ -45226,7 +45294,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$3 = new Version('2.4.1-28a92b2');
+	var VERSION$3 = new Version('2.4.1-56b4296');
 
 	/**
 	 * @license
@@ -45311,6 +45379,19 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
+	// In TypeScript 2.1 these flags moved
+	// These helpers work for both 2.0 and 2.1.
+	var isPrivate = ts.ModifierFlags ?
+	    (function (node) {
+	        return !!(ts.getCombinedModifierFlags(node) & ts.ModifierFlags.Private);
+	    }) :
+	    (function (node) { return !!(node.flags & ts.NodeFlags.Private); });
+	var isReferenceType = ts.ObjectFlags ?
+	    (function (type) {
+	        return !!(type.flags & ts.TypeFlags.Object &&
+	            type.objectFlags & ts.ObjectFlags.Reference);
+	    }) :
+	    (function (type) { return !!(type.flags & ts.TypeFlags.Reference); });
 	/**
 	 * Create a `LanguageServiceHost`
 	 */
@@ -45915,7 +45996,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            for (var _i = 0, _a = constructorDeclaration.parameters; _i < _a.length; _i++) {
 	                var parameter = _a[_i];
 	                var type_1 = this.checker.getTypeAtLocation(parameter.type);
-	                if (type_1.symbol.name == 'TemplateRef' && type_1.flags & ts.TypeFlags.Reference) {
+	                if (type_1.symbol.name == 'TemplateRef' && isReferenceType(type_1)) {
 	                    var typeReference = type_1;
 	                    if (typeReference.typeArguments.length === 1) {
 	                        return typeReference.typeArguments[0].symbol;
@@ -46067,7 +46148,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    Object.defineProperty(SymbolWrapper.prototype, "public", {
 	        get: function () {
 	            // Symbols that are not explicitly made private are public.
-	            return !(getDeclarationFlagsFromSymbol(this.symbol) & ts.NodeFlags.Private);
+	            return !isSymbolPrivate(this.symbol);
 	        },
 	        enumerable: true,
 	        configurable: true
@@ -46407,35 +46488,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        dir = path.dirname(dir);
 	    }
 	}
-	function isBindingPattern(node) {
-	    return !!node && (node.kind === ts.SyntaxKind.ArrayBindingPattern ||
-	        node.kind === ts.SyntaxKind.ObjectBindingPattern);
-	}
-	function walkUpBindingElementsAndPatterns(node) {
-	    while (node && (node.kind === ts.SyntaxKind.BindingElement || isBindingPattern(node))) {
-	        node = node.parent;
-	    }
-	    return node;
-	}
-	function getCombinedNodeFlags(node) {
-	    node = walkUpBindingElementsAndPatterns(node);
-	    var flags = node.flags;
-	    if (node.kind === ts.SyntaxKind.VariableDeclaration) {
-	        node = node.parent;
-	    }
-	    if (node && node.kind === ts.SyntaxKind.VariableDeclarationList) {
-	        flags |= node.flags;
-	        node = node.parent;
-	    }
-	    if (node && node.kind === ts.SyntaxKind.VariableStatement) {
-	        flags |= node.flags;
-	    }
-	    return flags;
-	}
-	function getDeclarationFlagsFromSymbol(s) {
-	    return s.valueDeclaration ?
-	        getCombinedNodeFlags(s.valueDeclaration) :
-	        s.flags & ts.SymbolFlags.Prototype ? ts.NodeFlags.Public | ts.NodeFlags.Static : 0;
+	function isSymbolPrivate(s) {
+	    return s.valueDeclaration && isPrivate(s.valueDeclaration);
 	}
 	function getBuiltinTypeFromTs(kind, context) {
 	    var type;
@@ -46642,7 +46696,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$4 = new Version('2.4.1-28a92b2');
+	var VERSION$4 = new Version('2.4.1-56b4296');
 
 	exports['default'] = LanguageServicePlugin;
 	exports.createLanguageService = createLanguageService;

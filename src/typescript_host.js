@@ -30,6 +30,19 @@ import * as ts from 'typescript';
 import { createLanguageService } from './language_service';
 import { ReflectorHost } from './reflector_host';
 import { BuiltinType } from './types';
+// In TypeScript 2.1 these flags moved
+// These helpers work for both 2.0 and 2.1.
+var isPrivate = ts.ModifierFlags ?
+    (function (node) {
+        return !!(ts.getCombinedModifierFlags(node) & ts.ModifierFlags.Private);
+    }) :
+    (function (node) { return !!(node.flags & ts.NodeFlags.Private); });
+var isReferenceType = ts.ObjectFlags ?
+    (function (type) {
+        return !!(type.flags & ts.TypeFlags.Object &&
+            type.objectFlags & ts.ObjectFlags.Reference);
+    }) :
+    (function (type) { return !!(type.flags & ts.TypeFlags.Reference); });
 /**
  * Create a `LanguageServiceHost`
  */
@@ -634,7 +647,7 @@ var TypeScriptSymbolQuery = (function () {
             for (var _i = 0, _a = constructorDeclaration.parameters; _i < _a.length; _i++) {
                 var parameter = _a[_i];
                 var type_1 = this.checker.getTypeAtLocation(parameter.type);
-                if (type_1.symbol.name == 'TemplateRef' && type_1.flags & ts.TypeFlags.Reference) {
+                if (type_1.symbol.name == 'TemplateRef' && isReferenceType(type_1)) {
                     var typeReference = type_1;
                     if (typeReference.typeArguments.length === 1) {
                         return typeReference.typeArguments[0].symbol;
@@ -786,7 +799,7 @@ var SymbolWrapper = (function () {
     Object.defineProperty(SymbolWrapper.prototype, "public", {
         get: function () {
             // Symbols that are not explicitly made private are public.
-            return !(getDeclarationFlagsFromSymbol(this.symbol) & ts.NodeFlags.Private);
+            return !isSymbolPrivate(this.symbol);
         },
         enumerable: true,
         configurable: true
@@ -1151,10 +1164,8 @@ function getCombinedNodeFlags(node) {
     }
     return flags;
 }
-function getDeclarationFlagsFromSymbol(s) {
-    return s.valueDeclaration ?
-        getCombinedNodeFlags(s.valueDeclaration) :
-        s.flags & ts.SymbolFlags.Prototype ? ts.NodeFlags.Public | ts.NodeFlags.Static : 0;
+function isSymbolPrivate(s) {
+    return s.valueDeclaration && isPrivate(s.valueDeclaration);
 }
 function getBuiltinTypeFromTs(kind, context) {
     var type;
