@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.0.0-beta.2-02dd90f
+ * @license Angular v4.0.0-beta.2-8578682
  * (c) 2010-2016 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1602,7 +1602,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('4.0.0-beta.2-02dd90f');
+	var /** @type {?} */ VERSION = new Version('4.0.0-beta.2-8578682');
 
 	/**
 	 * Inject decorator and metadata.
@@ -12612,6 +12612,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	  * which consists
 	  * of two known states (use an asterix (`*`) to refer to a dynamic starting and/or ending state).
 	  * *
+	  * A function can also be provided as the `stateChangeExpr` argument for a transition and this
+	  * function will be executed each time a state change occurs. If the value returned within the
+	  * function is true then the associated animation will be run.
+	  * *
 	  * Animation transitions are placed within an {@link trigger animation trigger}. For an transition
 	  * to animate to
 	  * a state value and persist its styles then one or more {@link state animation states} is expected
@@ -12652,6 +12656,12 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	  * *
 	  * // this will capture a state change between any states
 	  * transition("* => *", animate("1s 0s")),
+	  * *
+	  * // you can also go full out and include a function
+	  * transition((fromState, toState) => {
+	  * // when `true` then it will allow the animation below to be invoked
+	  * return fromState == "off" && toState == "on";
+	  * }, animate("1s 0s"))
 	  * ])
 	  * ```
 	  * *
@@ -12944,11 +12954,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @param {?} __0
 	     */
 	    function AnimationTransitionEvent(_a) {
-	        var fromState = _a.fromState, toState = _a.toState, totalTime = _a.totalTime, phaseName = _a.phaseName;
+	        var fromState = _a.fromState, toState = _a.toState, totalTime = _a.totalTime, phaseName = _a.phaseName, element = _a.element, triggerName = _a.triggerName;
 	        this.fromState = fromState;
 	        this.toState = toState;
 	        this.totalTime = totalTime;
 	        this.phaseName = phaseName;
+	        this.element = new ElementRef(element);
+	        this.triggerName = triggerName;
 	    }
 	    return AnimationTransitionEvent;
 	}());
@@ -12956,12 +12968,16 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	var AnimationTransition = (function () {
 	    /**
 	     * @param {?} _player
+	     * @param {?} _element
+	     * @param {?} _triggerName
 	     * @param {?} _fromState
 	     * @param {?} _toState
 	     * @param {?} _totalTime
 	     */
-	    function AnimationTransition(_player, _fromState, _toState, _totalTime) {
+	    function AnimationTransition(_player, _element, _triggerName, _fromState, _toState, _totalTime) {
 	        this._player = _player;
+	        this._element = _element;
+	        this._triggerName = _triggerName;
 	        this._fromState = _fromState;
 	        this._toState = _toState;
 	        this._totalTime = _totalTime;
@@ -12975,7 +12991,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            fromState: this._fromState,
 	            toState: this._toState,
 	            totalTime: this._totalTime,
-	            phaseName: phaseName
+	            phaseName: phaseName,
+	            element: this._element,
+	            triggerName: this._triggerName
 	        });
 	    };
 	    /**
@@ -26361,7 +26379,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.2-02dd90f');
+	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.2-8578682');
 
 	/**
 	 * @return {?}
@@ -26488,11 +26506,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
 	/**
-	 * @license undefined
-	  * Copyright Google Inc. All Rights Reserved.
-	  * *
-	  * Use of this source code is governed by an MIT-style license that can be
-	  * found in the LICENSE file at https://angular.io/license
 	 * @abstract
 	 */
 	var AnimationAst = (function () {
@@ -26581,6 +26594,17 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    }
 	    return AnimationStateTransitionExpression;
 	}());
+	var AnimationStateTransitionFnExpression = (function (_super) {
+	    __extends$40(AnimationStateTransitionFnExpression, _super);
+	    /**
+	     * @param {?} fn
+	     */
+	    function AnimationStateTransitionFnExpression(fn) {
+	        _super.call(this, null, null);
+	        this.fn = fn;
+	    }
+	    return AnimationStateTransitionFnExpression;
+	}(AnimationStateTransitionExpression));
 	var AnimationStateTransitionAst = (function (_super) {
 	    __extends$40(AnimationStateTransitionAst, _super);
 	    /**
@@ -26937,8 +26961,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	function _parseAnimationStateTransition(transitionStateMetadata, stateStyles, schema, errors) {
 	    var /** @type {?} */ styles = new StylesCollection();
 	    var /** @type {?} */ transitionExprs = [];
-	    var /** @type {?} */ transitionStates = transitionStateMetadata.stateChangeExpr.split(/\s*,\s*/);
-	    transitionStates.forEach(function (expr) { transitionExprs.push.apply(transitionExprs, _parseAnimationTransitionExpr(expr, errors)); });
+	    var /** @type {?} */ stateChangeExpr = transitionStateMetadata.stateChangeExpr;
+	    var /** @type {?} */ transitionStates = typeof stateChangeExpr == 'string' ?
+	        ((stateChangeExpr)).split(/\s*,\s*/) :
+	        [(stateChangeExpr)];
+	    transitionStates.forEach(function (expr) { return transitionExprs.push.apply(transitionExprs, _parseAnimationTransitionExpr(expr, errors)); });
 	    var /** @type {?} */ entry = _normalizeAnimationEntry(transitionStateMetadata.steps);
 	    var /** @type {?} */ animation = _normalizeStyleSteps(entry, stateStyles, schema, errors);
 	    var /** @type {?} */ animationAst = _parseTransitionAnimation(animation, 0, styles, stateStyles, errors);
@@ -26967,27 +26994,33 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    }
 	}
 	/**
-	 * @param {?} eventStr
+	 * @param {?} transitionValue
 	 * @param {?} errors
 	 * @return {?}
 	 */
-	function _parseAnimationTransitionExpr(eventStr, errors) {
+	function _parseAnimationTransitionExpr(transitionValue, errors) {
 	    var /** @type {?} */ expressions = [];
-	    if (eventStr[0] == ':') {
-	        eventStr = _parseAnimationAlias(eventStr, errors);
+	    if (typeof transitionValue == 'string') {
+	        var /** @type {?} */ eventStr = (transitionValue);
+	        if (eventStr[0] == ':') {
+	            eventStr = _parseAnimationAlias(eventStr, errors);
+	        }
+	        var /** @type {?} */ match = eventStr.match(/^(\*|[-\w]+)\s*(<?[=-]>)\s*(\*|[-\w]+)$/);
+	        if (!isPresent(match) || match.length < 4) {
+	            errors.push(new AnimationParseError("the provided " + eventStr + " is not of a supported format"));
+	            return expressions;
+	        }
+	        var /** @type {?} */ fromState = match[1];
+	        var /** @type {?} */ separator = match[2];
+	        var /** @type {?} */ toState = match[3];
+	        expressions.push(new AnimationStateTransitionExpression(fromState, toState));
+	        var /** @type {?} */ isFullAnyStateExpr = fromState == ANY_STATE$1 && toState == ANY_STATE$1;
+	        if (separator[0] == '<' && !isFullAnyStateExpr) {
+	            expressions.push(new AnimationStateTransitionExpression(toState, fromState));
+	        }
 	    }
-	    var /** @type {?} */ match = eventStr.match(/^(\*|[-\w]+)\s*(<?[=-]>)\s*(\*|[-\w]+)$/);
-	    if (!isPresent(match) || match.length < 4) {
-	        errors.push(new AnimationParseError("the provided " + eventStr + " is not of a supported format"));
-	        return expressions;
-	    }
-	    var /** @type {?} */ fromState = match[1];
-	    var /** @type {?} */ separator = match[2];
-	    var /** @type {?} */ toState = match[3];
-	    expressions.push(new AnimationStateTransitionExpression(fromState, toState));
-	    var /** @type {?} */ isFullAnyStateExpr = fromState == ANY_STATE$1 && toState == ANY_STATE$1;
-	    if (separator[0] == '<' && !isFullAnyStateExpr) {
-	        expressions.push(new AnimationStateTransitionExpression(toState, fromState));
+	    else {
+	        expressions.push(new AnimationStateTransitionFnExpression(/** @type {?} */ (transitionValue)));
 	    }
 	    return expressions;
 	}
@@ -38105,13 +38138,20 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        context.isExpectingFirstAnimateStep = true;
 	        var /** @type {?} */ stateChangePreconditions = [];
 	        ast.stateChanges.forEach(function (stateChange) {
-	            stateChangePreconditions.push(_compareToAnimationStateExpr(_ANIMATION_CURRENT_STATE_VAR, stateChange.fromState)
-	                .and(_compareToAnimationStateExpr(_ANIMATION_NEXT_STATE_VAR, stateChange.toState)));
-	            if (stateChange.fromState != ANY_STATE$1) {
-	                context.stateMap.registerState(stateChange.fromState);
+	            if (stateChange instanceof AnimationStateTransitionFnExpression) {
+	                stateChangePreconditions.push(importExpr({ reference: stateChange.fn }).callFn([
+	                    _ANIMATION_CURRENT_STATE_VAR, _ANIMATION_NEXT_STATE_VAR
+	                ]));
 	            }
-	            if (stateChange.toState != ANY_STATE$1) {
-	                context.stateMap.registerState(stateChange.toState);
+	            else {
+	                stateChangePreconditions.push(_compareToAnimationStateExpr(_ANIMATION_CURRENT_STATE_VAR, stateChange.fromState)
+	                    .and(_compareToAnimationStateExpr(_ANIMATION_NEXT_STATE_VAR, stateChange.toState)));
+	                if (stateChange.fromState != ANY_STATE$1) {
+	                    context.stateMap.registerState(stateChange.fromState);
+	                }
+	                if (stateChange.toState != ANY_STATE$1) {
+	                    context.stateMap.registerState(stateChange.toState);
+	                }
 	            }
 	        });
 	        var /** @type {?} */ animationPlayerExpr = ast.animation.visit(this, context);
@@ -38197,8 +38237,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        ])
 	            .toStmt());
 	        statements.push(new ReturnStatement(importExpr(createIdentifier(Identifiers.AnimationTransition)).instantiate([
-	            _ANIMATION_PLAYER_VAR, _ANIMATION_CURRENT_STATE_VAR, _ANIMATION_NEXT_STATE_VAR,
-	            _ANIMATION_TIME_VAR
+	            _ANIMATION_PLAYER_VAR, _ANIMATION_FACTORY_ELEMENT_VAR, literal(this.animationName),
+	            _ANIMATION_CURRENT_STATE_VAR, _ANIMATION_NEXT_STATE_VAR, _ANIMATION_TIME_VAR
 	        ])));
 	        return fn([
 	            new FnParam(_ANIMATION_FACTORY_VIEW_VAR.name, importType(createIdentifier(Identifiers.AppView), [DYNAMIC_TYPE])),
@@ -45792,7 +45832,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$3 = new Version('4.0.0-beta.2-02dd90f');
+	var VERSION$3 = new Version('4.0.0-beta.2-8578682');
 
 	/**
 	 * @license
@@ -47195,7 +47235,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$4 = new Version('4.0.0-beta.2-02dd90f');
+	var VERSION$4 = new Version('4.0.0-beta.2-8578682');
 
 	exports['default'] = LanguageServicePlugin;
 	exports.createLanguageService = createLanguageService;
