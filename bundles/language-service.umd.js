@@ -1,5 +1,5 @@
 /**
- * @license Angular v2.4.1-56b4296
+ * @license Angular v2.4.2-7dc12b9
  * (c) 2010-2016 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1654,7 +1654,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('2.4.1-56b4296');
+	var /** @type {?} */ VERSION = new Version('2.4.2-7dc12b9');
 
 	/**
 	 *  Allows to refer to references which are not yet defined.
@@ -25542,7 +25542,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            }
 	            else if (normalizedName.startsWith(TEMPLATE_ATTR_PREFIX)) {
 	                templateBindingsSource = attr.value;
-	                prefixToken = normalizedName.substring(TEMPLATE_ATTR_PREFIX.length);
+	                prefixToken = normalizedName.substring(TEMPLATE_ATTR_PREFIX.length) + ':';
 	            }
 	            var /** @type {?} */ hasTemplateBinding = isPresent(templateBindingsSource);
 	            if (hasTemplateBinding) {
@@ -26156,7 +26156,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('2.4.1-56b4296');
+	var /** @type {?} */ VERSION$1 = new Version('2.4.2-7dc12b9');
 
 	/**
 	 * @return {?}
@@ -45294,7 +45294,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$3 = new Version('2.4.1-56b4296');
+	var VERSION$3 = new Version('2.4.2-7dc12b9');
 
 	/**
 	 * @license
@@ -46696,7 +46696,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$4 = new Version('2.4.1-56b4296');
+	var VERSION$4 = new Version('2.4.2-7dc12b9');
 
 	exports['default'] = LanguageServicePlugin;
 	exports.createLanguageService = createLanguageService;
