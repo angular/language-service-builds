@@ -94,7 +94,8 @@ var LanguageServiceImpl = (function () {
         var _this = this;
         var result;
         try {
-            var metadata = this.metadataResolver.getNonNormalizedDirectiveMetadata(template.type).metadata;
+            var resolvedMetadata = this.metadataResolver.getNonNormalizedDirectiveMetadata(template.type);
+            var metadata = resolvedMetadata && resolvedMetadata.metadata;
             if (metadata) {
                 var rawHtmlParser = new HtmlParser();
                 var htmlParser = new I18NHtmlParser(rawHtmlParser);
@@ -109,8 +110,8 @@ var LanguageServiceImpl = (function () {
                     ngModule = findSuitableDefaultModule(analyzedModules);
                 }
                 if (ngModule) {
-                    var directives = ngModule.transitiveModule.directives.map(function (d) { return _this.host.resolver.getNonNormalizedDirectiveMetadata(d.reference)
-                        .metadata.toSummary(); });
+                    var resolvedDirectives = ngModule.transitiveModule.directives.map(function (d) { return _this.host.resolver.getNonNormalizedDirectiveMetadata(d.reference); });
+                    var directives = resolvedDirectives.filter(function (d) { return d !== null; }).map(function (d) { return d.metadata.toSummary(); });
                     var pipes = ngModule.transitiveModule.pipes.map(function (p) { return _this.host.resolver.getOrLoadPipeMetadata(p.reference).toSummary(); });
                     var schemas = ngModule.schemas;
                     var parseResult = parser.tryParseHtml(htmlResult, metadata, template.source, directives, pipes, schemas, '');

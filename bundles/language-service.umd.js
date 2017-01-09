@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.0.0-beta.2-fb6c458
+ * @license Angular v4.0.0-beta.2-99aa49a
  * (c) 2010-2016 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1602,7 +1602,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('4.0.0-beta.2-fb6c458');
+	var /** @type {?} */ VERSION = new Version('4.0.0-beta.2-99aa49a');
 
 	/**
 	 * Inject decorator and metadata.
@@ -25765,7 +25765,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            }
 	            else if (normalizedName.startsWith(TEMPLATE_ATTR_PREFIX)) {
 	                templateBindingsSource = attr.value;
-	                prefixToken = normalizedName.substring(TEMPLATE_ATTR_PREFIX.length);
+	                prefixToken = normalizedName.substring(TEMPLATE_ATTR_PREFIX.length) + ':';
 	            }
 	            var /** @type {?} */ hasTemplateBinding = isPresent(templateBindingsSource);
 	            if (hasTemplateBinding) {
@@ -26379,7 +26379,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.2-fb6c458');
+	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.2-99aa49a');
 
 	/**
 	 * @return {?}
@@ -38737,7 +38737,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            var /** @type {?} */ classMetadata = this.getTypeMetadata(type);
 	            if (classMetadata['extends']) {
 	                var /** @type {?} */ parentType = this.simplify(type, classMetadata['extends']);
-	                if (parentType instanceof StaticSymbol) {
+	                if (parentType && (parentType instanceof StaticSymbol)) {
 	                    var /** @type {?} */ parentAnnotations = this.annotations(parentType);
 	                    annotations.push.apply(annotations, parentAnnotations);
 	                }
@@ -43888,7 +43888,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        var _this = this;
 	        var result;
 	        try {
-	            var metadata = this.metadataResolver.getNonNormalizedDirectiveMetadata(template.type).metadata;
+	            var resolvedMetadata = this.metadataResolver.getNonNormalizedDirectiveMetadata(template.type);
+	            var metadata = resolvedMetadata && resolvedMetadata.metadata;
 	            if (metadata) {
 	                var rawHtmlParser = new HtmlParser();
 	                var htmlParser = new I18NHtmlParser(rawHtmlParser);
@@ -43903,8 +43904,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                    ngModule = findSuitableDefaultModule(analyzedModules);
 	                }
 	                if (ngModule) {
-	                    var directives = ngModule.transitiveModule.directives.map(function (d) { return _this.host.resolver.getNonNormalizedDirectiveMetadata(d.reference)
-	                        .metadata.toSummary(); });
+	                    var resolvedDirectives = ngModule.transitiveModule.directives.map(function (d) { return _this.host.resolver.getNonNormalizedDirectiveMetadata(d.reference); });
+	                    var directives = resolvedDirectives.filter(function (d) { return d !== null; }).map(function (d) { return d.metadata.toSummary(); });
 	                    var pipes = ngModule.transitiveModule.pipes.map(function (p) { return _this.host.resolver.getOrLoadPipeMetadata(p.reference).toSummary(); });
 	                    var schemas = ngModule.schemas;
 	                    var parseResult = parser.tryParseHtml(htmlResult, metadata, template.source, directives, pipes, schemas, '');
@@ -45832,7 +45833,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$3 = new Version('4.0.0-beta.2-fb6c458');
+	var VERSION$3 = new Version('4.0.0-beta.2-99aa49a');
 
 	/**
 	 * @license
@@ -47179,66 +47180,127 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return BuiltinType$1.Other;
 	}
 
-	/** A plugin to TypeScript's langauge service that provide language services for
-	 * templates in string literals.
-	 *
-	 * @experimental
-	 */
-	var LanguageServicePlugin = (function () {
-	    function LanguageServicePlugin(config) {
-	        this.host = config.host;
-	        this.serviceHost = new TypeScriptServiceHost(config.host, config.service);
-	        this.service = createLanguageService(this.serviceHost);
-	        this.serviceHost.setSite(this.service);
+	function create(info /* ts.server.PluginCreateInfo */) {
+	    // Create the proxy
+	    var proxy = Object.create(null);
+	    var oldLS = info.languageService;
+	    var _loop_1 = function(k) {
+	        proxy[k] = function () { return oldLS[k].apply(oldLS, arguments); };
+	    };
+	    for (var k in oldLS) {
+	        _loop_1(k);
 	    }
-	    /**
-	     * Augment the diagnostics reported by TypeScript with errors from the templates in string
-	     * literals.
-	     */
-	    LanguageServicePlugin.prototype.getSemanticDiagnosticsFilter = function (fileName, previous) {
-	        var errors = this.service.getDiagnostics(fileName);
-	        if (errors && errors.length) {
-	            var file = this.serviceHost.getSourceFile(fileName);
-	            for (var _i = 0, errors_1 = errors; _i < errors_1.length; _i++) {
-	                var error = errors_1[_i];
-	                previous.push({
-	                    file: file,
-	                    start: error.span.start,
-	                    length: error.span.end - error.span.start,
-	                    messageText: error.message,
-	                    category: ts.DiagnosticCategory.Error,
-	                    code: 0
-	                });
+	    function completionToEntry(c) {
+	        return { kind: c.kind, name: c.name, sortText: c.sort, kindModifiers: '' };
+	    }
+	    function diagnosticToDiagnostic(d, file) {
+	        return {
+	            file: file,
+	            start: d.span.start,
+	            length: d.span.end - d.span.start,
+	            messageText: d.message,
+	            category: ts.DiagnosticCategory.Error,
+	            code: 0
+	        };
+	    }
+	    function tryOperation(attempting, callback) {
+	        try {
+	            callback();
+	        }
+	        catch (e) {
+	            info.project.projectService.logger.info("Failed to " + attempting + ": " + e.toString());
+	            info.project.projectService.logger.info("Stack trace: " + e.stack);
+	        }
+	    }
+	    var serviceHost = new TypeScriptServiceHost(info.languageServiceHost, info.languageService);
+	    var ls = createLanguageService(serviceHost);
+	    serviceHost.setSite(ls);
+	    proxy.getCompletionsAtPosition = function (fileName, position) {
+	        var base = oldLS.getCompletionsAtPosition(fileName, position);
+	        tryOperation('get completions', function () {
+	            var results = ls.getCompletionsAt(fileName, position);
+	            if (results && results.length) {
+	                if (base === undefined) {
+	                    base = { isMemberCompletion: false, isNewIdentifierLocation: false, entries: [] };
+	                }
+	                for (var _i = 0, results_1 = results; _i < results_1.length; _i++) {
+	                    var entry = results_1[_i];
+	                    base.entries.push(completionToEntry(entry));
+	                }
 	            }
-	        }
-	        return previous;
+	        });
+	        return base;
 	    };
-	    /**
-	     * Get completions for angular templates if one is at the given position.
-	     */
-	    LanguageServicePlugin.prototype.getCompletionsAtPosition = function (fileName, position) {
-	        var result = this.service.getCompletionsAt(fileName, position);
-	        if (result) {
-	            return {
-	                isMemberCompletion: false,
-	                isNewIdentifierLocation: false,
-	                entries: result.map(function (entry) {
-	                    return ({ name: entry.name, kind: entry.kind, kindModifiers: '', sortText: entry.sort });
-	                })
-	            };
-	        }
+	    proxy.getQuickInfoAtPosition = function (fileName, position) {
+	        var base = oldLS.getQuickInfoAtPosition(fileName, position);
+	        tryOperation('get quick info', function () {
+	            var ours = ls.getHoverAt(fileName, position);
+	            if (ours) {
+	                var displayParts = [];
+	                for (var _i = 0, _a = ours.text; _i < _a.length; _i++) {
+	                    var part = _a[_i];
+	                    displayParts.push({ kind: part.language, text: part.text });
+	                }
+	                base = {
+	                    displayParts: displayParts,
+	                    documentation: [],
+	                    kind: 'angular',
+	                    kindModifiers: 'what does this do?',
+	                    textSpan: { start: ours.span.start, length: ours.span.end - ours.span.start }
+	                };
+	            }
+	        });
+	        return base;
 	    };
-	    LanguageServicePlugin['extension-kind'] = 'language-service';
-	    return LanguageServicePlugin;
-	}());
+	    proxy.getSemanticDiagnostics = function (fileName) {
+	        var base = oldLS.getSemanticDiagnostics(fileName);
+	        if (base === undefined) {
+	            base = [];
+	        }
+	        tryOperation('get diagnostics', function () {
+	            info.project.projectService.logger.info("Computing Angular semantic diagnostics...");
+	            var ours = ls.getDiagnostics(fileName);
+	            if (ours && ours.length) {
+	                var file_1 = oldLS.getProgram().getSourceFile(fileName);
+	                base.push.apply(base, ours.map(function (d) { return diagnosticToDiagnostic(d, file_1); }));
+	            }
+	        });
+	        return base;
+	    };
+	    proxy.getDefinitionAtPosition = function (fileName, position) {
+	        var base = oldLS.getDefinitionAtPosition(fileName, position);
+	        if (base && base.length) {
+	            return base;
+	        }
+	        tryOperation('get definition', function () {
+	            var ours = ls.getDefinitionAt(fileName, position);
+	            if (ours && ours.length) {
+	                base = base || [];
+	                for (var _i = 0, ours_1 = ours; _i < ours_1.length; _i++) {
+	                    var loc = ours_1[_i];
+	                    base.push({
+	                        fileName: loc.fileName,
+	                        textSpan: { start: loc.span.start, length: loc.span.end - loc.span.start },
+	                        name: '',
+	                        kind: 'definition',
+	                        containerName: loc.fileName,
+	                        containerKind: 'file'
+	                    });
+	                }
+	            }
+	        });
+	        return base;
+	    };
+	    return proxy;
+	}
 
 	/**
 	 * @stable
 	 */
-	var VERSION$4 = new Version('4.0.0-beta.2-fb6c458');
+	var VERSION$4 = new Version('4.0.0-beta.2-99aa49a');
 
-	exports['default'] = LanguageServicePlugin;
 	exports.createLanguageService = createLanguageService;
+	exports.create = create;
 	exports.TypeScriptServiceHost = TypeScriptServiceHost;
 	exports.createLanguageServiceFromTypescript = createLanguageServiceFromTypescript;
 	exports.VERSION = VERSION$4;
