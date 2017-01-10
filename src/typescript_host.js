@@ -124,7 +124,7 @@ export var TypeScriptServiceHost = (function () {
                     useJit: false
                 });
                 var directiveNormalizer = new DirectiveNormalizer(resourceLoader, urlResolver, htmlParser, config);
-                result = this._resolver = new CompileMetadataResolver(moduleResolver, directiveResolver, pipeResolver, new SummaryResolver(), elementSchemaRegistry, directiveNormalizer, this._staticSymbolCache, this.reflector, function (error, type) { return _this.collectError(error, type && type.filePath); });
+                result = this._resolver = new CompileMetadataResolver(moduleResolver, directiveResolver, pipeResolver, new SummaryResolver(), elementSchemaRegistry, directiveNormalizer, this.reflector, function (error, type) { return _this.collectError(error, type && type.filePath); });
             }
             return result;
         },
@@ -383,8 +383,7 @@ export var TypeScriptServiceHost = (function () {
             if (!result) {
                 var summaryResolver = new AotSummaryResolver({
                     loadSummary: function (filePath) { return null; },
-                    isSourceFile: function (sourceFilePath) { return true; },
-                    getOutputFileName: function (sourceFilePath) { return null; }
+                    isSourceFile: function (sourceFilePath) { return true; }
                 }, this._staticSymbolCache);
                 result = this._staticSymbolResolver = new StaticSymbolResolver(this.reflectorHost, this._staticSymbolCache, summaryResolver, function (e, filePath) { return _this.collectError(e, filePath); });
             }

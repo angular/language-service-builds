@@ -5,13 +5,9 @@
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-/**
- * @module
- * @description
- * Entry point for all public APIs of the language service package.
- */
+import { LanguageServicePlugin } from './src/ts_plugin';
 export { createLanguageService } from './src/language_service';
-export { create } from './src/ts_plugin';
 export { TypeScriptServiceHost, createLanguageServiceFromTypescript } from './src/typescript_host';
 export { VERSION } from './src/version';
+export default LanguageServicePlugin;
 //# sourceMappingURL=index.js.map
