@@ -1,5 +1,5 @@
 /**
- * @license Angular v2.4.2-d43e5dd
+ * @license Angular v2.4.2-d7f2a3c
  * (c) 2010-2016 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -542,7 +542,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            this.advance();
 	            str += two;
 	        }
-	        if (isPresent(threeCode) && this.peek == threeCode) {
+	        if (threeCode != null && this.peek == threeCode) {
 	            this.advance();
 	            str += three;
 	        }
@@ -1654,7 +1654,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('2.4.2-d43e5dd');
+	var /** @type {?} */ VERSION = new Version('2.4.2-d7f2a3c');
 
 	/**
 	 *  Allows to refer to references which are not yet defined.
@@ -8083,7 +8083,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    function ViewUtils(_renderer, sanitizer, animationQueue) {
 	        this._renderer = _renderer;
 	        this.animationQueue = animationQueue;
-	        this._nextCompTypeId = 0;
 	        this.sanitizer = sanitizer;
 	    }
 	    /**
@@ -13469,7 +13468,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @experimental
 	 */
-	var /** @type {?} */ EMPTY_CONTEXT$1 = new Object();
+	var /** @type {?} */ EMPTY_CONTEXT = new Object();
 	var /** @type {?} */ UNDEFINED$1 = new Object();
 	/**
 	 *  Cost of making objects: http://jsperf.com/instantiate-size-of-object
@@ -13545,7 +13544,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @return {?}
 	     */
 	    AppView.prototype.createHostView = function (rootSelectorOrNode, hostInjector, projectableNodes) {
-	        this.context = (EMPTY_CONTEXT$1);
+	        this.context = (EMPTY_CONTEXT);
 	        this._hasExternalHostElement = isPresent$1(rootSelectorOrNode);
 	        this._hostInjector = hostInjector;
 	        this._hostProjectableNodes = projectableNodes;
@@ -18017,7 +18016,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        }
 	        var /** @type {?} */ tagDef = this.getTagDefinition(el.name);
 	        var _a = this._getParentElementSkippingContainers(), parent = _a.parent, container = _a.container;
-	        if (isPresent(parent) && tagDef.requireExtraParent(parent.name)) {
+	        if (parent && tagDef.requireExtraParent(parent.name)) {
 	            var /** @type {?} */ newParent = new Element$1(tagDef.parentToAdd, [], [], el.sourceSpan, el.startSourceSpan, el.endSourceSpan);
 	            this._insertBeforeContainer(parent, container, newParent);
 	        }
@@ -18923,47 +18922,30 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        this._depth++;
 	        var /** @type {?} */ wasInI18nNode = this._inI18nNode;
 	        var /** @type {?} */ wasInImplicitNode = this._inImplicitNode;
-	        var /** @type {?} */ childNodes;
-	        // Extract only top level nodes with the (implicit) "i18n" attribute if not in a block or an ICU
-	        // message
+	        var /** @type {?} */ childNodes = [];
+	        var /** @type {?} */ translatedChildNodes;
+	        // Extract:
+	        // - top level nodes with the (implicit) "i18n" attribute if not already in a section
+	        // - ICU messages
 	        var /** @type {?} */ i18nAttr = _getI18nAttr(el);
+	        var /** @type {?} */ i18nMeta = i18nAttr ? i18nAttr.value : '';
 	        var /** @type {?} */ isImplicit = this._implicitTags.some(function (tag) { return el.name === tag; }) && !this._inIcu &&
 	            !this._isInTranslatableSection;
 	        var /** @type {?} */ isTopLevelImplicit = !wasInImplicitNode && isImplicit;
-	        this._inImplicitNode = this._inImplicitNode || isImplicit;
+	        this._inImplicitNode = wasInImplicitNode || isImplicit;
 	        if (!this._isInTranslatableSection && !this._inIcu) {
-	            if (i18nAttr) {
-	                // explicit translation
+	            if (i18nAttr || isTopLevelImplicit) {
 	                this._inI18nNode = true;
-	                var /** @type {?} */ message = this._addMessage(el.children, i18nAttr.value);
-	                childNodes = this._translateMessage(el, message);
-	            }
-	            else if (isTopLevelImplicit) {
-	                // implicit translation
-	                this._inI18nNode = true;
-	                var /** @type {?} */ message = this._addMessage(el.children);
-	                childNodes = this._translateMessage(el, message);
+	                var /** @type {?} */ message = this._addMessage(el.children, i18nMeta);
+	                translatedChildNodes = this._translateMessage(el, message);
 	            }
 	            if (this._mode == _VisitorMode.Extract) {
 	                var /** @type {?} */ isTranslatable = i18nAttr || isTopLevelImplicit;
-	                if (isTranslatable) {
+	                if (isTranslatable)
 	                    this._openTranslatableSection(el);
-	                }
 	                visitAll(this, el.children);
-	                if (isTranslatable) {
+	                if (isTranslatable)
 	                    this._closeTranslatableSection(el, el.children);
-	                }
-	            }
-	            if (this._mode === _VisitorMode.Merge && !i18nAttr && !isTopLevelImplicit) {
-	                childNodes = [];
-	                el.children.forEach(function (child) {
-	                    var /** @type {?} */ visited = child.visit(_this, context);
-	                    if (visited && !_this._isInTranslatableSection) {
-	                        // Do not add the children from translatable sections (= i18n blocks here)
-	                        // They will be added when the section is close (i.e. on `<!-- /i18n -->`)
-	                        childNodes = childNodes.concat(visited);
-	                    }
-	                });
 	            }
 	        }
 	        else {
@@ -18974,25 +18956,23 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                // Descend into child nodes for extraction
 	                visitAll(this, el.children);
 	            }
-	            if (this._mode == _VisitorMode.Merge) {
-	                // Translate attributes in ICU messages
-	                childNodes = [];
-	                el.children.forEach(function (child) {
-	                    var /** @type {?} */ visited = child.visit(_this, context);
-	                    if (visited && !_this._isInTranslatableSection) {
-	                        // Do not add the children from translatable sections (= i18n blocks here)
-	                        // They will be added when the section is close (i.e. on `<!-- /i18n -->`)
-	                        childNodes = childNodes.concat(visited);
-	                    }
-	                });
-	            }
+	        }
+	        if (this._mode === _VisitorMode.Merge) {
+	            var /** @type {?} */ visitNodes = translatedChildNodes || el.children;
+	            visitNodes.forEach(function (child) {
+	                var /** @type {?} */ visited = child.visit(_this, context);
+	                if (visited && !_this._isInTranslatableSection) {
+	                    // Do not add the children from translatable sections (= i18n blocks here)
+	                    // They will be added later in this loop when the block closes (i.e. on `<!-- /i18n -->`)
+	                    childNodes = childNodes.concat(visited);
+	                }
+	            });
 	        }
 	        this._visitAttributesOf(el);
 	        this._depth--;
 	        this._inI18nNode = wasInI18nNode;
 	        this._inImplicitNode = wasInImplicitNode;
 	        if (this._mode === _VisitorMode.Merge) {
-	            // There are no childNodes in translatable sections - those nodes will be replace anyway
 	            var /** @type {?} */ translatedAttrs = this._translateAttributes(el);
 	            return new Element$1(el.name, translatedAttrs, childNodes, el.sourceSpan, el.startSourceSpan, el.endSourceSpan);
 	        }
@@ -19145,7 +19125,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    Object.defineProperty(_Visitor.prototype, "_isInTranslatableSection", {
 	        /**
 	         *  A translatable section could be:
-	          * - a translatable element,
+	          * - the content of translatable element,
 	          * - nodes between `<!-- i18n -->` and `<!-- /i18n -->` comments
 	         * @return {?}
 	         */
@@ -24122,7 +24102,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        var /** @type {?} */ queries;
 	        while (currentEl !== null) {
 	            queries = currentEl._contentQueries.get(tokenReference(token));
-	            if (isPresent(queries)) {
+	            if (queries) {
 	                result.push.apply(result, queries.filter(function (query) { return query.descendants || distance <= 1; }));
 	            }
 	            if (currentEl._directiveAsts.length > 0) {
@@ -24131,7 +24111,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            currentEl = currentEl._parent;
 	        }
 	        queries = this.viewContext.viewQueries.get(tokenReference(token));
-	        if (isPresent(queries)) {
+	        if (queries) {
 	            result.push.apply(result, queries);
 	        }
 	        return result;
@@ -24154,7 +24134,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            return null;
 	        }
 	        var /** @type {?} */ transformedProviderAst = this._transformedProviders.get(tokenReference(token));
-	        if (isPresent(transformedProviderAst)) {
+	        if (transformedProviderAst) {
 	            return transformedProviderAst;
 	        }
 	        if (isPresent(this._seenProviders.get(tokenReference(token)))) {
@@ -24176,12 +24156,12 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                    transformedUseValue = existingDiDep.value;
 	                }
 	            }
-	            else if (isPresent(provider.useFactory)) {
+	            else if (provider.useFactory) {
 	                var /** @type {?} */ deps = provider.deps || provider.useFactory.diDeps;
 	                transformedDeps =
 	                    deps.map(function (dep) { return _this._getDependency(resolvedProvider.providerType, dep, eager); });
 	            }
-	            else if (isPresent(provider.useClass)) {
+	            else if (provider.useClass) {
 	                var /** @type {?} */ deps = provider.deps || provider.useClass.diDeps;
 	                transformedDeps =
 	                    deps.map(function (dep) { return _this._getDependency(resolvedProvider.providerType, dep, eager); });
@@ -24255,7 +24235,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        }
 	        else {
 	            // check parent elements
-	            while (!result && isPresent(currElement._parent)) {
+	            while (!result && currElement._parent) {
 	                var /** @type {?} */ prevElement = currElement;
 	                currElement = currElement._parent;
 	                if (prevElement._isViewRoot) {
@@ -24326,7 +24306,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            return null;
 	        }
 	        var /** @type {?} */ transformedProviderAst = this._transformedProviders.get(tokenReference(token));
-	        if (isPresent(transformedProviderAst)) {
+	        if (transformedProviderAst) {
 	            return transformedProviderAst;
 	        }
 	        if (isPresent(this._seenProviders.get(tokenReference(token)))) {
@@ -24348,12 +24328,12 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                    transformedUseValue = existingDiDep.value;
 	                }
 	            }
-	            else if (isPresent(provider.useFactory)) {
+	            else if (provider.useFactory) {
 	                var /** @type {?} */ deps = provider.deps || provider.useFactory.diDeps;
 	                transformedDeps =
 	                    deps.map(function (dep) { return _this._getDependency(dep, eager, resolvedProvider.sourceSpan); });
 	            }
-	            else if (isPresent(provider.useClass)) {
+	            else if (provider.useClass) {
 	                var /** @type {?} */ deps = provider.deps || provider.useClass.diDeps;
 	                transformedDeps =
 	                    deps.map(function (dep) { return _this._getDependency(dep, eager, resolvedProvider.sourceSpan); });
@@ -24484,7 +24464,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 */
 	function _getViewQueries(component) {
 	    var /** @type {?} */ viewQueries = new Map();
-	    if (isPresent(component.viewQueries)) {
+	    if (component.viewQueries) {
 	        component.viewQueries.forEach(function (query) { return _addQueryToTokenMap(viewQueries, query); });
 	    }
 	    return viewQueries;
@@ -24496,7 +24476,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	function _getContentQueries(directives) {
 	    var /** @type {?} */ contentQueries = new Map();
 	    directives.forEach(function (directive) {
-	        if (isPresent(directive.queries)) {
+	        if (directive.queries) {
 	            directive.queries.forEach(function (query) { return _addQueryToTokenMap(contentQueries, query); });
 	        }
 	    });
@@ -24715,7 +24695,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        }
 	    };
 	    /**
-	     * @param {?} name
 	     * @param {?} prefixToken
 	     * @param {?} value
 	     * @param {?} sourceSpan
@@ -24724,14 +24703,14 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @param {?} targetVars
 	     * @return {?}
 	     */
-	    BindingParser.prototype.parseInlineTemplateBinding = function (name, prefixToken, value, sourceSpan, targetMatchableAttrs, targetProps, targetVars) {
+	    BindingParser.prototype.parseInlineTemplateBinding = function (prefixToken, value, sourceSpan, targetMatchableAttrs, targetProps, targetVars) {
 	        var /** @type {?} */ bindings = this._parseTemplateBindings(prefixToken, value, sourceSpan);
 	        for (var /** @type {?} */ i = 0; i < bindings.length; i++) {
 	            var /** @type {?} */ binding = bindings[i];
 	            if (binding.keyIsVar) {
 	                targetVars.push(new VariableAst(binding.key, binding.name, sourceSpan));
 	            }
-	            else if (isPresent(binding.expression)) {
+	            else if (binding.expression) {
 	                this._parsePropertyAst(binding.key, binding.expression, sourceSpan, targetMatchableAttrs, targetProps);
 	            }
 	            else {
@@ -24753,7 +24732,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            var /** @type {?} */ bindingsResult = this._exprParser.parseTemplateBindings(prefixToken, value, sourceInfo);
 	            this._reportExpressionParserErrors(bindingsResult.errors, sourceSpan);
 	            bindingsResult.templateBindings.forEach(function (binding) {
-	                if (isPresent(binding.expression)) {
+	                if (binding.expression) {
 	                    _this._checkPipes(binding.expression, sourceSpan);
 	                }
 	            });
@@ -24822,7 +24801,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     */
 	    BindingParser.prototype.parsePropertyInterpolation = function (name, value, sourceSpan, targetMatchableAttrs, targetProps) {
 	        var /** @type {?} */ expr = this.parseInterpolation(value, sourceSpan);
-	        if (isPresent(expr)) {
+	        if (expr) {
 	            this._parsePropertyAst(name, expr, sourceSpan, targetMatchableAttrs, targetProps);
 	            return true;
 	        }
@@ -25040,7 +25019,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     */
 	    BindingParser.prototype._checkPipes = function (ast, sourceSpan) {
 	        var _this = this;
-	        if (isPresent(ast)) {
+	        if (ast) {
 	            var /** @type {?} */ collector = new PipeCollector();
 	            ast.visit(collector);
 	            collector.pipes.forEach(function (ast, pipeName) {
@@ -25550,7 +25529,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                    _this._reportError("Can't have multiple template bindings on one element. Use only one attribute named 'template' or prefixed with *", attr.sourceSpan);
 	                }
 	                hasInlineTemplates = true;
-	                _this._bindingParser.parseInlineTemplateBinding(attr.name, prefixToken, templateBindingsSource, attr.sourceSpan, templateMatchableAttrs, templateElementOrDirectiveProps, templateElementVars);
+	                _this._bindingParser.parseInlineTemplateBinding(prefixToken, templateBindingsSource, attr.sourceSpan, templateMatchableAttrs, templateElementOrDirectiveProps, templateElementVars);
 	            }
 	            if (!hasBinding && !hasTemplateBinding) {
 	                // don't include the bindings as attributes as well in the AST
@@ -26156,7 +26135,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('2.4.2-d43e5dd');
+	var /** @type {?} */ VERSION$1 = new Version('2.4.2-d7f2a3c');
 
 	/**
 	 * @return {?}
@@ -30434,7 +30413,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            var /** @type {?} */ receiver = this.visit(ast.receiver, _Mode.Expression);
 	            if (receiver === this._implicitReceiver) {
 	                var /** @type {?} */ varExpr = this._getLocal(ast.name);
-	                if (isPresent(varExpr)) {
+	                if (varExpr) {
 	                    result = varExpr.callFn(args);
 	                }
 	            }
@@ -30483,7 +30462,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        var /** @type {?} */ receiver = this.visit(ast.receiver, _Mode.Expression);
 	        if (receiver === this._implicitReceiver) {
 	            var /** @type {?} */ varExpr = this._getLocal(ast.name);
-	            if (isPresent(varExpr)) {
+	            if (varExpr) {
 	                throw new Error('Cannot assign to a reference or variable!');
 	            }
 	        }
@@ -31670,7 +31649,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    NgModuleResolver.prototype.resolve = function (type, throwIfNotFound) {
 	        if (throwIfNotFound === void 0) { throwIfNotFound = true; }
 	        var /** @type {?} */ ngModuleMeta = ListWrapper$1.findLast(this._reflector.annotations(type), _isNgModuleMetadata);
-	        if (isPresent(ngModuleMeta)) {
+	        if (ngModuleMeta) {
 	            return ngModuleMeta;
 	        }
 	        else {
@@ -31742,9 +31721,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    PipeResolver.prototype.resolve = function (type, throwIfNotFound) {
 	        if (throwIfNotFound === void 0) { throwIfNotFound = true; }
 	        var /** @type {?} */ metas = this._reflector.annotations(resolveForwardRef(type));
-	        if (isPresent(metas)) {
+	        if (metas) {
 	            var /** @type {?} */ annotation = ListWrapper$1.findLast(metas, _isPipeMetadata);
-	            if (isPresent(annotation)) {
+	            if (annotation) {
 	                return annotation;
 	            }
 	        }
@@ -35063,7 +35042,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        if (this._newState.nodeIndex !== this._currState.nodeIndex ||
 	            this._newState.sourceAst !== this._currState.sourceAst) {
 	            var /** @type {?} */ expr = this._updateDebugContext(this._newState);
-	            if (isPresent(expr)) {
+	            if (expr) {
 	                this._bodyStatements.push(expr.toStmt());
 	            }
 	        }
@@ -35075,11 +35054,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    CompileMethod.prototype._updateDebugContext = function (newState) {
 	        this._currState = this._newState = newState;
 	        if (this._debugEnabled) {
-	            var /** @type {?} */ sourceLocation = isPresent(newState.sourceAst) ? newState.sourceAst.sourceSpan.start : null;
+	            var /** @type {?} */ sourceLocation = newState.sourceAst ? newState.sourceAst.sourceSpan.start : null;
 	            return THIS_EXPR.callMethod('debug', [
 	                literal(newState.nodeIndex),
-	                isPresent(sourceLocation) ? literal(sourceLocation.line) : NULL_EXPR,
-	                isPresent(sourceLocation) ? literal(sourceLocation.col) : NULL_EXPR
+	                sourceLocation ? literal(sourceLocation.line) : NULL_EXPR,
+	                sourceLocation ? literal(sourceLocation.col) : NULL_EXPR
 	            ]);
 	        }
 	        else {
@@ -35167,7 +35146,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    else {
 	        var /** @type {?} */ viewProp = THIS_EXPR;
 	        var /** @type {?} */ currView = callingView;
-	        while (currView !== definedView && isPresent(currView.declarationElement.view)) {
+	        while (currView !== definedView && currView.declarationElement.view) {
 	            currView = currView.declarationElement.view;
 	            viewProp = viewProp.prop('parentView');
 	        }
@@ -35289,7 +35268,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    CompileQuery.prototype.addValue = function (value, view) {
 	        var /** @type {?} */ currentView = view;
 	        var /** @type {?} */ elPath = [];
-	        while (isPresent(currentView) && currentView !== this.view) {
+	        while (currentView && currentView !== this.view) {
 	            var /** @type {?} */ parentEl = currentView.declarationElement;
 	            elPath.unshift(parentEl);
 	            currentView = parentEl.view;
@@ -35326,7 +35305,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    CompileQuery.prototype.generateStatements = function (targetStaticMethod, targetDynamicMethod) {
 	        var /** @type {?} */ values = createQueryValues(this._values);
 	        var /** @type {?} */ updateStmts = [this.queryList.callMethod('reset', [literalArr(values)]).toStmt()];
-	        if (isPresent(this.ownerDirectiveExpression)) {
+	        if (this.ownerDirectiveExpression) {
 	            var /** @type {?} */ valueExpr = this.meta.first ? this.queryList.prop('first') : this.queryList;
 	            updateStmts.push(this.ownerDirectiveExpression.prop(this.meta.propertyName).set(valueExpr).toStmt());
 	        }
@@ -35374,13 +35353,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    ]);
 	}
 	/**
-	 * @param {?} query
-	 * @param {?} directiveInstance
 	 * @param {?} propertyName
 	 * @param {?} compileView
 	 * @return {?}
 	 */
-	function createQueryList(query, directiveInstance, propertyName, compileView) {
+	function createQueryList(propertyName, compileView) {
 	    compileView.fields.push(new ClassField(propertyName, importType(createIdentifier(Identifiers.QueryList), [DYNAMIC_TYPE])));
 	    var /** @type {?} */ expr = THIS_EXPR.prop(propertyName);
 	    compileView.createMethod.addStmt(THIS_EXPR.prop(propertyName)
@@ -35720,7 +35697,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                }
 	            });
 	            var /** @type {?} */ propName = "_" + tokenName(resolvedProvider.token) + "_" + _this.nodeIndex + "_" + _this.instances.size;
-	            var /** @type {?} */ instance = createProviderProperty(propName, resolvedProvider, providerValueExpressions, resolvedProvider.multiProvider, resolvedProvider.eager, _this);
+	            var /** @type {?} */ instance = createProviderProperty(propName, providerValueExpressions, resolvedProvider.multiProvider, resolvedProvider.eager, _this);
 	            if (isDirectiveWrapper) {
 	                _this.directiveWrapperInstance.set(tokenReference(resolvedProvider.token), instance);
 	                _this.instances.set(tokenReference(resolvedProvider.token), DirectiveWrapperExpressions.context(instance));
@@ -35831,7 +35808,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     */
 	    CompileElement.prototype._addQuery = function (queryMeta, directiveInstance) {
 	        var /** @type {?} */ propName = "_query_" + tokenName(queryMeta.selectors[0]) + "_" + this.nodeIndex + "_" + this._queryCount++;
-	        var /** @type {?} */ queryList = createQueryList(queryMeta, directiveInstance, propName, this.view);
+	        var /** @type {?} */ queryList = createQueryList(propName, this.view);
 	        var /** @type {?} */ query = new CompileQuery(queryMeta, queryList, directiveInstance, this.view);
 	        addQueryToTokenMap(this._queries, query);
 	        return query;
@@ -35920,14 +35897,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	}
 	/**
 	 * @param {?} propName
-	 * @param {?} provider
 	 * @param {?} providerValueExpressions
 	 * @param {?} isMulti
 	 * @param {?} isEager
 	 * @param {?} compileElement
 	 * @return {?}
 	 */
-	function createProviderProperty(propName, provider, providerValueExpressions, isMulti, isEager, compileElement) {
+	function createProviderProperty(propName, providerValueExpressions, isMulti, isEager, compileElement) {
 	    var /** @type {?} */ view = compileElement.view;
 	    var /** @type {?} */ resolvedProviderValueExpr;
 	    var /** @type {?} */ type;
@@ -36146,7 +36122,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            var directiveInstance_1 = THIS_EXPR.prop('context');
 	            this.component.viewQueries.forEach(function (queryMeta, queryIndex) {
 	                var propName = "_viewQuery_" + tokenName(queryMeta.selectors[0]) + "_" + queryIndex;
-	                var queryList = createQueryList(queryMeta, directiveInstance_1, propName, _this);
+	                var queryList = createQueryList(propName, _this);
 	                var query = new CompileQuery(queryMeta, queryList, directiveInstance_1, _this);
 	                addQueryToTokenMap(viewQueries, query);
 	            });
@@ -36534,7 +36510,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        queriesWithReads.push.apply(queriesWithReads, queriesForProvider.map(function (query) { return new _QueryWithRead(query, token); }));
 	    });
 	    Object.keys(ce.referenceTokens).forEach(function (varName) {
-	        var /** @type {?} */ token = ce.referenceTokens[varName];
 	        var /** @type {?} */ varToken = { value: varName };
 	        queriesWithReads.push.apply(queriesWithReads, ce.getQueriesFor(varToken).map(function (query) { return new _QueryWithRead(query, varToken); }));
 	    });
@@ -37432,7 +37407,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    view.nodes.forEach(function (node) {
 	        if (node instanceof CompileElement) {
 	            if (node.embeddedView) {
-	                var /** @type {?} */ parentNodeIndex = node.isRootElement() ? null : node.parent.nodeIndex;
 	                stmts.push(new IfStmt(nodeIndexVar.equals(literal(node.nodeIndex)), [new ReturnStatement(node.embeddedView.classExpr.instantiate([
 	                        ViewProperties.viewUtils, THIS_EXPR, literal(node.nodeIndex), node.renderNode,
 	                        node.viewContainer
@@ -45295,7 +45269,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$3 = new Version('2.4.2-d43e5dd');
+	var VERSION$3 = new Version('2.4.2-d7f2a3c');
 
 	/**
 	 * @license
@@ -46697,7 +46671,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$4 = new Version('2.4.2-d43e5dd');
+	var VERSION$4 = new Version('2.4.2-d7f2a3c');
 
 	exports['default'] = LanguageServicePlugin;
 	exports.createLanguageService = createLanguageService;
