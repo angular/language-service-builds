@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.0.0-beta.3-dc63cef
+ * @license Angular v4.0.0-beta.3-5237b1c
  * (c) 2010-2016 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1602,7 +1602,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('4.0.0-beta.3-dc63cef');
+	var /** @type {?} */ VERSION = new Version('4.0.0-beta.3-5237b1c');
 
 	/**
 	 * Inject decorator and metadata.
@@ -26354,7 +26354,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.3-dc63cef');
+	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.3-5237b1c');
 
 	/**
 	 * @return {?}
@@ -37559,7 +37559,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            literal(view.component.template.ngContentSelectors.length),
 	            ViewEncapsulationEnum.fromValue(view.component.template.encapsulation),
 	            view.styles,
-	            literalMap(view.animations.map(function (entry) { return [entry.name, entry.fnExp]; })),
+	            literalMap(view.animations.map(function (entry) { return [entry.name, entry.fnExp]; }), null, true),
 	        ]))
 	            .toDeclStmt(importType(createIdentifier(Identifiers.RenderComponentType))));
 	    }
@@ -45579,6 +45579,27 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        var excludeRegex = this.options.generateCodeForLibraries === false ? GENERATED_OR_DTS_FILES : GENERATED_FILES;
 	        return !excludeRegex.test(filePath);
 	    };
+	    CompilerHost.prototype.calculateEmitPath = function (filePath) {
+	        // Write codegen in a directory structure matching the sources.
+	        var root = this.options.basePath;
+	        for (var _i = 0, _a = this.options.rootDirs || []; _i < _a.length; _i++) {
+	            var eachRootDir = _a[_i];
+	            if (this.options.trace) {
+	                console.error("Check if " + filePath + " is under rootDirs element " + eachRootDir);
+	            }
+	            if (path.relative(eachRootDir, filePath).indexOf('.') !== 0) {
+	                root = eachRootDir;
+	            }
+	        }
+	        // transplant the codegen path to be inside the `genDir`
+	        var relativePath = path.relative(root, filePath);
+	        while (relativePath.startsWith('..' + path.sep)) {
+	            // Strip out any `..` path such as: `../node_modules/@foo` as we want to put everything
+	            // into `genDir`.
+	            relativePath = relativePath.substr(3);
+	        }
+	        return path.join(this.options.genDir, relativePath);
+	    };
 	    return CompilerHost;
 	}());
 	var CompilerHostContextAdapter = (function () {
@@ -45772,7 +45793,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$3 = new Version('4.0.0-beta.3-dc63cef');
+	var VERSION$3 = new Version('4.0.0-beta.3-5237b1c');
 
 	/**
 	 * @license
@@ -47236,7 +47257,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$4 = new Version('4.0.0-beta.3-dc63cef');
+	var VERSION$4 = new Version('4.0.0-beta.3-5237b1c');
 
 	exports.createLanguageService = createLanguageService;
 	exports.create = create;
