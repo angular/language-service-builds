@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.0.0-beta.3-5237b1c
+ * @license Angular v4.0.0-beta.3-d169c24
  * (c) 2010-2016 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -723,6 +723,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    }
 	}
 
+	var __extends = (this && this.__extends) || function (d, b) {
+	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+	    function __() { this.constructor = d; }
+	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+	};
 	/**
 	 *  Creates a token that can be used in a DI Provider.
 	  * *
@@ -743,6 +748,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	  * *
 	  * Using an `OpaqueToken` is preferable to using an `Object` as tokens because it provides better
 	  * error messages.
+	 * @deprecated since v4.0.0 because it does not support type information, use `InjectionToken<?>`
+	  * instead.
 	 */
 	var OpaqueToken = (function () {
 	    /**
@@ -757,6 +764,41 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    OpaqueToken.prototype.toString = function () { return "Token " + this._desc; };
 	    return OpaqueToken;
 	}());
+	/**
+	 *  Creates a token that can be used in a DI Provider.
+	  * *
+	  * Use an `InjectionToken` whenever the type you are injecting is not reified (does not have a
+	  * runtime representation) such as when injecting an interface, callable type, array or
+	  * parametrized type.
+	  * *
+	  * `InjectionToken` is parametrize on `T` which is the type of object which will be returned by the
+	  * `Injector`. This provides additional level of type safety.
+	  * *
+	  * ```
+	  * interface MyInterface {...}
+	  * var myInterface = injector.get(new InjectionToken<MyInterface>('SomeToken'));
+	  * // myInterface is inferred to be MyInterface.
+	  * ```
+	  * *
+	  * ### Example
+	  * *
+	  * {@example core/di/ts/injector_spec.ts region='Injector'}
+	  * *
+	 */
+	var InjectionToken = (function (_super) {
+	    __extends(InjectionToken, _super);
+	    /**
+	     * @param {?} desc
+	     */
+	    function InjectionToken(desc) {
+	        _super.call(this, desc);
+	    }
+	    /**
+	     * @return {?}
+	     */
+	    InjectionToken.prototype.toString = function () { return "InjectionToken " + this._desc; };
+	    return InjectionToken;
+	}(OpaqueToken));
 
 	/**
 	 * @license
@@ -1257,7 +1299,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 *
 	 * @experimental
 	 */
-	var /** @type {?} */ ANALYZE_FOR_ENTRY_COMPONENTS = new OpaqueToken('AnalyzeForEntryComponents');
+	var /** @type {?} */ ANALYZE_FOR_ENTRY_COMPONENTS = new InjectionToken('AnalyzeForEntryComponents');
 	/**
 	 * Attribute decorator and metadata.
 	 *
@@ -1602,7 +1644,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('4.0.0-beta.3-5237b1c');
+	var /** @type {?} */ VERSION = new Version('4.0.0-beta.3-d169c24');
 
 	/**
 	 * Inject decorator and metadata.
@@ -1688,7 +1730,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    }
 	}
 
-	var __extends = (this && this.__extends) || function (d, b) {
+	var __extends$1 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -1708,7 +1750,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @stable
 	 */
 	var BaseError = (function (_super) {
-	    __extends(BaseError, _super);
+	    __extends$1(BaseError, _super);
 	    /**
 	     * @param {?} message
 	     */
@@ -1765,7 +1807,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @stable
 	 */
 	var WrappedError = (function (_super) {
-	    __extends(WrappedError, _super);
+	    __extends$1(WrappedError, _super);
 	    /**
 	     * @param {?} message
 	     * @param {?} error
@@ -1828,11 +1870,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    function Injector() {
 	    }
 	    /**
-	     *  Retrieves an instance from the injector based on the provided token.
-	      * If not found:
-	      * - Throws {@link NoProviderError} if no `notFoundValue` that is not equal to
-	      * Injector.THROW_IF_NOT_FOUND is given
-	      * - Returns the `notFoundValue` otherwise
 	     * @param {?} token
 	     * @param {?=} notFoundValue
 	     * @return {?}
@@ -1850,7 +1887,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
-	var __extends$1 = (this && this.__extends) || function (d, b) {
+	var __extends$2 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -1886,7 +1923,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 *  Base class for all errors arising from misconfigured providers.
 	 */
 	var AbstractProviderError = (function (_super) {
-	    __extends$1(AbstractProviderError, _super);
+	    __extends$2(AbstractProviderError, _super);
 	    /**
 	     * @param {?} injector
 	     * @param {?} key
@@ -1926,7 +1963,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	  * ```
 	 */
 	var NoProviderError = (function (_super) {
-	    __extends$1(NoProviderError, _super);
+	    __extends$2(NoProviderError, _super);
 	    /**
 	     * @param {?} injector
 	     * @param {?} key
@@ -1956,7 +1993,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	  * Retrieving `A` or `B` throws a `CyclicDependencyError` as the graph above cannot be constructed.
 	 */
 	var CyclicDependencyError = (function (_super) {
-	    __extends$1(CyclicDependencyError, _super);
+	    __extends$2(CyclicDependencyError, _super);
 	    /**
 	     * @param {?} injector
 	     * @param {?} key
@@ -1994,7 +2031,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	  * ```
 	 */
 	var InstantiationError = (function (_super) {
-	    __extends$1(InstantiationError, _super);
+	    __extends$2(InstantiationError, _super);
 	    /**
 	     * @param {?} injector
 	     * @param {?} originalException
@@ -2047,7 +2084,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	  * ```
 	 */
 	var InvalidProviderError = (function (_super) {
-	    __extends$1(InvalidProviderError, _super);
+	    __extends$2(InvalidProviderError, _super);
 	    /**
 	     * @param {?} provider
 	     */
@@ -2085,7 +2122,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	  * ```
 	 */
 	var NoAnnotationError = (function (_super) {
-	    __extends$1(NoAnnotationError, _super);
+	    __extends$2(NoAnnotationError, _super);
 	    /**
 	     * @param {?} typeOrFunc
 	     * @param {?} params
@@ -2130,7 +2167,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	  * ```
 	 */
 	var OutOfBoundsError = (function (_super) {
-	    __extends$1(OutOfBoundsError, _super);
+	    __extends$2(OutOfBoundsError, _super);
 	    /**
 	     * @param {?} index
 	     */
@@ -2152,7 +2189,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	  * ```
 	 */
 	var MixingMultiProvidersWithRegularProvidersError = (function (_super) {
-	    __extends$1(MixingMultiProvidersWithRegularProvidersError, _super);
+	    __extends$2(MixingMultiProvidersWithRegularProvidersError, _super);
 	    /**
 	     * @param {?} provider1
 	     * @param {?} provider2
@@ -2633,7 +2670,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
-	var __extends$2 = (this && this.__extends) || function (d, b) {
+	var __extends$3 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -2643,7 +2680,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	  * to power dependency injection and compilation.
 	 */
 	var Reflector = (function (_super) {
-	    __extends$2(Reflector, _super);
+	    __extends$3(Reflector, _super);
 	    /**
 	     * @param {?} reflectionCapabilities
 	     */
@@ -4259,7 +4296,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * A function that will be executed when an application is initialized.
 	 * @experimental
 	 */
-	var /** @type {?} */ APP_INITIALIZER = new OpaqueToken('Application Initializer');
+	var /** @type {?} */ APP_INITIALIZER = new InjectionToken('Application Initializer');
 	/**
 	 *  A class that reflects the state of running {@link APP_INITIALIZER}s.
 	  * *
@@ -4321,7 +4358,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * using this token.
 	 * @experimental
 	 */
-	var /** @type {?} */ APP_ID = new OpaqueToken('AppId');
+	var /** @type {?} */ APP_ID = new InjectionToken('AppId');
 	/**
 	 * @return {?}
 	 */
@@ -4347,7 +4384,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * A function that will be executed when a platform is initialized.
 	 * @experimental
 	 */
-	var /** @type {?} */ PLATFORM_INITIALIZER = new OpaqueToken('Platform Initializer');
+	var /** @type {?} */ PLATFORM_INITIALIZER = new InjectionToken('Platform Initializer');
 	/**
 	 * All callbacks provided via this token will be called for every component that is bootstrapped.
 	 * Signature of the callback:
@@ -4356,12 +4393,12 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 *
 	 * @experimental
 	 */
-	var /** @type {?} */ APP_BOOTSTRAP_LISTENER = new OpaqueToken('appBootstrapListener');
+	var /** @type {?} */ APP_BOOTSTRAP_LISTENER = new InjectionToken('appBootstrapListener');
 	/**
 	 * A token which indicates the root directory of the application
 	 * @experimental
 	 */
-	var /** @type {?} */ PACKAGE_ROOT_URL = new OpaqueToken('Application Packages Root URL');
+	var /** @type {?} */ PACKAGE_ROOT_URL = new InjectionToken('Application Packages Root URL');
 
 	var Console = (function () {
 	    function Console() {
@@ -4391,7 +4428,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
-	var __extends$4 = (this && this.__extends) || function (d, b) {
+	var __extends$5 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -4401,7 +4438,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	  * *
 	 */
 	var ComponentStillLoadingError = (function (_super) {
-	    __extends$4(ComponentStillLoadingError, _super);
+	    __extends$5(ComponentStillLoadingError, _super);
 	    /**
 	     * @param {?} compType
 	     */
@@ -4506,7 +4543,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 *
 	 * @experimental
 	 */
-	var /** @type {?} */ COMPILER_OPTIONS = new OpaqueToken('compilerOptions');
+	var /** @type {?} */ COMPILER_OPTIONS = new InjectionToken('compilerOptions');
 	/**
 	 *  A factory for creating a Compiler
 	  * *
@@ -4632,7 +4669,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 		tryCatch: tryCatch_2
 	};
 
-	var __extends$9 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
+	var __extends$10 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -4642,7 +4679,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * `unsubscribe` of a {@link Subscription}.
 	 */
 	var UnsubscriptionError = (function (_super) {
-	    __extends$9(UnsubscriptionError, _super);
+	    __extends$10(UnsubscriptionError, _super);
 	    function UnsubscriptionError(errors) {
 	        _super.call(this);
 	        this.errors = errors;
@@ -4836,7 +4873,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 		$$rxSubscriber: $$rxSubscriber
 	};
 
-	var __extends$8 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
+	var __extends$9 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -4856,7 +4893,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @class Subscriber<T>
 	 */
 	var Subscriber = (function (_super) {
-	    __extends$8(Subscriber, _super);
+	    __extends$9(Subscriber, _super);
 	    /**
 	     * @param {Observer|function(value: T): void} [destinationOrNext] A partially
 	     * defined Observer or a `next` callback function.
@@ -4978,7 +5015,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @extends {Ignored}
 	 */
 	var SafeSubscriber = (function (_super) {
-	    __extends$8(SafeSubscriber, _super);
+	    __extends$9(SafeSubscriber, _super);
 	    function SafeSubscriber(_parent, observerOrNext, error, complete) {
 	        _super.call(this);
 	        this._parent = _parent;
@@ -5269,7 +5306,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 		Observable: Observable_2
 	};
 
-	var __extends$10 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
+	var __extends$11 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -5284,7 +5321,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @class ObjectUnsubscribedError
 	 */
 	var ObjectUnsubscribedError = (function (_super) {
-	    __extends$10(ObjectUnsubscribedError, _super);
+	    __extends$11(ObjectUnsubscribedError, _super);
 	    function ObjectUnsubscribedError() {
 	        var err = _super.call(this, 'object unsubscribed');
 	        this.name = err.name = 'ObjectUnsubscribedError';
@@ -5299,7 +5336,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 		ObjectUnsubscribedError: ObjectUnsubscribedError_2
 	};
 
-	var __extends$11 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
+	var __extends$12 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -5311,7 +5348,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @extends {Ignored}
 	 */
 	var SubjectSubscription = (function (_super) {
-	    __extends$11(SubjectSubscription, _super);
+	    __extends$12(SubjectSubscription, _super);
 	    function SubjectSubscription(subject, subscriber) {
 	        _super.call(this);
 	        this.subject = subject;
@@ -5342,7 +5379,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 		SubjectSubscription: SubjectSubscription_2
 	};
 
-	var __extends$7 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
+	var __extends$8 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -5357,7 +5394,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @class SubjectSubscriber<T>
 	 */
 	var SubjectSubscriber = (function (_super) {
-	    __extends$7(SubjectSubscriber, _super);
+	    __extends$8(SubjectSubscriber, _super);
 	    function SubjectSubscriber(destination) {
 	        _super.call(this, destination);
 	        this.destination = destination;
@@ -5369,7 +5406,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @class Subject<T>
 	 */
 	var Subject = (function (_super) {
-	    __extends$7(Subject, _super);
+	    __extends$8(Subject, _super);
 	    function Subject() {
 	        _super.call(this);
 	        this.observers = [];
@@ -5464,7 +5501,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @class AnonymousSubject<T>
 	 */
 	var AnonymousSubject = (function (_super) {
-	    __extends$7(AnonymousSubject, _super);
+	    __extends$8(AnonymousSubject, _super);
 	    function AnonymousSubject(destination, source) {
 	        _super.call(this);
 	        this.destination = destination;
@@ -5514,7 +5551,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
-	var __extends$6 = (this && this.__extends) || function (d, b) {
+	var __extends$7 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -5565,7 +5602,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	  * Once a reference implementation of the spec is available, switch to it.
 	 */
 	var EventEmitter = (function (_super) {
-	    __extends$6(EventEmitter, _super);
+	    __extends$7(EventEmitter, _super);
 	    /**
 	     *  Creates an instance of [EventEmitter], which depending on [isAsync],
 	      * delivers events synchronously or asynchronously.
@@ -7974,7 +8011,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
-	var __extends$12 = (this && this.__extends) || function (d, b) {
+	var __extends$13 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -8008,7 +8045,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	  * ```
 	 */
 	var ExpressionChangedAfterItHasBeenCheckedError = (function (_super) {
-	    __extends$12(ExpressionChangedAfterItHasBeenCheckedError, _super);
+	    __extends$13(ExpressionChangedAfterItHasBeenCheckedError, _super);
 	    /**
 	     * @param {?} oldValue
 	     * @param {?} currValue
@@ -8032,7 +8069,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	  * be useful for debugging.
 	 */
 	var ViewWrappedError = (function (_super) {
-	    __extends$12(ViewWrappedError, _super);
+	    __extends$13(ViewWrappedError, _super);
 	    /**
 	     * @param {?} originalError
 	     * @param {?} context
@@ -8051,7 +8088,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	  * This is an internal Angular error.
 	 */
 	var ViewDestroyedError = (function (_super) {
-	    __extends$12(ViewDestroyedError, _super);
+	    __extends$13(ViewDestroyedError, _super);
 	    /**
 	     * @param {?} details
 	     */
@@ -9103,7 +9140,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
-	var __extends$5 = (this && this.__extends) || function (d, b) {
+	var __extends$6 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -9191,7 +9228,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return ComponentRef;
 	}());
 	var ComponentRef_ = (function (_super) {
-	    __extends$5(ComponentRef_, _super);
+	    __extends$6(ComponentRef_, _super);
 	    /**
 	     * @param {?} _index
 	     * @param {?} _parentView
@@ -9316,7 +9353,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
-	var __extends$13 = (this && this.__extends) || function (d, b) {
+	var __extends$14 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -9325,7 +9362,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @stable
 	 */
 	var NoComponentFactoryError = (function (_super) {
-	    __extends$13(NoComponentFactoryError, _super);
+	    __extends$14(NoComponentFactoryError, _super);
 	    /**
 	     * @param {?} component
 	     */
@@ -9687,7 +9724,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
-	var __extends$3 = (this && this.__extends) || function (d, b) {
+	var __extends$4 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -9719,7 +9756,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        throw new Error('There can be only one platform. Destroy the previous one to create a new one.');
 	    }
 	    _platform = injector.get(PlatformRef);
-	    var /** @type {?} */ inits = (injector.get(PLATFORM_INITIALIZER, null));
+	    var /** @type {?} */ inits = injector.get(PLATFORM_INITIALIZER, null);
 	    if (inits)
 	        inits.forEach(function (init) { return init(); });
 	    return _platform;
@@ -9734,7 +9771,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 */
 	function createPlatformFactory(parentPlatformFactory, name, providers) {
 	    if (providers === void 0) { providers = []; }
-	    var /** @type {?} */ marker = new OpaqueToken("Platform: " + name);
+	    var /** @type {?} */ marker = new InjectionToken("Platform: " + name);
 	    return function (extraProviders) {
 	        if (extraProviders === void 0) { extraProviders = []; }
 	        if (!getPlatform()) {
@@ -9890,7 +9927,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    }
 	}
 	var PlatformRef_ = (function (_super) {
-	    __extends$3(PlatformRef_, _super);
+	    __extends$4(PlatformRef_, _super);
 	    /**
 	     * @param {?} _injector
 	     */
@@ -10120,7 +10157,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return ApplicationRef;
 	}());
 	var ApplicationRef_ = (function (_super) {
-	    __extends$3(ApplicationRef_, _super);
+	    __extends$4(ApplicationRef_, _super);
 	    /**
 	     * @param {?} _zone
 	     * @param {?} _console
@@ -10208,8 +10245,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        this.tick();
 	        this._rootComponents.push(componentRef);
 	        // Get the listeners lazily to prevent DI cycles.
-	        var /** @type {?} */ listeners = (this._injector.get(APP_BOOTSTRAP_LISTENER, [])
-	            .concat(this._bootstrapListeners));
+	        var /** @type {?} */ listeners = this._injector.get(APP_BOOTSTRAP_LISTENER, []).concat(this._bootstrapListeners);
 	        listeners.forEach(function (listener) { return listener(componentRef); });
 	    };
 	    /**
@@ -10297,7 +10333,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
-	var __extends$14 = (this && this.__extends) || function (d, b) {
+	var __extends$15 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -10395,7 +10431,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @abstract
 	 */
 	var NgModuleInjector = (function (_super) {
-	    __extends$14(NgModuleInjector, _super);
+	    __extends$15(NgModuleInjector, _super);
 	    /**
 	     * @param {?} parent
 	     * @param {?} factories
@@ -10648,7 +10684,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
-	var __extends$15 = (this && this.__extends) || function (d, b) {
+	var __extends$16 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -10686,7 +10722,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return TemplateRef;
 	}());
 	var TemplateRef_ = (function (_super) {
-	    __extends$15(TemplateRef_, _super);
+	    __extends$16(TemplateRef_, _super);
 	    /**
 	     * @param {?} _parentView
 	     * @param {?} _nodeIndex
@@ -11035,7 +11071,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
-	var __extends$16 = (this && this.__extends) || function (d, b) {
+	var __extends$17 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -11044,7 +11080,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @abstract
 	 */
 	var ViewRef = (function (_super) {
-	    __extends$16(ViewRef, _super);
+	    __extends$17(ViewRef, _super);
 	    function ViewRef() {
 	        _super.apply(this, arguments);
 	    }
@@ -11125,7 +11161,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @abstract
 	 */
 	var EmbeddedViewRef = (function (_super) {
-	    __extends$16(EmbeddedViewRef, _super);
+	    __extends$17(EmbeddedViewRef, _super);
 	    function EmbeddedViewRef() {
 	        _super.apply(this, arguments);
 	    }
@@ -11241,7 +11277,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
-	var __extends$17 = (this && this.__extends) || function (d, b) {
+	var __extends$18 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -11334,7 +11370,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @experimental All debugging apis are currently experimental.
 	 */
 	var DebugElement = (function (_super) {
-	    __extends$17(DebugElement, _super);
+	    __extends$18(DebugElement, _super);
 	    /**
 	     * @param {?} nativeNode
 	     * @param {?} parent
@@ -11522,15 +11558,15 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @experimental i18n support is experimental.
 	 */
-	var /** @type {?} */ LOCALE_ID = new OpaqueToken('LocaleId');
+	var /** @type {?} */ LOCALE_ID = new InjectionToken('LocaleId');
 	/**
 	 * @experimental i18n support is experimental.
 	 */
-	var /** @type {?} */ TRANSLATIONS = new OpaqueToken('Translations');
+	var /** @type {?} */ TRANSLATIONS = new InjectionToken('Translations');
 	/**
 	 * @experimental i18n support is experimental.
 	 */
-	var /** @type {?} */ TRANSLATIONS_FORMAT = new OpaqueToken('TranslationsFormat');
+	var /** @type {?} */ TRANSLATIONS_FORMAT = new InjectionToken('TranslationsFormat');
 
 	/**
 	 * @return {?}
@@ -12060,7 +12096,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
-	var __extends$18 = (this && this.__extends) || function (d, b) {
+	var __extends$19 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -12101,7 +12137,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	  * *
 	 */
 	var AnimationStateDeclarationMetadata = (function (_super) {
-	    __extends$18(AnimationStateDeclarationMetadata, _super);
+	    __extends$19(AnimationStateDeclarationMetadata, _super);
 	    /**
 	     * @param {?} stateNameExpr
 	     * @param {?} styles
@@ -12120,7 +12156,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	  * *
 	 */
 	var AnimationStateTransitionMetadata = (function (_super) {
-	    __extends$18(AnimationStateTransitionMetadata, _super);
+	    __extends$19(AnimationStateTransitionMetadata, _super);
 	    /**
 	     * @param {?} stateChangeExpr
 	     * @param {?} steps
@@ -12147,7 +12183,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	  * *
 	 */
 	var AnimationKeyframesSequenceMetadata = (function (_super) {
-	    __extends$18(AnimationKeyframesSequenceMetadata, _super);
+	    __extends$19(AnimationKeyframesSequenceMetadata, _super);
 	    /**
 	     * @param {?} steps
 	     */
@@ -12164,7 +12200,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	  * *
 	 */
 	var AnimationStyleMetadata = (function (_super) {
-	    __extends$18(AnimationStyleMetadata, _super);
+	    __extends$19(AnimationStyleMetadata, _super);
 	    /**
 	     * @param {?} styles
 	     * @param {?=} offset
@@ -12184,7 +12220,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	  * *
 	 */
 	var AnimationAnimateMetadata = (function (_super) {
-	    __extends$18(AnimationAnimateMetadata, _super);
+	    __extends$19(AnimationAnimateMetadata, _super);
 	    /**
 	     * @param {?} timings
 	     * @param {?} styles
@@ -12200,7 +12236,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @abstract
 	 */
 	var AnimationWithStepsMetadata = (function (_super) {
-	    __extends$18(AnimationWithStepsMetadata, _super);
+	    __extends$19(AnimationWithStepsMetadata, _super);
 	    function AnimationWithStepsMetadata() {
 	        _super.call(this);
 	    }
@@ -12221,7 +12257,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	  * *
 	 */
 	var AnimationSequenceMetadata = (function (_super) {
-	    __extends$18(AnimationSequenceMetadata, _super);
+	    __extends$19(AnimationSequenceMetadata, _super);
 	    /**
 	     * @param {?} _steps
 	     */
@@ -12246,7 +12282,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	  * *
 	 */
 	var AnimationGroupMetadata = (function (_super) {
-	    __extends$18(AnimationGroupMetadata, _super);
+	    __extends$19(AnimationGroupMetadata, _super);
 	    /**
 	     * @param {?} _steps
 	     */
@@ -13557,13 +13593,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
-	var __extends$20 = (this && this.__extends) || function (d, b) {
+	var __extends$21 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
 	var ElementInjector = (function (_super) {
-	    __extends$20(ElementInjector, _super);
+	    __extends$21(ElementInjector, _super);
 	    /**
 	     * @param {?} _view
 	     * @param {?} _nodeIndex
@@ -13592,7 +13628,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
-	var __extends$19 = (this && this.__extends) || function (d, b) {
+	var __extends$20 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -14047,7 +14083,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return AppView;
 	}());
 	var DebugAppView = (function (_super) {
-	    __extends$19(DebugAppView, _super);
+	    __extends$20(DebugAppView, _super);
 	    /**
 	     * @param {?} clazz
 	     * @param {?} componentType
@@ -14503,7 +14539,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
-	var __extends$21 = (this && this.__extends) || function (d, b) {
+	var __extends$22 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -14570,7 +14606,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	  * therefore not interpreted by the Angular's own expression parser.
 	 */
 	var Quote = (function (_super) {
-	    __extends$21(Quote, _super);
+	    __extends$22(Quote, _super);
 	    /**
 	     * @param {?} span
 	     * @param {?} prefix
@@ -14599,7 +14635,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return Quote;
 	}(AST));
 	var EmptyExpr = (function (_super) {
-	    __extends$21(EmptyExpr, _super);
+	    __extends$22(EmptyExpr, _super);
 	    function EmptyExpr() {
 	        _super.apply(this, arguments);
 	    }
@@ -14615,7 +14651,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return EmptyExpr;
 	}(AST));
 	var ImplicitReceiver = (function (_super) {
-	    __extends$21(ImplicitReceiver, _super);
+	    __extends$22(ImplicitReceiver, _super);
 	    function ImplicitReceiver() {
 	        _super.apply(this, arguments);
 	    }
@@ -14634,7 +14670,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 *  Multiple expressions separated by a semicolon.
 	 */
 	var Chain = (function (_super) {
-	    __extends$21(Chain, _super);
+	    __extends$22(Chain, _super);
 	    /**
 	     * @param {?} span
 	     * @param {?} expressions
@@ -14655,7 +14691,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return Chain;
 	}(AST));
 	var Conditional = (function (_super) {
-	    __extends$21(Conditional, _super);
+	    __extends$22(Conditional, _super);
 	    /**
 	     * @param {?} span
 	     * @param {?} condition
@@ -14680,7 +14716,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return Conditional;
 	}(AST));
 	var PropertyRead = (function (_super) {
-	    __extends$21(PropertyRead, _super);
+	    __extends$22(PropertyRead, _super);
 	    /**
 	     * @param {?} span
 	     * @param {?} receiver
@@ -14703,7 +14739,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return PropertyRead;
 	}(AST));
 	var PropertyWrite = (function (_super) {
-	    __extends$21(PropertyWrite, _super);
+	    __extends$22(PropertyWrite, _super);
 	    /**
 	     * @param {?} span
 	     * @param {?} receiver
@@ -14728,7 +14764,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return PropertyWrite;
 	}(AST));
 	var SafePropertyRead = (function (_super) {
-	    __extends$21(SafePropertyRead, _super);
+	    __extends$22(SafePropertyRead, _super);
 	    /**
 	     * @param {?} span
 	     * @param {?} receiver
@@ -14751,7 +14787,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return SafePropertyRead;
 	}(AST));
 	var KeyedRead = (function (_super) {
-	    __extends$21(KeyedRead, _super);
+	    __extends$22(KeyedRead, _super);
 	    /**
 	     * @param {?} span
 	     * @param {?} obj
@@ -14774,7 +14810,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return KeyedRead;
 	}(AST));
 	var KeyedWrite = (function (_super) {
-	    __extends$21(KeyedWrite, _super);
+	    __extends$22(KeyedWrite, _super);
 	    /**
 	     * @param {?} span
 	     * @param {?} obj
@@ -14799,7 +14835,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return KeyedWrite;
 	}(AST));
 	var BindingPipe = (function (_super) {
-	    __extends$21(BindingPipe, _super);
+	    __extends$22(BindingPipe, _super);
 	    /**
 	     * @param {?} span
 	     * @param {?} exp
@@ -14824,7 +14860,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return BindingPipe;
 	}(AST));
 	var LiteralPrimitive = (function (_super) {
-	    __extends$21(LiteralPrimitive, _super);
+	    __extends$22(LiteralPrimitive, _super);
 	    /**
 	     * @param {?} span
 	     * @param {?} value
@@ -14845,7 +14881,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return LiteralPrimitive;
 	}(AST));
 	var LiteralArray = (function (_super) {
-	    __extends$21(LiteralArray, _super);
+	    __extends$22(LiteralArray, _super);
 	    /**
 	     * @param {?} span
 	     * @param {?} expressions
@@ -14866,7 +14902,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return LiteralArray;
 	}(AST));
 	var LiteralMap = (function (_super) {
-	    __extends$21(LiteralMap, _super);
+	    __extends$22(LiteralMap, _super);
 	    /**
 	     * @param {?} span
 	     * @param {?} keys
@@ -14889,7 +14925,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return LiteralMap;
 	}(AST));
 	var Interpolation = (function (_super) {
-	    __extends$21(Interpolation, _super);
+	    __extends$22(Interpolation, _super);
 	    /**
 	     * @param {?} span
 	     * @param {?} strings
@@ -14912,7 +14948,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return Interpolation;
 	}(AST));
 	var Binary = (function (_super) {
-	    __extends$21(Binary, _super);
+	    __extends$22(Binary, _super);
 	    /**
 	     * @param {?} span
 	     * @param {?} operation
@@ -14937,7 +14973,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return Binary;
 	}(AST));
 	var PrefixNot = (function (_super) {
-	    __extends$21(PrefixNot, _super);
+	    __extends$22(PrefixNot, _super);
 	    /**
 	     * @param {?} span
 	     * @param {?} expression
@@ -14958,7 +14994,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return PrefixNot;
 	}(AST));
 	var MethodCall = (function (_super) {
-	    __extends$21(MethodCall, _super);
+	    __extends$22(MethodCall, _super);
 	    /**
 	     * @param {?} span
 	     * @param {?} receiver
@@ -14983,7 +15019,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return MethodCall;
 	}(AST));
 	var SafeMethodCall = (function (_super) {
-	    __extends$21(SafeMethodCall, _super);
+	    __extends$22(SafeMethodCall, _super);
 	    /**
 	     * @param {?} span
 	     * @param {?} receiver
@@ -15008,7 +15044,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return SafeMethodCall;
 	}(AST));
 	var FunctionCall = (function (_super) {
-	    __extends$21(FunctionCall, _super);
+	    __extends$22(FunctionCall, _super);
 	    /**
 	     * @param {?} span
 	     * @param {?} target
@@ -15031,7 +15067,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return FunctionCall;
 	}(AST));
 	var ASTWithSource = (function (_super) {
-	    __extends$21(ASTWithSource, _super);
+	    __extends$22(ASTWithSource, _super);
 	    /**
 	     * @param {?} ast
 	     * @param {?} source
@@ -16926,7 +16962,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
-	var __extends$23 = (this && this.__extends) || function (d, b) {
+	var __extends$24 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -16986,7 +17022,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return Token;
 	}());
 	var TokenError = (function (_super) {
-	    __extends$23(TokenError, _super);
+	    __extends$24(TokenError, _super);
 	    /**
 	     * @param {?} errorMsg
 	     * @param {?} tokenType
@@ -17833,13 +17869,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
-	var __extends$22 = (this && this.__extends) || function (d, b) {
+	var __extends$23 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
 	var TreeError = (function (_super) {
-	    __extends$22(TreeError, _super);
+	    __extends$23(TreeError, _super);
 	    /**
 	     * @param {?} elementName
 	     * @param {?} span
@@ -18859,7 +18895,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
-	var __extends$24 = (this && this.__extends) || function (d, b) {
+	var __extends$25 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -18868,7 +18904,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 *  An i18n error.
 	 */
 	var I18nError = (function (_super) {
-	    __extends$24(I18nError, _super);
+	    __extends$25(I18nError, _super);
 	    /**
 	     * @param {?} span
 	     * @param {?} msg
@@ -19393,13 +19429,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
-	var __extends$25 = (this && this.__extends) || function (d, b) {
+	var __extends$26 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
 	var XmlParser = (function (_super) {
-	    __extends$25(XmlParser, _super);
+	    __extends$26(XmlParser, _super);
 	    function XmlParser() {
 	        _super.call(this, getXmlTagDefinition);
 	    }
@@ -19423,7 +19459,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
-	var __extends$26 = (this && this.__extends) || function (d, b) {
+	var __extends$27 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -19522,7 +19558,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	  * *
 	 */
 	var _SerializerIgnoreIcuExpVisitor = (function (_super) {
-	    __extends$26(_SerializerIgnoreIcuExpVisitor, _super);
+	    __extends$27(_SerializerIgnoreIcuExpVisitor, _super);
 	    function _SerializerIgnoreIcuExpVisitor() {
 	        _super.apply(this, arguments);
 	    }
@@ -19917,7 +19953,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
-	var __extends$27 = (this && this.__extends) || function (d, b) {
+	var __extends$28 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -20050,7 +20086,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return Text;
 	}());
 	var CR = (function (_super) {
-	    __extends$27(CR, _super);
+	    __extends$28(CR, _super);
 	    /**
 	     * @param {?=} ws
 	     */
@@ -20833,7 +20869,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
-	var __extends$28 = (this && this.__extends) || function (d, b) {
+	var __extends$29 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -20848,7 +20884,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 	};
 	var HtmlParser = (function (_super) {
-	    __extends$28(HtmlParser, _super);
+	    __extends$29(HtmlParser, _super);
 	    function HtmlParser() {
 	        _super.call(this, getHtmlTagDefinition);
 	    }
@@ -21083,7 +21119,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return I18NHtmlParser;
 	}());
 
-	var __extends$31 = (this && this.__extends) || function (d, b) {
+	var __extends$32 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -21092,7 +21128,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @stable
 	 */
 	var BaseError$1 = (function (_super) {
-	    __extends$31(BaseError, _super);
+	    __extends$32(BaseError, _super);
 	    /**
 	     * @param {?} message
 	     */
@@ -21149,7 +21185,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @stable
 	 */
 	var WrappedError$1 = (function (_super) {
-	    __extends$31(WrappedError, _super);
+	    __extends$32(WrappedError, _super);
 	    /**
 	     * @param {?} message
 	     * @param {?} error
@@ -21179,7 +21215,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
-	var __extends$30 = (this && this.__extends) || function (d, b) {
+	var __extends$31 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -21298,7 +21334,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return SyncAsyncResult;
 	}());
 	var SyntaxError = (function (_super) {
-	    __extends$30(SyntaxError, _super);
+	    __extends$31(SyntaxError, _super);
 	    function SyntaxError() {
 	        _super.apply(this, arguments);
 	    }
@@ -21446,7 +21482,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
-	var __extends$29 = (this && this.__extends) || function (d, b) {
+	var __extends$30 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -21679,7 +21715,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    'tabindex': 'tabIndex',
 	};
 	var DomElementSchemaRegistry = (function (_super) {
-	    __extends$29(DomElementSchemaRegistry, _super);
+	    __extends$30(DomElementSchemaRegistry, _super);
 	    function DomElementSchemaRegistry() {
 	        var _this = this;
 	        _super.call(this);
@@ -22533,7 +22569,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
-	var __extends$33 = (this && this.__extends) || function (d, b) {
+	var __extends$34 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -22565,7 +22601,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return CompileAnimationStateMetadata;
 	}());
 	var CompileAnimationStateDeclarationMetadata = (function (_super) {
-	    __extends$33(CompileAnimationStateDeclarationMetadata, _super);
+	    __extends$34(CompileAnimationStateDeclarationMetadata, _super);
 	    /**
 	     * @param {?} stateNameExpr
 	     * @param {?} styles
@@ -22578,7 +22614,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return CompileAnimationStateDeclarationMetadata;
 	}(CompileAnimationStateMetadata));
 	var CompileAnimationStateTransitionMetadata = (function (_super) {
-	    __extends$33(CompileAnimationStateTransitionMetadata, _super);
+	    __extends$34(CompileAnimationStateTransitionMetadata, _super);
 	    /**
 	     * @param {?} stateChangeExpr
 	     * @param {?} steps
@@ -22599,7 +22635,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return CompileAnimationMetadata;
 	}());
 	var CompileAnimationKeyframesSequenceMetadata = (function (_super) {
-	    __extends$33(CompileAnimationKeyframesSequenceMetadata, _super);
+	    __extends$34(CompileAnimationKeyframesSequenceMetadata, _super);
 	    /**
 	     * @param {?=} steps
 	     */
@@ -22611,7 +22647,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return CompileAnimationKeyframesSequenceMetadata;
 	}(CompileAnimationMetadata));
 	var CompileAnimationStyleMetadata = (function (_super) {
-	    __extends$33(CompileAnimationStyleMetadata, _super);
+	    __extends$34(CompileAnimationStyleMetadata, _super);
 	    /**
 	     * @param {?} offset
 	     * @param {?=} styles
@@ -22625,7 +22661,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return CompileAnimationStyleMetadata;
 	}(CompileAnimationMetadata));
 	var CompileAnimationAnimateMetadata = (function (_super) {
-	    __extends$33(CompileAnimationAnimateMetadata, _super);
+	    __extends$34(CompileAnimationAnimateMetadata, _super);
 	    /**
 	     * @param {?=} timings
 	     * @param {?=} styles
@@ -22643,7 +22679,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @abstract
 	 */
 	var CompileAnimationWithStepsMetadata = (function (_super) {
-	    __extends$33(CompileAnimationWithStepsMetadata, _super);
+	    __extends$34(CompileAnimationWithStepsMetadata, _super);
 	    /**
 	     * @param {?=} steps
 	     */
@@ -22655,7 +22691,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return CompileAnimationWithStepsMetadata;
 	}(CompileAnimationMetadata));
 	var CompileAnimationSequenceMetadata = (function (_super) {
-	    __extends$33(CompileAnimationSequenceMetadata, _super);
+	    __extends$34(CompileAnimationSequenceMetadata, _super);
 	    /**
 	     * @param {?=} steps
 	     */
@@ -22666,7 +22702,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return CompileAnimationSequenceMetadata;
 	}(CompileAnimationWithStepsMetadata));
 	var CompileAnimationGroupMetadata = (function (_super) {
-	    __extends$33(CompileAnimationGroupMetadata, _super);
+	    __extends$34(CompileAnimationGroupMetadata, _super);
 	    /**
 	     * @param {?=} steps
 	     */
@@ -23558,7 +23594,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
-	var __extends$34 = (this && this.__extends) || function (d, b) {
+	var __extends$35 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -23608,7 +23644,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return ExpansionResult;
 	}());
 	var ExpansionError = (function (_super) {
-	    __extends$34(ExpansionError, _super);
+	    __extends$35(ExpansionError, _super);
 	    /**
 	     * @param {?} span
 	     * @param {?} errorMsg
@@ -24177,13 +24213,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
-	var __extends$35 = (this && this.__extends) || function (d, b) {
+	var __extends$36 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
 	var ProviderError = (function (_super) {
-	    __extends$35(ProviderError, _super);
+	    __extends$36(ProviderError, _super);
 	    /**
 	     * @param {?} message
 	     * @param {?} span
@@ -24781,7 +24817,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
-	var __extends$36 = (this && this.__extends) || function (d, b) {
+	var __extends$37 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -25264,7 +25300,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return BindingParser;
 	}());
 	var PipeCollector = (function (_super) {
-	    __extends$36(PipeCollector, _super);
+	    __extends$37(PipeCollector, _super);
 	    function PipeCollector() {
 	        _super.apply(this, arguments);
 	        this.pipes = new Map();
@@ -25411,7 +25447,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
-	var __extends$32 = (this && this.__extends) || function (d, b) {
+	var __extends$33 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -25458,9 +25494,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 *
 	 * This is currently an internal-only feature and not meant for general use.
 	 */
-	var /** @type {?} */ TEMPLATE_TRANSFORMS = new OpaqueToken('TemplateTransforms');
+	var /** @type {?} */ TEMPLATE_TRANSFORMS = new InjectionToken('TemplateTransforms');
 	var TemplateParseError = (function (_super) {
-	    __extends$32(TemplateParseError, _super);
+	    __extends$33(TemplateParseError, _super);
 	    /**
 	     * @param {?} message
 	     * @param {?} span
@@ -26354,7 +26390,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.3-5237b1c');
+	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.3-d169c24');
 
 	/**
 	 * @return {?}
@@ -26475,7 +26511,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return DefaultRenderTypes;
 	}());
 
-	var __extends$40 = (this && this.__extends) || function (d, b) {
+	var __extends$41 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -26501,7 +26537,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @abstract
 	 */
 	var AnimationStateAst = (function (_super) {
-	    __extends$40(AnimationStateAst, _super);
+	    __extends$41(AnimationStateAst, _super);
 	    function AnimationStateAst() {
 	        _super.apply(this, arguments);
 	    }
@@ -26515,7 +26551,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return AnimationStateAst;
 	}(AnimationAst));
 	var AnimationEntryAst = (function (_super) {
-	    __extends$40(AnimationEntryAst, _super);
+	    __extends$41(AnimationEntryAst, _super);
 	    /**
 	     * @param {?} name
 	     * @param {?} stateDeclarations
@@ -26538,7 +26574,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return AnimationEntryAst;
 	}(AnimationAst));
 	var AnimationStateDeclarationAst = (function (_super) {
-	    __extends$40(AnimationStateDeclarationAst, _super);
+	    __extends$41(AnimationStateDeclarationAst, _super);
 	    /**
 	     * @param {?} stateName
 	     * @param {?} styles
@@ -26570,7 +26606,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return AnimationStateTransitionExpression;
 	}());
 	var AnimationStateTransitionFnExpression = (function (_super) {
-	    __extends$40(AnimationStateTransitionFnExpression, _super);
+	    __extends$41(AnimationStateTransitionFnExpression, _super);
 	    /**
 	     * @param {?} fn
 	     */
@@ -26581,7 +26617,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return AnimationStateTransitionFnExpression;
 	}(AnimationStateTransitionExpression));
 	var AnimationStateTransitionAst = (function (_super) {
-	    __extends$40(AnimationStateTransitionAst, _super);
+	    __extends$41(AnimationStateTransitionAst, _super);
 	    /**
 	     * @param {?} stateChanges
 	     * @param {?} animation
@@ -26602,7 +26638,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return AnimationStateTransitionAst;
 	}(AnimationStateAst));
 	var AnimationStepAst = (function (_super) {
-	    __extends$40(AnimationStepAst, _super);
+	    __extends$41(AnimationStepAst, _super);
 	    /**
 	     * @param {?} startingStyles
 	     * @param {?} keyframes
@@ -26629,7 +26665,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return AnimationStepAst;
 	}(AnimationAst));
 	var AnimationStylesAst = (function (_super) {
-	    __extends$40(AnimationStylesAst, _super);
+	    __extends$41(AnimationStylesAst, _super);
 	    /**
 	     * @param {?} styles
 	     */
@@ -26648,7 +26684,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return AnimationStylesAst;
 	}(AnimationAst));
 	var AnimationKeyframeAst = (function (_super) {
-	    __extends$40(AnimationKeyframeAst, _super);
+	    __extends$41(AnimationKeyframeAst, _super);
 	    /**
 	     * @param {?} offset
 	     * @param {?} styles
@@ -26672,7 +26708,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @abstract
 	 */
 	var AnimationWithStepsAst = (function (_super) {
-	    __extends$40(AnimationWithStepsAst, _super);
+	    __extends$41(AnimationWithStepsAst, _super);
 	    /**
 	     * @param {?} steps
 	     */
@@ -26683,7 +26719,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return AnimationWithStepsAst;
 	}(AnimationAst));
 	var AnimationGroupAst = (function (_super) {
-	    __extends$40(AnimationGroupAst, _super);
+	    __extends$41(AnimationGroupAst, _super);
 	    /**
 	     * @param {?} steps
 	     */
@@ -26701,7 +26737,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return AnimationGroupAst;
 	}(AnimationWithStepsAst));
 	var AnimationSequenceAst = (function (_super) {
-	    __extends$40(AnimationSequenceAst, _super);
+	    __extends$41(AnimationSequenceAst, _super);
 	    /**
 	     * @param {?} steps
 	     */
@@ -26802,7 +26838,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
-	var __extends$39 = (this && this.__extends) || function (d, b) {
+	var __extends$40 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -26820,7 +26856,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	var /** @type {?} */ _TERMINAL_KEYFRAME = 1;
 	var /** @type {?} */ _ONE_SECOND = 1000;
 	var AnimationParseError = (function (_super) {
-	    __extends$39(AnimationParseError, _super);
+	    __extends$40(AnimationParseError, _super);
 	    /**
 	     * @param {?} message
 	     */
@@ -28299,7 +28335,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
-	var __extends$41 = (this && this.__extends) || function (d, b) {
+	var __extends$42 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -28351,7 +28387,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	BuiltinTypeName[BuiltinTypeName.Function] = "Function";
 	BuiltinTypeName[BuiltinTypeName.Null] = "Null";
 	var BuiltinType = (function (_super) {
-	    __extends$41(BuiltinType, _super);
+	    __extends$42(BuiltinType, _super);
 	    /**
 	     * @param {?} name
 	     * @param {?=} modifiers
@@ -28372,7 +28408,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return BuiltinType;
 	}(Type$1));
 	var ExpressionType = (function (_super) {
-	    __extends$41(ExpressionType, _super);
+	    __extends$42(ExpressionType, _super);
 	    /**
 	     * @param {?} value
 	     * @param {?=} typeParams
@@ -28396,7 +28432,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return ExpressionType;
 	}(Type$1));
 	var ArrayType = (function (_super) {
-	    __extends$41(ArrayType, _super);
+	    __extends$42(ArrayType, _super);
 	    /**
 	     * @param {?} of
 	     * @param {?=} modifiers
@@ -28417,7 +28453,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return ArrayType;
 	}(Type$1));
 	var MapType = (function (_super) {
-	    __extends$41(MapType, _super);
+	    __extends$42(MapType, _super);
 	    /**
 	     * @param {?} valueType
 	     * @param {?=} modifiers
@@ -28669,7 +28705,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	BuiltinVar[BuiltinVar.CatchError] = "CatchError";
 	BuiltinVar[BuiltinVar.CatchStack] = "CatchStack";
 	var ReadVarExpr = (function (_super) {
-	    __extends$41(ReadVarExpr, _super);
+	    __extends$42(ReadVarExpr, _super);
 	    /**
 	     * @param {?} name
 	     * @param {?=} type
@@ -28702,7 +28738,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return ReadVarExpr;
 	}(Expression));
 	var WriteVarExpr = (function (_super) {
-	    __extends$41(WriteVarExpr, _super);
+	    __extends$42(WriteVarExpr, _super);
 	    /**
 	     * @param {?} name
 	     * @param {?} value
@@ -28735,7 +28771,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return WriteVarExpr;
 	}(Expression));
 	var WriteKeyExpr = (function (_super) {
-	    __extends$41(WriteKeyExpr, _super);
+	    __extends$42(WriteKeyExpr, _super);
 	    /**
 	     * @param {?} receiver
 	     * @param {?} index
@@ -28760,7 +28796,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return WriteKeyExpr;
 	}(Expression));
 	var WritePropExpr = (function (_super) {
-	    __extends$41(WritePropExpr, _super);
+	    __extends$42(WritePropExpr, _super);
 	    /**
 	     * @param {?} receiver
 	     * @param {?} name
@@ -28792,7 +28828,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	BuiltinMethod[BuiltinMethod.SubscribeObservable] = "SubscribeObservable";
 	BuiltinMethod[BuiltinMethod.Bind] = "Bind";
 	var InvokeMethodExpr = (function (_super) {
-	    __extends$41(InvokeMethodExpr, _super);
+	    __extends$42(InvokeMethodExpr, _super);
 	    /**
 	     * @param {?} receiver
 	     * @param {?} method
@@ -28824,7 +28860,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return InvokeMethodExpr;
 	}(Expression));
 	var InvokeFunctionExpr = (function (_super) {
-	    __extends$41(InvokeFunctionExpr, _super);
+	    __extends$42(InvokeFunctionExpr, _super);
 	    /**
 	     * @param {?} fn
 	     * @param {?} args
@@ -28847,7 +28883,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return InvokeFunctionExpr;
 	}(Expression));
 	var InstantiateExpr = (function (_super) {
-	    __extends$41(InstantiateExpr, _super);
+	    __extends$42(InstantiateExpr, _super);
 	    /**
 	     * @param {?} classExpr
 	     * @param {?} args
@@ -28869,7 +28905,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return InstantiateExpr;
 	}(Expression));
 	var LiteralExpr = (function (_super) {
-	    __extends$41(LiteralExpr, _super);
+	    __extends$42(LiteralExpr, _super);
 	    /**
 	     * @param {?} value
 	     * @param {?=} type
@@ -28890,7 +28926,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return LiteralExpr;
 	}(Expression));
 	var ExternalExpr = (function (_super) {
-	    __extends$41(ExternalExpr, _super);
+	    __extends$42(ExternalExpr, _super);
 	    /**
 	     * @param {?} value
 	     * @param {?=} type
@@ -28914,7 +28950,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return ExternalExpr;
 	}(Expression));
 	var ConditionalExpr = (function (_super) {
-	    __extends$41(ConditionalExpr, _super);
+	    __extends$42(ConditionalExpr, _super);
 	    /**
 	     * @param {?} condition
 	     * @param {?} trueCase
@@ -28940,7 +28976,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return ConditionalExpr;
 	}(Expression));
 	var NotExpr = (function (_super) {
-	    __extends$41(NotExpr, _super);
+	    __extends$42(NotExpr, _super);
 	    /**
 	     * @param {?} condition
 	     */
@@ -28959,7 +28995,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return NotExpr;
 	}(Expression));
 	var CastExpr = (function (_super) {
-	    __extends$41(CastExpr, _super);
+	    __extends$42(CastExpr, _super);
 	    /**
 	     * @param {?} value
 	     * @param {?} type
@@ -28991,7 +29027,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return FnParam;
 	}());
 	var FunctionExpr = (function (_super) {
-	    __extends$41(FunctionExpr, _super);
+	    __extends$42(FunctionExpr, _super);
 	    /**
 	     * @param {?} params
 	     * @param {?} statements
@@ -29023,7 +29059,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return FunctionExpr;
 	}(Expression));
 	var BinaryOperatorExpr = (function (_super) {
-	    __extends$41(BinaryOperatorExpr, _super);
+	    __extends$42(BinaryOperatorExpr, _super);
 	    /**
 	     * @param {?} operator
 	     * @param {?} lhs
@@ -29048,7 +29084,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return BinaryOperatorExpr;
 	}(Expression));
 	var ReadPropExpr = (function (_super) {
-	    __extends$41(ReadPropExpr, _super);
+	    __extends$42(ReadPropExpr, _super);
 	    /**
 	     * @param {?} receiver
 	     * @param {?} name
@@ -29078,7 +29114,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return ReadPropExpr;
 	}(Expression));
 	var ReadKeyExpr = (function (_super) {
-	    __extends$41(ReadKeyExpr, _super);
+	    __extends$42(ReadKeyExpr, _super);
 	    /**
 	     * @param {?} receiver
 	     * @param {?} index
@@ -29108,7 +29144,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return ReadKeyExpr;
 	}(Expression));
 	var LiteralArrayExpr = (function (_super) {
-	    __extends$41(LiteralArrayExpr, _super);
+	    __extends$42(LiteralArrayExpr, _super);
 	    /**
 	     * @param {?} entries
 	     * @param {?=} type
@@ -29143,7 +29179,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return LiteralMapEntry;
 	}());
 	var LiteralMapExpr = (function (_super) {
-	    __extends$41(LiteralMapExpr, _super);
+	    __extends$42(LiteralMapExpr, _super);
 	    /**
 	     * @param {?} entries
 	     * @param {?=} type
@@ -29207,7 +29243,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return Statement;
 	}());
 	var DeclareVarStmt = (function (_super) {
-	    __extends$41(DeclareVarStmt, _super);
+	    __extends$42(DeclareVarStmt, _super);
 	    /**
 	     * @param {?} name
 	     * @param {?} value
@@ -29233,7 +29269,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return DeclareVarStmt;
 	}(Statement));
 	var DeclareFunctionStmt = (function (_super) {
-	    __extends$41(DeclareFunctionStmt, _super);
+	    __extends$42(DeclareFunctionStmt, _super);
 	    /**
 	     * @param {?} name
 	     * @param {?} params
@@ -29261,7 +29297,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return DeclareFunctionStmt;
 	}(Statement));
 	var ExpressionStatement = (function (_super) {
-	    __extends$41(ExpressionStatement, _super);
+	    __extends$42(ExpressionStatement, _super);
 	    /**
 	     * @param {?} expr
 	     */
@@ -29280,7 +29316,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return ExpressionStatement;
 	}(Statement));
 	var ReturnStatement = (function (_super) {
-	    __extends$41(ReturnStatement, _super);
+	    __extends$42(ReturnStatement, _super);
 	    /**
 	     * @param {?} value
 	     */
@@ -29319,7 +29355,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return AbstractClassPart;
 	}());
 	var ClassField = (function (_super) {
-	    __extends$41(ClassField, _super);
+	    __extends$42(ClassField, _super);
 	    /**
 	     * @param {?} name
 	     * @param {?=} type
@@ -29334,7 +29370,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return ClassField;
 	}(AbstractClassPart));
 	var ClassMethod = (function (_super) {
-	    __extends$41(ClassMethod, _super);
+	    __extends$42(ClassMethod, _super);
 	    /**
 	     * @param {?} name
 	     * @param {?} params
@@ -29353,7 +29389,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return ClassMethod;
 	}(AbstractClassPart));
 	var ClassGetter = (function (_super) {
-	    __extends$41(ClassGetter, _super);
+	    __extends$42(ClassGetter, _super);
 	    /**
 	     * @param {?} name
 	     * @param {?} body
@@ -29370,7 +29406,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return ClassGetter;
 	}(AbstractClassPart));
 	var ClassStmt = (function (_super) {
-	    __extends$41(ClassStmt, _super);
+	    __extends$42(ClassStmt, _super);
 	    /**
 	     * @param {?} name
 	     * @param {?} parent
@@ -29401,7 +29437,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return ClassStmt;
 	}(Statement));
 	var IfStmt = (function (_super) {
-	    __extends$41(IfStmt, _super);
+	    __extends$42(IfStmt, _super);
 	    /**
 	     * @param {?} condition
 	     * @param {?} trueCase
@@ -29425,7 +29461,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return IfStmt;
 	}(Statement));
 	var CommentStmt = (function (_super) {
-	    __extends$41(CommentStmt, _super);
+	    __extends$42(CommentStmt, _super);
 	    /**
 	     * @param {?} comment
 	     */
@@ -29444,7 +29480,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return CommentStmt;
 	}(Statement));
 	var TryCatchStmt = (function (_super) {
-	    __extends$41(TryCatchStmt, _super);
+	    __extends$42(TryCatchStmt, _super);
 	    /**
 	     * @param {?} bodyStmts
 	     * @param {?} catchStmts
@@ -29465,7 +29501,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return TryCatchStmt;
 	}(Statement));
 	var ThrowStmt = (function (_super) {
-	    __extends$41(ThrowStmt, _super);
+	    __extends$42(ThrowStmt, _super);
 	    /**
 	     * @param {?} error
 	     */
@@ -29996,7 +30032,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return expression.visitExpression(transformer, null);
 	}
 	var _ReplaceVariableTransformer = (function (_super) {
-	    __extends$41(_ReplaceVariableTransformer, _super);
+	    __extends$42(_ReplaceVariableTransformer, _super);
 	    /**
 	     * @param {?} _varName
 	     * @param {?} _newValue
@@ -30026,7 +30062,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return finder.varNames;
 	}
 	var _VariableFinder = (function (_super) {
-	    __extends$41(_VariableFinder, _super);
+	    __extends$42(_VariableFinder, _super);
 	    function _VariableFinder() {
 	        _super.apply(this, arguments);
 	        this.varNames = new Set();
@@ -32068,7 +32104,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
-	var __extends$42 = (this && this.__extends) || function (d, b) {
+	var __extends$43 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -32082,7 +32118,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	var __metadata$10 = (this && this.__metadata) || function (k, v) {
 	    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 	};
-	var /** @type {?} */ ERROR_COLLECTOR_TOKEN = new OpaqueToken('ErrorCollector');
+	var /** @type {?} */ ERROR_COLLECTOR_TOKEN = new InjectionToken('ErrorCollector');
 	// Design notes:
 	// - don't lazily create metadata:
 	//   For some metadata, we need to do async work sometimes,
@@ -33253,7 +33289,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    visitValue(value, new _CompileValueConverter(), targetIdentifiers);
 	}
 	var _CompileValueConverter = (function (_super) {
-	    __extends$42(_CompileValueConverter, _super);
+	    __extends$43(_CompileValueConverter, _super);
 	    function _CompileValueConverter() {
 	        _super.apply(this, arguments);
 	    }
@@ -34254,7 +34290,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
-	var __extends$43 = (this && this.__extends) || function (d, b) {
+	var __extends$44 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -34297,7 +34333,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return ctx.toSource();
 	}
 	var _TsEmitterVisitor = (function (_super) {
-	    __extends$43(_TsEmitterVisitor, _super);
+	    __extends$44(_TsEmitterVisitor, _super);
 	    /**
 	     * @param {?} _genFilePath
 	     * @param {?} _importResolver
@@ -35593,7 +35629,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
-	var __extends$45 = (this && this.__extends) || function (d, b) {
+	var __extends$46 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -35622,7 +35658,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    }
 	}
 	var _ReplaceViewTransformer = (function (_super) {
-	    __extends$45(_ReplaceViewTransformer, _super);
+	    __extends$46(_ReplaceViewTransformer, _super);
 	    /**
 	     * @param {?} _viewExpr
 	     * @param {?} _view
@@ -35947,7 +35983,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
-	var __extends$44 = (this && this.__extends) || function (d, b) {
+	var __extends$45 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -35978,7 +36014,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return CompileNode;
 	}());
 	var CompileElement = (function (_super) {
-	    __extends$44(CompileElement, _super);
+	    __extends$45(CompileElement, _super);
 	    /**
 	     * @param {?} parent
 	     * @param {?} view
@@ -38309,7 +38345,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return obj.styles.styles;
 	}
 
-	var __extends$46 = (this && this.__extends) || function (d, b) {
+	var __extends$47 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -38324,7 +38360,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return deserializer.deserialize(json);
 	}
 	var Serializer = (function (_super) {
-	    __extends$46(Serializer, _super);
+	    __extends$47(Serializer, _super);
 	    /**
 	     * @param {?} symbolResolver
 	     * @param {?} summaryResolver
@@ -38420,7 +38456,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return Serializer;
 	}(ValueTransformer));
 	var Deserializer = (function (_super) {
-	    __extends$46(Deserializer, _super);
+	    __extends$47(Deserializer, _super);
 	    /**
 	     * @param {?} symbolCache
 	     */
@@ -38602,7 +38638,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
-	var __extends$47 = (this && this.__extends) || function (d, b) {
+	var __extends$48 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -38611,7 +38647,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    coreDecorators: '@angular/core/src/metadata',
 	    diDecorators: '@angular/core/src/di/metadata',
 	    diMetadata: '@angular/core/src/di/metadata',
-	    diOpaqueToken: '@angular/core/src/di/opaque_token',
+	    diInjectionToken: '@angular/core/src/di/injection_token',
+	    diOpaqueToken: '@angular/core/src/di/injection_token',
 	    animationMetadata: '@angular/core/src/animation/metadata',
 	    provider: '@angular/core/src/di/provider'
 	};
@@ -38865,8 +38902,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @return {?}
 	     */
 	    StaticReflector.prototype.initializeConversionMap = function () {
-	        var coreDecorators = ANGULAR_IMPORT_LOCATIONS.coreDecorators, diDecorators = ANGULAR_IMPORT_LOCATIONS.diDecorators, diMetadata = ANGULAR_IMPORT_LOCATIONS.diMetadata, diOpaqueToken = ANGULAR_IMPORT_LOCATIONS.diOpaqueToken, animationMetadata = ANGULAR_IMPORT_LOCATIONS.animationMetadata, provider = ANGULAR_IMPORT_LOCATIONS.provider;
-	        this.opaqueToken = this.findDeclaration(diOpaqueToken, 'OpaqueToken');
+	        var coreDecorators = ANGULAR_IMPORT_LOCATIONS.coreDecorators, diDecorators = ANGULAR_IMPORT_LOCATIONS.diDecorators, diMetadata = ANGULAR_IMPORT_LOCATIONS.diMetadata, diInjectionToken = ANGULAR_IMPORT_LOCATIONS.diInjectionToken, diOpaqueToken = ANGULAR_IMPORT_LOCATIONS.diOpaqueToken, animationMetadata = ANGULAR_IMPORT_LOCATIONS.animationMetadata, provider = ANGULAR_IMPORT_LOCATIONS.provider;
+	        this.injectionToken = this.findDeclaration(diInjectionToken, 'InjectionToken');
+	        this.opaqueToken = this.findDeclaration(diInjectionToken, 'OpaqueToken');
 	        this._registerDecoratorOrConstructor(this.findDeclaration(diDecorators, 'Host'), Host);
 	        this._registerDecoratorOrConstructor(this.findDeclaration(diDecorators, 'Injectable'), Injectable);
 	        this._registerDecoratorOrConstructor(this.findDeclaration(diDecorators, 'Self'), Self);
@@ -39033,7 +39071,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                }
 	                if (expression instanceof StaticSymbol) {
 	                    // Stop simplification at builtin symbols
-	                    if (expression === self.opaqueToken || self.conversionMap.has(expression)) {
+	                    if (expression === self.injectionToken || expression === self.opaqueToken ||
+	                        self.conversionMap.has(expression)) {
 	                        return expression;
 	                    }
 	                    else {
@@ -39164,9 +39203,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                                // Determine if the function is a built-in conversion
 	                                staticSymbol = simplifyInContext(context, expression['expression'], depth + 1);
 	                                if (staticSymbol instanceof StaticSymbol) {
-	                                    if (staticSymbol === self.opaqueToken) {
-	                                        // if somebody calls new OpaqueToken, don't create an OpaqueToken,
-	                                        // but rather return the symbol to which the OpaqueToken is assigned to.
+	                                    if (staticSymbol === self.injectionToken || staticSymbol === self.opaqueToken) {
+	                                        // if somebody calls new InjectionToken, don't create an InjectionToken,
+	                                        // but rather return the symbol to which the InjectionToken is assigned to.
 	                                        return context;
 	                                    }
 	                                    var /** @type {?} */ argExpressions = expression['arguments'] || [];
@@ -39335,7 +39374,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return BindingScope;
 	}());
 	var PopulatedScope = (function (_super) {
-	    __extends$47(PopulatedScope, _super);
+	    __extends$48(PopulatedScope, _super);
 	    /**
 	     * @param {?} bindings
 	     */
@@ -39381,7 +39420,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
-	var __extends$48 = (this && this.__extends) || function (d, b) {
+	var __extends$49 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -39604,7 +39643,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    StaticSymbolResolver.prototype.createResolvedSymbol = function (sourceSymbol, topLevelSymbolNames, metadata) {
 	        var /** @type {?} */ self = this;
 	        var ReferenceTransformer = (function (_super) {
-	            __extends$48(ReferenceTransformer, _super);
+	            __extends$49(ReferenceTransformer, _super);
 	            function ReferenceTransformer() {
 	                _super.apply(this, arguments);
 	            }
@@ -40373,7 +40412,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
-	var __extends$50 = (this && this.__extends) || function (d, b) {
+	var __extends$51 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -40382,7 +40421,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @abstract
 	 */
 	var AbstractJsEmitterVisitor = (function (_super) {
-	    __extends$50(AbstractJsEmitterVisitor, _super);
+	    __extends$51(AbstractJsEmitterVisitor, _super);
 	    function AbstractJsEmitterVisitor() {
 	        _super.call(this, false);
 	    }
@@ -40607,7 +40646,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
-	var __extends$49 = (this && this.__extends) || function (d, b) {
+	var __extends$50 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -40642,7 +40681,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return evalExpression(sourceUrl, resultVar, ctx.toSource(), converter.getArgs());
 	}
 	var JitEmitterVisitor = (function (_super) {
-	    __extends$49(JitEmitterVisitor, _super);
+	    __extends$50(JitEmitterVisitor, _super);
 	    function JitEmitterVisitor() {
 	        _super.apply(this, arguments);
 	        this._evalArgNames = [];
@@ -41173,7 +41212,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        throw new Error("No ResourceLoader implementation has been provided. Can't read the url \"" + url + "\"");
 	    }
 	};
-	var /** @type {?} */ baseHtmlParser = new OpaqueToken('HtmlParser');
+	var /** @type {?} */ baseHtmlParser = new InjectionToken('HtmlParser');
 	/**
 	 * A set of providers that provide `JitCompiler` and its dependencies to use for
 	 * template compilation.
@@ -41447,13 +41486,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
-	var __extends$51 = (this && this.__extends) || function (d, b) {
+	var __extends$52 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
 	var TemplateAstPath = (function (_super) {
-	    __extends$51(TemplateAstPath, _super);
+	    __extends$52(TemplateAstPath, _super);
 	    function TemplateAstPath(ast, position, allowWidening) {
 	        if (allowWidening === void 0) { allowWidening = false; }
 	        _super.call(this, buildTemplatePath(ast, position, allowWidening));
@@ -41540,7 +41579,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return TemplateAstChildVisitor;
 	}());
 	var TemplateAstPathBuilder = (function (_super) {
-	    __extends$51(TemplateAstPathBuilder, _super);
+	    __extends$52(TemplateAstPathBuilder, _super);
 	    function TemplateAstPathBuilder(position, allowWidening) {
 	        _super.call(this);
 	        this.position = position;
@@ -41655,7 +41694,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
-	var __extends$38 = (this && this.__extends) || function (d, b) {
+	var __extends$39 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -42169,7 +42208,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return AstType;
 	}());
 	var AstPath = (function (_super) {
-	    __extends$38(AstPath, _super);
+	    __extends$39(AstPath, _super);
 	    function AstPath(ast, position, excludeEmpty) {
 	        if (excludeEmpty === void 0) { excludeEmpty = false; }
 	        _super.call(this, new AstPathVisitor(position, excludeEmpty).buildPath(ast).path);
@@ -42178,7 +42217,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return AstPath;
 	}(AstPath$1));
 	var AstPathVisitor = (function (_super) {
-	    __extends$38(AstPathVisitor, _super);
+	    __extends$39(AstPathVisitor, _super);
 	    function AstPathVisitor(position, excludeEmpty) {
 	        _super.call(this);
 	        this.position = position;
@@ -42305,7 +42344,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        }
 	    }
 	    var visitor = new (function (_super) {
-	        __extends$38(class_1, _super);
+	        __extends$39(class_1, _super);
 	        function class_1() {
 	            _super.apply(this, arguments);
 	        }
@@ -42826,13 +42865,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
-	var __extends$52 = (this && this.__extends) || function (d, b) {
+	var __extends$53 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
 	var HtmlAstPath = (function (_super) {
-	    __extends$52(HtmlAstPath, _super);
+	    __extends$53(HtmlAstPath, _super);
 	    function HtmlAstPath(ast, position) {
 	        _super.call(this, buildPath(ast, position));
 	        this.position = position;
@@ -42874,7 +42913,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return ChildVisitor;
 	}());
 	var HtmlAstPathBuilder = (function (_super) {
-	    __extends$52(HtmlAstPathBuilder, _super);
+	    __extends$53(HtmlAstPathBuilder, _super);
 	    function HtmlAstPathBuilder(position) {
 	        _super.call(this);
 	        this.position = position;
@@ -42901,7 +42940,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
-	var __extends$37 = (this && this.__extends) || function (d, b) {
+	var __extends$38 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -43130,7 +43169,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    }
 	}
 	var ExpressionVisitor = (function (_super) {
-	    __extends$37(ExpressionVisitor, _super);
+	    __extends$38(ExpressionVisitor, _super);
 	    function ExpressionVisitor(info, position, attr, getExpressionScope) {
 	        _super.call(this);
 	        this.info = info;
@@ -43527,7 +43566,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
-	var __extends$53 = (this && this.__extends) || function (d, b) {
+	var __extends$54 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -43619,7 +43658,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return visitor.diagnostics;
 	}
 	var ExpressionDiagnosticsVisitor = (function (_super) {
-	    __extends$53(ExpressionDiagnosticsVisitor, _super);
+	    __extends$54(ExpressionDiagnosticsVisitor, _super);
 	    function ExpressionDiagnosticsVisitor(info, getExpressionScope) {
 	        _super.call(this);
 	        this.info = info;
@@ -45349,7 +45388,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
-	var __extends$56 = (this && this.__extends) || function (d, b) {
+	var __extends$57 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -45610,7 +45649,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return CompilerHostContextAdapter;
 	}());
 	var ModuleResolutionHostAdapter = (function (_super) {
-	    __extends$56(ModuleResolutionHostAdapter, _super);
+	    __extends$57(ModuleResolutionHostAdapter, _super);
 	    function ModuleResolutionHostAdapter(host) {
 	        _super.call(this);
 	        this.host = host;
@@ -45632,7 +45671,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return ModuleResolutionHostAdapter;
 	}(CompilerHostContextAdapter));
 	var NodeCompilerHostContext = (function (_super) {
-	    __extends$56(NodeCompilerHostContext, _super);
+	    __extends$57(NodeCompilerHostContext, _super);
 	    function NodeCompilerHostContext() {
 	        _super.apply(this, arguments);
 	    }
@@ -45665,7 +45704,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
-	var __extends$57 = (this && this.__extends) || function (d, b) {
+	var __extends$58 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -45680,7 +45719,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * loader what to do.
 	 */
 	var PathMappedCompilerHost = (function (_super) {
-	    __extends$57(PathMappedCompilerHost, _super);
+	    __extends$58(PathMappedCompilerHost, _super);
 	    function PathMappedCompilerHost(program, options, context) {
 	        _super.call(this, program, options, context);
 	    }
@@ -45793,7 +45832,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$3 = new Version('4.0.0-beta.3-5237b1c');
+	var VERSION$3 = new Version('4.0.0-beta.3-d169c24');
 
 	/**
 	 * @license
@@ -45802,7 +45841,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
-	var __extends$58 = (this && this.__extends) || function (d, b) {
+	var __extends$59 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -45812,7 +45851,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * passed in the interface.
 	 */
 	var CustomLoaderModuleResolutionHostAdapter = (function (_super) {
-	    __extends$58(CustomLoaderModuleResolutionHostAdapter, _super);
+	    __extends$59(CustomLoaderModuleResolutionHostAdapter, _super);
 	    function CustomLoaderModuleResolutionHostAdapter(_readResource, host) {
 	        _super.call(this, host);
 	        this._readResource = _readResource;
@@ -45828,7 +45867,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
-	var __extends$55 = (this && this.__extends) || function (d, b) {
+	var __extends$56 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -45850,7 +45889,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return ReflectorModuleModuleResolutionHost;
 	}());
 	var ReflectorHost = (function (_super) {
-	    __extends$55(ReflectorHost, _super);
+	    __extends$56(ReflectorHost, _super);
 	    function ReflectorHost(getProgram, serviceHost, options) {
 	        _super.call(this, null, options, new ModuleResolutionHostAdapter(new ReflectorModuleModuleResolutionHost(serviceHost)));
 	        this.getProgram = getProgram;
@@ -45873,7 +45912,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
-	var __extends$54 = (this && this.__extends) || function (d, b) {
+	var __extends$55 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -45907,7 +45946,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * syntatically incorrect templates.
 	 */
 	var DummyHtmlParser = (function (_super) {
-	    __extends$54(DummyHtmlParser, _super);
+	    __extends$55(DummyHtmlParser, _super);
 	    function DummyHtmlParser() {
 	        _super.call(this);
 	    }
@@ -45922,7 +45961,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Avoid loading resources in the language servcie by using a dummy loader.
 	 */
 	var DummyResourceLoader = (function (_super) {
-	    __extends$54(DummyResourceLoader, _super);
+	    __extends$55(DummyResourceLoader, _super);
 	    function DummyResourceLoader() {
 	        _super.apply(this, arguments);
 	    }
@@ -47257,7 +47296,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$4 = new Version('4.0.0-beta.3-5237b1c');
+	var VERSION$4 = new Version('4.0.0-beta.3-d169c24');
 
 	exports.createLanguageService = createLanguageService;
 	exports.create = create;
