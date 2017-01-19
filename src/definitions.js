@@ -7,7 +7,7 @@
  */
 import { locateSymbol } from './locate_symbol';
 export function getDefinition(info) {
-    var result = locateSymbol(info);
+    const result = locateSymbol(info);
     return result && result.symbol.definition;
 }
 //# sourceMappingURL=definitions.js.map

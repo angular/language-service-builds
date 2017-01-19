@@ -5,7 +5,7 @@
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-var values = [
+const values = [
     'ID',
     'CDATA',
     'NAME',
@@ -33,7 +33,7 @@ var values = [
     ['row', 'col', 'rowgroup', 'colgroup'],
     ['defer']
 ];
-var groups = [
+const groups = [
     { id: 0 },
     {
         onclick: 1,
@@ -95,7 +95,7 @@ var groups = [
     { ismap: 7 },
     { defer: 25, event: 1, for: 1 }
 ];
-var elements = {
+const elements = {
     TT: [0, 1, 2, 16, 44],
     I: [0, 1, 2, 16, 44],
     B: [0, 1, 2, 16, 44],
@@ -174,19 +174,18 @@ var elements = {
     NOSCRIPT: [0, 1, 2, 16, 44],
     HTML: [2]
 };
-var defaultAttributes = [0, 1, 2, 4];
+const defaultAttributes = [0, 1, 2, 4];
 export function elementNames() {
-    return Object.keys(elements).sort().map(function (v) { return v.toLowerCase(); });
+    return Object.keys(elements).sort().map(v => v.toLowerCase());
 }
 function compose(indexes) {
-    var result = {};
+    const result = {};
     if (indexes) {
-        for (var _i = 0, indexes_1 = indexes; _i < indexes_1.length; _i++) {
-            var index = indexes_1[_i];
-            var group = groups[index];
-            for (var name_1 in group)
-                if (group.hasOwnProperty(name_1))
-                    result[name_1] = values[group[name_1]];
+        for (let index of indexes) {
+            const group = groups[index];
+            for (let name in group)
+                if (group.hasOwnProperty(name))
+                    result[name] = values[group[name]];
         }
     }
     return result;
@@ -201,7 +200,7 @@ export function attributeType(element, attribute) {
 // from the SCHEMA strings from the security context information. SCHEMA is copied here because
 // it would be an unnecessary risk to allow this array to be imported from the security context
 // schema registry.
-var SCHEMA = [
+const SCHEMA = [
     '[Element]|textContent,%classList,className,id,innerHTML,*beforecopy,*beforecut,*beforepaste,*copy,*cut,*paste,*search,*selectstart,*webkitfullscreenchange,*webkitfullscreenerror,*wheel,outerHTML,#scrollLeft,#scrollTop',
     '[HTMLElement]^[Element]|accessKey,contentEditable,dir,!draggable,!hidden,innerText,lang,*abort,*beforecopy,*beforecut,*beforepaste,*blur,*cancel,*canplay,*canplaythrough,*change,*click,*close,*contextmenu,*copy,*cuechange,*cut,*dblclick,*drag,*dragend,*dragenter,*dragleave,*dragover,*dragstart,*drop,*durationchange,*emptied,*ended,*error,*focus,*input,*invalid,*keydown,*keypress,*keyup,*load,*loadeddata,*loadedmetadata,*loadstart,*message,*mousedown,*mouseenter,*mouseleave,*mousemove,*mouseout,*mouseover,*mouseup,*mousewheel,*mozfullscreenchange,*mozfullscreenerror,*mozpointerlockchange,*mozpointerlockerror,*paste,*pause,*play,*playing,*progress,*ratechange,*reset,*resize,*scroll,*search,*seeked,*seeking,*select,*selectstart,*show,*stalled,*submit,*suspend,*timeupdate,*toggle,*volumechange,*waiting,*webglcontextcreationerror,*webglcontextlost,*webglcontextrestored,*webkitfullscreenchange,*webkitfullscreenerror,*wheel,outerText,!spellcheck,%style,#tabIndex,title,!translate',
     'abbr,address,article,aside,b,bdi,bdo,cite,code,dd,dfn,dt,em,figcaption,figure,footer,header,i,kbd,main,mark,nav,noscript,rb,rp,rt,rtc,ruby,s,samp,section,small,strong,sub,sup,u,var,wbr^[HTMLElement]|accessKey,contentEditable,dir,!draggable,!hidden,innerText,lang,*abort,*beforecopy,*beforecut,*beforepaste,*blur,*cancel,*canplay,*canplaythrough,*change,*click,*close,*contextmenu,*copy,*cuechange,*cut,*dblclick,*drag,*dragend,*dragenter,*dragleave,*dragover,*dragstart,*drop,*durationchange,*emptied,*ended,*error,*focus,*input,*invalid,*keydown,*keypress,*keyup,*load,*loadeddata,*loadedmetadata,*loadstart,*message,*mousedown,*mouseenter,*mouseleave,*mousemove,*mouseout,*mouseover,*mouseup,*mousewheel,*mozfullscreenchange,*mozfullscreenerror,*mozpointerlockchange,*mozpointerlockerror,*paste,*pause,*play,*playing,*progress,*ratechange,*reset,*resize,*scroll,*search,*seeked,*seeking,*select,*selectstart,*show,*stalled,*submit,*suspend,*timeupdate,*toggle,*volumechange,*waiting,*webglcontextcreationerror,*webglcontextlost,*webglcontextrestored,*webkitfullscreenchange,*webkitfullscreenerror,*wheel,outerText,!spellcheck,%style,#tabIndex,title,!translate',
@@ -353,37 +352,36 @@ var SCHEMA = [
     'summary^[HTMLElement]|',
     'time^[HTMLElement]|dateTime',
 ];
-var attrToPropMap = {
+const attrToPropMap = {
     'class': 'className',
     'formaction': 'formAction',
     'innerHtml': 'innerHTML',
     'readonly': 'readOnly',
     'tabindex': 'tabIndex'
 };
-var EVENT = 'event';
-var BOOLEAN = 'boolean';
-var NUMBER = 'number';
-var STRING = 'string';
-var OBJECT = 'object';
-export var SchemaInformation = (function () {
-    function SchemaInformation() {
-        var _this = this;
+const EVENT = 'event';
+const BOOLEAN = 'boolean';
+const NUMBER = 'number';
+const STRING = 'string';
+const OBJECT = 'object';
+export class SchemaInformation {
+    constructor() {
         this.schema = {};
-        SCHEMA.forEach(function (encodedType) {
-            var parts = encodedType.split('|');
-            var properties = parts[1].split(',');
-            var typeParts = (parts[0] + '^').split('^');
-            var typeName = typeParts[0];
-            var type = {};
-            typeName.split(',').forEach(function (tag) { return _this.schema[tag.toLowerCase()] = type; });
-            var superName = typeParts[1];
-            var superType = superName && _this.schema[superName.toLowerCase()];
+        SCHEMA.forEach(encodedType => {
+            const parts = encodedType.split('|');
+            const properties = parts[1].split(',');
+            const typeParts = (parts[0] + '^').split('^');
+            const typeName = typeParts[0];
+            const type = {};
+            typeName.split(',').forEach(tag => this.schema[tag.toLowerCase()] = type);
+            const superName = typeParts[1];
+            const superType = superName && this.schema[superName.toLowerCase()];
             if (superType) {
-                for (var key in superType) {
+                for (const key in superType) {
                     type[key] = superType[key];
                 }
             }
-            properties.forEach(function (property) {
+            properties.forEach((property) => {
                 if (property == '') {
                 }
                 else if (property.startsWith('*')) {
@@ -404,31 +402,26 @@ export var SchemaInformation = (function () {
             });
         });
     }
-    SchemaInformation.prototype.allKnownElements = function () { return Object.keys(this.schema); };
-    SchemaInformation.prototype.eventsOf = function (elementName) {
-        var elementType = this.schema[elementName.toLowerCase()] || {};
-        return Object.keys(elementType).filter(function (property) { return elementType[property] === EVENT; });
-    };
-    SchemaInformation.prototype.propertiesOf = function (elementName) {
-        var elementType = this.schema[elementName.toLowerCase()] || {};
-        return Object.keys(elementType).filter(function (property) { return elementType[property] !== EVENT; });
-    };
-    SchemaInformation.prototype.typeOf = function (elementName, property) {
+    allKnownElements() { return Object.keys(this.schema); }
+    eventsOf(elementName) {
+        const elementType = this.schema[elementName.toLowerCase()] || {};
+        return Object.keys(elementType).filter(property => elementType[property] === EVENT);
+    }
+    propertiesOf(elementName) {
+        const elementType = this.schema[elementName.toLowerCase()] || {};
+        return Object.keys(elementType).filter(property => elementType[property] !== EVENT);
+    }
+    typeOf(elementName, property) {
         return (this.schema[elementName.toLowerCase()] || {})[property];
-    };
-    Object.defineProperty(SchemaInformation, "instance", {
-        get: function () {
-            var result = SchemaInformation._instance;
-            if (!result) {
-                result = SchemaInformation._instance = new SchemaInformation();
-            }
-            return result;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    return SchemaInformation;
-}());
+    }
+    static get instance() {
+        let result = SchemaInformation._instance;
+        if (!result) {
+            result = SchemaInformation._instance = new SchemaInformation();
+        }
+        return result;
+    }
+}
 export function eventNames(elementName) {
     return SchemaInformation.instance.eventsOf(elementName);
 }

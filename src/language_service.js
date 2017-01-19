@@ -24,62 +24,58 @@ import { DiagnosticKind } from './types';
 export function createLanguageService(host) {
     return new LanguageServiceImpl(host);
 }
-var LanguageServiceImpl = (function () {
-    function LanguageServiceImpl(host) {
+class LanguageServiceImpl {
+    constructor(host) {
         this.host = host;
     }
-    Object.defineProperty(LanguageServiceImpl.prototype, "metadataResolver", {
-        get: function () { return this.host.resolver; },
-        enumerable: true,
-        configurable: true
-    });
-    LanguageServiceImpl.prototype.getTemplateReferences = function () { return this.host.getTemplateReferences(); };
-    LanguageServiceImpl.prototype.getDiagnostics = function (fileName) {
-        var results = [];
-        var templates = this.host.getTemplates(fileName);
+    get metadataResolver() { return this.host.resolver; }
+    getTemplateReferences() { return this.host.getTemplateReferences(); }
+    getDiagnostics(fileName) {
+        let results = [];
+        let templates = this.host.getTemplates(fileName);
         if (templates && templates.length) {
-            results.push.apply(results, getTemplateDiagnostics(fileName, this, templates));
+            results.push(...getTemplateDiagnostics(fileName, this, templates));
         }
-        var declarations = this.host.getDeclarations(fileName);
+        let declarations = this.host.getDeclarations(fileName);
         if (declarations && declarations.length) {
-            var summary = this.host.getAnalyzedModules();
-            results.push.apply(results, getDeclarationDiagnostics(declarations, summary));
+            const summary = this.host.getAnalyzedModules();
+            results.push(...getDeclarationDiagnostics(declarations, summary));
         }
         return uniqueBySpan(results);
-    };
-    LanguageServiceImpl.prototype.getPipesAt = function (fileName, position) {
-        var templateInfo = this.getTemplateAstAtPosition(fileName, position);
+    }
+    getPipesAt(fileName, position) {
+        let templateInfo = this.getTemplateAstAtPosition(fileName, position);
         if (templateInfo) {
-            return templateInfo.pipes.map(function (pipeInfo) { return ({ name: pipeInfo.name, symbol: pipeInfo.type.reference }); });
+            return templateInfo.pipes.map(pipeInfo => ({ name: pipeInfo.name, symbol: pipeInfo.type.reference }));
         }
-    };
-    LanguageServiceImpl.prototype.getCompletionsAt = function (fileName, position) {
-        var templateInfo = this.getTemplateAstAtPosition(fileName, position);
+    }
+    getCompletionsAt(fileName, position) {
+        let templateInfo = this.getTemplateAstAtPosition(fileName, position);
         if (templateInfo) {
             return getTemplateCompletions(templateInfo);
         }
-    };
-    LanguageServiceImpl.prototype.getDefinitionAt = function (fileName, position) {
-        var templateInfo = this.getTemplateAstAtPosition(fileName, position);
+    }
+    getDefinitionAt(fileName, position) {
+        let templateInfo = this.getTemplateAstAtPosition(fileName, position);
         if (templateInfo) {
             return getDefinition(templateInfo);
         }
-    };
-    LanguageServiceImpl.prototype.getHoverAt = function (fileName, position) {
-        var templateInfo = this.getTemplateAstAtPosition(fileName, position);
+    }
+    getHoverAt(fileName, position) {
+        let templateInfo = this.getTemplateAstAtPosition(fileName, position);
         if (templateInfo) {
             return getHover(templateInfo);
         }
-    };
-    LanguageServiceImpl.prototype.getTemplateAstAtPosition = function (fileName, position) {
-        var template = this.host.getTemplateAt(fileName, position);
+    }
+    getTemplateAstAtPosition(fileName, position) {
+        let template = this.host.getTemplateAt(fileName, position);
         if (template) {
-            var astResult = this.getTemplateAst(template, fileName);
+            let astResult = this.getTemplateAst(template, fileName);
             if (astResult && astResult.htmlAst && astResult.templateAst)
                 return {
-                    position: position,
-                    fileName: fileName,
-                    template: template,
+                    position,
+                    fileName,
+                    template,
                     htmlAst: astResult.htmlAst,
                     directive: astResult.directive,
                     directives: astResult.directives,
@@ -89,60 +85,57 @@ var LanguageServiceImpl = (function () {
                 };
         }
         return undefined;
-    };
-    LanguageServiceImpl.prototype.getTemplateAst = function (template, contextFile) {
-        var _this = this;
-        var result;
+    }
+    getTemplateAst(template, contextFile) {
+        let result;
         try {
-            var resolvedMetadata = this.metadataResolver.getNonNormalizedDirectiveMetadata(template.type);
-            var metadata = resolvedMetadata && resolvedMetadata.metadata;
+            const resolvedMetadata = this.metadataResolver.getNonNormalizedDirectiveMetadata(template.type);
+            const metadata = resolvedMetadata && resolvedMetadata.metadata;
             if (metadata) {
-                var rawHtmlParser = new HtmlParser();
-                var htmlParser = new I18NHtmlParser(rawHtmlParser);
-                var expressionParser = new Parser(new Lexer());
-                var parser = new TemplateParser(expressionParser, new DomElementSchemaRegistry(), htmlParser, null, []);
-                var htmlResult = htmlParser.parse(template.source, '');
-                var analyzedModules = this.host.getAnalyzedModules();
-                var errors = undefined;
-                var ngModule = analyzedModules.ngModuleByPipeOrDirective.get(template.type);
+                const rawHtmlParser = new HtmlParser();
+                const htmlParser = new I18NHtmlParser(rawHtmlParser);
+                const expressionParser = new Parser(new Lexer());
+                const parser = new TemplateParser(expressionParser, new DomElementSchemaRegistry(), htmlParser, null, []);
+                const htmlResult = htmlParser.parse(template.source, '');
+                const analyzedModules = this.host.getAnalyzedModules();
+                let errors = undefined;
+                let ngModule = analyzedModules.ngModuleByPipeOrDirective.get(template.type);
                 if (!ngModule) {
                     // Reported by the the declaration diagnostics.
                     ngModule = findSuitableDefaultModule(analyzedModules);
                 }
                 if (ngModule) {
-                    var resolvedDirectives = ngModule.transitiveModule.directives.map(function (d) { return _this.host.resolver.getNonNormalizedDirectiveMetadata(d.reference); });
-                    var directives = resolvedDirectives.filter(function (d) { return d !== null; }).map(function (d) { return d.metadata.toSummary(); });
-                    var pipes = ngModule.transitiveModule.pipes.map(function (p) { return _this.host.resolver.getOrLoadPipeMetadata(p.reference).toSummary(); });
-                    var schemas = ngModule.schemas;
-                    var parseResult = parser.tryParseHtml(htmlResult, metadata, template.source, directives, pipes, schemas, '');
+                    const resolvedDirectives = ngModule.transitiveModule.directives.map(d => this.host.resolver.getNonNormalizedDirectiveMetadata(d.reference));
+                    const directives = resolvedDirectives.filter(d => d !== null).map(d => d.metadata.toSummary());
+                    const pipes = ngModule.transitiveModule.pipes.map(p => this.host.resolver.getOrLoadPipeMetadata(p.reference).toSummary());
+                    const schemas = ngModule.schemas;
+                    const parseResult = parser.tryParseHtml(htmlResult, metadata, template.source, directives, pipes, schemas, '');
                     result = {
                         htmlAst: htmlResult.rootNodes,
                         templateAst: parseResult.templateAst,
-                        directive: metadata, directives: directives, pipes: pipes,
-                        parseErrors: parseResult.errors, expressionParser: expressionParser, errors: errors
+                        directive: metadata, directives, pipes,
+                        parseErrors: parseResult.errors, expressionParser, errors
                     };
                 }
             }
         }
         catch (e) {
-            var span = template.span;
+            let span = template.span;
             if (e.fileName == contextFile) {
                 span = template.query.getSpanAt(e.line, e.column) || span;
             }
-            result = { errors: [{ kind: DiagnosticKind.Error, message: e.message, span: span }] };
+            result = { errors: [{ kind: DiagnosticKind.Error, message: e.message, span }] };
         }
         return result;
-    };
-    return LanguageServiceImpl;
-}());
+    }
+}
 function uniqueBySpan(elements) {
     if (elements) {
-        var result = [];
-        var map = new Map();
-        for (var _i = 0, elements_1 = elements; _i < elements_1.length; _i++) {
-            var element = elements_1[_i];
-            var span = element.span;
-            var set = map.get(span.start);
+        const result = [];
+        const map = new Map();
+        for (const element of elements) {
+            let span = element.span;
+            let set = map.get(span.start);
             if (!set) {
                 set = new Set();
                 map.set(span.start, set);
@@ -156,13 +149,12 @@ function uniqueBySpan(elements) {
     }
 }
 function findSuitableDefaultModule(modules) {
-    var result;
-    var resultSize = 0;
-    for (var _i = 0, _a = modules.ngModules; _i < _a.length; _i++) {
-        var module_1 = _a[_i];
-        var moduleSize = module_1.transitiveModule.directives.length;
+    let result;
+    let resultSize = 0;
+    for (const module of modules.ngModules) {
+        const moduleSize = module.transitiveModule.directives.length;
         if (moduleSize > resultSize) {
-            result = module_1;
+            result = module;
             resultSize = moduleSize;
         }
     }

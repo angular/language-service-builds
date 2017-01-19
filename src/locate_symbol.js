@@ -13,22 +13,21 @@ import { HtmlAstPath } from './html_path';
 import { TemplateAstPath } from './template_path';
 import { inSpan, offsetSpan, spanOf } from './utils';
 export function locateSymbol(info) {
-    var templatePosition = info.position - info.template.span.start;
-    var path = new TemplateAstPath(info.templateAst, templatePosition);
+    const templatePosition = info.position - info.template.span.start;
+    const path = new TemplateAstPath(info.templateAst, templatePosition);
     if (path.tail) {
-        var symbol_1 = undefined;
-        var span_1 = undefined;
-        var attributeValueSymbol_1 = function (ast, inEvent) {
-            if (inEvent === void 0) { inEvent = false; }
-            var attribute = findAttribute(info);
+        let symbol = undefined;
+        let span = undefined;
+        const attributeValueSymbol = (ast, inEvent = false) => {
+            const attribute = findAttribute(info);
             if (attribute) {
                 if (inSpan(templatePosition, spanOf(attribute.valueSpan))) {
-                    var scope = getExpressionScope(info, path, inEvent);
-                    var expressionOffset = attribute.valueSpan.start.offset + 1;
-                    var result = getExpressionSymbol(scope, ast, templatePosition - expressionOffset, info.template.query);
+                    const scope = getExpressionScope(info, path, inEvent);
+                    const expressionOffset = attribute.valueSpan.start.offset + 1;
+                    const result = getExpressionSymbol(scope, ast, templatePosition - expressionOffset, info.template.query);
                     if (result) {
-                        symbol_1 = result.symbol;
-                        span_1 = offsetSpan(result.span, expressionOffset);
+                        symbol = result.symbol;
+                        span = offsetSpan(result.span, expressionOffset);
                     }
                     return true;
                 }
@@ -36,81 +35,80 @@ export function locateSymbol(info) {
             return false;
         };
         path.tail.visit({
-            visitNgContent: function (ast) { },
-            visitEmbeddedTemplate: function (ast) { },
-            visitElement: function (ast) {
-                var component = ast.directives.find(function (d) { return d.directive.isComponent; });
+            visitNgContent(ast) { },
+            visitEmbeddedTemplate(ast) { },
+            visitElement(ast) {
+                const component = ast.directives.find(d => d.directive.isComponent);
                 if (component) {
-                    symbol_1 = info.template.query.getTypeSymbol(component.directive.type.reference);
-                    symbol_1 = symbol_1 && new OverrideKindSymbol(symbol_1, 'component');
-                    span_1 = spanOf(ast);
+                    symbol = info.template.query.getTypeSymbol(component.directive.type.reference);
+                    symbol = symbol && new OverrideKindSymbol(symbol, 'component');
+                    span = spanOf(ast);
                 }
                 else {
                     // Find a directive that matches the element name
-                    var directive = ast.directives.find(function (d) { return d.directive.selector.indexOf(ast.name) >= 0; });
+                    const directive = ast.directives.find(d => d.directive.selector.indexOf(ast.name) >= 0);
                     if (directive) {
-                        symbol_1 = info.template.query.getTypeSymbol(directive.directive.type.reference);
-                        symbol_1 = symbol_1 && new OverrideKindSymbol(symbol_1, 'directive');
-                        span_1 = spanOf(ast);
+                        symbol = info.template.query.getTypeSymbol(directive.directive.type.reference);
+                        symbol = symbol && new OverrideKindSymbol(symbol, 'directive');
+                        span = spanOf(ast);
                     }
                 }
             },
-            visitReference: function (ast) {
-                symbol_1 = info.template.query.getTypeSymbol(tokenReference(ast.value));
-                span_1 = spanOf(ast);
+            visitReference(ast) {
+                symbol = info.template.query.getTypeSymbol(tokenReference(ast.value));
+                span = spanOf(ast);
             },
-            visitVariable: function (ast) { },
-            visitEvent: function (ast) {
-                if (!attributeValueSymbol_1(ast.handler, /* inEvent */ true)) {
-                    symbol_1 = findOutputBinding(info, path, ast);
-                    symbol_1 = symbol_1 && new OverrideKindSymbol(symbol_1, 'event');
-                    span_1 = spanOf(ast);
+            visitVariable(ast) { },
+            visitEvent(ast) {
+                if (!attributeValueSymbol(ast.handler, /* inEvent */ true)) {
+                    symbol = findOutputBinding(info, path, ast);
+                    symbol = symbol && new OverrideKindSymbol(symbol, 'event');
+                    span = spanOf(ast);
                 }
             },
-            visitElementProperty: function (ast) { attributeValueSymbol_1(ast.value); },
-            visitAttr: function (ast) { },
-            visitBoundText: function (ast) {
-                var expressionPosition = templatePosition - ast.sourceSpan.start.offset;
+            visitElementProperty(ast) { attributeValueSymbol(ast.value); },
+            visitAttr(ast) { },
+            visitBoundText(ast) {
+                const expressionPosition = templatePosition - ast.sourceSpan.start.offset;
                 if (inSpan(expressionPosition, ast.value.span)) {
-                    var scope = getExpressionScope(info, path, /* includeEvent */ false);
-                    var result = getExpressionSymbol(scope, ast.value, expressionPosition, info.template.query);
+                    const scope = getExpressionScope(info, path, /* includeEvent */ false);
+                    const result = getExpressionSymbol(scope, ast.value, expressionPosition, info.template.query);
                     if (result) {
-                        symbol_1 = result.symbol;
-                        span_1 = offsetSpan(result.span, ast.sourceSpan.start.offset);
+                        symbol = result.symbol;
+                        span = offsetSpan(result.span, ast.sourceSpan.start.offset);
                     }
                 }
             },
-            visitText: function (ast) { },
-            visitDirective: function (ast) {
-                symbol_1 = info.template.query.getTypeSymbol(ast.directive.type.reference);
-                span_1 = spanOf(ast);
+            visitText(ast) { },
+            visitDirective(ast) {
+                symbol = info.template.query.getTypeSymbol(ast.directive.type.reference);
+                span = spanOf(ast);
             },
-            visitDirectiveProperty: function (ast) {
-                if (!attributeValueSymbol_1(ast.value)) {
-                    symbol_1 = findInputBinding(info, path, ast);
-                    span_1 = spanOf(ast);
+            visitDirectiveProperty(ast) {
+                if (!attributeValueSymbol(ast.value)) {
+                    symbol = findInputBinding(info, path, ast);
+                    span = spanOf(ast);
                 }
             }
         }, null);
-        if (symbol_1 && span_1) {
-            return { symbol: symbol_1, span: offsetSpan(span_1, info.template.span.start) };
+        if (symbol && span) {
+            return { symbol, span: offsetSpan(span, info.template.span.start) };
         }
     }
 }
 function findAttribute(info) {
-    var templatePosition = info.position - info.template.span.start;
-    var path = new HtmlAstPath(info.htmlAst, templatePosition);
+    const templatePosition = info.position - info.template.span.start;
+    const path = new HtmlAstPath(info.htmlAst, templatePosition);
     return path.first(Attribute);
 }
 function findInputBinding(info, path, binding) {
-    var element = path.first(ElementAst);
+    const element = path.first(ElementAst);
     if (element) {
-        for (var _i = 0, _a = element.directives; _i < _a.length; _i++) {
-            var directive = _a[_i];
-            var invertedInput = invertMap(directive.directive.inputs);
-            var fieldName = invertedInput[binding.templateName];
+        for (const directive of element.directives) {
+            const invertedInput = invertMap(directive.directive.inputs);
+            const fieldName = invertedInput[binding.templateName];
             if (fieldName) {
-                var classSymbol = info.template.query.getTypeSymbol(directive.directive.type.reference);
+                const classSymbol = info.template.query.getTypeSymbol(directive.directive.type.reference);
                 if (classSymbol) {
                     return classSymbol.members().get(fieldName);
                 }
@@ -119,14 +117,13 @@ function findInputBinding(info, path, binding) {
     }
 }
 function findOutputBinding(info, path, binding) {
-    var element = path.first(ElementAst);
+    const element = path.first(ElementAst);
     if (element) {
-        for (var _i = 0, _a = element.directives; _i < _a.length; _i++) {
-            var directive = _a[_i];
-            var invertedOutputs = invertMap(directive.directive.outputs);
-            var fieldName = invertedOutputs[binding.name];
+        for (const directive of element.directives) {
+            const invertedOutputs = invertMap(directive.directive.outputs);
+            const fieldName = invertedOutputs[binding.name];
             if (fieldName) {
-                var classSymbol = info.template.query.getTypeSymbol(directive.directive.type.reference);
+                const classSymbol = info.template.query.getTypeSymbol(directive.directive.type.reference);
                 if (classSymbol) {
                     return classSymbol.members().get(fieldName);
                 }
@@ -135,66 +132,32 @@ function findOutputBinding(info, path, binding) {
     }
 }
 function invertMap(obj) {
-    var result = {};
-    for (var _i = 0, _a = Object.keys(obj); _i < _a.length; _i++) {
-        var name_1 = _a[_i];
-        var v = obj[name_1];
-        result[v] = name_1;
+    const result = {};
+    for (const name of Object.keys(obj)) {
+        const v = obj[name];
+        result[v] = name;
     }
     return result;
 }
 /**
  * Wrap a symbol and change its kind to component.
  */
-var OverrideKindSymbol = (function () {
-    function OverrideKindSymbol(sym, kindOverride) {
+class OverrideKindSymbol {
+    constructor(sym, kindOverride) {
         this.sym = sym;
         this.kindOverride = kindOverride;
     }
-    Object.defineProperty(OverrideKindSymbol.prototype, "name", {
-        get: function () { return this.sym.name; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(OverrideKindSymbol.prototype, "kind", {
-        get: function () { return this.kindOverride; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(OverrideKindSymbol.prototype, "language", {
-        get: function () { return this.sym.language; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(OverrideKindSymbol.prototype, "type", {
-        get: function () { return this.sym.type; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(OverrideKindSymbol.prototype, "container", {
-        get: function () { return this.sym.container; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(OverrideKindSymbol.prototype, "public", {
-        get: function () { return this.sym.public; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(OverrideKindSymbol.prototype, "callable", {
-        get: function () { return this.sym.callable; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(OverrideKindSymbol.prototype, "definition", {
-        get: function () { return this.sym.definition; },
-        enumerable: true,
-        configurable: true
-    });
-    OverrideKindSymbol.prototype.members = function () { return this.sym.members(); };
-    OverrideKindSymbol.prototype.signatures = function () { return this.sym.signatures(); };
-    OverrideKindSymbol.prototype.selectSignature = function (types) { return this.sym.selectSignature(types); };
-    OverrideKindSymbol.prototype.indexed = function (argument) { return this.sym.indexed(argument); };
-    return OverrideKindSymbol;
-}());
+    get name() { return this.sym.name; }
+    get kind() { return this.kindOverride; }
+    get language() { return this.sym.language; }
+    get type() { return this.sym.type; }
+    get container() { return this.sym.container; }
+    get public() { return this.sym.public; }
+    get callable() { return this.sym.callable; }
+    get definition() { return this.sym.definition; }
+    members() { return this.sym.members(); }
+    signatures() { return this.sym.signatures(); }
+    selectSignature(types) { return this.sym.selectSignature(types); }
+    indexed(argument) { return this.sym.indexed(argument); }
+}
 //# sourceMappingURL=locate_symbol.js.map

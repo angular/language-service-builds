@@ -7,14 +7,14 @@
  */
 import { locateSymbol } from './locate_symbol';
 export function getHover(info) {
-    var result = locateSymbol(info);
+    const result = locateSymbol(info);
     if (result) {
         return { text: hoverTextOf(result.symbol), span: result.span };
     }
 }
 function hoverTextOf(symbol) {
-    var result = [{ text: symbol.kind }, { text: ' ' }, { text: symbol.name, language: symbol.language }];
-    var container = symbol.container;
+    const result = [{ text: symbol.kind }, { text: ' ' }, { text: symbol.name, language: symbol.language }];
+    const container = symbol.container;
     if (container) {
         result.push({ text: ' of ' }, { text: container.name, language: container.language });
     }
