@@ -41,7 +41,8 @@ export function isNarrower(spanA, spanB) {
 }
 export function hasTemplateReference(type) {
     if (type.diDeps) {
-        for (let diDep of type.diDeps) {
+        for (var _i = 0, _a = type.diDeps; _i < _a.length; _i++) {
+            var diDep = _a[_i];
             if (diDep.token.identifier && identifierName(diDep.token.identifier) == 'TemplateRef')
                 return true;
         }
@@ -49,16 +50,17 @@ export function hasTemplateReference(type) {
     return false;
 }
 export function getSelectors(info) {
-    const map = new Map();
-    const selectors = flatten(info.directives.map(directive => {
-        const selectors = CssSelector.parse(directive.selector);
-        selectors.forEach(selector => map.set(selector, directive));
+    var map = new Map();
+    var selectors = flatten(info.directives.map(function (directive) {
+        var selectors = CssSelector.parse(directive.selector);
+        selectors.forEach(function (selector) { return map.set(selector, directive); });
         return selectors;
     }));
-    return { selectors, map };
+    return { selectors: selectors, map: map };
 }
 export function flatten(a) {
-    return [].concat(...a);
+    return (_a = []).concat.apply(_a, a);
+    var _a;
 }
 export function removeSuffix(value, suffix) {
     if (value.endsWith(suffix))
@@ -67,9 +69,10 @@ export function removeSuffix(value, suffix) {
 }
 export function uniqueByName(elements) {
     if (elements) {
-        const result = [];
-        const set = new Set();
-        for (const element of elements) {
+        var result = [];
+        var set = new Set();
+        for (var _i = 0, elements_1 = elements; _i < elements_1.length; _i++) {
+            var element = elements_1[_i];
             if (!set.has(element.name)) {
                 set.add(element.name);
                 result.push(element);

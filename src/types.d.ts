@@ -38,7 +38,7 @@ export interface TemplateSource {
     /**
      * The source of the template.
      */
-    readonly source: string;
+    source: string;
     /**
      * The version of the source. As files are modified the version should change. That is, if the
      * `LanguageSerivce` requesting
@@ -49,23 +49,23 @@ export interface TemplateSource {
      *
      * The version can change more often than the source but should not change less often.
      */
-    readonly version: string;
+    version: string;
     /**
      * The span of the template within the source file.
      */
-    readonly span: Span;
+    span: Span;
     /**
      * A static symbol for the template's component.
      */
-    readonly type: StaticSymbol;
+    type: StaticSymbol;
     /**
      * The `SymbolTable` for the members of the component.
      */
-    readonly members: SymbolTable;
+    members: SymbolTable;
     /**
      * A `SymbolQuery` for the context of the template.
      */
-    readonly query: SymbolQuery;
+    query: SymbolQuery;
 }
 /**
  * A sequence of template sources.
@@ -86,11 +86,11 @@ export interface DeclarationError {
     /**
      * The span of the error in the declaration's module.
      */
-    readonly span: Span;
+    span: Span;
     /**
      * The message to display describing the error.
      */
-    readonly message: string;
+    message: string;
 }
 /**
  * Information about the component declarations.
@@ -109,20 +109,20 @@ export interface Declaration {
     /**
      * The static symbol of the compponent being declared.
      */
-    readonly type: StaticSymbol;
+    type: StaticSymbol;
     /**
      * The span of the declaration annotation reference (e.g. the 'Component' or 'Directive'
      * reference).
      */
-    readonly declarationSpan: Span;
+    declarationSpan: Span;
     /**
      * Reference to the compiler directive metadata for the declaration.
      */
-    readonly metadata?: CompileDirectiveMetadata;
+    metadata?: CompileDirectiveMetadata;
     /**
      * Error reported trying to get the metadata.
      */
-    readonly errors: DeclarationError[];
+    errors: DeclarationError[];
 }
 /**
  * A sequence of declarations.
@@ -181,38 +181,38 @@ export interface Symbol {
     /**
      * The name of the symbol as it would be referenced in an Angular expression.
      */
-    readonly name: string;
+    name: string;
     /**
      * The kind of completion this symbol should generate if included.
      */
-    readonly kind: string;
+    kind: string;
     /**
      * The language of the source that defines the symbol. (e.g. typescript for TypeScript,
      * ng-template for an Angular template, etc.)
      */
-    readonly language: string;
+    language: string;
     /**
      * A symbol representing type of the symbol.
      */
-    readonly type: Symbol;
+    type: Symbol;
     /**
      * A symbol for the container of this symbol. For example, if this is a method, the container
      * is the class or interface of the method. If no container is appropriate, undefined is
      * returned.
      */
-    readonly container: Symbol;
+    container: Symbol;
     /**
      * The symbol is public in the container.
      */
-    readonly public: boolean;
+    public: boolean;
     /**
      * `true` if the symbol can be the target of a call.
      */
-    readonly callable: boolean;
+    callable: boolean;
     /**
      * The location of the definition of the symbol
      */
-    readonly definition: Definition;
+    definition: Definition;
     /**
   
      * A table of the members of the symbol; that is, the members that can appear
@@ -248,7 +248,7 @@ export interface SymbolTable {
     /**
      * The number of symbols in the table.
      */
-    readonly size: number;
+    size: number;
     /**
      * Get the symbol corresponding to `key` or `undefined` if there is no symbol in the
      * table by the name `key`.
@@ -276,11 +276,11 @@ export interface Signature {
      * The arguments of the signture. The order of `argumetnts.symbols()` must be in the order
      * of argument declaration.
      */
-    readonly arguments: SymbolTable;
+    arguments: SymbolTable;
     /**
      * The symbol of the signature result type.
      */
-    readonly result: Symbol;
+    result: Symbol;
 }
 /**
  * Describes the language context in which an Angular expression is evaluated.
@@ -387,7 +387,7 @@ export interface LanguageServiceHost {
     /**
      * The resolver to use to find compiler metadata.
      */
-    readonly resolver: CompileMetadataResolver;
+    resolver: CompileMetadataResolver;
     /**
      * Returns the template information for templates in `fileName` at the given location. If
      * `fileName`
@@ -528,19 +528,19 @@ export interface SymbolDeclaration {
     /**
      * The name of the symbol in table.
      */
-    readonly name: string;
+    name: string;
     /**
      * The kind of symbol to declare.
      */
-    readonly kind: CompletionKind;
+    kind: CompletionKind;
     /**
      * Type of the symbol. The type symbol should refer to a symbol for a type.
      */
-    readonly type: Symbol;
+    type: Symbol;
     /**
      * The definion of the symbol if one exists.
      */
-    readonly definition?: Definition;
+    definition?: Definition;
 }
 /**
  * A section of hover text. If the text is code then langauge should be provided.
@@ -550,11 +550,11 @@ export interface HoverTextSection {
     /**
      * Source code or markdown text describing the symbol a the hover location.
      */
-    readonly text: string;
+    text: string;
     /**
      * The langauge of the source if `text` is a souce code fragment.
      */
-    readonly language?: string;
+    language?: string;
 }
 /**
  * Hover infomration for a symbol at the hover location.
@@ -564,11 +564,11 @@ export interface Hover {
      * The hover text to display for the symbol at the hover location. If the text includes
      * source code, the section will specify which langauge it should be interpreted as.
      */
-    readonly text: HoverTextSection[];
+    text: HoverTextSection[];
     /**
      * The span of source the hover covers.
      */
-    readonly span: Span;
+    span: Span;
 }
 /**
  * An instance of an Angular language service created by `createLanguageService()`.

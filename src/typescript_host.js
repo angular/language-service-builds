@@ -5,6 +5,11 @@
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 import { AotSummaryResolver, CompilerConfig, StaticReflector, StaticSymbolCache, StaticSymbolResolver, componentModuleUrl, createOfflineCompileUrlResolver } from '@angular/compiler';
 import { analyzeNgModules, extractProgramSymbols } from '@angular/compiler/src/aot/compiler';
 import { DirectiveNormalizer } from '@angular/compiler/src/directive_normalizer';
@@ -27,19 +32,23 @@ import { ReflectorHost } from './reflector_host';
 import { BuiltinType } from './types';
 // In TypeScript 2.1 these flags moved
 // These helpers work for both 2.0 and 2.1.
-const isPrivate = ts.ModifierFlags ?
-    ((node) => !!(ts.getCombinedModifierFlags(node) & ts.ModifierFlags.Private)) :
-    ((node) => !!(node.flags & ts.NodeFlags.Private));
-const isReferenceType = ts.ObjectFlags ?
-    ((type) => !!(type.flags & ts.TypeFlags.Object &&
-        type.objectFlags & ts.ObjectFlags.Reference)) :
-    ((type) => !!(type.flags & ts.TypeFlags.Reference));
+var isPrivate = ts.ModifierFlags ?
+    (function (node) {
+        return !!(ts.getCombinedModifierFlags(node) & ts.ModifierFlags.Private);
+    }) :
+    (function (node) { return !!(node.flags & ts.NodeFlags.Private); });
+var isReferenceType = ts.ObjectFlags ?
+    (function (type) {
+        return !!(type.flags & ts.TypeFlags.Object &&
+            type.objectFlags & ts.ObjectFlags.Reference);
+    }) :
+    (function (type) { return !!(type.flags & ts.TypeFlags.Reference); });
 /**
  * Create a `LanguageServiceHost`
  */
 export function createLanguageServiceFromTypescript(host, service) {
-    const ngHost = new TypeScriptServiceHost(host, service);
-    const ngServer = createLanguageService(ngHost);
+    var ngHost = new TypeScriptServiceHost(host, service);
+    var ngServer = createLanguageService(ngHost);
     ngHost.setSite(ngServer);
     return ngServer;
 }
@@ -49,20 +58,29 @@ export function createLanguageServiceFromTypescript(host, service) {
  * template that are syntatically incorrect which is required to provide completions in
  * syntatically incorrect templates.
  */
-export class DummyHtmlParser extends HtmlParser {
-    constructor() {
-        super();
+export var DummyHtmlParser = (function (_super) {
+    __extends(DummyHtmlParser, _super);
+    function DummyHtmlParser() {
+        _super.call(this);
     }
-    parse(source, url, parseExpansionForms = false, interpolationConfig = DEFAULT_INTERPOLATION_CONFIG) {
+    DummyHtmlParser.prototype.parse = function (source, url, parseExpansionForms, interpolationConfig) {
+        if (parseExpansionForms === void 0) { parseExpansionForms = false; }
+        if (interpolationConfig === void 0) { interpolationConfig = DEFAULT_INTERPOLATION_CONFIG; }
         return new ParseTreeResult([], []);
-    }
-}
+    };
+    return DummyHtmlParser;
+}(HtmlParser));
 /**
  * Avoid loading resources in the language servcie by using a dummy loader.
  */
-export class DummyResourceLoader extends ResourceLoader {
-    get(url) { return Promise.resolve(''); }
-}
+export var DummyResourceLoader = (function (_super) {
+    __extends(DummyResourceLoader, _super);
+    function DummyResourceLoader() {
+        _super.apply(this, arguments);
+    }
+    DummyResourceLoader.prototype.get = function (url) { return Promise.resolve(''); };
+    return DummyResourceLoader;
+}(ResourceLoader));
 /**
  * An implemntation of a `LanguageSerivceHost` for a TypeScript project.
  *
@@ -71,52 +89,57 @@ export class DummyResourceLoader extends ResourceLoader {
  *
  * @expermental
  */
-export class TypeScriptServiceHost {
-    constructor(host, tsService) {
+export var TypeScriptServiceHost = (function () {
+    function TypeScriptServiceHost(host, tsService) {
         this.host = host;
         this.tsService = tsService;
         this._staticSymbolCache = new StaticSymbolCache();
         this._typeCache = [];
         this.modulesOutOfDate = true;
     }
-    setSite(service) { this.service = service; }
-    /**
-     * Angular LanguageServiceHost implementation
-     */
-    get resolver() {
-        this.validate();
-        let result = this._resolver;
-        if (!result) {
-            const moduleResolver = new NgModuleResolver(this.reflector);
-            const directiveResolver = new DirectiveResolver(this.reflector);
-            const pipeResolver = new PipeResolver(this.reflector);
-            const elementSchemaRegistry = new DomElementSchemaRegistry();
-            const resourceLoader = new DummyResourceLoader();
-            const urlResolver = createOfflineCompileUrlResolver();
-            const htmlParser = new DummyHtmlParser();
-            // This tracks the CompileConfig in codegen.ts. Currently these options
-            // are hard-coded except for genDebugInfo which is not applicable as we
-            // never generate code.
-            const config = new CompilerConfig({
-                genDebugInfo: false,
-                defaultEncapsulation: ViewEncapsulation.Emulated,
-                logBindingUpdate: false,
-                useJit: false
-            });
-            const directiveNormalizer = new DirectiveNormalizer(resourceLoader, urlResolver, htmlParser, config);
-            result = this._resolver = new CompileMetadataResolver(moduleResolver, directiveResolver, pipeResolver, new SummaryResolver(), elementSchemaRegistry, directiveNormalizer, this._staticSymbolCache, this.reflector, (error, type) => this.collectError(error, type && type.filePath));
-        }
-        return result;
-    }
-    getTemplateReferences() {
+    TypeScriptServiceHost.prototype.setSite = function (service) { this.service = service; };
+    Object.defineProperty(TypeScriptServiceHost.prototype, "resolver", {
+        /**
+         * Angular LanguageServiceHost implementation
+         */
+        get: function () {
+            var _this = this;
+            this.validate();
+            var result = this._resolver;
+            if (!result) {
+                var moduleResolver = new NgModuleResolver(this.reflector);
+                var directiveResolver = new DirectiveResolver(this.reflector);
+                var pipeResolver = new PipeResolver(this.reflector);
+                var elementSchemaRegistry = new DomElementSchemaRegistry();
+                var resourceLoader = new DummyResourceLoader();
+                var urlResolver = createOfflineCompileUrlResolver();
+                var htmlParser = new DummyHtmlParser();
+                // This tracks the CompileConfig in codegen.ts. Currently these options
+                // are hard-coded except for genDebugInfo which is not applicable as we
+                // never generate code.
+                var config = new CompilerConfig({
+                    genDebugInfo: false,
+                    defaultEncapsulation: ViewEncapsulation.Emulated,
+                    logBindingUpdate: false,
+                    useJit: false
+                });
+                var directiveNormalizer = new DirectiveNormalizer(resourceLoader, urlResolver, htmlParser, config);
+                result = this._resolver = new CompileMetadataResolver(moduleResolver, directiveResolver, pipeResolver, new SummaryResolver(), elementSchemaRegistry, directiveNormalizer, this._staticSymbolCache, this.reflector, function (error, type) { return _this.collectError(error, type && type.filePath); });
+            }
+            return result;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    TypeScriptServiceHost.prototype.getTemplateReferences = function () {
         this.ensureTemplateMap();
         return this.templateReferences;
-    }
-    getTemplateAt(fileName, position) {
-        let sourceFile = this.getSourceFile(fileName);
+    };
+    TypeScriptServiceHost.prototype.getTemplateAt = function (fileName, position) {
+        var sourceFile = this.getSourceFile(fileName);
         if (sourceFile) {
             this.context = sourceFile.fileName;
-            let node = this.findNode(sourceFile, position);
+            var node = this.findNode(sourceFile, position);
             if (node) {
                 return this.getSourceFromNode(fileName, this.host.getScriptVersion(sourceFile.fileName), node);
             }
@@ -124,77 +147,79 @@ export class TypeScriptServiceHost {
         else {
             this.ensureTemplateMap();
             // TODO: Cannocalize the file?
-            const componentType = this.fileToComponent.get(fileName);
+            var componentType = this.fileToComponent.get(fileName);
             if (componentType) {
                 return this.getSourceFromType(fileName, this.host.getScriptVersion(fileName), componentType);
             }
         }
-    }
-    getAnalyzedModules() {
+    };
+    TypeScriptServiceHost.prototype.getAnalyzedModules = function () {
         this.validate();
         return this.ensureAnalyzedModules();
-    }
-    ensureAnalyzedModules() {
-        let analyzedModules = this.analyzedModules;
+    };
+    TypeScriptServiceHost.prototype.ensureAnalyzedModules = function () {
+        var analyzedModules = this.analyzedModules;
         if (!analyzedModules) {
-            const analyzeHost = { isSourceFile(filePath) { return true; } };
-            const programSymbols = extractProgramSymbols(this.staticSymbolResolver, this.program.getSourceFiles().map(sf => sf.fileName), analyzeHost);
+            var analyzeHost = { isSourceFile: function (filePath) { return true; } };
+            var programSymbols = extractProgramSymbols(this.staticSymbolResolver, this.program.getSourceFiles().map(function (sf) { return sf.fileName; }), analyzeHost);
             analyzedModules = this.analyzedModules =
                 analyzeNgModules(programSymbols, analyzeHost, this.resolver);
         }
         return analyzedModules;
-    }
-    getTemplates(fileName) {
+    };
+    TypeScriptServiceHost.prototype.getTemplates = function (fileName) {
+        var _this = this;
         this.ensureTemplateMap();
-        const componentType = this.fileToComponent.get(fileName);
+        var componentType = this.fileToComponent.get(fileName);
         if (componentType) {
-            const templateSource = this.getTemplateAt(fileName, 0);
+            var templateSource = this.getTemplateAt(fileName, 0);
             if (templateSource) {
                 return [templateSource];
             }
         }
         else {
-            let version = this.host.getScriptVersion(fileName);
-            let result = [];
+            var version_1 = this.host.getScriptVersion(fileName);
+            var result_1 = [];
             // Find each template string in the file
-            let visit = (child) => {
-                let templateSource = this.getSourceFromNode(fileName, version, child);
+            var visit_1 = function (child) {
+                var templateSource = _this.getSourceFromNode(fileName, version_1, child);
                 if (templateSource) {
-                    result.push(templateSource);
+                    result_1.push(templateSource);
                 }
                 else {
-                    ts.forEachChild(child, visit);
+                    ts.forEachChild(child, visit_1);
                 }
             };
-            let sourceFile = this.getSourceFile(fileName);
+            var sourceFile = this.getSourceFile(fileName);
             if (sourceFile) {
                 this.context = sourceFile.path;
-                ts.forEachChild(sourceFile, visit);
+                ts.forEachChild(sourceFile, visit_1);
             }
-            return result.length ? result : undefined;
+            return result_1.length ? result_1 : undefined;
         }
-    }
-    getDeclarations(fileName) {
-        const result = [];
-        const sourceFile = this.getSourceFile(fileName);
+    };
+    TypeScriptServiceHost.prototype.getDeclarations = function (fileName) {
+        var _this = this;
+        var result = [];
+        var sourceFile = this.getSourceFile(fileName);
         if (sourceFile) {
-            let visit = (child) => {
-                let declaration = this.getDeclarationFromNode(sourceFile, child);
+            var visit_2 = function (child) {
+                var declaration = _this.getDeclarationFromNode(sourceFile, child);
                 if (declaration) {
                     result.push(declaration);
                 }
                 else {
-                    ts.forEachChild(child, visit);
+                    ts.forEachChild(child, visit_2);
                 }
             };
-            ts.forEachChild(sourceFile, visit);
+            ts.forEachChild(sourceFile, visit_2);
         }
         return result;
-    }
-    getSourceFile(fileName) {
+    };
+    TypeScriptServiceHost.prototype.getSourceFile = function (fileName) {
         return this.tsService.getProgram().getSourceFile(fileName);
-    }
-    updateAnalyzedModules() {
+    };
+    TypeScriptServiceHost.prototype.updateAnalyzedModules = function () {
         this.validate();
         if (this.modulesOutOfDate) {
             this.analyzedModules = null;
@@ -205,40 +230,50 @@ export class TypeScriptServiceHost {
             this.ensureAnalyzedModules();
             this.modulesOutOfDate = false;
         }
-    }
-    get program() { return this.tsService.getProgram(); }
-    get checker() {
-        let checker = this._checker;
-        if (!checker) {
-            checker = this._checker = this.program.getTypeChecker();
-        }
-        return checker;
-    }
-    validate() {
-        const program = this.program;
+    };
+    Object.defineProperty(TypeScriptServiceHost.prototype, "program", {
+        get: function () { return this.tsService.getProgram(); },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(TypeScriptServiceHost.prototype, "checker", {
+        get: function () {
+            var checker = this._checker;
+            if (!checker) {
+                checker = this._checker = this.program.getTypeChecker();
+            }
+            return checker;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    TypeScriptServiceHost.prototype.validate = function () {
+        var program = this.program;
         if (this.lastProgram != program) {
             this.clearCaches();
             this.lastProgram = program;
         }
-    }
-    clearCaches() {
+    };
+    TypeScriptServiceHost.prototype.clearCaches = function () {
         this._checker = null;
         this._typeCache = [];
         this._resolver = null;
         this.collectedErrors = null;
         this.modulesOutOfDate = true;
-    }
-    ensureTemplateMap() {
+    };
+    TypeScriptServiceHost.prototype.ensureTemplateMap = function () {
         if (!this.fileToComponent || !this.templateReferences) {
-            const fileToComponent = new Map();
-            const templateReference = [];
-            const ngModuleSummary = this.getAnalyzedModules();
-            const urlResolver = createOfflineCompileUrlResolver();
-            for (const module of ngModuleSummary.ngModules) {
-                for (const directive of module.declaredDirectives) {
-                    const { metadata, annotation } = this.resolver.getNonNormalizedDirectiveMetadata(directive.reference);
+            var fileToComponent = new Map();
+            var templateReference = [];
+            var ngModuleSummary = this.getAnalyzedModules();
+            var urlResolver = createOfflineCompileUrlResolver();
+            for (var _i = 0, _a = ngModuleSummary.ngModules; _i < _a.length; _i++) {
+                var module_1 = _a[_i];
+                for (var _b = 0, _c = module_1.declaredDirectives; _b < _c.length; _b++) {
+                    var directive = _c[_b];
+                    var _d = this.resolver.getNonNormalizedDirectiveMetadata(directive.reference), metadata = _d.metadata, annotation = _d.annotation;
                     if (metadata.isComponent && metadata.template && metadata.template.templateUrl) {
-                        const templateName = urlResolver.resolve(componentModuleUrl(this.reflector, directive.reference, annotation), metadata.template.templateUrl);
+                        var templateName = urlResolver.resolve(componentModuleUrl(this.reflector, directive.reference, annotation), metadata.template.templateUrl);
                         fileToComponent.set(templateName, directive.reference);
                         templateReference.push(templateName);
                     }
@@ -247,120 +282,135 @@ export class TypeScriptServiceHost {
             this.fileToComponent = fileToComponent;
             this.templateReferences = templateReference;
         }
-    }
-    getSourceFromDeclaration(fileName, version, source, span, type, declaration, node, sourceFile) {
-        let queryCache = undefined;
-        const t = this;
+    };
+    TypeScriptServiceHost.prototype.getSourceFromDeclaration = function (fileName, version, source, span, type, declaration, node, sourceFile) {
+        var queryCache = undefined;
+        var t = this;
         if (declaration) {
             return {
-                version,
-                source,
-                span,
-                type,
+                version: version,
+                source: source,
+                span: span,
+                type: type,
                 get members() {
-                    const checker = t.checker;
-                    const program = t.program;
-                    const type = checker.getTypeAtLocation(declaration);
-                    return new TypeWrapper(type, { node, program, checker }).members();
+                    var checker = t.checker;
+                    var program = t.program;
+                    var type = checker.getTypeAtLocation(declaration);
+                    return new TypeWrapper(type, { node: node, program: program, checker: checker }).members();
                 },
                 get query() {
                     if (!queryCache) {
-                        queryCache = new TypeScriptSymbolQuery(t.program, t.checker, sourceFile, () => {
-                            const pipes = t.service.getPipesAt(fileName, node.getStart());
-                            const checker = t.checker;
-                            const program = t.program;
-                            return new PipesTable(pipes, { node, program, checker });
+                        queryCache = new TypeScriptSymbolQuery(t.program, t.checker, sourceFile, function () {
+                            var pipes = t.service.getPipesAt(fileName, node.getStart());
+                            var checker = t.checker;
+                            var program = t.program;
+                            return new PipesTable(pipes, { node: node, program: program, checker: checker });
                         });
                     }
                     return queryCache;
                 }
             };
         }
-    }
-    getSourceFromNode(fileName, version, node) {
-        let result = undefined;
-        const t = this;
+    };
+    TypeScriptServiceHost.prototype.getSourceFromNode = function (fileName, version, node) {
+        var result = undefined;
+        var t = this;
         switch (node.kind) {
             case ts.SyntaxKind.NoSubstitutionTemplateLiteral:
             case ts.SyntaxKind.StringLiteral:
-                let [declaration, decorator] = this.getTemplateClassDeclFromNode(node);
-                let queryCache = undefined;
+                var _a = this.getTemplateClassDeclFromNode(node), declaration = _a[0], decorator = _a[1];
+                var queryCache = undefined;
                 if (declaration && declaration.name) {
-                    const sourceFile = this.getSourceFile(fileName);
+                    var sourceFile = this.getSourceFile(fileName);
                     return this.getSourceFromDeclaration(fileName, version, this.stringOf(node), shrink(spanOf(node)), this.reflector.getStaticSymbol(sourceFile.fileName, declaration.name.text), declaration, node, sourceFile);
                 }
                 break;
         }
         return result;
-    }
-    getSourceFromType(fileName, version, type) {
-        let result = undefined;
-        const declaration = this.getTemplateClassFromStaticSymbol(type);
+    };
+    TypeScriptServiceHost.prototype.getSourceFromType = function (fileName, version, type) {
+        var result = undefined;
+        var declaration = this.getTemplateClassFromStaticSymbol(type);
         if (declaration) {
-            const snapshot = this.host.getScriptSnapshot(fileName);
-            const source = snapshot.getText(0, snapshot.getLength());
+            var snapshot = this.host.getScriptSnapshot(fileName);
+            var source = snapshot.getText(0, snapshot.getLength());
             result = this.getSourceFromDeclaration(fileName, version, source, { start: 0, end: source.length }, type, declaration, declaration, declaration.getSourceFile());
         }
         return result;
-    }
-    get reflectorHost() {
-        let result = this._reflectorHost;
-        if (!result) {
-            if (!this.context) {
-                // Make up a context by finding the first script and using that as the base dir.
-                this.context = this.host.getScriptFileNames()[0];
+    };
+    Object.defineProperty(TypeScriptServiceHost.prototype, "reflectorHost", {
+        get: function () {
+            var _this = this;
+            var result = this._reflectorHost;
+            if (!result) {
+                if (!this.context) {
+                    // Make up a context by finding the first script and using that as the base dir.
+                    this.context = this.host.getScriptFileNames()[0];
+                }
+                // Use the file context's directory as the base directory.
+                // The host's getCurrentDirectory() is not reliable as it is always "" in
+                // tsserver. We don't need the exact base directory, just one that contains
+                // a source file.
+                var source = this.tsService.getProgram().getSourceFile(this.context);
+                if (!source) {
+                    throw new Error('Internal error: no context could be determined');
+                }
+                var tsConfigPath = findTsConfig(source.fileName);
+                var basePath = path.dirname(tsConfigPath || this.context);
+                result = this._reflectorHost = new ReflectorHost(function () { return _this.tsService.getProgram(); }, this.host, { basePath: basePath, genDir: basePath });
             }
-            // Use the file context's directory as the base directory.
-            // The host's getCurrentDirectory() is not reliable as it is always "" in
-            // tsserver. We don't need the exact base directory, just one that contains
-            // a source file.
-            const source = this.tsService.getProgram().getSourceFile(this.context);
-            if (!source) {
-                throw new Error('Internal error: no context could be determined');
-            }
-            const tsConfigPath = findTsConfig(source.fileName);
-            const basePath = path.dirname(tsConfigPath || this.context);
-            result = this._reflectorHost = new ReflectorHost(() => this.tsService.getProgram(), this.host, { basePath, genDir: basePath });
-        }
-        return result;
-    }
-    collectError(error, filePath) {
-        let errorMap = this.collectedErrors;
+            return result;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    TypeScriptServiceHost.prototype.collectError = function (error, filePath) {
+        var errorMap = this.collectedErrors;
         if (!errorMap) {
             errorMap = this.collectedErrors = new Map();
         }
-        let errors = errorMap.get(filePath);
+        var errors = errorMap.get(filePath);
         if (!errors) {
             errors = [];
             this.collectedErrors.set(filePath, errors);
         }
         errors.push(error);
-    }
-    get staticSymbolResolver() {
-        let result = this._staticSymbolResolver;
-        if (!result) {
-            const summaryResolver = new AotSummaryResolver({
-                loadSummary(filePath) { return null; },
-                isSourceFile(sourceFilePath) { return true; },
-                getOutputFileName(sourceFilePath) { return null; }
-            }, this._staticSymbolCache);
-            result = this._staticSymbolResolver = new StaticSymbolResolver(this.reflectorHost, this._staticSymbolCache, summaryResolver, (e, filePath) => this.collectError(e, filePath));
-        }
-        return result;
-    }
-    get reflector() {
-        let result = this._reflector;
-        if (!result) {
-            result = this._reflector = new StaticReflector(this.staticSymbolResolver, [], [], (e, filePath) => this.collectError(e, filePath));
-        }
-        return result;
-    }
-    getTemplateClassFromStaticSymbol(type) {
-        const source = this.getSourceFile(type.filePath);
+    };
+    Object.defineProperty(TypeScriptServiceHost.prototype, "staticSymbolResolver", {
+        get: function () {
+            var _this = this;
+            var result = this._staticSymbolResolver;
+            if (!result) {
+                var summaryResolver = new AotSummaryResolver({
+                    loadSummary: function (filePath) { return null; },
+                    isSourceFile: function (sourceFilePath) { return true; },
+                    getOutputFileName: function (sourceFilePath) { return null; }
+                }, this._staticSymbolCache);
+                result = this._staticSymbolResolver = new StaticSymbolResolver(this.reflectorHost, this._staticSymbolCache, summaryResolver, function (e, filePath) { return _this.collectError(e, filePath); });
+            }
+            return result;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(TypeScriptServiceHost.prototype, "reflector", {
+        get: function () {
+            var _this = this;
+            var result = this._reflector;
+            if (!result) {
+                result = this._reflector = new StaticReflector(this.staticSymbolResolver, [], [], function (e, filePath) { return _this.collectError(e, filePath); });
+            }
+            return result;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    TypeScriptServiceHost.prototype.getTemplateClassFromStaticSymbol = function (type) {
+        var source = this.getSourceFile(type.filePath);
         if (source) {
-            const declarationNode = ts.forEachChild(source, child => {
+            var declarationNode = ts.forEachChild(source, function (child) {
                 if (child.kind === ts.SyntaxKind.ClassDeclaration) {
-                    const classDeclaration = child;
+                    var classDeclaration = child;
                     if (classDeclaration.name.text === type.name) {
                         return classDeclaration;
                     }
@@ -369,15 +419,15 @@ export class TypeScriptServiceHost {
             return declarationNode;
         }
         return undefined;
-    }
+    };
     /**
      * Given a template string node, see if it is an Angular template string, and if so return the
      * containing class.
      */
-    getTemplateClassDeclFromNode(currentToken) {
+    TypeScriptServiceHost.prototype.getTemplateClassDeclFromNode = function (currentToken) {
         // Verify we are in a 'template' property assignment, in an object literal, which is an call
         // arg, in a decorator
-        let parentNode = currentToken.parent; // PropertyAssignment
+        var parentNode = currentToken.parent; // PropertyAssignment
         if (!parentNode) {
             return TypeScriptServiceHost.missingTemplate;
         }
@@ -398,44 +448,45 @@ export class TypeScriptServiceHost {
         if (!parentNode || parentNode.kind !== ts.SyntaxKind.CallExpression) {
             return TypeScriptServiceHost.missingTemplate;
         }
-        const callTarget = parentNode.expression;
-        let decorator = parentNode.parent; // Decorator
+        var callTarget = parentNode.expression;
+        var decorator = parentNode.parent; // Decorator
         if (!decorator || decorator.kind !== ts.SyntaxKind.Decorator) {
             return TypeScriptServiceHost.missingTemplate;
         }
-        let declaration = decorator.parent; // ClassDeclaration
+        var declaration = decorator.parent; // ClassDeclaration
         if (!declaration || declaration.kind !== ts.SyntaxKind.ClassDeclaration) {
             return TypeScriptServiceHost.missingTemplate;
         }
         return [declaration, callTarget];
-    }
-    getCollectedErrors(defaultSpan, sourceFile) {
-        const errors = (this.collectedErrors && this.collectedErrors.get(sourceFile.fileName));
-        return (errors && errors.map((e) => {
+    };
+    TypeScriptServiceHost.prototype.getCollectedErrors = function (defaultSpan, sourceFile) {
+        var errors = (this.collectedErrors && this.collectedErrors.get(sourceFile.fileName));
+        return (errors && errors.map(function (e) {
             return { message: e.message, span: spanAt(sourceFile, e.line, e.column) || defaultSpan };
         })) ||
             [];
-    }
-    getDeclarationFromNode(sourceFile, node) {
+    };
+    TypeScriptServiceHost.prototype.getDeclarationFromNode = function (sourceFile, node) {
         if (node.kind == ts.SyntaxKind.ClassDeclaration && node.decorators &&
             node.name) {
-            for (const decorator of node.decorators) {
+            for (var _i = 0, _a = node.decorators; _i < _a.length; _i++) {
+                var decorator = _a[_i];
                 if (decorator.expression && decorator.expression.kind == ts.SyntaxKind.CallExpression) {
-                    const classDeclaration = node;
+                    var classDeclaration = node;
                     if (classDeclaration.name) {
-                        const call = decorator.expression;
-                        const target = call.expression;
-                        const type = this.checker.getTypeAtLocation(target);
+                        var call = decorator.expression;
+                        var target = call.expression;
+                        var type = this.checker.getTypeAtLocation(target);
                         if (type) {
-                            const staticSymbol = this._reflector.getStaticSymbol(sourceFile.fileName, classDeclaration.name.text);
+                            var staticSymbol = this._reflector.getStaticSymbol(sourceFile.fileName, classDeclaration.name.text);
                             try {
                                 if (this.resolver.isDirective(staticSymbol)) {
-                                    const { metadata } = this.resolver.getNonNormalizedDirectiveMetadata(staticSymbol);
-                                    const declarationSpan = spanOf(target);
+                                    var metadata = this.resolver.getNonNormalizedDirectiveMetadata(staticSymbol).metadata;
+                                    var declarationSpan = spanOf(target);
                                     return {
                                         type: staticSymbol,
-                                        declarationSpan,
-                                        metadata,
+                                        declarationSpan: declarationSpan,
+                                        metadata: metadata,
                                         errors: this.getCollectedErrors(declarationSpan, sourceFile)
                                     };
                                 }
@@ -443,10 +494,10 @@ export class TypeScriptServiceHost {
                             catch (e) {
                                 if (e.message) {
                                     this.collectError(e, sourceFile.fileName);
-                                    const declarationSpan = spanOf(target);
+                                    var declarationSpan = spanOf(target);
                                     return {
                                         type: staticSymbol,
-                                        declarationSpan,
+                                        declarationSpan: declarationSpan,
                                         errors: this.getCollectedErrors(declarationSpan, sourceFile)
                                     };
                                 }
@@ -456,27 +507,27 @@ export class TypeScriptServiceHost {
                 }
             }
         }
-    }
-    stringOf(node) {
+    };
+    TypeScriptServiceHost.prototype.stringOf = function (node) {
         switch (node.kind) {
             case ts.SyntaxKind.NoSubstitutionTemplateLiteral:
                 return node.text;
             case ts.SyntaxKind.StringLiteral:
                 return node.text;
         }
-    }
-    findNode(sourceFile, position) {
-        let _this = this;
+    };
+    TypeScriptServiceHost.prototype.findNode = function (sourceFile, position) {
+        var _this = this;
         function find(node) {
             if (position >= node.getStart() && position < node.getEnd()) {
                 return ts.forEachChild(node, find) || node;
             }
         }
         return find(sourceFile);
-    }
-    findLiteralType(kind, context) {
-        const checker = this.checker;
-        let type;
+    };
+    TypeScriptServiceHost.prototype.findLiteralType = function (kind, context) {
+        var checker = this.checker;
+        var type;
         switch (kind) {
             case BuiltinType.Any:
                 type = checker.getTypeAtLocation({
@@ -502,96 +553,103 @@ export class TypeScriptServiceHost {
                 type = checker.getTypeAtLocation({ kind: ts.SyntaxKind.VoidExpression });
                 break;
             default:
-                throw new Error(`Internal error, unhandled literal kind ${kind}:${BuiltinType[kind]}`);
+                throw new Error("Internal error, unhandled literal kind " + kind + ":" + BuiltinType[kind]);
         }
         return new TypeWrapper(type, context);
-    }
-}
-TypeScriptServiceHost.missingTemplate = [];
-class TypeScriptSymbolQuery {
-    constructor(program, checker, source, fetchPipes) {
+    };
+    TypeScriptServiceHost.missingTemplate = [];
+    return TypeScriptServiceHost;
+}());
+var TypeScriptSymbolQuery = (function () {
+    function TypeScriptSymbolQuery(program, checker, source, fetchPipes) {
         this.program = program;
         this.checker = checker;
         this.source = source;
         this.fetchPipes = fetchPipes;
         this.typeCache = new Map();
     }
-    getTypeKind(symbol) { return typeKindOf(this.getTsTypeOf(symbol)); }
-    getBuiltinType(kind) {
+    TypeScriptSymbolQuery.prototype.getTypeKind = function (symbol) { return typeKindOf(this.getTsTypeOf(symbol)); };
+    TypeScriptSymbolQuery.prototype.getBuiltinType = function (kind) {
         // TODO: Replace with typeChecker API when available.
-        let result = this.typeCache.get(kind);
+        var result = this.typeCache.get(kind);
         if (!result) {
-            const type = getBuiltinTypeFromTs(kind, { checker: this.checker, node: this.source, program: this.program });
+            var type = getBuiltinTypeFromTs(kind, { checker: this.checker, node: this.source, program: this.program });
             result =
                 new TypeWrapper(type, { program: this.program, checker: this.checker, node: this.source });
             this.typeCache.set(kind, result);
         }
         return result;
-    }
-    getTypeUnion(...types) {
+    };
+    TypeScriptSymbolQuery.prototype.getTypeUnion = function () {
+        var types = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            types[_i - 0] = arguments[_i];
+        }
         // TODO: Replace with typeChecker API when available
-        const checker = this.checker;
+        var checker = this.checker;
         // No API exists so the cheat is to just return the last type any if no types are given.
         return types.length ? types[types.length - 1] : this.getBuiltinType(BuiltinType.Any);
-    }
-    getArrayType(type) {
+    };
+    TypeScriptSymbolQuery.prototype.getArrayType = function (type) {
         // TODO: Replace with typeChecker API when available
         return this.getBuiltinType(BuiltinType.Any);
-    }
-    getElementType(type) {
+    };
+    TypeScriptSymbolQuery.prototype.getElementType = function (type) {
         if (type instanceof TypeWrapper) {
-            const elementType = getTypeParameterOf(type.tsType, 'Array');
+            var elementType = getTypeParameterOf(type.tsType, 'Array');
             if (elementType) {
                 return new TypeWrapper(elementType, type.context);
             }
         }
-    }
-    getNonNullableType(symbol) {
+    };
+    TypeScriptSymbolQuery.prototype.getNonNullableType = function (symbol) {
         // TODO: Replace with typeChecker API when available;
         return symbol;
-    }
-    getPipes() {
-        let result = this.pipesCache;
+    };
+    TypeScriptSymbolQuery.prototype.getPipes = function () {
+        var result = this.pipesCache;
         if (!result) {
             result = this.pipesCache = this.fetchPipes();
         }
         return result;
-    }
-    getTemplateContext(type) {
-        const context = { node: this.source, program: this.program, checker: this.checker };
-        const typeSymbol = findClassSymbolInContext(type, context);
+    };
+    TypeScriptSymbolQuery.prototype.getTemplateContext = function (type) {
+        var context = { node: this.source, program: this.program, checker: this.checker };
+        var typeSymbol = findClassSymbolInContext(type, context);
         if (typeSymbol) {
-            const contextType = this.getTemplateRefContextType(typeSymbol);
+            var contextType = this.getTemplateRefContextType(typeSymbol);
             if (contextType)
                 return new SymbolWrapper(contextType, context).members();
         }
-    }
-    getTypeSymbol(type) {
-        const context = { node: this.source, program: this.program, checker: this.checker };
-        const typeSymbol = findClassSymbolInContext(type, context);
+    };
+    TypeScriptSymbolQuery.prototype.getTypeSymbol = function (type) {
+        var context = { node: this.source, program: this.program, checker: this.checker };
+        var typeSymbol = findClassSymbolInContext(type, context);
         return new SymbolWrapper(typeSymbol, context);
-    }
-    createSymbolTable(symbols) {
-        const result = new MapSymbolTable();
-        result.addAll(symbols.map(s => new DeclaredSymbol(s)));
+    };
+    TypeScriptSymbolQuery.prototype.createSymbolTable = function (symbols) {
+        var result = new MapSymbolTable();
+        result.addAll(symbols.map(function (s) { return new DeclaredSymbol(s); }));
         return result;
-    }
-    mergeSymbolTable(symbolTables) {
-        const result = new MapSymbolTable();
-        for (const symbolTable of symbolTables) {
+    };
+    TypeScriptSymbolQuery.prototype.mergeSymbolTable = function (symbolTables) {
+        var result = new MapSymbolTable();
+        for (var _i = 0, symbolTables_1 = symbolTables; _i < symbolTables_1.length; _i++) {
+            var symbolTable = symbolTables_1[_i];
             result.addAll(symbolTable.values());
         }
         return result;
-    }
-    getSpanAt(line, column) { return spanAt(this.source, line, column); }
-    getTemplateRefContextType(type) {
-        const constructor = type.members['__constructor'];
+    };
+    TypeScriptSymbolQuery.prototype.getSpanAt = function (line, column) { return spanAt(this.source, line, column); };
+    TypeScriptSymbolQuery.prototype.getTemplateRefContextType = function (type) {
+        var constructor = type.members['__constructor'];
         if (constructor) {
-            const constructorDeclaration = constructor.declarations[0];
-            for (const parameter of constructorDeclaration.parameters) {
-                const type = this.checker.getTypeAtLocation(parameter.type);
-                if (type.symbol.name == 'TemplateRef' && isReferenceType(type)) {
-                    const typeReference = type;
+            var constructorDeclaration = constructor.declarations[0];
+            for (var _i = 0, _a = constructorDeclaration.parameters; _i < _a.length; _i++) {
+                var parameter = _a[_i];
+                var type_1 = this.checker.getTypeAtLocation(parameter.type);
+                if (type_1.symbol.name == 'TemplateRef' && isReferenceType(type_1)) {
+                    var typeReference = type_1;
                     if (typeReference.typeArguments.length === 1) {
                         return typeReference.typeArguments[0].symbol;
                     }
@@ -599,13 +657,13 @@ class TypeScriptSymbolQuery {
             }
             ;
         }
-    }
-    getTsTypeOf(symbol) {
-        const type = this.getTypeWrapper(symbol);
+    };
+    TypeScriptSymbolQuery.prototype.getTsTypeOf = function (symbol) {
+        var type = this.getTypeWrapper(symbol);
         return type && type.tsType;
-    }
-    getTypeWrapper(symbol) {
-        let type = undefined;
+    };
+    TypeScriptSymbolQuery.prototype.getTypeWrapper = function (symbol) {
+        var type = undefined;
         if (symbol instanceof TypeWrapper) {
             type = symbol;
         }
@@ -613,137 +671,260 @@ class TypeScriptSymbolQuery {
             type = symbol.type;
         }
         return type;
-    }
-}
+    };
+    return TypeScriptSymbolQuery;
+}());
 function typeCallable(type) {
-    const signatures = type.getCallSignatures();
+    var signatures = type.getCallSignatures();
     return signatures && signatures.length != 0;
 }
 function signaturesOf(type, context) {
-    return type.getCallSignatures().map(s => new SignatureWrapper(s, context));
+    return type.getCallSignatures().map(function (s) { return new SignatureWrapper(s, context); });
 }
 function selectSignature(type, context, types) {
     // TODO: Do a better job of selecting the right signature.
-    const signatures = type.getCallSignatures();
+    var signatures = type.getCallSignatures();
     return signatures.length ? new SignatureWrapper(signatures[0], context) : undefined;
 }
 function toSymbolTable(symbols) {
-    const result = {};
-    for (const symbol of symbols) {
+    var result = {};
+    for (var _i = 0, symbols_1 = symbols; _i < symbols_1.length; _i++) {
+        var symbol = symbols_1[_i];
         result[symbol.name] = symbol;
     }
     return result;
 }
 function toSymbols(symbolTable, filter) {
-    const result = [];
-    const own = typeof symbolTable.hasOwnProperty === 'function' ?
-            (name) => symbolTable.hasOwnProperty(name) :
-            (name) => !!symbolTable[name];
-    for (const name in symbolTable) {
-        if (own(name) && (!filter || filter(symbolTable[name]))) {
-            result.push(symbolTable[name]);
+    var result = [];
+    var own = typeof symbolTable.hasOwnProperty === 'function' ?
+        function (name) { return symbolTable.hasOwnProperty(name); } :
+        function (name) { return !!symbolTable[name]; };
+    for (var name_1 in symbolTable) {
+        if (own(name_1) && (!filter || filter(symbolTable[name_1]))) {
+            result.push(symbolTable[name_1]);
         }
     }
     return result;
 }
-class TypeWrapper {
-    constructor(tsType, context) {
+var TypeWrapper = (function () {
+    function TypeWrapper(tsType, context) {
         this.tsType = tsType;
         this.context = context;
         if (!tsType) {
             throw Error('Internal: null type');
         }
     }
-    get name() {
-        const symbol = this.tsType.symbol;
-        return (symbol && symbol.name) || '<anonymous>';
-    }
-    get kind() { return 'type'; }
-    get language() { return 'typescript'; }
-    get type() { return undefined; }
-    get container() { return undefined; }
-    get public() { return true; }
-    get callable() { return typeCallable(this.tsType); }
-    get definition() { return definitionFromTsSymbol(this.tsType.getSymbol()); }
-    members() {
+    Object.defineProperty(TypeWrapper.prototype, "name", {
+        get: function () {
+            var symbol = this.tsType.symbol;
+            return (symbol && symbol.name) || '<anonymous>';
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(TypeWrapper.prototype, "kind", {
+        get: function () { return 'type'; },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(TypeWrapper.prototype, "language", {
+        get: function () { return 'typescript'; },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(TypeWrapper.prototype, "type", {
+        get: function () { return undefined; },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(TypeWrapper.prototype, "container", {
+        get: function () { return undefined; },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(TypeWrapper.prototype, "public", {
+        get: function () { return true; },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(TypeWrapper.prototype, "callable", {
+        get: function () { return typeCallable(this.tsType); },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(TypeWrapper.prototype, "definition", {
+        get: function () { return definitionFromTsSymbol(this.tsType.getSymbol()); },
+        enumerable: true,
+        configurable: true
+    });
+    TypeWrapper.prototype.members = function () {
         return new SymbolTableWrapper(this.tsType.getProperties(), this.context);
-    }
-    signatures() { return signaturesOf(this.tsType, this.context); }
-    selectSignature(types) {
+    };
+    TypeWrapper.prototype.signatures = function () { return signaturesOf(this.tsType, this.context); };
+    TypeWrapper.prototype.selectSignature = function (types) {
         return selectSignature(this.tsType, this.context, types);
-    }
-    indexed(argument) { return undefined; }
-}
-class SymbolWrapper {
-    constructor(symbol, context) {
+    };
+    TypeWrapper.prototype.indexed = function (argument) { return undefined; };
+    return TypeWrapper;
+}());
+var SymbolWrapper = (function () {
+    function SymbolWrapper(symbol, context) {
         this.symbol = symbol;
         this.context = context;
     }
-    get name() { return this.symbol.name; }
-    get kind() { return this.callable ? 'method' : 'property'; }
-    get language() { return 'typescript'; }
-    get type() { return new TypeWrapper(this.tsType, this.context); }
-    get container() { return getContainerOf(this.symbol, this.context); }
-    get public() {
-        // Symbols that are not explicitly made private are public.
-        return !isSymbolPrivate(this.symbol);
-    }
-    get callable() { return typeCallable(this.tsType); }
-    get definition() { return definitionFromTsSymbol(this.symbol); }
-    members() { return new SymbolTableWrapper(this.symbol.members, this.context); }
-    signatures() { return signaturesOf(this.tsType, this.context); }
-    selectSignature(types) {
+    Object.defineProperty(SymbolWrapper.prototype, "name", {
+        get: function () { return this.symbol.name; },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(SymbolWrapper.prototype, "kind", {
+        get: function () { return this.callable ? 'method' : 'property'; },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(SymbolWrapper.prototype, "language", {
+        get: function () { return 'typescript'; },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(SymbolWrapper.prototype, "type", {
+        get: function () { return new TypeWrapper(this.tsType, this.context); },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(SymbolWrapper.prototype, "container", {
+        get: function () { return getContainerOf(this.symbol, this.context); },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(SymbolWrapper.prototype, "public", {
+        get: function () {
+            // Symbols that are not explicitly made private are public.
+            return !isSymbolPrivate(this.symbol);
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(SymbolWrapper.prototype, "callable", {
+        get: function () { return typeCallable(this.tsType); },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(SymbolWrapper.prototype, "definition", {
+        get: function () { return definitionFromTsSymbol(this.symbol); },
+        enumerable: true,
+        configurable: true
+    });
+    SymbolWrapper.prototype.members = function () { return new SymbolTableWrapper(this.symbol.members, this.context); };
+    SymbolWrapper.prototype.signatures = function () { return signaturesOf(this.tsType, this.context); };
+    SymbolWrapper.prototype.selectSignature = function (types) {
         return selectSignature(this.tsType, this.context, types);
-    }
-    indexed(argument) { return undefined; }
-    get tsType() {
-        let type = this._tsType;
-        if (!type) {
-            type = this._tsType =
-                this.context.checker.getTypeOfSymbolAtLocation(this.symbol, this.context.node);
-        }
-        return type;
-    }
-}
-class DeclaredSymbol {
-    constructor(declaration) {
+    };
+    SymbolWrapper.prototype.indexed = function (argument) { return undefined; };
+    Object.defineProperty(SymbolWrapper.prototype, "tsType", {
+        get: function () {
+            var type = this._tsType;
+            if (!type) {
+                type = this._tsType =
+                    this.context.checker.getTypeOfSymbolAtLocation(this.symbol, this.context.node);
+            }
+            return type;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    return SymbolWrapper;
+}());
+var DeclaredSymbol = (function () {
+    function DeclaredSymbol(declaration) {
         this.declaration = declaration;
     }
-    get name() { return this.declaration.name; }
-    get kind() { return this.declaration.kind; }
-    get language() { return 'ng-template'; }
-    get container() { return undefined; }
-    get type() { return this.declaration.type; }
-    get callable() { return this.declaration.type.callable; }
-    get public() { return true; }
-    get definition() { return this.declaration.definition; }
-    members() { return this.declaration.type.members(); }
-    signatures() { return this.declaration.type.signatures(); }
-    selectSignature(types) {
+    Object.defineProperty(DeclaredSymbol.prototype, "name", {
+        get: function () { return this.declaration.name; },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(DeclaredSymbol.prototype, "kind", {
+        get: function () { return this.declaration.kind; },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(DeclaredSymbol.prototype, "language", {
+        get: function () { return 'ng-template'; },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(DeclaredSymbol.prototype, "container", {
+        get: function () { return undefined; },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(DeclaredSymbol.prototype, "type", {
+        get: function () { return this.declaration.type; },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(DeclaredSymbol.prototype, "callable", {
+        get: function () { return this.declaration.type.callable; },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(DeclaredSymbol.prototype, "public", {
+        get: function () { return true; },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(DeclaredSymbol.prototype, "definition", {
+        get: function () { return this.declaration.definition; },
+        enumerable: true,
+        configurable: true
+    });
+    DeclaredSymbol.prototype.members = function () { return this.declaration.type.members(); };
+    DeclaredSymbol.prototype.signatures = function () { return this.declaration.type.signatures(); };
+    DeclaredSymbol.prototype.selectSignature = function (types) {
         return this.declaration.type.selectSignature(types);
-    }
-    indexed(argument) { return undefined; }
-}
-class SignatureWrapper {
-    constructor(signature, context) {
+    };
+    DeclaredSymbol.prototype.indexed = function (argument) { return undefined; };
+    return DeclaredSymbol;
+}());
+var SignatureWrapper = (function () {
+    function SignatureWrapper(signature, context) {
         this.signature = signature;
         this.context = context;
     }
-    get arguments() {
-        return new SymbolTableWrapper(this.signature.getParameters(), this.context);
-    }
-    get result() { return new TypeWrapper(this.signature.getReturnType(), this.context); }
-}
-class SignatureResultOverride {
-    constructor(signature, resultType) {
+    Object.defineProperty(SignatureWrapper.prototype, "arguments", {
+        get: function () {
+            return new SymbolTableWrapper(this.signature.getParameters(), this.context);
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(SignatureWrapper.prototype, "result", {
+        get: function () { return new TypeWrapper(this.signature.getReturnType(), this.context); },
+        enumerable: true,
+        configurable: true
+    });
+    return SignatureWrapper;
+}());
+var SignatureResultOverride = (function () {
+    function SignatureResultOverride(signature, resultType) {
         this.signature = signature;
         this.resultType = resultType;
     }
-    get arguments() { return this.signature.arguments; }
-    get result() { return this.resultType; }
-}
-class SymbolTableWrapper {
-    constructor(symbols, context, filter) {
+    Object.defineProperty(SignatureResultOverride.prototype, "arguments", {
+        get: function () { return this.signature.arguments; },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(SignatureResultOverride.prototype, "result", {
+        get: function () { return this.resultType; },
+        enumerable: true,
+        configurable: true
+    });
+    return SignatureResultOverride;
+}());
+var SymbolTableWrapper = (function () {
+    function SymbolTableWrapper(symbols, context, filter) {
         this.context = context;
         if (Array.isArray(symbols)) {
             this.symbols = filter ? symbols.filter(filter) : symbols;
@@ -754,76 +935,130 @@ class SymbolTableWrapper {
             this.symbolTable = filter ? toSymbolTable(this.symbols) : symbols;
         }
     }
-    get size() { return this.symbols.length; }
-    get(key) {
-        const symbol = this.symbolTable[key];
+    Object.defineProperty(SymbolTableWrapper.prototype, "size", {
+        get: function () { return this.symbols.length; },
+        enumerable: true,
+        configurable: true
+    });
+    SymbolTableWrapper.prototype.get = function (key) {
+        var symbol = this.symbolTable[key];
         return symbol ? new SymbolWrapper(symbol, this.context) : undefined;
-    }
-    has(key) { return this.symbolTable[key] != null; }
-    values() { return this.symbols.map(s => new SymbolWrapper(s, this.context)); }
-}
-class MapSymbolTable {
-    constructor() {
+    };
+    SymbolTableWrapper.prototype.has = function (key) { return this.symbolTable[key] != null; };
+    SymbolTableWrapper.prototype.values = function () {
+        var _this = this;
+        return this.symbols.map(function (s) { return new SymbolWrapper(s, _this.context); });
+    };
+    return SymbolTableWrapper;
+}());
+var MapSymbolTable = (function () {
+    function MapSymbolTable() {
         this.map = new Map();
         this._values = [];
     }
-    get size() { return this.map.size; }
-    get(key) { return this.map.get(key); }
-    add(symbol) {
+    Object.defineProperty(MapSymbolTable.prototype, "size", {
+        get: function () { return this.map.size; },
+        enumerable: true,
+        configurable: true
+    });
+    MapSymbolTable.prototype.get = function (key) { return this.map.get(key); };
+    MapSymbolTable.prototype.add = function (symbol) {
         if (this.map.has(symbol.name)) {
-            const previous = this.map.get(symbol.name);
+            var previous = this.map.get(symbol.name);
             this._values[this._values.indexOf(previous)] = symbol;
         }
         this.map.set(symbol.name, symbol);
         this._values.push(symbol);
-    }
-    addAll(symbols) {
-        for (const symbol of symbols) {
+    };
+    MapSymbolTable.prototype.addAll = function (symbols) {
+        for (var _i = 0, symbols_2 = symbols; _i < symbols_2.length; _i++) {
+            var symbol = symbols_2[_i];
             this.add(symbol);
         }
-    }
-    has(key) { return this.map.has(key); }
-    values() {
+    };
+    MapSymbolTable.prototype.has = function (key) { return this.map.has(key); };
+    MapSymbolTable.prototype.values = function () {
         // Switch to this.map.values once iterables are supported by the target language.
         return this._values;
-    }
-}
-class PipesTable {
-    constructor(pipes, context) {
+    };
+    return MapSymbolTable;
+}());
+var PipesTable = (function () {
+    function PipesTable(pipes, context) {
         this.pipes = pipes;
         this.context = context;
     }
-    get size() { return this.pipes.length; }
-    get(key) {
-        const pipe = this.pipes.find(pipe => pipe.name == key);
+    Object.defineProperty(PipesTable.prototype, "size", {
+        get: function () { return this.pipes.length; },
+        enumerable: true,
+        configurable: true
+    });
+    PipesTable.prototype.get = function (key) {
+        var pipe = this.pipes.find(function (pipe) { return pipe.name == key; });
         if (pipe) {
             return new PipeSymbol(pipe, this.context);
         }
-    }
-    has(key) { return this.pipes.find(pipe => pipe.name == key) != null; }
-    values() { return this.pipes.map(pipe => new PipeSymbol(pipe, this.context)); }
-}
-class PipeSymbol {
-    constructor(pipe, context) {
+    };
+    PipesTable.prototype.has = function (key) { return this.pipes.find(function (pipe) { return pipe.name == key; }) != null; };
+    PipesTable.prototype.values = function () {
+        var _this = this;
+        return this.pipes.map(function (pipe) { return new PipeSymbol(pipe, _this.context); });
+    };
+    return PipesTable;
+}());
+var PipeSymbol = (function () {
+    function PipeSymbol(pipe, context) {
         this.pipe = pipe;
         this.context = context;
     }
-    get name() { return this.pipe.name; }
-    get kind() { return 'pipe'; }
-    get language() { return 'typescript'; }
-    get type() { return new TypeWrapper(this.tsType, this.context); }
-    get container() { return undefined; }
-    get callable() { return true; }
-    get public() { return true; }
-    get definition() { return definitionFromTsSymbol(this.tsType.getSymbol()); }
-    members() { return EmptyTable.instance; }
-    signatures() { return signaturesOf(this.tsType, this.context); }
-    selectSignature(types) {
-        let signature = selectSignature(this.tsType, this.context, types);
+    Object.defineProperty(PipeSymbol.prototype, "name", {
+        get: function () { return this.pipe.name; },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(PipeSymbol.prototype, "kind", {
+        get: function () { return 'pipe'; },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(PipeSymbol.prototype, "language", {
+        get: function () { return 'typescript'; },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(PipeSymbol.prototype, "type", {
+        get: function () { return new TypeWrapper(this.tsType, this.context); },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(PipeSymbol.prototype, "container", {
+        get: function () { return undefined; },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(PipeSymbol.prototype, "callable", {
+        get: function () { return true; },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(PipeSymbol.prototype, "public", {
+        get: function () { return true; },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(PipeSymbol.prototype, "definition", {
+        get: function () { return definitionFromTsSymbol(this.tsType.getSymbol()); },
+        enumerable: true,
+        configurable: true
+    });
+    PipeSymbol.prototype.members = function () { return EmptyTable.instance; };
+    PipeSymbol.prototype.signatures = function () { return signaturesOf(this.tsType, this.context); };
+    PipeSymbol.prototype.selectSignature = function (types) {
+        var signature = selectSignature(this.tsType, this.context, types);
         if (types.length == 1) {
-            const parameterType = types[0];
+            var parameterType = types[0];
             if (parameterType instanceof TypeWrapper) {
-                let resultType = undefined;
+                var resultType = undefined;
                 switch (this.name) {
                     case 'async':
                         switch (parameterType.name) {
@@ -844,50 +1079,62 @@ class PipeSymbol {
             }
         }
         return signature;
-    }
-    indexed(argument) { return undefined; }
-    get tsType() {
-        let type = this._tsType;
-        if (!type) {
-            const classSymbol = this.findClassSymbol(this.pipe.symbol);
-            if (classSymbol) {
-                type = this._tsType = this.findTransformMethodType(classSymbol);
-            }
+    };
+    PipeSymbol.prototype.indexed = function (argument) { return undefined; };
+    Object.defineProperty(PipeSymbol.prototype, "tsType", {
+        get: function () {
+            var type = this._tsType;
             if (!type) {
-                type = this._tsType = getBuiltinTypeFromTs(BuiltinType.Any, this.context);
+                var classSymbol = this.findClassSymbol(this.pipe.symbol);
+                if (classSymbol) {
+                    type = this._tsType = this.findTransformMethodType(classSymbol);
+                }
+                if (!type) {
+                    type = this._tsType = getBuiltinTypeFromTs(BuiltinType.Any, this.context);
+                }
             }
-        }
-        return type;
-    }
-    findClassSymbol(type) {
+            return type;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    PipeSymbol.prototype.findClassSymbol = function (type) {
         return findClassSymbolInContext(type, this.context);
-    }
-    findTransformMethodType(classSymbol) {
-        const transform = classSymbol.members['transform'];
+    };
+    PipeSymbol.prototype.findTransformMethodType = function (classSymbol) {
+        var transform = classSymbol.members['transform'];
         if (transform) {
             return this.context.checker.getTypeOfSymbolAtLocation(transform, this.context.node);
         }
-    }
-}
+    };
+    return PipeSymbol;
+}());
 function findClassSymbolInContext(type, context) {
-    const sourceFile = context.program.getSourceFile(type.filePath);
+    var sourceFile = context.program.getSourceFile(type.filePath);
     if (sourceFile) {
-        const moduleSymbol = sourceFile.module || sourceFile.symbol;
-        const exports = context.checker.getExportsOfModule(moduleSymbol);
-        return (exports || []).find(symbol => symbol.name == type.name);
+        var moduleSymbol = sourceFile.module || sourceFile.symbol;
+        var exports_1 = context.checker.getExportsOfModule(moduleSymbol);
+        return (exports_1 || []).find(function (symbol) { return symbol.name == type.name; });
     }
 }
-class EmptyTable {
-    get size() { return 0; }
-    get(key) { return undefined; }
-    has(key) { return false; }
-    values() { return []; }
-}
-EmptyTable.instance = new EmptyTable();
+var EmptyTable = (function () {
+    function EmptyTable() {
+    }
+    Object.defineProperty(EmptyTable.prototype, "size", {
+        get: function () { return 0; },
+        enumerable: true,
+        configurable: true
+    });
+    EmptyTable.prototype.get = function (key) { return undefined; };
+    EmptyTable.prototype.has = function (key) { return false; };
+    EmptyTable.prototype.values = function () { return []; };
+    EmptyTable.instance = new EmptyTable();
+    return EmptyTable;
+}());
 function findTsConfig(fileName) {
-    let dir = path.dirname(fileName);
+    var dir = path.dirname(fileName);
     while (fs.existsSync(dir)) {
-        const candidate = path.join(dir, 'tsconfig.json');
+        var candidate = path.join(dir, 'tsconfig.json');
         if (fs.existsSync(candidate))
             return candidate;
         dir = path.dirname(dir);
@@ -905,7 +1152,7 @@ function walkUpBindingElementsAndPatterns(node) {
 }
 function getCombinedNodeFlags(node) {
     node = walkUpBindingElementsAndPatterns(node);
-    let flags = node.flags;
+    var flags = node.flags;
     if (node.kind === ts.SyntaxKind.VariableDeclaration) {
         node = node.parent;
     }
@@ -922,9 +1169,9 @@ function isSymbolPrivate(s) {
     return s.valueDeclaration && isPrivate(s.valueDeclaration);
 }
 function getBuiltinTypeFromTs(kind, context) {
-    let type;
-    const checker = context.checker;
-    const node = context.node;
+    var type;
+    var checker = context.checker;
+    var node = context.node;
     switch (kind) {
         case BuiltinType.Any:
             type = checker.getTypeAtLocation(setParents({
@@ -942,7 +1189,7 @@ function getBuiltinTypeFromTs(kind, context) {
                 checker.getTypeAtLocation(setParents({ kind: ts.SyntaxKind.NullKeyword }, node));
             break;
         case BuiltinType.Number:
-            const numeric = { kind: ts.SyntaxKind.NumericLiteral };
+            var numeric = { kind: ts.SyntaxKind.NumericLiteral };
             setParents({ kind: ts.SyntaxKind.ExpressionStatement, expression: numeric }, node);
             type = checker.getTypeAtLocation(numeric);
             break;
@@ -956,13 +1203,13 @@ function getBuiltinTypeFromTs(kind, context) {
             }, node));
             break;
         default:
-            throw new Error(`Internal error, unhandled literal kind ${kind}:${BuiltinType[kind]}`);
+            throw new Error("Internal error, unhandled literal kind " + kind + ":" + BuiltinType[kind]);
     }
     return type;
 }
 function setParents(node, parent) {
     node.parent = parent;
-    ts.forEachChild(node, child => setParents(child, node));
+    ts.forEachChild(node, function (child) { return setParents(child, node); });
     return node;
 }
 function spanOf(node) {
@@ -975,24 +1222,24 @@ function shrink(span, offset) {
 }
 function spanAt(sourceFile, line, column) {
     if (line != null && column != null) {
-        const position = ts.getPositionOfLineAndCharacter(sourceFile, line, column);
-        const findChild = function findChild(node) {
-            if (node.kind > ts.SyntaxKind.LastToken && node.pos <= position && node.end > position) {
-                const betterNode = ts.forEachChild(node, findChild);
+        var position_1 = ts.getPositionOfLineAndCharacter(sourceFile, line, column);
+        var findChild = function findChild(node) {
+            if (node.kind > ts.SyntaxKind.LastToken && node.pos <= position_1 && node.end > position_1) {
+                var betterNode = ts.forEachChild(node, findChild);
                 return betterNode || node;
             }
         };
-        const node = ts.forEachChild(sourceFile, findChild);
+        var node = ts.forEachChild(sourceFile, findChild);
         if (node) {
             return { start: node.getStart(), end: node.getEnd() };
         }
     }
 }
 function definitionFromTsSymbol(symbol) {
-    const declarations = symbol.declarations;
+    var declarations = symbol.declarations;
     if (declarations) {
-        return declarations.map(declaration => {
-            const sourceFile = declaration.getSourceFile();
+        return declarations.map(function (declaration) {
+            var sourceFile = declaration.getSourceFile();
             return {
                 fileName: sourceFile.fileName,
                 span: { start: declaration.getStart(), end: declaration.getEnd() }
@@ -1014,10 +1261,11 @@ function parentDeclarationOf(node) {
 }
 function getContainerOf(symbol, context) {
     if (symbol.getFlags() & ts.SymbolFlags.ClassMember && symbol.declarations) {
-        for (const declaration of symbol.declarations) {
-            const parent = parentDeclarationOf(declaration);
-            if (parent) {
-                const type = context.checker.getTypeAtLocation(parent);
+        for (var _i = 0, _a = symbol.declarations; _i < _a.length; _i++) {
+            var declaration = _a[_i];
+            var parent_1 = parentDeclarationOf(declaration);
+            if (parent_1) {
+                var type = context.checker.getTypeAtLocation(parent_1);
                 if (type) {
                     return new TypeWrapper(type, context);
                 }
@@ -1027,7 +1275,7 @@ function getContainerOf(symbol, context) {
 }
 function getTypeParameterOf(type, name) {
     if (type && type.symbol && type.symbol.name == name) {
-        const typeArguments = type.typeArguments;
+        var typeArguments = type.typeArguments;
         if (typeArguments && typeArguments.length <= 1) {
             return typeArguments[0];
         }
@@ -1052,11 +1300,12 @@ function typeKindOf(type) {
         }
         else if (type.flags & ts.TypeFlags.Union) {
             // If all the constituent types of a union are the same kind, it is also that kind.
-            let candidate;
-            const unionType = type;
+            var candidate = void 0;
+            var unionType = type;
             if (unionType.types.length > 0) {
                 candidate = typeKindOf(unionType.types[0]);
-                for (const subType of unionType.types) {
+                for (var _i = 0, _a = unionType.types; _i < _a.length; _i++) {
+                    var subType = _a[_i];
                     if (candidate != typeKindOf(subType)) {
                         return BuiltinType.Other;
                     }

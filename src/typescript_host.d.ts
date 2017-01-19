@@ -57,7 +57,7 @@ export declare class TypeScriptServiceHost implements LanguageServiceHost {
     /**
      * Angular LanguageServiceHost implementation
      */
-    readonly resolver: CompileMetadataResolver;
+    resolver: CompileMetadataResolver;
     getTemplateReferences(): string[];
     getTemplateAt(fileName: string, position: number): TemplateSource | undefined;
     getAnalyzedModules(): NgAnalyzedModules;
@@ -66,18 +66,18 @@ export declare class TypeScriptServiceHost implements LanguageServiceHost {
     getDeclarations(fileName: string): Declarations;
     getSourceFile(fileName: string): ts.SourceFile;
     updateAnalyzedModules(): void;
-    private readonly program;
-    private readonly checker;
+    private program;
+    private checker;
     private validate();
     private clearCaches();
     private ensureTemplateMap();
     private getSourceFromDeclaration(fileName, version, source, span, type, declaration, node, sourceFile);
     private getSourceFromNode(fileName, version, node);
     private getSourceFromType(fileName, version, type);
-    private readonly reflectorHost;
+    private reflectorHost;
     private collectError(error, filePath);
-    private readonly staticSymbolResolver;
-    private readonly reflector;
+    private staticSymbolResolver;
+    private reflector;
     private getTemplateClassFromStaticSymbol(type);
     private static missingTemplate;
     /**

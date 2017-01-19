@@ -5,6 +5,11 @@
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 import { identifierName, tokenReference } from '@angular/compiler';
 import { ASTWithSource } from '@angular/compiler/src/expression_parser/ast';
 import { EmbeddedTemplateAst, templateVisitAll } from '@angular/compiler/src/template_parser/template_ast';
@@ -12,177 +17,182 @@ import { AstPath as AstPathBase } from './ast_path';
 import { TemplateAstChildVisitor } from './template_path';
 import { BuiltinType, DiagnosticKind } from './types';
 import { inSpan } from './utils';
-export function getExpressionDiagnostics(scope, ast, query, context = {}) {
-    const analyzer = new AstType(scope, query, context);
+export function getExpressionDiagnostics(scope, ast, query, context) {
+    if (context === void 0) { context = {}; }
+    var analyzer = new AstType(scope, query, context);
     analyzer.getDiagnostics(ast);
     return analyzer.diagnostics;
 }
 export function getExpressionCompletions(scope, ast, position, query) {
-    const path = new AstPath(ast, position);
+    var path = new AstPath(ast, position);
     if (path.empty)
         return undefined;
-    const tail = path.tail;
-    let result = scope;
+    var tail = path.tail;
+    var result = scope;
     function getType(ast) { return new AstType(scope, query, {}).getType(ast); }
     // If the completion request is in a not in a pipe or property access then the global scope
     // (that is the scope of the implicit receiver) is the right scope as the user is typing the
     // beginning of an expression.
     tail.visit({
-        visitBinary(ast) { },
-        visitChain(ast) { },
-        visitConditional(ast) { },
-        visitFunctionCall(ast) { },
-        visitImplicitReceiver(ast) { },
-        visitInterpolation(ast) { result = undefined; },
-        visitKeyedRead(ast) { },
-        visitKeyedWrite(ast) { },
-        visitLiteralArray(ast) { },
-        visitLiteralMap(ast) { },
-        visitLiteralPrimitive(ast) { },
-        visitMethodCall(ast) { },
-        visitPipe(ast) {
+        visitBinary: function (ast) { },
+        visitChain: function (ast) { },
+        visitConditional: function (ast) { },
+        visitFunctionCall: function (ast) { },
+        visitImplicitReceiver: function (ast) { },
+        visitInterpolation: function (ast) { result = undefined; },
+        visitKeyedRead: function (ast) { },
+        visitKeyedWrite: function (ast) { },
+        visitLiteralArray: function (ast) { },
+        visitLiteralMap: function (ast) { },
+        visitLiteralPrimitive: function (ast) { },
+        visitMethodCall: function (ast) { },
+        visitPipe: function (ast) {
             if (position >= ast.exp.span.end &&
                 (!ast.args || !ast.args.length || position < ast.args[0].span.start)) {
                 // We are in a position a pipe name is expected.
                 result = query.getPipes();
             }
         },
-        visitPrefixNot(ast) { },
-        visitPropertyRead(ast) {
-            const receiverType = getType(ast.receiver);
+        visitPrefixNot: function (ast) { },
+        visitPropertyRead: function (ast) {
+            var receiverType = getType(ast.receiver);
             result = receiverType ? receiverType.members() : scope;
         },
-        visitPropertyWrite(ast) {
-            const receiverType = getType(ast.receiver);
+        visitPropertyWrite: function (ast) {
+            var receiverType = getType(ast.receiver);
             result = receiverType ? receiverType.members() : scope;
         },
-        visitQuote(ast) {
+        visitQuote: function (ast) {
             // For a quote, return the members of any (if there are any).
             result = query.getBuiltinType(BuiltinType.Any).members();
         },
-        visitSafeMethodCall(ast) {
-            const receiverType = getType(ast.receiver);
+        visitSafeMethodCall: function (ast) {
+            var receiverType = getType(ast.receiver);
             result = receiverType ? receiverType.members() : scope;
         },
-        visitSafePropertyRead(ast) {
-            const receiverType = getType(ast.receiver);
+        visitSafePropertyRead: function (ast) {
+            var receiverType = getType(ast.receiver);
             result = receiverType ? receiverType.members() : scope;
         },
     });
     return result && result.values();
 }
 export function getExpressionSymbol(scope, ast, position, query) {
-    const path = new AstPath(ast, position, /* excludeEmpty */ true);
+    var path = new AstPath(ast, position, /* excludeEmpty */ true);
     if (path.empty)
         return undefined;
-    const tail = path.tail;
+    var tail = path.tail;
     function getType(ast) { return new AstType(scope, query, {}).getType(ast); }
-    let symbol = undefined;
-    let span = undefined;
+    var symbol = undefined;
+    var span = undefined;
     // If the completion request is in a not in a pipe or property access then the global scope
     // (that is the scope of the implicit receiver) is the right scope as the user is typing the
     // beginning of an expression.
     tail.visit({
-        visitBinary(ast) { },
-        visitChain(ast) { },
-        visitConditional(ast) { },
-        visitFunctionCall(ast) { },
-        visitImplicitReceiver(ast) { },
-        visitInterpolation(ast) { },
-        visitKeyedRead(ast) { },
-        visitKeyedWrite(ast) { },
-        visitLiteralArray(ast) { },
-        visitLiteralMap(ast) { },
-        visitLiteralPrimitive(ast) { },
-        visitMethodCall(ast) {
-            const receiverType = getType(ast.receiver);
+        visitBinary: function (ast) { },
+        visitChain: function (ast) { },
+        visitConditional: function (ast) { },
+        visitFunctionCall: function (ast) { },
+        visitImplicitReceiver: function (ast) { },
+        visitInterpolation: function (ast) { },
+        visitKeyedRead: function (ast) { },
+        visitKeyedWrite: function (ast) { },
+        visitLiteralArray: function (ast) { },
+        visitLiteralMap: function (ast) { },
+        visitLiteralPrimitive: function (ast) { },
+        visitMethodCall: function (ast) {
+            var receiverType = getType(ast.receiver);
             symbol = receiverType && receiverType.members().get(ast.name);
             span = ast.span;
         },
-        visitPipe(ast) {
+        visitPipe: function (ast) {
             if (position >= ast.exp.span.end &&
                 (!ast.args || !ast.args.length || position < ast.args[0].span.start)) {
                 // We are in a position a pipe name is expected.
-                const pipes = query.getPipes();
+                var pipes = query.getPipes();
                 if (pipes) {
                     symbol = pipes.get(ast.name);
                     span = ast.span;
                 }
             }
         },
-        visitPrefixNot(ast) { },
-        visitPropertyRead(ast) {
-            const receiverType = getType(ast.receiver);
+        visitPrefixNot: function (ast) { },
+        visitPropertyRead: function (ast) {
+            var receiverType = getType(ast.receiver);
             symbol = receiverType && receiverType.members().get(ast.name);
             span = ast.span;
         },
-        visitPropertyWrite(ast) {
-            const receiverType = getType(ast.receiver);
+        visitPropertyWrite: function (ast) {
+            var receiverType = getType(ast.receiver);
             symbol = receiverType && receiverType.members().get(ast.name);
             span = ast.span;
         },
-        visitQuote(ast) { },
-        visitSafeMethodCall(ast) {
-            const receiverType = getType(ast.receiver);
+        visitQuote: function (ast) { },
+        visitSafeMethodCall: function (ast) {
+            var receiverType = getType(ast.receiver);
             symbol = receiverType && receiverType.members().get(ast.name);
             span = ast.span;
         },
-        visitSafePropertyRead(ast) {
-            const receiverType = getType(ast.receiver);
+        visitSafePropertyRead: function (ast) {
+            var receiverType = getType(ast.receiver);
             symbol = receiverType && receiverType.members().get(ast.name);
             span = ast.span;
         },
     });
     if (symbol && span) {
-        return { symbol, span };
+        return { symbol: symbol, span: span };
     }
 }
 // Consider moving to expression_parser/ast
-class NullVisitor {
-    visitBinary(ast) { }
-    visitChain(ast) { }
-    visitConditional(ast) { }
-    visitFunctionCall(ast) { }
-    visitImplicitReceiver(ast) { }
-    visitInterpolation(ast) { }
-    visitKeyedRead(ast) { }
-    visitKeyedWrite(ast) { }
-    visitLiteralArray(ast) { }
-    visitLiteralMap(ast) { }
-    visitLiteralPrimitive(ast) { }
-    visitMethodCall(ast) { }
-    visitPipe(ast) { }
-    visitPrefixNot(ast) { }
-    visitPropertyRead(ast) { }
-    visitPropertyWrite(ast) { }
-    visitQuote(ast) { }
-    visitSafeMethodCall(ast) { }
-    visitSafePropertyRead(ast) { }
-}
-export class TypeDiagnostic {
-    constructor(kind, message, ast) {
+var NullVisitor = (function () {
+    function NullVisitor() {
+    }
+    NullVisitor.prototype.visitBinary = function (ast) { };
+    NullVisitor.prototype.visitChain = function (ast) { };
+    NullVisitor.prototype.visitConditional = function (ast) { };
+    NullVisitor.prototype.visitFunctionCall = function (ast) { };
+    NullVisitor.prototype.visitImplicitReceiver = function (ast) { };
+    NullVisitor.prototype.visitInterpolation = function (ast) { };
+    NullVisitor.prototype.visitKeyedRead = function (ast) { };
+    NullVisitor.prototype.visitKeyedWrite = function (ast) { };
+    NullVisitor.prototype.visitLiteralArray = function (ast) { };
+    NullVisitor.prototype.visitLiteralMap = function (ast) { };
+    NullVisitor.prototype.visitLiteralPrimitive = function (ast) { };
+    NullVisitor.prototype.visitMethodCall = function (ast) { };
+    NullVisitor.prototype.visitPipe = function (ast) { };
+    NullVisitor.prototype.visitPrefixNot = function (ast) { };
+    NullVisitor.prototype.visitPropertyRead = function (ast) { };
+    NullVisitor.prototype.visitPropertyWrite = function (ast) { };
+    NullVisitor.prototype.visitQuote = function (ast) { };
+    NullVisitor.prototype.visitSafeMethodCall = function (ast) { };
+    NullVisitor.prototype.visitSafePropertyRead = function (ast) { };
+    return NullVisitor;
+}());
+export var TypeDiagnostic = (function () {
+    function TypeDiagnostic(kind, message, ast) {
         this.kind = kind;
         this.message = message;
         this.ast = ast;
     }
-}
+    return TypeDiagnostic;
+}());
 // AstType calculatetype of the ast given AST element.
-class AstType {
-    constructor(scope, query, context) {
+var AstType = (function () {
+    function AstType(scope, query, context) {
         this.scope = scope;
         this.query = query;
         this.context = context;
     }
-    getType(ast) { return ast.visit(this); }
-    getDiagnostics(ast) {
+    AstType.prototype.getType = function (ast) { return ast.visit(this); };
+    AstType.prototype.getDiagnostics = function (ast) {
         this.diagnostics = [];
-        const type = ast.visit(this);
+        var type = ast.visit(this);
         if (this.context.event && type.callable) {
             this.reportWarning('Unexpected callable expression. Expected a method call', ast);
         }
         return this.diagnostics;
-    }
-    visitBinary(ast) {
+    };
+    AstType.prototype.visitBinary = function (ast) {
         // Treat undefined and null as other.
         function normalize(kind, other) {
             switch (kind) {
@@ -192,16 +202,16 @@ class AstType {
             }
             return kind;
         }
-        const leftType = this.getType(ast.left);
-        const rightType = this.getType(ast.right);
-        const leftRawKind = this.query.getTypeKind(leftType);
-        const rightRawKind = this.query.getTypeKind(rightType);
-        const leftKind = normalize(leftRawKind, rightRawKind);
-        const rightKind = normalize(rightRawKind, leftRawKind);
+        var leftType = this.getType(ast.left);
+        var rightType = this.getType(ast.right);
+        var leftRawKind = this.query.getTypeKind(leftType);
+        var rightRawKind = this.query.getTypeKind(rightType);
+        var leftKind = normalize(leftRawKind, rightRawKind);
+        var rightKind = normalize(rightRawKind, leftRawKind);
         // The following swtich implements operator typing similar to the
         // type production tables in the TypeScript specification.
         // https://github.com/Microsoft/TypeScript/blob/v1.8.10/doc/spec.md#4.19
-        const operKind = leftKind << 8 | rightKind;
+        var operKind = leftKind << 8 | rightKind;
         switch (ast.operation) {
             case '*':
             case '/':
@@ -220,7 +230,7 @@ class AstType {
                     case BuiltinType.Number << 8 | BuiltinType.Number:
                         return this.query.getBuiltinType(BuiltinType.Number);
                     default:
-                        let errorAst = ast.left;
+                        var errorAst = ast.left;
                         switch (leftKind) {
                             case BuiltinType.Any:
                             case BuiltinType.Number:
@@ -291,37 +301,38 @@ class AstType {
             case '||':
                 return this.query.getTypeUnion(leftType, rightType);
         }
-        return this.reportError(`Unrecognized operator ${ast.operation}`, ast);
-    }
-    visitChain(ast) {
+        return this.reportError("Unrecognized operator " + ast.operation, ast);
+    };
+    AstType.prototype.visitChain = function (ast) {
         if (this.diagnostics) {
             // If we are producing diagnostics, visit the children
             visitChildren(ast, this);
         }
         // The type of a chain is always undefined.
         return this.query.getBuiltinType(BuiltinType.Undefined);
-    }
-    visitConditional(ast) {
+    };
+    AstType.prototype.visitConditional = function (ast) {
         // The type of a conditional is the union of the true and false conditions.
         return this.query.getTypeUnion(this.getType(ast.trueExp), this.getType(ast.falseExp));
-    }
-    visitFunctionCall(ast) {
+    };
+    AstType.prototype.visitFunctionCall = function (ast) {
+        var _this = this;
         // The type of a function call is the return type of the selected signature.
         // The signature is selected based on the types of the arguments. Angular doesn't
         // support contextual typing of arguments so this is simpler than TypeScript's
         // version.
-        const args = ast.args.map(arg => this.getType(arg));
-        const target = this.getType(ast.target);
+        var args = ast.args.map(function (arg) { return _this.getType(arg); });
+        var target = this.getType(ast.target);
         if (!target || !target.callable)
             return this.reportError('Call target is not callable', ast);
-        const signature = target.selectSignature(args);
+        var signature = target.selectSignature(args);
         if (signature)
             return signature.result;
         // TODO: Consider a better error message here.
         return this.reportError('Unable no compatible signature found for call', ast);
-    }
-    visitImplicitReceiver(ast) {
-        const _this = this;
+    };
+    AstType.prototype.visitImplicitReceiver = function (ast) {
+        var _this = this;
         // Return a pseudo-symbol for the implicit receiver.
         // The members of the implicit receiver are what is defined by the
         // scope passed into this class.
@@ -334,42 +345,44 @@ class AstType {
             callable: false,
             public: true,
             definition: undefined,
-            members() { return _this.scope; },
-            signatures() { return []; },
-            selectSignature(types) { return undefined; },
-            indexed(argument) { return undefined; }
+            members: function () { return _this.scope; },
+            signatures: function () { return []; },
+            selectSignature: function (types) { return undefined; },
+            indexed: function (argument) { return undefined; }
         };
-    }
-    visitInterpolation(ast) {
+    };
+    AstType.prototype.visitInterpolation = function (ast) {
         // If we are producing diagnostics, visit the children.
         if (this.diagnostics) {
             visitChildren(ast, this);
         }
         return this.undefinedType;
-    }
-    visitKeyedRead(ast) {
-        const targetType = this.getType(ast.obj);
-        const keyType = this.getType(ast.key);
-        const result = targetType.indexed(keyType);
+    };
+    AstType.prototype.visitKeyedRead = function (ast) {
+        var targetType = this.getType(ast.obj);
+        var keyType = this.getType(ast.key);
+        var result = targetType.indexed(keyType);
         return result || this.anyType;
-    }
-    visitKeyedWrite(ast) {
+    };
+    AstType.prototype.visitKeyedWrite = function (ast) {
         // The write of a type is the type of the value being written.
         return this.getType(ast.value);
-    }
-    visitLiteralArray(ast) {
+    };
+    AstType.prototype.visitLiteralArray = function (ast) {
+        var _this = this;
         // A type literal is an array type of the union of the elements
-        return this.query.getArrayType(this.query.getTypeUnion(...ast.expressions.map(element => this.getType(element))));
-    }
-    visitLiteralMap(ast) {
+        return this.query.getArrayType((_a = this.query).getTypeUnion.apply(_a, ast.expressions.map(function (element) { return _this.getType(element); })));
+        var _a;
+    };
+    AstType.prototype.visitLiteralMap = function (ast) {
         // If we are producing diagnostics, visit the children
         if (this.diagnostics) {
             visitChildren(ast, this);
         }
         // TODO: Return a composite type.
         return this.anyType;
-    }
-    visitLiteralPrimitive(ast) {
+    };
+    AstType.prototype.visitLiteralPrimitive = function (ast) {
         // The type of a literal primitive depends on the value of the literal.
         switch (ast.value) {
             case true:
@@ -389,138 +402,153 @@ class AstType {
                         return this.reportError('Unrecognized primitive', ast);
                 }
         }
-    }
-    visitMethodCall(ast) {
+    };
+    AstType.prototype.visitMethodCall = function (ast) {
         return this.resolveMethodCall(this.getType(ast.receiver), ast);
-    }
-    visitPipe(ast) {
+    };
+    AstType.prototype.visitPipe = function (ast) {
+        var _this = this;
         // The type of a pipe node is the return type of the pipe's transform method. The table returned
         // by getPipes() is expected to contain symbols with the corresponding transform method type.
-        const pipe = this.query.getPipes().get(ast.name);
+        var pipe = this.query.getPipes().get(ast.name);
         if (!pipe)
-            return this.reportError(`No pipe by the name ${pipe.name} found`, ast);
-        const expType = this.getType(ast.exp);
-        const signature = pipe.selectSignature([expType].concat(ast.args.map(arg => this.getType(arg))));
+            return this.reportError("No pipe by the name " + pipe.name + " found", ast);
+        var expType = this.getType(ast.exp);
+        var signature = pipe.selectSignature([expType].concat(ast.args.map(function (arg) { return _this.getType(arg); })));
         if (!signature)
             return this.reportError('Unable to resolve signature for pipe invocation', ast);
         return signature.result;
-    }
-    visitPrefixNot(ast) {
+    };
+    AstType.prototype.visitPrefixNot = function (ast) {
         // The type of a prefix ! is always boolean.
         return this.query.getBuiltinType(BuiltinType.Boolean);
-    }
-    visitPropertyRead(ast) {
+    };
+    AstType.prototype.visitPropertyRead = function (ast) {
         return this.resolvePropertyRead(this.getType(ast.receiver), ast);
-    }
-    visitPropertyWrite(ast) {
+    };
+    AstType.prototype.visitPropertyWrite = function (ast) {
         // The type of a write is the type of the value being written.
         return this.getType(ast.value);
-    }
-    visitQuote(ast) {
+    };
+    AstType.prototype.visitQuote = function (ast) {
         // The type of a quoted expression is any.
         return this.query.getBuiltinType(BuiltinType.Any);
-    }
-    visitSafeMethodCall(ast) {
+    };
+    AstType.prototype.visitSafeMethodCall = function (ast) {
         return this.resolveMethodCall(this.query.getNonNullableType(this.getType(ast.receiver)), ast);
-    }
-    visitSafePropertyRead(ast) {
+    };
+    AstType.prototype.visitSafePropertyRead = function (ast) {
         return this.resolvePropertyRead(this.query.getNonNullableType(this.getType(ast.receiver)), ast);
-    }
-    get anyType() {
-        let result = this._anyType;
-        if (!result) {
-            result = this._anyType = this.query.getBuiltinType(BuiltinType.Any);
-        }
-        return result;
-    }
-    get undefinedType() {
-        let result = this._undefinedType;
-        if (!result) {
-            result = this._undefinedType = this.query.getBuiltinType(BuiltinType.Undefined);
-        }
-        return result;
-    }
-    resolveMethodCall(receiverType, ast) {
+    };
+    Object.defineProperty(AstType.prototype, "anyType", {
+        get: function () {
+            var result = this._anyType;
+            if (!result) {
+                result = this._anyType = this.query.getBuiltinType(BuiltinType.Any);
+            }
+            return result;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(AstType.prototype, "undefinedType", {
+        get: function () {
+            var result = this._undefinedType;
+            if (!result) {
+                result = this._undefinedType = this.query.getBuiltinType(BuiltinType.Undefined);
+            }
+            return result;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    AstType.prototype.resolveMethodCall = function (receiverType, ast) {
+        var _this = this;
         if (this.isAny(receiverType)) {
             return this.anyType;
         }
         // The type of a method is the selected methods result type.
-        const method = receiverType.members().get(ast.name);
+        var method = receiverType.members().get(ast.name);
         if (!method)
-            return this.reportError(`Unknown method ${ast.name}`, ast);
+            return this.reportError("Unknown method " + ast.name, ast);
         if (!method.type.callable)
-            return this.reportError(`Member ${ast.name} is not callable`, ast);
-        const signature = method.type.selectSignature(ast.args.map(arg => this.getType(arg)));
+            return this.reportError("Member " + ast.name + " is not callable", ast);
+        var signature = method.type.selectSignature(ast.args.map(function (arg) { return _this.getType(arg); }));
         if (!signature)
-            return this.reportError(`Unable to resolve signature for call of method ${ast.name}`, ast);
+            return this.reportError("Unable to resolve signature for call of method " + ast.name, ast);
         return signature.result;
-    }
-    resolvePropertyRead(receiverType, ast) {
+    };
+    AstType.prototype.resolvePropertyRead = function (receiverType, ast) {
         if (this.isAny(receiverType)) {
             return this.anyType;
         }
         // The type of a property read is the seelcted member's type.
-        const member = receiverType.members().get(ast.name);
+        var member = receiverType.members().get(ast.name);
         if (!member) {
-            let receiverInfo = receiverType.name;
+            var receiverInfo = receiverType.name;
             if (receiverInfo == '$implict') {
                 receiverInfo =
                     'The component declaration, template variable declarations, and element references do';
             }
             else {
-                receiverInfo = `'${receiverInfo}' does`;
+                receiverInfo = "'" + receiverInfo + "' does";
             }
-            return this.reportError(`Identifier '${ast.name}' is not defined. ${receiverInfo} not contain such a member`, ast);
+            return this.reportError("Identifier '" + ast.name + "' is not defined. " + receiverInfo + " not contain such a member", ast);
         }
         if (!member.public) {
-            let receiverInfo = receiverType.name;
+            var receiverInfo = receiverType.name;
             if (receiverInfo == '$implict') {
                 receiverInfo = 'the component';
             }
             else {
-                receiverInfo = `'${receiverInfo}'`;
+                receiverInfo = "'" + receiverInfo + "'";
             }
-            this.reportWarning(`Identifier '${ast.name}' refers to a private member of ${receiverInfo}`, ast);
+            this.reportWarning("Identifier '" + ast.name + "' refers to a private member of " + receiverInfo, ast);
         }
         return member.type;
-    }
-    reportError(message, ast) {
+    };
+    AstType.prototype.reportError = function (message, ast) {
         if (this.diagnostics) {
             this.diagnostics.push(new TypeDiagnostic(DiagnosticKind.Error, message, ast));
         }
         return this.anyType;
-    }
-    reportWarning(message, ast) {
+    };
+    AstType.prototype.reportWarning = function (message, ast) {
         if (this.diagnostics) {
             this.diagnostics.push(new TypeDiagnostic(DiagnosticKind.Warning, message, ast));
         }
         return this.anyType;
-    }
-    isAny(symbol) {
+    };
+    AstType.prototype.isAny = function (symbol) {
         return !symbol || this.query.getTypeKind(symbol) == BuiltinType.Any ||
             (symbol.type && this.isAny(symbol.type));
-    }
-}
-class AstPath extends AstPathBase {
-    constructor(ast, position, excludeEmpty = false) {
-        super(new AstPathVisitor(position, excludeEmpty).buildPath(ast).path);
+    };
+    return AstType;
+}());
+var AstPath = (function (_super) {
+    __extends(AstPath, _super);
+    function AstPath(ast, position, excludeEmpty) {
+        if (excludeEmpty === void 0) { excludeEmpty = false; }
+        _super.call(this, new AstPathVisitor(position, excludeEmpty).buildPath(ast).path);
         this.position = position;
     }
-}
-class AstPathVisitor extends NullVisitor {
-    constructor(position, excludeEmpty) {
-        super();
+    return AstPath;
+}(AstPathBase));
+var AstPathVisitor = (function (_super) {
+    __extends(AstPathVisitor, _super);
+    function AstPathVisitor(position, excludeEmpty) {
+        _super.call(this);
         this.position = position;
         this.excludeEmpty = excludeEmpty;
         this.path = [];
     }
-    visit(ast) {
+    AstPathVisitor.prototype.visit = function (ast) {
         if ((!this.excludeEmpty || ast.span.start < ast.span.end) && inSpan(this.position, ast.span)) {
             this.path.push(ast);
             visitChildren(ast, this);
         }
-    }
-    buildPath(ast) {
+    };
+    AstPathVisitor.prototype.buildPath = function (ast) {
         // We never care about the ASTWithSource node and its visit() method calls its ast's visit so
         // the visit() method above would never see it.
         if (ast instanceof ASTWithSource) {
@@ -528,79 +556,80 @@ class AstPathVisitor extends NullVisitor {
         }
         this.visit(ast);
         return this;
-    }
-}
+    };
+    return AstPathVisitor;
+}(NullVisitor));
 // TODO: Consider moving to expression_parser/ast
 function visitChildren(ast, visitor) {
     function visit(ast) { visitor.visit && visitor.visit(ast) || ast.visit(visitor); }
     function visitAll(asts) { asts.forEach(visit); }
     ast.visit({
-        visitBinary(ast) {
+        visitBinary: function (ast) {
             visit(ast.left);
             visit(ast.right);
         },
-        visitChain(ast) { visitAll(ast.expressions); },
-        visitConditional(ast) {
+        visitChain: function (ast) { visitAll(ast.expressions); },
+        visitConditional: function (ast) {
             visit(ast.condition);
             visit(ast.trueExp);
             visit(ast.falseExp);
         },
-        visitFunctionCall(ast) {
+        visitFunctionCall: function (ast) {
             visit(ast.target);
             visitAll(ast.args);
         },
-        visitImplicitReceiver(ast) { },
-        visitInterpolation(ast) { visitAll(ast.expressions); },
-        visitKeyedRead(ast) {
+        visitImplicitReceiver: function (ast) { },
+        visitInterpolation: function (ast) { visitAll(ast.expressions); },
+        visitKeyedRead: function (ast) {
             visit(ast.obj);
             visit(ast.key);
         },
-        visitKeyedWrite(ast) {
+        visitKeyedWrite: function (ast) {
             visit(ast.obj);
             visit(ast.key);
             visit(ast.obj);
         },
-        visitLiteralArray(ast) { visitAll(ast.expressions); },
-        visitLiteralMap(ast) { },
-        visitLiteralPrimitive(ast) { },
-        visitMethodCall(ast) {
+        visitLiteralArray: function (ast) { visitAll(ast.expressions); },
+        visitLiteralMap: function (ast) { },
+        visitLiteralPrimitive: function (ast) { },
+        visitMethodCall: function (ast) {
             visit(ast.receiver);
             visitAll(ast.args);
         },
-        visitPipe(ast) {
+        visitPipe: function (ast) {
             visit(ast.exp);
             visitAll(ast.args);
         },
-        visitPrefixNot(ast) { visit(ast.expression); },
-        visitPropertyRead(ast) { visit(ast.receiver); },
-        visitPropertyWrite(ast) {
+        visitPrefixNot: function (ast) { visit(ast.expression); },
+        visitPropertyRead: function (ast) { visit(ast.receiver); },
+        visitPropertyWrite: function (ast) {
             visit(ast.receiver);
             visit(ast.value);
         },
-        visitQuote(ast) { },
-        visitSafeMethodCall(ast) {
+        visitQuote: function (ast) { },
+        visitSafeMethodCall: function (ast) {
             visit(ast.receiver);
             visitAll(ast.args);
         },
-        visitSafePropertyRead(ast) { visit(ast.receiver); },
+        visitSafePropertyRead: function (ast) { visit(ast.receiver); },
     });
 }
 export function getExpressionScope(info, path, includeEvent) {
-    let result = info.template.members;
-    const references = getReferences(info);
-    const variables = getVarDeclarations(info, path);
-    const events = getEventDeclaration(info, path, includeEvent);
+    var result = info.template.members;
+    var references = getReferences(info);
+    var variables = getVarDeclarations(info, path);
+    var events = getEventDeclaration(info, path, includeEvent);
     if (references.length || variables.length || events.length) {
-        const referenceTable = info.template.query.createSymbolTable(references);
-        const variableTable = info.template.query.createSymbolTable(variables);
-        const eventsTable = info.template.query.createSymbolTable(events);
+        var referenceTable = info.template.query.createSymbolTable(references);
+        var variableTable = info.template.query.createSymbolTable(variables);
+        var eventsTable = info.template.query.createSymbolTable(events);
         result =
             info.template.query.mergeSymbolTable([result, referenceTable, variableTable, eventsTable]);
     }
     return result;
 }
 function getEventDeclaration(info, path, includeEvent) {
-    let result = [];
+    var result = [];
     if (includeEvent) {
         // TODO: Determine the type of the event parameter based on the Observable<T> or EventEmitter<T>
         // of the event.
@@ -613,10 +642,10 @@ function getEventDeclaration(info, path, includeEvent) {
     return result;
 }
 function getReferences(info) {
-    const result = [];
+    var result = [];
     function processReferences(references) {
-        for (const reference of references) {
-            let type;
+        var _loop_1 = function(reference) {
+            var type = void 0;
             if (reference.value) {
                 type = info.template.query.getTypeSymbol(tokenReference(reference.value));
             }
@@ -626,37 +655,45 @@ function getReferences(info) {
                 type: type || info.template.query.getBuiltinType(BuiltinType.Any),
                 get definition() { return getDefintionOf(info, reference); }
             });
+        };
+        for (var _i = 0, references_1 = references; _i < references_1.length; _i++) {
+            var reference = references_1[_i];
+            _loop_1(reference);
         }
     }
-    const visitor = new class extends TemplateAstChildVisitor {
-        visitEmbeddedTemplate(ast, context) {
-            super.visitEmbeddedTemplate(ast, context);
-            processReferences(ast.references);
+    var visitor = new (function (_super) {
+        __extends(class_1, _super);
+        function class_1() {
+            _super.apply(this, arguments);
         }
-        visitElement(ast, context) {
-            super.visitElement(ast, context);
+        class_1.prototype.visitEmbeddedTemplate = function (ast, context) {
+            _super.prototype.visitEmbeddedTemplate.call(this, ast, context);
             processReferences(ast.references);
-        }
-    }
-    ;
+        };
+        class_1.prototype.visitElement = function (ast, context) {
+            _super.prototype.visitElement.call(this, ast, context);
+            processReferences(ast.references);
+        };
+        return class_1;
+    }(TemplateAstChildVisitor));
     templateVisitAll(visitor, info.templateAst);
     return result;
 }
 function getVarDeclarations(info, path) {
-    const result = [];
-    let current = path.tail;
+    var result = [];
+    var current = path.tail;
     while (current) {
         if (current instanceof EmbeddedTemplateAst) {
-            for (const variable of current.variables) {
-                const name = variable.name;
+            var _loop_2 = function(variable) {
+                var name_1 = variable.name;
                 // Find the first directive with a context.
-                const context = current.directives
-                    .map(d => info.template.query.getTemplateContext(d.directive.type.reference))
-                    .find(c => !!c);
+                var context = current.directives
+                    .map(function (d) { return info.template.query.getTemplateContext(d.directive.type.reference); })
+                    .find(function (c) { return !!c; });
                 // Determine the type of the context field referenced by variable.value.
-                let type;
+                var type = void 0;
                 if (context) {
-                    const value = context.get(variable.value);
+                    var value = context.get(variable.value);
                     if (value) {
                         type = value.type;
                         if (info.template.query.getTypeKind(type) === BuiltinType.Any) {
@@ -670,9 +707,13 @@ function getVarDeclarations(info, path) {
                     type = info.template.query.getBuiltinType(BuiltinType.Any);
                 }
                 result.push({
-                    name,
-                    kind: 'variable', type, get definition() { return getDefintionOf(info, variable); }
+                    name: name_1,
+                    kind: 'variable', type: type, get definition() { return getDefintionOf(info, variable); }
                 });
+            };
+            for (var _i = 0, _a = current.variables; _i < _a.length; _i++) {
+                var variable = _a[_i];
+                _loop_2(variable);
             }
         }
         current = path.parentOf(current);
@@ -681,11 +722,11 @@ function getVarDeclarations(info, path) {
 }
 function refinedVariableType(type, info, templateElement) {
     // Special case the ngFor directive
-    const ngForDirective = templateElement.directives.find(d => identifierName(d.directive.type) == 'NgFor');
+    var ngForDirective = templateElement.directives.find(function (d) { return identifierName(d.directive.type) == 'NgFor'; });
     if (ngForDirective) {
-        const ngForOfBinding = ngForDirective.inputs.find(i => i.directiveName == 'ngForOf');
+        var ngForOfBinding = ngForDirective.inputs.find(function (i) { return i.directiveName == 'ngForOf'; });
         if (ngForOfBinding) {
-            const bindingType = new AstType(info.template.members, info.template.query, {}).getType(ngForOfBinding.value);
+            var bindingType = new AstType(info.template.members, info.template.query, {}).getType(ngForOfBinding.value);
             if (bindingType) {
                 return info.template.query.getElementType(bindingType);
             }
@@ -696,7 +737,7 @@ function refinedVariableType(type, info, templateElement) {
 }
 function getDefintionOf(info, ast) {
     if (info.fileName) {
-        const templateOffset = info.template.span.start;
+        var templateOffset = info.template.span.start;
         return [{
                 fileName: info.fileName,
                 span: {
