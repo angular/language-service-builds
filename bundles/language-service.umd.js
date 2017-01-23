@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.0.0-beta.4-d3a3a8e
+ * @license Angular v4.0.0-beta.4-e21e9c5
  * (c) 2010-2016 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1650,7 +1650,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('4.0.0-beta.4-d3a3a8e');
+	var /** @type {?} */ VERSION = new Version('4.0.0-beta.4-e21e9c5');
 
 	/**
 	 * Inject decorator and metadata.
@@ -26499,7 +26499,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.4-d3a3a8e');
+	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.4-e21e9c5');
 
 	/**
 	 * @return {?}
@@ -45804,7 +45804,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$3 = new Version('4.0.0-beta.4-d3a3a8e');
+	var VERSION$3 = new Version('4.0.0-beta.4-e21e9c5');
 
 	/**
 	 * @license
@@ -47268,7 +47268,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$4 = new Version('4.0.0-beta.4-d3a3a8e');
+	var VERSION$4 = new Version('4.0.0-beta.4-e21e9c5');
 
 	exports.createLanguageService = createLanguageService;
 	exports.create = create;
