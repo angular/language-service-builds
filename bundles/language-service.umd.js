@@ -1650,7 +1650,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('4.0.0-beta.4-1f54040');
+	var /** @type {?} */ VERSION = new Version('4.0.0-beta.4-83361d8');
 
 	/**
 	 * Inject decorator and metadata.
@@ -11859,6 +11859,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
+	/**
+	 * \@experimental
+	 */
 	var AnimationKeyframe = (function () {
 	    /**
 	     * @param {?} offset
@@ -13043,11 +13046,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	}
 
 	/**
-	 * @license
-	 * Copyright Google Inc. All Rights Reserved.
-	 *
-	 * Use of this source code is governed by an MIT-style license that can be
-	 * found in the LICENSE file at https://angular.io/license
+	 * \@experimental
 	 */
 	var AnimationStyles = (function () {
 	    /**
@@ -26499,7 +26498,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.4-1f54040');
+	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.4-83361d8');
 
 	/**
 	 * @return {?}
