@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.0.0-beta.4-1f54040
+ * @license Angular v4.0.0-beta.4-83361d8
  * (c) 2010-2016 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1650,7 +1650,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('4.0.0-beta.4-1f54040');
+	var /** @type {?} */ VERSION = new Version('4.0.0-beta.4-83361d8');
 
 	/**
 	 * Inject decorator and metadata.
@@ -11859,6 +11859,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
+	/**
+	 * \@experimental
+	 */
 	var AnimationKeyframe = (function () {
 	    /**
 	     * @param {?} offset
@@ -13043,11 +13046,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	}
 
 	/**
-	 * @license
-	 * Copyright Google Inc. All Rights Reserved.
-	 *
-	 * Use of this source code is governed by an MIT-style license that can be
-	 * found in the LICENSE file at https://angular.io/license
+	 * \@experimental
 	 */
 	var AnimationStyles = (function () {
 	    /**
@@ -26499,7 +26498,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.4-1f54040');
+	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.4-83361d8');
 
 	/**
 	 * @return {?}
@@ -45804,7 +45803,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$3 = new Version('4.0.0-beta.4-1f54040');
+	var VERSION$3 = new Version('4.0.0-beta.4-83361d8');
 
 	/**
 	 * @license
@@ -47268,7 +47267,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$4 = new Version('4.0.0-beta.4-1f54040');
+	var VERSION$4 = new Version('4.0.0-beta.4-83361d8');
 
 	exports.createLanguageService = createLanguageService;
 	exports.create = create;
