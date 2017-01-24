@@ -1650,7 +1650,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('4.0.0-beta.4-1c24271');
+	var /** @type {?} */ VERSION = new Version('4.0.0-beta.4-6152eb2');
 
 	/**
 	 * Inject decorator and metadata.
@@ -22579,7 +22579,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	var /** @type {?} */ _SELECTOR_REGEXP = new RegExp('(\\:not\\()|' +
 	    '([-\\w]+)|' +
 	    '(?:\\.([-\\w]+))|' +
-	    '(?:\\[([.-\\w*]+)(?:=([^\\]]*))?\\])|' +
+	    '(?:\\[([-.\\w*]+)(?:=([^\\]]*))?\\])|' +
 	    '(\\))|' +
 	    '(\\s*,\\s*)', // ","
 	'g');
@@ -26814,7 +26814,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.4-1c24271');
+	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.4-6152eb2');
 
 	/**
 	 * @return {?}
