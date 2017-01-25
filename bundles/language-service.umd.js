@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.0.0-beta.4-b2f9d56
+ * @license Angular v4.0.0-beta.4-a733444
  * (c) 2010-2016 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1650,7 +1650,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('4.0.0-beta.4-b2f9d56');
+	var /** @type {?} */ VERSION = new Version('4.0.0-beta.4-a733444');
 
 	/**
 	 * Inject decorator and metadata.
@@ -22579,6 +22579,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	var /** @type {?} */ _SELECTOR_REGEXP = new RegExp('(\\:not\\()|' +
 	    '([-\\w]+)|' +
 	    '(?:\\.([-\\w]+))|' +
+	    // "-" should appear first in the regexp below as FF31 parses "[.-\w]" as a range
 	    '(?:\\[([-.\\w*]+)(?:=([^\\]]*))?\\])|' +
 	    '(\\))|' +
 	    '(\\s*,\\s*)', // ","
@@ -26814,7 +26815,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.4-b2f9d56');
+	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.4-a733444');
 
 	/**
 	 * @return {?}
@@ -46176,7 +46177,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$3 = new Version('4.0.0-beta.4-b2f9d56');
+	var VERSION$3 = new Version('4.0.0-beta.4-a733444');
 
 	/**
 	 * @license
@@ -47640,7 +47641,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$4 = new Version('4.0.0-beta.4-b2f9d56');
+	var VERSION$4 = new Version('4.0.0-beta.4-a733444');
 
 	exports.createLanguageService = createLanguageService;
 	exports.create = create;
