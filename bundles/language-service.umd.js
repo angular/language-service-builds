@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.0.0-beta.5-4d5a4d8
+ * @license Angular v4.0.0-beta.5-d339d8b
  * (c) 2010-2016 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1650,7 +1650,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('4.0.0-beta.5-4d5a4d8');
+	var /** @type {?} */ VERSION = new Version('4.0.0-beta.5-d339d8b');
 
 	/**
 	 * Inject decorator and metadata.
@@ -1738,23 +1738,84 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    }
 	}
 
-	var __extends$1 = (this && this.__extends) || function (d, b) {
+	var /** @type {?} */ _THROW_IF_NOT_FOUND = new Object();
+	var /** @type {?} */ THROW_IF_NOT_FOUND = _THROW_IF_NOT_FOUND;
+	var _NullInjector = (function () {
+	    function _NullInjector() {
+	    }
+	    /**
+	     * @param {?} token
+	     * @param {?=} notFoundValue
+	     * @return {?}
+	     */
+	    _NullInjector.prototype.get = function (token, notFoundValue) {
+	        if (notFoundValue === void 0) { notFoundValue = _THROW_IF_NOT_FOUND; }
+	        if (notFoundValue === _THROW_IF_NOT_FOUND) {
+	            throw new Error("No provider for " + stringify$1(token) + "!");
+	        }
+	        return notFoundValue;
+	    };
+	    return _NullInjector;
+	}());
+	/**
+	 * \@whatItDoes Injector interface
+	 * \@howToUse
+	 * ```
+	 * const injector: Injector = ...;
+	 * injector.get(...);
+	 * ```
+	 *
+	 * \@description
+	 * For more details, see the {\@linkDocs guide/dependency-injection "Dependency Injection Guide"}.
+	 *
+	 * ### Example
+	 *
+	 * {\@example core/di/ts/injector_spec.ts region='Injector'}
+	 *
+	 * `Injector` returns itself when given `Injector` as a token:
+	 * {\@example core/di/ts/injector_spec.ts region='injectInjector'}
+	 *
+	 * \@stable
+	 * @abstract
+	 */
+	var Injector = (function () {
+	    function Injector() {
+	    }
+	    /**
+	     * Retrieves an instance from the injector based on the provided token.
+	     * If not found:
+	     * - Throws {\@link NoProviderError} if no `notFoundValue` that is not equal to
+	     * Injector.THROW_IF_NOT_FOUND is given
+	     * - Returns the `notFoundValue` otherwise
+	     * @abstract
+	     * @param {?} token
+	     * @param {?=} notFoundValue
+	     * @return {?}
+	     */
+	    Injector.prototype.get = function (token, notFoundValue) { };
+	    /**
+	     * @deprecated from v4.0.0 use Type<T> or InjectToken<T>
+	     * @abstract
+	     * @param {?} token
+	     * @param {?=} notFoundValue
+	     * @return {?}
+	     */
+	    Injector.prototype.get = function (token, notFoundValue) { };
+	    Injector.THROW_IF_NOT_FOUND = _THROW_IF_NOT_FOUND;
+	    Injector.NULL = new _NullInjector();
+	    return Injector;
+	}());
+
+	var __extends$2 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
 	/**
-	 * Convenience to throw an Error with 'unimplemented' as the message.
-	 * @return {?}
-	 */
-	function unimplemented() {
-	    throw new Error('unimplemented');
-	}
-	/**
 	 * \@stable
 	 */
 	var BaseError = (function (_super) {
-	    __extends$1(BaseError, _super);
+	    __extends$2(BaseError, _super);
 	    /**
 	     * @param {?} message
 	     */
@@ -1811,7 +1872,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * \@stable
 	 */
 	var WrappedError = (function (_super) {
-	    __extends$1(WrappedError, _super);
+	    __extends$2(WrappedError, _super);
 	    /**
 	     * @param {?} message
 	     * @param {?} error
@@ -1834,60 +1895,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return WrappedError;
 	}(BaseError));
 
-	var /** @type {?} */ _THROW_IF_NOT_FOUND = new Object();
-	var /** @type {?} */ THROW_IF_NOT_FOUND = _THROW_IF_NOT_FOUND;
-	var _NullInjector = (function () {
-	    function _NullInjector() {
-	    }
-	    /**
-	     * @param {?} token
-	     * @param {?=} notFoundValue
-	     * @return {?}
-	     */
-	    _NullInjector.prototype.get = function (token, notFoundValue) {
-	        if (notFoundValue === void 0) { notFoundValue = _THROW_IF_NOT_FOUND; }
-	        if (notFoundValue === _THROW_IF_NOT_FOUND) {
-	            throw new Error("No provider for " + stringify$1(token) + "!");
-	        }
-	        return notFoundValue;
-	    };
-	    return _NullInjector;
-	}());
-	/**
-	 * \@whatItDoes Injector interface
-	 * \@howToUse
-	 * ```
-	 * const injector: Injector = ...;
-	 * injector.get(...);
-	 * ```
-	 *
-	 * \@description
-	 * For more details, see the {\@linkDocs guide/dependency-injection "Dependency Injection Guide"}.
-	 *
-	 * ### Example
-	 *
-	 * {\@example core/di/ts/injector_spec.ts region='Injector'}
-	 *
-	 * `Injector` returns itself when given `Injector` as a token:
-	 * {\@example core/di/ts/injector_spec.ts region='injectInjector'}
-	 *
-	 * \@stable
-	 * @abstract
-	 */
-	var Injector = (function () {
-	    function Injector() {
-	    }
-	    /**
-	     * @param {?} token
-	     * @param {?=} notFoundValue
-	     * @return {?}
-	     */
-	    Injector.prototype.get = function (token, notFoundValue) { return unimplemented(); };
-	    Injector.THROW_IF_NOT_FOUND = _THROW_IF_NOT_FOUND;
-	    Injector.NULL = new _NullInjector();
-	    return Injector;
-	}());
-
 	/**
 	 * @license
 	 * Copyright Google Inc. All Rights Reserved.
@@ -1895,7 +1902,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
-	var __extends$2 = (this && this.__extends) || function (d, b) {
+	var __extends$1 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -1932,7 +1939,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * \@stable
 	 */
 	var AbstractProviderError = (function (_super) {
-	    __extends$2(AbstractProviderError, _super);
+	    __extends$1(AbstractProviderError, _super);
 	    /**
 	     * @param {?} injector
 	     * @param {?} key
@@ -1973,7 +1980,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * \@stable
 	 */
 	var NoProviderError = (function (_super) {
-	    __extends$2(NoProviderError, _super);
+	    __extends$1(NoProviderError, _super);
 	    /**
 	     * @param {?} injector
 	     * @param {?} key
@@ -2004,7 +2011,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * \@stable
 	 */
 	var CyclicDependencyError = (function (_super) {
-	    __extends$2(CyclicDependencyError, _super);
+	    __extends$1(CyclicDependencyError, _super);
 	    /**
 	     * @param {?} injector
 	     * @param {?} key
@@ -2043,7 +2050,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * \@stable
 	 */
 	var InstantiationError = (function (_super) {
-	    __extends$2(InstantiationError, _super);
+	    __extends$1(InstantiationError, _super);
 	    /**
 	     * @param {?} injector
 	     * @param {?} originalException
@@ -2097,7 +2104,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * \@stable
 	 */
 	var InvalidProviderError = (function (_super) {
-	    __extends$2(InvalidProviderError, _super);
+	    __extends$1(InvalidProviderError, _super);
 	    /**
 	     * @param {?} provider
 	     */
@@ -2136,7 +2143,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * \@stable
 	 */
 	var NoAnnotationError = (function (_super) {
-	    __extends$2(NoAnnotationError, _super);
+	    __extends$1(NoAnnotationError, _super);
 	    /**
 	     * @param {?} typeOrFunc
 	     * @param {?} params
@@ -2182,7 +2189,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * \@stable
 	 */
 	var OutOfBoundsError = (function (_super) {
-	    __extends$2(OutOfBoundsError, _super);
+	    __extends$1(OutOfBoundsError, _super);
 	    /**
 	     * @param {?} index
 	     */
@@ -2204,7 +2211,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * ```
 	 */
 	var MixingMultiProvidersWithRegularProvidersError = (function (_super) {
-	    __extends$2(MixingMultiProvidersWithRegularProvidersError, _super);
+	    __extends$1(MixingMultiProvidersWithRegularProvidersError, _super);
 	    /**
 	     * @param {?} provider1
 	     * @param {?} provider2
@@ -3544,26 +3551,23 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        if (parent === void 0) { parent = null; }
 	        return new ReflectiveInjector_(ReflectiveProtoInjector.fromResolvedProviders(providers), parent);
 	    };
-	    Object.defineProperty(ReflectiveInjector.prototype, "parent", {
-	        /**
-	         * Parent of this injector.
-	         *
-	         * <!-- TODO: Add a link to the section of the user guide talking about hierarchical injection.
-	         * -->
-	         *
-	         * ### Example ([live demo](http://plnkr.co/edit/eosMGo?p=preview))
-	         *
-	         * ```typescript
-	         * var parent = ReflectiveInjector.resolveAndCreate([]);
-	         * var child = parent.resolveAndCreateChild([]);
-	         * expect(child.parent).toBe(parent);
-	         * ```
-	         * @return {?}
-	         */
-	        get: function () { return unimplemented(); },
-	        enumerable: true,
-	        configurable: true
-	    });
+	    /**
+	     * Parent of this injector.
+	     *
+	     * <!-- TODO: Add a link to the section of the user guide talking about hierarchical injection.
+	     * -->
+	     *
+	     * ### Example ([live demo](http://plnkr.co/edit/eosMGo?p=preview))
+	     *
+	     * ```typescript
+	     * var parent = ReflectiveInjector.resolveAndCreate([]);
+	     * var child = parent.resolveAndCreateChild([]);
+	     * expect(child.parent).toBe(parent);
+	     * ```
+	     * @abstract
+	     * @return {?}
+	     */
+	    ReflectiveInjector.prototype.parent = function () { };
 	    /**
 	     * Resolves an array of providers and creates a child injector from those providers.
 	     *
@@ -3590,10 +3594,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * This function is slower than the corresponding `createChildFromResolved`
 	     * because it needs to resolve the passed-in providers first.
 	     * See {\@link Injector#resolve} and {\@link Injector#createChildFromResolved}.
+	     * @abstract
 	     * @param {?} providers
 	     * @return {?}
 	     */
-	    ReflectiveInjector.prototype.resolveAndCreateChild = function (providers) { return unimplemented(); };
+	    ReflectiveInjector.prototype.resolveAndCreateChild = function (providers) { };
 	    /**
 	     * Creates a child injector from previously resolved providers.
 	     *
@@ -3618,12 +3623,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * expect(child.get(ChildProvider) instanceof ChildProvider).toBe(true);
 	     * expect(child.get(ParentProvider)).toBe(parent.get(ParentProvider));
 	     * ```
+	     * @abstract
 	     * @param {?} providers
 	     * @return {?}
 	     */
-	    ReflectiveInjector.prototype.createChildFromResolved = function (providers) {
-	        return unimplemented();
-	    };
+	    ReflectiveInjector.prototype.createChildFromResolved = function (providers) { };
 	    /**
 	     * Resolves a provider and instantiates an object in the context of the injector.
 	     *
@@ -3647,10 +3651,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * expect(car.engine).toBe(injector.get(Engine));
 	     * expect(car).not.toBe(injector.resolveAndInstantiate(Car));
 	     * ```
+	     * @abstract
 	     * @param {?} provider
 	     * @return {?}
 	     */
-	    ReflectiveInjector.prototype.resolveAndInstantiate = function (provider) { return unimplemented(); };
+	    ReflectiveInjector.prototype.resolveAndInstantiate = function (provider) { };
 	    /**
 	     * Instantiates an object using a resolved provider in the context of the injector.
 	     *
@@ -3674,10 +3679,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * expect(car.engine).toBe(injector.get(Engine));
 	     * expect(car).not.toBe(injector.instantiateResolved(carProvider));
 	     * ```
+	     * @abstract
 	     * @param {?} provider
 	     * @return {?}
 	     */
-	    ReflectiveInjector.prototype.instantiateResolved = function (provider) { return unimplemented(); };
+	    ReflectiveInjector.prototype.instantiateResolved = function (provider) { };
 	    /**
 	     * @abstract
 	     * @param {?} token
@@ -7768,6 +7774,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	var /** @type {?} */ defaultIterableDiffers = new IterableDiffers(iterableDiff);
 	var /** @type {?} */ defaultKeyValueDiffers = new KeyValueDiffers(keyValDiff);
 
+	/**
+	 * @license
+	 * Copyright Google Inc. All Rights Reserved.
+	 *
+	 * Use of this source code is governed by an MIT-style license that can be
+	 * found in the LICENSE file at https://angular.io/license
+	 */
 	var RenderComponentType = (function () {
 	    /**
 	     * @param {?} id
@@ -7793,54 +7806,36 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	var RenderDebugInfo = (function () {
 	    function RenderDebugInfo() {
 	    }
-	    Object.defineProperty(RenderDebugInfo.prototype, "injector", {
-	        /**
-	         * @return {?}
-	         */
-	        get: function () { return unimplemented(); },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    Object.defineProperty(RenderDebugInfo.prototype, "component", {
-	        /**
-	         * @return {?}
-	         */
-	        get: function () { return unimplemented(); },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    Object.defineProperty(RenderDebugInfo.prototype, "providerTokens", {
-	        /**
-	         * @return {?}
-	         */
-	        get: function () { return unimplemented(); },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    Object.defineProperty(RenderDebugInfo.prototype, "references", {
-	        /**
-	         * @return {?}
-	         */
-	        get: function () { return unimplemented(); },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    Object.defineProperty(RenderDebugInfo.prototype, "context", {
-	        /**
-	         * @return {?}
-	         */
-	        get: function () { return unimplemented(); },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    Object.defineProperty(RenderDebugInfo.prototype, "source", {
-	        /**
-	         * @return {?}
-	         */
-	        get: function () { return unimplemented(); },
-	        enumerable: true,
-	        configurable: true
-	    });
+	    /**
+	     * @abstract
+	     * @return {?}
+	     */
+	    RenderDebugInfo.prototype.injector = function () { };
+	    /**
+	     * @abstract
+	     * @return {?}
+	     */
+	    RenderDebugInfo.prototype.component = function () { };
+	    /**
+	     * @abstract
+	     * @return {?}
+	     */
+	    RenderDebugInfo.prototype.providerTokens = function () { };
+	    /**
+	     * @abstract
+	     * @return {?}
+	     */
+	    RenderDebugInfo.prototype.references = function () { };
+	    /**
+	     * @abstract
+	     * @return {?}
+	     */
+	    RenderDebugInfo.prototype.context = function () { };
+	    /**
+	     * @abstract
+	     * @return {?}
+	     */
+	    RenderDebugInfo.prototype.source = function () { };
 	    return RenderDebugInfo;
 	}());
 	/**
@@ -9216,62 +9211,42 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	var ComponentRef = (function () {
 	    function ComponentRef() {
 	    }
-	    Object.defineProperty(ComponentRef.prototype, "location", {
-	        /**
-	         * Location of the Host Element of this Component Instance.
-	         * @return {?}
-	         */
-	        get: function () { return unimplemented(); },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    Object.defineProperty(ComponentRef.prototype, "injector", {
-	        /**
-	         * The injector on which the component instance exists.
-	         * @return {?}
-	         */
-	        get: function () { return unimplemented(); },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    Object.defineProperty(ComponentRef.prototype, "instance", {
-	        /**
-	         * The instance of the Component.
-	         * @return {?}
-	         */
-	        get: function () { return unimplemented(); },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    ;
-	    Object.defineProperty(ComponentRef.prototype, "hostView", {
-	        /**
-	         * The {\@link ViewRef} of the Host View of this Component instance.
-	         * @return {?}
-	         */
-	        get: function () { return unimplemented(); },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    ;
-	    Object.defineProperty(ComponentRef.prototype, "changeDetectorRef", {
-	        /**
-	         * The {\@link ChangeDetectorRef} of the Component instance.
-	         * @return {?}
-	         */
-	        get: function () { return unimplemented(); },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    Object.defineProperty(ComponentRef.prototype, "componentType", {
-	        /**
-	         * The component type.
-	         * @return {?}
-	         */
-	        get: function () { return unimplemented(); },
-	        enumerable: true,
-	        configurable: true
-	    });
+	    /**
+	     * Location of the Host Element of this Component Instance.
+	     * @abstract
+	     * @return {?}
+	     */
+	    ComponentRef.prototype.location = function () { };
+	    /**
+	     * The injector on which the component instance exists.
+	     * @abstract
+	     * @return {?}
+	     */
+	    ComponentRef.prototype.injector = function () { };
+	    /**
+	     * The instance of the Component.
+	     * @abstract
+	     * @return {?}
+	     */
+	    ComponentRef.prototype.instance = function () { };
+	    /**
+	     * The {\@link ViewRef} of the Host View of this Component instance.
+	     * @abstract
+	     * @return {?}
+	     */
+	    ComponentRef.prototype.hostView = function () { };
+	    /**
+	     * The {\@link ChangeDetectorRef} of the Component instance.
+	     * @abstract
+	     * @return {?}
+	     */
+	    ComponentRef.prototype.changeDetectorRef = function () { };
+	    /**
+	     * The component type.
+	     * @abstract
+	     * @return {?}
+	     */
+	    ComponentRef.prototype.componentType = function () { };
 	    /**
 	     * Destroys the component instance and all of the data structures associated with it.
 	     * @abstract
@@ -9916,12 +9891,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * ```
 	     *
 	     * \@experimental APIs related to application bootstrap are currently under review.
+	     * @abstract
 	     * @param {?} moduleFactory
 	     * @return {?}
 	     */
-	    PlatformRef.prototype.bootstrapModuleFactory = function (moduleFactory) {
-	        throw unimplemented();
-	    };
+	    PlatformRef.prototype.bootstrapModuleFactory = function (moduleFactory) { };
 	    /**
 	     * Creates an instance of an `\@NgModule` for a given platform using the given runtime compiler.
 	     *
@@ -9936,14 +9910,12 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * let moduleRef = platformBrowser().bootstrapModule(MyModule);
 	     * ```
 	     * \@stable
+	     * @abstract
 	     * @param {?} moduleType
 	     * @param {?=} compilerOptions
 	     * @return {?}
 	     */
-	    PlatformRef.prototype.bootstrapModule = function (moduleType, compilerOptions) {
-	        if (compilerOptions === void 0) { compilerOptions = []; }
-	        throw unimplemented();
-	    };
+	    PlatformRef.prototype.bootstrapModule = function (moduleType, compilerOptions) { };
 	    /**
 	     * Register a listener to be called when the platform is disposed.
 	     * @abstract
@@ -9951,31 +9923,24 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @return {?}
 	     */
 	    PlatformRef.prototype.onDestroy = function (callback) { };
-	    Object.defineProperty(PlatformRef.prototype, "injector", {
-	        /**
-	         * Retrieve the platform {\@link Injector}, which is the parent injector for
-	         * every Angular application on the page and provides singleton providers.
-	         * @return {?}
-	         */
-	        get: function () { throw unimplemented(); },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    ;
+	    /**
+	     * Retrieve the platform {\@link Injector}, which is the parent injector for
+	     * every Angular application on the page and provides singleton providers.
+	     * @abstract
+	     * @return {?}
+	     */
+	    PlatformRef.prototype.injector = function () { };
 	    /**
 	     * Destroy the Angular platform and all Angular applications on the page.
 	     * @abstract
 	     * @return {?}
 	     */
 	    PlatformRef.prototype.destroy = function () { };
-	    Object.defineProperty(PlatformRef.prototype, "destroyed", {
-	        /**
-	         * @return {?}
-	         */
-	        get: function () { throw unimplemented(); },
-	        enumerable: true,
-	        configurable: true
-	    });
+	    /**
+	     * @abstract
+	     * @return {?}
+	     */
+	    PlatformRef.prototype.destroyed = function () { };
 	    return PlatformRef;
 	}());
 	/**
@@ -10186,50 +10151,41 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @return {?}
 	     */
 	    ApplicationRef.prototype.tick = function () { };
-	    Object.defineProperty(ApplicationRef.prototype, "componentTypes", {
-	        /**
-	         * Get a list of component types registered to this application.
-	         * This list is populated even before the component is created.
-	         * @return {?}
-	         */
-	        get: function () { return (unimplemented()); },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    ;
-	    Object.defineProperty(ApplicationRef.prototype, "components", {
-	        /**
-	         * Get a list of components registered to this application.
-	         * @return {?}
-	         */
-	        get: function () { return (unimplemented()); },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    ;
+	    /**
+	     * Get a list of component types registered to this application.
+	     * This list is populated even before the component is created.
+	     * @abstract
+	     * @return {?}
+	     */
+	    ApplicationRef.prototype.componentTypes = function () { };
+	    /**
+	     * Get a list of components registered to this application.
+	     * @abstract
+	     * @return {?}
+	     */
+	    ApplicationRef.prototype.components = function () { };
 	    /**
 	     * Attaches a view so that it will be dirty checked.
 	     * The view will be automatically detached when it is destroyed.
 	     * This will throw if the view is already attached to a ViewContainer.
+	     * @abstract
 	     * @param {?} view
 	     * @return {?}
 	     */
-	    ApplicationRef.prototype.attachView = function (view) { unimplemented(); };
+	    ApplicationRef.prototype.attachView = function (view) { };
 	    /**
 	     * Detaches a view from dirty checking again.
+	     * @abstract
 	     * @param {?} view
 	     * @return {?}
 	     */
-	    ApplicationRef.prototype.detachView = function (view) { unimplemented(); };
-	    Object.defineProperty(ApplicationRef.prototype, "viewCount", {
-	        /**
-	         * Returns the number of attached views.
-	         * @return {?}
-	         */
-	        get: function () { return unimplemented(); },
-	        enumerable: true,
-	        configurable: true
-	    });
+	    ApplicationRef.prototype.detachView = function (view) { };
+	    /**
+	     * Returns the number of attached views.
+	     * @abstract
+	     * @return {?}
+	     */
+	    ApplicationRef.prototype.viewCount = function () { };
 	    return ApplicationRef;
 	}());
 	var ApplicationRef_ = (function (_super) {
@@ -10414,61 +10370,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	/**
-	 * Represents an instance of an NgModule created via a {\@link NgModuleFactory}.
-	 *
-	 * `NgModuleRef` provides access to the NgModule Instance as well other objects related to this
-	 * NgModule Instance.
-	 *
-	 * \@stable
-	 * @abstract
-	 */
-	var NgModuleRef = (function () {
-	    function NgModuleRef() {
-	    }
-	    Object.defineProperty(NgModuleRef.prototype, "injector", {
-	        /**
-	         * The injector that contains all of the providers of the NgModule.
-	         * @return {?}
-	         */
-	        get: function () { return unimplemented(); },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    Object.defineProperty(NgModuleRef.prototype, "componentFactoryResolver", {
-	        /**
-	         * The ComponentFactoryResolver to get hold of the ComponentFactories
-	         * declared in the `entryComponents` property of the module.
-	         * @return {?}
-	         */
-	        get: function () { return unimplemented(); },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    Object.defineProperty(NgModuleRef.prototype, "instance", {
-	        /**
-	         * The NgModule instance.
-	         * @return {?}
-	         */
-	        get: function () { return unimplemented(); },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    /**
-	     * Destroys the module instance and all of the data structures associated with it.
-	     * @abstract
-	     * @return {?}
-	     */
-	    NgModuleRef.prototype.destroy = function () { };
-	    /**
-	     * Allows to register a callback that will be called when the module is destroyed.
-	     * @abstract
-	     * @param {?} callback
-	     * @return {?}
-	     */
-	    NgModuleRef.prototype.onDestroy = function (callback) { };
-	    return NgModuleRef;
-	}());
 	/**
 	 * \@experimental
 	 */
@@ -10786,14 +10687,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	var TemplateRef = (function () {
 	    function TemplateRef() {
 	    }
-	    Object.defineProperty(TemplateRef.prototype, "elementRef", {
-	        /**
-	         * @return {?}
-	         */
-	        get: function () { return null; },
-	        enumerable: true,
-	        configurable: true
-	    });
+	    /**
+	     * @abstract
+	     * @return {?}
+	     */
+	    TemplateRef.prototype.elementRef = function () { };
 	    /**
 	     * @abstract
 	     * @param {?} context
@@ -10857,32 +10755,23 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	var ViewContainerRef = (function () {
 	    function ViewContainerRef() {
 	    }
-	    Object.defineProperty(ViewContainerRef.prototype, "element", {
-	        /**
-	         * Anchor element that specifies the location of this container in the containing View.
-	         * <!-- TODO: rename to anchorElement -->
-	         * @return {?}
-	         */
-	        get: function () { return (unimplemented()); },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    Object.defineProperty(ViewContainerRef.prototype, "injector", {
-	        /**
-	         * @return {?}
-	         */
-	        get: function () { return (unimplemented()); },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    Object.defineProperty(ViewContainerRef.prototype, "parentInjector", {
-	        /**
-	         * @return {?}
-	         */
-	        get: function () { return (unimplemented()); },
-	        enumerable: true,
-	        configurable: true
-	    });
+	    /**
+	     * Anchor element that specifies the location of this container in the containing View.
+	     * <!-- TODO: rename to anchorElement -->
+	     * @abstract
+	     * @return {?}
+	     */
+	    ViewContainerRef.prototype.element = function () { };
+	    /**
+	     * @abstract
+	     * @return {?}
+	     */
+	    ViewContainerRef.prototype.injector = function () { };
+	    /**
+	     * @abstract
+	     * @return {?}
+	     */
+	    ViewContainerRef.prototype.parentInjector = function () { };
 	    /**
 	     * Destroys all Views in this container.
 	     * @abstract
@@ -10896,16 +10785,12 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @return {?}
 	     */
 	    ViewContainerRef.prototype.get = function (index) { };
-	    Object.defineProperty(ViewContainerRef.prototype, "length", {
-	        /**
-	         * Returns the number of Views currently attached to this container.
-	         * @return {?}
-	         */
-	        get: function () { return (unimplemented()); },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    ;
+	    /**
+	     * Returns the number of Views currently attached to this container.
+	     * @abstract
+	     * @return {?}
+	     */
+	    ViewContainerRef.prototype.length = function () { };
 	    /**
 	     * Instantiates an Embedded View based on the {\@link TemplateRef `templateRef`} and inserts it
 	     * into this container at the specified `index`.
@@ -11173,14 +11058,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @return {?}
 	     */
 	    ViewRef.prototype.destroy = function () { };
-	    Object.defineProperty(ViewRef.prototype, "destroyed", {
-	        /**
-	         * @return {?}
-	         */
-	        get: function () { return (unimplemented()); },
-	        enumerable: true,
-	        configurable: true
-	    });
+	    /**
+	     * @abstract
+	     * @return {?}
+	     */
+	    ViewRef.prototype.destroyed = function () { };
 	    /**
 	     * @abstract
 	     * @param {?} callback
@@ -11249,23 +11131,16 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    function EmbeddedViewRef() {
 	        _super.apply(this, arguments);
 	    }
-	    Object.defineProperty(EmbeddedViewRef.prototype, "context", {
-	        /**
-	         * @return {?}
-	         */
-	        get: function () { return unimplemented(); },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    Object.defineProperty(EmbeddedViewRef.prototype, "rootNodes", {
-	        /**
-	         * @return {?}
-	         */
-	        get: function () { return (unimplemented()); },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    ;
+	    /**
+	     * @abstract
+	     * @return {?}
+	     */
+	    EmbeddedViewRef.prototype.context = function () { };
+	    /**
+	     * @abstract
+	     * @return {?}
+	     */
+	    EmbeddedViewRef.prototype.rootNodes = function () { };
 	    return EmbeddedViewRef;
 	}(ViewRef));
 	var ViewRef_ = (function () {
@@ -11652,6 +11527,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @experimental i18n support is experimental.
 	 */
 	var /** @type {?} */ TRANSLATIONS_FORMAT = new InjectionToken('TranslationsFormat');
+	var MissingTranslationStrategy = {};
+	MissingTranslationStrategy.Error = 0;
+	MissingTranslationStrategy.Warning = 1;
+	MissingTranslationStrategy.Ignore = 2;
+	MissingTranslationStrategy[MissingTranslationStrategy.Error] = "Error";
+	MissingTranslationStrategy[MissingTranslationStrategy.Warning] = "Warning";
+	MissingTranslationStrategy[MissingTranslationStrategy.Ignore] = "Ignore";
 
 	/**
 	 * @return {?}
@@ -16539,6 +16421,48 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        }
 	        return new ParseLocation(this.file, offset, line, col);
 	    };
+	    /**
+	     * @param {?} maxChars
+	     * @param {?} maxLines
+	     * @return {?}
+	     */
+	    ParseLocation.prototype.getContext = function (maxChars, maxLines) {
+	        var /** @type {?} */ content = this.file.content;
+	        var /** @type {?} */ startOffset = this.offset;
+	        if (isPresent(startOffset)) {
+	            if (startOffset > content.length - 1) {
+	                startOffset = content.length - 1;
+	            }
+	            var /** @type {?} */ endOffset = startOffset;
+	            var /** @type {?} */ ctxChars = 0;
+	            var /** @type {?} */ ctxLines = 0;
+	            while (ctxChars < maxChars && startOffset > 0) {
+	                startOffset--;
+	                ctxChars++;
+	                if (content[startOffset] == '\n') {
+	                    if (++ctxLines == maxLines) {
+	                        break;
+	                    }
+	                }
+	            }
+	            ctxChars = 0;
+	            ctxLines = 0;
+	            while (ctxChars < maxChars && endOffset < content.length - 1) {
+	                endOffset++;
+	                ctxChars++;
+	                if (content[endOffset] == '\n') {
+	                    if (++ctxLines == maxLines) {
+	                        break;
+	                    }
+	                }
+	            }
+	            return {
+	                before: content.substring(startOffset, this.offset),
+	                after: content.substring(this.offset, endOffset + 1),
+	            };
+	        }
+	        return null;
+	    };
 	    return ParseLocation;
 	}());
 	var ParseSourceFile = (function () {
@@ -16593,44 +16517,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @return {?}
 	     */
 	    ParseError.prototype.toString = function () {
-	        var /** @type {?} */ source = this.span.start.file.content;
-	        var /** @type {?} */ ctxStart = this.span.start.offset;
-	        var /** @type {?} */ contextStr = '';
-	        var /** @type {?} */ details = '';
-	        if (isPresent(ctxStart)) {
-	            if (ctxStart > source.length - 1) {
-	                ctxStart = source.length - 1;
-	            }
-	            var /** @type {?} */ ctxEnd = ctxStart;
-	            var /** @type {?} */ ctxLen = 0;
-	            var /** @type {?} */ ctxLines = 0;
-	            while (ctxLen < 100 && ctxStart > 0) {
-	                ctxStart--;
-	                ctxLen++;
-	                if (source[ctxStart] == '\n') {
-	                    if (++ctxLines == 3) {
-	                        break;
-	                    }
-	                }
-	            }
-	            ctxLen = 0;
-	            ctxLines = 0;
-	            while (ctxLen < 100 && ctxEnd < source.length - 1) {
-	                ctxEnd++;
-	                ctxLen++;
-	                if (source[ctxEnd] == '\n') {
-	                    if (++ctxLines == 3) {
-	                        break;
-	                    }
-	                }
-	            }
-	            var /** @type {?} */ context = source.substring(ctxStart, this.span.start.offset) + '[ERROR ->]' +
-	                source.substring(this.span.start.offset, ctxEnd + 1);
-	            contextStr = " (\"" + context + "\")";
-	        }
-	        if (this.span.details) {
-	            details = ", " + this.span.details;
-	        }
+	        var /** @type {?} */ ctx = this.span.start.getContext(100, 3);
+	        var /** @type {?} */ contextStr = ctx ? " (\"" + ctx.before + "[ERROR ->]" + ctx.after + "\")" : '';
+	        var /** @type {?} */ details = this.span.details ? ", " + this.span.details : '';
 	        return "" + this.msg + contextStr + ": " + this.span.start + details;
 	    };
 	    return ParseError;
@@ -21094,10 +20983,18 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        // xml nodes to i18n nodes
 	        var /** @type {?} */ i18nNodesByMsgId = {};
 	        var /** @type {?} */ converter = new XmlToI18n$1();
+	        // Because we should be able to load xtb files that rely on features not supported by angular,
+	        // we need to delay the conversion of html to i18n nodes so that non angular messages are not
+	        // converted
 	        Object.keys(mlNodesByMsgId).forEach(function (msgId) {
-	            var _a = converter.convert(mlNodesByMsgId[msgId]), i18nNodes = _a.i18nNodes, e = _a.errors;
-	            errors.push.apply(errors, e);
-	            i18nNodesByMsgId[msgId] = i18nNodes;
+	            var /** @type {?} */ valueFn = function () {
+	                var _a = converter.convert(mlNodesByMsgId[msgId]), i18nNodes = _a.i18nNodes, errors = _a.errors;
+	                if (errors.length) {
+	                    throw new Error("xtb parse errors:\n" + errors.join('\n'));
+	                }
+	                return i18nNodes;
+	            };
+	            createLazyProperty(i18nNodesByMsgId, msgId, valueFn);
 	        });
 	        if (errors.length) {
 	            throw new Error("xtb parse errors:\n" + errors.join('\n'));
@@ -21118,6 +21015,24 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    };
 	    return Xtb;
 	}(Serializer));
+	/**
+	 * @param {?} messages
+	 * @param {?} id
+	 * @param {?} valueFn
+	 * @return {?}
+	 */
+	function createLazyProperty(messages, id, valueFn) {
+	    Object.defineProperty(messages, id, {
+	        configurable: true,
+	        enumerable: true,
+	        get: function () {
+	            var /** @type {?} */ value = valueFn();
+	            Object.defineProperty(messages, id, { enumerable: true, value: value });
+	            return value;
+	        },
+	        set: function (_) { throw new Error('Could not overwrite an XTB translation'); },
+	    });
+	}
 	var XtbParser = (function () {
 	    function XtbParser() {
 	    }
@@ -21347,25 +21262,30 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @param {?=} _i18nNodesByMsgId
 	     * @param {?} digest
 	     * @param {?=} mapperFactory
+	     * @param {?=} missingTranslationStrategy
+	     * @param {?=} console
 	     */
-	    function TranslationBundle(_i18nNodesByMsgId, digest, mapperFactory) {
+	    function TranslationBundle(_i18nNodesByMsgId, digest, mapperFactory, missingTranslationStrategy, console) {
 	        if (_i18nNodesByMsgId === void 0) { _i18nNodesByMsgId = {}; }
+	        if (missingTranslationStrategy === void 0) { missingTranslationStrategy = MissingTranslationStrategy.Warning; }
 	        this._i18nNodesByMsgId = _i18nNodesByMsgId;
 	        this.digest = digest;
 	        this.mapperFactory = mapperFactory;
-	        this._i18nToHtml = new I18nToHtmlVisitor(_i18nNodesByMsgId, digest, mapperFactory);
+	        this._i18nToHtml = new I18nToHtmlVisitor(_i18nNodesByMsgId, digest, mapperFactory, missingTranslationStrategy, console);
 	    }
 	    /**
 	     * @param {?} content
 	     * @param {?} url
 	     * @param {?} serializer
+	     * @param {?} missingTranslationStrategy
+	     * @param {?=} console
 	     * @return {?}
 	     */
-	    TranslationBundle.load = function (content, url, serializer) {
+	    TranslationBundle.load = function (content, url, serializer, missingTranslationStrategy, console) {
 	        var /** @type {?} */ i18nNodesByMsgId = serializer.load(content, url);
 	        var /** @type {?} */ digestFn = function (m) { return serializer.digest(m); };
 	        var /** @type {?} */ mapperFactory = function (m) { return serializer.createNameMapper(m); };
-	        return new TranslationBundle(i18nNodesByMsgId, digestFn, mapperFactory);
+	        return new TranslationBundle(i18nNodesByMsgId, digestFn, mapperFactory, missingTranslationStrategy, console);
 	    };
 	    /**
 	     * @param {?} srcMsg
@@ -21390,12 +21310,16 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @param {?=} _i18nNodesByMsgId
 	     * @param {?} _digest
 	     * @param {?} _mapperFactory
+	     * @param {?} _missingTranslationStrategy
+	     * @param {?=} _console
 	     */
-	    function I18nToHtmlVisitor(_i18nNodesByMsgId, _digest, _mapperFactory) {
+	    function I18nToHtmlVisitor(_i18nNodesByMsgId, _digest, _mapperFactory, _missingTranslationStrategy, _console) {
 	        if (_i18nNodesByMsgId === void 0) { _i18nNodesByMsgId = {}; }
 	        this._i18nNodesByMsgId = _i18nNodesByMsgId;
 	        this._digest = _digest;
 	        this._mapperFactory = _mapperFactory;
+	        this._missingTranslationStrategy = _missingTranslationStrategy;
+	        this._console = _console;
 	        this._contextStack = [];
 	        this._errors = [];
 	    }
@@ -21459,7 +21383,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        if (this._srcMsg.placeholderToMessage.hasOwnProperty(phName)) {
 	            return this._convertToText(this._srcMsg.placeholderToMessage[phName]);
 	        }
-	        this._addError(ph, "Unknown placeholder");
+	        this._addError(ph, "Unknown placeholder \"" + ph.name + "\"");
 	        return '';
 	    };
 	    /**
@@ -21467,13 +21391,25 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @param {?=} context
 	     * @return {?}
 	     */
-	    I18nToHtmlVisitor.prototype.visitTagPlaceholder = function (ph, context) { throw 'unreachable code'; };
+	    I18nToHtmlVisitor.prototype.visitTagPlaceholder = function (ph, context) {
+	        var _this = this;
+	        var /** @type {?} */ tag = "" + ph.tag;
+	        var /** @type {?} */ attrs = Object.keys(ph.attrs).map(function (name) { return (name + "=\"" + ph.attrs[name] + "\""); }).join(' ');
+	        if (ph.isVoid) {
+	            return "<" + tag + " " + attrs + "/>";
+	        }
+	        var /** @type {?} */ children = ph.children.map(function (c) { return c.visit(_this); }).join('');
+	        return "<" + tag + " " + attrs + ">" + children + "</" + tag + ">";
+	    };
 	    /**
 	     * @param {?} ph
 	     * @param {?=} context
 	     * @return {?}
 	     */
-	    I18nToHtmlVisitor.prototype.visitIcuPlaceholder = function (ph, context) { throw 'unreachable code'; };
+	    I18nToHtmlVisitor.prototype.visitIcuPlaceholder = function (ph, context) {
+	        // An ICU placeholder references the source message to be serialized
+	        return this._convertToText(this._srcMsg.placeholderToMessage[ph.name]);
+	    };
 	    /**
 	     * Convert a source message to a translated text string:
 	     * - text nodes are replaced with their translation,
@@ -21484,21 +21420,37 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     */
 	    I18nToHtmlVisitor.prototype._convertToText = function (srcMsg) {
 	        var _this = this;
-	        var /** @type {?} */ digest = this._digest(srcMsg);
+	        var /** @type {?} */ id = this._digest(srcMsg);
 	        var /** @type {?} */ mapper = this._mapperFactory ? this._mapperFactory(srcMsg) : null;
-	        if (this._i18nNodesByMsgId.hasOwnProperty(digest)) {
-	            this._contextStack.push({ msg: this._srcMsg, mapper: this._mapper });
-	            this._srcMsg = srcMsg;
+	        var /** @type {?} */ nodes;
+	        this._contextStack.push({ msg: this._srcMsg, mapper: this._mapper });
+	        this._srcMsg = srcMsg;
+	        if (this._i18nNodesByMsgId.hasOwnProperty(id)) {
+	            // When there is a translation use its nodes as the source
+	            // And create a mapper to convert serialized placeholder names to internal names
+	            nodes = this._i18nNodesByMsgId[id];
 	            this._mapper = function (name) { return mapper ? mapper.toInternalName(name) : name; };
-	            var /** @type {?} */ nodes = this._i18nNodesByMsgId[digest];
-	            var /** @type {?} */ text = nodes.map(function (node) { return node.visit(_this); }).join('');
-	            var /** @type {?} */ context = this._contextStack.pop();
-	            this._srcMsg = context.msg;
-	            this._mapper = context.mapper;
-	            return text;
 	        }
-	        this._addError(srcMsg.nodes[0], "Missing translation for message " + digest);
-	        return '';
+	        else {
+	            // When no translation has been found
+	            // - report an error / a warning / nothing,
+	            // - use the nodes from the original message
+	            // - placeholders are already internal and need no mapper
+	            if (this._missingTranslationStrategy === MissingTranslationStrategy.Error) {
+	                this._addError(srcMsg.nodes[0], "Missing translation for message \"" + id + "\"");
+	            }
+	            else if (this._console &&
+	                this._missingTranslationStrategy === MissingTranslationStrategy.Warning) {
+	                this._console.warn("Missing translation for message \"" + id + "\"");
+	            }
+	            nodes = srcMsg.nodes;
+	            this._mapper = function (name) { return name; };
+	        }
+	        var /** @type {?} */ text = nodes.map(function (node) { return node.visit(_this); }).join('');
+	        var /** @type {?} */ context = this._contextStack.pop();
+	        this._srcMsg = context.msg;
+	        this._mapper = context.mapper;
+	        return text;
 	    };
 	    /**
 	     * @param {?} el
@@ -21516,11 +21468,16 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @param {?} _htmlParser
 	     * @param {?=} _translations
 	     * @param {?=} _translationsFormat
+	     * @param {?=} _missingTranslation
+	     * @param {?=} _console
 	     */
-	    function I18NHtmlParser(_htmlParser, _translations, _translationsFormat) {
+	    function I18NHtmlParser(_htmlParser, _translations, _translationsFormat, _missingTranslation, _console) {
+	        if (_missingTranslation === void 0) { _missingTranslation = MissingTranslationStrategy.Warning; }
 	        this._htmlParser = _htmlParser;
 	        this._translations = _translations;
 	        this._translationsFormat = _translationsFormat;
+	        this._missingTranslation = _missingTranslation;
+	        this._console = _console;
 	    }
 	    /**
 	     * @param {?} source
@@ -21542,7 +21499,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            return new ParseTreeResult(parseResult.rootNodes, parseResult.errors);
 	        }
 	        var /** @type {?} */ serializer = this._createSerializer();
-	        var /** @type {?} */ translationBundle = TranslationBundle.load(this._translations, url, serializer);
+	        var /** @type {?} */ translationBundle = TranslationBundle.load(this._translations, url, serializer, this._missingTranslation, this._console);
 	        return mergeTranslations(parseResult.rootNodes, translationBundle, interpolationConfig, [], {});
 	    };
 	    /**
@@ -26839,25 +26796,20 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.5-4d5a4d8');
+	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.5-d339d8b');
 
-	/**
-	 * @return {?}
-	 */
-	function unimplemented$3() {
-	    throw new Error('unimplemented');
-	}
 	var CompilerConfig = (function () {
 	    /**
 	     * @param {?=} __0
 	     */
 	    function CompilerConfig(_a) {
-	        var _b = _a === void 0 ? {} : _a, _c = _b.renderTypes, renderTypes = _c === void 0 ? new DefaultRenderTypes() : _c, _d = _b.defaultEncapsulation, defaultEncapsulation = _d === void 0 ? ViewEncapsulation.Emulated : _d, genDebugInfo = _b.genDebugInfo, logBindingUpdate = _b.logBindingUpdate, _e = _b.useJit, useJit = _e === void 0 ? true : _e;
+	        var _b = _a === void 0 ? {} : _a, _c = _b.renderTypes, renderTypes = _c === void 0 ? new DefaultRenderTypes() : _c, _d = _b.defaultEncapsulation, defaultEncapsulation = _d === void 0 ? ViewEncapsulation.Emulated : _d, genDebugInfo = _b.genDebugInfo, logBindingUpdate = _b.logBindingUpdate, _e = _b.useJit, useJit = _e === void 0 ? true : _e, missingTranslation = _b.missingTranslation;
 	        this.renderTypes = renderTypes;
 	        this.defaultEncapsulation = defaultEncapsulation;
 	        this._genDebugInfo = genDebugInfo;
 	        this._logBindingUpdate = logBindingUpdate;
 	        this.useJit = useJit;
+	        this.missingTranslation = missingTranslation;
 	    }
 	    Object.defineProperty(CompilerConfig.prototype, "genDebugInfo", {
 	        /**
@@ -26880,65 +26832,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        configurable: true
 	    });
 	    return CompilerConfig;
-	}());
-	/**
-	 * Types used for the renderer.
-	 * Can be replaced to specialize the generated output to a specific renderer
-	 * to help tree shaking.
-	 * @abstract
-	 */
-	var RenderTypes = (function () {
-	    function RenderTypes() {
-	    }
-	    Object.defineProperty(RenderTypes.prototype, "renderer", {
-	        /**
-	         * @return {?}
-	         */
-	        get: function () { return unimplemented$3(); },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    Object.defineProperty(RenderTypes.prototype, "renderText", {
-	        /**
-	         * @return {?}
-	         */
-	        get: function () { return unimplemented$3(); },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    Object.defineProperty(RenderTypes.prototype, "renderElement", {
-	        /**
-	         * @return {?}
-	         */
-	        get: function () { return unimplemented$3(); },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    Object.defineProperty(RenderTypes.prototype, "renderComment", {
-	        /**
-	         * @return {?}
-	         */
-	        get: function () { return unimplemented$3(); },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    Object.defineProperty(RenderTypes.prototype, "renderNode", {
-	        /**
-	         * @return {?}
-	         */
-	        get: function () { return unimplemented$3(); },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    Object.defineProperty(RenderTypes.prototype, "renderEvent", {
-	        /**
-	         * @return {?}
-	         */
-	        get: function () { return unimplemented$3(); },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    return RenderTypes;
 	}());
 	var DefaultRenderTypes = (function () {
 	    function DefaultRenderTypes() {
@@ -39555,7 +39448,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                if (e.fileName) {
 	                    throw positionalError(message, e.fileName, e.line, e.column);
 	                }
-	                throw new Error(message);
+	                throw new SyntaxError(message);
 	            }
 	        }
 	        var /** @type {?} */ recordedSimplifyInContext = function (context, value, depth) {
@@ -41600,13 +41493,15 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    },
 	    {
 	        provide: I18NHtmlParser,
-	        useFactory: function (parser, translations, format) {
-	            return new I18NHtmlParser(parser, translations, format);
+	        useFactory: function (parser, translations, format, config, console) {
+	            return new I18NHtmlParser(parser, translations, format, config.missingTranslation, console);
 	        },
 	        deps: [
 	            baseHtmlParser,
 	            [new Optional(), new Inject(TRANSLATIONS)],
 	            [new Optional(), new Inject(TRANSLATIONS_FORMAT)],
+	            [CompilerConfig],
+	            [Console$1],
 	        ]
 	    },
 	    {
@@ -41630,7 +41525,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    DirectiveResolver,
 	    PipeResolver,
 	    NgModuleResolver,
-	    AnimationParser
+	    AnimationParser,
 	];
 	var JitCompilerFactory = (function () {
 	    /**
@@ -41640,7 +41535,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        this._defaultOptions = [{
 	                useDebug: isDevMode(),
 	                useJit: true,
-	                defaultEncapsulation: ViewEncapsulation.Emulated
+	                defaultEncapsulation: ViewEncapsulation.Emulated,
+	                missingTranslation: MissingTranslationStrategy.Warning,
 	            }].concat(defaultOptions);
 	    }
 	    /**
@@ -41649,7 +41545,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     */
 	    JitCompilerFactory.prototype.createCompiler = function (options) {
 	        if (options === void 0) { options = []; }
-	        var /** @type {?} */ mergedOptions = _mergeOptions(this._defaultOptions.concat(options));
+	        var /** @type {?} */ opts = _mergeOptions(this._defaultOptions.concat(options));
 	        var /** @type {?} */ injector = ReflectiveInjector.resolveAndCreate([
 	            COMPILER_PROVIDERS, {
 	                provide: CompilerConfig,
@@ -41657,19 +41553,20 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                    return new CompilerConfig({
 	                        // let explicit values from the compiler options overwrite options
 	                        // from the app providers. E.g. important for the testing platform.
-	                        genDebugInfo: mergedOptions.useDebug,
+	                        genDebugInfo: opts.useDebug,
 	                        // let explicit values from the compiler options overwrite options
 	                        // from the app providers
-	                        useJit: mergedOptions.useJit,
+	                        useJit: opts.useJit,
 	                        // let explicit values from the compiler options overwrite options
 	                        // from the app providers
-	                        defaultEncapsulation: mergedOptions.defaultEncapsulation,
-	                        logBindingUpdate: mergedOptions.useDebug
+	                        defaultEncapsulation: opts.defaultEncapsulation,
+	                        logBindingUpdate: opts.useDebug,
+	                        missingTranslation: opts.missingTranslation,
 	                    });
 	                },
 	                deps: []
 	            },
-	            mergedOptions.providers
+	            opts.providers
 	        ]);
 	        return injector.get(Compiler);
 	    };
@@ -41708,7 +41605,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        useDebug: _lastDefined(optionsArr.map(function (options) { return options.useDebug; })),
 	        useJit: _lastDefined(optionsArr.map(function (options) { return options.useJit; })),
 	        defaultEncapsulation: _lastDefined(optionsArr.map(function (options) { return options.defaultEncapsulation; })),
-	        providers: _mergeArrays(optionsArr.map(function (options) { return options.providers; }))
+	        providers: _mergeArrays(optionsArr.map(function (options) { return options.providers; })),
+	        missingTranslation: _lastDefined(optionsArr.map(function (options) { return options.missingTranslation; })),
 	    };
 	}
 	/**
@@ -46201,7 +46099,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$3 = new Version('4.0.0-beta.5-4d5a4d8');
+	var VERSION$3 = new Version('4.0.0-beta.5-d339d8b');
 
 	/**
 	 * @license
@@ -47665,7 +47563,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$4 = new Version('4.0.0-beta.5-4d5a4d8');
+	var VERSION$4 = new Version('4.0.0-beta.5-d339d8b');
 
 	exports.createLanguageService = createLanguageService;
 	exports.create = create;
