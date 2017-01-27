@@ -1650,7 +1650,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('4.0.0-beta.5-d339d8b');
+	var /** @type {?} */ VERSION = new Version('4.0.0-beta.5-da41a95');
 
 	/**
 	 * Inject decorator and metadata.
@@ -4566,7 +4566,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * Exposes the CSS-style selectors that have been used in `ngContent` directives within
 	     * the template of the given component.
 	     * This is used by the `upgrade` library to compile the appropriate transclude content
-	     * in the Angular 1 wrapper component.
+	     * in the AngularJS wrapper component.
 	     * @param {?} component
 	     * @return {?}
 	     */
@@ -26796,7 +26796,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.5-d339d8b');
+	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.5-da41a95');
 
 	var CompilerConfig = (function () {
 	    /**
