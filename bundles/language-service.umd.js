@@ -1,6 +1,6 @@
 /**
  * @license Angular v0.0.0-PLACEHOLDER
- * (c) 2010-2016 Google, Inc. https://angular.io/
+ * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
 
@@ -1650,7 +1650,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('4.0.0-beta.5-df7f5fc');
+	var /** @type {?} */ VERSION = new Version('4.0.0-beta.5-0854a5d');
 
 	/**
 	 * Inject decorator and metadata.
@@ -26346,7 +26346,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.5-df7f5fc');
+	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.5-0854a5d');
 
 	var CompilerConfig = (function () {
 	    /**
