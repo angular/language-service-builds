@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.0.0-beta.5-bc1320d
+ * @license Angular v4.0.0-beta.5-104c157
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1650,7 +1650,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('4.0.0-beta.5-bc1320d');
+	var /** @type {?} */ VERSION = new Version('4.0.0-beta.5-104c157');
 
 	/**
 	 * Inject decorator and metadata.
@@ -9651,6 +9651,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            throw new Error(("The module " + stringify$1(moduleRef.instance.constructor) + " was bootstrapped, but it does not declare \"@NgModule.bootstrap\" components nor a \"ngDoBootstrap\" method. ") +
 	                "Please define one of these.");
 	        }
+	        this._modules.push(moduleRef);
 	    };
 	    PlatformRef_.decorators = [
 	        { type: Injectable },
@@ -10542,7 +10543,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @return {?}
 	     */
 	    ViewContainerRef_.prototype.indexOf = function (viewRef) {
-	        return this._element.nestedViews.indexOf(((viewRef)).internalView);
+	        return this.length ? this._element.nestedViews.indexOf(((viewRef)).internalView) :
+	            -1;
 	    };
 	    /**
 	     * @param {?=} index
@@ -26346,7 +26348,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.5-bc1320d');
+	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.5-104c157');
 
 	var CompilerConfig = (function () {
 	    /**
@@ -45649,7 +45651,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$3 = new Version('4.0.0-beta.5-bc1320d');
+	var VERSION$3 = new Version('4.0.0-beta.5-104c157');
 
 	/**
 	 * @license
@@ -47113,7 +47115,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$4 = new Version('4.0.0-beta.5-bc1320d');
+	var VERSION$4 = new Version('4.0.0-beta.5-104c157');
 
 	exports.createLanguageService = createLanguageService;
 	exports.create = create;
