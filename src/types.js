@@ -39,9 +39,13 @@ export var BuiltinType;
      */
     BuiltinType[BuiltinType["Null"] = 5] = "Null";
     /**
+     * the type is an unbound type parameter.
+     */
+    BuiltinType[BuiltinType["Unbound"] = 6] = "Unbound";
+    /**
      * Not a built-in type.
      */
-    BuiltinType[BuiltinType["Other"] = 6] = "Other";
+    BuiltinType[BuiltinType["Other"] = 7] = "Other";
 })(BuiltinType || (BuiltinType = {}));
 /**
  * The kind of diagnostic message.
