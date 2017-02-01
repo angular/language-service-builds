@@ -1,5 +1,5 @@
 /**
- * @license Angular v2.4.5-14e9751
+ * @license Angular v2.4.5-8d4aa82
  * (c) 2010-2016 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1636,7 +1636,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('2.4.5-14e9751');
+	var /** @type {?} */ VERSION = new Version('2.4.5-8d4aa82');
 
 	/**
 	 * Allows to refer to references which are not yet defined.
@@ -19103,7 +19103,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        }
 	    };
 	    /**
-	     * Marks the start of a section, see `_endSection`
+	     * Marks the start of a section, see `_closeTranslatableSection`
 	     * @param {?} node
 	     * @return {?}
 	     */
@@ -26346,7 +26346,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('2.4.5-14e9751');
+	var /** @type {?} */ VERSION$1 = new Version('2.4.5-8d4aa82');
 
 	var CompilerConfig = (function () {
 	    /**
@@ -27829,7 +27829,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     */
 	    DirectiveNormalizer.prototype.normalizeLoadedTemplate = function (prenomData, template, templateAbsUrl) {
 	        var /** @type {?} */ interpolationConfig = InterpolationConfig.fromArray(prenomData.interpolation);
-	        var /** @type {?} */ rootNodesAndErrors = this._htmlParser.parse(template, stringify(prenomData.componentType), false, interpolationConfig);
+	        var /** @type {?} */ rootNodesAndErrors = this._htmlParser.parse(template, stringify(prenomData.componentType), true, interpolationConfig);
 	        if (rootNodesAndErrors.errors.length > 0) {
 	            var /** @type {?} */ errorString = rootNodesAndErrors.errors.join('\n');
 	            throw new SyntaxError("Template parse errors:\n" + errorString);
@@ -27966,6 +27966,20 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @param {?} context
 	     * @return {?}
 	     */
+	    TemplatePreparseVisitor.prototype.visitExpansion = function (ast, context) { visitAll(this, ast.cases); };
+	    /**
+	     * @param {?} ast
+	     * @param {?} context
+	     * @return {?}
+	     */
+	    TemplatePreparseVisitor.prototype.visitExpansionCase = function (ast, context) {
+	        visitAll(this, ast.expression);
+	    };
+	    /**
+	     * @param {?} ast
+	     * @param {?} context
+	     * @return {?}
+	     */
 	    TemplatePreparseVisitor.prototype.visitComment = function (ast, context) { return null; };
 	    /**
 	     * @param {?} ast
@@ -27979,18 +27993,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @return {?}
 	     */
 	    TemplatePreparseVisitor.prototype.visitText = function (ast, context) { return null; };
-	    /**
-	     * @param {?} ast
-	     * @param {?} context
-	     * @return {?}
-	     */
-	    TemplatePreparseVisitor.prototype.visitExpansion = function (ast, context) { return null; };
-	    /**
-	     * @param {?} ast
-	     * @param {?} context
-	     * @return {?}
-	     */
-	    TemplatePreparseVisitor.prototype.visitExpansionCase = function (ast, context) { return null; };
 	    return TemplatePreparseVisitor;
 	}());
 
@@ -40694,6 +40696,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        throw new Error("No ResourceLoader implementation has been provided. Can't read the url \"" + url + "\"");
 	    }
 	};
+	var /** @type {?} */ baseHtmlParser = new OpaqueToken('HtmlParser');
 	/**
 	 * A set of providers that provide `JitCompiler` and its dependencies to use for
 	 * template compilation.
@@ -40706,17 +40709,24 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    Console$1,
 	    Lexer,
 	    Parser,
-	    HtmlParser,
+	    {
+	        provide: baseHtmlParser,
+	        useClass: HtmlParser,
+	    },
 	    {
 	        provide: I18NHtmlParser,
 	        useFactory: function (parser, translations, format) {
 	            return new I18NHtmlParser(parser, translations, format);
 	        },
 	        deps: [
-	            HtmlParser,
+	            baseHtmlParser,
 	            [new Optional(), new Inject(TRANSLATIONS)],
 	            [new Optional(), new Inject(TRANSLATIONS_FORMAT)],
 	        ]
+	    },
+	    {
+	        provide: HtmlParser,
+	        useExisting: I18NHtmlParser,
 	    },
 	    TemplateParser,
 	    DirectiveNormalizer,
@@ -45299,7 +45309,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$3 = new Version('2.4.5-14e9751');
+	var VERSION$3 = new Version('2.4.5-8d4aa82');
 
 	/**
 	 * @license
@@ -46701,7 +46711,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$4 = new Version('2.4.5-14e9751');
+	var VERSION$4 = new Version('2.4.5-8d4aa82');
 
 	exports['default'] = LanguageServicePlugin;
 	exports.createLanguageService = createLanguageService;
