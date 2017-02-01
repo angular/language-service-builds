@@ -1650,7 +1650,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('4.0.0-beta.5-8270bec');
+	var /** @type {?} */ VERSION = new Version('4.0.0-beta.5-e0e5e78');
 
 	/**
 	 * Inject decorator and metadata.
@@ -26385,7 +26385,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.5-8270bec');
+	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.5-e0e5e78');
 
 	var CompilerConfig = (function () {
 	    /**
@@ -38527,7 +38527,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            annotations = [];
 	            var /** @type {?} */ classMetadata = this.getTypeMetadata(type);
 	            if (classMetadata['extends']) {
-	                var /** @type {?} */ parentType = this.simplify(type, classMetadata['extends']);
+	                var /** @type {?} */ parentType = this.trySimplify(type, classMetadata['extends']);
 	                if (parentType && (parentType instanceof StaticSymbol)) {
 	                    var /** @type {?} */ parentAnnotations = this.annotations(parentType);
 	                    annotations.push.apply(annotations, parentAnnotations);
@@ -38754,6 +38754,19 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        else {
 	            throw error;
 	        }
+	    };
+	    /**
+	     * Simplify but discard any errors
+	     * @param {?} context
+	     * @param {?} value
+	     * @return {?}
+	     */
+	    StaticReflector.prototype.trySimplify = function (context, value) {
+	        var /** @type {?} */ originalRecorder = this.errorRecorder;
+	        this.errorRecorder = function (error, fileName) { };
+	        var /** @type {?} */ result = this.simplify(context, value);
+	        this.errorRecorder = originalRecorder;
+	        return result;
 	    };
 	    /**
 	     * \@internal
