@@ -165,9 +165,13 @@ export declare enum BuiltinType {
      */
     Null = 5,
     /**
+     * the type is an unbound type parameter.
+     */
+    Unbound = 6,
+    /**
      * Not a built-in type.
      */
-    Other = 6,
+    Other = 7,
 }
 /**
  * A symbol describing a language element that can be referenced by expressions

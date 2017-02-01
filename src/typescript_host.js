@@ -1313,6 +1313,9 @@ function typeKindOf(type) {
             }
             return candidate;
         }
+        else if (type.flags & ts.TypeFlags.TypeParameter) {
+            return BuiltinType.Unbound;
+        }
     }
     return BuiltinType.Other;
 }

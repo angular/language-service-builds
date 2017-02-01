@@ -696,7 +696,8 @@ function getVarDeclarations(info, path) {
                     var value = context.get(variable.value);
                     if (value) {
                         type = value.type;
-                        if (info.template.query.getTypeKind(type) === BuiltinType.Any) {
+                        var kind = info.template.query.getTypeKind(type);
+                        if (kind === BuiltinType.Any || kind == BuiltinType.Unbound) {
                             // The any type is not very useful here. For special cases, such as ngFor, we can do
                             // better.
                             type = refinedVariableType(type, info, current);
@@ -722,7 +723,10 @@ function getVarDeclarations(info, path) {
 }
 function refinedVariableType(type, info, templateElement) {
     // Special case the ngFor directive
-    var ngForDirective = templateElement.directives.find(function (d) { return identifierName(d.directive.type) == 'NgFor'; });
+    var ngForDirective = templateElement.directives.find(function (d) {
+        var name = identifierName(d.directive.type);
+        return name == 'NgFor' || name == 'NgForOf';
+    });
     if (ngForDirective) {
         var ngForOfBinding = ngForDirective.inputs.find(function (i) { return i.directiveName == 'ngForOf'; });
         if (ngForOfBinding) {
