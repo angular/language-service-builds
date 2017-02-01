@@ -1650,7 +1650,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('4.0.0-beta.5-2205829');
+	var /** @type {?} */ VERSION = new Version('4.0.0-beta.5-8270bec');
 
 	/**
 	 * Inject decorator and metadata.
@@ -3879,6 +3879,55 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    }
 	}
 
+	var commonjsGlobal = typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
+
+	function createCommonjsModule(fn, module) {
+		return module = { exports: {} }, fn(module, module.exports), module.exports;
+	}
+
+	var __moduleExports$1 = createCommonjsModule(function (module, exports) {
+	"use strict";
+	/**
+	 * window: browser in DOM main thread
+	 * self: browser in WebWorker
+	 * global: Node.js/other
+	 */
+	exports.root = (typeof window == 'object' && window.window === window && window
+	    || typeof self == 'object' && self.self === self && self
+	    || typeof commonjsGlobal == 'object' && commonjsGlobal.global === commonjsGlobal && commonjsGlobal);
+	if (!exports.root) {
+	    throw new Error('RxJS could not find any global context (window, self, global)');
+	}
+	});
+
+	var root_1$1 = __moduleExports$1.root;
+
+	var root_1 = __moduleExports$1;
+	function getSymbolObservable(context) {
+	    var $$observable;
+	    var Symbol = context.Symbol;
+	    if (typeof Symbol === 'function') {
+	        if (Symbol.observable) {
+	            $$observable = Symbol.observable;
+	        }
+	        else {
+	            $$observable = Symbol('observable');
+	            Symbol.observable = $$observable;
+	        }
+	    }
+	    else {
+	        $$observable = '@@observable';
+	    }
+	    return $$observable;
+	}
+	var getSymbolObservable_1 = getSymbolObservable;
+	var $$observable = getSymbolObservable(root_1.root);
+
+	var __moduleExports = {
+		getSymbolObservable: getSymbolObservable_1,
+		$$observable: $$observable
+	};
+
 	/**
 	 * Determine if the argument is shaped like a Promise
 	 * @param {?} obj
@@ -3888,6 +3937,14 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    // allow any Promise/A+ compliant thenable.
 	    // It's up to the caller to ensure that obj.then conforms to the spec
 	    return !!obj && typeof obj.then === 'function';
+	}
+	/**
+	 * Determine if the argument is an Observable
+	 * @param {?} obj
+	 * @return {?}
+	 */
+	function isObservable(obj) {
+	    return !!(obj && obj[$$observable]);
 	}
 
 	/**
@@ -4174,41 +4231,18 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return ElementRef;
 	}());
 
-	var commonjsGlobal = typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
-
-	function createCommonjsModule(fn, module) {
-		return module = { exports: {} }, fn(module, module.exports), module.exports;
-	}
-
-	var __moduleExports$1 = createCommonjsModule(function (module, exports) {
-	"use strict";
-	/**
-	 * window: browser in DOM main thread
-	 * self: browser in WebWorker
-	 * global: Node.js/other
-	 */
-	exports.root = (typeof window == 'object' && window.window === window && window
-	    || typeof self == 'object' && self.self === self && self
-	    || typeof commonjsGlobal == 'object' && commonjsGlobal.global === commonjsGlobal && commonjsGlobal);
-	if (!exports.root) {
-	    throw new Error('RxJS could not find any global context (window, self, global)');
-	}
-	});
-
-	var root_1$1 = __moduleExports$1.root;
-
 	function isFunction(x) {
 	    return typeof x === 'function';
 	}
 	var isFunction_2 = isFunction;
 
-	var __moduleExports$4 = {
+	var __moduleExports$5 = {
 		isFunction: isFunction_2
 	};
 
 	var isArray_1$1 = Array.isArray || (function (x) { return x && typeof x.length === 'number'; });
 
-	var __moduleExports$6 = {
+	var __moduleExports$7 = {
 		isArray: isArray_1$1
 	};
 
@@ -4217,18 +4251,18 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	}
 	var isObject_2 = isObject;
 
-	var __moduleExports$7 = {
+	var __moduleExports$8 = {
 		isObject: isObject_2
 	};
 
 	// typeof any so that it we don't have to cast when comparing a result to the error object
 	var errorObject_1$2 = { e: {} };
 
-	var __moduleExports$9 = {
+	var __moduleExports$10 = {
 		errorObject: errorObject_1$2
 	};
 
-	var errorObject_1$1 = __moduleExports$9;
+	var errorObject_1$1 = __moduleExports$10;
 	var tryCatchTarget;
 	function tryCatcher() {
 	    try {
@@ -4246,7 +4280,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	var tryCatch_2 = tryCatch;
 	;
 
-	var __moduleExports$8 = {
+	var __moduleExports$9 = {
 		tryCatch: tryCatch_2
 	};
 
@@ -4274,16 +4308,16 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	}(Error));
 	var UnsubscriptionError_2 = UnsubscriptionError;
 
-	var __moduleExports$10 = {
+	var __moduleExports$11 = {
 		UnsubscriptionError: UnsubscriptionError_2
 	};
 
-	var isArray_1 = __moduleExports$6;
-	var isObject_1 = __moduleExports$7;
-	var isFunction_1$1 = __moduleExports$4;
-	var tryCatch_1 = __moduleExports$8;
-	var errorObject_1 = __moduleExports$9;
-	var UnsubscriptionError_1 = __moduleExports$10;
+	var isArray_1 = __moduleExports$7;
+	var isObject_1 = __moduleExports$8;
+	var isFunction_1$1 = __moduleExports$5;
+	var tryCatch_1 = __moduleExports$9;
+	var errorObject_1 = __moduleExports$10;
+	var UnsubscriptionError_1 = __moduleExports$11;
 	/**
 	 * Represents a disposable resource, such as the execution of an Observable. A
 	 * Subscription has one important method, `unsubscribe`, that takes no argument
@@ -4430,7 +4464,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	}());
 	var Subscription_2 = Subscription;
 
-	var __moduleExports$5 = {
+	var __moduleExports$6 = {
 		Subscription: Subscription_2
 	};
 
@@ -4441,16 +4475,16 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    complete: function () { }
 	};
 
-	var __moduleExports$11 = {
+	var __moduleExports$12 = {
 		empty: empty
 	};
 
-	var root_1$2 = __moduleExports$1;
-	var Symbol$1 = root_1$2.root.Symbol;
+	var root_1$3 = __moduleExports$1;
+	var Symbol$1 = root_1$3.root.Symbol;
 	var $$rxSubscriber = (typeof Symbol$1 === 'function' && typeof Symbol$1.for === 'function') ?
 	    Symbol$1.for('rxSubscriber') : '@@rxSubscriber';
 
-	var __moduleExports$12 = {
+	var __moduleExports$13 = {
 		$$rxSubscriber: $$rxSubscriber
 	};
 
@@ -4459,10 +4493,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	var isFunction_1 = __moduleExports$4;
-	var Subscription_1$1 = __moduleExports$5;
-	var Observer_1$1 = __moduleExports$11;
-	var rxSubscriber_1$2 = __moduleExports$12;
+	var isFunction_1 = __moduleExports$5;
+	var Subscription_1$1 = __moduleExports$6;
+	var Observer_1$1 = __moduleExports$12;
+	var rxSubscriber_1$2 = __moduleExports$13;
 	/**
 	 * Implements the {@link Observer} interface and extends the
 	 * {@link Subscription} class. While the {@link Observer} is the public API for
@@ -4702,13 +4736,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return SafeSubscriber;
 	}(Subscriber));
 
-	var __moduleExports$3 = {
+	var __moduleExports$4 = {
 		Subscriber: Subscriber_2
 	};
 
-	var Subscriber_1$1 = __moduleExports$3;
-	var rxSubscriber_1$1 = __moduleExports$12;
-	var Observer_1 = __moduleExports$11;
+	var Subscriber_1$1 = __moduleExports$4;
+	var rxSubscriber_1$1 = __moduleExports$13;
+	var Observer_1 = __moduleExports$12;
 	function toSubscriber(nextOrObserver, error, complete) {
 	    if (nextOrObserver) {
 	        if (nextOrObserver instanceof Subscriber_1$1.Subscriber) {
@@ -4725,39 +4759,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	}
 	var toSubscriber_2 = toSubscriber;
 
-	var __moduleExports$2 = {
+	var __moduleExports$3 = {
 		toSubscriber: toSubscriber_2
 	};
 
-	var root_1$3 = __moduleExports$1;
-	function getSymbolObservable(context) {
-	    var $$observable;
-	    var Symbol = context.Symbol;
-	    if (typeof Symbol === 'function') {
-	        if (Symbol.observable) {
-	            $$observable = Symbol.observable;
-	        }
-	        else {
-	            $$observable = Symbol('observable');
-	            Symbol.observable = $$observable;
-	        }
-	    }
-	    else {
-	        $$observable = '@@observable';
-	    }
-	    return $$observable;
-	}
-	var getSymbolObservable_1 = getSymbolObservable;
-	var $$observable = getSymbolObservable(root_1$3.root);
-
-	var __moduleExports$13 = {
-		getSymbolObservable: getSymbolObservable_1,
-		$$observable: $$observable
-	};
-
-	var root_1 = __moduleExports$1;
-	var toSubscriber_1 = __moduleExports$2;
-	var observable_1 = __moduleExports$13;
+	var root_1$2 = __moduleExports$1;
+	var toSubscriber_1 = __moduleExports$3;
+	var observable_1 = __moduleExports;
 	/**
 	 * A representation of any set of values over any amount of time. This the most basic building block
 	 * of RxJS.
@@ -4818,11 +4826,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    Observable.prototype.forEach = function (next, PromiseCtor) {
 	        var _this = this;
 	        if (!PromiseCtor) {
-	            if (root_1.root.Rx && root_1.root.Rx.config && root_1.root.Rx.config.Promise) {
-	                PromiseCtor = root_1.root.Rx.config.Promise;
+	            if (root_1$2.root.Rx && root_1$2.root.Rx.config && root_1$2.root.Rx.config.Promise) {
+	                PromiseCtor = root_1$2.root.Rx.config.Promise;
 	            }
-	            else if (root_1.root.Promise) {
-	                PromiseCtor = root_1.root.Promise;
+	            else if (root_1$2.root.Promise) {
+	                PromiseCtor = root_1$2.root.Promise;
 	            }
 	        }
 	        if (!PromiseCtor) {
@@ -4883,7 +4891,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	}());
 	var Observable_2 = Observable;
 
-	var __moduleExports = {
+	var __moduleExports$2 = {
 		Observable: Observable_2
 	};
 
@@ -4922,7 +4930,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	var Subscription_1$2 = __moduleExports$5;
+	var Subscription_1$2 = __moduleExports$6;
 	/**
 	 * We need this JSDoc comment for affecting ESDoc.
 	 * @ignore
@@ -4965,12 +4973,12 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	var Observable_1 = __moduleExports;
-	var Subscriber_1 = __moduleExports$3;
-	var Subscription_1 = __moduleExports$5;
+	var Observable_1 = __moduleExports$2;
+	var Subscriber_1 = __moduleExports$4;
+	var Subscription_1 = __moduleExports$6;
 	var ObjectUnsubscribedError_1 = __moduleExports$14;
 	var SubjectSubscription_1 = __moduleExports$15;
-	var rxSubscriber_1 = __moduleExports$12;
+	var rxSubscriber_1 = __moduleExports$13;
 	/**
 	 * @class SubjectSubscriber<T>
 	 */
@@ -14039,6 +14047,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    FILL_STYLE_FLAG: FILL_STYLE_FLAG,
 	    ComponentStillLoadingError: ComponentStillLoadingError,
 	    isPromise: isPromise,
+	    isObservable: isObservable,
 	    AnimationTransition: AnimationTransition
 	};
 
@@ -20548,16 +20557,16 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    Xtb.prototype.load = function (content, url) {
 	        // xtb to xml nodes
 	        var /** @type {?} */ xtbParser = new XtbParser();
-	        var _a = xtbParser.parse(content, url), mlNodesByMsgId = _a.mlNodesByMsgId, errors = _a.errors;
+	        var _a = xtbParser.parse(content, url), msgIdToHtml = _a.msgIdToHtml, errors = _a.errors;
 	        // xml nodes to i18n nodes
 	        var /** @type {?} */ i18nNodesByMsgId = {};
 	        var /** @type {?} */ converter = new XmlToI18n$1();
 	        // Because we should be able to load xtb files that rely on features not supported by angular,
 	        // we need to delay the conversion of html to i18n nodes so that non angular messages are not
 	        // converted
-	        Object.keys(mlNodesByMsgId).forEach(function (msgId) {
+	        Object.keys(msgIdToHtml).forEach(function (msgId) {
 	            var /** @type {?} */ valueFn = function () {
-	                var _a = converter.convert(mlNodesByMsgId[msgId]), i18nNodes = _a.i18nNodes, errors = _a.errors;
+	                var _a = converter.convert(msgIdToHtml[msgId], url), i18nNodes = _a.i18nNodes, errors = _a.errors;
 	                if (errors.length) {
 	                    throw new Error("xtb parse errors:\n" + errors.join('\n'));
 	                }
@@ -20612,12 +20621,14 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     */
 	    XtbParser.prototype.parse = function (xtb, url) {
 	        this._bundleDepth = 0;
-	        this._mlNodesByMsgId = {};
-	        var /** @type {?} */ xml = new XmlParser().parse(xtb, url, true);
+	        this._msgIdToHtml = {};
+	        // We can not parse the ICU messages at this point as some messages might not originate
+	        // from Angular that could not be lex'd.
+	        var /** @type {?} */ xml = new XmlParser().parse(xtb, url, false);
 	        this._errors = xml.errors;
 	        visitAll(this, xml.rootNodes);
 	        return {
-	            mlNodesByMsgId: this._mlNodesByMsgId,
+	            msgIdToHtml: this._msgIdToHtml,
 	            errors: this._errors,
 	        };
 	    };
@@ -20643,11 +20654,15 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                }
 	                else {
 	                    var /** @type {?} */ id = idAttr.value;
-	                    if (this._mlNodesByMsgId.hasOwnProperty(id)) {
+	                    if (this._msgIdToHtml.hasOwnProperty(id)) {
 	                        this._addError(element, "Duplicated translations for msg " + id);
 	                    }
 	                    else {
-	                        this._mlNodesByMsgId[id] = element.children;
+	                        var /** @type {?} */ innerTextStart = element.startSourceSpan.end.offset;
+	                        var /** @type {?} */ innerTextEnd = element.endSourceSpan.start.offset;
+	                        var /** @type {?} */ content = element.startSourceSpan.start.file.content;
+	                        var /** @type {?} */ innerText = content.slice(innerTextStart, innerTextEnd);
+	                        this._msgIdToHtml[id] = innerText;
 	                    }
 	                }
 	                break;
@@ -20699,13 +20714,18 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    function XmlToI18n() {
 	    }
 	    /**
-	     * @param {?} nodes
+	     * @param {?} message
+	     * @param {?} url
 	     * @return {?}
 	     */
-	    XmlToI18n.prototype.convert = function (nodes) {
-	        this._errors = [];
+	    XmlToI18n.prototype.convert = function (message, url) {
+	        var /** @type {?} */ xmlIcu = new XmlParser().parse(message, url, true);
+	        this._errors = xmlIcu.errors;
+	        var /** @type {?} */ i18nNodes = this._errors.length > 0 || xmlIcu.rootNodes.length == 0 ?
+	            [] :
+	            visitAll(this, xmlIcu.rootNodes);
 	        return {
-	            i18nNodes: visitAll(this, nodes),
+	            i18nNodes: i18nNodes,
 	            errors: this._errors,
 	        };
 	    };
@@ -26365,7 +26385,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.5-2205829');
+	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.5-8270bec');
 
 	var CompilerConfig = (function () {
 	    /**
@@ -39545,7 +39565,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    StaticSymbolResolver.prototype.getSymbolByModule = function (module, symbolName, containingFile) {
 	        var /** @type {?} */ filePath = this.resolveModule(module, containingFile);
 	        if (!filePath) {
-	            throw new Error("Could not resolve module " + module + " relative to " + containingFile);
+	            this.reportError(new Error("Could not resolve module " + module + (containingFile ? " relative to $ {\n            containingFile\n          } " : '')), null);
+	            return this.getStaticSymbol("ERROR:" + module, symbolName);
 	        }
 	        return this.getStaticSymbol(filePath, symbolName);
 	    };
