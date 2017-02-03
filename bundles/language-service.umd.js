@@ -1650,7 +1650,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('4.0.0-beta.6-0ba5beb');
+	var /** @type {?} */ VERSION = new Version('4.0.0-beta.6-fb91b2f');
 
 	/**
 	 * Inject decorator and metadata.
@@ -26373,7 +26373,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.6-0ba5beb');
+	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.6-fb91b2f');
 
 	var CompilerConfig = (function () {
 	    /**
