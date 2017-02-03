@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.0.0-beta.6-fb91b2f
+ * @license Angular v4.0.0-beta.6-41db177
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1650,7 +1650,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('4.0.0-beta.6-fb91b2f');
+	var /** @type {?} */ VERSION = new Version('4.0.0-beta.6-41db177');
 
 	/**
 	 * Inject decorator and metadata.
@@ -8908,21 +8908,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    /**
 	     * @param {?} selector
 	     * @param {?} _viewClass
-	     * @param {?} _componentType
+	     * @param {?} componentType
 	     */
-	    function ComponentFactory(selector, _viewClass, _componentType) {
+	    function ComponentFactory(selector, _viewClass, componentType) {
 	        this.selector = selector;
-	        this._componentType = _componentType;
+	        this.componentType = componentType;
 	        this._viewClass = _viewClass;
 	    }
-	    Object.defineProperty(ComponentFactory.prototype, "componentType", {
-	        /**
-	         * @return {?}
-	         */
-	        get: function () { return this._componentType; },
-	        enumerable: true,
-	        configurable: true
-	    });
 	    /**
 	     * Creates a new component.
 	     * @param {?} injector
@@ -26373,7 +26365,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.6-fb91b2f');
+	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.6-41db177');
 
 	var CompilerConfig = (function () {
 	    /**
@@ -45771,7 +45763,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$3 = new Version('4.0.0-beta.6-fb91b2f');
+	var VERSION$3 = new Version('4.0.0-beta.6-41db177');
 
 	/**
 	 * @license
@@ -47238,7 +47230,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$4 = new Version('4.0.0-beta.6-fb91b2f');
+	var VERSION$4 = new Version('4.0.0-beta.6-41db177');
 
 	exports.createLanguageService = createLanguageService;
 	exports.create = create;
