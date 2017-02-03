@@ -1,6 +1,6 @@
 /**
- * @license Angular v2.4.5-7ed39eb
- * (c) 2010-2016 Google, Inc. https://angular.io/
+ * @license Angular v2.4.6-343ee8a
+ * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
 
@@ -1636,7 +1636,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('2.4.5-7ed39eb');
+	var /** @type {?} */ VERSION = new Version('2.4.6-343ee8a');
 
 	/**
 	 * Allows to refer to references which are not yet defined.
@@ -1681,23 +1681,76 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    }
 	}
 
-	var __extends = (this && this.__extends) || function (d, b) {
+	var /** @type {?} */ _THROW_IF_NOT_FOUND = new Object();
+	var /** @type {?} */ THROW_IF_NOT_FOUND = _THROW_IF_NOT_FOUND;
+	var _NullInjector = (function () {
+	    function _NullInjector() {
+	    }
+	    /**
+	     * @param {?} token
+	     * @param {?=} notFoundValue
+	     * @return {?}
+	     */
+	    _NullInjector.prototype.get = function (token, notFoundValue) {
+	        if (notFoundValue === void 0) { notFoundValue = _THROW_IF_NOT_FOUND; }
+	        if (notFoundValue === _THROW_IF_NOT_FOUND) {
+	            throw new Error("No provider for " + stringify$1(token) + "!");
+	        }
+	        return notFoundValue;
+	    };
+	    return _NullInjector;
+	}());
+	/**
+	 * \@whatItDoes Injector interface
+	 * \@howToUse
+	 * ```
+	 * const injector: Injector = ...;
+	 * injector.get(...);
+	 * ```
+	 *
+	 * \@description
+	 * For more details, see the {\@linkDocs guide/dependency-injection "Dependency Injection Guide"}.
+	 *
+	 * ### Example
+	 *
+	 * {\@example core/di/ts/injector_spec.ts region='Injector'}
+	 *
+	 * `Injector` returns itself when given `Injector` as a token:
+	 * {\@example core/di/ts/injector_spec.ts region='injectInjector'}
+	 *
+	 * \@stable
+	 * @abstract
+	 */
+	var Injector = (function () {
+	    function Injector() {
+	    }
+	    /**
+	     * Retrieves an instance from the injector based on the provided token.
+	     * If not found:
+	     * - Throws {\@link NoProviderError} if no `notFoundValue` that is not equal to
+	     * Injector.THROW_IF_NOT_FOUND is given
+	     * - Returns the `notFoundValue` otherwise
+	     * @abstract
+	     * @param {?} token
+	     * @param {?=} notFoundValue
+	     * @return {?}
+	     */
+	    Injector.prototype.get = function (token, notFoundValue) { };
+	    Injector.THROW_IF_NOT_FOUND = _THROW_IF_NOT_FOUND;
+	    Injector.NULL = new _NullInjector();
+	    return Injector;
+	}());
+
+	var __extends$1 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
 	/**
-	 * Convenience to throw an Error with 'unimplemented' as the message.
-	 * @return {?}
-	 */
-	function unimplemented() {
-	    throw new Error('unimplemented');
-	}
-	/**
 	 * \@stable
 	 */
 	var BaseError = (function (_super) {
-	    __extends(BaseError, _super);
+	    __extends$1(BaseError, _super);
 	    /**
 	     * @param {?} message
 	     */
@@ -1754,7 +1807,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * \@stable
 	 */
 	var WrappedError = (function (_super) {
-	    __extends(WrappedError, _super);
+	    __extends$1(WrappedError, _super);
 	    /**
 	     * @param {?} message
 	     * @param {?} error
@@ -1777,65 +1830,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return WrappedError;
 	}(BaseError));
 
-	var /** @type {?} */ _THROW_IF_NOT_FOUND = new Object();
-	var /** @type {?} */ THROW_IF_NOT_FOUND = _THROW_IF_NOT_FOUND;
-	var _NullInjector = (function () {
-	    function _NullInjector() {
-	    }
-	    /**
-	     * @param {?} token
-	     * @param {?=} notFoundValue
-	     * @return {?}
-	     */
-	    _NullInjector.prototype.get = function (token, notFoundValue) {
-	        if (notFoundValue === void 0) { notFoundValue = _THROW_IF_NOT_FOUND; }
-	        if (notFoundValue === _THROW_IF_NOT_FOUND) {
-	            throw new Error("No provider for " + stringify$1(token) + "!");
-	        }
-	        return notFoundValue;
-	    };
-	    return _NullInjector;
-	}());
-	/**
-	 * \@whatItDoes Injector interface
-	 * \@howToUse
-	 * ```
-	 * const injector: Injector = ...;
-	 * injector.get(...);
-	 * ```
-	 *
-	 * \@description
-	 * For more details, see the {\@linkDocs guide/dependency-injection "Dependency Injection Guide"}.
-	 *
-	 * ### Example
-	 *
-	 * {\@example core/di/ts/injector_spec.ts region='Injector'}
-	 *
-	 * `Injector` returns itself when given `Injector` as a token:
-	 * {\@example core/di/ts/injector_spec.ts region='injectInjector'}
-	 *
-	 * \@stable
-	 * @abstract
-	 */
-	var Injector = (function () {
-	    function Injector() {
-	    }
-	    /**
-	     * Retrieves an instance from the injector based on the provided token.
-	     * If not found:
-	     * - Throws {\@link NoProviderError} if no `notFoundValue` that is not equal to
-	     * Injector.THROW_IF_NOT_FOUND is given
-	     * - Returns the `notFoundValue` otherwise
-	     * @param {?} token
-	     * @param {?=} notFoundValue
-	     * @return {?}
-	     */
-	    Injector.prototype.get = function (token, notFoundValue) { return unimplemented(); };
-	    Injector.THROW_IF_NOT_FOUND = _THROW_IF_NOT_FOUND;
-	    Injector.NULL = new _NullInjector();
-	    return Injector;
-	}());
-
 	/**
 	 * @license
 	 * Copyright Google Inc. All Rights Reserved.
@@ -1843,7 +1837,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
-	var __extends$1 = (this && this.__extends) || function (d, b) {
+	var __extends = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -1880,7 +1874,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * \@stable
 	 */
 	var AbstractProviderError = (function (_super) {
-	    __extends$1(AbstractProviderError, _super);
+	    __extends(AbstractProviderError, _super);
 	    /**
 	     * @param {?} injector
 	     * @param {?} key
@@ -1921,7 +1915,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * \@stable
 	 */
 	var NoProviderError = (function (_super) {
-	    __extends$1(NoProviderError, _super);
+	    __extends(NoProviderError, _super);
 	    /**
 	     * @param {?} injector
 	     * @param {?} key
@@ -1952,7 +1946,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * \@stable
 	 */
 	var CyclicDependencyError = (function (_super) {
-	    __extends$1(CyclicDependencyError, _super);
+	    __extends(CyclicDependencyError, _super);
 	    /**
 	     * @param {?} injector
 	     * @param {?} key
@@ -1991,7 +1985,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * \@stable
 	 */
 	var InstantiationError = (function (_super) {
-	    __extends$1(InstantiationError, _super);
+	    __extends(InstantiationError, _super);
 	    /**
 	     * @param {?} injector
 	     * @param {?} originalException
@@ -2045,7 +2039,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * \@stable
 	 */
 	var InvalidProviderError = (function (_super) {
-	    __extends$1(InvalidProviderError, _super);
+	    __extends(InvalidProviderError, _super);
 	    /**
 	     * @param {?} provider
 	     */
@@ -2084,7 +2078,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * \@stable
 	 */
 	var NoAnnotationError = (function (_super) {
-	    __extends$1(NoAnnotationError, _super);
+	    __extends(NoAnnotationError, _super);
 	    /**
 	     * @param {?} typeOrFunc
 	     * @param {?} params
@@ -2130,7 +2124,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * \@stable
 	 */
 	var OutOfBoundsError = (function (_super) {
-	    __extends$1(OutOfBoundsError, _super);
+	    __extends(OutOfBoundsError, _super);
 	    /**
 	     * @param {?} index
 	     */
@@ -2152,7 +2146,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * ```
 	 */
 	var MixingMultiProvidersWithRegularProvidersError = (function (_super) {
-	    __extends$1(MixingMultiProvidersWithRegularProvidersError, _super);
+	    __extends(MixingMultiProvidersWithRegularProvidersError, _super);
 	    /**
 	     * @param {?} provider1
 	     * @param {?} provider2
@@ -2746,23 +2740,19 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    /**
 	     * @param {?} key
 	     * @param {?} optional
-	     * @param {?} lowerBoundVisibility
-	     * @param {?} upperBoundVisibility
-	     * @param {?} properties
+	     * @param {?} visibility
 	     */
-	    function ReflectiveDependency(key, optional, lowerBoundVisibility, upperBoundVisibility, properties) {
+	    function ReflectiveDependency(key, optional, visibility) {
 	        this.key = key;
 	        this.optional = optional;
-	        this.lowerBoundVisibility = lowerBoundVisibility;
-	        this.upperBoundVisibility = upperBoundVisibility;
-	        this.properties = properties;
+	        this.visibility = visibility;
 	    }
 	    /**
 	     * @param {?} key
 	     * @return {?}
 	     */
 	    ReflectiveDependency.fromKey = function (key) {
-	        return new ReflectiveDependency(key, false, null, null, []);
+	        return new ReflectiveDependency(key, false, null);
 	    };
 	    return ReflectiveDependency;
 	}());
@@ -2947,19 +2937,17 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @return {?}
 	 */
 	function _extractToken(typeOrFunc, metadata, params) {
-	    var /** @type {?} */ depProps = [];
 	    var /** @type {?} */ token = null;
 	    var /** @type {?} */ optional = false;
 	    if (!Array.isArray(metadata)) {
 	        if (metadata instanceof Inject) {
-	            return _createDependency(metadata.token, optional, null, null, depProps);
+	            return _createDependency(metadata.token, optional, null);
 	        }
 	        else {
-	            return _createDependency(metadata, optional, null, null, depProps);
+	            return _createDependency(metadata, optional, null);
 	        }
 	    }
-	    var /** @type {?} */ lowerBoundVisibility = null;
-	    var /** @type {?} */ upperBoundVisibility = null;
+	    var /** @type {?} */ visibility = null;
 	    for (var /** @type {?} */ i = 0; i < metadata.length; ++i) {
 	        var /** @type {?} */ paramMetadata = metadata[i];
 	        if (paramMetadata instanceof Type) {
@@ -2971,19 +2959,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        else if (paramMetadata instanceof Optional) {
 	            optional = true;
 	        }
-	        else if (paramMetadata instanceof Self) {
-	            upperBoundVisibility = paramMetadata;
-	        }
-	        else if (paramMetadata instanceof Host) {
-	            upperBoundVisibility = paramMetadata;
-	        }
-	        else if (paramMetadata instanceof SkipSelf) {
-	            lowerBoundVisibility = paramMetadata;
+	        else if (paramMetadata instanceof Self || paramMetadata instanceof SkipSelf) {
+	            visibility = paramMetadata;
 	        }
 	    }
 	    token = resolveForwardRef(token);
 	    if (token != null) {
-	        return _createDependency(token, optional, lowerBoundVisibility, upperBoundVisibility, depProps);
+	        return _createDependency(token, optional, visibility);
 	    }
 	    else {
 	        throw new NoAnnotationError(typeOrFunc, params);
@@ -2992,365 +2974,15 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @param {?} token
 	 * @param {?} optional
-	 * @param {?} lowerBoundVisibility
-	 * @param {?} upperBoundVisibility
-	 * @param {?} depProps
+	 * @param {?} visibility
 	 * @return {?}
 	 */
-	function _createDependency(token, optional, lowerBoundVisibility, upperBoundVisibility, depProps) {
-	    return new ReflectiveDependency(ReflectiveKey.get(token), optional, lowerBoundVisibility, upperBoundVisibility, depProps);
+	function _createDependency(token, optional, visibility) {
+	    return new ReflectiveDependency(ReflectiveKey.get(token), optional, visibility);
 	}
 
 	// Threshold for the dynamic version
-	var /** @type {?} */ _MAX_CONSTRUCTION_COUNTER = 10;
 	var /** @type {?} */ UNDEFINED = new Object();
-	var ReflectiveProtoInjectorInlineStrategy = (function () {
-	    /**
-	     * @param {?} protoEI
-	     * @param {?} providers
-	     */
-	    function ReflectiveProtoInjectorInlineStrategy(protoEI, providers) {
-	        this.provider0 = null;
-	        this.provider1 = null;
-	        this.provider2 = null;
-	        this.provider3 = null;
-	        this.provider4 = null;
-	        this.provider5 = null;
-	        this.provider6 = null;
-	        this.provider7 = null;
-	        this.provider8 = null;
-	        this.provider9 = null;
-	        this.keyId0 = null;
-	        this.keyId1 = null;
-	        this.keyId2 = null;
-	        this.keyId3 = null;
-	        this.keyId4 = null;
-	        this.keyId5 = null;
-	        this.keyId6 = null;
-	        this.keyId7 = null;
-	        this.keyId8 = null;
-	        this.keyId9 = null;
-	        var length = providers.length;
-	        if (length > 0) {
-	            this.provider0 = providers[0];
-	            this.keyId0 = providers[0].key.id;
-	        }
-	        if (length > 1) {
-	            this.provider1 = providers[1];
-	            this.keyId1 = providers[1].key.id;
-	        }
-	        if (length > 2) {
-	            this.provider2 = providers[2];
-	            this.keyId2 = providers[2].key.id;
-	        }
-	        if (length > 3) {
-	            this.provider3 = providers[3];
-	            this.keyId3 = providers[3].key.id;
-	        }
-	        if (length > 4) {
-	            this.provider4 = providers[4];
-	            this.keyId4 = providers[4].key.id;
-	        }
-	        if (length > 5) {
-	            this.provider5 = providers[5];
-	            this.keyId5 = providers[5].key.id;
-	        }
-	        if (length > 6) {
-	            this.provider6 = providers[6];
-	            this.keyId6 = providers[6].key.id;
-	        }
-	        if (length > 7) {
-	            this.provider7 = providers[7];
-	            this.keyId7 = providers[7].key.id;
-	        }
-	        if (length > 8) {
-	            this.provider8 = providers[8];
-	            this.keyId8 = providers[8].key.id;
-	        }
-	        if (length > 9) {
-	            this.provider9 = providers[9];
-	            this.keyId9 = providers[9].key.id;
-	        }
-	    }
-	    /**
-	     * @param {?} index
-	     * @return {?}
-	     */
-	    ReflectiveProtoInjectorInlineStrategy.prototype.getProviderAtIndex = function (index) {
-	        if (index == 0)
-	            return this.provider0;
-	        if (index == 1)
-	            return this.provider1;
-	        if (index == 2)
-	            return this.provider2;
-	        if (index == 3)
-	            return this.provider3;
-	        if (index == 4)
-	            return this.provider4;
-	        if (index == 5)
-	            return this.provider5;
-	        if (index == 6)
-	            return this.provider6;
-	        if (index == 7)
-	            return this.provider7;
-	        if (index == 8)
-	            return this.provider8;
-	        if (index == 9)
-	            return this.provider9;
-	        throw new OutOfBoundsError(index);
-	    };
-	    /**
-	     * @param {?} injector
-	     * @return {?}
-	     */
-	    ReflectiveProtoInjectorInlineStrategy.prototype.createInjectorStrategy = function (injector) {
-	        return new ReflectiveInjectorInlineStrategy(injector, this);
-	    };
-	    return ReflectiveProtoInjectorInlineStrategy;
-	}());
-	var ReflectiveProtoInjectorDynamicStrategy = (function () {
-	    /**
-	     * @param {?} protoInj
-	     * @param {?} providers
-	     */
-	    function ReflectiveProtoInjectorDynamicStrategy(protoInj, providers) {
-	        this.providers = providers;
-	        var len = providers.length;
-	        this.keyIds = new Array(len);
-	        for (var i = 0; i < len; i++) {
-	            this.keyIds[i] = providers[i].key.id;
-	        }
-	    }
-	    /**
-	     * @param {?} index
-	     * @return {?}
-	     */
-	    ReflectiveProtoInjectorDynamicStrategy.prototype.getProviderAtIndex = function (index) {
-	        if (index < 0 || index >= this.providers.length) {
-	            throw new OutOfBoundsError(index);
-	        }
-	        return this.providers[index];
-	    };
-	    /**
-	     * @param {?} ei
-	     * @return {?}
-	     */
-	    ReflectiveProtoInjectorDynamicStrategy.prototype.createInjectorStrategy = function (ei) {
-	        return new ReflectiveInjectorDynamicStrategy(this, ei);
-	    };
-	    return ReflectiveProtoInjectorDynamicStrategy;
-	}());
-	var ReflectiveProtoInjector = (function () {
-	    /**
-	     * @param {?} providers
-	     */
-	    function ReflectiveProtoInjector(providers) {
-	        this.numberOfProviders = providers.length;
-	        this._strategy = providers.length > _MAX_CONSTRUCTION_COUNTER ?
-	            new ReflectiveProtoInjectorDynamicStrategy(this, providers) :
-	            new ReflectiveProtoInjectorInlineStrategy(this, providers);
-	    }
-	    /**
-	     * @param {?} providers
-	     * @return {?}
-	     */
-	    ReflectiveProtoInjector.fromResolvedProviders = function (providers) {
-	        return new ReflectiveProtoInjector(providers);
-	    };
-	    /**
-	     * @param {?} index
-	     * @return {?}
-	     */
-	    ReflectiveProtoInjector.prototype.getProviderAtIndex = function (index) {
-	        return this._strategy.getProviderAtIndex(index);
-	    };
-	    return ReflectiveProtoInjector;
-	}());
-	var ReflectiveInjectorInlineStrategy = (function () {
-	    /**
-	     * @param {?} injector
-	     * @param {?} protoStrategy
-	     */
-	    function ReflectiveInjectorInlineStrategy(injector, protoStrategy) {
-	        this.injector = injector;
-	        this.protoStrategy = protoStrategy;
-	        this.obj0 = UNDEFINED;
-	        this.obj1 = UNDEFINED;
-	        this.obj2 = UNDEFINED;
-	        this.obj3 = UNDEFINED;
-	        this.obj4 = UNDEFINED;
-	        this.obj5 = UNDEFINED;
-	        this.obj6 = UNDEFINED;
-	        this.obj7 = UNDEFINED;
-	        this.obj8 = UNDEFINED;
-	        this.obj9 = UNDEFINED;
-	    }
-	    /**
-	     * @return {?}
-	     */
-	    ReflectiveInjectorInlineStrategy.prototype.resetConstructionCounter = function () { this.injector._constructionCounter = 0; };
-	    /**
-	     * @param {?} provider
-	     * @return {?}
-	     */
-	    ReflectiveInjectorInlineStrategy.prototype.instantiateProvider = function (provider) {
-	        return this.injector._new(provider);
-	    };
-	    /**
-	     * @param {?} keyId
-	     * @return {?}
-	     */
-	    ReflectiveInjectorInlineStrategy.prototype.getObjByKeyId = function (keyId) {
-	        var /** @type {?} */ p = this.protoStrategy;
-	        var /** @type {?} */ inj = this.injector;
-	        if (p.keyId0 === keyId) {
-	            if (this.obj0 === UNDEFINED) {
-	                this.obj0 = inj._new(p.provider0);
-	            }
-	            return this.obj0;
-	        }
-	        if (p.keyId1 === keyId) {
-	            if (this.obj1 === UNDEFINED) {
-	                this.obj1 = inj._new(p.provider1);
-	            }
-	            return this.obj1;
-	        }
-	        if (p.keyId2 === keyId) {
-	            if (this.obj2 === UNDEFINED) {
-	                this.obj2 = inj._new(p.provider2);
-	            }
-	            return this.obj2;
-	        }
-	        if (p.keyId3 === keyId) {
-	            if (this.obj3 === UNDEFINED) {
-	                this.obj3 = inj._new(p.provider3);
-	            }
-	            return this.obj3;
-	        }
-	        if (p.keyId4 === keyId) {
-	            if (this.obj4 === UNDEFINED) {
-	                this.obj4 = inj._new(p.provider4);
-	            }
-	            return this.obj4;
-	        }
-	        if (p.keyId5 === keyId) {
-	            if (this.obj5 === UNDEFINED) {
-	                this.obj5 = inj._new(p.provider5);
-	            }
-	            return this.obj5;
-	        }
-	        if (p.keyId6 === keyId) {
-	            if (this.obj6 === UNDEFINED) {
-	                this.obj6 = inj._new(p.provider6);
-	            }
-	            return this.obj6;
-	        }
-	        if (p.keyId7 === keyId) {
-	            if (this.obj7 === UNDEFINED) {
-	                this.obj7 = inj._new(p.provider7);
-	            }
-	            return this.obj7;
-	        }
-	        if (p.keyId8 === keyId) {
-	            if (this.obj8 === UNDEFINED) {
-	                this.obj8 = inj._new(p.provider8);
-	            }
-	            return this.obj8;
-	        }
-	        if (p.keyId9 === keyId) {
-	            if (this.obj9 === UNDEFINED) {
-	                this.obj9 = inj._new(p.provider9);
-	            }
-	            return this.obj9;
-	        }
-	        return UNDEFINED;
-	    };
-	    /**
-	     * @param {?} index
-	     * @return {?}
-	     */
-	    ReflectiveInjectorInlineStrategy.prototype.getObjAtIndex = function (index) {
-	        if (index == 0)
-	            return this.obj0;
-	        if (index == 1)
-	            return this.obj1;
-	        if (index == 2)
-	            return this.obj2;
-	        if (index == 3)
-	            return this.obj3;
-	        if (index == 4)
-	            return this.obj4;
-	        if (index == 5)
-	            return this.obj5;
-	        if (index == 6)
-	            return this.obj6;
-	        if (index == 7)
-	            return this.obj7;
-	        if (index == 8)
-	            return this.obj8;
-	        if (index == 9)
-	            return this.obj9;
-	        throw new OutOfBoundsError(index);
-	    };
-	    /**
-	     * @return {?}
-	     */
-	    ReflectiveInjectorInlineStrategy.prototype.getMaxNumberOfObjects = function () { return _MAX_CONSTRUCTION_COUNTER; };
-	    return ReflectiveInjectorInlineStrategy;
-	}());
-	var ReflectiveInjectorDynamicStrategy = (function () {
-	    /**
-	     * @param {?} protoStrategy
-	     * @param {?} injector
-	     */
-	    function ReflectiveInjectorDynamicStrategy(protoStrategy, injector) {
-	        this.protoStrategy = protoStrategy;
-	        this.injector = injector;
-	        this.objs = new Array(protoStrategy.providers.length).fill(UNDEFINED);
-	    }
-	    /**
-	     * @return {?}
-	     */
-	    ReflectiveInjectorDynamicStrategy.prototype.resetConstructionCounter = function () { this.injector._constructionCounter = 0; };
-	    /**
-	     * @param {?} provider
-	     * @return {?}
-	     */
-	    ReflectiveInjectorDynamicStrategy.prototype.instantiateProvider = function (provider) {
-	        return this.injector._new(provider);
-	    };
-	    /**
-	     * @param {?} keyId
-	     * @return {?}
-	     */
-	    ReflectiveInjectorDynamicStrategy.prototype.getObjByKeyId = function (keyId) {
-	        var /** @type {?} */ p = this.protoStrategy;
-	        for (var /** @type {?} */ i = 0; i < p.keyIds.length; i++) {
-	            if (p.keyIds[i] === keyId) {
-	                if (this.objs[i] === UNDEFINED) {
-	                    this.objs[i] = this.injector._new(p.providers[i]);
-	                }
-	                return this.objs[i];
-	            }
-	        }
-	        return UNDEFINED;
-	    };
-	    /**
-	     * @param {?} index
-	     * @return {?}
-	     */
-	    ReflectiveInjectorDynamicStrategy.prototype.getObjAtIndex = function (index) {
-	        if (index < 0 || index >= this.objs.length) {
-	            throw new OutOfBoundsError(index);
-	        }
-	        return this.objs[index];
-	    };
-	    /**
-	     * @return {?}
-	     */
-	    ReflectiveInjectorDynamicStrategy.prototype.getMaxNumberOfObjects = function () { return this.objs.length; };
-	    return ReflectiveInjectorDynamicStrategy;
-	}());
 	/**
 	 * A ReflectiveDependency injection container used for instantiating objects and resolving
 	 * dependencies.
@@ -3490,28 +3122,25 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     */
 	    ReflectiveInjector.fromResolvedProviders = function (providers, parent) {
 	        if (parent === void 0) { parent = null; }
-	        return new ReflectiveInjector_(ReflectiveProtoInjector.fromResolvedProviders(providers), parent);
+	        return new ReflectiveInjector_(providers, parent);
 	    };
-	    Object.defineProperty(ReflectiveInjector.prototype, "parent", {
-	        /**
-	         * Parent of this injector.
-	         *
-	         * <!-- TODO: Add a link to the section of the user guide talking about hierarchical injection.
-	         * -->
-	         *
-	         * ### Example ([live demo](http://plnkr.co/edit/eosMGo?p=preview))
-	         *
-	         * ```typescript
-	         * var parent = ReflectiveInjector.resolveAndCreate([]);
-	         * var child = parent.resolveAndCreateChild([]);
-	         * expect(child.parent).toBe(parent);
-	         * ```
-	         * @return {?}
-	         */
-	        get: function () { return unimplemented(); },
-	        enumerable: true,
-	        configurable: true
-	    });
+	    /**
+	     * Parent of this injector.
+	     *
+	     * <!-- TODO: Add a link to the section of the user guide talking about hierarchical injection.
+	     * -->
+	     *
+	     * ### Example ([live demo](http://plnkr.co/edit/eosMGo?p=preview))
+	     *
+	     * ```typescript
+	     * var parent = ReflectiveInjector.resolveAndCreate([]);
+	     * var child = parent.resolveAndCreateChild([]);
+	     * expect(child.parent).toBe(parent);
+	     * ```
+	     * @abstract
+	     * @return {?}
+	     */
+	    ReflectiveInjector.prototype.parent = function () { };
 	    /**
 	     * Resolves an array of providers and creates a child injector from those providers.
 	     *
@@ -3538,10 +3167,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * This function is slower than the corresponding `createChildFromResolved`
 	     * because it needs to resolve the passed-in providers first.
 	     * See {\@link Injector#resolve} and {\@link Injector#createChildFromResolved}.
+	     * @abstract
 	     * @param {?} providers
 	     * @return {?}
 	     */
-	    ReflectiveInjector.prototype.resolveAndCreateChild = function (providers) { return unimplemented(); };
+	    ReflectiveInjector.prototype.resolveAndCreateChild = function (providers) { };
 	    /**
 	     * Creates a child injector from previously resolved providers.
 	     *
@@ -3566,12 +3196,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * expect(child.get(ChildProvider) instanceof ChildProvider).toBe(true);
 	     * expect(child.get(ParentProvider)).toBe(parent.get(ParentProvider));
 	     * ```
+	     * @abstract
 	     * @param {?} providers
 	     * @return {?}
 	     */
-	    ReflectiveInjector.prototype.createChildFromResolved = function (providers) {
-	        return unimplemented();
-	    };
+	    ReflectiveInjector.prototype.createChildFromResolved = function (providers) { };
 	    /**
 	     * Resolves a provider and instantiates an object in the context of the injector.
 	     *
@@ -3595,10 +3224,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * expect(car.engine).toBe(injector.get(Engine));
 	     * expect(car).not.toBe(injector.resolveAndInstantiate(Car));
 	     * ```
+	     * @abstract
 	     * @param {?} provider
 	     * @return {?}
 	     */
-	    ReflectiveInjector.prototype.resolveAndInstantiate = function (provider) { return unimplemented(); };
+	    ReflectiveInjector.prototype.resolveAndInstantiate = function (provider) { };
 	    /**
 	     * Instantiates an object using a resolved provider in the context of the injector.
 	     *
@@ -3622,10 +3252,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * expect(car.engine).toBe(injector.get(Engine));
 	     * expect(car).not.toBe(injector.instantiateResolved(carProvider));
 	     * ```
+	     * @abstract
 	     * @param {?} provider
 	     * @return {?}
 	     */
-	    ReflectiveInjector.prototype.instantiateResolved = function (provider) { return unimplemented(); };
+	    ReflectiveInjector.prototype.instantiateResolved = function (provider) { };
 	    /**
 	     * @abstract
 	     * @param {?} token
@@ -3638,16 +3269,22 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	var ReflectiveInjector_ = (function () {
 	    /**
 	     * Private
-	     * @param {?} _proto
+	     * @param {?} _providers
 	     * @param {?=} _parent
 	     */
-	    function ReflectiveInjector_(_proto /* ProtoInjector */, _parent) {
+	    function ReflectiveInjector_(_providers, _parent) {
 	        if (_parent === void 0) { _parent = null; }
 	        /** @internal */
 	        this._constructionCounter = 0;
-	        this._proto = _proto;
+	        this._providers = _providers;
 	        this._parent = _parent;
-	        this._strategy = _proto._strategy.createInjectorStrategy(this);
+	        var len = _providers.length;
+	        this.keyIds = new Array(len);
+	        this.objs = new Array(len);
+	        for (var i = 0; i < len; i++) {
+	            this.keyIds[i] = _providers[i].key.id;
+	            this.objs[i] = UNDEFINED;
+	        }
 	    }
 	    /**
 	     * @param {?} token
@@ -3656,29 +3293,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     */
 	    ReflectiveInjector_.prototype.get = function (token, notFoundValue) {
 	        if (notFoundValue === void 0) { notFoundValue = THROW_IF_NOT_FOUND; }
-	        return this._getByKey(ReflectiveKey.get(token), null, null, notFoundValue);
+	        return this._getByKey(ReflectiveKey.get(token), null, notFoundValue);
 	    };
-	    /**
-	     * @param {?} index
-	     * @return {?}
-	     */
-	    ReflectiveInjector_.prototype.getAt = function (index) { return this._strategy.getObjAtIndex(index); };
 	    Object.defineProperty(ReflectiveInjector_.prototype, "parent", {
 	        /**
 	         * @return {?}
 	         */
 	        get: function () { return this._parent; },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    Object.defineProperty(ReflectiveInjector_.prototype, "internalStrategy", {
-	        /**
-	         * \@internal
-	         * Internal. Do not use.
-	         * We return `any` not to export the InjectorStrategy type.
-	         * @return {?}
-	         */
-	        get: function () { return this._strategy; },
 	        enumerable: true,
 	        configurable: true
 	    });
@@ -3695,8 +3316,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @return {?}
 	     */
 	    ReflectiveInjector_.prototype.createChildFromResolved = function (providers) {
-	        var /** @type {?} */ proto = new ReflectiveProtoInjector(providers);
-	        var /** @type {?} */ inj = new ReflectiveInjector_(proto);
+	        var /** @type {?} */ inj = new ReflectiveInjector_(providers);
 	        inj._parent = this;
 	        return inj;
 	    };
@@ -3715,16 +3335,30 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        return this._instantiateProvider(provider);
 	    };
 	    /**
+	     * @param {?} index
+	     * @return {?}
+	     */
+	    ReflectiveInjector_.prototype.getProviderAtIndex = function (index) {
+	        if (index < 0 || index >= this._providers.length) {
+	            throw new OutOfBoundsError(index);
+	        }
+	        return this._providers[index];
+	    };
+	    /**
 	     * \@internal
 	     * @param {?} provider
 	     * @return {?}
 	     */
 	    ReflectiveInjector_.prototype._new = function (provider) {
-	        if (this._constructionCounter++ > this._strategy.getMaxNumberOfObjects()) {
+	        if (this._constructionCounter++ > this._getMaxNumberOfObjects()) {
 	            throw new CyclicDependencyError(this, provider.key);
 	        }
 	        return this._instantiateProvider(provider);
 	    };
+	    /**
+	     * @return {?}
+	     */
+	    ReflectiveInjector_.prototype._getMaxNumberOfObjects = function () { return this.objs.length; };
 	    /**
 	     * @param {?} provider
 	     * @return {?}
@@ -3747,50 +3381,12 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @return {?}
 	     */
 	    ReflectiveInjector_.prototype._instantiate = function (provider, ResolvedReflectiveFactory) {
+	        var _this = this;
 	        var /** @type {?} */ factory = ResolvedReflectiveFactory.factory;
-	        var /** @type {?} */ deps = ResolvedReflectiveFactory.dependencies;
-	        var /** @type {?} */ length = deps.length;
-	        var /** @type {?} */ d0;
-	        var /** @type {?} */ d1;
-	        var /** @type {?} */ d2;
-	        var /** @type {?} */ d3;
-	        var /** @type {?} */ d4;
-	        var /** @type {?} */ d5;
-	        var /** @type {?} */ d6;
-	        var /** @type {?} */ d7;
-	        var /** @type {?} */ d8;
-	        var /** @type {?} */ d9;
-	        var /** @type {?} */ d10;
-	        var /** @type {?} */ d11;
-	        var /** @type {?} */ d12;
-	        var /** @type {?} */ d13;
-	        var /** @type {?} */ d14;
-	        var /** @type {?} */ d15;
-	        var /** @type {?} */ d16;
-	        var /** @type {?} */ d17;
-	        var /** @type {?} */ d18;
-	        var /** @type {?} */ d19;
+	        var /** @type {?} */ deps;
 	        try {
-	            d0 = length > 0 ? this._getByReflectiveDependency(provider, deps[0]) : null;
-	            d1 = length > 1 ? this._getByReflectiveDependency(provider, deps[1]) : null;
-	            d2 = length > 2 ? this._getByReflectiveDependency(provider, deps[2]) : null;
-	            d3 = length > 3 ? this._getByReflectiveDependency(provider, deps[3]) : null;
-	            d4 = length > 4 ? this._getByReflectiveDependency(provider, deps[4]) : null;
-	            d5 = length > 5 ? this._getByReflectiveDependency(provider, deps[5]) : null;
-	            d6 = length > 6 ? this._getByReflectiveDependency(provider, deps[6]) : null;
-	            d7 = length > 7 ? this._getByReflectiveDependency(provider, deps[7]) : null;
-	            d8 = length > 8 ? this._getByReflectiveDependency(provider, deps[8]) : null;
-	            d9 = length > 9 ? this._getByReflectiveDependency(provider, deps[9]) : null;
-	            d10 = length > 10 ? this._getByReflectiveDependency(provider, deps[10]) : null;
-	            d11 = length > 11 ? this._getByReflectiveDependency(provider, deps[11]) : null;
-	            d12 = length > 12 ? this._getByReflectiveDependency(provider, deps[12]) : null;
-	            d13 = length > 13 ? this._getByReflectiveDependency(provider, deps[13]) : null;
-	            d14 = length > 14 ? this._getByReflectiveDependency(provider, deps[14]) : null;
-	            d15 = length > 15 ? this._getByReflectiveDependency(provider, deps[15]) : null;
-	            d16 = length > 16 ? this._getByReflectiveDependency(provider, deps[16]) : null;
-	            d17 = length > 17 ? this._getByReflectiveDependency(provider, deps[17]) : null;
-	            d18 = length > 18 ? this._getByReflectiveDependency(provider, deps[18]) : null;
-	            d19 = length > 19 ? this._getByReflectiveDependency(provider, deps[19]) : null;
+	            deps =
+	                ResolvedReflectiveFactory.dependencies.map(function (dep) { return _this._getByReflectiveDependency(dep); });
 	        }
 	        catch (e) {
 	            if (e instanceof AbstractProviderError || e instanceof InstantiationError) {
@@ -3800,73 +3396,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        }
 	        var /** @type {?} */ obj;
 	        try {
-	            switch (length) {
-	                case 0:
-	                    obj = factory();
-	                    break;
-	                case 1:
-	                    obj = factory(d0);
-	                    break;
-	                case 2:
-	                    obj = factory(d0, d1);
-	                    break;
-	                case 3:
-	                    obj = factory(d0, d1, d2);
-	                    break;
-	                case 4:
-	                    obj = factory(d0, d1, d2, d3);
-	                    break;
-	                case 5:
-	                    obj = factory(d0, d1, d2, d3, d4);
-	                    break;
-	                case 6:
-	                    obj = factory(d0, d1, d2, d3, d4, d5);
-	                    break;
-	                case 7:
-	                    obj = factory(d0, d1, d2, d3, d4, d5, d6);
-	                    break;
-	                case 8:
-	                    obj = factory(d0, d1, d2, d3, d4, d5, d6, d7);
-	                    break;
-	                case 9:
-	                    obj = factory(d0, d1, d2, d3, d4, d5, d6, d7, d8);
-	                    break;
-	                case 10:
-	                    obj = factory(d0, d1, d2, d3, d4, d5, d6, d7, d8, d9);
-	                    break;
-	                case 11:
-	                    obj = factory(d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, d10);
-	                    break;
-	                case 12:
-	                    obj = factory(d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11);
-	                    break;
-	                case 13:
-	                    obj = factory(d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11, d12);
-	                    break;
-	                case 14:
-	                    obj = factory(d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11, d12, d13);
-	                    break;
-	                case 15:
-	                    obj = factory(d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11, d12, d13, d14);
-	                    break;
-	                case 16:
-	                    obj = factory(d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11, d12, d13, d14, d15);
-	                    break;
-	                case 17:
-	                    obj = factory(d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11, d12, d13, d14, d15, d16);
-	                    break;
-	                case 18:
-	                    obj = factory(d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11, d12, d13, d14, d15, d16, d17);
-	                    break;
-	                case 19:
-	                    obj = factory(d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11, d12, d13, d14, d15, d16, d17, d18);
-	                    break;
-	                case 20:
-	                    obj = factory(d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11, d12, d13, d14, d15, d16, d17, d18, d19);
-	                    break;
-	                default:
-	                    throw new Error("Cannot instantiate '" + provider.key.displayName + "' because it has more than 20 dependencies");
-	            }
+	            obj = factory.apply(void 0, deps);
 	        }
 	        catch (e) {
 	            throw new InstantiationError(this, e, e.stack, provider.key);
@@ -3874,30 +3404,43 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        return obj;
 	    };
 	    /**
-	     * @param {?} provider
 	     * @param {?} dep
 	     * @return {?}
 	     */
-	    ReflectiveInjector_.prototype._getByReflectiveDependency = function (provider, dep) {
-	        return this._getByKey(dep.key, dep.lowerBoundVisibility, dep.upperBoundVisibility, dep.optional ? null : THROW_IF_NOT_FOUND);
+	    ReflectiveInjector_.prototype._getByReflectiveDependency = function (dep) {
+	        return this._getByKey(dep.key, dep.visibility, dep.optional ? null : THROW_IF_NOT_FOUND);
 	    };
 	    /**
 	     * @param {?} key
-	     * @param {?} lowerBoundVisibility
-	     * @param {?} upperBoundVisibility
+	     * @param {?} visibility
 	     * @param {?} notFoundValue
 	     * @return {?}
 	     */
-	    ReflectiveInjector_.prototype._getByKey = function (key, lowerBoundVisibility, upperBoundVisibility, notFoundValue) {
+	    ReflectiveInjector_.prototype._getByKey = function (key, visibility, notFoundValue) {
 	        if (key === INJECTOR_KEY) {
 	            return this;
 	        }
-	        if (upperBoundVisibility instanceof Self) {
+	        if (visibility instanceof Self) {
 	            return this._getByKeySelf(key, notFoundValue);
 	        }
 	        else {
-	            return this._getByKeyDefault(key, notFoundValue, lowerBoundVisibility);
+	            return this._getByKeyDefault(key, notFoundValue, visibility);
 	        }
+	    };
+	    /**
+	     * @param {?} keyId
+	     * @return {?}
+	     */
+	    ReflectiveInjector_.prototype._getObjByKeyId = function (keyId) {
+	        for (var /** @type {?} */ i = 0; i < this.keyIds.length; i++) {
+	            if (this.keyIds[i] === keyId) {
+	                if (this.objs[i] === UNDEFINED) {
+	                    this.objs[i] = this._new(this._providers[i]);
+	                }
+	                return this.objs[i];
+	            }
+	        }
+	        return UNDEFINED;
 	    };
 	    /**
 	     * \@internal
@@ -3920,19 +3463,19 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @return {?}
 	     */
 	    ReflectiveInjector_.prototype._getByKeySelf = function (key, notFoundValue) {
-	        var /** @type {?} */ obj = this._strategy.getObjByKeyId(key.id);
+	        var /** @type {?} */ obj = this._getObjByKeyId(key.id);
 	        return (obj !== UNDEFINED) ? obj : this._throwOrNull(key, notFoundValue);
 	    };
 	    /**
 	     * \@internal
 	     * @param {?} key
 	     * @param {?} notFoundValue
-	     * @param {?} lowerBoundVisibility
+	     * @param {?} visibility
 	     * @return {?}
 	     */
-	    ReflectiveInjector_.prototype._getByKeyDefault = function (key, notFoundValue, lowerBoundVisibility) {
+	    ReflectiveInjector_.prototype._getByKeyDefault = function (key, notFoundValue, visibility) {
 	        var /** @type {?} */ inj;
-	        if (lowerBoundVisibility instanceof SkipSelf) {
+	        if (visibility instanceof SkipSelf) {
 	            inj = this._parent;
 	        }
 	        else {
@@ -3940,7 +3483,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        }
 	        while (inj instanceof ReflectiveInjector_) {
 	            var /** @type {?} */ inj_ = (inj);
-	            var /** @type {?} */ obj = inj_._strategy.getObjByKeyId(key.id);
+	            var /** @type {?} */ obj = inj_._getObjByKeyId(key.id);
 	            if (obj !== UNDEFINED)
 	                return obj;
 	            inj = inj_._parent;
@@ -3977,9 +3520,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @return {?}
 	 */
 	function _mapProviders(injector, fn) {
-	    var /** @type {?} */ res = new Array(injector._proto.numberOfProviders);
-	    for (var /** @type {?} */ i = 0; i < injector._proto.numberOfProviders; ++i) {
-	        res[i] = fn(injector._proto.getProviderAtIndex(i));
+	    var /** @type {?} */ res = new Array(injector._providers.length);
+	    for (var /** @type {?} */ i = 0; i < injector._providers.length; ++i) {
+	        res[i] = fn(injector.getProviderAtIndex(i));
 	    }
 	    return res;
 	}
@@ -4270,6 +3813,55 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    }
 	}
 
+	var commonjsGlobal = typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
+
+	function createCommonjsModule(fn, module) {
+		return module = { exports: {} }, fn(module, module.exports), module.exports;
+	}
+
+	var __moduleExports$1 = createCommonjsModule(function (module, exports) {
+	"use strict";
+	/**
+	 * window: browser in DOM main thread
+	 * self: browser in WebWorker
+	 * global: Node.js/other
+	 */
+	exports.root = (typeof window == 'object' && window.window === window && window
+	    || typeof self == 'object' && self.self === self && self
+	    || typeof commonjsGlobal == 'object' && commonjsGlobal.global === commonjsGlobal && commonjsGlobal);
+	if (!exports.root) {
+	    throw new Error('RxJS could not find any global context (window, self, global)');
+	}
+	});
+
+	var root_1$1 = __moduleExports$1.root;
+
+	var root_1 = __moduleExports$1;
+	function getSymbolObservable(context) {
+	    var $$observable;
+	    var Symbol = context.Symbol;
+	    if (typeof Symbol === 'function') {
+	        if (Symbol.observable) {
+	            $$observable = Symbol.observable;
+	        }
+	        else {
+	            $$observable = Symbol('observable');
+	            Symbol.observable = $$observable;
+	        }
+	    }
+	    else {
+	        $$observable = '@@observable';
+	    }
+	    return $$observable;
+	}
+	var getSymbolObservable_1 = getSymbolObservable;
+	var $$observable = getSymbolObservable(root_1.root);
+
+	var __moduleExports = {
+		getSymbolObservable: getSymbolObservable_1,
+		$$observable: $$observable
+	};
+
 	/**
 	 * Determine if the argument is shaped like a Promise
 	 * @param {?} obj
@@ -4279,6 +3871,14 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    // allow any Promise/A+ compliant thenable.
 	    // It's up to the caller to ensure that obj.then conforms to the spec
 	    return !!obj && typeof obj.then === 'function';
+	}
+	/**
+	 * Determine if the argument is an Observable
+	 * @param {?} obj
+	 * @return {?}
+	 */
+	function isObservable(obj) {
+	    return !!(obj && obj[$$observable]);
 	}
 
 	/**
@@ -4565,41 +4165,18 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return ElementRef;
 	}());
 
-	var commonjsGlobal = typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
-
-	function createCommonjsModule(fn, module) {
-		return module = { exports: {} }, fn(module, module.exports), module.exports;
-	}
-
-	var __moduleExports$1 = createCommonjsModule(function (module, exports) {
-	"use strict";
-	/**
-	 * window: browser in DOM main thread
-	 * self: browser in WebWorker
-	 * global: Node.js/other
-	 */
-	exports.root = (typeof window == 'object' && window.window === window && window
-	    || typeof self == 'object' && self.self === self && self
-	    || typeof commonjsGlobal == 'object' && commonjsGlobal.global === commonjsGlobal && commonjsGlobal);
-	if (!exports.root) {
-	    throw new Error('RxJS could not find any global context (window, self, global)');
-	}
-	});
-
-	var root_1$1 = __moduleExports$1.root;
-
 	function isFunction(x) {
 	    return typeof x === 'function';
 	}
 	var isFunction_2 = isFunction;
 
-	var __moduleExports$4 = {
+	var __moduleExports$5 = {
 		isFunction: isFunction_2
 	};
 
 	var isArray_1$1 = Array.isArray || (function (x) { return x && typeof x.length === 'number'; });
 
-	var __moduleExports$6 = {
+	var __moduleExports$7 = {
 		isArray: isArray_1$1
 	};
 
@@ -4608,18 +4185,18 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	}
 	var isObject_2 = isObject;
 
-	var __moduleExports$7 = {
+	var __moduleExports$8 = {
 		isObject: isObject_2
 	};
 
 	// typeof any so that it we don't have to cast when comparing a result to the error object
 	var errorObject_1$2 = { e: {} };
 
-	var __moduleExports$9 = {
+	var __moduleExports$10 = {
 		errorObject: errorObject_1$2
 	};
 
-	var errorObject_1$1 = __moduleExports$9;
+	var errorObject_1$1 = __moduleExports$10;
 	var tryCatchTarget;
 	function tryCatcher() {
 	    try {
@@ -4637,7 +4214,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	var tryCatch_2 = tryCatch;
 	;
 
-	var __moduleExports$8 = {
+	var __moduleExports$9 = {
 		tryCatch: tryCatch_2
 	};
 
@@ -4665,16 +4242,16 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	}(Error));
 	var UnsubscriptionError_2 = UnsubscriptionError;
 
-	var __moduleExports$10 = {
+	var __moduleExports$11 = {
 		UnsubscriptionError: UnsubscriptionError_2
 	};
 
-	var isArray_1 = __moduleExports$6;
-	var isObject_1 = __moduleExports$7;
-	var isFunction_1$1 = __moduleExports$4;
-	var tryCatch_1 = __moduleExports$8;
-	var errorObject_1 = __moduleExports$9;
-	var UnsubscriptionError_1 = __moduleExports$10;
+	var isArray_1 = __moduleExports$7;
+	var isObject_1 = __moduleExports$8;
+	var isFunction_1$1 = __moduleExports$5;
+	var tryCatch_1 = __moduleExports$9;
+	var errorObject_1 = __moduleExports$10;
+	var UnsubscriptionError_1 = __moduleExports$11;
 	/**
 	 * Represents a disposable resource, such as the execution of an Observable. A
 	 * Subscription has one important method, `unsubscribe`, that takes no argument
@@ -4821,7 +4398,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	}());
 	var Subscription_2 = Subscription;
 
-	var __moduleExports$5 = {
+	var __moduleExports$6 = {
 		Subscription: Subscription_2
 	};
 
@@ -4832,16 +4409,16 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    complete: function () { }
 	};
 
-	var __moduleExports$11 = {
+	var __moduleExports$12 = {
 		empty: empty
 	};
 
-	var root_1$2 = __moduleExports$1;
-	var Symbol$1 = root_1$2.root.Symbol;
+	var root_1$3 = __moduleExports$1;
+	var Symbol$1 = root_1$3.root.Symbol;
 	var $$rxSubscriber = (typeof Symbol$1 === 'function' && typeof Symbol$1.for === 'function') ?
 	    Symbol$1.for('rxSubscriber') : '@@rxSubscriber';
 
-	var __moduleExports$12 = {
+	var __moduleExports$13 = {
 		$$rxSubscriber: $$rxSubscriber
 	};
 
@@ -4850,10 +4427,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	var isFunction_1 = __moduleExports$4;
-	var Subscription_1$1 = __moduleExports$5;
-	var Observer_1$1 = __moduleExports$11;
-	var rxSubscriber_1$2 = __moduleExports$12;
+	var isFunction_1 = __moduleExports$5;
+	var Subscription_1$1 = __moduleExports$6;
+	var Observer_1$1 = __moduleExports$12;
+	var rxSubscriber_1$2 = __moduleExports$13;
 	/**
 	 * Implements the {@link Observer} interface and extends the
 	 * {@link Subscription} class. While the {@link Observer} is the public API for
@@ -5093,13 +4670,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return SafeSubscriber;
 	}(Subscriber));
 
-	var __moduleExports$3 = {
+	var __moduleExports$4 = {
 		Subscriber: Subscriber_2
 	};
 
-	var Subscriber_1$1 = __moduleExports$3;
-	var rxSubscriber_1$1 = __moduleExports$12;
-	var Observer_1 = __moduleExports$11;
+	var Subscriber_1$1 = __moduleExports$4;
+	var rxSubscriber_1$1 = __moduleExports$13;
+	var Observer_1 = __moduleExports$12;
 	function toSubscriber(nextOrObserver, error, complete) {
 	    if (nextOrObserver) {
 	        if (nextOrObserver instanceof Subscriber_1$1.Subscriber) {
@@ -5116,39 +4693,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	}
 	var toSubscriber_2 = toSubscriber;
 
-	var __moduleExports$2 = {
+	var __moduleExports$3 = {
 		toSubscriber: toSubscriber_2
 	};
 
-	var root_1$3 = __moduleExports$1;
-	function getSymbolObservable(context) {
-	    var $$observable;
-	    var Symbol = context.Symbol;
-	    if (typeof Symbol === 'function') {
-	        if (Symbol.observable) {
-	            $$observable = Symbol.observable;
-	        }
-	        else {
-	            $$observable = Symbol('observable');
-	            Symbol.observable = $$observable;
-	        }
-	    }
-	    else {
-	        $$observable = '@@observable';
-	    }
-	    return $$observable;
-	}
-	var getSymbolObservable_1 = getSymbolObservable;
-	var $$observable = getSymbolObservable(root_1$3.root);
-
-	var __moduleExports$13 = {
-		getSymbolObservable: getSymbolObservable_1,
-		$$observable: $$observable
-	};
-
-	var root_1 = __moduleExports$1;
-	var toSubscriber_1 = __moduleExports$2;
-	var observable_1 = __moduleExports$13;
+	var root_1$2 = __moduleExports$1;
+	var toSubscriber_1 = __moduleExports$3;
+	var observable_1 = __moduleExports;
 	/**
 	 * A representation of any set of values over any amount of time. This the most basic building block
 	 * of RxJS.
@@ -5209,11 +4760,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    Observable.prototype.forEach = function (next, PromiseCtor) {
 	        var _this = this;
 	        if (!PromiseCtor) {
-	            if (root_1.root.Rx && root_1.root.Rx.config && root_1.root.Rx.config.Promise) {
-	                PromiseCtor = root_1.root.Rx.config.Promise;
+	            if (root_1$2.root.Rx && root_1$2.root.Rx.config && root_1$2.root.Rx.config.Promise) {
+	                PromiseCtor = root_1$2.root.Rx.config.Promise;
 	            }
-	            else if (root_1.root.Promise) {
-	                PromiseCtor = root_1.root.Promise;
+	            else if (root_1$2.root.Promise) {
+	                PromiseCtor = root_1$2.root.Promise;
 	            }
 	        }
 	        if (!PromiseCtor) {
@@ -5274,7 +4825,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	}());
 	var Observable_2 = Observable;
 
-	var __moduleExports = {
+	var __moduleExports$2 = {
 		Observable: Observable_2
 	};
 
@@ -5313,7 +4864,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	var Subscription_1$2 = __moduleExports$5;
+	var Subscription_1$2 = __moduleExports$6;
 	/**
 	 * We need this JSDoc comment for affecting ESDoc.
 	 * @ignore
@@ -5356,12 +4907,12 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	var Observable_1 = __moduleExports;
-	var Subscriber_1 = __moduleExports$3;
-	var Subscription_1 = __moduleExports$5;
+	var Observable_1 = __moduleExports$2;
+	var Subscriber_1 = __moduleExports$4;
+	var Subscription_1 = __moduleExports$6;
 	var ObjectUnsubscribedError_1 = __moduleExports$14;
 	var SubjectSubscription_1 = __moduleExports$15;
-	var rxSubscriber_1 = __moduleExports$12;
+	var rxSubscriber_1 = __moduleExports$13;
 	/**
 	 * @class SubjectSubscriber<T>
 	 */
@@ -7729,6 +7280,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	var /** @type {?} */ defaultIterableDiffers = new IterableDiffers(iterableDiff);
 	var /** @type {?} */ defaultKeyValueDiffers = new KeyValueDiffers(keyValDiff);
 
+	/**
+	 * @license
+	 * Copyright Google Inc. All Rights Reserved.
+	 *
+	 * Use of this source code is governed by an MIT-style license that can be
+	 * found in the LICENSE file at https://angular.io/license
+	 */
 	var RenderComponentType = (function () {
 	    /**
 	     * @param {?} id
@@ -7754,54 +7312,36 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	var RenderDebugInfo = (function () {
 	    function RenderDebugInfo() {
 	    }
-	    Object.defineProperty(RenderDebugInfo.prototype, "injector", {
-	        /**
-	         * @return {?}
-	         */
-	        get: function () { return unimplemented(); },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    Object.defineProperty(RenderDebugInfo.prototype, "component", {
-	        /**
-	         * @return {?}
-	         */
-	        get: function () { return unimplemented(); },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    Object.defineProperty(RenderDebugInfo.prototype, "providerTokens", {
-	        /**
-	         * @return {?}
-	         */
-	        get: function () { return unimplemented(); },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    Object.defineProperty(RenderDebugInfo.prototype, "references", {
-	        /**
-	         * @return {?}
-	         */
-	        get: function () { return unimplemented(); },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    Object.defineProperty(RenderDebugInfo.prototype, "context", {
-	        /**
-	         * @return {?}
-	         */
-	        get: function () { return unimplemented(); },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    Object.defineProperty(RenderDebugInfo.prototype, "source", {
-	        /**
-	         * @return {?}
-	         */
-	        get: function () { return unimplemented(); },
-	        enumerable: true,
-	        configurable: true
-	    });
+	    /**
+	     * @abstract
+	     * @return {?}
+	     */
+	    RenderDebugInfo.prototype.injector = function () { };
+	    /**
+	     * @abstract
+	     * @return {?}
+	     */
+	    RenderDebugInfo.prototype.component = function () { };
+	    /**
+	     * @abstract
+	     * @return {?}
+	     */
+	    RenderDebugInfo.prototype.providerTokens = function () { };
+	    /**
+	     * @abstract
+	     * @return {?}
+	     */
+	    RenderDebugInfo.prototype.references = function () { };
+	    /**
+	     * @abstract
+	     * @return {?}
+	     */
+	    RenderDebugInfo.prototype.context = function () { };
+	    /**
+	     * @abstract
+	     * @return {?}
+	     */
+	    RenderDebugInfo.prototype.source = function () { };
 	    return RenderDebugInfo;
 	}());
 	/**
@@ -9048,62 +8588,42 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	var ComponentRef = (function () {
 	    function ComponentRef() {
 	    }
-	    Object.defineProperty(ComponentRef.prototype, "location", {
-	        /**
-	         * Location of the Host Element of this Component Instance.
-	         * @return {?}
-	         */
-	        get: function () { return unimplemented(); },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    Object.defineProperty(ComponentRef.prototype, "injector", {
-	        /**
-	         * The injector on which the component instance exists.
-	         * @return {?}
-	         */
-	        get: function () { return unimplemented(); },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    Object.defineProperty(ComponentRef.prototype, "instance", {
-	        /**
-	         * The instance of the Component.
-	         * @return {?}
-	         */
-	        get: function () { return unimplemented(); },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    ;
-	    Object.defineProperty(ComponentRef.prototype, "hostView", {
-	        /**
-	         * The {\@link ViewRef} of the Host View of this Component instance.
-	         * @return {?}
-	         */
-	        get: function () { return unimplemented(); },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    ;
-	    Object.defineProperty(ComponentRef.prototype, "changeDetectorRef", {
-	        /**
-	         * The {\@link ChangeDetectorRef} of the Component instance.
-	         * @return {?}
-	         */
-	        get: function () { return unimplemented(); },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    Object.defineProperty(ComponentRef.prototype, "componentType", {
-	        /**
-	         * The component type.
-	         * @return {?}
-	         */
-	        get: function () { return unimplemented(); },
-	        enumerable: true,
-	        configurable: true
-	    });
+	    /**
+	     * Location of the Host Element of this Component Instance.
+	     * @abstract
+	     * @return {?}
+	     */
+	    ComponentRef.prototype.location = function () { };
+	    /**
+	     * The injector on which the component instance exists.
+	     * @abstract
+	     * @return {?}
+	     */
+	    ComponentRef.prototype.injector = function () { };
+	    /**
+	     * The instance of the Component.
+	     * @abstract
+	     * @return {?}
+	     */
+	    ComponentRef.prototype.instance = function () { };
+	    /**
+	     * The {\@link ViewRef} of the Host View of this Component instance.
+	     * @abstract
+	     * @return {?}
+	     */
+	    ComponentRef.prototype.hostView = function () { };
+	    /**
+	     * The {\@link ChangeDetectorRef} of the Component instance.
+	     * @abstract
+	     * @return {?}
+	     */
+	    ComponentRef.prototype.changeDetectorRef = function () { };
+	    /**
+	     * The component type.
+	     * @abstract
+	     * @return {?}
+	     */
+	    ComponentRef.prototype.componentType = function () { };
 	    /**
 	     * Destroys the component instance and all of the data structures associated with it.
 	     * @abstract
@@ -9748,12 +9268,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * ```
 	     *
 	     * \@experimental APIs related to application bootstrap are currently under review.
+	     * @abstract
 	     * @param {?} moduleFactory
 	     * @return {?}
 	     */
-	    PlatformRef.prototype.bootstrapModuleFactory = function (moduleFactory) {
-	        throw unimplemented();
-	    };
+	    PlatformRef.prototype.bootstrapModuleFactory = function (moduleFactory) { };
 	    /**
 	     * Creates an instance of an `\@NgModule` for a given platform using the given runtime compiler.
 	     *
@@ -9768,14 +9287,12 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * let moduleRef = platformBrowser().bootstrapModule(MyModule);
 	     * ```
 	     * \@stable
+	     * @abstract
 	     * @param {?} moduleType
 	     * @param {?=} compilerOptions
 	     * @return {?}
 	     */
-	    PlatformRef.prototype.bootstrapModule = function (moduleType, compilerOptions) {
-	        if (compilerOptions === void 0) { compilerOptions = []; }
-	        throw unimplemented();
-	    };
+	    PlatformRef.prototype.bootstrapModule = function (moduleType, compilerOptions) { };
 	    /**
 	     * Register a listener to be called when the platform is disposed.
 	     * @abstract
@@ -9783,31 +9300,24 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @return {?}
 	     */
 	    PlatformRef.prototype.onDestroy = function (callback) { };
-	    Object.defineProperty(PlatformRef.prototype, "injector", {
-	        /**
-	         * Retrieve the platform {\@link Injector}, which is the parent injector for
-	         * every Angular application on the page and provides singleton providers.
-	         * @return {?}
-	         */
-	        get: function () { throw unimplemented(); },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    ;
+	    /**
+	     * Retrieve the platform {\@link Injector}, which is the parent injector for
+	     * every Angular application on the page and provides singleton providers.
+	     * @abstract
+	     * @return {?}
+	     */
+	    PlatformRef.prototype.injector = function () { };
 	    /**
 	     * Destroy the Angular platform and all Angular applications on the page.
 	     * @abstract
 	     * @return {?}
 	     */
 	    PlatformRef.prototype.destroy = function () { };
-	    Object.defineProperty(PlatformRef.prototype, "destroyed", {
-	        /**
-	         * @return {?}
-	         */
-	        get: function () { throw unimplemented(); },
-	        enumerable: true,
-	        configurable: true
-	    });
+	    /**
+	     * @abstract
+	     * @return {?}
+	     */
+	    PlatformRef.prototype.destroyed = function () { };
 	    return PlatformRef;
 	}());
 	/**
@@ -9968,6 +9478,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            throw new Error(("The module " + stringify$1(moduleRef.instance.constructor) + " was bootstrapped, but it does not declare \"@NgModule.bootstrap\" components nor a \"ngDoBootstrap\" method. ") +
 	                "Please define one of these.");
 	        }
+	        this._modules.push(moduleRef);
 	    };
 	    PlatformRef_.decorators = [
 	        { type: Injectable },
@@ -10018,50 +9529,41 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @return {?}
 	     */
 	    ApplicationRef.prototype.tick = function () { };
-	    Object.defineProperty(ApplicationRef.prototype, "componentTypes", {
-	        /**
-	         * Get a list of component types registered to this application.
-	         * This list is populated even before the component is created.
-	         * @return {?}
-	         */
-	        get: function () { return (unimplemented()); },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    ;
-	    Object.defineProperty(ApplicationRef.prototype, "components", {
-	        /**
-	         * Get a list of components registered to this application.
-	         * @return {?}
-	         */
-	        get: function () { return (unimplemented()); },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    ;
+	    /**
+	     * Get a list of component types registered to this application.
+	     * This list is populated even before the component is created.
+	     * @abstract
+	     * @return {?}
+	     */
+	    ApplicationRef.prototype.componentTypes = function () { };
+	    /**
+	     * Get a list of components registered to this application.
+	     * @abstract
+	     * @return {?}
+	     */
+	    ApplicationRef.prototype.components = function () { };
 	    /**
 	     * Attaches a view so that it will be dirty checked.
 	     * The view will be automatically detached when it is destroyed.
 	     * This will throw if the view is already attached to a ViewContainer.
+	     * @abstract
 	     * @param {?} view
 	     * @return {?}
 	     */
-	    ApplicationRef.prototype.attachView = function (view) { unimplemented(); };
+	    ApplicationRef.prototype.attachView = function (view) { };
 	    /**
 	     * Detaches a view from dirty checking again.
+	     * @abstract
 	     * @param {?} view
 	     * @return {?}
 	     */
-	    ApplicationRef.prototype.detachView = function (view) { unimplemented(); };
-	    Object.defineProperty(ApplicationRef.prototype, "viewCount", {
-	        /**
-	         * Returns the number of attached views.
-	         * @return {?}
-	         */
-	        get: function () { return unimplemented(); },
-	        enumerable: true,
-	        configurable: true
-	    });
+	    ApplicationRef.prototype.detachView = function (view) { };
+	    /**
+	     * Returns the number of attached views.
+	     * @abstract
+	     * @return {?}
+	     */
+	    ApplicationRef.prototype.viewCount = function () { };
 	    return ApplicationRef;
 	}());
 	var ApplicationRef_ = (function (_super) {
@@ -10247,61 +9749,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	/**
-	 * Represents an instance of an NgModule created via a {\@link NgModuleFactory}.
-	 *
-	 * `NgModuleRef` provides access to the NgModule Instance as well other objects related to this
-	 * NgModule Instance.
-	 *
-	 * \@stable
-	 * @abstract
-	 */
-	var NgModuleRef = (function () {
-	    function NgModuleRef() {
-	    }
-	    Object.defineProperty(NgModuleRef.prototype, "injector", {
-	        /**
-	         * The injector that contains all of the providers of the NgModule.
-	         * @return {?}
-	         */
-	        get: function () { return unimplemented(); },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    Object.defineProperty(NgModuleRef.prototype, "componentFactoryResolver", {
-	        /**
-	         * The ComponentFactoryResolver to get hold of the ComponentFactories
-	         * declared in the `entryComponents` property of the module.
-	         * @return {?}
-	         */
-	        get: function () { return unimplemented(); },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    Object.defineProperty(NgModuleRef.prototype, "instance", {
-	        /**
-	         * The NgModule instance.
-	         * @return {?}
-	         */
-	        get: function () { return unimplemented(); },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    /**
-	     * Destroys the module instance and all of the data structures associated with it.
-	     * @abstract
-	     * @return {?}
-	     */
-	    NgModuleRef.prototype.destroy = function () { };
-	    /**
-	     * Allows to register a callback that will be called when the module is destroyed.
-	     * @abstract
-	     * @param {?} callback
-	     * @return {?}
-	     */
-	    NgModuleRef.prototype.onDestroy = function (callback) { };
-	    return NgModuleRef;
-	}());
 	/**
 	 * \@experimental
 	 */
@@ -10619,14 +10066,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	var TemplateRef = (function () {
 	    function TemplateRef() {
 	    }
-	    Object.defineProperty(TemplateRef.prototype, "elementRef", {
-	        /**
-	         * @return {?}
-	         */
-	        get: function () { return null; },
-	        enumerable: true,
-	        configurable: true
-	    });
+	    /**
+	     * @abstract
+	     * @return {?}
+	     */
+	    TemplateRef.prototype.elementRef = function () { };
 	    /**
 	     * @abstract
 	     * @param {?} context
@@ -10690,32 +10134,23 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	var ViewContainerRef = (function () {
 	    function ViewContainerRef() {
 	    }
-	    Object.defineProperty(ViewContainerRef.prototype, "element", {
-	        /**
-	         * Anchor element that specifies the location of this container in the containing View.
-	         * <!-- TODO: rename to anchorElement -->
-	         * @return {?}
-	         */
-	        get: function () { return (unimplemented()); },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    Object.defineProperty(ViewContainerRef.prototype, "injector", {
-	        /**
-	         * @return {?}
-	         */
-	        get: function () { return (unimplemented()); },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    Object.defineProperty(ViewContainerRef.prototype, "parentInjector", {
-	        /**
-	         * @return {?}
-	         */
-	        get: function () { return (unimplemented()); },
-	        enumerable: true,
-	        configurable: true
-	    });
+	    /**
+	     * Anchor element that specifies the location of this container in the containing View.
+	     * <!-- TODO: rename to anchorElement -->
+	     * @abstract
+	     * @return {?}
+	     */
+	    ViewContainerRef.prototype.element = function () { };
+	    /**
+	     * @abstract
+	     * @return {?}
+	     */
+	    ViewContainerRef.prototype.injector = function () { };
+	    /**
+	     * @abstract
+	     * @return {?}
+	     */
+	    ViewContainerRef.prototype.parentInjector = function () { };
 	    /**
 	     * Destroys all Views in this container.
 	     * @abstract
@@ -10729,16 +10164,12 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @return {?}
 	     */
 	    ViewContainerRef.prototype.get = function (index) { };
-	    Object.defineProperty(ViewContainerRef.prototype, "length", {
-	        /**
-	         * Returns the number of Views currently attached to this container.
-	         * @return {?}
-	         */
-	        get: function () { return (unimplemented()); },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    ;
+	    /**
+	     * Returns the number of Views currently attached to this container.
+	     * @abstract
+	     * @return {?}
+	     */
+	    ViewContainerRef.prototype.length = function () { };
 	    /**
 	     * Instantiates an Embedded View based on the {\@link TemplateRef `templateRef`} and inserts it
 	     * into this container at the specified `index`.
@@ -10940,7 +10371,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @return {?}
 	     */
 	    ViewContainerRef_.prototype.indexOf = function (viewRef) {
-	        return this._element.nestedViews.indexOf(((viewRef)).internalView);
+	        return this.length ? this._element.nestedViews.indexOf(((viewRef)).internalView) :
+	            -1;
 	    };
 	    /**
 	     * @param {?=} index
@@ -11006,14 +10438,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @return {?}
 	     */
 	    ViewRef.prototype.destroy = function () { };
-	    Object.defineProperty(ViewRef.prototype, "destroyed", {
-	        /**
-	         * @return {?}
-	         */
-	        get: function () { return (unimplemented()); },
-	        enumerable: true,
-	        configurable: true
-	    });
+	    /**
+	     * @abstract
+	     * @return {?}
+	     */
+	    ViewRef.prototype.destroyed = function () { };
 	    /**
 	     * @abstract
 	     * @param {?} callback
@@ -11082,23 +10511,16 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    function EmbeddedViewRef() {
 	        _super.apply(this, arguments);
 	    }
-	    Object.defineProperty(EmbeddedViewRef.prototype, "context", {
-	        /**
-	         * @return {?}
-	         */
-	        get: function () { return unimplemented(); },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    Object.defineProperty(EmbeddedViewRef.prototype, "rootNodes", {
-	        /**
-	         * @return {?}
-	         */
-	        get: function () { return (unimplemented()); },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    ;
+	    /**
+	     * @abstract
+	     * @return {?}
+	     */
+	    EmbeddedViewRef.prototype.context = function () { };
+	    /**
+	     * @abstract
+	     * @return {?}
+	     */
+	    EmbeddedViewRef.prototype.rootNodes = function () { };
 	    return EmbeddedViewRef;
 	}(ViewRef));
 	var ViewRef_ = (function () {
@@ -14403,6 +13825,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    FILL_STYLE_FLAG: FILL_STYLE_FLAG,
 	    ComponentStillLoadingError: ComponentStillLoadingError,
 	    isPromise: isPromise,
+	    isObservable: isObservable,
 	    AnimationTransition: AnimationTransition
 	};
 
@@ -16354,6 +15777,48 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        }
 	        return new ParseLocation(this.file, offset, line, col);
 	    };
+	    /**
+	     * @param {?} maxChars
+	     * @param {?} maxLines
+	     * @return {?}
+	     */
+	    ParseLocation.prototype.getContext = function (maxChars, maxLines) {
+	        var /** @type {?} */ content = this.file.content;
+	        var /** @type {?} */ startOffset = this.offset;
+	        if (isPresent(startOffset)) {
+	            if (startOffset > content.length - 1) {
+	                startOffset = content.length - 1;
+	            }
+	            var /** @type {?} */ endOffset = startOffset;
+	            var /** @type {?} */ ctxChars = 0;
+	            var /** @type {?} */ ctxLines = 0;
+	            while (ctxChars < maxChars && startOffset > 0) {
+	                startOffset--;
+	                ctxChars++;
+	                if (content[startOffset] == '\n') {
+	                    if (++ctxLines == maxLines) {
+	                        break;
+	                    }
+	                }
+	            }
+	            ctxChars = 0;
+	            ctxLines = 0;
+	            while (ctxChars < maxChars && endOffset < content.length - 1) {
+	                endOffset++;
+	                ctxChars++;
+	                if (content[endOffset] == '\n') {
+	                    if (++ctxLines == maxLines) {
+	                        break;
+	                    }
+	                }
+	            }
+	            return {
+	                before: content.substring(startOffset, this.offset),
+	                after: content.substring(this.offset, endOffset + 1),
+	            };
+	        }
+	        return null;
+	    };
 	    return ParseLocation;
 	}());
 	var ParseSourceFile = (function () {
@@ -16408,44 +15873,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @return {?}
 	     */
 	    ParseError.prototype.toString = function () {
-	        var /** @type {?} */ source = this.span.start.file.content;
-	        var /** @type {?} */ ctxStart = this.span.start.offset;
-	        var /** @type {?} */ contextStr = '';
-	        var /** @type {?} */ details = '';
-	        if (isPresent(ctxStart)) {
-	            if (ctxStart > source.length - 1) {
-	                ctxStart = source.length - 1;
-	            }
-	            var /** @type {?} */ ctxEnd = ctxStart;
-	            var /** @type {?} */ ctxLen = 0;
-	            var /** @type {?} */ ctxLines = 0;
-	            while (ctxLen < 100 && ctxStart > 0) {
-	                ctxStart--;
-	                ctxLen++;
-	                if (source[ctxStart] == '\n') {
-	                    if (++ctxLines == 3) {
-	                        break;
-	                    }
-	                }
-	            }
-	            ctxLen = 0;
-	            ctxLines = 0;
-	            while (ctxLen < 100 && ctxEnd < source.length - 1) {
-	                ctxEnd++;
-	                ctxLen++;
-	                if (source[ctxEnd] == '\n') {
-	                    if (++ctxLines == 3) {
-	                        break;
-	                    }
-	                }
-	            }
-	            var /** @type {?} */ context = source.substring(ctxStart, this.span.start.offset) + '[ERROR ->]' +
-	                source.substring(this.span.start.offset, ctxEnd + 1);
-	            contextStr = " (\"" + context + "\")";
-	        }
-	        if (this.span.details) {
-	            details = ", " + this.span.details;
-	        }
+	        var /** @type {?} */ ctx = this.span.start.getContext(100, 3);
+	        var /** @type {?} */ contextStr = ctx ? " (\"" + ctx.before + "[ERROR ->]" + ctx.after + "\")" : '';
+	        var /** @type {?} */ details = this.span.details ? ", " + this.span.details : '';
 	        return "" + this.msg + contextStr + ": " + this.span.start + details;
 	    };
 	    return ParseError;
@@ -19199,7 +18629,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                var /** @type {?} */ message = _this._createI18nMessage([attr], meaning, '');
 	                var /** @type {?} */ nodes = _this._translations.get(message);
 	                if (nodes) {
-	                    if (nodes[0] instanceof Text) {
+	                    if (nodes.length == 0) {
+	                        translatedAttributes.push(new Attribute$1(attr.name, '', attr.sourceSpan));
+	                    }
+	                    else if (nodes[0] instanceof Text) {
 	                        var /** @type {?} */ value = ((nodes[0])).value;
 	                        translatedAttributes.push(new Attribute$1(attr.name, value, attr.sourceSpan));
 	                    }
@@ -19231,7 +18664,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        }
 	    };
 	    /**
-	     * Marks the start of a section, see `_endSection`
+	     * Marks the start of a section, see `_closeTranslatableSection`
 	     * @param {?} node
 	     * @return {?}
 	     */
@@ -26474,14 +25907,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('2.4.5-7ed39eb');
+	var /** @type {?} */ VERSION$1 = new Version('2.4.6-343ee8a');
 
-	/**
-	 * @return {?}
-	 */
-	function unimplemented$3() {
-	    throw new Error('unimplemented');
-	}
 	var CompilerConfig = (function () {
 	    /**
 	     * @param {?=} __0
@@ -26515,65 +25942,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        configurable: true
 	    });
 	    return CompilerConfig;
-	}());
-	/**
-	 * Types used for the renderer.
-	 * Can be replaced to specialize the generated output to a specific renderer
-	 * to help tree shaking.
-	 * @abstract
-	 */
-	var RenderTypes = (function () {
-	    function RenderTypes() {
-	    }
-	    Object.defineProperty(RenderTypes.prototype, "renderer", {
-	        /**
-	         * @return {?}
-	         */
-	        get: function () { return unimplemented$3(); },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    Object.defineProperty(RenderTypes.prototype, "renderText", {
-	        /**
-	         * @return {?}
-	         */
-	        get: function () { return unimplemented$3(); },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    Object.defineProperty(RenderTypes.prototype, "renderElement", {
-	        /**
-	         * @return {?}
-	         */
-	        get: function () { return unimplemented$3(); },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    Object.defineProperty(RenderTypes.prototype, "renderComment", {
-	        /**
-	         * @return {?}
-	         */
-	        get: function () { return unimplemented$3(); },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    Object.defineProperty(RenderTypes.prototype, "renderNode", {
-	        /**
-	         * @return {?}
-	         */
-	        get: function () { return unimplemented$3(); },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    Object.defineProperty(RenderTypes.prototype, "renderEvent", {
-	        /**
-	         * @return {?}
-	         */
-	        get: function () { return unimplemented$3(); },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    return RenderTypes;
 	}());
 	var DefaultRenderTypes = (function () {
 	    function DefaultRenderTypes() {
@@ -28022,7 +27390,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     */
 	    DirectiveNormalizer.prototype.normalizeLoadedTemplate = function (prenomData, template, templateAbsUrl) {
 	        var /** @type {?} */ interpolationConfig = InterpolationConfig.fromArray(prenomData.interpolation);
-	        var /** @type {?} */ rootNodesAndErrors = this._htmlParser.parse(template, stringify(prenomData.componentType), false, interpolationConfig);
+	        var /** @type {?} */ rootNodesAndErrors = this._htmlParser.parse(template, stringify(prenomData.componentType), true, interpolationConfig);
 	        if (rootNodesAndErrors.errors.length > 0) {
 	            var /** @type {?} */ errorString = rootNodesAndErrors.errors.join('\n');
 	            throw new SyntaxError("Template parse errors:\n" + errorString);
@@ -28159,6 +27527,20 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @param {?} context
 	     * @return {?}
 	     */
+	    TemplatePreparseVisitor.prototype.visitExpansion = function (ast, context) { visitAll(this, ast.cases); };
+	    /**
+	     * @param {?} ast
+	     * @param {?} context
+	     * @return {?}
+	     */
+	    TemplatePreparseVisitor.prototype.visitExpansionCase = function (ast, context) {
+	        visitAll(this, ast.expression);
+	    };
+	    /**
+	     * @param {?} ast
+	     * @param {?} context
+	     * @return {?}
+	     */
 	    TemplatePreparseVisitor.prototype.visitComment = function (ast, context) { return null; };
 	    /**
 	     * @param {?} ast
@@ -28172,18 +27554,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @return {?}
 	     */
 	    TemplatePreparseVisitor.prototype.visitText = function (ast, context) { return null; };
-	    /**
-	     * @param {?} ast
-	     * @param {?} context
-	     * @return {?}
-	     */
-	    TemplatePreparseVisitor.prototype.visitExpansion = function (ast, context) { return null; };
-	    /**
-	     * @param {?} ast
-	     * @param {?} context
-	     * @return {?}
-	     */
-	    TemplatePreparseVisitor.prototype.visitExpansionCase = function (ast, context) { return null; };
 	    return TemplatePreparseVisitor;
 	}());
 
@@ -38939,7 +38309,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                if (e.fileName) {
 	                    throw positionalError(message, e.fileName, e.line, e.column);
 	                }
-	                throw new Error(message);
+	                throw new SyntaxError(message);
 	            }
 	        }
 	        var /** @type {?} */ recordedSimplifyInContext = function (context, value, depth) {
@@ -39417,7 +38787,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    StaticSymbolResolver.prototype.getSymbolByModule = function (module, symbolName, containingFile) {
 	        var /** @type {?} */ filePath = this.resolveModule(module, containingFile);
 	        if (!filePath) {
-	            throw new Error("Could not resolve module " + module + " relative to " + containingFile);
+	            this.reportError(new Error("Could not resolve module " + module + (containingFile ? " relative to $ {\n            containingFile\n          } " : '')), null);
+	            return this.getStaticSymbol("ERROR:" + module, symbolName);
 	        }
 	        return this.getStaticSymbol(filePath, symbolName);
 	    };
@@ -40887,6 +40258,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        throw new Error("No ResourceLoader implementation has been provided. Can't read the url \"" + url + "\"");
 	    }
 	};
+	var /** @type {?} */ baseHtmlParser = new OpaqueToken('HtmlParser');
 	/**
 	 * A set of providers that provide `JitCompiler` and its dependencies to use for
 	 * template compilation.
@@ -40899,17 +40271,24 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    Console$1,
 	    Lexer,
 	    Parser,
-	    HtmlParser,
+	    {
+	        provide: baseHtmlParser,
+	        useClass: HtmlParser,
+	    },
 	    {
 	        provide: I18NHtmlParser,
 	        useFactory: function (parser, translations, format) {
 	            return new I18NHtmlParser(parser, translations, format);
 	        },
 	        deps: [
-	            HtmlParser,
+	            baseHtmlParser,
 	            [new Optional(), new Inject(TRANSLATIONS)],
 	            [new Optional(), new Inject(TRANSLATIONS_FORMAT)],
 	        ]
+	    },
+	    {
+	        provide: HtmlParser,
+	        useExisting: I18NHtmlParser,
 	    },
 	    TemplateParser,
 	    DirectiveNormalizer,
@@ -45492,7 +44871,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$3 = new Version('2.4.5-7ed39eb');
+	var VERSION$3 = new Version('2.4.6-343ee8a');
 
 	/**
 	 * @license
@@ -46894,7 +46273,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$4 = new Version('2.4.5-7ed39eb');
+	var VERSION$4 = new Version('2.4.6-343ee8a');
 
 	exports['default'] = LanguageServicePlugin;
 	exports.createLanguageService = createLanguageService;
