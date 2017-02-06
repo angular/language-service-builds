@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.0.0-beta.6-41db177
+ * @license Angular v4.0.0-beta.6-80b66ed
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1650,7 +1650,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('4.0.0-beta.6-41db177');
+	var /** @type {?} */ VERSION = new Version('4.0.0-beta.6-80b66ed');
 
 	/**
 	 * Inject decorator and metadata.
@@ -5263,6 +5263,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 *   -->
 	 *
 	 * ### Example
+	 *
 	 * ```
 	 * import {Component, NgZone} from '\@angular/core';
 	 * import {NgIf} from '\@angular/common';
@@ -5317,6 +5318,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 *   }
 	 * }
 	 * ```
+	 *
 	 * \@experimental
 	 */
 	var NgZone = (function () {
@@ -26365,7 +26367,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.6-41db177');
+	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.6-80b66ed');
 
 	var CompilerConfig = (function () {
 	    /**
@@ -45763,7 +45765,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$3 = new Version('4.0.0-beta.6-41db177');
+	var VERSION$3 = new Version('4.0.0-beta.6-80b66ed');
 
 	/**
 	 * @license
@@ -47230,7 +47232,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$4 = new Version('4.0.0-beta.6-41db177');
+	var VERSION$4 = new Version('4.0.0-beta.6-80b66ed');
 
 	exports.createLanguageService = createLanguageService;
 	exports.create = create;
