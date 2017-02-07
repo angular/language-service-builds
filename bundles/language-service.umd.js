@@ -1,5 +1,5 @@
 /**
- * @license Angular v2.4.6-343ee8a
+ * @license Angular v2.4.6-5bb47db
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1636,7 +1636,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('2.4.6-343ee8a');
+	var /** @type {?} */ VERSION = new Version('2.4.6-5bb47db');
 
 	/**
 	 * Allows to refer to references which are not yet defined.
@@ -25907,7 +25907,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('2.4.6-343ee8a');
+	var /** @type {?} */ VERSION$1 = new Version('2.4.6-5bb47db');
 
 	var CompilerConfig = (function () {
 	    /**
@@ -44871,7 +44871,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$3 = new Version('2.4.6-343ee8a');
+	var VERSION$3 = new Version('2.4.6-5bb47db');
 
 	/**
 	 * @license
@@ -46273,7 +46273,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$4 = new Version('2.4.6-343ee8a');
+	var VERSION$4 = new Version('2.4.6-5bb47db');
 
 	exports['default'] = LanguageServicePlugin;
 	exports.createLanguageService = createLanguageService;
