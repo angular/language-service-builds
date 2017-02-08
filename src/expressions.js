@@ -168,7 +168,7 @@ var NullVisitor = (function () {
     NullVisitor.prototype.visitSafePropertyRead = function (ast) { };
     return NullVisitor;
 }());
-export var TypeDiagnostic = (function () {
+var TypeDiagnostic = (function () {
     function TypeDiagnostic(kind, message, ast) {
         this.kind = kind;
         this.message = message;
@@ -176,6 +176,7 @@ export var TypeDiagnostic = (function () {
     }
     return TypeDiagnostic;
 }());
+export { TypeDiagnostic };
 // AstType calculatetype of the ast given AST element.
 var AstType = (function () {
     function AstType(scope, query, context) {
@@ -529,18 +530,20 @@ var AstPath = (function (_super) {
     __extends(AstPath, _super);
     function AstPath(ast, position, excludeEmpty) {
         if (excludeEmpty === void 0) { excludeEmpty = false; }
-        _super.call(this, new AstPathVisitor(position, excludeEmpty).buildPath(ast).path);
-        this.position = position;
+        var _this = _super.call(this, new AstPathVisitor(position, excludeEmpty).buildPath(ast).path) || this;
+        _this.position = position;
+        return _this;
     }
     return AstPath;
 }(AstPathBase));
 var AstPathVisitor = (function (_super) {
     __extends(AstPathVisitor, _super);
     function AstPathVisitor(position, excludeEmpty) {
-        _super.call(this);
-        this.position = position;
-        this.excludeEmpty = excludeEmpty;
-        this.path = [];
+        var _this = _super.call(this) || this;
+        _this.position = position;
+        _this.excludeEmpty = excludeEmpty;
+        _this.path = [];
+        return _this;
     }
     AstPathVisitor.prototype.visit = function (ast) {
         if ((!this.excludeEmpty || ast.span.start < ast.span.end) && inSpan(this.position, ast.span)) {
@@ -644,7 +647,7 @@ function getEventDeclaration(info, path, includeEvent) {
 function getReferences(info) {
     var result = [];
     function processReferences(references) {
-        var _loop_1 = function(reference) {
+        var _loop_1 = function (reference) {
             var type = void 0;
             if (reference.value) {
                 type = info.template.query.getTypeSymbol(tokenReference(reference.value));
@@ -664,7 +667,7 @@ function getReferences(info) {
     var visitor = new (function (_super) {
         __extends(class_1, _super);
         function class_1() {
-            _super.apply(this, arguments);
+            return _super !== null && _super.apply(this, arguments) || this;
         }
         class_1.prototype.visitEmbeddedTemplate = function (ast, context) {
             _super.prototype.visitEmbeddedTemplate.call(this, ast, context);
@@ -684,7 +687,7 @@ function getVarDeclarations(info, path) {
     var current = path.tail;
     while (current) {
         if (current instanceof EmbeddedTemplateAst) {
-            var _loop_2 = function(variable) {
+            var _loop_2 = function (variable) {
                 var name_1 = variable.name;
                 // Find the first directive with a context.
                 var context = current.directives

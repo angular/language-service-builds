@@ -365,7 +365,7 @@ var BOOLEAN = 'boolean';
 var NUMBER = 'number';
 var STRING = 'string';
 var OBJECT = 'object';
-export var SchemaInformation = (function () {
+var SchemaInformation = (function () {
     function SchemaInformation() {
         var _this = this;
         this.schema = {};
@@ -429,6 +429,7 @@ export var SchemaInformation = (function () {
     });
     return SchemaInformation;
 }());
+export { SchemaInformation };
 export function eventNames(elementName) {
     return SchemaInformation.instance.eventsOf(elementName);
 }

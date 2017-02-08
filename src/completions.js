@@ -246,14 +246,15 @@ function voidElementAttributeCompletions(info, path) {
 var ExpressionVisitor = (function (_super) {
     __extends(ExpressionVisitor, _super);
     function ExpressionVisitor(info, position, attr, getExpressionScope) {
-        _super.call(this);
-        this.info = info;
-        this.position = position;
-        this.attr = attr;
-        this.getExpressionScope = getExpressionScope;
+        var _this = _super.call(this) || this;
+        _this.info = info;
+        _this.position = position;
+        _this.attr = attr;
+        _this.getExpressionScope = getExpressionScope;
         if (!getExpressionScope) {
-            this.getExpressionScope = function () { return info.template.members; };
+            _this.getExpressionScope = function () { return info.template.members; };
         }
+        return _this;
     }
     ExpressionVisitor.prototype.visitDirectiveProperty = function (ast) {
         this.attributeValueCompletions(ast.value);
@@ -287,7 +288,7 @@ var ExpressionVisitor = (function (_super) {
                         .map(function (name) { return lowerName(name.substr(key_1.length)); });
                 }
                 keys.push('let');
-                _this.result = keys.map(function (key) { return { kind: 'key', name: key, sort: key }; });
+                _this.result = keys.map(function (key) { return ({ kind: 'key', name: key, sort: key }); });
             };
             if (!binding || (binding.key == key_1 && !binding.expression)) {
                 // We are in the root binding. We should return `let` and keys that are left in the
@@ -344,7 +345,7 @@ var ExpressionVisitor = (function (_super) {
     };
     ExpressionVisitor.prototype.symbolsToCompletions = function (symbols) {
         return symbols.filter(function (s) { return !s.name.startsWith('__') && s.public; })
-            .map(function (symbol) { return { kind: symbol.kind, name: symbol.name, sort: symbol.name }; });
+            .map(function (symbol) { return ({ kind: symbol.kind, name: symbol.name, sort: symbol.name }); });
     };
     Object.defineProperty(ExpressionVisitor.prototype, "attributeValuePosition", {
         get: function () {

@@ -8,9 +8,9 @@
 export declare class AstPath<T> {
     private path;
     constructor(path: T[]);
-    empty: boolean;
-    head: T | undefined;
-    tail: T | undefined;
+    readonly empty: boolean;
+    readonly head: T | undefined;
+    readonly tail: T | undefined;
     parentOf(node: T): T | undefined;
     childOf(node: T): T | undefined;
     first<N extends T>(ctor: {

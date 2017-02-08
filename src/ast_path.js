@@ -5,7 +5,7 @@
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-export var AstPath = (function () {
+var AstPath = (function () {
     function AstPath(path) {
         this.path = path;
     }
@@ -37,4 +37,5 @@ export var AstPath = (function () {
     AstPath.prototype.pop = function () { return this.path.pop(); };
     return AstPath;
 }());
+export { AstPath };
 //# sourceMappingURL=ast_path.js.map

@@ -13,20 +13,22 @@ var __extends = (this && this.__extends) || function (d, b) {
 import { visitAll } from '@angular/compiler/src/ml_parser/ast';
 import { AstPath } from './ast_path';
 import { inSpan, spanOf } from './utils';
-export var HtmlAstPath = (function (_super) {
+var HtmlAstPath = (function (_super) {
     __extends(HtmlAstPath, _super);
     function HtmlAstPath(ast, position) {
-        _super.call(this, buildPath(ast, position));
-        this.position = position;
+        var _this = _super.call(this, buildPath(ast, position)) || this;
+        _this.position = position;
+        return _this;
     }
     return HtmlAstPath;
 }(AstPath));
+export { HtmlAstPath };
 function buildPath(ast, position) {
     var visitor = new HtmlAstPathBuilder(position);
     visitAll(visitor, ast);
     return visitor.getPath();
 }
-export var ChildVisitor = (function () {
+var ChildVisitor = (function () {
     function ChildVisitor(visitor) {
         this.visitor = visitor;
     }
@@ -55,12 +57,14 @@ export var ChildVisitor = (function () {
     };
     return ChildVisitor;
 }());
+export { ChildVisitor };
 var HtmlAstPathBuilder = (function (_super) {
     __extends(HtmlAstPathBuilder, _super);
     function HtmlAstPathBuilder(position) {
-        _super.call(this);
-        this.position = position;
-        this.path = [];
+        var _this = _super.call(this) || this;
+        _this.position = position;
+        _this.path = [];
+        return _this;
     }
     HtmlAstPathBuilder.prototype.visit = function (ast, context) {
         var span = spanOf(ast);

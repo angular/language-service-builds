@@ -19,7 +19,7 @@ import { DiagnosticKind } from './types';
 import { getSelectors, hasTemplateReference, offsetSpan, spanOf } from './utils';
 export function getTemplateDiagnostics(fileName, astProvider, templates) {
     var results = [];
-    var _loop_1 = function(template) {
+    var _loop_1 = function (template) {
         var ast = astProvider.getTemplateAst(template, fileName);
         if (ast) {
             if (ast.parseErrors && ast.parseErrors.length) {
@@ -47,7 +47,7 @@ export function getTemplateDiagnostics(fileName, astProvider, templates) {
 export function getDeclarationDiagnostics(declarations, modules) {
     var results = [];
     var directives = undefined;
-    var _loop_2 = function(declaration) {
+    var _loop_2 = function (declaration) {
         var report = function (message, span) {
             results.push({
                 kind: DiagnosticKind.Error,
@@ -81,8 +81,8 @@ export function getDeclarationDiagnostics(declarations, modules) {
             }
         }
     };
-    for (var _b = 0, declarations_1 = declarations; _b < declarations_1.length; _b++) {
-        var declaration = declarations_1[_b];
+    for (var _i = 0, declarations_1 = declarations; _i < declarations_1.length; _i++) {
+        var declaration = declarations_1[_i];
         _loop_2(declaration);
     }
     return results;
@@ -106,11 +106,12 @@ function getTemplateExpressionDiagnostics(template, astResult) {
 var ExpressionDiagnosticsVisitor = (function (_super) {
     __extends(ExpressionDiagnosticsVisitor, _super);
     function ExpressionDiagnosticsVisitor(info, getExpressionScope) {
-        _super.call(this);
-        this.info = info;
-        this.getExpressionScope = getExpressionScope;
-        this.diagnostics = [];
-        this.path = new TemplateAstPath([], 0);
+        var _this = _super.call(this) || this;
+        _this.info = info;
+        _this.getExpressionScope = getExpressionScope;
+        _this.diagnostics = [];
+        _this.path = new TemplateAstPath([], 0);
+        return _this;
     }
     ExpressionDiagnosticsVisitor.prototype.visitDirective = function (ast, context) {
         // Override the default child visitor to ignore the host properties of a directive.

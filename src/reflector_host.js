@@ -27,11 +27,12 @@ var ReflectorModuleModuleResolutionHost = (function () {
     };
     return ReflectorModuleModuleResolutionHost;
 }());
-export var ReflectorHost = (function (_super) {
+var ReflectorHost = (function (_super) {
     __extends(ReflectorHost, _super);
     function ReflectorHost(getProgram, serviceHost, options) {
-        _super.call(this, null, options, new ModuleResolutionHostAdapter(new ReflectorModuleModuleResolutionHost(serviceHost)));
-        this.getProgram = getProgram;
+        var _this = _super.call(this, null, options, new ModuleResolutionHostAdapter(new ReflectorModuleModuleResolutionHost(serviceHost))) || this;
+        _this.getProgram = getProgram;
+        return _this;
     }
     Object.defineProperty(ReflectorHost.prototype, "program", {
         get: function () { return this.getProgram(); },
@@ -43,4 +44,5 @@ export var ReflectorHost = (function (_super) {
     });
     return ReflectorHost;
 }(CompilerHost));
+export { ReflectorHost };
 //# sourceMappingURL=reflector_host.js.map

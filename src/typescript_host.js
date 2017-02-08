@@ -58,10 +58,10 @@ export function createLanguageServiceFromTypescript(host, service) {
  * template that are syntatically incorrect which is required to provide completions in
  * syntatically incorrect templates.
  */
-export var DummyHtmlParser = (function (_super) {
+var DummyHtmlParser = (function (_super) {
     __extends(DummyHtmlParser, _super);
     function DummyHtmlParser() {
-        _super.call(this);
+        return _super.call(this) || this;
     }
     DummyHtmlParser.prototype.parse = function (source, url, parseExpansionForms, interpolationConfig) {
         if (parseExpansionForms === void 0) { parseExpansionForms = false; }
@@ -70,17 +70,19 @@ export var DummyHtmlParser = (function (_super) {
     };
     return DummyHtmlParser;
 }(HtmlParser));
+export { DummyHtmlParser };
 /**
  * Avoid loading resources in the language servcie by using a dummy loader.
  */
-export var DummyResourceLoader = (function (_super) {
+var DummyResourceLoader = (function (_super) {
     __extends(DummyResourceLoader, _super);
     function DummyResourceLoader() {
-        _super.apply(this, arguments);
+        return _super !== null && _super.apply(this, arguments) || this;
     }
     DummyResourceLoader.prototype.get = function (url) { return Promise.resolve(''); };
     return DummyResourceLoader;
 }(ResourceLoader));
+export { DummyResourceLoader };
 /**
  * An implemntation of a `LanguageSerivceHost` for a TypeScript project.
  *
@@ -89,7 +91,7 @@ export var DummyResourceLoader = (function (_super) {
  *
  * @expermental
  */
-export var TypeScriptServiceHost = (function () {
+var TypeScriptServiceHost = (function () {
     function TypeScriptServiceHost(host, tsService) {
         this.host = host;
         this.tsService = tsService;
@@ -557,9 +559,10 @@ export var TypeScriptServiceHost = (function () {
         }
         return new TypeWrapper(type, context);
     };
-    TypeScriptServiceHost.missingTemplate = [];
     return TypeScriptServiceHost;
 }());
+export { TypeScriptServiceHost };
+TypeScriptServiceHost.missingTemplate = [];
 var TypeScriptSymbolQuery = (function () {
     function TypeScriptSymbolQuery(program, checker, source, fetchPipes) {
         this.program = program;
@@ -583,7 +586,7 @@ var TypeScriptSymbolQuery = (function () {
     TypeScriptSymbolQuery.prototype.getTypeUnion = function () {
         var types = [];
         for (var _i = 0; _i < arguments.length; _i++) {
-            types[_i - 0] = arguments[_i];
+            types[_i] = arguments[_i];
         }
         // TODO: Replace with typeChecker API when available
         var checker = this.checker;
@@ -1128,9 +1131,9 @@ var EmptyTable = (function () {
     EmptyTable.prototype.get = function (key) { return undefined; };
     EmptyTable.prototype.has = function (key) { return false; };
     EmptyTable.prototype.values = function () { return []; };
-    EmptyTable.instance = new EmptyTable();
     return EmptyTable;
 }());
+EmptyTable.instance = new EmptyTable();
 function findTsConfig(fileName) {
     var dir = path.dirname(fileName);
     while (fs.existsSync(dir)) {

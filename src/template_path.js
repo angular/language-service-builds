@@ -13,22 +13,24 @@ var __extends = (this && this.__extends) || function (d, b) {
 import { templateVisitAll } from '@angular/compiler/src/template_parser/template_ast';
 import { AstPath } from './ast_path';
 import { inSpan, isNarrower, spanOf } from './utils';
-export var TemplateAstPath = (function (_super) {
+var TemplateAstPath = (function (_super) {
     __extends(TemplateAstPath, _super);
     function TemplateAstPath(ast, position, allowWidening) {
         if (allowWidening === void 0) { allowWidening = false; }
-        _super.call(this, buildTemplatePath(ast, position, allowWidening));
-        this.position = position;
+        var _this = _super.call(this, buildTemplatePath(ast, position, allowWidening)) || this;
+        _this.position = position;
+        return _this;
     }
     return TemplateAstPath;
 }(AstPath));
+export { TemplateAstPath };
 function buildTemplatePath(ast, position, allowWidening) {
     if (allowWidening === void 0) { allowWidening = false; }
     var visitor = new TemplateAstPathBuilder(position, allowWidening);
     templateVisitAll(visitor, ast);
     return visitor.getPath();
 }
-export var NullTemplateVisitor = (function () {
+var NullTemplateVisitor = (function () {
     function NullTemplateVisitor() {
     }
     NullTemplateVisitor.prototype.visitNgContent = function (ast) { };
@@ -45,7 +47,8 @@ export var NullTemplateVisitor = (function () {
     NullTemplateVisitor.prototype.visitDirectiveProperty = function (ast) { };
     return NullTemplateVisitor;
 }());
-export var TemplateAstChildVisitor = (function () {
+export { NullTemplateVisitor };
+var TemplateAstChildVisitor = (function () {
     function TemplateAstChildVisitor(visitor) {
         this.visitor = visitor;
     }
@@ -100,13 +103,15 @@ export var TemplateAstChildVisitor = (function () {
     };
     return TemplateAstChildVisitor;
 }());
+export { TemplateAstChildVisitor };
 var TemplateAstPathBuilder = (function (_super) {
     __extends(TemplateAstPathBuilder, _super);
     function TemplateAstPathBuilder(position, allowWidening) {
-        _super.call(this);
-        this.position = position;
-        this.allowWidening = allowWidening;
-        this.path = [];
+        var _this = _super.call(this) || this;
+        _this.position = position;
+        _this.allowWidening = allowWidening;
+        _this.path = [];
+        return _this;
     }
     TemplateAstPathBuilder.prototype.visit = function (ast, context) {
         var span = spanOf(ast);

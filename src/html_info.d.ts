@@ -13,7 +13,7 @@ export declare class SchemaInformation {
     propertiesOf(elementName: string): string[];
     typeOf(elementName: string, property: string): string;
     private static _instance;
-    static instance: SchemaInformation;
+    static readonly instance: SchemaInformation;
 }
 export declare function eventNames(elementName: string): string[];
 export declare function propertyNames(elementName: string): string[];

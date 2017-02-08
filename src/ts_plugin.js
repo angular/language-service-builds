@@ -12,7 +12,7 @@ export function create(info /* ts.server.PluginCreateInfo */) {
     // Create the proxy
     var proxy = Object.create(null);
     var oldLS = info.languageService;
-    var _loop_1 = function(k) {
+    var _loop_1 = function (k) {
         proxy[k] = function () { return oldLS[k].apply(oldLS, arguments); };
     };
     for (var k in oldLS) {
@@ -49,7 +49,12 @@ export function create(info /* ts.server.PluginCreateInfo */) {
             var results = ls.getCompletionsAt(fileName, position);
             if (results && results.length) {
                 if (base === undefined) {
-                    base = { isMemberCompletion: false, isNewIdentifierLocation: false, entries: [] };
+                    base = {
+                        isGlobalCompletion: false,
+                        isMemberCompletion: false,
+                        isNewIdentifierLocation: false,
+                        entries: []
+                    };
                 }
                 for (var _i = 0, results_1 = results; _i < results_1.length; _i++) {
                     var entry = results_1[_i];
@@ -74,7 +79,8 @@ export function create(info /* ts.server.PluginCreateInfo */) {
                     documentation: [],
                     kind: 'angular',
                     kindModifiers: 'what does this do?',
-                    textSpan: { start: ours.span.start, length: ours.span.end - ours.span.start }
+                    textSpan: { start: ours.span.start, length: ours.span.end - ours.span.start },
+                    tags: [],
                 };
             }
         });
