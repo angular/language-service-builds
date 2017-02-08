@@ -637,8 +637,7 @@ function getReferences(info) {
             super.visitElement(ast, context);
             processReferences(ast.references);
         }
-    }
-    ;
+    };
     templateVisitAll(visitor, info.templateAst);
     return result;
 }

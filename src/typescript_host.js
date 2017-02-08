@@ -50,9 +50,7 @@ export function createLanguageServiceFromTypescript(host, service) {
  * syntatically incorrect templates.
  */
 export class DummyHtmlParser extends HtmlParser {
-    constructor() {
-        super();
-    }
+    constructor() { super(); }
     parse(source, url, parseExpansionForms = false, interpolationConfig = DEFAULT_INTERPOLATION_CONFIG) {
         return new ParseTreeResult([], []);
     }
@@ -637,8 +635,8 @@ function toSymbolTable(symbols) {
 function toSymbols(symbolTable, filter) {
     const result = [];
     const own = typeof symbolTable.hasOwnProperty === 'function' ?
-            (name) => symbolTable.hasOwnProperty(name) :
-            (name) => !!symbolTable[name];
+        (name) => symbolTable.hasOwnProperty(name) :
+        (name) => !!symbolTable[name];
     for (const name in symbolTable) {
         if (own(name) && (!filter || filter(symbolTable[name]))) {
             result.push(symbolTable[name]);

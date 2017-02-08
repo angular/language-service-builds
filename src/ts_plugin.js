@@ -46,7 +46,12 @@ export function create(info /* ts.server.PluginCreateInfo */) {
             const results = ls.getCompletionsAt(fileName, position);
             if (results && results.length) {
                 if (base === undefined) {
-                    base = { isMemberCompletion: false, isNewIdentifierLocation: false, entries: [] };
+                    base = {
+                        isGlobalCompletion: false,
+                        isMemberCompletion: false,
+                        isNewIdentifierLocation: false,
+                        entries: []
+                    };
                 }
                 for (const entry of results) {
                     base.entries.push(completionToEntry(entry));
@@ -69,7 +74,8 @@ export function create(info /* ts.server.PluginCreateInfo */) {
                     documentation: [],
                     kind: 'angular',
                     kindModifiers: 'what does this do?',
-                    textSpan: { start: ours.span.start, length: ours.span.end - ours.span.start }
+                    textSpan: { start: ours.span.start, length: ours.span.end - ours.span.start },
+                    tags: [],
                 };
             }
         });
