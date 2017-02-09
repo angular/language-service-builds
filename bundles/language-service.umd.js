@@ -1,5 +1,5 @@
 /**
- * @license Angular v2.4.6-5bb47db
+ * @license Angular v2.4.6-401ef74
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1636,7 +1636,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('2.4.6-5bb47db');
+	var /** @type {?} */ VERSION = new Version('2.4.6-401ef74');
 
 	/**
 	 * Allows to refer to references which are not yet defined.
@@ -5197,6 +5197,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 *   -->
 	 *
 	 * ### Example
+	 *
 	 * ```
 	 * import {Component, NgZone} from '\@angular/core';
 	 * import {NgIf} from '\@angular/common';
@@ -5251,6 +5252,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 *   }
 	 * }
 	 * ```
+	 *
 	 * \@experimental
 	 */
 	var NgZone = (function () {
@@ -25907,7 +25909,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('2.4.6-5bb47db');
+	var /** @type {?} */ VERSION$1 = new Version('2.4.6-401ef74');
 
 	var CompilerConfig = (function () {
 	    /**
@@ -31769,14 +31771,14 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    };
 	    /**
 	     * Gets the metadata for the given directive.
-	     * This assumes `loadNgModuleMetadata` has been called first.
+	     * This assumes `loadNgModuleDirectiveAndPipeMetadata` has been called first.
 	     * @param {?} directiveType
 	     * @return {?}
 	     */
 	    CompileMetadataResolver.prototype.getDirectiveMetadata = function (directiveType) {
 	        var /** @type {?} */ dirMeta = this._directiveCache.get(directiveType);
 	        if (!dirMeta) {
-	            this._reportError(new SyntaxError("Illegal state: getDirectiveMetadata can only be called after loadNgModuleMetadata for a module that declares it. Directive " + stringifyType(directiveType) + "."), directiveType);
+	            this._reportError(new SyntaxError("Illegal state: getDirectiveMetadata can only be called after loadNgModuleDirectiveAndPipeMetadata for a module that declares it. Directive " + stringifyType(directiveType) + "."), directiveType);
 	        }
 	        return dirMeta;
 	    };
@@ -32129,14 +32131,14 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    };
 	    /**
 	     * Gets the metadata for the given pipe.
-	     * This assumes `loadNgModuleMetadata` has been called first.
+	     * This assumes `loadNgModuleDirectiveAndPipeMetadata` has been called first.
 	     * @param {?} pipeType
 	     * @return {?}
 	     */
 	    CompileMetadataResolver.prototype.getPipeMetadata = function (pipeType) {
 	        var /** @type {?} */ pipeMeta = this._pipeCache.get(pipeType);
 	        if (!pipeMeta) {
-	            this._reportError(new SyntaxError("Illegal state: getPipeMetadata can only be called after loadNgModuleMetadata for a module that declares it. Pipe " + stringifyType(pipeType) + "."), pipeType);
+	            this._reportError(new SyntaxError("Illegal state: getPipeMetadata can only be called after loadNgModuleDirectiveAndPipeMetadata for a module that declares it. Pipe " + stringifyType(pipeType) + "."), pipeType);
 	        }
 	        return pipeMeta;
 	    };
@@ -39858,7 +39860,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        // Note: the loadingPromise for a module only includes the loading of the exported directives
 	        // of imported modules.
 	        // However, for runtime compilation, we want to transitively compile all modules,
-	        // so we also need to call loadNgModuleMetadata for all nested modules.
+	        // so we also need to call loadNgModuleDirectiveAndPipeMetadata for all nested modules.
 	        ngModule.transitiveModule.modules.forEach(function (localModuleMeta) {
 	            loadingPromises.push(_this._metadataResolver.loadNgModuleDirectiveAndPipeMetadata(localModuleMeta.reference, isSync));
 	        });
@@ -44871,7 +44873,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$3 = new Version('2.4.6-5bb47db');
+	var VERSION$3 = new Version('2.4.6-401ef74');
 
 	/**
 	 * @license
@@ -46273,7 +46275,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$4 = new Version('2.4.6-5bb47db');
+	var VERSION$4 = new Version('2.4.6-401ef74');
 
 	exports['default'] = LanguageServicePlugin;
 	exports.createLanguageService = createLanguageService;
