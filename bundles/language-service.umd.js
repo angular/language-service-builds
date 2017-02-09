@@ -1654,7 +1654,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('4.0.0-beta.7-56e2f84');
+	var /** @type {?} */ VERSION = new Version('4.0.0-beta.7-45cc444');
 
 	/**
 	 * Inject decorator and metadata.
@@ -6491,12 +6491,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     */
 	    DefaultIterableDifferFactory.prototype.supports = function (obj) { return isListLikeIterable(obj); };
 	    /**
-	     * @param {?} cdRef
+	     * @deprecated v4.0.0 - ChangeDetectorRef is not used and is no longer a parameter
+	     * @param {?=} cdRefOrTrackBy
 	     * @param {?=} trackByFn
 	     * @return {?}
 	     */
-	    DefaultIterableDifferFactory.prototype.create = function (cdRef, trackByFn) {
-	        return new DefaultIterableDiffer(trackByFn);
+	    DefaultIterableDifferFactory.prototype.create = function (cdRefOrTrackBy, trackByFn) {
+	        return new DefaultIterableDiffer(trackByFn || (cdRefOrTrackBy));
 	    };
 	    return DefaultIterableDifferFactory;
 	}());
@@ -7349,10 +7350,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     */
 	    DefaultKeyValueDifferFactory.prototype.supports = function (obj) { return obj instanceof Map || isJsObject$1(obj); };
 	    /**
-	     * @param {?} cdRef
+	     * @deprecated v4.0.0 - ChangeDetectorRef is not used and is no longer a parameter
+	     * @param {?=} cd
 	     * @return {?}
 	     */
-	    DefaultKeyValueDifferFactory.prototype.create = function (cdRef) {
+	    DefaultKeyValueDifferFactory.prototype.create = function (cd) {
 	        return new DefaultKeyValueDiffer();
 	    };
 	    return DefaultKeyValueDifferFactory;
@@ -27441,7 +27443,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.7-56e2f84');
+	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.7-45cc444');
 
 	var CompilerConfig = (function () {
 	    /**
