@@ -1389,19 +1389,19 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	ChangeDetectionStrategy.Default = 1;
 	ChangeDetectionStrategy[ChangeDetectionStrategy.OnPush] = "OnPush";
 	ChangeDetectionStrategy[ChangeDetectionStrategy.Default] = "Default";
-	var ChangeDetectorStatus = {};
-	ChangeDetectorStatus.CheckOnce = 0;
-	ChangeDetectorStatus.Checked = 1;
-	ChangeDetectorStatus.CheckAlways = 2;
-	ChangeDetectorStatus.Detached = 3;
-	ChangeDetectorStatus.Errored = 4;
-	ChangeDetectorStatus.Destroyed = 5;
-	ChangeDetectorStatus[ChangeDetectorStatus.CheckOnce] = "CheckOnce";
-	ChangeDetectorStatus[ChangeDetectorStatus.Checked] = "Checked";
-	ChangeDetectorStatus[ChangeDetectorStatus.CheckAlways] = "CheckAlways";
-	ChangeDetectorStatus[ChangeDetectorStatus.Detached] = "Detached";
-	ChangeDetectorStatus[ChangeDetectorStatus.Errored] = "Errored";
-	ChangeDetectorStatus[ChangeDetectorStatus.Destroyed] = "Destroyed";
+	var ɵChangeDetectorStatus = {};
+	ɵChangeDetectorStatus.CheckOnce = 0;
+	ɵChangeDetectorStatus.Checked = 1;
+	ɵChangeDetectorStatus.CheckAlways = 2;
+	ɵChangeDetectorStatus.Detached = 3;
+	ɵChangeDetectorStatus.Errored = 4;
+	ɵChangeDetectorStatus.Destroyed = 5;
+	ɵChangeDetectorStatus[ɵChangeDetectorStatus.CheckOnce] = "CheckOnce";
+	ɵChangeDetectorStatus[ɵChangeDetectorStatus.Checked] = "Checked";
+	ɵChangeDetectorStatus[ɵChangeDetectorStatus.CheckAlways] = "CheckAlways";
+	ɵChangeDetectorStatus[ɵChangeDetectorStatus.Detached] = "Detached";
+	ɵChangeDetectorStatus[ɵChangeDetectorStatus.Errored] = "Errored";
+	ɵChangeDetectorStatus[ɵChangeDetectorStatus.Destroyed] = "Destroyed";
 	/**
 	 * @param {?} changeDetectionStrategy
 	 * @return {?}
@@ -1654,7 +1654,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('4.0.0-beta.7-e4e9dbe');
+	var /** @type {?} */ VERSION = new Version('4.0.0-beta.7-269cf42');
 
 	/**
 	 * Inject decorator and metadata.
@@ -2591,10 +2591,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    /**
 	     * @param {?} name
 	     * @param {?} moduleUrl
+	     * @param {?} members
 	     * @param {?} runtime
 	     * @return {?}
 	     */
-	    ReflectionCapabilities.prototype.resolveIdentifier = function (name, moduleUrl, runtime) { return runtime; };
+	    ReflectionCapabilities.prototype.resolveIdentifier = function (name, moduleUrl, members, runtime) {
+	        return runtime;
+	    };
 	    /**
 	     * @param {?} enumIdentifier
 	     * @param {?} name
@@ -2666,10 +2669,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @abstract
 	     * @param {?} name
 	     * @param {?} moduleUrl
+	     * @param {?} members
 	     * @param {?} runtime
 	     * @return {?}
 	     */
-	    ReflectorReader.prototype.resolveIdentifier = function (name, moduleUrl, runtime) { };
+	    ReflectorReader.prototype.resolveIdentifier = function (name, moduleUrl, members, runtime) { };
 	    /**
 	     * @abstract
 	     * @param {?} identifier
@@ -2768,11 +2772,12 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    /**
 	     * @param {?} name
 	     * @param {?} moduleUrl
+	     * @param {?} members
 	     * @param {?} runtime
 	     * @return {?}
 	     */
-	    Reflector.prototype.resolveIdentifier = function (name, moduleUrl, runtime) {
-	        return this.reflectionCapabilities.resolveIdentifier(name, moduleUrl, runtime);
+	    Reflector.prototype.resolveIdentifier = function (name, moduleUrl, members, runtime) {
+	        return this.reflectionCapabilities.resolveIdentifier(name, moduleUrl, members, runtime);
 	    };
 	    /**
 	     * @param {?} identifier
@@ -2789,7 +2794,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * The {@link Reflector} used internally in Angular to access metadata
 	 * about symbols.
 	 */
-	var /** @type {?} */ reflector = new Reflector(new ReflectionCapabilities());
+	var /** @type {?} */ ɵreflector = new Reflector(new ReflectionCapabilities());
 
 	/**
 	 * `Dependency` is used by the framework to extend DI.
@@ -2863,7 +2868,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    var /** @type {?} */ resolvedDeps;
 	    if (provider.useClass) {
 	        var /** @type {?} */ useClass = resolveForwardRef(provider.useClass);
-	        factoryFn = reflector.factory(useClass);
+	        factoryFn = ɵreflector.factory(useClass);
 	        resolvedDeps = _dependenciesFor(useClass);
 	    }
 	    else if (provider.useExisting) {
@@ -2981,7 +2986,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @return {?}
 	 */
 	function _dependenciesFor(typeOrFunc) {
-	    var /** @type {?} */ params = reflector.parameters(typeOrFunc);
+	    var /** @type {?} */ params = ɵreflector.parameters(typeOrFunc);
 	    if (!params)
 	        return [];
 	    if (params.some(function (p) { return p == null; })) {
@@ -7884,9 +7889,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @param {?} b
 	 * @return {?}
 	 */
-	function devModeEqual(a, b) {
+	function ɵdevModeEqual(a, b) {
 	    if (isListLikeIterable(a) && isListLikeIterable(b)) {
-	        return areIterablesEqual(a, b, devModeEqual);
+	        return areIterablesEqual(a, b, ɵdevModeEqual);
 	    }
 	    else if (!isListLikeIterable(a) && !isPrimitive$1(a) && !isListLikeIterable(b) && !isPrimitive$1(b)) {
 	        return true;
@@ -7931,7 +7936,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * Helper class for unwrapping WrappedValue s
 	 */
-	var ValueUnwrapper = (function () {
+	var ɵValueUnwrapper = (function () {
 	    function ValueUnwrapper() {
 	        this.hasWrappedValue = false;
 	    }
@@ -8669,7 +8674,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	function checkBinding(view, oldValue, newValue, forceUpdate) {
 	    var /** @type {?} */ isFirstCheck = view.numberOfChecks === 0;
 	    if (view.throwOnChange) {
-	        if (isFirstCheck || !devModeEqual(oldValue, newValue)) {
+	        if (isFirstCheck || !ɵdevModeEqual(oldValue, newValue)) {
 	            throw expressionChangedAfterItHasBeenCheckedError(oldValue, newValue, isFirstCheck);
 	        }
 	        return false;
@@ -9648,7 +9653,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * workaround https://github.com/angular/tsickle/issues/350
 	 * @suppress {checkTypes}
 	 */
-	var ComponentRef_ = (function (_super) {
+	var ɵComponentRef_ = (function (_super) {
 	    __extends$15(ComponentRef_, _super);
 	    /**
 	     * @param {?} _index
@@ -9798,7 +9803,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return ComponentFactoryResolver;
 	}());
 	ComponentFactoryResolver.NULL = new _NullComponentFactoryResolver();
-	var CodegenComponentFactoryResolver = (function () {
+	var ɵCodegenComponentFactoryResolver = (function () {
 	    /**
 	     * @param {?} factories
 	     * @param {?} _parent
@@ -10819,7 +10824,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @abstract
 	 */
-	var NgModuleInjector = (function (_super) {
+	var ɵNgModuleInjector = (function (_super) {
 	    __extends$17(NgModuleInjector, _super);
 	    /**
 	     * @param {?} parent
@@ -10901,7 +10906,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     */
 	    NgModuleInjector.prototype.destroyInternal = function () { };
 	    return NgModuleInjector;
-	}(CodegenComponentFactoryResolver));
+	}(ɵCodegenComponentFactoryResolver));
 
 	var /** @type {?} */ moduleFactories = new Map();
 	/**
@@ -10911,7 +10916,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @param {?} factory
 	 * @return {?}
 	 */
-	function registerModuleFactory(id, factory) {
+	function ɵregisterModuleFactory(id, factory) {
 	    var /** @type {?} */ existing = moduleFactories.get(id);
 	    if (existing) {
 	        throw new Error("Duplicate module registered for " + id + " - " + existing.moduleType.name + " vs " + factory.moduleType.name);
@@ -11208,7 +11213,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * workaround https://github.com/angular/tsickle/issues/350
 	 * @suppress {checkTypes}
 	 */
-	var TemplateRef_ = (function (_super) {
+	var ɵTemplateRef_ = (function (_super) {
 	    __extends$18(TemplateRef_, _super);
 	    /**
 	     * @param {?} _parentView
@@ -11703,7 +11708,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    /**
 	     * @return {?}
 	     */
-	    ViewRef_.prototype.detach = function () { this._view.cdMode = ChangeDetectorStatus.Detached; };
+	    ViewRef_.prototype.detach = function () { this._view.cdMode = ɵChangeDetectorStatus.Detached; };
 	    /**
 	     * @return {?}
 	     */
@@ -12096,7 +12101,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    });
 	    return AnimationPlayer;
 	}());
-	var NoOpAnimationPlayer = (function () {
+	var ɵNoOpAnimationPlayer = (function () {
 	    function NoOpAnimationPlayer() {
 	        var _this = this;
 	        this._onDoneFns = [];
@@ -12254,7 +12259,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @return {?}
 	     */
 	    NoOpTransitionEngine.prototype.process = function (element, instructions) {
-	        return new NoOpAnimationPlayer();
+	        return new ɵNoOpAnimationPlayer();
 	    };
 	    /**
 	     * @return {?}
@@ -12274,7 +12279,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @return {?}
 	 */
 	function _reflector() {
-	    return reflector;
+	    return ɵreflector;
 	}
 	var /** @type {?} */ _CORE_PLATFORM_PROVIDERS = [
 	    PlatformRef_,
@@ -12682,7 +12687,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	function checkBinding$1(view, def, bindingIdx, value) {
 	    var /** @type {?} */ oldValue = view.oldValues[def.bindingIndex + bindingIdx];
 	    return unwrapCounter > 0 || !!(view.state & ViewState.FirstCheck) ||
-	        !devModeEqual(oldValue, value);
+	        !ɵdevModeEqual(oldValue, value);
 	}
 	/**
 	 * @param {?} view
@@ -12693,7 +12698,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 */
 	function checkBindingNoChanges(view, def, bindingIdx, value) {
 	    var /** @type {?} */ oldValue = view.oldValues[def.bindingIndex + bindingIdx];
-	    if (unwrapCounter || (view.state & ViewState.FirstCheck) || !devModeEqual(oldValue, value)) {
+	    if (unwrapCounter || (view.state & ViewState.FirstCheck) || !ɵdevModeEqual(oldValue, value)) {
 	        unwrapCounter = 0;
 	        throw expressionChangedAfterItHasBeenCheckedError$1(Services.createDebugContext(view, def.index), oldValue, value, (view.state & ViewState.FirstCheck) !== 0);
 	    }
@@ -13412,11 +13417,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        }
 	        var /** @type {?} */ view = Services.createRootView(injector, projectableNodes || [], rootSelectorOrNode, viewDef, EMPTY_CONTEXT);
 	        var /** @type {?} */ component = asProviderData(view, componentNodeIndex).instance;
-	        return new ComponentRef_$1(view, new ViewRef_$1(view), component);
+	        return new ComponentRef_(view, new ViewRef_$1(view), component);
 	    };
 	    return ComponentFactory_;
 	}());
-	var ComponentRef_$1 = (function () {
+	var ComponentRef_ = (function () {
 	    /**
 	     * @param {?} _view
 	     * @param {?} _viewRef
@@ -13708,9 +13713,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @return {?}
 	 */
 	function createTemplateRef(view, def) {
-	    return new TemplateRef_$1(view, def);
+	    return new TemplateRef_(view, def);
 	}
-	var TemplateRef_$1 = (function () {
+	var TemplateRef_ = (function () {
 	    /**
 	     * @param {?} _parentView
 	     * @param {?} _def
@@ -16873,7 +16878,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	var /** @type {?} */ DEFAULT_STATE = '*';
 	var /** @type {?} */ EMPTY_STATE = 'void';
 
-	var AnimationGroupPlayer = (function () {
+	var ɵAnimationGroupPlayer = (function () {
 	    /**
 	     * @param {?} _players
 	     */
@@ -17032,7 +17037,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 *
 	 * \@experimental Animation support is experimental
 	 */
-	var AnimationKeyframe = (function () {
+	var ɵAnimationKeyframe = (function () {
 	    /**
 	     * @param {?} offset
 	     * @param {?} styles
@@ -17044,7 +17049,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return AnimationKeyframe;
 	}());
 
-	var AnimationSequencePlayer = (function () {
+	var ɵAnimationSequencePlayer = (function () {
 	    /**
 	     * @param {?} _players
 	     */
@@ -17071,11 +17076,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        if (this._finished)
 	            return;
 	        if (this._players.length == 0) {
-	            this._activePlayer = new NoOpAnimationPlayer();
+	            this._activePlayer = new ɵNoOpAnimationPlayer();
 	            scheduleMicroTask$1(function () { return _this._onFinish(); });
 	        }
 	        else if (this._currentIndex >= this._players.length) {
-	            this._activePlayer = new NoOpAnimationPlayer();
+	            this._activePlayer = new ɵNoOpAnimationPlayer();
 	            this._onFinish();
 	        }
 	        else {
@@ -17171,7 +17176,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            this._onFinish();
 	            this._players.forEach(function (player) { return player.destroy(); });
 	            this._destroyed = true;
-	            this._activePlayer = new NoOpAnimationPlayer();
+	            this._activePlayer = new ɵNoOpAnimationPlayer();
 	            this._onDestroyFns.forEach(function (fn) { return fn(); });
 	            this._onDestroyFns = [];
 	        }
@@ -17951,7 +17956,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @param {?=} nullValue
 	 * @return {?}
 	 */
-	function prepareFinalAnimationStyles(previousStyles, newStyles, nullValue) {
+	function ɵprepareFinalAnimationStyles(previousStyles, newStyles, nullValue) {
 	    if (nullValue === void 0) { nullValue = null; }
 	    var /** @type {?} */ finalStyles = {};
 	    Object.keys(newStyles).forEach(function (prop) {
@@ -17971,7 +17976,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @param {?} keyframes
 	 * @return {?}
 	 */
-	function balanceAnimationKeyframes(collectedStyles, finalStateStyles, keyframes) {
+	function ɵbalanceAnimationKeyframes(collectedStyles, finalStateStyles, keyframes) {
 	    var /** @type {?} */ limit = keyframes.length - 1;
 	    var /** @type {?} */ firstKeyframe = keyframes[0];
 	    // phase 1: copy all the styles from the first keyframe into the lookup map
@@ -18013,14 +18018,14 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    if (hasExtraFirstStyles) {
 	        firstKeyframe.styles.styles.push(extraFirstKeyframeStyles);
 	    }
-	    collectAndResolveStyles(collectedStyles, [finalStateStyles]);
+	    ɵcollectAndResolveStyles(collectedStyles, [finalStateStyles]);
 	    return keyframes;
 	}
 	/**
 	 * @param {?} styles
 	 * @return {?}
 	 */
-	function clearStyles(styles) {
+	function ɵclearStyles(styles) {
 	    var /** @type {?} */ finalStyles = {};
 	    Object.keys(styles).forEach(function (key) { finalStyles[key] = null; });
 	    return finalStyles;
@@ -18030,7 +18035,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @param {?} styles
 	 * @return {?}
 	 */
-	function collectAndResolveStyles(collection, styles) {
+	function ɵcollectAndResolveStyles(collection, styles) {
 	    return styles.map(function (entry) {
 	        var /** @type {?} */ stylesObj = {};
 	        Object.keys(entry).forEach(function (prop) {
@@ -18053,7 +18058,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @param {?} styles
 	 * @return {?}
 	 */
-	function renderStyles(element, renderer, styles) {
+	function ɵrenderStyles(element, renderer, styles) {
 	    Object.keys(styles).forEach(function (prop) { renderer.setElementStyle(element, prop, styles[prop]); });
 	}
 	/**
@@ -18085,7 +18090,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 *
 	 * \@experimental Animation support is experimental
 	 */
-	var AnimationStyles = (function () {
+	var ɵAnimationStyles = (function () {
 	    /**
 	     * @param {?} styles
 	     */
@@ -18142,7 +18147,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return AnimationTransitionEvent;
 	}());
 
-	var AnimationTransition = (function () {
+	var ɵAnimationTransition = (function () {
 	    /**
 	     * @param {?} _player
 	     * @param {?} _element
@@ -18437,15 +18442,15 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return DebugDomRenderer;
 	}());
 
-	var ViewType = {};
-	ViewType.HOST = 0;
-	ViewType.COMPONENT = 1;
-	ViewType.EMBEDDED = 2;
-	ViewType[ViewType.HOST] = "HOST";
-	ViewType[ViewType.COMPONENT] = "COMPONENT";
-	ViewType[ViewType.EMBEDDED] = "EMBEDDED";
+	var ɵViewType = {};
+	ɵViewType.HOST = 0;
+	ɵViewType.COMPONENT = 1;
+	ɵViewType.EMBEDDED = 2;
+	ɵViewType[ɵViewType.HOST] = "HOST";
+	ɵViewType[ɵViewType.COMPONENT] = "COMPONENT";
+	ɵViewType[ɵViewType.EMBEDDED] = "EMBEDDED";
 
-	var StaticNodeDebugInfo = (function () {
+	var ɵStaticNodeDebugInfo = (function () {
 	    /**
 	     * @param {?} providerTokens
 	     * @param {?} componentToken
@@ -18458,7 +18463,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    }
 	    return StaticNodeDebugInfo;
 	}());
-	var DebugContext$1 = (function () {
+	var ɵDebugContext = (function () {
 	    /**
 	     * @param {?} _view
 	     * @param {?} _nodeIndex
@@ -18509,7 +18514,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	         */
 	        get: function () {
 	            var /** @type {?} */ componentView = this._view;
-	            while (isPresent$1(componentView.parentView) && componentView.type !== ViewType.COMPONENT) {
+	            while (isPresent$1(componentView.parentView) && componentView.type !== ɵViewType.COMPONENT) {
 	                componentView = (componentView.parentView);
 	            }
 	            return componentView.parentElement;
@@ -18679,7 +18684,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        // we check for the length to avoid having GroupAnimationPlayer
 	        // issue an unnecessary microtask when zero players are passed in
 	        if (activeAnimationPlayers.length) {
-	            new AnimationGroupPlayer(activeAnimationPlayers).onDone(function () { return callback(); });
+	            new ɵAnimationGroupPlayer(activeAnimationPlayers).onDone(function () { return callback(); });
 	        }
 	        else {
 	            callback();
@@ -18724,7 +18729,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @return {?}
 	 */
 	function _recursePlayers(player, collectedPlayers) {
-	    if ((player instanceof AnimationGroupPlayer) || (player instanceof AnimationSequencePlayer)) {
+	    if ((player instanceof ɵAnimationGroupPlayer) || (player instanceof ɵAnimationSequencePlayer)) {
 	        player.players.forEach(function (player) { return _recursePlayers(player, collectedPlayers); });
 	    }
 	    else {
@@ -18791,7 +18796,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 *
 	 * @abstract
 	 */
-	var AppView = (function () {
+	var ɵAppView = (function () {
 	    /**
 	     * @param {?} clazz
 	     * @param {?} componentType
@@ -18817,7 +18822,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        this.numberOfChecks = 0;
 	        this.throwOnChange = false;
 	        this.ref = new ViewRef_(this, viewUtils.animationQueue);
-	        if (type === ViewType.COMPONENT || type === ViewType.HOST) {
+	        if (type === ɵViewType.COMPONENT || type === ɵViewType.HOST) {
 	            this.renderer = viewUtils.renderComponent(componentType);
 	        }
 	        else {
@@ -18842,7 +18847,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        /**
 	         * @return {?}
 	         */
-	        get: function () { return this.cdMode === ChangeDetectorStatus.Destroyed; },
+	        get: function () { return this.cdMode === ɵChangeDetectorStatus.Destroyed; },
 	        enumerable: true,
 	        configurable: true
 	    });
@@ -18890,7 +18895,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        this.lastRootNode = lastRootNode;
 	        this.allNodes = allNodes;
 	        this.disposables = disposables;
-	        if (this.type === ViewType.COMPONENT) {
+	        if (this.type === ɵViewType.COMPONENT) {
 	            this.dirtyParentQueriesInternal();
 	        }
 	    };
@@ -18908,7 +18913,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            if (isPresent$1(nodeIndex)) {
 	                result = view.injectorGetInternal(token, nodeIndex, UNDEFINED$1);
 	            }
-	            if (result === UNDEFINED$1 && view.type === ViewType.HOST) {
+	            if (result === UNDEFINED$1 && view.type === ɵViewType.HOST) {
 	                result = view._hostInjector.get(token, notFoundValue);
 	            }
 	            nodeIndex = view.parentIndex;
@@ -18951,10 +18956,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     */
 	    AppView.prototype.destroy = function () {
 	        var _this = this;
-	        if (this.cdMode === ChangeDetectorStatus.Destroyed) {
+	        if (this.cdMode === ɵChangeDetectorStatus.Destroyed) {
 	            return;
 	        }
-	        var /** @type {?} */ hostElement = this.type === ViewType.COMPONENT ? this.parentElement : null;
+	        var /** @type {?} */ hostElement = this.type === ɵViewType.COMPONENT ? this.parentElement : null;
 	        if (this.disposables) {
 	            for (var /** @type {?} */ i = 0; i < this.disposables.length; i++) {
 	                this.disposables[i]();
@@ -18968,7 +18973,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        else {
 	            this.renderer.destroyView(hostElement, this.allNodes);
 	        }
-	        this.cdMode = ChangeDetectorStatus.Destroyed;
+	        this.cdMode = ɵChangeDetectorStatus.Destroyed;
 	    };
 	    /**
 	     * Overwritten by implementations
@@ -19124,11 +19129,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     */
 	    AppView.prototype.visitProjectedNodes = function (ngContentIndex, cb, c) {
 	        switch (this.type) {
-	            case ViewType.EMBEDDED:
+	            case ɵViewType.EMBEDDED:
 	                this.parentView.visitProjectedNodes(ngContentIndex, cb, c);
 	                break;
-	            case ViewType.COMPONENT:
-	                if (this.parentView.type === ViewType.HOST) {
+	            case ɵViewType.COMPONENT:
+	                if (this.parentView.type === ɵViewType.HOST) {
 	                    var /** @type {?} */ nodes = this.parentView._hostProjectableNodes[ngContentIndex] || [];
 	                    for (var /** @type {?} */ i = 0; i < nodes.length; i++) {
 	                        cb(nodes[i], c);
@@ -19166,7 +19171,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @return {?}
 	     */
 	    AppView.prototype.internalDetectChanges = function (throwOnChange) {
-	        if (this.cdMode !== ChangeDetectorStatus.Detached) {
+	        if (this.cdMode !== ɵChangeDetectorStatus.Detached) {
 	            this.detectChanges(throwOnChange);
 	        }
 	    };
@@ -19176,16 +19181,16 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     */
 	    AppView.prototype.detectChanges = function (throwOnChange) {
 	        var /** @type {?} */ s = _scope_check(this.clazz);
-	        if (this.cdMode === ChangeDetectorStatus.Checked ||
-	            this.cdMode === ChangeDetectorStatus.Errored)
+	        if (this.cdMode === ɵChangeDetectorStatus.Checked ||
+	            this.cdMode === ɵChangeDetectorStatus.Errored)
 	            return;
-	        if (this.cdMode === ChangeDetectorStatus.Destroyed) {
+	        if (this.cdMode === ɵChangeDetectorStatus.Destroyed) {
 	            this.throwDestroyedError('detectChanges');
 	        }
 	        this.throwOnChange = throwOnChange;
 	        this.detectChangesInternal();
-	        if (this.cdMode === ChangeDetectorStatus.CheckOnce)
-	            this.cdMode = ChangeDetectorStatus.Checked;
+	        if (this.cdMode === ɵChangeDetectorStatus.CheckOnce)
+	            this.cdMode = ɵChangeDetectorStatus.Checked;
 	        this.numberOfChecks++;
 	        wtfLeave(s);
 	    };
@@ -19197,17 +19202,17 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    /**
 	     * @return {?}
 	     */
-	    AppView.prototype.markAsCheckOnce = function () { this.cdMode = ChangeDetectorStatus.CheckOnce; };
+	    AppView.prototype.markAsCheckOnce = function () { this.cdMode = ɵChangeDetectorStatus.CheckOnce; };
 	    /**
 	     * @return {?}
 	     */
 	    AppView.prototype.markPathToRootAsCheckOnce = function () {
 	        var /** @type {?} */ c = this;
-	        while (isPresent$1(c) && c.cdMode !== ChangeDetectorStatus.Detached) {
-	            if (c.cdMode === ChangeDetectorStatus.Checked) {
-	                c.cdMode = ChangeDetectorStatus.CheckOnce;
+	        while (isPresent$1(c) && c.cdMode !== ɵChangeDetectorStatus.Detached) {
+	            if (c.cdMode === ɵChangeDetectorStatus.Checked) {
+	                c.cdMode = ɵChangeDetectorStatus.CheckOnce;
 	            }
-	            if (c.type === ViewType.COMPONENT) {
+	            if (c.type === ɵViewType.COMPONENT) {
 	                c = c.parentView;
 	            }
 	            else {
@@ -19229,7 +19234,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    AppView.prototype.throwDestroyedError = function (details) { throw viewDestroyedError(details); };
 	    return AppView;
 	}());
-	var DebugAppView = (function (_super) {
+	var ɵDebugAppView = (function (_super) {
 	    __extends$24(DebugAppView, _super);
 	    /**
 	     * @param {?} clazz
@@ -19348,7 +19353,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @return {?}
 	     */
 	    DebugAppView.prototype.debug = function (nodeIndex, rowNum, colNum) {
-	        return this._currentDebugContext = new DebugContext$1(this, nodeIndex, rowNum, colNum);
+	        return this._currentDebugContext = new ɵDebugContext(this, nodeIndex, rowNum, colNum);
 	    };
 	    /**
 	     * @param {?} e
@@ -19357,7 +19362,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    DebugAppView.prototype._rethrowWithContext = function (e) {
 	        if (!(getType(e) == viewWrappedError)) {
 	            if (!(getType(e) == expressionChangedAfterItHasBeenCheckedError)) {
-	                this.cdMode = ChangeDetectorStatus.Errored;
+	                this.cdMode = ɵChangeDetectorStatus.Errored;
 	            }
 	            if (isPresent$1(this._currentDebugContext)) {
 	                throw viewWrappedError(e, this._currentDebugContext);
@@ -19383,13 +19388,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        };
 	    };
 	    return DebugAppView;
-	}(AppView));
+	}(ɵAppView));
 
 	/**
 	 * A ViewContainer is created for elements that have a ViewContainerRef
 	 * to keep track of the nested views.
 	 */
-	var ViewContainer = (function () {
+	var ɵViewContainer = (function () {
 	    /**
 	     * @param {?} index
 	     * @param {?} parentIndex
@@ -19499,7 +19504,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     */
 	    ViewContainer.prototype.moveView = function (view, currentIndex) {
 	        var /** @type {?} */ previousIndex = this.nestedViews.indexOf(view);
-	        if (view.type === ViewType.COMPONENT) {
+	        if (view.type === ɵViewType.COMPONENT) {
 	            throw new Error("Component views can't be moved!");
 	        }
 	        var /** @type {?} */ nestedViews = this.nestedViews;
@@ -19518,7 +19523,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @return {?}
 	     */
 	    ViewContainer.prototype.attachView = function (view, viewIndex) {
-	        if (view.type === ViewType.COMPONENT) {
+	        if (view.type === ɵViewType.COMPONENT) {
 	            throw new Error("Component views can't be moved!");
 	        }
 	        var /** @type {?} */ nestedViews = this.nestedViews;
@@ -19549,7 +19554,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        else {
 	            this.nestedViews.splice(viewIndex, 1);
 	        }
-	        if (view.type === ViewType.COMPONENT) {
+	        if (view.type === ɵViewType.COMPONENT) {
 	            throw new Error("Component views can't be moved!");
 	        }
 	        view.detach();
@@ -19560,54 +19565,54 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 
 	var /** @type {?} */ r = ({
 	    isDefaultChangeDetectionStrategy: isDefaultChangeDetectionStrategy,
-	    ChangeDetectorStatus: ChangeDetectorStatus,
+	    ChangeDetectorStatus: ɵChangeDetectorStatus,
 	    constructDependencies: constructDependencies,
 	    LifecycleHooks: LifecycleHooks,
 	    LIFECYCLE_HOOKS_VALUES: LIFECYCLE_HOOKS_VALUES,
 	    ReflectorReader: ReflectorReader,
-	    CodegenComponentFactoryResolver: CodegenComponentFactoryResolver,
-	    ComponentRef_: ComponentRef_,
-	    ViewContainer: ViewContainer,
-	    AppView: AppView,
-	    DebugAppView: DebugAppView,
-	    NgModuleInjector: NgModuleInjector,
-	    registerModuleFactory: registerModuleFactory,
-	    ViewType: ViewType,
+	    CodegenComponentFactoryResolver: ɵCodegenComponentFactoryResolver,
+	    ComponentRef_: ɵComponentRef_,
+	    ViewContainer: ɵViewContainer,
+	    AppView: ɵAppView,
+	    DebugAppView: ɵDebugAppView,
+	    NgModuleInjector: ɵNgModuleInjector,
+	    registerModuleFactory: ɵregisterModuleFactory,
+	    ViewType: ɵViewType,
 	    view_utils: view_utils,
 	    viewEngine: viewEngine,
 	    ViewMetadata: ViewMetadata,
-	    DebugContext: DebugContext$1,
-	    StaticNodeDebugInfo: StaticNodeDebugInfo,
-	    devModeEqual: devModeEqual,
-	    ValueUnwrapper: ValueUnwrapper,
+	    DebugContext: ɵDebugContext,
+	    StaticNodeDebugInfo: ɵStaticNodeDebugInfo,
+	    devModeEqual: ɵdevModeEqual,
+	    ValueUnwrapper: ɵValueUnwrapper,
 	    RenderDebugInfo: RenderDebugInfo,
-	    TemplateRef_: TemplateRef_,
+	    TemplateRef_: ɵTemplateRef_,
 	    ReflectionCapabilities: ReflectionCapabilities,
 	    makeDecorator: makeDecorator,
 	    DebugDomRootRenderer: DebugDomRootRenderer,
 	    Console: Console,
-	    reflector: reflector,
+	    reflector: ɵreflector,
 	    Reflector: Reflector,
-	    NoOpAnimationPlayer: NoOpAnimationPlayer,
+	    NoOpAnimationPlayer: ɵNoOpAnimationPlayer,
 	    AnimationPlayer: AnimationPlayer_,
-	    AnimationSequencePlayer: AnimationSequencePlayer,
-	    AnimationGroupPlayer: AnimationGroupPlayer,
-	    AnimationKeyframe: AnimationKeyframe,
-	    prepareFinalAnimationStyles: prepareFinalAnimationStyles,
-	    balanceAnimationKeyframes: balanceAnimationKeyframes,
+	    AnimationSequencePlayer: ɵAnimationSequencePlayer,
+	    AnimationGroupPlayer: ɵAnimationGroupPlayer,
+	    AnimationKeyframe: ɵAnimationKeyframe,
+	    prepareFinalAnimationStyles: ɵprepareFinalAnimationStyles,
+	    balanceAnimationKeyframes: ɵbalanceAnimationKeyframes,
 	    flattenStyles: flattenStyles,
-	    clearStyles: clearStyles,
-	    renderStyles: renderStyles,
-	    collectAndResolveStyles: collectAndResolveStyles,
+	    clearStyles: ɵclearStyles,
+	    renderStyles: ɵrenderStyles,
+	    collectAndResolveStyles: ɵcollectAndResolveStyles,
 	    APP_ID_RANDOM_PROVIDER: APP_ID_RANDOM_PROVIDER,
-	    AnimationStyles: AnimationStyles,
+	    AnimationStyles: ɵAnimationStyles,
 	    ANY_STATE: ANY_STATE,
 	    DEFAULT_STATE: DEFAULT_STATE,
 	    EMPTY_STATE: EMPTY_STATE,
 	    FILL_STYLE_FLAG: FILL_STYLE_FLAG,
 	    isPromise: isPromise$1,
 	    isObservable: isObservable,
-	    AnimationTransition: AnimationTransition,
+	    AnimationTransition: ɵAnimationTransition,
 	    ERROR_COMPONENT_TYPE: ERROR_COMPONENT_TYPE,
 	    TransitionEngine: TransitionEngine
 	}) /* TODO(misko): export these using omega names instead */;
@@ -27787,45 +27792,22 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	}());
 
 	var /** @type {?} */ isDefaultChangeDetectionStrategy$1 = r.isDefaultChangeDetectionStrategy;
-	var /** @type {?} */ ChangeDetectorStatus$1 = r.ChangeDetectorStatus;
+	var /** @type {?} */ ChangeDetectorStatus = r.ChangeDetectorStatus;
 	var /** @type {?} */ LifecycleHooks$1 = r.LifecycleHooks;
 	var /** @type {?} */ LIFECYCLE_HOOKS_VALUES$1 = r.LIFECYCLE_HOOKS_VALUES;
 	var /** @type {?} */ ReflectorReader$1 = r.ReflectorReader;
-	var /** @type {?} */ ViewContainer$1 = r.ViewContainer;
-	var /** @type {?} */ CodegenComponentFactoryResolver$1 = r.CodegenComponentFactoryResolver;
-	var /** @type {?} */ ComponentRef_$2 = r.ComponentRef_;
-	var /** @type {?} */ AppView$1 = r.AppView;
-	var /** @type {?} */ DebugAppView$1 = r.DebugAppView;
-	var /** @type {?} */ NgModuleInjector$1 = r.NgModuleInjector;
-	var /** @type {?} */ registerModuleFactory$1 = r.registerModuleFactory;
-	var /** @type {?} */ ViewType$1 = r.ViewType;
+	var /** @type {?} */ ViewType = r.ViewType;
 	var /** @type {?} */ view_utils$1 = r.view_utils;
 	var /** @type {?} */ viewEngine$1 = r.viewEngine;
-	var /** @type {?} */ DebugContext$2 = r.DebugContext;
-	var /** @type {?} */ StaticNodeDebugInfo$1 = r.StaticNodeDebugInfo;
-	var /** @type {?} */ devModeEqual$1 = r.devModeEqual;
-	var /** @type {?} */ ValueUnwrapper$1 = r.ValueUnwrapper;
-	var /** @type {?} */ TemplateRef_$2 = r.TemplateRef_;
 	var /** @type {?} */ Console$1 = r.Console;
-	var /** @type {?} */ reflector$1 = r.reflector;
+	var /** @type {?} */ reflector = r.reflector;
 	var /** @type {?} */ Reflector$1 = r.Reflector;
 	var /** @type {?} */ ReflectionCapabilities$1 = r.ReflectionCapabilities;
-	var /** @type {?} */ NoOpAnimationPlayer$1 = r.NoOpAnimationPlayer;
-	var /** @type {?} */ AnimationSequencePlayer$1 = r.AnimationSequencePlayer;
-	var /** @type {?} */ AnimationGroupPlayer$1 = r.AnimationGroupPlayer;
-	var /** @type {?} */ AnimationKeyframe$1 = r.AnimationKeyframe;
-	var /** @type {?} */ AnimationStyles$1 = r.AnimationStyles;
 	var /** @type {?} */ ANY_STATE$1 = r.ANY_STATE;
 	var /** @type {?} */ DEFAULT_STATE$1 = r.DEFAULT_STATE;
 	var /** @type {?} */ EMPTY_STATE$1 = r.EMPTY_STATE;
 	var /** @type {?} */ ERROR_COMPONENT_TYPE$1 = r.ERROR_COMPONENT_TYPE;
 	var /** @type {?} */ FILL_STYLE_FLAG$1 = r.FILL_STYLE_FLAG;
-	var /** @type {?} */ prepareFinalAnimationStyles$1 = r.prepareFinalAnimationStyles;
-	var /** @type {?} */ balanceAnimationKeyframes$1 = r.balanceAnimationKeyframes;
-	var /** @type {?} */ clearStyles$1 = r.clearStyles;
-	var /** @type {?} */ collectAndResolveStyles$1 = r.collectAndResolveStyles;
-	var /** @type {?} */ renderStyles$1 = r.renderStyles;
-	var /** @type {?} */ AnimationTransition$1 = r.AnimationTransition;
 
 	var /** @type {?} */ _SELECTOR_REGEXP = new RegExp('(\\:not\\()|' +
 	    '([-\\w]+)|' +
@@ -28435,7 +28417,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    if (ref instanceof StaticSymbol) {
 	        return ref.filePath;
 	    }
-	    return reflector$1.importUri(ref);
+	    return reflector.importUri(ref);
 	}
 	/**
 	 * @param {?} compType
@@ -28871,11 +28853,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return ProviderMeta;
 	}());
 
-	var /** @type {?} */ APP_VIEW_MODULE_URL = assetUrl('core', 'linker/view');
+	var /** @type {?} */ CORE = assetUrl('core');
 	var /** @type {?} */ VIEW_UTILS_MODULE_URL = assetUrl('core', 'linker/view_utils');
-	var /** @type {?} */ VIEW_ENGINE_MODULE_URL = assetUrl('core', 'view/index');
-	var /** @type {?} */ CD_MODULE_URL = assetUrl('core', 'change_detection/change_detection');
-	var /** @type {?} */ ANIMATION_STYLE_UTIL_ASSET_URL = assetUrl('core', 'animation/animation_style_util');
 	var Identifiers = (function () {
 	    function Identifiers() {
 	    }
@@ -28883,400 +28862,322 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	}());
 	Identifiers.ANALYZE_FOR_ENTRY_COMPONENTS = {
 	    name: 'ANALYZE_FOR_ENTRY_COMPONENTS',
-	    moduleUrl: assetUrl('core', 'metadata/di'),
+	    moduleUrl: CORE,
 	    runtime: ANALYZE_FOR_ENTRY_COMPONENTS
 	};
-	Identifiers.ViewUtils = {
-	    name: 'ViewUtils',
-	    moduleUrl: assetUrl('core', 'linker/view_utils'),
-	    runtime: view_utils$1.ViewUtils
-	};
-	Identifiers.AppView = { name: 'AppView', moduleUrl: APP_VIEW_MODULE_URL, runtime: AppView$1 };
-	Identifiers.DebugAppView = {
-	    name: 'DebugAppView',
-	    moduleUrl: APP_VIEW_MODULE_URL,
-	    runtime: DebugAppView$1
-	};
-	Identifiers.ViewContainer = {
-	    name: 'ViewContainer',
-	    moduleUrl: assetUrl('core', 'linker/view_container'),
-	    runtime: ViewContainer$1
-	};
-	Identifiers.ElementRef = {
-	    name: 'ElementRef',
-	    moduleUrl: assetUrl('core', 'linker/element_ref'),
-	    runtime: ElementRef
-	};
-	Identifiers.ViewContainerRef = {
-	    name: 'ViewContainerRef',
-	    moduleUrl: assetUrl('core', 'linker/view_container_ref'),
-	    runtime: ViewContainerRef
-	};
-	Identifiers.ChangeDetectorRef = {
-	    name: 'ChangeDetectorRef',
-	    moduleUrl: assetUrl('core', 'change_detection/change_detector_ref'),
-	    runtime: ChangeDetectorRef
-	};
-	Identifiers.RenderComponentType = {
-	    name: 'RenderComponentType',
-	    moduleUrl: assetUrl('core', 'render/api'),
-	    runtime: RenderComponentType
-	};
-	Identifiers.QueryList = {
-	    name: 'QueryList',
-	    moduleUrl: assetUrl('core', 'linker/query_list'),
-	    runtime: QueryList
-	};
-	Identifiers.TemplateRef = {
-	    name: 'TemplateRef',
-	    moduleUrl: assetUrl('core', 'linker/template_ref'),
-	    runtime: TemplateRef
-	};
-	Identifiers.TemplateRef_ = {
-	    name: 'TemplateRef_',
-	    moduleUrl: assetUrl('core', 'linker/template_ref'),
-	    runtime: TemplateRef_$2
-	};
+	Identifiers.ViewUtils = { name: 'ɵview_utils', moduleUrl: CORE, member: 'ViewUtils', runtime: ViewUtils };
+	Identifiers.AppView = { name: 'ɵAppView', moduleUrl: CORE, runtime: ɵAppView };
+	Identifiers.DebugAppView = { name: 'ɵDebugAppView', moduleUrl: CORE, runtime: ɵDebugAppView };
+	Identifiers.ViewContainer = { name: 'ɵViewContainer', moduleUrl: CORE, runtime: ɵViewContainer };
+	Identifiers.ElementRef = { name: 'ElementRef', moduleUrl: CORE, runtime: ElementRef };
+	Identifiers.ViewContainerRef = { name: 'ViewContainerRef', moduleUrl: CORE, runtime: ViewContainerRef };
+	Identifiers.ChangeDetectorRef = { name: 'ChangeDetectorRef', moduleUrl: CORE, runtime: ChangeDetectorRef };
+	Identifiers.RenderComponentType = { name: 'RenderComponentType', moduleUrl: CORE, runtime: RenderComponentType };
+	Identifiers.QueryList = { name: 'QueryList', moduleUrl: CORE, runtime: QueryList };
+	Identifiers.TemplateRef = { name: 'TemplateRef', moduleUrl: CORE, runtime: TemplateRef };
+	Identifiers.TemplateRef_ = { name: 'ɵTemplateRef_', moduleUrl: CORE, runtime: ɵTemplateRef_ };
 	Identifiers.CodegenComponentFactoryResolver = {
-	    name: 'CodegenComponentFactoryResolver',
-	    moduleUrl: assetUrl('core', 'linker/component_factory_resolver'),
-	    runtime: CodegenComponentFactoryResolver$1
+	    name: 'ɵCodegenComponentFactoryResolver',
+	    moduleUrl: CORE,
+	    runtime: ɵCodegenComponentFactoryResolver
 	};
 	Identifiers.ComponentFactoryResolver = {
 	    name: 'ComponentFactoryResolver',
-	    moduleUrl: assetUrl('core', 'linker/component_factory_resolver'),
+	    moduleUrl: CORE,
 	    runtime: ComponentFactoryResolver
 	};
-	Identifiers.ComponentFactory = {
-	    name: 'ComponentFactory',
-	    runtime: ComponentFactory,
-	    moduleUrl: assetUrl('core', 'linker/component_factory')
-	};
+	Identifiers.ComponentFactory = { name: 'ComponentFactory', moduleUrl: CORE, runtime: ComponentFactory };
 	Identifiers.ComponentRef_ = {
-	    name: 'ComponentRef_',
-	    runtime: ComponentRef_$2,
-	    moduleUrl: assetUrl('core', 'linker/component_factory')
+	    name: 'ɵComponentRef_',
+	    moduleUrl: CORE,
+	    runtime: ɵComponentRef_,
 	};
-	Identifiers.ComponentRef = {
-	    name: 'ComponentRef',
-	    runtime: ComponentRef,
-	    moduleUrl: assetUrl('core', 'linker/component_factory')
-	};
-	Identifiers.NgModuleFactory = {
-	    name: 'NgModuleFactory',
-	    runtime: NgModuleFactory,
-	    moduleUrl: assetUrl('core', 'linker/ng_module_factory')
-	};
+	Identifiers.ComponentRef = { name: 'ComponentRef', moduleUrl: CORE, runtime: ComponentRef };
+	Identifiers.NgModuleFactory = { name: 'NgModuleFactory', moduleUrl: CORE, runtime: NgModuleFactory };
 	Identifiers.NgModuleInjector = {
-	    name: 'NgModuleInjector',
-	    runtime: NgModuleInjector$1,
-	    moduleUrl: assetUrl('core', 'linker/ng_module_factory')
+	    name: 'ɵNgModuleInjector',
+	    moduleUrl: CORE,
+	    runtime: ɵNgModuleInjector,
 	};
 	Identifiers.RegisterModuleFactoryFn = {
-	    name: 'registerModuleFactory',
-	    runtime: registerModuleFactory$1,
-	    moduleUrl: assetUrl('core', 'linker/ng_module_factory_loader')
+	    name: 'ɵregisterModuleFactory',
+	    moduleUrl: CORE,
+	    runtime: ɵregisterModuleFactory,
 	};
-	Identifiers.ValueUnwrapper = { name: 'ValueUnwrapper', moduleUrl: CD_MODULE_URL, runtime: ValueUnwrapper$1 };
-	Identifiers.Injector = {
-	    name: 'Injector',
-	    moduleUrl: assetUrl('core', 'di/injector'),
-	    runtime: Injector
-	};
-	Identifiers.ViewEncapsulation = {
-	    name: 'ViewEncapsulation',
-	    moduleUrl: assetUrl('core', 'metadata/view'),
-	    runtime: ViewEncapsulation
-	};
-	Identifiers.ViewType = {
-	    name: 'ViewType',
-	    moduleUrl: assetUrl('core', 'linker/view_type'),
-	    runtime: ViewType$1
-	};
+	Identifiers.ValueUnwrapper = { name: 'ɵValueUnwrapper', moduleUrl: CORE, runtime: ɵValueUnwrapper };
+	Identifiers.Injector = { name: 'Injector', moduleUrl: CORE, runtime: Injector };
+	Identifiers.ViewEncapsulation = { name: 'ViewEncapsulation', moduleUrl: CORE, runtime: ViewEncapsulation };
+	Identifiers.ViewType = { name: 'ɵViewType', moduleUrl: CORE, runtime: ɵViewType };
 	Identifiers.ChangeDetectionStrategy = {
 	    name: 'ChangeDetectionStrategy',
-	    moduleUrl: CD_MODULE_URL,
+	    moduleUrl: CORE,
 	    runtime: ChangeDetectionStrategy
 	};
 	Identifiers.StaticNodeDebugInfo = {
-	    name: 'StaticNodeDebugInfo',
-	    moduleUrl: assetUrl('core', 'linker/debug_context'),
-	    runtime: StaticNodeDebugInfo$1
+	    name: 'ɵStaticNodeDebugInfo',
+	    moduleUrl: CORE,
+	    runtime: ɵStaticNodeDebugInfo
 	};
-	Identifiers.DebugContext = {
-	    name: 'DebugContext',
-	    moduleUrl: assetUrl('core', 'linker/debug_context'),
-	    runtime: DebugContext$2
-	};
-	Identifiers.Renderer = {
-	    name: 'Renderer',
-	    moduleUrl: assetUrl('core', 'render/api'),
-	    runtime: Renderer
-	};
-	Identifiers.SimpleChange = { name: 'SimpleChange', moduleUrl: CD_MODULE_URL, runtime: SimpleChange };
+	Identifiers.DebugContext = { name: 'ɵDebugContext', moduleUrl: CORE, runtime: ɵDebugContext };
+	Identifiers.Renderer = { name: 'Renderer', moduleUrl: CORE, runtime: Renderer };
+	Identifiers.SimpleChange = { name: 'SimpleChange', moduleUrl: CORE, runtime: SimpleChange };
 	Identifiers.ChangeDetectorStatus = {
-	    name: 'ChangeDetectorStatus',
-	    moduleUrl: CD_MODULE_URL,
-	    runtime: ChangeDetectorStatus$1
+	    name: 'ɵChangeDetectorStatus',
+	    moduleUrl: CORE,
+	    runtime: ɵChangeDetectorStatus
 	};
 	Identifiers.checkBinding = {
-	    name: 'checkBinding',
-	    moduleUrl: VIEW_UTILS_MODULE_URL,
-	    runtime: view_utils$1.checkBinding
+	    name: 'ɵview_utils',
+	    moduleUrl: CORE,
+	    member: 'checkBinding',
+	    runtime: checkBinding
 	};
 	Identifiers.checkBindingChange = {
-	    name: 'checkBindingChange',
-	    moduleUrl: VIEW_UTILS_MODULE_URL,
-	    runtime: view_utils$1.checkBindingChange
+	    name: 'ɵview_utils',
+	    moduleUrl: CORE,
+	    member: 'checkBindingChange',
+	    runtime: checkBindingChange
 	};
 	Identifiers.checkRenderText = {
-	    name: 'checkRenderText',
-	    moduleUrl: VIEW_UTILS_MODULE_URL,
-	    runtime: view_utils$1.checkRenderText
+	    name: 'ɵview_utils',
+	    moduleUrl: CORE,
+	    member: 'checkRenderText',
+	    runtime: checkRenderText
 	};
 	Identifiers.checkRenderProperty = {
-	    name: 'checkRenderProperty',
-	    moduleUrl: VIEW_UTILS_MODULE_URL,
-	    runtime: view_utils$1.checkRenderProperty
+	    name: 'ɵview_utils',
+	    moduleUrl: CORE,
+	    member: 'checkRenderProperty',
+	    runtime: checkRenderProperty
 	};
 	Identifiers.checkRenderAttribute = {
-	    name: 'checkRenderAttribute',
-	    moduleUrl: VIEW_UTILS_MODULE_URL,
-	    runtime: view_utils$1.checkRenderAttribute
+	    name: 'ɵview_utils',
+	    moduleUrl: CORE,
+	    member: 'checkRenderAttribute',
+	    runtime: checkRenderAttribute
 	};
 	Identifiers.checkRenderClass = {
-	    name: 'checkRenderClass',
-	    moduleUrl: VIEW_UTILS_MODULE_URL,
-	    runtime: view_utils$1.checkRenderClass
+	    name: 'ɵview_utils',
+	    moduleUrl: CORE,
+	    member: 'checkRenderClass',
+	    runtime: checkRenderClass
 	};
 	Identifiers.checkRenderStyle = {
-	    name: 'checkRenderStyle',
-	    moduleUrl: VIEW_UTILS_MODULE_URL,
-	    runtime: view_utils$1.checkRenderStyle
+	    name: 'ɵview_utils',
+	    moduleUrl: CORE,
+	    member: 'checkRenderStyle',
+	    runtime: checkRenderStyle
 	};
-	Identifiers.devModeEqual = { name: 'devModeEqual', moduleUrl: CD_MODULE_URL, runtime: devModeEqual$1 };
+	Identifiers.devModeEqual = { name: 'ɵdevModeEqual', moduleUrl: CORE, runtime: ɵdevModeEqual };
 	Identifiers.inlineInterpolate = {
-	    name: 'inlineInterpolate',
-	    moduleUrl: VIEW_UTILS_MODULE_URL,
-	    runtime: view_utils$1.inlineInterpolate
+	    name: 'ɵview_utils',
+	    moduleUrl: CORE,
+	    member: 'inlineInterpolate',
+	    runtime: inlineInterpolate
 	};
 	Identifiers.interpolate = {
-	    name: 'interpolate',
-	    moduleUrl: VIEW_UTILS_MODULE_URL,
-	    runtime: view_utils$1.interpolate
+	    name: 'ɵview_utils',
+	    moduleUrl: CORE,
+	    member: 'interpolate',
+	    runtime: interpolate
 	};
 	Identifiers.castByValue = {
-	    name: 'castByValue',
-	    moduleUrl: VIEW_UTILS_MODULE_URL,
-	    runtime: view_utils$1.castByValue
+	    name: 'ɵview_utils',
+	    moduleUrl: CORE,
+	    member: 'castByValue',
+	    runtime: castByValue
 	};
 	Identifiers.EMPTY_ARRAY = {
-	    name: 'EMPTY_ARRAY',
-	    moduleUrl: VIEW_UTILS_MODULE_URL,
-	    runtime: view_utils$1.EMPTY_ARRAY
+	    name: 'ɵview_utils',
+	    moduleUrl: CORE,
+	    member: 'EMPTY_ARRAY',
+	    runtime: EMPTY_ARRAY
 	};
-	Identifiers.EMPTY_MAP = {
-	    name: 'EMPTY_MAP',
-	    moduleUrl: VIEW_UTILS_MODULE_URL,
-	    runtime: view_utils$1.EMPTY_MAP
-	};
+	Identifiers.EMPTY_MAP = { name: 'ɵview_utils', moduleUrl: CORE, member: 'EMPTY_MAP', runtime: EMPTY_MAP };
 	Identifiers.createRenderElement = {
-	    name: 'createRenderElement',
-	    moduleUrl: VIEW_UTILS_MODULE_URL,
-	    runtime: view_utils$1.createRenderElement
+	    name: 'ɵview_utils',
+	    moduleUrl: CORE,
+	    member: 'createRenderElement',
+	    runtime: createRenderElement
 	};
 	Identifiers.selectOrCreateRenderHostElement = {
-	    name: 'selectOrCreateRenderHostElement',
-	    moduleUrl: VIEW_UTILS_MODULE_URL,
-	    runtime: view_utils$1.selectOrCreateRenderHostElement
+	    name: 'ɵview_utils',
+	    moduleUrl: CORE,
+	    member: 'selectOrCreateRenderHostElement',
+	    runtime: selectOrCreateRenderHostElement
 	};
 	Identifiers.pureProxies = [
 	    null,
-	    { name: 'pureProxy1', moduleUrl: VIEW_UTILS_MODULE_URL, runtime: view_utils$1.pureProxy1 },
-	    { name: 'pureProxy2', moduleUrl: VIEW_UTILS_MODULE_URL, runtime: view_utils$1.pureProxy2 },
-	    { name: 'pureProxy3', moduleUrl: VIEW_UTILS_MODULE_URL, runtime: view_utils$1.pureProxy3 },
-	    { name: 'pureProxy4', moduleUrl: VIEW_UTILS_MODULE_URL, runtime: view_utils$1.pureProxy4 },
-	    { name: 'pureProxy5', moduleUrl: VIEW_UTILS_MODULE_URL, runtime: view_utils$1.pureProxy5 },
-	    { name: 'pureProxy6', moduleUrl: VIEW_UTILS_MODULE_URL, runtime: view_utils$1.pureProxy6 },
-	    { name: 'pureProxy7', moduleUrl: VIEW_UTILS_MODULE_URL, runtime: view_utils$1.pureProxy7 },
-	    { name: 'pureProxy8', moduleUrl: VIEW_UTILS_MODULE_URL, runtime: view_utils$1.pureProxy8 },
-	    { name: 'pureProxy9', moduleUrl: VIEW_UTILS_MODULE_URL, runtime: view_utils$1.pureProxy9 },
-	    { name: 'pureProxy10', moduleUrl: VIEW_UTILS_MODULE_URL, runtime: view_utils$1.pureProxy10 },
+	    { name: 'ɵview_utils', moduleUrl: CORE, member: 'pureProxy1', runtime: pureProxy1 },
+	    { name: 'ɵview_utils', moduleUrl: CORE, member: 'pureProxy2', runtime: pureProxy2 },
+	    { name: 'ɵview_utils', moduleUrl: CORE, member: 'pureProxy3', runtime: pureProxy3 },
+	    { name: 'ɵview_utils', moduleUrl: CORE, member: 'pureProxy4', runtime: pureProxy4 },
+	    { name: 'ɵview_utils', moduleUrl: CORE, member: 'pureProxy5', runtime: pureProxy5 },
+	    { name: 'ɵview_utils', moduleUrl: CORE, member: 'pureProxy6', runtime: pureProxy6 },
+	    { name: 'ɵview_utils', moduleUrl: CORE, member: 'pureProxy7', runtime: pureProxy7 },
+	    { name: 'ɵview_utils', moduleUrl: CORE, member: 'pureProxy8', runtime: pureProxy8 },
+	    { name: 'ɵview_utils', moduleUrl: CORE, member: 'pureProxy9', runtime: pureProxy9 },
+	    { name: 'ɵview_utils', moduleUrl: CORE, member: 'pureProxy10', runtime: pureProxy10 },
 	];
 	Identifiers.SecurityContext = {
 	    name: 'SecurityContext',
-	    moduleUrl: assetUrl('core', 'security'),
+	    moduleUrl: CORE,
 	    runtime: SecurityContext,
 	};
-	Identifiers.AnimationKeyframe = {
-	    name: 'AnimationKeyframe',
-	    moduleUrl: assetUrl('core', 'animation/animation_keyframe'),
-	    runtime: AnimationKeyframe$1
-	};
-	Identifiers.AnimationStyles = {
-	    name: 'AnimationStyles',
-	    moduleUrl: assetUrl('core', 'animation/animation_styles'),
-	    runtime: AnimationStyles$1
-	};
+	Identifiers.AnimationKeyframe = { name: 'ɵAnimationKeyframe', moduleUrl: CORE, runtime: ɵAnimationKeyframe };
+	Identifiers.AnimationStyles = { name: 'ɵAnimationStyles', moduleUrl: CORE, runtime: ɵAnimationStyles };
 	Identifiers.NoOpAnimationPlayer = {
-	    name: 'NoOpAnimationPlayer',
-	    moduleUrl: assetUrl('core', 'animation/animation_player'),
-	    runtime: NoOpAnimationPlayer$1
+	    name: 'ɵNoOpAnimationPlayer',
+	    moduleUrl: CORE,
+	    runtime: ɵNoOpAnimationPlayer
 	};
 	Identifiers.AnimationGroupPlayer = {
-	    name: 'AnimationGroupPlayer',
-	    moduleUrl: assetUrl('core', 'animation/animation_group_player'),
-	    runtime: AnimationGroupPlayer$1
+	    name: 'ɵAnimationGroupPlayer',
+	    moduleUrl: CORE,
+	    runtime: ɵAnimationGroupPlayer
 	};
 	Identifiers.AnimationSequencePlayer = {
-	    name: 'AnimationSequencePlayer',
-	    moduleUrl: assetUrl('core', 'animation/animation_sequence_player'),
-	    runtime: AnimationSequencePlayer$1
+	    name: 'ɵAnimationSequencePlayer',
+	    moduleUrl: CORE,
+	    runtime: ɵAnimationSequencePlayer
 	};
 	Identifiers.prepareFinalAnimationStyles = {
-	    name: 'prepareFinalAnimationStyles',
-	    moduleUrl: ANIMATION_STYLE_UTIL_ASSET_URL,
-	    runtime: prepareFinalAnimationStyles$1
+	    name: 'ɵprepareFinalAnimationStyles',
+	    moduleUrl: CORE,
+	    runtime: ɵprepareFinalAnimationStyles
 	};
 	Identifiers.balanceAnimationKeyframes = {
-	    name: 'balanceAnimationKeyframes',
-	    moduleUrl: ANIMATION_STYLE_UTIL_ASSET_URL,
-	    runtime: balanceAnimationKeyframes$1
+	    name: 'ɵbalanceAnimationKeyframes',
+	    moduleUrl: CORE,
+	    runtime: ɵbalanceAnimationKeyframes
 	};
-	Identifiers.clearStyles = {
-	    name: 'clearStyles',
-	    moduleUrl: ANIMATION_STYLE_UTIL_ASSET_URL,
-	    runtime: clearStyles$1
-	};
-	Identifiers.renderStyles = {
-	    name: 'renderStyles',
-	    moduleUrl: ANIMATION_STYLE_UTIL_ASSET_URL,
-	    runtime: renderStyles$1
-	};
+	Identifiers.clearStyles = { name: 'ɵclearStyles', moduleUrl: CORE, runtime: ɵclearStyles };
+	Identifiers.renderStyles = { name: 'ɵrenderStyles', moduleUrl: CORE, runtime: ɵrenderStyles };
 	Identifiers.collectAndResolveStyles = {
-	    name: 'collectAndResolveStyles',
-	    moduleUrl: ANIMATION_STYLE_UTIL_ASSET_URL,
-	    runtime: collectAndResolveStyles$1
+	    name: 'ɵcollectAndResolveStyles',
+	    moduleUrl: CORE,
+	    runtime: ɵcollectAndResolveStyles
 	};
-	Identifiers.LOCALE_ID = {
-	    name: 'LOCALE_ID',
-	    moduleUrl: assetUrl('core', 'i18n/tokens'),
-	    runtime: LOCALE_ID
-	};
-	Identifiers.TRANSLATIONS_FORMAT = {
-	    name: 'TRANSLATIONS_FORMAT',
-	    moduleUrl: assetUrl('core', 'i18n/tokens'),
-	    runtime: TRANSLATIONS_FORMAT
-	};
+	Identifiers.LOCALE_ID = { name: 'LOCALE_ID', moduleUrl: CORE, runtime: LOCALE_ID };
+	Identifiers.TRANSLATIONS_FORMAT = { name: 'TRANSLATIONS_FORMAT', moduleUrl: CORE, runtime: TRANSLATIONS_FORMAT };
 	Identifiers.setBindingDebugInfo = {
-	    name: 'setBindingDebugInfo',
-	    moduleUrl: VIEW_UTILS_MODULE_URL,
-	    runtime: view_utils$1.setBindingDebugInfo
+	    name: 'ɵview_utils',
+	    moduleUrl: CORE,
+	    member: 'setBindingDebugInfo',
+	    runtime: setBindingDebugInfo
 	};
 	Identifiers.setBindingDebugInfoForChanges = {
-	    name: 'setBindingDebugInfoForChanges',
-	    moduleUrl: VIEW_UTILS_MODULE_URL,
-	    runtime: view_utils$1.setBindingDebugInfoForChanges
+	    name: 'ɵview_utils',
+	    moduleUrl: CORE,
+	    member: 'setBindingDebugInfoForChanges',
+	    runtime: setBindingDebugInfoForChanges
 	};
 	Identifiers.AnimationTransition = {
-	    name: 'AnimationTransition',
-	    moduleUrl: assetUrl('core', 'animation/animation_transition'),
-	    runtime: AnimationTransition$1
+	    name: 'ɵAnimationTransition',
+	    moduleUrl: CORE,
+	    runtime: ɵAnimationTransition
 	};
 	// This is just the interface!
 	Identifiers.InlineArray = { name: 'InlineArray', moduleUrl: VIEW_UTILS_MODULE_URL, runtime: null };
 	Identifiers.inlineArrays = [
-	    { name: 'InlineArray2', moduleUrl: VIEW_UTILS_MODULE_URL, runtime: view_utils$1.InlineArray2 },
-	    { name: 'InlineArray2', moduleUrl: VIEW_UTILS_MODULE_URL, runtime: view_utils$1.InlineArray2 },
-	    { name: 'InlineArray4', moduleUrl: VIEW_UTILS_MODULE_URL, runtime: view_utils$1.InlineArray4 },
-	    { name: 'InlineArray8', moduleUrl: VIEW_UTILS_MODULE_URL, runtime: view_utils$1.InlineArray8 },
-	    { name: 'InlineArray16', moduleUrl: VIEW_UTILS_MODULE_URL, runtime: view_utils$1.InlineArray16 },
+	    {
+	        name: 'ɵview_utils',
+	        moduleUrl: CORE,
+	        member: 'InlineArray2',
+	        runtime: InlineArray2
+	    },
+	    {
+	        name: 'ɵview_utils',
+	        moduleUrl: CORE,
+	        member: 'InlineArray2',
+	        runtime: InlineArray2
+	    },
+	    {
+	        name: 'ɵview_utils',
+	        moduleUrl: CORE,
+	        member: 'InlineArray4',
+	        runtime: InlineArray4
+	    },
+	    {
+	        name: 'ɵview_utils',
+	        moduleUrl: CORE,
+	        member: 'InlineArray8',
+	        runtime: InlineArray8
+	    },
+	    {
+	        name: 'ɵview_utils',
+	        moduleUrl: CORE,
+	        member: 'InlineArray16',
+	        runtime: InlineArray16
+	    },
 	];
 	Identifiers.EMPTY_INLINE_ARRAY = {
-	    name: 'EMPTY_INLINE_ARRAY',
-	    moduleUrl: VIEW_UTILS_MODULE_URL,
-	    runtime: view_utils$1.EMPTY_INLINE_ARRAY
+	    name: 'ɵview_utils',
+	    moduleUrl: CORE,
+	    member: 'EMPTY_INLINE_ARRAY',
+	    runtime: EMPTY_INLINE_ARRAY
 	};
 	Identifiers.InlineArrayDynamic = {
-	    name: 'InlineArrayDynamic',
-	    moduleUrl: VIEW_UTILS_MODULE_URL,
-	    runtime: view_utils$1.InlineArrayDynamic
+	    name: 'ɵview_utils',
+	    moduleUrl: CORE,
+	    member: 'InlineArrayDynamic',
+	    runtime: InlineArrayDynamic
 	};
 	Identifiers.subscribeToRenderElement = {
-	    name: 'subscribeToRenderElement',
-	    moduleUrl: VIEW_UTILS_MODULE_URL,
-	    runtime: view_utils$1.subscribeToRenderElement
+	    name: 'ɵview_utils',
+	    moduleUrl: CORE,
+	    member: 'subscribeToRenderElement',
+	    runtime: subscribeToRenderElement
 	};
 	Identifiers.createRenderComponentType = {
-	    name: 'createRenderComponentType',
-	    moduleUrl: VIEW_UTILS_MODULE_URL,
-	    runtime: view_utils$1.createRenderComponentType
+	    name: 'ɵview_utils',
+	    moduleUrl: CORE,
+	    member: 'createRenderComponentType',
+	    runtime: createRenderComponentType
 	};
-	Identifiers.noop = { name: 'noop', moduleUrl: VIEW_UTILS_MODULE_URL, runtime: view_utils$1.noop };
-	Identifiers.viewDef = {
-	    name: 'viewDef',
-	    moduleUrl: VIEW_ENGINE_MODULE_URL,
-	    runtime: viewEngine$1.viewDef
-	};
-	Identifiers.elementDef = {
-	    name: 'elementDef',
-	    moduleUrl: VIEW_ENGINE_MODULE_URL,
-	    runtime: viewEngine$1.elementDef
-	};
-	Identifiers.anchorDef = {
-	    name: 'anchorDef',
-	    moduleUrl: VIEW_ENGINE_MODULE_URL,
-	    runtime: viewEngine$1.anchorDef
-	};
-	Identifiers.textDef = {
-	    name: 'textDef',
-	    moduleUrl: VIEW_ENGINE_MODULE_URL,
-	    runtime: viewEngine$1.textDef
-	};
+	Identifiers.noop = { name: 'ɵview_utils', moduleUrl: CORE, member: 'noop', runtime: noop };
+	Identifiers.viewDef = { name: 'ɵviewEngine', moduleUrl: CORE, member: 'viewDef', runtime: viewDef };
+	Identifiers.elementDef = { name: 'ɵviewEngine', moduleUrl: CORE, member: 'elementDef', runtime: elementDef };
+	Identifiers.anchorDef = { name: 'ɵviewEngine', moduleUrl: CORE, member: 'anchorDef', runtime: anchorDef };
+	Identifiers.textDef = { name: 'ɵviewEngine', moduleUrl: CORE, member: 'textDef', runtime: textDef };
 	Identifiers.directiveDef = {
-	    name: 'directiveDef',
-	    moduleUrl: VIEW_ENGINE_MODULE_URL,
-	    runtime: viewEngine$1.directiveDef
+	    name: 'ɵviewEngine',
+	    moduleUrl: CORE,
+	    member: 'directiveDef',
+	    runtime: directiveDef
 	};
 	Identifiers.providerDef = {
-	    name: 'providerDef',
-	    moduleUrl: VIEW_ENGINE_MODULE_URL,
-	    runtime: viewEngine$1.providerDef
+	    name: 'ɵviewEngine',
+	    moduleUrl: CORE,
+	    member: 'providerDef',
+	    runtime: providerDef
 	};
-	Identifiers.queryDef = {
-	    name: 'queryDef',
-	    moduleUrl: VIEW_ENGINE_MODULE_URL,
-	    runtime: viewEngine$1.queryDef
-	};
+	Identifiers.queryDef = { name: 'ɵviewEngine', moduleUrl: CORE, member: 'queryDef', runtime: queryDef };
 	Identifiers.pureArrayDef = {
-	    name: 'pureArrayDef',
-	    moduleUrl: VIEW_ENGINE_MODULE_URL,
-	    runtime: viewEngine$1.pureArrayDef
+	    name: 'ɵviewEngine',
+	    moduleUrl: CORE,
+	    member: 'pureArrayDef',
+	    runtime: pureArrayDef
 	};
 	Identifiers.pureObjectDef = {
-	    name: 'pureObjectDef',
-	    moduleUrl: VIEW_ENGINE_MODULE_URL,
-	    runtime: viewEngine$1.pureObjectDef
+	    name: 'ɵviewEngine',
+	    moduleUrl: CORE,
+	    member: 'pureObjectDef',
+	    runtime: pureObjectDef
 	};
 	Identifiers.purePipeDef = {
-	    name: 'purePipeDef',
-	    moduleUrl: VIEW_ENGINE_MODULE_URL,
-	    runtime: viewEngine$1.purePipeDef
+	    name: 'ɵviewEngine',
+	    moduleUrl: CORE,
+	    member: 'purePipeDef',
+	    runtime: purePipeDef
 	};
-	Identifiers.pipeDef = {
-	    name: 'pipeDef',
-	    moduleUrl: VIEW_ENGINE_MODULE_URL,
-	    runtime: viewEngine$1.pipeDef
-	};
-	Identifiers.nodeValue = {
-	    name: 'nodeValue',
-	    moduleUrl: VIEW_ENGINE_MODULE_URL,
-	    runtime: viewEngine$1.nodeValue
-	};
+	Identifiers.pipeDef = { name: 'ɵviewEngine', moduleUrl: CORE, member: 'pipeDef', runtime: pipeDef };
+	Identifiers.nodeValue = { name: 'ɵviewEngine', moduleUrl: CORE, member: 'nodeValue', runtime: nodeValue };
 	Identifiers.unwrapValue = {
-	    name: 'unwrapValue',
-	    moduleUrl: VIEW_ENGINE_MODULE_URL,
-	    runtime: viewEngine$1.unwrapValue
+	    name: 'ɵviewEngine',
+	    moduleUrl: CORE,
+	    member: 'unwrapValue',
+	    runtime: unwrapValue
 	};
 	/**
 	 * @param {?} pkg
@@ -29288,7 +29189,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    if (path === void 0) { path = null; }
 	    if (type === void 0) { type = 'src'; }
 	    if (path == null) {
-	        return "@angular/" + pkg + "/index";
+	        return "@angular/" + pkg;
 	    }
 	    else {
 	        return "@angular/" + pkg + "/" + type + "/" + path;
@@ -29299,15 +29200,16 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @return {?}
 	 */
 	function resolveIdentifier(identifier) {
-	    return reflector$1.resolveIdentifier(identifier.name, identifier.moduleUrl, identifier.runtime);
+	    var /** @type {?} */ name = identifier.name;
+	    var /** @type {?} */ members = identifier.member && [identifier.member];
+	    return ɵreflector.resolveIdentifier(name, identifier.moduleUrl, members, identifier.runtime);
 	}
 	/**
 	 * @param {?} identifier
 	 * @return {?}
 	 */
 	function createIdentifier(identifier) {
-	    var /** @type {?} */ reference = reflector$1.resolveIdentifier(identifier.name, identifier.moduleUrl, identifier.runtime);
-	    return { reference: reference };
+	    return { reference: resolveIdentifier(identifier) };
 	}
 	/**
 	 * @param {?} identifier
@@ -29329,7 +29231,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @return {?}
 	 */
 	function createEnumIdentifier(enumType, name) {
-	    var /** @type {?} */ resolvedEnum = reflector$1.resolveEnum(resolveIdentifier(enumType), name);
+	    var /** @type {?} */ resolvedEnum = ɵreflector.resolveEnum(resolveIdentifier(enumType), name);
 	    return { reference: resolvedEnum };
 	}
 
@@ -32223,7 +32125,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.7-e4e9dbe');
+	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.7-269cf42');
 
 	/**
 	 * Temporal switch for the compiler to use the new view engine,
@@ -33934,7 +33836,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @param {?=} _reflector
 	     */
 	    function DirectiveResolver(_reflector) {
-	        if (_reflector === void 0) { _reflector = reflector$1; }
+	        if (_reflector === void 0) { _reflector = reflector; }
 	        this._reflector = _reflector;
 	    }
 	    /**
@@ -37914,7 +37816,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @return {?}
 	 */
 	function hasLifecycleHook(hook, token) {
-	    return reflector$1.hasLifecycleHook(token, getHookName(hook));
+	    return reflector.hasLifecycleHook(token, getHookName(hook));
 	}
 	/**
 	 * @param {?} hook
@@ -37972,7 +37874,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @param {?=} _reflector
 	     */
 	    function NgModuleResolver(_reflector) {
-	        if (_reflector === void 0) { _reflector = reflector$1; }
+	        if (_reflector === void 0) { _reflector = reflector; }
 	        this._reflector = _reflector;
 	    }
 	    /**
@@ -38040,7 +37942,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @param {?=} _reflector
 	     */
 	    function PipeResolver(_reflector) {
-	        if (_reflector === void 0) { _reflector = reflector$1; }
+	        if (_reflector === void 0) { _reflector = reflector; }
 	        this._reflector = _reflector;
 	    }
 	    /**
@@ -38156,7 +38058,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @param {?=} _useViewEngine
 	     */
 	    function CompileMetadataResolver(_ngModuleResolver, _directiveResolver, _pipeResolver, _summaryResolver, _schemaRegistry, _directiveNormalizer, _staticSymbolCache, _reflector, _errorCollector, _useViewEngine) {
-	        if (_reflector === void 0) { _reflector = reflector$1; }
+	        if (_reflector === void 0) { _reflector = reflector; }
 	        this._ngModuleResolver = _ngModuleResolver;
 	        this._directiveResolver = _directiveResolver;
 	        this._pipeResolver = _pipeResolver;
@@ -41935,7 +41837,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 */
 	function injectFromViewParentInjector(view, token, optional) {
 	    var /** @type {?} */ viewExpr;
-	    if (view.viewType === ViewType$1.HOST) {
+	    if (view.viewType === ViewType.HOST) {
 	        viewExpr = THIS_EXPR;
 	    }
 	    else {
@@ -42816,7 +42718,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        this.className = viewClassName(component.type.reference, viewIndex);
 	        this.classType = expressionType(variable(this.className));
 	        this.classExpr = variable(this.className);
-	        if (this.viewType === ViewType$1.COMPONENT || this.viewType === ViewType$1.HOST) {
+	        if (this.viewType === ViewType.COMPONENT || this.viewType === ViewType.HOST) {
 	            this.componentView = this;
 	        }
 	        else {
@@ -42825,7 +42727,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        this.componentContext =
 	            getPropertyInView(THIS_EXPR.prop('context'), this, this.componentView);
 	        var viewQueries = new Map();
-	        if (this.viewType === ViewType$1.COMPONENT) {
+	        if (this.viewType === ViewType.COMPONENT) {
 	            var directiveInstance_1 = THIS_EXPR.prop('context');
 	            this.component.viewQueries.forEach(function (queryMeta, queryIndex) {
 	                var propName = "_viewQuery_" + tokenName(queryMeta.selectors[0]) + "_" + queryIndex;
@@ -42887,12 +42789,12 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 */
 	function getViewType(component, embeddedTemplateIndex) {
 	    if (embeddedTemplateIndex > 0) {
-	        return ViewType$1.EMBEDDED;
+	        return ViewType.EMBEDDED;
 	    }
 	    if (component.isHost) {
-	        return ViewType$1.HOST;
+	        return ViewType.HOST;
 	    }
-	    return ViewType$1.COMPONENT;
+	    return ViewType.COMPONENT;
 	}
 
 	/**
@@ -43416,7 +43318,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    var /** @type {?} */ builderVisitor = new ViewBuilderVisitor(view, targetDependencies);
 	    var /** @type {?} */ parentEl = view.declarationElement.isNull() ? view.declarationElement : view.declarationElement.parent;
 	    templateVisitAll(builderVisitor, template, parentEl);
-	    if (view.viewType === ViewType$1.EMBEDDED || view.viewType === ViewType$1.HOST) {
+	    if (view.viewType === ViewType.EMBEDDED || view.viewType === ViewType.HOST) {
 	        view.lastRenderNode = builderVisitor.getOrCreateLastRenderNode();
 	    }
 	    return builderVisitor.nestedViewCount;
@@ -43463,7 +43365,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        var /** @type {?} */ ngContentIndex = ((projectedNode.sourceAst)).ngContentIndex;
 	        var /** @type {?} */ viewContainer = (node instanceof CompileElement && node.hasViewContainer) ? node.viewContainer : null;
 	        if (this._isRootNode(parent)) {
-	            if (this.view.viewType !== ViewType$1.COMPONENT) {
+	            if (this.view.viewType !== ViewType.COMPONENT) {
 	                this.view.rootNodes.push(new CompileViewRootNode(viewContainer ? CompileViewRootNodeType.ViewContainer : CompileViewRootNodeType.Node, viewContainer || node.renderNode));
 	            }
 	        }
@@ -43478,7 +43380,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    ViewBuilderVisitor.prototype._getParentRenderNode = function (parent) {
 	        parent = _getOuterContainerParentOrSelf(parent);
 	        if (this._isRootNode(parent)) {
-	            if (this.view.viewType === ViewType$1.COMPONENT) {
+	            if (this.view.viewType === ViewType.COMPONENT) {
 	                return parentRenderNodeVar;
 	            }
 	            else {
@@ -43562,7 +43464,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                .toStmt());
 	        }
 	        else if (this._isRootNode(parent)) {
-	            if (this.view.viewType !== ViewType$1.COMPONENT) {
+	            if (this.view.viewType !== ViewType.COMPONENT) {
 	                // store root nodes only for embedded/host views
 	                this.view.rootNodes.push(new CompileViewRootNode(CompileViewRootNodeType.NgContent, null, ast.index));
 	            }
@@ -43591,7 +43493,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        else {
 	            var /** @type {?} */ htmlAttrs = _readHtmlAttrs(ast.attrs);
 	            var /** @type {?} */ attrNameAndValues = createInlineArray(_mergeHtmlAndDirectiveAttrs(htmlAttrs, directives).map(function (v) { return literal(v); }));
-	            if (nodeIndex === 0 && this.view.viewType === ViewType$1.HOST) {
+	            if (nodeIndex === 0 && this.view.viewType === ViewType.HOST) {
 	                createRenderNodeExpr =
 	                    importExpr(createIdentifier(Identifiers.selectOrCreateRenderHostElement)).callFn([
 	                        ViewProperties.renderer, literal(ast.name), attrNameAndValues, rootSelectorVar,
@@ -43880,7 +43782,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    if (view.genConfig.genDebugInfo) {
 	        superConstructorArgs.push(nodeDebugInfosVar);
 	    }
-	    if (view.viewType === ViewType$1.EMBEDDED) {
+	    if (view.viewType === ViewType.EMBEDDED) {
 	        viewConstructorArgs.push(new FnParam('declaredViewContainer', importType(createIdentifier(Identifiers.ViewContainer))));
 	        superConstructorArgs.push(variable('declaredViewContainer'));
 	    }
@@ -43929,7 +43831,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	function generateCreateMethod(view) {
 	    var /** @type {?} */ parentRenderNodeExpr = NULL_EXPR;
 	    var /** @type {?} */ parentRenderNodeStmts = [];
-	    if (view.viewType === ViewType$1.COMPONENT) {
+	    if (view.viewType === ViewType.COMPONENT) {
 	        parentRenderNodeExpr =
 	            ViewProperties.renderer.callMethod('createViewRoot', [THIS_EXPR.prop('parentElement')]);
 	        parentRenderNodeStmts =
@@ -43937,7 +43839,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                    .toDeclStmt(importType(view.genConfig.renderTypes.renderNode), [StmtModifier.Final])];
 	    }
 	    var /** @type {?} */ resultExpr;
-	    if (view.viewType === ViewType$1.HOST) {
+	    if (view.viewType === ViewType.HOST) {
 	        var /** @type {?} */ hostEl = (view.nodes[0]);
 	        resultExpr =
 	            importExpr(createIdentifier(Identifiers.ComponentRef_), [DYNAMIC_TYPE]).instantiate([
@@ -44014,7 +43916,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @return {?}
 	 */
 	function getContextType(view) {
-	    if (view.viewType === ViewType$1.COMPONENT) {
+	    if (view.viewType === ViewType.COMPONENT) {
 	        return importType(view.component.type);
 	    }
 	    return DYNAMIC_TYPE;
@@ -44025,13 +43927,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 */
 	function getChangeDetectionMode(view) {
 	    var /** @type {?} */ mode;
-	    if (view.viewType === ViewType$1.COMPONENT) {
+	    if (view.viewType === ViewType.COMPONENT) {
 	        mode = isDefaultChangeDetectionStrategy$1(view.component.changeDetection) ?
-	            ChangeDetectorStatus$1.CheckAlways :
-	            ChangeDetectorStatus$1.CheckOnce;
+	            ChangeDetectorStatus.CheckAlways :
+	            ChangeDetectorStatus.CheckOnce;
 	    }
 	    else {
-	        mode = ChangeDetectorStatus$1.CheckAlways;
+	        mode = ChangeDetectorStatus.CheckAlways;
 	    }
 	    return mode;
 	}
@@ -45222,7 +45124,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @return {?}
 	     */
 	    StaticAndDynamicReflectionCapabilities.install = function (staticDelegate) {
-	        reflector$1.updateCapabilities(new StaticAndDynamicReflectionCapabilities(staticDelegate));
+	        reflector.updateCapabilities(new StaticAndDynamicReflectionCapabilities(staticDelegate));
 	    };
 	    /**
 	     * @return {?}
@@ -45289,11 +45191,12 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    /**
 	     * @param {?} name
 	     * @param {?} moduleUrl
+	     * @param {?} members
 	     * @param {?} runtime
 	     * @return {?}
 	     */
-	    StaticAndDynamicReflectionCapabilities.prototype.resolveIdentifier = function (name, moduleUrl, runtime) {
-	        return this.staticDelegate.resolveIdentifier(name, moduleUrl);
+	    StaticAndDynamicReflectionCapabilities.prototype.resolveIdentifier = function (name, moduleUrl, members, runtime) {
+	        return this.staticDelegate.resolveIdentifier(name, moduleUrl, members);
 	    };
 	    /**
 	     * @param {?} enumIdentifier
@@ -45377,10 +45280,19 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    /**
 	     * @param {?} name
 	     * @param {?} moduleUrl
+	     * @param {?} members
 	     * @return {?}
 	     */
-	    StaticReflector.prototype.resolveIdentifier = function (name, moduleUrl) {
-	        return this.findDeclaration(moduleUrl, name);
+	    StaticReflector.prototype.resolveIdentifier = function (name, moduleUrl, members) {
+	        var /** @type {?} */ importSymbol = this.getStaticSymbol(moduleUrl, name);
+	        var /** @type {?} */ rootSymbol = this.findDeclaration(moduleUrl, name);
+	        if (importSymbol != rootSymbol) {
+	            this.symbolResolver.recordImportAs(rootSymbol, importSymbol);
+	        }
+	        if (members && members.length) {
+	            return this.getStaticSymbol(rootSymbol.filePath, rootSymbol.name, members);
+	        }
+	        return rootSymbol;
 	    };
 	    /**
 	     * @param {?} moduleUrl
@@ -45411,7 +45323,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     */
 	    StaticReflector.prototype.resolveEnum = function (enumIdentifier, name) {
 	        var /** @type {?} */ staticSymbol = enumIdentifier;
-	        return this.getStaticSymbol(staticSymbol.filePath, staticSymbol.name, [name]);
+	        var /** @type {?} */ members = (staticSymbol.members || []).concat(name);
+	        return this.getStaticSymbol(staticSymbol.filePath, staticSymbol.name, members);
 	    };
 	    /**
 	     * @param {?} type
@@ -46230,6 +46143,16 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            resolvedSymbol = this.resolveSymbol(resolvedSymbol.metadata);
 	        }
 	        return (resolvedSymbol && resolvedSymbol.metadata && resolvedSymbol.metadata.arity) || null;
+	    };
+	    /**
+	     * @param {?} sourceSymbol
+	     * @param {?} targetSymbol
+	     * @return {?}
+	     */
+	    StaticSymbolResolver.prototype.recordImportAs = function (sourceSymbol, targetSymbol) {
+	        sourceSymbol.assertNoMembers();
+	        targetSymbol.assertNoMembers();
+	        this.importAs.set(sourceSymbol, targetSymbol);
 	    };
 	    /**
 	     * @param {?} staticSymbol
@@ -49163,7 +49086,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * template compilation.
 	 */
 	var /** @type {?} */ COMPILER_PROVIDERS = [
-	    { provide: Reflector$1, useValue: reflector$1 },
+	    { provide: Reflector$1, useValue: reflector },
 	    { provide: ReflectorReader$1, useExisting: Reflector$1 },
 	    { provide: ResourceLoader, useValue: _NO_RESOURCE_LOADER },
 	    SummaryResolver,
@@ -49272,7 +49195,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @return {?}
 	 */
 	function _initReflector() {
-	    reflector$1.reflectionCapabilities = new ReflectionCapabilities$1();
+	    reflector.reflectionCapabilities = new ReflectionCapabilities$1();
 	}
 	/**
 	 * A platform that included corePlatform and the compiler.
@@ -53375,6 +53298,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	var IS_GENERATED = /\.(ngfactory|ngstyle)$/;
 	var GENERATED_FILES = /\.ngfactory\.ts$|\.ngstyle\.ts$/;
 	var GENERATED_OR_DTS_FILES = /\.d\.ts$|\.ngfactory\.ts$|\.ngstyle\.ts$/;
+	var SHALLOW_IMPORT = /^(\w+|(\@\w+\/\w+))$/;
 	var CompilerHost = (function () {
 	    function CompilerHost(program, options, context) {
 	        var _this = this;
@@ -53474,6 +53398,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                if (!this.isGenDirChildOfRootDir) {
 	                    // assume that they are on top of each other.
 	                    importedFile = importedFile.replace(this.basePath, this.genDir);
+	                }
+	                if (SHALLOW_IMPORT.test(importedFile)) {
+	                    return importedFile;
 	                }
 	                return this.dotRelative(containingDir, importedFile);
 	            }
