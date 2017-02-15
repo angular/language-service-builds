@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.0.0-beta.7-e9ba7aa
+ * @license Angular v4.0.0-beta.7-4e7752a
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1656,7 +1656,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('4.0.0-beta.7-e9ba7aa');
+	var /** @type {?} */ VERSION = new Version('4.0.0-beta.7-4e7752a');
 
 	/**
 	 * Inject decorator and metadata.
@@ -12600,8 +12600,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	NodeFlags.HasEmbeddedViews = 256;
 	NodeFlags.HasComponent = 512;
 	NodeFlags.HasContentQuery = 1024;
-	NodeFlags.HasViewQuery = 2048;
-	NodeFlags.LazyProvider = 4096;
+	NodeFlags.HasStaticQuery = 2048;
+	NodeFlags.HasDynamicQuery = 4096;
+	NodeFlags.HasViewQuery = 8192;
+	NodeFlags.LazyProvider = 16384;
+	NodeFlags.PrivateProvider = 32768;
 	NodeFlags[NodeFlags.None] = "None";
 	NodeFlags[NodeFlags.OnInit] = "OnInit";
 	NodeFlags[NodeFlags.OnDestroy] = "OnDestroy";
@@ -12614,8 +12617,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	NodeFlags[NodeFlags.HasEmbeddedViews] = "HasEmbeddedViews";
 	NodeFlags[NodeFlags.HasComponent] = "HasComponent";
 	NodeFlags[NodeFlags.HasContentQuery] = "HasContentQuery";
+	NodeFlags[NodeFlags.HasStaticQuery] = "HasStaticQuery";
+	NodeFlags[NodeFlags.HasDynamicQuery] = "HasDynamicQuery";
 	NodeFlags[NodeFlags.HasViewQuery] = "HasViewQuery";
 	NodeFlags[NodeFlags.LazyProvider] = "LazyProvider";
+	NodeFlags[NodeFlags.PrivateProvider] = "PrivateProvider";
 	var BindingType = {};
 	BindingType.ElementAttribute = 0;
 	BindingType.ElementClass = 1;
@@ -12927,7 +12933,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	function declaredViewContainer(view) {
 	    if (view.parent) {
 	        var /** @type {?} */ parentView = view.parent;
-	        return asElementData(parentView, view.parentIndex);
+	        return asElementData(parentView, view.parentNodeDef.index);
 	    }
 	    return undefined;
 	}
@@ -12938,10 +12944,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @param {?} view
 	 * @return {?}
 	 */
-	function viewParentElIndex(view) {
+	function viewParentEl(view) {
 	    var /** @type {?} */ parentView = view.parent;
 	    if (parentView) {
-	        return parentView.def.nodes[view.parentIndex].parent;
+	        return view.parentNodeDef.parent;
 	    }
 	    else {
 	        return null;
@@ -12980,13 +12986,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return undefined;
 	}
 	/**
-	 * @param {?} queryId
-	 * @return {?}
-	 */
-	function queryIdIsReference(queryId) {
-	    return queryId.startsWith('#');
-	}
-	/**
 	 * @param {?} target
 	 * @param {?} name
 	 * @return {?}
@@ -13000,6 +12999,58 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 */
 	function isComponentView(view) {
 	    return view.component === view.context && !!view.parent;
+	}
+	/**
+	 * @param {?} view
+	 * @return {?}
+	 */
+	function isEmbeddedView(view) {
+	    return view.component !== view.context && !!view.parent;
+	}
+	/**
+	 * @param {?} queryId
+	 * @return {?}
+	 */
+	function filterQueryId(queryId) {
+	    return 1 << (queryId % 32);
+	}
+	/**
+	 * @param {?} matchedQueriesDsl
+	 * @return {?}
+	 */
+	function splitMatchedQueriesDsl(matchedQueriesDsl) {
+	    var /** @type {?} */ matchedQueries = {};
+	    var /** @type {?} */ matchedQueryIds = 0;
+	    var /** @type {?} */ references = {};
+	    if (matchedQueriesDsl) {
+	        matchedQueriesDsl.forEach(function (_a) {
+	            var queryId = _a[0], valueType = _a[1];
+	            if (typeof queryId === 'number') {
+	                matchedQueries[queryId] = valueType;
+	                matchedQueryIds |= filterQueryId(queryId);
+	            }
+	            else {
+	                references[queryId] = valueType;
+	            }
+	        });
+	    }
+	    return { matchedQueries: matchedQueries, references: references, matchedQueryIds: matchedQueryIds };
+	}
+	/**
+	 * @param {?} view
+	 * @param {?} renderHost
+	 * @param {?} def
+	 * @return {?}
+	 */
+	function getParentRenderElement(view, renderHost, def) {
+	    var /** @type {?} */ parentEl;
+	    if (!def.parent) {
+	        parentEl = renderHost;
+	    }
+	    else if (def.renderParent) {
+	        parentEl = asElementData(view, def.renderParent.index).renderElement;
+	    }
+	    return parentEl;
 	}
 	var /** @type {?} */ VIEW_DEFINITION_CACHE = new WeakMap();
 	/**
@@ -13067,8 +13118,20 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    if (action === RenderNodeAction.RemoveChild) {
 	        parentNode = view.root.renderer.parentNode(renderNode(view, view.def.lastRootNode));
 	    }
-	    var /** @type {?} */ len = view.def.nodes.length;
-	    for (var /** @type {?} */ i = 0; i < len; i++) {
+	    visitSiblingRenderNodes(view, action, 0, view.def.nodes.length - 1, parentNode, nextSibling, target);
+	}
+	/**
+	 * @param {?} view
+	 * @param {?} action
+	 * @param {?} startIndex
+	 * @param {?} endIndex
+	 * @param {?} parentNode
+	 * @param {?} nextSibling
+	 * @param {?} target
+	 * @return {?}
+	 */
+	function visitSiblingRenderNodes(view, action, startIndex, endIndex, parentNode, nextSibling, target) {
+	    for (var /** @type {?} */ i = startIndex; i <= endIndex; i++) {
 	        var /** @type {?} */ nodeDef = view.def.nodes[i];
 	        if (nodeDef.type === NodeType.Element || nodeDef.type === NodeType.Text ||
 	            nodeDef.type === NodeType.NgContent) {
@@ -13093,7 +13156,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        compView = compView.parent;
 	    }
 	    var /** @type {?} */ hostView = compView.parent;
-	    var /** @type {?} */ hostElDef = hostView.def.nodes[viewParentElIndex(compView)];
+	    var /** @type {?} */ hostElDef = viewParentEl(compView);
 	    var /** @type {?} */ startIndex = hostElDef.index + 1;
 	    var /** @type {?} */ endIndex = hostElDef.index + hostElDef.childCount;
 	    for (var /** @type {?} */ i = startIndex; i <= endIndex; i++) {
@@ -13138,6 +13201,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                }
 	            }
 	        }
+	        if (nodeDef.type === NodeType.Element && !nodeDef.element.name) {
+	            visitSiblingRenderNodes(view, action, nodeDef.index + 1, nodeDef.index + nodeDef.childCount, parentNode, nextSibling, target);
+	        }
 	    }
 	}
 	/**
@@ -13169,20 +13235,14 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 
 	/**
 	 * @param {?} flags
-	 * @param {?} matchedQueries
+	 * @param {?} matchedQueriesDsl
 	 * @param {?} ngContentIndex
 	 * @param {?} childCount
 	 * @param {?=} templateFactory
 	 * @return {?}
 	 */
-	function anchorDef(flags, matchedQueries, ngContentIndex, childCount, templateFactory) {
-	    var /** @type {?} */ matchedQueryDefs = {};
-	    if (matchedQueries) {
-	        matchedQueries.forEach(function (_a) {
-	            var queryId = _a[0], valueType = _a[1];
-	            matchedQueryDefs[queryId] = valueType;
-	        });
-	    }
+	function anchorDef(flags, matchedQueriesDsl, ngContentIndex, childCount, templateFactory) {
+	    var _a = splitMatchedQueriesDsl(matchedQueriesDsl), matchedQueries = _a.matchedQueries, references = _a.references, matchedQueryIds = _a.matchedQueryIds;
 	    // skip the call to sliceErrorStack itself + the call to this function.
 	    var /** @type {?} */ source = isDevMode() ? sliceErrorStack(2, 3) : '';
 	    var /** @type {?} */ template = templateFactory ? resolveViewDefinition(templateFactory) : null;
@@ -13192,21 +13252,23 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        index: undefined,
 	        reverseChildIndex: undefined,
 	        parent: undefined,
-	        childFlags: undefined,
-	        childMatchedQueries: undefined,
+	        renderParent: undefined,
 	        bindingIndex: undefined,
 	        disposableIndex: undefined,
 	        // regular values
 	        flags: flags,
-	        matchedQueries: matchedQueryDefs, ngContentIndex: ngContentIndex, childCount: childCount,
+	        childFlags: 0,
+	        childMatchedQueries: 0, matchedQueries: matchedQueries, matchedQueryIds: matchedQueryIds, references: references, ngContentIndex: ngContentIndex, childCount: childCount,
 	        bindings: [],
 	        disposableCount: 0,
 	        element: {
 	            name: undefined,
 	            attrs: undefined,
-	            outputs: [], template: template,
+	            outputs: [], template: template, source: source,
 	            // will bet set by the view definition
-	            providerIndices: undefined, source: source,
+	            component: undefined,
+	            publicProviders: undefined,
+	            allProviders: undefined,
 	        },
 	        provider: undefined,
 	        text: undefined,
@@ -13217,7 +13279,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	}
 	/**
 	 * @param {?} flags
-	 * @param {?} matchedQueries
+	 * @param {?} matchedQueriesDsl
 	 * @param {?} ngContentIndex
 	 * @param {?} childCount
 	 * @param {?} name
@@ -13226,17 +13288,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @param {?=} outputs
 	 * @return {?}
 	 */
-	function elementDef(flags, matchedQueries, ngContentIndex, childCount, name, fixedAttrs, bindings, outputs) {
+	function elementDef(flags, matchedQueriesDsl, ngContentIndex, childCount, name, fixedAttrs, bindings, outputs) {
 	    if (fixedAttrs === void 0) { fixedAttrs = {}; }
 	    // skip the call to sliceErrorStack itself + the call to this function.
 	    var /** @type {?} */ source = isDevMode() ? sliceErrorStack(2, 3) : '';
-	    var /** @type {?} */ matchedQueryDefs = {};
-	    if (matchedQueries) {
-	        matchedQueries.forEach(function (_a) {
-	            var queryId = _a[0], valueType = _a[1];
-	            matchedQueryDefs[queryId] = valueType;
-	        });
-	    }
+	    var _a = splitMatchedQueriesDsl(matchedQueriesDsl), matchedQueries = _a.matchedQueries, references = _a.references, matchedQueryIds = _a.matchedQueryIds;
 	    bindings = bindings || [];
 	    var /** @type {?} */ bindingDefs = new Array(bindings.length);
 	    for (var /** @type {?} */ i = 0; i < bindings.length; i++) {
@@ -13277,22 +13333,24 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        index: undefined,
 	        reverseChildIndex: undefined,
 	        parent: undefined,
-	        childFlags: undefined,
-	        childMatchedQueries: undefined,
+	        renderParent: undefined,
 	        bindingIndex: undefined,
 	        disposableIndex: undefined,
 	        // regular values
 	        flags: flags,
-	        matchedQueries: matchedQueryDefs, ngContentIndex: ngContentIndex, childCount: childCount,
+	        childFlags: 0,
+	        childMatchedQueries: 0, matchedQueries: matchedQueries, matchedQueryIds: matchedQueryIds, references: references, ngContentIndex: ngContentIndex, childCount: childCount,
 	        bindings: bindingDefs,
 	        disposableCount: outputDefs.length,
 	        element: {
 	            name: name,
 	            attrs: fixedAttrs,
-	            outputs: outputDefs,
+	            outputs: outputDefs, source: source,
 	            template: undefined,
 	            // will bet set by the view definition
-	            providerIndices: undefined, source: source,
+	            component: undefined,
+	            publicProviders: undefined,
+	            allProviders: undefined,
 	        },
 	        provider: undefined,
 	        text: undefined,
@@ -13313,7 +13371,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    var /** @type {?} */ renderer = view.root.renderer;
 	    var /** @type {?} */ el;
 	    if (view.parent || !rootSelectorOrNode) {
-	        var /** @type {?} */ parentNode = def.parent != null ? asElementData(view, def.parent).renderElement : renderHost;
 	        if (elDef.name) {
 	            // TODO(vicb): move the namespace to the node definition
 	            var /** @type {?} */ nsAndName = splitNamespace(elDef.name);
@@ -13322,8 +13379,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        else {
 	            el = renderer.createComment('');
 	        }
-	        if (parentNode) {
-	            renderer.appendChild(parentNode, el);
+	        var /** @type {?} */ parentEl = getParentRenderElement(view, renderHost, def);
+	        if (parentEl) {
+	            renderer.appendChild(parentEl, el);
 	        }
 	    }
 	    else {
@@ -13543,13 +13601,16 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        index: undefined,
 	        reverseChildIndex: undefined,
 	        parent: undefined,
-	        childFlags: undefined,
-	        childMatchedQueries: undefined,
+	        renderParent: undefined,
 	        bindingIndex: undefined,
 	        disposableIndex: undefined,
 	        // regular values
 	        flags: 0,
-	        matchedQueries: {}, ngContentIndex: ngContentIndex,
+	        childFlags: 0,
+	        childMatchedQueries: 0,
+	        matchedQueries: {},
+	        matchedQueryIds: 0,
+	        references: {}, ngContentIndex: ngContentIndex,
 	        childCount: 0,
 	        bindings: [],
 	        disposableCount: 0,
@@ -13568,11 +13629,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @return {?}
 	 */
 	function appendNgContent(view, renderHost, def) {
-	    if (def.ngContentIndex != null) {
-	        // Do nothing if we are reprojected!
-	        return;
-	    }
-	    var /** @type {?} */ parentEl = def.parent != null ? asElementData(view, def.parent).renderElement : renderHost;
+	    var /** @type {?} */ parentEl = getParentRenderElement(view, renderHost, def);
 	    if (!parentEl) {
 	        // Nothing to do if there is no parent element.
 	        return;
@@ -13613,18 +13670,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        if (projectableNodes === void 0) { projectableNodes = null; }
 	        if (rootSelectorOrNode === void 0) { rootSelectorOrNode = null; }
 	        var /** @type {?} */ viewDef = resolveViewDefinition(this._viewClass);
-	        var /** @type {?} */ componentNodeIndex;
-	        var /** @type {?} */ len = viewDef.nodes.length;
-	        for (var /** @type {?} */ i = 0; i < len; i++) {
-	            var /** @type {?} */ nodeDef = viewDef.nodes[i];
-	            if (nodeDef.flags & NodeFlags.HasComponent) {
-	                componentNodeIndex = i;
-	                break;
-	            }
-	        }
-	        if (componentNodeIndex == null) {
-	            throw new Error("Illegal State: Could not find a component in the view definition!");
-	        }
+	        var /** @type {?} */ componentNodeIndex = viewDef.nodes[0].element.component.index;
 	        var /** @type {?} */ view = Services.createRootView(injector, projectableNodes || [], rootSelectorOrNode, viewDef, EMPTY_CONTEXT);
 	        var /** @type {?} */ component = asProviderData(view, componentNodeIndex).instance;
 	        return new ComponentRef_(view, new ViewRef_$1(view), component);
@@ -13641,12 +13687,15 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        this._view = _view;
 	        this._viewRef = _viewRef;
 	        this._component = _component;
+	        this._elDef = this._view.def.nodes[0];
 	    }
 	    Object.defineProperty(ComponentRef_.prototype, "location", {
 	        /**
 	         * @return {?}
 	         */
-	        get: function () { return new ElementRef(asElementData(this._view, 0).renderElement); },
+	        get: function () {
+	            return new ElementRef(asElementData(this._view, this._elDef.index).renderElement);
+	        },
 	        enumerable: true,
 	        configurable: true
 	    });
@@ -13654,7 +13703,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        /**
 	         * @return {?}
 	         */
-	        get: function () { return new Injector_(this._view, 0); },
+	        get: function () { return new Injector_(this._view, this._elDef); },
 	        enumerable: true,
 	        configurable: true
 	    });
@@ -13706,21 +13755,21 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	}());
 	/**
 	 * @param {?} view
-	 * @param {?} elIndex
+	 * @param {?} elDef
 	 * @return {?}
 	 */
-	function createViewContainerRef(view, elIndex) {
-	    return new ViewContainerRef_$1(view, elIndex);
+	function createViewContainerRef(view, elDef) {
+	    return new ViewContainerRef_$1(view, elDef);
 	}
 	var ViewContainerRef_$1 = (function () {
 	    /**
 	     * @param {?} _view
-	     * @param {?} _elIndex
+	     * @param {?} _elDef
 	     */
-	    function ViewContainerRef_(_view, _elIndex) {
+	    function ViewContainerRef_(_view, _elDef) {
 	        this._view = _view;
-	        this._elIndex = _elIndex;
-	        this._data = asElementData(_view, _elIndex);
+	        this._elDef = _elDef;
+	        this._data = asElementData(_view, _elDef.index);
 	    }
 	    Object.defineProperty(ViewContainerRef_.prototype, "element", {
 	        /**
@@ -13734,7 +13783,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        /**
 	         * @return {?}
 	         */
-	        get: function () { return new Injector_(this._view, this._elIndex); },
+	        get: function () { return new Injector_(this._view, this._elDef); },
 	        enumerable: true,
 	        configurable: true
 	    });
@@ -13744,12 +13793,12 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	         */
 	        get: function () {
 	            var /** @type {?} */ view = this._view;
-	            var /** @type {?} */ elIndex = view.def.nodes[this._elIndex].parent;
-	            while (elIndex == null && view) {
-	                elIndex = viewParentElIndex(view);
+	            var /** @type {?} */ elDef = this._elDef.parent;
+	            while (!elDef && view) {
+	                elDef = viewParentEl(view);
 	                view = view.parent;
 	            }
-	            return view ? new Injector_(view, elIndex) : this._view.root.injector;
+	            return view ? new Injector_(view, elDef) : this._view.root.injector;
 	        },
 	        enumerable: true,
 	        configurable: true
@@ -13955,20 +14004,20 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	}());
 	/**
 	 * @param {?} view
-	 * @param {?} elIndex
+	 * @param {?} elDef
 	 * @return {?}
 	 */
-	function createInjector(view, elIndex) {
-	    return new Injector_(view, elIndex);
+	function createInjector(view, elDef) {
+	    return new Injector_(view, elDef);
 	}
 	var Injector_ = (function () {
 	    /**
 	     * @param {?} view
-	     * @param {?} elIndex
+	     * @param {?} elDef
 	     */
-	    function Injector_(view, elIndex) {
+	    function Injector_(view, elDef) {
 	        this.view = view;
-	        this.elIndex = elIndex;
+	        this.elDef = elDef;
 	    }
 	    /**
 	     * @param {?} token
@@ -13977,7 +14026,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     */
 	    Injector_.prototype.get = function (token, notFoundValue) {
 	        if (notFoundValue === void 0) { notFoundValue = Injector.THROW_IF_NOT_FOUND; }
-	        return Services.resolveDep(this.view, undefined, this.elIndex, { flags: DepFlags.None, token: token, tokenKey: tokenKey(token) }, notFoundValue);
+	        return Services.resolveDep(this.view, this.elDef, true, { flags: DepFlags.None, token: token, tokenKey: tokenKey(token) }, notFoundValue);
 	    };
 	    return Injector_;
 	}());
@@ -14045,7 +14094,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @param {?} type
 	 * @param {?} flags
-	 * @param {?} matchedQueries
+	 * @param {?} matchedQueriesDsl
 	 * @param {?} childCount
 	 * @param {?} providerType
 	 * @param {?} token
@@ -14056,14 +14105,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @param {?=} component
 	 * @return {?}
 	 */
-	function _def(type, flags, matchedQueries, childCount, providerType, token, value, deps, bindings, outputs, component) {
-	    var /** @type {?} */ matchedQueryDefs = {};
-	    if (matchedQueries) {
-	        matchedQueries.forEach(function (_a) {
-	            var queryId = _a[0], valueType = _a[1];
-	            matchedQueryDefs[queryId] = valueType;
-	        });
-	    }
+	function _def(type, flags, matchedQueriesDsl, childCount, providerType, token, value, deps, bindings, outputs, component) {
+	    var _a = splitMatchedQueriesDsl(matchedQueriesDsl), matchedQueries = _a.matchedQueries, references = _a.references, matchedQueryIds = _a.matchedQueryIds;
 	    if (!outputs) {
 	        outputs = [];
 	    }
@@ -14091,13 +14134,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        index: undefined,
 	        reverseChildIndex: undefined,
 	        parent: undefined,
-	        childFlags: undefined,
-	        childMatchedQueries: undefined,
+	        renderParent: undefined,
 	        bindingIndex: undefined,
 	        disposableIndex: undefined,
 	        // regular values
 	        flags: flags,
-	        matchedQueries: matchedQueryDefs,
+	        childFlags: 0,
+	        childMatchedQueries: 0, matchedQueries: matchedQueries, matchedQueryIds: matchedQueryIds, references: references,
 	        ngContentIndex: undefined, childCount: childCount, bindings: bindings,
 	        disposableCount: outputs.length,
 	        element: undefined,
@@ -14132,8 +14175,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    while (compView.parent && !isComponentView(compView)) {
 	        compView = compView.parent;
 	    }
+	    // pipes can see the private services of the component
+	    var /** @type {?} */ allowPrivateServices = true;
 	    // pipes are always eager and classes!
-	    return createClass(compView.parent, compView.parentIndex, viewParentElIndex(compView), def.provider.value, def.provider.deps);
+	    return createClass(compView.parent, viewParentEl(compView), allowPrivateServices, def.provider.value, def.provider.deps);
 	}
 	/**
 	 * @param {?} view
@@ -14141,13 +14186,15 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @return {?}
 	 */
 	function createDirectiveInstance(view, def) {
+	    // components can see other private services, other directives can't.
+	    var /** @type {?} */ allowPrivateServices = (def.flags & NodeFlags.HasComponent) > 0;
 	    var /** @type {?} */ providerDef = def.provider;
 	    // directives are always eager and classes!
-	    var /** @type {?} */ instance = createClass(view, def.index, def.parent, def.provider.value, def.provider.deps);
+	    var /** @type {?} */ instance = createClass(view, def.parent, allowPrivateServices, def.provider.value, def.provider.deps);
 	    if (providerDef.outputs.length) {
 	        for (var /** @type {?} */ i = 0; i < providerDef.outputs.length; i++) {
 	            var /** @type {?} */ output = providerDef.outputs[i];
-	            var /** @type {?} */ subscription = instance[output.propName].subscribe(eventHandlerClosure(view, def.parent, output.eventName));
+	            var /** @type {?} */ subscription = instance[output.propName].subscribe(eventHandlerClosure(view, def.parent.index, output.eventName));
 	            view.disposables[def.disposableIndex + i] = subscription.unsubscribe.bind(subscription);
 	        }
 	    }
@@ -14243,17 +14290,21 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @return {?}
 	 */
 	function _createProviderInstance(view, def) {
+	    // private services can see other private services
+	    var /** @type {?} */ allowPrivateServices = (def.flags & NodeFlags.PrivateProvider) > 0;
 	    var /** @type {?} */ providerDef = def.provider;
 	    var /** @type {?} */ injectable;
 	    switch (providerDef.type) {
 	        case ProviderType.Class:
-	            injectable = createClass(view, def.index, def.parent, providerDef.value, providerDef.deps);
+	            injectable =
+	                createClass(view, def.parent, allowPrivateServices, providerDef.value, providerDef.deps);
 	            break;
 	        case ProviderType.Factory:
-	            injectable = callFactory(view, def.index, def.parent, providerDef.value, providerDef.deps);
+	            injectable =
+	                callFactory(view, def.parent, allowPrivateServices, providerDef.value, providerDef.deps);
 	            break;
 	        case ProviderType.UseExisting:
-	            injectable = resolveDep(view, def.index, def.parent, providerDef.deps[0]);
+	            injectable = resolveDep(view, def.parent, allowPrivateServices, providerDef.deps[0]);
 	            break;
 	        case ProviderType.Value:
 	            injectable = providerDef.value;
@@ -14263,13 +14314,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	}
 	/**
 	 * @param {?} view
-	 * @param {?} requestorNodeIndex
-	 * @param {?} elIndex
+	 * @param {?} elDef
+	 * @param {?} allowPrivateServices
 	 * @param {?} ctor
 	 * @param {?} deps
 	 * @return {?}
 	 */
-	function createClass(view, requestorNodeIndex, elIndex, ctor, deps) {
+	function createClass(view, elDef, allowPrivateServices, ctor, deps) {
 	    var /** @type {?} */ len = deps.length;
 	    var /** @type {?} */ injectable;
 	    switch (len) {
@@ -14277,18 +14328,18 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            injectable = new ctor();
 	            break;
 	        case 1:
-	            injectable = new ctor(resolveDep(view, requestorNodeIndex, elIndex, deps[0]));
+	            injectable = new ctor(resolveDep(view, elDef, allowPrivateServices, deps[0]));
 	            break;
 	        case 2:
-	            injectable = new ctor(resolveDep(view, requestorNodeIndex, elIndex, deps[0]), resolveDep(view, requestorNodeIndex, elIndex, deps[1]));
+	            injectable = new ctor(resolveDep(view, elDef, allowPrivateServices, deps[0]), resolveDep(view, elDef, allowPrivateServices, deps[1]));
 	            break;
 	        case 3:
-	            injectable = new ctor(resolveDep(view, requestorNodeIndex, elIndex, deps[0]), resolveDep(view, requestorNodeIndex, elIndex, deps[1]), resolveDep(view, requestorNodeIndex, elIndex, deps[2]));
+	            injectable = new ctor(resolveDep(view, elDef, allowPrivateServices, deps[0]), resolveDep(view, elDef, allowPrivateServices, deps[1]), resolveDep(view, elDef, allowPrivateServices, deps[2]));
 	            break;
 	        default:
 	            var /** @type {?} */ depValues = new Array(len);
 	            for (var /** @type {?} */ i = 0; i < len; i++) {
-	                depValues[i] = resolveDep(view, requestorNodeIndex, elIndex, deps[i]);
+	                depValues[i] = resolveDep(view, elDef, allowPrivateServices, deps[i]);
 	            }
 	            injectable = new (ctor.bind.apply(ctor, [void 0].concat(depValues)))();
 	    }
@@ -14296,13 +14347,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	}
 	/**
 	 * @param {?} view
-	 * @param {?} requestorNodeIndex
-	 * @param {?} elIndex
+	 * @param {?} elDef
+	 * @param {?} allowPrivateServices
 	 * @param {?} factory
 	 * @param {?} deps
 	 * @return {?}
 	 */
-	function callFactory(view, requestorNodeIndex, elIndex, factory, deps) {
+	function callFactory(view, elDef, allowPrivateServices, factory, deps) {
 	    var /** @type {?} */ len = deps.length;
 	    var /** @type {?} */ injectable;
 	    switch (len) {
@@ -14310,18 +14361,18 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            injectable = factory();
 	            break;
 	        case 1:
-	            injectable = factory(resolveDep(view, requestorNodeIndex, elIndex, deps[0]));
+	            injectable = factory(resolveDep(view, elDef, allowPrivateServices, deps[0]));
 	            break;
 	        case 2:
-	            injectable = factory(resolveDep(view, requestorNodeIndex, elIndex, deps[0]), resolveDep(view, requestorNodeIndex, elIndex, deps[1]));
+	            injectable = factory(resolveDep(view, elDef, allowPrivateServices, deps[0]), resolveDep(view, elDef, allowPrivateServices, deps[1]));
 	            break;
 	        case 3:
-	            injectable = factory(resolveDep(view, requestorNodeIndex, elIndex, deps[0]), resolveDep(view, requestorNodeIndex, elIndex, deps[1]), resolveDep(view, requestorNodeIndex, elIndex, deps[2]));
+	            injectable = factory(resolveDep(view, elDef, allowPrivateServices, deps[0]), resolveDep(view, elDef, allowPrivateServices, deps[1]), resolveDep(view, elDef, allowPrivateServices, deps[2]));
 	            break;
 	        default:
 	            var /** @type {?} */ depValues = Array(len);
 	            for (var /** @type {?} */ i = 0; i < len; i++) {
-	                depValues[i] = resolveDep(view, requestorNodeIndex, elIndex, deps[i]);
+	                depValues[i] = resolveDep(view, elDef, allowPrivateServices, deps[i]);
 	            }
 	            injectable = factory.apply(void 0, depValues);
 	    }
@@ -14329,13 +14380,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	}
 	/**
 	 * @param {?} view
-	 * @param {?} requestNodeIndex
-	 * @param {?} elIndex
+	 * @param {?} elDef
+	 * @param {?} allowPrivateServices
 	 * @param {?} depDef
 	 * @param {?=} notFoundValue
 	 * @return {?}
 	 */
-	function resolveDep(view, requestNodeIndex, elIndex, depDef, notFoundValue) {
+	function resolveDep(view, elDef, allowPrivateServices, depDef, notFoundValue) {
 	    if (notFoundValue === void 0) { notFoundValue = Injector.THROW_IF_NOT_FOUND; }
 	    if (depDef.flags & DepFlags.Value) {
 	        return depDef.token;
@@ -14346,55 +14397,60 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    }
 	    var /** @type {?} */ tokenKey = depDef.tokenKey;
 	    if (depDef.flags & DepFlags.SkipSelf) {
-	        requestNodeIndex = null;
-	        elIndex = view.def.nodes[elIndex].parent;
-	        while (elIndex == null && view) {
-	            elIndex = viewParentElIndex(view);
-	            view = view.parent;
-	        }
+	        allowPrivateServices = false;
+	        elDef = elDef.parent;
 	    }
 	    while (view) {
-	        var /** @type {?} */ elDef = view.def.nodes[elIndex];
-	        switch (tokenKey) {
-	            case RendererV1TokenKey: {
-	                var /** @type {?} */ compView = view;
-	                while (compView && !isComponentView(compView)) {
-	                    compView = compView.parent;
+	        if (elDef) {
+	            switch (tokenKey) {
+	                case RendererV1TokenKey: {
+	                    var /** @type {?} */ compView = view;
+	                    while (compView && !isComponentView(compView)) {
+	                        compView = compView.parent;
+	                    }
+	                    var /** @type {?} */ rootRenderer = view.root.injector.get(RootRenderer);
+	                    // Note: Don't fill in the styles as they have been installed already!
+	                    return rootRenderer.renderComponent(new RenderComponentType(view.def.component.id, '', 0, view.def.component.encapsulation, [], {}));
 	                }
-	                var /** @type {?} */ rootRenderer = view.root.injector.get(RootRenderer);
-	                // Note: Don't fill in the styles as they have been installed already!
-	                return rootRenderer.renderComponent(new RenderComponentType(view.def.component.id, '', 0, view.def.component.encapsulation, [], {}));
+	                case ElementRefTokenKey:
+	                    return new ElementRef(asElementData(view, elDef.index).renderElement);
+	                case ViewContainerRefTokenKey:
+	                    return createViewContainerRef(view, elDef);
+	                case TemplateRefTokenKey: {
+	                    if (elDef.element.template) {
+	                        return createTemplateRef(view, elDef);
+	                    }
+	                    break;
+	                }
+	                case ChangeDetectorRefTokenKey: {
+	                    var /** @type {?} */ cdView = void 0;
+	                    if (allowPrivateServices) {
+	                        cdView = asProviderData(view, elDef.element.component.index).componentView;
+	                    }
+	                    else {
+	                        cdView = view;
+	                        while (cdView.parent && !isComponentView(cdView)) {
+	                            cdView = cdView.parent;
+	                        }
+	                    }
+	                    return createChangeDetectorRef(cdView);
+	                }
+	                case InjectorRefTokenKey:
+	                    return createInjector(view, elDef);
+	                default:
+	                    var /** @type {?} */ providerDef_1 = (allowPrivateServices ? elDef.element.allProviders :
+	                        elDef.element.publicProviders)[tokenKey];
+	                    if (providerDef_1) {
+	                        var /** @type {?} */ providerData = asProviderData(view, providerDef_1.index);
+	                        if (providerData.instance === NOT_CREATED) {
+	                            providerData.instance = _createProviderInstance(view, providerDef_1);
+	                        }
+	                        return providerData.instance;
+	                    }
 	            }
-	            case ElementRefTokenKey:
-	                return new ElementRef(asElementData(view, elIndex).renderElement);
-	            case ViewContainerRefTokenKey:
-	                return createViewContainerRef(view, elIndex);
-	            case TemplateRefTokenKey:
-	                return createTemplateRef(view, elDef);
-	            case ChangeDetectorRefTokenKey:
-	                var /** @type {?} */ cdView = view;
-	                // If we are still checking dependencies on the initial element...
-	                if (requestNodeIndex != null) {
-	                    var /** @type {?} */ requestorNodeDef = view.def.nodes[requestNodeIndex];
-	                    if (requestorNodeDef.flags & NodeFlags.HasComponent) {
-	                        cdView = asProviderData(view, requestNodeIndex).componentView;
-	                    }
-	                }
-	                return createChangeDetectorRef(cdView);
-	            case InjectorRefTokenKey:
-	                return createInjector(view, elIndex);
-	            default:
-	                var /** @type {?} */ providerIndex = elDef.element.providerIndices[tokenKey];
-	                if (providerIndex != null) {
-	                    var /** @type {?} */ providerData = asProviderData(view, providerIndex);
-	                    if (providerData.instance === NOT_CREATED) {
-	                        providerData.instance = _createProviderInstance(view, view.def.nodes[providerIndex]);
-	                    }
-	                    return providerData.instance;
-	                }
 	        }
-	        requestNodeIndex = null;
-	        elIndex = viewParentElIndex(view);
+	        allowPrivateServices = isComponentView(view);
+	        elDef = viewParentEl(view);
 	        view = view.parent;
 	    }
 	    return startView.root.injector.get(depDef.token, notFoundValue);
@@ -14536,13 +14592,16 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        index: undefined,
 	        reverseChildIndex: undefined,
 	        parent: undefined,
-	        childFlags: undefined,
-	        childMatchedQueries: undefined,
+	        renderParent: undefined,
 	        bindingIndex: undefined,
 	        disposableIndex: undefined,
 	        // regular values
 	        flags: 0,
+	        childFlags: 0,
+	        childMatchedQueries: 0,
 	        matchedQueries: {},
+	        matchedQueryIds: 0,
+	        references: {},
 	        ngContentIndex: undefined,
 	        childCount: 0, bindings: bindings,
 	        disposableCount: 0,
@@ -14767,14 +14826,17 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        index: undefined,
 	        reverseChildIndex: undefined,
 	        parent: undefined,
-	        childFlags: undefined,
-	        childMatchedQueries: undefined,
+	        renderParent: undefined,
 	        bindingIndex: undefined,
 	        disposableIndex: undefined,
 	        // regular values
 	        flags: flags,
+	        childFlags: 0,
+	        childMatchedQueries: 0,
 	        ngContentIndex: undefined,
 	        matchedQueries: {},
+	        matchedQueryIds: 0,
+	        references: {},
 	        childCount: 0,
 	        bindings: [],
 	        disposableCount: 0,
@@ -14782,7 +14844,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        provider: undefined,
 	        text: undefined,
 	        pureExpression: undefined,
-	        query: { id: id, bindings: bindingDefs },
+	        query: { id: id, filterId: filterQueryId(id), bindings: bindingDefs },
 	        ngContent: undefined
 	    };
 	}
@@ -14793,29 +14855,42 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return new QueryList();
 	}
 	/**
-	 * @param {?} queryId
 	 * @param {?} view
 	 * @return {?}
 	 */
-	function dirtyParentQuery(queryId, view) {
-	    var /** @type {?} */ elIndex = viewParentElIndex(view);
-	    view = view.parent;
-	    var /** @type {?} */ queryIdx;
-	    while (view) {
-	        if (elIndex != null) {
-	            var /** @type {?} */ elementDef = view.def.nodes[elIndex];
-	            queryIdx = elementDef.element.providerIndices[queryId];
-	            if (queryIdx != null) {
-	                break;
+	function dirtyParentQueries(view) {
+	    var /** @type {?} */ queryIds = view.def.nodeMatchedQueries;
+	    while (view.parent && isEmbeddedView(view)) {
+	        var /** @type {?} */ tplDef = view.parentNodeDef;
+	        view = view.parent;
+	        // content queries
+	        var /** @type {?} */ end = tplDef.index + tplDef.childCount;
+	        for (var /** @type {?} */ i = 0; i <= end; i++) {
+	            var /** @type {?} */ nodeDef = view.def.nodes[i];
+	            if ((nodeDef.flags & NodeFlags.HasContentQuery) &&
+	                (nodeDef.flags & NodeFlags.HasDynamicQuery) &&
+	                (nodeDef.query.filterId & queryIds) === nodeDef.query.filterId) {
+	                asQueryList(view, i).setDirty();
+	            }
+	            if ((nodeDef.type === NodeType.Element && i + nodeDef.childCount < tplDef.index) ||
+	                !(nodeDef.childFlags & NodeFlags.HasContentQuery) ||
+	                !(nodeDef.childFlags & NodeFlags.HasDynamicQuery)) {
+	                // skip elements that don't contain the template element or no query.
+	                i += nodeDef.childCount;
 	            }
 	        }
-	        elIndex = viewParentElIndex(view);
-	        view = view.parent;
 	    }
-	    if (!view) {
-	        throw new Error("Illegal State: Tried to dirty parent query " + queryId + " but the query could not be found!");
+	    // view queries
+	    var /** @type {?} */ compDef = view.parentNodeDef;
+	    view = view.parent;
+	    if (view) {
+	        for (var /** @type {?} */ i = compDef.index + 1; i <= compDef.index + compDef.childCount; i++) {
+	            var /** @type {?} */ nodeDef = view.def.nodes[i];
+	            if ((nodeDef.flags & NodeFlags.HasViewQuery) && (nodeDef.flags & NodeFlags.HasDynamicQuery)) {
+	                asQueryList(view, i).setDirty();
+	            }
+	        }
 	    }
-	    asQueryList(view, queryIdx).setDirty();
 	}
 	/**
 	 * @param {?} view
@@ -14827,74 +14902,77 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    if (!queryList.dirty) {
 	        return;
 	    }
-	    var /** @type {?} */ queryId = nodeDef.query.id;
-	    var /** @type {?} */ providerDef = view.def.nodes[nodeDef.parent];
+	    var /** @type {?} */ providerDef = nodeDef.parent;
 	    var /** @type {?} */ providerData = asProviderData(view, providerDef.index);
 	    var /** @type {?} */ newValues;
 	    if (nodeDef.flags & NodeFlags.HasContentQuery) {
-	        var /** @type {?} */ elementDef = view.def.nodes[providerDef.parent];
-	        newValues = calcQueryValues(view, elementDef.index, elementDef.index + elementDef.childCount, queryId, []);
+	        var /** @type {?} */ elementDef = providerDef.parent;
+	        newValues = calcQueryValues(view, elementDef.index, elementDef.index + elementDef.childCount, nodeDef.query, []);
 	    }
 	    else if (nodeDef.flags & NodeFlags.HasViewQuery) {
 	        var /** @type {?} */ compView = providerData.componentView;
-	        newValues = calcQueryValues(compView, 0, compView.def.nodes.length - 1, queryId, []);
+	        newValues = calcQueryValues(compView, 0, compView.def.nodes.length - 1, nodeDef.query, []);
 	    }
 	    queryList.reset(newValues);
-	    var /** @type {?} */ boundValue;
 	    var /** @type {?} */ bindings = nodeDef.query.bindings;
+	    var /** @type {?} */ notify = false;
 	    for (var /** @type {?} */ i = 0; i < bindings.length; i++) {
 	        var /** @type {?} */ binding = bindings[i];
+	        var /** @type {?} */ boundValue = void 0;
 	        switch (binding.bindingType) {
 	            case QueryBindingType.First:
 	                boundValue = queryList.first;
 	                break;
 	            case QueryBindingType.All:
 	                boundValue = queryList;
+	                notify = true;
 	                break;
 	        }
 	        providerData.instance[binding.propName] = boundValue;
+	    }
+	    if (notify) {
+	        queryList.notifyOnChanges();
 	    }
 	}
 	/**
 	 * @param {?} view
 	 * @param {?} startIndex
 	 * @param {?} endIndex
-	 * @param {?} queryId
+	 * @param {?} queryDef
 	 * @param {?} values
 	 * @return {?}
 	 */
-	function calcQueryValues(view, startIndex, endIndex, queryId, values) {
-	    var /** @type {?} */ len = view.def.nodes.length;
+	function calcQueryValues(view, startIndex, endIndex, queryDef, values) {
 	    for (var /** @type {?} */ i = startIndex; i <= endIndex; i++) {
 	        var /** @type {?} */ nodeDef = view.def.nodes[i];
-	        var /** @type {?} */ value = getQueryValue(view, nodeDef, queryId);
-	        if (value != null) {
-	            // a match
-	            values.push(value);
+	        var /** @type {?} */ valueType = nodeDef.matchedQueries[queryDef.id];
+	        if (valueType != null) {
+	            values.push(getQueryValue(view, nodeDef, valueType));
 	        }
-	        if (nodeDef.flags & NodeFlags.HasEmbeddedViews &&
-	            queryId in nodeDef.element.template.nodeMatchedQueries) {
+	        if (nodeDef.type === NodeType.Element && nodeDef.element.template &&
+	            (nodeDef.element.template.nodeMatchedQueries & queryDef.filterId) === queryDef.filterId) {
 	            // check embedded views that were attached at the place of their template.
 	            var /** @type {?} */ elementData = asElementData(view, i);
 	            var /** @type {?} */ embeddedViews = elementData.embeddedViews;
-	            for (var /** @type {?} */ k = 0; k < embeddedViews.length; k++) {
-	                var /** @type {?} */ embeddedView = embeddedViews[k];
-	                var /** @type {?} */ dvc = declaredViewContainer(embeddedView);
-	                if (dvc && dvc === elementData) {
-	                    calcQueryValues(embeddedView, 0, embeddedView.def.nodes.length - 1, queryId, values);
+	            if (embeddedViews) {
+	                for (var /** @type {?} */ k = 0; k < embeddedViews.length; k++) {
+	                    var /** @type {?} */ embeddedView = embeddedViews[k];
+	                    var /** @type {?} */ dvc = declaredViewContainer(embeddedView);
+	                    if (dvc && dvc === elementData) {
+	                        calcQueryValues(embeddedView, 0, embeddedView.def.nodes.length - 1, queryDef, values);
+	                    }
 	                }
 	            }
 	            var /** @type {?} */ projectedViews = elementData.projectedViews;
 	            if (projectedViews) {
 	                for (var /** @type {?} */ k = 0; k < projectedViews.length; k++) {
 	                    var /** @type {?} */ projectedView = projectedViews[k];
-	                    calcQueryValues(projectedView, 0, projectedView.def.nodes.length - 1, queryId, values);
+	                    calcQueryValues(projectedView, 0, projectedView.def.nodes.length - 1, queryDef, values);
 	                }
 	            }
 	        }
-	        if (!(queryId in nodeDef.childMatchedQueries)) {
-	            // If don't check descendants, skip the children.
-	            // Or: no child matches the query, then skip the children as well.
+	        if ((nodeDef.childMatchedQueries & queryDef.filterId) !== queryDef.filterId) {
+	            // if no child matches the query, skip the children.
 	            i += nodeDef.childCount;
 	        }
 	    }
@@ -14903,11 +14981,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @param {?} view
 	 * @param {?} nodeDef
-	 * @param {?} queryId
+	 * @param {?} queryValueType
 	 * @return {?}
 	 */
-	function getQueryValue(view, nodeDef, queryId) {
-	    var /** @type {?} */ queryValueType = (nodeDef.matchedQueries[queryId]);
+	function getQueryValue(view, nodeDef, queryValueType) {
 	    if (queryValueType != null) {
 	        // a match
 	        var /** @type {?} */ value = void 0;
@@ -14922,7 +14999,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                value = createTemplateRef(view, nodeDef);
 	                break;
 	            case QueryValueType.ViewContainerRef:
-	                value = createViewContainerRef(view, nodeDef.index);
+	                value = createViewContainerRef(view, nodeDef);
 	                break;
 	            case QueryValueType.Provider:
 	                value = asProviderData(view, nodeDef.index).instance;
@@ -14956,13 +15033,16 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        index: undefined,
 	        reverseChildIndex: undefined,
 	        parent: undefined,
-	        childFlags: undefined,
-	        childMatchedQueries: undefined,
+	        renderParent: undefined,
 	        bindingIndex: undefined,
 	        disposableIndex: undefined,
 	        // regular values
 	        flags: 0,
-	        matchedQueries: {}, ngContentIndex: ngContentIndex,
+	        childFlags: 0,
+	        childMatchedQueries: 0,
+	        matchedQueries: {},
+	        matchedQueryIds: 0,
+	        references: {}, ngContentIndex: ngContentIndex,
 	        childCount: 0, bindings: bindings,
 	        disposableCount: 0,
 	        element: undefined,
@@ -14980,12 +15060,12 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @return {?}
 	 */
 	function createText(view, renderHost, def) {
-	    var /** @type {?} */ parentNode = def.parent != null ? asElementData(view, def.parent).renderElement : renderHost;
 	    var /** @type {?} */ renderNode;
 	    var /** @type {?} */ renderer = view.root.renderer;
 	    renderNode = renderer.createText(def.text.prefix);
-	    if (parentNode) {
-	        renderer.appendChild(parentNode, renderNode);
+	    var /** @type {?} */ parentEl = getParentRenderElement(view, renderHost, def);
+	    if (parentEl) {
+	        renderer.appendChild(parentEl, renderNode);
 	    }
 	    return { renderText: renderNode };
 	}
@@ -15109,7 +15189,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	var /** @type {?} */ NOOP = function () { return undefined; };
 	/**
 	 * @param {?} flags
-	 * @param {?} nodesWithoutIndices
+	 * @param {?} nodes
 	 * @param {?=} updateDirectives
 	 * @param {?=} updateRenderer
 	 * @param {?=} handleEvent
@@ -15118,75 +15198,110 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @param {?=} styles
 	 * @return {?}
 	 */
-	function viewDef(flags, nodesWithoutIndices, updateDirectives, updateRenderer, handleEvent, compId, encapsulation, styles) {
+	function viewDef(flags, nodes, updateDirectives, updateRenderer, handleEvent, compId, encapsulation, styles) {
 	    // clone nodes and set auto calculated values
-	    if (nodesWithoutIndices.length === 0) {
+	    if (nodes.length === 0) {
 	        throw new Error("Illegal State: Views without nodes are not allowed!");
 	    }
-	    var /** @type {?} */ nodes = new Array(nodesWithoutIndices.length);
-	    var /** @type {?} */ reverseChildNodes = new Array(nodesWithoutIndices.length);
+	    var /** @type {?} */ reverseChildNodes = new Array(nodes.length);
 	    var /** @type {?} */ viewBindingCount = 0;
 	    var /** @type {?} */ viewDisposableCount = 0;
 	    var /** @type {?} */ viewNodeFlags = 0;
-	    var /** @type {?} */ viewMatchedQueries = {};
+	    var /** @type {?} */ viewMatchedQueries = 0;
 	    var /** @type {?} */ currentParent = null;
+	    var /** @type {?} */ currentElementHasPublicProviders = false;
+	    var /** @type {?} */ currentElementHasPrivateProviders = false;
 	    var /** @type {?} */ lastRootNode = null;
-	    for (var /** @type {?} */ i = 0; i < nodesWithoutIndices.length; i++) {
+	    for (var /** @type {?} */ i = 0; i < nodes.length; i++) {
 	        while (currentParent && i > currentParent.index + currentParent.childCount) {
-	            var /** @type {?} */ newParent = nodes[currentParent.parent];
+	            var /** @type {?} */ newParent = currentParent.parent;
 	            if (newParent) {
 	                newParent.childFlags |= currentParent.childFlags;
-	                copyQueryMatchesInto(currentParent.childMatchedQueries, newParent.childMatchedQueries);
+	                newParent.childMatchedQueries |= currentParent.childMatchedQueries;
 	            }
 	            currentParent = newParent;
 	        }
-	        var /** @type {?} */ nodeWithoutIndices = nodesWithoutIndices[i];
-	        var /** @type {?} */ reverseChildIndex = calculateReverseChildIndex(currentParent, i, nodeWithoutIndices.childCount, nodesWithoutIndices.length);
-	        var /** @type {?} */ node = cloneAndModifyNode(nodeWithoutIndices, {
-	            index: i,
-	            parent: currentParent ? currentParent.index : undefined,
-	            bindingIndex: viewBindingCount,
-	            disposableIndex: viewDisposableCount, reverseChildIndex: reverseChildIndex,
-	        });
-	        if (node.element) {
-	            node.element = cloneAndModifyElement(node.element, {
-	                // Use protoypical inheritance to not get O(n^2) complexity...
-	                providerIndices: Object.create(currentParent ? currentParent.element.providerIndices : null),
-	            });
-	        }
-	        nodes[i] = node;
-	        reverseChildNodes[reverseChildIndex] = node;
-	        validateNode(currentParent, node, nodesWithoutIndices.length);
-	        viewNodeFlags |= node.flags;
-	        copyQueryMatchesInto(node.matchedQueries, viewMatchedQueries);
-	        viewBindingCount += node.bindings.length;
-	        viewDisposableCount += node.disposableCount;
-	        if (currentParent) {
-	            currentParent.childFlags |= node.flags;
-	            copyQueryMatchesInto(node.matchedQueries, currentParent.childMatchedQueries);
-	            if (node.element && node.element.template) {
-	                copyQueryMatchesInto(node.element.template.nodeMatchedQueries, currentParent.childMatchedQueries);
+	        var /** @type {?} */ node = nodes[i];
+	        node.index = i;
+	        node.parent = currentParent;
+	        node.bindingIndex = viewBindingCount;
+	        node.disposableIndex = viewDisposableCount;
+	        node.reverseChildIndex =
+	            calculateReverseChildIndex(currentParent, i, node.childCount, nodes.length);
+	        var /** @type {?} */ currentRenderParent = void 0;
+	        if (currentParent &&
+	            !(currentParent.type === NodeType.Element && currentParent.element.component)) {
+	            // children of components should never be attached!
+	            if (currentParent && currentParent.type === NodeType.Element && !currentParent.element.name) {
+	                currentRenderParent = currentParent.renderParent;
+	            }
+	            else {
+	                currentRenderParent = currentParent;
 	            }
 	        }
+	        node.renderParent = currentRenderParent;
+	        if (node.element) {
+	            var /** @type {?} */ elDef = node.element;
+	            elDef.publicProviders =
+	                currentParent ? currentParent.element.publicProviders : Object.create(null);
+	            elDef.allProviders = elDef.publicProviders;
+	            // Note: We assume that all providers of an element are before any child element!
+	            currentElementHasPublicProviders = false;
+	            currentElementHasPrivateProviders = false;
+	        }
+	        reverseChildNodes[node.reverseChildIndex] = node;
+	        validateNode(currentParent, node, nodes.length);
+	        viewNodeFlags |= node.flags;
+	        viewMatchedQueries |= node.matchedQueryIds;
+	        if (node.element && node.element.template) {
+	            viewMatchedQueries |= node.element.template.nodeMatchedQueries;
+	        }
+	        if (currentParent) {
+	            currentParent.childFlags |= node.flags;
+	            currentParent.childMatchedQueries |= node.matchedQueryIds;
+	            if (node.element && node.element.template) {
+	                currentParent.childMatchedQueries |= node.element.template.nodeMatchedQueries;
+	            }
+	        }
+	        viewBindingCount += node.bindings.length;
+	        viewDisposableCount += node.disposableCount;
 	        if (!currentParent) {
 	            lastRootNode = node;
 	        }
 	        if (node.type === NodeType.Provider || node.type === NodeType.Directive) {
-	            currentParent.element.providerIndices[node.provider.tokenKey] = i;
-	        }
-	        if (node.query) {
-	            var /** @type {?} */ elementDef = nodes[currentParent.parent];
-	            elementDef.element.providerIndices[node.query.id] = i;
+	            if (!currentElementHasPublicProviders) {
+	                currentElementHasPublicProviders = true;
+	                // Use protoypical inheritance to not get O(n^2) complexity...
+	                currentParent.element.publicProviders =
+	                    Object.create(currentParent.element.publicProviders);
+	                currentParent.element.allProviders = currentParent.element.publicProviders;
+	            }
+	            var /** @type {?} */ isPrivateService = (node.flags & NodeFlags.PrivateProvider) !== 0;
+	            var /** @type {?} */ isComponent = (node.flags & NodeFlags.HasComponent) !== 0;
+	            if (!isPrivateService || isComponent) {
+	                currentParent.element.publicProviders[node.provider.tokenKey] = node;
+	            }
+	            else {
+	                if (!currentElementHasPrivateProviders) {
+	                    currentElementHasPrivateProviders = true;
+	                    // Use protoypical inheritance to not get O(n^2) complexity...
+	                    currentParent.element.allProviders = Object.create(currentParent.element.publicProviders);
+	                }
+	                currentParent.element.allProviders[node.provider.tokenKey] = node;
+	            }
+	            if (isComponent) {
+	                currentParent.element.component = node;
+	            }
 	        }
 	        if (node.childCount) {
 	            currentParent = node;
 	        }
 	    }
 	    while (currentParent) {
-	        var /** @type {?} */ newParent = nodes[currentParent.parent];
+	        var /** @type {?} */ newParent = currentParent.parent;
 	        if (newParent) {
 	            newParent.childFlags |= currentParent.childFlags;
-	            copyQueryMatchesInto(currentParent.childMatchedQueries, newParent.childMatchedQueries);
+	            newParent.childMatchedQueries |= currentParent.childMatchedQueries;
 	        }
 	        currentParent = newParent;
 	    }
@@ -15202,18 +15317,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        bindingCount: viewBindingCount,
 	        disposableCount: viewDisposableCount, lastRootNode: lastRootNode
 	    };
-	}
-	/**
-	 * @param {?} source
-	 * @param {?} target
-	 * @return {?}
-	 */
-	function copyQueryMatchesInto(source, target) {
-	    for (var /** @type {?} */ prop in source) {
-	        if (!queryIdIsReference(prop)) {
-	            target[prop] = true;
-	        }
-	    }
 	}
 	/**
 	 * @param {?} currentParent
@@ -15291,54 +15394,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    }
 	}
 	/**
-	 * @param {?} nodeDef
-	 * @param {?} values
-	 * @return {?}
-	 */
-	function cloneAndModifyNode(nodeDef, values) {
-	    // Attention: don't use copyInto here to prevent v8 from treating this object
-	    // as a dictionary!
-	    return {
-	        type: nodeDef.type,
-	        index: values.index,
-	        reverseChildIndex: values.reverseChildIndex,
-	        parent: values.parent,
-	        childFlags: 0,
-	        childMatchedQueries: {},
-	        bindingIndex: values.bindingIndex,
-	        disposableIndex: values.disposableIndex,
-	        flags: nodeDef.flags,
-	        matchedQueries: nodeDef.matchedQueries,
-	        ngContentIndex: nodeDef.ngContentIndex,
-	        childCount: nodeDef.childCount,
-	        bindings: nodeDef.bindings,
-	        disposableCount: nodeDef.disposableCount,
-	        element: nodeDef.element,
-	        provider: nodeDef.provider,
-	        text: nodeDef.text,
-	        pureExpression: nodeDef.pureExpression,
-	        query: nodeDef.query,
-	        ngContent: nodeDef.ngContent
-	    };
-	}
-	/**
-	 * @param {?} elementDef
-	 * @param {?} values
-	 * @return {?}
-	 */
-	function cloneAndModifyElement(elementDef, values) {
-	    // Attention: don't use copyInto here to prevent v8 from treating this object
-	    // as a dictionary!
-	    return {
-	        name: elementDef.name,
-	        attrs: elementDef.attrs,
-	        outputs: elementDef.outputs,
-	        template: elementDef.template,
-	        providerIndices: values.providerIndices,
-	        source: elementDef.source
-	    };
-	}
-	/**
 	 * @param {?} parent
 	 * @param {?} anchorDef
 	 * @param {?=} context
@@ -15347,7 +15402,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	function createEmbeddedView(parent, anchorDef, context) {
 	    // embedded views are seen as siblings to the anchor, so we need
 	    // to get the parent of the anchor and use it as parentIndex.
-	    var /** @type {?} */ view = createView(parent.root, parent, anchorDef.index, anchorDef.element.template);
+	    var /** @type {?} */ view = createView(parent.root, parent, anchorDef, anchorDef.element.template);
 	    initView(view, parent.component, context);
 	    createViewNodes(view);
 	    return view;
@@ -15367,17 +15422,17 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @param {?} root
 	 * @param {?} parent
-	 * @param {?} parentIndex
+	 * @param {?} parentNodeDef
 	 * @param {?} def
 	 * @return {?}
 	 */
-	function createView(root, parent, parentIndex, def) {
+	function createView(root, parent, parentNodeDef, def) {
 	    var /** @type {?} */ nodes = new Array(def.nodes.length);
 	    var /** @type {?} */ disposables = def.disposableCount ? new Array(def.disposableCount) : undefined;
 	    var /** @type {?} */ view = {
 	        def: def,
 	        parent: parent,
-	        parentIndex: parentIndex,
+	        parentNodeDef: parentNodeDef,
 	        context: undefined,
 	        component: undefined, nodes: nodes,
 	        state: ViewState.FirstCheck | ViewState.ChecksEnabled, root: root,
@@ -15402,7 +15457,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	function createViewNodes(view) {
 	    var /** @type {?} */ renderHost;
 	    if (isComponentView(view)) {
-	        renderHost = asElementData(view.parent, viewParentElIndex(view)).renderElement;
+	        renderHost = asElementData(view.parent, viewParentEl(view).index).renderElement;
 	    }
 	    var /** @type {?} */ def = view.def;
 	    var /** @type {?} */ nodes = view.nodes;
@@ -15433,7 +15488,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                    // Components can inject a ChangeDetectorRef that needs a references to
 	                    // the component view. Therefore, we create the component view first
 	                    // and set the ProviderData in ViewData, and then instantiate the provider.
-	                    var /** @type {?} */ componentView = createView(view.root, view, nodeDef.index, resolveViewDefinition(nodeDef.provider.component));
+	                    var /** @type {?} */ componentView = createView(view.root, view, nodeDef, resolveViewDefinition(nodeDef.provider.component));
 	                    var /** @type {?} */ providerData = ({ componentView: componentView, instance: undefined });
 	                    nodes[i] = (providerData);
 	                    var /** @type {?} */ instance = providerData.instance = createDirectiveInstance(view, nodeDef);
@@ -15462,6 +15517,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    // Create the ViewData.nodes of component views after we created everything else,
 	    // so that e.g. ng-content works
 	    execComponentViewsAction(view, ViewAction.CreateViewNodes);
+	    // fill static content and view queries
+	    execQueriesAction(view, NodeFlags.HasContentQuery | NodeFlags.HasViewQuery, NodeFlags.HasStaticQuery, QueryAction.CheckAndUpdate);
 	}
 	/**
 	 * @param {?} view
@@ -15470,10 +15527,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	function checkNoChangesView(view) {
 	    Services.updateDirectives(checkNoChangesNode, view);
 	    execEmbeddedViewsAction(view, ViewAction.CheckNoChanges);
-	    execQueriesAction(view, NodeFlags.HasContentQuery, QueryAction.CheckNoChanges);
+	    execQueriesAction(view, NodeFlags.HasContentQuery, NodeFlags.HasDynamicQuery, QueryAction.CheckNoChanges);
 	    Services.updateRenderer(checkNoChangesNode, view);
 	    execComponentViewsAction(view, ViewAction.CheckNoChanges);
-	    execQueriesAction(view, NodeFlags.HasViewQuery, QueryAction.CheckNoChanges);
+	    execQueriesAction(view, NodeFlags.HasViewQuery, NodeFlags.HasDynamicQuery, QueryAction.CheckNoChanges);
 	}
 	/**
 	 * @param {?} view
@@ -15482,12 +15539,12 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	function checkAndUpdateView(view) {
 	    Services.updateDirectives(checkAndUpdateNode, view);
 	    execEmbeddedViewsAction(view, ViewAction.CheckAndUpdate);
-	    execQueriesAction(view, NodeFlags.HasContentQuery, QueryAction.CheckAndUpdate);
+	    execQueriesAction(view, NodeFlags.HasContentQuery, NodeFlags.HasDynamicQuery, QueryAction.CheckAndUpdate);
 	    callLifecycleHooksChildrenFirst(view, NodeFlags.AfterContentChecked |
 	        (view.state & ViewState.FirstCheck ? NodeFlags.AfterContentInit : 0));
 	    Services.updateRenderer(checkAndUpdateNode, view);
 	    execComponentViewsAction(view, ViewAction.CheckAndUpdate);
-	    execQueriesAction(view, NodeFlags.HasViewQuery, QueryAction.CheckAndUpdate);
+	    execQueriesAction(view, NodeFlags.HasViewQuery, NodeFlags.HasDynamicQuery, QueryAction.CheckAndUpdate);
 	    callLifecycleHooksChildrenFirst(view, NodeFlags.AfterViewChecked |
 	        (view.state & ViewState.FirstCheck ? NodeFlags.AfterViewInit : 0));
 	    if (view.def.flags & ViewFlags.OnPush) {
@@ -15772,17 +15829,19 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @param {?} view
 	 * @param {?} queryFlags
+	 * @param {?} staticDynamicQueryFlag
 	 * @param {?} action
 	 * @return {?}
 	 */
-	function execQueriesAction(view, queryFlags, action) {
-	    if (!(view.def.nodeFlags & queryFlags)) {
+	function execQueriesAction(view, queryFlags, staticDynamicQueryFlag, action) {
+	    if (!(view.def.nodeFlags & queryFlags) || !(view.def.nodeFlags & staticDynamicQueryFlag)) {
 	        return;
 	    }
 	    var /** @type {?} */ nodeCount = view.def.nodes.length;
 	    for (var /** @type {?} */ i = 0; i < nodeCount; i++) {
 	        var /** @type {?} */ nodeDef = view.def.nodes[i];
-	        if (nodeDef.flags & queryFlags) {
+	        if ((nodeDef.flags & queryFlags) && (nodeDef.flags & staticDynamicQueryFlag)) {
+	            var /** @type {?} */ elDef = nodeDef.parent.parent;
 	            Services.setCurrentNode(view, nodeDef.index);
 	            switch (action) {
 	                case QueryAction.CheckAndUpdate:
@@ -15793,8 +15852,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                    break;
 	            }
 	        }
-	        else if ((nodeDef.childFlags & queryFlags) === 0) {
-	            // no child has a content query
+	        if (!(nodeDef.childFlags & queryFlags) || !(nodeDef.childFlags & staticDynamicQueryFlag)) {
+	            // no child has a matching query
 	            // then skip the children
 	            i += nodeDef.childCount;
 	        }
@@ -15821,9 +15880,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        }
 	        projectedViews.push(view);
 	    }
-	    for (var /** @type {?} */ queryId in view.def.nodeMatchedQueries) {
-	        dirtyParentQuery(queryId, view);
-	    }
+	    dirtyParentQueries(view);
 	    var /** @type {?} */ prevView = viewIndex > 0 ? embeddedViews[viewIndex - 1] : null;
 	    renderAttachEmbeddedView(elementData, prevView, view);
 	}
@@ -15844,9 +15901,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        var /** @type {?} */ projectedViews = dvcElementData.projectedViews;
 	        removeFromArray(projectedViews, projectedViews.indexOf(view));
 	    }
-	    for (var /** @type {?} */ queryId in view.def.nodeMatchedQueries) {
-	        dirtyParentQuery(queryId, view);
-	    }
+	    dirtyParentQueries(view);
 	    renderDetachEmbeddedView(elementData, view);
 	    return view;
 	}
@@ -15866,9 +15921,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    addToArray$1(embeddedViews, newViewIndex, view);
 	    // Note: Don't need to change projectedViews as the order in there
 	    // as always invalid...
-	    for (var /** @type {?} */ queryId in view.def.nodeMatchedQueries) {
-	        dirtyParentQuery(queryId, view);
-	    }
+	    dirtyParentQueries(view);
 	    renderDetachEmbeddedView(elementData, view);
 	    var /** @type {?} */ prevView = newViewIndex > 0 ? embeddedViews[newViewIndex - 1] : null;
 	    renderAttachEmbeddedView(elementData, prevView, view);
@@ -16170,8 +16223,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        if ((binding.type === BindingType.ElementProperty ||
 	            binding.type === BindingType.DirectiveProperty) &&
 	            checkBinding$1(view, nodeDef, i, value)) {
-	            var /** @type {?} */ elIndex = nodeDef.type === NodeType.Directive ? nodeDef.parent : nodeDef.index;
-	            setBindingDebugInfo$1(view.root.renderer, asElementData(view, elIndex).renderElement, binding.nonMinifiedName, value);
+	            var /** @type {?} */ elDef = nodeDef.type === NodeType.Directive ? nodeDef.parent : nodeDef;
+	            setBindingDebugInfo$1(view.root.renderer, asElementData(view, elDef.index).renderElement, binding.nonMinifiedName, value);
 	        }
 	    }
 	    return ((delegate)).apply(void 0, [view, nodeIndex, argStyle].concat(givenValues));
@@ -16418,38 +16471,26 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            this.nodeIndex = 0;
 	        }
 	        this.nodeDef = view.def.nodes[nodeIndex];
-	        var elIndex = nodeIndex;
+	        var elDef = this.nodeDef;
 	        var elView = view;
-	        while (elIndex != null && view.def.nodes[elIndex].type !== NodeType.Element) {
-	            elIndex = view.def.nodes[elIndex].parent;
+	        while (elDef && elDef.type !== NodeType.Element) {
+	            elDef = elDef.parent;
 	        }
-	        if (elIndex == null) {
-	            while (elIndex == null && elView) {
-	                elIndex = viewParentElIndex(elView);
+	        if (!elDef) {
+	            while (!elDef && elView) {
+	                elDef = viewParentEl(elView);
 	                elView = elView.parent;
 	            }
 	        }
+	        this.elDef = elDef;
 	        this.elView = elView;
-	        if (elView) {
-	            this.elDef = elView.def.nodes[elIndex];
-	            for (var i = this.elDef.index + 1; i <= this.elDef.index + this.elDef.childCount; i++) {
-	                var childDef = this.elView.def.nodes[i];
-	                if (childDef.flags & NodeFlags.HasComponent) {
-	                    this.compProviderIndex = i;
-	                    break;
-	                }
-	                i += childDef.childCount;
-	            }
-	        }
-	        else {
-	            this.elDef = null;
-	        }
+	        this.compProviderDef = elView ? this.elDef.element.component : null;
 	    }
 	    Object.defineProperty(DebugContext_.prototype, "injector", {
 	        /**
 	         * @return {?}
 	         */
-	        get: function () { return createInjector(this.elView, this.elDef.index); },
+	        get: function () { return createInjector(this.elView, this.elDef); },
 	        enumerable: true,
 	        configurable: true
 	    });
@@ -16458,8 +16499,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	         * @return {?}
 	         */
 	        get: function () {
-	            if (this.compProviderIndex != null) {
-	                return asProviderData(this.elView, this.compProviderIndex).instance;
+	            if (this.compProviderDef) {
+	                return asProviderData(this.elView, this.compProviderDef.index).instance;
 	            }
 	            return this.view.component;
 	        },
@@ -16471,8 +16512,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	         * @return {?}
 	         */
 	        get: function () {
-	            if (this.compProviderIndex != null) {
-	                return asProviderData(this.elView, this.compProviderIndex).instance;
+	            if (this.compProviderDef) {
+	                return asProviderData(this.elView, this.compProviderDef.index).instance;
 	            }
 	            return this.view.context;
 	        },
@@ -16540,8 +16581,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	         * @return {?}
 	         */
 	        get: function () {
-	            var /** @type {?} */ view = this.compProviderIndex != null ?
-	                asProviderData(this.elView, this.compProviderIndex).componentView :
+	            var /** @type {?} */ view = this.compProviderDef ?
+	                asProviderData(this.elView, this.compProviderDef.index).componentView :
 	                this.view;
 	            var /** @type {?} */ elData = findHostElement(view);
 	            return elData ? elData.renderElement : undefined;
@@ -16571,8 +16612,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        view = view.parent;
 	    }
 	    if (view.parent) {
-	        var /** @type {?} */ hostData = asElementData(view.parent, viewParentElIndex(view));
-	        return hostData;
+	        return asElementData(view.parent, viewParentEl(view).index);
 	    }
 	    return undefined;
 	}
@@ -16583,10 +16623,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @return {?}
 	 */
 	function collectReferences(view, nodeDef, references) {
-	    for (var /** @type {?} */ queryId in nodeDef.matchedQueries) {
-	        if (queryIdIsReference(queryId)) {
-	            references[queryId.slice(1)] = getQueryValue(view, nodeDef, queryId);
-	        }
+	    for (var /** @type {?} */ refName in nodeDef.references) {
+	        references[refName] = getQueryValue(view, nodeDef, nodeDef.references[refName]);
 	    }
 	}
 	/**
@@ -28744,6 +28782,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            providers: this.providers,
 	            viewProviders: this.viewProviders,
 	            queries: this.queries,
+	            viewQueries: this.viewQueries,
 	            entryComponents: this.entryComponents,
 	            changeDetection: this.changeDetection,
 	            template: this.template && this.template.toSummary(),
@@ -29281,6 +29320,12 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	};
 	Identifiers.pipeDef = { name: 'ɵviewEngine', moduleUrl: CORE, member: 'pipeDef', runtime: pipeDef };
 	Identifiers.nodeValue = { name: 'ɵviewEngine', moduleUrl: CORE, member: 'nodeValue', runtime: nodeValue };
+	Identifiers.ngContentDef = {
+	    name: 'ɵviewEngine',
+	    moduleUrl: CORE,
+	    member: 'ngContentDef',
+	    runtime: ngContentDef
+	};
 	Identifiers.unwrapValue = {
 	    name: 'ɵviewEngine',
 	    moduleUrl: CORE,
@@ -29847,13 +29892,15 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @param {?} inputs
 	     * @param {?} hostProperties
 	     * @param {?} hostEvents
+	     * @param {?} contentQueryStartId
 	     * @param {?} sourceSpan
 	     */
-	    function DirectiveAst(directive, inputs, hostProperties, hostEvents, sourceSpan) {
+	    function DirectiveAst(directive, inputs, hostProperties, hostEvents, contentQueryStartId, sourceSpan) {
 	        this.directive = directive;
 	        this.inputs = inputs;
 	        this.hostProperties = hostProperties;
 	        this.hostEvents = hostEvents;
+	        this.contentQueryStartId = contentQueryStartId;
 	        this.sourceSpan = sourceSpan;
 	    }
 	    /**
@@ -30018,9 +30065,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @param {?} _directiveAsts
 	     * @param {?} attrs
 	     * @param {?} refs
+	     * @param {?} isTemplate
+	     * @param {?} contentQueryStartId
 	     * @param {?} _sourceSpan
 	     */
-	    function ProviderElementContext(viewContext, _parent, _isViewRoot, _directiveAsts, attrs, refs, _sourceSpan) {
+	    function ProviderElementContext(viewContext, _parent, _isViewRoot, _directiveAsts, attrs, refs, isTemplate, contentQueryStartId, _sourceSpan) {
 	        var _this = this;
 	        this.viewContext = viewContext;
 	        this._parent = _parent;
@@ -30036,10 +30085,14 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        var directivesMeta = _directiveAsts.map(function (directiveAst) { return directiveAst.directive; });
 	        this._allProviders =
 	            _resolveProvidersFromDirectives(directivesMeta, _sourceSpan, viewContext.errors);
-	        this._contentQueries = _getContentQueries(this.depth, directivesMeta);
+	        this._contentQueries = _getContentQueries(contentQueryStartId, directivesMeta);
 	        Array.from(this._allProviders.values()).forEach(function (provider) {
 	            _this._addQueryReadsTo(provider.token, provider.token, _this._queriedTokens);
 	        });
+	        if (isTemplate) {
+	            var templateRefId = createIdentifierToken(Identifiers.TemplateRef);
+	            this._addQueryReadsTo(templateRefId, templateRefId, this._queriedTokens);
+	        }
 	        refs.forEach(function (refAst) {
 	            var defaultQueryValue = refAst.value || createIdentifierToken(Identifiers.ElementRef);
 	            _this._addQueryReadsTo({ value: refAst.name }, defaultQueryValue, _this._queriedTokens);
@@ -30065,22 +30118,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            _this._getOrCreateLocalProvider(provider.providerType, provider.token, false);
 	        });
 	    };
-	    Object.defineProperty(ProviderElementContext.prototype, "depth", {
-	        /**
-	         * @return {?}
-	         */
-	        get: function () {
-	            var /** @type {?} */ d = 0;
-	            var /** @type {?} */ current = this;
-	            while (current._parent) {
-	                d++;
-	                current = current._parent;
-	            }
-	            return d;
-	        },
-	        enumerable: true,
-	        configurable: true
-	    });
 	    Object.defineProperty(ProviderElementContext.prototype, "transformProviders", {
 	        /**
 	         * @return {?}
@@ -30140,7 +30177,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                queryMatches = [];
 	                queryReadTokens.set(tokenRef, queryMatches);
 	            }
-	            queryMatches.push({ query: query.id, value: queryValue });
+	            queryMatches.push({ queryId: query.queryId, value: queryValue });
 	        });
 	    };
 	    /**
@@ -30515,22 +30552,25 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @return {?}
 	 */
 	function _getViewQueries(component) {
+	    // Note: queries start with id 1 so we can use the number in a Bloom filter!
+	    var /** @type {?} */ viewQueryId = 1;
 	    var /** @type {?} */ viewQueries = new Map();
 	    if (component.viewQueries) {
-	        component.viewQueries.forEach(function (query, queryIndex) { return _addQueryToTokenMap(viewQueries, { meta: query, id: { elementDepth: null, directiveIndex: null, queryIndex: queryIndex } }); });
+	        component.viewQueries.forEach(function (query) { return _addQueryToTokenMap(viewQueries, { meta: query, queryId: viewQueryId++ }); });
 	    }
 	    return viewQueries;
 	}
 	/**
-	 * @param {?} elementDepth
+	 * @param {?} contentQueryStartId
 	 * @param {?} directives
 	 * @return {?}
 	 */
-	function _getContentQueries(elementDepth, directives) {
+	function _getContentQueries(contentQueryStartId, directives) {
+	    var /** @type {?} */ contentQueryId = contentQueryStartId;
 	    var /** @type {?} */ contentQueries = new Map();
 	    directives.forEach(function (directive, directiveIndex) {
 	        if (directive.queries) {
-	            directive.queries.forEach(function (query, queryIndex) { return _addQueryToTokenMap(contentQueries, { meta: query, id: { elementDepth: elementDepth, directiveIndex: directiveIndex, queryIndex: queryIndex } }); });
+	            directive.queries.forEach(function (query) { return _addQueryToTokenMap(contentQueries, { meta: query, queryId: contentQueryId++ }); });
 	        }
 	    });
 	    return contentQueries;
@@ -31501,6 +31541,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        this.selectorMatcher = new SelectorMatcher();
 	        this.directivesIndex = new Map();
 	        this.ngContentCount = 0;
+	        // Note: queries start with id 1 so we can use the number in a Bloom filter!
+	        this.contentQueryStartId = providerViewContext.component.viewQueries.length + 1;
 	        directives.forEach(function (directive, index) {
 	            var selector = CssSelector.parse(directive.selector);
 	            _this.selectorMatcher.addSelectables(selector, directive);
@@ -31555,6 +31597,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     */
 	    TemplateParseVisitor.prototype.visitElement = function (element, parent) {
 	        var _this = this;
+	        var /** @type {?} */ queryStartIndex = this.contentQueryStartId;
 	        var /** @type {?} */ nodeName = element.name;
 	        var /** @type {?} */ preparsedElement = preparseElement(element);
 	        if (preparsedElement.type === PreparsedElementType.SCRIPT ||
@@ -31615,7 +31658,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        var /** @type {?} */ directiveAsts = this._createDirectiveAsts(isTemplateElement, element.name, directiveMetas, elementOrDirectiveProps, elementOrDirectiveRefs, element.sourceSpan, references, boundDirectivePropNames);
 	        var /** @type {?} */ elementProps = this._createElementPropertyAsts(element.name, elementOrDirectiveProps, boundDirectivePropNames);
 	        var /** @type {?} */ isViewRoot = parent.isTemplateElement || hasInlineTemplates;
-	        var /** @type {?} */ providerContext = new ProviderElementContext(this.providerViewContext, parent.providerContext, isViewRoot, directiveAsts, attrs, references, element.sourceSpan);
+	        var /** @type {?} */ providerContext = new ProviderElementContext(this.providerViewContext, parent.providerContext, isViewRoot, directiveAsts, attrs, references, isTemplateElement, queryStartIndex, element.sourceSpan);
 	        var /** @type {?} */ children = visitAll(preparsedElement.nonBindable ? NON_BINDABLE_VISITOR : this, element.children, ElementContext.create(isTemplateElement, directiveAsts, isTemplateElement ? parent.providerContext : providerContext));
 	        providerContext.afterElement();
 	        // Override the actual selector when the `ngProjectAs` attribute is provided
@@ -31646,13 +31689,14 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            this._validateElementAnimationInputOutputs(elementProps, events, componentTemplate.toSummary());
 	        }
 	        if (hasInlineTemplates) {
+	            var /** @type {?} */ templateQueryStartIndex = this.contentQueryStartId;
 	            var /** @type {?} */ templateCssSelector = createElementCssSelector(TEMPLATE_ELEMENT, templateMatchableAttrs);
 	            var templateDirectiveMetas = this._parseDirectives(this.selectorMatcher, templateCssSelector).directives;
 	            var /** @type {?} */ templateBoundDirectivePropNames = new Set();
 	            var /** @type {?} */ templateDirectiveAsts = this._createDirectiveAsts(true, element.name, templateDirectiveMetas, templateElementOrDirectiveProps, [], element.sourceSpan, [], templateBoundDirectivePropNames);
 	            var /** @type {?} */ templateElementProps = this._createElementPropertyAsts(element.name, templateElementOrDirectiveProps, templateBoundDirectivePropNames);
 	            this._assertNoComponentsNorElementBindingsOnTemplate(templateDirectiveAsts, templateElementProps, element.sourceSpan);
-	            var /** @type {?} */ templateProviderContext = new ProviderElementContext(this.providerViewContext, parent.providerContext, parent.isTemplateElement, templateDirectiveAsts, [], [], element.sourceSpan);
+	            var /** @type {?} */ templateProviderContext = new ProviderElementContext(this.providerViewContext, parent.providerContext, parent.isTemplateElement, templateDirectiveAsts, [], [], true, templateQueryStartIndex, element.sourceSpan);
 	            templateProviderContext.afterElement();
 	            parsedElement = new EmbeddedTemplateAst([], [], [], templateElementVars, templateProviderContext.transformedDirectiveAsts, templateProviderContext.transformProviders, templateProviderContext.transformedHasViewContainer, templateProviderContext.queryMatches, [parsedElement], ngContentIndex, element.sourceSpan);
 	        }
@@ -31847,7 +31891,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                    matchedReferences.add(elOrDirRef.name);
 	                }
 	            });
-	            return new DirectiveAst(directive, directiveProperties, hostProperties, hostEvents, sourceSpan);
+	            var /** @type {?} */ contentQueryStartId = _this.contentQueryStartId;
+	            _this.contentQueryStartId += directive.queries.length;
+	            return new DirectiveAst(directive, directiveProperties, hostProperties, hostEvents, contentQueryStartId, sourceSpan);
 	        });
 	        elementOrDirectiveRefs.forEach(function (elOrDirRef) {
 	            if (elOrDirRef.value.length > 0) {
@@ -32233,7 +32279,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.7-e9ba7aa');
+	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.7-4e7752a');
 
 	/**
 	 * Temporal switch for the compiler to use the new view engine,
@@ -48231,6 +48277,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	var /** @type {?} */ CLASS_ATTR$2 = 'class';
 	var /** @type {?} */ STYLE_ATTR$1 = 'style';
 	var /** @type {?} */ IMPLICIT_TEMPLATE_VAR$1 = '\$implicit';
+	var /** @type {?} */ NG_CONTAINER_TAG$1 = 'ng-container';
 	var ViewCompilerNext = (function (_super) {
 	    __extends$60(ViewCompilerNext, _super);
 	    /**
@@ -48254,13 +48301,14 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    ViewCompilerNext.prototype.compileComponent = function (component, template, styles, usedPipes, compiledAnimations) {
 	        var /** @type {?} */ compName = identifierName(component.type) + (component.isHost ? "_Host" : '');
 	        var /** @type {?} */ embeddedViewCount = 0;
+	        var /** @type {?} */ staticQueryIds = findStaticQueryIds(template);
 	        var /** @type {?} */ viewBuilderFactory = function (parent) {
 	            var /** @type {?} */ embeddedViewIndex = embeddedViewCount++;
 	            var /** @type {?} */ viewName = "view_" + compName + "_" + embeddedViewIndex;
-	            return new ViewBuilder(parent, viewName, usedPipes, viewBuilderFactory);
+	            return new ViewBuilder(parent, viewName, usedPipes, staticQueryIds, viewBuilderFactory);
 	        };
 	        var /** @type {?} */ visitor = viewBuilderFactory(null);
-	        visitor.visitAll([], template, 0);
+	        visitor.visitAll([], template);
 	        var /** @type {?} */ statements = [];
 	        statements.push.apply(statements, visitor.build(component));
 	        return new ViewCompileResult(statements, visitor.viewName, []);
@@ -48283,12 +48331,14 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @param {?} parent
 	     * @param {?} viewName
 	     * @param {?} usedPipes
+	     * @param {?} staticQueryIds
 	     * @param {?} viewBuilderFactory
 	     */
-	    function ViewBuilder(parent, viewName, usedPipes, viewBuilderFactory) {
+	    function ViewBuilder(parent, viewName, usedPipes, staticQueryIds, viewBuilderFactory) {
 	        this.parent = parent;
 	        this.viewName = viewName;
 	        this.usedPipes = usedPipes;
+	        this.staticQueryIds = staticQueryIds;
 	        this.viewBuilderFactory = viewBuilderFactory;
 	        this.nodeDefs = [];
 	        this.purePipeNodeIndices = {};
@@ -48302,10 +48352,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    /**
 	     * @param {?} variables
 	     * @param {?} astNodes
-	     * @param {?} elementDepth
 	     * @return {?}
 	     */
-	    ViewBuilder.prototype.visitAll = function (variables, astNodes, elementDepth) {
+	    ViewBuilder.prototype.visitAll = function (variables, astNodes) {
 	        var _this = this;
 	        this.variables = variables;
 	        // create the pipes for the pure pipes immediately, so that we know their indices.
@@ -48316,7 +48365,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                }
 	            });
 	        }
-	        templateVisitAll(this, astNodes, { elementDepth: elementDepth });
+	        templateVisitAll(this, astNodes);
 	        if (astNodes.length === 0 ||
 	            (this.parent && needsAdditionalRootNode(astNodes[astNodes.length - 1]))) {
 	            // if the view is empty, or an embedded view has a view container as last root nde,
@@ -48414,7 +48463,12 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @param {?} context
 	     * @return {?}
 	     */
-	    ViewBuilder.prototype.visitNgContent = function (ast, context) { };
+	    ViewBuilder.prototype.visitNgContent = function (ast, context) {
+	        // ngContentDef(ngContentIndex: number, index: number): NodeDef;
+	        this.nodeDefs.push(importExpr(createIdentifier(Identifiers.ngContentDef)).callFn([
+	            literal(ast.ngContentIndex), literal(ast.index)
+	        ]));
+	    };
 	    /**
 	     * @param {?} ast
 	     * @param {?} context
@@ -48423,7 +48477,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    ViewBuilder.prototype.visitText = function (ast, context) {
 	        // textDef(ngContentIndex: number, constants: string[]): NodeDef;
 	        this.nodeDefs.push(importExpr(createIdentifier(Identifiers.textDef)).callFn([
-	            NULL_EXPR, literalArr([literal(ast.value)])
+	            literal(ast.ngContentIndex), literalArr([literal(ast.value)])
 	        ]));
 	    };
 	    /**
@@ -48440,7 +48494,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        this._addUpdateExpressions(nodeIndex, inter.expressions.map(function (expr) { return { context: COMP_VAR, value: expr }; }), this.updateRendererExpressions);
 	        // textDef(ngContentIndex: number, constants: string[]): NodeDef;
 	        this.nodeDefs[nodeIndex] = importExpr(createIdentifier(Identifiers.textDef)).callFn([
-	            NULL_EXPR, literalArr(inter.strings.map(function (s) { return literal(s); }))
+	            literal(ast.ngContentIndex), literalArr(inter.strings.map(function (s) { return literal(s); }))
 	        ]);
 	    };
 	    /**
@@ -48452,16 +48506,16 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        var /** @type {?} */ nodeIndex = this.nodeDefs.length;
 	        // reserve the space in the nodeDefs array
 	        this.nodeDefs.push(null);
-	        var _a = this._visitElementOrTemplate(nodeIndex, ast, context), flags = _a.flags, queryMatchesExpr = _a.queryMatchesExpr;
+	        var _a = this._visitElementOrTemplate(nodeIndex, ast), flags = _a.flags, queryMatchesExpr = _a.queryMatchesExpr;
 	        var /** @type {?} */ childVisitor = this.viewBuilderFactory(this);
 	        this.children.push(childVisitor);
-	        childVisitor.visitAll(ast.variables, ast.children, context.elementDepth + 1);
+	        childVisitor.visitAll(ast.variables, ast.children);
 	        var /** @type {?} */ childCount = this.nodeDefs.length - nodeIndex - 1;
 	        // anchorDef(
 	        //   flags: NodeFlags, matchedQueries: [string, QueryValueType][], ngContentIndex: number,
 	        //   childCount: number, templateFactory?: ViewDefinitionFactory): NodeDef;
 	        this.nodeDefs[nodeIndex] = importExpr(createIdentifier(Identifiers.anchorDef)).callFn([
-	            literal(flags), queryMatchesExpr, NULL_EXPR, literal(childCount),
+	            literal(flags), queryMatchesExpr, literal(ast.ngContentIndex), literal(childCount),
 	            variable(childVisitor.viewName)
 	        ]);
 	    };
@@ -48474,8 +48528,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        var /** @type {?} */ nodeIndex = this.nodeDefs.length;
 	        // reserve the space in the nodeDefs array so we can add children
 	        this.nodeDefs.push(null);
-	        var _a = this._visitElementOrTemplate(nodeIndex, ast, context), flags = _a.flags, usedEvents = _a.usedEvents, queryMatchesExpr = _a.queryMatchesExpr, hostBindings = _a.hostBindings;
-	        templateVisitAll(this, ast.children, { elementDepth: context.elementDepth + 1 });
+	        var _a = this._visitElementOrTemplate(nodeIndex, ast), flags = _a.flags, usedEvents = _a.usedEvents, queryMatchesExpr = _a.queryMatchesExpr, hostBindings = _a.hostBindings;
+	        templateVisitAll(this, ast.children);
 	        ast.inputs.forEach(function (inputAst) { hostBindings.push({ context: COMP_VAR, value: inputAst.value }); });
 	        this._addUpdateExpressions(nodeIndex, hostBindings, this.updateRendererExpressions);
 	        var /** @type {?} */ inputDefs = elementBindingDefs(ast.inputs);
@@ -48486,6 +48540,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                literal(eventName);
 	        });
 	        var /** @type {?} */ childCount = this.nodeDefs.length - nodeIndex - 1;
+	        var /** @type {?} */ elName = ast.name;
+	        if (ast.name === NG_CONTAINER_TAG$1) {
+	            // Using a null element name creates an anchor.
+	            elName = null;
+	        }
 	        // elementDef(
 	        //   flags: NodeFlags, matchedQueries: [string, QueryValueType][], ngContentIndex: number,
 	        //   childCount: number, name: string, fixedAttrs: {[name: string]: string} = {},
@@ -48495,18 +48554,18 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        //         SecurityContext])[],
 	        //   outputs?: (string | [string, string])[]): NodeDef;
 	        this.nodeDefs[nodeIndex] = importExpr(createIdentifier(Identifiers.elementDef)).callFn([
-	            literal(flags), queryMatchesExpr, NULL_EXPR, literal(childCount), literal(ast.name),
-	            fixedAttrsDef(ast), inputDefs.length ? literalArr(inputDefs) : NULL_EXPR,
+	            literal(flags), queryMatchesExpr, literal(ast.ngContentIndex), literal(childCount),
+	            literal(elName), fixedAttrsDef(ast),
+	            inputDefs.length ? literalArr(inputDefs) : NULL_EXPR,
 	            outputDefs.length ? literalArr(outputDefs) : NULL_EXPR
 	        ]);
 	    };
 	    /**
 	     * @param {?} nodeIndex
 	     * @param {?} ast
-	     * @param {?} context
 	     * @return {?}
 	     */
-	    ViewBuilder.prototype._visitElementOrTemplate = function (nodeIndex, ast, context) {
+	    ViewBuilder.prototype._visitElementOrTemplate = function (nodeIndex, ast) {
 	        var _this = this;
 	        var /** @type {?} */ flags = viewEngine$1.NodeFlags.None;
 	        if (ast.hasViewContainer) {
@@ -48523,17 +48582,21 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        });
 	        var /** @type {?} */ hostBindings = [];
 	        var /** @type {?} */ hostEvents = [];
+	        var /** @type {?} */ componentFactoryResolverProvider = createComponentFactoryResolver(ast.directives);
+	        if (componentFactoryResolverProvider) {
+	            this._visitProvider(componentFactoryResolverProvider, ast.queryMatches);
+	        }
 	        ast.providers.forEach(function (providerAst, providerIndex) {
 	            var /** @type {?} */ dirAst;
 	            var /** @type {?} */ dirIndex;
 	            ast.directives.forEach(function (localDirAst, i) {
-	                if (localDirAst.directive.type.reference === providerAst.token.identifier.reference) {
+	                if (localDirAst.directive.type.reference === tokenReference(providerAst.token)) {
 	                    dirAst = localDirAst;
 	                    dirIndex = i;
 	                }
 	            });
 	            if (dirAst) {
-	                var _a = _this._visitDirective(providerAst, dirAst, dirIndex, nodeIndex, context.elementDepth, ast.references, ast.queryMatches, usedEvents), dirHostBindings = _a.hostBindings, dirHostEvents = _a.hostEvents;
+	                var _a = _this._visitDirective(providerAst, dirAst, dirIndex, nodeIndex, ast.references, ast.queryMatches, usedEvents, _this.staticQueryIds.get(/** @type {?} */ (ast))), dirHostBindings = _a.hostBindings, dirHostEvents = _a.hostEvents;
 	                hostBindings.push.apply(hostBindings, dirHostBindings);
 	                hostEvents.push.apply(hostEvents, dirHostEvents);
 	            }
@@ -48554,7 +48617,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                valueType = viewEngine$1.QueryValueType.TemplateRef;
 	            }
 	            if (valueType != null) {
-	                queryMatchExprs.push(literalArr([literal(calcQueryId(match.query)), literal(valueType)]));
+	                queryMatchExprs.push(literalArr([literal(match.queryId), literal(valueType)]));
 	            }
 	        });
 	        ast.references.forEach(function (ref) {
@@ -48567,7 +48630,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            }
 	            if (valueType != null) {
 	                _this.refNodeIndices[ref.name] = nodeIndex;
-	                queryMatchExprs.push(literalArr([literal("#" + ref.name), literal(valueType)]));
+	                queryMatchExprs.push(literalArr([literal(ref.name), literal(valueType)]));
 	            }
 	        });
 	        ast.outputs.forEach(function (outputAst) { hostEvents.push({ context: COMP_VAR, eventAst: outputAst }); });
@@ -48586,22 +48649,45 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @param {?} directiveAst
 	     * @param {?} directiveIndex
 	     * @param {?} elementNodeIndex
-	     * @param {?} elementDepth
 	     * @param {?} refs
 	     * @param {?} queryMatches
 	     * @param {?} usedEvents
+	     * @param {?} queryIds
 	     * @return {?}
 	     */
-	    ViewBuilder.prototype._visitDirective = function (providerAst, directiveAst, directiveIndex, elementNodeIndex, elementDepth, refs, queryMatches, usedEvents) {
+	    ViewBuilder.prototype._visitDirective = function (providerAst, directiveAst, directiveIndex, elementNodeIndex, refs, queryMatches, usedEvents, queryIds) {
 	        var _this = this;
 	        var /** @type {?} */ nodeIndex = this.nodeDefs.length;
 	        // reserve the space in the nodeDefs array so we can add children
 	        this.nodeDefs.push(null);
+	        directiveAst.directive.viewQueries.forEach(function (query, queryIndex) {
+	            // Note: queries start with id 1 so we can use the number in a Bloom filter!
+	            var /** @type {?} */ queryId = queryIndex + 1;
+	            var /** @type {?} */ bindingType = query.first ? viewEngine$1.QueryBindingType.First : viewEngine$1.QueryBindingType.All;
+	            var /** @type {?} */ flags = viewEngine$1.NodeFlags.HasViewQuery;
+	            if (queryIds.staticQueryIds.has(queryId)) {
+	                flags |= viewEngine$1.NodeFlags.HasStaticQuery;
+	            }
+	            else {
+	                flags |= viewEngine$1.NodeFlags.HasDynamicQuery;
+	            }
+	            _this.nodeDefs.push(importExpr(createIdentifier(Identifiers.queryDef)).callFn([
+	                literal(flags), literal(queryId),
+	                new LiteralMapExpr([new LiteralMapEntry(query.propertyName, literal(bindingType))])
+	            ]));
+	        });
 	        directiveAst.directive.queries.forEach(function (query, queryIndex) {
-	            var /** @type {?} */ queryId = { elementDepth: elementDepth, directiveIndex: directiveIndex, queryIndex: queryIndex };
+	            var /** @type {?} */ flags = viewEngine$1.NodeFlags.HasContentQuery;
+	            var /** @type {?} */ queryId = directiveAst.contentQueryStartId + queryIndex;
+	            if (queryIds.staticQueryIds.has(queryId)) {
+	                flags |= viewEngine$1.NodeFlags.HasStaticQuery;
+	            }
+	            else {
+	                flags |= viewEngine$1.NodeFlags.HasDynamicQuery;
+	            }
 	            var /** @type {?} */ bindingType = query.first ? viewEngine$1.QueryBindingType.First : viewEngine$1.QueryBindingType.All;
 	            _this.nodeDefs.push(importExpr(createIdentifier(Identifiers.queryDef)).callFn([
-	                literal(viewEngine$1.NodeFlags.HasContentQuery), literal(calcQueryId(queryId)),
+	                literal(flags), literal(queryId),
 	                new LiteralMapExpr([new LiteralMapEntry(query.propertyName, literal(bindingType))])
 	            ]));
 	        });
@@ -48614,7 +48700,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        refs.forEach(function (ref) {
 	            if (ref.value && tokenReference(ref.value) === tokenReference(providerAst.token)) {
 	                _this.refNodeIndices[ref.name] = nodeIndex;
-	                queryMatchExprs.push(literalArr([literal("#" + ref.name), literal(viewEngine$1.QueryValueType.Provider)]));
+	                queryMatchExprs.push(literalArr([literal(ref.name), literal(viewEngine$1.QueryValueType.Provider)]));
 	            }
 	        });
 	        var /** @type {?} */ compView = NULL_EXPR;
@@ -48692,6 +48778,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        if (!providerAst.eager) {
 	            flags |= viewEngine$1.NodeFlags.LazyProvider;
 	        }
+	        if (providerAst.providerType === ProviderAstType.PrivateService) {
+	            flags |= viewEngine$1.NodeFlags.PrivateProvider;
+	        }
 	        providerAst.lifecycleHooks.forEach(function (lifecycleHook) {
 	            // for regular providers, we only support ngOnDestroy
 	            if (lifecycleHook === LifecycleHooks$1.OnDestroy ||
@@ -48703,7 +48792,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        var /** @type {?} */ queryMatchExprs = [];
 	        queryMatches.forEach(function (match) {
 	            if (tokenReference(match.value) === tokenReference(providerAst.token)) {
-	                queryMatchExprs.push(literalArr([literal(calcQueryId(match.query)), literal(viewEngine$1.QueryValueType.Provider)]));
+	                queryMatchExprs.push(literalArr([literal(match.queryId), literal(viewEngine$1.QueryValueType.Provider)]));
 	            }
 	        });
 	        var _a = providerDef$1(providerAst), providerExpr = _a.providerExpr, providerType = _a.providerType, depsExpr = _a.depsExpr;
@@ -48922,20 +49011,17 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    var /** @type {?} */ allDepDefs = [];
 	    var /** @type {?} */ allParams = [];
 	    var /** @type {?} */ exprs = providers.map(function (provider, providerIndex) {
-	        var /** @type {?} */ depExprs = provider.deps.map(function (dep, depIndex) {
-	            var /** @type {?} */ paramName = "p" + providerIndex + "_" + depIndex;
-	            allParams.push(new FnParam(paramName, DYNAMIC_TYPE));
-	            allDepDefs.push(depDef(dep));
-	            return variable(paramName);
-	        });
 	        var /** @type {?} */ expr;
 	        if (provider.useClass) {
+	            var /** @type {?} */ depExprs = convertDeps(providerIndex, provider.deps || provider.useClass.diDeps);
 	            expr = importExpr(provider.useClass).instantiate(depExprs);
 	        }
 	        else if (provider.useFactory) {
+	            var /** @type {?} */ depExprs = convertDeps(providerIndex, provider.deps || provider.useFactory.diDeps);
 	            expr = importExpr(provider.useFactory).callFn(depExprs);
 	        }
 	        else if (provider.useExisting) {
+	            var /** @type {?} */ depExprs = convertDeps(providerIndex, [{ token: provider.useExisting }]);
 	            expr = depExprs[0];
 	        }
 	        else {
@@ -48949,6 +49035,19 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        providerType: viewEngine$1.ProviderType.Factory,
 	        depsExpr: literalArr(allDepDefs)
 	    };
+	    /**
+	     * @param {?} providerIndex
+	     * @param {?} deps
+	     * @return {?}
+	     */
+	    function convertDeps(providerIndex, deps) {
+	        return deps.map(function (dep, depIndex) {
+	            var /** @type {?} */ paramName = "p" + providerIndex + "_" + depIndex;
+	            allParams.push(new FnParam(paramName, DYNAMIC_TYPE));
+	            allDepDefs.push(depDef(dep));
+	            return variable(paramName);
+	        });
+	    }
 	}
 	/**
 	 * @param {?} providerMeta
@@ -49020,19 +49119,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        return ast.hasViewContainer;
 	    }
 	    return ast instanceof NgContentAst;
-	}
-	/**
-	 * @param {?} queryId
-	 * @return {?}
-	 */
-	function calcQueryId(queryId) {
-	    if (queryId.directiveIndex == null) {
-	        // view query
-	        return "v" + queryId.queryIndex;
-	    }
-	    else {
-	        return "c" + queryId.elementDepth + "_" + queryId.directiveIndex + "_" + queryId.queryIndex;
-	    }
 	}
 	/**
 	 * @param {?} lifecycleHook
@@ -49153,6 +49239,66 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 */
 	function callUnwrapValue(expr) {
 	    return importExpr(createIdentifier(Identifiers.unwrapValue)).callFn([expr]);
+	}
+	/**
+	 * @param {?} nodes
+	 * @param {?=} result
+	 * @return {?}
+	 */
+	function findStaticQueryIds(nodes, result) {
+	    if (result === void 0) { result = new Map(); }
+	    nodes.forEach(function (node) {
+	        var /** @type {?} */ staticQueryIds = new Set();
+	        var /** @type {?} */ dynamicQueryIds = new Set();
+	        var /** @type {?} */ queryMatches;
+	        if (node instanceof ElementAst) {
+	            findStaticQueryIds(node.children, result);
+	            node.children.forEach(function (child) {
+	                var /** @type {?} */ childData = result.get(child);
+	                childData.staticQueryIds.forEach(function (queryId) { return staticQueryIds.add(queryId); });
+	                childData.dynamicQueryIds.forEach(function (queryId) { return dynamicQueryIds.add(queryId); });
+	            });
+	            queryMatches = node.queryMatches;
+	        }
+	        else if (node instanceof EmbeddedTemplateAst) {
+	            findStaticQueryIds(node.children, result);
+	            node.children.forEach(function (child) {
+	                var /** @type {?} */ childData = result.get(child);
+	                childData.staticQueryIds.forEach(function (queryId) { return dynamicQueryIds.add(queryId); });
+	                childData.dynamicQueryIds.forEach(function (queryId) { return dynamicQueryIds.add(queryId); });
+	            });
+	            queryMatches = node.queryMatches;
+	        }
+	        if (queryMatches) {
+	            queryMatches.forEach(function (match) { return staticQueryIds.add(match.queryId); });
+	        }
+	        dynamicQueryIds.forEach(function (queryId) { return staticQueryIds.delete(queryId); });
+	        result.set(node, { staticQueryIds: staticQueryIds, dynamicQueryIds: dynamicQueryIds });
+	    });
+	    return result;
+	}
+	/**
+	 * @param {?} directives
+	 * @return {?}
+	 */
+	function createComponentFactoryResolver(directives) {
+	    var /** @type {?} */ componentDirMeta = directives.find(function (dirAst) { return dirAst.directive.isComponent; });
+	    if (componentDirMeta) {
+	        var /** @type {?} */ entryComponentFactories = componentDirMeta.directive.entryComponents.map(function (entryComponent) { return importExpr({ reference: entryComponent.componentFactory }); });
+	        var /** @type {?} */ cfrExpr = importExpr(createIdentifier(Identifiers.CodegenComponentFactoryResolver))
+	            .instantiate([literalArr(entryComponentFactories)]);
+	        var /** @type {?} */ token = createIdentifierToken(Identifiers.ComponentFactoryResolver);
+	        var /** @type {?} */ classMeta = {
+	            diDeps: [
+	                { isValue: true, value: literalArr(entryComponentFactories) },
+	                { token: token, isSkipSelf: true, isOptional: true }
+	            ],
+	            lifecycleHooks: [],
+	            reference: resolveIdentifier(Identifiers.CodegenComponentFactoryResolver)
+	        };
+	        return new ProviderAst(token, false, true, [{ token: token, multi: false, useClass: classMeta }], ProviderAstType.PrivateService, [], componentDirMeta.sourceSpan);
+	    }
+	    return null;
 	}
 
 	/**
@@ -53953,7 +54099,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$4 = new Version('4.0.0-beta.7-e9ba7aa');
+	var VERSION$4 = new Version('4.0.0-beta.7-4e7752a');
 
 	var ROUTER_MODULE_PATH = '@angular/router/src/router_config_loader';
 	var ROUTER_ROUTES_SYMBOL_NAME = 'ROUTES';
@@ -55636,7 +55782,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$5 = new Version('4.0.0-beta.7-e9ba7aa');
+	var VERSION$5 = new Version('4.0.0-beta.7-4e7752a');
 
 	exports.createLanguageService = createLanguageService;
 	exports.create = create;
