@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.0.0-beta.7-3dbd9a0
+ * @license Angular v4.0.0-beta.7-ba17dcb
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1656,7 +1656,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('4.0.0-beta.7-3dbd9a0');
+	var /** @type {?} */ VERSION = new Version('4.0.0-beta.7-ba17dcb');
 
 	/**
 	 * Inject decorator and metadata.
@@ -32282,7 +32282,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.7-3dbd9a0');
+	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.7-ba17dcb');
 
 	/**
 	 * Temporal switch for the compiler to use the new view engine,
@@ -54101,7 +54101,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$4 = new Version('4.0.0-beta.7-3dbd9a0');
+	var VERSION$4 = new Version('4.0.0-beta.7-ba17dcb');
 
 	var ROUTER_MODULE_PATH = '@angular/router';
 	var ROUTER_ROUTES_SYMBOL_NAME = 'ROUTES';
@@ -55784,7 +55784,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$5 = new Version('4.0.0-beta.7-3dbd9a0');
+	var VERSION$5 = new Version('4.0.0-beta.7-ba17dcb');
 
 	exports.createLanguageService = createLanguageService;
 	exports.create = create;
