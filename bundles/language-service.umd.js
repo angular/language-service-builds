@@ -1656,7 +1656,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('4.0.0-beta.7-3dbd9a0');
+	var /** @type {?} */ VERSION = new Version('4.0.0-beta.7-ba17dcb');
 
 	/**
 	 * Inject decorator and metadata.
@@ -32282,7 +32282,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.7-3dbd9a0');
+	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.7-ba17dcb');
 
 	/**
 	 * Temporal switch for the compiler to use the new view engine,
