@@ -1656,7 +1656,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('4.0.0-beta.7-0e2fd9d');
+	var /** @type {?} */ VERSION = new Version('4.0.0-beta.7-4a56b6e');
 
 	/**
 	 * Inject decorator and metadata.
@@ -10354,6 +10354,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	var /** @type {?} */ _devMode = true;
 	var /** @type {?} */ _runModeLocked = false;
 	var /** @type {?} */ _platform;
+	var /** @type {?} */ ALLOW_MULTIPLE_PLATFORMS = new InjectionToken('AllowMultipleToken');
 	/**
 	 * Returns whether Angular is in development mode. After called once,
 	 * the value is locked and won't change any more.
@@ -10376,7 +10377,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @return {?}
 	 */
 	function createPlatform(injector) {
-	    if (_platform && !_platform.destroyed) {
+	    if (_platform && !_platform.destroyed &&
+	        !_platform.injector.get(ALLOW_MULTIPLE_PLATFORMS, false)) {
 	        throw new Error('There can be only one platform. Destroy the previous one to create a new one.');
 	    }
 	    _platform = injector.get(PlatformRef);
@@ -10399,7 +10401,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    var /** @type {?} */ marker = new InjectionToken("Platform: " + name);
 	    return function (extraProviders) {
 	        if (extraProviders === void 0) { extraProviders = []; }
-	        if (!getPlatform()) {
+	        var /** @type {?} */ platform = getPlatform();
+	        if (!platform || platform.injector.get(ALLOW_MULTIPLE_PLATFORMS, false)) {
 	            if (parentPlatformFactory) {
 	                parentPlatformFactory(providers.concat(extraProviders).concat({ provide: marker, useValue: true }));
 	            }
@@ -10411,8 +10414,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    };
 	}
 	/**
-	 * Checks that there currently is a platform
-	 * which contains the given token as a provider.
+	 * Checks that there currently is a platform which contains the given token as a provider.
 	 *
 	 * \@experimental APIs related to application bootstrap are currently under review.
 	 * @param {?} requiredToken
@@ -19759,6 +19761,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    isPromise: isPromise$1,
 	    isObservable: isObservable,
 	    AnimationTransition: ɵAnimationTransition,
+	    ALLOW_MULTIPLE_PLATFORMS: ALLOW_MULTIPLE_PLATFORMS,
 	    ERROR_COMPONENT_TYPE: ERROR_COMPONENT_TYPE,
 	    TransitionEngine: TransitionEngine
 	}) /* TODO(misko): export these using omega names instead */;
@@ -32279,7 +32282,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.7-0e2fd9d');
+	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.7-4a56b6e');
 
 	/**
 	 * Temporal switch for the compiler to use the new view engine,
@@ -45387,15 +45390,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	var /** @type {?} */ ANGULAR_IMPORT_LOCATIONS = {
-	    coreDecorators: '@angular/core/src/metadata',
-	    diDecorators: '@angular/core/src/di/metadata',
-	    diMetadata: '@angular/core/src/di/metadata',
-	    diInjectionToken: '@angular/core/src/di/injection_token',
-	    diOpaqueToken: '@angular/core/src/di/injection_token',
-	    animationMetadata: '@angular/core/src/animation/metadata',
-	    provider: '@angular/core/src/di/provider'
-	};
+	var /** @type {?} */ ANGULAR_CORE = '@angular/core';
 	var /** @type {?} */ HIDDEN_KEY = /^\$.*\$$/;
 	/**
 	 * A static reflector implements enough of the Reflector API that is necessary to compile
@@ -45656,41 +45651,40 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @return {?}
 	     */
 	    StaticReflector.prototype.initializeConversionMap = function () {
-	        var coreDecorators = ANGULAR_IMPORT_LOCATIONS.coreDecorators, diDecorators = ANGULAR_IMPORT_LOCATIONS.diDecorators, diMetadata = ANGULAR_IMPORT_LOCATIONS.diMetadata, diInjectionToken = ANGULAR_IMPORT_LOCATIONS.diInjectionToken, diOpaqueToken = ANGULAR_IMPORT_LOCATIONS.diOpaqueToken, animationMetadata = ANGULAR_IMPORT_LOCATIONS.animationMetadata, provider = ANGULAR_IMPORT_LOCATIONS.provider;
-	        this.injectionToken = this.findDeclaration(diInjectionToken, 'InjectionToken');
-	        this.opaqueToken = this.findDeclaration(diInjectionToken, 'OpaqueToken');
-	        this._registerDecoratorOrConstructor(this.findDeclaration(diDecorators, 'Host'), Host);
-	        this._registerDecoratorOrConstructor(this.findDeclaration(diDecorators, 'Injectable'), Injectable);
-	        this._registerDecoratorOrConstructor(this.findDeclaration(diDecorators, 'Self'), Self);
-	        this._registerDecoratorOrConstructor(this.findDeclaration(diDecorators, 'SkipSelf'), SkipSelf);
-	        this._registerDecoratorOrConstructor(this.findDeclaration(diDecorators, 'Inject'), Inject);
-	        this._registerDecoratorOrConstructor(this.findDeclaration(diDecorators, 'Optional'), Optional);
-	        this._registerDecoratorOrConstructor(this.findDeclaration(coreDecorators, 'Attribute'), Attribute);
-	        this._registerDecoratorOrConstructor(this.findDeclaration(coreDecorators, 'ContentChild'), ContentChild);
-	        this._registerDecoratorOrConstructor(this.findDeclaration(coreDecorators, 'ContentChildren'), ContentChildren);
-	        this._registerDecoratorOrConstructor(this.findDeclaration(coreDecorators, 'ViewChild'), ViewChild);
-	        this._registerDecoratorOrConstructor(this.findDeclaration(coreDecorators, 'ViewChildren'), ViewChildren);
-	        this._registerDecoratorOrConstructor(this.findDeclaration(coreDecorators, 'Input'), Input);
-	        this._registerDecoratorOrConstructor(this.findDeclaration(coreDecorators, 'Output'), Output);
-	        this._registerDecoratorOrConstructor(this.findDeclaration(coreDecorators, 'Pipe'), Pipe);
-	        this._registerDecoratorOrConstructor(this.findDeclaration(coreDecorators, 'HostBinding'), HostBinding);
-	        this._registerDecoratorOrConstructor(this.findDeclaration(coreDecorators, 'HostListener'), HostListener);
-	        this._registerDecoratorOrConstructor(this.findDeclaration(coreDecorators, 'Directive'), Directive);
-	        this._registerDecoratorOrConstructor(this.findDeclaration(coreDecorators, 'Component'), Component);
-	        this._registerDecoratorOrConstructor(this.findDeclaration(coreDecorators, 'NgModule'), NgModule);
+	        this.injectionToken = this.findDeclaration(ANGULAR_CORE, 'InjectionToken');
+	        this.opaqueToken = this.findDeclaration(ANGULAR_CORE, 'OpaqueToken');
+	        this._registerDecoratorOrConstructor(this.findDeclaration(ANGULAR_CORE, 'Host'), Host);
+	        this._registerDecoratorOrConstructor(this.findDeclaration(ANGULAR_CORE, 'Injectable'), Injectable);
+	        this._registerDecoratorOrConstructor(this.findDeclaration(ANGULAR_CORE, 'Self'), Self);
+	        this._registerDecoratorOrConstructor(this.findDeclaration(ANGULAR_CORE, 'SkipSelf'), SkipSelf);
+	        this._registerDecoratorOrConstructor(this.findDeclaration(ANGULAR_CORE, 'Inject'), Inject);
+	        this._registerDecoratorOrConstructor(this.findDeclaration(ANGULAR_CORE, 'Optional'), Optional);
+	        this._registerDecoratorOrConstructor(this.findDeclaration(ANGULAR_CORE, 'Attribute'), Attribute);
+	        this._registerDecoratorOrConstructor(this.findDeclaration(ANGULAR_CORE, 'ContentChild'), ContentChild);
+	        this._registerDecoratorOrConstructor(this.findDeclaration(ANGULAR_CORE, 'ContentChildren'), ContentChildren);
+	        this._registerDecoratorOrConstructor(this.findDeclaration(ANGULAR_CORE, 'ViewChild'), ViewChild);
+	        this._registerDecoratorOrConstructor(this.findDeclaration(ANGULAR_CORE, 'ViewChildren'), ViewChildren);
+	        this._registerDecoratorOrConstructor(this.findDeclaration(ANGULAR_CORE, 'Input'), Input);
+	        this._registerDecoratorOrConstructor(this.findDeclaration(ANGULAR_CORE, 'Output'), Output);
+	        this._registerDecoratorOrConstructor(this.findDeclaration(ANGULAR_CORE, 'Pipe'), Pipe);
+	        this._registerDecoratorOrConstructor(this.findDeclaration(ANGULAR_CORE, 'HostBinding'), HostBinding);
+	        this._registerDecoratorOrConstructor(this.findDeclaration(ANGULAR_CORE, 'HostListener'), HostListener);
+	        this._registerDecoratorOrConstructor(this.findDeclaration(ANGULAR_CORE, 'Directive'), Directive);
+	        this._registerDecoratorOrConstructor(this.findDeclaration(ANGULAR_CORE, 'Component'), Component);
+	        this._registerDecoratorOrConstructor(this.findDeclaration(ANGULAR_CORE, 'NgModule'), NgModule);
 	        // Note: Some metadata classes can be used directly with Provider.deps.
-	        this._registerDecoratorOrConstructor(this.findDeclaration(diMetadata, 'Host'), Host);
-	        this._registerDecoratorOrConstructor(this.findDeclaration(diMetadata, 'Self'), Self);
-	        this._registerDecoratorOrConstructor(this.findDeclaration(diMetadata, 'SkipSelf'), SkipSelf);
-	        this._registerDecoratorOrConstructor(this.findDeclaration(diMetadata, 'Optional'), Optional);
-	        this._registerFunction(this.findDeclaration(animationMetadata, 'trigger'), trigger);
-	        this._registerFunction(this.findDeclaration(animationMetadata, 'state'), state);
-	        this._registerFunction(this.findDeclaration(animationMetadata, 'transition'), transition);
-	        this._registerFunction(this.findDeclaration(animationMetadata, 'style'), style);
-	        this._registerFunction(this.findDeclaration(animationMetadata, 'animate'), animate);
-	        this._registerFunction(this.findDeclaration(animationMetadata, 'keyframes'), keyframes);
-	        this._registerFunction(this.findDeclaration(animationMetadata, 'sequence'), sequence);
-	        this._registerFunction(this.findDeclaration(animationMetadata, 'group'), group);
+	        this._registerDecoratorOrConstructor(this.findDeclaration(ANGULAR_CORE, 'Host'), Host);
+	        this._registerDecoratorOrConstructor(this.findDeclaration(ANGULAR_CORE, 'Self'), Self);
+	        this._registerDecoratorOrConstructor(this.findDeclaration(ANGULAR_CORE, 'SkipSelf'), SkipSelf);
+	        this._registerDecoratorOrConstructor(this.findDeclaration(ANGULAR_CORE, 'Optional'), Optional);
+	        this._registerFunction(this.findDeclaration(ANGULAR_CORE, 'trigger'), trigger);
+	        this._registerFunction(this.findDeclaration(ANGULAR_CORE, 'state'), state);
+	        this._registerFunction(this.findDeclaration(ANGULAR_CORE, 'transition'), transition);
+	        this._registerFunction(this.findDeclaration(ANGULAR_CORE, 'style'), style);
+	        this._registerFunction(this.findDeclaration(ANGULAR_CORE, 'animate'), animate);
+	        this._registerFunction(this.findDeclaration(ANGULAR_CORE, 'keyframes'), keyframes);
+	        this._registerFunction(this.findDeclaration(ANGULAR_CORE, 'sequence'), sequence);
+	        this._registerFunction(this.findDeclaration(ANGULAR_CORE, 'group'), group);
 	    };
 	    /**
 	     * getStaticSymbol produces a Type whose metadata is known but whose implementation is not loaded.
@@ -46390,7 +46384,15 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            var /** @type {?} */ topLevelSymbolNames_1 = new Set(Object.keys(metadata['metadata']).map(unescapeIdentifier));
 	            Object.keys(metadata['metadata']).forEach(function (metadataKey) {
 	                var /** @type {?} */ symbolMeta = metadata['metadata'][metadataKey];
-	                resolvedSymbols.push(_this.createResolvedSymbol(_this.getStaticSymbol(filePath, unescapeIdentifier(metadataKey)), topLevelSymbolNames_1, symbolMeta));
+	                var /** @type {?} */ name = unescapeIdentifier(metadataKey);
+	                var /** @type {?} */ canonicalSymbol = _this.getStaticSymbol(filePath, name);
+	                if (metadata['importAs']) {
+	                    // Index bundle indexes should use the importAs module name instead of a reference
+	                    // to the .d.ts file directly.
+	                    var /** @type {?} */ importSymbol = _this.getStaticSymbol(metadata['importAs'], name);
+	                    _this.recordImportAs(canonicalSymbol, importSymbol);
+	                }
+	                resolvedSymbols.push(_this.createResolvedSymbol(canonicalSymbol, topLevelSymbolNames_1, symbolMeta));
 	            });
 	        }
 	        // handle the symbols in one of the re-export location
@@ -46594,7 +46596,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        }
 	        catch (e) {
 	            console.error("Could not resolve module '" + module + "' relative to file " + containingFile);
-	            this.reportError(new e, null, containingFile);
+	            this.reportError(e, null, containingFile);
 	        }
 	    };
 	    return StaticSymbolResolver;
@@ -54101,7 +54103,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 */
 	var VERSION$4 = new Version('0.0.0-PLACEHOLDER');
 
-	var ROUTER_MODULE_PATH = '@angular/router/src/router_config_loader';
+	var ROUTER_MODULE_PATH = '@angular/router';
 	var ROUTER_ROUTES_SYMBOL_NAME = 'ROUTES';
 	// A route definition. Normally the short form 'path/to/module#ModuleClassName' is used by
 	// the user, and this is a helper class to extract information from it.
