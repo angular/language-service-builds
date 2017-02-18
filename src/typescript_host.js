@@ -126,7 +126,7 @@ var TypeScriptServiceHost = (function () {
                     useJit: false
                 });
                 var directiveNormalizer = new DirectiveNormalizer(resourceLoader, urlResolver, htmlParser, config);
-                result = this._resolver = new CompileMetadataResolver(moduleResolver, directiveResolver, pipeResolver, new SummaryResolver(), elementSchemaRegistry, directiveNormalizer, this._staticSymbolCache, this.reflector, function (error, type) { return _this.collectError(error, type && type.filePath); });
+                result = this._resolver = new CompileMetadataResolver(config, moduleResolver, directiveResolver, pipeResolver, new SummaryResolver(), elementSchemaRegistry, directiveNormalizer, this._staticSymbolCache, this.reflector, function (error, type) { return _this.collectError(error, type && type.filePath); });
             }
             return result;
         },
