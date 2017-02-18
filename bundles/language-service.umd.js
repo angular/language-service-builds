@@ -949,7 +949,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('4.0.0-beta.7-c4a6263');
+	var /** @type {?} */ VERSION = new Version('4.0.0-beta.7-45eac23');
 
 	/**
 	 * Inject decorator and metadata.
@@ -32589,7 +32589,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.7-c4a6263');
+	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.7-45eac23');
 
 	var __extends$47 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
