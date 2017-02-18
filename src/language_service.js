@@ -5,6 +5,7 @@
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
+import { CompilerConfig } from '@angular/compiler/src/config';
 import { Lexer } from '@angular/compiler/src/expression_parser/lexer';
 import { Parser } from '@angular/compiler/src/expression_parser/parser';
 import { I18NHtmlParser } from '@angular/compiler/src/i18n/i18n_html_parser';
@@ -95,7 +96,8 @@ class LanguageServiceImpl {
                 const rawHtmlParser = new HtmlParser();
                 const htmlParser = new I18NHtmlParser(rawHtmlParser);
                 const expressionParser = new Parser(new Lexer());
-                const parser = new TemplateParser(expressionParser, new DomElementSchemaRegistry(), htmlParser, null, []);
+                const config = new CompilerConfig();
+                const parser = new TemplateParser(config, expressionParser, new DomElementSchemaRegistry(), htmlParser, null, []);
                 const htmlResult = htmlParser.parse(template.source, '');
                 const analyzedModules = this.host.getAnalyzedModules();
                 let errors = undefined;
