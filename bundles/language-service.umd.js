@@ -949,7 +949,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION = new Version('4.0.0-beta.8-5f3c844');
+	var /** @type {?} */ VERSION = new Version('4.0.0-beta.8-d6a58f9');
 
 	/**
 	 * Inject decorator and metadata.
@@ -2320,6 +2320,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        }
 	        else if (paramMetadata instanceof Self || paramMetadata instanceof SkipSelf) {
 	            visibility = paramMetadata;
+	        }
+	        else if (paramMetadata instanceof InjectionToken) {
+	            token = paramMetadata;
 	        }
 	    }
 	    token = resolveForwardRef(token);
@@ -32589,7 +32592,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.8-5f3c844');
+	var /** @type {?} */ VERSION$1 = new Version('4.0.0-beta.8-d6a58f9');
 
 	var __extends$47 = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -39296,6 +39299,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                    }
 	                    else if (paramEntry instanceof Inject) {
 	                        token = paramEntry.token;
+	                    }
+	                    else if (paramEntry instanceof InjectionToken) {
+	                        token = paramEntry;
 	                    }
 	                    else if (isValidType(paramEntry) && token == null) {
 	                        token = paramEntry;
