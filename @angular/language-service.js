@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.0.0-beta.8-88bc143
+ * @license Angular v4.0.0-beta.8-a1d4769
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -3560,6 +3560,6 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-const VERSION = new Version('4.0.0-beta.8-88bc143');
+const VERSION = new Version('4.0.0-beta.8-a1d4769');
 
 export { createLanguageService, create, TypeScriptServiceHost, createLanguageServiceFromTypescript, VERSION };
