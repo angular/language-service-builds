@@ -791,7 +791,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   /**
    * @stable
    */
-  const VERSION$1 = new Version('4.0.0-beta.8-436a179');
+  const VERSION$1 = new Version('4.0.0-beta.8-3c9a46c');
 
   /**
    * Inject decorator and metadata.
@@ -10288,7 +10288,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
                   nodeData = { instance };
                   if (nodeDef.flags & NodeFlags.IsComponent) {
                       const compView = asElementData(view, nodeDef.parent.index).componentView;
-                      initView(componentView, instance, instance);
+                      initView(compView, instance, instance);
                   }
                   break;
               }
@@ -12712,7 +12712,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   /**
    * @stable
    */
-  const VERSION = new Version('4.0.0-beta.8-436a179');
+  const VERSION = new Version('4.0.0-beta.8-3c9a46c');
 
   /**
    * @license
@@ -37685,7 +37685,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   /**
    * @stable
    */
-  var VERSION$4 = new Version('4.0.0-beta.8-436a179');
+  var VERSION$4 = new Version('4.0.0-beta.8-3c9a46c');
 
   var ROUTER_MODULE_PATH = '@angular/router';
   var ROUTER_ROUTES_SYMBOL_NAME = 'ROUTES';
@@ -39369,7 +39369,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   /**
    * @stable
    */
-  var VERSION$5 = new Version('4.0.0-beta.8-436a179');
+  var VERSION$5 = new Version('4.0.0-beta.8-3c9a46c');
 
   exports.createLanguageService = createLanguageService;
   exports.create = create;
