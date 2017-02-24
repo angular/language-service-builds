@@ -791,7 +791,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   /**
    * @stable
    */
-  const VERSION$1 = new Version('4.0.0-beta.8-1f3198c');
+  const VERSION$1 = new Version('4.0.0-beta.8-32c2fd5');
 
   /**
    * Inject decorator and metadata.
@@ -12711,7 +12711,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   /**
    * @stable
    */
-  const VERSION = new Version('4.0.0-beta.8-1f3198c');
+  const VERSION = new Version('4.0.0-beta.8-32c2fd5');
 
   /**
    * @license
@@ -37683,7 +37683,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   /**
    * @stable
    */
-  var VERSION$4 = new Version('4.0.0-beta.8-1f3198c');
+  var VERSION$4 = new Version('4.0.0-beta.8-32c2fd5');
 
   var ROUTER_MODULE_PATH = '@angular/router';
   var ROUTER_ROUTES_SYMBOL_NAME = 'ROUTES';
@@ -39367,7 +39367,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   /**
    * @stable
    */
-  var VERSION$5 = new Version('4.0.0-beta.8-1f3198c');
+  var VERSION$5 = new Version('4.0.0-beta.8-32c2fd5');
 
   exports.createLanguageService = createLanguageService;
   exports.create = create;
