@@ -5234,7 +5234,7 @@
     /**
      * @stable
      */
-    var VERSION = new _core.Version('4.0.0-beta.8-a23634d');
+    var VERSION = new _core.Version('4.0.0-beta.8-ee747f7');
 
     exports.createLanguageService = createLanguageService;
     exports.create = create;
