@@ -791,7 +791,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   /**
    * @stable
    */
-  const VERSION$1 = new Version('4.0.0-beta.8-93ddd38');
+  const VERSION$1 = new Version('4.0.0-beta.8-5094aef');
 
   /**
    * Inject decorator and metadata.
@@ -12711,7 +12711,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   /**
    * @stable
    */
-  const VERSION = new Version('4.0.0-beta.8-93ddd38');
+  const VERSION = new Version('4.0.0-beta.8-5094aef');
 
   /**
    * @license
@@ -37299,7 +37299,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           if (DTS.test(filePath)) {
               // Check for a bundle index.
               if (this.hasBundleIndex(filePath)) {
-                  return this.bundleIndexNames.has(filePath);
+                  var normalFilePath = path.normalize(filePath);
+                  return this.bundleIndexNames.has(normalFilePath);
               }
           }
           return true;
@@ -37683,7 +37684,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   /**
    * @stable
    */
-  var VERSION$4 = new Version('4.0.0-beta.8-93ddd38');
+  var VERSION$4 = new Version('4.0.0-beta.8-5094aef');
 
   var ROUTER_MODULE_PATH = '@angular/router';
   var ROUTER_ROUTES_SYMBOL_NAME = 'ROUTES';
@@ -39367,7 +39368,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   /**
    * @stable
    */
-  var VERSION$5 = new Version('4.0.0-beta.8-93ddd38');
+  var VERSION$5 = new Version('4.0.0-beta.8-5094aef');
 
   exports.createLanguageService = createLanguageService;
   exports.create = create;
