@@ -821,7 +821,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   /**
    * @stable
    */
-  var VERSION$1 = new Version('4.0.0-rc.1-f356041');
+  var VERSION$1 = new Version('4.0.0-rc.1-5caab71');
 
   /**
    * Inject decorator and metadata.
@@ -8556,123 +8556,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   })(MissingTranslationStrategy || (MissingTranslationStrategy = {}));
 
   /**
-   * @license
-   * Copyright Google Inc. All Rights Reserved.
-   *
-   * Use of this source code is governed by an MIT-style license that can be
-   * found in the LICENSE file at https://angular.io/license
-   */
-  var ArgumentType;
-  (function (ArgumentType) {
-      ArgumentType[ArgumentType["Inline"] = 0] = "Inline";
-      ArgumentType[ArgumentType["Dynamic"] = 1] = "Dynamic";
-  })(ArgumentType || (ArgumentType = {}));
-  /**
-   * Bitmask for ViewDefintion.flags.
-   */
-  var ViewFlags;
-  (function (ViewFlags) {
-      ViewFlags[ViewFlags["None"] = 0] = "None";
-      ViewFlags[ViewFlags["OnPush"] = 2] = "OnPush";
-  })(ViewFlags || (ViewFlags = {}));
-  var NodeType;
-  (function (NodeType) {
-      NodeType[NodeType["Element"] = 0] = "Element";
-      NodeType[NodeType["Text"] = 1] = "Text";
-      NodeType[NodeType["Directive"] = 2] = "Directive";
-      NodeType[NodeType["Provider"] = 3] = "Provider";
-      NodeType[NodeType["Pipe"] = 4] = "Pipe";
-      NodeType[NodeType["PureExpression"] = 5] = "PureExpression";
-      NodeType[NodeType["Query"] = 6] = "Query";
-      NodeType[NodeType["NgContent"] = 7] = "NgContent";
-  })(NodeType || (NodeType = {}));
-  /**
-   * Bitmask for NodeDef.flags.
-   */
-  var NodeFlags;
-  (function (NodeFlags) {
-      NodeFlags[NodeFlags["None"] = 0] = "None";
-      NodeFlags[NodeFlags["OnInit"] = 1] = "OnInit";
-      NodeFlags[NodeFlags["OnDestroy"] = 2] = "OnDestroy";
-      NodeFlags[NodeFlags["DoCheck"] = 4] = "DoCheck";
-      NodeFlags[NodeFlags["OnChanges"] = 8] = "OnChanges";
-      NodeFlags[NodeFlags["AfterContentInit"] = 16] = "AfterContentInit";
-      NodeFlags[NodeFlags["AfterContentChecked"] = 32] = "AfterContentChecked";
-      NodeFlags[NodeFlags["AfterViewInit"] = 64] = "AfterViewInit";
-      NodeFlags[NodeFlags["AfterViewChecked"] = 128] = "AfterViewChecked";
-      NodeFlags[NodeFlags["HasEmbeddedViews"] = 256] = "HasEmbeddedViews";
-      NodeFlags[NodeFlags["HasComponent"] = 512] = "HasComponent";
-      NodeFlags[NodeFlags["IsComponent"] = 1024] = "IsComponent";
-      NodeFlags[NodeFlags["HasContentQuery"] = 2048] = "HasContentQuery";
-      NodeFlags[NodeFlags["HasStaticQuery"] = 4096] = "HasStaticQuery";
-      NodeFlags[NodeFlags["HasDynamicQuery"] = 8192] = "HasDynamicQuery";
-      NodeFlags[NodeFlags["HasViewQuery"] = 16384] = "HasViewQuery";
-      NodeFlags[NodeFlags["LazyProvider"] = 32768] = "LazyProvider";
-      NodeFlags[NodeFlags["PrivateProvider"] = 65536] = "PrivateProvider";
-  })(NodeFlags || (NodeFlags = {}));
-  var BindingType;
-  (function (BindingType) {
-      BindingType[BindingType["ElementAttribute"] = 0] = "ElementAttribute";
-      BindingType[BindingType["ElementClass"] = 1] = "ElementClass";
-      BindingType[BindingType["ElementStyle"] = 2] = "ElementStyle";
-      BindingType[BindingType["ElementProperty"] = 3] = "ElementProperty";
-      BindingType[BindingType["ComponentHostProperty"] = 4] = "ComponentHostProperty";
-      BindingType[BindingType["DirectiveProperty"] = 5] = "DirectiveProperty";
-      BindingType[BindingType["TextInterpolation"] = 6] = "TextInterpolation";
-      BindingType[BindingType["PureExpressionProperty"] = 7] = "PureExpressionProperty";
-  })(BindingType || (BindingType = {}));
-  var OutputType;
-  (function (OutputType) {
-      OutputType[OutputType["ElementOutput"] = 0] = "ElementOutput";
-      OutputType[OutputType["DirectiveOutput"] = 1] = "DirectiveOutput";
-  })(OutputType || (OutputType = {}));
-  var QueryValueType;
-  (function (QueryValueType) {
-      QueryValueType[QueryValueType["ElementRef"] = 0] = "ElementRef";
-      QueryValueType[QueryValueType["RenderElement"] = 1] = "RenderElement";
-      QueryValueType[QueryValueType["TemplateRef"] = 2] = "TemplateRef";
-      QueryValueType[QueryValueType["ViewContainerRef"] = 3] = "ViewContainerRef";
-      QueryValueType[QueryValueType["Provider"] = 4] = "Provider";
-  })(QueryValueType || (QueryValueType = {}));
-  var ProviderType;
-  (function (ProviderType) {
-      ProviderType[ProviderType["Value"] = 0] = "Value";
-      ProviderType[ProviderType["Class"] = 1] = "Class";
-      ProviderType[ProviderType["Factory"] = 2] = "Factory";
-      ProviderType[ProviderType["UseExisting"] = 3] = "UseExisting";
-  })(ProviderType || (ProviderType = {}));
-  /**
-   * Bitmask for DI flags
-   */
-  var DepFlags;
-  (function (DepFlags) {
-      DepFlags[DepFlags["None"] = 0] = "None";
-      DepFlags[DepFlags["SkipSelf"] = 1] = "SkipSelf";
-      DepFlags[DepFlags["Optional"] = 2] = "Optional";
-      DepFlags[DepFlags["Value"] = 8] = "Value";
-  })(DepFlags || (DepFlags = {}));
-  var PureExpressionType;
-  (function (PureExpressionType) {
-      PureExpressionType[PureExpressionType["Array"] = 0] = "Array";
-      PureExpressionType[PureExpressionType["Object"] = 1] = "Object";
-      PureExpressionType[PureExpressionType["Pipe"] = 2] = "Pipe";
-  })(PureExpressionType || (PureExpressionType = {}));
-  var QueryBindingType;
-  (function (QueryBindingType) {
-      QueryBindingType[QueryBindingType["First"] = 0] = "First";
-      QueryBindingType[QueryBindingType["All"] = 1] = "All";
-  })(QueryBindingType || (QueryBindingType = {}));
-  /**
-   * Bitmask of states
-   */
-  var ViewState;
-  (function (ViewState) {
-      ViewState[ViewState["FirstCheck"] = 1] = "FirstCheck";
-      ViewState[ViewState["ChecksEnabled"] = 2] = "ChecksEnabled";
-      ViewState[ViewState["Errored"] = 4] = "Errored";
-      ViewState[ViewState["Destroyed"] = 8] = "Destroyed";
-  })(ViewState || (ViewState = {}));
-  /**
    * Accessor for view.nodes, enforcing that every usage site stays monomorphic.
    */
   function asTextData(view, index) {
@@ -8702,14 +8585,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   function asQueryList(view, index) {
       return view.nodes[index];
   }
-  // -------------------------------------
-  // Other
-  // -------------------------------------
-  var CheckType;
-  (function (CheckType) {
-      CheckType[CheckType["CheckAndUpdate"] = 0] = "CheckAndUpdate";
-      CheckType[CheckType["CheckNoChanges"] = 1] = "CheckNoChanges";
-  })(CheckType || (CheckType = {}));
   /**
    * This object is used to prevent cycles in the source files and to have a place where
    * debug mode can hook it. It is lazily filled when `isDevMode` is known.
@@ -8766,7 +8641,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       return key;
   }
   var unwrapCounter = 0;
-  function ɵunwrapValue(value) {
+  function ɵunv(value) {
       if (value instanceof WrappedValue) {
           value = value.wrapped;
           unwrapCounter++;
@@ -8774,7 +8649,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       return value;
   }
   var _renderCompCount = 0;
-  function ɵcreateRendererTypeV2(values) {
+  function ɵcrt(values) {
       var isFilled = values && (values.encapsulation !== ViewEncapsulation.None ||
           values.styles.length || Object.keys(values.data).length);
       if (isFilled) {
@@ -8787,7 +8662,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   }
   function checkBinding(view, def, bindingIdx, value) {
       var oldValues = view.oldValues;
-      if (unwrapCounter > 0 || !!(view.state & ViewState.FirstCheck) ||
+      if (unwrapCounter > 0 || !!(view.state & 1 /* FirstCheck */) ||
           !looseIdentical(oldValues[def.bindingIndex + bindingIdx], value)) {
           unwrapCounter = 0;
           return true;
@@ -8803,16 +8678,16 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   }
   function checkBindingNoChanges(view, def, bindingIdx, value) {
       var oldValue = view.oldValues[def.bindingIndex + bindingIdx];
-      if (unwrapCounter || (view.state & ViewState.FirstCheck) || !ɵdevModeEqual(oldValue, value)) {
+      if (unwrapCounter || (view.state & 1 /* FirstCheck */) || !ɵdevModeEqual(oldValue, value)) {
           unwrapCounter = 0;
-          throw expressionChangedAfterItHasBeenCheckedError$1(Services.createDebugContext(view, def.index), oldValue, value, (view.state & ViewState.FirstCheck) !== 0);
+          throw expressionChangedAfterItHasBeenCheckedError$1(Services.createDebugContext(view, def.index), oldValue, value, (view.state & 1 /* FirstCheck */) !== 0);
       }
   }
   function markParentViewsForCheck(view) {
       var currView = view;
       while (currView) {
-          if (currView.def.flags & ViewFlags.OnPush) {
-              currView.state |= ViewState.ChecksEnabled;
+          if (currView.def.flags & 2 /* OnPush */) {
+              currView.state |= 2 /* ChecksEnabled */;
           }
           currView = currView.viewContainerParent || currView.parent;
       }
@@ -8843,10 +8718,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       }
   }
   function renderNode(view, def) {
-      switch (def.type) {
-          case NodeType.Element:
+      switch (def.flags & 100673535 /* Types */) {
+          case 1 /* TypeElement */:
               return asElementData(view, def.index).renderElement;
-          case NodeType.Text:
+          case 2 /* TypeText */:
               return asTextData(view, def.index).renderText;
       }
   }
@@ -8883,8 +8758,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   function getParentRenderElement(view, renderHost, def) {
       var renderParent = def.renderParent;
       if (renderParent) {
-          if (renderParent.type !== NodeType.Element ||
-              (renderParent.flags & NodeFlags.HasComponent) === 0 ||
+          if ((renderParent.flags & 1 /* TypeElement */) === 0 ||
+              (renderParent.flags & 16777216 /* ComponentView */) === 0 ||
               (renderParent.element.componentRendererType &&
                   renderParent.element.componentRendererType.encapsulation === ViewEncapsulation.Native)) {
               // only children of non components, or children of components with native encapsulation should
@@ -8944,8 +8819,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   function visitSiblingRenderNodes(view, action, startIndex, endIndex, parentNode, nextSibling, target) {
       for (var i = startIndex; i <= endIndex; i++) {
           var nodeDef = view.def.nodes[i];
-          if (nodeDef.type === NodeType.Element || nodeDef.type === NodeType.Text ||
-              nodeDef.type === NodeType.NgContent) {
+          if (nodeDef.flags & (1 /* TypeElement */ | 2 /* TypeText */ | 4 /* TypeNgContent */)) {
               visitRenderNode(view, nodeDef, action, parentNode, nextSibling, target);
           }
           // jump to next sibling
@@ -8980,13 +8854,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       }
   }
   function visitRenderNode(view, nodeDef, action, parentNode, nextSibling, target) {
-      if (nodeDef.type === NodeType.NgContent) {
+      if (nodeDef.flags & 4 /* TypeNgContent */) {
           visitProjectedRenderNodes(view, nodeDef.ngContent.index, action, parentNode, nextSibling, target);
       }
       else {
           var rn = renderNode(view, nodeDef);
           execRenderNodeAction(view, rn, action, parentNode, nextSibling, target);
-          if (nodeDef.flags & NodeFlags.HasEmbeddedViews) {
+          if (nodeDef.flags & 8388608 /* EmbeddedViews */) {
               var embeddedViews = asElementData(view, nodeDef.index).embeddedViews;
               if (embeddedViews) {
                   for (var k = 0; k < embeddedViews.length; k++) {
@@ -8994,7 +8868,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
                   }
               }
           }
-          if (nodeDef.type === NodeType.Element && !nodeDef.element.name) {
+          if (nodeDef.flags & 1 /* TypeElement */ && !nodeDef.element.name) {
               visitSiblingRenderNodes(view, action, nodeDef.index + 1, nodeDef.index + nodeDef.childCount, parentNode, nextSibling, target);
           }
       }
@@ -9026,19 +8900,18 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   }
 
   var NOOP = function () { };
-  function ɵanchorDef(flags, matchedQueriesDsl, ngContentIndex, childCount, handleEvent, templateFactory) {
+  function ɵand(flags, matchedQueriesDsl, ngContentIndex, childCount, handleEvent, templateFactory) {
       if (!handleEvent) {
           handleEvent = NOOP;
       }
+      flags |= 1 /* TypeElement */;
       var _a = splitMatchedQueriesDsl(matchedQueriesDsl), matchedQueries = _a.matchedQueries, references = _a.references, matchedQueryIds = _a.matchedQueryIds;
       // skip the call to sliceErrorStack itself + the call to this function.
       var source = isDevMode() ? sliceErrorStack(2, 3) : '';
       var template = templateFactory ? resolveViewDefinition(templateFactory) : null;
       return {
-          type: NodeType.Element,
           // will bet set by the view definition
           index: undefined,
-          reverseChildIndex: undefined,
           parent: undefined,
           renderParent: undefined,
           bindingIndex: undefined,
@@ -9046,6 +8919,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           // regular values
           flags: flags,
           childFlags: 0,
+          directChildFlags: 0,
           childMatchedQueries: 0, matchedQueries: matchedQueries, matchedQueryIds: matchedQueryIds, references: references, ngContentIndex: ngContentIndex, childCount: childCount,
           bindings: [],
           outputs: [],
@@ -9061,12 +8935,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           },
           provider: undefined,
           text: undefined,
-          pureExpression: undefined,
           query: undefined,
           ngContent: undefined
       };
   }
-  function ɵelementDef(flags, matchedQueriesDsl, ngContentIndex, childCount, namespaceAndName, fixedAttrs, bindings, outputs, handleEvent, componentView, componentRendererType) {
+  function ɵeld(flags, matchedQueriesDsl, ngContentIndex, childCount, namespaceAndName, fixedAttrs, bindings, outputs, handleEvent, componentView, componentRendererType) {
       if (fixedAttrs === void 0) { fixedAttrs = []; }
       if (!handleEvent) {
           handleEvent = NOOP;
@@ -9089,12 +8962,12 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           var securityContext = void 0;
           var suffix = void 0;
           switch (bindingType) {
-              case BindingType.ElementStyle:
+              case 2 /* ElementStyle */:
                   suffix = entry[2];
                   break;
-              case BindingType.ElementAttribute:
-              case BindingType.ElementProperty:
-              case BindingType.ComponentHostProperty:
+              case 0 /* ElementAttribute */:
+              case 3 /* ElementProperty */:
+              case 4 /* ComponentHostProperty */:
                   securityContext = entry[2];
                   break;
           }
@@ -9105,7 +8978,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       for (var i = 0; i < outputs.length; i++) {
           var _d = outputs[i], target = _d[0], eventName = _d[1];
           outputDefs[i] = {
-              type: OutputType.ElementOutput,
+              type: 0 /* ElementOutput */,
               target: target, eventName: eventName,
               propName: undefined
           };
@@ -9122,13 +8995,12 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           componentRendererType = null;
       }
       if (componentView) {
-          flags |= NodeFlags.HasComponent;
+          flags |= 16777216 /* ComponentView */;
       }
+      flags |= 1 /* TypeElement */;
       return {
-          type: NodeType.Element,
           // will bet set by the view definition
           index: undefined,
-          reverseChildIndex: undefined,
           parent: undefined,
           renderParent: undefined,
           bindingIndex: undefined,
@@ -9136,6 +9008,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           // regular values
           flags: flags,
           childFlags: 0,
+          directChildFlags: 0,
           childMatchedQueries: 0, matchedQueries: matchedQueries, matchedQueryIds: matchedQueryIds, references: references, ngContentIndex: ngContentIndex, childCount: childCount,
           bindings: bindingDefs,
           outputs: outputDefs,
@@ -9152,7 +9025,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           },
           provider: undefined,
           text: undefined,
-          pureExpression: undefined,
           query: undefined,
           ngContent: undefined
       };
@@ -9245,19 +9117,19 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       var renderNode = elData.renderElement;
       var name = binding.name;
       switch (binding.type) {
-          case BindingType.ElementAttribute:
+          case 0 /* ElementAttribute */:
               setElementAttribute(view, binding, renderNode, binding.ns, name, value);
               break;
-          case BindingType.ElementClass:
+          case 1 /* ElementClass */:
               setElementClass(view, renderNode, name, value);
               break;
-          case BindingType.ElementStyle:
+          case 2 /* ElementStyle */:
               setElementStyle(view, binding, renderNode, name, value);
               break;
-          case BindingType.ElementProperty:
+          case 3 /* ElementProperty */:
               setElementProperty(view, binding, renderNode, name, value);
               break;
-          case BindingType.ComponentHostProperty:
+          case 4 /* ComponentHostProperty */:
               setElementProperty(elData.componentView, binding, renderNode, name, value);
               break;
       }
@@ -9310,19 +9182,18 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       view.renderer.setProperty(renderNode, name, renderValue);
   }
 
-  function ɵngContentDef(ngContentIndex, index) {
+  function ɵncd(ngContentIndex, index) {
       return {
-          type: NodeType.NgContent,
           // will bet set by the view definition
           index: undefined,
-          reverseChildIndex: undefined,
           parent: undefined,
           renderParent: undefined,
           bindingIndex: undefined,
           outputIndex: undefined,
           // regular values
-          flags: 0,
+          flags: 4 /* TypeNgContent */,
           childFlags: 0,
+          directChildFlags: 0,
           childMatchedQueries: 0,
           matchedQueries: {},
           matchedQueryIds: 0,
@@ -9333,7 +9204,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           element: undefined,
           provider: undefined,
           text: undefined,
-          pureExpression: undefined,
           query: undefined,
           ngContent: { index: index }
       };
@@ -9692,15 +9562,15 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           configurable: true
       });
       Object.defineProperty(ViewRef_.prototype, "destroyed", {
-          get: function () { return (this._view.state & ViewState.Destroyed) !== 0; },
+          get: function () { return (this._view.state & 8 /* Destroyed */) !== 0; },
           enumerable: true,
           configurable: true
       });
       ViewRef_.prototype.markForCheck = function () { markParentViewsForCheck(this._view); };
-      ViewRef_.prototype.detach = function () { this._view.state &= ~ViewState.ChecksEnabled; };
+      ViewRef_.prototype.detach = function () { this._view.state &= ~2 /* ChecksEnabled */; };
       ViewRef_.prototype.detectChanges = function () { Services.checkAndUpdateView(this._view); };
       ViewRef_.prototype.checkNoChanges = function () { Services.checkNoChangesView(this._view); };
-      ViewRef_.prototype.reattach = function () { this._view.state |= ViewState.ChecksEnabled; };
+      ViewRef_.prototype.reattach = function () { this._view.state |= 2 /* ChecksEnabled */; };
       ViewRef_.prototype.onDestroy = function (callback) {
           if (!this._view.disposables) {
               this._view.disposables = [];
@@ -9768,29 +9638,28 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       }
       Injector_.prototype.get = function (token, notFoundValue) {
           if (notFoundValue === void 0) { notFoundValue = Injector.THROW_IF_NOT_FOUND; }
-          var allowPrivateServices = (this.elDef.flags & NodeFlags.HasComponent) !== 0;
-          return Services.resolveDep(this.view, this.elDef, allowPrivateServices, { flags: DepFlags.None, token: token, tokenKey: tokenKey(token) }, notFoundValue);
+          var allowPrivateServices = (this.elDef.flags & 16777216 /* ComponentView */) !== 0;
+          return Services.resolveDep(this.view, this.elDef, allowPrivateServices, { flags: 0 /* None */, token: token, tokenKey: tokenKey(token) }, notFoundValue);
       };
       return Injector_;
   }());
-  function ɵnodeValue(view, index) {
+  function ɵnov(view, index) {
       var def = view.def.nodes[index];
-      switch (def.type) {
-          case NodeType.Element:
-              if (def.element.template) {
-                  return createTemplateRef(view, def);
-              }
-              else {
-                  return asElementData(view, def.index).renderElement;
-              }
-          case NodeType.Text:
-              return asTextData(view, def.index).renderText;
-          case NodeType.Directive:
-          case NodeType.Pipe:
-          case NodeType.Provider:
-              return asProviderData(view, def.index).instance;
+      if (def.flags & 1 /* TypeElement */) {
+          if (def.element.template) {
+              return createTemplateRef(view, def);
+          }
+          else {
+              return asElementData(view, def.index).renderElement;
+          }
       }
-      return undefined;
+      else if (def.flags & 2 /* TypeText */) {
+          return asTextData(view, def.index).renderText;
+      }
+      else if (def.flags & (10112 /* CatProvider */ | 8 /* TypePipe */)) {
+          return asProviderData(view, def.index).instance;
+      }
+      throw new Error("Illegal state: read nodeValue for node index " + index);
   }
   function createRendererV1(view) {
       return new RendererAdapter(view.renderer);
@@ -9900,13 +9769,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   var ChangeDetectorRefTokenKey = tokenKey(ChangeDetectorRef);
   var InjectorRefTokenKey = tokenKey(Injector);
   var NOT_CREATED = new Object();
-  function ɵdirectiveDef(flags, matchedQueries, childCount, ctor, deps, props, outputs) {
+  function ɵdid(flags, matchedQueries, childCount, ctor, deps, props, outputs) {
       var bindings = [];
       if (props) {
           for (var prop in props) {
               var _a = props[prop], bindingIndex = _a[0], nonMinifiedName = _a[1];
               bindings[bindingIndex] = {
-                  type: BindingType.DirectiveProperty,
+                  type: 5 /* DirectiveProperty */,
                   name: prop, nonMinifiedName: nonMinifiedName,
                   ns: undefined,
                   securityContext: undefined,
@@ -9917,18 +9786,20 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       var outputDefs = [];
       if (outputs) {
           for (var propName in outputs) {
-              outputDefs.push({ type: OutputType.DirectiveOutput, propName: propName, target: null, eventName: outputs[propName] });
+              outputDefs.push({ type: 1 /* DirectiveOutput */, propName: propName, target: null, eventName: outputs[propName] });
           }
       }
-      return _def(NodeType.Directive, flags, matchedQueries, childCount, ProviderType.Class, ctor, ctor, deps, bindings, outputDefs);
+      flags |= 8192 /* TypeDirective */;
+      return _def(flags, matchedQueries, childCount, ctor, ctor, deps, bindings, outputDefs);
   }
-  function ɵpipeDef(flags, ctor, deps) {
-      return _def(NodeType.Pipe, flags, null, 0, ProviderType.Class, ctor, ctor, deps);
+  function ɵpid(flags, ctor, deps) {
+      flags |= 8 /* TypePipe */;
+      return _def(flags, null, 0, ctor, ctor, deps);
   }
-  function ɵproviderDef(flags, matchedQueries, type, token, value, deps) {
-      return _def(NodeType.Provider, flags, matchedQueries, 0, type, token, value, deps);
+  function ɵprd(flags, matchedQueries, token, value, deps) {
+      return _def(flags, matchedQueries, 0, token, value, deps);
   }
-  function _def(type, flags, matchedQueriesDsl, childCount, providerType, token, value, deps, bindings, outputs) {
+  function _def(flags, matchedQueriesDsl, childCount, token, value, deps, bindings, outputs) {
       var _a = splitMatchedQueriesDsl(matchedQueriesDsl), matchedQueries = _a.matchedQueries, references = _a.references, matchedQueryIds = _a.matchedQueryIds;
       if (!outputs) {
           outputs = [];
@@ -9943,16 +9814,14 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
               flags = value[0], token = value[1];
           }
           else {
-              flags = DepFlags.None;
+              flags = 0 /* None */;
               token = value;
           }
           return { flags: flags, token: token, tokenKey: tokenKey(token) };
       });
       return {
-          type: type,
           // will bet set by the view definition
           index: undefined,
-          reverseChildIndex: undefined,
           parent: undefined,
           renderParent: undefined,
           bindingIndex: undefined,
@@ -9960,18 +9829,18 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           // regular values
           flags: flags,
           childFlags: 0,
+          directChildFlags: 0,
           childMatchedQueries: 0, matchedQueries: matchedQueries, matchedQueryIds: matchedQueryIds, references: references,
           ngContentIndex: undefined, childCount: childCount, bindings: bindings, outputs: outputs,
           element: undefined,
-          provider: { type: providerType, token: token, tokenKey: tokenKey(token), value: value, deps: depDefs },
+          provider: { token: token, tokenKey: tokenKey(token), value: value, deps: depDefs },
           text: undefined,
-          pureExpression: undefined,
           query: undefined,
           ngContent: undefined
       };
   }
   function createProviderInstance(view, def) {
-      return def.flags & NodeFlags.LazyProvider ? NOT_CREATED : _createProviderInstance(view, def);
+      return def.flags & 2048 /* LazyProvider */ ? NOT_CREATED : _createProviderInstance(view, def);
   }
   function createPipeInstance(view, def) {
       // deps are looked up from component.
@@ -9986,7 +9855,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   }
   function createDirectiveInstance(view, def) {
       // components can see other private services, other directives can't.
-      var allowPrivateServices = (def.flags & NodeFlags.IsComponent) > 0;
+      var allowPrivateServices = (def.flags & 16384 /* Component */) > 0;
       var providerDef = def.provider;
       // directives are always eager and classes!
       var instance = createClass(view, def.parent, allowPrivateServices, def.provider.value, def.provider.deps);
@@ -10061,10 +9930,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       if (changes) {
           directive.ngOnChanges(changes);
       }
-      if ((view.state & ViewState.FirstCheck) && (def.flags & NodeFlags.OnInit)) {
+      if ((view.state & 1 /* FirstCheck */) && (def.flags & 32768 /* OnInit */)) {
           directive.ngOnInit();
       }
-      if (def.flags & NodeFlags.DoCheck) {
+      if (def.flags & 131072 /* DoCheck */) {
           directive.ngDoCheck();
       }
       return changed;
@@ -10083,32 +9952,32 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       if (changes) {
           directive.ngOnChanges(changes);
       }
-      if ((view.state & ViewState.FirstCheck) && (def.flags & NodeFlags.OnInit)) {
+      if ((view.state & 1 /* FirstCheck */) && (def.flags & 32768 /* OnInit */)) {
           directive.ngOnInit();
       }
-      if (def.flags & NodeFlags.DoCheck) {
+      if (def.flags & 131072 /* DoCheck */) {
           directive.ngDoCheck();
       }
       return changed;
   }
   function _createProviderInstance(view, def) {
       // private services can see other private services
-      var allowPrivateServices = (def.flags & NodeFlags.PrivateProvider) > 0;
+      var allowPrivateServices = (def.flags & 4096 /* PrivateProvider */) > 0;
       var providerDef = def.provider;
       var injectable;
-      switch (providerDef.type) {
-          case ProviderType.Class:
+      switch (def.flags & 100673535 /* Types */) {
+          case 256 /* TypeClassProvider */:
               injectable =
                   createClass(view, def.parent, allowPrivateServices, providerDef.value, providerDef.deps);
               break;
-          case ProviderType.Factory:
+          case 512 /* TypeFactoryProvider */:
               injectable =
                   callFactory(view, def.parent, allowPrivateServices, providerDef.value, providerDef.deps);
               break;
-          case ProviderType.UseExisting:
+          case 1024 /* TypeUseExistingProvider */:
               injectable = resolveDep(view, def.parent, allowPrivateServices, providerDef.deps[0]);
               break;
-          case ProviderType.Value:
+          case 128 /* TypeValueProvider */:
               injectable = providerDef.value;
               break;
       }
@@ -10166,15 +10035,15 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   }
   function resolveDep(view, elDef, allowPrivateServices, depDef, notFoundValue) {
       if (notFoundValue === void 0) { notFoundValue = Injector.THROW_IF_NOT_FOUND; }
-      if (depDef.flags & DepFlags.Value) {
+      if (depDef.flags & 8 /* Value */) {
           return depDef.token;
       }
       var startView = view;
-      if (depDef.flags & DepFlags.Optional) {
+      if (depDef.flags & 2 /* Optional */) {
           notFoundValue = null;
       }
       var tokenKey = depDef.tokenKey;
-      if (depDef.flags & DepFlags.SkipSelf) {
+      if (depDef.flags & 1 /* SkipSelf */) {
           allowPrivateServices = false;
           elDef = elDef.parent;
       }
@@ -10237,10 +10106,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       return compView;
   }
   function updateProp(view, providerData, def, bindingIdx, value, changes) {
-      if (def.flags & NodeFlags.IsComponent) {
+      if (def.flags & 16384 /* Component */) {
           var compView = asElementData(view, def.parent.index).componentView;
-          if (compView.def.flags & ViewFlags.OnPush) {
-              compView.state |= ViewState.ChecksEnabled;
+          if (compView.def.flags & 2 /* OnPush */) {
+              compView.state |= 2 /* ChecksEnabled */;
           }
       }
       var binding = def.bindings[bindingIdx];
@@ -10249,12 +10118,12 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       // the user passed in the property name as an object has to `providerDef`,
       // so Closure Compiler will have renamed the property correctly already.
       providerData.instance[propName] = value;
-      if (def.flags & NodeFlags.OnChanges) {
+      if (def.flags & 262144 /* OnChanges */) {
           changes = changes || {};
           var oldValue = view.oldValues[def.bindingIndex + bindingIdx];
           var binding_1 = def.bindings[bindingIdx];
           changes[binding_1.nonMinifiedName] =
-              new SimpleChange(oldValue, value, (view.state & ViewState.FirstCheck) !== 0);
+              new SimpleChange(oldValue, value, (view.state & 1 /* FirstCheck */) !== 0);
       }
       view.oldValues[def.bindingIndex + bindingIdx] = value;
       return changes;
@@ -10263,58 +10132,74 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       if (!(view.def.nodeFlags & lifecycles)) {
           return;
       }
-      var len = view.def.nodes.length;
-      for (var i = 0; i < len; i++) {
-          // We use the reverse child oreder to call providers of children first.
-          var nodeDef = view.def.reverseChildNodes[i];
-          var nodeIndex = nodeDef.index;
-          if (nodeDef.flags & lifecycles) {
-              // a leaf
-              Services.setCurrentNode(view, nodeIndex);
-              callProviderLifecycles(asProviderData(view, nodeIndex).instance, nodeDef.flags & lifecycles);
+      var nodes = view.def.nodes;
+      for (var i = 0; i < nodes.length; i++) {
+          var nodeDef = nodes[i];
+          var parent_1 = nodeDef.parent;
+          if (!parent_1 && nodeDef.flags & lifecycles) {
+              // matching root node (e.g. a pipe)
+              callProviderLifecycles(view, i, nodeDef.flags & lifecycles);
           }
-          else if ((nodeDef.childFlags & lifecycles) === 0) {
-              // a parent with leafs
-              // no child matches one of the lifecycles,
-              // then skip the children
+          if ((nodeDef.childFlags & lifecycles) === 0) {
+              // no child matches one of the lifecycles
               i += nodeDef.childCount;
+          }
+          while (parent_1 && (parent_1.flags & 1 /* TypeElement */) &&
+              i === parent_1.index + parent_1.childCount) {
+              // last child of an element
+              if (parent_1.directChildFlags & lifecycles) {
+                  callElementProvidersLifecycles(view, parent_1, lifecycles);
+              }
+              parent_1 = parent_1.parent;
           }
       }
   }
-  function callProviderLifecycles(provider, lifecycles) {
-      if (lifecycles & NodeFlags.AfterContentInit) {
+  function callElementProvidersLifecycles(view, elDef, lifecycles) {
+      for (var i = elDef.index + 1; i <= elDef.index + elDef.childCount; i++) {
+          var nodeDef = view.def.nodes[i];
+          if (nodeDef.flags & lifecycles) {
+              callProviderLifecycles(view, i, nodeDef.flags & lifecycles);
+          }
+          // only visit direct children
+          i += nodeDef.childCount;
+      }
+  }
+  function callProviderLifecycles(view, index, lifecycles) {
+      var provider = asProviderData(view, index).instance;
+      Services.setCurrentNode(view, index);
+      if (lifecycles & 524288 /* AfterContentInit */) {
           provider.ngAfterContentInit();
       }
-      if (lifecycles & NodeFlags.AfterContentChecked) {
+      if (lifecycles & 1048576 /* AfterContentChecked */) {
           provider.ngAfterContentChecked();
       }
-      if (lifecycles & NodeFlags.AfterViewInit) {
+      if (lifecycles & 2097152 /* AfterViewInit */) {
           provider.ngAfterViewInit();
       }
-      if (lifecycles & NodeFlags.AfterViewChecked) {
+      if (lifecycles & 4194304 /* AfterViewChecked */) {
           provider.ngAfterViewChecked();
       }
-      if (lifecycles & NodeFlags.OnDestroy) {
+      if (lifecycles & 65536 /* OnDestroy */) {
           provider.ngOnDestroy();
       }
   }
 
-  function ɵpurePipeDef(argCount) {
+  function ɵppd(argCount) {
       // argCount + 1 to include the pipe as first arg
-      return _pureExpressionDef(PureExpressionType.Pipe, new Array(argCount + 1));
+      return _pureExpressionDef(64 /* TypePurePipe */, new Array(argCount + 1));
   }
-  function ɵpureArrayDef(argCount) {
-      return _pureExpressionDef(PureExpressionType.Array, new Array(argCount));
+  function ɵpad(argCount) {
+      return _pureExpressionDef(16 /* TypePureArray */, new Array(argCount));
   }
-  function ɵpureObjectDef(propertyNames) {
-      return _pureExpressionDef(PureExpressionType.Object, propertyNames);
+  function ɵpod(propertyNames) {
+      return _pureExpressionDef(32 /* TypePureObject */, propertyNames);
   }
-  function _pureExpressionDef(type, propertyNames) {
+  function _pureExpressionDef(flags, propertyNames) {
       var bindings = new Array(propertyNames.length);
       for (var i = 0; i < propertyNames.length; i++) {
           var prop = propertyNames[i];
           bindings[i] = {
-              type: BindingType.PureExpressionProperty,
+              type: 7 /* PureExpressionProperty */,
               name: prop,
               ns: undefined,
               nonMinifiedName: prop,
@@ -10323,17 +10208,16 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           };
       }
       return {
-          type: NodeType.PureExpression,
           // will bet set by the view definition
           index: undefined,
-          reverseChildIndex: undefined,
           parent: undefined,
           renderParent: undefined,
           bindingIndex: undefined,
           outputIndex: undefined,
           // regular values
-          flags: 0,
+          flags: flags,
           childFlags: 0,
+          directChildFlags: 0,
           childMatchedQueries: 0,
           matchedQueries: {},
           matchedQueryIds: 0,
@@ -10344,7 +10228,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           element: undefined,
           provider: undefined,
           text: undefined,
-          pureExpression: { type: type },
           query: undefined,
           ngContent: undefined
       };
@@ -10379,8 +10262,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       if (changed) {
           var data = asPureExpressionData(view, def.index);
           var value = void 0;
-          switch (def.pureExpression.type) {
-              case PureExpressionType.Array:
+          switch (def.flags & 100673535 /* Types */) {
+              case 16 /* TypePureArray */:
                   value = new Array(bindings.length);
                   if (bindLen > 0)
                       value[0] = v0;
@@ -10403,7 +10286,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
                   if (bindLen > 9)
                       value[9] = v9;
                   break;
-              case PureExpressionType.Object:
+              case 32 /* TypePureObject */:
                   value = {};
                   if (bindLen > 0)
                       value[bindings[0].name] = v0;
@@ -10426,7 +10309,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
                   if (bindLen > 9)
                       value[bindings[9].name] = v9;
                   break;
-              case PureExpressionType.Pipe:
+              case 64 /* TypePurePipe */:
                   var pipe = v0;
                   switch (bindLen) {
                       case 1:
@@ -10479,17 +10362,17 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       if (changed) {
           var data = asPureExpressionData(view, def.index);
           var value = void 0;
-          switch (def.pureExpression.type) {
-              case PureExpressionType.Array:
+          switch (def.flags & 100673535 /* Types */) {
+              case 16 /* TypePureArray */:
                   value = values;
                   break;
-              case PureExpressionType.Object:
+              case 32 /* TypePureObject */:
                   value = {};
                   for (var i = 0; i < values.length; i++) {
                       value[bindings[i].name] = values[i];
                   }
                   break;
-              case PureExpressionType.Pipe:
+              case 64 /* TypePurePipe */:
                   var pipe = values[0];
                   var params = values.slice(1);
                   value = pipe.transform.apply(pipe, params);
@@ -10500,17 +10383,15 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       return changed;
   }
 
-  function ɵqueryDef(flags, id, bindings) {
+  function ɵqud(flags, id, bindings) {
       var bindingDefs = [];
       for (var propName in bindings) {
           var bindingType = bindings[propName];
           bindingDefs.push({ propName: propName, bindingType: bindingType });
       }
       return {
-          type: NodeType.Query,
           // will bet set by the view definition
           index: undefined,
-          reverseChildIndex: undefined,
           parent: undefined,
           renderParent: undefined,
           bindingIndex: undefined,
@@ -10518,6 +10399,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           // regular values
           flags: flags,
           childFlags: 0,
+          directChildFlags: 0,
           childMatchedQueries: 0,
           ngContentIndex: undefined,
           matchedQueries: {},
@@ -10529,7 +10411,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           element: undefined,
           provider: undefined,
           text: undefined,
-          pureExpression: undefined,
           query: { id: id, filterId: filterQueryId(id), bindings: bindingDefs },
           ngContent: undefined
       };
@@ -10546,24 +10427,24 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           var end = tplDef.index + tplDef.childCount;
           for (var i = 0; i <= end; i++) {
               var nodeDef = view.def.nodes[i];
-              if ((nodeDef.flags & NodeFlags.HasContentQuery) &&
-                  (nodeDef.flags & NodeFlags.HasDynamicQuery) &&
+              if ((nodeDef.flags & 33554432 /* TypeContentQuery */) &&
+                  (nodeDef.flags & 268435456 /* DynamicQuery */) &&
                   (nodeDef.query.filterId & queryIds) === nodeDef.query.filterId) {
                   asQueryList(view, i).setDirty();
               }
-              if ((nodeDef.type === NodeType.Element && i + nodeDef.childCount < tplDef.index) ||
-                  !(nodeDef.childFlags & NodeFlags.HasContentQuery) ||
-                  !(nodeDef.childFlags & NodeFlags.HasDynamicQuery)) {
+              if ((nodeDef.flags & 1 /* TypeElement */ && i + nodeDef.childCount < tplDef.index) ||
+                  !(nodeDef.childFlags & 33554432 /* TypeContentQuery */) ||
+                  !(nodeDef.childFlags & 268435456 /* DynamicQuery */)) {
                   // skip elements that don't contain the template element or no query.
                   i += nodeDef.childCount;
               }
           }
       }
       // view queries
-      if (view.def.nodeFlags & NodeFlags.HasViewQuery) {
+      if (view.def.nodeFlags & 67108864 /* TypeViewQuery */) {
           for (var i = 0; i < view.def.nodes.length; i++) {
               var nodeDef = view.def.nodes[i];
-              if ((nodeDef.flags & NodeFlags.HasViewQuery) && (nodeDef.flags & NodeFlags.HasDynamicQuery)) {
+              if ((nodeDef.flags & 67108864 /* TypeViewQuery */) && (nodeDef.flags & 268435456 /* DynamicQuery */)) {
                   asQueryList(view, i).setDirty();
               }
               // only visit the root nodes
@@ -10578,12 +10459,12 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       }
       var directiveInstance;
       var newValues;
-      if (nodeDef.flags & NodeFlags.HasContentQuery) {
+      if (nodeDef.flags & 33554432 /* TypeContentQuery */) {
           var elementDef = nodeDef.parent.parent;
           newValues = calcQueryValues(view, elementDef.index, elementDef.index + elementDef.childCount, nodeDef.query, []);
           directiveInstance = asProviderData(view, nodeDef.parent.index).instance;
       }
-      else if (nodeDef.flags & NodeFlags.HasViewQuery) {
+      else if (nodeDef.flags & 67108864 /* TypeViewQuery */) {
           newValues = calcQueryValues(view, 0, view.def.nodes.length - 1, nodeDef.query, []);
           directiveInstance = view.component;
       }
@@ -10594,10 +10475,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           var binding = bindings[i];
           var boundValue = void 0;
           switch (binding.bindingType) {
-              case QueryBindingType.First:
+              case 0 /* First */:
                   boundValue = queryList.first;
                   break;
-              case QueryBindingType.All:
+              case 1 /* All */:
                   boundValue = queryList;
                   notify = true;
                   break;
@@ -10615,7 +10496,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           if (valueType != null) {
               values.push(getQueryValue(view, nodeDef, valueType));
           }
-          if (nodeDef.type === NodeType.Element && nodeDef.element.template &&
+          if (nodeDef.flags & 1 /* TypeElement */ && nodeDef.element.template &&
               (nodeDef.element.template.nodeMatchedQueries & queryDef.filterId) === queryDef.filterId) {
               // check embedded views that were attached at the place of their template.
               var elementData = asElementData(view, i);
@@ -10649,19 +10530,19 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           // a match
           var value = void 0;
           switch (queryValueType) {
-              case QueryValueType.RenderElement:
+              case 1 /* RenderElement */:
                   value = asElementData(view, nodeDef.index).renderElement;
                   break;
-              case QueryValueType.ElementRef:
+              case 0 /* ElementRef */:
                   value = new ElementRef(asElementData(view, nodeDef.index).renderElement);
                   break;
-              case QueryValueType.TemplateRef:
+              case 2 /* TemplateRef */:
                   value = createTemplateRef(view, nodeDef);
                   break;
-              case QueryValueType.ViewContainerRef:
+              case 3 /* ViewContainerRef */:
                   value = createViewContainerRef(view, nodeDef);
                   break;
-              case QueryValueType.Provider:
+              case 4 /* Provider */:
                   value = asProviderData(view, nodeDef.index).instance;
                   break;
           }
@@ -10669,13 +10550,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       }
   }
 
-  function ɵtextDef(ngContentIndex, constants) {
+  function ɵted(ngContentIndex, constants) {
       // skip the call to sliceErrorStack itself + the call to this function.
       var source = isDevMode() ? sliceErrorStack(2, 3) : '';
       var bindings = new Array(constants.length - 1);
       for (var i = 1; i < constants.length; i++) {
           bindings[i - 1] = {
-              type: BindingType.TextInterpolation,
+              type: 6 /* TextInterpolation */,
               name: undefined,
               ns: undefined,
               nonMinifiedName: undefined,
@@ -10683,18 +10564,18 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
               suffix: constants[i]
           };
       }
+      var flags = 2 /* TypeText */;
       return {
-          type: NodeType.Text,
           // will bet set by the view definition
           index: undefined,
-          reverseChildIndex: undefined,
           parent: undefined,
           renderParent: undefined,
           bindingIndex: undefined,
           outputIndex: undefined,
           // regular values
-          flags: 0,
+          flags: flags,
           childFlags: 0,
+          directChildFlags: 0,
           childMatchedQueries: 0,
           matchedQueries: {},
           matchedQueryIds: 0,
@@ -10704,7 +10585,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           element: undefined,
           provider: undefined,
           text: { prefix: constants[0], source: source },
-          pureExpression: undefined,
           query: undefined,
           ngContent: undefined
       };
@@ -10797,7 +10677,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   }
 
   var NOOP$1 = function () { return undefined; };
-  function ɵviewDef(flags, nodes, updateDirectives, updateRenderer) {
+  function ɵvid(flags, nodes, updateDirectives, updateRenderer) {
       // clone nodes and set auto calculated values
       if (nodes.length === 0) {
           throw new Error("Illegal State: Views without nodes are not allowed!");
@@ -10806,6 +10686,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       var viewBindingCount = 0;
       var viewDisposableCount = 0;
       var viewNodeFlags = 0;
+      var viewRootNodeFlags = 0;
       var viewMatchedQueries = 0;
       var currentParent = null;
       var currentElementHasPublicProviders = false;
@@ -10825,11 +10706,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           node.parent = currentParent;
           node.bindingIndex = viewBindingCount;
           node.outputIndex = viewDisposableCount;
-          node.reverseChildIndex =
-              calculateReverseChildIndex(currentParent, i, node.childCount, nodes.length);
           // renderParent needs to account for ng-container!
           var currentRenderParent = void 0;
-          if (currentParent && currentParent.type === NodeType.Element && !currentParent.element.name) {
+          if (currentParent && currentParent.flags & 1 /* TypeElement */ &&
+              !currentParent.element.name) {
               currentRenderParent = currentParent.renderParent;
           }
           else {
@@ -10845,7 +10725,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
               currentElementHasPublicProviders = false;
               currentElementHasPrivateProviders = false;
           }
-          reverseChildNodes[node.reverseChildIndex] = node;
           validateNode(currentParent, node, nodes.length);
           viewNodeFlags |= node.flags;
           viewMatchedQueries |= node.matchedQueryIds;
@@ -10854,17 +10733,21 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           }
           if (currentParent) {
               currentParent.childFlags |= node.flags;
+              currentParent.directChildFlags |= node.flags;
               currentParent.childMatchedQueries |= node.matchedQueryIds;
               if (node.element && node.element.template) {
                   currentParent.childMatchedQueries |= node.element.template.nodeMatchedQueries;
               }
           }
+          else {
+              viewRootNodeFlags |= node.flags;
+          }
           viewBindingCount += node.bindings.length;
           viewDisposableCount += node.outputs.length;
-          if (!currentRenderParent && (node.type === NodeType.Element || node.type === NodeType.Text)) {
+          if (!currentRenderParent && (node.flags & 3 /* CatRenderNode */)) {
               lastRenderRootNode = node;
           }
-          if (node.type === NodeType.Provider || node.type === NodeType.Directive) {
+          if (node.flags & 10112 /* CatProvider */) {
               if (!currentElementHasPublicProviders) {
                   currentElementHasPublicProviders = true;
                   // Use protoypical inheritance to not get O(n^2) complexity...
@@ -10872,8 +10755,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
                       Object.create(currentParent.element.publicProviders);
                   currentParent.element.allProviders = currentParent.element.publicProviders;
               }
-              var isPrivateService = (node.flags & NodeFlags.PrivateProvider) !== 0;
-              var isComponent = (node.flags & NodeFlags.IsComponent) !== 0;
+              var isPrivateService = (node.flags & 4096 /* PrivateProvider */) !== 0;
+              var isComponent = (node.flags & 16384 /* Component */) !== 0;
               if (!isPrivateService || isComponent) {
                   currentParent.element.publicProviders[node.provider.tokenKey] = node;
               }
@@ -10906,8 +10789,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       };
       return {
           nodeFlags: viewNodeFlags,
+          rootNodeFlags: viewRootNodeFlags,
           nodeMatchedQueries: viewMatchedQueries, flags: flags,
-          nodes: nodes, reverseChildNodes: reverseChildNodes,
+          nodes: nodes,
           updateDirectives: updateDirectives || NOOP$1,
           updateRenderer: updateRenderer || NOOP$1,
           handleEvent: handleEvent || NOOP$1,
@@ -10915,61 +10799,26 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           outputCount: viewDisposableCount, lastRenderRootNode: lastRenderRootNode
       };
   }
-  function calculateReverseChildIndex(currentParent, i, childCount, nodeCount) {
-      // Notes about reverse child order:
-      // - Every node is directly before its children, in dfs and reverse child order.
-      // - node.childCount contains all children, in dfs and reverse child order.
-      // - In dfs order, every node is before its first child
-      // - In reverse child order, every node is before its last child
-      // Algorithm, main idea:
-      // - In reverse child order, the ranges for each child + its transitive children are mirrored
-      //   regarding their position inside of their parent
-      // Visualization:
-      // Given the following tree:
-      // Nodes: n0
-      //             n1         n2
-      //                n11 n12    n21 n22
-      // dfs:    0   1   2   3  4   5   6
-      // result: 0   4   6   5  1   3   2
-      //
-      // Example:
-      // Current node = 1
-      // 1) lastChildIndex = 3
-      // 2) lastChildOffsetRelativeToParentInDfsOrder = 2
-      // 3) parentEndIndexInReverseChildOrder = 6
-      // 4) result = 4
-      var lastChildOffsetRelativeToParentInDfsOrder;
-      var parentEndIndexInReverseChildOrder;
-      if (currentParent) {
-          var lastChildIndex = i + childCount;
-          lastChildOffsetRelativeToParentInDfsOrder = lastChildIndex - currentParent.index - 1;
-          parentEndIndexInReverseChildOrder = currentParent.reverseChildIndex + currentParent.childCount;
-      }
-      else {
-          lastChildOffsetRelativeToParentInDfsOrder = i + childCount;
-          parentEndIndexInReverseChildOrder = nodeCount - 1;
-      }
-      return parentEndIndexInReverseChildOrder - lastChildOffsetRelativeToParentInDfsOrder;
-  }
   function validateNode(parent, node, nodeCount) {
       var template = node.element && node.element.template;
       if (template) {
           if (template.lastRenderRootNode &&
-              template.lastRenderRootNode.flags & NodeFlags.HasEmbeddedViews) {
+              template.lastRenderRootNode.flags & 8388608 /* EmbeddedViews */) {
               throw new Error("Illegal State: Last root node of a template can't have embedded views, at index " + node.index + "!");
           }
       }
-      if (node.type === NodeType.Provider || node.type === NodeType.Directive) {
-          var parentType = parent ? parent.type : null;
-          if (parentType !== NodeType.Element) {
+      if (node.flags & 10112 /* CatProvider */) {
+          var parentFlags = parent ? parent.flags : null;
+          if ((parentFlags & 1 /* TypeElement */) === 0) {
               throw new Error("Illegal State: Provider/Directive nodes need to be children of elements or anchors, at index " + node.index + "!");
           }
       }
       if (node.query) {
-          if (node.flags & NodeFlags.HasContentQuery && (!parent || parent.type !== NodeType.Directive)) {
+          if (node.flags & 33554432 /* TypeContentQuery */ &&
+              (!parent || (parent.flags & 8192 /* TypeDirective */) === 0)) {
               throw new Error("Illegal State: Content Query nodes need to be children of directives, at index " + node.index + "!");
           }
-          if (node.flags & NodeFlags.HasViewQuery && parent) {
+          if (node.flags & 67108864 /* TypeViewQuery */ && parent) {
               throw new Error("Illegal State: View Query nodes have to be top level nodes, at index " + node.index + "!");
           }
       }
@@ -11003,7 +10852,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           viewContainerParent: undefined, parentNodeDef: parentNodeDef,
           context: undefined,
           component: undefined, nodes: nodes,
-          state: ViewState.FirstCheck | ViewState.ChecksEnabled, root: root, renderer: renderer,
+          state: 1 /* FirstCheck */ | 2 /* ChecksEnabled */, root: root, renderer: renderer,
           oldValues: new Array(def.bindingCount), disposables: disposables
       };
       return view;
@@ -11024,11 +10873,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           var nodeDef = def.nodes[i];
           Services.setCurrentNode(view, i);
           var nodeData = void 0;
-          switch (nodeDef.type) {
-              case NodeType.Element:
+          switch (nodeDef.flags & 100673535 /* Types */) {
+              case 1 /* TypeElement */:
                   var el = createElement(view, renderHost, nodeDef);
                   var componentView = void 0;
-                  if (nodeDef.flags & NodeFlags.HasComponent) {
+                  if (nodeDef.flags & 16777216 /* ComponentView */) {
                       var compViewDef = resolveViewDefinition(nodeDef.element.componentView);
                       var rendererType = nodeDef.element.componentRendererType;
                       var compRenderer = void 0;
@@ -11044,39 +10893,45 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
                   nodeData = {
                       renderElement: el,
                       componentView: componentView,
-                      embeddedViews: (nodeDef.flags & NodeFlags.HasEmbeddedViews) ? [] : undefined,
+                      embeddedViews: (nodeDef.flags & 8388608 /* EmbeddedViews */) ? [] : undefined,
                       projectedViews: undefined
                   };
                   break;
-              case NodeType.Text:
+              case 2 /* TypeText */:
                   nodeData = createText(view, renderHost, nodeDef);
                   break;
-              case NodeType.Provider: {
+              case 256 /* TypeClassProvider */:
+              case 512 /* TypeFactoryProvider */:
+              case 1024 /* TypeUseExistingProvider */:
+              case 128 /* TypeValueProvider */: {
                   var instance = createProviderInstance(view, nodeDef);
                   nodeData = { instance: instance };
                   break;
               }
-              case NodeType.Pipe: {
+              case 8 /* TypePipe */: {
                   var instance = createPipeInstance(view, nodeDef);
                   nodeData = { instance: instance };
                   break;
               }
-              case NodeType.Directive: {
+              case 8192 /* TypeDirective */: {
                   var instance = createDirectiveInstance(view, nodeDef);
                   nodeData = { instance: instance };
-                  if (nodeDef.flags & NodeFlags.IsComponent) {
+                  if (nodeDef.flags & 16384 /* Component */) {
                       var compView = asElementData(view, nodeDef.parent.index).componentView;
                       initView(compView, instance, instance);
                   }
                   break;
               }
-              case NodeType.PureExpression:
+              case 16 /* TypePureArray */:
+              case 32 /* TypePureObject */:
+              case 64 /* TypePurePipe */:
                   nodeData = createPureExpression(view, nodeDef);
                   break;
-              case NodeType.Query:
+              case 33554432 /* TypeContentQuery */:
+              case 67108864 /* TypeViewQuery */:
                   nodeData = createQuery();
                   break;
-              case NodeType.NgContent:
+              case 4 /* TypeNgContent */:
                   appendNgContent(view, renderHost, nodeDef);
                   // no runtime data needed for NgContent...
                   nodeData = undefined;
@@ -11088,34 +10943,34 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       // so that e.g. ng-content works
       execComponentViewsAction(view, ViewAction.CreateViewNodes);
       // fill static content and view queries
-      execQueriesAction(view, NodeFlags.HasContentQuery | NodeFlags.HasViewQuery, NodeFlags.HasStaticQuery, CheckType.CheckAndUpdate);
+      execQueriesAction(view, 33554432 /* TypeContentQuery */ | 67108864 /* TypeViewQuery */, 134217728 /* StaticQuery */, 0 /* CheckAndUpdate */);
   }
   function checkNoChangesView(view) {
-      Services.updateDirectives(view, CheckType.CheckNoChanges);
+      Services.updateDirectives(view, 1 /* CheckNoChanges */);
       execEmbeddedViewsAction(view, ViewAction.CheckNoChanges);
-      execQueriesAction(view, NodeFlags.HasContentQuery, NodeFlags.HasDynamicQuery, CheckType.CheckNoChanges);
-      Services.updateRenderer(view, CheckType.CheckNoChanges);
+      execQueriesAction(view, 33554432 /* TypeContentQuery */, 268435456 /* DynamicQuery */, 1 /* CheckNoChanges */);
+      Services.updateRenderer(view, 1 /* CheckNoChanges */);
       execComponentViewsAction(view, ViewAction.CheckNoChanges);
-      execQueriesAction(view, NodeFlags.HasViewQuery, NodeFlags.HasDynamicQuery, CheckType.CheckNoChanges);
+      execQueriesAction(view, 67108864 /* TypeViewQuery */, 268435456 /* DynamicQuery */, 1 /* CheckNoChanges */);
   }
   function checkAndUpdateView(view) {
-      Services.updateDirectives(view, CheckType.CheckAndUpdate);
+      Services.updateDirectives(view, 0 /* CheckAndUpdate */);
       execEmbeddedViewsAction(view, ViewAction.CheckAndUpdate);
-      execQueriesAction(view, NodeFlags.HasContentQuery, NodeFlags.HasDynamicQuery, CheckType.CheckAndUpdate);
-      callLifecycleHooksChildrenFirst(view, NodeFlags.AfterContentChecked |
-          (view.state & ViewState.FirstCheck ? NodeFlags.AfterContentInit : 0));
-      Services.updateRenderer(view, CheckType.CheckAndUpdate);
+      execQueriesAction(view, 33554432 /* TypeContentQuery */, 268435456 /* DynamicQuery */, 0 /* CheckAndUpdate */);
+      callLifecycleHooksChildrenFirst(view, 1048576 /* AfterContentChecked */ |
+          (view.state & 1 /* FirstCheck */ ? 524288 /* AfterContentInit */ : 0));
+      Services.updateRenderer(view, 0 /* CheckAndUpdate */);
       execComponentViewsAction(view, ViewAction.CheckAndUpdate);
-      execQueriesAction(view, NodeFlags.HasViewQuery, NodeFlags.HasDynamicQuery, CheckType.CheckAndUpdate);
-      callLifecycleHooksChildrenFirst(view, NodeFlags.AfterViewChecked |
-          (view.state & ViewState.FirstCheck ? NodeFlags.AfterViewInit : 0));
-      if (view.def.flags & ViewFlags.OnPush) {
-          view.state &= ~ViewState.ChecksEnabled;
+      execQueriesAction(view, 67108864 /* TypeViewQuery */, 268435456 /* DynamicQuery */, 0 /* CheckAndUpdate */);
+      callLifecycleHooksChildrenFirst(view, 4194304 /* AfterViewChecked */ |
+          (view.state & 1 /* FirstCheck */ ? 2097152 /* AfterViewInit */ : 0));
+      if (view.def.flags & 2 /* OnPush */) {
+          view.state &= ~2 /* ChecksEnabled */;
       }
-      view.state &= ~ViewState.FirstCheck;
+      view.state &= ~1 /* FirstCheck */;
   }
   function checkAndUpdateNode(view, nodeDef, argStyle, v0, v1, v2, v3, v4, v5, v6, v7, v8, v9) {
-      if (argStyle === ArgumentType.Inline) {
+      if (argStyle === 0 /* Inline */) {
           return checkAndUpdateNodeInline(view, nodeDef, v0, v1, v2, v3, v4, v5, v6, v7, v8, v9);
       }
       else {
@@ -11124,18 +10979,20 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   }
   function checkAndUpdateNodeInline(view, nodeDef, v0, v1, v2, v3, v4, v5, v6, v7, v8, v9) {
       var changed = false;
-      switch (nodeDef.type) {
-          case NodeType.Element:
+      switch (nodeDef.flags & 100673535 /* Types */) {
+          case 1 /* TypeElement */:
               changed = checkAndUpdateElementInline(view, nodeDef, v0, v1, v2, v3, v4, v5, v6, v7, v8, v9);
               break;
-          case NodeType.Text:
+          case 2 /* TypeText */:
               changed = checkAndUpdateTextInline(view, nodeDef, v0, v1, v2, v3, v4, v5, v6, v7, v8, v9);
               break;
-          case NodeType.Directive:
+          case 8192 /* TypeDirective */:
               changed =
                   checkAndUpdateDirectiveInline(view, nodeDef, v0, v1, v2, v3, v4, v5, v6, v7, v8, v9);
               break;
-          case NodeType.PureExpression:
+          case 16 /* TypePureArray */:
+          case 32 /* TypePureObject */:
+          case 64 /* TypePurePipe */:
               changed =
                   checkAndUpdatePureExpressionInline(view, nodeDef, v0, v1, v2, v3, v4, v5, v6, v7, v8, v9);
               break;
@@ -11144,17 +11001,19 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   }
   function checkAndUpdateNodeDynamic(view, nodeDef, values) {
       var changed = false;
-      switch (nodeDef.type) {
-          case NodeType.Element:
+      switch (nodeDef.flags & 100673535 /* Types */) {
+          case 1 /* TypeElement */:
               changed = checkAndUpdateElementDynamic(view, nodeDef, values);
               break;
-          case NodeType.Text:
+          case 2 /* TypeText */:
               changed = checkAndUpdateTextDynamic(view, nodeDef, values);
               break;
-          case NodeType.Directive:
+          case 8192 /* TypeDirective */:
               changed = checkAndUpdateDirectiveDynamic(view, nodeDef, values);
               break;
-          case NodeType.PureExpression:
+          case 16 /* TypePureArray */:
+          case 32 /* TypePureObject */:
+          case 64 /* TypePurePipe */:
               changed = checkAndUpdatePureExpressionDynamic(view, nodeDef, values);
               break;
       }
@@ -11171,7 +11030,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       return changed;
   }
   function checkNoChangesNode(view, nodeDef, argStyle, v0, v1, v2, v3, v4, v5, v6, v7, v8, v9) {
-      if (argStyle === ArgumentType.Inline) {
+      if (argStyle === 0 /* Inline */) {
           checkNoChangesNodeInline(view, nodeDef, v0, v1, v2, v3, v4, v5, v6, v7, v8, v9);
       }
       else {
@@ -11211,16 +11070,16 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   function checkNoChangesQuery(view, nodeDef) {
       var queryList = asQueryList(view, nodeDef.index);
       if (queryList.dirty) {
-          throw expressionChangedAfterItHasBeenCheckedError$1(Services.createDebugContext(view, nodeDef.index), "Query " + nodeDef.query.id + " not dirty", "Query " + nodeDef.query.id + " dirty", (view.state & ViewState.FirstCheck) !== 0);
+          throw expressionChangedAfterItHasBeenCheckedError$1(Services.createDebugContext(view, nodeDef.index), "Query " + nodeDef.query.id + " not dirty", "Query " + nodeDef.query.id + " dirty", (view.state & 1 /* FirstCheck */) !== 0);
       }
   }
   function destroyView(view) {
-      if (view.state & ViewState.Destroyed) {
+      if (view.state & 8 /* Destroyed */) {
           return;
       }
       execEmbeddedViewsAction(view, ViewAction.Destroy);
       execComponentViewsAction(view, ViewAction.Destroy);
-      callLifecycleHooksChildrenFirst(view, NodeFlags.OnDestroy);
+      callLifecycleHooksChildrenFirst(view, 65536 /* OnDestroy */);
       if (view.disposables) {
           for (var i = 0; i < view.disposables.length; i++) {
               view.disposables[i]();
@@ -11232,16 +11091,16 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       if (isComponentView(view)) {
           view.renderer.destroy();
       }
-      view.state |= ViewState.Destroyed;
+      view.state |= 8 /* Destroyed */;
   }
   function destroyViewNodes(view) {
       var len = view.def.nodes.length;
       for (var i = 0; i < len; i++) {
           var def = view.def.nodes[i];
-          if (def.type === NodeType.Element) {
+          if (def.flags & 1 /* TypeElement */) {
               view.renderer.destroyNode(asElementData(view, i).renderElement);
           }
-          else if (def.type === NodeType.Text) {
+          else if (def.flags & 2 /* TypeText */) {
               view.renderer.destroyNode(asTextData(view, i).renderText);
           }
       }
@@ -11255,16 +11114,16 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   })(ViewAction || (ViewAction = {}));
   function execComponentViewsAction(view, action) {
       var def = view.def;
-      if (!(def.nodeFlags & NodeFlags.HasComponent)) {
+      if (!(def.nodeFlags & 16777216 /* ComponentView */)) {
           return;
       }
       for (var i = 0; i < def.nodes.length; i++) {
           var nodeDef = def.nodes[i];
-          if (nodeDef.flags & NodeFlags.HasComponent) {
+          if (nodeDef.flags & 16777216 /* ComponentView */) {
               // a leaf
               callViewAction(asElementData(view, i).componentView, action);
           }
-          else if ((nodeDef.childFlags & NodeFlags.HasComponent) === 0) {
+          else if ((nodeDef.childFlags & 16777216 /* ComponentView */) === 0) {
               // a parent with leafs
               // no child is a component,
               // then skip the children
@@ -11274,12 +11133,12 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   }
   function execEmbeddedViewsAction(view, action) {
       var def = view.def;
-      if (!(def.nodeFlags & NodeFlags.HasEmbeddedViews)) {
+      if (!(def.nodeFlags & 8388608 /* EmbeddedViews */)) {
           return;
       }
       for (var i = 0; i < def.nodes.length; i++) {
           var nodeDef = def.nodes[i];
-          if (nodeDef.flags & NodeFlags.HasEmbeddedViews) {
+          if (nodeDef.flags & 8388608 /* EmbeddedViews */) {
               // a leaf
               var embeddedViews = asElementData(view, i).embeddedViews;
               if (embeddedViews) {
@@ -11288,7 +11147,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
                   }
               }
           }
-          else if ((nodeDef.childFlags & NodeFlags.HasEmbeddedViews) === 0) {
+          else if ((nodeDef.childFlags & 8388608 /* EmbeddedViews */) === 0) {
               // a parent with leafs
               // no child is a component,
               // then skip the children
@@ -11300,14 +11159,14 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       var viewState = view.state;
       switch (action) {
           case ViewAction.CheckNoChanges:
-              if ((viewState & ViewState.ChecksEnabled) &&
-                  (viewState & (ViewState.Errored | ViewState.Destroyed)) === 0) {
+              if ((viewState & 2 /* ChecksEnabled */) &&
+                  (viewState & (4 /* Errored */ | 8 /* Destroyed */)) === 0) {
                   checkNoChangesView(view);
               }
               break;
           case ViewAction.CheckAndUpdate:
-              if ((viewState & ViewState.ChecksEnabled) &&
-                  (viewState & (ViewState.Errored | ViewState.Destroyed)) === 0) {
+              if ((viewState & 2 /* ChecksEnabled */) &&
+                  (viewState & (4 /* Errored */ | 8 /* Destroyed */)) === 0) {
                   checkAndUpdateView(view);
               }
               break;
@@ -11329,10 +11188,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           if ((nodeDef.flags & queryFlags) && (nodeDef.flags & staticDynamicQueryFlag)) {
               Services.setCurrentNode(view, nodeDef.index);
               switch (checkType) {
-                  case CheckType.CheckAndUpdate:
+                  case 0 /* CheckAndUpdate */:
                       checkAndUpdateQuery(view, nodeDef);
                       break;
-                  case CheckType.CheckNoChanges:
+                  case 1 /* CheckNoChanges */:
                       checkNoChangesQuery(view, nodeDef);
                       break;
               }
@@ -11377,9 +11236,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           handleEvent: function (view, nodeIndex, eventName, event) {
               return view.def.handleEvent(view, nodeIndex, eventName, event);
           },
-          updateDirectives: function (view, checkType) { return view.def.updateDirectives(checkType === CheckType.CheckAndUpdate ? prodCheckAndUpdateNode :
+          updateDirectives: function (view, checkType) { return view.def.updateDirectives(checkType === 0 /* CheckAndUpdate */ ? prodCheckAndUpdateNode :
               prodCheckNoChangesNode, view); },
-          updateRenderer: function (view, checkType) { return view.def.updateRenderer(checkType === CheckType.CheckAndUpdate ? prodCheckAndUpdateNode :
+          updateRenderer: function (view, checkType) { return view.def.updateRenderer(checkType === 0 /* CheckAndUpdate */ ? prodCheckAndUpdateNode :
               prodCheckNoChangesNode, view); },
       };
   }
@@ -11418,13 +11277,15 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   function prodCheckAndUpdateNode(view, nodeIndex, argStyle, v0, v1, v2, v3, v4, v5, v6, v7, v8, v9) {
       var nodeDef = view.def.nodes[nodeIndex];
       checkAndUpdateNode(view, nodeDef, argStyle, v0, v1, v2, v3, v4, v5, v6, v7, v8, v9);
-      return (nodeDef.type === NodeType.PureExpression) ? asPureExpressionData(view, nodeIndex).value :
+      return (nodeDef.flags & 112 /* CatPureExpression */) ?
+          asPureExpressionData(view, nodeIndex).value :
           undefined;
   }
   function prodCheckNoChangesNode(view, nodeIndex, argStyle, v0, v1, v2, v3, v4, v5, v6, v7, v8, v9) {
       var nodeDef = view.def.nodes[nodeIndex];
       checkNoChangesNode(view, nodeDef, argStyle, v0, v1, v2, v3, v4, v5, v6, v7, v8, v9);
-      return (nodeDef.type === NodeType.PureExpression) ? asPureExpressionData(view, nodeIndex).value :
+      return (nodeDef.flags & 112 /* CatPureExpression */) ?
+          asPureExpressionData(view, nodeIndex).value :
           undefined;
   }
   function debugCreateEmbeddedView(parent, anchorDef, context) {
@@ -11459,7 +11320,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       return callWithDebugContext(DebugAction.handleEvent, view.def.handleEvent, null, [view, nodeIndex, eventName, event]);
   }
   function debugUpdateDirectives(view, checkType) {
-      if (view.state & ViewState.Destroyed) {
+      if (view.state & 8 /* Destroyed */) {
           throw viewDestroyedError$1(DebugAction[_currentAction]);
       }
       debugSetCurrentNode(view, nextDirectiveWithBinding(view, 0));
@@ -11470,23 +11331,23 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
               values[_i - 3] = arguments[_i];
           }
           var nodeDef = view.def.nodes[nodeIndex];
-          if (checkType === CheckType.CheckAndUpdate) {
+          if (checkType === 0 /* CheckAndUpdate */) {
               debugCheckAndUpdateNode(view, nodeDef, argStyle, values);
           }
           else {
               debugCheckNoChangesNode(view, nodeDef, argStyle, values);
           }
-          if (nodeDef.type === NodeType.Directive) {
+          if (nodeDef.flags & 8192 /* TypeDirective */) {
               debugSetCurrentNode(view, nextDirectiveWithBinding(view, nodeIndex));
           }
-          return (nodeDef.type === NodeType.PureExpression) ?
+          return (nodeDef.flags & 112 /* CatPureExpression */) ?
               asPureExpressionData(view, nodeDef.index).value :
               undefined;
       }
       ;
   }
   function debugUpdateRenderer(view, checkType) {
-      if (view.state & ViewState.Destroyed) {
+      if (view.state & 8 /* Destroyed */) {
           throw viewDestroyedError$1(DebugAction[_currentAction]);
       }
       debugSetCurrentNode(view, nextRenderNodeWithBinding(view, 0));
@@ -11497,16 +11358,16 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
               values[_i - 3] = arguments[_i];
           }
           var nodeDef = view.def.nodes[nodeIndex];
-          if (checkType === CheckType.CheckAndUpdate) {
+          if (checkType === 0 /* CheckAndUpdate */) {
               debugCheckAndUpdateNode(view, nodeDef, argStyle, values);
           }
           else {
               debugCheckNoChangesNode(view, nodeDef, argStyle, values);
           }
-          if (nodeDef.type === NodeType.Element || nodeDef.type === NodeType.Text) {
+          if (nodeDef.flags & 3 /* CatRenderNode */) {
               debugSetCurrentNode(view, nextRenderNodeWithBinding(view, nodeIndex));
           }
-          return (nodeDef.type === NodeType.PureExpression) ?
+          return (nodeDef.flags & 112 /* CatPureExpression */) ?
               asPureExpressionData(view, nodeDef.index).value :
               undefined;
       }
@@ -11514,20 +11375,19 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   function debugCheckAndUpdateNode(view, nodeDef, argStyle, givenValues) {
       var changed = checkAndUpdateNode.apply(void 0, [view, nodeDef, argStyle].concat(givenValues));
       if (changed) {
-          var values = argStyle === ArgumentType.Dynamic ? givenValues[0] : givenValues;
-          if (nodeDef.type === NodeType.Directive || nodeDef.type === NodeType.Element) {
+          var values = argStyle === 1 /* Dynamic */ ? givenValues[0] : givenValues;
+          if (nodeDef.flags & (8192 /* TypeDirective */ | 1 /* TypeElement */)) {
               var bindingValues = {};
               for (var i = 0; i < nodeDef.bindings.length; i++) {
                   var binding = nodeDef.bindings[i];
                   var value = values[i];
-                  if ((binding.type === BindingType.ElementProperty ||
-                      binding.type === BindingType.ComponentHostProperty ||
-                      binding.type === BindingType.DirectiveProperty)) {
+                  if ((binding.type === 4 /* ComponentHostProperty */ ||
+                      binding.type === 5 /* DirectiveProperty */)) {
                       bindingValues[normalizeDebugBindingName(binding.nonMinifiedName)] =
                           normalizeDebugBindingValue(value);
                   }
               }
-              var elDef = nodeDef.type === NodeType.Directive ? nodeDef.parent : nodeDef;
+              var elDef = nodeDef.flags & 8192 /* TypeDirective */ ? nodeDef.parent : nodeDef;
               var el = asElementData(view, elDef.index).renderElement;
               if (!elDef.element.name) {
                   // a comment.
@@ -11578,7 +11438,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   function nextDirectiveWithBinding(view, nodeIndex) {
       for (var i = nodeIndex; i < view.def.nodes.length; i++) {
           var nodeDef = view.def.nodes[i];
-          if (nodeDef.type === NodeType.Directive && nodeDef.bindings && nodeDef.bindings.length) {
+          if (nodeDef.flags & 8192 /* TypeDirective */ && nodeDef.bindings && nodeDef.bindings.length) {
               return i;
           }
       }
@@ -11587,8 +11447,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   function nextRenderNodeWithBinding(view, nodeIndex) {
       for (var i = nodeIndex; i < view.def.nodes.length; i++) {
           var nodeDef = view.def.nodes[i];
-          if ((nodeDef.type === NodeType.Element || nodeDef.type === NodeType.Text) && nodeDef.bindings &&
-              nodeDef.bindings.length) {
+          if ((nodeDef.flags & 3 /* CatRenderNode */) && nodeDef.bindings && nodeDef.bindings.length) {
               return i;
           }
       }
@@ -11604,7 +11463,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           this.nodeDef = view.def.nodes[nodeIndex];
           var elDef = this.nodeDef;
           var elView = view;
-          while (elDef && elDef.type !== NodeType.Element) {
+          while (elDef && (elDef.flags & 1 /* TypeElement */) === 0) {
               elDef = elDef.parent;
           }
           if (!elDef) {
@@ -11645,7 +11504,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
               if (this.elDef) {
                   for (var i = this.elDef.index + 1; i <= this.elDef.index + this.elDef.childCount; i++) {
                       var childDef = this.elView.def.nodes[i];
-                      if (childDef.type === NodeType.Provider || childDef.type === NodeType.Directive) {
+                      if (childDef.flags & 10112 /* CatProvider */) {
                           tokens.push(childDef.provider.token);
                       }
                       i += childDef.childCount;
@@ -11663,7 +11522,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
                   collectReferences(this.elView, this.elDef, references);
                   for (var i = this.elDef.index + 1; i <= this.elDef.index + this.elDef.childCount; i++) {
                       var childDef = this.elView.def.nodes[i];
-                      if (childDef.type === NodeType.Provider || childDef.type === NodeType.Directive) {
+                      if (childDef.flags & 10112 /* CatProvider */) {
                           collectReferences(this.elView, childDef, references);
                       }
                       i += childDef.childCount;
@@ -11676,7 +11535,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       });
       Object.defineProperty(DebugContext_.prototype, "source", {
           get: function () {
-              if (this.nodeDef.type === NodeType.Text) {
+              if (this.nodeDef.flags & 2 /* TypeText */) {
                   return this.nodeDef.text.source;
               }
               else {
@@ -11696,7 +11555,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       });
       Object.defineProperty(DebugContext_.prototype, "renderNode", {
           get: function () {
-              return this.nodeDef.type === NodeType.Text ? renderNode(this.view, this.nodeDef) :
+              return this.nodeDef.flags & 2 /* TypeText */ ? renderNode(this.view, this.nodeDef) :
                   renderNode(this.elView, this.elDef);
           },
           enumerable: true,
@@ -11734,7 +11593,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           if (isViewDebugError(e) || !_currentView) {
               throw e;
           }
-          _currentView.state |= ViewState.Errored;
+          _currentView.state |= 4 /* Errored */;
           throw viewWrappedDebugError(e, getCurrentDebugContext());
       }
   }
@@ -13987,7 +13846,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   /**
    * @stable
    */
-  var VERSION = new Version('4.0.0-rc.1-f356041');
+  var VERSION = new Version('4.0.0-rc.1-5caab71');
 
   /**
    * @license
@@ -15932,25 +15791,21 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       runtime: ɵcreateRenderComponentType
   };
   Identifiers.noop = { name: 'ɵnoop', moduleUrl: CORE, runtime: ɵnoop };
-  Identifiers.viewDef = { name: 'ɵviewDef', moduleUrl: CORE, runtime: ɵviewDef };
-  Identifiers.elementDef = { name: 'ɵelementDef', moduleUrl: CORE, runtime: ɵelementDef };
-  Identifiers.anchorDef = { name: 'ɵanchorDef', moduleUrl: CORE, runtime: ɵanchorDef };
-  Identifiers.textDef = { name: 'ɵtextDef', moduleUrl: CORE, runtime: ɵtextDef };
-  Identifiers.directiveDef = { name: 'ɵdirectiveDef', moduleUrl: CORE, runtime: ɵdirectiveDef };
-  Identifiers.providerDef = { name: 'ɵproviderDef', moduleUrl: CORE, runtime: ɵproviderDef };
-  Identifiers.queryDef = { name: 'ɵqueryDef', moduleUrl: CORE, runtime: ɵqueryDef };
-  Identifiers.pureArrayDef = { name: 'ɵpureArrayDef', moduleUrl: CORE, runtime: ɵpureArrayDef };
-  Identifiers.pureObjectDef = { name: 'ɵpureObjectDef', moduleUrl: CORE, runtime: ɵpureObjectDef };
-  Identifiers.purePipeDef = { name: 'ɵpurePipeDef', moduleUrl: CORE, runtime: ɵpurePipeDef };
-  Identifiers.pipeDef = { name: 'ɵpipeDef', moduleUrl: CORE, runtime: ɵpipeDef };
-  Identifiers.nodeValue = { name: 'ɵnodeValue', moduleUrl: CORE, runtime: ɵnodeValue };
-  Identifiers.ngContentDef = { name: 'ɵngContentDef', moduleUrl: CORE, runtime: ɵngContentDef };
-  Identifiers.unwrapValue = { name: 'ɵunwrapValue', moduleUrl: CORE, runtime: ɵunwrapValue };
-  Identifiers.createRendererTypeV2 = {
-      name: 'ɵcreateRendererTypeV2',
-      moduleUrl: CORE,
-      runtime: ɵcreateRendererTypeV2
-  };
+  Identifiers.viewDef = { name: 'ɵvid', moduleUrl: CORE, runtime: ɵvid };
+  Identifiers.elementDef = { name: 'ɵeld', moduleUrl: CORE, runtime: ɵeld };
+  Identifiers.anchorDef = { name: 'ɵand', moduleUrl: CORE, runtime: ɵand };
+  Identifiers.textDef = { name: 'ɵted', moduleUrl: CORE, runtime: ɵted };
+  Identifiers.directiveDef = { name: 'ɵdid', moduleUrl: CORE, runtime: ɵdid };
+  Identifiers.providerDef = { name: 'ɵprd', moduleUrl: CORE, runtime: ɵprd };
+  Identifiers.queryDef = { name: 'ɵqud', moduleUrl: CORE, runtime: ɵqud };
+  Identifiers.pureArrayDef = { name: 'ɵpad', moduleUrl: CORE, runtime: ɵpad };
+  Identifiers.pureObjectDef = { name: 'ɵpod', moduleUrl: CORE, runtime: ɵpod };
+  Identifiers.purePipeDef = { name: 'ɵppd', moduleUrl: CORE, runtime: ɵppd };
+  Identifiers.pipeDef = { name: 'ɵpid', moduleUrl: CORE, runtime: ɵpid };
+  Identifiers.nodeValue = { name: 'ɵnov', moduleUrl: CORE, runtime: ɵnov };
+  Identifiers.ngContentDef = { name: 'ɵncd', moduleUrl: CORE, runtime: ɵncd };
+  Identifiers.unwrapValue = { name: 'ɵunv', moduleUrl: CORE, runtime: ɵunv };
+  Identifiers.createRendererTypeV2 = { name: 'ɵcrt', moduleUrl: CORE, runtime: ɵcrt };
   Identifiers.RendererTypeV2 = {
       name: 'RendererTypeV2',
       moduleUrl: CORE,
@@ -15963,11 +15818,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       // type only
       runtime: null
   };
-  Identifiers.createComponentFactory = {
-      name: 'ɵcreateComponentFactory',
-      moduleUrl: CORE,
-      runtime: createComponentFactory
-  };
+  Identifiers.createComponentFactory = { name: 'ɵccf', moduleUrl: CORE, runtime: createComponentFactory };
   function assetUrl(pkg, path, type) {
       if (path === void 0) { path = null; }
       if (type === void 0) { type = 'src'; }
@@ -31905,13 +31756,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
               this.component.viewQueries.forEach(function (query, queryIndex) {
                   // Note: queries start with id 1 so we can use the number in a Bloom filter!
                   var queryId = queryIndex + 1;
-                  var bindingType = query.first ? QueryBindingType.First : QueryBindingType.All;
-                  var flags = NodeFlags.HasViewQuery;
+                  var bindingType = query.first ? 0 /* First */ : 1 /* All */;
+                  var flags = 67108864 /* TypeViewQuery */;
                   if (queryIds_1.staticQueryIds.has(queryId)) {
-                      flags |= NodeFlags.HasStaticQuery;
+                      flags |= 134217728 /* StaticQuery */;
                   }
                   else {
-                      flags |= NodeFlags.HasDynamicQuery;
+                      flags |= 268435456 /* DynamicQuery */;
                   }
                   _this.nodeDefs.push(function () { return importExpr(createIdentifier(Identifiers.queryDef)).callFn([
                       literal(flags), literal(queryId),
@@ -31925,7 +31776,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
               // if the view is empty, or an embedded view has a view container as last root nde,
               // create an additional root node.
               this.nodeDefs.push(function () { return importExpr(createIdentifier(Identifiers.anchorDef)).callFn([
-                  literal(NodeFlags.None), NULL_EXPR, NULL_EXPR, literal(0)
+                  literal(0 /* None */), NULL_EXPR, NULL_EXPR, literal(0)
               ]); });
           }
       };
@@ -31934,9 +31785,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           this.children.forEach(function (child) { return child.build(targetStatements); });
           var updateDirectivesFn = this._createUpdateFn(this.updateDirectivesExpressions);
           var updateRendererFn = this._createUpdateFn(this.updateRendererExpressions);
-          var viewFlags = ViewFlags.None;
+          var viewFlags = 0 /* None */;
           if (!this.parent && this.component.changeDetection === ChangeDetectionStrategy.OnPush) {
-              viewFlags |= ViewFlags.OnPush;
+              viewFlags |= 2 /* OnPush */;
           }
           var viewFactory = new DeclareFunctionStmt(this.viewName, [], [new ReturnStatement(importExpr(createIdentifier(Identifiers.viewDef)).callFn([
                   literal(viewFlags),
@@ -32087,9 +31938,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       };
       ViewBuilder.prototype._visitElementOrTemplate = function (nodeIndex, ast) {
           var _this = this;
-          var flags = NodeFlags.None;
+          var flags = 0 /* None */;
           if (ast.hasViewContainer) {
-              flags |= NodeFlags.HasEmbeddedViews;
+              flags |= 8388608 /* EmbeddedViews */;
           }
           var usedEvents = new Map();
           ast.outputs.forEach(function (event) {
@@ -32130,13 +31981,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           ast.queryMatches.forEach(function (match) {
               var valueType;
               if (tokenReference(match.value) === resolveIdentifier(Identifiers.ElementRef)) {
-                  valueType = QueryValueType.ElementRef;
+                  valueType = 0 /* ElementRef */;
               }
               else if (tokenReference(match.value) === resolveIdentifier(Identifiers.ViewContainerRef)) {
-                  valueType = QueryValueType.ViewContainerRef;
+                  valueType = 3 /* ViewContainerRef */;
               }
               else if (tokenReference(match.value) === resolveIdentifier(Identifiers.TemplateRef)) {
-                  valueType = QueryValueType.TemplateRef;
+                  valueType = 2 /* TemplateRef */;
               }
               if (valueType != null) {
                   queryMatchExprs.push(literalArr([literal(match.queryId), literal(valueType)]));
@@ -32145,10 +31996,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           ast.references.forEach(function (ref) {
               var valueType;
               if (!ref.value) {
-                  valueType = QueryValueType.RenderElement;
+                  valueType = 1 /* RenderElement */;
               }
               else if (tokenReference(ref.value) === resolveIdentifier(Identifiers.TemplateRef)) {
-                  valueType = QueryValueType.TemplateRef;
+                  valueType = 2 /* TemplateRef */;
               }
               if (valueType != null) {
                   _this.refNodeIndices[ref.name] = nodeIndex;
@@ -32172,17 +32023,17 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           // reserve the space in the nodeDefs array so we can add children
           this.nodeDefs.push(null);
           dirAst.directive.queries.forEach(function (query, queryIndex) {
-              var flags = NodeFlags.HasContentQuery;
+              var flags = 33554432 /* TypeContentQuery */;
               var queryId = dirAst.contentQueryStartId + queryIndex;
               // Note: We only make queries static that query for a single item.
               // This is because of backwards compatibility with the old view compiler...
               if (queryIds.staticQueryIds.has(queryId) && query.first) {
-                  flags |= NodeFlags.HasStaticQuery;
+                  flags |= 134217728 /* StaticQuery */;
               }
               else {
-                  flags |= NodeFlags.HasDynamicQuery;
+                  flags |= 268435456 /* DynamicQuery */;
               }
-              var bindingType = query.first ? QueryBindingType.First : QueryBindingType.All;
+              var bindingType = query.first ? 0 /* First */ : 1 /* All */;
               _this.nodeDefs.push(function () { return importExpr(createIdentifier(Identifiers.queryDef)).callFn([
                   literal(flags), literal(queryId),
                   new LiteralMapExpr([new LiteralMapEntry(query.propertyName, literal(bindingType))])
@@ -32193,15 +32044,15 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           // as they might be a provider/pipe on their own.
           // I.e. we only allow queries as children of directives nodes.
           var childCount = this.nodeDefs.length - nodeIndex - 1;
-          var _a = this._visitProviderOrDirective(providerAst, queryMatches), flags = _a.flags, queryMatchExprs = _a.queryMatchExprs, providerExpr = _a.providerExpr, providerType = _a.providerType, depsExpr = _a.depsExpr;
+          var _a = this._visitProviderOrDirective(providerAst, queryMatches), flags = _a.flags, queryMatchExprs = _a.queryMatchExprs, providerExpr = _a.providerExpr, depsExpr = _a.depsExpr;
           refs.forEach(function (ref) {
               if (ref.value && tokenReference(ref.value) === tokenReference(providerAst.token)) {
                   _this.refNodeIndices[ref.name] = nodeIndex;
-                  queryMatchExprs.push(literalArr([literal(ref.name), literal(QueryValueType.Provider)]));
+                  queryMatchExprs.push(literalArr([literal(ref.name), literal(4 /* Provider */)]));
               }
           });
           if (dirAst.directive.isComponent) {
-              flags |= NodeFlags.IsComponent;
+              flags |= 16384 /* Component */;
           }
           var inputDefs = dirAst.inputs.map(function (inputAst, inputIndex) {
               var mapValue = literalArr([literal(inputIndex), literal(inputAst.directiveName)]);
@@ -32217,7 +32068,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
                   outputDefs.push(new LiteralMapEntry(propName, literal(eventName), false));
               }
           });
-          if (dirAst.inputs.length || (flags & (NodeFlags.DoCheck | NodeFlags.OnInit)) > 0) {
+          if (dirAst.inputs.length || (flags & (131072 /* DoCheck */ | 32768 /* OnInit */)) > 0) {
               this._addUpdateExpressions(nodeIndex, dirAst.inputs.map(function (input) { return { context: COMP_VAR, value: input.value }; }), this.updateDirectivesExpressions);
           }
           var dirContextExpr = importExpr(createIdentifier(Identifiers.nodeValue)).callFn([
@@ -32248,24 +32099,23 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           var nodeIndex = this.nodeDefs.length;
           // reserve the space in the nodeDefs array so we can add children
           this.nodeDefs.push(null);
-          var _a = this._visitProviderOrDirective(providerAst, queryMatches), flags = _a.flags, queryMatchExprs = _a.queryMatchExprs, providerExpr = _a.providerExpr, providerType = _a.providerType, depsExpr = _a.depsExpr;
+          var _a = this._visitProviderOrDirective(providerAst, queryMatches), flags = _a.flags, queryMatchExprs = _a.queryMatchExprs, providerExpr = _a.providerExpr, depsExpr = _a.depsExpr;
           // providerDef(
-          //   flags: NodeFlags, matchedQueries: [string, QueryValueType][], type: ProviderType, token:
-          //   any,
+          //   flags: NodeFlags, matchedQueries: [string, QueryValueType][], token:any,
           //   value: any, deps: ([DepFlags, any] | any)[]): NodeDef;
           var nodeDef = function () { return importExpr(createIdentifier(Identifiers.providerDef)).callFn([
               literal(flags), queryMatchExprs.length ? literalArr(queryMatchExprs) : NULL_EXPR,
-              literal(providerType), tokenExpr(providerAst.token), providerExpr, depsExpr
+              tokenExpr(providerAst.token), providerExpr, depsExpr
           ]); };
           this.nodeDefs[nodeIndex] = nodeDef;
       };
       ViewBuilder.prototype._visitProviderOrDirective = function (providerAst, queryMatches) {
-          var flags = NodeFlags.None;
+          var flags = 0 /* None */;
           if (!providerAst.eager) {
-              flags |= NodeFlags.LazyProvider;
+              flags |= 2048 /* LazyProvider */;
           }
           if (providerAst.providerType === ProviderAstType.PrivateService) {
-              flags |= NodeFlags.PrivateProvider;
+              flags |= 4096 /* PrivateProvider */;
           }
           providerAst.lifecycleHooks.forEach(function (lifecycleHook) {
               // for regular providers, we only support ngOnDestroy
@@ -32278,11 +32128,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           var queryMatchExprs = [];
           queryMatches.forEach(function (match) {
               if (tokenReference(match.value) === tokenReference(providerAst.token)) {
-                  queryMatchExprs.push(literalArr([literal(match.queryId), literal(QueryValueType.Provider)]));
+                  queryMatchExprs.push(literalArr([literal(match.queryId), literal(4 /* Provider */)]));
               }
           });
-          var _a = providerDef(providerAst), providerExpr = _a.providerExpr, providerType = _a.providerType, depsExpr = _a.depsExpr;
-          return { flags: flags, queryMatchExprs: queryMatchExprs, providerExpr: providerExpr, providerType: providerType, depsExpr: depsExpr };
+          var _a = providerDef(providerAst), providerExpr = _a.providerExpr, depsExpr = _a.depsExpr, providerType = _a.flags;
+          return { flags: flags | providerType, queryMatchExprs: queryMatchExprs, providerExpr: providerExpr, depsExpr: depsExpr };
       };
       ViewBuilder.prototype.getLocal = function (name) {
           if (name == EventHandlerVars.event.name) {
@@ -32369,7 +32219,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       };
       ViewBuilder.prototype._createPipe = function (pipe) {
           var nodeIndex = this.nodeDefs.length;
-          var flags = NodeFlags.None;
+          var flags = 0 /* None */;
           pipe.type.lifecycleHooks.forEach(function (lifecycleHook) {
               // for pipes, we only support ngOnDestroy
               if (lifecycleHook === LifecycleHooks.OnDestroy) {
@@ -32442,8 +32292,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       return ViewBuilder;
   }());
   function providerDef(providerAst) {
-      return providerAst.multiProvider ? multiProviderDef(providerAst.providers) :
-          singleProviderDef(providerAst.providers[0]);
+      return providerAst.multiProvider ?
+          multiProviderDef(providerAst.providers) :
+          singleProviderDef(providerAst.providerType, providerAst.providers[0]);
   }
   function multiProviderDef(providers) {
       var allDepDefs = [];
@@ -32468,7 +32319,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           return expr;
       });
       var providerExpr = fn(allParams, [new ReturnStatement(literalArr(exprs))], INFERRED_TYPE);
-      return { providerExpr: providerExpr, providerType: ProviderType.Factory, depsExpr: literalArr(allDepDefs) };
+      return { providerExpr: providerExpr, flags: 512 /* TypeFactoryProvider */, depsExpr: literalArr(allDepDefs) };
       function convertDeps(providerIndex, deps) {
           return deps.map(function (dep, depIndex) {
               var paramName = "p" + providerIndex + "_" + depIndex;
@@ -32478,32 +32329,39 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           });
       }
   }
-  function singleProviderDef(providerMeta) {
+  function singleProviderDef(providerType, providerMeta) {
       var providerExpr;
-      var providerType;
+      var flags;
       var deps;
-      if (providerMeta.useClass) {
+      if (providerType === ProviderAstType.Directive || providerType === ProviderAstType.Component) {
           providerExpr = importExpr(providerMeta.useClass);
-          providerType = ProviderType.Class;
+          flags = 8192 /* TypeDirective */;
           deps = providerMeta.deps || providerMeta.useClass.diDeps;
       }
-      else if (providerMeta.useFactory) {
-          providerExpr = importExpr(providerMeta.useFactory);
-          providerType = ProviderType.Factory;
-          deps = providerMeta.deps || providerMeta.useFactory.diDeps;
-      }
-      else if (providerMeta.useExisting) {
-          providerExpr = NULL_EXPR;
-          providerType = ProviderType.UseExisting;
-          deps = [{ token: providerMeta.useExisting }];
-      }
       else {
-          providerExpr = convertValueToOutputAst(providerMeta.useValue);
-          providerType = ProviderType.Value;
-          deps = [];
+          if (providerMeta.useClass) {
+              providerExpr = importExpr(providerMeta.useClass);
+              flags = 256 /* TypeClassProvider */;
+              deps = providerMeta.deps || providerMeta.useClass.diDeps;
+          }
+          else if (providerMeta.useFactory) {
+              providerExpr = importExpr(providerMeta.useFactory);
+              flags = 512 /* TypeFactoryProvider */;
+              deps = providerMeta.deps || providerMeta.useFactory.diDeps;
+          }
+          else if (providerMeta.useExisting) {
+              providerExpr = NULL_EXPR;
+              flags = 1024 /* TypeUseExistingProvider */;
+              deps = [{ token: providerMeta.useExisting }];
+          }
+          else {
+              providerExpr = convertValueToOutputAst(providerMeta.useValue);
+              flags = 128 /* TypeValueProvider */;
+              deps = [];
+          }
       }
       var depsExpr = literalArr(deps.map(function (dep) { return depDef(dep); }));
-      return { providerExpr: providerExpr, providerType: providerType, depsExpr: depsExpr };
+      return { providerExpr: providerExpr, flags: flags, depsExpr: depsExpr };
   }
   function tokenExpr(tokenMeta) {
       return tokenMeta.identifier ? importExpr(tokenMeta.identifier) : literal(tokenMeta.value);
@@ -32512,17 +32370,17 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       // Note: the following fields have already been normalized out by provider_analyzer:
       // - isAttribute, isSelf, isHost
       var expr = dep.isValue ? convertValueToOutputAst(dep.value) : tokenExpr(dep.token);
-      var flags = DepFlags.None;
+      var flags = 0 /* None */;
       if (dep.isSkipSelf) {
-          flags |= DepFlags.SkipSelf;
+          flags |= 1 /* SkipSelf */;
       }
       if (dep.isOptional) {
-          flags |= DepFlags.Optional;
+          flags |= 2 /* Optional */;
       }
       if (dep.isValue) {
-          flags |= DepFlags.Value;
+          flags |= 8 /* Value */;
       }
-      return flags === DepFlags.None ? expr : literalArr([literal(flags), expr]);
+      return flags === 0 /* None */ ? expr : literalArr([literal(flags), expr]);
   }
   function needsAdditionalRootNode(ast) {
       if (ast instanceof EmbeddedTemplateAst) {
@@ -32537,31 +32395,31 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       return ast instanceof NgContentAst;
   }
   function lifecycleHookToNodeFlag(lifecycleHook) {
-      var nodeFlag = NodeFlags.None;
+      var nodeFlag = 0 /* None */;
       switch (lifecycleHook) {
           case LifecycleHooks.AfterContentChecked:
-              nodeFlag = NodeFlags.AfterContentChecked;
+              nodeFlag = 1048576 /* AfterContentChecked */;
               break;
           case LifecycleHooks.AfterContentInit:
-              nodeFlag = NodeFlags.AfterContentInit;
+              nodeFlag = 524288 /* AfterContentInit */;
               break;
           case LifecycleHooks.AfterViewChecked:
-              nodeFlag = NodeFlags.AfterViewChecked;
+              nodeFlag = 4194304 /* AfterViewChecked */;
               break;
           case LifecycleHooks.AfterViewInit:
-              nodeFlag = NodeFlags.AfterViewInit;
+              nodeFlag = 2097152 /* AfterViewInit */;
               break;
           case LifecycleHooks.DoCheck:
-              nodeFlag = NodeFlags.DoCheck;
+              nodeFlag = 131072 /* DoCheck */;
               break;
           case LifecycleHooks.OnChanges:
-              nodeFlag = NodeFlags.OnChanges;
+              nodeFlag = 262144 /* OnChanges */;
               break;
           case LifecycleHooks.OnDestroy:
-              nodeFlag = NodeFlags.OnDestroy;
+              nodeFlag = 65536 /* OnDestroy */;
               break;
           case LifecycleHooks.OnInit:
-              nodeFlag = NodeFlags.OnInit;
+              nodeFlag = 32768 /* OnInit */;
               break;
       }
       return nodeFlag;
@@ -32571,27 +32429,27 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           switch (inputAst.type) {
               case PropertyBindingType.Attribute:
                   return literalArr([
-                      literal(BindingType.ElementAttribute), literal(inputAst.name),
+                      literal(0 /* ElementAttribute */), literal(inputAst.name),
                       literal(inputAst.securityContext)
                   ]);
               case PropertyBindingType.Property:
                   return literalArr([
-                      literal(BindingType.ElementProperty), literal(inputAst.name),
+                      literal(3 /* ElementProperty */), literal(inputAst.name),
                       literal(inputAst.securityContext)
                   ]);
               case PropertyBindingType.Animation:
                   var bindingType = dirAst && dirAst.directive.isComponent ?
-                      BindingType.ComponentHostProperty :
-                      BindingType.ElementProperty;
+                      4 /* ComponentHostProperty */ :
+                      3 /* ElementProperty */;
                   return literalArr([
                       literal(bindingType), literal('@' + inputAst.name),
                       literal(inputAst.securityContext)
                   ]);
               case PropertyBindingType.Class:
-                  return literalArr([literal(BindingType.ElementClass), literal(inputAst.name)]);
+                  return literalArr([literal(1 /* ElementClass */), literal(inputAst.name)]);
               case PropertyBindingType.Style:
                   return literalArr([
-                      literal(BindingType.ElementStyle), literal(inputAst.name), literal(inputAst.unit)
+                      literal(2 /* ElementStyle */), literal(inputAst.name), literal(inputAst.unit)
                   ]);
           }
       });
@@ -32621,10 +32479,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   }
   function callCheckStmt(nodeIndex, exprs) {
       if (exprs.length > 10) {
-          return CHECK_VAR.callFn([VIEW_VAR$1, literal(nodeIndex), literal(ArgumentType.Dynamic), literalArr(exprs)]);
+          return CHECK_VAR.callFn([VIEW_VAR$1, literal(nodeIndex), literal(1 /* Dynamic */), literalArr(exprs)]);
       }
       else {
-          return CHECK_VAR.callFn([VIEW_VAR$1, literal(nodeIndex), literal(ArgumentType.Inline)].concat(exprs));
+          return CHECK_VAR.callFn([VIEW_VAR$1, literal(nodeIndex), literal(0 /* Inline */)].concat(exprs));
       }
   }
   function callUnwrapValue(expr) {
@@ -40497,7 +40355,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   /**
    * @stable
    */
-  var VERSION$4 = new Version('4.0.0-rc.1-f356041');
+  var VERSION$4 = new Version('4.0.0-rc.1-5caab71');
 
   var ROUTER_MODULE_PATH = '@angular/router';
   var ROUTER_ROUTES_SYMBOL_NAME = 'ROUTES';
@@ -42181,7 +42039,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   /**
    * @stable
    */
-  var VERSION$5 = new Version('4.0.0-rc.1-f356041');
+  var VERSION$5 = new Version('4.0.0-rc.1-5caab71');
 
   exports.createLanguageService = createLanguageService;
   exports.create = create;
