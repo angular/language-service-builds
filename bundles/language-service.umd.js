@@ -787,7 +787,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   /**
    * @stable
    */
-  var VERSION$1 = new Version('4.0.0-rc.1-7a66a41');
+  var VERSION$1 = new Version('4.0.0-rc.1-6bae737');
 
   /**
    * Inject decorator and metadata.
@@ -11151,7 +11151,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   /**
    * @stable
    */
-  var VERSION = new Version('4.0.0-rc.1-7a66a41');
+  var VERSION = new Version('4.0.0-rc.1-6bae737');
 
   /**
    * @license
@@ -27027,6 +27027,12 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   };
   var ANGULAR_CORE = '@angular/core';
   var HIDDEN_KEY = /^\$.*\$$/;
+  var IGNORE = {
+      __symbolic: 'ignore'
+  };
+  function shouldIgnore(value) {
+      return value && value.__symbolic == 'ignore';
+  }
   /**
    * A static reflector implements enough of the Reflector API that is necessary to compile
    * templates statically.
@@ -27306,7 +27312,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
                           if (value_1 && (depth != 0 || value_1.__symbolic != 'error')) {
                               var parameters = targetFunction['parameters'];
                               var defaults = targetFunction.defaults;
-                              args = args.map(function (arg) { return simplifyInContext(context, arg, depth + 1); });
+                              args = args.map(function (arg) { return simplifyInContext(context, arg, depth + 1); })
+                                  .map(function (arg) { return shouldIgnore(arg) ? undefined : arg; });
                               if (defaults && defaults.length > args.length) {
                                   args.push.apply(args, defaults.slice(args.length).map(function (value) { return simplify(value); }));
                               }
@@ -27334,7 +27341,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
                       // If depth is 0 we are evaluating the top level expression that is describing element
                       // decorator. In this case, it is a decorator we don't understand, such as a custom
                       // non-angular decorator, and we should just ignore it.
-                      return { __symbolic: 'ignore' };
+                      return IGNORE;
                   }
                   return simplify({ __symbolic: 'error', message: 'Function call not supported', context: functionSymbol });
               }
@@ -27507,7 +27514,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
                                       var argExpressions = expression['arguments'] || [];
                                       var converter = self.conversionMap.get(staticSymbol);
                                       if (converter) {
-                                          var args = argExpressions.map(function (arg) { return simplifyInContext(context, arg, depth + 1); });
+                                          var args = argExpressions.map(function (arg) { return simplifyInContext(context, arg, depth + 1); })
+                                              .map(function (arg) { return shouldIgnore(arg) ? undefined : arg; });
                                           return converter(context, args);
                                       }
                                       else {
@@ -27522,15 +27530,20 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
                                   if (expression['line']) {
                                       message =
                                           message + " (position " + (expression['line'] + 1) + ":" + (expression['character'] + 1) + " in the original .ts file)";
-                                      throw positionalError(message, context.filePath, expression['line'], expression['character']);
+                                      self.reportError(positionalError(message, context.filePath, expression['line'], expression['character']), context);
                                   }
-                                  throw new Error(message);
+                                  else {
+                                      self.reportError(new Error(message), context);
+                                  }
+                                  return IGNORE;
+                              case 'ignore':
+                                  return expression;
                           }
                           return null;
                       }
                       return mapStringMap(expression, function (value, name) { return simplify(value); });
                   }
-                  return null;
+                  return IGNORE;
               }
               try {
                   return simplify(value);
@@ -27648,9 +27661,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       };
       return PopulatedScope;
   }(BindingScope));
-  function shouldIgnore(value) {
-      return value && value.__symbolic == 'ignore';
-  }
   function positionalError(message, fileName, line, column) {
       var result = new Error(message);
       result.fileName = fileName;
@@ -32193,6 +32203,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
               t.nodeMap.set(entry, node);
               return entry;
           }
+          function isFoldableError(value) {
+              return !t.options.verboseInvalidExpression && schema_1$1.isMetadataError(value);
+          }
           switch (node.kind) {
               case ts$2.SyntaxKind.ObjectLiteralExpression:
                   var obj_1 = {};
@@ -32207,14 +32220,14 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
                                   quoted_1.push(name_2);
                               }
                               var propertyName = _this.nameOf(assignment.name);
-                              if (schema_1$1.isMetadataError(propertyName)) {
+                              if (isFoldableError(propertyName)) {
                                   error = propertyName;
                                   return true;
                               }
                               var propertyValue = isPropertyAssignment(assignment) ?
                                   _this.evaluateNode(assignment.initializer) :
                                   { __symbolic: 'reference', name: propertyName };
-                              if (schema_1$1.isMetadataError(propertyValue)) {
+                              if (isFoldableError(propertyValue)) {
                                   error = propertyValue;
                                   return true; // Stop the forEachChild.
                               }
@@ -32234,7 +32247,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
                   ts$2.forEachChild(node, function (child) {
                       var value = _this.evaluateNode(child);
                       // Check for error
-                      if (schema_1$1.isMetadataError(value)) {
+                      if (isFoldableError(value)) {
                           error = value;
                           return true; // Stop the forEachChild.
                       }
@@ -32266,13 +32279,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
                       }
                   }
                   var args_1 = callExpression.arguments.map(function (arg) { return _this.evaluateNode(arg); });
-                  if (args_1.some(schema_1$1.isMetadataError)) {
+                  if (!this.options.verboseInvalidExpression && args_1.some(schema_1$1.isMetadataError)) {
                       return args_1.find(schema_1$1.isMetadataError);
                   }
                   if (this.isFoldable(callExpression)) {
                       if (isMethodCallOf(callExpression, 'concat')) {
                           var arrayValue = this.evaluateNode(callExpression.expression.expression);
-                          if (schema_1$1.isMetadataError(arrayValue))
+                          if (isFoldableError(arrayValue))
                               return arrayValue;
                           return arrayValue.concat(args_1[0]);
                       }
@@ -32282,7 +32295,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
                       return recordEntry(args_1[0], node);
                   }
                   var expression = this.evaluateNode(callExpression.expression);
-                  if (schema_1$1.isMetadataError(expression)) {
+                  if (isFoldableError(expression)) {
                       return recordEntry(expression, node);
                   }
                   var result = { __symbolic: 'call', expression: expression };
@@ -32293,7 +32306,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
               case ts$2.SyntaxKind.NewExpression:
                   var newExpression = node;
                   var newArgs = newExpression.arguments.map(function (arg) { return _this.evaluateNode(arg); });
-                  if (newArgs.some(schema_1$1.isMetadataError)) {
+                  if (!this.options.verboseInvalidExpression && newArgs.some(schema_1$1.isMetadataError)) {
                       return recordEntry(newArgs.find(schema_1$1.isMetadataError), node);
                   }
                   var newTarget = this.evaluateNode(newExpression.expression);
@@ -32308,11 +32321,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
               case ts$2.SyntaxKind.PropertyAccessExpression: {
                   var propertyAccessExpression = node;
                   var expression_1 = this.evaluateNode(propertyAccessExpression.expression);
-                  if (schema_1$1.isMetadataError(expression_1)) {
+                  if (isFoldableError(expression_1)) {
                       return recordEntry(expression_1, node);
                   }
                   var member = this.nameOf(propertyAccessExpression.name);
-                  if (schema_1$1.isMetadataError(member)) {
+                  if (isFoldableError(member)) {
                       return recordEntry(member, node);
                   }
                   if (expression_1 && this.isFoldable(propertyAccessExpression.expression))
@@ -32327,11 +32340,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
               case ts$2.SyntaxKind.ElementAccessExpression: {
                   var elementAccessExpression = node;
                   var expression_2 = this.evaluateNode(elementAccessExpression.expression);
-                  if (schema_1$1.isMetadataError(expression_2)) {
+                  if (isFoldableError(expression_2)) {
                       return recordEntry(expression_2, node);
                   }
                   var index = this.evaluateNode(elementAccessExpression.argumentExpression);
-                  if (schema_1$1.isMetadataError(expression_2)) {
+                  if (isFoldableError(expression_2)) {
                       return recordEntry(expression_2, node);
                   }
                   if (this.isFoldable(elementAccessExpression.expression) &&
@@ -32368,14 +32381,14 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
                       else {
                           var identifier_1 = typeNameNode_1;
                           var symbol = _this.symbols.resolve(identifier_1.text);
-                          if (schema_1$1.isMetadataError(symbol) || schema_1$1.isMetadataSymbolicReferenceExpression(symbol)) {
+                          if (isFoldableError(symbol) || schema_1$1.isMetadataSymbolicReferenceExpression(symbol)) {
                               return recordEntry(symbol, node);
                           }
                           return recordEntry(errorSymbol('Could not resolve type', node, { typeName: identifier_1.text }), node);
                       }
                   };
                   var typeReference = getReference(typeNameNode_1);
-                  if (schema_1$1.isMetadataError(typeReference)) {
+                  if (isFoldableError(typeReference)) {
                       return recordEntry(typeReference, node);
                   }
                   if (!schema_1$1.isMetadataModuleReferenceExpression(typeReference) &&
@@ -33330,7 +33343,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   var GENERATED_OR_DTS_FILES = /\.d\.ts$|\.ngfactory\.ts$|\.ngstyle\.ts$/;
   var SHALLOW_IMPORT = /^((\w|-)+|(@(\w|-)+(\/(\w|-)+)+))$/;
   var CompilerHost = (function () {
-      function CompilerHost(program, options, context) {
+      function CompilerHost(program, options, context, collectorOptions) {
           var _this = this;
           this.program = program;
           this.options = options;
@@ -33942,7 +33955,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   /**
    * @stable
    */
-  var VERSION$4 = new Version('4.0.0-rc.1-7a66a41');
+  var VERSION$4 = new Version('4.0.0-rc.1-6bae737');
 
   var ROUTER_MODULE_PATH = '@angular/router';
   var ROUTER_ROUTES_SYMBOL_NAME = 'ROUTES';
@@ -34211,7 +34224,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   var ReflectorHost = (function (_super) {
       __extends$54(ReflectorHost, _super);
       function ReflectorHost(getProgram, serviceHost, options) {
-          var _this = _super.call(this, null, options, new ModuleResolutionHostAdapter(new ReflectorModuleModuleResolutionHost(serviceHost))) || this;
+          var _this = _super.call(this, null, options, new ModuleResolutionHostAdapter(new ReflectorModuleModuleResolutionHost(serviceHost)), { verboseInvalidExpression: true }) || this;
           _this.getProgram = getProgram;
           return _this;
       }
@@ -35626,7 +35639,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   /**
    * @stable
    */
-  var VERSION$5 = new Version('4.0.0-rc.1-7a66a41');
+  var VERSION$5 = new Version('4.0.0-rc.1-6bae737');
 
   exports.createLanguageService = createLanguageService;
   exports.create = create;

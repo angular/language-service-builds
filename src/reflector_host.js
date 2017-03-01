@@ -30,7 +30,7 @@ var ReflectorModuleModuleResolutionHost = (function () {
 var ReflectorHost = (function (_super) {
     __extends(ReflectorHost, _super);
     function ReflectorHost(getProgram, serviceHost, options) {
-        var _this = _super.call(this, null, options, new ModuleResolutionHostAdapter(new ReflectorModuleModuleResolutionHost(serviceHost))) || this;
+        var _this = _super.call(this, null, options, new ModuleResolutionHostAdapter(new ReflectorModuleModuleResolutionHost(serviceHost)), { verboseInvalidExpression: true }) || this;
         _this.getProgram = getProgram;
         return _this;
     }
