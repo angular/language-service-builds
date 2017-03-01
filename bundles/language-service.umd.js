@@ -787,7 +787,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   /**
    * @stable
    */
-  var VERSION$1 = new Version('4.0.0-rc.1-6bae737');
+  var VERSION$1 = new Version('4.0.0-rc.1-a6996a9');
 
   /**
    * Inject decorator and metadata.
@@ -11151,7 +11151,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   /**
    * @stable
    */
-  var VERSION = new Version('4.0.0-rc.1-6bae737');
+  var VERSION = new Version('4.0.0-rc.1-a6996a9');
 
   /**
    * @license
@@ -33215,6 +33215,17 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
               Object.getOwnPropertyNames(classData.members)
                   .forEach(function (name) { return classData.members[name].forEach(function (m) { return validateMember(classData, m); }); });
           }
+          if (classData.statics) {
+              Object.getOwnPropertyNames(classData.statics).forEach(function (name) {
+                  var staticMember = classData.statics[name];
+                  if (schema_1.isFunctionMetadata(staticMember)) {
+                      validateExpression(staticMember.value);
+                  }
+                  else {
+                      validateExpression(staticMember);
+                  }
+              });
+          }
       }
       function validateFunction(functionDeclaration) {
           if (functionDeclaration.value) {
@@ -33955,7 +33966,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   /**
    * @stable
    */
-  var VERSION$4 = new Version('4.0.0-rc.1-6bae737');
+  var VERSION$4 = new Version('4.0.0-rc.1-a6996a9');
 
   var ROUTER_MODULE_PATH = '@angular/router';
   var ROUTER_ROUTES_SYMBOL_NAME = 'ROUTES';
@@ -35639,7 +35650,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   /**
    * @stable
    */
-  var VERSION$5 = new Version('4.0.0-rc.1-6bae737');
+  var VERSION$5 = new Version('4.0.0-rc.1-a6996a9');
 
   exports.createLanguageService = createLanguageService;
   exports.create = create;
