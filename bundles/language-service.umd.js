@@ -787,7 +787,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   /**
    * @stable
    */
-  var VERSION$1 = new Version('4.0.0-rc.1-bc9e1de');
+  var VERSION$1 = new Version('4.0.0-rc.1-5753de5');
 
   /**
    * Inject decorator and metadata.
@@ -7577,10 +7577,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       return target ? target + ":" + name : name;
   }
   function isComponentView(view) {
-      return view.component === view.context && !!view.parent;
+      return !!view.parent && !!(view.parentNodeDef.flags & 16384 /* Component */);
   }
   function isEmbeddedView(view) {
-      return view.component !== view.context && !!view.parent;
+      return !!view.parent && !(view.parentNodeDef.flags & 16384 /* Component */);
   }
   function filterQueryId(queryId) {
       return 1 << (queryId % 32);
@@ -11155,7 +11155,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   /**
    * @stable
    */
-  var VERSION = new Version('4.0.0-rc.1-bc9e1de');
+  var VERSION = new Version('4.0.0-rc.1-5753de5');
 
   /**
    * @license
@@ -33944,7 +33944,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   /**
    * @stable
    */
-  var VERSION$4 = new Version('4.0.0-rc.1-bc9e1de');
+  var VERSION$4 = new Version('4.0.0-rc.1-5753de5');
 
   var ROUTER_MODULE_PATH = '@angular/router';
   var ROUTER_ROUTES_SYMBOL_NAME = 'ROUTES';
@@ -35628,7 +35628,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   /**
    * @stable
    */
-  var VERSION$5 = new Version('4.0.0-rc.1-bc9e1de');
+  var VERSION$5 = new Version('4.0.0-rc.1-5753de5');
 
   exports.createLanguageService = createLanguageService;
   exports.create = create;
