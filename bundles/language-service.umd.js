@@ -787,7 +787,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   /**
    * @stable
    */
-  var VERSION$1 = new Version('4.0.0-rc.1-47bdc2b');
+  var VERSION$1 = new Version('4.0.0-rc.1-9402df9');
 
   /**
    * Inject decorator and metadata.
@@ -11151,7 +11151,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   /**
    * @stable
    */
-  var VERSION = new Version('4.0.0-rc.1-47bdc2b');
+  var VERSION = new Version('4.0.0-rc.1-9402df9');
 
   /**
    * @license
@@ -12020,7 +12020,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       '([-\\w]+)|' +
       '(?:\\.([-\\w]+))|' +
       // "-" should appear first in the regexp below as FF31 parses "[.-\w]" as a range
-      '(?:\\[([-.\\w*]+)(?:=([^\\]]*))?\\])|' +
+      '(?:\\[([-.\\w*]+)(?:=([\"\']?)([^\\]\"\']*)\\5)?\\])|' +
+      // "[name="value"]",
+      // "[name='value']"
       '(\\))|' +
       '(\\s*,\\s*)', // ","
   'g');
@@ -12066,13 +12068,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
                   current.addClassName(match[3]);
               }
               if (match[4]) {
-                  current.addAttribute(match[4], match[5]);
+                  current.addAttribute(match[4], match[6]);
               }
-              if (match[6]) {
+              if (match[7]) {
                   inNot = false;
                   current = cssSelector;
               }
-              if (match[7]) {
+              if (match[8]) {
                   if (inNot) {
                       throw new Error('Multiple selectors in :not are not supported');
                   }
@@ -33940,7 +33942,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   /**
    * @stable
    */
-  var VERSION$4 = new Version('4.0.0-rc.1-47bdc2b');
+  var VERSION$4 = new Version('4.0.0-rc.1-9402df9');
 
   var ROUTER_MODULE_PATH = '@angular/router';
   var ROUTER_ROUTES_SYMBOL_NAME = 'ROUTES';
@@ -35624,7 +35626,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   /**
    * @stable
    */
-  var VERSION$5 = new Version('4.0.0-rc.1-47bdc2b');
+  var VERSION$5 = new Version('4.0.0-rc.1-9402df9');
 
   exports.createLanguageService = createLanguageService;
   exports.create = create;
