@@ -787,7 +787,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   /**
    * @stable
    */
-  var VERSION$1 = new Version('4.0.0-rc.1-49b462e');
+  var VERSION$1 = new Version('4.0.0-rc.1-47bdc2b');
 
   /**
    * Inject decorator and metadata.
@@ -5281,7 +5281,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
    */
   var ApplicationRef_ = (function (_super) {
       __extends$2(ApplicationRef_, _super);
-      function ApplicationRef_(_zone, _console, _injector, _exceptionHandler, _componentFactoryResolver, _initStatus, _testabilityRegistry, _testability) {
+      function ApplicationRef_(_zone, _console, _injector, _exceptionHandler, _componentFactoryResolver, _initStatus) {
           var _this = _super.call(this) || this;
           _this._zone = _zone;
           _this._console = _console;
@@ -5289,8 +5289,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           _this._exceptionHandler = _exceptionHandler;
           _this._componentFactoryResolver = _componentFactoryResolver;
           _this._initStatus = _initStatus;
-          _this._testabilityRegistry = _testabilityRegistry;
-          _this._testability = _testability;
           _this._bootstrapListeners = [];
           _this._rootComponents = [];
           _this._rootComponentTypes = [];
@@ -5440,8 +5438,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       { type: ErrorHandler, },
       { type: ComponentFactoryResolver, },
       { type: ApplicationInitStatus, },
-      { type: TestabilityRegistry, decorators: [{ type: Optional },] },
-      { type: Testability, decorators: [{ type: Optional },] },
   ]; };
 
   /**
@@ -11155,7 +11151,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   /**
    * @stable
    */
-  var VERSION = new Version('4.0.0-rc.1-49b462e');
+  var VERSION = new Version('4.0.0-rc.1-47bdc2b');
 
   /**
    * @license
@@ -33944,7 +33940,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   /**
    * @stable
    */
-  var VERSION$4 = new Version('4.0.0-rc.1-49b462e');
+  var VERSION$4 = new Version('4.0.0-rc.1-47bdc2b');
 
   var ROUTER_MODULE_PATH = '@angular/router';
   var ROUTER_ROUTES_SYMBOL_NAME = 'ROUTES';
@@ -35628,7 +35624,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   /**
    * @stable
    */
-  var VERSION$5 = new Version('4.0.0-rc.1-49b462e');
+  var VERSION$5 = new Version('4.0.0-rc.1-47bdc2b');
 
   exports.createLanguageService = createLanguageService;
   exports.create = create;
