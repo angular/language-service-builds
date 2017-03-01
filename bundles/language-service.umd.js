@@ -787,7 +787,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   /**
    * @stable
    */
-  var VERSION$1 = new Version('4.0.0-rc.1-126fda2');
+  var VERSION$1 = new Version('4.0.0-rc.1-5ba55b0');
 
   /**
    * Inject decorator and metadata.
@@ -11155,7 +11155,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   /**
    * @stable
    */
-  var VERSION = new Version('4.0.0-rc.1-126fda2');
+  var VERSION = new Version('4.0.0-rc.1-5ba55b0');
 
   /**
    * @license
@@ -18066,8 +18066,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   Identifiers.TRANSLATIONS_FORMAT = { name: 'TRANSLATIONS_FORMAT', moduleUrl: CORE, runtime: TRANSLATIONS_FORMAT };
   Identifiers.inlineInterpolate = { name: 'ɵinlineInterpolate', moduleUrl: CORE, runtime: ɵinlineInterpolate };
   Identifiers.interpolate = { name: 'ɵinterpolate', moduleUrl: CORE, runtime: ɵinterpolate };
-  Identifiers.EMPTY_ARRAY = { name: 'ÉµEMPTY_ARRAY', moduleUrl: CORE, runtime: ɵEMPTY_ARRAY };
-  Identifiers.EMPTY_MAP = { name: 'ÉµEMPTY_MAP', moduleUrl: CORE, runtime: ɵEMPTY_MAP };
+  Identifiers.EMPTY_ARRAY = { name: 'ɵEMPTY_ARRAY', moduleUrl: CORE, runtime: ɵEMPTY_ARRAY };
+  Identifiers.EMPTY_MAP = { name: 'ɵEMPTY_MAP', moduleUrl: CORE, runtime: ɵEMPTY_MAP };
   Identifiers.Renderer = { name: 'Renderer', moduleUrl: CORE, runtime: Renderer };
   Identifiers.viewDef = { name: 'ɵvid', moduleUrl: CORE, runtime: ɵvid };
   Identifiers.elementDef = { name: 'ɵeld', moduleUrl: CORE, runtime: ɵeld };
@@ -33944,7 +33944,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   /**
    * @stable
    */
-  var VERSION$4 = new Version('4.0.0-rc.1-126fda2');
+  var VERSION$4 = new Version('4.0.0-rc.1-5ba55b0');
 
   var ROUTER_MODULE_PATH = '@angular/router';
   var ROUTER_ROUTES_SYMBOL_NAME = 'ROUTES';
@@ -35628,7 +35628,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   /**
    * @stable
    */
-  var VERSION$5 = new Version('4.0.0-rc.1-126fda2');
+  var VERSION$5 = new Version('4.0.0-rc.1-5ba55b0');
 
   exports.createLanguageService = createLanguageService;
   exports.create = create;
