@@ -1,0 +1,14 @@
+{
+  "name": "@angular/language-service",
+  "version": "4.0.0-rc.2-180b705",
+  "description": "Angular - language services",
+  "main": "bundles/language-service.umd.js",
+  "module": "index.js",
+  "typings": "index.d.ts",
+  "author": "angular",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/angular/angular.git"
+  }
+}
