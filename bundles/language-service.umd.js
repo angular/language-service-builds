@@ -787,7 +787,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   /**
    * @stable
    */
-  var VERSION$1 = new Version('4.0.0-rc.1-3168ef7');
+  var VERSION$1 = new Version('4.0.0-rc.1-9560ad8');
 
   /**
    * Inject decorator and metadata.
@@ -10865,24 +10865,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
    * @experimental Animation support is experimental.
    */
   function style$1(tokens) {
-      var input;
-      var offset = null;
-      if (Array.isArray(tokens)) {
-          input = tokens;
-      }
-      else {
-          input = [tokens];
-      }
-      input.forEach(function (entry) {
-          var entryOffset = entry['offset'];
-          if (entryOffset != null) {
-              offset = offset == null ? parseFloat(entryOffset) : offset;
-          }
-      });
-      return _style(offset, input);
-  }
-  function _style(offset, styles) {
-      return { type: 6 /* Style */, styles: styles, offset: offset };
+      return { type: 6 /* Style */, styles: tokens };
   }
   /**
    * `state` is an animation-specific function that is designed to be used inside of Angular2's
@@ -11091,11 +11074,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
    * @experimental Animation support is experimental.
    */
   function transition$1(stateChangeExpr, steps) {
-      return {
-          type: 1 /* Transition */,
-          expr: stateChangeExpr,
-          animation: Array.isArray(steps) ? sequence$1(steps) : steps
-      };
+      return { type: 1 /* Transition */, expr: stateChangeExpr, animation: steps };
   }
 
   /**
@@ -11151,7 +11130,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   /**
    * @stable
    */
-  var VERSION = new Version('4.0.0-rc.1-3168ef7');
+  var VERSION = new Version('4.0.0-rc.1-9560ad8');
 
   /**
    * @license
@@ -33966,7 +33945,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   /**
    * @stable
    */
-  var VERSION$4 = new Version('4.0.0-rc.1-3168ef7');
+  var VERSION$4 = new Version('4.0.0-rc.1-9560ad8');
 
   var ROUTER_MODULE_PATH = '@angular/router';
   var ROUTER_ROUTES_SYMBOL_NAME = 'ROUTES';
@@ -35650,7 +35629,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   /**
    * @stable
    */
-  var VERSION$5 = new Version('4.0.0-rc.1-3168ef7');
+  var VERSION$5 = new Version('4.0.0-rc.1-9560ad8');
 
   exports.createLanguageService = createLanguageService;
   exports.create = create;
