@@ -762,7 +762,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   /**
    * @stable
    */
-  var VERSION$1 = new Version('4.0.0-rc.2-07122f0');
+  var VERSION$1 = new Version('4.0.0-rc.2-1cff125');
 
   /**
    * Inject decorator and metadata.
@@ -11112,7 +11112,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   /**
    * @stable
    */
-  var VERSION = new Version('4.0.0-rc.2-07122f0');
+  var VERSION = new Version('4.0.0-rc.2-1cff125');
 
   /**
    * @license
@@ -12756,28 +12756,12 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 
   var CompilerConfig = (function () {
       function CompilerConfig(_a) {
-          var _b = _a === void 0 ? {} : _a, _c = _b.defaultEncapsulation, defaultEncapsulation = _c === void 0 ? ViewEncapsulation.Emulated : _c, genDebugInfo = _b.genDebugInfo, logBindingUpdate = _b.logBindingUpdate, _d = _b.useJit, useJit = _d === void 0 ? true : _d, missingTranslation = _b.missingTranslation, enableLegacyTemplate = _b.enableLegacyTemplate;
+          var _b = _a === void 0 ? {} : _a, _c = _b.defaultEncapsulation, defaultEncapsulation = _c === void 0 ? ViewEncapsulation.Emulated : _c, _d = _b.useJit, useJit = _d === void 0 ? true : _d, missingTranslation = _b.missingTranslation, enableLegacyTemplate = _b.enableLegacyTemplate;
           this.defaultEncapsulation = defaultEncapsulation;
-          this._genDebugInfo = genDebugInfo;
-          this._logBindingUpdate = logBindingUpdate;
           this.useJit = useJit;
           this.missingTranslation = missingTranslation;
           this.enableLegacyTemplate = enableLegacyTemplate !== false;
       }
-      Object.defineProperty(CompilerConfig.prototype, "genDebugInfo", {
-          get: function () {
-              return this._genDebugInfo === void 0 ? isDevMode() : this._genDebugInfo;
-          },
-          enumerable: true,
-          configurable: true
-      });
-      Object.defineProperty(CompilerConfig.prototype, "logBindingUpdate", {
-          get: function () {
-              return this._logBindingUpdate === void 0 ? isDevMode() : this._logBindingUpdate;
-          },
-          enumerable: true,
-          configurable: true
-      });
       return CompilerConfig;
   }());
 
@@ -27987,9 +27971,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       var console = new Console();
       var htmlParser = new I18NHtmlParser(new HtmlParser(), translations, options.i18nFormat, MissingTranslationStrategy.Warning, console);
       var config = new CompilerConfig({
-          genDebugInfo: options.debug === true,
           defaultEncapsulation: ViewEncapsulation.Emulated,
-          logBindingUpdate: false,
           useJit: false,
           enableLegacyTemplate: options.enableLegacyTemplate !== false,
       });
@@ -29006,12 +28988,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           var staticSymbolResolver = new StaticSymbolResolver(host, symbolCache, summaryResolver);
           var staticReflector = new StaticReflector(staticSymbolResolver);
           StaticAndDynamicReflectionCapabilities.install(staticReflector);
-          var config = new CompilerConfig({
-              genDebugInfo: false,
-              defaultEncapsulation: ViewEncapsulation.Emulated,
-              logBindingUpdate: false,
-              useJit: false
-          });
+          var config = new CompilerConfig({ defaultEncapsulation: ViewEncapsulation.Emulated, useJit: false });
           var normalizer = new DirectiveNormalizer({ get: function (url) { return host.loadResource(url); } }, urlResolver, htmlParser, config);
           var elementSchemaRegistry = new DomElementSchemaRegistry();
           var resolver = new CompileMetadataResolver(config, new NgModuleResolver(staticReflector), new DirectiveResolver(staticReflector), new PipeResolver(staticReflector), summaryResolver, elementSchemaRegistry, normalizer, symbolCache, staticReflector);
@@ -29099,15 +29076,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
                   useFactory: function () {
                       return new CompilerConfig({
                           // let explicit values from the compiler options overwrite options
-                          // from the app providers. E.g. important for the testing platform.
-                          genDebugInfo: opts.useDebug,
-                          // let explicit values from the compiler options overwrite options
                           // from the app providers
                           useJit: opts.useJit,
                           // let explicit values from the compiler options overwrite options
                           // from the app providers
                           defaultEncapsulation: opts.defaultEncapsulation,
-                          logBindingUpdate: opts.useDebug,
                           missingTranslation: opts.missingTranslation,
                           enableLegacyTemplate: opts.enableLegacyTemplate,
                       });
@@ -29142,7 +29115,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   ]);
   function _mergeOptions(optionsArr) {
       return {
-          useDebug: _lastDefined(optionsArr.map(function (options) { return options.useDebug; })),
           useJit: _lastDefined(optionsArr.map(function (options) { return options.useJit; })),
           defaultEncapsulation: _lastDefined(optionsArr.map(function (options) { return options.defaultEncapsulation; })),
           providers: _mergeArrays(optionsArr.map(function (options) { return options.providers; })),
@@ -33777,7 +33749,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
               transContent = fs.readFileSync(transFile, 'utf8');
           }
           var aotCompiler = createAotCompiler(ngCompilerHost, {
-              debug: options.debug === true,
               translations: transContent,
               i18nFormat: cliOptions.i18nFormat,
               locale: cliOptions.locale,
@@ -33849,7 +33820,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   /**
    * @stable
    */
-  var VERSION$4 = new Version('4.0.0-rc.2-07122f0');
+  var VERSION$4 = new Version('4.0.0-rc.2-1cff125');
 
   var ROUTER_MODULE_PATH = '@angular/router';
   var ROUTER_ROUTES_SYMBOL_NAME = 'ROUTES';
@@ -34230,14 +34201,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
                   var urlResolver = createOfflineCompileUrlResolver();
                   var htmlParser = new DummyHtmlParser();
                   // This tracks the CompileConfig in codegen.ts. Currently these options
-                  // are hard-coded except for genDebugInfo which is not applicable as we
-                  // never generate code.
-                  var config = new CompilerConfig({
-                      genDebugInfo: false,
-                      defaultEncapsulation: ViewEncapsulation.Emulated,
-                      logBindingUpdate: false,
-                      useJit: false
-                  });
+                  // are hard-coded.
+                  var config = new CompilerConfig({ defaultEncapsulation: ViewEncapsulation.Emulated, useJit: false });
                   var directiveNormalizer = new DirectiveNormalizer(resourceLoader, urlResolver, htmlParser, config);
                   result = this._resolver = new CompileMetadataResolver(config, moduleResolver, directiveResolver, pipeResolver, new SummaryResolver(), elementSchemaRegistry, directiveNormalizer, this._staticSymbolCache, this.reflector, function (error, type) { return _this.collectError(error, type && type.filePath); });
               }
@@ -35533,7 +35498,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   /**
    * @stable
    */
-  var VERSION$5 = new Version('4.0.0-rc.2-07122f0');
+  var VERSION$5 = new Version('4.0.0-rc.2-1cff125');
 
   exports.createLanguageService = createLanguageService;
   exports.create = create;
