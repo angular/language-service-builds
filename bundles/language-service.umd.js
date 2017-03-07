@@ -95,39 +95,38 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
    * Use of this source code is governed by an MIT-style license that can be
    * found in the LICENSE file at https://angular.io/license
    */
-  var globalScope;
-  if (typeof window === 'undefined') {
-      if (typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope) {
-          // TODO: Replace any with WorkerGlobalScope from lib.webworker.d.ts #3492
-          globalScope = self;
+  var __window = typeof window !== 'undefined' && window;
+  var __self = typeof self !== 'undefined' && typeof WorkerGlobalScope !== 'undefined' &&
+      self instanceof WorkerGlobalScope && self;
+  var __global = typeof global !== 'undefined' && global;
+  var global$1 = __window || __global || __self;
+  var _symbolIterator = null;
+  function getSymbolIterator() {
+      if (!_symbolIterator) {
+          var Symbol_1 = global$1['Symbol'];
+          if (Symbol_1 && Symbol_1.iterator) {
+              _symbolIterator = Symbol_1.iterator;
+          }
+          else {
+              // es6-shim specific logic
+              var keys = Object.getOwnPropertyNames(Map.prototype);
+              for (var i = 0; i < keys.length; ++i) {
+                  var key = keys[i];
+                  if (key !== 'entries' && key !== 'size' &&
+                      Map.prototype[key] === Map.prototype['entries']) {
+                      _symbolIterator = key;
+                  }
+              }
+          }
       }
-      else {
-          globalScope = global;
-      }
-  }
-  else {
-      globalScope = window;
+      return _symbolIterator;
   }
   function scheduleMicroTask(fn) {
       Zone.current.scheduleMicroTask('scheduleMicrotask', fn);
   }
-  // Need to declare a new variable for global here since TypeScript
-  // exports the original value of the symbol.
-  var global$1 = globalScope;
-  function getTypeNameForDebugging(type) {
-      return type['name'] || typeof type;
-  }
-  // TODO: remove calls to assert in production environment
-  // Note: Can't just export this and import in in other files
-  // as `assert` is a reserved keyword in Dart
-  global$1.assert = function assert(condition) {
-      // TODO: to be fixed properly via #2830, noop for now
-  };
-  function isPresent(obj) {
-      return obj != null;
-  }
-  function isBlank(obj) {
-      return obj == null;
+  // JS has NaN !== NaN
+  function looseIdentical(a, b) {
+      return a === b || typeof a === 'number' && typeof b === 'number' && isNaN(a) && isNaN(b);
   }
   function stringify(token) {
       if (typeof token === 'string') {
@@ -146,46 +145,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       var newLineIndex = res.indexOf('\n');
       return newLineIndex === -1 ? res : res.substring(0, newLineIndex);
   }
-  // JS has NaN !== NaN
-  function looseIdentical(a, b) {
-      return a === b || typeof a === 'number' && typeof b === 'number' && isNaN(a) && isNaN(b);
-  }
-  function isJsObject(o) {
-      return o !== null && (typeof o === 'function' || typeof o === 'object');
-  }
-  function print(obj) {
-      // tslint:disable-next-line:no-console
-      console.log(obj);
-  }
-  function warn(obj) {
-      console.warn(obj);
-  }
-  var _symbolIterator = null;
-  function getSymbolIterator() {
-      if (!_symbolIterator) {
-          if (globalScope.Symbol && Symbol.iterator) {
-              _symbolIterator = Symbol.iterator;
-          }
-          else {
-              // es6-shim specific logic
-              var keys = Object.getOwnPropertyNames(Map.prototype);
-              for (var i = 0; i < keys.length; ++i) {
-                  var key = keys[i];
-                  if (key !== 'entries' && key !== 'size' &&
-                      Map.prototype[key] === Map.prototype['entries']) {
-                      _symbolIterator = key;
-                  }
-              }
-          }
-      }
-      return _symbolIterator;
-  }
-  function isPrimitive(obj) {
-      return !isJsObject(obj);
-  }
 
   var _nextClassId = 0;
-  var Reflect = global$1.Reflect;
+  var Reflect = global$1['Reflect'];
   function extractAnnotation(annotation) {
       if (typeof annotation === 'function' && annotation.hasOwnProperty('annotation')) {
           // it is a decorator, extract annotation
@@ -576,11 +538,24 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   ], Query);
 
   /**
+   * @license
+   * Copyright Google Inc. All Rights Reserved.
+   *
+   * Use of this source code is governed by an MIT-style license that can be
+   * found in the LICENSE file at https://angular.io/license
+   */
+  /**
    * Describes within the change detector which strategy will be used the next time change
    * detection is triggered.
    * @stable
    */
-  var ChangeDetectionStrategy;
+  /**
+   * @license
+   * Copyright Google Inc. All Rights Reserved.
+   *
+   * Use of this source code is governed by an MIT-style license that can be
+   * found in the LICENSE file at https://angular.io/license
+   */ var ChangeDetectionStrategy;
   (function (ChangeDetectionStrategy) {
       /**
        * `OnPush` means that the change detector's mode will be set to `CheckOnce` during hydration.
@@ -787,7 +762,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   /**
    * @stable
    */
-  var VERSION$1 = new Version('4.0.0-rc.2-207298c');
+  var VERSION$1 = new Version('4.0.0-rc.2-b7e76cc');
 
   /**
    * Inject decorator and metadata.
@@ -1332,7 +1307,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   var DELEGATE_CTOR = /^function\s+\S+\(\)\s*{\s*("use strict";)?\s*(return\s+)?(\S+\s+!==\s+null\s+&&\s+)?\S+\.apply\(this,\s*arguments\)/;
   var ReflectionCapabilities = (function () {
       function ReflectionCapabilities(reflect) {
-          this._reflect = reflect || global$1.Reflect;
+          this._reflect = reflect || global$1['Reflect'];
       }
       ReflectionCapabilities.prototype.isReflectionEnabled = function () { return true; };
       ReflectionCapabilities.prototype.factory = function (t) { return function () {
@@ -1364,7 +1339,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
               else {
                   result[i] = [];
               }
-              if (paramAnnotations && isPresent(paramAnnotations[i])) {
+              if (paramAnnotations && paramAnnotations[i] != null) {
                   result[i] = result[i].concat(paramAnnotations[i]);
               }
           }
@@ -1398,7 +1373,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
               return this._zipTypesAndAnnotations(paramTypes, paramAnnotations);
           }
           // API for metadata created by invoking the decorators.
-          if (isPresent(this._reflect) && isPresent(this._reflect.getOwnMetadata)) {
+          if (this._reflect != null && this._reflect.getOwnMetadata != null) {
               var paramAnnotations = this._reflect.getOwnMetadata('parameters', type);
               var paramTypes = this._reflect.getOwnMetadata('design:paramtypes', type);
               if (paramTypes || paramAnnotations) {
@@ -2405,9 +2380,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   };
 
   var root_1$2 = __moduleExports$1;
-  var Symbol$1 = root_1$2.root.Symbol;
-  var $$rxSubscriber = (typeof Symbol$1 === 'function' && typeof Symbol$1.for === 'function') ?
-      Symbol$1.for('rxSubscriber') : '@@rxSubscriber';
+  var Symbol = root_1$2.root.Symbol;
+  var $$rxSubscriber = (typeof Symbol === 'function' && typeof Symbol.for === 'function') ?
+      Symbol.for('rxSubscriber') : '@@rxSubscriber';
 
   var __moduleExports$12 = {
   	$$rxSubscriber: $$rxSubscriber
@@ -4088,86 +4063,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   	share: share_2
   };
 
-  var ListWrapper = (function () {
-      function ListWrapper() {
-      }
-      ListWrapper.findLast = function (arr, condition) {
-          for (var i = arr.length - 1; i >= 0; i--) {
-              if (condition(arr[i])) {
-                  return arr[i];
-              }
-          }
-          return null;
-      };
-      ListWrapper.removeAll = function (list, items) {
-          for (var i = 0; i < items.length; ++i) {
-              var index = list.indexOf(items[i]);
-              if (index > -1) {
-                  list.splice(index, 1);
-              }
-          }
-      };
-      ListWrapper.remove = function (list, el) {
-          var index = list.indexOf(el);
-          if (index > -1) {
-              list.splice(index, 1);
-              return true;
-          }
-          return false;
-      };
-      ListWrapper.equals = function (a, b) {
-          if (a.length != b.length)
-              return false;
-          for (var i = 0; i < a.length; ++i) {
-              if (a[i] !== b[i])
-                  return false;
-          }
-          return true;
-      };
-      ListWrapper.flatten = function (list) {
-          return list.reduce(function (flat, item) {
-              var flatItem = Array.isArray(item) ? ListWrapper.flatten(item) : item;
-              return flat.concat(flatItem);
-          }, []);
-      };
-      return ListWrapper;
-  }());
-  function isListLikeIterable(obj) {
-      if (!isJsObject(obj))
-          return false;
-      return Array.isArray(obj) ||
-          (!(obj instanceof Map) &&
-              getSymbolIterator() in obj); // JS Iterable have a Symbol.iterator prop
-  }
-  function areIterablesEqual(a, b, comparator) {
-      var iterator1 = a[getSymbolIterator()]();
-      var iterator2 = b[getSymbolIterator()]();
-      while (true) {
-          var item1 = iterator1.next();
-          var item2 = iterator2.next();
-          if (item1.done && item2.done)
-              return true;
-          if (item1.done || item2.done)
-              return false;
-          if (!comparator(item1.value, item2.value))
-              return false;
-      }
-  }
-  function iterateListLike(obj, fn) {
-      if (Array.isArray(obj)) {
-          for (var i = 0; i < obj.length; i++) {
-              fn(obj[i]);
-          }
-      }
-      else {
-          var iterator = obj[getSymbolIterator()]();
-          var item = void 0;
-          while (!((item = iterator.next()).done)) {
-              fn(item.value);
-          }
-      }
-  }
-
   /**
    * Determine if the argument is shaped like a Promise
    */
@@ -4175,6 +4070,19 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       // allow any Promise/A+ compliant thenable.
       // It's up to the caller to ensure that obj.then conforms to the spec
       return !!obj && typeof obj.then === 'function';
+  }
+  // TODO(misko): replace with Object.assign once we require ES6.
+  function merge$2(m1, m2) {
+      var m = {};
+      for (var _i = 0, _a = Object.keys(m1); _i < _a.length; _i++) {
+          var k = _a[_i];
+          m[k] = m1[k];
+      }
+      for (var _b = 0, _c = Object.keys(m2); _b < _c.length; _b++) {
+          var k = _c[_b];
+          m[k] = m2[k];
+      }
+      return m;
   }
 
   /**
@@ -4279,9 +4187,15 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   var Console = (function () {
       function Console() {
       }
-      Console.prototype.log = function (message) { print(message); };
+      Console.prototype.log = function (message) {
+          // tslint:disable-next-line:no-console
+          console.log(message);
+      };
       // Note: for reporting errors use `DOM.logError()` as it is platform specific
-      Console.prototype.warn = function (message) { warn(message); };
+      Console.prototype.warn = function (message) {
+          // tslint:disable-next-line:no-console
+          console.warn(message);
+      };
       return Console;
   }());
   Console.decorators = [
@@ -5216,7 +5130,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
               if (!exceptionHandler) {
                   throw new Error('No ErrorHandler. Is platform module (BrowserModule) included?');
               }
-              moduleRef.onDestroy(function () { return ListWrapper.remove(_this._modules, moduleRef); });
+              moduleRef.onDestroy(function () { return remove(_this._modules, moduleRef); });
               ngZone.onError.subscribe({ next: function (error) { exceptionHandler.handleError(error); } });
               return _callAndReportToErrorHandler(exceptionHandler, function () {
                   var initStatus = moduleRef.injector.get(ApplicationInitStatus);
@@ -5341,7 +5255,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       };
       ApplicationRef_.prototype.detachView = function (viewRef) {
           var view = viewRef;
-          ListWrapper.remove(this._views, view);
+          remove(this._views, view);
           view.detachFromAppRef();
       };
       ApplicationRef_.prototype.bootstrap = function (componentOrFactory) {
@@ -5380,7 +5294,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       };
       ApplicationRef_.prototype._unloadComponent = function (componentRef) {
           this.detachView(componentRef.hostView);
-          ListWrapper.remove(this._rootComponents, componentRef);
+          remove(this._rootComponents, componentRef);
       };
       ApplicationRef_.prototype.tick = function () {
           if (this._runningTick) {
@@ -5439,6 +5353,12 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       { type: ComponentFactoryResolver, },
       { type: ApplicationInitStatus, },
   ]; };
+  function remove(list, el) {
+      var index = list.indexOf(el);
+      if (index > -1) {
+          list.splice(index, 1);
+      }
+  }
 
   /**
    * @deprecated Use the `RendererV2` instead.
@@ -5674,7 +5594,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       QueryList.prototype[getSymbolIterator()] = function () { return this._results[getSymbolIterator()](); };
       QueryList.prototype.toString = function () { return this._results.toString(); };
       QueryList.prototype.reset = function (res) {
-          this._results = ListWrapper.flatten(res);
+          this._results = flatten(res);
           this._dirty = false;
       };
       QueryList.prototype.notifyOnChanges = function () { this._emitter.emit(this); };
@@ -5688,6 +5608,12 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       });
       return QueryList;
   }());
+  function flatten(list) {
+      return list.reduce(function (flat, item) {
+          var flatItem = Array.isArray(item) ? flatten(item) : item;
+          return flat.concat(flatItem);
+      }, []);
+  }
 
   var _SEPARATOR = '#';
   var FACTORY_CLASS_SUFFIX = 'NgFactory';
@@ -6106,6 +6032,121 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       _nativeNodeToDebugNode.delete(node.nativeNode);
   }
 
+  function devModeEqual(a, b) {
+      var isListLikeIterableA = isListLikeIterable(a);
+      var isListLikeIterableB = isListLikeIterable(b);
+      if (isListLikeIterableA && isListLikeIterableB) {
+          return areIterablesEqual(a, b, devModeEqual);
+      }
+      else {
+          var isAObject = a && (typeof a === 'object' || typeof a === 'function');
+          var isBObject = b && (typeof b === 'object' || typeof b === 'function');
+          if (!isListLikeIterableA && isAObject && !isListLikeIterableB && isBObject) {
+              return true;
+          }
+          else {
+              return looseIdentical(a, b);
+          }
+      }
+  }
+  /**
+   * Indicates that the result of a {@link Pipe} transformation has changed even though the
+   * reference
+   * has not changed.
+   *
+   * The wrapped value will be unwrapped by change detection, and the unwrapped value will be stored.
+   *
+   * Example:
+   *
+   * ```
+   * if (this._latestValue === this._latestReturnedValue) {
+   *    return this._latestReturnedValue;
+   *  } else {
+   *    this._latestReturnedValue = this._latestValue;
+   *    return WrappedValue.wrap(this._latestValue); // this will force update
+   *  }
+   * ```
+   * @stable
+   */
+  var WrappedValue = (function () {
+      function WrappedValue(wrapped) {
+          this.wrapped = wrapped;
+      }
+      WrappedValue.wrap = function (value) { return new WrappedValue(value); };
+      return WrappedValue;
+  }());
+  /**
+   * Helper class for unwrapping WrappedValue s
+   */
+  var ValueUnwrapper = (function () {
+      function ValueUnwrapper() {
+          this.hasWrappedValue = false;
+      }
+      ValueUnwrapper.prototype.unwrap = function (value) {
+          if (value instanceof WrappedValue) {
+              this.hasWrappedValue = true;
+              return value.wrapped;
+          }
+          return value;
+      };
+      ValueUnwrapper.prototype.reset = function () { this.hasWrappedValue = false; };
+      return ValueUnwrapper;
+  }());
+  /**
+   * Represents a basic change from a previous to a new value.
+   * @stable
+   */
+  var SimpleChange = (function () {
+      function SimpleChange(previousValue, currentValue, firstChange) {
+          this.previousValue = previousValue;
+          this.currentValue = currentValue;
+          this.firstChange = firstChange;
+      }
+      /**
+       * Check whether the new value is the first value assigned.
+       */
+      SimpleChange.prototype.isFirstChange = function () { return this.firstChange; };
+      return SimpleChange;
+  }());
+  function isListLikeIterable(obj) {
+      if (!isJsObject(obj))
+          return false;
+      return Array.isArray(obj) ||
+          (!(obj instanceof Map) &&
+              getSymbolIterator() in obj); // JS Iterable have a Symbol.iterator prop
+  }
+  function areIterablesEqual(a, b, comparator) {
+      var iterator1 = a[getSymbolIterator()]();
+      var iterator2 = b[getSymbolIterator()]();
+      while (true) {
+          var item1 = iterator1.next();
+          var item2 = iterator2.next();
+          if (item1.done && item2.done)
+              return true;
+          if (item1.done || item2.done)
+              return false;
+          if (!comparator(item1.value, item2.value))
+              return false;
+      }
+  }
+  function iterateListLike(obj, fn) {
+      if (Array.isArray(obj)) {
+          for (var i = 0; i < obj.length; i++) {
+              fn(obj[i]);
+          }
+      }
+      else {
+          var iterator = obj[getSymbolIterator()]();
+          var item = void 0;
+          while (!((item = iterator.next()).done)) {
+              fn(item.value);
+          }
+      }
+  }
+  function isJsObject(o) {
+      return o !== null && (typeof o === 'function' || typeof o === 'object');
+  }
+
   var DefaultIterableDifferFactory = (function () {
       function DefaultIterableDifferFactory() {
       }
@@ -6241,7 +6282,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           }
       };
       DefaultIterableDiffer.prototype.diff = function (collection) {
-          if (isBlank(collection))
+          if (collection == null)
               collection = [];
           if (!isListLikeIterable(collection)) {
               throw new Error("Error trying to diff '" + collection + "'");
@@ -7118,7 +7159,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           this.factories = factories;
       }
       IterableDiffers.create = function (factories, parent) {
-          if (isPresent(parent)) {
+          if (parent != null) {
               var copied = parent.factories.slice();
               factories = factories.concat(copied);
               return new IterableDiffers(factories);
@@ -7164,7 +7205,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       };
       IterableDiffers.prototype.find = function (iterable) {
           var factory = this.factories.find(function (f) { return f.supports(iterable); });
-          if (isPresent(factory)) {
+          if (factory != null) {
               return factory;
           }
           else {
@@ -7173,6 +7214,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       };
       return IterableDiffers;
   }());
+  function getTypeNameForDebugging(type) {
+      return type['name'] || typeof type;
+  }
 
   /**
    * A repository of different Map diffing strategies used by NgClass, NgStyle, and others.
@@ -7231,77 +7275,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           throw new Error("Cannot find a differ supporting object '" + kv + "'");
       };
       return KeyValueDiffers;
-  }());
-
-  function devModeEqual(a, b) {
-      if (isListLikeIterable(a) && isListLikeIterable(b)) {
-          return areIterablesEqual(a, b, devModeEqual);
-      }
-      else if (!isListLikeIterable(a) && !isPrimitive(a) && !isListLikeIterable(b) && !isPrimitive(b)) {
-          return true;
-      }
-      else {
-          return looseIdentical(a, b);
-      }
-  }
-  /**
-   * Indicates that the result of a {@link Pipe} transformation has changed even though the
-   * reference
-   * has not changed.
-   *
-   * The wrapped value will be unwrapped by change detection, and the unwrapped value will be stored.
-   *
-   * Example:
-   *
-   * ```
-   * if (this._latestValue === this._latestReturnedValue) {
-   *    return this._latestReturnedValue;
-   *  } else {
-   *    this._latestReturnedValue = this._latestValue;
-   *    return WrappedValue.wrap(this._latestValue); // this will force update
-   *  }
-   * ```
-   * @stable
-   */
-  var WrappedValue = (function () {
-      function WrappedValue(wrapped) {
-          this.wrapped = wrapped;
-      }
-      WrappedValue.wrap = function (value) { return new WrappedValue(value); };
-      return WrappedValue;
-  }());
-  /**
-   * Helper class for unwrapping WrappedValue s
-   */
-  var ValueUnwrapper = (function () {
-      function ValueUnwrapper() {
-          this.hasWrappedValue = false;
-      }
-      ValueUnwrapper.prototype.unwrap = function (value) {
-          if (value instanceof WrappedValue) {
-              this.hasWrappedValue = true;
-              return value.wrapped;
-          }
-          return value;
-      };
-      ValueUnwrapper.prototype.reset = function () { this.hasWrappedValue = false; };
-      return ValueUnwrapper;
-  }());
-  /**
-   * Represents a basic change from a previous to a new value.
-   * @stable
-   */
-  var SimpleChange = (function () {
-      function SimpleChange(previousValue, currentValue, firstChange) {
-          this.previousValue = previousValue;
-          this.currentValue = currentValue;
-          this.firstChange = firstChange;
-      }
-      /**
-       * Check whether the new value is the first value assigned.
-       */
-      SimpleChange.prototype.isFirstChange = function () { return this.firstChange; };
-      return SimpleChange;
   }());
 
   /**
@@ -10433,7 +10406,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       }
   }
   function getCurrentDebugContext() {
-      return new DebugContext_(_currentView, _currentNodeIndex);
+      return _currentView ? new DebugContext_(_currentView, _currentNodeIndex) : null;
   }
   var DebugRendererFactoryV2 = (function () {
       function DebugRendererFactoryV2(delegate) {
@@ -10462,21 +10435,28 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       DebugRendererV2.prototype.destroy = function () { this.delegate.destroy(); };
       DebugRendererV2.prototype.createElement = function (name, namespace) {
           var el = this.delegate.createElement(name, namespace);
-          var debugEl = new DebugElement(el, null, getCurrentDebugContext());
-          debugEl.name = name;
-          indexDebugNode(debugEl);
+          var debugCtx = getCurrentDebugContext();
+          if (debugCtx) {
+              var debugEl = new DebugElement(el, null, debugCtx);
+              debugEl.name = name;
+              indexDebugNode(debugEl);
+          }
           return el;
       };
       DebugRendererV2.prototype.createComment = function (value) {
           var comment = this.delegate.createComment(value);
-          var debugEl = new DebugNode(comment, null, getCurrentDebugContext());
-          indexDebugNode(debugEl);
+          var debugCtx = getCurrentDebugContext();
+          if (debugCtx) {
+              indexDebugNode(new DebugNode(comment, null, debugCtx));
+          }
           return comment;
       };
       DebugRendererV2.prototype.createText = function (value) {
           var text = this.delegate.createText(value);
-          var debugEl = new DebugNode(text, null, getCurrentDebugContext());
-          indexDebugNode(debugEl);
+          var debugCtx = getCurrentDebugContext();
+          if (debugCtx) {
+              indexDebugNode(new DebugNode(text, null, debugCtx));
+          }
           return text;
       };
       DebugRendererV2.prototype.appendChild = function (parent, newChild) {
@@ -10506,8 +10486,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       };
       DebugRendererV2.prototype.selectRootElement = function (selectorOrNode) {
           var el = this.delegate.selectRootElement(selectorOrNode);
-          var debugEl = new DebugElement(el, null, getCurrentDebugContext());
-          indexDebugNode(debugEl);
+          var debugCtx = getCurrentDebugContext();
+          if (debugCtx) {
+              indexDebugNode(new DebugElement(el, null, debugCtx));
+          }
           return el;
       };
       DebugRendererV2.prototype.setAttribute = function (el, name, value, namespace) {
@@ -11130,7 +11112,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   /**
    * @stable
    */
-  var VERSION = new Version('4.0.0-rc.2-207298c');
+  var VERSION = new Version('4.0.0-rc.2-b7e76cc');
 
   /**
    * @license
@@ -11474,135 +11456,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           return result;
       };
       return StaticSymbolCache;
-  }());
-
-  function isPresent$1(obj) {
-      return obj != null;
-  }
-  function isBlank$1(obj) {
-      return obj == null;
-  }
-  var STRING_MAP_PROTO$1 = Object.getPrototypeOf({});
-  function isStrictStringMap$1(obj) {
-      return typeof obj === 'object' && obj !== null && Object.getPrototypeOf(obj) === STRING_MAP_PROTO$1;
-  }
-  function stringify$1(token) {
-      if (typeof token === 'string') {
-          return token;
-      }
-      if (token == null) {
-          return '' + token;
-      }
-      if (token.overriddenName) {
-          return "" + token.overriddenName;
-      }
-      if (token.name) {
-          return "" + token.name;
-      }
-      var res = token.toString();
-      var newLineIndex = res.indexOf('\n');
-      return newLineIndex === -1 ? res : res.substring(0, newLineIndex);
-  }
-  var NumberWrapper$1 = (function () {
-      function NumberWrapper() {
-      }
-      NumberWrapper.parseIntAutoRadix = function (text) {
-          var result = parseInt(text);
-          if (isNaN(result)) {
-              throw new Error('Invalid integer literal when parsing ' + text);
-          }
-          return result;
-      };
-      NumberWrapper.isNumeric = function (value) { return !isNaN(value - parseFloat(value)); };
-      return NumberWrapper;
-  }());
-  function isJsObject$1(o) {
-      return o !== null && (typeof o === 'function' || typeof o === 'object');
-  }
-  function isPrimitive$1(obj) {
-      return !isJsObject$1(obj);
-  }
-  function escapeRegExp$1(s) {
-      return s.replace(/([.*+?^=!:${}()|[\]\/\\])/g, '\\$1');
-  }
-
-  /**
-   * Wraps Javascript Objects
-   */
-  var StringMapWrapper$1 = (function () {
-      function StringMapWrapper() {
-      }
-      StringMapWrapper.merge = function (m1, m2) {
-          var m = {};
-          for (var _i = 0, _a = Object.keys(m1); _i < _a.length; _i++) {
-              var k = _a[_i];
-              m[k] = m1[k];
-          }
-          for (var _b = 0, _c = Object.keys(m2); _b < _c.length; _b++) {
-              var k = _c[_b];
-              m[k] = m2[k];
-          }
-          return m;
-      };
-      StringMapWrapper.equals = function (m1, m2) {
-          var k1 = Object.keys(m1);
-          var k2 = Object.keys(m2);
-          if (k1.length != k2.length) {
-              return false;
-          }
-          for (var i = 0; i < k1.length; i++) {
-              var key = k1[i];
-              if (m1[key] !== m2[key]) {
-                  return false;
-              }
-          }
-          return true;
-      };
-      return StringMapWrapper;
-  }());
-  var ListWrapper$1 = (function () {
-      function ListWrapper() {
-      }
-      ListWrapper.findLast = function (arr, condition) {
-          for (var i = arr.length - 1; i >= 0; i--) {
-              if (condition(arr[i])) {
-                  return arr[i];
-              }
-          }
-          return null;
-      };
-      ListWrapper.removeAll = function (list, items) {
-          for (var i = 0; i < items.length; ++i) {
-              var index = list.indexOf(items[i]);
-              if (index > -1) {
-                  list.splice(index, 1);
-              }
-          }
-      };
-      ListWrapper.remove = function (list, el) {
-          var index = list.indexOf(el);
-          if (index > -1) {
-              list.splice(index, 1);
-              return true;
-          }
-          return false;
-      };
-      ListWrapper.equals = function (a, b) {
-          if (a.length != b.length)
-              return false;
-          for (var i = 0; i < a.length; ++i) {
-              if (a[i] !== b[i])
-                  return false;
-          }
-          return true;
-      };
-      ListWrapper.flatten = function (list) {
-          return list.reduce(function (flat, item) {
-              var flatItem = Array.isArray(item) ? ListWrapper.flatten(item) : item;
-              return flat.concat(flatItem);
-          }, []);
-      };
-      return ListWrapper;
   }());
 
   /**
@@ -12329,7 +12182,20 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       return SelectorContext;
   }());
 
-  var MODULE_SUFFIX = '';
+  /**
+   * @license
+   * Copyright Google Inc. All Rights Reserved.
+   *
+   * Use of this source code is governed by an MIT-style license that can be
+   * found in the LICENSE file at https://angular.io/license
+   */
+  /**
+   * @license
+   * Copyright Google Inc. All Rights Reserved.
+   *
+   * Use of this source code is governed by an MIT-style license that can be
+   * found in the LICENSE file at https://angular.io/license
+   */ var MODULE_SUFFIX = '';
   var DASH_CASE_REGEXP = /-+([a-z0-9])/g;
   function dashCaseToCamelCase(input) {
       return input.replace(DASH_CASE_REGEXP, function () {
@@ -12356,10 +12222,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       if (Array.isArray(value)) {
           return visitor.visitArray(value, context);
       }
-      if (isStrictStringMap$1(value)) {
+      if (isStrictStringMap(value)) {
           return visitor.visitStringMap(value, context);
       }
-      if (value == null || isPrimitive$1(value)) {
+      if (value == null || typeof value == 'string' || typeof value == 'number' ||
+          typeof value == 'boolean') {
           return visitor.visitPrimitive(value, context);
       }
       return visitor.visitOther(value, context);
@@ -12398,6 +12265,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       return error;
   }
   var ERROR_SYNTAX_ERROR = 'ngSyntaxError';
+  function escapeRegExp(s) {
+      return s.replace(/([.*+?^=!:${}()|[\]\/\\])/g, '\\$1');
+  }
+  var STRING_MAP_PROTO = Object.getPrototypeOf({});
+  function isStrictStringMap(obj) {
+      return typeof obj === 'object' && obj !== null && Object.getPrototypeOf(obj) === STRING_MAP_PROTO;
+  }
 
   /**
    * @license
@@ -12520,7 +12394,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       if (ref['__anonymousType']) {
           return ref['__anonymousType'];
       }
-      var identifier = stringify$1(ref);
+      var identifier = stringify(ref);
       if (identifier.indexOf('(') >= 0) {
           // case: anonymous functions!
           identifier = "anonymous_" + _anonymousTypeIndex++;
@@ -12558,11 +12432,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       CompileSummaryKind[CompileSummaryKind["Injectable"] = 3] = "Injectable";
   })(CompileSummaryKind || (CompileSummaryKind = {}));
   function tokenName(token) {
-      return isPresent$1(token.value) ? _sanitizeIdentifier(token.value) :
-          identifierName(token.identifier);
+      return token.value != null ? _sanitizeIdentifier(token.value) : identifierName(token.identifier);
   }
   function tokenReference(token) {
-      if (isPresent$1(token.identifier)) {
+      if (token.identifier != null) {
           return token.identifier.reference;
       }
       else {
@@ -12593,7 +12466,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           this.styles = _normalizeArray(styles);
           this.styleUrls = _normalizeArray(styleUrls);
           this.externalStylesheets = _normalizeArray(externalStylesheets);
-          this.animations = animations ? ListWrapper$1.flatten(animations) : [];
+          this.animations = animations ? flatten$1(animations) : [];
           this.ngContentSelectors = ngContentSelectors || [];
           if (interpolation && interpolation.length != 2) {
               throw new Error("'interpolation' should have a start and an end symbol.");
@@ -12641,23 +12514,23 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           var hostListeners = {};
           var hostProperties = {};
           var hostAttributes = {};
-          if (isPresent$1(host)) {
+          if (host != null) {
               Object.keys(host).forEach(function (key) {
                   var value = host[key];
                   var matches = key.match(HOST_REG_EXP);
                   if (matches === null) {
                       hostAttributes[key] = value;
                   }
-                  else if (isPresent$1(matches[1])) {
+                  else if (matches[1] != null) {
                       hostProperties[matches[1]] = value;
                   }
-                  else if (isPresent$1(matches[2])) {
+                  else if (matches[2] != null) {
                       hostListeners[matches[2]] = value;
                   }
               });
           }
           var inputsMap = {};
-          if (isPresent$1(inputs)) {
+          if (inputs != null) {
               inputs.forEach(function (bindConfig) {
                   // canonical syntax: `dirProp: elProp`
                   // if there is no `:`, use dirProp = elProp
@@ -12666,7 +12539,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
               });
           }
           var outputsMap = {};
-          if (isPresent$1(outputs)) {
+          if (outputs != null) {
               outputs.forEach(function (bindConfig) {
                   // canonical syntax: `dirProp: elProp`
                   // if there is no `:`, use dirProp = elProp
@@ -12874,6 +12747,12 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       }
       return ProviderMeta;
   }());
+  function flatten$1(list) {
+      return list.reduce(function (flat, item) {
+          var flatItem = Array.isArray(item) ? flatten$1(item) : item;
+          return flat.concat(flatItem);
+      }, []);
+  }
 
   var CompilerConfig = (function () {
       function CompilerConfig(_a) {
@@ -13239,7 +13118,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   var ASTWithSource = (function (_super) {
       __extends$22(ASTWithSource, _super);
       function ASTWithSource(ast, source, location, errors) {
-          var _this = _super.call(this, new ParseSpan(0, isBlank$1(source) ? 0 : source.length)) || this;
+          var _this = _super.call(this, new ParseSpan(0, source == null ? 0 : source.length)) || this;
           _this.ast = ast;
           _this.source = source;
           _this.location = location;
@@ -13355,7 +13234,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           return new PropertyRead(ast.span, ast.receiver.visit(this), ast.name);
       };
       AstTransformer.prototype.visitPropertyWrite = function (ast, context) {
-          return new PropertyWrite(ast.span, ast.receiver.visit(this), ast.name, ast.value);
+          return new PropertyWrite(ast.span, ast.receiver.visit(this), ast.name, ast.value.visit(this));
       };
       AstTransformer.prototype.visitSafePropertyRead = function (ast, context) {
           return new SafePropertyRead(ast.span, ast.receiver.visit(this), ast.name);
@@ -13514,7 +13393,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   }
 
   function assertArrayOfStrings(identifier, value) {
-      if (!isDevMode() || isBlank$1(value)) {
+      if (!isDevMode() || value == null) {
           return;
       }
       if (!Array.isArray(value)) {
@@ -13534,10 +13413,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       /^\/\//,
   ];
   function assertInterpolationSymbols(identifier, value) {
-      if (isPresent$1(value) && !(Array.isArray(value) && value.length == 2)) {
+      if (value != null && !(Array.isArray(value) && value.length == 2)) {
           throw new Error("Expected '" + identifier + "' to be an array, [start, end].");
       }
-      else if (isDevMode() && !isBlank$1(value)) {
+      else if (isDevMode() && value != null) {
           var start_1 = value[0];
           var end_1 = value[1];
           // black list checking
@@ -13808,7 +13687,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
               this.advance();
           }
           var str = this.input.substring(start, this.index);
-          var value = simple ? NumberWrapper$1.parseIntAutoRadix(str) : parseFloat(str);
+          var value = simple ? parseIntAutoRadix(str) : parseFloat(str);
           return newNumberToken(start, value);
       };
       _Scanner.prototype.scanString = function () {
@@ -13909,6 +13788,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
               return code;
       }
   }
+  function parseIntAutoRadix(text) {
+      var result = parseInt(text);
+      if (isNaN(result)) {
+          throw new Error('Invalid integer literal when parsing ' + text);
+      }
+      return result;
+  }
 
   var SplitInterpolation = (function () {
       function SplitInterpolation(strings, expressions, offsets) {
@@ -13927,7 +13813,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       return TemplateBindingParseResult;
   }());
   function _createInterpolateRegExp(config) {
-      var pattern = escapeRegExp$1(config.start) + '([\\s\\S]*?)' + escapeRegExp$1(config.end);
+      var pattern = escapeRegExp(config.start) + '([\\s\\S]*?)' + escapeRegExp(config.end);
       return new RegExp(pattern, 'g');
   }
   var Parser = (function () {
@@ -13965,7 +13851,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           // Quotes expressions use 3rd-party expression language. We don't want to use
           // our lexer or parser for that, so we check for that ahead of time.
           var quote = this._parseQuote(input, location);
-          if (isPresent$1(quote)) {
+          if (quote != null) {
               return quote;
           }
           this._checkNoInterpolation(input, location, interpolationConfig);
@@ -13975,7 +13861,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
               .parseChain();
       };
       Parser.prototype._parseQuote = function (input, location) {
-          if (isBlank$1(input))
+          if (input == null)
               return null;
           var prefixSeparatorIndex = input.indexOf(':');
           if (prefixSeparatorIndex == -1)
@@ -14013,7 +13899,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
                   .parseChain();
               expressions.push(ast);
           }
-          return new ASTWithSource(new Interpolation(new ParseSpan(0, isBlank$1(input) ? 0 : input.length), split.strings, expressions), input, location, this.errors);
+          return new ASTWithSource(new Interpolation(new ParseSpan(0, input == null ? 0 : input.length), split.strings, expressions), input, location, this.errors);
       };
       Parser.prototype.splitInterpolation = function (input, location, interpolationConfig) {
           if (interpolationConfig === void 0) { interpolationConfig = DEFAULT_INTERPOLATION_CONFIG; }
@@ -14048,23 +13934,23 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           return new SplitInterpolation(strings, expressions, offsets);
       };
       Parser.prototype.wrapLiteralPrimitive = function (input, location) {
-          return new ASTWithSource(new LiteralPrimitive(new ParseSpan(0, isBlank$1(input) ? 0 : input.length), input), input, location, this.errors);
+          return new ASTWithSource(new LiteralPrimitive(new ParseSpan(0, input == null ? 0 : input.length), input), input, location, this.errors);
       };
       Parser.prototype._stripComments = function (input) {
           var i = this._commentStart(input);
-          return isPresent$1(i) ? input.substring(0, i).trim() : input;
+          return i != null ? input.substring(0, i).trim() : input;
       };
       Parser.prototype._commentStart = function (input) {
           var outerQuote = null;
           for (var i = 0; i < input.length - 1; i++) {
               var char = input.charCodeAt(i);
               var nextChar = input.charCodeAt(i + 1);
-              if (char === $SLASH && nextChar == $SLASH && isBlank$1(outerQuote))
+              if (char === $SLASH && nextChar == $SLASH && outerQuote == null)
                   return i;
               if (outerQuote === char) {
                   outerQuote = null;
               }
-              else if (isBlank$1(outerQuote) && isQuote(char)) {
+              else if (outerQuote == null && isQuote(char)) {
                   outerQuote = char;
               }
           }
@@ -14583,7 +14469,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       };
       _ParseAST.prototype.locationText = function (index) {
           if (index === void 0) { index = null; }
-          if (isBlank$1(index))
+          if (index == null)
               index = this.index;
           return (index < this.tokens.length) ? "at column " + (this.tokens[index].index + 1) + " in" :
               "at the end of the expression";
@@ -14658,7 +14544,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           this.col = col;
       }
       ParseLocation.prototype.toString = function () {
-          return isPresent$1(this.offset) ? this.file.url + "@" + this.line + ":" + this.col : this.file.url;
+          return this.offset != null ? this.file.url + "@" + this.line + ":" + this.col : this.file.url;
       };
       ParseLocation.prototype.moveBy = function (delta) {
           var source = this.file.content;
@@ -14698,7 +14584,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       ParseLocation.prototype.getContext = function (maxChars, maxLines) {
           var content = this.file.content;
           var startOffset = this.offset;
-          if (isPresent$1(startOffset)) {
+          if (startOffset != null) {
               if (startOffset > content.length - 1) {
                   startOffset = content.length - 1;
               }
@@ -15620,7 +15506,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       _TreeBuilder.prototype._consumeComment = function (token) {
           var text = this._advanceIf(TokenType$1.RAW_TEXT);
           this._advanceIf(TokenType$1.COMMENT_END);
-          var value = isPresent$1(text) ? text.parts[0].trim() : null;
+          var value = text != null ? text.parts[0].trim() : null;
           this._addToParent(new Comment(value, token.sourceSpan));
       };
       _TreeBuilder.prototype._consumeExpansion = function (token) {
@@ -15706,7 +15592,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           var text = token.parts[0];
           if (text.length > 0 && text[0] == '\n') {
               var parent_1 = this._getParentElement();
-              if (isPresent$1(parent_1) && parent_1.children.length == 0 &&
+              if (parent_1 != null && parent_1.children.length == 0 &&
                   this.getTagDefinition(parent_1.name).ignoreFirstLf) {
                   text = text.substring(1);
               }
@@ -15829,7 +15715,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       };
       _TreeBuilder.prototype._addToParent = function (node) {
           var parent = this._getParentElement();
-          if (isPresent$1(parent)) {
+          if (parent != null) {
               parent.children.push(node);
           }
           else {
@@ -15862,9 +15748,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           }
       };
       _TreeBuilder.prototype._getElementFullName = function (prefix, localName, parentElement) {
-          if (isBlank$1(prefix)) {
+          if (prefix == null) {
               prefix = this.getTagDefinition(localName).implicitNamespacePrefix;
-              if (isBlank$1(prefix) && isPresent$1(parentElement)) {
+              if (prefix == null && parentElement != null) {
                   prefix = getNsPrefix(parentElement.name);
               }
           }
@@ -18236,7 +18122,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           this.viewQueries = _getViewQueries(component);
           this.viewProviders = new Map();
           component.viewProviders.forEach(function (provider) {
-              if (isBlank$1(_this.viewProviders.get(tokenReference(provider.token)))) {
+              if (_this.viewProviders.get(tokenReference(provider.token)) == null) {
                   _this.viewProviders.set(tokenReference(provider.token), true);
               }
           });
@@ -18370,7 +18256,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           if (transformedProviderAst) {
               return transformedProviderAst;
           }
-          if (isPresent$1(this._seenProviders.get(tokenReference(token)))) {
+          if (this._seenProviders.get(tokenReference(token)) != null) {
               this.viewContext.errors.push(new ProviderError("Cannot instantiate cyclic dependency! " + tokenName(token), this._sourceSpan));
               return null;
           }
@@ -18379,9 +18265,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
               var transformedUseValue = provider.useValue;
               var transformedUseExisting = provider.useExisting;
               var transformedDeps;
-              if (isPresent$1(provider.useExisting)) {
+              if (provider.useExisting != null) {
                   var existingDiDep = _this._getDependency(resolvedProvider.providerType, { token: provider.useExisting }, eager);
-                  if (isPresent$1(existingDiDep.token)) {
+                  if (existingDiDep.token != null) {
                       transformedUseExisting = existingDiDep.token;
                   }
                   else {
@@ -18416,7 +18302,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
               var attrValue = this._attrs[dep.token.value];
               return { isValue: true, value: attrValue == null ? null : attrValue };
           }
-          if (isPresent$1(dep.token)) {
+          if (dep.token != null) {
               // access builtints
               if ((requestingProviderType === ProviderAstType.Directive ||
                   requestingProviderType === ProviderAstType.Component)) {
@@ -18435,7 +18321,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
                   return dep;
               }
               // access providers
-              if (isPresent$1(this._getOrCreateLocalProvider(requestingProviderType, dep.token, eager))) {
+              if (this._getOrCreateLocalProvider(requestingProviderType, dep.token, eager) != null) {
                   return dep;
               }
           }
@@ -18468,7 +18354,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
               if (!result) {
                   if (!dep.isHost || this.viewContext.component.isHost ||
                       this.viewContext.component.type.reference === tokenReference(dep.token) ||
-                      isPresent$1(this.viewContext.viewProviders.get(tokenReference(dep.token)))) {
+                      this.viewContext.viewProviders.get(tokenReference(dep.token)) != null) {
                       result = dep;
                   }
                   else {
@@ -18517,7 +18403,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           if (transformedProviderAst) {
               return transformedProviderAst;
           }
-          if (isPresent$1(this._seenProviders.get(tokenReference(token)))) {
+          if (this._seenProviders.get(tokenReference(token)) != null) {
               this._errors.push(new ProviderError("Cannot instantiate cyclic dependency! " + tokenName(token), resolvedProvider.sourceSpan));
               return null;
           }
@@ -18526,9 +18412,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
               var transformedUseValue = provider.useValue;
               var transformedUseExisting = provider.useExisting;
               var transformedDeps;
-              if (isPresent$1(provider.useExisting)) {
+              if (provider.useExisting != null) {
                   var existingDiDep = _this._getDependency({ token: provider.useExisting }, eager, resolvedProvider.sourceSpan);
-                  if (isPresent$1(existingDiDep.token)) {
+                  if (existingDiDep.token != null) {
                       transformedUseExisting = existingDiDep.token;
                   }
                   else {
@@ -18560,13 +18446,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       NgModuleProviderAnalyzer.prototype._getDependency = function (dep, eager, requestorSourceSpan) {
           if (eager === void 0) { eager = null; }
           var foundLocal = false;
-          if (!dep.isSkipSelf && isPresent$1(dep.token)) {
+          if (!dep.isSkipSelf && dep.token != null) {
               // access the injector
               if (tokenReference(dep.token) === resolveIdentifier(Identifiers.Injector) ||
                   tokenReference(dep.token) === resolveIdentifier(Identifiers.ComponentFactoryResolver)) {
                   foundLocal = true;
               }
-              else if (isPresent$1(this._getOrCreateLocalProvider(dep.token, eager))) {
+              else if (this._getOrCreateLocalProvider(dep.token, eager) != null) {
                   foundLocal = true;
               }
           }
@@ -18616,7 +18502,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   function _resolveProviders(providers, providerType, eager, sourceSpan, targetErrors, targetProvidersByToken) {
       providers.forEach(function (provider) {
           var resolvedProvider = targetProvidersByToken.get(tokenReference(provider.token));
-          if (isPresent$1(resolvedProvider) && !!resolvedProvider.multiProvider !== !!provider.multi) {
+          if (resolvedProvider != null && !!resolvedProvider.multiProvider !== !!provider.multi) {
               targetErrors.push(new ProviderError("Mixing multi and non multi provider is not possible for token " + tokenName(resolvedProvider.token), sourceSpan));
           }
           if (!resolvedProvider) {
@@ -19421,7 +19307,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
                   templateBindingsSource = attr.value;
                   prefixToken = normalizedName.substring(TEMPLATE_ATTR_PREFIX.length) + ':';
               }
-              var hasTemplateBinding = isPresent$1(templateBindingsSource);
+              var hasTemplateBinding = templateBindingsSource != null;
               if (hasTemplateBinding) {
                   if (hasInlineTemplates) {
                       _this._reportError("Can't have multiple template bindings on one element. Use only one attribute named 'template' or prefixed with *", attr.sourceSpan);
@@ -19446,7 +19332,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           var children = visitAll(preparsedElement.nonBindable ? NON_BINDABLE_VISITOR : this, element.children, ElementContext.create(isTemplateElement, directiveAsts, isTemplateElement ? parent.providerContext : providerContext));
           providerContext.afterElement();
           // Override the actual selector when the `ngProjectAs` attribute is provided
-          var projectionSelector = isPresent$1(preparsedElement.projectAs) ?
+          var projectionSelector = preparsedElement.projectAs != null ?
               CssSelector.parse(preparsedElement.projectAs)[0] :
               elementCssSelector;
           var ngContentIndex = parent.findNgContentIndex(projectionSelector);
@@ -19490,7 +19376,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           var hasBinding = false;
           if (bindParts !== null) {
               hasBinding = true;
-              if (isPresent$1(bindParts[KW_BIND_IDX])) {
+              if (bindParts[KW_BIND_IDX] != null) {
                   this._bindingParser.parsePropertyBinding(bindParts[IDENT_KW_IDX], value, false, srcSpan, targetMatchableAttrs, targetProps);
               }
               else if (bindParts[KW_LET_IDX]) {
@@ -19707,7 +19593,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
               });
           });
           events.forEach(function (event) {
-              if (isPresent$1(event.target) || !allDirectiveEvents.has(event.name)) {
+              if (event.target != null || !allDirectiveEvents.has(event.name)) {
                   _this._reportError("Event binding " + event.fullName + " not emitted by any directive on an embedded template. Make sure that the event name is spelled correctly and all directives are listed in the \"@NgModule.declarations\".", event.sourceSpan);
               }
           });
@@ -19813,7 +19699,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           var ngContentIndices = [];
           this._ngContentIndexMatcher.match(selector, function (selector, ngContentIndex) { ngContentIndices.push(ngContentIndex); });
           ngContentIndices.sort();
-          if (isPresent$1(this._wildcardNgContentIndex)) {
+          if (this._wildcardNgContentIndex != null) {
               ngContentIndices.push(this._wildcardNgContentIndex);
           }
           return ngContentIndices.length > 0 ? ngContentIndices[0] : null;
@@ -19931,12 +19817,12 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
        */
       UrlResolver.prototype.resolve = function (baseUrl, url) {
           var resolvedUrl = url;
-          if (isPresent$1(baseUrl) && baseUrl.length > 0) {
+          if (baseUrl != null && baseUrl.length > 0) {
               resolvedUrl = _resolveUrl(baseUrl, resolvedUrl);
           }
           var resolvedParts = _split(resolvedUrl);
           var prefix = this._packagePrefix;
-          if (isPresent$1(prefix) && isPresent$1(resolvedParts) &&
+          if (prefix != null && resolvedParts != null &&
               resolvedParts[_ComponentIndex.Scheme] == 'package') {
               var path = resolvedParts[_ComponentIndex.Path];
               prefix = prefix.replace(/\/+$/, '');
@@ -19982,26 +19868,26 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
    */
   function _buildFromEncodedParts(opt_scheme, opt_userInfo, opt_domain, opt_port, opt_path, opt_queryData, opt_fragment) {
       var out = [];
-      if (isPresent$1(opt_scheme)) {
+      if (opt_scheme != null) {
           out.push(opt_scheme + ':');
       }
-      if (isPresent$1(opt_domain)) {
+      if (opt_domain != null) {
           out.push('//');
-          if (isPresent$1(opt_userInfo)) {
+          if (opt_userInfo != null) {
               out.push(opt_userInfo + '@');
           }
           out.push(opt_domain);
-          if (isPresent$1(opt_port)) {
+          if (opt_port != null) {
               out.push(':' + opt_port);
           }
       }
-      if (isPresent$1(opt_path)) {
+      if (opt_path != null) {
           out.push(opt_path);
       }
-      if (isPresent$1(opt_queryData)) {
+      if (opt_queryData != null) {
           out.push('?' + opt_queryData);
       }
-      if (isPresent$1(opt_fragment)) {
+      if (opt_fragment != null) {
           out.push('#' + opt_fragment);
       }
       return out.join('');
@@ -20165,7 +20051,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
    */
   function _joinAndCanonicalizePath(parts) {
       var path = parts[_ComponentIndex.Path];
-      path = isBlank$1(path) ? '' : _removeDotSegments(path);
+      path = path == null ? '' : _removeDotSegments(path);
       parts[_ComponentIndex.Path] = path;
       return _buildFromEncodedParts(parts[_ComponentIndex.Scheme], parts[_ComponentIndex.UserInfo], parts[_ComponentIndex.Domain], parts[_ComponentIndex.Port], path, parts[_ComponentIndex.QueryData], parts[_ComponentIndex.Fragment]);
   }
@@ -20177,14 +20063,14 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   function _resolveUrl(base, url) {
       var parts = _split(encodeURI(url));
       var baseParts = _split(base);
-      if (isPresent$1(parts[_ComponentIndex.Scheme])) {
+      if (parts[_ComponentIndex.Scheme] != null) {
           return _joinAndCanonicalizePath(parts);
       }
       else {
           parts[_ComponentIndex.Scheme] = baseParts[_ComponentIndex.Scheme];
       }
       for (var i = _ComponentIndex.Scheme; i <= _ComponentIndex.Port; i++) {
-          if (isBlank$1(parts[i])) {
+          if (parts[i] == null) {
               parts[i] = baseParts[i];
           }
       }
@@ -20192,7 +20078,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           return _joinAndCanonicalizePath(parts);
       }
       var path = baseParts[_ComponentIndex.Path];
-      if (isBlank$1(path))
+      if (path == null)
           path = '/';
       var index = path.lastIndexOf('/');
       path = path.substring(0, index + 1) + parts[_ComponentIndex.Path];
@@ -20231,19 +20117,19 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           var normalizedTemplateAsync;
           if (prenormData.template != null) {
               if (typeof prenormData.template !== 'string') {
-                  throw syntaxError("The template specified for component " + stringify$1(prenormData.componentType) + " is not a string");
+                  throw syntaxError("The template specified for component " + stringify(prenormData.componentType) + " is not a string");
               }
               normalizedTemplateSync = this.normalizeTemplateSync(prenormData);
               normalizedTemplateAsync = Promise.resolve(normalizedTemplateSync);
           }
           else if (prenormData.templateUrl) {
               if (typeof prenormData.templateUrl !== 'string') {
-                  throw syntaxError("The templateUrl specified for component " + stringify$1(prenormData.componentType) + " is not a string");
+                  throw syntaxError("The templateUrl specified for component " + stringify(prenormData.componentType) + " is not a string");
               }
               normalizedTemplateAsync = this.normalizeTemplateAsync(prenormData);
           }
           else {
-              throw syntaxError("No template specified for component " + stringify$1(prenormData.componentType));
+              throw syntaxError("No template specified for component " + stringify(prenormData.componentType));
           }
           if (normalizedTemplateSync && normalizedTemplateSync.styleUrls.length === 0) {
               // sync case
@@ -20265,7 +20151,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       };
       DirectiveNormalizer.prototype.normalizeLoadedTemplate = function (prenomData, template, templateAbsUrl) {
           var interpolationConfig = InterpolationConfig.fromArray(prenomData.interpolation);
-          var rootNodesAndErrors = this._htmlParser.parse(template, stringify$1(prenomData.componentType), true, interpolationConfig);
+          var rootNodesAndErrors = this._htmlParser.parse(template, stringify(prenomData.componentType), true, interpolationConfig);
           if (rootNodesAndErrors.errors.length > 0) {
               var errorString = rootNodesAndErrors.errors.join('\n');
               throw syntaxError("Template parse errors:\n" + errorString);
@@ -20418,14 +20304,14 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           if (throwIfNotFound === void 0) { throwIfNotFound = true; }
           var typeMetadata = this._reflector.annotations(resolveForwardRef(type));
           if (typeMetadata) {
-              var metadata = ListWrapper$1.findLast(typeMetadata, isDirectiveMetadata);
+              var metadata = findLast(typeMetadata, isDirectiveMetadata);
               if (metadata) {
                   var propertyMetadata = this._reflector.propMetadata(type);
                   return this._mergeWithPropertyMetadata(metadata, propertyMetadata, type);
               }
           }
           if (throwIfNotFound) {
-              throw new Error("No Directive annotation found on " + stringify$1(type));
+              throw new Error("No Directive annotation found on " + stringify(type));
           }
           return null;
       };
@@ -20435,7 +20321,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           var host = {};
           var queries = {};
           Object.keys(propertyMetadata).forEach(function (propName) {
-              var input = ListWrapper$1.findLast(propertyMetadata[propName], function (a) { return a instanceof Input; });
+              var input = findLast(propertyMetadata[propName], function (a) { return a instanceof Input; });
               if (input) {
                   if (input.bindingPropertyName) {
                       inputs.push(propName + ": " + input.bindingPropertyName);
@@ -20444,7 +20330,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
                       inputs.push(propName);
                   }
               }
-              var output = ListWrapper$1.findLast(propertyMetadata[propName], function (a) { return a instanceof Output; });
+              var output = findLast(propertyMetadata[propName], function (a) { return a instanceof Output; });
               if (output) {
                   if (output.bindingPropertyName) {
                       outputs.push(propName + ": " + output.bindingPropertyName);
@@ -20474,7 +20360,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
                   var args = hostListener.args || [];
                   host["(" + hostListener.eventName + ")"] = propName + "(" + args.join(',') + ")";
               });
-              var query = ListWrapper$1.findLast(propertyMetadata[propName], function (a) { return a instanceof Query; });
+              var query = findLast(propertyMetadata[propName], function (a) { return a instanceof Query; });
               if (query) {
                   queries[propName] = query;
               }
@@ -20499,8 +20385,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       DirectiveResolver.prototype._merge = function (directive, inputs, outputs, host, queries, directiveType) {
           var mergedInputs = this._dedupeBindings(directive.inputs ? directive.inputs.concat(inputs) : inputs);
           var mergedOutputs = this._dedupeBindings(directive.outputs ? directive.outputs.concat(outputs) : outputs);
-          var mergedHost = directive.host ? StringMapWrapper$1.merge(directive.host, host) : host;
-          var mergedQueries = directive.queries ? StringMapWrapper$1.merge(directive.queries, queries) : queries;
+          var mergedHost = directive.host ? merge$2(directive.host, host) : host;
+          var mergedQueries = directive.queries ? merge$2(directive.queries, queries) : queries;
           if (directive instanceof Component) {
               return new Component({
                   selector: directive.selector,
@@ -20546,6 +20432,14 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   ]; };
   function isDirectiveMetadata(type) {
       return type instanceof Directive;
+  }
+  function findLast(arr, condition) {
+      for (var i = arr.length - 1; i >= 0; i--) {
+          if (condition(arr[i])) {
+              return arr[i];
+          }
+      }
+      return null;
   }
 
   /**
@@ -20620,13 +20514,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       NgModuleResolver.prototype.isNgModule = function (type) { return this._reflector.annotations(type).some(_isNgModuleMetadata); };
       NgModuleResolver.prototype.resolve = function (type, throwIfNotFound) {
           if (throwIfNotFound === void 0) { throwIfNotFound = true; }
-          var ngModuleMeta = ListWrapper$1.findLast(this._reflector.annotations(type), _isNgModuleMetadata);
+          var ngModuleMeta = findLast(this._reflector.annotations(type), _isNgModuleMetadata);
           if (ngModuleMeta) {
               return ngModuleMeta;
           }
           else {
               if (throwIfNotFound) {
-                  throw new Error("No NgModule metadata found for '" + stringify$1(type) + "'.");
+                  throw new Error("No NgModule metadata found for '" + stringify(type) + "'.");
               }
               return null;
           }
@@ -20667,13 +20561,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           if (throwIfNotFound === void 0) { throwIfNotFound = true; }
           var metas = this._reflector.annotations(resolveForwardRef(type));
           if (metas) {
-              var annotation = ListWrapper$1.findLast(metas, _isPipeMetadata);
+              var annotation = findLast(metas, _isPipeMetadata);
               if (annotation) {
                   return annotation;
               }
           }
           if (throwIfNotFound) {
-              throw new Error("No Pipe decorator found on " + stringify$1(type));
+              throw new Error("No Pipe decorator found on " + stringify(type));
           }
           return null;
       };
@@ -20771,7 +20665,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           var delegate = null;
           var proxyClass = function () {
               if (!delegate) {
-                  throw new Error("Illegal state: Class " + name + " for type " + stringify$1(baseType) + " is not compiled yet!");
+                  throw new Error("Illegal state: Class " + name + " for type " + stringify(baseType) + " is not compiled yet!");
               }
               return delegate.apply(this, arguments);
           };
@@ -21077,6 +20971,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
                       }
                   }
                   if (importedModuleType) {
+                      if (_this._checkSelfImport(moduleType, importedModuleType))
+                          return;
                       var importedModuleSummary = _this.getNgModuleSummary(importedModuleType);
                       if (!importedModuleSummary) {
                           _this._reportError(syntaxError("Unexpected " + _this._getTypeDescriptor(importedType) + " '" + stringifyType(importedType) + "' imported by the module '" + stringifyType(moduleType) + "'"), moduleType);
@@ -21189,6 +21085,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           transitiveModule.addModule(compileMeta.type);
           this._ngModuleCache.set(moduleType, compileMeta);
           return compileMeta;
+      };
+      CompileMetadataResolver.prototype._checkSelfImport = function (moduleType, importedModuleType) {
+          if (moduleType === importedModuleType) {
+              this._reportError(syntaxError("'" + stringifyType(moduleType) + "' module can't import itself"), moduleType);
+              return true;
+          }
+          return false;
       };
       CompileMetadataResolver.prototype._getTypeDescriptor = function (type) {
           if (this._directiveResolver.isDirective(type)) {
@@ -21630,7 +21533,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           return type.name + " in " + type.filePath;
       }
       else {
-          return stringify$1(type);
+          return stringify(type);
       }
   }
   /**
@@ -21638,7 +21541,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
    */
   function componentStillLoadingError(compType) {
       debugger;
-      var error = Error("Can't compile synchronously as " + stringify$1(compType) + " is still being loaded!");
+      var error = Error("Can't compile synchronously as " + stringify(compType) + " is still being loaded!");
       error[ɵERROR_COMPONENT_TYPE] = compType;
       return error;
   }
@@ -22604,11 +22507,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   function importType(id, typeParams, typeModifiers) {
       if (typeParams === void 0) { typeParams = null; }
       if (typeModifiers === void 0) { typeModifiers = null; }
-      return isPresent$1(id) ? expressionType(importExpr(id, typeParams), typeModifiers) : null;
+      return id != null ? expressionType(importExpr(id, typeParams), typeModifiers) : null;
   }
   function expressionType(expr, typeModifiers) {
       if (typeModifiers === void 0) { typeModifiers = null; }
-      return isPresent$1(expr) ? new ExpressionType(expr, typeModifiers) : null;
+      return expr != null ? new ExpressionType(expr, typeModifiers) : null;
   }
   function literalArr(values, type, sourceSpan) {
       if (type === void 0) { type = null; }
@@ -22706,7 +22609,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       }
       NgModuleCompiler.prototype.compile = function (ngModuleMeta, extraProviders) {
           var moduleUrl = identifierModuleUrl(ngModuleMeta.type);
-          var sourceFileName = isPresent$1(moduleUrl) ?
+          var sourceFileName = moduleUrl != null ?
               "in NgModule " + identifierName(ngModuleMeta.type) + " in " + moduleUrl :
               "in NgModule " + identifierName(ngModuleMeta.type);
           var sourceFile = new ParseSourceFile('', sourceFileName);
@@ -22802,15 +22705,15 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       _InjectorBuilder.prototype._getProviderValue = function (provider) {
           var _this = this;
           var result;
-          if (isPresent$1(provider.useExisting)) {
+          if (provider.useExisting != null) {
               result = this._getDependency({ token: provider.useExisting });
           }
-          else if (isPresent$1(provider.useFactory)) {
+          else if (provider.useFactory != null) {
               var deps = provider.deps || provider.useFactory.diDeps;
               var depsExpr = deps.map(function (dep) { return _this._getDependency(dep); });
               result = importExpr(provider.useFactory).callFn(depsExpr);
           }
-          else if (isPresent$1(provider.useClass)) {
+          else if (provider.useClass != null) {
               var deps = provider.deps || provider.useClass.diDeps;
               var depsExpr = deps.map(function (dep) { return _this._getDependency(dep); });
               result =
@@ -22878,7 +22781,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       return _InjectorBuilder;
   }());
   function createDiTokenExpression(token) {
-      if (isPresent$1(token.value)) {
+      if (token.value != null) {
           return literal(token.value);
       }
       else {
@@ -23187,7 +23090,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           ctx.print(stmt, "if (");
           stmt.condition.visitExpression(this, ctx);
           ctx.print(stmt, ") {");
-          var hasElseCase = isPresent$1(stmt.falseCase) && stmt.falseCase.length > 0;
+          var hasElseCase = stmt.falseCase != null && stmt.falseCase.length > 0;
           if (stmt.trueCase.length <= 1 && !hasElseCase) {
               ctx.print(stmt, " ");
               this.visitAllStatements(stmt.trueCase, ctx);
@@ -23263,9 +23166,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       AbstractEmitterVisitor.prototype.visitInvokeMethodExpr = function (expr, ctx) {
           expr.receiver.visitExpression(this, ctx);
           var name = expr.name;
-          if (isPresent$1(expr.builtin)) {
+          if (expr.builtin != null) {
               name = this.getBuiltinMethodName(expr.builtin);
-              if (isBlank$1(name)) {
+              if (name == null) {
                   // some builtins just mean to skip the call.
                   return null;
               }
@@ -23284,7 +23187,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       };
       AbstractEmitterVisitor.prototype.visitReadVarExpr = function (ast, ctx) {
           var varName = ast.name;
-          if (isPresent$1(ast.builtin)) {
+          if (ast.builtin != null) {
               switch (ast.builtin) {
                   case BuiltinVar.Super:
                       varName = 'super';
@@ -23456,7 +23359,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   }());
   function escapeIdentifier(input, escapeDollar, alwaysQuote) {
       if (alwaysQuote === void 0) { alwaysQuote = true; }
-      if (isBlank$1(input)) {
+      if (input == null) {
           return null;
       }
       var body = input.replace(_SINGLE_QUOTE_ESCAPE_STRING_RE, function () {
@@ -23567,7 +23470,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       }
       _TsEmitterVisitor.prototype.visitType = function (t, ctx, defaultType) {
           if (defaultType === void 0) { defaultType = 'any'; }
-          if (isPresent$1(t)) {
+          if (t != null) {
               this.typeExpression++;
               t.visitType(this, ctx);
               this.typeExpression--;
@@ -23578,7 +23481,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       };
       _TsEmitterVisitor.prototype.visitLiteralExpr = function (ast, ctx) {
           var value = ast.value;
-          if (isBlank$1(value) && ast.type != INFERRED_TYPE) {
+          if (value == null && ast.type != INFERRED_TYPE) {
               ctx.print(ast, "(" + value + " as any)");
               return null;
           }
@@ -23657,7 +23560,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
               ctx.print(stmt, "export ");
           }
           ctx.print(stmt, "class " + stmt.name);
-          if (isPresent$1(stmt.parent)) {
+          if (stmt.parent != null) {
               ctx.print(stmt, " extends ");
               this.typeExpression++;
               stmt.parent.visitExpression(this, ctx);
@@ -23666,7 +23569,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           ctx.println(stmt, " {");
           ctx.incIndent();
           stmt.fields.forEach(function (field) { return _this._visitClassField(field, ctx); });
-          if (isPresent$1(stmt.constructorMethod)) {
+          if (stmt.constructorMethod != null) {
               this._visitClassConstructor(stmt, ctx);
           }
           stmt.getters.forEach(function (getter) { return _this._visitClassGetter(getter, ctx); });
@@ -23846,7 +23749,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           var _a = this._resolveStaticSymbol(value), name = _a.name, filePath = _a.filePath, members = _a.members, arity = _a.arity;
           if (filePath != this._genFilePath) {
               var prefix = this.importsWithPrefixes.get(filePath);
-              if (isBlank$1(prefix)) {
+              if (prefix == null) {
                   prefix = "import" + this.importsWithPrefixes.size;
                   this.importsWithPrefixes.set(filePath, prefix);
               }
@@ -25333,7 +25236,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
                       result = varExpr.callFn(args);
                   }
               }
-              if (isBlank$1(result)) {
+              if (result == null) {
                   result = receiver.callMethod(ast.name, args);
               }
               return convertToStatementIfNeeded(mode, result);
@@ -25353,7 +25256,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
               if (receiver === this._implicitReceiver) {
                   result = this._getLocal(ast.name);
               }
-              if (isBlank$1(result)) {
+              if (result == null) {
                   result = receiver.prop(ast.name);
               }
               return convertToStatementIfNeeded(mode, result);
@@ -26707,7 +26610,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
               .all(ngModules.map(function (ngModule) { return _this._metadataResolver.loadNgModuleDirectiveAndPipeMetadata(ngModule.type.reference, false); }))
               .then(function () {
               var sourceModules = files.map(function (file) { return _this._compileSrcFile(file.srcUrl, ngModuleByPipeOrDirective, file.directives, file.pipes, file.ngModules, file.injectables); });
-              return ListWrapper$1.flatten(sourceModules);
+              return flatten$1(sourceModules);
           });
       };
       AotCompiler.prototype._compileSrcFile = function (srcFileUrl, ngModuleByPipeOrDirective, directives, pipes, ngModules, injectables) {
@@ -27325,7 +27228,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
                   return simplify({ __symbolic: 'error', message: 'Function call not supported', context: functionSymbol });
               }
               function simplify(expression) {
-                  if (isPrimitive$2(expression)) {
+                  if (isPrimitive(expression)) {
                       return expression;
                   }
                   if (expression instanceof Array) {
@@ -27444,7 +27347,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
                               case 'index':
                                   var indexTarget = simplify(expression['expression']);
                                   var index = simplify(expression['index']);
-                                  if (indexTarget && isPrimitive$2(index))
+                                  if (indexTarget && isPrimitive(index))
                                       return indexTarget[index];
                                   return null;
                               case 'select':
@@ -27463,7 +27366,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
                                           return selectContext;
                                       }
                                   }
-                                  if (selectTarget && isPrimitive$2(member))
+                                  if (selectTarget && isPrimitive(member))
                                       return simplifyInContext(selectContext, selectTarget[member], depth + 1);
                                   return null;
                               case 'reference':
@@ -27606,7 +27509,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       });
       return result;
   }
-  function isPrimitive$2(o) {
+  function isPrimitive(o) {
       return o === null || (typeof o !== 'function' && typeof o !== 'object');
   }
   var BindingScope = (function () {
@@ -28113,7 +28016,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       var ctx = new _ExecutionContext(null, null, null, new Map());
       var visitor = new StatementInterpreter();
       var result = visitor.visitAllStatements(stmtsWithReturn, ctx);
-      return isPresent$1(result) ? result.value : null;
+      return result != null ? result.value : null;
   }
   function _executeFunctionStatements(varNames, varValues, statements, ctx, visitor) {
       var childCtx = ctx.createChildWihtLocalVars();
@@ -28207,7 +28110,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       };
       StatementInterpreter.prototype.visitReadVarExpr = function (ast, ctx) {
           var varName = ast.name;
-          if (isPresent$1(ast.builtin)) {
+          if (ast.builtin != null) {
               switch (ast.builtin) {
                   case BuiltinVar.Super:
                       return ctx.instance.__proto__;
@@ -28249,7 +28152,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           var receiver = expr.receiver.visitExpression(this, ctx);
           var args = this.visitAllExpressions(expr.args, ctx);
           var result;
-          if (isPresent$1(expr.builtin)) {
+          if (expr.builtin != null) {
               switch (expr.builtin) {
                   case BuiltinMethod.ConcatArray:
                       result = receiver.concat.apply(receiver, args);
@@ -28297,7 +28200,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           if (condition) {
               return this.visitAllStatements(stmt.trueCase, ctx);
           }
-          else if (isPresent$1(stmt.falseCase)) {
+          else if (stmt.falseCase != null) {
               return this.visitAllStatements(stmt.falseCase, ctx);
           }
           return null;
@@ -28330,7 +28233,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           if (ast.condition.visitExpression(this, ctx)) {
               return ast.trueCase.visitExpression(this, ctx);
           }
-          else if (isPresent$1(ast.falseCase)) {
+          else if (ast.falseCase != null) {
               return ast.falseCase.visitExpression(this, ctx);
           }
           return null;
@@ -28458,7 +28361,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           var _this = this;
           ctx.pushClass(stmt);
           this._visitClassConstructor(stmt, ctx);
-          if (isPresent$1(stmt.parent)) {
+          if (stmt.parent != null) {
               ctx.print(stmt, stmt.name + ".prototype = Object.create(");
               stmt.parent.visitExpression(this, ctx);
               ctx.println(stmt, ".prototype);");
@@ -28470,12 +28373,12 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       };
       AbstractJsEmitterVisitor.prototype._visitClassConstructor = function (stmt, ctx) {
           ctx.print(stmt, "function " + stmt.name + "(");
-          if (isPresent$1(stmt.constructorMethod)) {
+          if (stmt.constructorMethod != null) {
               this._visitParams(stmt.constructorMethod.params, ctx);
           }
           ctx.println(stmt, ") {");
           ctx.incIndent();
-          if (isPresent$1(stmt.constructorMethod)) {
+          if (stmt.constructorMethod != null) {
               if (stmt.constructorMethod.body.length > 0) {
                   ctx.println(stmt, "var self = this;");
                   this.visitAllStatements(stmt.constructorMethod.body, ctx);
@@ -28704,7 +28607,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       JitCompiler.prototype.getNgContentSelectors = function (component) {
           var template = this._compiledTemplateCache.get(component);
           if (!template) {
-              throw new Error("The component " + stringify$1(component) + " is not yet compiled!");
+              throw new Error("The component " + stringify(component) + " is not yet compiled!");
           }
           return template.compMeta.template.ngContentSelectors;
       };
@@ -28827,7 +28730,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       };
       JitCompiler.prototype._createCompiledHostTemplate = function (compType, ngModule) {
           if (!ngModule) {
-              throw new Error("Component " + stringify$1(compType) + " is not part of any NgModule or the module has not been imported into your module.");
+              throw new Error("Component " + stringify(compType) + " is not part of any NgModule or the module has not been imported into your module.");
           }
           var compiledTemplate = this._compiledHostTemplateCache.get(compType);
           if (!compiledTemplate) {
@@ -29344,14 +29247,14 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   }
   function getSelectors(info) {
       var map = new Map();
-      var selectors = flatten(info.directives.map(function (directive) {
+      var selectors = flatten$2(info.directives.map(function (directive) {
           var selectors = CssSelector.parse(directive.selector);
           selectors.forEach(function (selector) { return map.set(selector, directive); });
           return selectors;
       }));
       return { selectors: selectors, map: map };
   }
-  function flatten(a) {
+  function flatten$2(a) {
       return (_a = []).concat.apply(_a, a);
       var _a;
   }
@@ -30974,7 +30877,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           // All the attributes that are selectable should be shown.
           var applicableSelectors = selectors.filter(function (selector) { return !selector.element || selector.element == elementName; });
           var selectorAndAttributeNames = applicableSelectors.map(function (selector) { return ({ selector: selector, attrs: selector.attrs.filter(function (a) { return !!a; }) }); });
-          var attrs_1 = flatten(selectorAndAttributeNames.map(function (selectorAndAttr) {
+          var attrs_1 = flatten$2(selectorAndAttributeNames.map(function (selectorAndAttr) {
               var directive = selectorMap.get(selectorAndAttr.selector);
               var result = selectorAndAttr.attrs.map(function (name) { return ({ name: name, input: name in directive.inputs, output: name in directive.outputs }); });
               return result;
@@ -31005,7 +30908,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           attrs_1 = foldAttrs(attrs_1);
           // Now expand them back out to ensure that input/output shows up as well as input and
           // output.
-          attributes.push.apply(attributes, flatten(attrs_1.map(expandedAttr)));
+          attributes.push.apply(attributes, flatten$2(attrs_1.map(expandedAttr)));
       }
       return attributes;
   }
@@ -32020,10 +31923,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   function everyNodeChild(node, cb) {
       return !ts$2.forEachChild(node, function (node) { return !cb(node); });
   }
-  function isPrimitive$3(value) {
+  function isPrimitive$1(value) {
       return Object(value) !== value;
   }
-  var isPrimitive_1 = isPrimitive$3;
+  var isPrimitive_1 = isPrimitive$1;
   function isDefined(obj) {
       return obj !== undefined;
   }
@@ -32162,7 +32065,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
                   case ts$2.SyntaxKind.Identifier:
                       var identifier = node;
                       var reference = this.symbols.resolve(identifier.text);
-                      if (reference !== undefined && isPrimitive$3(reference)) {
+                      if (reference !== undefined && isPrimitive$1(reference)) {
                           return true;
                       }
                       break;
@@ -32414,7 +32317,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
               case ts$2.SyntaxKind.PrefixUnaryExpression:
                   var prefixUnaryExpression = node;
                   var operand = this.evaluateNode(prefixUnaryExpression.operand);
-                  if (isDefined(operand) && isPrimitive$3(operand)) {
+                  if (isDefined(operand) && isPrimitive$1(operand)) {
                       switch (prefixUnaryExpression.operator) {
                           case ts$2.SyntaxKind.PlusToken:
                               return +operand;
@@ -32449,7 +32352,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
                   var left = this.evaluateNode(binaryExpression.left);
                   var right = this.evaluateNode(binaryExpression.right);
                   if (isDefined(left) && isDefined(right)) {
-                      if (isPrimitive$3(left) && isPrimitive$3(right))
+                      if (isPrimitive$1(left) && isPrimitive$1(right))
                           switch (binaryExpression.operatorToken.kind) {
                               case ts$2.SyntaxKind.BarBarToken:
                                   return left || right;
@@ -32507,7 +32410,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
                   var condition = this.evaluateNode(conditionalExpression.condition);
                   var thenExpression = this.evaluateNode(conditionalExpression.whenTrue);
                   var elseExpression = this.evaluateNode(conditionalExpression.whenFalse);
-                  if (isPrimitive$3(condition)) {
+                  if (isPrimitive$1(condition)) {
                       return condition ? thenExpression : elseExpression;
                   }
                   return recordEntry({ __symbolic: 'if', condition: condition, thenExpression: thenExpression, elseExpression: elseExpression }, node);
@@ -33038,7 +32941,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
                                   metadata[exportedIdentifierName(nameNode)] = recordEntry(varValue, node);
                                   exported = true;
                               }
-                              if (evaluator_1.isPrimitive(varValue)) {
+                              if (typeof varValue == 'string' || typeof varValue == 'number' ||
+                                  typeof varValue == 'boolean') {
                                   locals.define(nameNode.text, varValue);
                               }
                               else if (!exported) {
@@ -33945,7 +33849,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   /**
    * @stable
    */
-  var VERSION$4 = new Version('4.0.0-rc.2-207298c');
+  var VERSION$4 = new Version('4.0.0-rc.2-b7e76cc');
 
   var ROUTER_MODULE_PATH = '@angular/router';
   var ROUTER_ROUTES_SYMBOL_NAME = 'ROUTES';
@@ -35629,7 +35533,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   /**
    * @stable
    */
-  var VERSION$5 = new Version('4.0.0-rc.2-207298c');
+  var VERSION$5 = new Version('4.0.0-rc.2-b7e76cc');
 
   exports.createLanguageService = createLanguageService;
   exports.create = create;
