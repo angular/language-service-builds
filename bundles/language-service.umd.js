@@ -762,7 +762,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   /**
    * @stable
    */
-  var VERSION$1 = new Version('4.0.0-rc.2-5df998d');
+  var VERSION$1 = new Version('4.0.0-rc.2-ad3b44a');
 
   /**
    * Inject decorator and metadata.
@@ -5361,29 +5361,29 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   }
 
   /**
-   * @deprecated Use the `RendererV2` instead.
+   * @deprecated Use the `Renderer2` instead.
    */
   var Renderer = (function () {
       function Renderer() {
       }
       return Renderer;
   }());
-  var RendererV2Interceptor = new InjectionToken('RendererV2Interceptor');
+  var Renderer2Interceptor = new InjectionToken('Renderer2Interceptor');
   /**
    * @experimental
    */
-  var RendererFactoryV2 = (function () {
-      function RendererFactoryV2() {
+  var RendererFactory2 = (function () {
+      function RendererFactory2() {
       }
-      return RendererFactoryV2;
+      return RendererFactory2;
   }());
   /**
    * @experimental
    */
-  var RendererV2 = (function () {
-      function RendererV2() {
+  var Renderer2 = (function () {
+      function Renderer2() {
       }
-      return RendererV2;
+      return Renderer2;
   }());
 
   /**
@@ -7852,7 +7852,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           var _b = splitNamespace(namespaceAndName), ns = _b[0], name = _b[1];
           return [ns, name, value];
       });
-      // This is needed as the jit compiler always uses an empty hash as default RendererTypeV2,
+      // This is needed as the jit compiler always uses an empty hash as default RendererType2,
       // which is not filled for host views.
       if (componentRendererType && componentRendererType.encapsulation == null) {
           componentRendererType = null;
@@ -8570,7 +8570,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   }());
 
   var RendererV1TokenKey = tokenKey(Renderer);
-  var RendererV2TokenKey = tokenKey(RendererV2);
+  var Renderer2TokenKey = tokenKey(Renderer2);
   var ElementRefTokenKey = tokenKey(ElementRef);
   var ViewContainerRefTokenKey = tokenKey(ViewContainerRef);
   var TemplateRefTokenKey = tokenKey(TemplateRef);
@@ -8862,7 +8862,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
                       var compView = findCompView(view, elDef, allowPrivateServices);
                       return createRendererV1(compView);
                   }
-                  case RendererV2TokenKey: {
+                  case Renderer2TokenKey: {
                       var compView = findCompView(view, elDef, allowPrivateServices);
                       return compView.renderer;
                   }
@@ -10065,12 +10065,12 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
       };
   }
   function createProdRootView(injector, projectableNodes, rootSelectorOrNode, def, context) {
-      var rendererFactory = injector.get(RendererFactoryV2);
+      var rendererFactory = injector.get(RendererFactory2);
       return createRootView(createRootData(injector, rendererFactory, projectableNodes, rootSelectorOrNode), def, context);
   }
   function debugCreateRootView(injector, projectableNodes, rootSelectorOrNode, def, context) {
-      var rendererFactory = injector.get(RendererFactoryV2);
-      var root = createRootData(injector, new DebugRendererFactoryV2(rendererFactory), projectableNodes, rootSelectorOrNode);
+      var rendererFactory = injector.get(RendererFactory2);
+      var root = createRootData(injector, new DebugRendererFactory2(rendererFactory), projectableNodes, rootSelectorOrNode);
       return callWithDebugContext(DebugAction.create, createRootView, null, [root, def, context]);
   }
   function createRootData(injector, rendererFactory, projectableNodes, rootSelectorOrNode) {
@@ -10408,32 +10408,32 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   function getCurrentDebugContext() {
       return _currentView ? new DebugContext_(_currentView, _currentNodeIndex) : null;
   }
-  var DebugRendererFactoryV2 = (function () {
-      function DebugRendererFactoryV2(delegate) {
+  var DebugRendererFactory2 = (function () {
+      function DebugRendererFactory2(delegate) {
           this.delegate = delegate;
       }
-      DebugRendererFactoryV2.prototype.createRenderer = function (element, renderData) {
-          return new DebugRendererV2(this.delegate.createRenderer(element, renderData));
+      DebugRendererFactory2.prototype.createRenderer = function (element, renderData) {
+          return new DebugRenderer2(this.delegate.createRenderer(element, renderData));
       };
-      return DebugRendererFactoryV2;
+      return DebugRendererFactory2;
   }());
-  var DebugRendererV2 = (function () {
-      function DebugRendererV2(delegate) {
+  var DebugRenderer2 = (function () {
+      function DebugRenderer2(delegate) {
           this.delegate = delegate;
       }
-      Object.defineProperty(DebugRendererV2.prototype, "data", {
+      Object.defineProperty(DebugRenderer2.prototype, "data", {
           get: function () { return this.delegate.data; },
           enumerable: true,
           configurable: true
       });
-      DebugRendererV2.prototype.destroyNode = function (node) {
+      DebugRenderer2.prototype.destroyNode = function (node) {
           removeDebugNodeFromIndex(getDebugNode(node));
           if (this.delegate.destroyNode) {
               this.delegate.destroyNode(node);
           }
       };
-      DebugRendererV2.prototype.destroy = function () { this.delegate.destroy(); };
-      DebugRendererV2.prototype.createElement = function (name, namespace) {
+      DebugRenderer2.prototype.destroy = function () { this.delegate.destroy(); };
+      DebugRenderer2.prototype.createElement = function (name, namespace) {
           var el = this.delegate.createElement(name, namespace);
           var debugCtx = getCurrentDebugContext();
           if (debugCtx) {
@@ -10443,7 +10443,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           }
           return el;
       };
-      DebugRendererV2.prototype.createComment = function (value) {
+      DebugRenderer2.prototype.createComment = function (value) {
           var comment = this.delegate.createComment(value);
           var debugCtx = getCurrentDebugContext();
           if (debugCtx) {
@@ -10451,7 +10451,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           }
           return comment;
       };
-      DebugRendererV2.prototype.createText = function (value) {
+      DebugRenderer2.prototype.createText = function (value) {
           var text = this.delegate.createText(value);
           var debugCtx = getCurrentDebugContext();
           if (debugCtx) {
@@ -10459,7 +10459,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           }
           return text;
       };
-      DebugRendererV2.prototype.appendChild = function (parent, newChild) {
+      DebugRenderer2.prototype.appendChild = function (parent, newChild) {
           var debugEl = getDebugNode(parent);
           var debugChildEl = getDebugNode(newChild);
           if (debugEl && debugChildEl && debugEl instanceof DebugElement) {
@@ -10467,7 +10467,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           }
           this.delegate.appendChild(parent, newChild);
       };
-      DebugRendererV2.prototype.insertBefore = function (parent, newChild, refChild) {
+      DebugRenderer2.prototype.insertBefore = function (parent, newChild, refChild) {
           var debugEl = getDebugNode(parent);
           var debugChildEl = getDebugNode(newChild);
           var debugRefEl = getDebugNode(refChild);
@@ -10476,7 +10476,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           }
           this.delegate.insertBefore(parent, newChild, refChild);
       };
-      DebugRendererV2.prototype.removeChild = function (parent, oldChild) {
+      DebugRenderer2.prototype.removeChild = function (parent, oldChild) {
           var debugEl = getDebugNode(parent);
           var debugChildEl = getDebugNode(oldChild);
           if (debugEl && debugChildEl && debugEl instanceof DebugElement) {
@@ -10484,7 +10484,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           }
           this.delegate.removeChild(parent, oldChild);
       };
-      DebugRendererV2.prototype.selectRootElement = function (selectorOrNode) {
+      DebugRenderer2.prototype.selectRootElement = function (selectorOrNode) {
           var el = this.delegate.selectRootElement(selectorOrNode);
           var debugCtx = getCurrentDebugContext();
           if (debugCtx) {
@@ -10492,7 +10492,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           }
           return el;
       };
-      DebugRendererV2.prototype.setAttribute = function (el, name, value, namespace) {
+      DebugRenderer2.prototype.setAttribute = function (el, name, value, namespace) {
           var debugEl = getDebugNode(el);
           if (debugEl && debugEl instanceof DebugElement) {
               var fullName = namespace ? namespace + ':' + name : name;
@@ -10500,7 +10500,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           }
           this.delegate.setAttribute(el, name, value, namespace);
       };
-      DebugRendererV2.prototype.removeAttribute = function (el, name, namespace) {
+      DebugRenderer2.prototype.removeAttribute = function (el, name, namespace) {
           var debugEl = getDebugNode(el);
           if (debugEl && debugEl instanceof DebugElement) {
               var fullName = namespace ? namespace + ':' + name : name;
@@ -10508,42 +10508,42 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           }
           this.delegate.removeAttribute(el, name, namespace);
       };
-      DebugRendererV2.prototype.addClass = function (el, name) {
+      DebugRenderer2.prototype.addClass = function (el, name) {
           var debugEl = getDebugNode(el);
           if (debugEl && debugEl instanceof DebugElement) {
               debugEl.classes[name] = true;
           }
           this.delegate.addClass(el, name);
       };
-      DebugRendererV2.prototype.removeClass = function (el, name) {
+      DebugRenderer2.prototype.removeClass = function (el, name) {
           var debugEl = getDebugNode(el);
           if (debugEl && debugEl instanceof DebugElement) {
               debugEl.classes[name] = false;
           }
           this.delegate.removeClass(el, name);
       };
-      DebugRendererV2.prototype.setStyle = function (el, style, value, hasVendorPrefix, hasImportant) {
+      DebugRenderer2.prototype.setStyle = function (el, style, value, hasVendorPrefix, hasImportant) {
           var debugEl = getDebugNode(el);
           if (debugEl && debugEl instanceof DebugElement) {
               debugEl.styles[style] = value;
           }
           this.delegate.setStyle(el, style, value, hasVendorPrefix, hasImportant);
       };
-      DebugRendererV2.prototype.removeStyle = function (el, style, hasVendorPrefix) {
+      DebugRenderer2.prototype.removeStyle = function (el, style, hasVendorPrefix) {
           var debugEl = getDebugNode(el);
           if (debugEl && debugEl instanceof DebugElement) {
               debugEl.styles[style] = null;
           }
           this.delegate.removeStyle(el, style, hasVendorPrefix);
       };
-      DebugRendererV2.prototype.setProperty = function (el, name, value) {
+      DebugRenderer2.prototype.setProperty = function (el, name, value) {
           var debugEl = getDebugNode(el);
           if (debugEl && debugEl instanceof DebugElement) {
               debugEl.properties[name] = value;
           }
           this.delegate.setProperty(el, name, value);
       };
-      DebugRendererV2.prototype.listen = function (target, eventName, callback) {
+      DebugRenderer2.prototype.listen = function (target, eventName, callback) {
           if (typeof target !== 'string') {
               var debugEl = getDebugNode(target);
               if (debugEl) {
@@ -10552,10 +10552,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           }
           return this.delegate.listen(target, eventName, callback);
       };
-      DebugRendererV2.prototype.parentNode = function (node) { return this.delegate.parentNode(node); };
-      DebugRendererV2.prototype.nextSibling = function (node) { return this.delegate.nextSibling(node); };
-      DebugRendererV2.prototype.setValue = function (node, value) { return this.delegate.setValue(node, value); };
-      return DebugRendererV2;
+      DebugRenderer2.prototype.parentNode = function (node) { return this.delegate.parentNode(node); };
+      DebugRenderer2.prototype.nextSibling = function (node) { return this.delegate.nextSibling(node); };
+      DebugRenderer2.prototype.setValue = function (node, value) { return this.delegate.setValue(node, value); };
+      return DebugRenderer2;
   }());
 
   function _iterableDiffersFactory() {
@@ -11112,7 +11112,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   /**
    * @stable
    */
-  var VERSION = new Version('4.0.0-rc.2-5df998d');
+  var VERSION = new Version('4.0.0-rc.2-ad3b44a');
 
   /**
    * @license
@@ -17930,9 +17930,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   Identifiers.nodeValue = { name: 'ɵnov', moduleUrl: CORE, runtime: ɵnov };
   Identifiers.ngContentDef = { name: 'ɵncd', moduleUrl: CORE, runtime: ɵncd };
   Identifiers.unwrapValue = { name: 'ɵunv', moduleUrl: CORE, runtime: ɵunv };
-  Identifiers.createRendererTypeV2 = { name: 'ɵcrt', moduleUrl: CORE, runtime: ɵcrt };
-  Identifiers.RendererTypeV2 = {
-      name: 'RendererTypeV2',
+  Identifiers.createRendererType2 = { name: 'ɵcrt', moduleUrl: CORE, runtime: ɵcrt };
+  Identifiers.RendererType2 = {
+      name: 'RendererType2',
       moduleUrl: CORE,
       // type only
       runtime: null
@@ -25500,14 +25500,14 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           }
           var renderComponentVar = variable(rendererTypeName(component.type.reference));
           statements.push(renderComponentVar
-              .set(importExpr(createIdentifier(Identifiers.createRendererTypeV2)).callFn([
+              .set(importExpr(createIdentifier(Identifiers.createRendererType2)).callFn([
               new LiteralMapExpr([
                   new LiteralMapEntry('encapsulation', literal(component.template.encapsulation)),
                   new LiteralMapEntry('styles', styles),
                   new LiteralMapEntry('data', new LiteralMapExpr(customRenderData))
               ])
           ]))
-              .toDeclStmt(importType(createIdentifier(Identifiers.RendererTypeV2)), [StmtModifier.Final]));
+              .toDeclStmt(importType(createIdentifier(Identifiers.RendererType2)), [StmtModifier.Final]));
           var viewBuilderFactory = function (parent) {
               var embeddedViewIndex = embeddedViewCount++;
               return new ViewBuilder(parent, component, embeddedViewIndex, usedPipes, staticQueryIds, viewBuilderFactory);
@@ -25748,7 +25748,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
           //        BindingType.DirectiveHostProperty, string, SecurityContext])[],
           //   outputs?: ([OutputType.ElementOutput | OutputType.DirectiveHostOutput, string, string])[],
           //   handleEvent?: ElementHandleEventFn,
-          //   componentView?: () => ViewDefinition, componentRendererType?: RendererTypeV2): NodeDef;
+          //   componentView?: () => ViewDefinition, componentRendererType?: RendererType2): NodeDef;
           var nodeDef = function () { return importExpr(createIdentifier(Identifiers.elementDef)).callFn([
               literal(flags), queryMatchesExpr, literal(ast.ngContentIndex), literal(childCount),
               literal(elName), elName ? fixedAttrsDef(ast) : NULL_EXPR,
@@ -33820,7 +33820,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   /**
    * @stable
    */
-  var VERSION$4 = new Version('4.0.0-rc.2-5df998d');
+  var VERSION$4 = new Version('4.0.0-rc.2-ad3b44a');
 
   var ROUTER_MODULE_PATH = '@angular/router';
   var ROUTER_ROUTES_SYMBOL_NAME = 'ROUTES';
@@ -35498,7 +35498,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
   /**
    * @stable
    */
-  var VERSION$5 = new Version('4.0.0-rc.2-5df998d');
+  var VERSION$5 = new Version('4.0.0-rc.2-ad3b44a');
 
   exports.createLanguageService = createLanguageService;
   exports.create = create;
