@@ -1,10 +1,10 @@
 {
   "name": "@angular/language-service",
-  "version": "4.0.0-rc.2-5ad5301",
+  "version": "4.0.0-rc.3-6c8638c",
   "description": "Angular - language services",
-  "main": "bundles/language-service.umd.js",
-  "module": "index.js",
-  "typings": "index.d.ts",
+  "main": "./bundles/language-service.umd.js",
+  "module": "./@angular/language-service.es5.js",
+  "typings": "./typings/language-service.d.ts",
   "author": "angular",
   "license": "MIT",
   "repository": {
