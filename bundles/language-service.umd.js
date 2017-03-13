@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.0.0-rc.3-fa1920a
+ * @license Angular v4.0.0-rc.3-ff71eff
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2794,7 +2794,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$2 = new Version('4.0.0-rc.3-fa1920a');
+	var /** @type {?} */ VERSION$2 = new Version('4.0.0-rc.3-ff71eff');
 	/**
 	 * Inject decorator and metadata.
 	 *
@@ -6854,6 +6854,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    RendererFactory2.prototype.createRenderer = function (hostElement, type) { };
 	    return RendererFactory2;
 	}());
+	var RendererStyleFlags2 = {};
+	RendererStyleFlags2.Important = 1;
+	RendererStyleFlags2.DashCase = 2;
+	RendererStyleFlags2[RendererStyleFlags2.Important] = "Important";
+	RendererStyleFlags2[RendererStyleFlags2.DashCase] = "DashCase";
 	/**
 	 * \@experimental
 	 * @abstract
@@ -6974,19 +6979,18 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @param {?} el
 	     * @param {?} style
 	     * @param {?} value
-	     * @param {?} hasVendorPrefix
-	     * @param {?} hasImportant
+	     * @param {?=} flags
 	     * @return {?}
 	     */
-	    Renderer2.prototype.setStyle = function (el, style, value, hasVendorPrefix, hasImportant) { };
+	    Renderer2.prototype.setStyle = function (el, style, value, flags) { };
 	    /**
 	     * @abstract
 	     * @param {?} el
 	     * @param {?} style
-	     * @param {?} hasVendorPrefix
+	     * @param {?=} flags
 	     * @return {?}
 	     */
-	    Renderer2.prototype.removeStyle = function (el, style, hasVendorPrefix) { };
+	    Renderer2.prototype.removeStyle = function (el, style, flags) { };
 	    /**
 	     * @abstract
 	     * @param {?} el
@@ -10867,10 +10871,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    }
 	    var /** @type {?} */ renderer = view.renderer;
 	    if (renderValue != null) {
-	        renderer.setStyle(renderNode, name, renderValue, false, false);
+	        renderer.setStyle(renderNode, name, renderValue);
 	    }
 	    else {
-	        renderer.removeStyle(renderNode, name, false);
+	        renderer.removeStyle(renderNode, name);
 	    }
 	}
 	/**
@@ -11718,10 +11722,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     */
 	    RendererAdapter.prototype.setElementStyle = function (renderElement, styleName, styleValue) {
 	        if (styleValue != null) {
-	            this.delegate.setStyle(renderElement, styleName, styleValue, false, false);
+	            this.delegate.setStyle(renderElement, styleName, styleValue);
 	        }
 	        else {
-	            this.delegate.removeStyle(renderElement, styleName, false);
+	            this.delegate.removeStyle(renderElement, styleName);
 	        }
 	    };
 	    /**
@@ -14390,29 +14394,28 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @param {?} el
 	     * @param {?} style
 	     * @param {?} value
-	     * @param {?} hasVendorPrefix
-	     * @param {?} hasImportant
+	     * @param {?} flags
 	     * @return {?}
 	     */
-	    DebugRenderer2.prototype.setStyle = function (el, style, value, hasVendorPrefix, hasImportant) {
+	    DebugRenderer2.prototype.setStyle = function (el, style, value, flags) {
 	        var /** @type {?} */ debugEl = getDebugNode(el);
 	        if (debugEl && debugEl instanceof DebugElement) {
 	            debugEl.styles[style] = value;
 	        }
-	        this.delegate.setStyle(el, style, value, hasVendorPrefix, hasImportant);
+	        this.delegate.setStyle(el, style, value, flags);
 	    };
 	    /**
 	     * @param {?} el
 	     * @param {?} style
-	     * @param {?} hasVendorPrefix
+	     * @param {?} flags
 	     * @return {?}
 	     */
-	    DebugRenderer2.prototype.removeStyle = function (el, style, hasVendorPrefix) {
+	    DebugRenderer2.prototype.removeStyle = function (el, style, flags) {
 	        var /** @type {?} */ debugEl = getDebugNode(el);
 	        if (debugEl && debugEl instanceof DebugElement) {
 	            debugEl.styles[style] = null;
 	        }
-	        this.delegate.removeStyle(el, style, hasVendorPrefix);
+	        this.delegate.removeStyle(el, style, flags);
 	    };
 	    /**
 	     * @param {?} el
@@ -15148,6 +15151,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    Renderer: Renderer,
 	    Renderer2: Renderer2,
 	    RendererFactory2: RendererFactory2,
+	    RendererStyleFlags2: RendererStyleFlags2,
 	    RootRenderer: RootRenderer,
 	    COMPILER_OPTIONS: COMPILER_OPTIONS,
 	    Compiler: Compiler,
@@ -15275,7 +15279,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('4.0.0-rc.3-fa1920a');
+	var /** @type {?} */ VERSION$1 = new Version('4.0.0-rc.3-ff71eff');
 	/**
 	 * @license
 	 * Copyright Google Inc. All Rights Reserved.
@@ -41750,7 +41754,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$5 = new core_1.Version('4.0.0-rc.3-fa1920a');
+	var VERSION$5 = new core_1.Version('4.0.0-rc.3-ff71eff');
 
 	var __moduleExports$38 = {
 		VERSION: VERSION$5
@@ -46103,7 +46107,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION = new Version('4.0.0-rc.3-fa1920a');
+	var VERSION = new Version('4.0.0-rc.3-ff71eff');
 
 	exports.createLanguageService = createLanguageService;
 	exports.create = create;
