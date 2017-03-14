@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.0.0-rc.3-0aad270
+ * @license Angular v4.0.0-rc.3-2c5a671
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2794,7 +2794,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$2 = new Version('4.0.0-rc.3-0aad270');
+	var /** @type {?} */ VERSION$2 = new Version('4.0.0-rc.3-2c5a671');
 	/**
 	 * Inject decorator and metadata.
 	 *
@@ -12335,6 +12335,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 */
 	function callProviderLifecycles(view, index, lifecycles) {
 	    var /** @type {?} */ provider = asProviderData(view, index).instance;
+	    if (provider === NOT_CREATED) {
+	        return;
+	    }
 	    Services.setCurrentNode(view, index);
 	    if (lifecycles & 524288 /* AfterContentInit */) {
 	        provider.ngAfterContentInit();
@@ -14560,7 +14563,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * \@experimental
 	 */
 	var ApplicationModule = (function () {
-	    function ApplicationModule() {
+	    /**
+	     * @param {?} appRef
+	     */
+	    function ApplicationModule(appRef) {
 	    }
 	    return ApplicationModule;
 	}());
@@ -14584,7 +14590,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            },] },
 	];
 	/** @nocollapse */
-	ApplicationModule.ctorParameters = function () { return []; };
+	ApplicationModule.ctorParameters = function () { return [
+	    { type: ApplicationRef, },
+	]; };
 	/**
 	 * @license
 	 * Copyright Google Inc. All Rights Reserved.
@@ -15345,7 +15353,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('4.0.0-rc.3-0aad270');
+	var /** @type {?} */ VERSION$1 = new Version('4.0.0-rc.3-2c5a671');
 	/**
 	 * @license
 	 * Copyright Google Inc. All Rights Reserved.
@@ -25688,7 +25696,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                ((provider.token.identifier)).lifecycleHooks ?
 	                ((provider.token.identifier)).lifecycleHooks :
 	                [];
-	            resolvedProvider = new ProviderAst(provider.token, provider.multi, eager || lifecycleHooks.length > 0, [provider], providerType, lifecycleHooks, sourceSpan);
+	            var /** @type {?} */ isUseValue = !(provider.useClass || provider.useExisting || provider.useFactory);
+	            resolvedProvider = new ProviderAst(provider.token, provider.multi, eager || isUseValue, [provider], providerType, lifecycleHooks, sourceSpan);
 	            targetProvidersByToken.set(tokenReference(provider.token), resolvedProvider);
 	        }
 	        else {
@@ -31553,6 +31562,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        this.getters = [];
 	        this.methods = [];
 	        this.ctorStmts = [];
+	        this._lazyProps = new Map();
 	        this._tokens = [];
 	        this._instances = new Map();
 	        this._createStmts = [];
@@ -31568,7 +31578,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        var /** @type {?} */ propName = "_" + tokenName(resolvedProvider.token) + "_" + this._instances.size;
 	        var /** @type {?} */ instance = this._createProviderProperty(propName, resolvedProvider, providerValueExpressions, resolvedProvider.multiProvider, resolvedProvider.eager);
 	        if (resolvedProvider.lifecycleHooks.indexOf(ɵLifecycleHooks.OnDestroy) !== -1) {
-	            this._destroyStmts.push(instance.callMethod('ngOnDestroy', []).toStmt());
+	            var /** @type {?} */ callNgOnDestroy = instance.callMethod('ngOnDestroy', []);
+	            if (!resolvedProvider.eager) {
+	                callNgOnDestroy = this._lazyProps.get(instance.name).and(callNgOnDestroy);
+	            }
+	            this._destroyStmts.push(callNgOnDestroy.toStmt());
 	        }
 	        this._tokens.push(resolvedProvider.token);
 	        this._instances.set(tokenReference(resolvedProvider.token), instance);
@@ -31657,14 +31671,15 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            this._createStmts.push(THIS_EXPR.prop(propName).set(resolvedProviderValueExpr).toStmt());
 	        }
 	        else {
-	            var /** @type {?} */ internalField = "_" + propName;
-	            this.fields.push(new ClassField(internalField, type));
+	            var /** @type {?} */ internalFieldProp = THIS_EXPR.prop("_" + propName);
+	            this.fields.push(new ClassField(internalFieldProp.name, type));
 	            // Note: Equals is important for JS so that it also checks the undefined case!
 	            var /** @type {?} */ getterStmts = [
-	                new IfStmt(THIS_EXPR.prop(internalField).isBlank(), [THIS_EXPR.prop(internalField).set(resolvedProviderValueExpr).toStmt()]),
-	                new ReturnStatement(THIS_EXPR.prop(internalField))
+	                new IfStmt(internalFieldProp.isBlank(), [internalFieldProp.set(resolvedProviderValueExpr).toStmt()]),
+	                new ReturnStatement(internalFieldProp)
 	            ];
 	            this.getters.push(new ClassGetter(propName, getterStmts, type));
+	            this._lazyProps.set(propName, internalFieldProp);
 	        }
 	        return THIS_EXPR.prop(propName);
 	    };
@@ -42414,7 +42429,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$5 = new core_1.Version('4.0.0-rc.3-0aad270');
+	var VERSION$5 = new core_1.Version('4.0.0-rc.3-2c5a671');
 
 	var __moduleExports$38 = {
 		VERSION: VERSION$5
@@ -46767,7 +46782,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION = new Version('4.0.0-rc.3-0aad270');
+	var VERSION = new Version('4.0.0-rc.3-2c5a671');
 
 	exports.createLanguageService = createLanguageService;
 	exports.create = create;
