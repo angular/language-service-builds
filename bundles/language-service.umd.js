@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.0.0-rc.3-f093501
+ * @license Angular v4.0.0-rc.3-13686bb
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2794,7 +2794,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$2 = new Version('4.0.0-rc.3-f093501');
+	var /** @type {?} */ VERSION$2 = new Version('4.0.0-rc.3-13686bb');
 	/**
 	 * Inject decorator and metadata.
 	 *
@@ -5059,9 +5059,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @param {?} injector
 	     * @param {?=} projectableNodes
 	     * @param {?=} rootSelectorOrNode
+	     * @param {?=} ngModule
 	     * @return {?}
 	     */
-	    ComponentFactory.prototype.create = function (injector, projectableNodes, rootSelectorOrNode) { };
+	    ComponentFactory.prototype.create = function (injector, projectableNodes, rootSelectorOrNode, ngModule) { };
 	    return ComponentFactory;
 	}());
 	/**
@@ -5106,9 +5107,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    /**
 	     * @param {?} factories
 	     * @param {?} _parent
+	     * @param {?} _ngModule
 	     */
-	    function CodegenComponentFactoryResolver(factories, _parent) {
+	    function CodegenComponentFactoryResolver(factories, _parent, _ngModule) {
 	        this._parent = _parent;
+	        this._ngModule = _ngModule;
 	        this._factories = new Map();
 	        for (var i = 0; i < factories.length; i++) {
 	            var factory = factories[i];
@@ -5120,13 +5123,217 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @return {?}
 	     */
 	    CodegenComponentFactoryResolver.prototype.resolveComponentFactory = function (component) {
-	        var /** @type {?} */ result = this._factories.get(component);
-	        if (!result) {
-	            result = this._parent.resolveComponentFactory(component);
-	        }
-	        return result;
+	        var /** @type {?} */ factory = this._factories.get(component) || this._parent.resolveComponentFactory(component);
+	        return factory ? new ComponentFactoryBoundToModule(factory, this._ngModule) : null;
 	    };
 	    return CodegenComponentFactoryResolver;
+	}());
+	var ComponentFactoryBoundToModule = (function (_super) {
+	    __extends$2$1(ComponentFactoryBoundToModule, _super);
+	    /**
+	     * @param {?} factory
+	     * @param {?} ngModule
+	     */
+	    function ComponentFactoryBoundToModule(factory, ngModule) {
+	        var _this = _super.call(this) || this;
+	        _this.factory = factory;
+	        _this.ngModule = ngModule;
+	        return _this;
+	    }
+	    Object.defineProperty(ComponentFactoryBoundToModule.prototype, "selector", {
+	        /**
+	         * @return {?}
+	         */
+	        get: function () { return this.factory.selector; },
+	        enumerable: true,
+	        configurable: true
+	    });
+	    Object.defineProperty(ComponentFactoryBoundToModule.prototype, "componentType", {
+	        /**
+	         * @return {?}
+	         */
+	        get: function () { return this.factory.componentType; },
+	        enumerable: true,
+	        configurable: true
+	    });
+	    /**
+	     * @param {?} injector
+	     * @param {?=} projectableNodes
+	     * @param {?=} rootSelectorOrNode
+	     * @param {?=} ngModule
+	     * @return {?}
+	     */
+	    ComponentFactoryBoundToModule.prototype.create = function (injector, projectableNodes, rootSelectorOrNode, ngModule) {
+	        return this.factory.create(injector, projectableNodes, rootSelectorOrNode, ngModule || this.ngModule);
+	    };
+	    return ComponentFactoryBoundToModule;
+	}(ɵComponentFactory));
+	/**
+	 * Represents an instance of an NgModule created via a {\@link NgModuleFactory}.
+	 *
+	 * `NgModuleRef` provides access to the NgModule Instance as well other objects related to this
+	 * NgModule Instance.
+	 *
+	 * \@stable
+	 * @abstract
+	 */
+	var NgModuleRef = (function () {
+	    function NgModuleRef() {
+	    }
+	    /**
+	     * The injector that contains all of the providers of the NgModule.
+	     * @abstract
+	     * @return {?}
+	     */
+	    NgModuleRef.prototype.injector = function () { };
+	    /**
+	     * The ComponentFactoryResolver to get hold of the ComponentFactories
+	     * declared in the `entryComponents` property of the module.
+	     * @abstract
+	     * @return {?}
+	     */
+	    NgModuleRef.prototype.componentFactoryResolver = function () { };
+	    /**
+	     * The NgModule instance.
+	     * @abstract
+	     * @return {?}
+	     */
+	    NgModuleRef.prototype.instance = function () { };
+	    /**
+	     * Destroys the module instance and all of the data structures associated with it.
+	     * @abstract
+	     * @return {?}
+	     */
+	    NgModuleRef.prototype.destroy = function () { };
+	    /**
+	     * Allows to register a callback that will be called when the module is destroyed.
+	     * @abstract
+	     * @param {?} callback
+	     * @return {?}
+	     */
+	    NgModuleRef.prototype.onDestroy = function (callback) { };
+	    return NgModuleRef;
+	}());
+	/**
+	 * \@experimental
+	 */
+	var NgModuleFactory = (function () {
+	    /**
+	     * @param {?} _injectorClass
+	     * @param {?} _moduleType
+	     */
+	    function NgModuleFactory(_injectorClass, _moduleType) {
+	        this._injectorClass = _injectorClass;
+	        this._moduleType = _moduleType;
+	    }
+	    Object.defineProperty(NgModuleFactory.prototype, "moduleType", {
+	        /**
+	         * @return {?}
+	         */
+	        get: function () { return this._moduleType; },
+	        enumerable: true,
+	        configurable: true
+	    });
+	    /**
+	     * @param {?} parentInjector
+	     * @return {?}
+	     */
+	    NgModuleFactory.prototype.create = function (parentInjector) {
+	        var /** @type {?} */ instance = new this._injectorClass(parentInjector || Injector.NULL);
+	        instance.create();
+	        return instance;
+	    };
+	    return NgModuleFactory;
+	}());
+	var /** @type {?} */ _UNDEFINED = new Object();
+	/**
+	 * @abstract
+	 */
+	var ɵNgModuleInjector = (function () {
+	    /**
+	     * @param {?} parent
+	     * @param {?} factories
+	     * @param {?} bootstrapFactories
+	     */
+	    function NgModuleInjector(parent, factories, bootstrapFactories) {
+	        var _this = this;
+	        this.parent = parent;
+	        this._destroyListeners = [];
+	        this._destroyed = false;
+	        this.bootstrapFactories =
+	            bootstrapFactories.map(function (f) { return new ComponentFactoryBoundToModule(f, _this); });
+	        this._cmpFactoryResolver = new ɵCodegenComponentFactoryResolver(factories, parent.get(ComponentFactoryResolver, ComponentFactoryResolver.NULL), this);
+	    }
+	    /**
+	     * @return {?}
+	     */
+	    NgModuleInjector.prototype.create = function () { this.instance = this.createInternal(); };
+	    /**
+	     * @abstract
+	     * @return {?}
+	     */
+	    NgModuleInjector.prototype.createInternal = function () { };
+	    /**
+	     * @param {?} token
+	     * @param {?=} notFoundValue
+	     * @return {?}
+	     */
+	    NgModuleInjector.prototype.get = function (token, notFoundValue) {
+	        if (notFoundValue === void 0) { notFoundValue = THROW_IF_NOT_FOUND; }
+	        if (token === Injector || token === NgModuleRef) {
+	            return this;
+	        }
+	        if (token === ComponentFactoryResolver) {
+	            return this._cmpFactoryResolver;
+	        }
+	        var /** @type {?} */ result = this.getInternal(token, _UNDEFINED);
+	        return result === _UNDEFINED ? this.parent.get(token, notFoundValue) : result;
+	    };
+	    /**
+	     * @abstract
+	     * @param {?} token
+	     * @param {?} notFoundValue
+	     * @return {?}
+	     */
+	    NgModuleInjector.prototype.getInternal = function (token, notFoundValue) { };
+	    Object.defineProperty(NgModuleInjector.prototype, "injector", {
+	        /**
+	         * @return {?}
+	         */
+	        get: function () { return this; },
+	        enumerable: true,
+	        configurable: true
+	    });
+	    Object.defineProperty(NgModuleInjector.prototype, "componentFactoryResolver", {
+	        /**
+	         * @return {?}
+	         */
+	        get: function () { return this._cmpFactoryResolver; },
+	        enumerable: true,
+	        configurable: true
+	    });
+	    /**
+	     * @return {?}
+	     */
+	    NgModuleInjector.prototype.destroy = function () {
+	        if (this._destroyed) {
+	            throw new Error("The ng module " + ɵstringify(this.instance.constructor) + " has already been destroyed.");
+	        }
+	        this._destroyed = true;
+	        this.destroyInternal();
+	        this._destroyListeners.forEach(function (listener) { return listener(); });
+	    };
+	    /**
+	     * @param {?} callback
+	     * @return {?}
+	     */
+	    NgModuleInjector.prototype.onDestroy = function (callback) { this._destroyListeners.push(callback); };
+	    /**
+	     * @abstract
+	     * @return {?}
+	     */
+	    NgModuleInjector.prototype.destroyInternal = function () { };
+	    return NgModuleInjector;
 	}());
 	var /** @type {?} */ trace;
 	var /** @type {?} */ events;
@@ -6259,7 +6466,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    PlatformRef_.prototype._moduleDoBootstrap = function (moduleRef) {
 	        var /** @type {?} */ appRef = moduleRef.injector.get(ApplicationRef);
 	        if (moduleRef.bootstrapFactories.length > 0) {
-	            moduleRef.bootstrapFactories.forEach(function (compFactory) { return appRef.bootstrap(compFactory); });
+	            moduleRef.bootstrapFactories.forEach(function (f) { return appRef.bootstrap(f); });
 	        }
 	        else if (moduleRef.instance.ngDoBootstrap) {
 	            moduleRef.instance.ngDoBootstrap(appRef);
@@ -6464,7 +6671,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            componentFactory = this._componentFactoryResolver.resolveComponentFactory(componentOrFactory);
 	        }
 	        this._rootComponentTypes.push(componentFactory.componentType);
-	        var /** @type {?} */ compRef = componentFactory.create(this._injector, [], componentFactory.selector);
+	        // Create a factory associated with the current module if it's not bound to some other
+	        var /** @type {?} */ ngModule = componentFactory instanceof ComponentFactoryBoundToModule ?
+	            null :
+	            this._injector.get(NgModuleRef);
+	        var /** @type {?} */ compRef = componentFactory.create(Injector.NULL, [], componentFactory.selector, ngModule);
 	        compRef.onDestroy(function () { _this._unloadComponent(compRef); });
 	        var /** @type {?} */ testability = compRef.injector.get(Testability, null);
 	        if (testability) {
@@ -7014,173 +7225,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    }
 	    return ElementRef;
 	}());
-	/**
-	 * Represents an instance of an NgModule created via a {\@link NgModuleFactory}.
-	 *
-	 * `NgModuleRef` provides access to the NgModule Instance as well other objects related to this
-	 * NgModule Instance.
-	 *
-	 * \@stable
-	 * @abstract
-	 */
-	var NgModuleRef = (function () {
-	    function NgModuleRef() {
-	    }
-	    /**
-	     * The injector that contains all of the providers of the NgModule.
-	     * @abstract
-	     * @return {?}
-	     */
-	    NgModuleRef.prototype.injector = function () { };
-	    /**
-	     * The ComponentFactoryResolver to get hold of the ComponentFactories
-	     * declared in the `entryComponents` property of the module.
-	     * @abstract
-	     * @return {?}
-	     */
-	    NgModuleRef.prototype.componentFactoryResolver = function () { };
-	    /**
-	     * The NgModule instance.
-	     * @abstract
-	     * @return {?}
-	     */
-	    NgModuleRef.prototype.instance = function () { };
-	    /**
-	     * Destroys the module instance and all of the data structures associated with it.
-	     * @abstract
-	     * @return {?}
-	     */
-	    NgModuleRef.prototype.destroy = function () { };
-	    /**
-	     * Allows to register a callback that will be called when the module is destroyed.
-	     * @abstract
-	     * @param {?} callback
-	     * @return {?}
-	     */
-	    NgModuleRef.prototype.onDestroy = function (callback) { };
-	    return NgModuleRef;
-	}());
-	/**
-	 * \@experimental
-	 */
-	var NgModuleFactory = (function () {
-	    /**
-	     * @param {?} _injectorClass
-	     * @param {?} _moduleType
-	     */
-	    function NgModuleFactory(_injectorClass, _moduleType) {
-	        this._injectorClass = _injectorClass;
-	        this._moduleType = _moduleType;
-	    }
-	    Object.defineProperty(NgModuleFactory.prototype, "moduleType", {
-	        /**
-	         * @return {?}
-	         */
-	        get: function () { return this._moduleType; },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    /**
-	     * @param {?} parentInjector
-	     * @return {?}
-	     */
-	    NgModuleFactory.prototype.create = function (parentInjector) {
-	        if (!parentInjector) {
-	            parentInjector = Injector.NULL;
-	        }
-	        var /** @type {?} */ instance = new this._injectorClass(parentInjector);
-	        instance.create();
-	        return instance;
-	    };
-	    return NgModuleFactory;
-	}());
-	var /** @type {?} */ _UNDEFINED = new Object();
-	/**
-	 * @abstract
-	 */
-	var ɵNgModuleInjector = (function (_super) {
-	    __extends$2$1(NgModuleInjector, _super);
-	    /**
-	     * @param {?} parent
-	     * @param {?} factories
-	     * @param {?} bootstrapFactories
-	     */
-	    function NgModuleInjector(parent, factories, bootstrapFactories) {
-	        var _this = _super.call(this, factories, parent.get(ComponentFactoryResolver, ComponentFactoryResolver.NULL)) || this;
-	        _this.parent = parent;
-	        _this.bootstrapFactories = bootstrapFactories;
-	        _this._destroyListeners = [];
-	        _this._destroyed = false;
-	        return _this;
-	    }
-	    /**
-	     * @return {?}
-	     */
-	    NgModuleInjector.prototype.create = function () { this.instance = this.createInternal(); };
-	    /**
-	     * @abstract
-	     * @return {?}
-	     */
-	    NgModuleInjector.prototype.createInternal = function () { };
-	    /**
-	     * @param {?} token
-	     * @param {?=} notFoundValue
-	     * @return {?}
-	     */
-	    NgModuleInjector.prototype.get = function (token, notFoundValue) {
-	        if (notFoundValue === void 0) { notFoundValue = THROW_IF_NOT_FOUND; }
-	        if (token === Injector || token === ComponentFactoryResolver) {
-	            return this;
-	        }
-	        var /** @type {?} */ result = this.getInternal(token, _UNDEFINED);
-	        return result === _UNDEFINED ? this.parent.get(token, notFoundValue) : result;
-	    };
-	    /**
-	     * @abstract
-	     * @param {?} token
-	     * @param {?} notFoundValue
-	     * @return {?}
-	     */
-	    NgModuleInjector.prototype.getInternal = function (token, notFoundValue) { };
-	    Object.defineProperty(NgModuleInjector.prototype, "injector", {
-	        /**
-	         * @return {?}
-	         */
-	        get: function () { return this; },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    Object.defineProperty(NgModuleInjector.prototype, "componentFactoryResolver", {
-	        /**
-	         * @return {?}
-	         */
-	        get: function () { return this; },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    /**
-	     * @return {?}
-	     */
-	    NgModuleInjector.prototype.destroy = function () {
-	        if (this._destroyed) {
-	            throw new Error("The ng module " + ɵstringify(this.instance.constructor) + " has already been destroyed.");
-	        }
-	        this._destroyed = true;
-	        this.destroyInternal();
-	        this._destroyListeners.forEach(function (listener) { return listener(); });
-	    };
-	    /**
-	     * @param {?} callback
-	     * @return {?}
-	     */
-	    NgModuleInjector.prototype.onDestroy = function (callback) { this._destroyListeners.push(callback); };
-	    /**
-	     * @abstract
-	     * @return {?}
-	     */
-	    NgModuleInjector.prototype.destroyInternal = function () { };
-	    return NgModuleInjector;
-	}(ɵCodegenComponentFactoryResolver));
 	/**
 	 * @license
 	 * Copyright Google Inc. All Rights Reserved.
@@ -11136,14 +11180,16 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @param {?} injector
 	     * @param {?=} projectableNodes
 	     * @param {?=} rootSelectorOrNode
+	     * @param {?=} ngModule
 	     * @return {?}
 	     */
-	    ComponentFactory_.prototype.create = function (injector, projectableNodes, rootSelectorOrNode) {
-	        if (projectableNodes === void 0) { projectableNodes = null; }
-	        if (rootSelectorOrNode === void 0) { rootSelectorOrNode = null; }
+	    ComponentFactory_.prototype.create = function (injector, projectableNodes, rootSelectorOrNode, ngModule) {
+	        if (!ngModule) {
+	            throw new Error('ngModule should be provided');
+	        }
 	        var /** @type {?} */ viewDef = resolveViewDefinition(this.viewDefFactory);
 	        var /** @type {?} */ componentNodeIndex = viewDef.nodes[0].element.componentProvider.index;
-	        var /** @type {?} */ view = Services.createRootView(injector, projectableNodes || [], rootSelectorOrNode, viewDef, EMPTY_CONTEXT);
+	        var /** @type {?} */ view = Services.createRootView(injector, projectableNodes || [], rootSelectorOrNode, viewDef, ngModule, EMPTY_CONTEXT);
 	        var /** @type {?} */ component = asProviderData(view, componentNodeIndex).instance;
 	        view.renderer.setAttribute(asElementData(view, 0).renderElement, 'ng-version', VERSION$2.full);
 	        return new ComponentRef_(view, new ViewRef_(view), component);
@@ -11937,7 +11983,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	function createDirectiveInstance(view, def) {
 	    // components can see other private services, other directives can't.
 	    var /** @type {?} */ allowPrivateServices = (def.flags & 16384 /* Component */) > 0;
-	    var /** @type {?} */ providerDef = def.provider;
 	    // directives are always eager and classes!
 	    var /** @type {?} */ instance = createClass(view, def.parent, allowPrivateServices, def.provider.value, def.provider.deps);
 	    if (def.outputs.length) {
@@ -12162,6 +12207,24 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    }
 	    return injectable;
 	}
+	// This default value is when checking the hierarchy for a token.
+	//
+	// It means both:
+	// - the token is not provided by the current injector,
+	// - only the element injectors should be checked (ie do not check module injectors
+	//
+	//          mod1
+	//         /
+	//       el1   mod2
+	//         \  /
+	//         el2
+	//
+	// When requesting el2.injector.get(token), we should check in the following order and return the
+	// first found value:
+	// - el2.injector.get(token, default)
+	// - el1.injector.get(token, NOT_FOUND_CHECK_ONLY_ELEMENT_INJECTOR) -> do not check the module
+	// - mod2.injector.get(token, default)
+	var /** @type {?} */ NOT_FOUND_CHECK_ONLY_ELEMENT_INJECTOR = {};
 	/**
 	 * @param {?} view
 	 * @param {?} elDef
@@ -12227,7 +12290,17 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        elDef = viewParentEl(view);
 	        view = view.parent;
 	    }
-	    return startView.root.injector.get(depDef.token, notFoundValue);
+	    var /** @type {?} */ value = startView.root.injector.get(depDef.token, NOT_FOUND_CHECK_ONLY_ELEMENT_INJECTOR);
+	    if (value !== NOT_FOUND_CHECK_ONLY_ELEMENT_INJECTOR ||
+	        notFoundValue === NOT_FOUND_CHECK_ONLY_ELEMENT_INJECTOR) {
+	        // Return the value from the root element injector when
+	        // - it provides it
+	        //   (value !== NOT_FOUND_CHECK_ONLY_ELEMENT_INJECTOR)
+	        // - the module injector should not be checked
+	        //   (notFoundValue === NOT_FOUND_CHECK_ONLY_ELEMENT_INJECTOR)
+	        return value;
+	    }
+	    return startView.root.ngModule.injector.get(depDef.token, notFoundValue);
 	}
 	/**
 	 * @param {?} view
@@ -13703,43 +13776,46 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    };
 	}
 	/**
-	 * @param {?} injector
+	 * @param {?} elInjector
 	 * @param {?} projectableNodes
 	 * @param {?} rootSelectorOrNode
 	 * @param {?} def
+	 * @param {?} ngModule
 	 * @param {?=} context
 	 * @return {?}
 	 */
-	function createProdRootView(injector, projectableNodes, rootSelectorOrNode, def, context) {
-	    var /** @type {?} */ rendererFactory = injector.get(RendererFactory2);
-	    return createRootView(createRootData(injector, rendererFactory, projectableNodes, rootSelectorOrNode), def, context);
+	function createProdRootView(elInjector, projectableNodes, rootSelectorOrNode, def, ngModule, context) {
+	    var /** @type {?} */ rendererFactory = ngModule.injector.get(RendererFactory2);
+	    return createRootView(createRootData(elInjector, ngModule, rendererFactory, projectableNodes, rootSelectorOrNode), def, context);
 	}
 	/**
-	 * @param {?} injector
+	 * @param {?} elInjector
 	 * @param {?} projectableNodes
 	 * @param {?} rootSelectorOrNode
 	 * @param {?} def
+	 * @param {?} ngModule
 	 * @param {?=} context
 	 * @return {?}
 	 */
-	function debugCreateRootView(injector, projectableNodes, rootSelectorOrNode, def, context) {
-	    var /** @type {?} */ rendererFactory = injector.get(RendererFactory2);
-	    var /** @type {?} */ root = createRootData(injector, new DebugRendererFactory2(rendererFactory), projectableNodes, rootSelectorOrNode);
+	function debugCreateRootView(elInjector, projectableNodes, rootSelectorOrNode, def, ngModule, context) {
+	    var /** @type {?} */ rendererFactory = ngModule.injector.get(RendererFactory2);
+	    var /** @type {?} */ root = createRootData(elInjector, ngModule, new DebugRendererFactory2(rendererFactory), projectableNodes, rootSelectorOrNode);
 	    return callWithDebugContext(DebugAction.create, createRootView, null, [root, def, context]);
 	}
 	/**
-	 * @param {?} injector
+	 * @param {?} elInjector
+	 * @param {?} ngModule
 	 * @param {?} rendererFactory
 	 * @param {?} projectableNodes
 	 * @param {?} rootSelectorOrNode
 	 * @return {?}
 	 */
-	function createRootData(injector, rendererFactory, projectableNodes, rootSelectorOrNode) {
-	    var /** @type {?} */ sanitizer = injector.get(Sanitizer);
+	function createRootData(elInjector, ngModule, rendererFactory, projectableNodes, rootSelectorOrNode) {
+	    var /** @type {?} */ sanitizer = ngModule.injector.get(Sanitizer);
 	    var /** @type {?} */ renderer = rendererFactory.createRenderer(null, null);
 	    return {
-	        injector: injector,
-	        projectableNodes: projectableNodes,
+	        ngModule: ngModule,
+	        injector: elInjector, projectableNodes: projectableNodes,
 	        selectorOrNode: rootSelectorOrNode, sanitizer: sanitizer, rendererFactory: rendererFactory, renderer: renderer
 	    };
 	}
@@ -15353,7 +15429,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('4.0.0-rc.3-f093501');
+	var /** @type {?} */ VERSION$1 = new Version('4.0.0-rc.3-13686bb');
 	/**
 	 * @license
 	 * Copyright Google Inc. All Rights Reserved.
@@ -24923,6 +24999,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    runtime: ANALYZE_FOR_ENTRY_COMPONENTS
 	};
 	Identifiers.ElementRef = { name: 'ElementRef', moduleUrl: CORE, runtime: ElementRef };
+	Identifiers.NgModuleRef = { name: 'NgModuleRef', moduleUrl: CORE, runtime: NgModuleRef };
 	Identifiers.ViewContainerRef = { name: 'ViewContainerRef', moduleUrl: CORE, runtime: ViewContainerRef };
 	Identifiers.ChangeDetectorRef = { name: 'ChangeDetectorRef', moduleUrl: CORE, runtime: ChangeDetectorRef };
 	Identifiers.QueryList = { name: 'QueryList', moduleUrl: CORE, runtime: QueryList };
@@ -31693,10 +31770,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            result = literal(dep.value);
 	        }
 	        if (!dep.isSkipSelf) {
-	            if (dep.token &&
-	                (tokenReference(dep.token) === resolveIdentifier(Identifiers.Injector) ||
-	                    tokenReference(dep.token) === resolveIdentifier(Identifiers.ComponentFactoryResolver))) {
-	                result = THIS_EXPR;
+	            if (dep.token) {
+	                if (tokenReference(dep.token) === resolveIdentifier(Identifiers.Injector)) {
+	                    result = THIS_EXPR;
+	                }
+	                else if (tokenReference(dep.token) === resolveIdentifier(Identifiers.ComponentFactoryResolver)) {
+	                    result = THIS_EXPR.prop('componentFactoryResolver');
+	                }
 	            }
 	            if (!result) {
 	                result = this._instances.get(tokenReference(dep.token));
@@ -36388,13 +36468,12 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    var /** @type {?} */ componentDirMeta = directives.find(function (dirAst) { return dirAst.directive.isComponent; });
 	    if (componentDirMeta && componentDirMeta.directive.entryComponents.length) {
 	        var /** @type {?} */ entryComponentFactories = componentDirMeta.directive.entryComponents.map(function (entryComponent) { return importExpr({ reference: entryComponent.componentFactory }); });
-	        var /** @type {?} */ cfrExpr = importExpr(createIdentifier(Identifiers.CodegenComponentFactoryResolver))
-	            .instantiate([literalArr(entryComponentFactories)]);
 	        var /** @type {?} */ token = createIdentifierToken(Identifiers.ComponentFactoryResolver);
 	        var /** @type {?} */ classMeta = {
 	            diDeps: [
 	                { isValue: true, value: literalArr(entryComponentFactories) },
-	                { token: token, isSkipSelf: true, isOptional: true }
+	                { token: token, isSkipSelf: true, isOptional: true },
+	                { token: createIdentifierToken(Identifiers.NgModuleRef) },
 	            ],
 	            lifecycleHooks: [],
 	            reference: resolveIdentifier(Identifiers.CodegenComponentFactoryResolver)
@@ -42429,7 +42508,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$5 = new core_1.Version('4.0.0-rc.3-f093501');
+	var VERSION$5 = new core_1.Version('4.0.0-rc.3-13686bb');
 
 	var __moduleExports$38 = {
 		VERSION: VERSION$5
@@ -46782,7 +46861,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION = new Version('4.0.0-rc.3-f093501');
+	var VERSION = new Version('4.0.0-rc.3-13686bb');
 
 	exports.createLanguageService = createLanguageService;
 	exports.create = create;
