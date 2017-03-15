@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.0.0-rc.3-a3e32fb
+ * @license Angular v4.0.0-rc.3-322bf7a
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2794,7 +2794,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$2 = new Version('4.0.0-rc.3-a3e32fb');
+	var /** @type {?} */ VERSION$2 = new Version('4.0.0-rc.3-322bf7a');
 	/**
 	 * Inject decorator and metadata.
 	 *
@@ -4927,8 +4927,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * the template of the given component.
 	     * This is used by the `upgrade` library to compile the appropriate transclude content
 	     * in the AngularJS wrapper component.
-	     *
-	     * @deprecated since v4. Use ComponentFactory.ngContentSelectors instead.
 	     * @param {?} component
 	     * @return {?}
 	     */
@@ -5064,24 +5062,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     */
 	    ComponentFactory.prototype.componentType = function () { };
 	    /**
-	     * selector for all <ng-content> elements in the component.
-	     * @abstract
-	     * @return {?}
-	     */
-	    ComponentFactory.prototype.ngContentSelectors = function () { };
-	    /**
-	     * the inputs of the component.
-	     * @abstract
-	     * @return {?}
-	     */
-	    ComponentFactory.prototype.inputs = function () { };
-	    /**
-	     * the outputs of the component.
-	     * @abstract
-	     * @return {?}
-	     */
-	    ComponentFactory.prototype.outputs = function () { };
-	    /**
 	     * Creates a new component.
 	     * @abstract
 	     * @param {?} injector
@@ -5181,30 +5161,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	         * @return {?}
 	         */
 	        get: function () { return this.factory.componentType; },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    Object.defineProperty(ComponentFactoryBoundToModule.prototype, "ngContentSelectors", {
-	        /**
-	         * @return {?}
-	         */
-	        get: function () { return this.factory.ngContentSelectors; },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    Object.defineProperty(ComponentFactoryBoundToModule.prototype, "inputs", {
-	        /**
-	         * @return {?}
-	         */
-	        get: function () { return this.factory.inputs; },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    Object.defineProperty(ComponentFactoryBoundToModule.prototype, "outputs", {
-	        /**
-	         * @return {?}
-	         */
-	        get: function () { return this.factory.outputs; },
 	        enumerable: true,
 	        configurable: true
 	    });
@@ -11257,23 +11213,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @param {?} selector
 	 * @param {?} componentType
 	 * @param {?} viewDefFactory
-	 * @param {?} inputs
-	 * @param {?} outputs
-	 * @param {?} ngContentSelectors
 	 * @return {?}
 	 */
-	function ɵccf(selector, componentType, viewDefFactory, inputs, outputs, ngContentSelectors) {
-	    var /** @type {?} */ inputsArr = [];
-	    for (var /** @type {?} */ propName in inputs) {
-	        var /** @type {?} */ templateName = inputs[propName];
-	        inputsArr.push({ propName: propName, templateName: templateName });
-	    }
-	    var /** @type {?} */ outputsArr = [];
-	    for (var /** @type {?} */ propName in outputs) {
-	        var /** @type {?} */ templateName = outputs[propName];
-	        outputsArr.push({ propName: propName, templateName: templateName });
-	    }
-	    return new ComponentFactory_(selector, componentType, viewDefFactory, inputsArr, outputsArr, ngContentSelectors);
+	function ɵccf(selector, componentType, viewDefFactory) {
+	    return new ComponentFactory_(selector, componentType, viewDefFactory);
 	}
 	/**
 	 * @param {?} componentFactory
@@ -11288,17 +11231,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @param {?} selector
 	     * @param {?} componentType
 	     * @param {?} viewDefFactory
-	     * @param {?} inputs
-	     * @param {?} outputs
-	     * @param {?} ngContentSelectors
 	     */
-	    function ComponentFactory_(selector, componentType, viewDefFactory, inputs, outputs, ngContentSelectors) {
+	    function ComponentFactory_(selector, componentType, viewDefFactory) {
 	        var _this = _super.call(this) || this;
 	        _this.selector = selector;
 	        _this.componentType = componentType;
-	        _this.inputs = inputs;
-	        _this.outputs = outputs;
-	        _this.ngContentSelectors = ngContentSelectors;
 	        _this.viewDefFactory = viewDefFactory;
 	        return _this;
 	    }
@@ -15558,7 +15495,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('4.0.0-rc.3-a3e32fb');
+	var /** @type {?} */ VERSION$1 = new Version('4.0.0-rc.3-322bf7a');
 	/**
 	 * @license
 	 * Copyright Google Inc. All Rights Reserved.
@@ -28897,31 +28834,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        }
 	        else {
 	            var /** @type {?} */ hostView = this.getHostComponentViewClass(dirType);
-	            // Note: inputs / outputs / ngContentSelectors will be filled later once the template is
-	            // loaded.
-	            return ɵccf(selector, dirType, /** @type {?} */ (hostView), {}, {}, []);
+	            return ɵccf(selector, dirType, /** @type {?} */ (hostView));
 	        }
-	    };
-	    /**
-	     * @param {?} factory
-	     * @param {?} inputs
-	     * @param {?} outputs
-	     * @param {?} ngContentSelectors
-	     * @return {?}
-	     */
-	    CompileMetadataResolver.prototype.initComponentFactory = function (factory, inputs, outputs, ngContentSelectors) {
-	        if (!(factory instanceof StaticSymbol)) {
-	            for (var /** @type {?} */ propName in inputs) {
-	                var /** @type {?} */ templateName = inputs[propName];
-	                factory.inputs.push({ propName: propName, templateName: templateName });
-	            }
-	            for (var /** @type {?} */ propName in outputs) {
-	                var /** @type {?} */ templateName = outputs[propName];
-	                factory.outputs.push({ propName: propName, templateName: templateName });
-	            }
-	            (_a = factory.ngContentSelectors).push.apply(_a, ngContentSelectors);
-	        }
-	        var _a;
 	    };
 	    /**
 	     * @param {?} type
@@ -28972,9 +28886,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                componentFactory: metadata.componentFactory,
 	                template: templateMetadata
 	            });
-	            if (templateMetadata) {
-	                _this.initComponentFactory(metadata.componentFactory, metadata.inputs, metadata.outputs, templateMetadata.ngContentSelectors);
-	            }
 	            _this._directiveCache.set(directiveType, normalizedDirMeta);
 	            _this._summaryCache.set(directiveType, normalizedDirMeta.toSummary());
 	            return normalizedDirMeta;
@@ -37414,24 +37325,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        var /** @type {?} */ hostViewFactoryVar = this._compileComponent(hostMeta, ngModule, [compMeta.type], null, fileSuffix, targetStatements)
 	            .viewClassVar;
 	        var /** @type {?} */ compFactoryVar = componentFactoryName(compMeta.type.reference);
-	        var /** @type {?} */ inputsExprs = [];
-	        for (var /** @type {?} */ propName in compMeta.inputs) {
-	            var /** @type {?} */ templateName = compMeta.inputs[propName];
-	            // Don't quote so that the key gets minified...
-	            inputsExprs.push(new LiteralMapEntry(propName, literal(templateName), false));
-	        }
-	        var /** @type {?} */ outputsExprs = [];
-	        for (var /** @type {?} */ propName in compMeta.outputs) {
-	            var /** @type {?} */ templateName = compMeta.outputs[propName];
-	            // Don't quote so that the key gets minified...
-	            outputsExprs.push(new LiteralMapEntry(propName, literal(templateName), false));
-	        }
 	        targetStatements.push(variable(compFactoryVar)
 	            .set(importExpr(createIdentifier(Identifiers.createComponentFactory)).callFn([
-	            literal(compMeta.selector), importExpr(compMeta.type),
-	            variable(hostViewFactoryVar), new LiteralMapExpr(inputsExprs),
-	            new LiteralMapExpr(outputsExprs),
-	            literalArr(compMeta.template.ngContentSelectors.map(function (selector) { return literal(selector); }))
+	            literal(compMeta.selector),
+	            importExpr(compMeta.type),
+	            variable(hostViewFactoryVar),
 	        ]))
 	            .toDeclStmt(importType(createIdentifier(Identifiers.ComponentFactory), [importType(compMeta.type)], [TypeModifier.Const]), [StmtModifier.Final]));
 	        return compFactoryVar;
@@ -39938,9 +39836,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @param {?} _viewCompiler
 	     * @param {?} _ngModuleCompiler
 	     * @param {?} _compilerConfig
-	     * @param {?} _console
 	     */
-	    function JitCompiler(_injector, _metadataResolver, _templateParser, _styleCompiler, _viewCompiler, _ngModuleCompiler, _compilerConfig, _console) {
+	    function JitCompiler(_injector, _metadataResolver, _templateParser, _styleCompiler, _viewCompiler, _ngModuleCompiler, _compilerConfig) {
 	        this._injector = _injector;
 	        this._metadataResolver = _metadataResolver;
 	        this._templateParser = _templateParser;
@@ -39948,7 +39845,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        this._viewCompiler = _viewCompiler;
 	        this._ngModuleCompiler = _ngModuleCompiler;
 	        this._compilerConfig = _compilerConfig;
-	        this._console = _console;
 	        this._compiledTemplateCache = new Map();
 	        this._compiledHostTemplateCache = new Map();
 	        this._compiledDirectiveWrapperCache = new Map();
@@ -39996,7 +39892,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @return {?}
 	     */
 	    JitCompiler.prototype.getNgContentSelectors = function (component) {
-	        this._console.warn('Compiler.getNgContentSelectors is deprecated. Use ComponentFactory.ngContentSelectors instead!');
 	        var /** @type {?} */ template = this._compiledTemplateCache.get(component);
 	        if (!template) {
 	            throw new Error("The component " + ɵstringify(component) + " is not yet compiled!");
@@ -40261,7 +40156,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    { type: ViewCompiler, },
 	    { type: NgModuleCompiler, },
 	    { type: CompilerConfig, },
-	    { type: ɵConsole, },
 	]; };
 	var CompiledTemplate = (function () {
 	    /**
@@ -43086,7 +42980,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$5 = new core_1.Version('4.0.0-rc.3-a3e32fb');
+	var VERSION$5 = new core_1.Version('4.0.0-rc.3-322bf7a');
 
 	var __moduleExports$38 = {
 		VERSION: VERSION$5
@@ -47439,7 +47333,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION = new Version('4.0.0-rc.3-a3e32fb');
+	var VERSION = new Version('4.0.0-rc.3-322bf7a');
 
 	exports.createLanguageService = createLanguageService;
 	exports.create = create;
