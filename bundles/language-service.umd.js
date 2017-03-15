@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.0.0-rc.3-b00fe20
+ * @license Angular v4.0.0-rc.3-36ce0af
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2794,7 +2794,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$2 = new Version('4.0.0-rc.3-b00fe20');
+	var /** @type {?} */ VERSION$2 = new Version('4.0.0-rc.3-36ce0af');
 	/**
 	 * Inject decorator and metadata.
 	 *
@@ -15495,7 +15495,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('4.0.0-rc.3-b00fe20');
+	var /** @type {?} */ VERSION$1 = new Version('4.0.0-rc.3-36ce0af');
 	/**
 	 * @license
 	 * Copyright Google Inc. All Rights Reserved.
@@ -40841,10 +40841,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return value && value.__symbolic === 'class';
 	}
 	var isClassMetadata_1 = isClassMetadata;
-	function isInterfaceMetadata(value) {
-	    return value && value.__symbolic === 'interface';
-	}
-	var isInterfaceMetadata_1 = isInterfaceMetadata;
 	function isMemberMetadata(value) {
 	    if (value) {
 	        switch (value.__symbolic) {
@@ -40945,7 +40941,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 		VERSION: VERSION$4,
 		isModuleMetadata: isModuleMetadata_1,
 		isClassMetadata: isClassMetadata_1,
-		isInterfaceMetadata: isInterfaceMetadata_1,
 		isMemberMetadata: isMemberMetadata_1,
 		isMethodMetadata: isMethodMetadata_1,
 		isConstructorMetadata: isConstructorMetadata_1,
@@ -41849,11 +41844,15 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            }
 	        });
 	        var isExportedIdentifier = function (identifier) { return exportMap.has(identifier.text); };
-	        var isExported = function (node) { return isExport(node) || isExportedIdentifier(node.name); };
+	        var isExported = function (node) {
+	            return isExport(node) || isExportedIdentifier(node.name);
+	        };
 	        var exportedIdentifierName = function (identifier) {
 	            return exportMap.get(identifier.text) || identifier.text;
 	        };
-	        var exportedName = function (node) { return exportedIdentifierName(node.name); };
+	        var exportedName = function (node) {
+	            return exportedIdentifierName(node.name);
+	        };
 	        // Predeclare classes and functions
 	        ts$2.forEachChild(sourceFile, function (node) {
 	            switch (node.kind) {
@@ -41867,14 +41866,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                        else {
 	                            locals.define(className, errorSym('Reference to non-exported class', node, { className: className }));
 	                        }
-	                    }
-	                    break;
-	                case ts$2.SyntaxKind.InterfaceDeclaration:
-	                    var interfaceDeclaration = node;
-	                    if (interfaceDeclaration.name) {
-	                        var interfaceName = interfaceDeclaration.name.text;
-	                        // All references to interfaces should be converted to references to `any`.
-	                        locals.define(interfaceName, { __symbolic: 'reference', name: 'any' });
 	                    }
 	                    break;
 	                case ts$2.SyntaxKind.FunctionDeclaration:
@@ -41937,14 +41928,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                        }
 	                    }
 	                    // Otherwise don't record metadata for the class.
-	                    break;
-	                case ts$2.SyntaxKind.InterfaceDeclaration:
-	                    var interfaceDeclaration = node;
-	                    if (interfaceDeclaration.name && isExported(interfaceDeclaration)) {
-	                        if (!metadata)
-	                            metadata = {};
-	                        metadata[exportedName(interfaceDeclaration)] = { __symbolic: 'interface' };
-	                    }
 	                    break;
 	                case ts$2.SyntaxKind.FunctionDeclaration:
 	                    // Record functions that return a single value. Record the parameter
@@ -42980,7 +42963,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$5 = new core_1.Version('4.0.0-rc.3-b00fe20');
+	var VERSION$5 = new core_1.Version('4.0.0-rc.3-36ce0af');
 
 	var __moduleExports$38 = {
 		VERSION: VERSION$5
@@ -47333,7 +47316,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION = new Version('4.0.0-rc.3-b00fe20');
+	var VERSION = new Version('4.0.0-rc.3-36ce0af');
 
 	exports.createLanguageService = createLanguageService;
 	exports.create = create;
