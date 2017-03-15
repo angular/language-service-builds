@@ -1,11 +1,11 @@
 /**
- * @license Angular v4.0.0-rc.3-3c15916
+ * @license Angular v4.0.0-rc.3-5c34066
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
 import { DomElementSchemaRegistry, TemplateParser, CompilerConfig, Lexer, Parser, I18NHtmlParser, HtmlParser, ImplicitReceiver, PropertyRead, ParseSpan, ASTWithSource, templateVisitAll, visitAll, Attribute, ParseTreeResult, DEFAULT_INTERPOLATION_CONFIG, ResourceLoader, StaticReflector, StaticSymbolResolver, AotSummaryResolver, componentModuleUrl, createOfflineCompileUrlResolver, analyzeNgModules, extractProgramSymbols, SummaryResolver, CompileMetadataResolver, DirectiveNormalizer, PipeResolver, DirectiveResolver, NgModuleResolver, StaticSymbolCache, TagContentType, getHtmlTagDefinition, Element, SelectorMatcher, NAMED_ENTITIES, Text, splitNsName, CssSelector, tokenReference, EmbeddedTemplateAst, identifierName, ElementAst } from '@angular/compiler';
 import * as ts from 'typescript';
-import { ViewEncapsulation, Version } from '@angular/core';
+import { ɵConsole, ViewEncapsulation, Version } from '@angular/core';
 import * as fs from 'fs';
 import * as path from 'path';
 import { CompilerHost, ModuleResolutionHostAdapter } from '@angular/compiler-cli';
@@ -2750,7 +2750,7 @@ var TypeScriptServiceHost = (function () {
                 // are hard-coded.
                 var config = new CompilerConfig({ defaultEncapsulation: ViewEncapsulation.Emulated, useJit: false });
                 var directiveNormalizer = new DirectiveNormalizer(resourceLoader, urlResolver, htmlParser, config);
-                result = this._resolver = new CompileMetadataResolver(config, moduleResolver, directiveResolver, pipeResolver, new SummaryResolver(), elementSchemaRegistry, directiveNormalizer, this._staticSymbolCache, this.reflector, function (error, type) { return _this.collectError(error, type && type.filePath); });
+                result = this._resolver = new CompileMetadataResolver(config, moduleResolver, directiveResolver, pipeResolver, new SummaryResolver(), elementSchemaRegistry, directiveNormalizer, new ɵConsole(), this._staticSymbolCache, this.reflector, function (error, type) { return _this.collectError(error, type && type.filePath); });
             }
             return result;
         },
@@ -4044,6 +4044,6 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version('4.0.0-rc.3-3c15916');
+var VERSION = new Version('4.0.0-rc.3-5c34066');
 
 export { createLanguageService, create, TypeScriptServiceHost, createLanguageServiceFromTypescript, VERSION };
