@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.0.0-rc.3-bf98d9d
+ * @license Angular v4.0.0-rc.3-6772c91
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2794,7 +2794,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$2 = new Version('4.0.0-rc.3-bf98d9d');
+	var /** @type {?} */ VERSION$2 = new Version('4.0.0-rc.3-6772c91');
 	/**
 	 * Inject decorator and metadata.
 	 *
@@ -3017,7 +3017,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    function ErrorHandler(rethrowError) {
 	        if (rethrowError === void 0) { rethrowError = false; }
 	        /**
-	         * @internal
+	         * \@internal
 	         */
 	        this._console = console;
 	        this.rethrowError = rethrowError;
@@ -4427,7 +4427,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     */
 	    function ReflectiveInjector_(_providers, _parent) {
 	        if (_parent === void 0) { _parent = null; }
-	        /** @internal */
+	        /**
+	         * \@internal
+	         */
 	        this._constructionCounter = 0;
 	        this._providers = _providers;
 	        this._parent = _parent;
@@ -4766,7 +4768,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	ApplicationInitStatus.decorators = [
 	    { type: Injectable },
 	];
-	/** @nocollapse */
+	/**
+	 * @nocollapse
+	 */
 	ApplicationInitStatus.ctorParameters = function () { return [
 	    { type: Array, decorators: [{ type: Inject, args: [APP_INITIALIZER,] }, { type: Optional },] },
 	]; };
@@ -4850,7 +4854,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	ɵConsole.decorators = [
 	    { type: Injectable },
 	];
-	/** @nocollapse */
+	/**
+	 * @nocollapse
+	 */
 	ɵConsole.ctorParameters = function () { return []; };
 	/**
 	 * Combination of NgModuleFactory and ComponentFactorys.
@@ -4941,7 +4947,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	Compiler.decorators = [
 	    { type: Injectable },
 	];
-	/** @nocollapse */
+	/**
+	 * @nocollapse
+	 */
 	Compiler.ctorParameters = function () { return []; };
 	/**
 	 * Token to provide CompilerOptions in the platform injector.
@@ -5901,18 +5909,24 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     */
 	    function Testability(_ngZone) {
 	        this._ngZone = _ngZone;
-	        /** @internal */
+	        /**
+	         * \@internal
+	         */
 	        this._pendingCount = 0;
-	        /** @internal */
+	        /**
+	         * \@internal
+	         */
 	        this._isZoneStable = true;
 	        /**
 	         * Whether any work was done since the last 'whenStable' callback. This is
 	         * useful to detect if this could have potentially destabilized another
 	         * component while it is stabilizing.
-	         * @internal
+	         * \@internal
 	         */
 	        this._didWork = false;
-	        /** @internal */
+	        /**
+	         * \@internal
+	         */
 	        this._callbacks = [];
 	        this._watchAngularEvents();
 	    }
@@ -6023,7 +6037,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	Testability.decorators = [
 	    { type: Injectable },
 	];
-	/** @nocollapse */
+	/**
+	 * @nocollapse
+	 */
 	Testability.ctorParameters = function () { return [
 	    { type: NgZone, },
 	]; };
@@ -6033,7 +6049,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 */
 	var TestabilityRegistry = (function () {
 	    function TestabilityRegistry() {
-	        /** @internal */
+	        /**
+	         * \@internal
+	         */
 	        this._applications = new Map();
 	        _testabilityGetter.addToWindow(this);
 	    }
@@ -6072,7 +6090,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	TestabilityRegistry.decorators = [
 	    { type: Injectable },
 	];
-	/** @nocollapse */
+	/**
+	 * @nocollapse
+	 */
 	TestabilityRegistry.ctorParameters = function () { return []; };
 	var _NoopGetTestability = (function () {
 	    function _NoopGetTestability() {
@@ -6482,7 +6502,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	PlatformRef_.decorators = [
 	    { type: Injectable },
 	];
-	/** @nocollapse */
+	/**
+	 * @nocollapse
+	 */
 	PlatformRef_.ctorParameters = function () { return [
 	    { type: Injector, },
 	]; };
@@ -6769,12 +6791,16 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    });
 	    return ApplicationRef_;
 	}(ApplicationRef));
-	/** @internal */
+	/**
+	 * \@internal
+	 */
 	ɵf._tickScope = wtfCreateScope('ApplicationRef#tick()');
 	ɵf.decorators = [
 	    { type: Injectable },
 	];
-	/** @nocollapse */
+	/**
+	 * @nocollapse
+	 */
 	ɵf.ctorParameters = function () { return [
 	    { type: NgZone, },
 	    { type: ɵConsole, },
@@ -7511,7 +7537,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	SystemJsNgModuleLoader.decorators = [
 	    { type: Injectable },
 	];
-	/** @nocollapse */
+	/**
+	 * @nocollapse
+	 */
 	SystemJsNgModuleLoader.ctorParameters = function () { return [
 	    { type: Compiler, },
 	    { type: SystemJsNgModuleLoaderConfig, decorators: [{ type: Optional },] },
@@ -9120,25 +9148,45 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        this.trackById = trackById;
 	        this.currentIndex = null;
 	        this.previousIndex = null;
-	        /** @internal */
+	        /**
+	         * \@internal
+	         */
 	        this._nextPrevious = null;
-	        /** @internal */
+	        /**
+	         * \@internal
+	         */
 	        this._prev = null;
-	        /** @internal */
+	        /**
+	         * \@internal
+	         */
 	        this._next = null;
-	        /** @internal */
+	        /**
+	         * \@internal
+	         */
 	        this._prevDup = null;
-	        /** @internal */
+	        /**
+	         * \@internal
+	         */
 	        this._nextDup = null;
-	        /** @internal */
+	        /**
+	         * \@internal
+	         */
 	        this._prevRemoved = null;
-	        /** @internal */
+	        /**
+	         * \@internal
+	         */
 	        this._nextRemoved = null;
-	        /** @internal */
+	        /**
+	         * \@internal
+	         */
 	        this._nextAdded = null;
-	        /** @internal */
+	        /**
+	         * \@internal
+	         */
 	        this._nextMoved = null;
-	        /** @internal */
+	        /**
+	         * \@internal
+	         */
 	        this._nextIdentityChange = null;
 	    }
 	    /**
@@ -9153,9 +9201,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	}());
 	var _DuplicateItemRecordList = (function () {
 	    function _DuplicateItemRecordList() {
-	        /** @internal */
+	        /**
+	         * \@internal
+	         */
 	        this._head = null;
-	        /** @internal */
+	        /**
+	         * \@internal
+	         */
 	        this._tail = null;
 	    }
 	    /**
@@ -9674,17 +9726,29 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        this.key = key;
 	        this.previousValue = null;
 	        this.currentValue = null;
-	        /** @internal */
+	        /**
+	         * \@internal
+	         */
 	        this._nextPrevious = null;
-	        /** @internal */
+	        /**
+	         * \@internal
+	         */
 	        this._next = null;
-	        /** @internal */
+	        /**
+	         * \@internal
+	         */
 	        this._nextAdded = null;
-	        /** @internal */
+	        /**
+	         * \@internal
+	         */
 	        this._nextRemoved = null;
-	        /** @internal */
+	        /**
+	         * \@internal
+	         */
 	        this._prevRemoved = null;
-	        /** @internal */
+	        /**
+	         * \@internal
+	         */
 	        this._nextChanged = null;
 	    }
 	    /**
@@ -11295,7 +11359,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        this._elDef = _elDef;
 	        this._data = _data;
 	        /**
-	         * @internal
+	         * \@internal
 	         */
 	        this._embeddedViews = [];
 	    }
@@ -14665,7 +14729,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                ]
 	            },] },
 	];
-	/** @nocollapse */
+	/**
+	 * @nocollapse
+	 */
 	ApplicationModule.ctorParameters = function () { return [
 	    { type: ApplicationRef, },
 	]; };
@@ -15429,7 +15495,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('4.0.0-rc.3-bf98d9d');
+	var /** @type {?} */ VERSION$1 = new Version('4.0.0-rc.3-6772c91');
 	/**
 	 * @license
 	 * Copyright Google Inc. All Rights Reserved.
@@ -18829,7 +18895,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	Lexer.decorators = [
 	    { type: CompilerInjectable },
 	];
-	/** @nocollapse */
+	/**
+	 * @nocollapse
+	 */
 	Lexer.ctorParameters = function () { return []; };
 	var Token = (function () {
 	    /**
@@ -19585,7 +19653,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	Parser.decorators = [
 	    { type: CompilerInjectable },
 	];
-	/** @nocollapse */
+	/**
+	 * @nocollapse
+	 */
 	Parser.ctorParameters = function () { return [
 	    { type: Lexer, },
 	]; };
@@ -24721,7 +24791,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	HtmlParser.decorators = [
 	    { type: CompilerInjectable },
 	];
-	/** @nocollapse */
+	/**
+	 * @nocollapse
+	 */
 	HtmlParser.ctorParameters = function () { return []; };
 	/**
 	 * A container for translated messages
@@ -24729,8 +24801,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	var TranslationBundle = (function () {
 	    /**
 	     * @param {?=} _i18nNodesByMsgId
-	     * @param {?} locale
-	     * @param {?} digest
+	     * @param {?=} locale
+	     * @param {?=} digest
 	     * @param {?=} mapperFactory
 	     * @param {?=} missingTranslationStrategy
 	     * @param {?=} console
@@ -24778,10 +24850,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	var I18nToHtmlVisitor = (function () {
 	    /**
 	     * @param {?=} _i18nNodesByMsgId
-	     * @param {?} _locale
-	     * @param {?} _digest
-	     * @param {?} _mapperFactory
-	     * @param {?} _missingTranslationStrategy
+	     * @param {?=} _locale
+	     * @param {?=} _digest
+	     * @param {?=} _mapperFactory
+	     * @param {?=} _missingTranslationStrategy
 	     * @param {?=} _console
 	     */
 	    function I18nToHtmlVisitor(_i18nNodesByMsgId, _locale, _digest, _mapperFactory, _missingTranslationStrategy, _console) {
@@ -25684,7 +25756,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    /**
 	     * @param {?} dep
 	     * @param {?=} eager
-	     * @param {?} requestorSourceSpan
+	     * @param {?=} requestorSourceSpan
 	     * @return {?}
 	     */
 	    NgModuleProviderAnalyzer.prototype._getDependency = function (dep, eager, requestorSourceSpan) {
@@ -26803,7 +26875,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	TemplateParser.decorators = [
 	    { type: CompilerInjectable },
 	];
-	/** @nocollapse */
+	/**
+	 * @nocollapse
+	 */
 	TemplateParser.ctorParameters = function () { return [
 	    { type: CompilerConfig, },
 	    { type: Parser, },
@@ -27643,7 +27717,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	UrlResolver.decorators = [
 	    { type: CompilerInjectable },
 	];
-	/** @nocollapse */
+	/**
+	 * @nocollapse
+	 */
 	UrlResolver.ctorParameters = function () { return [
 	    { type: undefined, decorators: [{ type: Inject, args: [PACKAGE_ROOT_URL,] },] },
 	]; };
@@ -28085,7 +28161,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	DirectiveNormalizer.decorators = [
 	    { type: CompilerInjectable },
 	];
-	/** @nocollapse */
+	/**
+	 * @nocollapse
+	 */
 	DirectiveNormalizer.ctorParameters = function () { return [
 	    { type: ResourceLoader, },
 	    { type: UrlResolver, },
@@ -28341,7 +28419,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	DirectiveResolver.decorators = [
 	    { type: CompilerInjectable },
 	];
-	/** @nocollapse */
+	/**
+	 * @nocollapse
+	 */
 	DirectiveResolver.ctorParameters = function () { return [
 	    { type: ɵReflectorReader, },
 	]; };
@@ -28496,7 +28576,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	NgModuleResolver.decorators = [
 	    { type: CompilerInjectable },
 	];
-	/** @nocollapse */
+	/**
+	 * @nocollapse
+	 */
 	NgModuleResolver.ctorParameters = function () { return [
 	    { type: ɵReflectorReader, },
 	]; };
@@ -28555,7 +28637,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	PipeResolver.decorators = [
 	    { type: CompilerInjectable },
 	];
-	/** @nocollapse */
+	/**
+	 * @nocollapse
+	 */
 	PipeResolver.ctorParameters = function () { return [
 	    { type: ɵReflectorReader, },
 	]; };
@@ -28594,7 +28678,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	SummaryResolver.decorators = [
 	    { type: CompilerInjectable },
 	];
-	/** @nocollapse */
+	/**
+	 * @nocollapse
+	 */
 	SummaryResolver.ctorParameters = function () { return []; };
 	var /** @type {?} */ ERROR_COLLECTOR_TOKEN = new InjectionToken('ErrorCollector');
 	var CompileMetadataResolver = (function () {
@@ -29664,7 +29750,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	CompileMetadataResolver.decorators = [
 	    { type: CompilerInjectable },
 	];
-	/** @nocollapse */
+	/**
+	 * @nocollapse
+	 */
 	CompileMetadataResolver.ctorParameters = function () { return [
 	    { type: CompilerConfig, },
 	    { type: NgModuleResolver, },
@@ -30894,7 +30982,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	var AbstractClassPart = (function () {
 	    /**
 	     * @param {?=} type
-	     * @param {?} modifiers
+	     * @param {?=} modifiers
 	     */
 	    function AbstractClassPart(type, modifiers) {
 	        if (type === void 0) { type = null; }
@@ -31970,7 +32058,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	NgModuleCompiler.decorators = [
 	    { type: CompilerInjectable },
 	];
-	/** @nocollapse */
+	/**
+	 * @nocollapse
+	 */
 	NgModuleCompiler.ctorParameters = function () { return []; };
 	var _InjectorBuilder = (function () {
 	    /**
@@ -34050,7 +34140,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	DomElementSchemaRegistry.decorators = [
 	    { type: CompilerInjectable },
 	];
-	/** @nocollapse */
+	/**
+	 * @nocollapse
+	 */
 	DomElementSchemaRegistry.ctorParameters = function () { return []; };
 	/**
 	 * @param {?} prop
@@ -34699,7 +34791,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	StyleCompiler.decorators = [
 	    { type: CompilerInjectable },
 	];
-	/** @nocollapse */
+	/**
+	 * @nocollapse
+	 */
 	StyleCompiler.ctorParameters = function () { return [
 	    { type: UrlResolver, },
 	]; };
@@ -35704,7 +35798,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	ViewCompiler.decorators = [
 	    { type: CompilerInjectable },
 	];
-	/** @nocollapse */
+	/**
+	 * @nocollapse
+	 */
 	ViewCompiler.ctorParameters = function () { return [
 	    { type: CompilerConfig, },
 	    { type: ElementSchemaRegistry, },
@@ -40049,7 +40145,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	JitCompiler.decorators = [
 	    { type: CompilerInjectable },
 	];
-	/** @nocollapse */
+	/**
+	 * @nocollapse
+	 */
 	JitCompiler.ctorParameters = function () { return [
 	    { type: Injector, },
 	    { type: CompileMetadataResolver, },
@@ -40451,7 +40549,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	JitCompilerFactory.decorators = [
 	    { type: CompilerInjectable },
 	];
-	/** @nocollapse */
+	/**
+	 * @nocollapse
+	 */
 	JitCompilerFactory.ctorParameters = function () { return [
 	    { type: Array, decorators: [{ type: Inject, args: [COMPILER_OPTIONS,] },] },
 	]; };
@@ -40741,6 +40841,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return value && value.__symbolic === 'class';
 	}
 	var isClassMetadata_1 = isClassMetadata;
+	function isInterfaceMetadata(value) {
+	    return value && value.__symbolic === 'interface';
+	}
+	var isInterfaceMetadata_1 = isInterfaceMetadata;
 	function isMemberMetadata(value) {
 	    if (value) {
 	        switch (value.__symbolic) {
@@ -40841,6 +40945,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 		VERSION: VERSION$4,
 		isModuleMetadata: isModuleMetadata_1,
 		isClassMetadata: isClassMetadata_1,
+		isInterfaceMetadata: isInterfaceMetadata_1,
 		isMemberMetadata: isMemberMetadata_1,
 		isMethodMetadata: isMethodMetadata_1,
 		isConstructorMetadata: isConstructorMetadata_1,
@@ -41744,15 +41849,11 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            }
 	        });
 	        var isExportedIdentifier = function (identifier) { return exportMap.has(identifier.text); };
-	        var isExported = function (node) {
-	            return isExport(node) || isExportedIdentifier(node.name);
-	        };
+	        var isExported = function (node) { return isExport(node) || isExportedIdentifier(node.name); };
 	        var exportedIdentifierName = function (identifier) {
 	            return exportMap.get(identifier.text) || identifier.text;
 	        };
-	        var exportedName = function (node) {
-	            return exportedIdentifierName(node.name);
-	        };
+	        var exportedName = function (node) { return exportedIdentifierName(node.name); };
 	        // Predeclare classes and functions
 	        ts$2.forEachChild(sourceFile, function (node) {
 	            switch (node.kind) {
@@ -41766,6 +41867,14 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                        else {
 	                            locals.define(className, errorSym('Reference to non-exported class', node, { className: className }));
 	                        }
+	                    }
+	                    break;
+	                case ts$2.SyntaxKind.InterfaceDeclaration:
+	                    var interfaceDeclaration = node;
+	                    if (interfaceDeclaration.name) {
+	                        var interfaceName = interfaceDeclaration.name.text;
+	                        // All references to interfaces should be converted to references to `any`.
+	                        locals.define(interfaceName, { __symbolic: 'reference', name: 'any' });
 	                    }
 	                    break;
 	                case ts$2.SyntaxKind.FunctionDeclaration:
@@ -41828,6 +41937,14 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                        }
 	                    }
 	                    // Otherwise don't record metadata for the class.
+	                    break;
+	                case ts$2.SyntaxKind.InterfaceDeclaration:
+	                    var interfaceDeclaration = node;
+	                    if (interfaceDeclaration.name && isExported(interfaceDeclaration)) {
+	                        if (!metadata)
+	                            metadata = {};
+	                        metadata[exportedName(interfaceDeclaration)] = { __symbolic: 'interface' };
+	                    }
 	                    break;
 	                case ts$2.SyntaxKind.FunctionDeclaration:
 	                    // Record functions that return a single value. Record the parameter
@@ -42863,7 +42980,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$5 = new core_1.Version('4.0.0-rc.3-bf98d9d');
+	var VERSION$5 = new core_1.Version('4.0.0-rc.3-6772c91');
 
 	var __moduleExports$38 = {
 		VERSION: VERSION$5
@@ -47216,7 +47333,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION = new Version('4.0.0-rc.3-bf98d9d');
+	var VERSION = new Version('4.0.0-rc.3-6772c91');
 
 	exports.createLanguageService = createLanguageService;
 	exports.create = create;
