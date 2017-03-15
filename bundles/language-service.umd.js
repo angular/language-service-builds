@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.0.0-rc.3-ff60c04
+ * @license Angular v4.0.0-rc.3-3b1956b
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2794,7 +2794,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$2 = new Version('4.0.0-rc.3-ff60c04');
+	var /** @type {?} */ VERSION$2 = new Version('4.0.0-rc.3-3b1956b');
 	/**
 	 * Inject decorator and metadata.
 	 *
@@ -15429,7 +15429,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('4.0.0-rc.3-ff60c04');
+	var /** @type {?} */ VERSION$1 = new Version('4.0.0-rc.3-3b1956b');
 	/**
 	 * @license
 	 * Copyright Google Inc. All Rights Reserved.
@@ -20452,9 +20452,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	}());
 	var ParseErrorLevel = {};
 	ParseErrorLevel.WARNING = 0;
-	ParseErrorLevel.FATAL = 1;
+	ParseErrorLevel.ERROR = 1;
 	ParseErrorLevel[ParseErrorLevel.WARNING] = "WARNING";
-	ParseErrorLevel[ParseErrorLevel.FATAL] = "FATAL";
+	ParseErrorLevel[ParseErrorLevel.ERROR] = "ERROR";
 	var ParseError = (function () {
 	    /**
 	     * @param {?} span
@@ -20462,7 +20462,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @param {?=} level
 	     */
 	    function ParseError(span, msg, level) {
-	        if (level === void 0) { level = ParseErrorLevel.FATAL; }
+	        if (level === void 0) { level = ParseErrorLevel.ERROR; }
 	        this.span = span;
 	        this.msg = msg;
 	        this.level = level;
@@ -20472,7 +20472,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     */
 	    ParseError.prototype.toString = function () {
 	        var /** @type {?} */ ctx = this.span.start.getContext(100, 3);
-	        var /** @type {?} */ contextStr = ctx ? " (\"" + ctx.before + "[ERROR ->]" + ctx.after + "\")" : '';
+	        var /** @type {?} */ contextStr = ctx ? " (\"" + ctx.before + "[" + ParseErrorLevel[this.level] + " ->]" + ctx.after + "\")" : '';
 	        var /** @type {?} */ details = this.span.details ? ", " + this.span.details : '';
 	        return "" + this.msg + contextStr + ": " + this.span.start + details;
 	    };
@@ -26160,7 +26160,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            name = name.substring(1);
 	            if (value) {
 	                this._reportError("Assigning animation triggers via @prop=\"exp\" attributes with an expression is invalid." +
-	                    " Use property bindings (e.g. [@prop]=\"exp\") or use an attribute without a value (e.g. @prop) instead.", sourceSpan, ParseErrorLevel.FATAL);
+	                    " Use property bindings (e.g. [@prop]=\"exp\") or use an attribute without a value (e.g. @prop) instead.", sourceSpan, ParseErrorLevel.ERROR);
 	            }
 	            this._parseAnimation(name, value, sourceSpan, targetMatchableAttrs, targetProps);
 	        }
@@ -26401,7 +26401,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @return {?}
 	     */
 	    BindingParser.prototype._reportError = function (message, sourceSpan, level) {
-	        if (level === void 0) { level = ParseErrorLevel.FATAL; }
+	        if (level === void 0) { level = ParseErrorLevel.ERROR; }
 	        this._targetErrors.push(new ParseError(sourceSpan, message, level));
 	    };
 	    /**
@@ -26446,7 +26446,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        var /** @type {?} */ report = isAttr ? this._schemaRegistry.validateAttribute(propName) :
 	            this._schemaRegistry.validateProperty(propName);
 	        if (report.error) {
-	            this._reportError(report.msg, sourceSpan, ParseErrorLevel.FATAL);
+	            this._reportError(report.msg, sourceSpan, ParseErrorLevel.ERROR);
 	        }
 	    };
 	    return BindingParser;
@@ -26682,7 +26682,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    TemplateParser.prototype.parse = function (component, template, directives, pipes, schemas, templateUrl) {
 	        var /** @type {?} */ result = this.tryParse(component, template, directives, pipes, schemas, templateUrl);
 	        var /** @type {?} */ warnings = result.errors.filter(function (error) { return error.level === ParseErrorLevel.WARNING; });
-	        var /** @type {?} */ errors = result.errors.filter(function (error) { return error.level === ParseErrorLevel.FATAL; });
+	        var /** @type {?} */ errors = result.errors.filter(function (error) { return error.level === ParseErrorLevel.ERROR; });
 	        if (warnings.length > 0) {
 	            this._console.warn("Template parse warnings:\n" + warnings.join('\n'));
 	        }
@@ -26787,7 +26787,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                existingReferences.push(name);
 	            }
 	            else {
-	                var /** @type {?} */ error = new TemplateParseError("Reference \"#" + name + "\" is defined several times", reference.sourceSpan, ParseErrorLevel.FATAL);
+	                var /** @type {?} */ error = new TemplateParseError("Reference \"#" + name + "\" is defined several times", reference.sourceSpan, ParseErrorLevel.ERROR);
 	                errors.push(error);
 	            }
 	        }); });
@@ -27336,7 +27336,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @return {?}
 	     */
 	    TemplateParseVisitor.prototype._reportError = function (message, sourceSpan, level) {
-	        if (level === void 0) { level = ParseErrorLevel.FATAL; }
+	        if (level === void 0) { level = ParseErrorLevel.ERROR; }
 	        this._targetErrors.push(new ParseError(sourceSpan, message, level));
 	    };
 	    return TemplateParseVisitor;
@@ -29041,7 +29041,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                        return;
 	                    var /** @type {?} */ importedModuleSummary = _this.getNgModuleSummary(importedModuleType);
 	                    if (!importedModuleSummary) {
-	                        _this._reportError(syntaxError("Unexpected " + _this._getTypeDescriptor(importedType) + " '" + stringifyType(importedType) + "' imported by the module '" + stringifyType(moduleType) + "'"), moduleType);
+	                        _this._reportError(syntaxError("Unexpected " + _this._getTypeDescriptor(importedType) + " '" + stringifyType(importedType) + "' imported by the module '" + stringifyType(moduleType) + "'. Please add a @NgModule annotation."), moduleType);
 	                        return;
 	                    }
 	                    importedModules.push(importedModuleSummary);
@@ -29089,7 +29089,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                    _this._addTypeToModule(declaredType, moduleType);
 	                }
 	                else {
-	                    _this._reportError(syntaxError("Unexpected " + _this._getTypeDescriptor(declaredType) + " '" + stringifyType(declaredType) + "' declared by the module '" + stringifyType(moduleType) + "'"), moduleType);
+	                    _this._reportError(syntaxError("Unexpected " + _this._getTypeDescriptor(declaredType) + " '" + stringifyType(declaredType) + "' declared by the module '" + stringifyType(moduleType) + "'. Please add a @Pipe/@Directive/@Component annotation."), moduleType);
 	                    return;
 	                }
 	            });
@@ -42508,7 +42508,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$5 = new core_1.Version('4.0.0-rc.3-ff60c04');
+	var VERSION$5 = new core_1.Version('4.0.0-rc.3-3b1956b');
 
 	var __moduleExports$38 = {
 		VERSION: VERSION$5
@@ -46861,7 +46861,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION = new Version('4.0.0-rc.3-ff60c04');
+	var VERSION = new Version('4.0.0-rc.3-3b1956b');
 
 	exports.createLanguageService = createLanguageService;
 	exports.create = create;
