@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.0.0-rc.3-5fe2d8f
+ * @license Angular v4.0.0-rc.3-c10c060
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2794,7 +2794,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$2 = new Version('4.0.0-rc.3-5fe2d8f');
+	var /** @type {?} */ VERSION$2 = new Version('4.0.0-rc.3-c10c060');
 	/**
 	 * Inject decorator and metadata.
 	 *
@@ -15429,7 +15429,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('4.0.0-rc.3-5fe2d8f');
+	var /** @type {?} */ VERSION$1 = new Version('4.0.0-rc.3-c10c060');
 	/**
 	 * @license
 	 * Copyright Google Inc. All Rights Reserved.
@@ -18806,7 +18806,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	TokenType[TokenType.Operator] = "Operator";
 	TokenType[TokenType.Number] = "Number";
 	TokenType[TokenType.Error] = "Error";
-	var /** @type {?} */ KEYWORDS = ['var', 'let', 'null', 'undefined', 'true', 'false', 'if', 'else', 'this'];
+	var /** @type {?} */ KEYWORDS = ['var', 'let', 'as', 'null', 'undefined', 'true', 'false', 'if', 'else', 'this'];
 	var Lexer = (function () {
 	    function Lexer() {
 	    }
@@ -18878,6 +18878,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @return {?}
 	     */
 	    Token.prototype.isKeywordLet = function () { return this.type == TokenType.Keyword && this.strValue == 'let'; };
+	    /**
+	     * @return {?}
+	     */
+	    Token.prototype.isKeywordAs = function () { return this.type == TokenType.Keyword && this.strValue == 'as'; };
 	    /**
 	     * @return {?}
 	     */
@@ -19662,6 +19666,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     */
 	    _ParseAST.prototype.peekKeywordLet = function () { return this.next.isKeywordLet(); };
 	    /**
+	     * @return {?}
+	     */
+	    _ParseAST.prototype.peekKeywordAs = function () { return this.next.isKeywordAs(); };
+	    /**
 	     * @param {?} code
 	     * @return {?}
 	     */
@@ -20142,7 +20150,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            if (keyIsVar) {
 	                this.advance();
 	            }
-	            var /** @type {?} */ key = this.expectTemplateBindingKey();
+	            var /** @type {?} */ rawKey = this.expectTemplateBindingKey();
+	            var /** @type {?} */ key = rawKey;
 	            if (!keyIsVar) {
 	                if (prefix == null) {
 	                    prefix = key;
@@ -20162,6 +20171,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                    name = '\$implicit';
 	                }
 	            }
+	            else if (this.peekKeywordAs()) {
+	                var /** @type {?} */ letStart = this.inputIndex;
+	                this.advance(); // consume `as`
+	                name = rawKey;
+	                key = this.expectTemplateBindingKey(); // read local var name
+	                keyIsVar = true;
+	            }
 	            else if (this.next !== EOF && !this.peekKeywordLet()) {
 	                var /** @type {?} */ start_2 = this.inputIndex;
 	                var /** @type {?} */ ast = this.parsePipe();
@@ -20169,6 +20185,12 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                expression = new ASTWithSource(ast, source, this.location, this.errors);
 	            }
 	            bindings.push(new TemplateBinding(this.span(start), key, keyIsVar, name, expression));
+	            if (this.peekKeywordAs() && !keyIsVar) {
+	                var /** @type {?} */ letStart = this.inputIndex;
+	                this.advance(); // consume `as`
+	                var /** @type {?} */ letName = this.expectTemplateBindingKey(); // read local var name
+	                bindings.push(new TemplateBinding(this.span(letStart), letName, true, key, null));
+	            }
 	            if (!this.optionalCharacter($SEMICOLON)) {
 	                this.optionalCharacter($COMMA);
 	            }
@@ -42841,7 +42863,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$5 = new core_1.Version('4.0.0-rc.3-5fe2d8f');
+	var VERSION$5 = new core_1.Version('4.0.0-rc.3-c10c060');
 
 	var __moduleExports$38 = {
 		VERSION: VERSION$5
@@ -47194,7 +47216,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION = new Version('4.0.0-rc.3-5fe2d8f');
+	var VERSION = new Version('4.0.0-rc.3-c10c060');
 
 	exports.createLanguageService = createLanguageService;
 	exports.create = create;
