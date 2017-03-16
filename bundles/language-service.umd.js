@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.0.0-rc.3-492153a
+ * @license Angular v4.0.0-rc.3-77fd91d
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2794,7 +2794,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * \@stable
 	 */
-	var VERSION$2 = new Version('4.0.0-rc.3-492153a');
+	var VERSION$2 = new Version('4.0.0-rc.3-77fd91d');
 	/**
 	 * Inject decorator and metadata.
 	 *
@@ -3013,15 +3013,18 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 */
 	var ErrorHandler = (function () {
 	    /**
-	     * @param {?=} rethrowError
+	     * @param {?=} deprecatedParameter
 	     */
-	    function ErrorHandler(rethrowError) {
-	        if (rethrowError === void 0) { rethrowError = true; }
+	    function ErrorHandler(
+	        /**
+	         * @deprecated since v4.0 parameter no longer has an effect, as ErrorHandler will never
+	         * rethrow.
+	         */
+	        deprecatedParameter) {
 	        /**
 	         * \@internal
 	         */
 	        this._console = console;
-	        this.rethrowError = rethrowError;
 	    }
 	    /**
 	     * @param {?} error
@@ -3040,10 +3043,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        if (context) {
 	            errorLogger(this._console, 'ERROR CONTEXT', context);
 	        }
-	        // We rethrow exceptions, so operations like 'bootstrap' will result in an error
-	        // when an error happens. If we do not rethrow, bootstrap will always succeed.
-	        if (this.rethrowError)
-	            throw error;
 	    };
 	    /**
 	     * \@internal
@@ -15524,7 +15523,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * \@stable
 	 */
-	var VERSION$1 = new Version('4.0.0-rc.3-492153a');
+	var VERSION$1 = new Version('4.0.0-rc.3-77fd91d');
 	/**
 	 * @license
 	 * Copyright Google Inc. All Rights Reserved.
@@ -43032,7 +43031,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$5 = new core_1.Version('4.0.0-rc.3-492153a');
+	var VERSION$5 = new core_1.Version('4.0.0-rc.3-77fd91d');
 
 	var __moduleExports$38 = {
 		VERSION: VERSION$5
@@ -47385,7 +47384,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION = new Version('4.0.0-rc.3-492153a');
+	var VERSION = new Version('4.0.0-rc.3-77fd91d');
 
 	exports.createLanguageService = createLanguageService;
 	exports.create = create;

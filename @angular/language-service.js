@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.0.0-rc.3-492153a
+ * @license Angular v4.0.0-rc.3-77fd91d
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -4044,7 +4044,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version('4.0.0-rc.3-492153a');
+var VERSION = new Version('4.0.0-rc.3-77fd91d');
 
 export { createLanguageService, create, TypeScriptServiceHost, createLanguageServiceFromTypescript, VERSION };
 //# sourceMappingURL=language-service.js.map
