@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.0.0-rc.3-6772c91
+ * @license Angular v4.0.0-rc.3-923d0c5
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2794,7 +2794,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$2 = new Version('4.0.0-rc.3-6772c91');
+	var /** @type {?} */ VERSION$2 = new Version('4.0.0-rc.3-923d0c5');
 	/**
 	 * Inject decorator and metadata.
 	 *
@@ -3015,7 +3015,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @param {?=} rethrowError
 	     */
 	    function ErrorHandler(rethrowError) {
-	        if (rethrowError === void 0) { rethrowError = false; }
+	        if (rethrowError === void 0) { rethrowError = true; }
 	        /**
 	         * \@internal
 	         */
@@ -3039,6 +3039,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        if (context) {
 	            errorLogger(this._console, 'ERROR CONTEXT', context);
 	        }
+	        // We rethrow exceptions, so operations like 'bootstrap' will result in an error
+	        // when an error happens. If we do not rethrow, bootstrap will always succeed.
 	        if (this.rethrowError)
 	            throw error;
 	    };
@@ -4682,6 +4684,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return res;
 	}
 	/**
+	 * @license
+	 * Copyright Google Inc. All Rights Reserved.
+	 *
+	 * Use of this source code is governed by an MIT-style license that can be
+	 * found in the LICENSE file at https://angular.io/license
+	 */
+	/**
 	 * Determine if the argument is shaped like a Promise
 	 * @param {?} obj
 	 * @return {?}
@@ -4697,7 +4706,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @return {?}
 	 */
 	function ɵisObservable(obj) {
-	    return !!(obj && obj[$$observable]);
+	    // TODO use Symbol.observable when https://github.com/ReactiveX/rxjs/issues/2415 will be resolved
+	    return !!obj && typeof obj.subscribe === 'function';
 	}
 	/**
 	 * @param {?} m1
@@ -15495,7 +15505,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('4.0.0-rc.3-6772c91');
+	var /** @type {?} */ VERSION$1 = new Version('4.0.0-rc.3-923d0c5');
 	/**
 	 * @license
 	 * Copyright Google Inc. All Rights Reserved.
@@ -42980,7 +42990,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$5 = new core_1.Version('4.0.0-rc.3-6772c91');
+	var VERSION$5 = new core_1.Version('4.0.0-rc.3-923d0c5');
 
 	var __moduleExports$38 = {
 		VERSION: VERSION$5
@@ -47333,7 +47343,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION = new Version('4.0.0-rc.3-6772c91');
+	var VERSION = new Version('4.0.0-rc.3-923d0c5');
 
 	exports.createLanguageService = createLanguageService;
 	exports.create = create;
