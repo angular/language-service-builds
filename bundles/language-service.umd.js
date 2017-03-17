@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.0.0-rc.3-994089d
+ * @license Angular v4.0.0-rc.3-410aa33
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2794,7 +2794,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * \@stable
 	 */
-	var VERSION$2 = new Version('4.0.0-rc.3-994089d');
+	var VERSION$2 = new Version('4.0.0-rc.3-410aa33');
 	/**
 	 * Inject decorator and metadata.
 	 *
@@ -15523,7 +15523,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * \@stable
 	 */
-	var VERSION$1 = new Version('4.0.0-rc.3-994089d');
+	var VERSION$1 = new Version('4.0.0-rc.3-410aa33');
 	/**
 	 * @license
 	 * Copyright Google Inc. All Rights Reserved.
@@ -42545,6 +42545,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        }
 	        try {
 	            var metadataOrMetadatas = JSON.parse(this.context.readFile(filePath));
+	            while (metadataOrMetadatas && metadataOrMetadatas.alias) {
+	                filePath = path$1.join(path$1.dirname(filePath), metadataOrMetadatas.alias);
+	                metadataOrMetadatas = JSON.parse(this.context.readFile(filePath));
+	            }
 	            var metadatas_1 = metadataOrMetadatas ?
 	                (Array.isArray(metadataOrMetadatas) ? metadataOrMetadatas : [metadataOrMetadatas]) :
 	                [];
@@ -43036,7 +43040,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$5 = new core_1.Version('4.0.0-rc.3-994089d');
+	var VERSION$5 = new core_1.Version('4.0.0-rc.3-410aa33');
 
 	var __moduleExports$38 = {
 		VERSION: VERSION$5
@@ -47389,7 +47393,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION = new Version('4.0.0-rc.3-994089d');
+	var VERSION = new Version('4.0.0-rc.3-410aa33');
 
 	exports.createLanguageService = createLanguageService;
 	exports.create = create;
