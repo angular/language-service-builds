@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.0.0-rc.3-480a407
+ * @license Angular v4.0.0-rc.4-fcaca45
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2479,22 +2479,22 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 *   {path: '/teams', component: TeamsComp}
 	 * ];
 	 *
-	 * @NgModule({
+	 * \@NgModule({
 	 *   providers: [provideRoutes(routes)]
 	 * })
 	 * class ModuleWithRoutes {}
 	 * ```
 	 *
-	 * @experimental
+	 * \@experimental
 	 */
-	var /** @type {?} */ ANALYZE_FOR_ENTRY_COMPONENTS = new InjectionToken('AnalyzeForEntryComponents');
+	var ANALYZE_FOR_ENTRY_COMPONENTS = new InjectionToken('AnalyzeForEntryComponents');
 	/**
 	 * Attribute decorator and metadata.
 	 *
-	 * @stable
-	 * @Annotation
+	 * \@stable
+	 * \@Annotation
 	 */
-	var /** @type {?} */ Attribute$1 = ɵa('Attribute', [['attributeName', undefined]]);
+	var Attribute$1 = ɵa('Attribute', [['attributeName', undefined]]);
 	/**
 	 * Base class for query metadata.
 	 *
@@ -2512,24 +2512,24 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * ContentChildren decorator and metadata.
 	 *
-	 *  @stable
-	 *  @Annotation
+	 *  \@stable
+	 *  \@Annotation
 	 */
-	var /** @type {?} */ ContentChildren = (ɵb('ContentChildren', [
+	var ContentChildren = ɵb('ContentChildren', [
 	    ['selector', undefined], {
 	        first: false,
 	        isViewQuery: false,
 	        descendants: false,
 	        read: undefined,
 	    }
-	], Query));
+	], Query);
 	/**
 	 * ContentChild decorator and metadata.
 	 *
-	 * @stable
-	 * @Annotation
+	 * \@stable
+	 * \@Annotation
 	 */
-	var /** @type {?} */ ContentChild = ɵb('ContentChild', [
+	var ContentChild = ɵb('ContentChild', [
 	    ['selector', undefined], {
 	        first: true,
 	        isViewQuery: false,
@@ -2540,10 +2540,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * ViewChildren decorator and metadata.
 	 *
-	 * @stable
-	 * @Annotation
+	 * \@stable
+	 * \@Annotation
 	 */
-	var /** @type {?} */ ViewChildren = ɵb('ViewChildren', [
+	var ViewChildren = ɵb('ViewChildren', [
 	    ['selector', undefined], {
 	        first: false,
 	        isViewQuery: true,
@@ -2554,10 +2554,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * ViewChild decorator and metadata.
 	 *
-	 * @stable
-	 * @Annotation
+	 * \@stable
+	 * \@Annotation
 	 */
-	var /** @type {?} */ ViewChild = ɵb('ViewChild', [
+	var ViewChild = ɵb('ViewChild', [
 	    ['selector', undefined], {
 	        first: true,
 	        isViewQuery: true,
@@ -2594,10 +2594,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * Directive decorator and metadata.
 	 *
-	 * @stable
-	 * @Annotation
+	 * \@stable
+	 * \@Annotation
 	 */
-	var /** @type {?} */ Directive = (ɵmakeDecorator('Directive', {
+	var Directive = ɵmakeDecorator('Directive', {
 	    selector: undefined,
 	    inputs: undefined,
 	    outputs: undefined,
@@ -2605,14 +2605,14 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    providers: undefined,
 	    exportAs: undefined,
 	    queries: undefined
-	}));
+	});
 	/**
 	 * Component decorator and metadata.
 	 *
-	 * @stable
-	 * @Annotation
+	 * \@stable
+	 * \@Annotation
 	 */
-	var /** @type {?} */ Component = (ɵmakeDecorator('Component', {
+	var Component = ɵmakeDecorator('Component', {
 	    selector: undefined,
 	    inputs: undefined,
 	    outputs: undefined,
@@ -2631,71 +2631,71 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    encapsulation: undefined,
 	    interpolation: undefined,
 	    entryComponents: undefined
-	}, Directive));
+	}, Directive);
 	/**
 	 * Pipe decorator and metadata.
 	 *
-	 * @stable
-	 * @Annotation
+	 * \@stable
+	 * \@Annotation
 	 */
-	var /** @type {?} */ Pipe = (ɵmakeDecorator('Pipe', {
+	var Pipe = ɵmakeDecorator('Pipe', {
 	    name: undefined,
 	    pure: true,
-	}));
+	});
 	/**
 	 * Input decorator and metadata.
 	 *
-	 * @stable
-	 * @Annotation
+	 * \@stable
+	 * \@Annotation
 	 */
-	var /** @type {?} */ Input = ɵb('Input', [['bindingPropertyName', undefined]]);
+	var Input = ɵb('Input', [['bindingPropertyName', undefined]]);
 	/**
 	 * Output decorator and metadata.
 	 *
-	 * @stable
-	 * @Annotation
+	 * \@stable
+	 * \@Annotation
 	 */
-	var /** @type {?} */ Output = ɵb('Output', [['bindingPropertyName', undefined]]);
+	var Output = ɵb('Output', [['bindingPropertyName', undefined]]);
 	/**
 	 * HostBinding decorator and metadata.
 	 *
-	 * @stable
-	 * @Annotation
+	 * \@stable
+	 * \@Annotation
 	 */
-	var /** @type {?} */ HostBinding = ɵb('HostBinding', [['hostPropertyName', undefined]]);
+	var HostBinding = ɵb('HostBinding', [['hostPropertyName', undefined]]);
 	/**
 	 * HostListener decorator and metadata.
 	 *
-	 * @stable
-	 * @Annotation
+	 * \@stable
+	 * \@Annotation
 	 */
-	var /** @type {?} */ HostListener = ɵb('HostListener', [['eventName', undefined], ['args', []]]);
+	var HostListener = ɵb('HostListener', [['eventName', undefined], ['args', []]]);
 	/**
 	 * Defines a schema that will allow:
 	 * - any non-Angular elements with a `-` in their name,
 	 * - any properties on elements with a `-` in their name which is the common rule for custom
 	 * elements.
 	 *
-	 * @stable
+	 * \@stable
 	 */
-	var /** @type {?} */ CUSTOM_ELEMENTS_SCHEMA = {
+	var CUSTOM_ELEMENTS_SCHEMA = {
 	    name: 'custom-elements'
 	};
 	/**
 	 * Defines a schema that will allow any property on any element.
 	 *
-	 * @experimental
+	 * \@experimental
 	 */
-	var /** @type {?} */ NO_ERRORS_SCHEMA = {
+	var NO_ERRORS_SCHEMA = {
 	    name: 'no-errors-schema'
 	};
 	/**
 	 * NgModule decorator and metadata.
 	 *
-	 * @stable
-	 * @Annotation
+	 * \@stable
+	 * \@Annotation
 	 */
-	var /** @type {?} */ NgModule = (ɵmakeDecorator('NgModule', {
+	var NgModule = ɵmakeDecorator('NgModule', {
 	    providers: undefined,
 	    declarations: undefined,
 	    imports: undefined,
@@ -2704,7 +2704,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    bootstrap: undefined,
 	    schemas: undefined,
 	    id: undefined,
-	}));
+	});
 	var ViewEncapsulation = {};
 	ViewEncapsulation.Emulated = 0;
 	ViewEncapsulation.Native = 1;
@@ -2792,51 +2792,51 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return Version;
 	}());
 	/**
-	 * @stable
+	 * \@stable
 	 */
-	var /** @type {?} */ VERSION$2 = new Version('4.0.0-rc.3-480a407');
+	var VERSION$2 = new Version('4.0.0-rc.4-fcaca45');
 	/**
 	 * Inject decorator and metadata.
 	 *
-	 * @stable
-	 * @Annotation
+	 * \@stable
+	 * \@Annotation
 	 */
-	var /** @type {?} */ Inject = ɵa('Inject', [['token', undefined]]);
+	var Inject = ɵa('Inject', [['token', undefined]]);
 	/**
 	 * Optional decorator and metadata.
 	 *
-	 * @stable
-	 * @Annotation
+	 * \@stable
+	 * \@Annotation
 	 */
-	var /** @type {?} */ Optional = ɵa('Optional', []);
+	var Optional = ɵa('Optional', []);
 	/**
 	 * Injectable decorator and metadata.
 	 *
-	 * @stable
-	 * @Annotation
+	 * \@stable
+	 * \@Annotation
 	 */
-	var /** @type {?} */ Injectable = (ɵmakeDecorator('Injectable', []));
+	var Injectable = ɵmakeDecorator('Injectable', []);
 	/**
 	 * Self decorator and metadata.
 	 *
-	 * @stable
-	 * @Annotation
+	 * \@stable
+	 * \@Annotation
 	 */
-	var /** @type {?} */ Self = ɵa('Self', []);
+	var Self = ɵa('Self', []);
 	/**
 	 * SkipSelf decorator and metadata.
 	 *
-	 * @stable
-	 * @Annotation
+	 * \@stable
+	 * \@Annotation
 	 */
-	var /** @type {?} */ SkipSelf = ɵa('SkipSelf', []);
+	var SkipSelf = ɵa('SkipSelf', []);
 	/**
 	 * Host decorator and metadata.
 	 *
-	 * @stable
-	 * @Annotation
+	 * \@stable
+	 * \@Annotation
 	 */
-	var /** @type {?} */ Host = ɵa('Host', []);
+	var Host = ɵa('Host', []);
 	/**
 	 * Allows to refer to references which are not yet defined.
 	 *
@@ -2929,6 +2929,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * Injector.THROW_IF_NOT_FOUND is given
 	     * - Returns the `notFoundValue` otherwise
 	     * @abstract
+	     * @template T
 	     * @param {?} token
 	     * @param {?=} notFoundValue
 	     * @return {?}
@@ -3012,15 +3013,18 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 */
 	var ErrorHandler = (function () {
 	    /**
-	     * @param {?=} rethrowError
+	     * @param {?=} deprecatedParameter
 	     */
-	    function ErrorHandler(rethrowError) {
-	        if (rethrowError === void 0) { rethrowError = true; }
+	    function ErrorHandler(
+	        /**
+	         * @deprecated since v4.0 parameter no longer has an effect, as ErrorHandler will never
+	         * rethrow.
+	         */
+	        deprecatedParameter) {
 	        /**
 	         * \@internal
 	         */
 	        this._console = console;
-	        this.rethrowError = rethrowError;
 	    }
 	    /**
 	     * @param {?} error
@@ -3039,10 +3043,6 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        if (context) {
 	            errorLogger(this._console, 'ERROR CONTEXT', context);
 	        }
-	        // We rethrow exceptions, so operations like 'bootstrap' will result in an error
-	        // when an error happens. If we do not rethrow, bootstrap will always succeed.
-	        if (this.rethrowError)
-	            throw error;
 	    };
 	    /**
 	     * \@internal
@@ -3408,29 +3408,16 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	}());
 	var /** @type {?} */ _globalKeyRegistry = new KeyRegistry();
 	/**
-	 * @license
-	 * Copyright Google Inc. All Rights Reserved.
+	 * \@whatItDoes Represents a type that a Component or other object is instances of.
 	 *
-	 * Use of this source code is governed by an MIT-style license that can be
-	 * found in the LICENSE file at https://angular.io/license
-	 */
-	/**
-	 * @whatItDoes Represents a type that a Component or other object is instances of.
-	 *
-	 * @description
+	 * \@description
 	 *
 	 * An example of a `Type` is `MyCustomComponent` class, which in JavaScript is be represented by
 	 * the `MyCustomComponent` constructor function.
 	 *
-	 * @stable
+	 * \@stable
 	 */
-	/**
-	 * @license
-	 * Copyright Google Inc. All Rights Reserved.
-	 *
-	 * Use of this source code is governed by an MIT-style license that can be
-	 * found in the LICENSE file at https://angular.io/license
-	 */ var /** @type {?} */ Type = Function;
+	var Type = Function;
 	/**
 	 * @param {?} v
 	 * @return {?}
@@ -3454,6 +3441,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     */
 	    ReflectionCapabilities.prototype.isReflectionEnabled = function () { return true; };
 	    /**
+	     * @template T
 	     * @param {?} t
 	     * @return {?}
 	     */
@@ -4710,6 +4698,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return !!obj && typeof obj.subscribe === 'function';
 	}
 	/**
+	 * @template V
 	 * @param {?} m1
 	 * @param {?} m2
 	 * @return {?}
@@ -4728,9 +4717,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	}
 	/**
 	 * A function that will be executed when an application is initialized.
-	 * @experimental
+	 * \@experimental
 	 */
-	var /** @type {?} */ APP_INITIALIZER = new InjectionToken('Application Initializer');
+	var APP_INITIALIZER = new InjectionToken('Application Initializer');
 	/**
 	 * A class that reflects the state of running {\@link APP_INITIALIZER}s.
 	 *
@@ -4787,14 +4776,14 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * A DI Token representing a unique string id assigned to the application by Angular and used
 	 * primarily for prefixing application attributes and CSS styles when
-	 * {@link ViewEncapsulation#Emulated} is being used.
+	 * {\@link ViewEncapsulation#Emulated} is being used.
 	 *
 	 * If you need to avoid randomly generated value to be used as an application id, you can provide
-	 * a custom value via a DI provider <!-- TODO: provider --> configuring the root {@link Injector}
+	 * a custom value via a DI provider <!-- TODO: provider --> configuring the root {\@link Injector}
 	 * using this token.
-	 * @experimental
+	 * \@experimental
 	 */
-	var /** @type {?} */ APP_ID = new InjectionToken('AppId');
+	var APP_ID = new InjectionToken('AppId');
 	/**
 	 * @return {?}
 	 */
@@ -4803,12 +4792,12 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	}
 	/**
 	 * Providers that will generate a random APP_ID_TOKEN.
-	 * @experimental
+	 * \@experimental
 	 */
-	var /** @type {?} */ ɵAPP_ID_RANDOM_PROVIDER = {
+	var ɵAPP_ID_RANDOM_PROVIDER = {
 	    provide: APP_ID,
 	    useFactory: ɵg,
-	    deps: /** @type {?} */ ([]),
+	    deps: [],
 	};
 	/**
 	 * @return {?}
@@ -4818,28 +4807,28 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	}
 	/**
 	 * A function that will be executed when a platform is initialized.
-	 * @experimental
+	 * \@experimental
 	 */
-	var /** @type {?} */ PLATFORM_INITIALIZER = new InjectionToken('Platform Initializer');
+	var PLATFORM_INITIALIZER = new InjectionToken('Platform Initializer');
 	/**
 	 * A token that indicates an opaque platform id.
-	 * @experimental
+	 * \@experimental
 	 */
-	var /** @type {?} */ PLATFORM_ID = new InjectionToken('Platform ID');
+	var PLATFORM_ID = new InjectionToken('Platform ID');
 	/**
 	 * All callbacks provided via this token will be called for every component that is bootstrapped.
 	 * Signature of the callback:
 	 *
 	 * `(componentRef: ComponentRef) => void`.
 	 *
-	 * @experimental
+	 * \@experimental
 	 */
-	var /** @type {?} */ APP_BOOTSTRAP_LISTENER = new InjectionToken('appBootstrapListener');
+	var APP_BOOTSTRAP_LISTENER = new InjectionToken('appBootstrapListener');
 	/**
 	 * A token which indicates the root directory of the application
-	 * @experimental
+	 * \@experimental
 	 */
-	var /** @type {?} */ PACKAGE_ROOT_URL = new InjectionToken('Application Packages Root URL');
+	var PACKAGE_ROOT_URL = new InjectionToken('Application Packages Root URL');
 	var ɵConsole = (function () {
 	    function Console() {
 	    }
@@ -4906,18 +4895,21 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    /**
 	     * Compiles the given NgModule and all of its components. All templates of the components listed
 	     * in `entryComponents` have to be inlined.
+	     * @template T
 	     * @param {?} moduleType
 	     * @return {?}
 	     */
 	    Compiler.prototype.compileModuleSync = function (moduleType) { throw _throwError(); };
 	    /**
 	     * Compiles the given NgModule and all of its components
+	     * @template T
 	     * @param {?} moduleType
 	     * @return {?}
 	     */
 	    Compiler.prototype.compileModuleAsync = function (moduleType) { throw _throwError(); };
 	    /**
 	     * Same as {\@link compileModuleSync} but also creates ComponentFactories for all components.
+	     * @template T
 	     * @param {?} moduleType
 	     * @return {?}
 	     */
@@ -4926,6 +4918,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    };
 	    /**
 	     * Same as {\@link compileModuleAsync} but also creates ComponentFactories for all components.
+	     * @template T
 	     * @param {?} moduleType
 	     * @return {?}
 	     */
@@ -4964,9 +4957,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * Token to provide CompilerOptions in the platform injector.
 	 *
-	 * @experimental
+	 * \@experimental
 	 */
-	var /** @type {?} */ COMPILER_OPTIONS = new InjectionToken('compilerOptions');
+	var COMPILER_OPTIONS = new InjectionToken('compilerOptions');
 	/**
 	 * A factory for creating a Compiler
 	 *
@@ -5097,6 +5090,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    function _NullComponentFactoryResolver() {
 	    }
 	    /**
+	     * @template T
 	     * @param {?} component
 	     * @return {?}
 	     */
@@ -5114,6 +5108,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    }
 	    /**
 	     * @abstract
+	     * @template T
 	     * @param {?} component
 	     * @return {?}
 	     */
@@ -5137,6 +5132,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        }
 	    }
 	    /**
+	     * @template T
 	     * @param {?} component
 	     * @return {?}
 	     */
@@ -5379,6 +5375,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return events.createScope(signature, flags);
 	}
 	/**
+	 * @template T
 	 * @param {?} scope
 	 * @param {?=} returnValue
 	 * @return {?}
@@ -5442,9 +5439,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * needs to be fixed before the app should be profiled. Add try-finally only when you expect that
 	 * an exception is expected during normal execution while profiling.
 	 *
-	 * @experimental
+	 * \@experimental
 	 */
-	var /** @type {?} */ wtfCreateScope = ɵp ? ɵr : function (signature, flags) { return noopScope; };
+	var wtfCreateScope = ɵp ? ɵr : function (signature, flags) { return noopScope; };
 	/**
 	 * Used to mark end of Scope.
 	 *
@@ -5452,9 +5449,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * - `returnValue` (optional) to be passed to the WTF.
 	 *
 	 * Returns the `returnValue for easy chaining.
-	 * @experimental
+	 * \@experimental
 	 */
-	var /** @type {?} */ wtfLeave = ɵp ? ɵs : function (s, r) { return r; };
+	var wtfLeave = ɵp ? ɵs : function (s, r) { return r; };
 	/**
 	 * Used to mark Async start. Async are similar to scope but they don't have to be strictly nested.
 	 * The return value is used in the call to [endAsync]. Async ranges only work if WTF has been
@@ -5466,16 +5463,16 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 *          wtfEndTimeRange(s);
 	 *        });
 	 *     }
-	 * @experimental
+	 * \@experimental
 	 */
-	var /** @type {?} */ wtfStartTimeRange = ɵp ? ɵt : function (rangeType, action) { return null; };
+	var wtfStartTimeRange = ɵp ? ɵt : function (rangeType, action) { return null; };
 	/**
 	 * Ends a async time range operation.
 	 * [range] is the return value from [wtfStartTimeRange] Async ranges only work if WTF has been
 	 * enabled.
-	 * @experimental
+	 * \@experimental
 	 */
-	var /** @type {?} */ wtfEndTimeRange = ɵp ? ɵu : function (r) { return null; };
+	var wtfEndTimeRange = ɵp ? ɵu : function (r) { return null; };
 	/**
 	 * Use by directives and components to emit custom Events.
 	 *
@@ -6302,6 +6299,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     *
 	     * \@experimental APIs related to application bootstrap are currently under review.
 	     * @abstract
+	     * @template M
 	     * @param {?} moduleFactory
 	     * @return {?}
 	     */
@@ -6321,6 +6319,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * ```
 	     * \@stable
 	     * @abstract
+	     * @template M
 	     * @param {?} moduleType
 	     * @param {?=} compilerOptions
 	     * @return {?}
@@ -6426,6 +6425,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        this._destroyed = true;
 	    };
 	    /**
+	     * @template M
 	     * @param {?} moduleFactory
 	     * @return {?}
 	     */
@@ -6433,6 +6433,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        return this._bootstrapModuleFactoryWithZone(moduleFactory, null);
 	    };
 	    /**
+	     * @template M
 	     * @param {?} moduleFactory
 	     * @param {?} ngZone
 	     * @return {?}
@@ -6466,6 +6467,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        });
 	    };
 	    /**
+	     * @template M
 	     * @param {?} moduleType
 	     * @param {?=} compilerOptions
 	     * @return {?}
@@ -6475,6 +6477,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        return this._bootstrapModuleWithZone(moduleType, compilerOptions, null);
 	    };
 	    /**
+	     * @template M
 	     * @param {?} moduleType
 	     * @param {?=} compilerOptions
 	     * @param {?=} ngZone
@@ -6541,6 +6544,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * ### Example
 	     * {\@example core/ts/platform/platform.ts region='longform'}
 	     * @abstract
+	     * @template C
 	     * @param {?} componentFactory
 	     * @return {?}
 	     */
@@ -6687,6 +6691,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        view.detachFromAppRef();
 	    };
 	    /**
+	     * @template C
 	     * @param {?} componentOrFactory
 	     * @return {?}
 	     */
@@ -6820,6 +6825,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    { type: ApplicationInitStatus, },
 	]; };
 	/**
+	 * @template T
 	 * @param {?} list
 	 * @param {?} el
 	 * @return {?}
@@ -7377,6 +7383,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    /**
 	     * See
 	     * [Array.map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map)
+	     * @template U
 	     * @param {?} fn
 	     * @return {?}
 	     */
@@ -7400,6 +7407,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    /**
 	     * See
 	     * [Array.reduce](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce)
+	     * @template U
 	     * @param {?} fn
 	     * @param {?} init
 	     * @return {?}
@@ -7464,6 +7472,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return QueryList;
 	}());
 	/**
+	 * @template T
 	 * @param {?} list
 	 * @return {?}
 	 */
@@ -7676,6 +7685,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     *
 	     * Returns the {\@link ViewRef} for the newly created View.
 	     * @abstract
+	     * @template C
 	     * @param {?} templateRef
 	     * @param {?=} context
 	     * @param {?=} index
@@ -7695,6 +7705,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     *
 	     * Returns the {\@link ComponentRef} of the Host View created for the newly instantiated Component.
 	     * @abstract
+	     * @template C
 	     * @param {?} componentFactory
 	     * @param {?=} index
 	     * @param {?=} injector
@@ -8503,6 +8514,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    DefaultIterableDifferFactory.prototype.supports = function (obj) { return ɵisListLikeIterable(obj); };
 	    /**
 	     * @deprecated v4.0.0 - ChangeDetectorRef is not used and is no longer a parameter
+	     * @template V
 	     * @param {?=} cdRefOrTrackBy
 	     * @param {?=} trackByFn
 	     * @return {?}
@@ -9385,6 +9397,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    DefaultKeyValueDifferFactory.prototype.supports = function (obj) { return obj instanceof Map || isJsObject(obj); };
 	    /**
 	     * @deprecated v4.0.0 - ChangeDetectorRef is not used and is no longer a parameter
+	     * @template K, V
 	     * @param {?=} cd
 	     * @return {?}
 	     */
@@ -9711,6 +9724,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    };
 	    /**
 	     * \@internal
+	     * @template K, V
 	     * @param {?} obj
 	     * @param {?} fn
 	     * @return {?}
@@ -9869,6 +9883,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        this.factories = factories;
 	    }
 	    /**
+	     * @template S
 	     * @param {?} factories
 	     * @param {?=} parent
 	     * @return {?}
@@ -9898,6 +9913,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     *   ]
 	     * })
 	     * ```
+	     * @template S
 	     * @param {?} factories
 	     * @return {?}
 	     */
@@ -9958,21 +9974,21 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * This platform has to be included in any other platform
 	 *
-	 * @experimental
+	 * \@experimental
 	 */
-	var /** @type {?} */ platformCore = createPlatformFactory(null, 'core', _CORE_PLATFORM_PROVIDERS);
+	var platformCore = createPlatformFactory(null, 'core', _CORE_PLATFORM_PROVIDERS);
 	/**
-	 * @experimental i18n support is experimental.
+	 * \@experimental i18n support is experimental.
 	 */
-	var /** @type {?} */ LOCALE_ID = new InjectionToken('LocaleId');
+	var LOCALE_ID = new InjectionToken('LocaleId');
 	/**
-	 * @experimental i18n support is experimental.
+	 * \@experimental i18n support is experimental.
 	 */
-	var /** @type {?} */ TRANSLATIONS = new InjectionToken('Translations');
+	var TRANSLATIONS = new InjectionToken('Translations');
 	/**
-	 * @experimental i18n support is experimental.
+	 * \@experimental i18n support is experimental.
 	 */
-	var /** @type {?} */ TRANSLATIONS_FORMAT = new InjectionToken('TranslationsFormat');
+	var TRANSLATIONS_FORMAT = new InjectionToken('TranslationsFormat');
 	var MissingTranslationStrategy = {};
 	MissingTranslationStrategy.Error = 0;
 	MissingTranslationStrategy.Warning = 1;
@@ -11438,6 +11454,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    });
 	    ;
 	    /**
+	     * @template C
 	     * @param {?} templateRef
 	     * @param {?=} context
 	     * @param {?=} index
@@ -11449,6 +11466,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        return viewRef;
 	    };
 	    /**
+	     * @template C
 	     * @param {?} componentFactory
 	     * @param {?=} index
 	     * @param {?=} injector
@@ -15223,9 +15241,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return { type: 1 /* Transition */, expr: stateChangeExpr, animation: steps };
 	}
 	/**
-	 * @deprecated This symbol has moved. Please Import from @angular/animations instead!
+	 * @deprecated This symbol has moved. Please Import from \@angular/animations instead!
 	 */
-	var /** @type {?} */ AUTO_STYLE = '*';
+	var AUTO_STYLE = '*';
 	/**
 	 * @deprecated This symbol has moved. Please Import from \@angular/animations instead!
 	 * @param {?} name
@@ -15503,9 +15521,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
 	/**
-	 * @stable
+	 * \@stable
 	 */
-	var /** @type {?} */ VERSION$1 = new Version('4.0.0-rc.3-480a407');
+	var VERSION$1 = new Version('4.0.0-rc.4-fcaca45');
 	/**
 	 * @license
 	 * Copyright Google Inc. All Rights Reserved.
@@ -16844,13 +16862,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
-	/**
-	 * @license
-	 * Copyright Google Inc. All Rights Reserved.
-	 *
-	 * Use of this source code is governed by an MIT-style license that can be
-	 * found in the LICENSE file at https://angular.io/license
-	 */ var /** @type {?} */ MODULE_SUFFIX = '';
+	var MODULE_SUFFIX = '';
 	var /** @type {?} */ DASH_CASE_REGEXP = /-+([a-z0-9])/g;
 	/**
 	 * @param {?} input
@@ -17678,6 +17690,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return ProviderMeta;
 	}());
 	/**
+	 * @template T
 	 * @param {?} list
 	 * @return {?}
 	 */
@@ -17688,13 +17701,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    }, []);
 	}
 	/**
-	 * Note: Using `location.origin` as prefix helps displaying them as a hierarchy in chrome.
-	 * It also helps long-stack-trace zone when rewriting stack traces to not break
-	 * source maps (as now all scripts have the same origin).
+	 * @param {?} url
 	 * @return {?}
 	 */
-	function ngJitFolder() {
-	    return 'ng://';
+	function sourceUrl(url) {
+	    // Note: We need 3 "/" so that ng shows up as a separate domain
+	    // in the chrome dev tools.
+	    return url.replace(/(\w+:\/\/[\w:-]+)?(\/+)?/, 'ng:///');
 	}
 	/**
 	 * @param {?} ngModuleType
@@ -17703,17 +17716,23 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @return {?}
 	 */
 	function templateSourceUrl(ngModuleType, compMeta, templateMeta) {
+	    var /** @type {?} */ url;
 	    if (templateMeta.isInline) {
 	        if (compMeta.type.reference instanceof StaticSymbol) {
-	            return compMeta.type.reference.filePath;
+	            // Note: a .ts file might contain multiple components with inline templates,
+	            // so we need to give them unique urls, as these will be used for sourcemaps.
+	            url = compMeta.type.reference.filePath + "." + compMeta.type.reference.name + ".html";
 	        }
 	        else {
-	            return ngJitFolder() + "/" + identifierName(ngModuleType) + "/" + identifierName(compMeta.type) + ".html";
+	            url = identifierName(ngModuleType) + "/" + identifierName(compMeta.type) + ".html";
 	        }
 	    }
 	    else {
-	        return templateMeta.templateUrl;
+	        url = templateMeta.templateUrl;
 	    }
+	    // always prepend ng:// to make angular resources easy to find and not clobber
+	    // user resources.
+	    return sourceUrl(url);
 	}
 	/**
 	 * @param {?} meta
@@ -17723,14 +17742,14 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	function sharedStylesheetJitUrl(meta, id) {
 	    var /** @type {?} */ pathParts = meta.moduleUrl.split(/\/\\/g);
 	    var /** @type {?} */ baseName = pathParts[pathParts.length - 1];
-	    return ngJitFolder() + "/css/" + id + baseName + ".ngstyle.js";
+	    return sourceUrl("css/" + id + baseName + ".ngstyle.js");
 	}
 	/**
 	 * @param {?} moduleMeta
 	 * @return {?}
 	 */
 	function ngModuleJitUrl(moduleMeta) {
-	    return ngJitFolder() + "/" + identifierName(moduleMeta.type) + "/module.ngfactory.js";
+	    return sourceUrl(identifierName(moduleMeta.type) + "/module.ngfactory.js");
 	}
 	/**
 	 * @param {?} ngModuleType
@@ -17738,7 +17757,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @return {?}
 	 */
 	function templateJitUrl(ngModuleType, compMeta) {
-	    return ngJitFolder() + "/" + identifierName(ngModuleType) + "/" + identifierName(compMeta.type) + ".ngfactory.js";
+	    return sourceUrl(identifierName(ngModuleType) + "/" + identifierName(compMeta.type) + ".ngfactory.js");
 	}
 	var CompilerConfig = (function () {
 	    /**
@@ -18699,13 +18718,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
-	/**
-	 * @license
-	 * Copyright Google Inc. All Rights Reserved.
-	 *
-	 * Use of this source code is governed by an MIT-style license that can be
-	 * found in the LICENSE file at https://angular.io/license
-	 */ var /** @type {?} */ $EOF = 0;
+	var $EOF = 0;
 	var /** @type {?} */ $TAB = 9;
 	var /** @type {?} */ $LF = 10;
 	var /** @type {?} */ $VTAB = 11;
@@ -22397,7 +22410,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
-	var /** @type {?} */ TAG_TO_PLACEHOLDER_NAMES = {
+	var TAG_TO_PLACEHOLDER_NAMES = {
 	    'A': 'LINK',
 	    'B': 'BOLD_TEXT',
 	    'BR': 'LINE_BREAK',
@@ -27595,6 +27608,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return node instanceof Text && node.value.trim().length == 0;
 	}
 	/**
+	 * @template T
 	 * @param {?} items
 	 * @return {?}
 	 */
@@ -27788,7 +27802,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * A regular expression for breaking a URI into its component parts.
 	 *
-	 * {@link http://www.gbiv.com/protocols/uri/rfc/rfc3986.html#RFC2234} says
+	 * {\@link http://www.gbiv.com/protocols/uri/rfc/rfc3986.html#RFC2234} says
 	 * As the "first-match-wins" algorithm is identical to the "greedy"
 	 * disambiguation method used by POSIX regular expressions, it is natural and
 	 * commonplace to use a regular expression for parsing the potential five
@@ -27844,10 +27858,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 *    $6 = <undefined>       query without ?
 	 *    $7 = Related           fragment without #
 	 * </pre>
-	 * @type {!RegExp}
-	 * @internal
+	 * \@internal
 	 */
-	var /** @type {?} */ _splitRe = new RegExp('^' +
+	var _splitRe = new RegExp('^' +
 	    '(?:' +
 	    '([^:/?#.]+)' +
 	    // used by other URL parts such as :,
@@ -28443,6 +28456,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    return type instanceof Directive;
 	}
 	/**
+	 * @template T
 	 * @param {?} arr
 	 * @param {?} condition
 	 * @return {?}
@@ -28462,7 +28476,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * Use of this source code is governed by an MIT-style license that can be
 	 * found in the LICENSE file at https://angular.io/license
 	 */
-	var /** @type {?} */ STRIP_SRC_FILE_SUFFIXES = /(\.ts|\.d\.ts|\.js|\.jsx|\.tsx)$/;
+	var STRIP_SRC_FILE_SUFFIXES = /(\.ts|\.d\.ts|\.js|\.jsx|\.tsx)$/;
 	var /** @type {?} */ NG_FACTORY = /\.ngfactory\./;
 	/**
 	 * @param {?} filePath
@@ -32574,18 +32588,26 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            .join('\n');
 	    };
 	    /**
-	     * @param {?=} file
+	     * @param {?} sourceFilePath
+	     * @param {?} genFilePath
 	     * @param {?=} startsAtLine
 	     * @return {?}
 	     */
-	    EmitterVisitorContext.prototype.toSourceMapGenerator = function (file, startsAtLine) {
-	        if (file === void 0) { file = null; }
+	    EmitterVisitorContext.prototype.toSourceMapGenerator = function (sourceFilePath, genFilePath, startsAtLine) {
 	        if (startsAtLine === void 0) { startsAtLine = 0; }
-	        var /** @type {?} */ map = new SourceMapGenerator(file);
+	        var /** @type {?} */ map = new SourceMapGenerator(genFilePath);
+	        var /** @type {?} */ firstOffsetMapped = false;
+	        var /** @type {?} */ mapFirstOffsetIfNeeded = function () {
+	            if (!firstOffsetMapped) {
+	                map.addSource(sourceFilePath).addMapping(0, sourceFilePath, 0, 0);
+	                firstOffsetMapped = true;
+	            }
+	        };
 	        for (var /** @type {?} */ i = 0; i < startsAtLine; i++) {
 	            map.addLine();
+	            mapFirstOffsetIfNeeded();
 	        }
-	        this.sourceLines.forEach(function (line) {
+	        this.sourceLines.forEach(function (line, lineIdx) {
 	            map.addLine();
 	            var /** @type {?} */ spans = line.srcSpans;
 	            var /** @type {?} */ parts = line.parts;
@@ -32595,6 +32617,12 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            while (spanIdx < spans.length && !spans[spanIdx]) {
 	                col0 += parts[spanIdx].length;
 	                spanIdx++;
+	            }
+	            if (spanIdx < spans.length && lineIdx === 0 && col0 === 0) {
+	                firstOffsetMapped = true;
+	            }
+	            else {
+	                mapFirstOffsetIfNeeded();
 	            }
 	            while (spanIdx < spans.length) {
 	                var /** @type {?} */ span = spans[spanIdx];
@@ -33077,6 +33105,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        this.visitAllObjects(function (expr) { return expr.visitExpression(_this, ctx); }, expressions, ctx, separator, newLine);
 	    };
 	    /**
+	     * @template T
 	     * @param {?} handler
 	     * @param {?} expressions
 	     * @param {?} ctx
@@ -33196,35 +33225,36 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        this._importResolver = _importResolver;
 	    }
 	    /**
+	     * @param {?} srcFilePath
 	     * @param {?} genFilePath
 	     * @param {?} stmts
 	     * @param {?} exportedVars
+	     * @param {?=} preamble
 	     * @return {?}
 	     */
-	    TypeScriptEmitter.prototype.emitStatements = function (genFilePath, stmts, exportedVars) {
+	    TypeScriptEmitter.prototype.emitStatements = function (srcFilePath, genFilePath, stmts, exportedVars, preamble) {
 	        var _this = this;
+	        if (preamble === void 0) { preamble = ''; }
 	        var /** @type {?} */ converter = new _TsEmitterVisitor(genFilePath, this._importResolver);
 	        var /** @type {?} */ ctx = EmitterVisitorContext.createRoot(exportedVars);
 	        converter.visitAllStatements(stmts, ctx);
-	        var /** @type {?} */ srcParts = [];
+	        var /** @type {?} */ preambleLines = preamble ? preamble.split('\n') : [];
 	        converter.reexports.forEach(function (reexports, exportedFilePath) {
 	            var /** @type {?} */ reexportsCode = reexports.map(function (reexport) { return reexport.name + " as " + reexport.as; }).join(',');
-	            srcParts.push("export {" + reexportsCode + "} from '" + _this._importResolver.fileNameToModuleName(exportedFilePath, genFilePath) + "';");
+	            preambleLines.push("export {" + reexportsCode + "} from '" + _this._importResolver.fileNameToModuleName(exportedFilePath, genFilePath) + "';");
 	        });
 	        converter.importsWithPrefixes.forEach(function (prefix, importedFilePath) {
 	            // Note: can't write the real word for import as it screws up system.js auto detection...
-	            srcParts.push("imp" +
+	            preambleLines.push("imp" +
 	                ("ort * as " + prefix + " from '" + _this._importResolver.fileNameToModuleName(importedFilePath, genFilePath) + "';"));
 	        });
-	        srcParts.push(ctx.toSource());
-	        var /** @type {?} */ prefixLines = converter.reexports.size + converter.importsWithPrefixes.size;
-	        var /** @type {?} */ sm = ctx.toSourceMapGenerator(genFilePath, prefixLines).toJsComment();
+	        var /** @type {?} */ sm = ctx.toSourceMapGenerator(srcFilePath, genFilePath, preambleLines.length).toJsComment();
+	        var /** @type {?} */ lines = preambleLines.concat([ctx.toSource(), sm]);
 	        if (sm) {
-	            srcParts.push(sm);
+	            // always add a newline at the end, as some tools have bugs without it.
+	            lines.push('');
 	        }
-	        // always add a newline at the end, as some tools have bugs without it.
-	        srcParts.push('');
-	        return srcParts.join('\n');
+	        return lines.join('\n');
 	    };
 	    return TypeScriptEmitter;
 	}());
@@ -37197,9 +37227,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @param {?} _summaryResolver
 	     * @param {?} _localeId
 	     * @param {?} _translationFormat
+	     * @param {?} _genFilePreamble
 	     * @param {?} _symbolResolver
 	     */
-	    function AotCompiler(_config, _host, _metadataResolver, _templateParser, _styleCompiler, _viewCompiler, _ngModuleCompiler, _outputEmitter, _summaryResolver, _localeId, _translationFormat, _symbolResolver) {
+	    function AotCompiler(_config, _host, _metadataResolver, _templateParser, _styleCompiler, _viewCompiler, _ngModuleCompiler, _outputEmitter, _summaryResolver, _localeId, _translationFormat, _genFilePreamble, _symbolResolver) {
 	        this._config = _config;
 	        this._host = _host;
 	        this._metadataResolver = _metadataResolver;
@@ -37211,6 +37242,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        this._summaryResolver = _summaryResolver;
 	        this._localeId = _localeId;
 	        this._translationFormat = _translationFormat;
+	        this._genFilePreamble = _genFilePreamble;
 	        this._symbolResolver = _symbolResolver;
 	    }
 	    /**
@@ -37384,7 +37416,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @return {?}
 	     */
 	    AotCompiler.prototype._codegenSourceModule = function (srcFileUrl, genFileUrl, statements, exportedVars) {
-	        return new GeneratedFile(srcFileUrl, genFileUrl, this._outputEmitter.emitStatements(genFileUrl, statements, exportedVars));
+	        return new GeneratedFile(srcFileUrl, genFileUrl, this._outputEmitter.emitStatements(sourceUrl(srcFileUrl), genFileUrl, statements, exportedVars, this._genFilePreamble));
 	    };
 	    return AotCompiler;
 	}());
@@ -39004,7 +39036,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        getTypeArity: function (symbol) { return symbolResolver.getTypeArity(symbol); }
 	    };
 	    var /** @type {?} */ viewCompiler = new ViewCompiler(config, elementSchemaRegistry);
-	    var /** @type {?} */ compiler = new AotCompiler(config, compilerHost, resolver, tmplParser, new StyleCompiler(urlResolver), viewCompiler, new NgModuleCompiler(), new TypeScriptEmitter(importResolver), summaryResolver, options.locale, options.i18nFormat, symbolResolver);
+	    var /** @type {?} */ compiler = new AotCompiler(config, compilerHost, resolver, tmplParser, new StyleCompiler(urlResolver), viewCompiler, new NgModuleCompiler(), new TypeScriptEmitter(importResolver), summaryResolver, options.locale, options.i18nFormat, options.genFilePreamble, symbolResolver);
 	    return { compiler: compiler, reflector: staticReflector };
 	}
 	/**
@@ -39774,7 +39806,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        // We don't want to hard code this fact, so we auto detect it via an empty function first.
 	        var /** @type {?} */ emptyFn = new (Function.bind.apply(Function, [void 0].concat(fnArgNames.concat('return null;'))))().toString();
 	        var /** @type {?} */ headerLines = emptyFn.slice(0, emptyFn.indexOf('return null;')).split('\n').length - 1;
-	        fnBody += "\n" + ctx.toSourceMapGenerator(sourceUrl, headerLines).toJsComment();
+	        fnBody += "\n" + ctx.toSourceMapGenerator(sourceUrl, sourceUrl, headerLines).toJsComment();
 	    }
 	    return new (Function.bind.apply(Function, [void 0].concat(fnArgNames.concat(fnBody))))().apply(void 0, fnArgValues);
 	}
@@ -39870,6 +39902,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        configurable: true
 	    });
 	    /**
+	     * @template T
 	     * @param {?} moduleType
 	     * @return {?}
 	     */
@@ -39877,6 +39910,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        return this._compileModuleAndComponents(moduleType, true).syncResult;
 	    };
 	    /**
+	     * @template T
 	     * @param {?} moduleType
 	     * @return {?}
 	     */
@@ -39884,6 +39918,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        return this._compileModuleAndComponents(moduleType, false).asyncResult;
 	    };
 	    /**
+	     * @template T
 	     * @param {?} moduleType
 	     * @return {?}
 	     */
@@ -39891,6 +39926,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        return this._compileModuleAndAllComponents(moduleType, true).syncResult;
 	    };
 	    /**
+	     * @template T
 	     * @param {?} moduleType
 	     * @return {?}
 	     */
@@ -39909,6 +39945,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        return template.compMeta.template.ngContentSelectors;
 	    };
 	    /**
+	     * @template T
 	     * @param {?} moduleType
 	     * @param {?} isSync
 	     * @return {?}
@@ -39928,6 +39965,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        }
 	    };
 	    /**
+	     * @template T
 	     * @param {?} moduleType
 	     * @param {?} isSync
 	     * @return {?}
@@ -39966,6 +40004,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        return Promise.all(loadingPromises);
 	    };
 	    /**
+	     * @template T
 	     * @param {?} moduleType
 	     * @return {?}
 	     */
@@ -40229,6 +40268,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        configurable: true
 	    });
 	    /**
+	     * @template T
 	     * @param {?} moduleType
 	     * @return {?}
 	     */
@@ -40236,6 +40276,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        return this._delegate.compileModuleSync(moduleType);
 	    };
 	    /**
+	     * @template T
 	     * @param {?} moduleType
 	     * @return {?}
 	     */
@@ -40243,6 +40284,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        return this._delegate.compileModuleAsync(moduleType);
 	    };
 	    /**
+	     * @template T
 	     * @param {?} moduleType
 	     * @return {?}
 	     */
@@ -40250,6 +40292,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        return this._delegate.compileModuleAndAllComponentsSync(moduleType);
 	    };
 	    /**
+	     * @template T
 	     * @param {?} moduleType
 	     * @return {?}
 	     */
@@ -40574,9 +40617,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * A platform that included corePlatform and the compiler.
 	 *
-	 * @experimental
+	 * \@experimental
 	 */
-	var /** @type {?} */ platformCoreDynamic = createPlatformFactory(platformCore, 'coreDynamic', [
+	var platformCoreDynamic = createPlatformFactory(platformCore, 'coreDynamic', [
 	    { provide: COMPILER_OPTIONS, useValue: {}, multi: true },
 	    { provide: CompilerFactory, useClass: JitCompilerFactory },
 	    { provide: PLATFORM_INITIALIZER, useValue: _initReflector, multi: true },
@@ -40594,6 +40637,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    };
 	}
 	/**
+	 * @template T
 	 * @param {?} args
 	 * @return {?}
 	 */
@@ -40716,6 +40760,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    TransitiveCompileNgModuleMetadata: TransitiveCompileNgModuleMetadata,
 	    ProviderMeta: ProviderMeta,
 	    flatten: flatten$1,
+	    sourceUrl: sourceUrl,
 	    templateSourceUrl: templateSourceUrl,
 	    sharedStylesheetJitUrl: sharedStylesheetJitUrl,
 	    ngModuleJitUrl: ngModuleJitUrl,
@@ -42500,6 +42545,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        }
 	        try {
 	            var metadataOrMetadatas = JSON.parse(this.context.readFile(filePath));
+	            while (metadataOrMetadatas && metadataOrMetadatas.alias) {
+	                filePath = path$1.join(path$1.dirname(filePath), metadataOrMetadatas.alias);
+	                metadataOrMetadatas = JSON.parse(this.context.readFile(filePath));
+	            }
 	            var metadatas_1 = metadataOrMetadatas ?
 	                (Array.isArray(metadataOrMetadatas) ? metadataOrMetadatas : [metadataOrMetadatas]) :
 	                [];
@@ -42870,7 +42919,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                var sourceFile = _this.program.getSourceFile(generatedModule.srcFileUrl);
 	                var emitPath = _this.ngCompilerHost.calculateEmitPath(generatedModule.genFileUrl);
 	                var source = GENERATED_META_FILES.test(emitPath) ? generatedModule.source :
-	                    PREAMBLE + generatedModule.source;
+	                    generatedModule.source;
 	                _this.host.writeFile(emitPath, source, false, function () { }, [sourceFile]);
 	            });
 	        });
@@ -42896,6 +42945,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            i18nFormat: cliOptions.i18nFormat,
 	            locale: cliOptions.locale,
 	            enableLegacyTemplate: options.enableLegacyTemplate !== false,
+	            genFilePreamble: PREAMBLE,
 	        }).compiler;
 	        return new CodeGenerator(options, program, tsCompilerHost, aotCompiler, ngCompilerHost);
 	    };
@@ -42990,7 +43040,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$5 = new core_1.Version('4.0.0-rc.3-480a407');
+	var VERSION$5 = new core_1.Version('4.0.0-rc.4-fcaca45');
 
 	var __moduleExports$38 = {
 		VERSION: VERSION$5
@@ -47343,7 +47393,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION = new Version('4.0.0-rc.3-480a407');
+	var VERSION = new Version('4.0.0-rc.4-fcaca45');
 
 	exports.createLanguageService = createLanguageService;
 	exports.create = create;
@@ -47352,3 +47402,4 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	exports.VERSION = VERSION;
 
 });
+//# sourceMappingURL=language-service.umd.js.map
