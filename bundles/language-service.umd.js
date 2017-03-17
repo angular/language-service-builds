@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.0.0-rc.5-2d78c8c
+ * @license Angular v4.0.0-rc.5-f925910
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2794,7 +2794,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * \@stable
 	 */
-	var VERSION$2 = new Version('4.0.0-rc.5-2d78c8c');
+	var VERSION$2 = new Version('4.0.0-rc.5-f925910');
 	/**
 	 * Inject decorator and metadata.
 	 *
@@ -4930,6 +4930,8 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * the template of the given component.
 	     * This is used by the `upgrade` library to compile the appropriate transclude content
 	     * in the AngularJS wrapper component.
+	     *
+	     * @deprecated since v4. Use ComponentFactory.ngContentSelectors instead.
 	     * @param {?} component
 	     * @return {?}
 	     */
@@ -5065,6 +5067,24 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     */
 	    ComponentFactory.prototype.componentType = function () { };
 	    /**
+	     * selector for all <ng-content> elements in the component.
+	     * @abstract
+	     * @return {?}
+	     */
+	    ComponentFactory.prototype.ngContentSelectors = function () { };
+	    /**
+	     * the inputs of the component.
+	     * @abstract
+	     * @return {?}
+	     */
+	    ComponentFactory.prototype.inputs = function () { };
+	    /**
+	     * the outputs of the component.
+	     * @abstract
+	     * @return {?}
+	     */
+	    ComponentFactory.prototype.outputs = function () { };
+	    /**
 	     * Creates a new component.
 	     * @abstract
 	     * @param {?} injector
@@ -5167,6 +5187,30 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	         * @return {?}
 	         */
 	        get: function () { return this.factory.componentType; },
+	        enumerable: true,
+	        configurable: true
+	    });
+	    Object.defineProperty(ComponentFactoryBoundToModule.prototype, "ngContentSelectors", {
+	        /**
+	         * @return {?}
+	         */
+	        get: function () { return this.factory.ngContentSelectors; },
+	        enumerable: true,
+	        configurable: true
+	    });
+	    Object.defineProperty(ComponentFactoryBoundToModule.prototype, "inputs", {
+	        /**
+	         * @return {?}
+	         */
+	        get: function () { return this.factory.inputs; },
+	        enumerable: true,
+	        configurable: true
+	    });
+	    Object.defineProperty(ComponentFactoryBoundToModule.prototype, "outputs", {
+	        /**
+	         * @return {?}
+	         */
+	        get: function () { return this.factory.outputs; },
 	        enumerable: true,
 	        configurable: true
 	    });
@@ -10244,21 +10288,41 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    }
 	    return value;
 	}
-	var /** @type {?} */ _renderCompCount = 0;
+	var /** @type {?} */ UNDEFINED_RENDERER_TYPE_ID = '$$undefined';
+	var /** @type {?} */ EMPTY_RENDERER_TYPE_ID = '$$empty';
 	/**
 	 * @param {?} values
 	 * @return {?}
 	 */
 	function ɵcrt(values) {
-	    var /** @type {?} */ isFilled = values && (values.encapsulation !== ViewEncapsulation.None ||
-	        values.styles.length || Object.keys(values.data).length);
-	    if (isFilled) {
-	        var /** @type {?} */ id = "c" + _renderCompCount++;
-	        return { id: id, styles: values.styles, encapsulation: values.encapsulation, data: values.data };
+	    return {
+	        id: UNDEFINED_RENDERER_TYPE_ID,
+	        styles: values.styles,
+	        encapsulation: values.encapsulation,
+	        data: values.data
+	    };
+	}
+	var /** @type {?} */ _renderCompCount = 0;
+	/**
+	 * @param {?} type
+	 * @return {?}
+	 */
+	function resolveRendererType2(type) {
+	    if (type && type.id === UNDEFINED_RENDERER_TYPE_ID) {
+	        // first time we see this RendererType2. Initialize it...
+	        var /** @type {?} */ isFilled = ((type.encapsulation != null && type.encapsulation !== ViewEncapsulation.None) ||
+	            type.styles.length || Object.keys(type.data).length);
+	        if (isFilled) {
+	            type.id = "c" + _renderCompCount++;
+	        }
+	        else {
+	            type.id = EMPTY_RENDERER_TYPE_ID;
+	        }
 	    }
-	    else {
-	        return null;
+	    if (type && type.id === EMPTY_RENDERER_TYPE_ID) {
+	        type = null;
 	    }
+	    return type;
 	}
 	/**
 	 * @param {?} view
@@ -10795,11 +10859,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        var _b = splitNamespace(namespaceAndName), ns = _b[0], name = _b[1];
 	        return [ns, name, value];
 	    }));
-	    // This is needed as the jit compiler always uses an empty hash as default RendererType2,
-	    // which is not filled for host views.
-	    if (componentRendererType && componentRendererType.encapsulation == null) {
-	        componentRendererType = null;
-	    }
+	    componentRendererType = resolveRendererType2(componentRendererType);
 	    if (componentView) {
 	        flags |= 16777216 /* ComponentView */;
 	    }
@@ -11239,10 +11299,13 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	 * @param {?} selector
 	 * @param {?} componentType
 	 * @param {?} viewDefFactory
+	 * @param {?} inputs
+	 * @param {?} outputs
+	 * @param {?} ngContentSelectors
 	 * @return {?}
 	 */
-	function ɵccf(selector, componentType, viewDefFactory) {
-	    return new ComponentFactory_(selector, componentType, viewDefFactory);
+	function ɵccf(selector, componentType, viewDefFactory, inputs, outputs, ngContentSelectors) {
+	    return new ComponentFactory_(selector, componentType, viewDefFactory, inputs, outputs, ngContentSelectors);
 	}
 	/**
 	 * @param {?} componentFactory
@@ -11257,14 +11320,53 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @param {?} selector
 	     * @param {?} componentType
 	     * @param {?} viewDefFactory
+	     * @param {?} _inputs
+	     * @param {?} _outputs
+	     * @param {?} ngContentSelectors
 	     */
-	    function ComponentFactory_(selector, componentType, viewDefFactory) {
-	        var _this = _super.call(this) || this;
+	    function ComponentFactory_(selector, componentType, viewDefFactory, _inputs, _outputs, ngContentSelectors) {
+	        var _this = 
+	        // Attention: this ctor is called as top level function.
+	        // Putting any logic in here will destroy closure tree shaking!
+	        _super.call(this) || this;
 	        _this.selector = selector;
 	        _this.componentType = componentType;
+	        _this._inputs = _inputs;
+	        _this._outputs = _outputs;
+	        _this.ngContentSelectors = ngContentSelectors;
 	        _this.viewDefFactory = viewDefFactory;
 	        return _this;
 	    }
+	    Object.defineProperty(ComponentFactory_.prototype, "inputs", {
+	        /**
+	         * @return {?}
+	         */
+	        get: function () {
+	            var /** @type {?} */ inputsArr = [];
+	            for (var /** @type {?} */ propName in this._inputs) {
+	                var /** @type {?} */ templateName = this._inputs[propName];
+	                inputsArr.push({ propName: propName, templateName: templateName });
+	            }
+	            return inputsArr;
+	        },
+	        enumerable: true,
+	        configurable: true
+	    });
+	    Object.defineProperty(ComponentFactory_.prototype, "outputs", {
+	        /**
+	         * @return {?}
+	         */
+	        get: function () {
+	            var /** @type {?} */ outputsArr = [];
+	            for (var /** @type {?} */ propName in this._outputs) {
+	                var /** @type {?} */ templateName = this._outputs[propName];
+	                outputsArr.push({ propName: propName, templateName: templateName });
+	            }
+	            return outputsArr;
+	        },
+	        enumerable: true,
+	        configurable: true
+	    });
 	    /**
 	     * Creates a new component.
 	     * @param {?} injector
@@ -15523,7 +15625,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * \@stable
 	 */
-	var VERSION$1 = new Version('4.0.0-rc.5-2d78c8c');
+	var VERSION$1 = new Version('4.0.0-rc.5-f925910');
 	/**
 	 * @license
 	 * Copyright Google Inc. All Rights Reserved.
@@ -28850,16 +28952,31 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    /**
 	     * @param {?} selector
 	     * @param {?} dirType
+	     * @param {?} inputs
+	     * @param {?} outputs
 	     * @return {?}
 	     */
-	    CompileMetadataResolver.prototype.getComponentFactory = function (selector, dirType) {
+	    CompileMetadataResolver.prototype.getComponentFactory = function (selector, dirType, inputs, outputs) {
 	        if (dirType instanceof StaticSymbol) {
 	            return this._staticSymbolCache.get(ngfactoryFilePath(dirType.filePath), componentFactoryName(dirType));
 	        }
 	        else {
 	            var /** @type {?} */ hostView = this.getHostComponentViewClass(dirType);
-	            return ɵccf(selector, dirType, /** @type {?} */ (hostView));
+	            // Note: ngContentSelectors will be filled later once the template is
+	            // loaded.
+	            return ɵccf(selector, dirType, /** @type {?} */ (hostView), inputs, outputs, []);
 	        }
+	    };
+	    /**
+	     * @param {?} factory
+	     * @param {?} ngContentSelectors
+	     * @return {?}
+	     */
+	    CompileMetadataResolver.prototype.initComponentFactory = function (factory, ngContentSelectors) {
+	        if (!(factory instanceof StaticSymbol)) {
+	            (_a = factory.ngContentSelectors).push.apply(_a, ngContentSelectors);
+	        }
+	        var _a;
 	    };
 	    /**
 	     * @param {?} type
@@ -28910,6 +29027,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	                componentFactory: metadata.componentFactory,
 	                template: templateMetadata
 	            });
+	            if (templateMetadata) {
+	                _this.initComponentFactory(metadata.componentFactory, templateMetadata.ngContentSelectors);
+	            }
 	            _this._directiveCache.set(directiveType, normalizedDirMeta);
 	            _this._summaryCache.set(directiveType, normalizedDirMeta.toSummary());
 	            return normalizedDirMeta;
@@ -29035,10 +29155,12 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	            componentViewType: nonNormalizedTemplateMetadata ? this.getComponentViewClass(directiveType) :
 	                undefined,
 	            rendererType: nonNormalizedTemplateMetadata ? this.getRendererType(directiveType) : undefined,
-	            componentFactory: nonNormalizedTemplateMetadata ?
-	                this.getComponentFactory(selector, directiveType) :
-	                undefined
+	            componentFactory: undefined
 	        });
+	        if (nonNormalizedTemplateMetadata) {
+	            metadata.componentFactory =
+	                this.getComponentFactory(selector, directiveType, metadata.inputs, metadata.outputs);
+	        }
 	        cacheEntry = { metadata: metadata, annotation: dirMeta };
 	        this._nonNormalizedDirectiveCache.set(directiveType, cacheEntry);
 	        return cacheEntry;
@@ -32599,7 +32721,10 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        var /** @type {?} */ firstOffsetMapped = false;
 	        var /** @type {?} */ mapFirstOffsetIfNeeded = function () {
 	            if (!firstOffsetMapped) {
-	                map.addSource(sourceFilePath).addMapping(0, sourceFilePath, 0, 0);
+	                // Add a single space so that tools won't try to load the file from disk.
+	                // Note: We are using virtual urls like `ng:///`, so we have to
+	                // provide a content here.
+	                map.addSource(sourceFilePath, ' ').addMapping(0, sourceFilePath, 0, 0);
 	                firstOffsetMapped = true;
 	            }
 	        };
@@ -37367,11 +37492,24 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        var /** @type {?} */ hostViewFactoryVar = this._compileComponent(hostMeta, ngModule, [compMeta.type], null, fileSuffix, targetStatements)
 	            .viewClassVar;
 	        var /** @type {?} */ compFactoryVar = componentFactoryName(compMeta.type.reference);
+	        var /** @type {?} */ inputsExprs = [];
+	        for (var /** @type {?} */ propName in compMeta.inputs) {
+	            var /** @type {?} */ templateName = compMeta.inputs[propName];
+	            // Don't quote so that the key gets minified...
+	            inputsExprs.push(new LiteralMapEntry(propName, literal(templateName), false));
+	        }
+	        var /** @type {?} */ outputsExprs = [];
+	        for (var /** @type {?} */ propName in compMeta.outputs) {
+	            var /** @type {?} */ templateName = compMeta.outputs[propName];
+	            // Don't quote so that the key gets minified...
+	            outputsExprs.push(new LiteralMapEntry(propName, literal(templateName), false));
+	        }
 	        targetStatements.push(variable(compFactoryVar)
 	            .set(importExpr(createIdentifier(Identifiers.createComponentFactory)).callFn([
-	            literal(compMeta.selector),
-	            importExpr(compMeta.type),
-	            variable(hostViewFactoryVar),
+	            literal(compMeta.selector), importExpr(compMeta.type),
+	            variable(hostViewFactoryVar), new LiteralMapExpr(inputsExprs),
+	            new LiteralMapExpr(outputsExprs),
+	            literalArr(compMeta.template.ngContentSelectors.map(function (selector) { return literal(selector); }))
 	        ]))
 	            .toDeclStmt(importType(createIdentifier(Identifiers.ComponentFactory), [importType(compMeta.type)], [TypeModifier.Const]), [StmtModifier.Final]));
 	        return compFactoryVar;
@@ -39878,8 +40016,9 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @param {?} _viewCompiler
 	     * @param {?} _ngModuleCompiler
 	     * @param {?} _compilerConfig
+	     * @param {?} _console
 	     */
-	    function JitCompiler(_injector, _metadataResolver, _templateParser, _styleCompiler, _viewCompiler, _ngModuleCompiler, _compilerConfig) {
+	    function JitCompiler(_injector, _metadataResolver, _templateParser, _styleCompiler, _viewCompiler, _ngModuleCompiler, _compilerConfig, _console) {
 	        this._injector = _injector;
 	        this._metadataResolver = _metadataResolver;
 	        this._templateParser = _templateParser;
@@ -39887,6 +40026,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	        this._viewCompiler = _viewCompiler;
 	        this._ngModuleCompiler = _ngModuleCompiler;
 	        this._compilerConfig = _compilerConfig;
+	        this._console = _console;
 	        this._compiledTemplateCache = new Map();
 	        this._compiledHostTemplateCache = new Map();
 	        this._compiledDirectiveWrapperCache = new Map();
@@ -39938,6 +40078,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	     * @return {?}
 	     */
 	    JitCompiler.prototype.getNgContentSelectors = function (component) {
+	        this._console.warn('Compiler.getNgContentSelectors is deprecated. Use ComponentFactory.ngContentSelectors instead!');
 	        var /** @type {?} */ template = this._compiledTemplateCache.get(component);
 	        if (!template) {
 	            throw new Error("The component " + ɵstringify(component) + " is not yet compiled!");
@@ -40205,6 +40346,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	    { type: ViewCompiler, },
 	    { type: NgModuleCompiler, },
 	    { type: CompilerConfig, },
+	    { type: ɵConsole, },
 	]; };
 	var CompiledTemplate = (function () {
 	    /**
@@ -43040,7 +43182,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION$5 = new core_1.Version('4.0.0-rc.5-2d78c8c');
+	var VERSION$5 = new core_1.Version('4.0.0-rc.5-f925910');
 
 	var __moduleExports$38 = {
 		VERSION: VERSION$5
@@ -47393,7 +47535,7 @@ define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata'], function (ex
 	/**
 	 * @stable
 	 */
-	var VERSION = new Version('4.0.0-rc.5-2d78c8c');
+	var VERSION = new Version('4.0.0-rc.5-f925910');
 
 	exports.createLanguageService = createLanguageService;
 	exports.create = create;
