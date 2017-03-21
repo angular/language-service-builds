@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.0.0-rc.5-d3eda7a
+ * @license Angular v4.0.0-rc.5-de3d2ee
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2007,7 +2007,7 @@ var __extends$2$1 = (undefined && undefined.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 /**
- * @license Angular v4.0.0-rc.5-d3eda7a
+ * @license Angular v4.0.0-rc.5-de3d2ee
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2857,7 +2857,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('4.0.0-rc.5-d3eda7a');
+var VERSION$2 = new Version('4.0.0-rc.5-de3d2ee');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -16160,7 +16160,7 @@ var __extends$1$1 = (undefined && undefined.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 /**
- * @license Angular v4.0.0-rc.5-d3eda7a
+ * @license Angular v4.0.0-rc.5-de3d2ee
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -16179,7 +16179,7 @@ var __extends$1$1 = (undefined && undefined.__extends) || function (d, b) {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('4.0.0-rc.5-d3eda7a');
+var VERSION$1 = new Version('4.0.0-rc.5-de3d2ee');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -17873,8 +17873,6 @@ function _sanitizeIdentifier(name) {
     return name.replace(/\W/g, '_');
 }
 var _anonymousTypeIndex = 0;
-var symbolId = 0;
-var symbolIds = new Map();
 /**
  * @param {?} compileIdentifier
  * @return {?}
@@ -17886,14 +17884,6 @@ function identifierName(compileIdentifier) {
     var /** @type {?} */ ref = compileIdentifier.reference;
     if (ref instanceof StaticSymbol) {
         return ref.name;
-    }
-    if (isSymbol(ref)) {
-        if (symbolIds.has(ref)) {
-            return symbolIds.get(ref);
-        }
-        var /** @type {?} */ symbolStr = "_symbol_" + _sanitizeIdentifier(ref.toString()) + "_" + symbolId++;
-        symbolIds.set(ref, symbolStr);
-        return symbolStr;
     }
     if (ref['__anonymousType']) {
         return ref['__anonymousType'];
@@ -17908,13 +17898,6 @@ function identifierName(compileIdentifier) {
         identifier = _sanitizeIdentifier(identifier);
     }
     return identifier;
-}
-/**
- * @param {?} sym
- * @return {?}
- */
-function isSymbol(sym) {
-    return typeof sym === 'symbol';
 }
 /**
  * @param {?} compileIdentifier
@@ -30846,7 +30829,6 @@ function stringifyType(type) {
  * @return {?}
  */
 function componentStillLoadingError(compType) {
-    debugger;
     var /** @type {?} */ error = Error("Can't compile synchronously as " + stringify(compType) + " is still being loaded!");
     ((error))[ERROR_COMPONENT_TYPE] = compType;
     return error;
@@ -44226,7 +44208,7 @@ var core_1 = require$$0$13;
 /**
  * @stable
  */
-var VERSION$5 = new core_1.Version('4.0.0-rc.5-d3eda7a');
+var VERSION$5 = new core_1.Version('4.0.0-rc.5-de3d2ee');
 
 
 var version = {
@@ -44536,7 +44518,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v4.0.0-rc.5-d3eda7a
+ * @license Angular v4.0.0-rc.5-de3d2ee
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -48645,7 +48627,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('4.0.0-rc.5-d3eda7a');
+var VERSION$$1 = new Version('4.0.0-rc.5-de3d2ee');
 
 exports.createLanguageService = createLanguageService;
 exports.create = create;
