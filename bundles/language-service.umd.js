@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.0.0-rc.5-8e6995c
+ * @license Angular v4.0.0-rc.5-64beae9
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2007,7 +2007,7 @@ var __extends$2$1 = (undefined && undefined.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 /**
- * @license Angular v4.0.0-rc.5-8e6995c
+ * @license Angular v4.0.0-rc.5-64beae9
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2860,7 +2860,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('4.0.0-rc.5-8e6995c');
+var VERSION$2 = new Version('4.0.0-rc.5-64beae9');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -8048,9 +8048,10 @@ var ViewContainerRef = (function () {
      * @param {?=} index
      * @param {?=} injector
      * @param {?=} projectableNodes
+     * @param {?=} ngModule
      * @return {?}
      */
-    ViewContainerRef.prototype.createComponent = function (componentFactory, index, injector, projectableNodes) { };
+    ViewContainerRef.prototype.createComponent = function (componentFactory, index, injector, projectableNodes, ngModule) { };
     /**
      * Inserts a View identified by a {\@link ViewRef} into the container at the specified `index`.
      *
@@ -10806,7 +10807,9 @@ function markParentViewsForCheck(view) {
  * @return {?}
  */
 function dispatchEvent(view, nodeIndex, eventName, event) {
-    markParentViewsForCheck(view);
+    var /** @type {?} */ nodeDef = view.def.nodes[nodeIndex];
+    var /** @type {?} */ startView = nodeDef.flags & 16777216 /* ComponentView */ ? asElementData(view, nodeIndex).componentView : view;
+    markParentViewsForCheck(startView);
     return Services.handleEvent(view, nodeIndex, eventName, event);
 }
 /**
@@ -11981,7 +11984,7 @@ var ViewContainerRef_ = (function () {
                 elDef = viewParentEl(view);
                 view = view.parent;
             }
-            return view ? new Injector_(view, elDef) : this._view.root.injector;
+            return view ? new Injector_(view, elDef) : new Injector_(this._view, null);
         },
         enumerable: true,
         configurable: true
@@ -12036,11 +12039,15 @@ var ViewContainerRef_ = (function () {
      * @param {?=} index
      * @param {?=} injector
      * @param {?=} projectableNodes
+     * @param {?=} ngModuleRef
      * @return {?}
      */
-    ViewContainerRef_.prototype.createComponent = function (componentFactory, index, injector, projectableNodes) {
+    ViewContainerRef_.prototype.createComponent = function (componentFactory, index, injector, projectableNodes, ngModuleRef) {
         var /** @type {?} */ contextInjector = injector || this.parentInjector;
-        var /** @type {?} */ componentRef = componentFactory.create(contextInjector, projectableNodes);
+        if (!ngModuleRef && !(componentFactory instanceof ComponentFactoryBoundToModule)) {
+            ngModuleRef = contextInjector.get(NgModuleRef);
+        }
+        var /** @type {?} */ componentRef = componentFactory.create(contextInjector, projectableNodes, undefined, ngModuleRef);
         this.insert(componentRef.hostView, index);
         return componentRef;
     };
@@ -12268,7 +12275,7 @@ var Injector_ = (function () {
      */
     Injector_.prototype.get = function (token, notFoundValue) {
         if (notFoundValue === void 0) { notFoundValue = Injector.THROW_IF_NOT_FOUND; }
-        var /** @type {?} */ allowPrivateServices = (this.elDef.flags & 16777216 /* ComponentView */) !== 0;
+        var /** @type {?} */ allowPrivateServices = this.elDef ? (this.elDef.flags & 16777216 /* ComponentView */) !== 0 : false;
         return Services.resolveDep(this.view, this.elDef, allowPrivateServices, { flags: 0 /* None */, token: token, tokenKey: tokenKey(token) }, notFoundValue);
     };
     return Injector_;
@@ -12898,7 +12905,7 @@ function resolveDep(view, elDef, allowPrivateServices, depDef, notFoundValue) {
         notFoundValue = null;
     }
     var /** @type {?} */ tokenKey$$1 = depDef.tokenKey;
-    if (depDef.flags & 1 /* SkipSelf */) {
+    if (elDef && (depDef.flags & 1 /* SkipSelf */)) {
         allowPrivateServices = false;
         elDef = elDef.parent;
     }
@@ -14951,20 +14958,23 @@ var DebugContext_ = (function () {
         for (var _i = 1; _i < arguments.length; _i++) {
             values[_i - 1] = arguments[_i];
         }
-        var /** @type {?} */ logViewFactory;
+        var /** @type {?} */ logViewDef;
         var /** @type {?} */ logNodeIndex;
         if (this.nodeDef.flags & 2 /* TypeText */) {
-            logViewFactory = this.view.def.factory;
+            logViewDef = this.view.def;
             logNodeIndex = this.nodeDef.index;
         }
         else {
-            logViewFactory = this.elView.def.factory;
+            logViewDef = this.elView.def;
             logNodeIndex = this.elDef.index;
         }
-        var /** @type {?} */ currNodeIndex = -1;
+        // Note: we only generate a log function for text and element nodes
+        // to make the generated code as small as possible.
+        var /** @type {?} */ renderNodeIndex = getRenderNodeIndex(logViewDef, logNodeIndex);
+        var /** @type {?} */ currRenderNodeIndex = -1;
         var /** @type {?} */ nodeLogger = function () {
-            currNodeIndex++;
-            if (currNodeIndex === logNodeIndex) {
+            currRenderNodeIndex++;
+            if (currRenderNodeIndex === renderNodeIndex) {
                 return (_a = console.error).bind.apply(_a, [console].concat(values));
             }
             else {
@@ -14972,14 +14982,29 @@ var DebugContext_ = (function () {
             }
             var _a;
         };
-        logViewFactory(nodeLogger);
-        if (currNodeIndex < logNodeIndex) {
+        logViewDef.factory(nodeLogger);
+        if (currRenderNodeIndex < renderNodeIndex) {
             console.error('Illegal state: the ViewDefinitionFactory did not call the logger!');
             console.error.apply(console, values);
         }
     };
     return DebugContext_;
 }());
+/**
+ * @param {?} viewDef
+ * @param {?} nodeIndex
+ * @return {?}
+ */
+function getRenderNodeIndex(viewDef$$1, nodeIndex) {
+    var /** @type {?} */ renderNodeIndex = -1;
+    for (var /** @type {?} */ i = 0; i <= nodeIndex; i++) {
+        var /** @type {?} */ nodeDef = viewDef$$1.nodes[i];
+        if (nodeDef.flags & 3 /* CatRenderNode */) {
+            renderNodeIndex++;
+        }
+    }
+    return renderNodeIndex;
+}
 /**
  * @param {?} view
  * @return {?}
@@ -16163,7 +16188,7 @@ var __extends$1$1 = (undefined && undefined.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 /**
- * @license Angular v4.0.0-rc.5-8e6995c
+ * @license Angular v4.0.0-rc.5-64beae9
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -16182,7 +16207,7 @@ var __extends$1$1 = (undefined && undefined.__extends) || function (d, b) {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('4.0.0-rc.5-8e6995c');
+var VERSION$1 = new Version('4.0.0-rc.5-64beae9');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -36863,13 +36888,12 @@ ViewCompiler.ctorParameters = function () { return [
     { type: CompilerConfig, },
     { type: ElementSchemaRegistry, },
 ]; };
-var LOG_VAR = variable('log');
-var VIEW_VAR = variable('view');
-var CHECK_VAR = variable('check');
-var COMP_VAR = variable('comp');
-var NODE_INDEX_VAR = variable('nodeIndex');
-var EVENT_NAME_VAR = variable('eventName');
-var ALLOW_DEFAULT_VAR = variable("allowDefault");
+var LOG_VAR = variable('l');
+var VIEW_VAR = variable('v');
+var CHECK_VAR = variable('ck');
+var COMP_VAR = variable('co');
+var EVENT_NAME_VAR = variable('en');
+var ALLOW_DEFAULT_VAR = variable("ad");
 var ViewBuilder = (function () {
     /**
      * @param {?} parent
@@ -36937,6 +36961,7 @@ var ViewBuilder = (function () {
                 }
                 _this.nodes.push(function () { return ({
                     sourceSpan: null,
+                    nodeFlags: flags,
                     nodeDef: importExpr(createIdentifier(Identifiers.queryDef)).callFn([
                         literal(flags), literal(queryId),
                         new LiteralMapExpr([new LiteralMapEntry(query.propertyName, literal(bindingType))])
@@ -36949,6 +36974,7 @@ var ViewBuilder = (function () {
             // if the view is an embedded view, then we need to add an additional root node in some cases
             this.nodes.push(function () { return ({
                 sourceSpan: null,
+                nodeFlags: 1 /* TypeElement */,
                 nodeDef: importExpr(createIdentifier(Identifiers.anchorDef)).callFn([
                     literal(0 /* None */), NULL_EXPR, NULL_EXPR, literal(0)
                 ])
@@ -37008,6 +37034,7 @@ var ViewBuilder = (function () {
         // ngContentDef(ngContentIndex: number, index: number): NodeDef;
         this.nodes.push(function () { return ({
             sourceSpan: ast.sourceSpan,
+            nodeFlags: 4 /* TypeNgContent */,
             nodeDef: importExpr(createIdentifier(Identifiers.ngContentDef)).callFn([
                 literal(ast.ngContentIndex), literal(ast.index)
             ])
@@ -37022,6 +37049,7 @@ var ViewBuilder = (function () {
         // textDef(ngContentIndex: number, constants: string[]): NodeDef;
         this.nodes.push(function () { return ({
             sourceSpan: ast.sourceSpan,
+            nodeFlags: 2 /* TypeText */,
             nodeDef: importExpr(createIdentifier(Identifiers.textDef)).callFn([
                 literal(ast.ngContentIndex), literalArr([literal(ast.value)])
             ])
@@ -37043,6 +37071,7 @@ var ViewBuilder = (function () {
         // textDef(ngContentIndex: number, constants: string[]): NodeDef;
         this.nodes[nodeIndex] = function () { return ({
             sourceSpan: ast.sourceSpan,
+            nodeFlags: 2 /* TypeText */,
             nodeDef: importExpr(createIdentifier(Identifiers.textDef)).callFn([
                 literal(ast.ngContentIndex), literalArr(inter.strings.map(function (s) { return literal(s); }))
             ]),
@@ -37070,6 +37099,7 @@ var ViewBuilder = (function () {
         //   ViewDefinitionFactory): NodeDef;
         this.nodes[nodeIndex] = function () { return ({
             sourceSpan: ast.sourceSpan,
+            nodeFlags: 1 /* TypeElement */ | flags,
             nodeDef: importExpr(createIdentifier(Identifiers.anchorDef)).callFn([
                 literal(flags),
                 queryMatchesExpr,
@@ -37142,6 +37172,7 @@ var ViewBuilder = (function () {
         //   componentView?: () => ViewDefinition, componentRendererType?: RendererType2): NodeDef;
         this.nodes[nodeIndex] = function () { return ({
             sourceSpan: ast.sourceSpan,
+            nodeFlags: 1 /* TypeElement */ | flags,
             nodeDef: importExpr(createIdentifier(Identifiers.elementDef)).callFn([
                 literal(flags),
                 queryMatchesExpr,
@@ -37274,6 +37305,7 @@ var ViewBuilder = (function () {
             var /** @type {?} */ bindingType = query.first ? 0 /* First */ : 1;
             _this.nodes.push(function () { return ({
                 sourceSpan: dirAst.sourceSpan,
+                nodeFlags: flags,
                 nodeDef: importExpr(createIdentifier(Identifiers.queryDef)).callFn([
                     literal(flags), literal(queryId),
                     new LiteralMapExpr([new LiteralMapEntry(query.propertyName, literal(bindingType))])
@@ -37339,6 +37371,7 @@ var ViewBuilder = (function () {
         //   outputs?: {[name: string]: string}, component?: () => ViewDefinition): NodeDef;
         this.nodes[nodeIndex] = function () { return ({
             sourceSpan: dirAst.sourceSpan,
+            nodeFlags: 8192 /* TypeDirective */ | flags,
             nodeDef: importExpr(createIdentifier(Identifiers.directiveDef)).callFn([
                 literal(flags), queryMatchExprs.length ? literalArr(queryMatchExprs) : NULL_EXPR,
                 literal(childCount), providerExpr, depsExpr,
@@ -37365,6 +37398,7 @@ var ViewBuilder = (function () {
         //   value: any, deps: ([DepFlags, any] | any)[]): NodeDef;
         this.nodes[nodeIndex] = function () { return ({
             sourceSpan: providerAst.sourceSpan,
+            nodeFlags: flags,
             nodeDef: importExpr(createIdentifier(Identifiers.providerDef)).callFn([
                 literal(flags), queryMatchExprs.length ? literalArr(queryMatchExprs) : NULL_EXPR,
                 tokenExpr(providerAst.token), providerExpr, depsExpr
@@ -37441,6 +37475,7 @@ var ViewBuilder = (function () {
         // pureArrayDef(argCount: number): NodeDef;
         this.nodes.push(function () { return ({
             sourceSpan: sourceSpan,
+            nodeFlags: 16 /* TypePureArray */,
             nodeDef: importExpr(createIdentifier(Identifiers.pureArrayDef)).callFn([literal(argCount)])
         }); });
         return function (args) { return callCheckStmt(nodeIndex, args); };
@@ -37459,6 +37494,7 @@ var ViewBuilder = (function () {
         // function pureObjectDef(propertyNames: string[]): NodeDef
         this.nodes.push(function () { return ({
             sourceSpan: sourceSpan,
+            nodeFlags: 32 /* TypePureObject */,
             nodeDef: importExpr(createIdentifier(Identifiers.pureObjectDef))
                 .callFn([literalArr(keys.map(function (key) { return literal(key); }))])
         }); });
@@ -37477,6 +37513,7 @@ var ViewBuilder = (function () {
             // function purePipeDef(argCount: number): NodeDef;
             this.nodes.push(function () { return ({
                 sourceSpan: expression.sourceSpan,
+                nodeFlags: 64 /* TypePurePipe */,
                 nodeDef: importExpr(createIdentifier(Identifiers.purePipeDef))
                     .callFn([literal(argCount)])
             }); });
@@ -37520,6 +37557,7 @@ var ViewBuilder = (function () {
         //   flags: NodeFlags, ctor: any, deps: ([DepFlags, any] | any)[]): NodeDef
         this.nodes.push(function () { return ({
             sourceSpan: sourceSpan,
+            nodeFlags: 8 /* TypePipe */,
             nodeDef: importExpr(createIdentifier(Identifiers.pipeDef)).callFn([
                 literal(flags), importExpr(pipe.type), literalArr(depExprs)
             ])
@@ -37553,17 +37591,21 @@ var ViewBuilder = (function () {
         var /** @type {?} */ updateRendererStmts = [];
         var /** @type {?} */ updateDirectivesStmts = [];
         var /** @type {?} */ nodeDefExprs = this.nodes.map(function (factory, nodeIndex) {
-            var _a = factory(), nodeDef = _a.nodeDef, directive = _a.directive, updateDirectives = _a.updateDirectives, updateRenderer = _a.updateRenderer, sourceSpan = _a.sourceSpan;
+            var _a = factory(), nodeDef = _a.nodeDef, nodeFlags = _a.nodeFlags, updateDirectives = _a.updateDirectives, updateRenderer = _a.updateRenderer, sourceSpan = _a.sourceSpan;
             if (updateRenderer) {
-                updateRendererStmts.push.apply(updateRendererStmts, createUpdateStatements(nodeIndex, sourceSpan, updateRenderer, null));
+                updateRendererStmts.push.apply(updateRendererStmts, createUpdateStatements(nodeIndex, sourceSpan, updateRenderer, false));
             }
             if (updateDirectives) {
-                updateDirectivesStmts.push.apply(updateDirectivesStmts, createUpdateStatements(nodeIndex, sourceSpan, updateDirectives, directive));
+                updateDirectivesStmts.push.apply(updateDirectivesStmts, createUpdateStatements(nodeIndex, sourceSpan, updateDirectives, (nodeFlags & (131072 /* DoCheck */ | 32768 /* OnInit */)) > 0));
             }
             // We use a comma expression to call the log function before
             // the nodeDef function, but still use the result of the nodeDef function
             // as the value.
-            var /** @type {?} */ logWithNodeDef = new CommaExpr([LOG_VAR.callFn([]).callFn([]), nodeDef]);
+            // Note: We only add the logger to elements / text nodes,
+            // so we don't generate too much code.
+            var /** @type {?} */ logWithNodeDef = nodeFlags & 3 /* CatRenderNode */ ?
+                new CommaExpr([LOG_VAR.callFn([]).callFn([]), nodeDef]) :
+                nodeDef;
             return applySourceSpanToExpressionIfNeeded(logWithNodeDef, sourceSpan);
         });
         return { updateRendererStmts: updateRendererStmts, updateDirectivesStmts: updateDirectivesStmts, nodeDefExprs: nodeDefExprs };
@@ -37571,10 +37613,10 @@ var ViewBuilder = (function () {
          * @param {?} nodeIndex
          * @param {?} sourceSpan
          * @param {?} expressions
-         * @param {?} directive
+         * @param {?} allowEmptyExprs
          * @return {?}
          */
-        function createUpdateStatements(nodeIndex, sourceSpan, expressions, directive) {
+        function createUpdateStatements(nodeIndex, sourceSpan, expressions, allowEmptyExprs) {
             var /** @type {?} */ updateStmts = [];
             var /** @type {?} */ exprs = expressions.map(function (_a) {
                 var sourceSpan = _a.sourceSpan, context = _a.context, value = _a.value;
@@ -37584,9 +37626,7 @@ var ViewBuilder = (function () {
                 updateStmts.push.apply(updateStmts, stmts.map(function (stmt) { return applySourceSpanToStatementIfNeeded(stmt, sourceSpan); }));
                 return applySourceSpanToExpressionIfNeeded(currValExpr, sourceSpan);
             });
-            if (expressions.length ||
-                (directive && (directive.lifecycleHooks.indexOf(LifecycleHooks.DoCheck) !== -1 ||
-                    directive.lifecycleHooks.indexOf(LifecycleHooks.OnInit) !== -1))) {
+            if (expressions.length || allowEmptyExprs) {
                 updateStmts.push(applySourceSpanToStatementIfNeeded(callCheckStmt(nodeIndex, exprs).toStmt(), sourceSpan));
             }
             return updateStmts;
@@ -44213,7 +44253,7 @@ var core_1 = require$$0$13;
 /**
  * @stable
  */
-var VERSION$5 = new core_1.Version('4.0.0-rc.5-8e6995c');
+var VERSION$5 = new core_1.Version('4.0.0-rc.5-64beae9');
 
 
 var version = {
@@ -44523,7 +44563,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v4.0.0-rc.5-8e6995c
+ * @license Angular v4.0.0-rc.5-64beae9
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -48632,7 +48672,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('4.0.0-rc.5-8e6995c');
+var VERSION$$1 = new Version('4.0.0-rc.5-64beae9');
 
 exports.createLanguageService = createLanguageService;
 exports.create = create;
