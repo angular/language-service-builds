@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.0.0-rc.5-98cb974
+ * @license Angular v4.0.0-rc.5-08d8675
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2007,7 +2007,7 @@ var __extends$2$1 = (undefined && undefined.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 /**
- * @license Angular v4.0.0-rc.5-98cb974
+ * @license Angular v4.0.0-rc.5-08d8675
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2860,7 +2860,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('4.0.0-rc.5-98cb974');
+var VERSION$2 = new Version('4.0.0-rc.5-08d8675');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -16203,7 +16203,7 @@ var __extends$1$1 = (undefined && undefined.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 /**
- * @license Angular v4.0.0-rc.5-98cb974
+ * @license Angular v4.0.0-rc.5-08d8675
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -16222,7 +16222,7 @@ var __extends$1$1 = (undefined && undefined.__extends) || function (d, b) {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('4.0.0-rc.5-98cb974');
+var VERSION$1 = new Version('4.0.0-rc.5-08d8675');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -27621,6 +27621,22 @@ var TEMPLATE_ATTR = 'template';
 var TEMPLATE_ATTR_PREFIX$1 = '*';
 var CLASS_ATTR = 'class';
 var TEXT_CSS_SELECTOR = CssSelector.parse('*')[0];
+var TEMPLATE_ELEMENT_DEPRECATION_WARNING = 'The <template> element is deprecated. Use <ng-template> instead';
+var TEMPLATE_ATTR_DEPRECATION_WARNING = 'The template attribute is deprecated. Use an ng-template element instead.';
+var warningCounts = {};
+/**
+ * @param {?} warnings
+ * @return {?}
+ */
+function warnOnlyOnce(warnings) {
+    return function (error) {
+        if (warnings.indexOf(error.msg) !== -1) {
+            warningCounts[error.msg] = (warningCounts[error.msg] || 0) + 1;
+            return warningCounts[error.msg] <= 1;
+        }
+        return true;
+    };
+}
 /**
  * Provides an array of {@link TemplateAstVisitor}s which will be used to transform
  * parsed templates before compilation is invoked, allowing custom expression syntax
@@ -27682,7 +27698,9 @@ var TemplateParser = (function () {
      */
     TemplateParser.prototype.parse = function (component, template, directives, pipes, schemas, templateUrl) {
         var /** @type {?} */ result = this.tryParse(component, template, directives, pipes, schemas, templateUrl);
-        var /** @type {?} */ warnings = result.errors.filter(function (error) { return error.level === ParseErrorLevel.WARNING; });
+        var /** @type {?} */ warnings = result.errors.filter(function (error) { return error.level === ParseErrorLevel.WARNING; }).filter(warnOnlyOnce([
+            TEMPLATE_ATTR_DEPRECATION_WARNING, TEMPLATE_ELEMENT_DEPRECATION_WARNING
+        ]));
         var /** @type {?} */ errors = result.errors.filter(function (error) { return error.level === ParseErrorLevel.ERROR; });
         if (warnings.length > 0) {
             this._console.warn("Template parse warnings:\n" + warnings.join('\n'));
@@ -27915,7 +27933,7 @@ var TemplateParseVisitor = (function () {
             var /** @type {?} */ prefixToken;
             var /** @type {?} */ normalizedName = _this._normalizeAttributeName(attr.name);
             if (_this.config.enableLegacyTemplate && normalizedName == TEMPLATE_ATTR) {
-                _this._reportError("The template attribute is deprecated. Use an ng-template element instead.", attr.sourceSpan, ParseErrorLevel.WARNING);
+                _this._reportError(TEMPLATE_ATTR_DEPRECATION_WARNING, attr.sourceSpan, ParseErrorLevel.WARNING);
                 templateBindingsSource = attr.value;
             }
             else if (normalizedName.startsWith(TEMPLATE_ATTR_PREFIX$1)) {
@@ -28545,7 +28563,7 @@ function isTemplate(el, enableLegacyTemplate, reportDeprecation) {
     // `<template>` is HTML and case insensitive
     if (tagNoNs.toLowerCase() === TEMPLATE_ELEMENT) {
         if (enableLegacyTemplate && tagNoNs.toLowerCase() === TEMPLATE_ELEMENT) {
-            reportDeprecation("The <template> element is deprecated. Use <ng-template> instead", el.sourceSpan);
+            reportDeprecation(TEMPLATE_ELEMENT_DEPRECATION_WARNING, el.sourceSpan);
             return true;
         }
         return false;
@@ -36502,7 +36520,7 @@ var _AstToIrVisitor = (function () {
         // Remove the mapping. This is not strictly required as the converter only traverses each node
         // once but is safer if the conversion is changed to traverse the nodes more than once.
         this._nodeMap.delete(leftMostSafe);
-        // If we allcoated a temporary, release it.
+        // If we allocated a temporary, release it.
         if (temporary) {
             this.releaseTemporary(temporary);
         }
@@ -44308,7 +44326,7 @@ var core_1 = require$$0$13;
 /**
  * @stable
  */
-var VERSION$5 = new core_1.Version('4.0.0-rc.5-98cb974');
+var VERSION$5 = new core_1.Version('4.0.0-rc.5-08d8675');
 
 
 var version = {
@@ -44618,7 +44636,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v4.0.0-rc.5-98cb974
+ * @license Angular v4.0.0-rc.5-08d8675
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -48727,7 +48745,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('4.0.0-rc.5-98cb974');
+var VERSION$$1 = new Version('4.0.0-rc.5-08d8675');
 
 exports.createLanguageService = createLanguageService;
 exports.create = create;
