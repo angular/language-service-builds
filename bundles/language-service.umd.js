@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.0.0-c65b754
+ * @license Angular v4.0.0-b2b1195
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2007,7 +2007,7 @@ var __extends$2$1 = (undefined && undefined.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 /**
- * @license Angular v4.0.0-c65b754
+ * @license Angular v4.0.0-b2b1195
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2860,7 +2860,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('4.0.0-c65b754');
+var VERSION$2 = new Version('4.0.0-b2b1195');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -16203,7 +16203,7 @@ var __extends$1$1 = (undefined && undefined.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 /**
- * @license Angular v4.0.0-c65b754
+ * @license Angular v4.0.0-b2b1195
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -16222,7 +16222,7 @@ var __extends$1$1 = (undefined && undefined.__extends) || function (d, b) {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('4.0.0-c65b754');
+var VERSION$1 = new Version('4.0.0-b2b1195');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -44330,7 +44330,7 @@ var core_1 = require$$0$13;
 /**
  * @stable
  */
-var VERSION$5 = new core_1.Version('4.0.0-c65b754');
+var VERSION$5 = new core_1.Version('4.0.0-b2b1195');
 
 
 var version = {
@@ -44640,7 +44640,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v4.0.0-c65b754
+ * @license Angular v4.0.0-b2b1195
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -48749,7 +48749,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('4.0.0-c65b754');
+var VERSION$$1 = new Version('4.0.0-b2b1195');
 
 exports.createLanguageService = createLanguageService;
 exports.create = create;
