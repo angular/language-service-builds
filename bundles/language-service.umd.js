@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.0.0-d92930e
+ * @license Angular v4.0.0-b8d5f87
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2007,7 +2007,7 @@ var __extends$2$1 = (undefined && undefined.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 /**
- * @license Angular v4.0.0-d92930e
+ * @license Angular v4.0.0-b8d5f87
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2860,7 +2860,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('4.0.0-d92930e');
+var VERSION$2 = new Version('4.0.0-b8d5f87');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -16203,7 +16203,7 @@ var __extends$1$1 = (undefined && undefined.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 /**
- * @license Angular v4.0.0-d92930e
+ * @license Angular v4.0.0-b8d5f87
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -16222,7 +16222,7 @@ var __extends$1$1 = (undefined && undefined.__extends) || function (d, b) {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('4.0.0-d92930e');
+var VERSION$1 = new Version('4.0.0-b8d5f87');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -24853,12 +24853,12 @@ var Xliff = (function (_super) {
     Xliff.prototype.load = function (content, url) {
         // xliff to xml nodes
         var /** @type {?} */ xliffParser = new XliffParser();
-        var _a = xliffParser.parse(content, url), locale = _a.locale, mlNodesByMsgId = _a.mlNodesByMsgId, errors = _a.errors;
+        var _a = xliffParser.parse(content, url), locale = _a.locale, msgIdToHtml = _a.msgIdToHtml, errors = _a.errors;
         // xml nodes to i18n nodes
         var /** @type {?} */ i18nNodesByMsgId = {};
         var /** @type {?} */ converter = new XmlToI18n();
-        Object.keys(mlNodesByMsgId).forEach(function (msgId) {
-            var _a = converter.convert(mlNodesByMsgId[msgId]), i18nNodes = _a.i18nNodes, e = _a.errors;
+        Object.keys(msgIdToHtml).forEach(function (msgId) {
+            var _a = converter.convert(msgIdToHtml[msgId], url), i18nNodes = _a.i18nNodes, e = _a.errors;
             errors.push.apply(errors, e);
             i18nNodesByMsgId[msgId] = i18nNodes;
         });
@@ -24900,16 +24900,12 @@ var _WriteVisitor = (function () {
      * @return {?}
      */
     _WriteVisitor.prototype.visitIcu = function (icu, context) {
-        if (this._isInIcu) {
-            // nested ICU is not supported
-            throw new Error('xliff does not support nested ICU messages');
-        }
-        this._isInIcu = true;
-        // TODO(vicb): support ICU messages
-        // https://lists.oasis-open.org/archives/xliff/201201/msg00028.html
-        // http://docs.oasis-open.org/xliff/v1.2/xliff-profile-po/xliff-profile-po-1.2-cd02.html
-        var /** @type {?} */ nodes = [];
-        this._isInIcu = false;
+        var _this = this;
+        var /** @type {?} */ nodes = [new Text$2("{" + icu.expressionPlaceholder + ", " + icu.type + ", ")];
+        Object.keys(icu.cases).forEach(function (c) {
+            nodes.push.apply(nodes, [new Text$2(c + " {")].concat(icu.cases[c].visit(_this), [new Text$2("} ")]));
+        });
+        nodes.push(new Text$2("}"));
         return nodes;
     };
     /**
@@ -24949,7 +24945,6 @@ var _WriteVisitor = (function () {
      */
     _WriteVisitor.prototype.serialize = function (nodes) {
         var _this = this;
-        this._isInIcu = false;
         return [].concat.apply([], nodes.map(function (node) { return node.visit(_this); }));
     };
     return _WriteVisitor;
@@ -24964,13 +24959,13 @@ var XliffParser = (function () {
      * @return {?}
      */
     XliffParser.prototype.parse = function (xliff, url) {
-        this._unitMlNodes = [];
-        this._mlNodesByMsgId = {};
+        this._unitMlString = null;
+        this._msgIdToHtml = {};
         var /** @type {?} */ xml = new XmlParser().parse(xliff, url, false);
         this._errors = xml.errors;
         visitAll(this, xml.rootNodes, null);
         return {
-            mlNodesByMsgId: this._mlNodesByMsgId,
+            msgIdToHtml: this._msgIdToHtml,
             errors: this._errors,
             locale: this._locale,
         };
@@ -24983,20 +24978,20 @@ var XliffParser = (function () {
     XliffParser.prototype.visitElement = function (element, context) {
         switch (element.name) {
             case _UNIT_TAG:
-                this._unitMlNodes = null;
+                this._unitMlString = null;
                 var /** @type {?} */ idAttr = element.attrs.find(function (attr) { return attr.name === 'id'; });
                 if (!idAttr) {
                     this._addError(element, "<" + _UNIT_TAG + "> misses the \"id\" attribute");
                 }
                 else {
                     var /** @type {?} */ id = idAttr.value;
-                    if (this._mlNodesByMsgId.hasOwnProperty(id)) {
+                    if (this._msgIdToHtml.hasOwnProperty(id)) {
                         this._addError(element, "Duplicated translations for msg " + id);
                     }
                     else {
                         visitAll(this, element.children, null);
-                        if (this._unitMlNodes) {
-                            this._mlNodesByMsgId[id] = this._unitMlNodes;
+                        if (typeof this._unitMlString === 'string') {
+                            this._msgIdToHtml[id] = this._unitMlString;
                         }
                         else {
                             this._addError(element, "Message " + id + " misses a translation");
@@ -25008,7 +25003,11 @@ var XliffParser = (function () {
                 // ignore source message
                 break;
             case _TARGET_TAG:
-                this._unitMlNodes = element.children;
+                var /** @type {?} */ innerTextStart = element.startSourceSpan.end.offset;
+                var /** @type {?} */ innerTextEnd = element.endSourceSpan.start.offset;
+                var /** @type {?} */ content = element.startSourceSpan.start.file.content;
+                var /** @type {?} */ innerText = content.slice(innerTextStart, innerTextEnd);
+                this._unitMlString = innerText;
                 break;
             case _FILE_TAG:
                 var /** @type {?} */ localeAttr = element.attrs.find(function (attr) { return attr.name === 'target-language'; });
@@ -25067,13 +25066,18 @@ var XmlToI18n = (function () {
     function XmlToI18n() {
     }
     /**
-     * @param {?} nodes
+     * @param {?} message
+     * @param {?} url
      * @return {?}
      */
-    XmlToI18n.prototype.convert = function (nodes) {
-        this._errors = [];
+    XmlToI18n.prototype.convert = function (message, url) {
+        var /** @type {?} */ xmlIcu = new XmlParser().parse(message, url, true);
+        this._errors = xmlIcu.errors;
+        var /** @type {?} */ i18nNodes = this._errors.length > 0 || xmlIcu.rootNodes.length == 0 ?
+            [] :
+            visitAll(this, xmlIcu.rootNodes);
         return {
-            i18nNodes: visitAll(this, nodes),
+            i18nNodes: i18nNodes,
             errors: this._errors,
         };
     };
@@ -25105,13 +25109,24 @@ var XmlToI18n = (function () {
      * @param {?} context
      * @return {?}
      */
-    XmlToI18n.prototype.visitExpansion = function (icu, context) { };
+    XmlToI18n.prototype.visitExpansion = function (icu, context) {
+        var /** @type {?} */ caseMap = {};
+        visitAll(this, icu.cases).forEach(function (c) {
+            caseMap[c.value] = new Container(c.nodes, icu.sourceSpan);
+        });
+        return new Icu(icu.switchValue, icu.type, caseMap, icu.sourceSpan);
+    };
     /**
      * @param {?} icuCase
      * @param {?} context
      * @return {?}
      */
-    XmlToI18n.prototype.visitExpansionCase = function (icuCase, context) { };
+    XmlToI18n.prototype.visitExpansionCase = function (icuCase, context) {
+        return {
+            value: icuCase.value,
+            nodes: visitAll(this, icuCase.expression),
+        };
+    };
     /**
      * @param {?} comment
      * @param {?} context
@@ -44330,7 +44345,7 @@ var core_1 = require$$0$13;
 /**
  * @stable
  */
-var VERSION$5 = new core_1.Version('4.0.0-d92930e');
+var VERSION$5 = new core_1.Version('4.0.0-b8d5f87');
 
 
 var version = {
@@ -44640,7 +44655,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v4.0.0-d92930e
+ * @license Angular v4.0.0-b8d5f87
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -48749,7 +48764,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('4.0.0-d92930e');
+var VERSION$$1 = new Version('4.0.0-b8d5f87');
 
 exports.createLanguageService = createLanguageService;
 exports.create = create;
