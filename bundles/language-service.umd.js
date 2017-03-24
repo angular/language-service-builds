@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.0.0-8785b2b
+ * @license Angular v4.0.0-c17b912
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2007,7 +2007,7 @@ var __extends$2$1 = (undefined && undefined.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 /**
- * @license Angular v4.0.0-8785b2b
+ * @license Angular v4.0.0-c17b912
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2860,7 +2860,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('4.0.0-8785b2b');
+var VERSION$2 = new Version('4.0.0-c17b912');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -4878,24 +4878,6 @@ function isPromise(obj) {
 function isObservable(obj) {
     // TODO use Symbol.observable when https://github.com/ReactiveX/rxjs/issues/2415 will be resolved
     return !!obj && typeof obj.subscribe === 'function';
-}
-/**
- * @template V
- * @param {?} m1
- * @param {?} m2
- * @return {?}
- */
-function merge$1(m1, m2) {
-    var /** @type {?} */ m = {};
-    for (var _i = 0, _a = Object.keys(m1); _i < _a.length; _i++) {
-        var k = _a[_i];
-        m[k] = m1[k];
-    }
-    for (var _b = 0, _c = Object.keys(m2); _b < _c.length; _b++) {
-        var k = _c[_b];
-        m[k] = m2[k];
-    }
-    return m;
 }
 /**
  * @license
@@ -16129,7 +16111,6 @@ var core_es5 = Object.freeze({
 	ɵmakeDecorator: makeDecorator,
 	ɵisObservable: isObservable,
 	ɵisPromise: isPromise,
-	ɵmerge: merge$1,
 	ɵNOT_FOUND_CHECK_ONLY_ELEMENT_INJECTOR: NOT_FOUND_CHECK_ONLY_ELEMENT_INJECTOR,
 	ɵNgModuleInjector: NgModuleInjector,
 	ɵregisterModuleFactory: registerModuleFactory,
@@ -16203,7 +16184,7 @@ var __extends$1$1 = (undefined && undefined.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 /**
- * @license Angular v4.0.0-8785b2b
+ * @license Angular v4.0.0-c17b912
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -16222,7 +16203,7 @@ var __extends$1$1 = (undefined && undefined.__extends) || function (d, b) {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('4.0.0-8785b2b');
+var VERSION$1 = new Version('4.0.0-c17b912');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -29225,6 +29206,15 @@ var TemplatePreparseVisitor = (function () {
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
+var __assign = (undefined && undefined.__assign) || Object.assign || function (t) {
+    for (var s, i = 1, n = arguments.length; i < n; i++) {
+        s = arguments[i];
+        for (var p in s)
+            if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+    }
+    return t;
+};
 var DirectiveResolver = (function () {
     /**
      * @param {?=} _reflector
@@ -29355,8 +29345,8 @@ var DirectiveResolver = (function () {
     DirectiveResolver.prototype._merge = function (directive, inputs, outputs, host, queries, directiveType) {
         var /** @type {?} */ mergedInputs = this._dedupeBindings(directive.inputs ? directive.inputs.concat(inputs) : inputs);
         var /** @type {?} */ mergedOutputs = this._dedupeBindings(directive.outputs ? directive.outputs.concat(outputs) : outputs);
-        var /** @type {?} */ mergedHost = directive.host ? merge$1(directive.host, host) : host;
-        var /** @type {?} */ mergedQueries = directive.queries ? merge$1(directive.queries, queries) : queries;
+        var /** @type {?} */ mergedHost = directive.host ? __assign({}, directive.host, host) : host;
+        var /** @type {?} */ mergedQueries = directive.queries ? __assign({}, directive.queries, queries) : queries;
         if (directive instanceof Component) {
             return new Component({
                 selector: directive.selector,
@@ -44345,7 +44335,7 @@ var core_1 = require$$0$13;
 /**
  * @stable
  */
-var VERSION$5 = new core_1.Version('4.0.0-8785b2b');
+var VERSION$5 = new core_1.Version('4.0.0-c17b912');
 
 
 var version = {
@@ -44655,7 +44645,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v4.0.0-8785b2b
+ * @license Angular v4.0.0-c17b912
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -48764,7 +48754,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('4.0.0-8785b2b');
+var VERSION$$1 = new Version('4.0.0-c17b912');
 
 exports.createLanguageService = createLanguageService;
 exports.create = create;
