@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.0.0-d05aa70
+ * @license Angular v4.0.0-b7fa5de
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -3158,7 +3158,7 @@ var TypeScriptServiceHost = (function () {
                         var target = call.expression;
                         var type = this.checker.getTypeAtLocation(target);
                         if (type) {
-                            var staticSymbol = this._reflector.getStaticSymbol(sourceFile.fileName, classDeclaration.name.text);
+                            var staticSymbol = this.reflector.getStaticSymbol(sourceFile.fileName, classDeclaration.name.text);
                             try {
                                 if (this.resolver.isDirective(staticSymbol)) {
                                     var metadata = this.resolver.getNonNormalizedDirectiveMetadata(staticSymbol).metadata;
@@ -4114,7 +4114,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version('4.0.0-d05aa70');
+var VERSION = new Version('4.0.0-b7fa5de');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.

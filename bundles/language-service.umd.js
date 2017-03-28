@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.0.0-d05aa70
+ * @license Angular v4.0.0-b7fa5de
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2007,7 +2007,7 @@ var __extends$2$1 = (undefined && undefined.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 /**
- * @license Angular v4.0.0-d05aa70
+ * @license Angular v4.0.0-b7fa5de
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2860,7 +2860,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('4.0.0-d05aa70');
+var VERSION$2 = new Version('4.0.0-b7fa5de');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -9057,7 +9057,7 @@ var DefaultIterableDiffer = (function () {
         if (collection == null)
             collection = [];
         if (!isListLikeIterable(collection)) {
-            throw new Error("Error trying to diff '" + collection + "'");
+            throw new Error("Error trying to diff '" + stringify(collection) + "'. Only arrays and iterables are allowed");
         }
         if (this.check(collection)) {
             return this;
@@ -9864,7 +9864,7 @@ var DefaultKeyValueDiffer = (function () {
             map = new Map();
         }
         else if (!(map instanceof Map || isJsObject(map))) {
-            throw new Error("Error trying to diff '" + map + "'");
+            throw new Error("Error trying to diff '" + stringify(map) + "'. Only maps and objects are allowed");
         }
         return this.check(map) ? this : null;
     };
@@ -16184,7 +16184,7 @@ var __extends$1$1 = (undefined && undefined.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 /**
- * @license Angular v4.0.0-d05aa70
+ * @license Angular v4.0.0-b7fa5de
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -16203,7 +16203,7 @@ var __extends$1$1 = (undefined && undefined.__extends) || function (d, b) {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('4.0.0-d05aa70');
+var VERSION$1 = new Version('4.0.0-b7fa5de');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -44335,7 +44335,7 @@ var core_1 = require$$0$13;
 /**
  * @stable
  */
-var VERSION$5 = new core_1.Version('4.0.0-d05aa70');
+var VERSION$5 = new core_1.Version('4.0.0-b7fa5de');
 
 
 var version = {
@@ -44645,7 +44645,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v4.0.0-d05aa70
+ * @license Angular v4.0.0-b7fa5de
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -47798,7 +47798,7 @@ var TypeScriptServiceHost = (function () {
                         var target = call.expression;
                         var type = this.checker.getTypeAtLocation(target);
                         if (type) {
-                            var staticSymbol = this._reflector.getStaticSymbol(sourceFile.fileName, classDeclaration.name.text);
+                            var staticSymbol = this.reflector.getStaticSymbol(sourceFile.fileName, classDeclaration.name.text);
                             try {
                                 if (this.resolver.isDirective(staticSymbol)) {
                                     var metadata = this.resolver.getNonNormalizedDirectiveMetadata(staticSymbol).metadata;
@@ -48754,7 +48754,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('4.0.0-d05aa70');
+var VERSION$$1 = new Version('4.0.0-b7fa5de');
 
 exports.createLanguageService = createLanguageService;
 exports.create = create;
