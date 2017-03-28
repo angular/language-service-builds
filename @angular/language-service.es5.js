@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.0.0-a9ae4da
+ * @license Angular v4.0.0-920bf37
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -3322,7 +3322,7 @@ var TypeScriptSymbolQuery = (function () {
     };
     TypeScriptSymbolQuery.prototype.getSpanAt = function (line, column) { return spanAt(this.source, line, column); };
     TypeScriptSymbolQuery.prototype.getTemplateRefContextType = function (type) {
-        var constructor = type.members['__constructor'];
+        var constructor = type.members && type.members['__constructor'];
         if (constructor) {
             var constructorDeclaration = constructor.declarations[0];
             for (var _i = 0, _a = constructorDeclaration.parameters; _i < _a.length; _i++) {
@@ -4114,7 +4114,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version('4.0.0-a9ae4da');
+var VERSION = new Version('4.0.0-920bf37');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
