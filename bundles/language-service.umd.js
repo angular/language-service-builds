@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.0.0-d438b88
+ * @license Angular v4.0.0-aa16ccd
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2007,7 +2007,7 @@ var __extends$2$1 = (undefined && undefined.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 /**
- * @license Angular v4.0.0-d438b88
+ * @license Angular v4.0.0-aa16ccd
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2860,7 +2860,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('4.0.0-d438b88');
+var VERSION$2 = new Version('4.0.0-aa16ccd');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -14786,7 +14786,7 @@ function camelCaseToDashCase(input) {
 function normalizeDebugBindingValue(value) {
     try {
         // Limit the size of the value as otherwise the DOM just gets polluted.
-        return value ? value.toString().slice(0, 30) : value;
+        return value != null ? value.toString().slice(0, 30) : value;
     }
     catch (e) {
         return '[ERROR] Exception while trying to serialize the value';
@@ -16184,7 +16184,7 @@ var __extends$1$1 = (undefined && undefined.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 /**
- * @license Angular v4.0.0-d438b88
+ * @license Angular v4.0.0-aa16ccd
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -16203,7 +16203,7 @@ var __extends$1$1 = (undefined && undefined.__extends) || function (d, b) {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('4.0.0-d438b88');
+var VERSION$1 = new Version('4.0.0-aa16ccd');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -39711,6 +39711,7 @@ var StaticSymbolResolver = (function () {
         this.resolvedFilePaths = new Set();
         this.importAs = new Map();
         this.symbolResourcePaths = new Map();
+        this.symbolFromFile = new Map();
     }
     /**
      * @param {?} staticSymbol
@@ -39798,6 +39799,26 @@ var StaticSymbolResolver = (function () {
         sourceSymbol.assertNoMembers();
         targetSymbol.assertNoMembers();
         this.importAs.set(sourceSymbol, targetSymbol);
+    };
+    /**
+     * Invalidate all information derived from the given file.
+     *
+     * @param {?} fileName the file to invalidate
+     * @return {?}
+     */
+    StaticSymbolResolver.prototype.invalidateFile = function (fileName) {
+        this.metadataCache.delete(fileName);
+        this.resolvedFilePaths.delete(fileName);
+        var /** @type {?} */ symbols = this.symbolFromFile.get(fileName);
+        if (symbols) {
+            this.symbolFromFile.delete(fileName);
+            for (var _i = 0, symbols_1 = symbols; _i < symbols_1.length; _i++) {
+                var symbol = symbols_1[_i];
+                this.resolvedSymbols.delete(symbol);
+                this.importAs.delete(symbol);
+                this.symbolResourcePaths.delete(symbol);
+            }
+        }
     };
     /**
      * @param {?} staticSymbol
@@ -39952,6 +39973,7 @@ var StaticSymbolResolver = (function () {
             }
         }
         resolvedSymbols.forEach(function (resolvedSymbol) { return _this.resolvedSymbols.set(resolvedSymbol.symbol, resolvedSymbol); });
+        this.symbolFromFile.set(filePath, resolvedSymbols.map(function (resolvedSymbol) { return resolvedSymbol.symbol; }));
     };
     /**
      * @param {?} sourceSymbol
@@ -43679,6 +43701,7 @@ var CompilerHost$1 = (function () {
         this.resolverCache = new Map();
         this.bundleIndexCache = new Map();
         this.bundleIndexNames = new Set();
+        this.moduleFileNames = new Map();
         // normalize the path so that it never ends with '/'.
         this.basePath = path.normalize(path.join(this.options.basePath, '.')).replace(/\\/g, '/');
         this.genDir = path.normalize(path.join(this.options.genDir, '.')).replace(/\\/g, '/');
@@ -43706,17 +43729,23 @@ var CompilerHost$1 = (function () {
     // We use absolute paths on disk as canonical.
     CompilerHost.prototype.getCanonicalFileName = function (fileName) { return fileName; };
     CompilerHost.prototype.moduleNameToFileName = function (m, containingFile) {
-        if (!containingFile || !containingFile.length) {
-            if (m.indexOf('.') === 0) {
-                throw new Error('Resolution of relative paths requires a containing file.');
+        var key = m + ':' + (containingFile || '');
+        var result = this.moduleFileNames.get(key);
+        if (!result) {
+            if (!containingFile || !containingFile.length) {
+                if (m.indexOf('.') === 0) {
+                    throw new Error('Resolution of relative paths requires a containing file.');
+                }
+                // Any containing file gives the same result for absolute imports
+                containingFile = this.getCanonicalFileName(path.join(this.basePath, 'index.ts'));
             }
-            // Any containing file gives the same result for absolute imports
-            containingFile = this.getCanonicalFileName(path.join(this.basePath, 'index.ts'));
+            m = m.replace(EXT, '');
+            var resolved = ts.resolveModuleName(m, containingFile.replace(/\\/g, '/'), this.options, this.resolveModuleNameHost)
+                .resolvedModule;
+            result = resolved ? this.getCanonicalFileName(resolved.resolvedFileName) : null;
+            this.moduleFileNames.set(key, result);
         }
-        m = m.replace(EXT, '');
-        var resolved = ts.resolveModuleName(m, containingFile.replace(/\\/g, '/'), this.options, this.resolveModuleNameHost)
-            .resolvedModule;
-        return resolved ? this.getCanonicalFileName(resolved.resolvedFileName) : null;
+        return result;
     };
     
     /**
@@ -44335,7 +44364,7 @@ var core_1 = require$$0$13;
 /**
  * @stable
  */
-var VERSION$5 = new core_1.Version('4.0.0-d438b88');
+var VERSION$5 = new core_1.Version('4.0.0-aa16ccd');
 
 
 var version = {
@@ -44645,7 +44674,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v4.0.0-d438b88
+ * @license Angular v4.0.0-aa16ccd
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -47422,6 +47451,7 @@ var TypeScriptServiceHost = (function () {
         this._staticSymbolCache = new StaticSymbolCache();
         this._typeCache = [];
         this.modulesOutOfDate = true;
+        this.fileVersions = new Map();
     }
     TypeScriptServiceHost.prototype.setSite = function (service) { this.service = service; };
     Object.defineProperty(TypeScriptServiceHost.prototype, "resolver", {
@@ -47544,7 +47574,6 @@ var TypeScriptServiceHost = (function () {
         if (this.modulesOutOfDate) {
             this.analyzedModules = null;
             this._reflector = null;
-            this._staticSymbolResolver = null;
             this.templateReferences = null;
             this.fileToComponent = null;
             this.ensureAnalyzedModules();
@@ -47568,9 +47597,30 @@ var TypeScriptServiceHost = (function () {
         configurable: true
     });
     TypeScriptServiceHost.prototype.validate = function () {
+        var _this = this;
         var program = this.program;
-        if (this.lastProgram != program) {
+        if (this._staticSymbolResolver && this.lastProgram != program) {
+            // Invalidate file that have changed in the static symbol resolver
+            var invalidateFile = function (fileName) {
+                return _this._staticSymbolResolver.invalidateFile(fileName);
+            };
             this.clearCaches();
+            var seen_1 = new Set();
+            for (var _i = 0, _a = this.program.getSourceFiles(); _i < _a.length; _i++) {
+                var sourceFile = _a[_i];
+                var fileName = sourceFile.fileName;
+                seen_1.add(fileName);
+                var version = this.host.getScriptVersion(fileName);
+                var lastVersion = this.fileVersions.get(fileName);
+                if (version != lastVersion) {
+                    this.fileVersions.set(fileName, version);
+                    invalidateFile(fileName);
+                }
+            }
+            // Remove file versions that are no longer in the file and invalidate them.
+            var missing = Array.from(this.fileVersions.keys()).filter(function (f) { return !seen_1.has(f); });
+            missing.forEach(function (f) { return _this.fileVersions.delete(f); });
+            missing.forEach(invalidateFile);
             this.lastProgram = program;
         }
     };
@@ -48754,7 +48804,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('4.0.0-d438b88');
+var VERSION$$1 = new Version('4.0.0-aa16ccd');
 
 exports.createLanguageService = createLanguageService;
 exports.create = create;
