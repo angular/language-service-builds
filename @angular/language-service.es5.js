@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.0.0-a5c972a
+ * @license Angular v4.0.0-6269d28
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2782,6 +2782,7 @@ var TypeScriptServiceHost = (function () {
         this._staticSymbolCache = new StaticSymbolCache();
         this._typeCache = [];
         this.modulesOutOfDate = true;
+        this.fileVersions = new Map();
     }
     TypeScriptServiceHost.prototype.setSite = function (service) { this.service = service; };
     Object.defineProperty(TypeScriptServiceHost.prototype, "resolver", {
@@ -2904,7 +2905,6 @@ var TypeScriptServiceHost = (function () {
         if (this.modulesOutOfDate) {
             this.analyzedModules = null;
             this._reflector = null;
-            this._staticSymbolResolver = null;
             this.templateReferences = null;
             this.fileToComponent = null;
             this.ensureAnalyzedModules();
@@ -2928,9 +2928,30 @@ var TypeScriptServiceHost = (function () {
         configurable: true
     });
     TypeScriptServiceHost.prototype.validate = function () {
+        var _this = this;
         var program = this.program;
-        if (this.lastProgram != program) {
+        if (this._staticSymbolResolver && this.lastProgram != program) {
+            // Invalidate file that have changed in the static symbol resolver
+            var invalidateFile = function (fileName) {
+                return _this._staticSymbolResolver.invalidateFile(fileName);
+            };
             this.clearCaches();
+            var seen_1 = new Set();
+            for (var _i = 0, _a = this.program.getSourceFiles(); _i < _a.length; _i++) {
+                var sourceFile = _a[_i];
+                var fileName = sourceFile.fileName;
+                seen_1.add(fileName);
+                var version = this.host.getScriptVersion(fileName);
+                var lastVersion = this.fileVersions.get(fileName);
+                if (version != lastVersion) {
+                    this.fileVersions.set(fileName, version);
+                    invalidateFile(fileName);
+                }
+            }
+            // Remove file versions that are no longer in the file and invalidate them.
+            var missing = Array.from(this.fileVersions.keys()).filter(function (f) { return !seen_1.has(f); });
+            missing.forEach(function (f) { return _this.fileVersions.delete(f); });
+            missing.forEach(invalidateFile);
             this.lastProgram = program;
         }
     };
@@ -4114,7 +4135,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version('4.0.0-a5c972a');
+var VERSION = new Version('4.0.0-6269d28');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
