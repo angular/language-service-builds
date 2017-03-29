@@ -54,6 +54,7 @@ export declare class TypeScriptServiceHost implements LanguageServiceHost {
     private fileToComponent;
     private templateReferences;
     private collectedErrors;
+    private fileVersions;
     constructor(host: ts.LanguageServiceHost, tsService: ts.LanguageService);
     setSite(service: LanguageService): void;
     /**
