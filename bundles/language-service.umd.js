@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.0.0-23bf348
+ * @license Angular v4.0.0-ca66530
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2009,7 +2009,7 @@ var __extends$2$1 = (undefined && undefined.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 /**
- * @license Angular v4.0.0-23bf348
+ * @license Angular v4.0.0-ca66530
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2861,7 +2861,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('4.0.0-23bf348');
+var VERSION$2 = new Version('4.0.0-ca66530');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -3555,7 +3555,7 @@ function isType(v) {
 /**
  * Attention: This regex has to hold even if the code is minified!
  */
-var DELEGATE_CTOR = /^function\s+\S+\(\)\s*{\s*("use strict";)?\s*(return\s+)?(\S+\s+!==\s+null\s+&&\s+)?\S+\.apply\(this,\s*arguments\)/;
+var DELEGATE_CTOR = /^function\s+\S+\(\)\s*{[\s\S]+\.apply\(this,\s*arguments\)/;
 var ReflectionCapabilities = (function () {
     /**
      * @param {?=} reflect
@@ -16156,7 +16156,7 @@ var __extends$1$1 = (undefined && undefined.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 /**
- * @license Angular v4.0.0-23bf348
+ * @license Angular v4.0.0-ca66530
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -16175,7 +16175,7 @@ var __extends$1$1 = (undefined && undefined.__extends) || function (d, b) {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('4.0.0-23bf348');
+var VERSION$1 = new Version('4.0.0-ca66530');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -28931,6 +28931,9 @@ var DirectiveNormalizer = (function () {
         var /** @type {?} */ normalizedTemplateSync = null;
         var /** @type {?} */ normalizedTemplateAsync;
         if (prenormData.template != null) {
+            if (prenormData.templateUrl != null) {
+                throw syntaxError("'" + stringify(prenormData.componentType) + "' component cannot define both template and templateUrl");
+            }
             if (typeof prenormData.template !== 'string') {
                 throw syntaxError("The template specified for component " + stringify(prenormData.componentType) + " is not a string");
             }
@@ -44322,7 +44325,7 @@ var core_1 = require$$0$13;
 /**
  * @stable
  */
-var VERSION$5 = new core_1.Version('4.0.0-23bf348');
+var VERSION$5 = new core_1.Version('4.0.0-ca66530');
 
 
 var version = {
@@ -44632,7 +44635,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v4.0.0-23bf348
+ * @license Angular v4.0.0-ca66530
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -48142,7 +48145,19 @@ var SymbolWrapper = (function () {
         enumerable: true,
         configurable: true
     });
-    SymbolWrapper.prototype.members = function () { return new SymbolTableWrapper(this.symbol.members, this.context); };
+    SymbolWrapper.prototype.members = function () {
+        if (!this._members) {
+            if ((this.symbol.flags & (typescript.SymbolFlags.Class | typescript.SymbolFlags.Interface)) != 0) {
+                var declaredType = this.context.checker.getDeclaredTypeOfSymbol(this.symbol);
+                var typeWrapper = new TypeWrapper(declaredType, this.context);
+                this._members = typeWrapper.members();
+            }
+            else {
+                this._members = new SymbolTableWrapper(this.symbol.members, this.context);
+            }
+        }
+        return this._members;
+    };
     SymbolWrapper.prototype.signatures = function () { return signaturesOf(this.tsType, this.context); };
     SymbolWrapper.prototype.selectSignature = function (types) {
         return selectSignature(this.tsType, this.context, types);
@@ -48429,7 +48444,7 @@ var PipeSymbol = (function () {
         return findClassSymbolInContext(type, this.context);
     };
     PipeSymbol.prototype.findTransformMethodType = function (classSymbol) {
-        var transform = classSymbol.members['transform'];
+        var transform = classSymbol.members && classSymbol.members['transform'];
         if (transform) {
             return this.context.checker.getTypeOfSymbolAtLocation(transform, this.context.node);
         }
@@ -48762,7 +48777,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('4.0.0-23bf348');
+var VERSION$$1 = new Version('4.0.0-ca66530');
 
 exports.createLanguageService = createLanguageService;
 exports.create = create;
