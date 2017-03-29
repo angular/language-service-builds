@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.0.0-19cb503
+ * @license Angular v4.0.0-a9321b1
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -3515,7 +3515,19 @@ var SymbolWrapper = (function () {
         enumerable: true,
         configurable: true
     });
-    SymbolWrapper.prototype.members = function () { return new SymbolTableWrapper(this.symbol.members, this.context); };
+    SymbolWrapper.prototype.members = function () {
+        if (!this._members) {
+            if ((this.symbol.flags & (SymbolFlags.Class | SymbolFlags.Interface)) != 0) {
+                var declaredType = this.context.checker.getDeclaredTypeOfSymbol(this.symbol);
+                var typeWrapper = new TypeWrapper(declaredType, this.context);
+                this._members = typeWrapper.members();
+            }
+            else {
+                this._members = new SymbolTableWrapper(this.symbol.members, this.context);
+            }
+        }
+        return this._members;
+    };
     SymbolWrapper.prototype.signatures = function () { return signaturesOf(this.tsType, this.context); };
     SymbolWrapper.prototype.selectSignature = function (types) {
         return selectSignature(this.tsType, this.context, types);
@@ -3802,7 +3814,7 @@ var PipeSymbol = (function () {
         return findClassSymbolInContext(type, this.context);
     };
     PipeSymbol.prototype.findTransformMethodType = function (classSymbol) {
-        var transform = classSymbol.members['transform'];
+        var transform = classSymbol.members && classSymbol.members['transform'];
         if (transform) {
             return this.context.checker.getTypeOfSymbolAtLocation(transform, this.context.node);
         }
@@ -4135,7 +4147,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version('4.0.0-19cb503');
+var VERSION = new Version('4.0.0-a9321b1');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
