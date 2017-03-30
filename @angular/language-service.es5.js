@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.1.0-beta.0-9e883f5
+ * @license Angular v4.1.0-beta.0-8ef621a
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -3082,12 +3082,12 @@ var TypeScriptServiceHost = (function () {
             var _this = this;
             var result = this._staticSymbolResolver;
             if (!result) {
-                var summaryResolver = new AotSummaryResolver({
+                this._summaryResolver = new AotSummaryResolver({
                     loadSummary: function (filePath) { return null; },
                     isSourceFile: function (sourceFilePath) { return true; },
                     getOutputFileName: function (sourceFilePath) { return null; }
                 }, this._staticSymbolCache);
-                result = this._staticSymbolResolver = new StaticSymbolResolver(this.reflectorHost, this._staticSymbolCache, summaryResolver, function (e, filePath) { return _this.collectError(e, filePath); });
+                result = this._staticSymbolResolver = new StaticSymbolResolver(this.reflectorHost, this._staticSymbolCache, this._summaryResolver, function (e, filePath) { return _this.collectError(e, filePath); });
             }
             return result;
         },
@@ -3099,7 +3099,8 @@ var TypeScriptServiceHost = (function () {
             var _this = this;
             var result = this._reflector;
             if (!result) {
-                result = this._reflector = new StaticReflector(this.staticSymbolResolver, [], [], function (e, filePath) { return _this.collectError(e, filePath); });
+                var ssr = this.staticSymbolResolver;
+                result = this._reflector = new StaticReflector(this._summaryResolver, ssr, [], [], function (e, filePath) { return _this.collectError(e, filePath); });
             }
             return result;
         },
@@ -4147,7 +4148,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version('4.1.0-beta.0-9e883f5');
+var VERSION = new Version('4.1.0-beta.0-8ef621a');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
