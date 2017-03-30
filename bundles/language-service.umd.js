@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.1.0-beta.0-8ef621a
+ * @license Angular v4.1.0-beta.0-28bf222
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2009,7 +2009,7 @@ var __extends$2$1 = (undefined && undefined.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 /**
- * @license Angular v4.1.0-beta.0-8ef621a
+ * @license Angular v4.1.0-beta.0-28bf222
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2861,7 +2861,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('4.1.0-beta.0-8ef621a');
+var VERSION$2 = new Version('4.1.0-beta.0-28bf222');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -16156,7 +16156,7 @@ var __extends$1$1 = (undefined && undefined.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 /**
- * @license Angular v4.1.0-beta.0-8ef621a
+ * @license Angular v4.1.0-beta.0-28bf222
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -16175,7 +16175,7 @@ var __extends$1$1 = (undefined && undefined.__extends) || function (d, b) {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('4.1.0-beta.0-8ef621a');
+var VERSION$1 = new Version('4.1.0-beta.0-28bf222');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -30637,9 +30637,11 @@ var CompileMetadataResolver = (function () {
         if (dirMeta && dirMeta.metadata.isComponent) {
             return { componentType: dirType, componentFactory: dirMeta.metadata.componentFactory };
         }
-        var /** @type {?} */ dirSummary = (this._loadSummary(dirType, CompileSummaryKind.Directive));
-        if (dirSummary && dirSummary.isComponent) {
-            return { componentType: dirType, componentFactory: dirSummary.componentFactory };
+        else {
+            var /** @type {?} */ dirSummary = (this._loadSummary(dirType, CompileSummaryKind.Directive));
+            if (dirSummary && dirSummary.isComponent) {
+                return { componentType: dirType, componentFactory: dirSummary.componentFactory };
+            }
         }
         if (throwIfNotFound) {
             throw syntaxError(dirType.name + " cannot be used as an entry component.");
@@ -38143,7 +38145,7 @@ function serializeSummaries(summaryResolver, symbolResolver, symbols, types) {
     // as the type summaries already contain the transitive data that they require
     // (in a minimal way).
     types.forEach(function (typeSummary) {
-        serializer.addOrMergeSummary({ symbol: typeSummary.type.reference, metadata: null, type: typeSummary });
+        serializer.addOrMergeSummary({ symbol: typeSummary.type.reference, metadata: { __symbolic: 'class' }, type: typeSummary });
         if (typeSummary.summaryKind === CompileSummaryKind.NgModule) {
             var /** @type {?} */ ngModuleSummary = (typeSummary);
             ngModuleSummary.exportedDirectives.concat(ngModuleSummary.exportedPipes).forEach(function (id) {
@@ -38192,21 +38194,10 @@ var Serializer$1 = (function (_super) {
     Serializer$1.prototype.addOrMergeSummary = function (summary) {
         var /** @type {?} */ symbolMeta = summary.metadata;
         if (symbolMeta && symbolMeta.__symbolic === 'class') {
-            // For classes, we keep everything except their class decorators.
-            // We need to keep e.g. the ctor args, method names, method decorators
-            // so that the class can be extended in another compilation unit.
-            // We don't keep the class decorators as
-            // 1) they refer to data
-            //   that should not cause a rebuild of downstream compilation units
-            //   (e.g. inline templates of @Component, or @NgModule.declarations)
-            // 2) their data is already captured in TypeSummaries, e.g. DirectiveSummary.
-            var /** @type {?} */ clone_1 = {};
-            Object.keys(symbolMeta).forEach(function (propName) {
-                if (propName !== 'decorators') {
-                    clone_1[propName] = symbolMeta[propName];
-                }
-            });
-            symbolMeta = clone_1;
+            // For classes, we only keep their statics and arity, but not the metadata
+            // of the class itself as that has been captured already via other summaries
+            // (e.g. DirectiveSummary, ...).
+            symbolMeta = { __symbolic: 'class', statics: symbolMeta.statics, arity: symbolMeta.arity };
         }
         var /** @type {?} */ processedSummary = this.processedSummaryBySymbol.get(summary.symbol);
         if (!processedSummary) {
@@ -38867,17 +38858,15 @@ function shouldIgnore(value) {
  */
 var StaticReflector = (function () {
     /**
-     * @param {?} summaryResolver
      * @param {?} symbolResolver
      * @param {?=} knownMetadataClasses
      * @param {?=} knownMetadataFunctions
      * @param {?=} errorRecorder
      */
-    function StaticReflector(summaryResolver, symbolResolver, knownMetadataClasses, knownMetadataFunctions, errorRecorder) {
+    function StaticReflector(symbolResolver, knownMetadataClasses, knownMetadataFunctions, errorRecorder) {
         if (knownMetadataClasses === void 0) { knownMetadataClasses = []; }
         if (knownMetadataFunctions === void 0) { knownMetadataFunctions = []; }
         var _this = this;
-        this.summaryResolver = summaryResolver;
         this.symbolResolver = symbolResolver;
         this.errorRecorder = errorRecorder;
         this.annotationCache = new Map();
@@ -38885,20 +38874,9 @@ var StaticReflector = (function () {
         this.parameterCache = new Map();
         this.methodCache = new Map();
         this.conversionMap = new Map();
-        this.annotationForParentClassWithSummaryKind = new Map();
-        this.annotationNames = new Map();
         this.initializeConversionMap();
         knownMetadataClasses.forEach(function (kc) { return _this._registerDecoratorOrConstructor(_this.getStaticSymbol(kc.filePath, kc.name), kc.ctor); });
         knownMetadataFunctions.forEach(function (kf) { return _this._registerFunction(_this.getStaticSymbol(kf.filePath, kf.name), kf.fn); });
-        this.annotationForParentClassWithSummaryKind.set(CompileSummaryKind.Directive, [Directive, Component]);
-        this.annotationForParentClassWithSummaryKind.set(CompileSummaryKind.Pipe, [Pipe]);
-        this.annotationForParentClassWithSummaryKind.set(CompileSummaryKind.NgModule, [NgModule]);
-        this.annotationForParentClassWithSummaryKind.set(CompileSummaryKind.Injectable, [Injectable, Pipe, Directive, Component, NgModule]);
-        this.annotationNames.set(Directive, 'Directive');
-        this.annotationNames.set(Component, 'Component');
-        this.annotationNames.set(Pipe, 'Pipe');
-        this.annotationNames.set(NgModule, 'NgModule');
-        this.annotationNames.set(Injectable, 'Injectable');
     }
     /**
      * @param {?} typeOrFunc
@@ -38970,32 +38948,20 @@ var StaticReflector = (function () {
      * @return {?}
      */
     StaticReflector.prototype.annotations = function (type) {
-        var _this = this;
         var /** @type {?} */ annotations = this.annotationCache.get(type);
         if (!annotations) {
             annotations = [];
             var /** @type {?} */ classMetadata = this.getTypeMetadata(type);
-            var /** @type {?} */ parentType = this.findParentType(type, classMetadata);
-            if (parentType) {
-                var /** @type {?} */ parentAnnotations = this.annotations(parentType);
-                annotations.push.apply(annotations, parentAnnotations);
-            }
-            var /** @type {?} */ ownAnnotations_1 = [];
-            if (classMetadata['decorators']) {
-                ownAnnotations_1 = this.simplify(type, classMetadata['decorators']);
-                annotations.push.apply(annotations, ownAnnotations_1);
-            }
-            if (parentType && !this.summaryResolver.isLibraryFile(type.filePath) &&
-                this.summaryResolver.isLibraryFile(parentType.filePath)) {
-                var /** @type {?} */ summary = this.summaryResolver.resolveSummary(parentType);
-                if (summary && summary.type) {
-                    var /** @type {?} */ requiredAnnotationTypes = this.annotationForParentClassWithSummaryKind.get(summary.type.summaryKind);
-                    var /** @type {?} */ typeHasRequiredAnnotation = requiredAnnotationTypes.some(function (requiredType) { return ownAnnotations_1.some(function (ann) { return ann instanceof requiredType; }); });
-                    if (!typeHasRequiredAnnotation) {
-                        this.reportError(syntaxError("Class " + type.name + " in " + type.filePath + " extends from a " + CompileSummaryKind[summary.type.summaryKind] + " in another compilation unit without duplicating the decorator. " +
-                            ("Please add a " + requiredAnnotationTypes.map(function (type) { return _this.annotationNames.get(type); }).join(' or ') + " decorator to the class.")), type);
-                    }
+            if (classMetadata['extends']) {
+                var /** @type {?} */ parentType = this.trySimplify(type, classMetadata['extends']);
+                if (parentType && (parentType instanceof StaticSymbol)) {
+                    var /** @type {?} */ parentAnnotations = this.annotations(parentType);
+                    annotations.push.apply(annotations, parentAnnotations);
                 }
+            }
+            if (classMetadata['decorators']) {
+                var /** @type {?} */ ownAnnotations = this.simplify(type, classMetadata['decorators']);
+                annotations.push.apply(annotations, ownAnnotations);
             }
             this.annotationCache.set(type, annotations.filter(function (ann) { return !!ann; }));
         }
@@ -39011,12 +38977,14 @@ var StaticReflector = (function () {
         if (!propMetadata) {
             var /** @type {?} */ classMetadata = this.getTypeMetadata(type);
             propMetadata = {};
-            var /** @type {?} */ parentType = this.findParentType(type, classMetadata);
-            if (parentType) {
-                var /** @type {?} */ parentPropMetadata_1 = this.propMetadata(parentType);
-                Object.keys(parentPropMetadata_1).forEach(function (parentProp) {
-                    propMetadata[parentProp] = parentPropMetadata_1[parentProp];
-                });
+            if (classMetadata['extends']) {
+                var /** @type {?} */ parentType = this.trySimplify(type, classMetadata['extends']);
+                if (parentType instanceof StaticSymbol) {
+                    var /** @type {?} */ parentPropMetadata_1 = this.propMetadata(parentType);
+                    Object.keys(parentPropMetadata_1).forEach(function (parentProp) {
+                        propMetadata[parentProp] = parentPropMetadata_1[parentProp];
+                    });
+                }
             }
             var /** @type {?} */ members_1 = classMetadata['members'] || {};
             Object.keys(members_1).forEach(function (propName) {
@@ -39049,7 +39017,6 @@ var StaticReflector = (function () {
             var /** @type {?} */ parameters_1 = this.parameterCache.get(type);
             if (!parameters_1) {
                 var /** @type {?} */ classMetadata = this.getTypeMetadata(type);
-                var /** @type {?} */ parentType = this.findParentType(type, classMetadata);
                 var /** @type {?} */ members = classMetadata ? classMetadata['members'] : null;
                 var /** @type {?} */ ctorData = members ? members['__ctor__'] : null;
                 if (ctorData) {
@@ -39069,8 +39036,11 @@ var StaticReflector = (function () {
                         parameters_1.push(nestedResult);
                     });
                 }
-                else if (parentType) {
-                    parameters_1 = this.parameters(parentType);
+                else if (classMetadata['extends']) {
+                    var /** @type {?} */ parentType = this.trySimplify(type, classMetadata['extends']);
+                    if (parentType instanceof StaticSymbol) {
+                        parameters_1 = this.parameters(parentType);
+                    }
                 }
                 if (!parameters_1) {
                     parameters_1 = [];
@@ -39093,12 +39063,14 @@ var StaticReflector = (function () {
         if (!methodNames) {
             var /** @type {?} */ classMetadata = this.getTypeMetadata(type);
             methodNames = {};
-            var /** @type {?} */ parentType = this.findParentType(type, classMetadata);
-            if (parentType) {
-                var /** @type {?} */ parentMethodNames_1 = this._methodNames(parentType);
-                Object.keys(parentMethodNames_1).forEach(function (parentProp) {
-                    methodNames[parentProp] = parentMethodNames_1[parentProp];
-                });
+            if (classMetadata['extends']) {
+                var /** @type {?} */ parentType = this.trySimplify(type, classMetadata['extends']);
+                if (parentType instanceof StaticSymbol) {
+                    var /** @type {?} */ parentMethodNames_1 = this._methodNames(parentType);
+                    Object.keys(parentMethodNames_1).forEach(function (parentProp) {
+                        methodNames[parentProp] = parentMethodNames_1[parentProp];
+                    });
+                }
             }
             var /** @type {?} */ members_2 = classMetadata['members'] || {};
             Object.keys(members_2).forEach(function (propName) {
@@ -39109,17 +39081,6 @@ var StaticReflector = (function () {
             this.methodCache.set(type, methodNames);
         }
         return methodNames;
-    };
-    /**
-     * @param {?} type
-     * @param {?} classMetadata
-     * @return {?}
-     */
-    StaticReflector.prototype.findParentType = function (type, classMetadata) {
-        var /** @type {?} */ parentType = this.trySimplify(type, classMetadata['extends']);
-        if (parentType instanceof StaticSymbol) {
-            return parentType;
-        }
     };
     /**
      * @param {?} type
@@ -39998,16 +39959,6 @@ var StaticSymbolResolver = (function () {
      * @return {?}
      */
     StaticSymbolResolver.prototype.createResolvedSymbol = function (sourceSymbol, topLevelPath, topLevelSymbolNames, metadata) {
-        // For classes that don't have Angular summaries / metadata,
-        // we only keep their arity, but nothing else
-        // (e.g. their constructor parameters).
-        // We do this to prevent introducing deep imports
-        // as we didn't generate .ngfactory.ts files with proper reexports.
-        if (this.summaryResolver.isLibraryFile(sourceSymbol.filePath) && metadata &&
-            metadata['__symbolic'] === 'class') {
-            var /** @type {?} */ transformedMeta_1 = { __symbolic: 'class', arity: metadata.arity };
-            return new ResolvedStaticSymbol(sourceSymbol, transformedMeta_1);
-        }
         var /** @type {?} */ self = this;
         var ReferenceTransformer = (function (_super) {
             __extends$1$1(ReferenceTransformer, _super);
@@ -40281,7 +40232,7 @@ function createAotCompiler(compilerHost, options) {
     var /** @type {?} */ symbolCache = new StaticSymbolCache();
     var /** @type {?} */ summaryResolver = new AotSummaryResolver(compilerHost, symbolCache);
     var /** @type {?} */ symbolResolver = new StaticSymbolResolver(compilerHost, symbolCache, summaryResolver);
-    var /** @type {?} */ staticReflector = new StaticReflector(summaryResolver, symbolResolver);
+    var /** @type {?} */ staticReflector = new StaticReflector(symbolResolver);
     StaticAndDynamicReflectionCapabilities.install(staticReflector);
     var /** @type {?} */ console = new Console();
     var /** @type {?} */ htmlParser = new I18NHtmlParser(new HtmlParser(), translations, options.i18nFormat, MissingTranslationStrategy.Warning, console);
@@ -41799,7 +41750,7 @@ var Extractor = (function () {
         var /** @type {?} */ symbolCache = new StaticSymbolCache();
         var /** @type {?} */ summaryResolver = new AotSummaryResolver(host, symbolCache);
         var /** @type {?} */ staticSymbolResolver = new StaticSymbolResolver(host, symbolCache, summaryResolver);
-        var /** @type {?} */ staticReflector = new StaticReflector(summaryResolver, staticSymbolResolver);
+        var /** @type {?} */ staticReflector = new StaticReflector(staticSymbolResolver);
         StaticAndDynamicReflectionCapabilities.install(staticReflector);
         var /** @type {?} */ config = new CompilerConfig({ defaultEncapsulation: ViewEncapsulation.Emulated, useJit: false });
         var /** @type {?} */ normalizer = new DirectiveNormalizer({ get: function (url) { return host.loadResource(url); } }, urlResolver, htmlParser, config);
@@ -44389,7 +44340,7 @@ var core_1 = require$$0$13;
 /**
  * @stable
  */
-var VERSION$5 = new core_1.Version('4.1.0-beta.0-8ef621a');
+var VERSION$5 = new core_1.Version('4.1.0-beta.0-28bf222');
 
 
 var version = {
@@ -44632,7 +44583,7 @@ var NgTools_InternalApi_NG_2 = (function () {
         var symbolCache = new compiler_1.StaticSymbolCache();
         var summaryResolver = new compiler_1.AotSummaryResolver(ngCompilerHost, symbolCache);
         var symbolResolver = new compiler_1.StaticSymbolResolver(ngCompilerHost, symbolCache, summaryResolver);
-        var staticReflector = new compiler_1.StaticReflector(summaryResolver, symbolResolver);
+        var staticReflector = new compiler_1.StaticReflector(symbolResolver);
         var routeMap = ngtools_impl_1.listLazyRoutesOfModule(options.entryModule, ngCompilerHost, staticReflector);
         return Object.keys(routeMap).reduce(function (acc, route) {
             acc[route] = routeMap[route].absoluteFilePath;
@@ -44699,7 +44650,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v4.1.0-beta.0-8ef621a
+ * @license Angular v4.1.0-beta.0-28bf222
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -47776,12 +47727,12 @@ var TypeScriptServiceHost = (function () {
             var _this = this;
             var result = this._staticSymbolResolver;
             if (!result) {
-                this._summaryResolver = new AotSummaryResolver({
+                var summaryResolver = new AotSummaryResolver({
                     loadSummary: function (filePath) { return null; },
                     isSourceFile: function (sourceFilePath) { return true; },
                     getOutputFileName: function (sourceFilePath) { return null; }
                 }, this._staticSymbolCache);
-                result = this._staticSymbolResolver = new StaticSymbolResolver(this.reflectorHost, this._staticSymbolCache, this._summaryResolver, function (e, filePath) { return _this.collectError(e, filePath); });
+                result = this._staticSymbolResolver = new StaticSymbolResolver(this.reflectorHost, this._staticSymbolCache, summaryResolver, function (e, filePath) { return _this.collectError(e, filePath); });
             }
             return result;
         },
@@ -47793,8 +47744,7 @@ var TypeScriptServiceHost = (function () {
             var _this = this;
             var result = this._reflector;
             if (!result) {
-                var ssr = this.staticSymbolResolver;
-                result = this._reflector = new StaticReflector(this._summaryResolver, ssr, [], [], function (e, filePath) { return _this.collectError(e, filePath); });
+                result = this._reflector = new StaticReflector(this.staticSymbolResolver, [], [], function (e, filePath) { return _this.collectError(e, filePath); });
             }
             return result;
         },
@@ -48842,7 +48792,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('4.1.0-beta.0-8ef621a');
+var VERSION$$1 = new Version('4.1.0-beta.0-28bf222');
 
 exports.createLanguageService = createLanguageService;
 exports.create = create;
