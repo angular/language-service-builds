@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.1.0-beta.0-7c2ce29
+ * @license Angular v4.1.0-beta.0-5fbb0d0
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2392,7 +2392,7 @@ var ExpressionDiagnosticsVisitor = (function (_super) {
         var directive = this.directiveSummary;
         if (directive && ast.value) {
             var context = this.info.template.query.getTemplateContext(directive.type.reference);
-            if (!context.has(ast.value)) {
+            if (context && !context.has(ast.value)) {
                 if (ast.value === '$implicit') {
                     this.reportError('The template context does not have an implicit value', spanOf(ast.sourceSpan));
                 }
@@ -3397,6 +3397,8 @@ function toSymbolTable(symbols) {
 }
 function toSymbols(symbolTable, filter) {
     var result = [];
+    if (!symbolTable)
+        return result;
     var own = typeof symbolTable.hasOwnProperty === 'function' ?
         function (name) { return symbolTable.hasOwnProperty(name); } :
         function (name) { return !!symbolTable[name]; };
@@ -3639,6 +3641,7 @@ var SignatureResultOverride = (function () {
 var SymbolTableWrapper = (function () {
     function SymbolTableWrapper(symbols, context, filter) {
         this.context = context;
+        symbols = symbols || [];
         if (Array.isArray(symbols)) {
             this.symbols = filter ? symbols.filter(filter) : symbols;
             this.symbolTable = toSymbolTable(symbols);
@@ -3780,6 +3783,9 @@ var PipeSymbol = (function () {
                             case 'EventEmitter':
                                 resultType = getTypeParameterOf(parameterType.tsType, parameterType.name);
                                 break;
+                            default:
+                                resultType = getBuiltinTypeFromTs(BuiltinType.Any, this.context);
+                                break;
                         }
                         break;
                     case 'slice':
@@ -3815,9 +3821,12 @@ var PipeSymbol = (function () {
         return findClassSymbolInContext(type, this.context);
     };
     PipeSymbol.prototype.findTransformMethodType = function (classSymbol) {
-        var transform = classSymbol.members && classSymbol.members['transform'];
-        if (transform) {
-            return this.context.checker.getTypeOfSymbolAtLocation(transform, this.context.node);
+        var classType = this.context.checker.getDeclaredTypeOfSymbol(classSymbol);
+        if (classType) {
+            var transform = classType.getProperty('transform');
+            if (transform) {
+                return this.context.checker.getTypeOfSymbolAtLocation(transform, this.context.node);
+            }
         }
     };
     return PipeSymbol;
@@ -4148,7 +4157,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version('4.1.0-beta.0-7c2ce29');
+var VERSION = new Version('4.1.0-beta.0-5fbb0d0');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
