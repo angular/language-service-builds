@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.1.0-beta.0-fe0d02f
+ * @license Angular v4.1.0-beta.0-bde9771
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2575,7 +2575,7 @@ var LanguageServiceImpl = (function () {
                 var expressionParser = new Parser(new Lexer());
                 var config = new CompilerConfig();
                 var parser = new TemplateParser(config, expressionParser, new DomElementSchemaRegistry(), htmlParser, null, []);
-                var htmlResult = htmlParser.parse(template.source, '');
+                var htmlResult = htmlParser.parse(template.source, '', true);
                 var analyzedModules = this.host.getAnalyzedModules();
                 var errors = undefined;
                 var ngModule = analyzedModules.ngModuleByPipeOrDirective.get(template.type);
@@ -4146,7 +4146,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version('4.1.0-beta.0-fe0d02f');
+var VERSION = new Version('4.1.0-beta.0-bde9771');
 
 /**
  * @license
