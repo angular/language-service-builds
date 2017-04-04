@@ -1,9 +1,9 @@
 /**
- * @license Angular v4.1.0-beta.0-7b005aa
+ * @license Angular v4.1.0-beta.0-fe0d02f
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
-import { ASTWithSource, AotSummaryResolver, Attribute, CompileMetadataResolver, CompilerConfig, CssSelector, DEFAULT_INTERPOLATION_CONFIG, DirectiveNormalizer, DirectiveResolver, DomElementSchemaRegistry, Element as Element$1, ElementAst, EmbeddedTemplateAst, HtmlParser, I18NHtmlParser, ImplicitReceiver, Lexer, NAMED_ENTITIES, NgModuleResolver, ParseSpan, ParseTreeResult, Parser, PipeResolver, PropertyRead, ResourceLoader, SelectorMatcher, StaticReflector, StaticSymbolCache, StaticSymbolResolver, SummaryResolver, TagContentType, TemplateParser, Text, analyzeNgModules, componentModuleUrl, createOfflineCompileUrlResolver, extractProgramSymbols, getHtmlTagDefinition, identifierName, splitNsName, templateVisitAll, tokenReference, visitAll } from '@angular/compiler';
+import { ASTWithSource, AotSummaryResolver, Attribute, CompileMetadataResolver, CompilerConfig, CssSelector, DEFAULT_INTERPOLATION_CONFIG, DirectiveNormalizer, DirectiveResolver, DomElementSchemaRegistry, Element as Element$1, ElementAst, EmbeddedTemplateAst, HtmlParser, I18NHtmlParser, ImplicitReceiver, Lexer, NAMED_ENTITIES, NgModuleResolver, ParseSpan, ParseTreeResult, Parser, PipeResolver, PropertyRead, ResourceLoader, SelectorMatcher, StaticAndDynamicReflectionCapabilities, StaticReflector, StaticSymbolCache, StaticSymbolResolver, SummaryResolver, TagContentType, TemplateParser, Text, analyzeNgModules, componentModuleUrl, createOfflineCompileUrlResolver, extractProgramSymbols, getHtmlTagDefinition, identifierName, splitNsName, templateVisitAll, tokenReference, visitAll } from '@angular/compiler';
 import { DiagnosticCategory, ModifierFlags, NodeFlags, ObjectFlags, SymbolFlags, SyntaxKind, TypeFlags, forEachChild, getCombinedModifierFlags, getPositionOfLineAndCharacter } from 'typescript';
 import * as ts from 'typescript';
 import { Version, ViewEncapsulation, ɵConsole } from '@angular/core';
@@ -3086,6 +3086,7 @@ var TypeScriptServiceHost = (function () {
             if (!result) {
                 var ssr = this.staticSymbolResolver;
                 result = this._reflector = new StaticReflector(this._summaryResolver, ssr, [], [], function (e, filePath) { return _this.collectError(e, filePath); });
+                StaticAndDynamicReflectionCapabilities.install(result);
             }
             return result;
         },
@@ -4145,7 +4146,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version('4.1.0-beta.0-7b005aa');
+var VERSION = new Version('4.1.0-beta.0-fe0d02f');
 
 /**
  * @license
