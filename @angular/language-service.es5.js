@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.1.0-beta.0-09d9f5f
+ * @license Angular v4.1.0-beta.0-258d539
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -3859,7 +3859,10 @@ function findTsConfig(fileName) {
         var candidate = join(dir, 'tsconfig.json');
         if (existsSync(candidate))
             return candidate;
-        dir = dirname(dir);
+        var parentDir = dirname(dir);
+        if (parentDir === dir)
+            break;
+        dir = parentDir;
     }
 }
 function isSymbolPrivate(s) {
@@ -4157,7 +4160,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version('4.1.0-beta.0-09d9f5f');
+var VERSION = new Version('4.1.0-beta.0-258d539');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
