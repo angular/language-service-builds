@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.1.0-beta.0-4c566db
+ * @license Angular v4.1.0-beta.0-09d9f5f
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2303,8 +2303,7 @@ function getDeclarationDiagnostics(declarations, modules) {
                 if (!modules.ngModuleByPipeOrDirective.has(declaration.type)) {
                     report("Component '" + declaration.type.name + "' is not included in a module and will not be available inside a template. Consider adding it to a NgModule declaration");
                 }
-                if (declaration.metadata.template.template == null &&
-                    !declaration.metadata.template.templateUrl) {
+                if (!declaration.metadata.template.template && !declaration.metadata.template.templateUrl) {
                     report("Component " + declaration.type.name + " must have a template or templateUrl");
                 }
             }
@@ -4146,7 +4145,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version('4.1.0-beta.0-4c566db');
+var VERSION = new Version('4.1.0-beta.0-09d9f5f');
 
 /**
  * @license
