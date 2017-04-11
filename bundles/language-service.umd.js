@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.0.1-6b79ab5
+ * @license Angular v4.0.2-14a2d1a
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2009,7 +2009,7 @@ var __extends$2$1 = (undefined && undefined.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 /**
- * @license Angular v4.0.1-6b79ab5
+ * @license Angular v4.0.2-14a2d1a
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2861,7 +2861,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('4.0.1-6b79ab5');
+var VERSION$2 = new Version('4.0.2-14a2d1a');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -16156,7 +16156,7 @@ var __extends$1$1 = (undefined && undefined.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 /**
- * @license Angular v4.0.1-6b79ab5
+ * @license Angular v4.0.2-14a2d1a
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -16175,7 +16175,7 @@ var __extends$1$1 = (undefined && undefined.__extends) || function (d, b) {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('4.0.1-6b79ab5');
+var VERSION$1 = new Version('4.0.2-14a2d1a');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -30184,6 +30184,7 @@ var CompileMetadataResolver = (function () {
             }
             else {
                 _this._reportError(syntaxError("Can't export " + _this._getTypeDescriptor(exportedId.reference) + " " + stringifyType(exportedId.reference) + " from " + stringifyType(moduleType) + " as it was neither declared nor imported!"), moduleType);
+                return;
             }
         });
         // The providers of the module have to go last
@@ -30271,6 +30272,7 @@ var CompileMetadataResolver = (function () {
             this._reportError(syntaxError("Type " + stringifyType(type) + " is part of the declarations of 2 modules: " + stringifyType(oldModule) + " and " + stringifyType(moduleType) + "! " +
                 ("Please consider moving " + stringifyType(type) + " to a higher module that imports " + stringifyType(oldModule) + " and " + stringifyType(moduleType) + ". ") +
                 ("You can also create a new NgModule that exports and includes " + stringifyType(type) + " then import that NgModule in " + stringifyType(oldModule) + " and " + stringifyType(moduleType) + ".")), moduleType);
+            return;
         }
         this._ngModuleOfTypes.set(type, moduleType);
     };
@@ -30549,6 +30551,7 @@ var CompileMetadataResolver = (function () {
                 }
                 else if (provider === void 0) {
                     _this._reportError(syntaxError("Encountered undefined provider! Usually this means you have a circular dependencies (might be caused by using 'barrel' index.ts files."));
+                    return;
                 }
                 else {
                     var /** @type {?} */ providersInfo = ((providers.reduce(function (soFar, seenProvider, seenProviderIdx) {
@@ -30565,6 +30568,7 @@ var CompileMetadataResolver = (function () {
                     }, [])))
                         .join(', ');
                     _this._reportError(syntaxError("Invalid " + (debugInfo ? debugInfo : 'provider') + " - only instances of Provider and Type are allowed, got: [" + providersInfo + "]"), type);
+                    return;
                 }
                 if (providerMeta.token === resolveIdentifier(Identifiers.ANALYZE_FOR_ENTRY_COMPONENTS)) {
                     targetEntryComponents.push.apply(targetEntryComponents, _this._getEntryComponentsFromProvider(providerMeta, type));
@@ -30622,11 +30626,9 @@ var CompileMetadataResolver = (function () {
         if (dirMeta && dirMeta.metadata.isComponent) {
             return { componentType: dirType, componentFactory: dirMeta.metadata.componentFactory };
         }
-        else {
-            var /** @type {?} */ dirSummary = (this._loadSummary(dirType, CompileSummaryKind.Directive));
-            if (dirSummary && dirSummary.isComponent) {
-                return { componentType: dirType, componentFactory: dirSummary.componentFactory };
-            }
+        var /** @type {?} */ dirSummary = (this._loadSummary(dirType, CompileSummaryKind.Directive));
+        if (dirSummary && dirSummary.isComponent) {
+            return { componentType: dirType, componentFactory: dirSummary.componentFactory };
         }
         if (throwIfNotFound) {
             throw syntaxError(dirType.name + " cannot be used as an entry component.");
@@ -30701,8 +30703,11 @@ var CompileMetadataResolver = (function () {
         else {
             if (!q.selector) {
                 this._reportError(syntaxError("Can't construct a query for the property \"" + propertyName + "\" of \"" + stringifyType(typeOrFunc) + "\" since the query selector wasn't defined."), typeOrFunc);
+                selectors = [];
             }
-            selectors = [this._getTokenMetadata(q.selector)];
+            else {
+                selectors = [this._getTokenMetadata(q.selector)];
+            }
         }
         return {
             selectors: selectors,
@@ -38130,7 +38135,7 @@ function serializeSummaries(summaryResolver, symbolResolver, symbols, types) {
     // as the type summaries already contain the transitive data that they require
     // (in a minimal way).
     types.forEach(function (typeSummary) {
-        serializer.addOrMergeSummary({ symbol: typeSummary.type.reference, metadata: { __symbolic: 'class' }, type: typeSummary });
+        serializer.addOrMergeSummary({ symbol: typeSummary.type.reference, metadata: null, type: typeSummary });
         if (typeSummary.summaryKind === CompileSummaryKind.NgModule) {
             var /** @type {?} */ ngModuleSummary = (typeSummary);
             ngModuleSummary.exportedDirectives.concat(ngModuleSummary.exportedPipes).forEach(function (id) {
@@ -38179,10 +38184,21 @@ var Serializer$1 = (function (_super) {
     Serializer$1.prototype.addOrMergeSummary = function (summary) {
         var /** @type {?} */ symbolMeta = summary.metadata;
         if (symbolMeta && symbolMeta.__symbolic === 'class') {
-            // For classes, we only keep their statics and arity, but not the metadata
-            // of the class itself as that has been captured already via other summaries
-            // (e.g. DirectiveSummary, ...).
-            symbolMeta = { __symbolic: 'class', statics: symbolMeta.statics, arity: symbolMeta.arity };
+            // For classes, we keep everything except their class decorators.
+            // We need to keep e.g. the ctor args, method names, method decorators
+            // so that the class can be extended in another compilation unit.
+            // We don't keep the class decorators as
+            // 1) they refer to data
+            //   that should not cause a rebuild of downstream compilation units
+            //   (e.g. inline templates of @Component, or @NgModule.declarations)
+            // 2) their data is already captured in TypeSummaries, e.g. DirectiveSummary.
+            var /** @type {?} */ clone_1 = {};
+            Object.keys(symbolMeta).forEach(function (propName) {
+                if (propName !== 'decorators') {
+                    clone_1[propName] = symbolMeta[propName];
+                }
+            });
+            symbolMeta = clone_1;
         }
         var /** @type {?} */ processedSummary = this.processedSummaryBySymbol.get(summary.symbol);
         if (!processedSummary) {
@@ -38843,15 +38859,17 @@ function shouldIgnore(value) {
  */
 var StaticReflector = (function () {
     /**
+     * @param {?} summaryResolver
      * @param {?} symbolResolver
      * @param {?=} knownMetadataClasses
      * @param {?=} knownMetadataFunctions
      * @param {?=} errorRecorder
      */
-    function StaticReflector(symbolResolver, knownMetadataClasses, knownMetadataFunctions, errorRecorder) {
+    function StaticReflector(summaryResolver, symbolResolver, knownMetadataClasses, knownMetadataFunctions, errorRecorder) {
         if (knownMetadataClasses === void 0) { knownMetadataClasses = []; }
         if (knownMetadataFunctions === void 0) { knownMetadataFunctions = []; }
         var _this = this;
+        this.summaryResolver = summaryResolver;
         this.symbolResolver = symbolResolver;
         this.errorRecorder = errorRecorder;
         this.annotationCache = new Map();
@@ -38859,9 +38877,20 @@ var StaticReflector = (function () {
         this.parameterCache = new Map();
         this.methodCache = new Map();
         this.conversionMap = new Map();
+        this.annotationForParentClassWithSummaryKind = new Map();
+        this.annotationNames = new Map();
         this.initializeConversionMap();
         knownMetadataClasses.forEach(function (kc) { return _this._registerDecoratorOrConstructor(_this.getStaticSymbol(kc.filePath, kc.name), kc.ctor); });
         knownMetadataFunctions.forEach(function (kf) { return _this._registerFunction(_this.getStaticSymbol(kf.filePath, kf.name), kf.fn); });
+        this.annotationForParentClassWithSummaryKind.set(CompileSummaryKind.Directive, [Directive, Component]);
+        this.annotationForParentClassWithSummaryKind.set(CompileSummaryKind.Pipe, [Pipe]);
+        this.annotationForParentClassWithSummaryKind.set(CompileSummaryKind.NgModule, [NgModule]);
+        this.annotationForParentClassWithSummaryKind.set(CompileSummaryKind.Injectable, [Injectable, Pipe, Directive, Component, NgModule]);
+        this.annotationNames.set(Directive, 'Directive');
+        this.annotationNames.set(Component, 'Component');
+        this.annotationNames.set(Pipe, 'Pipe');
+        this.annotationNames.set(NgModule, 'NgModule');
+        this.annotationNames.set(Injectable, 'Injectable');
     }
     /**
      * @param {?} typeOrFunc
@@ -38933,20 +38962,32 @@ var StaticReflector = (function () {
      * @return {?}
      */
     StaticReflector.prototype.annotations = function (type) {
+        var _this = this;
         var /** @type {?} */ annotations = this.annotationCache.get(type);
         if (!annotations) {
             annotations = [];
             var /** @type {?} */ classMetadata = this.getTypeMetadata(type);
-            if (classMetadata['extends']) {
-                var /** @type {?} */ parentType = this.trySimplify(type, classMetadata['extends']);
-                if (parentType && (parentType instanceof StaticSymbol)) {
-                    var /** @type {?} */ parentAnnotations = this.annotations(parentType);
-                    annotations.push.apply(annotations, parentAnnotations);
-                }
+            var /** @type {?} */ parentType = this.findParentType(type, classMetadata);
+            if (parentType) {
+                var /** @type {?} */ parentAnnotations = this.annotations(parentType);
+                annotations.push.apply(annotations, parentAnnotations);
             }
+            var /** @type {?} */ ownAnnotations_1 = [];
             if (classMetadata['decorators']) {
-                var /** @type {?} */ ownAnnotations = this.simplify(type, classMetadata['decorators']);
-                annotations.push.apply(annotations, ownAnnotations);
+                ownAnnotations_1 = this.simplify(type, classMetadata['decorators']);
+                annotations.push.apply(annotations, ownAnnotations_1);
+            }
+            if (parentType && !this.summaryResolver.isLibraryFile(type.filePath) &&
+                this.summaryResolver.isLibraryFile(parentType.filePath)) {
+                var /** @type {?} */ summary = this.summaryResolver.resolveSummary(parentType);
+                if (summary && summary.type) {
+                    var /** @type {?} */ requiredAnnotationTypes = this.annotationForParentClassWithSummaryKind.get(summary.type.summaryKind);
+                    var /** @type {?} */ typeHasRequiredAnnotation = requiredAnnotationTypes.some(function (requiredType) { return ownAnnotations_1.some(function (ann) { return ann instanceof requiredType; }); });
+                    if (!typeHasRequiredAnnotation) {
+                        this.reportError(syntaxError("Class " + type.name + " in " + type.filePath + " extends from a " + CompileSummaryKind[summary.type.summaryKind] + " in another compilation unit without duplicating the decorator. " +
+                            ("Please add a " + requiredAnnotationTypes.map(function (type) { return _this.annotationNames.get(type); }).join(' or ') + " decorator to the class.")), type);
+                    }
+                }
             }
             this.annotationCache.set(type, annotations.filter(function (ann) { return !!ann; }));
         }
@@ -38962,14 +39003,12 @@ var StaticReflector = (function () {
         if (!propMetadata) {
             var /** @type {?} */ classMetadata = this.getTypeMetadata(type);
             propMetadata = {};
-            if (classMetadata['extends']) {
-                var /** @type {?} */ parentType = this.trySimplify(type, classMetadata['extends']);
-                if (parentType instanceof StaticSymbol) {
-                    var /** @type {?} */ parentPropMetadata_1 = this.propMetadata(parentType);
-                    Object.keys(parentPropMetadata_1).forEach(function (parentProp) {
-                        propMetadata[parentProp] = parentPropMetadata_1[parentProp];
-                    });
-                }
+            var /** @type {?} */ parentType = this.findParentType(type, classMetadata);
+            if (parentType) {
+                var /** @type {?} */ parentPropMetadata_1 = this.propMetadata(parentType);
+                Object.keys(parentPropMetadata_1).forEach(function (parentProp) {
+                    propMetadata[parentProp] = parentPropMetadata_1[parentProp];
+                });
             }
             var /** @type {?} */ members_1 = classMetadata['members'] || {};
             Object.keys(members_1).forEach(function (propName) {
@@ -39002,6 +39041,7 @@ var StaticReflector = (function () {
             var /** @type {?} */ parameters_1 = this.parameterCache.get(type);
             if (!parameters_1) {
                 var /** @type {?} */ classMetadata = this.getTypeMetadata(type);
+                var /** @type {?} */ parentType = this.findParentType(type, classMetadata);
                 var /** @type {?} */ members = classMetadata ? classMetadata['members'] : null;
                 var /** @type {?} */ ctorData = members ? members['__ctor__'] : null;
                 if (ctorData) {
@@ -39021,11 +39061,8 @@ var StaticReflector = (function () {
                         parameters_1.push(nestedResult);
                     });
                 }
-                else if (classMetadata['extends']) {
-                    var /** @type {?} */ parentType = this.trySimplify(type, classMetadata['extends']);
-                    if (parentType instanceof StaticSymbol) {
-                        parameters_1 = this.parameters(parentType);
-                    }
+                else if (parentType) {
+                    parameters_1 = this.parameters(parentType);
                 }
                 if (!parameters_1) {
                     parameters_1 = [];
@@ -39048,14 +39085,12 @@ var StaticReflector = (function () {
         if (!methodNames) {
             var /** @type {?} */ classMetadata = this.getTypeMetadata(type);
             methodNames = {};
-            if (classMetadata['extends']) {
-                var /** @type {?} */ parentType = this.trySimplify(type, classMetadata['extends']);
-                if (parentType instanceof StaticSymbol) {
-                    var /** @type {?} */ parentMethodNames_1 = this._methodNames(parentType);
-                    Object.keys(parentMethodNames_1).forEach(function (parentProp) {
-                        methodNames[parentProp] = parentMethodNames_1[parentProp];
-                    });
-                }
+            var /** @type {?} */ parentType = this.findParentType(type, classMetadata);
+            if (parentType) {
+                var /** @type {?} */ parentMethodNames_1 = this._methodNames(parentType);
+                Object.keys(parentMethodNames_1).forEach(function (parentProp) {
+                    methodNames[parentProp] = parentMethodNames_1[parentProp];
+                });
             }
             var /** @type {?} */ members_2 = classMetadata['members'] || {};
             Object.keys(members_2).forEach(function (propName) {
@@ -39066,6 +39101,17 @@ var StaticReflector = (function () {
             this.methodCache.set(type, methodNames);
         }
         return methodNames;
+    };
+    /**
+     * @param {?} type
+     * @param {?} classMetadata
+     * @return {?}
+     */
+    StaticReflector.prototype.findParentType = function (type, classMetadata) {
+        var /** @type {?} */ parentType = this.trySimplify(type, classMetadata['extends']);
+        if (parentType instanceof StaticSymbol) {
+            return parentType;
+        }
     };
     /**
      * @param {?} type
@@ -39944,6 +39990,16 @@ var StaticSymbolResolver = (function () {
      * @return {?}
      */
     StaticSymbolResolver.prototype.createResolvedSymbol = function (sourceSymbol, topLevelPath, topLevelSymbolNames, metadata) {
+        // For classes that don't have Angular summaries / metadata,
+        // we only keep their arity, but nothing else
+        // (e.g. their constructor parameters).
+        // We do this to prevent introducing deep imports
+        // as we didn't generate .ngfactory.ts files with proper reexports.
+        if (this.summaryResolver.isLibraryFile(sourceSymbol.filePath) && metadata &&
+            metadata['__symbolic'] === 'class') {
+            var /** @type {?} */ transformedMeta_1 = { __symbolic: 'class', arity: metadata.arity };
+            return new ResolvedStaticSymbol(sourceSymbol, transformedMeta_1);
+        }
         var /** @type {?} */ self = this;
         var ReferenceTransformer = (function (_super) {
             __extends$1$1(ReferenceTransformer, _super);
@@ -40217,7 +40273,7 @@ function createAotCompiler(compilerHost, options) {
     var /** @type {?} */ symbolCache = new StaticSymbolCache();
     var /** @type {?} */ summaryResolver = new AotSummaryResolver(compilerHost, symbolCache);
     var /** @type {?} */ symbolResolver = new StaticSymbolResolver(compilerHost, symbolCache, summaryResolver);
-    var /** @type {?} */ staticReflector = new StaticReflector(symbolResolver);
+    var /** @type {?} */ staticReflector = new StaticReflector(summaryResolver, symbolResolver);
     StaticAndDynamicReflectionCapabilities.install(staticReflector);
     var /** @type {?} */ console = new Console();
     var /** @type {?} */ htmlParser = new I18NHtmlParser(new HtmlParser(), translations, options.i18nFormat, MissingTranslationStrategy.Warning, console);
@@ -41735,7 +41791,7 @@ var Extractor = (function () {
         var /** @type {?} */ symbolCache = new StaticSymbolCache();
         var /** @type {?} */ summaryResolver = new AotSummaryResolver(host, symbolCache);
         var /** @type {?} */ staticSymbolResolver = new StaticSymbolResolver(host, symbolCache, summaryResolver);
-        var /** @type {?} */ staticReflector = new StaticReflector(staticSymbolResolver);
+        var /** @type {?} */ staticReflector = new StaticReflector(summaryResolver, staticSymbolResolver);
         StaticAndDynamicReflectionCapabilities.install(staticReflector);
         var /** @type {?} */ config = new CompilerConfig({ defaultEncapsulation: ViewEncapsulation.Emulated, useJit: false });
         var /** @type {?} */ normalizer = new DirectiveNormalizer({ get: function (url) { return host.loadResource(url); } }, urlResolver, htmlParser, config);
@@ -44325,7 +44381,7 @@ var core_1 = require$$0$13;
 /**
  * @stable
  */
-var VERSION$5 = new core_1.Version('4.0.1-6b79ab5');
+var VERSION$5 = new core_1.Version('4.0.2-14a2d1a');
 
 
 var version = {
@@ -44568,7 +44624,7 @@ var NgTools_InternalApi_NG_2 = (function () {
         var symbolCache = new compiler_1.StaticSymbolCache();
         var summaryResolver = new compiler_1.AotSummaryResolver(ngCompilerHost, symbolCache);
         var symbolResolver = new compiler_1.StaticSymbolResolver(ngCompilerHost, symbolCache, summaryResolver);
-        var staticReflector = new compiler_1.StaticReflector(symbolResolver);
+        var staticReflector = new compiler_1.StaticReflector(summaryResolver, symbolResolver);
         var routeMap = ngtools_impl_1.listLazyRoutesOfModule(options.entryModule, ngCompilerHost, staticReflector);
         return Object.keys(routeMap).reduce(function (acc, route) {
             acc[route] = routeMap[route].absoluteFilePath;
@@ -44635,7 +44691,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v4.0.1-6b79ab5
+ * @license Angular v4.0.2-14a2d1a
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -47022,7 +47078,7 @@ var ExpressionDiagnosticsVisitor = (function (_super) {
         var directive = this.directiveSummary;
         if (directive && ast.value) {
             var context = this.info.template.query.getTemplateContext(directive.type.reference);
-            if (!context.has(ast.value)) {
+            if (context && !context.has(ast.value)) {
                 if (ast.value === '$implicit') {
                     this.reportError('The template context does not have an implicit value', spanOf(ast.sourceSpan));
                 }
@@ -47214,7 +47270,7 @@ var LanguageServiceImpl = (function () {
                 var expressionParser = new Parser(new Lexer());
                 var config = new CompilerConfig();
                 var parser = new TemplateParser(config, expressionParser, new DomElementSchemaRegistry(), htmlParser, null, []);
-                var htmlResult = htmlParser.parse(template.source, '');
+                var htmlResult = htmlParser.parse(template.source, '', true);
                 var analyzedModules = this.host.getAnalyzedModules();
                 var errors = undefined;
                 var ngModule = analyzedModules.ngModuleByPipeOrDirective.get(template.type);
@@ -47712,12 +47768,12 @@ var TypeScriptServiceHost = (function () {
             var _this = this;
             var result = this._staticSymbolResolver;
             if (!result) {
-                var summaryResolver = new AotSummaryResolver({
+                this._summaryResolver = new AotSummaryResolver({
                     loadSummary: function (filePath) { return null; },
                     isSourceFile: function (sourceFilePath) { return true; },
                     getOutputFileName: function (sourceFilePath) { return null; }
                 }, this._staticSymbolCache);
-                result = this._staticSymbolResolver = new StaticSymbolResolver(this.reflectorHost, this._staticSymbolCache, summaryResolver, function (e, filePath) { return _this.collectError(e, filePath); });
+                result = this._staticSymbolResolver = new StaticSymbolResolver(this.reflectorHost, this._staticSymbolCache, this._summaryResolver, function (e, filePath) { return _this.collectError(e, filePath); });
             }
             return result;
         },
@@ -47729,7 +47785,9 @@ var TypeScriptServiceHost = (function () {
             var _this = this;
             var result = this._reflector;
             if (!result) {
-                result = this._reflector = new StaticReflector(this.staticSymbolResolver, [], [], function (e, filePath) { return _this.collectError(e, filePath); });
+                var ssr = this.staticSymbolResolver;
+                result = this._reflector = new StaticReflector(this._summaryResolver, ssr, [], [], function (e, filePath) { return _this.collectError(e, filePath); });
+                StaticAndDynamicReflectionCapabilities.install(result);
             }
             return result;
         },
@@ -48026,6 +48084,8 @@ function toSymbolTable(symbols) {
 }
 function toSymbols(symbolTable, filter) {
     var result = [];
+    if (!symbolTable)
+        return result;
     var own = typeof symbolTable.hasOwnProperty === 'function' ?
         function (name) { return symbolTable.hasOwnProperty(name); } :
         function (name) { return !!symbolTable[name]; };
@@ -48268,6 +48328,7 @@ var SignatureResultOverride = (function () {
 var SymbolTableWrapper = (function () {
     function SymbolTableWrapper(symbols, context, filter) {
         this.context = context;
+        symbols = symbols || [];
         if (Array.isArray(symbols)) {
             this.symbols = filter ? symbols.filter(filter) : symbols;
             this.symbolTable = toSymbolTable(symbols);
@@ -48409,6 +48470,9 @@ var PipeSymbol = (function () {
                             case 'EventEmitter':
                                 resultType = getTypeParameterOf(parameterType.tsType, parameterType.name);
                                 break;
+                            default:
+                                resultType = getBuiltinTypeFromTs(BuiltinType.Any, this.context);
+                                break;
                         }
                         break;
                     case 'slice':
@@ -48444,9 +48508,12 @@ var PipeSymbol = (function () {
         return findClassSymbolInContext(type, this.context);
     };
     PipeSymbol.prototype.findTransformMethodType = function (classSymbol) {
-        var transform = classSymbol.members && classSymbol.members['transform'];
-        if (transform) {
-            return this.context.checker.getTypeOfSymbolAtLocation(transform, this.context.node);
+        var classType = this.context.checker.getDeclaredTypeOfSymbol(classSymbol);
+        if (classType) {
+            var transform = classType.getProperty('transform');
+            if (transform) {
+                return this.context.checker.getTypeOfSymbolAtLocation(transform, this.context.node);
+            }
         }
     };
     return PipeSymbol;
@@ -48479,7 +48546,10 @@ function findTsConfig(fileName) {
         var candidate = require$$2.join(dir, 'tsconfig.json');
         if (fs.existsSync(candidate))
             return candidate;
-        dir = require$$2.dirname(dir);
+        var parentDir = require$$2.dirname(dir);
+        if (parentDir === dir)
+            break;
+        dir = parentDir;
     }
 }
 function isSymbolPrivate(s) {
@@ -48777,7 +48847,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('4.0.1-6b79ab5');
+var VERSION$$1 = new Version('4.0.2-14a2d1a');
 
 exports.createLanguageService = createLanguageService;
 exports.create = create;

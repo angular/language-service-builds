@@ -41,6 +41,7 @@ export declare class TypeScriptServiceHost implements LanguageServiceHost {
     private tsService;
     private _resolver;
     private _staticSymbolCache;
+    private _summaryResolver;
     private _staticSymbolResolver;
     private _reflector;
     private _reflectorHost;

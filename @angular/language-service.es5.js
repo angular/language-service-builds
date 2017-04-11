@@ -1,9 +1,9 @@
 /**
- * @license Angular v4.0.1-6b79ab5
+ * @license Angular v4.0.2-14a2d1a
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
-import { ASTWithSource, AotSummaryResolver, Attribute, CompileMetadataResolver, CompilerConfig, CssSelector, DEFAULT_INTERPOLATION_CONFIG, DirectiveNormalizer, DirectiveResolver, DomElementSchemaRegistry, Element as Element$1, ElementAst, EmbeddedTemplateAst, HtmlParser, I18NHtmlParser, ImplicitReceiver, Lexer, NAMED_ENTITIES, NgModuleResolver, ParseSpan, ParseTreeResult, Parser, PipeResolver, PropertyRead, ResourceLoader, SelectorMatcher, StaticReflector, StaticSymbolCache, StaticSymbolResolver, SummaryResolver, TagContentType, TemplateParser, Text, analyzeNgModules, componentModuleUrl, createOfflineCompileUrlResolver, extractProgramSymbols, getHtmlTagDefinition, identifierName, splitNsName, templateVisitAll, tokenReference, visitAll } from '@angular/compiler';
+import { ASTWithSource, AotSummaryResolver, Attribute, CompileMetadataResolver, CompilerConfig, CssSelector, DEFAULT_INTERPOLATION_CONFIG, DirectiveNormalizer, DirectiveResolver, DomElementSchemaRegistry, Element as Element$1, ElementAst, EmbeddedTemplateAst, HtmlParser, I18NHtmlParser, ImplicitReceiver, Lexer, NAMED_ENTITIES, NgModuleResolver, ParseSpan, ParseTreeResult, Parser, PipeResolver, PropertyRead, ResourceLoader, SelectorMatcher, StaticAndDynamicReflectionCapabilities, StaticReflector, StaticSymbolCache, StaticSymbolResolver, SummaryResolver, TagContentType, TemplateParser, Text, analyzeNgModules, componentModuleUrl, createOfflineCompileUrlResolver, extractProgramSymbols, getHtmlTagDefinition, identifierName, splitNsName, templateVisitAll, tokenReference, visitAll } from '@angular/compiler';
 import { DiagnosticCategory, ModifierFlags, NodeFlags, ObjectFlags, SymbolFlags, SyntaxKind, TypeFlags, forEachChild, getCombinedModifierFlags, getPositionOfLineAndCharacter } from 'typescript';
 import { Version, ViewEncapsulation, ɵConsole } from '@angular/core';
 import { existsSync } from 'fs';
@@ -2392,7 +2392,7 @@ var ExpressionDiagnosticsVisitor = (function (_super) {
         var directive = this.directiveSummary;
         if (directive && ast.value) {
             var context = this.info.template.query.getTemplateContext(directive.type.reference);
-            if (!context.has(ast.value)) {
+            if (context && !context.has(ast.value)) {
                 if (ast.value === '$implicit') {
                     this.reportError('The template context does not have an implicit value', spanOf(ast.sourceSpan));
                 }
@@ -2584,7 +2584,7 @@ var LanguageServiceImpl = (function () {
                 var expressionParser = new Parser(new Lexer());
                 var config = new CompilerConfig();
                 var parser = new TemplateParser(config, expressionParser, new DomElementSchemaRegistry(), htmlParser, null, []);
-                var htmlResult = htmlParser.parse(template.source, '');
+                var htmlResult = htmlParser.parse(template.source, '', true);
                 var analyzedModules = this.host.getAnalyzedModules();
                 var errors = undefined;
                 var ngModule = analyzedModules.ngModuleByPipeOrDirective.get(template.type);
@@ -3082,12 +3082,12 @@ var TypeScriptServiceHost = (function () {
             var _this = this;
             var result = this._staticSymbolResolver;
             if (!result) {
-                var summaryResolver = new AotSummaryResolver({
+                this._summaryResolver = new AotSummaryResolver({
                     loadSummary: function (filePath) { return null; },
                     isSourceFile: function (sourceFilePath) { return true; },
                     getOutputFileName: function (sourceFilePath) { return null; }
                 }, this._staticSymbolCache);
-                result = this._staticSymbolResolver = new StaticSymbolResolver(this.reflectorHost, this._staticSymbolCache, summaryResolver, function (e, filePath) { return _this.collectError(e, filePath); });
+                result = this._staticSymbolResolver = new StaticSymbolResolver(this.reflectorHost, this._staticSymbolCache, this._summaryResolver, function (e, filePath) { return _this.collectError(e, filePath); });
             }
             return result;
         },
@@ -3099,7 +3099,9 @@ var TypeScriptServiceHost = (function () {
             var _this = this;
             var result = this._reflector;
             if (!result) {
-                result = this._reflector = new StaticReflector(this.staticSymbolResolver, [], [], function (e, filePath) { return _this.collectError(e, filePath); });
+                var ssr = this.staticSymbolResolver;
+                result = this._reflector = new StaticReflector(this._summaryResolver, ssr, [], [], function (e, filePath) { return _this.collectError(e, filePath); });
+                StaticAndDynamicReflectionCapabilities.install(result);
             }
             return result;
         },
@@ -3396,6 +3398,8 @@ function toSymbolTable(symbols) {
 }
 function toSymbols(symbolTable, filter) {
     var result = [];
+    if (!symbolTable)
+        return result;
     var own = typeof symbolTable.hasOwnProperty === 'function' ?
         function (name) { return symbolTable.hasOwnProperty(name); } :
         function (name) { return !!symbolTable[name]; };
@@ -3638,6 +3642,7 @@ var SignatureResultOverride = (function () {
 var SymbolTableWrapper = (function () {
     function SymbolTableWrapper(symbols, context, filter) {
         this.context = context;
+        symbols = symbols || [];
         if (Array.isArray(symbols)) {
             this.symbols = filter ? symbols.filter(filter) : symbols;
             this.symbolTable = toSymbolTable(symbols);
@@ -3779,6 +3784,9 @@ var PipeSymbol = (function () {
                             case 'EventEmitter':
                                 resultType = getTypeParameterOf(parameterType.tsType, parameterType.name);
                                 break;
+                            default:
+                                resultType = getBuiltinTypeFromTs(BuiltinType.Any, this.context);
+                                break;
                         }
                         break;
                     case 'slice':
@@ -3814,9 +3822,12 @@ var PipeSymbol = (function () {
         return findClassSymbolInContext(type, this.context);
     };
     PipeSymbol.prototype.findTransformMethodType = function (classSymbol) {
-        var transform = classSymbol.members && classSymbol.members['transform'];
-        if (transform) {
-            return this.context.checker.getTypeOfSymbolAtLocation(transform, this.context.node);
+        var classType = this.context.checker.getDeclaredTypeOfSymbol(classSymbol);
+        if (classType) {
+            var transform = classType.getProperty('transform');
+            if (transform) {
+                return this.context.checker.getTypeOfSymbolAtLocation(transform, this.context.node);
+            }
         }
     };
     return PipeSymbol;
@@ -3849,7 +3860,10 @@ function findTsConfig(fileName) {
         var candidate = join(dir, 'tsconfig.json');
         if (existsSync(candidate))
             return candidate;
-        dir = dirname(dir);
+        var parentDir = dirname(dir);
+        if (parentDir === dir)
+            break;
+        dir = parentDir;
     }
 }
 function isSymbolPrivate(s) {
@@ -4147,7 +4161,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version('4.0.1-6b79ab5');
+var VERSION = new Version('4.0.2-14a2d1a');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
