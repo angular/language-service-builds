@@ -10,11 +10,11 @@ import { SelectorInfo, TemplateInfo } from './common';
 import { Span } from './types';
 export interface SpanHolder {
     sourceSpan: ParseSourceSpan;
-    endSourceSpan?: ParseSourceSpan;
+    endSourceSpan?: ParseSourceSpan | null;
     children?: SpanHolder[];
 }
 export declare function isParseSourceSpan(value: any): value is ParseSourceSpan;
-export declare function spanOf(span?: SpanHolder | ParseSourceSpan): Span;
+export declare function spanOf(span?: SpanHolder | ParseSourceSpan): Span | undefined;
 export declare function inSpan(position: number, span?: Span, exclusive?: boolean): boolean;
 export declare function offsetSpan(span: Span, amount: number): Span;
 export declare function isNarrower(spanA: Span, spanB: Span): boolean;

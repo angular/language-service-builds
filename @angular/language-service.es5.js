@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.1.0-beta.0-075f3f8
+ * @license Angular v4.1.0-beta.0-540581d
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -758,7 +758,7 @@ var AstType = (function () {
         // by getPipes() is expected to contain symbols with the corresponding transform method type.
         var pipe = this.query.getPipes().get(ast.name);
         if (!pipe)
-            return this.reportError("No pipe by the name " + pipe.name + " found", ast);
+            return this.reportError("No pipe by the name " + ast.name + " found", ast);
         var expType = this.getType(ast.exp);
         var signature = pipe.selectSignature([expType].concat(ast.args.map(function (arg) { return _this.getType(arg); })));
         if (!signature)
@@ -867,7 +867,7 @@ var AstType = (function () {
     };
     AstType.prototype.isAny = function (symbol) {
         return !symbol || this.query.getTypeKind(symbol) == BuiltinType.Any ||
-            (symbol.type && this.isAny(symbol.type));
+            (!!symbol.type && this.isAny(symbol.type));
     };
     return AstType;
 }());
@@ -995,7 +995,7 @@ function getReferences(info) {
     var result = [];
     function processReferences(references) {
         var _loop_1 = function (reference) {
-            var type = void 0;
+            var type = undefined;
             if (reference.value) {
                 type = info.template.query.getTypeSymbol(tokenReference(reference.value));
             }
@@ -1041,7 +1041,7 @@ function getVarDeclarations(info, path$$1) {
                     .map(function (d) { return info.template.query.getTemplateContext(d.directive.type.reference); })
                     .find(function (c) { return !!c; });
                 // Determine the type of the context field referenced by variable.value.
-                var type = void 0;
+                var type = undefined;
                 if (context) {
                     var value = context.get(variable.value);
                     if (value) {
@@ -1758,7 +1758,7 @@ function getAttributeInfosForElement(info, elementName, element) {
         // All input and output properties of the matching directives should be added.
         var elementSelector = element ?
             createElementCssSelector(element) :
-            createElementCssSelector(new Element$1(elementName, [], [], undefined, undefined, undefined));
+            createElementCssSelector(new Element$1(elementName, [], [], null, null, null));
         var matcher = new SelectorMatcher();
         matcher.addSelectables(selectors);
         matcher.match(elementSelector, function (selector) {
@@ -1807,7 +1807,7 @@ function entityCompletions(value, position) {
     // Look for entity completions
     var re = /&[A-Za-z]*;?(?!\d)/g;
     var found;
-    var result;
+    var result = undefined;
     while (found = re.exec(value)) {
         var len = found[0].length;
         if (position >= found.index && position < (found.index + len)) {
@@ -2312,7 +2312,8 @@ function getDeclarationDiagnostics(declarations, modules) {
                 if (!modules.ngModuleByPipeOrDirective.has(declaration.type)) {
                     report("Component '" + declaration.type.name + "' is not included in a module and will not be available inside a template. Consider adding it to a NgModule declaration");
                 }
-                if (!declaration.metadata.template.template && !declaration.metadata.template.templateUrl) {
+                if (!declaration.metadata.template.template &&
+                    !declaration.metadata.template.templateUrl) {
                     report("Component " + declaration.type.name + " must have a template or templateUrl");
                 }
             }
@@ -2573,7 +2574,7 @@ var LanguageServiceImpl = (function () {
     };
     LanguageServiceImpl.prototype.getTemplateAst = function (template, contextFile) {
         var _this = this;
-        var result;
+        var result = undefined;
         try {
             var resolvedMetadata = this.metadataResolver.getNonNormalizedDirectiveMetadata(template.type);
             var metadata = resolvedMetadata && resolvedMetadata.metadata;
@@ -2638,7 +2639,7 @@ function uniqueBySpan(elements) {
     }
 }
 function findSuitableDefaultModule(modules) {
-    var result;
+    var result = undefined;
     var resultSize = 0;
     for (var _i = 0, _a = modules.ngModules; _i < _a.length; _i++) {
         var module_1 = _a[_i];
@@ -2677,6 +2678,7 @@ var ReflectorModuleModuleResolutionHost = (function () {
         if (snapshot) {
             return snapshot.getText(0, snapshot.getLength());
         }
+        return undefined;
     };
     return ReflectorModuleModuleResolutionHost;
 }());
@@ -2832,6 +2834,7 @@ var TypeScriptServiceHost = (function () {
                 return this.getSourceFromType(fileName, this.host.getScriptVersion(fileName), componentType);
             }
         }
+        return null;
     };
     TypeScriptServiceHost.prototype.getAnalyzedModules = function () {
         this.validate();
@@ -3261,7 +3264,7 @@ var TypeScriptServiceHost = (function () {
     };
     return TypeScriptServiceHost;
 }());
-TypeScriptServiceHost.missingTemplate = [];
+TypeScriptServiceHost.missingTemplate = [undefined, undefined];
 var TypeScriptSymbolQuery = (function () {
     function TypeScriptSymbolQuery(program, checker, source, fetchPipes) {
         this.program = program;
@@ -3342,7 +3345,9 @@ var TypeScriptSymbolQuery = (function () {
         }
         return result;
     };
-    TypeScriptSymbolQuery.prototype.getSpanAt = function (line, column) { return spanAt(this.source, line, column); };
+    TypeScriptSymbolQuery.prototype.getSpanAt = function (line, column) {
+        return spanAt(this.source, line, column);
+    };
     TypeScriptSymbolQuery.prototype.getTemplateRefContextType = function (type) {
         var constructor = type.members && type.members['__constructor'];
         if (constructor) {
@@ -3866,7 +3871,7 @@ function findTsConfig(fileName) {
     }
 }
 function isSymbolPrivate(s) {
-    return s.valueDeclaration && isPrivate(s.valueDeclaration);
+    return !!s.valueDeclaration && isPrivate(s.valueDeclaration);
 }
 function getBuiltinTypeFromTs(kind, context) {
     var type;
@@ -3954,7 +3959,7 @@ function parentDeclarationOf(node) {
             case SyntaxKind.InterfaceDeclaration:
                 return node;
             case SyntaxKind.SourceFile:
-                return null;
+                return undefined;
         }
         node = node.parent;
     }
@@ -4000,7 +4005,7 @@ function typeKindOf(type) {
         }
         else if (type.flags & TypeFlags.Union) {
             // If all the constituent types of a union are the same kind, it is also that kind.
-            var candidate = void 0;
+            var candidate = undefined;
             var unionType = type;
             if (unionType.types.length > 0) {
                 candidate = typeKindOf(unionType.types[0]);
@@ -4160,7 +4165,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version('4.1.0-beta.0-075f3f8');
+var VERSION = new Version('4.1.0-beta.0-540581d');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.

@@ -7,4 +7,4 @@
  */
 import { TemplateInfo } from './common';
 import { Hover } from './types';
-export declare function getHover(info: TemplateInfo): Hover;
+export declare function getHover(info: TemplateInfo): Hover | undefined;

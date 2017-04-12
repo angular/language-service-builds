@@ -72,7 +72,7 @@ export interface TemplateSource {
  *
  * @experimental
  */
-export declare type TemplateSources = TemplateSource[];
+export declare type TemplateSources = TemplateSource[] | undefined;
 /**
  * Error information found getting declaration information
  *
@@ -196,13 +196,13 @@ export interface Symbol {
     /**
      * A symbol representing type of the symbol.
      */
-    readonly type: Symbol;
+    readonly type: Symbol | undefined;
     /**
      * A symbol for the container of this symbol. For example, if this is a method, the container
      * is the class or interface of the method. If no container is appropriate, undefined is
      * returned.
      */
-    readonly container: Symbol;
+    readonly container: Symbol | undefined;
     /**
      * The symbol is public in the container.
      */
@@ -214,7 +214,7 @@ export interface Symbol {
     /**
      * The location of the definition of the symbol
      */
-    readonly definition: Definition;
+    readonly definition: Definition | undefined;
     /**
   
      * A table of the members of the symbol; that is, the members that can appear
@@ -232,12 +232,12 @@ export interface Symbol {
      * given the `types` supplied. If no signature would match, this method should
      * return `undefined`.
      */
-    selectSignature(types: Symbol[]): Signature;
+    selectSignature(types: Symbol[]): Signature | undefined;
     /**
      * Return the type of the expression if this symbol is indexed by `argument`.
      * If the symbol cannot be indexed, this method should return `undefined`.
      */
-    indexed(argument: Symbol): Symbol;
+    indexed(argument: Symbol): Symbol | undefined;
 }
 /**
  * A table of `Symbol`s accessible by name.
@@ -255,7 +255,7 @@ export interface SymbolTable {
      * Get the symbol corresponding to `key` or `undefined` if there is no symbol in the
      * table by the name `key`.
      */
-    get(key: string): Symbol;
+    get(key: string): Symbol | undefined;
     /**
      * Returns `true` if the table contains a `Symbol` with the name `key`.
      */
@@ -314,7 +314,7 @@ export interface SymbolQuery {
      * Return element type symbol for an array type if the `type` is an array type. Otherwise return
      * undefined.
      */
-    getElementType(type: Symbol): Symbol;
+    getElementType(type: Symbol): Symbol | undefined;
     /**
      * Return a type that is the non-nullable version of the given type. If `type` is already
      * non-nullable, return `type`.
@@ -331,7 +331,7 @@ export interface SymbolQuery {
     /**
      * Return the members that are in the context of a type's template reference.
      */
-    getTemplateContext(type: StaticSymbol): SymbolTable;
+    getTemplateContext(type: StaticSymbol): SymbolTable | undefined;
     /**
      * Produce a symbol table with the given symbols. Used to produce a symbol table
      * for use with mergeSymbolTables().
@@ -349,7 +349,7 @@ export interface SymbolQuery {
     /**
      * Return the span of the narrowest non-token node at the given location.
      */
-    getSpanAt(line: number, column: number): Span;
+    getSpanAt(line: number, column: number): Span | undefined;
 }
 /**
  * The host for a `LanguageService`. This provides all the `LanguageService` requires to respond to
@@ -450,7 +450,7 @@ export interface Completion {
  *
  * @experimental
  */
-export declare type Completions = Completion[];
+export declare type Completions = Completion[] | undefined;
 /**
  * A file and span.
  */
@@ -461,7 +461,7 @@ export interface Location {
 /**
  * A defnition location(s).
  */
-export declare type Definition = Location[];
+export declare type Definition = Location[] | undefined;
 /**
  * The kind of diagnostic message.
  *
@@ -518,7 +518,7 @@ export interface PipeInfo {
  *
  * @experimental
  */
-export declare type Pipes = PipeInfo[];
+export declare type Pipes = PipeInfo[] | undefined;
 /**
  * Describes a symbol to type binding used to build a symbol table.
  *
@@ -610,25 +610,25 @@ export interface LanguageService {
     /**
      * Returns a list of all the external templates referenced by the project.
      */
-    getTemplateReferences(): string[];
+    getTemplateReferences(): string[] | undefined;
     /**
      * Returns a list of all error for all templates in the given file.
      */
-    getDiagnostics(fileName: string): Diagnostics;
+    getDiagnostics(fileName: string): Diagnostics | undefined;
     /**
      * Return the completions at the given position.
      */
-    getCompletionsAt(fileName: string, position: number): Completions;
+    getCompletionsAt(fileName: string, position: number): Completions | undefined;
     /**
      * Return the definition location for the symbol at position.
      */
-    getDefinitionAt(fileName: string, position: number): Definition;
+    getDefinitionAt(fileName: string, position: number): Definition | undefined;
     /**
      * Return the hover information for the symbol at position.
      */
-    getHoverAt(fileName: string, position: number): Hover;
+    getHoverAt(fileName: string, position: number): Hover | undefined;
     /**
      * Return the pipes that are available at the given position.
      */
-    getPipesAt(fileName: string, position: number): Pipes;
+    getPipesAt(fileName: string, position: number): Pipes | undefined;
 }
