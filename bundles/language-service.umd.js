@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.1.0-beta.1-d263595
+ * @license Angular v4.1.0-beta.1-9394835
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2009,7 +2009,7 @@ var __extends$2$1 = (undefined && undefined.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 /**
- * @license Angular v4.1.0-beta.1-d263595
+ * @license Angular v4.1.0-beta.1-9394835
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2861,7 +2861,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('4.1.0-beta.1-d263595');
+var VERSION$2 = new Version('4.1.0-beta.1-9394835');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -16157,7 +16157,7 @@ var __extends$1$1 = (undefined && undefined.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 /**
- * @license Angular v4.1.0-beta.1-d263595
+ * @license Angular v4.1.0-beta.1-9394835
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -16176,7 +16176,7 @@ var __extends$1$1 = (undefined && undefined.__extends) || function (d, b) {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('4.1.0-beta.1-d263595');
+var VERSION$1 = new Version('4.1.0-beta.1-9394835');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -42504,7 +42504,8 @@ var Evaluator = (function () {
                 case ts$2.SyntaxKind.CallExpression:
                     var callExpression = node;
                     // We can fold a <array>.concat(<v>).
-                    if (isMethodCallOf(callExpression, 'concat') && callExpression.arguments.length === 1) {
+                    if (isMethodCallOf(callExpression, 'concat') &&
+                        arrayOrEmpty(callExpression.arguments).length === 1) {
                         var arrayNode = callExpression.expression.expression;
                         if (this.isFoldableWorker(arrayNode, folding) &&
                             this.isFoldableWorker(callExpression.arguments[0], folding)) {
@@ -42516,7 +42517,8 @@ var Evaluator = (function () {
                         }
                     }
                     // We can fold a call to CONST_EXPR
-                    if (isCallOf(callExpression, 'CONST_EXPR') && callExpression.arguments.length === 1)
+                    if (isCallOf(callExpression, 'CONST_EXPR') &&
+                        arrayOrEmpty(callExpression.arguments).length === 1)
                         return this.isFoldableWorker(callExpression.arguments[0], folding);
                     return false;
                 case ts$2.SyntaxKind.NoSubstitutionTemplateLiteral:
@@ -42642,14 +42644,15 @@ var Evaluator = (function () {
                 return recordEntry({ __symbolic: 'spread', expression: spreadExpression }, node);
             case ts$2.SyntaxKind.CallExpression:
                 var callExpression = node;
-                if (isCallOf(callExpression, 'forwardRef') && callExpression.arguments.length === 1) {
+                if (isCallOf(callExpression, 'forwardRef') &&
+                    arrayOrEmpty(callExpression.arguments).length === 1) {
                     var firstArgument = callExpression.arguments[0];
                     if (firstArgument.kind == ts$2.SyntaxKind.ArrowFunction) {
                         var arrowFunction = firstArgument;
                         return recordEntry(this.evaluateNode(arrowFunction.body), node);
                     }
                 }
-                var args_1 = callExpression.arguments.map(function (arg) { return _this.evaluateNode(arg); });
+                var args_1 = arrayOrEmpty(callExpression.arguments).map(function (arg) { return _this.evaluateNode(arg); });
                 if (!this.options.verboseInvalidExpression && args_1.some(schema_1$1.isMetadataError)) {
                     return args_1.find(schema_1$1.isMetadataError);
                 }
@@ -42662,7 +42665,8 @@ var Evaluator = (function () {
                     }
                 }
                 // Always fold a CONST_EXPR even if the argument is not foldable.
-                if (isCallOf(callExpression, 'CONST_EXPR') && callExpression.arguments.length === 1) {
+                if (isCallOf(callExpression, 'CONST_EXPR') &&
+                    arrayOrEmpty(callExpression.arguments).length === 1) {
                     return recordEntry(args_1[0], node);
                 }
                 var expression = this.evaluateNode(callExpression.expression);
@@ -42676,7 +42680,7 @@ var Evaluator = (function () {
                 return recordEntry(result, node);
             case ts$2.SyntaxKind.NewExpression:
                 var newExpression = node;
-                var newArgs = newExpression.arguments.map(function (arg) { return _this.evaluateNode(arg); });
+                var newArgs = arrayOrEmpty(newExpression.arguments).map(function (arg) { return _this.evaluateNode(arg); });
                 if (!this.options.verboseInvalidExpression && newArgs.some(schema_1$1.isMetadataError)) {
                     return recordEntry(newArgs.find(schema_1$1.isMetadataError), node);
                 }
@@ -42914,6 +42918,10 @@ var Evaluator = (function () {
 var Evaluator_1 = Evaluator;
 function isPropertyAssignment(node) {
     return node.kind == ts$2.SyntaxKind.PropertyAssignment;
+}
+var empty$1 = [];
+function arrayOrEmpty(v) {
+    return v || empty$1;
 }
 
 
@@ -44413,7 +44421,7 @@ var core_1 = require$$0$13;
 /**
  * @stable
  */
-var VERSION$5 = new core_1.Version('4.1.0-beta.1-d263595');
+var VERSION$5 = new core_1.Version('4.1.0-beta.1-9394835');
 
 
 var version = {
@@ -44723,7 +44731,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v4.1.0-beta.1-d263595
+ * @license Angular v4.1.0-beta.1-9394835
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -48883,7 +48891,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('4.1.0-beta.1-d263595');
+var VERSION$$1 = new Version('4.1.0-beta.1-9394835');
 
 exports.createLanguageService = createLanguageService;
 exports.create = create;
