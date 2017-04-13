@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.1.0-beta.1-14b7dfa
+ * @license Angular v4.1.0-beta.1-fdb3f26
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2009,7 +2009,7 @@ var __extends$2$1 = (undefined && undefined.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 /**
- * @license Angular v4.1.0-beta.1-14b7dfa
+ * @license Angular v4.1.0-beta.1-fdb3f26
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2861,7 +2861,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('4.1.0-beta.1-14b7dfa');
+var VERSION$2 = new Version('4.1.0-beta.1-fdb3f26');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -16157,7 +16157,7 @@ var __extends$1$1 = (undefined && undefined.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 /**
- * @license Angular v4.1.0-beta.1-14b7dfa
+ * @license Angular v4.1.0-beta.1-fdb3f26
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -16176,7 +16176,7 @@ var __extends$1$1 = (undefined && undefined.__extends) || function (d, b) {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('4.1.0-beta.1-14b7dfa');
+var VERSION$1 = new Version('4.1.0-beta.1-fdb3f26');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -27718,19 +27718,17 @@ var TemplateParser = (function () {
      * @return {?}
      */
     TemplateParser.prototype.tryParse = function (component, template, directives, pipes, schemas, templateUrl) {
-        return this.tryParseHtml(this.expandHtml(/** @type {?} */ ((this._htmlParser)).parse(template, templateUrl, true, this.getInterpolationConfig(component))), component, template, directives, pipes, schemas, templateUrl);
+        return this.tryParseHtml(this.expandHtml(/** @type {?} */ ((this._htmlParser)).parse(template, templateUrl, true, this.getInterpolationConfig(component))), component, directives, pipes, schemas);
     };
     /**
      * @param {?} htmlAstWithErrors
      * @param {?} component
-     * @param {?} template
      * @param {?} directives
      * @param {?} pipes
      * @param {?} schemas
-     * @param {?} templateUrl
      * @return {?}
      */
-    TemplateParser.prototype.tryParseHtml = function (htmlAstWithErrors, component, template, directives, pipes, schemas, templateUrl) {
+    TemplateParser.prototype.tryParseHtml = function (htmlAstWithErrors, component, directives, pipes, schemas) {
         var /** @type {?} */ result;
         var /** @type {?} */ errors = htmlAstWithErrors.errors;
         var /** @type {?} */ usedPipes = [];
@@ -44421,7 +44419,7 @@ var core_1 = require$$0$13;
 /**
  * @stable
  */
-var VERSION$5 = new core_1.Version('4.1.0-beta.1-14b7dfa');
+var VERSION$5 = new core_1.Version('4.1.0-beta.1-fdb3f26');
 
 
 var version = {
@@ -44731,7 +44729,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v4.1.0-beta.1-14b7dfa
+ * @license Angular v4.1.0-beta.1-fdb3f26
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -47323,7 +47321,7 @@ var LanguageServiceImpl = (function () {
                     var directives = resolvedDirectives.filter(function (d) { return d !== null; }).map(function (d) { return d.metadata.toSummary(); });
                     var pipes = ngModule.transitiveModule.pipes.map(function (p) { return _this.host.resolver.getOrLoadPipeMetadata(p.reference).toSummary(); });
                     var schemas = ngModule.schemas;
-                    var parseResult = parser.tryParseHtml(htmlResult, metadata, template.source, directives, pipes, schemas, '');
+                    var parseResult = parser.tryParseHtml(htmlResult, metadata, directives, pipes, schemas);
                     result = {
                         htmlAst: htmlResult.rootNodes,
                         templateAst: parseResult.templateAst,
@@ -48891,7 +48889,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('4.1.0-beta.1-14b7dfa');
+var VERSION$$1 = new Version('4.1.0-beta.1-fdb3f26');
 
 exports.createLanguageService = createLanguageService;
 exports.create = create;

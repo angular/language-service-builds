@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.1.0-beta.1-14b7dfa
+ * @license Angular v4.1.0-beta.1-fdb3f26
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2588,7 +2588,7 @@ var LanguageServiceImpl = (function () {
                     var directives = resolvedDirectives.filter(function (d) { return d !== null; }).map(function (d) { return d.metadata.toSummary(); });
                     var pipes = ngModule.transitiveModule.pipes.map(function (p) { return _this.host.resolver.getOrLoadPipeMetadata(p.reference).toSummary(); });
                     var schemas = ngModule.schemas;
-                    var parseResult = parser.tryParseHtml(htmlResult, metadata, template.source, directives, pipes, schemas, '');
+                    var parseResult = parser.tryParseHtml(htmlResult, metadata, directives, pipes, schemas);
                     result = {
                         htmlAst: htmlResult.rootNodes,
                         templateAst: parseResult.templateAst,
@@ -4153,7 +4153,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version('4.1.0-beta.1-14b7dfa');
+var VERSION = new Version('4.1.0-beta.1-fdb3f26');
 
 /**
  * @license
