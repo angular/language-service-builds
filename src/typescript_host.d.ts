@@ -63,7 +63,7 @@ export declare class TypeScriptServiceHost implements LanguageServiceHost {
      */
     readonly resolver: CompileMetadataResolver;
     getTemplateReferences(): string[];
-    getTemplateAt(fileName: string, position: number): TemplateSource | undefined;
+    getTemplateAt(fileName: string, position: number): TemplateSource;
     getAnalyzedModules(): NgAnalyzedModules;
     private ensureAnalyzedModules();
     getTemplates(fileName: string): TemplateSources;

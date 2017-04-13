@@ -4,4 +4,4 @@ export interface SymbolInfo {
     symbol: Symbol;
     span: Span;
 }
-export declare function locateSymbol(info: TemplateInfo): SymbolInfo;
+export declare function locateSymbol(info: TemplateInfo): SymbolInfo | undefined;
