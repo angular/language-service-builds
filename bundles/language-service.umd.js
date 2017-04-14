@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.1.0-beta.1-ce47d33
+ * @license Angular v4.1.0-beta.1-8ad464d
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2009,7 +2009,7 @@ var __extends$2$1 = (undefined && undefined.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 /**
- * @license Angular v4.1.0-beta.1-ce47d33
+ * @license Angular v4.1.0-beta.1-8ad464d
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2861,7 +2861,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('4.1.0-beta.1-ce47d33');
+var VERSION$2 = new Version('4.1.0-beta.1-8ad464d');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -9896,7 +9896,6 @@ var DefaultKeyValueDiffer = (function () {
                 insertBefore._prev._next = null;
             }
             this._removalsHead = insertBefore;
-            this._removalsTail = insertBefore;
             for (var /** @type {?} */ record = insertBefore; record !== null; record = record._nextRemoved) {
                 if (record === this._mapHead) {
                     this._mapHead = null;
@@ -9909,6 +9908,11 @@ var DefaultKeyValueDiffer = (function () {
                 record._next = null;
             }
         }
+        // Make sure tails have no next records from previous runs
+        if (this._changesTail)
+            this._changesTail._nextChanged = null;
+        if (this._additionsTail)
+            this._additionsTail._nextAdded = null;
         return this.isDirty;
     };
     /**
@@ -9996,7 +10000,7 @@ var DefaultKeyValueDiffer = (function () {
             }
             this._changesHead = this._changesTail = null;
             this._additionsHead = this._additionsTail = null;
-            this._removalsHead = this._removalsTail = null;
+            this._removalsHead = null;
         }
     };
     /**
@@ -10046,22 +10050,11 @@ var DefaultKeyValueDiffer = (function () {
         var /** @type {?} */ changes = [];
         var /** @type {?} */ additions = [];
         var /** @type {?} */ removals = [];
-        var /** @type {?} */ record;
-        for (record = this._mapHead; record !== null; record = record._next) {
-            items.push(stringify(record));
-        }
-        for (record = this._previousMapHead; record !== null; record = record._nextPrevious) {
-            previous.push(stringify(record));
-        }
-        for (record = this._changesHead; record !== null; record = record._nextChanged) {
-            changes.push(stringify(record));
-        }
-        for (record = this._additionsHead; record !== null; record = record._nextAdded) {
-            additions.push(stringify(record));
-        }
-        for (record = this._removalsHead; record !== null; record = record._nextRemoved) {
-            removals.push(stringify(record));
-        }
+        this.forEachItem(function (r) { return items.push(stringify(r)); });
+        this.forEachPreviousItem(function (r) { return previous.push(stringify(r)); });
+        this.forEachChangedItem(function (r) { return changes.push(stringify(r)); });
+        this.forEachAddedItem(function (r) { return additions.push(stringify(r)); });
+        this.forEachRemovedItem(function (r) { return removals.push(stringify(r)); });
         return 'map: ' + items.join(', ') + '\n' +
             'previous: ' + previous.join(', ') + '\n' +
             'additions: ' + additions.join(', ') + '\n' +
@@ -16157,7 +16150,7 @@ var __extends$1$1 = (undefined && undefined.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 /**
- * @license Angular v4.1.0-beta.1-ce47d33
+ * @license Angular v4.1.0-beta.1-8ad464d
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -16176,7 +16169,7 @@ var __extends$1$1 = (undefined && undefined.__extends) || function (d, b) {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('4.1.0-beta.1-ce47d33');
+var VERSION$1 = new Version('4.1.0-beta.1-8ad464d');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -44419,7 +44412,7 @@ var core_1 = require$$0$13;
 /**
  * @stable
  */
-var VERSION$5 = new core_1.Version('4.1.0-beta.1-ce47d33');
+var VERSION$5 = new core_1.Version('4.1.0-beta.1-8ad464d');
 
 
 var version = {
@@ -44729,7 +44722,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v4.1.0-beta.1-ce47d33
+ * @license Angular v4.1.0-beta.1-8ad464d
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -48889,7 +48882,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('4.1.0-beta.1-ce47d33');
+var VERSION$$1 = new Version('4.1.0-beta.1-8ad464d');
 
 exports.createLanguageService = createLanguageService;
 exports.create = create;
