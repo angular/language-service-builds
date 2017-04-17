@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.1.0-beta.1-7165eb1
+ * @license Angular v4.1.0-beta.1-5a88d2f
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -3477,8 +3477,10 @@ var TypeWrapper = (function () {
 }());
 var SymbolWrapper = (function () {
     function SymbolWrapper(symbol, context) {
-        this.symbol = symbol;
         this.context = context;
+        this.symbol = symbol && context && (symbol.flags & SymbolFlags.Alias) ?
+            context.checker.getAliasedSymbol(symbol) :
+            symbol;
     }
     Object.defineProperty(SymbolWrapper.prototype, "name", {
         get: function () { return this.symbol.name; },
@@ -4165,7 +4167,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version('4.1.0-beta.1-7165eb1');
+var VERSION = new Version('4.1.0-beta.1-5a88d2f');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
