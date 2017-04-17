@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.1.0-beta.1-5a88d2f
+ * @license Angular v4.1.0-beta.1-0a3a9af
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -3293,8 +3293,14 @@ var TypeScriptSymbolQuery = (function () {
         }
     };
     TypeScriptSymbolQuery.prototype.getNonNullableType = function (symbol) {
-        // TODO: Replace with typeChecker API when available;
-        return symbol;
+        if (symbol instanceof TypeWrapper && (typeof this.checker.getNonNullableType == 'function')) {
+            var tsType = symbol.tsType;
+            var nonNullableType = this.checker.getNonNullableType(tsType);
+            if (nonNullableType != tsType) {
+                return new TypeWrapper(nonNullableType, symbol.context);
+            }
+        }
+        return this.getBuiltinType(BuiltinType.Any);
     };
     TypeScriptSymbolQuery.prototype.getPipes = function () {
         var result = this.pipesCache;
@@ -4155,7 +4161,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version('4.1.0-beta.1-5a88d2f');
+var VERSION = new Version('4.1.0-beta.1-0a3a9af');
 
 /**
  * @license
