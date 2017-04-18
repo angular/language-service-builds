@@ -1,10 +1,10 @@
 /**
- * @license Angular v4.1.0-beta.1-bccfaa4
+ * @license Angular v4.1.0-beta.1-5293794
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
 import { ASTWithSource, AotSummaryResolver, Attribute, CompileMetadataResolver, CompilerConfig, CssSelector, DEFAULT_INTERPOLATION_CONFIG, DirectiveNormalizer, DirectiveResolver, DomElementSchemaRegistry, Element as Element$1, ElementAst, EmbeddedTemplateAst, HtmlParser, I18NHtmlParser, ImplicitReceiver, Lexer, NAMED_ENTITIES, NgModuleResolver, ParseSpan, ParseTreeResult, Parser, PipeResolver, PropertyRead, ResourceLoader, SelectorMatcher, StaticAndDynamicReflectionCapabilities, StaticReflector, StaticSymbolCache, StaticSymbolResolver, SummaryResolver, TagContentType, TemplateParser, Text, analyzeNgModules, componentModuleUrl, createOfflineCompileUrlResolver, extractProgramSymbols, getHtmlTagDefinition, identifierName, splitNsName, templateVisitAll, tokenReference, visitAll } from '@angular/compiler';
-import { DiagnosticCategory, ModifierFlags, NodeFlags, ObjectFlags, SymbolFlags, SyntaxKind, TypeFlags, forEachChild, getCombinedModifierFlags, getPositionOfLineAndCharacter } from 'typescript';
+import { DiagnosticCategory, ModifierFlags, NodeFlags, ObjectFlags, SymbolFlags, SyntaxKind, TypeFlags, forEachChild, getCombinedModifierFlags, getPositionOfLineAndCharacter, version } from 'typescript';
 import { Version, ViewEncapsulation, ɵConsole } from '@angular/core';
 import { existsSync } from 'fs';
 import { dirname, join } from 'path';
@@ -128,6 +128,14 @@ function uniqueByName(elements) {
         }
         return result;
     }
+}
+function isTypescriptVersion(low, high) {
+    var version$$1 = version;
+    if (version$$1.substring(0, low.length) < low)
+        return false;
+    if (high && (version$$1.substring(0, high.length) > high))
+        return false;
+    return true;
 }
 /**
  * @license
@@ -2739,12 +2747,12 @@ function createLanguageServiceFromTypescript(host, service) {
  * The language service never needs the normalized versions of the metadata. To avoid parsing
  * the content and resolving references, return an empty file. This also allows normalizing
  * template that are syntatically incorrect which is required to provide completions in
- * syntatically incorrect templates.
+ * syntactically incorrect templates.
  */
 var DummyHtmlParser = (function (_super) {
     __extends$5(DummyHtmlParser, _super);
     function DummyHtmlParser() {
-        return _super.call(this) || this;
+        return _super !== null && _super.apply(this, arguments) || this;
     }
     DummyHtmlParser.prototype.parse = function (source, url, parseExpansionForms, interpolationConfig) {
         if (parseExpansionForms === void 0) {
@@ -2774,7 +2782,7 @@ var DummyResourceLoader = (function (_super) {
  * The `TypeScriptServiceHost` implements the Angular `LanguageServiceHost` using
  * the TypeScript language services.
  *
- * @expermental
+ * @experimental
  */
 var TypeScriptServiceHost = (function () {
     function TypeScriptServiceHost(host, tsService) {
@@ -2875,7 +2883,7 @@ var TypeScriptServiceHost = (function () {
             };
             var sourceFile = this.getSourceFile(fileName);
             if (sourceFile) {
-                this.context = sourceFile.path;
+                this.context = sourceFile.path || sourceFile.fileName;
                 forEachChild(sourceFile, visit_1);
             }
             return result_1.length ? result_1 : undefined;
@@ -2943,10 +2951,10 @@ var TypeScriptServiceHost = (function () {
                 var sourceFile = _a[_i];
                 var fileName = sourceFile.fileName;
                 seen_1.add(fileName);
-                var version = this.host.getScriptVersion(fileName);
+                var version$$1 = this.host.getScriptVersion(fileName);
                 var lastVersion = this.fileVersions.get(fileName);
-                if (version != lastVersion) {
-                    this.fileVersions.set(fileName, version);
+                if (version$$1 != lastVersion) {
+                    this.fileVersions.set(fileName, version$$1);
                     invalidateFile(fileName);
                 }
             }
@@ -2986,12 +2994,12 @@ var TypeScriptServiceHost = (function () {
             this.templateReferences = templateReference;
         }
     };
-    TypeScriptServiceHost.prototype.getSourceFromDeclaration = function (fileName, version, source, span, type, declaration, node, sourceFile) {
+    TypeScriptServiceHost.prototype.getSourceFromDeclaration = function (fileName, version$$1, source, span, type, declaration, node, sourceFile) {
         var queryCache = undefined;
         var t = this;
         if (declaration) {
             return {
-                version: version,
+                version: version$$1,
                 source: source,
                 span: span,
                 type: type,
@@ -3015,29 +3023,28 @@ var TypeScriptServiceHost = (function () {
             };
         }
     };
-    TypeScriptServiceHost.prototype.getSourceFromNode = function (fileName, version, node) {
+    TypeScriptServiceHost.prototype.getSourceFromNode = function (fileName, version$$1, node) {
         var result = undefined;
         var t = this;
         switch (node.kind) {
             case SyntaxKind.NoSubstitutionTemplateLiteral:
             case SyntaxKind.StringLiteral:
                 var _a = this.getTemplateClassDeclFromNode(node), declaration = _a[0], decorator = _a[1];
-                var queryCache = undefined;
                 if (declaration && declaration.name) {
                     var sourceFile = this.getSourceFile(fileName);
-                    return this.getSourceFromDeclaration(fileName, version, this.stringOf(node), shrink(spanOf$1(node)), this.reflector.getStaticSymbol(sourceFile.fileName, declaration.name.text), declaration, node, sourceFile);
+                    return this.getSourceFromDeclaration(fileName, version$$1, this.stringOf(node), shrink(spanOf$1(node)), this.reflector.getStaticSymbol(sourceFile.fileName, declaration.name.text), declaration, node, sourceFile);
                 }
                 break;
         }
         return result;
     };
-    TypeScriptServiceHost.prototype.getSourceFromType = function (fileName, version, type) {
+    TypeScriptServiceHost.prototype.getSourceFromType = function (fileName, version$$1, type) {
         var result = undefined;
         var declaration = this.getTemplateClassFromStaticSymbol(type);
         if (declaration) {
             var snapshot = this.host.getScriptSnapshot(fileName);
             var source = snapshot.getText(0, snapshot.getLength());
-            result = this.getSourceFromDeclaration(fileName, version, source, { start: 0, end: source.length }, type, declaration, declaration, declaration.getSourceFile());
+            result = this.getSourceFromDeclaration(fileName, version$$1, source, { start: 0, end: source.length }, type, declaration, declaration, declaration.getSourceFile());
         }
         return result;
     };
@@ -3228,7 +3235,6 @@ var TypeScriptServiceHost = (function () {
         }
     };
     TypeScriptServiceHost.prototype.findNode = function (sourceFile, position) {
-        var _this = this;
         function find(node) {
             if (position >= node.getStart() && position < node.getEnd()) {
                 return forEachChild(node, find) || node;
@@ -3297,7 +3303,6 @@ var TypeScriptSymbolQuery = (function () {
             types[_i] = arguments[_i];
         }
         // TODO: Replace with typeChecker API when available
-        var checker = this.checker;
         // No API exists so the cheat is to just return the last type any if no types are given.
         return types.length ? types[types.length - 1] : this.getBuiltinType(BuiltinType.Any);
     };
@@ -3362,7 +3367,8 @@ var TypeScriptSymbolQuery = (function () {
     };
     TypeScriptSymbolQuery.prototype.getTemplateRefContextType = function (typeSymbol) {
         var type = this.checker.getTypeOfSymbolAtLocation(typeSymbol, this.source);
-        var constructor = type.symbol && type.symbol.members && type.symbol.members['__constructor'];
+        var constructor = type.symbol && type.symbol.members &&
+            getFromSymbolTable(type.symbol.members, '__constructor');
         if (constructor) {
             var constructorDeclaration = constructor.declarations[0];
             for (var _i = 0, _a = constructorDeclaration.parameters; _i < _a.length; _i++) {
@@ -3404,28 +3410,6 @@ function selectSignature(type, context, types) {
     // TODO: Do a better job of selecting the right signature.
     var signatures = type.getCallSignatures();
     return signatures.length ? new SignatureWrapper(signatures[0], context) : undefined;
-}
-function toSymbolTable(symbols) {
-    var result = {};
-    for (var _i = 0, symbols_1 = symbols; _i < symbols_1.length; _i++) {
-        var symbol = symbols_1[_i];
-        result[symbol.name] = symbol;
-    }
-    return result;
-}
-function toSymbols(symbolTable, filter) {
-    var result = [];
-    if (!symbolTable)
-        return result;
-    var own = typeof symbolTable.hasOwnProperty === 'function' ?
-        function (name) { return symbolTable.hasOwnProperty(name); } :
-        function (name) { return !!symbolTable[name]; };
-    for (var name_1 in symbolTable) {
-        if (own(name_1) && (!filter || filter(symbolTable[name_1]))) {
-            result.push(symbolTable[name_1]);
-        }
-    }
-    return result;
 }
 var TypeWrapper = (function () {
     function TypeWrapper(tsType, context) {
@@ -3658,17 +3642,51 @@ var SignatureResultOverride = (function () {
     });
     return SignatureResultOverride;
 }());
+function toSymbolTable(symbols) {
+    if (isTypescriptVersion('2.2')) {
+        var result_2 = new Map();
+        for (var _i = 0, symbols_1 = symbols; _i < symbols_1.length; _i++) {
+            var symbol = symbols_1[_i];
+            result_2.set(symbol.name, symbol);
+        }
+        return result_2;
+    }
+    var result = {};
+    for (var _a = 0, symbols_2 = symbols; _a < symbols_2.length; _a++) {
+        var symbol = symbols_2[_a];
+        result[symbol.name] = symbol;
+    }
+    return result;
+}
+function toSymbols(symbolTable) {
+    if (!symbolTable)
+        return [];
+    var table = symbolTable;
+    if (typeof table.values === 'function') {
+        return Array.from(table.values());
+    }
+    var result = [];
+    var own = typeof table.hasOwnProperty === 'function' ?
+        function (name) { return table.hasOwnProperty(name); } :
+        function (name) { return !!table[name]; };
+    for (var name_1 in table) {
+        if (own(name_1)) {
+            result.push(table[name_1]);
+        }
+    }
+    return result;
+}
 var SymbolTableWrapper = (function () {
-    function SymbolTableWrapper(symbols, context, filter) {
+    function SymbolTableWrapper(symbols, context) {
         this.context = context;
         symbols = symbols || [];
         if (Array.isArray(symbols)) {
-            this.symbols = filter ? symbols.filter(filter) : symbols;
+            this.symbols = symbols;
             this.symbolTable = toSymbolTable(symbols);
         }
         else {
-            this.symbols = toSymbols(symbols, filter);
-            this.symbolTable = filter ? toSymbolTable(this.symbols) : symbols;
+            this.symbols = toSymbols(symbols);
+            this.symbolTable = symbols;
         }
     }
     Object.defineProperty(SymbolTableWrapper.prototype, "size", {
@@ -3677,10 +3695,13 @@ var SymbolTableWrapper = (function () {
         configurable: true
     });
     SymbolTableWrapper.prototype.get = function (key) {
-        var symbol = this.symbolTable[key];
+        var symbol = getFromSymbolTable(this.symbolTable, key);
         return symbol ? new SymbolWrapper(symbol, this.context) : undefined;
     };
-    SymbolTableWrapper.prototype.has = function (key) { return this.symbolTable[key] != null; };
+    SymbolTableWrapper.prototype.has = function (key) {
+        var table = this.symbolTable;
+        return (typeof table.has === 'function') ? table.has(key) : table[key] != null;
+    };
     SymbolTableWrapper.prototype.values = function () {
         var _this = this;
         return this.symbols.map(function (s) { return new SymbolWrapper(s, _this.context); });
@@ -3707,8 +3728,8 @@ var MapSymbolTable = (function () {
         this._values.push(symbol);
     };
     MapSymbolTable.prototype.addAll = function (symbols) {
-        for (var _i = 0, symbols_2 = symbols; _i < symbols_2.length; _i++) {
-            var symbol = symbols_2[_i];
+        for (var _i = 0, symbols_3 = symbols; _i < symbols_3.length; _i++) {
+            var symbol = symbols_3[_i];
             this.add(symbol);
         }
     };
@@ -4039,6 +4060,19 @@ function typeKindOf(type) {
     }
     return BuiltinType.Other;
 }
+function getFromSymbolTable(symbolTable, key) {
+    var table = symbolTable;
+    var symbol;
+    if (typeof table.get === 'function') {
+        // TS 2.2 uses a Map
+        symbol = table.get(key);
+    }
+    else {
+        // TS pre-2.2 uses an object
+        symbol = table[key];
+    }
+    return symbol;
+}
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -4104,6 +4138,8 @@ function create(info /* ts.server.PluginCreateInfo */) {
     };
     proxy.getQuickInfoAtPosition = function (fileName, position) {
         var base = oldLS.getQuickInfoAtPosition(fileName, position);
+        // TODO(vicb): the tags property has been removed in TS 2.2
+        var tags = base.tags;
         tryOperation('get quick info', function () {
             var ours = ls.getHoverAt(fileName, position);
             if (ours) {
@@ -4118,8 +4154,10 @@ function create(info /* ts.server.PluginCreateInfo */) {
                     kind: 'angular',
                     kindModifiers: 'what does this do?',
                     textSpan: { start: ours.span.start, length: ours.span.end - ours.span.start },
-                    tags: [],
                 };
+                if (tags) {
+                    base.tags = tags;
+                }
             }
         });
         return base;
@@ -4180,7 +4218,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version('4.1.0-beta.1-bccfaa4');
+var VERSION = new Version('4.1.0-beta.1-5293794');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.

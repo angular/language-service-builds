@@ -25,3 +25,4 @@ export declare function removeSuffix(value: string, suffix: string): string;
 export declare function uniqueByName<T extends {
     name: string;
 }>(elements: T[] | undefined): T[] | undefined;
+export declare function isTypescriptVersion(low: string, high?: string): boolean;
