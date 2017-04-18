@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.1.0-beta.1-90814e4
+ * @license Angular v4.1.0-beta.1-7dfa0b9
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -3060,7 +3060,13 @@ var TypeScriptServiceHost = (function () {
                 }
                 var tsConfigPath = findTsConfig(source.fileName);
                 var basePath = dirname(tsConfigPath || this.context);
-                result = this._reflectorHost = new ReflectorHost(function () { return _this.tsService.getProgram(); }, this.host, { basePath: basePath, genDir: basePath });
+                var options = { basePath: basePath, genDir: basePath };
+                var compilerOptions = this.host.getCompilationSettings();
+                if (compilerOptions && compilerOptions.baseUrl) {
+                    options.baseUrl = compilerOptions.baseUrl;
+                }
+                result = this._reflectorHost =
+                    new ReflectorHost(function () { return _this.tsService.getProgram(); }, this.host, options);
             }
             return result;
         },
@@ -4174,7 +4180,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version('4.1.0-beta.1-90814e4');
+var VERSION = new Version('4.1.0-beta.1-7dfa0b9');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
