@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.1.0-beta.1-6f3710e
+ * @license Angular v4.1.0-beta.1-b46aba9
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2597,7 +2597,7 @@ var LanguageServiceImpl = (function () {
                     var directives = resolvedDirectives.filter(function (d) { return d !== null; }).map(function (d) { return d.metadata.toSummary(); });
                     var pipes = ngModule.transitiveModule.pipes.map(function (p) { return _this.host.resolver.getOrLoadPipeMetadata(p.reference).toSummary(); });
                     var schemas = ngModule.schemas;
-                    var parseResult = parser.tryParseHtml(htmlResult, metadata, template.source, directives, pipes, schemas, '');
+                    var parseResult = parser.tryParseHtml(htmlResult, metadata, directives, pipes, schemas);
                     result = {
                         htmlAst: htmlResult.rootNodes,
                         templateAst: parseResult.templateAst,
@@ -3060,7 +3060,13 @@ var TypeScriptServiceHost = (function () {
                 }
                 var tsConfigPath = findTsConfig(source.fileName);
                 var basePath = dirname(tsConfigPath || this.context);
-                result = this._reflectorHost = new ReflectorHost(function () { return _this.tsService.getProgram(); }, this.host, { basePath: basePath, genDir: basePath });
+                var options = { basePath: basePath, genDir: basePath };
+                var compilerOptions = this.host.getCompilationSettings();
+                if (compilerOptions && compilerOptions.baseUrl) {
+                    options.baseUrl = compilerOptions.baseUrl;
+                }
+                result = this._reflectorHost =
+                    new ReflectorHost(function () { return _this.tsService.getProgram(); }, this.host, options);
             }
             return result;
         },
@@ -3308,8 +3314,14 @@ var TypeScriptSymbolQuery = (function () {
         }
     };
     TypeScriptSymbolQuery.prototype.getNonNullableType = function (symbol) {
-        // TODO: Replace with typeChecker API when available;
-        return symbol;
+        if (symbol instanceof TypeWrapper && (typeof this.checker.getNonNullableType == 'function')) {
+            var tsType = symbol.tsType;
+            var nonNullableType = this.checker.getNonNullableType(tsType);
+            if (nonNullableType != tsType) {
+                return new TypeWrapper(nonNullableType, symbol.context);
+            }
+        }
+        return this.getBuiltinType(BuiltinType.Any);
     };
     TypeScriptSymbolQuery.prototype.getPipes = function () {
         var result = this.pipesCache;
@@ -3348,8 +3360,9 @@ var TypeScriptSymbolQuery = (function () {
     TypeScriptSymbolQuery.prototype.getSpanAt = function (line, column) {
         return spanAt(this.source, line, column);
     };
-    TypeScriptSymbolQuery.prototype.getTemplateRefContextType = function (type) {
-        var constructor = type.members && type.members['__constructor'];
+    TypeScriptSymbolQuery.prototype.getTemplateRefContextType = function (typeSymbol) {
+        var type = this.checker.getTypeOfSymbolAtLocation(typeSymbol, this.source);
+        var constructor = type.symbol && type.symbol.members && type.symbol.members['__constructor'];
         if (constructor) {
             var constructorDeclaration = constructor.declarations[0];
             for (var _i = 0, _a = constructorDeclaration.parameters; _i < _a.length; _i++) {
@@ -3477,8 +3490,10 @@ var TypeWrapper = (function () {
 }());
 var SymbolWrapper = (function () {
     function SymbolWrapper(symbol, context) {
-        this.symbol = symbol;
         this.context = context;
+        this.symbol = symbol && context && (symbol.flags & SymbolFlags.Alias) ?
+            context.checker.getAliasedSymbol(symbol) :
+            symbol;
     }
     Object.defineProperty(SymbolWrapper.prototype, "name", {
         get: function () { return this.symbol.name; },
@@ -4165,7 +4180,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version('4.1.0-beta.1-6f3710e');
+var VERSION = new Version('4.1.0-beta.1-b46aba9');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
