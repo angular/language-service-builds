@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.1.0-beta.1-b46aba9
+ * @license Angular v4.1.0-beta.1-47acf3d
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2009,7 +2009,7 @@ var __extends$2$1 = (undefined && undefined.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 /**
- * @license Angular v4.1.0-beta.1-b46aba9
+ * @license Angular v4.1.0-beta.1-47acf3d
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2861,7 +2861,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('4.1.0-beta.1-b46aba9');
+var VERSION$2 = new Version('4.1.0-beta.1-47acf3d');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -9958,7 +9958,7 @@ var DefaultKeyValueDiffer = (function () {
      */
     DefaultKeyValueDiffer.prototype._getOrCreateRecordForKey = function (key, value) {
         if (this._records.has(key)) {
-            var /** @type {?} */ record_1 = this._records.get(key);
+            var /** @type {?} */ record_1 = ((this._records.get(key)));
             this._maybeAddToChanges(record_1, value);
             var /** @type {?} */ prev = record_1._prev;
             var /** @type {?} */ next = record_1._next;
@@ -11498,7 +11498,7 @@ function setElementClass(view, renderNode$$1, name, value) {
  * @return {?}
  */
 function setElementStyle(view, binding, renderNode$$1, name, value) {
-    var /** @type {?} */ renderValue = view.root.sanitizer.sanitize(SecurityContext.STYLE, value);
+    var /** @type {?} */ renderValue = view.root.sanitizer.sanitize(SecurityContext.STYLE, /** @type {?} */ (value));
     if (renderValue != null) {
         renderValue = renderValue.toString();
         var /** @type {?} */ unit = binding.suffix;
@@ -15414,9 +15414,6 @@ var LIFECYCLE_HOOKS_VALUES = [
  * \@experimental Animation support is experimental.
  */
 /**
- * \@experimental Animation support is experimental.
- */
-/**
  * `trigger` is an animation-specific function that is designed to be used inside of Angular's
  * animation DSL language. If this information is new, please navigate to the {\@link
  * Component#animations-anchor component animations metadata page} to gain a better understanding of
@@ -15471,7 +15468,7 @@ var LIFECYCLE_HOOKS_VALUES = [
  * @return {?}
  */
 function trigger$1(name, definitions) {
-    return { type: 0 /* Trigger */, name: name, definitions: definitions };
+    return { type: 7 /* Trigger */, name: name, definitions: definitions };
 }
 /**
  * `animate` is an animation-specific function that is designed to be used inside of Angular's
@@ -15522,7 +15519,8 @@ function trigger$1(name, definitions) {
  * @return {?}
  */
 function animate$1(timings, styles) {
-    return { type: 5 /* Animate */, styles: styles, timings: timings };
+    if (styles === void 0) { styles = null; }
+    return { type: 4 /* Animate */, styles: styles, timings: timings };
 }
 /**
  * `group` is an animation-specific function that is designed to be used inside of Angular's
@@ -15559,7 +15557,8 @@ function animate$1(timings, styles) {
  * @return {?}
  */
 function group$1(steps, locals) {
-    return { type: 4 /* Group */, steps: steps, locals: locals };
+    if (locals === void 0) { locals = null; }
+    return { type: 3 /* Group */, steps: steps, locals: locals };
 }
 /**
  * `sequence` is an animation-specific function that is designed to be used inside of Angular's
@@ -15599,7 +15598,8 @@ function group$1(steps, locals) {
  * @return {?}
  */
 function sequence$1(steps, locals) {
-    return { type: 3 /* Sequence */, steps: steps, locals: locals };
+    if (locals === void 0) { locals = null; }
+    return { type: 2 /* Sequence */, steps: steps, locals: locals };
 }
 /**
  * `style` is an animation-specific function that is designed to be used inside of Angular's
@@ -15646,7 +15646,7 @@ function sequence$1(steps, locals) {
  * @return {?}
  */
 function style$1(tokens) {
-    return { type: 7 /* Style */, styles: tokens };
+    return { type: 6 /* Style */, styles: tokens, offset: null };
 }
 /**
  * `state` is an animation-specific function that is designed to be used inside of Angular's
@@ -15700,7 +15700,7 @@ function style$1(tokens) {
  * @return {?}
  */
 function state$1(name, styles) {
-    return { type: 1 /* State */, name: name, styles: styles };
+    return { type: 0 /* State */, name: name, styles: styles };
 }
 /**
  * `keyframes` is an animation-specific function that is designed to be used inside of Angular's
@@ -15750,7 +15750,7 @@ function state$1(name, styles) {
  * @return {?}
  */
 function keyframes$1(steps) {
-    return { type: 6 /* KeyframeSequence */, steps: steps };
+    return { type: 5 /* Keyframes */, steps: steps };
 }
 /**
  * `transition` is an animation-specific function that is designed to be used inside of Angular's
@@ -15864,7 +15864,8 @@ function keyframes$1(steps) {
  * @return {?}
  */
 function transition$1(stateChangeExpr, steps, locals) {
-    return { type: 2 /* Transition */, expr: stateChangeExpr, animation: steps, locals: locals };
+    if (locals === void 0) { locals = null; }
+    return { type: 1 /* Transition */, expr: stateChangeExpr, animation: steps, locals: locals };
 }
 /**
  * \@experimental Animation support is experimental.
@@ -15873,12 +15874,12 @@ function transition$1(stateChangeExpr, steps, locals) {
  * @return {?}
  */
 /**
- * @param {...?} args
+ * \@experimental Animation support is experimental.
+ * @param {?=} locals
  * @return {?}
  */
 /**
  * \@experimental Animation support is experimental.
- * @param {?} selector
  * @param {?} animation
  * @param {?=} locals
  * @return {?}
@@ -15891,7 +15892,16 @@ function transition$1(stateChangeExpr, steps, locals) {
  * @return {?}
  */
 /**
- * @param {...?} args
+ * \@experimental Animation support is experimental.
+ * @param {?} selector
+ * @param {?} animation
+ * @param {?=} locals
+ * @return {?}
+ */
+/**
+ * \@experimental Animation support is experimental.
+ * @param {?} timings
+ * @param {?} animation
  * @return {?}
  */
 /**
@@ -16183,7 +16193,7 @@ var __extends$1$1 = (undefined && undefined.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 /**
- * @license Angular v4.1.0-beta.1-b46aba9
+ * @license Angular v4.1.0-beta.1-47acf3d
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -16202,7 +16212,7 @@ var __extends$1$1 = (undefined && undefined.__extends) || function (d, b) {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('4.1.0-beta.1-b46aba9');
+var VERSION$1 = new Version('4.1.0-beta.1-47acf3d');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -25460,9 +25470,9 @@ var Xliff2Parser = (function () {
                 }
                 var /** @type {?} */ versionAttr = element.attrs.find(function (attr) { return attr.name === 'version'; });
                 if (versionAttr) {
-                    var /** @type {?} */ version = versionAttr.value;
-                    if (version !== '2.0') {
-                        this._addError(element, "The XLIFF file version " + version + " is not compatible with XLIFF 2.0 serializer");
+                    var /** @type {?} */ version$$1 = versionAttr.value;
+                    if (version$$1 !== '2.0') {
+                        this._addError(element, "The XLIFF file version " + version$$1 + " is not compatible with XLIFF 2.0 serializer");
                     }
                     else {
                         visitAll(this, element.children, null);
@@ -44942,10 +44952,10 @@ var core_1 = require$$0$13;
 /**
  * @stable
  */
-var VERSION$5 = new core_1.Version('4.1.0-beta.1-b46aba9');
+var VERSION$5 = new core_1.Version('4.1.0-beta.1-47acf3d');
 
 
-var version = {
+var version$1 = {
 	VERSION: VERSION$5
 };
 
@@ -45236,7 +45246,7 @@ exports.NodeCompilerHostContext = compiler_host_1.NodeCompilerHostContext;
 var extractor_1 = extractor;
 exports.Extractor = extractor_1.Extractor;
 __export(collector);
-var version_1 = version;
+var version_1 = version$1;
 exports.VERSION = version_1.VERSION;
 // TODO(hansl): moving to Angular 4 need to update this API.
 var ngtools_api_1 = ngtools_api;
@@ -45252,7 +45262,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v4.1.0-beta.1-b46aba9
+ * @license Angular v4.1.0-beta.1-47acf3d
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -45375,6 +45385,14 @@ function uniqueByName(elements) {
         }
         return result;
     }
+}
+function isTypescriptVersion(low, high) {
+    var version$$1 = typescript.version;
+    if (version$$1.substring(0, low.length) < low)
+        return false;
+    if (high && (version$$1.substring(0, high.length) > high))
+        return false;
+    return true;
 }
 /**
  * @license
@@ -47986,12 +48004,12 @@ function createLanguageServiceFromTypescript(host, service) {
  * The language service never needs the normalized versions of the metadata. To avoid parsing
  * the content and resolving references, return an empty file. This also allows normalizing
  * template that are syntatically incorrect which is required to provide completions in
- * syntatically incorrect templates.
+ * syntactically incorrect templates.
  */
 var DummyHtmlParser = (function (_super) {
     __extends$5(DummyHtmlParser, _super);
     function DummyHtmlParser() {
-        return _super.call(this) || this;
+        return _super !== null && _super.apply(this, arguments) || this;
     }
     DummyHtmlParser.prototype.parse = function (source, url, parseExpansionForms, interpolationConfig) {
         if (parseExpansionForms === void 0) {
@@ -48021,7 +48039,7 @@ var DummyResourceLoader = (function (_super) {
  * The `TypeScriptServiceHost` implements the Angular `LanguageServiceHost` using
  * the TypeScript language services.
  *
- * @expermental
+ * @experimental
  */
 var TypeScriptServiceHost = (function () {
     function TypeScriptServiceHost(host, tsService) {
@@ -48122,7 +48140,7 @@ var TypeScriptServiceHost = (function () {
             };
             var sourceFile = this.getSourceFile(fileName);
             if (sourceFile) {
-                this.context = sourceFile.path;
+                this.context = sourceFile.path || sourceFile.fileName;
                 typescript.forEachChild(sourceFile, visit_1);
             }
             return result_1.length ? result_1 : undefined;
@@ -48190,10 +48208,10 @@ var TypeScriptServiceHost = (function () {
                 var sourceFile = _a[_i];
                 var fileName = sourceFile.fileName;
                 seen_1.add(fileName);
-                var version = this.host.getScriptVersion(fileName);
+                var version$$1 = this.host.getScriptVersion(fileName);
                 var lastVersion = this.fileVersions.get(fileName);
-                if (version != lastVersion) {
-                    this.fileVersions.set(fileName, version);
+                if (version$$1 != lastVersion) {
+                    this.fileVersions.set(fileName, version$$1);
                     invalidateFile(fileName);
                 }
             }
@@ -48233,12 +48251,12 @@ var TypeScriptServiceHost = (function () {
             this.templateReferences = templateReference;
         }
     };
-    TypeScriptServiceHost.prototype.getSourceFromDeclaration = function (fileName, version, source, span, type, declaration, node, sourceFile) {
+    TypeScriptServiceHost.prototype.getSourceFromDeclaration = function (fileName, version$$1, source, span, type, declaration, node, sourceFile) {
         var queryCache = undefined;
         var t = this;
         if (declaration) {
             return {
-                version: version,
+                version: version$$1,
                 source: source,
                 span: span,
                 type: type,
@@ -48262,29 +48280,28 @@ var TypeScriptServiceHost = (function () {
             };
         }
     };
-    TypeScriptServiceHost.prototype.getSourceFromNode = function (fileName, version, node) {
+    TypeScriptServiceHost.prototype.getSourceFromNode = function (fileName, version$$1, node) {
         var result = undefined;
         var t = this;
         switch (node.kind) {
             case typescript.SyntaxKind.NoSubstitutionTemplateLiteral:
             case typescript.SyntaxKind.StringLiteral:
                 var _a = this.getTemplateClassDeclFromNode(node), declaration = _a[0], decorator = _a[1];
-                var queryCache = undefined;
                 if (declaration && declaration.name) {
                     var sourceFile = this.getSourceFile(fileName);
-                    return this.getSourceFromDeclaration(fileName, version, this.stringOf(node), shrink(spanOf$1(node)), this.reflector.getStaticSymbol(sourceFile.fileName, declaration.name.text), declaration, node, sourceFile);
+                    return this.getSourceFromDeclaration(fileName, version$$1, this.stringOf(node), shrink(spanOf$1(node)), this.reflector.getStaticSymbol(sourceFile.fileName, declaration.name.text), declaration, node, sourceFile);
                 }
                 break;
         }
         return result;
     };
-    TypeScriptServiceHost.prototype.getSourceFromType = function (fileName, version, type) {
+    TypeScriptServiceHost.prototype.getSourceFromType = function (fileName, version$$1, type) {
         var result = undefined;
         var declaration = this.getTemplateClassFromStaticSymbol(type);
         if (declaration) {
             var snapshot = this.host.getScriptSnapshot(fileName);
             var source = snapshot.getText(0, snapshot.getLength());
-            result = this.getSourceFromDeclaration(fileName, version, source, { start: 0, end: source.length }, type, declaration, declaration, declaration.getSourceFile());
+            result = this.getSourceFromDeclaration(fileName, version$$1, source, { start: 0, end: source.length }, type, declaration, declaration, declaration.getSourceFile());
         }
         return result;
     };
@@ -48475,7 +48492,6 @@ var TypeScriptServiceHost = (function () {
         }
     };
     TypeScriptServiceHost.prototype.findNode = function (sourceFile, position) {
-        var _this = this;
         function find(node) {
             if (position >= node.getStart() && position < node.getEnd()) {
                 return typescript.forEachChild(node, find) || node;
@@ -48544,7 +48560,6 @@ var TypeScriptSymbolQuery = (function () {
             types[_i] = arguments[_i];
         }
         // TODO: Replace with typeChecker API when available
-        var checker = this.checker;
         // No API exists so the cheat is to just return the last type any if no types are given.
         return types.length ? types[types.length - 1] : this.getBuiltinType(BuiltinType.Any);
     };
@@ -48609,7 +48624,8 @@ var TypeScriptSymbolQuery = (function () {
     };
     TypeScriptSymbolQuery.prototype.getTemplateRefContextType = function (typeSymbol) {
         var type = this.checker.getTypeOfSymbolAtLocation(typeSymbol, this.source);
-        var constructor = type.symbol && type.symbol.members && type.symbol.members['__constructor'];
+        var constructor = type.symbol && type.symbol.members &&
+            getFromSymbolTable(type.symbol.members, '__constructor');
         if (constructor) {
             var constructorDeclaration = constructor.declarations[0];
             for (var _i = 0, _a = constructorDeclaration.parameters; _i < _a.length; _i++) {
@@ -48651,28 +48667,6 @@ function selectSignature(type, context, types) {
     // TODO: Do a better job of selecting the right signature.
     var signatures = type.getCallSignatures();
     return signatures.length ? new SignatureWrapper(signatures[0], context) : undefined;
-}
-function toSymbolTable(symbols) {
-    var result = {};
-    for (var _i = 0, symbols_1 = symbols; _i < symbols_1.length; _i++) {
-        var symbol = symbols_1[_i];
-        result[symbol.name] = symbol;
-    }
-    return result;
-}
-function toSymbols(symbolTable, filter) {
-    var result = [];
-    if (!symbolTable)
-        return result;
-    var own = typeof symbolTable.hasOwnProperty === 'function' ?
-        function (name) { return symbolTable.hasOwnProperty(name); } :
-        function (name) { return !!symbolTable[name]; };
-    for (var name_1 in symbolTable) {
-        if (own(name_1) && (!filter || filter(symbolTable[name_1]))) {
-            result.push(symbolTable[name_1]);
-        }
-    }
-    return result;
 }
 var TypeWrapper = (function () {
     function TypeWrapper(tsType, context) {
@@ -48905,17 +48899,51 @@ var SignatureResultOverride = (function () {
     });
     return SignatureResultOverride;
 }());
+function toSymbolTable(symbols) {
+    if (isTypescriptVersion('2.2')) {
+        var result_2 = new Map();
+        for (var _i = 0, symbols_1 = symbols; _i < symbols_1.length; _i++) {
+            var symbol = symbols_1[_i];
+            result_2.set(symbol.name, symbol);
+        }
+        return result_2;
+    }
+    var result = {};
+    for (var _a = 0, symbols_2 = symbols; _a < symbols_2.length; _a++) {
+        var symbol = symbols_2[_a];
+        result[symbol.name] = symbol;
+    }
+    return result;
+}
+function toSymbols(symbolTable) {
+    if (!symbolTable)
+        return [];
+    var table = symbolTable;
+    if (typeof table.values === 'function') {
+        return Array.from(table.values());
+    }
+    var result = [];
+    var own = typeof table.hasOwnProperty === 'function' ?
+        function (name) { return table.hasOwnProperty(name); } :
+        function (name) { return !!table[name]; };
+    for (var name_1 in table) {
+        if (own(name_1)) {
+            result.push(table[name_1]);
+        }
+    }
+    return result;
+}
 var SymbolTableWrapper = (function () {
-    function SymbolTableWrapper(symbols, context, filter) {
+    function SymbolTableWrapper(symbols, context) {
         this.context = context;
         symbols = symbols || [];
         if (Array.isArray(symbols)) {
-            this.symbols = filter ? symbols.filter(filter) : symbols;
+            this.symbols = symbols;
             this.symbolTable = toSymbolTable(symbols);
         }
         else {
-            this.symbols = toSymbols(symbols, filter);
-            this.symbolTable = filter ? toSymbolTable(this.symbols) : symbols;
+            this.symbols = toSymbols(symbols);
+            this.symbolTable = symbols;
         }
     }
     Object.defineProperty(SymbolTableWrapper.prototype, "size", {
@@ -48924,10 +48952,13 @@ var SymbolTableWrapper = (function () {
         configurable: true
     });
     SymbolTableWrapper.prototype.get = function (key) {
-        var symbol = this.symbolTable[key];
+        var symbol = getFromSymbolTable(this.symbolTable, key);
         return symbol ? new SymbolWrapper(symbol, this.context) : undefined;
     };
-    SymbolTableWrapper.prototype.has = function (key) { return this.symbolTable[key] != null; };
+    SymbolTableWrapper.prototype.has = function (key) {
+        var table = this.symbolTable;
+        return (typeof table.has === 'function') ? table.has(key) : table[key] != null;
+    };
     SymbolTableWrapper.prototype.values = function () {
         var _this = this;
         return this.symbols.map(function (s) { return new SymbolWrapper(s, _this.context); });
@@ -48954,8 +48985,8 @@ var MapSymbolTable = (function () {
         this._values.push(symbol);
     };
     MapSymbolTable.prototype.addAll = function (symbols) {
-        for (var _i = 0, symbols_2 = symbols; _i < symbols_2.length; _i++) {
-            var symbol = symbols_2[_i];
+        for (var _i = 0, symbols_3 = symbols; _i < symbols_3.length; _i++) {
+            var symbol = symbols_3[_i];
             this.add(symbol);
         }
     };
@@ -49286,6 +49317,19 @@ function typeKindOf(type) {
     }
     return BuiltinType.Other;
 }
+function getFromSymbolTable(symbolTable, key) {
+    var table = symbolTable;
+    var symbol;
+    if (typeof table.get === 'function') {
+        // TS 2.2 uses a Map
+        symbol = table.get(key);
+    }
+    else {
+        // TS pre-2.2 uses an object
+        symbol = table[key];
+    }
+    return symbol;
+}
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -49351,6 +49395,8 @@ function create(info /* ts.server.PluginCreateInfo */) {
     };
     proxy.getQuickInfoAtPosition = function (fileName, position) {
         var base = oldLS.getQuickInfoAtPosition(fileName, position);
+        // TODO(vicb): the tags property has been removed in TS 2.2
+        var tags = base.tags;
         tryOperation('get quick info', function () {
             var ours = ls.getHoverAt(fileName, position);
             if (ours) {
@@ -49365,8 +49411,10 @@ function create(info /* ts.server.PluginCreateInfo */) {
                     kind: 'angular',
                     kindModifiers: 'what does this do?',
                     textSpan: { start: ours.span.start, length: ours.span.end - ours.span.start },
-                    tags: [],
                 };
+                if (tags) {
+                    base.tags = tags;
+                }
             }
         });
         return base;
@@ -49427,7 +49475,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('4.1.0-beta.1-b46aba9');
+var VERSION$$1 = new Version('4.1.0-beta.1-47acf3d');
 
 exports.createLanguageService = createLanguageService;
 exports.create = create;
