@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.0.2-14a2d1a
+ * @license Angular v4.0.3-6ccb937
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2597,7 +2597,7 @@ var LanguageServiceImpl = (function () {
                     var directives = resolvedDirectives.filter(function (d) { return d !== null; }).map(function (d) { return d.metadata.toSummary(); });
                     var pipes = ngModule.transitiveModule.pipes.map(function (p) { return _this.host.resolver.getOrLoadPipeMetadata(p.reference).toSummary(); });
                     var schemas = ngModule.schemas;
-                    var parseResult = parser.tryParseHtml(htmlResult, metadata, template.source, directives, pipes, schemas, '');
+                    var parseResult = parser.tryParseHtml(htmlResult, metadata, directives, pipes, schemas);
                     result = {
                         htmlAst: htmlResult.rootNodes,
                         templateAst: parseResult.templateAst,
@@ -2873,7 +2873,7 @@ var TypeScriptServiceHost = (function () {
             };
             var sourceFile = this.getSourceFile(fileName);
             if (sourceFile) {
-                this.context = sourceFile.path;
+                this.context = sourceFile.path || sourceFile.fileName;
                 forEachChild(sourceFile, visit_1);
             }
             return result_1.length ? result_1 : undefined;
@@ -3473,8 +3473,10 @@ var TypeWrapper = (function () {
 }());
 var SymbolWrapper = (function () {
     function SymbolWrapper(symbol, context) {
-        this.symbol = symbol;
         this.context = context;
+        this.symbol = symbol && context && (symbol.flags & SymbolFlags.Alias) ?
+            context.checker.getAliasedSymbol(symbol) :
+            symbol;
     }
     Object.defineProperty(SymbolWrapper.prototype, "name", {
         get: function () { return this.symbol.name; },
@@ -4161,7 +4163,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version('4.0.2-14a2d1a');
+var VERSION = new Version('4.0.3-6ccb937');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
