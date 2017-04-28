@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.1.0-3f46645
+ * @license Angular v4.1.0-8c50457
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2009,7 +2009,7 @@ var __extends$2$1 = (undefined && undefined.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 /**
- * @license Angular v4.1.0-3f46645
+ * @license Angular v4.1.0-8c50457
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2861,7 +2861,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('4.1.0-3f46645');
+var VERSION$2 = new Version('4.1.0-8c50457');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -16150,7 +16150,7 @@ var __extends$1$1 = (undefined && undefined.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 /**
- * @license Angular v4.1.0-3f46645
+ * @license Angular v4.1.0-8c50457
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -16169,7 +16169,7 @@ var __extends$1$1 = (undefined && undefined.__extends) || function (d, b) {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('4.1.0-3f46645');
+var VERSION$1 = new Version('4.1.0-8c50457');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -40766,11 +40766,12 @@ function createAotCompiler(compilerHost, options) {
     var /** @type {?} */ staticReflector = new StaticReflector(summaryResolver, symbolResolver);
     StaticAndDynamicReflectionCapabilities.install(staticReflector);
     var /** @type {?} */ console = new Console();
-    var /** @type {?} */ htmlParser = new I18NHtmlParser(new HtmlParser(), translations, options.i18nFormat, MissingTranslationStrategy.Warning, console);
+    var /** @type {?} */ htmlParser = new I18NHtmlParser(new HtmlParser(), translations, options.i18nFormat, options.missingTranslation, console);
     var /** @type {?} */ config = new CompilerConfig({
         defaultEncapsulation: ViewEncapsulation.Emulated,
         useJit: false,
         enableLegacyTemplate: options.enableLegacyTemplate !== false,
+        missingTranslation: options.missingTranslation,
     });
     var /** @type {?} */ normalizer = new DirectiveNormalizer({ get: function (url) { return compilerHost.loadResource(url); } }, urlResolver, htmlParser, config);
     var /** @type {?} */ expressionParser = new Parser(new Lexer());
@@ -44755,11 +44756,14 @@ var path_mapped_compiler_host = {
 
 var require$$1$9 = ( compiler_es5 && undefined ) || compiler_es5;
 
+var require$$0$12 = ( core_es5 && undefined ) || core_es5;
+
 /**
  * Transform template html and css into executable code.
  * Intended to be used in a build step.
  */
 var compiler = require$$1$9;
+var core_1 = require$$0$12;
 var fs_1 = fs__default;
 var compiler_host_1 = compiler_host;
 var path_mapped_compiler_host_1 = path_mapped_compiler_host;
@@ -44794,19 +44798,33 @@ var CodeGenerator$1 = (function () {
             ngCompilerHost = usePathMapping ? new path_mapped_compiler_host_1.PathMappedCompilerHost(program, options, context) :
                 new compiler_host_1.CompilerHost(program, options, context);
         }
-        var transFile = cliOptions.i18nFile;
-        var locale = cliOptions.locale;
         var transContent = '';
-        if (transFile) {
-            if (!locale) {
-                throw new Error("The translation file (" + transFile + ") locale must be provided. Use the --locale option.");
+        if (cliOptions.i18nFile) {
+            if (!cliOptions.locale) {
+                throw new Error("The translation file (" + cliOptions.i18nFile + ") locale must be provided. Use the --locale option.");
             }
-            transContent = fs_1.readFileSync(transFile, 'utf8');
+            transContent = fs_1.readFileSync(cliOptions.i18nFile, 'utf8');
+        }
+        var missingTranslation = core_1.MissingTranslationStrategy.Warning;
+        if (cliOptions.missingTranslation) {
+            switch (cliOptions.missingTranslation) {
+                case 'error':
+                    missingTranslation = core_1.MissingTranslationStrategy.Error;
+                    break;
+                case 'warning':
+                    missingTranslation = core_1.MissingTranslationStrategy.Warning;
+                    break;
+                case 'ignore':
+                    missingTranslation = core_1.MissingTranslationStrategy.Ignore;
+                    break;
+                default:
+                    throw new Error("Unknown option for missingTranslation (" + cliOptions.missingTranslation + "). Use either error, warning or ignore.");
+            }
         }
         var aotCompiler = compiler.createAotCompiler(ngCompilerHost, {
             translations: transContent,
             i18nFormat: cliOptions.i18nFormat,
-            locale: cliOptions.locale,
+            locale: cliOptions.locale, missingTranslation: missingTranslation,
             enableLegacyTemplate: options.enableLegacyTemplate !== false,
             genFilePreamble: PREAMBLE,
         }).compiler;
@@ -44907,18 +44925,16 @@ var extractor = {
 	Extractor: Extractor_1
 };
 
-var require$$0$13 = ( core_es5 && undefined ) || core_es5;
-
 /**
  * @module
  * @description
  * Entry point for all public APIs of the common package.
  */
-var core_1 = require$$0$13;
+var core_1$1 = require$$0$12;
 /**
  * @stable
  */
-var VERSION$5 = new core_1.Version('4.1.0-3f46645');
+var VERSION$5 = new core_1$1.Version('4.1.0-8c50457');
 
 
 var version$1 = {
@@ -44932,7 +44948,7 @@ var version$1 = {
  * something else.
  */
 var compiler_1$1 = require$$1$9;
-var core_1$1 = require$$0$13;
+var core_1$2 = require$$0$12;
 var ROUTER_MODULE_PATH = '@angular/router';
 var ROUTER_ROUTES_SYMBOL_NAME = 'ROUTES';
 // A route definition. Normally the short form 'path/to/module#ModuleClassName' is used by
@@ -45042,7 +45058,7 @@ function _extractLazyRoutesFromStaticModule(staticSymbol, reflector, host, ROUTE
  * @private
  */
 function _getNgModuleMetadata(staticSymbol, reflector) {
-    var ngModules = reflector.annotations(staticSymbol).filter(function (s) { return s instanceof core_1$1.NgModule; });
+    var ngModules = reflector.annotations(staticSymbol).filter(function (s) { return s instanceof core_1$2.NgModule; });
     if (ngModules.length === 0) {
         throw new Error(staticSymbol.name + " is not an NgModule");
     }
@@ -45140,6 +45156,7 @@ var NgTools_InternalApi_NG_2 = (function () {
             i18nFormat: options.i18nFormat,
             i18nFile: options.i18nFile,
             locale: options.locale,
+            missingTranslation: options.missingTranslation,
             basePath: options.basePath
         };
         // Create the Code Generator.
@@ -45228,7 +45245,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v4.1.0-3f46645
+ * @license Angular v4.1.0-8c50457
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -49441,7 +49458,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('4.1.0-3f46645');
+var VERSION$$1 = new Version('4.1.0-8c50457');
 
 exports.createLanguageService = createLanguageService;
 exports.create = create;
