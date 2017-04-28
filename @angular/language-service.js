@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.1.0-a4de214
+ * @license Angular v4.1.0-270d694
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -4066,10 +4066,139 @@ function getFromSymbolTable(symbolTable, key) {
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
+var projectHostMap = new WeakMap();
+function getExternalFiles(project) {
+    var host = projectHostMap.get(project);
+    if (host) {
+        return host.getTemplateReferences();
+    }
+}
+var angularOnlyResults = process.argv.indexOf('--angularOnlyResults') >= 0;
+function angularOnlyFilter(ls) {
+    return {
+        cleanupSemanticCache: function () { return ls.cleanupSemanticCache(); },
+        getSyntacticDiagnostics: function (fileName) { return []; },
+        getSemanticDiagnostics: function (fileName) { return []; },
+        getCompilerOptionsDiagnostics: function () { return []; },
+        getSyntacticClassifications: function (fileName, span) { return []; },
+        getSemanticClassifications: function (fileName, span) { return []; },
+        getEncodedSyntacticClassifications: function (fileName, span) { return ({ undefined: undefined }); },
+        getEncodedSemanticClassifications: function (fileName, span) { return undefined; },
+        getCompletionsAtPosition: function (fileName, position) { return undefined; },
+        getCompletionEntryDetails: function (fileName, position, entryName) {
+            return undefined;
+        },
+        getCompletionEntrySymbol: function (fileName, position, entryName) { return undefined; },
+        getQuickInfoAtPosition: function (fileName, position) { return undefined; },
+        getNameOrDottedNameSpan: function (fileName, startPos, endPos) { return undefined; },
+        getBreakpointStatementAtPosition: function (fileName, position) { return undefined; },
+        getSignatureHelpItems: function (fileName, position) { return undefined; },
+        getRenameInfo: function (fileName, position) { return undefined; },
+        findRenameLocations: function (fileName, position, findInStrings, findInComments) {
+            return [];
+        },
+        getDefinitionAtPosition: function (fileName, position) { return []; },
+        getTypeDefinitionAtPosition: function (fileName, position) { return []; },
+        getImplementationAtPosition: function (fileName, position) { return []; },
+        getReferencesAtPosition: function (fileName, position) { return []; },
+        findReferences: function (fileName, position) { return []; },
+        getDocumentHighlights: function (fileName, position, filesToSearch) { return []; },
+        /** @deprecated */
+        getOccurrencesAtPosition: function (fileName, position) { return []; },
+        getNavigateToItems: function (searchValue) { return []; },
+        getNavigationBarItems: function (fileName) { return []; },
+        getNavigationTree: function (fileName) { return undefined; },
+        getOutliningSpans: function (fileName) { return []; },
+        getTodoComments: function (fileName, descriptors) { return []; },
+        getBraceMatchingAtPosition: function (fileName, position) { return []; },
+        getIndentationAtPosition: function (fileName, position, options) { return undefined; },
+        getFormattingEditsForRange: function (fileName, start, end, options) { return []; },
+        getFormattingEditsForDocument: function (fileName, options) { return []; },
+        getFormattingEditsAfterKeystroke: function (fileName, position, key, options) { return []; },
+        getDocCommentTemplateAtPosition: function (fileName, position) { return undefined; },
+        isValidBraceCompletionAtPosition: function (fileName, position, openingBrace) { return undefined; },
+        getCodeFixesAtPosition: function (fileName, start, end, errorCodes) { return []; },
+        getEmitOutput: function (fileName) { return undefined; },
+        getProgram: function () { return ls.getProgram(); },
+        dispose: function () { return ls.dispose(); }
+    };
+}
 function create(info /* ts.server.PluginCreateInfo */) {
     // Create the proxy
     var proxy = Object.create(null);
     var oldLS = info.languageService;
+    if (angularOnlyResults) {
+        oldLS = angularOnlyFilter(oldLS);
+    }
+    function tryCall(fileName, callback) {
+        if (fileName && !oldLS.getProgram().getSourceFile(fileName)) {
+            return undefined;
+        }
+        try {
+            return callback();
+        }
+        catch (e) {
+            return undefined;
+        }
+    }
+    function tryFilenameCall(m) {
+        return function (fileName) { return tryCall(fileName, function () { return (m.call(ls, fileName)); }); };
+    }
+    function tryFilenameOneCall(m) {
+        return function (fileName, p) { return tryCall(fileName, function () { return (m.call(ls, fileName, p)); }); };
+    }
+    function tryFilenameTwoCall(m) {
+        return function (fileName, p1, p2) { return tryCall(fileName, function () { return (m.call(ls, fileName, p1, p2)); }); };
+    }
+    function tryFilenameThreeCall(m) {
+        return function (fileName, p1, p2, p3) { return tryCall(fileName, function () { return (m.call(ls, fileName, p1, p2, p3)); }); };
+    }
+    function typescriptOnly(ls) {
+        return {
+            cleanupSemanticCache: function () { return ls.cleanupSemanticCache(); },
+            getSyntacticDiagnostics: tryFilenameCall(ls.getSyntacticDiagnostics),
+            getSemanticDiagnostics: tryFilenameCall(ls.getSemanticDiagnostics),
+            getCompilerOptionsDiagnostics: function () { return ls.getCompilerOptionsDiagnostics(); },
+            getSyntacticClassifications: tryFilenameOneCall(ls.getSemanticClassifications),
+            getSemanticClassifications: tryFilenameOneCall(ls.getSemanticClassifications),
+            getEncodedSyntacticClassifications: tryFilenameOneCall(ls.getEncodedSyntacticClassifications),
+            getEncodedSemanticClassifications: tryFilenameOneCall(ls.getEncodedSemanticClassifications),
+            getCompletionsAtPosition: tryFilenameOneCall(ls.getCompletionsAtPosition),
+            getCompletionEntryDetails: tryFilenameTwoCall(ls.getCompletionEntryDetails),
+            getCompletionEntrySymbol: tryFilenameTwoCall(ls.getCompletionEntrySymbol),
+            getQuickInfoAtPosition: tryFilenameOneCall(ls.getQuickInfoAtPosition),
+            getNameOrDottedNameSpan: tryFilenameTwoCall(ls.getNameOrDottedNameSpan),
+            getBreakpointStatementAtPosition: tryFilenameOneCall(ls.getBreakpointStatementAtPosition),
+            getSignatureHelpItems: tryFilenameOneCall(ls.getSignatureHelpItems),
+            getRenameInfo: tryFilenameOneCall(ls.getRenameInfo),
+            findRenameLocations: tryFilenameThreeCall(ls.findRenameLocations),
+            getDefinitionAtPosition: tryFilenameOneCall(ls.getDefinitionAtPosition),
+            getTypeDefinitionAtPosition: tryFilenameOneCall(ls.getTypeDefinitionAtPosition),
+            getImplementationAtPosition: tryFilenameOneCall(ls.getImplementationAtPosition),
+            getReferencesAtPosition: tryFilenameOneCall(ls.getReferencesAtPosition),
+            findReferences: tryFilenameOneCall(ls.findReferences),
+            getDocumentHighlights: tryFilenameTwoCall(ls.getDocumentHighlights),
+            /** @deprecated */
+            getOccurrencesAtPosition: tryFilenameOneCall(ls.getOccurrencesAtPosition),
+            getNavigateToItems: function (searchValue, maxResultCount, fileName, excludeDtsFiles) { return tryCall(fileName, function () { return ls.getNavigateToItems(searchValue, maxResultCount, fileName, excludeDtsFiles); }); },
+            getNavigationBarItems: tryFilenameCall(ls.getNavigationBarItems),
+            getNavigationTree: tryFilenameCall(ls.getNavigationTree),
+            getOutliningSpans: tryFilenameCall(ls.getOutliningSpans),
+            getTodoComments: tryFilenameOneCall(ls.getTodoComments),
+            getBraceMatchingAtPosition: tryFilenameOneCall(ls.getBraceMatchingAtPosition),
+            getIndentationAtPosition: tryFilenameTwoCall(ls.getIndentationAtPosition),
+            getFormattingEditsForRange: tryFilenameThreeCall(ls.getFormattingEditsForRange),
+            getFormattingEditsForDocument: tryFilenameOneCall(ls.getFormattingEditsForDocument),
+            getFormattingEditsAfterKeystroke: tryFilenameThreeCall(ls.getFormattingEditsAfterKeystroke),
+            getDocCommentTemplateAtPosition: tryFilenameOneCall(ls.getDocCommentTemplateAtPosition),
+            isValidBraceCompletionAtPosition: tryFilenameTwoCall(ls.isValidBraceCompletionAtPosition),
+            getCodeFixesAtPosition: tryFilenameThreeCall(ls.getCodeFixesAtPosition),
+            getEmitOutput: tryFilenameCall(ls.getEmitOutput),
+            getProgram: function () { return ls.getProgram(); },
+            dispose: function () { return ls.dispose(); }
+        };
+    }
+    oldLS = typescriptOnly(oldLS);
     var _loop_1 = function (k) {
         proxy[k] = function () { return oldLS[k].apply(oldLS, arguments); };
     };
@@ -4091,18 +4220,25 @@ function create(info /* ts.server.PluginCreateInfo */) {
     }
     function tryOperation(attempting, callback) {
         try {
-            callback();
+            return callback();
         }
         catch (e) {
             info.project.projectService.logger.info("Failed to " + attempting + ": " + e.toString());
             info.project.projectService.logger.info("Stack trace: " + e.stack);
+            return null;
         }
     }
     var serviceHost = new TypeScriptServiceHost(info.languageServiceHost, info.languageService);
     var ls = createLanguageService(serviceHost);
     serviceHost.setSite(ls);
+    projectHostMap.set(info.project, serviceHost);
     proxy.getCompletionsAtPosition = function (fileName, position) {
-        var base = oldLS.getCompletionsAtPosition(fileName, position);
+        var base = oldLS.getCompletionsAtPosition(fileName, position) || {
+            isGlobalCompletion: false,
+            isMemberCompletion: false,
+            isNewIdentifierLocation: false,
+            entries: []
+        };
         tryOperation('get completions', function () {
             var results = ls.getCompletionsAt(fileName, position);
             if (results && results.length) {
@@ -4125,7 +4261,6 @@ function create(info /* ts.server.PluginCreateInfo */) {
     proxy.getQuickInfoAtPosition = function (fileName, position) {
         var base = oldLS.getQuickInfoAtPosition(fileName, position);
         // TODO(vicb): the tags property has been removed in TS 2.2
-        var tags = base.tags;
         tryOperation('get quick info', function () {
             var ours = ls.getHoverAt(fileName, position);
             if (ours) {
@@ -4134,6 +4269,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
                     var part = _a[_i];
                     displayParts.push({ kind: part.language, text: part.text });
                 }
+                var tags = base && base.tags;
                 base = {
                     displayParts: displayParts,
                     documentation: [],
@@ -4149,10 +4285,8 @@ function create(info /* ts.server.PluginCreateInfo */) {
         return base;
     };
     proxy.getSemanticDiagnostics = function (fileName) {
-        var base = oldLS.getSemanticDiagnostics(fileName);
-        if (base === undefined) {
-            base = [];
-        }
+        var result = oldLS.getSemanticDiagnostics(fileName);
+        var base = result || [];
         tryOperation('get diagnostics', function () {
             info.project.projectService.logger.info("Computing Angular semantic diagnostics...");
             var ours = ls.getDiagnostics(fileName);
@@ -4168,7 +4302,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
         if (base && base.length) {
             return base;
         }
-        tryOperation('get definition', function () {
+        return tryOperation('get definition', function () {
             var ours = ls.getDefinitionAt(fileName, position);
             if (ours && ours.length) {
                 base = base || [];
@@ -4184,8 +4318,8 @@ function create(info /* ts.server.PluginCreateInfo */) {
                     });
                 }
             }
-        });
-        return base;
+            return base;
+        }) || [];
     };
     return proxy;
 }
@@ -4205,7 +4339,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version('4.1.0-a4de214');
+var VERSION = new Version('4.1.0-270d694');
 
 /**
  * @license
@@ -4220,5 +4354,5 @@ var VERSION = new Version('4.1.0-a4de214');
  * Entry point for all public APIs of the language service package.
  */
 
-export { createLanguageService, create, TypeScriptServiceHost, createLanguageServiceFromTypescript, VERSION };
+export { createLanguageService, TypeScriptServiceHost, createLanguageServiceFromTypescript, VERSION, getExternalFiles, create };
 //# sourceMappingURL=language-service.js.map
