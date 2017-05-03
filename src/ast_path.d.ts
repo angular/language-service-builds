@@ -11,7 +11,7 @@ export declare class AstPath<T> {
     readonly empty: boolean;
     readonly head: T | undefined;
     readonly tail: T | undefined;
-    parentOf(node: T): T | undefined;
+    parentOf(node: T | undefined): T | undefined;
     childOf(node: T): T | undefined;
     first<N extends T>(ctor: {
         new (...args: any[]): N;
