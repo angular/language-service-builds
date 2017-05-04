@@ -1,9 +1,9 @@
 /**
- * @license Angular v4.1.0-1092292
+ * @license Angular v4.2.0-beta.0-04197ee
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
-import { ASTWithSource, AotSummaryResolver, Attribute, CompileMetadataResolver, CompilerConfig, CssSelector, DEFAULT_INTERPOLATION_CONFIG, DirectiveNormalizer, DirectiveResolver, DomElementSchemaRegistry, Element as Element$1, ElementAst, EmbeddedTemplateAst, HtmlParser, I18NHtmlParser, ImplicitReceiver, Lexer, NAMED_ENTITIES, NgModuleResolver, ParseSpan, ParseTreeResult, Parser, PipeResolver, PropertyRead, ResourceLoader, SelectorMatcher, StaticAndDynamicReflectionCapabilities, StaticReflector, StaticSymbolCache, StaticSymbolResolver, SummaryResolver, TagContentType, TemplateParser, Text, analyzeNgModules, componentModuleUrl, createOfflineCompileUrlResolver, extractProgramSymbols, getHtmlTagDefinition, identifierName, splitNsName, templateVisitAll, tokenReference, visitAll } from '@angular/compiler';
+import { ASTWithSource, AotSummaryResolver, Attribute, CompileMetadataResolver, CompilerConfig, CssSelector, DEFAULT_INTERPOLATION_CONFIG, DirectiveNormalizer, DirectiveResolver, DomElementSchemaRegistry, Element as Element$1, ElementAst, EmbeddedTemplateAst, HtmlParser, I18NHtmlParser, ImplicitReceiver, JitSummaryResolver, Lexer, NAMED_ENTITIES, NgModuleResolver, ParseSpan, ParseTreeResult, Parser, PipeResolver, PropertyRead, ResourceLoader, SelectorMatcher, StaticAndDynamicReflectionCapabilities, StaticReflector, StaticSymbolCache, StaticSymbolResolver, TagContentType, TemplateParser, Text, analyzeNgModules, componentModuleUrl, createOfflineCompileUrlResolver, extractProgramSymbols, getHtmlTagDefinition, identifierName, splitNsName, templateVisitAll, tokenReference, visitAll } from '@angular/compiler';
 import { DiagnosticCategory, ModifierFlags, NodeFlags, ObjectFlags, SymbolFlags, SyntaxKind, TypeFlags, forEachChild, getCombinedModifierFlags, getPositionOfLineAndCharacter, version } from 'typescript';
 import * as ts from 'typescript';
 import { Version, ViewEncapsulation, ɵConsole } from '@angular/core';
@@ -2840,7 +2840,7 @@ var TypeScriptServiceHost = (function () {
                 // are hard-coded.
                 var config = new CompilerConfig({ defaultEncapsulation: ViewEncapsulation.Emulated, useJit: false });
                 var directiveNormalizer = new DirectiveNormalizer(resourceLoader, urlResolver, htmlParser, config);
-                result = this._resolver = new CompileMetadataResolver(config, moduleResolver, directiveResolver, pipeResolver, new SummaryResolver(), elementSchemaRegistry, directiveNormalizer, new ɵConsole(), this._staticSymbolCache, this.reflector, function (error, type) { return _this.collectError(error, type && type.filePath); });
+                result = this._resolver = new CompileMetadataResolver(config, moduleResolver, directiveResolver, pipeResolver, new JitSummaryResolver(), elementSchemaRegistry, directiveNormalizer, new ɵConsole(), this._staticSymbolCache, this.reflector, function (error, type) { return _this.collectError(error, type && type.filePath); });
             }
             return result;
         },
@@ -4388,7 +4388,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version('4.1.0-1092292');
+var VERSION = new Version('4.2.0-beta.0-04197ee');
 
 /**
  * @license
