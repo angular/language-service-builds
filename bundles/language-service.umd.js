@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.1.0-8931e71
+ * @license Angular v4.1.0-1092292
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2009,7 +2009,7 @@ var __extends$2$1 = (undefined && undefined.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 /**
- * @license Angular v4.1.0-8931e71
+ * @license Angular v4.1.0-1092292
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2861,7 +2861,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('4.1.0-8931e71');
+var VERSION$2 = new Version('4.1.0-1092292');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -7413,6 +7413,16 @@ var RendererFactory2 = (function () {
      * @return {?}
      */
     RendererFactory2.prototype.createRenderer = function (hostElement, type) { };
+    /**
+     * @abstract
+     * @return {?}
+     */
+    RendererFactory2.prototype.begin = function () { };
+    /**
+     * @abstract
+     * @return {?}
+     */
+    RendererFactory2.prototype.end = function () { };
     return RendererFactory2;
 }());
 var RendererStyleFlags2 = {};
@@ -12134,7 +12144,16 @@ var ViewRef_ = (function () {
     /**
      * @return {?}
      */
-    ViewRef_.prototype.detectChanges = function () { Services.checkAndUpdateView(this._view); };
+    ViewRef_.prototype.detectChanges = function () {
+        var /** @type {?} */ fs$$1 = this._view.root.rendererFactory;
+        if (fs$$1.begin) {
+            fs$$1.begin();
+        }
+        Services.checkAndUpdateView(this._view);
+        if (fs$$1.end) {
+            fs$$1.end();
+        }
+    };
     /**
      * @return {?}
      */
@@ -15079,6 +15098,22 @@ var DebugRendererFactory2 = (function () {
     DebugRendererFactory2.prototype.createRenderer = function (element, renderData) {
         return new DebugRenderer2(this.delegate.createRenderer(element, renderData));
     };
+    /**
+     * @return {?}
+     */
+    DebugRendererFactory2.prototype.begin = function () {
+        if (this.delegate.begin) {
+            this.delegate.begin();
+        }
+    };
+    /**
+     * @return {?}
+     */
+    DebugRendererFactory2.prototype.end = function () {
+        if (this.delegate.end) {
+            this.delegate.end();
+        }
+    };
     return DebugRendererFactory2;
 }());
 var DebugRenderer2 = (function () {
@@ -16189,7 +16224,7 @@ var __extends$1$1 = (undefined && undefined.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 /**
- * @license Angular v4.1.0-8931e71
+ * @license Angular v4.1.0-1092292
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -16208,7 +16243,7 @@ var __extends$1$1 = (undefined && undefined.__extends) || function (d, b) {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('4.1.0-8931e71');
+var VERSION$1 = new Version('4.1.0-1092292');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -44973,7 +45008,7 @@ var core_1$1 = require$$0$12;
 /**
  * @stable
  */
-var VERSION$5 = new core_1$1.Version('4.1.0-8931e71');
+var VERSION$5 = new core_1$1.Version('4.1.0-1092292');
 
 
 var version$1 = {
@@ -45284,7 +45319,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v4.1.0-8931e71
+ * @license Angular v4.1.0-1092292
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -49680,7 +49715,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('4.1.0-8931e71');
+var VERSION$$1 = new Version('4.1.0-1092292');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
