@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.1.0-b9723f9
+ * @license Angular v4.1.1-5f6d0f2
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -39,7 +39,9 @@ var AstPath$1 = (function () {
         enumerable: true,
         configurable: true
     });
-    AstPath.prototype.parentOf = function (node) { return this.path[this.path.indexOf(node) - 1]; };
+    AstPath.prototype.parentOf = function (node) {
+        return node && this.path[this.path.indexOf(node) - 1];
+    };
     AstPath.prototype.childOf = function (node) { return this.path[this.path.indexOf(node) + 1]; };
     AstPath.prototype.first = function (ctor) {
         for (var i = this.path.length - 1; i >= 0; i--) {
@@ -83,8 +85,8 @@ function spanOf(span) {
     }
 }
 function inSpan(position, span, exclusive) {
-    return span && exclusive ? position >= span.start && position < span.end :
-        position >= span.start && position <= span.end;
+    return span != null && (exclusive ? position >= span.start && position < span.end :
+        position >= span.start && position <= span.end);
 }
 function offsetSpan(span, amount) {
     return { start: span.start + amount, end: span.end + amount };
@@ -96,7 +98,8 @@ function hasTemplateReference(type) {
     if (type.diDeps) {
         for (var _i = 0, _a = type.diDeps; _i < _a.length; _i++) {
             var diDep = _a[_i];
-            if (diDep.token.identifier && identifierName(diDep.token.identifier) == 'TemplateRef')
+            if (diDep.token && diDep.token.identifier &&
+                identifierName(diDep.token.identifier) == 'TemplateRef')
                 return true;
         }
     }
@@ -823,6 +826,8 @@ var AstType = (function () {
         var method = receiverType.members().get(ast.name);
         if (!method)
             return this.reportError("Unknown method " + ast.name, ast);
+        if (!method.type)
+            return this.reportError("Could not find a type for " + ast.name, ast);
         if (!method.type.callable)
             return this.reportError("Member " + ast.name + " is not callable", ast);
         var signature = method.type.selectSignature(ast.args.map(function (arg) { return _this.getType(arg); }));
@@ -929,7 +934,9 @@ function visitChildren(ast, visitor) {
             visit(ast.falseExp);
         },
         visitFunctionCall: function (ast) {
-            visit(ast.target);
+            if (ast.target) {
+                visit(ast.target);
+            }
             visitAll$$1(ast.args);
         },
         visitImplicitReceiver: function (ast) { },
@@ -1086,7 +1093,10 @@ function refinedVariableType(type, info, templateElement) {
         if (ngForOfBinding) {
             var bindingType = new AstType(info.template.members, info.template.query, {}).getType(ngForOfBinding.value);
             if (bindingType) {
-                return info.template.query.getElementType(bindingType);
+                var result = info.template.query.getElementType(bindingType);
+                if (result) {
+                    return result;
+                }
             }
         }
     }
@@ -1639,69 +1649,71 @@ function getTemplateCompletions(templateInfo) {
     var result = undefined;
     var htmlAst = templateInfo.htmlAst, templateAst = templateInfo.templateAst, template = templateInfo.template;
     // The templateNode starts at the delimiter character so we add 1 to skip it.
-    var templatePosition = templateInfo.position - template.span.start;
-    var path$$1 = new HtmlAstPath(htmlAst, templatePosition);
-    var mostSpecific = path$$1.tail;
-    if (path$$1.empty) {
-        result = elementCompletions(templateInfo, path$$1);
-    }
-    else {
-        var astPosition_1 = templatePosition - mostSpecific.sourceSpan.start.offset;
-        mostSpecific.visit({
-            visitElement: function (ast) {
-                var startTagSpan = spanOf(ast.sourceSpan);
-                var tagLen = ast.name.length;
-                if (templatePosition <=
-                    startTagSpan.start + tagLen + 1 /* 1 for the opening angle bracked */) {
-                    // If we are in the tag then return the element completions.
-                    result = elementCompletions(templateInfo, path$$1);
-                }
-                else if (templatePosition < startTagSpan.end) {
-                    // We are in the attribute section of the element (but not in an attribute).
-                    // Return the attribute completions.
-                    result = attributeCompletions(templateInfo, path$$1);
-                }
-            },
-            visitAttribute: function (ast) {
-                if (!ast.valueSpan || !inSpan(templatePosition, spanOf(ast.valueSpan))) {
-                    // We are in the name of an attribute. Show attribute completions.
-                    result = attributeCompletions(templateInfo, path$$1);
-                }
-                else if (ast.valueSpan && inSpan(templatePosition, spanOf(ast.valueSpan))) {
-                    result = attributeValueCompletions(templateInfo, templatePosition, ast);
-                }
-            },
-            visitText: function (ast) {
-                // Check if we are in a entity.
-                result = entityCompletions(getSourceText(template, spanOf(ast)), astPosition_1);
-                if (result)
-                    return result;
-                result = interpolationCompletions(templateInfo, templatePosition);
-                if (result)
-                    return result;
-                var element = path$$1.first(Element$1);
-                if (element) {
-                    var definition = getHtmlTagDefinition(element.name);
-                    if (definition.contentType === TagContentType.PARSABLE_DATA) {
-                        result = voidElementAttributeCompletions(templateInfo, path$$1);
-                        if (!result) {
-                            // If the element can hold content Show element completions.
-                            result = elementCompletions(templateInfo, path$$1);
+    if (templateInfo.position != null) {
+        var templatePosition_1 = templateInfo.position - template.span.start;
+        var path_1 = new HtmlAstPath(htmlAst, templatePosition_1);
+        var mostSpecific = path_1.tail;
+        if (path_1.empty || !mostSpecific) {
+            result = elementCompletions(templateInfo, path_1);
+        }
+        else {
+            var astPosition_1 = templatePosition_1 - mostSpecific.sourceSpan.start.offset;
+            mostSpecific.visit({
+                visitElement: function (ast) {
+                    var startTagSpan = spanOf(ast.sourceSpan);
+                    var tagLen = ast.name.length;
+                    if (templatePosition_1 <=
+                        startTagSpan.start + tagLen + 1 /* 1 for the opening angle bracked */) {
+                        // If we are in the tag then return the element completions.
+                        result = elementCompletions(templateInfo, path_1);
+                    }
+                    else if (templatePosition_1 < startTagSpan.end) {
+                        // We are in the attribute section of the element (but not in an attribute).
+                        // Return the attribute completions.
+                        result = attributeCompletions(templateInfo, path_1);
+                    }
+                },
+                visitAttribute: function (ast) {
+                    if (!ast.valueSpan || !inSpan(templatePosition_1, spanOf(ast.valueSpan))) {
+                        // We are in the name of an attribute. Show attribute completions.
+                        result = attributeCompletions(templateInfo, path_1);
+                    }
+                    else if (ast.valueSpan && inSpan(templatePosition_1, spanOf(ast.valueSpan))) {
+                        result = attributeValueCompletions(templateInfo, templatePosition_1, ast);
+                    }
+                },
+                visitText: function (ast) {
+                    // Check if we are in a entity.
+                    result = entityCompletions(getSourceText(template, spanOf(ast)), astPosition_1);
+                    if (result)
+                        return result;
+                    result = interpolationCompletions(templateInfo, templatePosition_1);
+                    if (result)
+                        return result;
+                    var element = path_1.first(Element$1);
+                    if (element) {
+                        var definition = getHtmlTagDefinition(element.name);
+                        if (definition.contentType === TagContentType.PARSABLE_DATA) {
+                            result = voidElementAttributeCompletions(templateInfo, path_1);
+                            if (!result) {
+                                // If the element can hold content Show element completions.
+                                result = elementCompletions(templateInfo, path_1);
+                            }
                         }
                     }
-                }
-                else {
-                    // If no element container, implies parsable data so show elements.
-                    result = voidElementAttributeCompletions(templateInfo, path$$1);
-                    if (!result) {
-                        result = elementCompletions(templateInfo, path$$1);
+                    else {
+                        // If no element container, implies parsable data so show elements.
+                        result = voidElementAttributeCompletions(templateInfo, path_1);
+                        if (!result) {
+                            result = elementCompletions(templateInfo, path_1);
+                        }
                     }
-                }
-            },
-            visitComment: function (ast) { },
-            visitExpansion: function (ast) { },
-            visitExpansionCase: function (ast) { }
-        }, null);
+                },
+                visitComment: function (ast) { },
+                visitExpansion: function (ast) { },
+                visitExpansionCase: function (ast) { }
+            }, null);
+        }
     }
     return result;
 }
@@ -1799,7 +1811,9 @@ function attributeValueCompletions(info, position, attr) {
 function elementCompletions(info, path$$1) {
     var htmlNames = elementNames().filter(function (name) { return !(name in hiddenHtmlElements); });
     // Collect the elements referenced by the selectors
-    var directiveElements = getSelectors(info).selectors.map(function (selector) { return selector.element; }).filter(function (name) { return !!name; });
+    var directiveElements = getSelectors(info)
+        .selectors.map(function (selector) { return selector.element; })
+        .filter(function (name) { return !!name; });
     var components = directiveElements.map(function (name) { return ({ kind: 'component', name: name, sort: name }); });
     var htmlElements = htmlNames.map(function (name) { return ({ kind: 'element', name: name, sort: name }); });
     // Return components and html elements
@@ -1842,7 +1856,8 @@ function voidElementAttributeCompletions(info, path$$1) {
         var match = tail.value.match(/<(\w(\w|\d|-)*:)?(\w(\w|\d|-)*)\s/);
         // The position must be after the match, otherwise we are still in a place where elements
         // are expected (such as `<|a` or `<a|`; we only want attributes for `<a |` or after).
-        if (match && path$$1.position >= match.index + match[0].length + tail.sourceSpan.start.offset) {
+        if (match &&
+            path$$1.position >= (match.index || 0) + match[0].length + tail.sourceSpan.start.offset) {
             return attributeCompletionsForElement(info, match[3]);
         }
     }
@@ -1854,10 +1869,7 @@ var ExpressionVisitor = (function (_super) {
         _this.info = info;
         _this.position = position;
         _this.attr = attr;
-        _this.getExpressionScope = getExpressionScope$$1;
-        if (!getExpressionScope$$1) {
-            _this.getExpressionScope = function () { return info.template.members; };
-        }
+        _this.getExpressionScope = getExpressionScope$$1 || (function () { return info.template.members; });
         return _this;
     }
     ExpressionVisitor.prototype.visitDirectiveProperty = function (ast) {
@@ -1880,6 +1892,8 @@ var ExpressionVisitor = (function (_super) {
             var selector_1 = selectors.filter(function (s) { return s.attrs.some(function (attr, i) { return i % 2 == 0 && attr == key_1; }); })[0];
             var templateBindingResult = this.info.expressionParser.parseTemplateBindings(key_1, this.attr.value, null);
             // find the template binding that contains the position
+            if (!this.attr.valueSpan)
+                return;
             var valueRelativePosition_1 = this.position - this.attr.valueSpan.start.offset - 1;
             var bindings = templateBindingResult.templateBindings;
             var binding = bindings.find(function (binding) { return inSpan(valueRelativePosition_1, binding.span, /* exclusive */ true); }) ||
@@ -1906,9 +1920,11 @@ var ExpressionVisitor = (function (_super) {
                     // We are after the '=' in a let clause. The valid values here are the members of the
                     // template reference's type parameter.
                     var directiveMetadata = selectorInfo.map.get(selector_1);
-                    var contextTable = this.info.template.query.getTemplateContext(directiveMetadata.type.reference);
-                    if (contextTable) {
-                        this.result = this.symbolsToCompletions(contextTable.values());
+                    if (directiveMetadata) {
+                        var contextTable = this.info.template.query.getTemplateContext(directiveMetadata.type.reference);
+                        if (contextTable) {
+                            this.result = this.symbolsToCompletions(contextTable.values());
+                        }
                     }
                 }
                 else if (binding.key && valueRelativePosition_1 <= (binding.key.length - key_1.length)) {
@@ -1953,7 +1969,10 @@ var ExpressionVisitor = (function (_super) {
     };
     Object.defineProperty(ExpressionVisitor.prototype, "attributeValuePosition", {
         get: function () {
-            return this.position - this.attr.valueSpan.start.offset - 1;
+            if (this.attr && this.attr.valueSpan) {
+                return this.position - this.attr.valueSpan.start.offset - 1;
+            }
+            return 0;
         },
         enumerable: true,
         configurable: true
@@ -2056,6 +2075,8 @@ function lowerName(name) {
  * found in the LICENSE file at https://angular.io/license
  */
 function locateSymbol(info) {
+    if (!info.position)
+        return undefined;
     var templatePosition = info.position - info.template.span.start;
     var path$$1 = new TemplateAstPath(info.templateAst, templatePosition);
     if (path$$1.tail) {
@@ -2067,11 +2088,13 @@ function locateSymbol(info) {
             if (attribute) {
                 if (inSpan(templatePosition, spanOf(attribute.valueSpan))) {
                     var scope = getExpressionScope(info, path$$1, inEvent);
-                    var expressionOffset = attribute.valueSpan.start.offset + 1;
-                    var result = getExpressionSymbol(scope, ast, templatePosition - expressionOffset, info.template.query);
-                    if (result) {
-                        symbol_1 = result.symbol;
-                        span_1 = offsetSpan(result.span, expressionOffset);
+                    if (attribute.valueSpan) {
+                        var expressionOffset = attribute.valueSpan.start.offset + 1;
+                        var result = getExpressionSymbol(scope, ast, templatePosition - expressionOffset, info.template.query);
+                        if (result) {
+                            symbol_1 = result.symbol;
+                            span_1 = offsetSpan(result.span, expressionOffset);
+                        }
                     }
                     return true;
                 }
@@ -2090,7 +2113,7 @@ function locateSymbol(info) {
                 }
                 else {
                     // Find a directive that matches the element name
-                    var directive = ast.directives.find(function (d) { return d.directive.selector.indexOf(ast.name) >= 0; });
+                    var directive = ast.directives.find(function (d) { return d.directive.selector != null && d.directive.selector.indexOf(ast.name) >= 0; });
                     if (directive) {
                         symbol_1 = info.template.query.getTypeSymbol(directive.directive.type.reference);
                         symbol_1 = symbol_1 && new OverrideKindSymbol(symbol_1, 'directive');
@@ -2141,9 +2164,11 @@ function locateSymbol(info) {
     }
 }
 function findAttribute(info) {
-    var templatePosition = info.position - info.template.span.start;
-    var path$$1 = new HtmlAstPath(info.htmlAst, templatePosition);
-    return path$$1.first(Attribute);
+    if (info.position) {
+        var templatePosition = info.position - info.template.span.start;
+        var path$$1 = new HtmlAstPath(info.htmlAst, templatePosition);
+        return path$$1.first(Attribute);
+    }
 }
 function findInputBinding(info, path$$1, binding) {
     var element = path$$1.first(ElementAst);
@@ -2336,20 +2361,24 @@ function getDeclarationDiagnostics(declarations, modules) {
     return results;
 }
 function getTemplateExpressionDiagnostics(template, astResult) {
-    var info = {
-        template: template,
-        htmlAst: astResult.htmlAst,
-        directive: astResult.directive,
-        directives: astResult.directives,
-        pipes: astResult.pipes,
-        templateAst: astResult.templateAst,
-        expressionParser: astResult.expressionParser
-    };
-    var visitor = new ExpressionDiagnosticsVisitor(info, function (path$$1, includeEvent) {
-        return getExpressionScope(info, path$$1, includeEvent);
-    });
-    templateVisitAll(visitor, astResult.templateAst);
-    return visitor.diagnostics;
+    if (astResult.htmlAst && astResult.directive && astResult.directives && astResult.pipes &&
+        astResult.templateAst && astResult.expressionParser) {
+        var info_1 = {
+            template: template,
+            htmlAst: astResult.htmlAst,
+            directive: astResult.directive,
+            directives: astResult.directives,
+            pipes: astResult.pipes,
+            templateAst: astResult.templateAst,
+            expressionParser: astResult.expressionParser
+        };
+        var visitor = new ExpressionDiagnosticsVisitor(info_1, function (path$$1, includeEvent) {
+            return getExpressionScope(info_1, path$$1, includeEvent);
+        });
+        templateVisitAll(visitor, astResult.templateAst);
+        return visitor.diagnostics;
+    }
+    return [];
 }
 var ExpressionDiagnosticsVisitor = (function (_super) {
     __extends$4(ExpressionDiagnosticsVisitor, _super);
@@ -2454,10 +2483,12 @@ var ExpressionDiagnosticsVisitor = (function (_super) {
         }
     };
     ExpressionDiagnosticsVisitor.prototype.reportError = function (message, span) {
-        this.diagnostics.push({
-            span: offsetSpan(span, this.info.template.span.start),
-            kind: DiagnosticKind.Error, message: message
-        });
+        if (span) {
+            this.diagnostics.push({
+                span: offsetSpan(span, this.info.template.span.start),
+                kind: DiagnosticKind.Error, message: message
+            });
+        }
     };
     ExpressionDiagnosticsVisitor.prototype.reportWarning = function (message, span) {
         this.diagnostics.push({
@@ -2556,7 +2587,8 @@ var LanguageServiceImpl = (function () {
         var template = this.host.getTemplateAt(fileName, position);
         if (template) {
             var astResult = this.getTemplateAst(template, fileName);
-            if (astResult && astResult.htmlAst && astResult.templateAst)
+            if (astResult && astResult.htmlAst && astResult.templateAst && astResult.directive &&
+                astResult.directives && astResult.pipes && astResult.expressionParser)
                 return {
                     position: position,
                     fileName: fileName,
@@ -2593,7 +2625,7 @@ var LanguageServiceImpl = (function () {
                 }
                 if (ngModule) {
                     var resolvedDirectives = ngModule.transitiveModule.directives.map(function (d) { return _this.host.resolver.getNonNormalizedDirectiveMetadata(d.reference); });
-                    var directives = resolvedDirectives.filter(function (d) { return d !== null; }).map(function (d) { return d.metadata.toSummary(); });
+                    var directives = removeMissing(resolvedDirectives).map(function (d) { return d.metadata.toSummary(); });
                     var pipes = ngModule.transitiveModule.pipes.map(function (p) { return _this.host.resolver.getOrLoadPipeMetadata(p.reference).toSummary(); });
                     var schemas = ngModule.schemas;
                     var parseResult = parser.tryParseHtml(htmlResult, metadata, directives, pipes, schemas);
@@ -2613,10 +2645,13 @@ var LanguageServiceImpl = (function () {
             }
             result = { errors: [{ kind: DiagnosticKind.Error, message: e.message, span: span }] };
         }
-        return result;
+        return result || {};
     };
     return LanguageServiceImpl;
 }());
+function removeMissing(values) {
+    return values.filter(function (e) { return !!e; });
+}
 function uniqueBySpan(elements) {
     if (elements) {
         var result = [];
@@ -2676,14 +2711,20 @@ var ReflectorModuleModuleResolutionHost = (function () {
         if (snapshot) {
             return snapshot.getText(0, snapshot.getLength());
         }
+        // Typescript readFile() declaration should be `readFile(fileName: string): string | undefined
         return undefined;
     };
     return ReflectorModuleModuleResolutionHost;
 }());
+// This reflector host's purpose is to first set verboseInvalidExpressions to true so the
+// reflector will collect errors instead of throwing, and second to all deferring the creation
+// of the program until it is actually needed.
 var ReflectorHost = (function (_super) {
     __extends$6(ReflectorHost, _super);
     function ReflectorHost(getProgram, serviceHost, options) {
-        var _this = _super.call(this, null, options, new ModuleResolutionHostAdapter(new ReflectorModuleModuleResolutionHost(serviceHost)), { verboseInvalidExpression: true }) || this;
+        var _this = _super.call(this, 
+        // The ancestor value for program is overridden below so passing null here is safe.
+        /* program */ null, options, new ModuleResolutionHostAdapter(new ReflectorModuleModuleResolutionHost(serviceHost)), { verboseInvalidExpression: true }) || this;
         _this.getProgram = getProgram;
         return _this;
     }
@@ -2808,7 +2849,7 @@ var TypeScriptServiceHost = (function () {
     });
     TypeScriptServiceHost.prototype.getTemplateReferences = function () {
         this.ensureTemplateMap();
-        return this.templateReferences;
+        return this.templateReferences || [];
     };
     TypeScriptServiceHost.prototype.getTemplateAt = function (fileName, position) {
         var sourceFile = this.getSourceFile(fileName);
@@ -2827,7 +2868,7 @@ var TypeScriptServiceHost = (function () {
                 return this.getSourceFromType(fileName, this.host.getScriptVersion(fileName), componentType);
             }
         }
-        return null;
+        return undefined;
     };
     TypeScriptServiceHost.prototype.getAnalyzedModules = function () {
         this.validate();
@@ -3017,7 +3058,7 @@ var TypeScriptServiceHost = (function () {
                 var _a = this.getTemplateClassDeclFromNode(node), declaration = _a[0], decorator = _a[1];
                 if (declaration && declaration.name) {
                     var sourceFile = this.getSourceFile(fileName);
-                    return this.getSourceFromDeclaration(fileName, version$$1, this.stringOf(node), shrink(spanOf$1(node)), this.reflector.getStaticSymbol(sourceFile.fileName, declaration.name.text), declaration, node, sourceFile);
+                    return this.getSourceFromDeclaration(fileName, version$$1, this.stringOf(node) || '', shrink(spanOf$1(node)), this.reflector.getStaticSymbol(sourceFile.fileName, declaration.name.text), declaration, node, sourceFile);
                 }
                 break;
         }
@@ -3028,8 +3069,10 @@ var TypeScriptServiceHost = (function () {
         var declaration = this.getTemplateClassFromStaticSymbol(type);
         if (declaration) {
             var snapshot = this.host.getScriptSnapshot(fileName);
-            var source = snapshot.getText(0, snapshot.getLength());
-            result = this.getSourceFromDeclaration(fileName, version$$1, source, { start: 0, end: source.length }, type, declaration, declaration, declaration.getSourceFile());
+            if (snapshot) {
+                var source = snapshot.getText(0, snapshot.getLength());
+                result = this.getSourceFromDeclaration(fileName, version$$1, source, { start: 0, end: source.length }, type, declaration, declaration, declaration.getSourceFile());
+            }
         }
         return result;
     };
@@ -3066,16 +3109,18 @@ var TypeScriptServiceHost = (function () {
         configurable: true
     });
     TypeScriptServiceHost.prototype.collectError = function (error, filePath) {
-        var errorMap = this.collectedErrors;
-        if (!errorMap) {
-            errorMap = this.collectedErrors = new Map();
+        if (filePath) {
+            var errorMap = this.collectedErrors;
+            if (!errorMap || !this.collectedErrors) {
+                errorMap = this.collectedErrors = new Map();
+            }
+            var errors = errorMap.get(filePath);
+            if (!errors) {
+                errors = [];
+                this.collectedErrors.set(filePath, errors);
+            }
+            errors.push(error);
         }
-        var errors = errorMap.get(filePath);
-        if (!errors) {
-            errors = [];
-            this.collectedErrors.set(filePath, errors);
-        }
-        errors.push(error);
     };
     Object.defineProperty(TypeScriptServiceHost.prototype, "staticSymbolResolver", {
         get: function () {
@@ -3085,7 +3130,7 @@ var TypeScriptServiceHost = (function () {
                 this._summaryResolver = new AotSummaryResolver({
                     loadSummary: function (filePath) { return null; },
                     isSourceFile: function (sourceFilePath) { return true; },
-                    getOutputFileName: function (sourceFilePath) { return null; }
+                    getOutputFileName: function (sourceFilePath) { return sourceFilePath; }
                 }, this._staticSymbolCache);
                 result = this._staticSymbolResolver = new StaticSymbolResolver(this.reflectorHost, this._staticSymbolCache, this._summaryResolver, function (e, filePath) { return _this.collectError(e, filePath); });
             }
@@ -3114,7 +3159,7 @@ var TypeScriptServiceHost = (function () {
             var declarationNode = forEachChild(source, function (child) {
                 if (child.kind === SyntaxKind.ClassDeclaration) {
                     var classDeclaration = child;
-                    if (classDeclaration.name.text === type.name) {
+                    if (classDeclaration.name != null && classDeclaration.name.text === type.name) {
                         return classDeclaration;
                     }
                 }
@@ -4026,7 +4071,7 @@ function typeKindOf(type) {
         }
         else if (type.flags & TypeFlags.Union) {
             // If all the constituent types of a union are the same kind, it is also that kind.
-            var candidate = undefined;
+            var candidate = null;
             var unionType = type;
             if (unionType.types.length > 0) {
                 candidate = typeKindOf(unionType.types[0]);
@@ -4037,7 +4082,9 @@ function typeKindOf(type) {
                     }
                 }
             }
-            return candidate;
+            if (candidate != null) {
+                return candidate;
+            }
         }
         else if (type.flags & TypeFlags.TypeParameter) {
             return BuiltinType.Unbound;
@@ -4080,14 +4127,16 @@ function create(info /* ts.server.PluginCreateInfo */) {
         return { kind: c.kind, name: c.name, sortText: c.sort, kindModifiers: '' };
     }
     function diagnosticToDiagnostic(d, file) {
-        return {
+        var result = {
             file: file,
             start: d.span.start,
             length: d.span.end - d.span.start,
             messageText: d.message,
             category: DiagnosticCategory.Error,
-            code: 0
+            code: 0,
+            source: 'ng'
         };
+        return result;
     }
     function tryOperation(attempting, callback) {
         try {
@@ -4132,7 +4181,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
                 var displayParts = [];
                 for (var _i = 0, _a = ours.text; _i < _a.length; _i++) {
                     var part = _a[_i];
-                    displayParts.push({ kind: part.language, text: part.text });
+                    displayParts.push({ kind: part.language || 'angular', text: part.text });
                 }
                 base = {
                     displayParts: displayParts,
@@ -4205,7 +4254,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version('4.1.0-b9723f9');
+var VERSION = new Version('4.1.1-5f6d0f2');
 
 /**
  * @license

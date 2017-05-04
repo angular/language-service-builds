@@ -14,7 +14,9 @@ export interface SpanHolder {
     children?: SpanHolder[];
 }
 export declare function isParseSourceSpan(value: any): value is ParseSourceSpan;
-export declare function spanOf(span?: SpanHolder | ParseSourceSpan): Span | undefined;
+export declare function spanOf(span: SpanHolder): Span;
+export declare function spanOf(span: ParseSourceSpan): Span;
+export declare function spanOf(span: SpanHolder | ParseSourceSpan | undefined): Span | undefined;
 export declare function inSpan(position: number, span?: Span, exclusive?: boolean): boolean;
 export declare function offsetSpan(span: Span, amount: number): Span;
 export declare function isNarrower(spanA: Span, spanB: Span): boolean;
