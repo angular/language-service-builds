@@ -396,7 +396,7 @@ export interface LanguageServiceHost {
      * refers to a template file then the `position` should be ignored. If the `position` is not in a
      * template literal string then this method should return `undefined`.
      */
-    getTemplateAt(fileName: string, position: number): TemplateSource;
+    getTemplateAt(fileName: string, position: number): TemplateSource | undefined;
     /**
      * Return the template source information for all templates in `fileName` or for `fileName` if it
      * is
