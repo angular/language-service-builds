@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.2.0-beta.0-9da6340
+ * @license Angular v4.2.0-beta.0-4874765
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2009,7 +2009,7 @@ var __extends$2$1 = (undefined && undefined.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 /**
- * @license Angular v4.2.0-beta.0-9da6340
+ * @license Angular v4.2.0-beta.0-4874765
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2861,7 +2861,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('4.2.0-beta.0-9da6340');
+var VERSION$2 = new Version('4.2.0-beta.0-4874765');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -5798,9 +5798,11 @@ var wtfEndTimeRange = wtfEnabled ? endTimeRange : function (r) { return null; };
 var EventEmitter = (function (_super) {
     __extends$2$1(EventEmitter, _super);
     /**
-     * Creates an instance of [EventEmitter], which depending on [isAsync],
+     * Creates an instance of {\@link EventEmitter}, which depending on `isAsync`,
      * delivers events synchronously or asynchronously.
-     * @param {?=} isAsync
+     *
+     * @param {?=} isAsync By default, events are delivered synchronously (default value: `false`).
+     * Set to `true` for asynchronous event delivery.
      */
     function EventEmitter(isAsync) {
         if (isAsync === void 0) { isAsync = false; }
@@ -16224,7 +16226,7 @@ var __extends$1$1 = (undefined && undefined.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 /**
- * @license Angular v4.2.0-beta.0-9da6340
+ * @license Angular v4.2.0-beta.0-4874765
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -16243,7 +16245,7 @@ var __extends$1$1 = (undefined && undefined.__extends) || function (d, b) {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('4.2.0-beta.0-9da6340');
+var VERSION$1 = new Version('4.2.0-beta.0-4874765');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -42581,7 +42583,7 @@ var MessageBundle = (function () {
             return i18nParserResult.errors;
         }
         (_a = this._messages).push.apply(_a, i18nParserResult.messages);
-        return null;
+        return [];
         var _a;
     };
     /**
@@ -45364,7 +45366,7 @@ var core_1$1 = require$$0$12;
 /**
  * @stable
  */
-var VERSION$5 = new core_1$1.Version('4.2.0-beta.0-9da6340');
+var VERSION$5 = new core_1$1.Version('4.2.0-beta.0-4874765');
 
 
 var version$1 = {
@@ -45675,7 +45677,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v4.2.0-beta.0-9da6340
+ * @license Angular v4.2.0-beta.0-4874765
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -50071,7 +50073,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('4.2.0-beta.0-9da6340');
+var VERSION$$1 = new Version('4.2.0-beta.0-4874765');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
