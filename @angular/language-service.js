@@ -1,17 +1,17 @@
 /**
- * @license Angular v4.2.0-beta.0-c5ce040
+ * @license Angular v4.2.0-beta.0-a2dcb7b
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
-import { ASTWithSource, AotSummaryResolver, Attribute, CompileMetadataResolver, CompilerConfig, CssSelector, DEFAULT_INTERPOLATION_CONFIG, DirectiveNormalizer, DirectiveResolver, DomElementSchemaRegistry, Element as Element$1, ElementAst, EmbeddedTemplateAst, HtmlParser, I18NHtmlParser, ImplicitReceiver, JitSummaryResolver, Lexer, NAMED_ENTITIES, NgModuleResolver, ParseSpan, ParseTreeResult, Parser, PipeResolver, PropertyRead, ResourceLoader, SelectorMatcher, StaticAndDynamicReflectionCapabilities, StaticReflector, StaticSymbolCache, StaticSymbolResolver, TagContentType, TemplateParser, Text, analyzeNgModules, componentModuleUrl, createOfflineCompileUrlResolver, extractProgramSymbols, getHtmlTagDefinition, identifierName, splitNsName, templateVisitAll, tokenReference, visitAll } from '@angular/compiler';
-import { DiagnosticCategory, ModifierFlags, NodeFlags, ObjectFlags, SymbolFlags, SyntaxKind, TypeFlags, forEachChild, getCombinedModifierFlags, getPositionOfLineAndCharacter, version } from 'typescript';
+import { ASTWithSource, AotSummaryResolver, AstPath, Attribute, CompileMetadataResolver, CompilerConfig, CssSelector, DEFAULT_INTERPOLATION_CONFIG, DirectiveNormalizer, DirectiveResolver, DomElementSchemaRegistry, Element, ElementAst, HtmlParser, I18NHtmlParser, ImplicitReceiver, JitSummaryResolver, Lexer, NAMED_ENTITIES, NgModuleResolver, NullAstVisitor, NullTemplateVisitor, ParseSpan, ParseTreeResult, Parser, PipeResolver, PropertyRead, RecursiveTemplateAstVisitor, ResourceLoader, SelectorMatcher, StaticAndDynamicReflectionCapabilities, StaticReflector, StaticSymbolCache, StaticSymbolResolver, TagContentType, TemplateParser, Text, analyzeNgModules, componentModuleUrl, createOfflineCompileUrlResolver, extractProgramSymbols, findNode, getHtmlTagDefinition, identifierName, splitNsName, templateVisitAll, tokenReference, visitAstChildren } from '@angular/compiler';
+import { AstType, BuiltinType, CompilerHost, ModuleResolutionHostAdapter, getClassMembersFromDeclaration, getExpressionScope, getPipesTable, getSymbolQuery, getTemplateExpressionDiagnostics } from '@angular/compiler-cli';
+import { DiagnosticCategory, SyntaxKind, forEachChild, getPositionOfLineAndCharacter } from 'typescript';
 import * as ts from 'typescript';
 import { Version, ViewEncapsulation, ɵConsole } from '@angular/core';
 import { existsSync } from 'fs';
 import * as fs from 'fs';
 import { dirname, join } from 'path';
 import * as path from 'path';
-import { CompilerHost, ModuleResolutionHostAdapter } from '@angular/compiler-cli';
 
 /**
  * @license
@@ -20,40 +20,16 @@ import { CompilerHost, ModuleResolutionHostAdapter } from '@angular/compiler-cli
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-var AstPath$1 = (function () {
-    function AstPath(path$$1) {
-        this.path = path$$1;
-    }
-    Object.defineProperty(AstPath.prototype, "empty", {
-        get: function () { return !this.path || !this.path.length; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(AstPath.prototype, "head", {
-        get: function () { return this.path[0]; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(AstPath.prototype, "tail", {
-        get: function () { return this.path[this.path.length - 1]; },
-        enumerable: true,
-        configurable: true
-    });
-    AstPath.prototype.parentOf = function (node) {
-        return node && this.path[this.path.indexOf(node) - 1];
-    };
-    AstPath.prototype.childOf = function (node) { return this.path[this.path.indexOf(node) + 1]; };
-    AstPath.prototype.first = function (ctor) {
-        for (var i = this.path.length - 1; i >= 0; i--) {
-            var item = this.path[i];
-            if (item instanceof ctor)
-                return item;
-        }
-    };
-    AstPath.prototype.push = function (node) { this.path.push(node); };
-    AstPath.prototype.pop = function () { return this.path.pop(); };
-    return AstPath;
-}());
+/**
+ * The kind of diagnostic message.
+ *
+ * @experimental
+ */
+var DiagnosticKind;
+(function (DiagnosticKind) {
+    DiagnosticKind[DiagnosticKind["Error"] = 0] = "Error";
+    DiagnosticKind[DiagnosticKind["Warning"] = 1] = "Warning";
+})(DiagnosticKind || (DiagnosticKind = {}));
 
 /**
  * @license
@@ -62,6 +38,11 @@ var AstPath$1 = (function () {
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
+var __extends$2 = (undefined && undefined.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 function isParseSourceSpan(value) {
     return value && !!value.start;
 }
@@ -137,228 +118,71 @@ function uniqueByName(elements) {
         return result;
     }
 }
-function isTypescriptVersion(low, high) {
-    var version$$1 = version;
-    if (version$$1.substring(0, low.length) < low)
-        return false;
-    if (high && (version$$1.substring(0, high.length) > high))
-        return false;
-    return true;
-}
 
-/**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
- */
-var __extends$2 = (undefined && undefined.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
-var TemplateAstPath = (function (_super) {
-    __extends$2(TemplateAstPath, _super);
-    function TemplateAstPath(ast, position, allowWidening) {
-        if (allowWidening === void 0) { allowWidening = false; }
-        var _this = _super.call(this, buildTemplatePath(ast, position, allowWidening)) || this;
-        _this.position = position;
-        return _this;
-    }
-    return TemplateAstPath;
-}(AstPath$1));
-function buildTemplatePath(ast, position, allowWidening) {
+function diagnosticInfoFromTemplateInfo(info) {
+    return {
+        fileName: info.fileName,
+        offset: info.template.span.start,
+        query: info.template.query,
+        members: info.template.members,
+        htmlAst: info.htmlAst,
+        templateAst: info.templateAst
+    };
+}
+function findTemplateAstAt(ast, position, allowWidening) {
     if (allowWidening === void 0) { allowWidening = false; }
-    var visitor = new TemplateAstPathBuilder(position, allowWidening);
-    templateVisitAll(visitor, ast);
-    return visitor.getPath();
-}
-var NullTemplateVisitor = (function () {
-    function NullTemplateVisitor() {
-    }
-    NullTemplateVisitor.prototype.visitNgContent = function (ast) { };
-    NullTemplateVisitor.prototype.visitEmbeddedTemplate = function (ast) { };
-    NullTemplateVisitor.prototype.visitElement = function (ast) { };
-    NullTemplateVisitor.prototype.visitReference = function (ast) { };
-    NullTemplateVisitor.prototype.visitVariable = function (ast) { };
-    NullTemplateVisitor.prototype.visitEvent = function (ast) { };
-    NullTemplateVisitor.prototype.visitElementProperty = function (ast) { };
-    NullTemplateVisitor.prototype.visitAttr = function (ast) { };
-    NullTemplateVisitor.prototype.visitBoundText = function (ast) { };
-    NullTemplateVisitor.prototype.visitText = function (ast) { };
-    NullTemplateVisitor.prototype.visitDirective = function (ast) { };
-    NullTemplateVisitor.prototype.visitDirectiveProperty = function (ast) { };
-    return NullTemplateVisitor;
-}());
-var TemplateAstChildVisitor = (function () {
-    function TemplateAstChildVisitor(visitor) {
-        this.visitor = visitor;
-    }
-    // Nodes with children
-    TemplateAstChildVisitor.prototype.visitEmbeddedTemplate = function (ast, context) {
-        return this.visitChildren(context, function (visit) {
-            visit(ast.attrs);
-            visit(ast.references);
-            visit(ast.variables);
-            visit(ast.directives);
-            visit(ast.providers);
-            visit(ast.children);
-        });
-    };
-    TemplateAstChildVisitor.prototype.visitElement = function (ast, context) {
-        return this.visitChildren(context, function (visit) {
-            visit(ast.attrs);
-            visit(ast.inputs);
-            visit(ast.outputs);
-            visit(ast.references);
-            visit(ast.directives);
-            visit(ast.providers);
-            visit(ast.children);
-        });
-    };
-    TemplateAstChildVisitor.prototype.visitDirective = function (ast, context) {
-        return this.visitChildren(context, function (visit) {
-            visit(ast.inputs);
-            visit(ast.hostProperties);
-            visit(ast.hostEvents);
-        });
-    };
-    // Terminal nodes
-    TemplateAstChildVisitor.prototype.visitNgContent = function (ast, context) { };
-    TemplateAstChildVisitor.prototype.visitReference = function (ast, context) { };
-    TemplateAstChildVisitor.prototype.visitVariable = function (ast, context) { };
-    TemplateAstChildVisitor.prototype.visitEvent = function (ast, context) { };
-    TemplateAstChildVisitor.prototype.visitElementProperty = function (ast, context) { };
-    TemplateAstChildVisitor.prototype.visitAttr = function (ast, context) { };
-    TemplateAstChildVisitor.prototype.visitBoundText = function (ast, context) { };
-    TemplateAstChildVisitor.prototype.visitText = function (ast, context) { };
-    TemplateAstChildVisitor.prototype.visitDirectiveProperty = function (ast, context) { };
-    TemplateAstChildVisitor.prototype.visitChildren = function (context, cb) {
-        var visitor = this.visitor || this;
-        var results = [];
-        function visit(children) {
-            if (children && children.length)
-                results.push(templateVisitAll(visitor, children, context));
+    var path$$1 = [];
+    var visitor = new (function (_super) {
+        __extends$2(class_1, _super);
+        function class_1() {
+            return _super !== null && _super.apply(this, arguments) || this;
         }
-        cb(visit);
-        return [].concat.apply([], results);
-    };
-    return TemplateAstChildVisitor;
-}());
-var TemplateAstPathBuilder = (function (_super) {
-    __extends$2(TemplateAstPathBuilder, _super);
-    function TemplateAstPathBuilder(position, allowWidening) {
-        var _this = _super.call(this) || this;
-        _this.position = position;
-        _this.allowWidening = allowWidening;
-        _this.path = [];
-        return _this;
-    }
-    TemplateAstPathBuilder.prototype.visit = function (ast, context) {
-        var span = spanOf(ast);
-        if (inSpan(this.position, span)) {
-            var len = this.path.length;
-            if (!len || this.allowWidening || isNarrower(span, spanOf(this.path[len - 1]))) {
-                this.path.push(ast);
+        class_1.prototype.visit = function (ast, context) {
+            var span = spanOf(ast);
+            if (inSpan(position, span)) {
+                var len = path$$1.length;
+                if (!len || allowWidening || isNarrower(span, spanOf(path$$1[len - 1]))) {
+                    path$$1.push(ast);
+                }
             }
-        }
-        else {
-            // Returning a value here will result in the children being skipped.
-            return true;
-        }
-    };
-    TemplateAstPathBuilder.prototype.visitEmbeddedTemplate = function (ast, context) {
-        return this.visitChildren(context, function (visit) {
-            // Ignore reference, variable and providers
-            visit(ast.attrs);
-            visit(ast.directives);
-            visit(ast.children);
-        });
-    };
-    TemplateAstPathBuilder.prototype.visitElement = function (ast, context) {
-        return this.visitChildren(context, function (visit) {
-            // Ingnore providers
-            visit(ast.attrs);
-            visit(ast.inputs);
-            visit(ast.outputs);
-            visit(ast.references);
-            visit(ast.directives);
-            visit(ast.children);
-        });
-    };
-    TemplateAstPathBuilder.prototype.visitDirective = function (ast, context) {
-        // Ignore the host properties of a directive
-        var result = this.visitChildren(context, function (visit) { visit(ast.inputs); });
-        // We never care about the diretive itself, just its inputs.
-        if (this.path[this.path.length - 1] == ast) {
-            this.path.pop();
-        }
-        return result;
-    };
-    TemplateAstPathBuilder.prototype.getPath = function () { return this.path; };
-    return TemplateAstPathBuilder;
-}(TemplateAstChildVisitor));
-
-/**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
- */
-/**
- * An enumeration of basic types.
- *
- * A `LanguageServiceHost` interface.
- *
- * @experimental
- */
-var BuiltinType;
-(function (BuiltinType) {
-    /**
-     * The type is a type that can hold any other type.
-     */
-    BuiltinType[BuiltinType["Any"] = 0] = "Any";
-    /**
-     * The type of a string literal.
-     */
-    BuiltinType[BuiltinType["String"] = 1] = "String";
-    /**
-     * The type of a numeric literal.
-     */
-    BuiltinType[BuiltinType["Number"] = 2] = "Number";
-    /**
-     * The type of the `true` and `false` literals.
-     */
-    BuiltinType[BuiltinType["Boolean"] = 3] = "Boolean";
-    /**
-     * The type of the `undefined` literal.
-     */
-    BuiltinType[BuiltinType["Undefined"] = 4] = "Undefined";
-    /**
-     * the type of the `null` literal.
-     */
-    BuiltinType[BuiltinType["Null"] = 5] = "Null";
-    /**
-     * the type is an unbound type parameter.
-     */
-    BuiltinType[BuiltinType["Unbound"] = 6] = "Unbound";
-    /**
-     * Not a built-in type.
-     */
-    BuiltinType[BuiltinType["Other"] = 7] = "Other";
-})(BuiltinType || (BuiltinType = {}));
-/**
- * The kind of diagnostic message.
- *
- * @experimental
- */
-var DiagnosticKind;
-(function (DiagnosticKind) {
-    DiagnosticKind[DiagnosticKind["Error"] = 0] = "Error";
-    DiagnosticKind[DiagnosticKind["Warning"] = 1] = "Warning";
-})(DiagnosticKind || (DiagnosticKind = {}));
+            else {
+                // Returning a value here will result in the children being skipped.
+                return true;
+            }
+        };
+        class_1.prototype.visitEmbeddedTemplate = function (ast, context) {
+            return this.visitChildren(context, function (visit) {
+                // Ignore reference, variable and providers
+                visit(ast.attrs);
+                visit(ast.directives);
+                visit(ast.children);
+            });
+        };
+        class_1.prototype.visitElement = function (ast, context) {
+            return this.visitChildren(context, function (visit) {
+                // Ingnore providers
+                visit(ast.attrs);
+                visit(ast.inputs);
+                visit(ast.outputs);
+                visit(ast.references);
+                visit(ast.directives);
+                visit(ast.children);
+            });
+        };
+        class_1.prototype.visitDirective = function (ast, context) {
+            // Ignore the host properties of a directive
+            var result = this.visitChildren(context, function (visit) { visit(ast.inputs); });
+            // We never care about the diretive itself, just its inputs.
+            if (path$$1[path$$1.length - 1] == ast) {
+                path$$1.pop();
+            }
+            return result;
+        };
+        return class_1;
+    }(RecursiveTemplateAstVisitor));
+    templateVisitAll(visitor, ast);
+    return new AstPath(path$$1, position);
+}
 
 /**
  * @license
@@ -372,14 +196,32 @@ var __extends$1 = (undefined && undefined.__extends) || function (d, b) {
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-function getExpressionDiagnostics(scope, ast, query, context) {
-    if (context === void 0) { context = {}; }
-    var analyzer = new AstType(scope, query, context);
-    analyzer.getDiagnostics(ast);
-    return analyzer.diagnostics;
+function findAstAt(ast, position, excludeEmpty) {
+    if (excludeEmpty === void 0) { excludeEmpty = false; }
+    var path$$1 = [];
+    var visitor = new (function (_super) {
+        __extends$1(class_1, _super);
+        function class_1() {
+            return _super !== null && _super.apply(this, arguments) || this;
+        }
+        class_1.prototype.visit = function (ast) {
+            if ((!excludeEmpty || ast.span.start < ast.span.end) && inSpan(position, ast.span)) {
+                path$$1.push(ast);
+                visitAstChildren(ast, this);
+            }
+        };
+        return class_1;
+    }(NullAstVisitor));
+    // We never care about the ASTWithSource node and its visit() method calls its ast's visit so
+    // the visit() method above would never see it.
+    if (ast instanceof ASTWithSource) {
+        ast = ast.ast;
+    }
+    visitor.visit(ast);
+    return new AstPath(path$$1, position);
 }
 function getExpressionCompletions(scope, ast, position, query) {
-    var path$$1 = new AstPath$$1(ast, position);
+    var path$$1 = findAstAt(ast, position);
     if (path$$1.empty)
         return undefined;
     var tail = path$$1.tail;
@@ -433,7 +275,7 @@ function getExpressionCompletions(scope, ast, position, query) {
     return result && result.values();
 }
 function getExpressionSymbol(scope, ast, position, query) {
-    var path$$1 = new AstPath$$1(ast, position, /* excludeEmpty */ true);
+    var path$$1 = findAstAt(ast, position, /* excludeEmpty */ true);
     if (path$$1.empty)
         return undefined;
     var tail = path$$1.tail;
@@ -496,623 +338,6 @@ function getExpressionSymbol(scope, ast, position, query) {
     });
     if (symbol && span) {
         return { symbol: symbol, span: span };
-    }
-}
-// Consider moving to expression_parser/ast
-var NullVisitor = (function () {
-    function NullVisitor() {
-    }
-    NullVisitor.prototype.visitBinary = function (ast) { };
-    NullVisitor.prototype.visitChain = function (ast) { };
-    NullVisitor.prototype.visitConditional = function (ast) { };
-    NullVisitor.prototype.visitFunctionCall = function (ast) { };
-    NullVisitor.prototype.visitImplicitReceiver = function (ast) { };
-    NullVisitor.prototype.visitInterpolation = function (ast) { };
-    NullVisitor.prototype.visitKeyedRead = function (ast) { };
-    NullVisitor.prototype.visitKeyedWrite = function (ast) { };
-    NullVisitor.prototype.visitLiteralArray = function (ast) { };
-    NullVisitor.prototype.visitLiteralMap = function (ast) { };
-    NullVisitor.prototype.visitLiteralPrimitive = function (ast) { };
-    NullVisitor.prototype.visitMethodCall = function (ast) { };
-    NullVisitor.prototype.visitPipe = function (ast) { };
-    NullVisitor.prototype.visitPrefixNot = function (ast) { };
-    NullVisitor.prototype.visitPropertyRead = function (ast) { };
-    NullVisitor.prototype.visitPropertyWrite = function (ast) { };
-    NullVisitor.prototype.visitQuote = function (ast) { };
-    NullVisitor.prototype.visitSafeMethodCall = function (ast) { };
-    NullVisitor.prototype.visitSafePropertyRead = function (ast) { };
-    return NullVisitor;
-}());
-var TypeDiagnostic = (function () {
-    function TypeDiagnostic(kind, message, ast) {
-        this.kind = kind;
-        this.message = message;
-        this.ast = ast;
-    }
-    return TypeDiagnostic;
-}());
-// AstType calculatetype of the ast given AST element.
-var AstType = (function () {
-    function AstType(scope, query, context) {
-        this.scope = scope;
-        this.query = query;
-        this.context = context;
-    }
-    AstType.prototype.getType = function (ast) { return ast.visit(this); };
-    AstType.prototype.getDiagnostics = function (ast) {
-        this.diagnostics = [];
-        var type = ast.visit(this);
-        if (this.context.event && type.callable) {
-            this.reportWarning('Unexpected callable expression. Expected a method call', ast);
-        }
-        return this.diagnostics;
-    };
-    AstType.prototype.visitBinary = function (ast) {
-        // Treat undefined and null as other.
-        function normalize(kind, other) {
-            switch (kind) {
-                case BuiltinType.Undefined:
-                case BuiltinType.Null:
-                    return normalize(other, BuiltinType.Other);
-            }
-            return kind;
-        }
-        var leftType = this.getType(ast.left);
-        var rightType = this.getType(ast.right);
-        var leftRawKind = this.query.getTypeKind(leftType);
-        var rightRawKind = this.query.getTypeKind(rightType);
-        var leftKind = normalize(leftRawKind, rightRawKind);
-        var rightKind = normalize(rightRawKind, leftRawKind);
-        // The following swtich implements operator typing similar to the
-        // type production tables in the TypeScript specification.
-        // https://github.com/Microsoft/TypeScript/blob/v1.8.10/doc/spec.md#4.19
-        var operKind = leftKind << 8 | rightKind;
-        switch (ast.operation) {
-            case '*':
-            case '/':
-            case '%':
-            case '-':
-            case '<<':
-            case '>>':
-            case '>>>':
-            case '&':
-            case '^':
-            case '|':
-                switch (operKind) {
-                    case BuiltinType.Any << 8 | BuiltinType.Any:
-                    case BuiltinType.Number << 8 | BuiltinType.Any:
-                    case BuiltinType.Any << 8 | BuiltinType.Number:
-                    case BuiltinType.Number << 8 | BuiltinType.Number:
-                        return this.query.getBuiltinType(BuiltinType.Number);
-                    default:
-                        var errorAst = ast.left;
-                        switch (leftKind) {
-                            case BuiltinType.Any:
-                            case BuiltinType.Number:
-                                errorAst = ast.right;
-                                break;
-                        }
-                        return this.reportError('Expected a numeric type', errorAst);
-                }
-            case '+':
-                switch (operKind) {
-                    case BuiltinType.Any << 8 | BuiltinType.Any:
-                    case BuiltinType.Any << 8 | BuiltinType.Boolean:
-                    case BuiltinType.Any << 8 | BuiltinType.Number:
-                    case BuiltinType.Any << 8 | BuiltinType.Other:
-                    case BuiltinType.Boolean << 8 | BuiltinType.Any:
-                    case BuiltinType.Number << 8 | BuiltinType.Any:
-                    case BuiltinType.Other << 8 | BuiltinType.Any:
-                        return this.anyType;
-                    case BuiltinType.Any << 8 | BuiltinType.String:
-                    case BuiltinType.Boolean << 8 | BuiltinType.String:
-                    case BuiltinType.Number << 8 | BuiltinType.String:
-                    case BuiltinType.String << 8 | BuiltinType.Any:
-                    case BuiltinType.String << 8 | BuiltinType.Boolean:
-                    case BuiltinType.String << 8 | BuiltinType.Number:
-                    case BuiltinType.String << 8 | BuiltinType.String:
-                    case BuiltinType.String << 8 | BuiltinType.Other:
-                    case BuiltinType.Other << 8 | BuiltinType.String:
-                        return this.query.getBuiltinType(BuiltinType.String);
-                    case BuiltinType.Number << 8 | BuiltinType.Number:
-                        return this.query.getBuiltinType(BuiltinType.Number);
-                    case BuiltinType.Boolean << 8 | BuiltinType.Number:
-                    case BuiltinType.Other << 8 | BuiltinType.Number:
-                        return this.reportError('Expected a number type', ast.left);
-                    case BuiltinType.Number << 8 | BuiltinType.Boolean:
-                    case BuiltinType.Number << 8 | BuiltinType.Other:
-                        return this.reportError('Expected a number type', ast.right);
-                    default:
-                        return this.reportError('Expected operands to be a string or number type', ast);
-                }
-            case '>':
-            case '<':
-            case '<=':
-            case '>=':
-            case '==':
-            case '!=':
-            case '===':
-            case '!==':
-                switch (operKind) {
-                    case BuiltinType.Any << 8 | BuiltinType.Any:
-                    case BuiltinType.Any << 8 | BuiltinType.Boolean:
-                    case BuiltinType.Any << 8 | BuiltinType.Number:
-                    case BuiltinType.Any << 8 | BuiltinType.String:
-                    case BuiltinType.Any << 8 | BuiltinType.Other:
-                    case BuiltinType.Boolean << 8 | BuiltinType.Any:
-                    case BuiltinType.Boolean << 8 | BuiltinType.Boolean:
-                    case BuiltinType.Number << 8 | BuiltinType.Any:
-                    case BuiltinType.Number << 8 | BuiltinType.Number:
-                    case BuiltinType.String << 8 | BuiltinType.Any:
-                    case BuiltinType.String << 8 | BuiltinType.String:
-                    case BuiltinType.Other << 8 | BuiltinType.Any:
-                    case BuiltinType.Other << 8 | BuiltinType.Other:
-                        return this.query.getBuiltinType(BuiltinType.Boolean);
-                    default:
-                        return this.reportError('Expected the operants to be of similar type or any', ast);
-                }
-            case '&&':
-                return rightType;
-            case '||':
-                return this.query.getTypeUnion(leftType, rightType);
-        }
-        return this.reportError("Unrecognized operator " + ast.operation, ast);
-    };
-    AstType.prototype.visitChain = function (ast) {
-        if (this.diagnostics) {
-            // If we are producing diagnostics, visit the children
-            visitChildren(ast, this);
-        }
-        // The type of a chain is always undefined.
-        return this.query.getBuiltinType(BuiltinType.Undefined);
-    };
-    AstType.prototype.visitConditional = function (ast) {
-        // The type of a conditional is the union of the true and false conditions.
-        return this.query.getTypeUnion(this.getType(ast.trueExp), this.getType(ast.falseExp));
-    };
-    AstType.prototype.visitFunctionCall = function (ast) {
-        var _this = this;
-        // The type of a function call is the return type of the selected signature.
-        // The signature is selected based on the types of the arguments. Angular doesn't
-        // support contextual typing of arguments so this is simpler than TypeScript's
-        // version.
-        var args = ast.args.map(function (arg) { return _this.getType(arg); });
-        var target = this.getType(ast.target);
-        if (!target || !target.callable)
-            return this.reportError('Call target is not callable', ast);
-        var signature = target.selectSignature(args);
-        if (signature)
-            return signature.result;
-        // TODO: Consider a better error message here.
-        return this.reportError('Unable no compatible signature found for call', ast);
-    };
-    AstType.prototype.visitImplicitReceiver = function (ast) {
-        var _this = this;
-        // Return a pseudo-symbol for the implicit receiver.
-        // The members of the implicit receiver are what is defined by the
-        // scope passed into this class.
-        return {
-            name: '$implict',
-            kind: 'component',
-            language: 'ng-template',
-            type: undefined,
-            container: undefined,
-            callable: false,
-            public: true,
-            definition: undefined,
-            members: function () { return _this.scope; },
-            signatures: function () { return []; },
-            selectSignature: function (types) { return undefined; },
-            indexed: function (argument) { return undefined; }
-        };
-    };
-    AstType.prototype.visitInterpolation = function (ast) {
-        // If we are producing diagnostics, visit the children.
-        if (this.diagnostics) {
-            visitChildren(ast, this);
-        }
-        return this.undefinedType;
-    };
-    AstType.prototype.visitKeyedRead = function (ast) {
-        var targetType = this.getType(ast.obj);
-        var keyType = this.getType(ast.key);
-        var result = targetType.indexed(keyType);
-        return result || this.anyType;
-    };
-    AstType.prototype.visitKeyedWrite = function (ast) {
-        // The write of a type is the type of the value being written.
-        return this.getType(ast.value);
-    };
-    AstType.prototype.visitLiteralArray = function (ast) {
-        var _this = this;
-        // A type literal is an array type of the union of the elements
-        return this.query.getArrayType((_a = this.query).getTypeUnion.apply(_a, ast.expressions.map(function (element) { return _this.getType(element); })));
-        var _a;
-    };
-    AstType.prototype.visitLiteralMap = function (ast) {
-        // If we are producing diagnostics, visit the children
-        if (this.diagnostics) {
-            visitChildren(ast, this);
-        }
-        // TODO: Return a composite type.
-        return this.anyType;
-    };
-    AstType.prototype.visitLiteralPrimitive = function (ast) {
-        // The type of a literal primitive depends on the value of the literal.
-        switch (ast.value) {
-            case true:
-            case false:
-                return this.query.getBuiltinType(BuiltinType.Boolean);
-            case null:
-                return this.query.getBuiltinType(BuiltinType.Null);
-            case undefined:
-                return this.query.getBuiltinType(BuiltinType.Undefined);
-            default:
-                switch (typeof ast.value) {
-                    case 'string':
-                        return this.query.getBuiltinType(BuiltinType.String);
-                    case 'number':
-                        return this.query.getBuiltinType(BuiltinType.Number);
-                    default:
-                        return this.reportError('Unrecognized primitive', ast);
-                }
-        }
-    };
-    AstType.prototype.visitMethodCall = function (ast) {
-        return this.resolveMethodCall(this.getType(ast.receiver), ast);
-    };
-    AstType.prototype.visitPipe = function (ast) {
-        var _this = this;
-        // The type of a pipe node is the return type of the pipe's transform method. The table returned
-        // by getPipes() is expected to contain symbols with the corresponding transform method type.
-        var pipe = this.query.getPipes().get(ast.name);
-        if (!pipe)
-            return this.reportError("No pipe by the name " + ast.name + " found", ast);
-        var expType = this.getType(ast.exp);
-        var signature = pipe.selectSignature([expType].concat(ast.args.map(function (arg) { return _this.getType(arg); })));
-        if (!signature)
-            return this.reportError('Unable to resolve signature for pipe invocation', ast);
-        return signature.result;
-    };
-    AstType.prototype.visitPrefixNot = function (ast) {
-        // The type of a prefix ! is always boolean.
-        return this.query.getBuiltinType(BuiltinType.Boolean);
-    };
-    AstType.prototype.visitPropertyRead = function (ast) {
-        return this.resolvePropertyRead(this.getType(ast.receiver), ast);
-    };
-    AstType.prototype.visitPropertyWrite = function (ast) {
-        // The type of a write is the type of the value being written.
-        return this.getType(ast.value);
-    };
-    AstType.prototype.visitQuote = function (ast) {
-        // The type of a quoted expression is any.
-        return this.query.getBuiltinType(BuiltinType.Any);
-    };
-    AstType.prototype.visitSafeMethodCall = function (ast) {
-        return this.resolveMethodCall(this.query.getNonNullableType(this.getType(ast.receiver)), ast);
-    };
-    AstType.prototype.visitSafePropertyRead = function (ast) {
-        return this.resolvePropertyRead(this.query.getNonNullableType(this.getType(ast.receiver)), ast);
-    };
-    Object.defineProperty(AstType.prototype, "anyType", {
-        get: function () {
-            var result = this._anyType;
-            if (!result) {
-                result = this._anyType = this.query.getBuiltinType(BuiltinType.Any);
-            }
-            return result;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(AstType.prototype, "undefinedType", {
-        get: function () {
-            var result = this._undefinedType;
-            if (!result) {
-                result = this._undefinedType = this.query.getBuiltinType(BuiltinType.Undefined);
-            }
-            return result;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    AstType.prototype.resolveMethodCall = function (receiverType, ast) {
-        var _this = this;
-        if (this.isAny(receiverType)) {
-            return this.anyType;
-        }
-        // The type of a method is the selected methods result type.
-        var method = receiverType.members().get(ast.name);
-        if (!method)
-            return this.reportError("Unknown method " + ast.name, ast);
-        if (!method.type)
-            return this.reportError("Could not find a type for " + ast.name, ast);
-        if (!method.type.callable)
-            return this.reportError("Member " + ast.name + " is not callable", ast);
-        var signature = method.type.selectSignature(ast.args.map(function (arg) { return _this.getType(arg); }));
-        if (!signature)
-            return this.reportError("Unable to resolve signature for call of method " + ast.name, ast);
-        return signature.result;
-    };
-    AstType.prototype.resolvePropertyRead = function (receiverType, ast) {
-        if (this.isAny(receiverType)) {
-            return this.anyType;
-        }
-        // The type of a property read is the seelcted member's type.
-        var member = receiverType.members().get(ast.name);
-        if (!member) {
-            var receiverInfo = receiverType.name;
-            if (receiverInfo == '$implict') {
-                receiverInfo =
-                    'The component declaration, template variable declarations, and element references do';
-            }
-            else {
-                receiverInfo = "'" + receiverInfo + "' does";
-            }
-            return this.reportError("Identifier '" + ast.name + "' is not defined. " + receiverInfo + " not contain such a member", ast);
-        }
-        if (!member.public) {
-            var receiverInfo = receiverType.name;
-            if (receiverInfo == '$implict') {
-                receiverInfo = 'the component';
-            }
-            else {
-                receiverInfo = "'" + receiverInfo + "'";
-            }
-            this.reportWarning("Identifier '" + ast.name + "' refers to a private member of " + receiverInfo, ast);
-        }
-        return member.type;
-    };
-    AstType.prototype.reportError = function (message, ast) {
-        if (this.diagnostics) {
-            this.diagnostics.push(new TypeDiagnostic(DiagnosticKind.Error, message, ast));
-        }
-        return this.anyType;
-    };
-    AstType.prototype.reportWarning = function (message, ast) {
-        if (this.diagnostics) {
-            this.diagnostics.push(new TypeDiagnostic(DiagnosticKind.Warning, message, ast));
-        }
-        return this.anyType;
-    };
-    AstType.prototype.isAny = function (symbol) {
-        return !symbol || this.query.getTypeKind(symbol) == BuiltinType.Any ||
-            (!!symbol.type && this.isAny(symbol.type));
-    };
-    return AstType;
-}());
-var AstPath$$1 = (function (_super) {
-    __extends$1(AstPath$$1, _super);
-    function AstPath$$1(ast, position, excludeEmpty) {
-        if (excludeEmpty === void 0) { excludeEmpty = false; }
-        var _this = _super.call(this, new AstPathVisitor(position, excludeEmpty).buildPath(ast).path) || this;
-        _this.position = position;
-        return _this;
-    }
-    return AstPath$$1;
-}(AstPath$1));
-var AstPathVisitor = (function (_super) {
-    __extends$1(AstPathVisitor, _super);
-    function AstPathVisitor(position, excludeEmpty) {
-        var _this = _super.call(this) || this;
-        _this.position = position;
-        _this.excludeEmpty = excludeEmpty;
-        _this.path = [];
-        return _this;
-    }
-    AstPathVisitor.prototype.visit = function (ast) {
-        if ((!this.excludeEmpty || ast.span.start < ast.span.end) && inSpan(this.position, ast.span)) {
-            this.path.push(ast);
-            visitChildren(ast, this);
-        }
-    };
-    AstPathVisitor.prototype.buildPath = function (ast) {
-        // We never care about the ASTWithSource node and its visit() method calls its ast's visit so
-        // the visit() method above would never see it.
-        if (ast instanceof ASTWithSource) {
-            ast = ast.ast;
-        }
-        this.visit(ast);
-        return this;
-    };
-    return AstPathVisitor;
-}(NullVisitor));
-// TODO: Consider moving to expression_parser/ast
-function visitChildren(ast, visitor) {
-    function visit(ast) { visitor.visit && visitor.visit(ast) || ast.visit(visitor); }
-    function visitAll$$1(asts) { asts.forEach(visit); }
-    ast.visit({
-        visitBinary: function (ast) {
-            visit(ast.left);
-            visit(ast.right);
-        },
-        visitChain: function (ast) { visitAll$$1(ast.expressions); },
-        visitConditional: function (ast) {
-            visit(ast.condition);
-            visit(ast.trueExp);
-            visit(ast.falseExp);
-        },
-        visitFunctionCall: function (ast) {
-            if (ast.target) {
-                visit(ast.target);
-            }
-            visitAll$$1(ast.args);
-        },
-        visitImplicitReceiver: function (ast) { },
-        visitInterpolation: function (ast) { visitAll$$1(ast.expressions); },
-        visitKeyedRead: function (ast) {
-            visit(ast.obj);
-            visit(ast.key);
-        },
-        visitKeyedWrite: function (ast) {
-            visit(ast.obj);
-            visit(ast.key);
-            visit(ast.obj);
-        },
-        visitLiteralArray: function (ast) { visitAll$$1(ast.expressions); },
-        visitLiteralMap: function (ast) { },
-        visitLiteralPrimitive: function (ast) { },
-        visitMethodCall: function (ast) {
-            visit(ast.receiver);
-            visitAll$$1(ast.args);
-        },
-        visitPipe: function (ast) {
-            visit(ast.exp);
-            visitAll$$1(ast.args);
-        },
-        visitPrefixNot: function (ast) { visit(ast.expression); },
-        visitPropertyRead: function (ast) { visit(ast.receiver); },
-        visitPropertyWrite: function (ast) {
-            visit(ast.receiver);
-            visit(ast.value);
-        },
-        visitQuote: function (ast) { },
-        visitSafeMethodCall: function (ast) {
-            visit(ast.receiver);
-            visitAll$$1(ast.args);
-        },
-        visitSafePropertyRead: function (ast) { visit(ast.receiver); },
-    });
-}
-function getExpressionScope(info, path$$1, includeEvent) {
-    var result = info.template.members;
-    var references = getReferences(info);
-    var variables = getVarDeclarations(info, path$$1);
-    var events = getEventDeclaration(info, path$$1, includeEvent);
-    if (references.length || variables.length || events.length) {
-        var referenceTable = info.template.query.createSymbolTable(references);
-        var variableTable = info.template.query.createSymbolTable(variables);
-        var eventsTable = info.template.query.createSymbolTable(events);
-        result =
-            info.template.query.mergeSymbolTable([result, referenceTable, variableTable, eventsTable]);
-    }
-    return result;
-}
-function getEventDeclaration(info, path$$1, includeEvent) {
-    var result = [];
-    if (includeEvent) {
-        // TODO: Determine the type of the event parameter based on the Observable<T> or EventEmitter<T>
-        // of the event.
-        result = [{
-                name: '$event',
-                kind: 'variable',
-                type: info.template.query.getBuiltinType(BuiltinType.Any)
-            }];
-    }
-    return result;
-}
-function getReferences(info) {
-    var result = [];
-    function processReferences(references) {
-        var _loop_1 = function (reference) {
-            var type = undefined;
-            if (reference.value) {
-                type = info.template.query.getTypeSymbol(tokenReference(reference.value));
-            }
-            result.push({
-                name: reference.name,
-                kind: 'reference',
-                type: type || info.template.query.getBuiltinType(BuiltinType.Any),
-                get definition() { return getDefintionOf(info, reference); }
-            });
-        };
-        for (var _i = 0, references_1 = references; _i < references_1.length; _i++) {
-            var reference = references_1[_i];
-            _loop_1(reference);
-        }
-    }
-    var visitor = new (function (_super) {
-        __extends$1(class_1, _super);
-        function class_1() {
-            return _super !== null && _super.apply(this, arguments) || this;
-        }
-        class_1.prototype.visitEmbeddedTemplate = function (ast, context) {
-            _super.prototype.visitEmbeddedTemplate.call(this, ast, context);
-            processReferences(ast.references);
-        };
-        class_1.prototype.visitElement = function (ast, context) {
-            _super.prototype.visitElement.call(this, ast, context);
-            processReferences(ast.references);
-        };
-        return class_1;
-    }(TemplateAstChildVisitor));
-    templateVisitAll(visitor, info.templateAst);
-    return result;
-}
-function getVarDeclarations(info, path$$1) {
-    var result = [];
-    var current = path$$1.tail;
-    while (current) {
-        if (current instanceof EmbeddedTemplateAst) {
-            var _loop_2 = function (variable) {
-                var name_1 = variable.name;
-                // Find the first directive with a context.
-                var context = current.directives
-                    .map(function (d) { return info.template.query.getTemplateContext(d.directive.type.reference); })
-                    .find(function (c) { return !!c; });
-                // Determine the type of the context field referenced by variable.value.
-                var type = undefined;
-                if (context) {
-                    var value = context.get(variable.value);
-                    if (value) {
-                        type = value.type;
-                        var kind = info.template.query.getTypeKind(type);
-                        if (kind === BuiltinType.Any || kind == BuiltinType.Unbound) {
-                            // The any type is not very useful here. For special cases, such as ngFor, we can do
-                            // better.
-                            type = refinedVariableType(type, info, current);
-                        }
-                    }
-                }
-                if (!type) {
-                    type = info.template.query.getBuiltinType(BuiltinType.Any);
-                }
-                result.push({
-                    name: name_1,
-                    kind: 'variable', type: type, get definition() { return getDefintionOf(info, variable); }
-                });
-            };
-            for (var _i = 0, _a = current.variables; _i < _a.length; _i++) {
-                var variable = _a[_i];
-                _loop_2(variable);
-            }
-        }
-        current = path$$1.parentOf(current);
-    }
-    return result;
-}
-function refinedVariableType(type, info, templateElement) {
-    // Special case the ngFor directive
-    var ngForDirective = templateElement.directives.find(function (d) {
-        var name = identifierName(d.directive.type);
-        return name == 'NgFor' || name == 'NgForOf';
-    });
-    if (ngForDirective) {
-        var ngForOfBinding = ngForDirective.inputs.find(function (i) { return i.directiveName == 'ngForOf'; });
-        if (ngForOfBinding) {
-            var bindingType = new AstType(info.template.members, info.template.query, {}).getType(ngForOfBinding.value);
-            if (bindingType) {
-                var result = info.template.query.getElementType(bindingType);
-                if (result) {
-                    return result;
-                }
-            }
-        }
-    }
-    // We can't do better, just return the original type.
-    return type;
-}
-function getDefintionOf(info, ast) {
-    if (info.fileName) {
-        var templateOffset = info.template.span.start;
-        return [{
-                fileName: info.fileName,
-                span: {
-                    start: ast.sourceSpan.start.offset + templateOffset,
-                    end: ast.sourceSpan.end.offset + templateOffset
-                }
-            }];
     }
 }
 
@@ -1552,83 +777,6 @@ function propertyNames(elementName) {
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-var __extends$3 = (undefined && undefined.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
-var HtmlAstPath = (function (_super) {
-    __extends$3(HtmlAstPath, _super);
-    function HtmlAstPath(ast, position) {
-        var _this = _super.call(this, buildPath(ast, position)) || this;
-        _this.position = position;
-        return _this;
-    }
-    return HtmlAstPath;
-}(AstPath$1));
-function buildPath(ast, position) {
-    var visitor = new HtmlAstPathBuilder(position);
-    visitAll(visitor, ast);
-    return visitor.getPath();
-}
-var ChildVisitor = (function () {
-    function ChildVisitor(visitor) {
-        this.visitor = visitor;
-    }
-    ChildVisitor.prototype.visitElement = function (ast, context) {
-        this.visitChildren(context, function (visit) {
-            visit(ast.attrs);
-            visit(ast.children);
-        });
-    };
-    ChildVisitor.prototype.visitAttribute = function (ast, context) { };
-    ChildVisitor.prototype.visitText = function (ast, context) { };
-    ChildVisitor.prototype.visitComment = function (ast, context) { };
-    ChildVisitor.prototype.visitExpansion = function (ast, context) {
-        return this.visitChildren(context, function (visit) { visit(ast.cases); });
-    };
-    ChildVisitor.prototype.visitExpansionCase = function (ast, context) { };
-    ChildVisitor.prototype.visitChildren = function (context, cb) {
-        var visitor = this.visitor || this;
-        var results = [];
-        function visit(children) {
-            if (children)
-                results.push(visitAll(visitor, children, context));
-        }
-        cb(visit);
-        return [].concat.apply([], results);
-    };
-    return ChildVisitor;
-}());
-var HtmlAstPathBuilder = (function (_super) {
-    __extends$3(HtmlAstPathBuilder, _super);
-    function HtmlAstPathBuilder(position) {
-        var _this = _super.call(this) || this;
-        _this.position = position;
-        _this.path = [];
-        return _this;
-    }
-    HtmlAstPathBuilder.prototype.visit = function (ast, context) {
-        var span = spanOf(ast);
-        if (inSpan(this.position, span)) {
-            this.path.push(ast);
-        }
-        else {
-            // Returning a value here will result in the children being skipped.
-            return true;
-        }
-    };
-    HtmlAstPathBuilder.prototype.getPath = function () { return this.path; };
-    return HtmlAstPathBuilder;
-}(ChildVisitor));
-
-/**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
- */
 var __extends = (undefined && undefined.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
@@ -1651,7 +799,7 @@ function getTemplateCompletions(templateInfo) {
     // The templateNode starts at the delimiter character so we add 1 to skip it.
     if (templateInfo.position != null) {
         var templatePosition_1 = templateInfo.position - template.span.start;
-        var path_1 = new HtmlAstPath(htmlAst, templatePosition_1);
+        var path_1 = findNode(htmlAst, templatePosition_1);
         var mostSpecific = path_1.tail;
         if (path_1.empty || !mostSpecific) {
             result = elementCompletions(templateInfo, path_1);
@@ -1690,7 +838,7 @@ function getTemplateCompletions(templateInfo) {
                     result = interpolationCompletions(templateInfo, templatePosition_1);
                     if (result)
                         return result;
-                    var element = path_1.first(Element$1);
+                    var element = path_1.first(Element);
                     if (element) {
                         var definition = getHtmlTagDefinition(element.name);
                         if (definition.contentType === TagContentType.PARSABLE_DATA) {
@@ -1718,8 +866,8 @@ function getTemplateCompletions(templateInfo) {
     return result;
 }
 function attributeCompletions(info, path$$1) {
-    var item = path$$1.tail instanceof Element$1 ? path$$1.tail : path$$1.parentOf(path$$1.tail);
-    if (item instanceof Element$1) {
+    var item = path$$1.tail instanceof Element ? path$$1.tail : path$$1.parentOf(path$$1.tail);
+    if (item instanceof Element) {
         return attributeCompletionsForElement(info, item.name, item);
     }
     return undefined;
@@ -1772,7 +920,7 @@ function getAttributeInfosForElement(info, elementName, element) {
         // All input and output properties of the matching directives should be added.
         var elementSelector = element ?
             createElementCssSelector(element) :
-            createElementCssSelector(new Element$1(elementName, [], [], null, null, null));
+            createElementCssSelector(new Element(elementName, [], [], null, null, null));
         var matcher = new SelectorMatcher();
         matcher.addSelectables(selectors);
         matcher.match(elementSelector, function (selector) {
@@ -1791,16 +939,17 @@ function getAttributeInfosForElement(info, elementName, element) {
     return attributes;
 }
 function attributeValueCompletions(info, position, attr) {
-    var path$$1 = new TemplateAstPath(info.templateAst, position);
+    var path$$1 = findTemplateAstAt(info.templateAst, position);
     var mostSpecific = path$$1.tail;
+    var dinfo = diagnosticInfoFromTemplateInfo(info);
     if (mostSpecific) {
-        var visitor = new ExpressionVisitor(info, position, attr, function () { return getExpressionScope(info, path$$1, false); });
+        var visitor = new ExpressionVisitor(info, position, attr, function () { return getExpressionScope(dinfo, path$$1, false); });
         mostSpecific.visit(visitor, null);
         if (!visitor.result || !visitor.result.length) {
             // Try allwoing widening the path
-            var widerPath_1 = new TemplateAstPath(info.templateAst, position, /* allowWidening */ true);
+            var widerPath_1 = findTemplateAstAt(info.templateAst, position, /* allowWidening */ true);
             if (widerPath_1.tail) {
-                var widerVisitor = new ExpressionVisitor(info, position, attr, function () { return getExpressionScope(info, widerPath_1, false); });
+                var widerVisitor = new ExpressionVisitor(info, position, attr, function () { return getExpressionScope(dinfo, widerPath_1, false); });
                 widerPath_1.tail.visit(widerVisitor, null);
                 return widerVisitor.result;
             }
@@ -1836,10 +985,10 @@ function entityCompletions(value, position) {
 }
 function interpolationCompletions(info, position) {
     // Look for an interpolation in at the position.
-    var templatePath = new TemplateAstPath(info.templateAst, position);
+    var templatePath = findTemplateAstAt(info.templateAst, position);
     var mostSpecific = templatePath.tail;
     if (mostSpecific) {
-        var visitor = new ExpressionVisitor(info, position, undefined, function () { return getExpressionScope(info, templatePath, false); });
+        var visitor = new ExpressionVisitor(info, position, undefined, function () { return getExpressionScope(diagnosticInfoFromTemplateInfo(info), templatePath, false); });
         mostSpecific.visit(visitor, null);
         return uniqueByName(visitor.result);
     }
@@ -2078,7 +1227,7 @@ function locateSymbol(info) {
     if (!info.position)
         return undefined;
     var templatePosition = info.position - info.template.span.start;
-    var path$$1 = new TemplateAstPath(info.templateAst, templatePosition);
+    var path$$1 = findTemplateAstAt(info.templateAst, templatePosition);
     if (path$$1.tail) {
         var symbol_1 = undefined;
         var span_1 = undefined;
@@ -2087,7 +1236,8 @@ function locateSymbol(info) {
             var attribute = findAttribute(info);
             if (attribute) {
                 if (inSpan(templatePosition, spanOf(attribute.valueSpan))) {
-                    var scope = getExpressionScope(info, path$$1, inEvent);
+                    var dinfo = diagnosticInfoFromTemplateInfo(info);
+                    var scope = getExpressionScope(dinfo, path$$1, inEvent);
                     if (attribute.valueSpan) {
                         var expressionOffset = attribute.valueSpan.start.offset + 1;
                         var result = getExpressionSymbol(scope, ast, templatePosition - expressionOffset, info.template.query);
@@ -2138,7 +1288,8 @@ function locateSymbol(info) {
             visitBoundText: function (ast) {
                 var expressionPosition = templatePosition - ast.sourceSpan.start.offset;
                 if (inSpan(expressionPosition, ast.value.span)) {
-                    var scope = getExpressionScope(info, path$$1, /* includeEvent */ false);
+                    var dinfo = diagnosticInfoFromTemplateInfo(info);
+                    var scope = getExpressionScope(dinfo, path$$1, /* includeEvent */ false);
                     var result = getExpressionSymbol(scope, ast.value, expressionPosition, info.template.query);
                     if (result) {
                         symbol_1 = result.symbol;
@@ -2166,7 +1317,7 @@ function locateSymbol(info) {
 function findAttribute(info) {
     if (info.position) {
         var templatePosition = info.position - info.template.span.start;
-        var path$$1 = new HtmlAstPath(info.htmlAst, templatePosition);
+        var path$$1 = findNode(info.htmlAst, templatePosition);
         return path$$1.first(Attribute);
     }
 }
@@ -2254,6 +1405,11 @@ var OverrideKindSymbol = (function () {
         enumerable: true,
         configurable: true
     });
+    Object.defineProperty(OverrideKindSymbol.prototype, "nullable", {
+        get: function () { return this.sym.nullable; },
+        enumerable: true,
+        configurable: true
+    });
     Object.defineProperty(OverrideKindSymbol.prototype, "definition", {
         get: function () { return this.sym.definition; },
         enumerable: true,
@@ -2285,11 +1441,6 @@ function getDefinition(info) {
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-var __extends$4 = (undefined && undefined.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
 function getTemplateDiagnostics(fileName, astProvider, templates) {
     var results = [];
     var _loop_1 = function (template) {
@@ -2302,8 +1453,15 @@ function getTemplateDiagnostics(fileName, astProvider, templates) {
                     message: e.msg
                 }); }));
             }
-            else if (ast.templateAst) {
-                var expressionDiagnostics = getTemplateExpressionDiagnostics(template, ast);
+            else if (ast.templateAst && ast.htmlAst) {
+                var info = {
+                    templateAst: ast.templateAst,
+                    htmlAst: ast.htmlAst,
+                    offset: template.span.start,
+                    query: template.query,
+                    members: template.members
+                };
+                var expressionDiagnostics = getTemplateExpressionDiagnostics(info);
                 results.push.apply(results, expressionDiagnostics);
             }
             if (ast.errors) {
@@ -2360,144 +1518,6 @@ function getDeclarationDiagnostics(declarations, modules) {
     }
     return results;
 }
-function getTemplateExpressionDiagnostics(template, astResult) {
-    if (astResult.htmlAst && astResult.directive && astResult.directives && astResult.pipes &&
-        astResult.templateAst && astResult.expressionParser) {
-        var info_1 = {
-            template: template,
-            htmlAst: astResult.htmlAst,
-            directive: astResult.directive,
-            directives: astResult.directives,
-            pipes: astResult.pipes,
-            templateAst: astResult.templateAst,
-            expressionParser: astResult.expressionParser
-        };
-        var visitor = new ExpressionDiagnosticsVisitor(info_1, function (path$$1, includeEvent) {
-            return getExpressionScope(info_1, path$$1, includeEvent);
-        });
-        templateVisitAll(visitor, astResult.templateAst);
-        return visitor.diagnostics;
-    }
-    return [];
-}
-var ExpressionDiagnosticsVisitor = (function (_super) {
-    __extends$4(ExpressionDiagnosticsVisitor, _super);
-    function ExpressionDiagnosticsVisitor(info, getExpressionScope$$1) {
-        var _this = _super.call(this) || this;
-        _this.info = info;
-        _this.getExpressionScope = getExpressionScope$$1;
-        _this.diagnostics = [];
-        _this.path = new TemplateAstPath([], 0);
-        return _this;
-    }
-    ExpressionDiagnosticsVisitor.prototype.visitDirective = function (ast, context) {
-        // Override the default child visitor to ignore the host properties of a directive.
-        if (ast.inputs && ast.inputs.length) {
-            templateVisitAll(this, ast.inputs, context);
-        }
-    };
-    ExpressionDiagnosticsVisitor.prototype.visitBoundText = function (ast) {
-        this.push(ast);
-        this.diagnoseExpression(ast.value, ast.sourceSpan.start.offset, false);
-        this.pop();
-    };
-    ExpressionDiagnosticsVisitor.prototype.visitDirectiveProperty = function (ast) {
-        this.push(ast);
-        this.diagnoseExpression(ast.value, this.attributeValueLocation(ast), false);
-        this.pop();
-    };
-    ExpressionDiagnosticsVisitor.prototype.visitElementProperty = function (ast) {
-        this.push(ast);
-        this.diagnoseExpression(ast.value, this.attributeValueLocation(ast), false);
-        this.pop();
-    };
-    ExpressionDiagnosticsVisitor.prototype.visitEvent = function (ast) {
-        this.push(ast);
-        this.diagnoseExpression(ast.handler, this.attributeValueLocation(ast), true);
-        this.pop();
-    };
-    ExpressionDiagnosticsVisitor.prototype.visitVariable = function (ast) {
-        var directive = this.directiveSummary;
-        if (directive && ast.value) {
-            var context = this.info.template.query.getTemplateContext(directive.type.reference);
-            if (context && !context.has(ast.value)) {
-                if (ast.value === '$implicit') {
-                    this.reportError('The template context does not have an implicit value', spanOf(ast.sourceSpan));
-                }
-                else {
-                    this.reportError("The template context does not defined a member called '" + ast.value + "'", spanOf(ast.sourceSpan));
-                }
-            }
-        }
-    };
-    ExpressionDiagnosticsVisitor.prototype.visitElement = function (ast, context) {
-        this.push(ast);
-        _super.prototype.visitElement.call(this, ast, context);
-        this.pop();
-    };
-    ExpressionDiagnosticsVisitor.prototype.visitEmbeddedTemplate = function (ast, context) {
-        var previousDirectiveSummary = this.directiveSummary;
-        this.push(ast);
-        // Find directive that refernces this template
-        this.directiveSummary =
-            ast.directives.map(function (d) { return d.directive; }).find(function (d) { return hasTemplateReference(d.type); });
-        // Process children
-        _super.prototype.visitEmbeddedTemplate.call(this, ast, context);
-        this.pop();
-        this.directiveSummary = previousDirectiveSummary;
-    };
-    ExpressionDiagnosticsVisitor.prototype.attributeValueLocation = function (ast) {
-        var path$$1 = new HtmlAstPath(this.info.htmlAst, ast.sourceSpan.start.offset);
-        var last = path$$1.tail;
-        if (last instanceof Attribute && last.valueSpan) {
-            // Add 1 for the quote.
-            return last.valueSpan.start.offset + 1;
-        }
-        return ast.sourceSpan.start.offset;
-    };
-    ExpressionDiagnosticsVisitor.prototype.diagnoseExpression = function (ast, offset, includeEvent) {
-        var _this = this;
-        var scope = this.getExpressionScope(this.path, includeEvent);
-        (_a = this.diagnostics).push.apply(_a, getExpressionDiagnostics(scope, ast, this.info.template.query, {
-            event: includeEvent
-        }).map(function (d) { return ({
-            span: offsetSpan(d.ast.span, offset + _this.info.template.span.start),
-            kind: d.kind,
-            message: d.message
-        }); }));
-        var _a;
-    };
-    ExpressionDiagnosticsVisitor.prototype.push = function (ast) { this.path.push(ast); };
-    ExpressionDiagnosticsVisitor.prototype.pop = function () { this.path.pop(); };
-    ExpressionDiagnosticsVisitor.prototype.selectors = function () {
-        var result = this._selectors;
-        if (!result) {
-            this._selectors = result = getSelectors(this.info);
-        }
-        return result;
-    };
-    ExpressionDiagnosticsVisitor.prototype.findElement = function (position) {
-        var htmlPath = new HtmlAstPath(this.info.htmlAst, position);
-        if (htmlPath.tail instanceof Element) {
-            return htmlPath.tail;
-        }
-    };
-    ExpressionDiagnosticsVisitor.prototype.reportError = function (message, span) {
-        if (span) {
-            this.diagnostics.push({
-                span: offsetSpan(span, this.info.template.span.start),
-                kind: DiagnosticKind.Error, message: message
-            });
-        }
-    };
-    ExpressionDiagnosticsVisitor.prototype.reportWarning = function (message, span) {
-        this.diagnostics.push({
-            span: offsetSpan(span, this.info.template.span.start),
-            kind: DiagnosticKind.Warning, message: message
-        });
-    };
-    return ExpressionDiagnosticsVisitor;
-}(TemplateAstChildVisitor));
 
 /**
  * @license
@@ -2562,8 +1582,9 @@ var LanguageServiceImpl = (function () {
     LanguageServiceImpl.prototype.getPipesAt = function (fileName, position) {
         var templateInfo = this.getTemplateAstAtPosition(fileName, position);
         if (templateInfo) {
-            return templateInfo.pipes.map(function (pipeInfo) { return ({ name: pipeInfo.name, symbol: pipeInfo.type.reference }); });
+            return templateInfo.pipes;
         }
+        return [];
     };
     LanguageServiceImpl.prototype.getCompletionsAt = function (fileName, position) {
         var templateInfo = this.getTemplateAstAtPosition(fileName, position);
@@ -2693,7 +1714,7 @@ function findSuitableDefaultModule(modules) {
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-var __extends$6 = (undefined && undefined.__extends) || function (d, b) {
+var __extends$4 = (undefined && undefined.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -2720,7 +1741,7 @@ var ReflectorModuleModuleResolutionHost = (function () {
 // reflector will collect errors instead of throwing, and second to all deferring the creation
 // of the program until it is actually needed.
 var ReflectorHost = (function (_super) {
-    __extends$6(ReflectorHost, _super);
+    __extends$4(ReflectorHost, _super);
     function ReflectorHost(getProgram, serviceHost, options) {
         var _this = _super.call(this, 
         // The ancestor value for program is overridden below so passing null here is safe.
@@ -2746,24 +1767,11 @@ var ReflectorHost = (function (_super) {
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-var __extends$5 = (undefined && undefined.__extends) || function (d, b) {
+var __extends$3 = (undefined && undefined.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-// In TypeScript 2.1 these flags moved
-// These helpers work for both 2.0 and 2.1.
-var isPrivate = ModifierFlags ?
-    (function (node) {
-        return !!(getCombinedModifierFlags(node) & ModifierFlags.Private);
-    }) :
-    (function (node) { return !!(node.flags & NodeFlags.Private); });
-var isReferenceType = ObjectFlags ?
-    (function (type) {
-        return !!(type.flags & TypeFlags.Object &&
-            type.objectFlags & ObjectFlags.Reference);
-    }) :
-    (function (type) { return !!(type.flags & TypeFlags.Reference); });
 /**
  * Create a `LanguageServiceHost`
  */
@@ -2780,7 +1788,7 @@ function createLanguageServiceFromTypescript(host, service) {
  * syntactically incorrect templates.
  */
 var DummyHtmlParser = (function (_super) {
-    __extends$5(DummyHtmlParser, _super);
+    __extends$3(DummyHtmlParser, _super);
     function DummyHtmlParser() {
         return _super !== null && _super.apply(this, arguments) || this;
     }
@@ -2795,7 +1803,7 @@ var DummyHtmlParser = (function (_super) {
  * Avoid loading resources in the language servcie by using a dummy loader.
  */
 var DummyResourceLoader = (function (_super) {
-    __extends$5(DummyResourceLoader, _super);
+    __extends$3(DummyResourceLoader, _super);
     function DummyResourceLoader() {
         return _super !== null && _super.apply(this, arguments) || this;
     }
@@ -3030,19 +2038,12 @@ var TypeScriptServiceHost = (function () {
                 span: span,
                 type: type,
                 get members() {
-                    var checker = t.checker;
-                    var program = t.program;
-                    var type = checker.getTypeAtLocation(declaration);
-                    return new TypeWrapper(type, { node: node, program: program, checker: checker }).members();
+                    return getClassMembersFromDeclaration(t.program, t.checker, sourceFile, declaration);
                 },
                 get query() {
                     if (!queryCache) {
-                        queryCache = new TypeScriptSymbolQuery(t.program, t.checker, sourceFile, function () {
-                            var pipes = t.service.getPipesAt(fileName, node.getStart());
-                            var checker = t.checker;
-                            var program = t.program;
-                            return new PipesTable(pipes, { node: node, program: program, checker: checker });
-                        });
+                        var pipes_1 = t.service.getPipesAt(fileName, node.getStart());
+                        queryCache = getSymbolQuery(t.program, t.checker, sourceFile, function () { return getPipesTable(sourceFile, t.program, t.checker, pipes_1); });
                     }
                     return queryCache;
                 }
@@ -3272,658 +2273,9 @@ var TypeScriptServiceHost = (function () {
         }
         return find(sourceFile);
     };
-    TypeScriptServiceHost.prototype.findLiteralType = function (kind, context) {
-        var checker = this.checker;
-        var type;
-        switch (kind) {
-            case BuiltinType.Any:
-                type = checker.getTypeAtLocation({
-                    kind: SyntaxKind.AsExpression,
-                    expression: { kind: SyntaxKind.TrueKeyword },
-                    type: { kind: SyntaxKind.AnyKeyword }
-                });
-                break;
-            case BuiltinType.Boolean:
-                type = checker.getTypeAtLocation({ kind: SyntaxKind.TrueKeyword });
-                break;
-            case BuiltinType.Null:
-                type = checker.getTypeAtLocation({ kind: SyntaxKind.NullKeyword });
-                break;
-            case BuiltinType.Number:
-                type = checker.getTypeAtLocation({ kind: SyntaxKind.NumericLiteral });
-                break;
-            case BuiltinType.String:
-                type =
-                    checker.getTypeAtLocation({ kind: SyntaxKind.NoSubstitutionTemplateLiteral });
-                break;
-            case BuiltinType.Undefined:
-                type = checker.getTypeAtLocation({ kind: SyntaxKind.VoidExpression });
-                break;
-            default:
-                throw new Error("Internal error, unhandled literal kind " + kind + ":" + BuiltinType[kind]);
-        }
-        return new TypeWrapper(type, context);
-    };
     return TypeScriptServiceHost;
 }());
 TypeScriptServiceHost.missingTemplate = [undefined, undefined];
-var TypeScriptSymbolQuery = (function () {
-    function TypeScriptSymbolQuery(program, checker, source, fetchPipes) {
-        this.program = program;
-        this.checker = checker;
-        this.source = source;
-        this.fetchPipes = fetchPipes;
-        this.typeCache = new Map();
-    }
-    TypeScriptSymbolQuery.prototype.getTypeKind = function (symbol) { return typeKindOf(this.getTsTypeOf(symbol)); };
-    TypeScriptSymbolQuery.prototype.getBuiltinType = function (kind) {
-        // TODO: Replace with typeChecker API when available.
-        var result = this.typeCache.get(kind);
-        if (!result) {
-            var type = getBuiltinTypeFromTs(kind, { checker: this.checker, node: this.source, program: this.program });
-            result =
-                new TypeWrapper(type, { program: this.program, checker: this.checker, node: this.source });
-            this.typeCache.set(kind, result);
-        }
-        return result;
-    };
-    TypeScriptSymbolQuery.prototype.getTypeUnion = function () {
-        var types = [];
-        for (var _i = 0; _i < arguments.length; _i++) {
-            types[_i] = arguments[_i];
-        }
-        // TODO: Replace with typeChecker API when available
-        // No API exists so the cheat is to just return the last type any if no types are given.
-        return types.length ? types[types.length - 1] : this.getBuiltinType(BuiltinType.Any);
-    };
-    TypeScriptSymbolQuery.prototype.getArrayType = function (type) {
-        // TODO: Replace with typeChecker API when available
-        return this.getBuiltinType(BuiltinType.Any);
-    };
-    TypeScriptSymbolQuery.prototype.getElementType = function (type) {
-        if (type instanceof TypeWrapper) {
-            var elementType = getTypeParameterOf(type.tsType, 'Array');
-            if (elementType) {
-                return new TypeWrapper(elementType, type.context);
-            }
-        }
-    };
-    TypeScriptSymbolQuery.prototype.getNonNullableType = function (symbol) {
-        if (symbol instanceof TypeWrapper && (typeof this.checker.getNonNullableType == 'function')) {
-            var tsType = symbol.tsType;
-            var nonNullableType = this.checker.getNonNullableType(tsType);
-            if (nonNullableType != tsType) {
-                return new TypeWrapper(nonNullableType, symbol.context);
-            }
-        }
-        return this.getBuiltinType(BuiltinType.Any);
-    };
-    TypeScriptSymbolQuery.prototype.getPipes = function () {
-        var result = this.pipesCache;
-        if (!result) {
-            result = this.pipesCache = this.fetchPipes();
-        }
-        return result;
-    };
-    TypeScriptSymbolQuery.prototype.getTemplateContext = function (type) {
-        var context = { node: this.source, program: this.program, checker: this.checker };
-        var typeSymbol = findClassSymbolInContext(type, context);
-        if (typeSymbol) {
-            var contextType = this.getTemplateRefContextType(typeSymbol);
-            if (contextType)
-                return new SymbolWrapper(contextType, context).members();
-        }
-    };
-    TypeScriptSymbolQuery.prototype.getTypeSymbol = function (type) {
-        var context = { node: this.source, program: this.program, checker: this.checker };
-        var typeSymbol = findClassSymbolInContext(type, context);
-        return new SymbolWrapper(typeSymbol, context);
-    };
-    TypeScriptSymbolQuery.prototype.createSymbolTable = function (symbols) {
-        var result = new MapSymbolTable();
-        result.addAll(symbols.map(function (s) { return new DeclaredSymbol(s); }));
-        return result;
-    };
-    TypeScriptSymbolQuery.prototype.mergeSymbolTable = function (symbolTables) {
-        var result = new MapSymbolTable();
-        for (var _i = 0, symbolTables_1 = symbolTables; _i < symbolTables_1.length; _i++) {
-            var symbolTable = symbolTables_1[_i];
-            result.addAll(symbolTable.values());
-        }
-        return result;
-    };
-    TypeScriptSymbolQuery.prototype.getSpanAt = function (line, column) {
-        return spanAt(this.source, line, column);
-    };
-    TypeScriptSymbolQuery.prototype.getTemplateRefContextType = function (typeSymbol) {
-        var type = this.checker.getTypeOfSymbolAtLocation(typeSymbol, this.source);
-        var constructor = type.symbol && type.symbol.members &&
-            getFromSymbolTable(type.symbol.members, '__constructor');
-        if (constructor) {
-            var constructorDeclaration = constructor.declarations[0];
-            for (var _i = 0, _a = constructorDeclaration.parameters; _i < _a.length; _i++) {
-                var parameter = _a[_i];
-                var type_1 = this.checker.getTypeAtLocation(parameter.type);
-                if (type_1.symbol.name == 'TemplateRef' && isReferenceType(type_1)) {
-                    var typeReference = type_1;
-                    if (typeReference.typeArguments.length === 1) {
-                        return typeReference.typeArguments[0].symbol;
-                    }
-                }
-            }
-        }
-    };
-    TypeScriptSymbolQuery.prototype.getTsTypeOf = function (symbol) {
-        var type = this.getTypeWrapper(symbol);
-        return type && type.tsType;
-    };
-    TypeScriptSymbolQuery.prototype.getTypeWrapper = function (symbol) {
-        var type = undefined;
-        if (symbol instanceof TypeWrapper) {
-            type = symbol;
-        }
-        else if (symbol.type instanceof TypeWrapper) {
-            type = symbol.type;
-        }
-        return type;
-    };
-    return TypeScriptSymbolQuery;
-}());
-function typeCallable(type) {
-    var signatures = type.getCallSignatures();
-    return signatures && signatures.length != 0;
-}
-function signaturesOf(type, context) {
-    return type.getCallSignatures().map(function (s) { return new SignatureWrapper(s, context); });
-}
-function selectSignature(type, context, types) {
-    // TODO: Do a better job of selecting the right signature.
-    var signatures = type.getCallSignatures();
-    return signatures.length ? new SignatureWrapper(signatures[0], context) : undefined;
-}
-var TypeWrapper = (function () {
-    function TypeWrapper(tsType, context) {
-        this.tsType = tsType;
-        this.context = context;
-        if (!tsType) {
-            throw Error('Internal: null type');
-        }
-    }
-    Object.defineProperty(TypeWrapper.prototype, "name", {
-        get: function () {
-            var symbol = this.tsType.symbol;
-            return (symbol && symbol.name) || '<anonymous>';
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(TypeWrapper.prototype, "kind", {
-        get: function () { return 'type'; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(TypeWrapper.prototype, "language", {
-        get: function () { return 'typescript'; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(TypeWrapper.prototype, "type", {
-        get: function () { return undefined; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(TypeWrapper.prototype, "container", {
-        get: function () { return undefined; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(TypeWrapper.prototype, "public", {
-        get: function () { return true; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(TypeWrapper.prototype, "callable", {
-        get: function () { return typeCallable(this.tsType); },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(TypeWrapper.prototype, "definition", {
-        get: function () { return definitionFromTsSymbol(this.tsType.getSymbol()); },
-        enumerable: true,
-        configurable: true
-    });
-    TypeWrapper.prototype.members = function () {
-        return new SymbolTableWrapper(this.tsType.getProperties(), this.context);
-    };
-    TypeWrapper.prototype.signatures = function () { return signaturesOf(this.tsType, this.context); };
-    TypeWrapper.prototype.selectSignature = function (types) {
-        return selectSignature(this.tsType, this.context, types);
-    };
-    TypeWrapper.prototype.indexed = function (argument) { return undefined; };
-    return TypeWrapper;
-}());
-var SymbolWrapper = (function () {
-    function SymbolWrapper(symbol, context) {
-        this.context = context;
-        this.symbol = symbol && context && (symbol.flags & SymbolFlags.Alias) ?
-            context.checker.getAliasedSymbol(symbol) :
-            symbol;
-    }
-    Object.defineProperty(SymbolWrapper.prototype, "name", {
-        get: function () { return this.symbol.name; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(SymbolWrapper.prototype, "kind", {
-        get: function () { return this.callable ? 'method' : 'property'; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(SymbolWrapper.prototype, "language", {
-        get: function () { return 'typescript'; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(SymbolWrapper.prototype, "type", {
-        get: function () { return new TypeWrapper(this.tsType, this.context); },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(SymbolWrapper.prototype, "container", {
-        get: function () { return getContainerOf(this.symbol, this.context); },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(SymbolWrapper.prototype, "public", {
-        get: function () {
-            // Symbols that are not explicitly made private are public.
-            return !isSymbolPrivate(this.symbol);
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(SymbolWrapper.prototype, "callable", {
-        get: function () { return typeCallable(this.tsType); },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(SymbolWrapper.prototype, "definition", {
-        get: function () { return definitionFromTsSymbol(this.symbol); },
-        enumerable: true,
-        configurable: true
-    });
-    SymbolWrapper.prototype.members = function () {
-        if (!this._members) {
-            if ((this.symbol.flags & (SymbolFlags.Class | SymbolFlags.Interface)) != 0) {
-                var declaredType = this.context.checker.getDeclaredTypeOfSymbol(this.symbol);
-                var typeWrapper = new TypeWrapper(declaredType, this.context);
-                this._members = typeWrapper.members();
-            }
-            else {
-                this._members = new SymbolTableWrapper(this.symbol.members, this.context);
-            }
-        }
-        return this._members;
-    };
-    SymbolWrapper.prototype.signatures = function () { return signaturesOf(this.tsType, this.context); };
-    SymbolWrapper.prototype.selectSignature = function (types) {
-        return selectSignature(this.tsType, this.context, types);
-    };
-    SymbolWrapper.prototype.indexed = function (argument) { return undefined; };
-    Object.defineProperty(SymbolWrapper.prototype, "tsType", {
-        get: function () {
-            var type = this._tsType;
-            if (!type) {
-                type = this._tsType =
-                    this.context.checker.getTypeOfSymbolAtLocation(this.symbol, this.context.node);
-            }
-            return type;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    return SymbolWrapper;
-}());
-var DeclaredSymbol = (function () {
-    function DeclaredSymbol(declaration) {
-        this.declaration = declaration;
-    }
-    Object.defineProperty(DeclaredSymbol.prototype, "name", {
-        get: function () { return this.declaration.name; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(DeclaredSymbol.prototype, "kind", {
-        get: function () { return this.declaration.kind; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(DeclaredSymbol.prototype, "language", {
-        get: function () { return 'ng-template'; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(DeclaredSymbol.prototype, "container", {
-        get: function () { return undefined; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(DeclaredSymbol.prototype, "type", {
-        get: function () { return this.declaration.type; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(DeclaredSymbol.prototype, "callable", {
-        get: function () { return this.declaration.type.callable; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(DeclaredSymbol.prototype, "public", {
-        get: function () { return true; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(DeclaredSymbol.prototype, "definition", {
-        get: function () { return this.declaration.definition; },
-        enumerable: true,
-        configurable: true
-    });
-    DeclaredSymbol.prototype.members = function () { return this.declaration.type.members(); };
-    DeclaredSymbol.prototype.signatures = function () { return this.declaration.type.signatures(); };
-    DeclaredSymbol.prototype.selectSignature = function (types) {
-        return this.declaration.type.selectSignature(types);
-    };
-    DeclaredSymbol.prototype.indexed = function (argument) { return undefined; };
-    return DeclaredSymbol;
-}());
-var SignatureWrapper = (function () {
-    function SignatureWrapper(signature, context) {
-        this.signature = signature;
-        this.context = context;
-    }
-    Object.defineProperty(SignatureWrapper.prototype, "arguments", {
-        get: function () {
-            return new SymbolTableWrapper(this.signature.getParameters(), this.context);
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(SignatureWrapper.prototype, "result", {
-        get: function () { return new TypeWrapper(this.signature.getReturnType(), this.context); },
-        enumerable: true,
-        configurable: true
-    });
-    return SignatureWrapper;
-}());
-var SignatureResultOverride = (function () {
-    function SignatureResultOverride(signature, resultType) {
-        this.signature = signature;
-        this.resultType = resultType;
-    }
-    Object.defineProperty(SignatureResultOverride.prototype, "arguments", {
-        get: function () { return this.signature.arguments; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(SignatureResultOverride.prototype, "result", {
-        get: function () { return this.resultType; },
-        enumerable: true,
-        configurable: true
-    });
-    return SignatureResultOverride;
-}());
-function toSymbolTable(symbols) {
-    if (isTypescriptVersion('2.2')) {
-        var result_2 = new Map();
-        for (var _i = 0, symbols_1 = symbols; _i < symbols_1.length; _i++) {
-            var symbol = symbols_1[_i];
-            result_2.set(symbol.name, symbol);
-        }
-        return result_2;
-    }
-    var result = {};
-    for (var _a = 0, symbols_2 = symbols; _a < symbols_2.length; _a++) {
-        var symbol = symbols_2[_a];
-        result[symbol.name] = symbol;
-    }
-    return result;
-}
-function toSymbols(symbolTable) {
-    if (!symbolTable)
-        return [];
-    var table = symbolTable;
-    if (typeof table.values === 'function') {
-        return Array.from(table.values());
-    }
-    var result = [];
-    var own = typeof table.hasOwnProperty === 'function' ?
-        function (name) { return table.hasOwnProperty(name); } :
-        function (name) { return !!table[name]; };
-    for (var name_1 in table) {
-        if (own(name_1)) {
-            result.push(table[name_1]);
-        }
-    }
-    return result;
-}
-var SymbolTableWrapper = (function () {
-    function SymbolTableWrapper(symbols, context) {
-        this.context = context;
-        symbols = symbols || [];
-        if (Array.isArray(symbols)) {
-            this.symbols = symbols;
-            this.symbolTable = toSymbolTable(symbols);
-        }
-        else {
-            this.symbols = toSymbols(symbols);
-            this.symbolTable = symbols;
-        }
-    }
-    Object.defineProperty(SymbolTableWrapper.prototype, "size", {
-        get: function () { return this.symbols.length; },
-        enumerable: true,
-        configurable: true
-    });
-    SymbolTableWrapper.prototype.get = function (key) {
-        var symbol = getFromSymbolTable(this.symbolTable, key);
-        return symbol ? new SymbolWrapper(symbol, this.context) : undefined;
-    };
-    SymbolTableWrapper.prototype.has = function (key) {
-        var table = this.symbolTable;
-        return (typeof table.has === 'function') ? table.has(key) : table[key] != null;
-    };
-    SymbolTableWrapper.prototype.values = function () {
-        var _this = this;
-        return this.symbols.map(function (s) { return new SymbolWrapper(s, _this.context); });
-    };
-    return SymbolTableWrapper;
-}());
-var MapSymbolTable = (function () {
-    function MapSymbolTable() {
-        this.map = new Map();
-        this._values = [];
-    }
-    Object.defineProperty(MapSymbolTable.prototype, "size", {
-        get: function () { return this.map.size; },
-        enumerable: true,
-        configurable: true
-    });
-    MapSymbolTable.prototype.get = function (key) { return this.map.get(key); };
-    MapSymbolTable.prototype.add = function (symbol) {
-        if (this.map.has(symbol.name)) {
-            var previous = this.map.get(symbol.name);
-            this._values[this._values.indexOf(previous)] = symbol;
-        }
-        this.map.set(symbol.name, symbol);
-        this._values.push(symbol);
-    };
-    MapSymbolTable.prototype.addAll = function (symbols) {
-        for (var _i = 0, symbols_3 = symbols; _i < symbols_3.length; _i++) {
-            var symbol = symbols_3[_i];
-            this.add(symbol);
-        }
-    };
-    MapSymbolTable.prototype.has = function (key) { return this.map.has(key); };
-    MapSymbolTable.prototype.values = function () {
-        // Switch to this.map.values once iterables are supported by the target language.
-        return this._values;
-    };
-    return MapSymbolTable;
-}());
-var PipesTable = (function () {
-    function PipesTable(pipes, context) {
-        this.pipes = pipes;
-        this.context = context;
-    }
-    Object.defineProperty(PipesTable.prototype, "size", {
-        get: function () { return this.pipes.length; },
-        enumerable: true,
-        configurable: true
-    });
-    PipesTable.prototype.get = function (key) {
-        var pipe = this.pipes.find(function (pipe) { return pipe.name == key; });
-        if (pipe) {
-            return new PipeSymbol(pipe, this.context);
-        }
-    };
-    PipesTable.prototype.has = function (key) { return this.pipes.find(function (pipe) { return pipe.name == key; }) != null; };
-    PipesTable.prototype.values = function () {
-        var _this = this;
-        return this.pipes.map(function (pipe) { return new PipeSymbol(pipe, _this.context); });
-    };
-    return PipesTable;
-}());
-var PipeSymbol = (function () {
-    function PipeSymbol(pipe, context) {
-        this.pipe = pipe;
-        this.context = context;
-    }
-    Object.defineProperty(PipeSymbol.prototype, "name", {
-        get: function () { return this.pipe.name; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(PipeSymbol.prototype, "kind", {
-        get: function () { return 'pipe'; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(PipeSymbol.prototype, "language", {
-        get: function () { return 'typescript'; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(PipeSymbol.prototype, "type", {
-        get: function () { return new TypeWrapper(this.tsType, this.context); },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(PipeSymbol.prototype, "container", {
-        get: function () { return undefined; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(PipeSymbol.prototype, "callable", {
-        get: function () { return true; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(PipeSymbol.prototype, "public", {
-        get: function () { return true; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(PipeSymbol.prototype, "definition", {
-        get: function () { return definitionFromTsSymbol(this.tsType.getSymbol()); },
-        enumerable: true,
-        configurable: true
-    });
-    PipeSymbol.prototype.members = function () { return EmptyTable.instance; };
-    PipeSymbol.prototype.signatures = function () { return signaturesOf(this.tsType, this.context); };
-    PipeSymbol.prototype.selectSignature = function (types) {
-        var signature = selectSignature(this.tsType, this.context, types);
-        if (types.length == 1) {
-            var parameterType = types[0];
-            if (parameterType instanceof TypeWrapper) {
-                var resultType = undefined;
-                switch (this.name) {
-                    case 'async':
-                        switch (parameterType.name) {
-                            case 'Observable':
-                            case 'Promise':
-                            case 'EventEmitter':
-                                resultType = getTypeParameterOf(parameterType.tsType, parameterType.name);
-                                break;
-                            default:
-                                resultType = getBuiltinTypeFromTs(BuiltinType.Any, this.context);
-                                break;
-                        }
-                        break;
-                    case 'slice':
-                        resultType = getTypeParameterOf(parameterType.tsType, 'Array');
-                        break;
-                }
-                if (resultType) {
-                    signature = new SignatureResultOverride(signature, new TypeWrapper(resultType, parameterType.context));
-                }
-            }
-        }
-        return signature;
-    };
-    PipeSymbol.prototype.indexed = function (argument) { return undefined; };
-    Object.defineProperty(PipeSymbol.prototype, "tsType", {
-        get: function () {
-            var type = this._tsType;
-            if (!type) {
-                var classSymbol = this.findClassSymbol(this.pipe.symbol);
-                if (classSymbol) {
-                    type = this._tsType = this.findTransformMethodType(classSymbol);
-                }
-                if (!type) {
-                    type = this._tsType = getBuiltinTypeFromTs(BuiltinType.Any, this.context);
-                }
-            }
-            return type;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    PipeSymbol.prototype.findClassSymbol = function (type) {
-        return findClassSymbolInContext(type, this.context);
-    };
-    PipeSymbol.prototype.findTransformMethodType = function (classSymbol) {
-        var classType = this.context.checker.getDeclaredTypeOfSymbol(classSymbol);
-        if (classType) {
-            var transform = classType.getProperty('transform');
-            if (transform) {
-                return this.context.checker.getTypeOfSymbolAtLocation(transform, this.context.node);
-            }
-        }
-    };
-    return PipeSymbol;
-}());
-function findClassSymbolInContext(type, context) {
-    var sourceFile = context.program.getSourceFile(type.filePath);
-    if (sourceFile) {
-        var moduleSymbol = sourceFile.module || sourceFile.symbol;
-        var exports_1 = context.checker.getExportsOfModule(moduleSymbol);
-        return (exports_1 || []).find(function (symbol) { return symbol.name == type.name; });
-    }
-}
-var EmptyTable = (function () {
-    function EmptyTable() {
-    }
-    Object.defineProperty(EmptyTable.prototype, "size", {
-        get: function () { return 0; },
-        enumerable: true,
-        configurable: true
-    });
-    EmptyTable.prototype.get = function (key) { return undefined; };
-    EmptyTable.prototype.has = function (key) { return false; };
-    EmptyTable.prototype.values = function () { return []; };
-    return EmptyTable;
-}());
-EmptyTable.instance = new EmptyTable();
 function findTsConfig(fileName) {
     var dir = dirname(fileName);
     while (existsSync(dir)) {
@@ -3935,53 +2287,6 @@ function findTsConfig(fileName) {
             break;
         dir = parentDir;
     }
-}
-function isSymbolPrivate(s) {
-    return !!s.valueDeclaration && isPrivate(s.valueDeclaration);
-}
-function getBuiltinTypeFromTs(kind, context) {
-    var type;
-    var checker = context.checker;
-    var node = context.node;
-    switch (kind) {
-        case BuiltinType.Any:
-            type = checker.getTypeAtLocation(setParents({
-                kind: SyntaxKind.AsExpression,
-                expression: { kind: SyntaxKind.TrueKeyword },
-                type: { kind: SyntaxKind.AnyKeyword }
-            }, node));
-            break;
-        case BuiltinType.Boolean:
-            type =
-                checker.getTypeAtLocation(setParents({ kind: SyntaxKind.TrueKeyword }, node));
-            break;
-        case BuiltinType.Null:
-            type =
-                checker.getTypeAtLocation(setParents({ kind: SyntaxKind.NullKeyword }, node));
-            break;
-        case BuiltinType.Number:
-            var numeric = { kind: SyntaxKind.NumericLiteral };
-            setParents({ kind: SyntaxKind.ExpressionStatement, expression: numeric }, node);
-            type = checker.getTypeAtLocation(numeric);
-            break;
-        case BuiltinType.String:
-            type = checker.getTypeAtLocation(setParents({ kind: SyntaxKind.NoSubstitutionTemplateLiteral }, node));
-            break;
-        case BuiltinType.Undefined:
-            type = checker.getTypeAtLocation(setParents({
-                kind: SyntaxKind.VoidExpression,
-                expression: { kind: SyntaxKind.NumericLiteral }
-            }, node));
-            break;
-        default:
-            throw new Error("Internal error, unhandled literal kind " + kind + ":" + BuiltinType[kind]);
-    }
-    return type;
-}
-function setParents(node, parent) {
-    node.parent = parent;
-    forEachChild(node, function (child) { return setParents(child, node); });
-    return node;
 }
 function spanOf$1(node) {
     return { start: node.getStart(), end: node.getEnd() };
@@ -4005,105 +2310,6 @@ function spanAt(sourceFile, line, column) {
             return { start: node.getStart(), end: node.getEnd() };
         }
     }
-}
-function definitionFromTsSymbol(symbol) {
-    var declarations = symbol.declarations;
-    if (declarations) {
-        return declarations.map(function (declaration) {
-            var sourceFile = declaration.getSourceFile();
-            return {
-                fileName: sourceFile.fileName,
-                span: { start: declaration.getStart(), end: declaration.getEnd() }
-            };
-        });
-    }
-}
-function parentDeclarationOf(node) {
-    while (node) {
-        switch (node.kind) {
-            case SyntaxKind.ClassDeclaration:
-            case SyntaxKind.InterfaceDeclaration:
-                return node;
-            case SyntaxKind.SourceFile:
-                return undefined;
-        }
-        node = node.parent;
-    }
-}
-function getContainerOf(symbol, context) {
-    if (symbol.getFlags() & SymbolFlags.ClassMember && symbol.declarations) {
-        for (var _i = 0, _a = symbol.declarations; _i < _a.length; _i++) {
-            var declaration = _a[_i];
-            var parent_1 = parentDeclarationOf(declaration);
-            if (parent_1) {
-                var type = context.checker.getTypeAtLocation(parent_1);
-                if (type) {
-                    return new TypeWrapper(type, context);
-                }
-            }
-        }
-    }
-}
-function getTypeParameterOf(type, name) {
-    if (type && type.symbol && type.symbol.name == name) {
-        var typeArguments = type.typeArguments;
-        if (typeArguments && typeArguments.length <= 1) {
-            return typeArguments[0];
-        }
-    }
-}
-function typeKindOf(type) {
-    if (type) {
-        if (type.flags & TypeFlags.Any) {
-            return BuiltinType.Any;
-        }
-        else if (type.flags & (TypeFlags.String | TypeFlags.StringLike | TypeFlags.StringLiteral)) {
-            return BuiltinType.String;
-        }
-        else if (type.flags & (TypeFlags.Number | TypeFlags.NumberLike)) {
-            return BuiltinType.Number;
-        }
-        else if (type.flags & (TypeFlags.Undefined)) {
-            return BuiltinType.Undefined;
-        }
-        else if (type.flags & (TypeFlags.Null)) {
-            return BuiltinType.Null;
-        }
-        else if (type.flags & TypeFlags.Union) {
-            // If all the constituent types of a union are the same kind, it is also that kind.
-            var candidate = null;
-            var unionType = type;
-            if (unionType.types.length > 0) {
-                candidate = typeKindOf(unionType.types[0]);
-                for (var _i = 0, _a = unionType.types; _i < _a.length; _i++) {
-                    var subType = _a[_i];
-                    if (candidate != typeKindOf(subType)) {
-                        return BuiltinType.Other;
-                    }
-                }
-            }
-            if (candidate != null) {
-                return candidate;
-            }
-        }
-        else if (type.flags & TypeFlags.TypeParameter) {
-            return BuiltinType.Unbound;
-        }
-    }
-    return BuiltinType.Other;
-}
-function getFromSymbolTable(symbolTable, key) {
-    var table = symbolTable;
-    var symbol;
-    if (typeof table.get === 'function') {
-        // TS 2.2 uses a Map
-        symbol = table.get(key);
-    }
-    else {
-        // TS pre-2.2 uses an object
-        symbol = table[key];
-    }
-    return symbol;
 }
 
 /**
@@ -4388,7 +2594,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version('4.2.0-beta.0-c5ce040');
+var VERSION = new Version('4.2.0-beta.0-a2dcb7b');
 
 /**
  * @license

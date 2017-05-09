@@ -92,5 +92,4 @@ export declare class TypeScriptServiceHost implements LanguageServiceHost {
     private getDeclarationFromNode(sourceFile, node);
     private stringOf(node);
     private findNode(sourceFile, position);
-    private findLiteralType(kind, context);
 }

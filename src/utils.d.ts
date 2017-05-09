@@ -5,7 +5,8 @@
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-import { CompileTypeMetadata, ParseSourceSpan } from '@angular/compiler';
+import { CompileTypeMetadata, ParseSourceSpan, TemplateAst, TemplateAstPath } from '@angular/compiler';
+import { DiagnosticTemplateInfo } from '@angular/compiler-cli';
 import { SelectorInfo, TemplateInfo } from './common';
 import { Span } from './types';
 export interface SpanHolder {
@@ -28,3 +29,5 @@ export declare function uniqueByName<T extends {
     name: string;
 }>(elements: T[] | undefined): T[] | undefined;
 export declare function isTypescriptVersion(low: string, high?: string): boolean;
+export declare function diagnosticInfoFromTemplateInfo(info: TemplateInfo): DiagnosticTemplateInfo;
+export declare function findTemplateAstAt(ast: TemplateAst[], position: number, allowWidening?: boolean): TemplateAstPath;
