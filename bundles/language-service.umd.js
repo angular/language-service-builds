@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.2.0-beta.1-ce1d7c4
+ * @license Angular v4.2.0-beta.1-5afaa39
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2009,7 +2009,7 @@ var __extends$2$1 = (undefined && undefined.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 /**
- * @license Angular v4.2.0-beta.1-ce1d7c4
+ * @license Angular v4.2.0-beta.1-5afaa39
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2861,7 +2861,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('4.2.0-beta.1-ce1d7c4');
+var VERSION$2 = new Version('4.2.0-beta.1-5afaa39');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -16593,7 +16593,7 @@ var __extends$1$1 = (undefined && undefined.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 /**
- * @license Angular v4.2.0-beta.1-ce1d7c4
+ * @license Angular v4.2.0-beta.1-5afaa39
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -16612,7 +16612,7 @@ var __extends$1$1 = (undefined && undefined.__extends) || function (d, b) {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('4.2.0-beta.1-ce1d7c4');
+var VERSION$1 = new Version('4.2.0-beta.1-5afaa39');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -35231,6 +35231,7 @@ var _EmittedLine = (function () {
      */
     function _EmittedLine(indent) {
         this.indent = indent;
+        this.partsLength = 0;
         this.parts = [];
         this.srcSpans = [];
     }
@@ -35281,6 +35282,12 @@ var EmitterVisitorContext = (function () {
      */
     EmitterVisitorContext.prototype.lineIsEmpty = function () { return this._currentLine.parts.length === 0; };
     /**
+     * @return {?}
+     */
+    EmitterVisitorContext.prototype.lineLength = function () {
+        return this._currentLine.indent * _INDENT_WITH.length + this._currentLine.partsLength;
+    };
+    /**
      * @param {?} from
      * @param {?} part
      * @param {?=} newLine
@@ -35290,6 +35297,7 @@ var EmitterVisitorContext = (function () {
         if (newLine === void 0) { newLine = false; }
         if (part.length > 0) {
             this._currentLine.parts.push(part);
+            this._currentLine.partsLength += part.length;
             this._currentLine.srcSpans.push(from && from.sourceSpan || null);
         }
         if (newLine) {
@@ -35309,14 +35317,18 @@ var EmitterVisitorContext = (function () {
      */
     EmitterVisitorContext.prototype.incIndent = function () {
         this._indent++;
-        this._currentLine.indent = this._indent;
+        if (this.lineIsEmpty()) {
+            this._currentLine.indent = this._indent;
+        }
     };
     /**
      * @return {?}
      */
     EmitterVisitorContext.prototype.decIndent = function () {
         this._indent--;
-        this._currentLine.indent = this._indent;
+        if (this.lineIsEmpty()) {
+            this._currentLine.indent = this._indent;
+        }
     };
     /**
      * @param {?} clazz
@@ -35825,12 +35837,9 @@ var AbstractEmitterVisitor = (function () {
      * @return {?}
      */
     AbstractEmitterVisitor.prototype.visitLiteralArrayExpr = function (ast, ctx) {
-        var /** @type {?} */ useNewLine = ast.entries.length > 1;
-        ctx.print(ast, "[", useNewLine);
-        ctx.incIndent();
-        this.visitAllExpressions(ast.entries, ctx, ',', useNewLine);
-        ctx.decIndent();
-        ctx.print(ast, "]", useNewLine);
+        ctx.print(ast, "[");
+        this.visitAllExpressions(ast.entries, ctx, ',');
+        ctx.print(ast, "]");
         return null;
     };
     /**
@@ -35840,15 +35849,12 @@ var AbstractEmitterVisitor = (function () {
      */
     AbstractEmitterVisitor.prototype.visitLiteralMapExpr = function (ast, ctx) {
         var _this = this;
-        var /** @type {?} */ useNewLine = ast.entries.length > 1;
-        ctx.print(ast, "{", useNewLine);
-        ctx.incIndent();
+        ctx.print(ast, "{");
         this.visitAllObjects(function (entry) {
-            ctx.print(ast, escapeIdentifier(entry.key, _this._escapeDollarInStrings, entry.quoted) + ": ");
+            ctx.print(ast, escapeIdentifier(entry.key, _this._escapeDollarInStrings, entry.quoted) + ":");
             entry.value.visitExpression(_this, ctx);
-        }, ast.entries, ctx, ',', useNewLine);
-        ctx.decIndent();
-        ctx.print(ast, "}", useNewLine);
+        }, ast.entries, ctx, ',');
+        ctx.print(ast, "}");
         return null;
     };
     /**
@@ -35866,13 +35872,11 @@ var AbstractEmitterVisitor = (function () {
      * @param {?} expressions
      * @param {?} ctx
      * @param {?} separator
-     * @param {?=} newLine
      * @return {?}
      */
-    AbstractEmitterVisitor.prototype.visitAllExpressions = function (expressions, ctx, separator, newLine) {
+    AbstractEmitterVisitor.prototype.visitAllExpressions = function (expressions, ctx, separator) {
         var _this = this;
-        if (newLine === void 0) { newLine = false; }
-        this.visitAllObjects(function (expr) { return expr.visitExpression(_this, ctx); }, expressions, ctx, separator, newLine);
+        this.visitAllObjects(function (expr) { return expr.visitExpression(_this, ctx); }, expressions, ctx, separator);
     };
     /**
      * @template T
@@ -35880,19 +35884,31 @@ var AbstractEmitterVisitor = (function () {
      * @param {?} expressions
      * @param {?} ctx
      * @param {?} separator
-     * @param {?=} newLine
      * @return {?}
      */
-    AbstractEmitterVisitor.prototype.visitAllObjects = function (handler, expressions, ctx, separator, newLine) {
-        if (newLine === void 0) { newLine = false; }
+    AbstractEmitterVisitor.prototype.visitAllObjects = function (handler, expressions, ctx, separator) {
+        var /** @type {?} */ incrementedIndent = false;
         for (var /** @type {?} */ i = 0; i < expressions.length; i++) {
             if (i > 0) {
-                ctx.print(null, separator, newLine);
+                if (ctx.lineLength() > 80) {
+                    ctx.print(null, separator, true);
+                    if (!incrementedIndent) {
+                        // continuation are marked with double indent.
+                        ctx.incIndent();
+                        ctx.incIndent();
+                        incrementedIndent = true;
+                    }
+                }
+                else {
+                    ctx.print(null, separator, false);
+                }
             }
             handler(expressions[i]);
         }
-        if (newLine) {
-            ctx.println();
+        if (incrementedIndent) {
+            // continuation are marked with double indent.
+            ctx.decIndent();
+            ctx.decIndent();
         }
     };
     /**
@@ -36453,7 +36469,7 @@ var _TsEmitterVisitor = (function (_super) {
         if (filePath != this._genFilePath) {
             var /** @type {?} */ prefix = this.importsWithPrefixes.get(filePath);
             if (prefix == null) {
-                prefix = "import" + this.importsWithPrefixes.size;
+                prefix = "i" + this.importsWithPrefixes.size;
                 this.importsWithPrefixes.set(filePath, prefix);
             }
             ctx.print(null, prefix + ".");
@@ -46345,7 +46361,7 @@ var core_1$1 = require$$0$12;
 /**
  * @stable
  */
-var VERSION$5 = new core_1$1.Version('4.2.0-beta.1-ce1d7c4');
+var VERSION$5 = new core_1$1.Version('4.2.0-beta.1-5afaa39');
 
 
 var version = {
@@ -48284,7 +48300,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v4.2.0-beta.1-ce1d7c4
+ * @license Angular v4.2.0-beta.1-5afaa39
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -50880,7 +50896,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('4.2.0-beta.1-ce1d7c4');
+var VERSION$$1 = new Version('4.2.0-beta.1-5afaa39');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
