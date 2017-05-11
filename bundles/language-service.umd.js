@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.2.0-beta.1-2eca6e6
+ * @license Angular v4.2.0-beta.1-b9521b5
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2009,7 +2009,7 @@ var __extends$2$1 = (undefined && undefined.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 /**
- * @license Angular v4.2.0-beta.1-2eca6e6
+ * @license Angular v4.2.0-beta.1-b9521b5
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2861,7 +2861,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('4.2.0-beta.1-2eca6e6');
+var VERSION$2 = new Version('4.2.0-beta.1-b9521b5');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -16367,7 +16367,7 @@ var __extends$1$1 = (undefined && undefined.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 /**
- * @license Angular v4.2.0-beta.1-2eca6e6
+ * @license Angular v4.2.0-beta.1-b9521b5
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -16386,7 +16386,7 @@ var __extends$1$1 = (undefined && undefined.__extends) || function (d, b) {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('4.2.0-beta.1-2eca6e6');
+var VERSION$1 = new Version('4.2.0-beta.1-b9521b5');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -19320,6 +19320,28 @@ var PrefixNot = (function (_super) {
     };
     return PrefixNot;
 }(AST));
+var NonNullAssert = (function (_super) {
+    __extends$1$1(NonNullAssert, _super);
+    /**
+     * @param {?} span
+     * @param {?} expression
+     */
+    function NonNullAssert(span, expression) {
+        var _this = _super.call(this, span) || this;
+        _this.expression = expression;
+        return _this;
+    }
+    /**
+     * @param {?} visitor
+     * @param {?=} context
+     * @return {?}
+     */
+    NonNullAssert.prototype.visit = function (visitor, context) {
+        if (context === void 0) { context = null; }
+        return visitor.visitNonNullAssert(this, context);
+    };
+    return NonNullAssert;
+}(AST));
 var MethodCall = (function (_super) {
     __extends$1$1(MethodCall, _super);
     /**
@@ -19536,6 +19558,12 @@ var NullAstVisitor = (function () {
      * @param {?} context
      * @return {?}
      */
+    NullAstVisitor.prototype.visitNonNullAssert = function (ast, context) { };
+    /**
+     * @param {?} ast
+     * @param {?} context
+     * @return {?}
+     */
     NullAstVisitor.prototype.visitPropertyRead = function (ast, context) { };
     /**
      * @param {?} ast
@@ -19683,6 +19711,15 @@ var RecursiveAstVisitor = (function () {
      * @return {?}
      */
     RecursiveAstVisitor.prototype.visitPrefixNot = function (ast, context) {
+        ast.expression.visit(this);
+        return null;
+    };
+    /**
+     * @param {?} ast
+     * @param {?} context
+     * @return {?}
+     */
+    RecursiveAstVisitor.prototype.visitNonNullAssert = function (ast, context) {
         ast.expression.visit(this);
         return null;
     };
@@ -19845,6 +19882,14 @@ var AstTransformer = (function () {
      */
     AstTransformer.prototype.visitPrefixNot = function (ast, context) {
         return new PrefixNot(ast.span, ast.expression.visit(this));
+    };
+    /**
+     * @param {?} ast
+     * @param {?} context
+     * @return {?}
+     */
+    AstTransformer.prototype.visitNonNullAssert = function (ast, context) {
+        return new NonNullAssert(ast.span, ast.expression.visit(this));
     };
     /**
      * @param {?} ast
@@ -20023,6 +20068,11 @@ function visitAstChildren(ast, visitor, context) {
          * @return {?}
          */
         visitPrefixNot: function (ast) { visit(ast.expression); },
+        /**
+         * @param {?} ast
+         * @return {?}
+         */
+        visitNonNullAssert: function (ast) { visit(ast.expression); },
         /**
          * @param {?} ast
          * @return {?}
@@ -21429,6 +21479,9 @@ var _ParseAST = (function () {
                 this.expectCharacter($RPAREN);
                 result = new FunctionCall(this.span(result.span.start), result, args);
             }
+            else if (this.optionalOperator('!')) {
+                result = new NonNullAssert(this.span(result.span.start), result);
+            }
             else {
                 return result;
             }
@@ -21793,6 +21846,12 @@ var SimpleExpressionChecker = (function () {
      * @return {?}
      */
     SimpleExpressionChecker.prototype.visitPrefixNot = function (ast, context) { };
+    /**
+     * @param {?} ast
+     * @param {?} context
+     * @return {?}
+     */
+    SimpleExpressionChecker.prototype.visitNonNullAssert = function (ast, context) { };
     /**
      * @param {?} ast
      * @param {?} context
@@ -33039,6 +33098,27 @@ var NotExpr = (function (_super) {
     };
     return NotExpr;
 }(Expression));
+var AssertNotNull = (function (_super) {
+    __extends$1$1(AssertNotNull, _super);
+    /**
+     * @param {?} condition
+     * @param {?=} sourceSpan
+     */
+    function AssertNotNull(condition, sourceSpan) {
+        var _this = _super.call(this, condition.type, sourceSpan) || this;
+        _this.condition = condition;
+        return _this;
+    }
+    /**
+     * @param {?} visitor
+     * @param {?} context
+     * @return {?}
+     */
+    AssertNotNull.prototype.visitExpression = function (visitor, context) {
+        return visitor.visitAssertNotNullExpr(this, context);
+    };
+    return AssertNotNull;
+}(Expression));
 var CastExpr = (function (_super) {
     __extends$1$1(CastExpr, _super);
     /**
@@ -33690,6 +33770,14 @@ var AstTransformer$1 = (function () {
      * @param {?} context
      * @return {?}
      */
+    AstTransformer$1.prototype.visitAssertNotNullExpr = function (ast, context) {
+        return this.transformExpr(new AssertNotNull(ast.condition.visitExpression(this, context), ast.sourceSpan), context);
+    };
+    /**
+     * @param {?} ast
+     * @param {?} context
+     * @return {?}
+     */
     AstTransformer$1.prototype.visitCastExpr = function (ast, context) {
         return this.transformExpr(new CastExpr(ast.value.visitExpression(this, context), ast.type, ast.sourceSpan), context);
     };
@@ -33948,6 +34036,15 @@ var RecursiveAstVisitor$1 = (function () {
      * @return {?}
      */
     RecursiveAstVisitor$1.prototype.visitNotExpr = function (ast, context) {
+        ast.condition.visitExpression(this, context);
+        return ast;
+    };
+    /**
+     * @param {?} ast
+     * @param {?} context
+     * @return {?}
+     */
+    RecursiveAstVisitor$1.prototype.visitAssertNotNullExpr = function (ast, context) {
         ast.condition.visitExpression(this, context);
         return ast;
     };
@@ -34316,6 +34413,14 @@ function literalMap(values, type, quoted) {
  */
 function not(expr, sourceSpan) {
     return new NotExpr(expr, sourceSpan);
+}
+/**
+ * @param {?} expr
+ * @param {?=} sourceSpan
+ * @return {?}
+ */
+function assertNotNull(expr, sourceSpan) {
+    return new AssertNotNull(expr, sourceSpan);
 }
 /**
  * @param {?} params
@@ -35394,6 +35499,15 @@ var AbstractEmitterVisitor = (function () {
         return null;
     };
     /**
+     * @param {?} ast
+     * @param {?} ctx
+     * @return {?}
+     */
+    AbstractEmitterVisitor.prototype.visitAssertNotNullExpr = function (ast, ctx) {
+        ast.condition.visitExpression(this, ctx);
+        return null;
+    };
+    /**
      * @abstract
      * @param {?} ast
      * @param {?} ctx
@@ -35777,6 +35891,16 @@ var _TsEmitterVisitor = (function (_super) {
     _TsEmitterVisitor.prototype.visitExternalExpr = function (ast, ctx) {
         this._visitIdentifier(ast.value, ast.typeParams, ctx);
         return null;
+    };
+    /**
+     * @param {?} ast
+     * @param {?} ctx
+     * @return {?}
+     */
+    _TsEmitterVisitor.prototype.visitAssertNotNullExpr = function (ast, ctx) {
+        var /** @type {?} */ result = _super.prototype.visitAssertNotNullExpr.call(this, ast, ctx);
+        ctx.print(ast, '!');
+        return result;
     };
     /**
      * @param {?} stmt
@@ -37788,6 +37912,14 @@ var _AstToIrVisitor = (function () {
      * @param {?} mode
      * @return {?}
      */
+    _AstToIrVisitor.prototype.visitNonNullAssert = function (ast, mode) {
+        return convertToStatementIfNeeded(mode, assertNotNull(this._visit(ast.expression, _Mode.Expression)));
+    };
+    /**
+     * @param {?} ast
+     * @param {?} mode
+     * @return {?}
+     */
     _AstToIrVisitor.prototype.visitPropertyRead = function (ast, mode) {
         var /** @type {?} */ leftMostSafe = this.leftMostSafeNode(ast);
         if (leftMostSafe) {
@@ -38022,6 +38154,11 @@ var _AstToIrVisitor = (function () {
              * @param {?} ast
              * @return {?}
              */
+            visitNonNullAssert: function (ast) { return null; },
+            /**
+             * @param {?} ast
+             * @return {?}
+             */
             visitPropertyRead: function (ast) { return visit(this, ast.receiver); },
             /**
              * @param {?} ast
@@ -38133,6 +38270,11 @@ var _AstToIrVisitor = (function () {
              * @return {?}
              */
             visitPrefixNot: function (ast) { return visit(this, ast.expression); },
+            /**
+             * @param {?} ast
+             * @return {?}
+             */
+            visitNonNullAssert: function (ast) { return visit(this, ast.expression); },
             /**
              * @param {?} ast
              * @return {?}
@@ -42308,6 +42450,14 @@ var StatementInterpreter = (function () {
      * @param {?} ctx
      * @return {?}
      */
+    StatementInterpreter.prototype.visitAssertNotNullExpr = function (ast, ctx) {
+        return ast.condition.visitExpression(this, ctx);
+    };
+    /**
+     * @param {?} ast
+     * @param {?} ctx
+     * @return {?}
+     */
     StatementInterpreter.prototype.visitCastExpr = function (ast, ctx) {
         return ast.value.visitExpression(this, ctx);
     };
@@ -43859,6 +44009,7 @@ var compiler_es5 = Object.freeze({
 	Interpolation: Interpolation,
 	Binary: Binary,
 	PrefixNot: PrefixNot,
+	NonNullAssert: NonNullAssert,
 	MethodCall: MethodCall,
 	SafeMethodCall: SafeMethodCall,
 	FunctionCall: FunctionCall,
@@ -46142,7 +46293,7 @@ var core_1$1 = require$$0$12;
 /**
  * @stable
  */
-var VERSION$5 = new core_1$1.Version('4.2.0-beta.1-2eca6e6');
+var VERSION$5 = new core_1$1.Version('4.2.0-beta.1-b9521b5');
 
 
 var version = {
@@ -46473,6 +46624,10 @@ var AstType = (function () {
     AstType.prototype.visitPrefixNot = function (ast) {
         // The type of a prefix ! is always boolean.
         return this.query.getBuiltinType(symbols_1.BuiltinType.Boolean);
+    };
+    AstType.prototype.visitNonNullAssert = function (ast) {
+        var expressionType = this.getType(ast.expression);
+        return this.query.getNonNullableType(expressionType);
     };
     AstType.prototype.visitPropertyRead = function (ast) {
         return this.resolvePropertyRead(this.getType(ast.receiver), ast);
@@ -48077,7 +48232,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v4.2.0-beta.1-2eca6e6
+ * @license Angular v4.2.0-beta.1-b9521b5
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -48324,6 +48479,7 @@ function getExpressionCompletions(scope, ast, position, query) {
             }
         },
         visitPrefixNot: function (ast) { },
+        visitNonNullAssert: function (ast) { },
         visitPropertyRead: function (ast) {
             var receiverType = getType(ast.receiver);
             result = receiverType ? receiverType.members() : scope;
@@ -48387,6 +48543,7 @@ function getExpressionSymbol(scope, ast, position, query) {
             }
         },
         visitPrefixNot: function (ast) { },
+        visitNonNullAssert: function (ast) { },
         visitPropertyRead: function (ast) {
             var receiverType = getType(ast.receiver);
             symbol = receiverType && receiverType.members().get(ast.name);
@@ -50671,7 +50828,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('4.2.0-beta.1-2eca6e6');
+var VERSION$$1 = new Version('4.2.0-beta.1-b9521b5');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;

@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.2.0-beta.1-2eca6e6
+ * @license Angular v4.2.0-beta.1-b9521b5
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -252,6 +252,7 @@ function getExpressionCompletions(scope, ast, position, query) {
             }
         },
         visitPrefixNot: function (ast) { },
+        visitNonNullAssert: function (ast) { },
         visitPropertyRead: function (ast) {
             var receiverType = getType(ast.receiver);
             result = receiverType ? receiverType.members() : scope;
@@ -315,6 +316,7 @@ function getExpressionSymbol(scope, ast, position, query) {
             }
         },
         visitPrefixNot: function (ast) { },
+        visitNonNullAssert: function (ast) { },
         visitPropertyRead: function (ast) {
             var receiverType = getType(ast.receiver);
             symbol = receiverType && receiverType.members().get(ast.name);
@@ -2599,7 +2601,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version('4.2.0-beta.1-2eca6e6');
+var VERSION = new Version('4.2.0-beta.1-b9521b5');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
