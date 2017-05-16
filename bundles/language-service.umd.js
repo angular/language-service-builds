@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.2.0-beta.1-c805082
+ * @license Angular v4.2.0-beta.1-d761059
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2014,7 +2014,7 @@ var __extends$2$1 = (undefined && undefined.__extends) || (function () {
     };
 })();
 /**
- * @license Angular v4.2.0-beta.1-c805082
+ * @license Angular v4.2.0-beta.1-d761059
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2866,7 +2866,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('4.2.0-beta.1-c805082');
+var VERSION$2 = new Version('4.2.0-beta.1-d761059');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -16813,7 +16813,7 @@ var __extends$1$1 = (undefined && undefined.__extends) || (function () {
     };
 })();
 /**
- * @license Angular v4.2.0-beta.1-c805082
+ * @license Angular v4.2.0-beta.1-d761059
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -16832,7 +16832,7 @@ var __extends$1$1 = (undefined && undefined.__extends) || (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('4.2.0-beta.1-c805082');
+var VERSION$1 = new Version('4.2.0-beta.1-d761059');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -46608,7 +46608,7 @@ var core_1 = require$$0$12;
 /**
  * @stable
  */
-exports.VERSION = new core_1.Version('4.2.0-beta.1-c805082');
+exports.VERSION = new core_1.Version('4.2.0-beta.1-d761059');
 
 });
 
@@ -46708,6 +46708,7 @@ var AstType = (function () {
         return this.diagnostics;
     };
     AstType.prototype.visitBinary = function (ast) {
+        var _this = this;
         // Treat undefined and null as other.
         function normalize(kind, other) {
             switch (kind) {
@@ -46717,8 +46718,28 @@ var AstType = (function () {
             }
             return kind;
         }
-        var leftType = this.getType(ast.left);
-        var rightType = this.getType(ast.right);
+        var getType = function (ast, operation) {
+            var type = _this.getType(ast);
+            if (type.nullable) {
+                switch (operation) {
+                    case '&&':
+                    case '||':
+                    case '==':
+                    case '!=':
+                    case '===':
+                    case '!==':
+                        // Nullable allowed.
+                        break;
+                    default:
+                        _this.reportError("The expression might be null", ast);
+                        break;
+                }
+                return _this.query.getNonNullableType(type);
+            }
+            return type;
+        };
+        var leftType = getType(ast.left, ast.operation);
+        var rightType = getType(ast.right, ast.operation);
         var leftRawKind = this.query.getTypeKind(leftType);
         var rightRawKind = this.query.getTypeKind(rightType);
         var leftKind = normalize(leftRawKind, rightRawKind);
@@ -46828,6 +46849,9 @@ var AstType = (function () {
     };
     AstType.prototype.visitConditional = function (ast) {
         // The type of a conditional is the union of the true and false conditions.
+        if (this.diagnostics) {
+            compiler_1.visitAstChildren(ast, this);
+        }
         return this.query.getTypeUnion(this.getType(ast.trueExp), this.getType(ast.falseExp));
     };
     AstType.prototype.visitFunctionCall = function (ast) {
@@ -48585,7 +48609,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v4.2.0-beta.1-c805082
+ * @license Angular v4.2.0-beta.1-d761059
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -51211,7 +51235,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('4.2.0-beta.1-c805082');
+var VERSION$$1 = new Version('4.2.0-beta.1-d761059');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
