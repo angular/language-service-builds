@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.2.0-beta.1-9a7f5d5
+ * @license Angular v4.2.0-beta.1-c805082
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2014,7 +2014,7 @@ var __extends$2$1 = (undefined && undefined.__extends) || (function () {
     };
 })();
 /**
- * @license Angular v4.2.0-beta.1-9a7f5d5
+ * @license Angular v4.2.0-beta.1-c805082
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2866,7 +2866,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('4.2.0-beta.1-9a7f5d5');
+var VERSION$2 = new Version('4.2.0-beta.1-c805082');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -4909,21 +4909,42 @@ var ApplicationInitStatus = (function () {
      */
     function ApplicationInitStatus(appInits) {
         var _this = this;
+        this.appInits = appInits;
+        this.initialized = false;
         this._done = false;
-        var asyncInitPromises = [];
-        if (appInits) {
-            for (var i = 0; i < appInits.length; i++) {
-                var initResult = appInits[i]();
+        this._donePromise = new Promise(function (res, rej) {
+            _this.resolve = res;
+            _this.reject = rej;
+        });
+    }
+    /**
+     * \@internal
+     * @return {?}
+     */
+    ApplicationInitStatus.prototype.runInitializers = function () {
+        var _this = this;
+        if (this.initialized) {
+            return;
+        }
+        var /** @type {?} */ asyncInitPromises = [];
+        var /** @type {?} */ complete = function () {
+            _this._done = true;
+            _this.resolve();
+        };
+        if (this.appInits) {
+            for (var /** @type {?} */ i = 0; i < this.appInits.length; i++) {
+                var /** @type {?} */ initResult = this.appInits[i]();
                 if (isPromise(initResult)) {
                     asyncInitPromises.push(initResult);
                 }
             }
         }
-        this._donePromise = Promise.all(asyncInitPromises).then(function () { _this._done = true; });
+        Promise.all(asyncInitPromises).then(function () { complete(); }).catch(function (e) { _this.reject(e); });
         if (asyncInitPromises.length === 0) {
-            this._done = true;
+            complete();
         }
-    }
+        this.initialized = true;
+    };
     Object.defineProperty(ApplicationInitStatus.prototype, "done", {
         /**
          * @return {?}
@@ -6670,6 +6691,7 @@ var PlatformRef_ = (function (_super) {
             ((ngZone)).onError.subscribe({ next: function (error) { exceptionHandler.handleError(error); } });
             return _callAndReportToErrorHandler(exceptionHandler, function () {
                 var /** @type {?} */ initStatus = moduleRef.injector.get(ApplicationInitStatus);
+                initStatus.runInitializers();
                 return initStatus.donePromise.then(function () {
                     _this._moduleDoBootstrap(moduleRef);
                     return moduleRef;
@@ -16791,7 +16813,7 @@ var __extends$1$1 = (undefined && undefined.__extends) || (function () {
     };
 })();
 /**
- * @license Angular v4.2.0-beta.1-9a7f5d5
+ * @license Angular v4.2.0-beta.1-c805082
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -16810,7 +16832,7 @@ var __extends$1$1 = (undefined && undefined.__extends) || (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('4.2.0-beta.1-9a7f5d5');
+var VERSION$1 = new Version('4.2.0-beta.1-c805082');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -46586,7 +46608,7 @@ var core_1 = require$$0$12;
 /**
  * @stable
  */
-exports.VERSION = new core_1.Version('4.2.0-beta.1-9a7f5d5');
+exports.VERSION = new core_1.Version('4.2.0-beta.1-c805082');
 
 });
 
@@ -48563,7 +48585,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v4.2.0-beta.1-9a7f5d5
+ * @license Angular v4.2.0-beta.1-c805082
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -51189,7 +51211,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('4.2.0-beta.1-9a7f5d5');
+var VERSION$$1 = new Version('4.2.0-beta.1-c805082');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
