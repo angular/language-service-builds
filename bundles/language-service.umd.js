@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.1.2-62a8618
+ * @license Angular v4.1.2-6f039d7
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2009,7 +2009,7 @@ var __extends$2$1 = (undefined && undefined.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 /**
- * @license Angular v4.1.2-62a8618
+ * @license Angular v4.1.2-6f039d7
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2861,7 +2861,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('4.1.2-62a8618');
+var VERSION$2 = new Version('4.1.2-6f039d7');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -4902,21 +4902,42 @@ var ApplicationInitStatus = (function () {
      */
     function ApplicationInitStatus(appInits) {
         var _this = this;
+        this.appInits = appInits;
+        this.initialized = false;
         this._done = false;
-        var asyncInitPromises = [];
-        if (appInits) {
-            for (var i = 0; i < appInits.length; i++) {
-                var initResult = appInits[i]();
+        this._donePromise = new Promise(function (res, rej) {
+            _this.resolve = res;
+            _this.reject = rej;
+        });
+    }
+    /**
+     * \@internal
+     * @return {?}
+     */
+    ApplicationInitStatus.prototype.runInitializers = function () {
+        var _this = this;
+        if (this.initialized) {
+            return;
+        }
+        var /** @type {?} */ asyncInitPromises = [];
+        var /** @type {?} */ complete = function () {
+            _this._done = true;
+            _this.resolve();
+        };
+        if (this.appInits) {
+            for (var /** @type {?} */ i = 0; i < this.appInits.length; i++) {
+                var /** @type {?} */ initResult = this.appInits[i]();
                 if (isPromise(initResult)) {
                     asyncInitPromises.push(initResult);
                 }
             }
         }
-        this._donePromise = Promise.all(asyncInitPromises).then(function () { _this._done = true; });
+        Promise.all(asyncInitPromises).then(function () { complete(); }).catch(function (e) { _this.reject(e); });
         if (asyncInitPromises.length === 0) {
-            this._done = true;
+            complete();
         }
-    }
+        this.initialized = true;
+    };
     Object.defineProperty(ApplicationInitStatus.prototype, "done", {
         /**
          * @return {?}
@@ -6758,6 +6779,7 @@ var PlatformRef_ = (function (_super) {
             ((ngZone)).onError.subscribe({ next: function (error) { exceptionHandler.handleError(error); } });
             return _callAndReportToErrorHandler(exceptionHandler, function () {
                 var /** @type {?} */ initStatus = moduleRef.injector.get(ApplicationInitStatus);
+                initStatus.runInitializers();
                 return initStatus.donePromise.then(function () {
                     _this._moduleDoBootstrap(moduleRef);
                     return moduleRef;
@@ -16326,7 +16348,7 @@ var __extends$1$1 = (undefined && undefined.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 /**
- * @license Angular v4.1.2-62a8618
+ * @license Angular v4.1.2-6f039d7
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -16345,7 +16367,7 @@ var __extends$1$1 = (undefined && undefined.__extends) || function (d, b) {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('4.1.2-62a8618');
+var VERSION$1 = new Version('4.1.2-6f039d7');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -45094,7 +45116,7 @@ var core_1 = require$$0$13;
 /**
  * @stable
  */
-var VERSION$5 = new core_1.Version('4.1.2-62a8618');
+var VERSION$5 = new core_1.Version('4.1.2-6f039d7');
 
 
 var version$1 = {
@@ -45206,7 +45228,12 @@ function _extractLazyRoutesFromStaticModule(staticSymbol, reflector, host, ROUTE
         return acc;
     }, []);
     var importedSymbols = (moduleMetadata.imports || [])
-        .filter(function (i) { return i instanceof compiler_1$1.StaticSymbol; });
+        .filter(function (i) { return i instanceof compiler_1$1.StaticSymbol || i.ngModule instanceof compiler_1$1.StaticSymbol; })
+        .map(function (i) {
+        if (i instanceof compiler_1$1.StaticSymbol)
+            return i;
+        return i.ngModule;
+    });
     return importedSymbols
         .reduce(function (acc, i) {
         return acc.concat(_extractLazyRoutesFromStaticModule(i, reflector, host, ROUTES));
@@ -45404,7 +45431,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v4.1.2-62a8618
+ * @license Angular v4.1.2-6f039d7
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -49666,7 +49693,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('4.1.2-62a8618');
+var VERSION$$1 = new Version('4.1.2-6f039d7');
 
 exports.createLanguageService = createLanguageService;
 exports.create = create;
