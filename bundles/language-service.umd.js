@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.2.0-rc.0-85d4c4b
+ * @license Angular v4.2.0-rc.0-08dfe91
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2014,7 +2014,7 @@ var __extends$2$1 = (undefined && undefined.__extends) || (function () {
     };
 })();
 /**
- * @license Angular v4.2.0-rc.0-85d4c4b
+ * @license Angular v4.2.0-rc.0-08dfe91
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2866,7 +2866,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('4.2.0-rc.0-85d4c4b');
+var VERSION$2 = new Version('4.2.0-rc.0-08dfe91');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -17157,7 +17157,7 @@ var __extends$1$1 = (undefined && undefined.__extends) || (function () {
     };
 })();
 /**
- * @license Angular v4.2.0-rc.0-85d4c4b
+ * @license Angular v4.2.0-rc.0-08dfe91
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -17176,7 +17176,7 @@ var __extends$1$1 = (undefined && undefined.__extends) || (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('4.2.0-rc.0-85d4c4b');
+var VERSION$1 = new Version('4.2.0-rc.0-08dfe91');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -26905,17 +26905,22 @@ var Xliff2 = (function (_super) {
         var /** @type {?} */ units = [];
         messages.forEach(function (message) {
             var /** @type {?} */ unit = new Tag(_UNIT_TAG$1, { id: message.id });
+            var /** @type {?} */ notes = new Tag('notes');
             if (message.description || message.meaning) {
-                var /** @type {?} */ notes = new Tag('notes');
                 if (message.description) {
                     notes.children.push(new CR(8), new Tag('note', { category: 'description' }, [new Text$2(message.description)]));
                 }
                 if (message.meaning) {
                     notes.children.push(new CR(8), new Tag('note', { category: 'meaning' }, [new Text$2(message.meaning)]));
                 }
-                notes.children.push(new CR(6));
-                unit.children.push(new CR(6), notes);
             }
+            message.sources.forEach(function (source) {
+                notes.children.push(new CR(8), new Tag('note', { category: 'location' }, [
+                    new Text$2(source.filePath + ":" + source.startLine + (source.endLine !== source.startLine ? ',' + source.endLine : ''))
+                ]));
+            });
+            notes.children.push(new CR(6));
+            unit.children.push(new CR(6), notes);
             var /** @type {?} */ segment = new Tag('segment');
             segment.children.push(new CR(8), new Tag(_SOURCE_TAG$1, {}, visitor.serialize(message.nodes)), new CR(6));
             unit.children.push(new CR(6), segment, new CR(4));
@@ -46993,7 +46998,7 @@ var core_1 = require$$0$12;
 /**
  * @stable
  */
-exports.VERSION = new core_1.Version('4.2.0-rc.0-85d4c4b');
+exports.VERSION = new core_1.Version('4.2.0-rc.0-08dfe91');
 
 });
 
@@ -48994,7 +48999,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v4.2.0-rc.0-85d4c4b
+ * @license Angular v4.2.0-rc.0-08dfe91
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -51620,7 +51625,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('4.2.0-rc.0-85d4c4b');
+var VERSION$$1 = new Version('4.2.0-rc.0-08dfe91');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
