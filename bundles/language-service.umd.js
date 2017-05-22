@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.2.0-rc.0-afd703d
+ * @license Angular v4.2.0-rc.0-98849de
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2014,7 +2014,7 @@ var __extends$2$1 = (undefined && undefined.__extends) || (function () {
     };
 })();
 /**
- * @license Angular v4.2.0-rc.0-afd703d
+ * @license Angular v4.2.0-rc.0-98849de
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2866,7 +2866,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('4.2.0-rc.0-afd703d');
+var VERSION$2 = new Version('4.2.0-rc.0-98849de');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -17157,7 +17157,7 @@ var __extends$1$1 = (undefined && undefined.__extends) || (function () {
     };
 })();
 /**
- * @license Angular v4.2.0-rc.0-afd703d
+ * @license Angular v4.2.0-rc.0-98849de
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -17176,7 +17176,7 @@ var __extends$1$1 = (undefined && undefined.__extends) || (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('4.2.0-rc.0-afd703d');
+var VERSION$1 = new Version('4.2.0-rc.0-98849de');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -46952,7 +46952,7 @@ var core_1 = require$$0$12;
 /**
  * @stable
  */
-exports.VERSION = new core_1.Version('4.2.0-rc.0-afd703d');
+exports.VERSION = new core_1.Version('4.2.0-rc.0-98849de');
 
 });
 
@@ -48953,7 +48953,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v4.2.0-rc.0-afd703d
+ * @license Angular v4.2.0-rc.0-98849de
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -51579,7 +51579,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('4.2.0-rc.0-afd703d');
+var VERSION$$1 = new Version('4.2.0-rc.0-98849de');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
