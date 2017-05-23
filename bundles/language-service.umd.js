@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.2.0-rc.0-a80ac0a
+ * @license Angular v4.2.0-rc.0-1651a8f
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2014,7 +2014,7 @@ var __extends$2$1 = (undefined && undefined.__extends) || (function () {
     };
 })();
 /**
- * @license Angular v4.2.0-rc.0-a80ac0a
+ * @license Angular v4.2.0-rc.0-1651a8f
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2806,7 +2806,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('4.2.0-rc.0-a80ac0a');
+var VERSION$2 = new Version('4.2.0-rc.0-1651a8f');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -17002,7 +17002,7 @@ var __extends$1$1 = (undefined && undefined.__extends) || (function () {
     };
 })();
 /**
- * @license Angular v4.2.0-rc.0-a80ac0a
+ * @license Angular v4.2.0-rc.0-1651a8f
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -17021,7 +17021,7 @@ var __extends$1$1 = (undefined && undefined.__extends) || (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('4.2.0-rc.0-a80ac0a');
+var VERSION$1 = new Version('4.2.0-rc.0-1651a8f');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -41181,6 +41181,7 @@ var StaticReflector = (function () {
      * @return {?}
      */
     StaticReflector.prototype.parameters = function (type) {
+        var _this = this;
         if (!(type instanceof StaticSymbol)) {
             this.reportError(new Error("parameters received " + JSON.stringify(type) + " which is not a StaticSymbol"), type);
             return [];
@@ -41194,14 +41195,14 @@ var StaticReflector = (function () {
                 var /** @type {?} */ ctorData = members ? members['__ctor__'] : null;
                 if (ctorData) {
                     var /** @type {?} */ ctor = ((ctorData)).find(function (a) { return a['__symbolic'] == 'constructor'; });
-                    var /** @type {?} */ parameterTypes = (this.simplify(type, ctor['parameters'] || []));
+                    var /** @type {?} */ rawParameterTypes = (ctor['parameters']) || [];
                     var /** @type {?} */ parameterDecorators_1 = (this.simplify(type, ctor['parameterDecorators'] || []));
                     parameters_1 = [];
-                    parameterTypes.forEach(function (paramType, index) {
+                    rawParameterTypes.forEach(function (rawParamType, index) {
                         var /** @type {?} */ nestedResult = [];
-                        if (paramType) {
+                        var /** @type {?} */ paramType = _this.trySimplify(type, rawParamType);
+                        if (paramType)
                             nestedResult.push(paramType);
-                        }
                         var /** @type {?} */ decorators = parameterDecorators_1 ? parameterDecorators_1[index] : null;
                         if (decorators) {
                             nestedResult.push.apply(nestedResult, decorators);
@@ -45064,6 +45065,36 @@ var Evaluator = (function () {
                     typeReference.arguments = args_2;
                 }
                 return recordEntry(typeReference, node);
+            case ts.SyntaxKind.UnionType:
+                var unionType = node;
+                // Remove null and undefined from the list of unions.
+                var references = unionType.types
+                    .filter(function (n) { return n.kind != ts.SyntaxKind.NullKeyword &&
+                    n.kind != ts.SyntaxKind.UndefinedKeyword; })
+                    .map(function (n) { return _this.evaluateNode(n); });
+                // The remmaining reference must be the same. If two have type arguments consider them
+                // different even if the type arguments are the same.
+                var candidate = null;
+                for (var i = 0; i < references.length; i++) {
+                    var reference = references[i];
+                    if (schema_1.isMetadataSymbolicReferenceExpression(reference)) {
+                        if (candidate) {
+                            if (reference.name == candidate.name &&
+                                reference.module == candidate.module && !reference.arguments) {
+                                candidate = reference;
+                            }
+                        }
+                        else {
+                            candidate = reference;
+                        }
+                    }
+                    else {
+                        return reference;
+                    }
+                }
+                if (candidate)
+                    return candidate;
+                break;
             case ts.SyntaxKind.NoSubstitutionTemplateLiteral:
             case ts.SyntaxKind.StringLiteral:
             case ts.SyntaxKind.TemplateHead:
@@ -46820,7 +46851,7 @@ var core_1 = require$$0$12;
 /**
  * @stable
  */
-exports.VERSION = new core_1.Version('4.2.0-rc.0-a80ac0a');
+exports.VERSION = new core_1.Version('4.2.0-rc.0-1651a8f');
 
 });
 
@@ -48821,7 +48852,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v4.2.0-rc.0-a80ac0a
+ * @license Angular v4.2.0-rc.0-1651a8f
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -51446,7 +51477,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('4.2.0-rc.0-a80ac0a');
+var VERSION$$1 = new Version('4.2.0-rc.0-1651a8f');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
