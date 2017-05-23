@@ -1,12 +1,15 @@
 {
   "name": "@angular/language-service",
-  "version": "4.2.0-rc.0-1651a8f",
+  "version": "4.2.0-rc.0-fa809ec",
   "description": "Angular - language services",
   "main": "./bundles/language-service.umd.js",
   "module": "./@angular/language-service.es5.js",
   "typings": "./language-service.d.ts",
   "author": "angular",
   "license": "MIT",
+  "dependencies": {
+    "tslib": "^1.7.1"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/angular/angular.git"

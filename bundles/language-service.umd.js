@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.2.0-rc.0-1651a8f
+ * @license Angular v4.2.0-rc.0-fa809ec
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -18,7 +18,7 @@ module.exports = function(provided) {
   return result;
 }
 
-define(['exports', 'fs', 'typescript', 'path', 'reflect-metadata'], function (exports, fs, require$$1, require$$2, reflectMetadata) { 'use strict';
+define(['exports', 'tslib', 'fs', 'typescript', 'path', 'reflect-metadata'], function (exports, tslib_1, fs, require$$1, require$$2, reflectMetadata) { 'use strict';
 
 var fs__default = 'default' in fs ? fs['default'] : fs;
 var require$$1__default = 'default' in require$$1 ? require$$1['default'] : require$$1;
@@ -109,7 +109,7 @@ var tryCatch_1$1 = {
 	tryCatch: tryCatch_2
 };
 
-var __extends$4$1 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
+var __extends$3$1 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -119,7 +119,7 @@ var __extends$4$1 = (commonjsGlobal && commonjsGlobal.__extends) || function (d,
  * `unsubscribe` of a {@link Subscription}.
  */
 var UnsubscriptionError = (function (_super) {
-    __extends$4$1(UnsubscriptionError, _super);
+    __extends$3$1(UnsubscriptionError, _super);
     function UnsubscriptionError(errors) {
         _super.call(this);
         this.errors = errors;
@@ -317,7 +317,7 @@ var rxSubscriber = {
 	$$rxSubscriber: $$rxSubscriber
 };
 
-var __extends$3$1 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
+var __extends$2$1 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -337,7 +337,7 @@ var rxSubscriber_1$1 = rxSubscriber;
  * @class Subscriber<T>
  */
 var Subscriber = (function (_super) {
-    __extends$3$1(Subscriber, _super);
+    __extends$2$1(Subscriber, _super);
     /**
      * @param {Observer|function(value: T): void} [destinationOrNext] A partially
      * defined Observer or a `next` callback function.
@@ -459,7 +459,7 @@ var Subscriber_2 = Subscriber;
  * @extends {Ignored}
  */
 var SafeSubscriber = (function (_super) {
-    __extends$3$1(SafeSubscriber, _super);
+    __extends$2$1(SafeSubscriber, _super);
     function SafeSubscriber(_parent, observerOrNext, error, complete) {
         _super.call(this);
         this._parent = _parent;
@@ -754,7 +754,7 @@ var Observable_1 = {
 	Observable: Observable_2
 };
 
-var __extends$6 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
+var __extends$5 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -766,7 +766,7 @@ var Observable_1$3 = Observable_1;
  * @hide true
  */
 var ScalarObservable = (function (_super) {
-    __extends$6(ScalarObservable, _super);
+    __extends$5(ScalarObservable, _super);
     function ScalarObservable(value, scheduler) {
         _super.call(this);
         this.value = value;
@@ -816,7 +816,7 @@ var ScalarObservable_1$1 = {
 	ScalarObservable: ScalarObservable_2
 };
 
-var __extends$7 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
+var __extends$6 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -828,7 +828,7 @@ var Observable_1$4 = Observable_1;
  * @hide true
  */
 var EmptyObservable = (function (_super) {
-    __extends$7(EmptyObservable, _super);
+    __extends$6(EmptyObservable, _super);
     function EmptyObservable(scheduler) {
         _super.call(this);
         this.scheduler = scheduler;
@@ -911,7 +911,7 @@ var isScheduler_1$2 = {
 	isScheduler: isScheduler_2
 };
 
-var __extends$5 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
+var __extends$4$1 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -926,7 +926,7 @@ var isScheduler_1$1 = isScheduler_1$2;
  * @hide true
  */
 var ArrayObservable = (function (_super) {
-    __extends$5(ArrayObservable, _super);
+    __extends$4$1(ArrayObservable, _super);
     function ArrayObservable(array, scheduler) {
         _super.call(this);
         this.array = array;
@@ -1037,7 +1037,7 @@ var ArrayObservable_1$1 = {
 	ArrayObservable: ArrayObservable_2
 };
 
-var __extends$9 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
+var __extends$8 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -1049,7 +1049,7 @@ var Subscriber_1$3 = Subscriber_1$1;
  * @extends {Ignored}
  */
 var OuterSubscriber = (function (_super) {
-    __extends$9(OuterSubscriber, _super);
+    __extends$8(OuterSubscriber, _super);
     function OuterSubscriber() {
         _super.apply(this, arguments);
     }
@@ -1120,7 +1120,7 @@ var iterator = {
 	$$iterator: $$iterator
 };
 
-var __extends$10 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
+var __extends$9 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -1132,7 +1132,7 @@ var Subscriber_1$4 = Subscriber_1$1;
  * @extends {Ignored}
  */
 var InnerSubscriber = (function (_super) {
-    __extends$10(InnerSubscriber, _super);
+    __extends$9(InnerSubscriber, _super);
     function InnerSubscriber(parent, outerValue, outerIndex) {
         _super.call(this);
         this.parent = parent;
@@ -1242,7 +1242,7 @@ var subscribeToResult_1$1 = {
 	subscribeToResult: subscribeToResult_2
 };
 
-var __extends$8 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
+var __extends$7 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -1314,7 +1314,7 @@ var MergeAllOperator_1 = MergeAllOperator;
  * @extends {Ignored}
  */
 var MergeAllSubscriber = (function (_super) {
-    __extends$8(MergeAllSubscriber, _super);
+    __extends$7(MergeAllSubscriber, _super);
     function MergeAllSubscriber(destination, concurrent) {
         _super.call(this, destination);
         this.concurrent = concurrent;
@@ -1511,7 +1511,7 @@ var merge_1$1 = {
 var merge_1 = merge_1$1;
 var merge_2 = merge_1.mergeStatic;
 
-var __extends$13 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
+var __extends$12 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -1526,7 +1526,7 @@ var __extends$13 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, 
  * @class ObjectUnsubscribedError
  */
 var ObjectUnsubscribedError = (function (_super) {
-    __extends$13(ObjectUnsubscribedError, _super);
+    __extends$12(ObjectUnsubscribedError, _super);
     function ObjectUnsubscribedError() {
         var err = _super.call(this, 'object unsubscribed');
         this.name = err.name = 'ObjectUnsubscribedError';
@@ -1542,7 +1542,7 @@ var ObjectUnsubscribedError_1$1 = {
 	ObjectUnsubscribedError: ObjectUnsubscribedError_2
 };
 
-var __extends$14 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
+var __extends$13 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -1554,7 +1554,7 @@ var Subscription_1$5 = Subscription_1$1;
  * @extends {Ignored}
  */
 var SubjectSubscription = (function (_super) {
-    __extends$14(SubjectSubscription, _super);
+    __extends$13(SubjectSubscription, _super);
     function SubjectSubscription(subject, subscriber) {
         _super.call(this);
         this.subject = subject;
@@ -1586,7 +1586,7 @@ var SubjectSubscription_1$1 = {
 	SubjectSubscription: SubjectSubscription_2
 };
 
-var __extends$12 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
+var __extends$11 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -1601,7 +1601,7 @@ var rxSubscriber_1$2 = rxSubscriber;
  * @class SubjectSubscriber<T>
  */
 var SubjectSubscriber = (function (_super) {
-    __extends$12(SubjectSubscriber, _super);
+    __extends$11(SubjectSubscriber, _super);
     function SubjectSubscriber(destination) {
         _super.call(this, destination);
         this.destination = destination;
@@ -1613,7 +1613,7 @@ var SubjectSubscriber_1 = SubjectSubscriber;
  * @class Subject<T>
  */
 var Subject = (function (_super) {
-    __extends$12(Subject, _super);
+    __extends$11(Subject, _super);
     function Subject() {
         _super.call(this);
         this.observers = [];
@@ -1708,7 +1708,7 @@ var Subject_2 = Subject;
  * @class AnonymousSubject<T>
  */
 var AnonymousSubject = (function (_super) {
-    __extends$12(AnonymousSubject, _super);
+    __extends$11(AnonymousSubject, _super);
     function AnonymousSubject(destination, source) {
         _super.call(this);
         this.destination = destination;
@@ -1752,7 +1752,7 @@ var Subject_1$2 = {
 	AnonymousSubject: AnonymousSubject_1
 };
 
-var __extends$11 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
+var __extends$10 = (commonjsGlobal && commonjsGlobal.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -1765,7 +1765,7 @@ var Subscription_1$3 = Subscription_1$1;
  * @class ConnectableObservable<T>
  */
 var ConnectableObservable = (function (_super) {
-    __extends$11(ConnectableObservable, _super);
+    __extends$10(ConnectableObservable, _super);
     function ConnectableObservable(source, subjectFactory) {
         _super.call(this);
         this.source = source;
@@ -1813,7 +1813,7 @@ var connectableObservableDescriptor = {
     refCount: { value: ConnectableObservable.prototype.refCount }
 };
 var ConnectableSubscriber = (function (_super) {
-    __extends$11(ConnectableSubscriber, _super);
+    __extends$10(ConnectableSubscriber, _super);
     function ConnectableSubscriber(destination, connectable) {
         _super.call(this, destination);
         this.connectable = connectable;
@@ -1858,7 +1858,7 @@ var RefCountOperator = (function () {
     return RefCountOperator;
 }());
 var RefCountSubscriber = (function (_super) {
-    __extends$11(RefCountSubscriber, _super);
+    __extends$10(RefCountSubscriber, _super);
     function RefCountSubscriber(destination, connectable) {
         _super.call(this, destination);
         this.connectable = connectable;
@@ -2003,18 +2003,8 @@ function share() {
 }
 var share_2 = share;
 
-var __extends$2$1 = (undefined && undefined.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 /**
- * @license Angular v4.2.0-rc.0-1651a8f
+ * @license Angular v4.2.0-rc.0-fa809ec
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2077,7 +2067,7 @@ var OpaqueToken = (function () {
  * \@stable
  */
 var InjectionToken = (function (_super) {
-    __extends$2$1(InjectionToken, _super);
+    tslib_1.__extends(InjectionToken, _super);
     /**
      * @param {?} desc
      */
@@ -2806,7 +2796,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('4.2.0-rc.0-1651a8f');
+var VERSION$2 = new Version('4.2.0-rc.0-fa809ec');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -5281,7 +5271,7 @@ var CodegenComponentFactoryResolver = (function () {
     return CodegenComponentFactoryResolver;
 }());
 var ComponentFactoryBoundToModule = (function (_super) {
-    __extends$2$1(ComponentFactoryBoundToModule, _super);
+    tslib_1.__extends(ComponentFactoryBoundToModule, _super);
     /**
      * @param {?} factory
      * @param {?} ngModule
@@ -5610,7 +5600,7 @@ var wtfEndTimeRange = wtfEnabled ? endTimeRange : function (r) { return null; };
  * \@stable
  */
 var EventEmitter = (function (_super) {
-    __extends$2$1(EventEmitter, _super);
+    tslib_1.__extends(EventEmitter, _super);
     /**
      * Creates an instance of {\@link EventEmitter}, which depending on `isAsync`,
      * delivers events synchronously or asynchronously.
@@ -6493,7 +6483,7 @@ function _callAndReportToErrorHandler(errorHandler, callback) {
  * @suppress {checkTypes}
  */
 var PlatformRef_ = (function (_super) {
-    __extends$2$1(PlatformRef_, _super);
+    tslib_1.__extends(PlatformRef_, _super);
     /**
      * @param {?} _injector
      */
@@ -6725,7 +6715,7 @@ var ApplicationRef = (function () {
  * @suppress {checkTypes}
  */
 var ApplicationRef_ = (function (_super) {
-    __extends$2$1(ApplicationRef_, _super);
+    tslib_1.__extends(ApplicationRef_, _super);
     /**
      * @param {?} _zone
      * @param {?} _console
@@ -8151,7 +8141,7 @@ var ChangeDetectorRef = (function () {
  * @abstract
  */
 var ViewRef = (function (_super) {
-    __extends$2$1(ViewRef, _super);
+    tslib_1.__extends(ViewRef, _super);
     function ViewRef() {
         return _super !== null && _super.apply(this, arguments) || this;
     }
@@ -8230,7 +8220,7 @@ var ViewRef = (function (_super) {
  * @abstract
  */
 var EmbeddedViewRef = (function (_super) {
-    __extends$2$1(EmbeddedViewRef, _super);
+    tslib_1.__extends(EmbeddedViewRef, _super);
     function EmbeddedViewRef() {
         return _super !== null && _super.apply(this, arguments) || this;
     }
@@ -8348,7 +8338,7 @@ var DebugNode = (function () {
  * \@experimental All debugging apis are currently experimental.
  */
 var DebugElement = (function (_super) {
-    __extends$2$1(DebugElement, _super);
+    tslib_1.__extends(DebugElement, _super);
     /**
      * @param {?} nativeNode
      * @param {?} parent
@@ -11885,7 +11875,7 @@ function getComponentViewDefinitionFactory(componentFactory) {
     return ((componentFactory)).viewDefFactory;
 }
 var ComponentFactory_ = (function (_super) {
-    __extends$2$1(ComponentFactory_, _super);
+    tslib_1.__extends(ComponentFactory_, _super);
     /**
      * @param {?} selector
      * @param {?} componentType
@@ -11962,7 +11952,7 @@ var ComponentFactory_ = (function (_super) {
     return ComponentFactory_;
 }(ComponentFactory));
 var ComponentRef_ = (function (_super) {
-    __extends$2$1(ComponentRef_, _super);
+    tslib_1.__extends(ComponentRef_, _super);
     /**
      * @param {?} _view
      * @param {?} _viewRef
@@ -12337,7 +12327,7 @@ function createTemplateData(view, def) {
     return new TemplateRef_(view, def);
 }
 var TemplateRef_ = (function (_super) {
-    __extends$2$1(TemplateRef_, _super);
+    tslib_1.__extends(TemplateRef_, _super);
     /**
      * @param {?} _parentView
      * @param {?} _def
@@ -15882,7 +15872,7 @@ function createNgModuleFactory(ngModuleType, bootstrapComponents, defFactory) {
     return new NgModuleFactory_(ngModuleType, bootstrapComponents, defFactory);
 }
 var NgModuleFactory_ = (function (_super) {
-    __extends$2$1(NgModuleFactory_, _super);
+    tslib_1.__extends(NgModuleFactory_, _super);
     /**
      * @param {?} moduleType
      * @param {?} _bootstrapComponents
@@ -16991,18 +16981,8 @@ var core_es5 = Object.freeze({
 	ɵu: DebugContext
 });
 
-var __extends$1$1 = (undefined && undefined.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 /**
- * @license Angular v4.2.0-rc.0-1651a8f
+ * @license Angular v4.2.0-rc.0-fa809ec
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -17021,7 +17001,7 @@ var __extends$1$1 = (undefined && undefined.__extends) || (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('4.2.0-rc.0-1651a8f');
+var VERSION$1 = new Version('4.2.0-rc.0-fa809ec');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -17551,7 +17531,7 @@ var NullTemplateVisitor = (function () {
  * in an template ast recursively.
  */
 var RecursiveTemplateAstVisitor = (function (_super) {
-    __extends$1$1(RecursiveTemplateAstVisitor, _super);
+    tslib_1.__extends(RecursiveTemplateAstVisitor, _super);
     function RecursiveTemplateAstVisitor() {
         return _super.call(this) || this;
     }
@@ -18780,7 +18760,7 @@ var CompileAnimationStateMetadata = (function () {
     return CompileAnimationStateMetadata;
 }());
 var CompileAnimationStateDeclarationMetadata = (function (_super) {
-    __extends$1$1(CompileAnimationStateDeclarationMetadata, _super);
+    tslib_1.__extends(CompileAnimationStateDeclarationMetadata, _super);
     /**
      * @param {?} stateNameExpr
      * @param {?} styles
@@ -18794,7 +18774,7 @@ var CompileAnimationStateDeclarationMetadata = (function (_super) {
     return CompileAnimationStateDeclarationMetadata;
 }(CompileAnimationStateMetadata));
 var CompileAnimationStateTransitionMetadata = (function (_super) {
-    __extends$1$1(CompileAnimationStateTransitionMetadata, _super);
+    tslib_1.__extends(CompileAnimationStateTransitionMetadata, _super);
     /**
      * @param {?} stateChangeExpr
      * @param {?} steps
@@ -18816,7 +18796,7 @@ var CompileAnimationMetadata = (function () {
     return CompileAnimationMetadata;
 }());
 var CompileAnimationKeyframesSequenceMetadata = (function (_super) {
-    __extends$1$1(CompileAnimationKeyframesSequenceMetadata, _super);
+    tslib_1.__extends(CompileAnimationKeyframesSequenceMetadata, _super);
     /**
      * @param {?=} steps
      */
@@ -18829,7 +18809,7 @@ var CompileAnimationKeyframesSequenceMetadata = (function (_super) {
     return CompileAnimationKeyframesSequenceMetadata;
 }(CompileAnimationMetadata));
 var CompileAnimationStyleMetadata = (function (_super) {
-    __extends$1$1(CompileAnimationStyleMetadata, _super);
+    tslib_1.__extends(CompileAnimationStyleMetadata, _super);
     /**
      * @param {?} offset
      * @param {?=} styles
@@ -18844,7 +18824,7 @@ var CompileAnimationStyleMetadata = (function (_super) {
     return CompileAnimationStyleMetadata;
 }(CompileAnimationMetadata));
 var CompileAnimationAnimateMetadata = (function (_super) {
-    __extends$1$1(CompileAnimationAnimateMetadata, _super);
+    tslib_1.__extends(CompileAnimationAnimateMetadata, _super);
     /**
      * @param {?=} timings
      * @param {?=} styles
@@ -18863,7 +18843,7 @@ var CompileAnimationAnimateMetadata = (function (_super) {
  * @abstract
  */
 var CompileAnimationWithStepsMetadata = (function (_super) {
-    __extends$1$1(CompileAnimationWithStepsMetadata, _super);
+    tslib_1.__extends(CompileAnimationWithStepsMetadata, _super);
     /**
      * @param {?=} steps
      */
@@ -18876,7 +18856,7 @@ var CompileAnimationWithStepsMetadata = (function (_super) {
     return CompileAnimationWithStepsMetadata;
 }(CompileAnimationMetadata));
 var CompileAnimationSequenceMetadata = (function (_super) {
-    __extends$1$1(CompileAnimationSequenceMetadata, _super);
+    tslib_1.__extends(CompileAnimationSequenceMetadata, _super);
     /**
      * @param {?=} steps
      */
@@ -18887,7 +18867,7 @@ var CompileAnimationSequenceMetadata = (function (_super) {
     return CompileAnimationSequenceMetadata;
 }(CompileAnimationWithStepsMetadata));
 var CompileAnimationGroupMetadata = (function (_super) {
-    __extends$1$1(CompileAnimationGroupMetadata, _super);
+    tslib_1.__extends(CompileAnimationGroupMetadata, _super);
     /**
      * @param {?=} steps
      */
@@ -19605,7 +19585,7 @@ var AST = (function () {
  * therefore not interpreted by the Angular's own expression parser.
  */
 var Quote = (function (_super) {
-    __extends$1$1(Quote, _super);
+    tslib_1.__extends(Quote, _super);
     /**
      * @param {?} span
      * @param {?} prefix
@@ -19635,7 +19615,7 @@ var Quote = (function (_super) {
     return Quote;
 }(AST));
 var EmptyExpr = (function (_super) {
-    __extends$1$1(EmptyExpr, _super);
+    tslib_1.__extends(EmptyExpr, _super);
     function EmptyExpr() {
         return _super !== null && _super.apply(this, arguments) || this;
     }
@@ -19651,7 +19631,7 @@ var EmptyExpr = (function (_super) {
     return EmptyExpr;
 }(AST));
 var ImplicitReceiver = (function (_super) {
-    __extends$1$1(ImplicitReceiver, _super);
+    tslib_1.__extends(ImplicitReceiver, _super);
     function ImplicitReceiver() {
         return _super !== null && _super.apply(this, arguments) || this;
     }
@@ -19670,7 +19650,7 @@ var ImplicitReceiver = (function (_super) {
  * Multiple expressions separated by a semicolon.
  */
 var Chain = (function (_super) {
-    __extends$1$1(Chain, _super);
+    tslib_1.__extends(Chain, _super);
     /**
      * @param {?} span
      * @param {?} expressions
@@ -19692,7 +19672,7 @@ var Chain = (function (_super) {
     return Chain;
 }(AST));
 var Conditional = (function (_super) {
-    __extends$1$1(Conditional, _super);
+    tslib_1.__extends(Conditional, _super);
     /**
      * @param {?} span
      * @param {?} condition
@@ -19718,7 +19698,7 @@ var Conditional = (function (_super) {
     return Conditional;
 }(AST));
 var PropertyRead = (function (_super) {
-    __extends$1$1(PropertyRead, _super);
+    tslib_1.__extends(PropertyRead, _super);
     /**
      * @param {?} span
      * @param {?} receiver
@@ -19742,7 +19722,7 @@ var PropertyRead = (function (_super) {
     return PropertyRead;
 }(AST));
 var PropertyWrite = (function (_super) {
-    __extends$1$1(PropertyWrite, _super);
+    tslib_1.__extends(PropertyWrite, _super);
     /**
      * @param {?} span
      * @param {?} receiver
@@ -19768,7 +19748,7 @@ var PropertyWrite = (function (_super) {
     return PropertyWrite;
 }(AST));
 var SafePropertyRead = (function (_super) {
-    __extends$1$1(SafePropertyRead, _super);
+    tslib_1.__extends(SafePropertyRead, _super);
     /**
      * @param {?} span
      * @param {?} receiver
@@ -19792,7 +19772,7 @@ var SafePropertyRead = (function (_super) {
     return SafePropertyRead;
 }(AST));
 var KeyedRead = (function (_super) {
-    __extends$1$1(KeyedRead, _super);
+    tslib_1.__extends(KeyedRead, _super);
     /**
      * @param {?} span
      * @param {?} obj
@@ -19816,7 +19796,7 @@ var KeyedRead = (function (_super) {
     return KeyedRead;
 }(AST));
 var KeyedWrite = (function (_super) {
-    __extends$1$1(KeyedWrite, _super);
+    tslib_1.__extends(KeyedWrite, _super);
     /**
      * @param {?} span
      * @param {?} obj
@@ -19842,7 +19822,7 @@ var KeyedWrite = (function (_super) {
     return KeyedWrite;
 }(AST));
 var BindingPipe = (function (_super) {
-    __extends$1$1(BindingPipe, _super);
+    tslib_1.__extends(BindingPipe, _super);
     /**
      * @param {?} span
      * @param {?} exp
@@ -19868,7 +19848,7 @@ var BindingPipe = (function (_super) {
     return BindingPipe;
 }(AST));
 var LiteralPrimitive = (function (_super) {
-    __extends$1$1(LiteralPrimitive, _super);
+    tslib_1.__extends(LiteralPrimitive, _super);
     /**
      * @param {?} span
      * @param {?} value
@@ -19890,7 +19870,7 @@ var LiteralPrimitive = (function (_super) {
     return LiteralPrimitive;
 }(AST));
 var LiteralArray = (function (_super) {
-    __extends$1$1(LiteralArray, _super);
+    tslib_1.__extends(LiteralArray, _super);
     /**
      * @param {?} span
      * @param {?} expressions
@@ -19912,7 +19892,7 @@ var LiteralArray = (function (_super) {
     return LiteralArray;
 }(AST));
 var LiteralMap = (function (_super) {
-    __extends$1$1(LiteralMap, _super);
+    tslib_1.__extends(LiteralMap, _super);
     /**
      * @param {?} span
      * @param {?} keys
@@ -19936,7 +19916,7 @@ var LiteralMap = (function (_super) {
     return LiteralMap;
 }(AST));
 var Interpolation = (function (_super) {
-    __extends$1$1(Interpolation, _super);
+    tslib_1.__extends(Interpolation, _super);
     /**
      * @param {?} span
      * @param {?} strings
@@ -19960,7 +19940,7 @@ var Interpolation = (function (_super) {
     return Interpolation;
 }(AST));
 var Binary = (function (_super) {
-    __extends$1$1(Binary, _super);
+    tslib_1.__extends(Binary, _super);
     /**
      * @param {?} span
      * @param {?} operation
@@ -19986,7 +19966,7 @@ var Binary = (function (_super) {
     return Binary;
 }(AST));
 var PrefixNot = (function (_super) {
-    __extends$1$1(PrefixNot, _super);
+    tslib_1.__extends(PrefixNot, _super);
     /**
      * @param {?} span
      * @param {?} expression
@@ -20008,7 +19988,7 @@ var PrefixNot = (function (_super) {
     return PrefixNot;
 }(AST));
 var NonNullAssert = (function (_super) {
-    __extends$1$1(NonNullAssert, _super);
+    tslib_1.__extends(NonNullAssert, _super);
     /**
      * @param {?} span
      * @param {?} expression
@@ -20030,7 +20010,7 @@ var NonNullAssert = (function (_super) {
     return NonNullAssert;
 }(AST));
 var MethodCall = (function (_super) {
-    __extends$1$1(MethodCall, _super);
+    tslib_1.__extends(MethodCall, _super);
     /**
      * @param {?} span
      * @param {?} receiver
@@ -20056,7 +20036,7 @@ var MethodCall = (function (_super) {
     return MethodCall;
 }(AST));
 var SafeMethodCall = (function (_super) {
-    __extends$1$1(SafeMethodCall, _super);
+    tslib_1.__extends(SafeMethodCall, _super);
     /**
      * @param {?} span
      * @param {?} receiver
@@ -20082,7 +20062,7 @@ var SafeMethodCall = (function (_super) {
     return SafeMethodCall;
 }(AST));
 var FunctionCall = (function (_super) {
-    __extends$1$1(FunctionCall, _super);
+    tslib_1.__extends(FunctionCall, _super);
     /**
      * @param {?} span
      * @param {?} target
@@ -20106,7 +20086,7 @@ var FunctionCall = (function (_super) {
     return FunctionCall;
 }(AST));
 var ASTWithSource = (function (_super) {
-    __extends$1$1(ASTWithSource, _super);
+    tslib_1.__extends(ASTWithSource, _super);
     /**
      * @param {?} ast
      * @param {?} source
@@ -23099,7 +23079,7 @@ function spanOf$1$1(ast) {
 function findNode(nodes, position) {
     var /** @type {?} */ path = [];
     var /** @type {?} */ visitor = new (function (_super) {
-        __extends$1$1(class_1, _super);
+        tslib_1.__extends(class_1, _super);
         function class_1() {
             return _super !== null && _super.apply(this, arguments) || this;
         }
@@ -23185,7 +23165,7 @@ var Token$1 = (function () {
     return Token$1;
 }());
 var TokenError = (function (_super) {
-    __extends$1$1(TokenError, _super);
+    tslib_1.__extends(TokenError, _super);
     /**
      * @param {?} errorMsg
      * @param {?} tokenType
@@ -24033,7 +24013,7 @@ function mergeTextTokens(srcTokens) {
  * found in the LICENSE file at https://angular.io/license
  */
 var TreeError = (function (_super) {
-    __extends$1$1(TreeError, _super);
+    tslib_1.__extends(TreeError, _super);
     /**
      * @param {?} elementName
      * @param {?} span
@@ -25081,7 +25061,7 @@ function _extractPlaceholderName(input) {
  * An i18n error.
  */
 var I18nError = (function (_super) {
-    __extends$1$1(I18nError, _super);
+    tslib_1.__extends(I18nError, _super);
     /**
      * @param {?} span
      * @param {?} msg
@@ -25635,7 +25615,7 @@ function getXmlTagDefinition(tagName) {
  * found in the LICENSE file at https://angular.io/license
  */
 var XmlParser = (function (_super) {
-    __extends$1$1(XmlParser, _super);
+    tslib_1.__extends(XmlParser, _super);
     function XmlParser() {
         return _super.call(this, getXmlTagDefinition) || this;
     }
@@ -25757,7 +25737,7 @@ function serializeNodes(nodes) {
  * \@internal
  */
 var _SerializerIgnoreIcuExpVisitor = (function (_super) {
-    __extends$1$1(_SerializerIgnoreIcuExpVisitor, _super);
+    tslib_1.__extends(_SerializerIgnoreIcuExpVisitor, _super);
     function _SerializerIgnoreIcuExpVisitor() {
         return _super !== null && _super.apply(this, arguments) || this;
     }
@@ -26147,7 +26127,7 @@ var Serializer = (function () {
  * A simple mapper that take a function to transform an internal name to a public name
  */
 var SimplePlaceholderMapper = (function (_super) {
-    __extends$1$1(SimplePlaceholderMapper, _super);
+    tslib_1.__extends(SimplePlaceholderMapper, _super);
     /**
      * @param {?} message
      * @param {?} mapName
@@ -26366,7 +26346,7 @@ var Text$2 = (function () {
     return Text$2;
 }());
 var CR = (function (_super) {
-    __extends$1$1(CR, _super);
+    tslib_1.__extends(CR, _super);
     /**
      * @param {?=} ws
      */
@@ -26409,7 +26389,7 @@ var _UNIT_TAG = 'trans-unit';
 var _CONTEXT_GROUP_TAG = 'context-group';
 var _CONTEXT_TAG = 'context';
 var Xliff = (function (_super) {
-    __extends$1$1(Xliff, _super);
+    tslib_1.__extends(Xliff, _super);
     function Xliff() {
         return _super !== null && _super.apply(this, arguments) || this;
     }
@@ -26788,7 +26768,7 @@ var _SOURCE_TAG$1 = 'source';
 var _TARGET_TAG$1 = 'target';
 var _UNIT_TAG$1 = 'unit';
 var Xliff2 = (function (_super) {
-    __extends$1$1(Xliff2, _super);
+    tslib_1.__extends(Xliff2, _super);
     function Xliff2() {
         return _super !== null && _super.apply(this, arguments) || this;
     }
@@ -27215,7 +27195,7 @@ var _EXEMPLE_TAG = 'ex';
 var _SOURCE_TAG$2 = 'source';
 var _DOCTYPE = "<!ELEMENT messagebundle (msg)*>\n<!ATTLIST messagebundle class CDATA #IMPLIED>\n\n<!ELEMENT msg (#PCDATA|ph|source)*>\n<!ATTLIST msg id CDATA #IMPLIED>\n<!ATTLIST msg seq CDATA #IMPLIED>\n<!ATTLIST msg name CDATA #IMPLIED>\n<!ATTLIST msg desc CDATA #IMPLIED>\n<!ATTLIST msg meaning CDATA #IMPLIED>\n<!ATTLIST msg obsolete (obsolete) #IMPLIED>\n<!ATTLIST msg xml:space (default|preserve) \"default\">\n<!ATTLIST msg is_hidden CDATA #IMPLIED>\n\n<!ELEMENT source (#PCDATA)>\n\n<!ELEMENT ph (#PCDATA|ex)*>\n<!ATTLIST ph name CDATA #REQUIRED>\n\n<!ELEMENT ex (#PCDATA)>";
 var Xmb = (function (_super) {
-    __extends$1$1(Xmb, _super);
+    tslib_1.__extends(Xmb, _super);
     function Xmb() {
         return _super !== null && _super.apply(this, arguments) || this;
     }
@@ -27421,7 +27401,7 @@ var _TRANSLATIONS_TAG = 'translationbundle';
 var _TRANSLATION_TAG = 'translation';
 var _PLACEHOLDER_TAG$3 = 'ph';
 var Xtb = (function (_super) {
-    __extends$1$1(Xtb, _super);
+    tslib_1.__extends(Xtb, _super);
     function Xtb() {
         return _super !== null && _super.apply(this, arguments) || this;
     }
@@ -27694,7 +27674,7 @@ var XmlToI18n$2 = (function () {
  * found in the LICENSE file at https://angular.io/license
  */
 var HtmlParser = (function (_super) {
-    __extends$1$1(HtmlParser, _super);
+    tslib_1.__extends(HtmlParser, _super);
     function HtmlParser() {
         return _super.call(this, getHtmlTagDefinition) || this;
     }
@@ -28192,7 +28172,7 @@ var ExpansionResult = (function () {
     return ExpansionResult;
 }());
 var ExpansionError = (function (_super) {
-    __extends$1$1(ExpansionError, _super);
+    tslib_1.__extends(ExpansionError, _super);
     /**
      * @param {?} span
      * @param {?} errorMsg
@@ -28301,7 +28281,7 @@ function _expandDefaultForm(ast, errors) {
  * found in the LICENSE file at https://angular.io/license
  */
 var ProviderError = (function (_super) {
-    __extends$1$1(ProviderError, _super);
+    tslib_1.__extends(ProviderError, _super);
     /**
      * @param {?} message
      * @param {?} span
@@ -29532,7 +29512,7 @@ var BindingParser = (function () {
     return BindingParser;
 }());
 var PipeCollector = (function (_super) {
-    __extends$1$1(PipeCollector, _super);
+    tslib_1.__extends(PipeCollector, _super);
     function PipeCollector() {
         var _this = _super.apply(this, arguments) || this;
         _this.pipes = new Map();
@@ -29737,7 +29717,7 @@ function warnOnlyOnce(warnings) {
  */
 var TEMPLATE_TRANSFORMS = new InjectionToken('TemplateTransforms');
 var TemplateParseError = (function (_super) {
-    __extends$1$1(TemplateParseError, _super);
+    tslib_1.__extends(TemplateParseError, _super);
     /**
      * @param {?} message
      * @param {?} span
@@ -33062,7 +33042,7 @@ function extractIdentifiers(value, targetIdentifiers) {
     visitValue(value, new _CompileValueConverter(), targetIdentifiers);
 }
 var _CompileValueConverter = (function (_super) {
-    __extends$1$1(_CompileValueConverter, _super);
+    tslib_1.__extends(_CompileValueConverter, _super);
     function _CompileValueConverter() {
         return _super !== null && _super.apply(this, arguments) || this;
     }
@@ -33152,7 +33132,7 @@ BuiltinTypeName[BuiltinTypeName.Number] = "Number";
 BuiltinTypeName[BuiltinTypeName.Function] = "Function";
 BuiltinTypeName[BuiltinTypeName.Inferred] = "Inferred";
 var BuiltinType = (function (_super) {
-    __extends$1$1(BuiltinType, _super);
+    tslib_1.__extends(BuiltinType, _super);
     /**
      * @param {?} name
      * @param {?=} modifiers
@@ -33174,7 +33154,7 @@ var BuiltinType = (function (_super) {
     return BuiltinType;
 }(Type$1));
 var ExpressionType = (function (_super) {
-    __extends$1$1(ExpressionType, _super);
+    tslib_1.__extends(ExpressionType, _super);
     /**
      * @param {?} value
      * @param {?=} modifiers
@@ -33196,7 +33176,7 @@ var ExpressionType = (function (_super) {
     return ExpressionType;
 }(Type$1));
 var ArrayType = (function (_super) {
-    __extends$1$1(ArrayType, _super);
+    tslib_1.__extends(ArrayType, _super);
     /**
      * @param {?} of
      * @param {?=} modifiers
@@ -33218,7 +33198,7 @@ var ArrayType = (function (_super) {
     return ArrayType;
 }(Type$1));
 var MapType = (function (_super) {
-    __extends$1$1(MapType, _super);
+    tslib_1.__extends(MapType, _super);
     /**
      * @param {?} valueType
      * @param {?=} modifiers
@@ -33500,7 +33480,7 @@ BuiltinVar[BuiltinVar.Super] = "Super";
 BuiltinVar[BuiltinVar.CatchError] = "CatchError";
 BuiltinVar[BuiltinVar.CatchStack] = "CatchStack";
 var ReadVarExpr = (function (_super) {
-    __extends$1$1(ReadVarExpr, _super);
+    tslib_1.__extends(ReadVarExpr, _super);
     /**
      * @param {?} name
      * @param {?=} type
@@ -33539,7 +33519,7 @@ var ReadVarExpr = (function (_super) {
     return ReadVarExpr;
 }(Expression));
 var WriteVarExpr = (function (_super) {
-    __extends$1$1(WriteVarExpr, _super);
+    tslib_1.__extends(WriteVarExpr, _super);
     /**
      * @param {?} name
      * @param {?} value
@@ -33571,7 +33551,7 @@ var WriteVarExpr = (function (_super) {
     return WriteVarExpr;
 }(Expression));
 var WriteKeyExpr = (function (_super) {
-    __extends$1$1(WriteKeyExpr, _super);
+    tslib_1.__extends(WriteKeyExpr, _super);
     /**
      * @param {?} receiver
      * @param {?} index
@@ -33597,7 +33577,7 @@ var WriteKeyExpr = (function (_super) {
     return WriteKeyExpr;
 }(Expression));
 var WritePropExpr = (function (_super) {
-    __extends$1$1(WritePropExpr, _super);
+    tslib_1.__extends(WritePropExpr, _super);
     /**
      * @param {?} receiver
      * @param {?} name
@@ -33630,7 +33610,7 @@ BuiltinMethod[BuiltinMethod.ConcatArray] = "ConcatArray";
 BuiltinMethod[BuiltinMethod.SubscribeObservable] = "SubscribeObservable";
 BuiltinMethod[BuiltinMethod.Bind] = "Bind";
 var InvokeMethodExpr = (function (_super) {
-    __extends$1$1(InvokeMethodExpr, _super);
+    tslib_1.__extends(InvokeMethodExpr, _super);
     /**
      * @param {?} receiver
      * @param {?} method
@@ -33663,7 +33643,7 @@ var InvokeMethodExpr = (function (_super) {
     return InvokeMethodExpr;
 }(Expression));
 var InvokeFunctionExpr = (function (_super) {
-    __extends$1$1(InvokeFunctionExpr, _super);
+    tslib_1.__extends(InvokeFunctionExpr, _super);
     /**
      * @param {?} fn
      * @param {?} args
@@ -33687,7 +33667,7 @@ var InvokeFunctionExpr = (function (_super) {
     return InvokeFunctionExpr;
 }(Expression));
 var InstantiateExpr = (function (_super) {
-    __extends$1$1(InstantiateExpr, _super);
+    tslib_1.__extends(InstantiateExpr, _super);
     /**
      * @param {?} classExpr
      * @param {?} args
@@ -33711,7 +33691,7 @@ var InstantiateExpr = (function (_super) {
     return InstantiateExpr;
 }(Expression));
 var LiteralExpr = (function (_super) {
-    __extends$1$1(LiteralExpr, _super);
+    tslib_1.__extends(LiteralExpr, _super);
     /**
      * @param {?} value
      * @param {?=} type
@@ -33733,7 +33713,7 @@ var LiteralExpr = (function (_super) {
     return LiteralExpr;
 }(Expression));
 var ExternalExpr = (function (_super) {
-    __extends$1$1(ExternalExpr, _super);
+    tslib_1.__extends(ExternalExpr, _super);
     /**
      * @param {?} value
      * @param {?=} type
@@ -33771,7 +33751,7 @@ var ExternalReference = (function () {
     return ExternalReference;
 }());
 var ConditionalExpr = (function (_super) {
-    __extends$1$1(ConditionalExpr, _super);
+    tslib_1.__extends(ConditionalExpr, _super);
     /**
      * @param {?} condition
      * @param {?} trueCase
@@ -33798,7 +33778,7 @@ var ConditionalExpr = (function (_super) {
     return ConditionalExpr;
 }(Expression));
 var NotExpr = (function (_super) {
-    __extends$1$1(NotExpr, _super);
+    tslib_1.__extends(NotExpr, _super);
     /**
      * @param {?} condition
      * @param {?=} sourceSpan
@@ -33819,7 +33799,7 @@ var NotExpr = (function (_super) {
     return NotExpr;
 }(Expression));
 var AssertNotNull = (function (_super) {
-    __extends$1$1(AssertNotNull, _super);
+    tslib_1.__extends(AssertNotNull, _super);
     /**
      * @param {?} condition
      * @param {?=} sourceSpan
@@ -33840,7 +33820,7 @@ var AssertNotNull = (function (_super) {
     return AssertNotNull;
 }(Expression));
 var CastExpr = (function (_super) {
-    __extends$1$1(CastExpr, _super);
+    tslib_1.__extends(CastExpr, _super);
     /**
      * @param {?} value
      * @param {?=} type
@@ -33874,7 +33854,7 @@ var FnParam = (function () {
     return FnParam;
 }());
 var FunctionExpr = (function (_super) {
-    __extends$1$1(FunctionExpr, _super);
+    tslib_1.__extends(FunctionExpr, _super);
     /**
      * @param {?} params
      * @param {?} statements
@@ -33907,7 +33887,7 @@ var FunctionExpr = (function (_super) {
     return FunctionExpr;
 }(Expression));
 var BinaryOperatorExpr = (function (_super) {
-    __extends$1$1(BinaryOperatorExpr, _super);
+    tslib_1.__extends(BinaryOperatorExpr, _super);
     /**
      * @param {?} operator
      * @param {?} lhs
@@ -33933,7 +33913,7 @@ var BinaryOperatorExpr = (function (_super) {
     return BinaryOperatorExpr;
 }(Expression));
 var ReadPropExpr = (function (_super) {
-    __extends$1$1(ReadPropExpr, _super);
+    tslib_1.__extends(ReadPropExpr, _super);
     /**
      * @param {?} receiver
      * @param {?} name
@@ -33964,7 +33944,7 @@ var ReadPropExpr = (function (_super) {
     return ReadPropExpr;
 }(Expression));
 var ReadKeyExpr = (function (_super) {
-    __extends$1$1(ReadKeyExpr, _super);
+    tslib_1.__extends(ReadKeyExpr, _super);
     /**
      * @param {?} receiver
      * @param {?} index
@@ -33995,7 +33975,7 @@ var ReadKeyExpr = (function (_super) {
     return ReadKeyExpr;
 }(Expression));
 var LiteralArrayExpr = (function (_super) {
-    __extends$1$1(LiteralArrayExpr, _super);
+    tslib_1.__extends(LiteralArrayExpr, _super);
     /**
      * @param {?} entries
      * @param {?=} type
@@ -34031,7 +34011,7 @@ var LiteralMapEntry = (function () {
     return LiteralMapEntry;
 }());
 var LiteralMapExpr = (function (_super) {
-    __extends$1$1(LiteralMapExpr, _super);
+    tslib_1.__extends(LiteralMapExpr, _super);
     /**
      * @param {?} entries
      * @param {?=} type
@@ -34057,7 +34037,7 @@ var LiteralMapExpr = (function (_super) {
     return LiteralMapExpr;
 }(Expression));
 var CommaExpr = (function (_super) {
-    __extends$1$1(CommaExpr, _super);
+    tslib_1.__extends(CommaExpr, _super);
     /**
      * @param {?} parts
      * @param {?=} sourceSpan
@@ -34117,7 +34097,7 @@ var Statement = (function () {
     return Statement;
 }());
 var DeclareVarStmt = (function (_super) {
-    __extends$1$1(DeclareVarStmt, _super);
+    tslib_1.__extends(DeclareVarStmt, _super);
     /**
      * @param {?} name
      * @param {?} value
@@ -34144,7 +34124,7 @@ var DeclareVarStmt = (function (_super) {
     return DeclareVarStmt;
 }(Statement));
 var DeclareFunctionStmt = (function (_super) {
-    __extends$1$1(DeclareFunctionStmt, _super);
+    tslib_1.__extends(DeclareFunctionStmt, _super);
     /**
      * @param {?} name
      * @param {?} params
@@ -34173,7 +34153,7 @@ var DeclareFunctionStmt = (function (_super) {
     return DeclareFunctionStmt;
 }(Statement));
 var ExpressionStatement = (function (_super) {
-    __extends$1$1(ExpressionStatement, _super);
+    tslib_1.__extends(ExpressionStatement, _super);
     /**
      * @param {?} expr
      * @param {?=} sourceSpan
@@ -34194,7 +34174,7 @@ var ExpressionStatement = (function (_super) {
     return ExpressionStatement;
 }(Statement));
 var ReturnStatement = (function (_super) {
-    __extends$1$1(ReturnStatement, _super);
+    tslib_1.__extends(ReturnStatement, _super);
     /**
      * @param {?} value
      * @param {?=} sourceSpan
@@ -34234,7 +34214,7 @@ var AbstractClassPart = (function () {
     return AbstractClassPart;
 }());
 var ClassMethod = (function (_super) {
-    __extends$1$1(ClassMethod, _super);
+    tslib_1.__extends(ClassMethod, _super);
     /**
      * @param {?} name
      * @param {?} params
@@ -34253,7 +34233,7 @@ var ClassMethod = (function (_super) {
     return ClassMethod;
 }(AbstractClassPart));
 var ClassGetter = (function (_super) {
-    __extends$1$1(ClassGetter, _super);
+    tslib_1.__extends(ClassGetter, _super);
     /**
      * @param {?} name
      * @param {?} body
@@ -34270,7 +34250,7 @@ var ClassGetter = (function (_super) {
     return ClassGetter;
 }(AbstractClassPart));
 var ClassStmt = (function (_super) {
-    __extends$1$1(ClassStmt, _super);
+    tslib_1.__extends(ClassStmt, _super);
     /**
      * @param {?} name
      * @param {?} parent
@@ -34303,7 +34283,7 @@ var ClassStmt = (function (_super) {
     return ClassStmt;
 }(Statement));
 var IfStmt = (function (_super) {
-    __extends$1$1(IfStmt, _super);
+    tslib_1.__extends(IfStmt, _super);
     /**
      * @param {?} condition
      * @param {?} trueCase
@@ -34329,7 +34309,7 @@ var IfStmt = (function (_super) {
     return IfStmt;
 }(Statement));
 var TryCatchStmt = (function (_super) {
-    __extends$1$1(TryCatchStmt, _super);
+    tslib_1.__extends(TryCatchStmt, _super);
     /**
      * @param {?} bodyStmts
      * @param {?} catchStmts
@@ -34352,7 +34332,7 @@ var TryCatchStmt = (function (_super) {
     return TryCatchStmt;
 }(Statement));
 var ThrowStmt = (function (_super) {
-    __extends$1$1(ThrowStmt, _super);
+    tslib_1.__extends(ThrowStmt, _super);
     /**
      * @param {?} error
      * @param {?=} sourceSpan
@@ -34946,7 +34926,7 @@ function findReadVarNames(stmts) {
     return visitor.varNames;
 }
 var _ReadVarVisitor = (function (_super) {
-    __extends$1$1(_ReadVarVisitor, _super);
+    tslib_1.__extends(_ReadVarVisitor, _super);
     function _ReadVarVisitor() {
         var _this = _super.apply(this, arguments) || this;
         _this.varNames = new Set();
@@ -35008,7 +34988,7 @@ function applySourceSpanToExpressionIfNeeded(expr, sourceSpan) {
     return expr.visitExpression(transformer, null);
 }
 var _ApplySourceSpanTransformer = (function (_super) {
-    __extends$1$1(_ApplySourceSpanTransformer, _super);
+    tslib_1.__extends(_ApplySourceSpanTransformer, _super);
     /**
      * @param {?} sourceSpan
      */
@@ -36505,7 +36485,7 @@ var TypeScriptEmitter = (function () {
     return TypeScriptEmitter;
 }());
 var _TsEmitterVisitor = (function (_super) {
-    __extends$1$1(_TsEmitterVisitor, _super);
+    tslib_1.__extends(_TsEmitterVisitor, _super);
     function _TsEmitterVisitor() {
         var _this = _super.call(this, false) || this;
         _this.typeExpression = 0;
@@ -37211,7 +37191,7 @@ var _ATTR_TO_PROP = {
     'tabindex': 'tabIndex',
 };
 var DomElementSchemaRegistry = (function (_super) {
-    __extends$1$1(DomElementSchemaRegistry, _super);
+    tslib_1.__extends(DomElementSchemaRegistry, _super);
     function DomElementSchemaRegistry() {
         var _this = _super.call(this) || this;
         _this._schema = {};
@@ -38271,7 +38251,7 @@ function convertToStatementIfNeeded(mode, expr) {
     }
 }
 var _BuiltinAstConverter = (function (_super) {
-    __extends$1$1(_BuiltinAstConverter, _super);
+    tslib_1.__extends(_BuiltinAstConverter, _super);
     /**
      * @param {?} _converterFactory
      */
@@ -39012,7 +38992,7 @@ function convertStmtIntoExpression(stmt) {
     return null;
 }
 var BuiltinFunctionCall = (function (_super) {
-    __extends$1$1(BuiltinFunctionCall, _super);
+    tslib_1.__extends(BuiltinFunctionCall, _super);
     /**
      * @param {?} span
      * @param {?} args
@@ -40245,7 +40225,7 @@ function deserializeSummaries(symbolCache, json) {
     return deserializer.deserialize(json);
 }
 var ToJsonSerializer = (function (_super) {
-    __extends$1$1(ToJsonSerializer, _super);
+    tslib_1.__extends(ToJsonSerializer, _super);
     /**
      * @param {?} symbolResolver
      * @param {?} summaryResolver
@@ -40508,7 +40488,7 @@ var ForJitSerializer = (function () {
     return ForJitSerializer;
 }());
 var FromJsonDeserializer = (function (_super) {
-    __extends$1$1(FromJsonDeserializer, _super);
+    tslib_1.__extends(FromJsonDeserializer, _super);
     /**
      * @param {?} symbolCache
      */
@@ -41791,7 +41771,7 @@ var BindingScope = (function () {
 BindingScope.missing = {};
 BindingScope.empty = { resolve: function (name) { return BindingScope.missing; } };
 var PopulatedScope = (function (_super) {
-    __extends$1$1(PopulatedScope, _super);
+    tslib_1.__extends(PopulatedScope, _super);
     /**
      * @param {?} bindings
      */
@@ -42172,7 +42152,7 @@ var StaticSymbolResolver = (function () {
         }
         var /** @type {?} */ self = this;
         var ReferenceTransformer = (function (_super) {
-            __extends$1$1(ReferenceTransformer, _super);
+            tslib_1.__extends(ReferenceTransformer, _super);
             function ReferenceTransformer() {
                 return _super !== null && _super.apply(this, arguments) || this;
             }
@@ -43026,7 +43006,7 @@ var CATCH_STACK_VAR$2 = 'stack';
  * @abstract
  */
 var AbstractJsEmitterVisitor = (function (_super) {
-    __extends$1$1(AbstractJsEmitterVisitor, _super);
+    tslib_1.__extends(AbstractJsEmitterVisitor, _super);
     function AbstractJsEmitterVisitor() {
         return _super.call(this, false) || this;
     }
@@ -43289,7 +43269,7 @@ function jitStatements(sourceUrl$$1, statements) {
     return evalExpression(sourceUrl$$1, ctx, converter.getArgs());
 }
 var JitEmitterVisitor = (function (_super) {
-    __extends$1$1(JitEmitterVisitor, _super);
+    tslib_1.__extends(JitEmitterVisitor, _super);
     function JitEmitterVisitor() {
         var _this = _super.apply(this, arguments) || this;
         _this._evalArgNames = [];
@@ -43978,7 +43958,7 @@ var MessageBundle = (function () {
     return MessageBundle;
 }());
 var MapPlaceholderNames = (function (_super) {
-    __extends$1$1(MapPlaceholderNames, _super);
+    tslib_1.__extends(MapPlaceholderNames, _super);
     function MapPlaceholderNames() {
         return _super !== null && _super.apply(this, arguments) || this;
     }
@@ -46097,7 +46077,7 @@ var compiler_host = createCommonjsModule(function (module, exports) {
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-var __extends = (commonjsGlobal && commonjsGlobal.__extends) || (function () {
+var __extends$$1 = (commonjsGlobal && commonjsGlobal.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
         ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
         function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
@@ -46448,7 +46428,7 @@ var CompilerHostContextAdapter = (function () {
 }());
 exports.CompilerHostContextAdapter = CompilerHostContextAdapter;
 var ModuleResolutionHostAdapter = (function (_super) {
-    __extends(ModuleResolutionHostAdapter, _super);
+    __extends$$1(ModuleResolutionHostAdapter, _super);
     function ModuleResolutionHostAdapter(host) {
         var _this = _super.call(this) || this;
         _this.host = host;
@@ -46472,7 +46452,7 @@ var ModuleResolutionHostAdapter = (function (_super) {
 }(CompilerHostContextAdapter));
 exports.ModuleResolutionHostAdapter = ModuleResolutionHostAdapter;
 var NodeCompilerHostContext = (function (_super) {
-    __extends(NodeCompilerHostContext, _super);
+    __extends$$1(NodeCompilerHostContext, _super);
     function NodeCompilerHostContext() {
         return _super !== null && _super.apply(this, arguments) || this;
     }
@@ -46510,7 +46490,7 @@ var path_mapped_compiler_host = createCommonjsModule(function (module, exports) 
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-var __extends = (commonjsGlobal && commonjsGlobal.__extends) || (function () {
+var __extends$$1 = (commonjsGlobal && commonjsGlobal.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
         ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
         function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
@@ -46534,7 +46514,7 @@ var DTS = /\.d\.ts$/;
  * loader what to do.
  */
 var PathMappedCompilerHost = (function (_super) {
-    __extends(PathMappedCompilerHost, _super);
+    __extends$$1(PathMappedCompilerHost, _super);
     function PathMappedCompilerHost(program, options, context) {
         return _super.call(this, program, options, context) || this;
     }
@@ -46851,7 +46831,7 @@ var core_1 = require$$0$12;
 /**
  * @stable
  */
-exports.VERSION = new core_1.Version('4.2.0-rc.0-1651a8f');
+exports.VERSION = new core_1.Version('4.2.0-rc.0-fa809ec');
 
 });
 
@@ -47330,7 +47310,7 @@ var expression_diagnostics = createCommonjsModule(function (module, exports) {
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-var __extends = (commonjsGlobal && commonjsGlobal.__extends) || (function () {
+var __extends$$1 = (commonjsGlobal && commonjsGlobal.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
         ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
         function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
@@ -47380,7 +47360,7 @@ function getReferences(info) {
         }
     }
     var visitor = new (function (_super) {
-        __extends(class_1, _super);
+        __extends$$1(class_1, _super);
         function class_1() {
             return _super !== null && _super.apply(this, arguments) || this;
         }
@@ -47495,7 +47475,7 @@ function getExpressionScope(info, path, includeEvent) {
 }
 exports.getExpressionScope = getExpressionScope;
 var ExpressionDiagnosticsVisitor = (function (_super) {
-    __extends(ExpressionDiagnosticsVisitor, _super);
+    __extends$$1(ExpressionDiagnosticsVisitor, _super);
     function ExpressionDiagnosticsVisitor(info, getExpressionScope) {
         var _this = _super.call(this) || this;
         _this.info = info;
@@ -48693,7 +48673,7 @@ var ngtools_api = createCommonjsModule(function (module, exports) {
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-var __extends = (commonjsGlobal && commonjsGlobal.__extends) || (function () {
+var __extends$$1 = (commonjsGlobal && commonjsGlobal.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
         ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
         function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
@@ -48721,7 +48701,7 @@ var path_mapped_compiler_host_1 = path_mapped_compiler_host;
  * passed in the interface.
  */
 var CustomLoaderModuleResolutionHostAdapter = (function (_super) {
-    __extends(CustomLoaderModuleResolutionHostAdapter, _super);
+    __extends$$1(CustomLoaderModuleResolutionHostAdapter, _super);
     function CustomLoaderModuleResolutionHostAdapter(_readResource, host) {
         var _this = _super.call(this, host) || this;
         _this._readResource = _readResource;
@@ -48852,7 +48832,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v4.2.0-rc.0-1651a8f
+ * @license Angular v4.2.0-rc.0-fa809ec
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -49634,7 +49614,7 @@ function propertyNames(elementName) {
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-var __extends = (undefined && undefined.__extends) || (function () {
+var __extends$1$1 = (undefined && undefined.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
         ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
         function (d, b) { for (var p in b)
@@ -49878,7 +49858,7 @@ function voidElementAttributeCompletions(info, path$$1) {
     }
 }
 var ExpressionVisitor = (function (_super) {
-    __extends(ExpressionVisitor, _super);
+    __extends$1$1(ExpressionVisitor, _super);
     function ExpressionVisitor(info, position, attr, getExpressionScope$$1) {
         var _this = _super.call(this) || this;
         _this.info = info;
@@ -51477,7 +51457,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('4.2.0-rc.0-1651a8f');
+var VERSION$$1 = new Version('4.2.0-rc.0-fa809ec');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
