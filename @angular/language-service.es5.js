@@ -1,9 +1,9 @@
 /**
- * @license Angular v4.2.0-rc.0-3b28c75
+ * @license Angular v4.2.0-rc.0-5af143e
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
-import { ASTWithSource, AotSummaryResolver, AstPath, Attribute, CompileMetadataResolver, CompilerConfig, CssSelector, DEFAULT_INTERPOLATION_CONFIG, DirectiveNormalizer, DirectiveResolver, DomElementSchemaRegistry, Element, ElementAst, HtmlParser, I18NHtmlParser, ImplicitReceiver, JitSummaryResolver, Lexer, NAMED_ENTITIES, NgModuleResolver, NullAstVisitor, NullTemplateVisitor, ParseSpan, ParseTreeResult, Parser, PipeResolver, PropertyRead, RecursiveTemplateAstVisitor, ResourceLoader, SelectorMatcher, StaticAndDynamicReflectionCapabilities, StaticReflector, StaticSymbolCache, StaticSymbolResolver, TagContentType, TemplateParser, Text, analyzeNgModules, componentModuleUrl, createOfflineCompileUrlResolver, extractProgramSymbols, findNode, getHtmlTagDefinition, identifierName, splitNsName, templateVisitAll, tokenReference, visitAstChildren } from '@angular/compiler';
+import { ASTWithSource, AotSummaryResolver, AstPath, Attribute, CompileMetadataResolver, CompilerConfig, CssSelector, DEFAULT_INTERPOLATION_CONFIG, DirectiveNormalizer, DirectiveResolver, DomElementSchemaRegistry, Element, ElementAst, HtmlParser, I18NHtmlParser, ImplicitReceiver, JitSummaryResolver, Lexer, NAMED_ENTITIES, NgModuleResolver, NullAstVisitor, NullTemplateVisitor, ParseSpan, ParseTreeResult, Parser, PipeResolver, PropertyRead, RecursiveTemplateAstVisitor, ResourceLoader, SelectorMatcher, StaticReflector, StaticSymbolCache, StaticSymbolResolver, TagContentType, TemplateParser, Text, analyzeNgModules, createOfflineCompileUrlResolver, extractProgramSymbols, findNode, getHtmlTagDefinition, identifierName, splitNsName, templateVisitAll, tokenReference, visitAstChildren } from '@angular/compiler';
 import { AstType, BuiltinType, CompilerHost, ModuleResolutionHostAdapter, getClassMembersFromDeclaration, getExpressionScope, getPipesTable, getSymbolQuery, getTemplateExpressionDiagnostics } from '@angular/compiler-cli';
 import { DiagnosticCategory, SyntaxKind, forEachChild, getPositionOfLineAndCharacter } from 'typescript';
 import { Version, ViewEncapsulation, ɵConsole } from '@angular/core';
@@ -1653,7 +1653,7 @@ var LanguageServiceImpl = (function () {
                 var htmlParser = new I18NHtmlParser(rawHtmlParser);
                 var expressionParser = new Parser(new Lexer());
                 var config = new CompilerConfig();
-                var parser = new TemplateParser(config, expressionParser, new DomElementSchemaRegistry(), htmlParser, null, []);
+                var parser = new TemplateParser(config, this.host.resolver.getReflector(), expressionParser, new DomElementSchemaRegistry(), htmlParser, null, []);
                 var htmlResult = htmlParser.parse(template.source, '', true);
                 var analyzedModules = this.host.getAnalyzedModules();
                 var errors = undefined;
@@ -2050,9 +2050,9 @@ var TypeScriptServiceHost = (function () {
                 var module_1 = _a[_i];
                 for (var _b = 0, _c = module_1.declaredDirectives; _b < _c.length; _b++) {
                     var directive = _c[_b];
-                    var _d = this.resolver.getNonNormalizedDirectiveMetadata(directive.reference), metadata = _d.metadata, annotation = _d.annotation;
+                    var metadata = this.resolver.getNonNormalizedDirectiveMetadata(directive.reference).metadata;
                     if (metadata.isComponent && metadata.template && metadata.template.templateUrl) {
-                        var templateName = urlResolver.resolve(componentModuleUrl(this.reflector, directive.reference, annotation), metadata.template.templateUrl);
+                        var templateName = urlResolver.resolve(this.reflector.componentModuleUrl(directive.reference), metadata.template.templateUrl);
                         fileToComponent.set(templateName, directive.reference);
                         templateReference.push(templateName);
                     }
@@ -2181,7 +2181,6 @@ var TypeScriptServiceHost = (function () {
             if (!result) {
                 var ssr = this.staticSymbolResolver;
                 result = this._reflector = new StaticReflector(this._summaryResolver, ssr, [], [], function (e, filePath) { return _this.collectError(e, filePath); });
-                StaticAndDynamicReflectionCapabilities.install(result);
             }
             return result;
         },
@@ -2631,7 +2630,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version('4.2.0-rc.0-3b28c75');
+var VERSION = new Version('4.2.0-rc.0-5af143e');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
