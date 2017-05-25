@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.2.0-rc.0-966eb2f
+ * @license Angular v4.2.0-rc.0-573b861
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2004,7 +2004,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v4.2.0-rc.0-966eb2f
+ * @license Angular v4.2.0-rc.0-573b861
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2796,7 +2796,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('4.2.0-rc.0-966eb2f');
+var VERSION$2 = new Version('4.2.0-rc.0-573b861');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -16982,7 +16982,7 @@ var core_es5 = Object.freeze({
 });
 
 /**
- * @license Angular v4.2.0-rc.0-966eb2f
+ * @license Angular v4.2.0-rc.0-573b861
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -17001,7 +17001,7 @@ var core_es5 = Object.freeze({
 /**
  * \@stable
  */
-var VERSION$1 = new Version('4.2.0-rc.0-966eb2f');
+var VERSION$1 = new Version('4.2.0-rc.0-573b861');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -46191,6 +46191,7 @@ var CompilerHost = (function () {
         this.resolverCache = new Map();
         this.bundleIndexCache = new Map();
         this.bundleIndexNames = new Set();
+        this.bundleRedirectNames = new Set();
         this.moduleFileNames = new Map();
         // normalize the path so that it never ends with '/'.
         this.basePath = path.normalize(path.join(this.options.basePath, '.')).replace(/\\/g, '/');
@@ -46418,7 +46419,8 @@ var CompilerHost = (function () {
             // Check for a bundle index.
             if (this.hasBundleIndex(filePath)) {
                 var normalFilePath = path.normalize(filePath);
-                return this.bundleIndexNames.has(normalFilePath);
+                return this.bundleIndexNames.has(normalFilePath) ||
+                    this.bundleRedirectNames.has(normalFilePath);
             }
         }
         return true;
@@ -46468,7 +46470,14 @@ var CompilerHost = (function () {
                                     var metadataFile = typings.replace(DTS, '.metadata.json');
                                     if (_this.context.fileExists(metadataFile)) {
                                         var metadata = JSON.parse(_this.context.readFile(metadataFile));
-                                        if (metadata.importAs) {
+                                        if (metadata.bundleRedirect) {
+                                            _this.bundleRedirectNames.add(typings);
+                                            // Note: don't set result = true,
+                                            // as this would mark this folder
+                                            // as having a bundleIndex too early without
+                                            // filling the bundleIndexNames.
+                                        }
+                                        else if (metadata.importAs) {
                                             _this.bundleIndexNames.add(typings);
                                             result = true;
                                         }
@@ -46750,11 +46759,12 @@ var CodeGenerator = (function () {
             .analyzeModulesAsync(this.program.getSourceFiles().map(function (sf) { return _this.ngCompilerHost.getCanonicalFileName(sf.fileName); }))
             .then(function (analyzedModules) { return _this.compiler.emitAllImpls(analyzedModules); })
             .then(function (generatedModules) {
-            generatedModules.forEach(function (generatedModule) {
+            return generatedModules.map(function (generatedModule) {
                 var sourceFile = _this.program.getSourceFile(generatedModule.srcFileUrl);
                 var emitPath = _this.ngCompilerHost.calculateEmitPath(generatedModule.genFileUrl);
                 var source = generatedModule.source || compiler.toTypeScript(generatedModule, PREAMBLE);
                 _this.host.writeFile(emitPath, source, false, function () { }, [sourceFile]);
+                return emitPath;
             });
         });
     };
@@ -46839,6 +46849,7 @@ var Extractor = (function () {
             var dstFile = outFile || "messages." + ext;
             var dstPath = path.join(_this.options.genDir, dstFile);
             _this.host.writeFile(dstPath, content, false);
+            return [dstPath];
         });
     };
     Extractor.prototype.extractBundle = function () {
@@ -46914,7 +46925,7 @@ var core_1 = require$$0$12;
 /**
  * @stable
  */
-exports.VERSION = new core_1.Version('4.2.0-rc.0-966eb2f');
+exports.VERSION = new core_1.Version('4.2.0-rc.0-573b861');
 
 });
 
@@ -48915,7 +48926,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v4.2.0-rc.0-966eb2f
+ * @license Angular v4.2.0-rc.0-573b861
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -51540,7 +51551,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('4.2.0-rc.0-966eb2f');
+var VERSION$$1 = new Version('4.2.0-rc.0-573b861');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
