@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.2.0-rc.0-3ab86bd
+ * @license Angular v4.2.0-rc.0-5aa53d7
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2630,7 +2630,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version('4.2.0-rc.0-3ab86bd');
+var VERSION = new Version('4.2.0-rc.0-5aa53d7');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
