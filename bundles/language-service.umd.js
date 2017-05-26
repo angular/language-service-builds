@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.2.0-rc.0-c0981b8
+ * @license Angular v4.2.0-rc.0-7ffb75f
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2004,7 +2004,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v4.2.0-rc.0-c0981b8
+ * @license Angular v4.2.0-rc.0-7ffb75f
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2796,7 +2796,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('4.2.0-rc.0-c0981b8');
+var VERSION$2 = new Version('4.2.0-rc.0-7ffb75f');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -16982,7 +16982,7 @@ var core_es5 = Object.freeze({
 });
 
 /**
- * @license Angular v4.2.0-rc.0-c0981b8
+ * @license Angular v4.2.0-rc.0-7ffb75f
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -17001,7 +17001,7 @@ var core_es5 = Object.freeze({
 /**
  * \@stable
  */
-var VERSION$1 = new Version('4.2.0-rc.0-c0981b8');
+var VERSION$1 = new Version('4.2.0-rc.0-7ffb75f');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -46189,9 +46189,9 @@ var CompilerHost = (function () {
         this.context = context;
         this.metadataCollector = new tsc_wrapped_1.MetadataCollector();
         this.resolverCache = new Map();
-        this.bundleIndexCache = new Map();
-        this.bundleIndexNames = new Set();
-        this.bundleRedirectNames = new Set();
+        this.flatModuleIndexCache = new Map();
+        this.flatModuleIndexNames = new Set();
+        this.flatModuleIndexRedirectNames = new Set();
         this.moduleFileNames = new Map();
         // normalize the path so that it never ends with '/'.
         this.basePath = path.normalize(path.join(this.options.basePath, '.')).replace(/\\/g, '/');
@@ -46419,8 +46419,8 @@ var CompilerHost = (function () {
             // Check for a bundle index.
             if (this.hasBundleIndex(filePath)) {
                 var normalFilePath = path.normalize(filePath);
-                return this.bundleIndexNames.has(normalFilePath) ||
-                    this.bundleRedirectNames.has(normalFilePath);
+                return this.flatModuleIndexNames.has(normalFilePath) ||
+                    this.flatModuleIndexRedirectNames.has(normalFilePath);
             }
         }
         return true;
@@ -46449,7 +46449,7 @@ var CompilerHost = (function () {
     CompilerHost.prototype.hasBundleIndex = function (filePath) {
         var _this = this;
         var checkBundleIndex = function (directory) {
-            var result = _this.bundleIndexCache.get(directory);
+            var result = _this.flatModuleIndexCache.get(directory);
             if (result == null) {
                 if (path.basename(directory) == 'node_module') {
                     // Don't look outside the node_modules this package is installed in.
@@ -46470,15 +46470,15 @@ var CompilerHost = (function () {
                                     var metadataFile = typings.replace(DTS, '.metadata.json');
                                     if (_this.context.fileExists(metadataFile)) {
                                         var metadata = JSON.parse(_this.context.readFile(metadataFile));
-                                        if (metadata.bundleRedirect) {
-                                            _this.bundleRedirectNames.add(typings);
+                                        if (metadata.flatModuleIndexRedirect) {
+                                            _this.flatModuleIndexRedirectNames.add(typings);
                                             // Note: don't set result = true,
                                             // as this would mark this folder
                                             // as having a bundleIndex too early without
                                             // filling the bundleIndexNames.
                                         }
                                         else if (metadata.importAs) {
-                                            _this.bundleIndexNames.add(typings);
+                                            _this.flatModuleIndexNames.add(typings);
                                             result = true;
                                         }
                                     }
@@ -46501,7 +46501,7 @@ var CompilerHost = (function () {
                         result = false;
                     }
                 }
-                _this.bundleIndexCache.set(directory, result);
+                _this.flatModuleIndexCache.set(directory, result);
             }
             return result;
         };
@@ -46925,7 +46925,7 @@ var core_1 = require$$0$12;
 /**
  * @stable
  */
-exports.VERSION = new core_1.Version('4.2.0-rc.0-c0981b8');
+exports.VERSION = new core_1.Version('4.2.0-rc.0-7ffb75f');
 
 });
 
@@ -48926,7 +48926,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v4.2.0-rc.0-c0981b8
+ * @license Angular v4.2.0-rc.0-7ffb75f
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -51551,7 +51551,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('4.2.0-rc.0-c0981b8');
+var VERSION$$1 = new Version('4.2.0-rc.0-7ffb75f');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
