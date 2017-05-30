@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.2.0-rc.1-160221c
+ * @license Angular v4.2.0-rc.1-18bf772
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2004,7 +2004,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v4.2.0-rc.1-160221c
+ * @license Angular v4.2.0-rc.1-18bf772
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2796,7 +2796,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('4.2.0-rc.1-160221c');
+var VERSION$2 = new Version('4.2.0-rc.1-18bf772');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -16982,7 +16982,7 @@ var core_es5 = Object.freeze({
 });
 
 /**
- * @license Angular v4.2.0-rc.1-160221c
+ * @license Angular v4.2.0-rc.1-18bf772
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -17001,7 +17001,7 @@ var core_es5 = Object.freeze({
 /**
  * \@stable
  */
-var VERSION$1 = new Version('4.2.0-rc.1-160221c');
+var VERSION$1 = new Version('4.2.0-rc.1-18bf772');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -34308,6 +34308,27 @@ var IfStmt = (function (_super) {
     };
     return IfStmt;
 }(Statement));
+var CommentStmt = (function (_super) {
+    tslib_1.__extends(CommentStmt, _super);
+    /**
+     * @param {?} comment
+     * @param {?=} sourceSpan
+     */
+    function CommentStmt(comment, sourceSpan) {
+        var _this = _super.call(this, null, sourceSpan) || this;
+        _this.comment = comment;
+        return _this;
+    }
+    /**
+     * @param {?} visitor
+     * @param {?} context
+     * @return {?}
+     */
+    CommentStmt.prototype.visitStatement = function (visitor, context) {
+        return visitor.visitCommentStmt(this, context);
+    };
+    return CommentStmt;
+}(Statement));
 var TryCatchStmt = (function (_super) {
     tslib_1.__extends(TryCatchStmt, _super);
     /**
@@ -44407,6 +44428,41 @@ var compiler_es5 = Object.freeze({
 	DEFAULT_INTERPOLATION_CONFIG: DEFAULT_INTERPOLATION_CONFIG,
 	InterpolationConfig: InterpolationConfig,
 	NgModuleCompiler: NgModuleCompiler,
+	AssertNotNull: AssertNotNull,
+	BinaryOperator: BinaryOperator,
+	BinaryOperatorExpr: BinaryOperatorExpr,
+	BuiltinMethod: BuiltinMethod,
+	BuiltinVar: BuiltinVar,
+	CastExpr: CastExpr,
+	ClassStmt: ClassStmt,
+	CommaExpr: CommaExpr,
+	CommentStmt: CommentStmt,
+	ConditionalExpr: ConditionalExpr,
+	DeclareFunctionStmt: DeclareFunctionStmt,
+	DeclareVarStmt: DeclareVarStmt,
+	ExpressionStatement: ExpressionStatement,
+	ExternalExpr: ExternalExpr,
+	ExternalReference: ExternalReference,
+	FunctionExpr: FunctionExpr,
+	IfStmt: IfStmt,
+	InstantiateExpr: InstantiateExpr,
+	InvokeFunctionExpr: InvokeFunctionExpr,
+	InvokeMethodExpr: InvokeMethodExpr,
+	LiteralArrayExpr: LiteralArrayExpr,
+	LiteralExpr: LiteralExpr,
+	LiteralMapExpr: LiteralMapExpr,
+	NotExpr: NotExpr,
+	ReadKeyExpr: ReadKeyExpr,
+	ReadPropExpr: ReadPropExpr,
+	ReadVarExpr: ReadVarExpr,
+	ReturnStatement: ReturnStatement,
+	ThrowStmt: ThrowStmt,
+	TryCatchStmt: TryCatchStmt,
+	WriteKeyExpr: WriteKeyExpr,
+	WritePropExpr: WritePropExpr,
+	WriteVarExpr: WriteVarExpr,
+	StmtModifier: StmtModifier,
+	Statement: Statement,
 	ViewCompiler: ViewCompiler,
 	isSyntaxError: isSyntaxError,
 	syntaxError: syntaxError,
@@ -46925,7 +46981,7 @@ var core_1 = require$$0$12;
 /**
  * @stable
  */
-exports.VERSION = new core_1.Version('4.2.0-rc.1-160221c');
+exports.VERSION = new core_1.Version('4.2.0-rc.1-18bf772');
 
 });
 
@@ -48926,7 +48982,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v4.2.0-rc.1-160221c
+ * @license Angular v4.2.0-rc.1-18bf772
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -51551,7 +51607,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('4.2.0-rc.1-160221c');
+var VERSION$$1 = new Version('4.2.0-rc.1-18bf772');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
