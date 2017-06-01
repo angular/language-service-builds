@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.2.0-rc.1-1338995
+ * @license Angular v4.2.0-rc.1-230255f
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2004,7 +2004,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v4.2.0-rc.1-1338995
+ * @license Angular v4.2.0-rc.1-230255f
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2796,7 +2796,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('4.2.0-rc.1-1338995');
+var VERSION$2 = new Version('4.2.0-rc.1-230255f');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -16982,7 +16982,7 @@ var core_es5 = Object.freeze({
 });
 
 /**
- * @license Angular v4.2.0-rc.1-1338995
+ * @license Angular v4.2.0-rc.1-230255f
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -17001,7 +17001,7 @@ var core_es5 = Object.freeze({
 /**
  * \@stable
  */
-var VERSION$1 = new Version('4.2.0-rc.1-1338995');
+var VERSION$1 = new Version('4.2.0-rc.1-230255f');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -35746,6 +35746,7 @@ var EmitterVisitorContext = (function () {
     function EmitterVisitorContext(_indent) {
         this._indent = _indent;
         this._classes = [];
+        this._preambleLineCount = 0;
         this._lines = [new _EmittedLine(_indent)];
     }
     /**
@@ -35906,6 +35907,30 @@ var EmitterVisitorContext = (function () {
             }
         });
         return map;
+    };
+    /**
+     * @param {?} count
+     * @return {?}
+     */
+    EmitterVisitorContext.prototype.setPreambleLineCount = function (count) { return this._preambleLineCount = count; };
+    /**
+     * @param {?} line
+     * @param {?} column
+     * @return {?}
+     */
+    EmitterVisitorContext.prototype.spanOf = function (line, column) {
+        var /** @type {?} */ emittedLine = this._lines[line - this._preambleLineCount];
+        if (emittedLine) {
+            var /** @type {?} */ columnsLeft = column - emittedLine.indent;
+            for (var /** @type {?} */ partIndex = 0; partIndex < emittedLine.parts.length; partIndex++) {
+                var /** @type {?} */ part = emittedLine.parts[partIndex];
+                if (part.length > columnsLeft) {
+                    return emittedLine.srcSpans[partIndex];
+                }
+                columnsLeft -= part.length;
+            }
+        }
+        return null;
     };
     Object.defineProperty(EmitterVisitorContext.prototype, "sourceLines", {
         /**
@@ -36496,10 +36521,12 @@ var TypeScriptEmitter = (function () {
      * @param {?} genFilePath
      * @param {?} stmts
      * @param {?=} preamble
+     * @param {?=} emitSourceMaps
      * @return {?}
      */
-    TypeScriptEmitter.prototype.emitStatements = function (srcFilePath, genFilePath, stmts, preamble) {
+    TypeScriptEmitter.prototype.emitStatementsAndContext = function (srcFilePath, genFilePath, stmts, preamble, emitSourceMaps) {
         if (preamble === void 0) { preamble = ''; }
+        if (emitSourceMaps === void 0) { emitSourceMaps = true; }
         var /** @type {?} */ converter = new _TsEmitterVisitor();
         var /** @type {?} */ ctx = EmitterVisitorContext.createRoot();
         converter.visitAllStatements(stmts, ctx);
@@ -36513,13 +36540,27 @@ var TypeScriptEmitter = (function () {
             preambleLines.push("imp" +
                 ("ort * as " + prefix + " from '" + importedModuleName + "';"));
         });
-        var /** @type {?} */ sm = ctx.toSourceMapGenerator(srcFilePath, genFilePath, preambleLines.length).toJsComment();
+        var /** @type {?} */ sm = emitSourceMaps ?
+            ctx.toSourceMapGenerator(srcFilePath, genFilePath, preambleLines.length).toJsComment() :
+            '';
         var /** @type {?} */ lines = preambleLines.concat([ctx.toSource(), sm]);
         if (sm) {
             // always add a newline at the end, as some tools have bugs without it.
             lines.push('');
         }
-        return lines.join('\n');
+        ctx.setPreambleLineCount(preambleLines.length);
+        return { sourceText: lines.join('\n'), context: ctx };
+    };
+    /**
+     * @param {?} srcFilePath
+     * @param {?} genFilePath
+     * @param {?} stmts
+     * @param {?=} preamble
+     * @return {?}
+     */
+    TypeScriptEmitter.prototype.emitStatements = function (srcFilePath, genFilePath, stmts, preamble) {
+        if (preamble === void 0) { preamble = ''; }
+        return this.emitStatementsAndContext(srcFilePath, genFilePath, stmts, preamble).sourceText;
     };
     return TypeScriptEmitter;
 }());
@@ -44464,6 +44505,7 @@ var compiler_es5 = Object.freeze({
 	WriteVarExpr: WriteVarExpr,
 	StmtModifier: StmtModifier,
 	Statement: Statement,
+	EmitterVisitorContext: EmitterVisitorContext,
 	ViewCompiler: ViewCompiler,
 	isSyntaxError: isSyntaxError,
 	syntaxError: syntaxError,
@@ -46982,7 +47024,7 @@ var core_1 = require$$0$12;
 /**
  * @stable
  */
-exports.VERSION = new core_1.Version('4.2.0-rc.1-1338995');
+exports.VERSION = new core_1.Version('4.2.0-rc.1-230255f');
 
 });
 
@@ -48983,7 +49025,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v4.2.0-rc.1-1338995
+ * @license Angular v4.2.0-rc.1-230255f
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -51608,7 +51650,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('4.2.0-rc.1-1338995');
+var VERSION$$1 = new Version('4.2.0-rc.1-230255f');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
