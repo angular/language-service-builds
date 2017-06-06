@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.2.0-rc.2-269bbe0
+ * @license Angular v4.2.0-rc.2-b00b80a
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2004,7 +2004,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v4.2.0-rc.2-269bbe0
+ * @license Angular v4.2.0-rc.2-b00b80a
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2796,7 +2796,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('4.2.0-rc.2-269bbe0');
+var VERSION$2 = new Version('4.2.0-rc.2-b00b80a');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -16982,7 +16982,7 @@ var core_es5 = Object.freeze({
 });
 
 /**
- * @license Angular v4.2.0-rc.2-269bbe0
+ * @license Angular v4.2.0-rc.2-b00b80a
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -17001,7 +17001,7 @@ var core_es5 = Object.freeze({
 /**
  * \@stable
  */
-var VERSION$1 = new Version('4.2.0-rc.2-269bbe0');
+var VERSION$1 = new Version('4.2.0-rc.2-b00b80a');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -46499,7 +46499,9 @@ var CompilerHost = (function () {
         }
         return v3Metadata;
     };
-    CompilerHost.prototype.loadResource = function (filePath) { return this.context.readResource(filePath); };
+    CompilerHost.prototype.loadResource = function (filePath) {
+        return this.context.readResource(filePath);
+    };
     CompilerHost.prototype.loadSummary = function (filePath) {
         if (this.context.fileExists(filePath)) {
             return this.context.readFile(filePath);
@@ -46856,15 +46858,22 @@ var CodeGenerator = (function () {
         var _this = this;
         return this.compiler
             .analyzeModulesAsync(this.program.getSourceFiles().map(function (sf) { return _this.ngCompilerHost.getCanonicalFileName(sf.fileName); }))
-            .then(function (analyzedModules) { return _this.compiler.emitAllImpls(analyzedModules); })
-            .then(function (generatedModules) {
-            return generatedModules.map(function (generatedModule) {
-                var sourceFile = _this.program.getSourceFile(generatedModule.srcFileUrl);
-                var emitPath = _this.ngCompilerHost.calculateEmitPath(generatedModule.genFileUrl);
-                var source = generatedModule.source || compiler.toTypeScript(generatedModule, PREAMBLE);
-                _this.host.writeFile(emitPath, source, false, function () { }, [sourceFile]);
-                return emitPath;
-            });
+            .then(function (analyzedModules) { return _this.emit(analyzedModules); });
+    };
+    CodeGenerator.prototype.codegenSync = function () {
+        var _this = this;
+        var analyzed = this.compiler.analyzeModulesSync(this.program.getSourceFiles().map(function (sf) { return _this.ngCompilerHost.getCanonicalFileName(sf.fileName); }));
+        return this.emit(analyzed);
+    };
+    CodeGenerator.prototype.emit = function (analyzedModules) {
+        var _this = this;
+        var generatedModules = this.compiler.emitAllImpls(analyzedModules);
+        return generatedModules.map(function (generatedModule) {
+            var sourceFile = _this.program.getSourceFile(generatedModule.srcFileUrl);
+            var emitPath = _this.ngCompilerHost.calculateEmitPath(generatedModule.genFileUrl);
+            var source = generatedModule.source || compiler.toTypeScript(generatedModule, PREAMBLE);
+            _this.host.writeFile(emitPath, source, false, function () { }, [sourceFile]);
+            return emitPath;
         });
     };
     CodeGenerator.create = function (options, cliOptions, program, tsCompilerHost, compilerHostContext, ngCompilerHost) {
@@ -47024,7 +47033,7 @@ var core_1 = require$$0$12;
 /**
  * @stable
  */
-exports.VERSION = new core_1.Version('4.2.0-rc.2-269bbe0');
+exports.VERSION = new core_1.Version('4.2.0-rc.2-b00b80a');
 
 });
 
@@ -49025,7 +49034,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v4.2.0-rc.2-269bbe0
+ * @license Angular v4.2.0-rc.2-b00b80a
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -51650,7 +51659,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('4.2.0-rc.2-269bbe0');
+var VERSION$$1 = new Version('4.2.0-rc.2-b00b80a');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
