@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.2.0-d56b7ed
+ * @license Angular v4.2.0-90b0713
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2004,7 +2004,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v4.2.0-d56b7ed
+ * @license Angular v4.2.0-90b0713
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2796,7 +2796,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('4.2.0-d56b7ed');
+var VERSION$2 = new Version('4.2.0-90b0713');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -16982,7 +16982,7 @@ var core_es5 = Object.freeze({
 });
 
 /**
- * @license Angular v4.2.0-d56b7ed
+ * @license Angular v4.2.0-90b0713
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -17001,7 +17001,7 @@ var core_es5 = Object.freeze({
 /**
  * \@stable
  */
-var VERSION$1 = new Version('4.2.0-d56b7ed');
+var VERSION$1 = new Version('4.2.0-90b0713');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -40654,9 +40654,10 @@ var AotCompiler = (function () {
      * @param {?} _summaryResolver
      * @param {?} _localeId
      * @param {?} _translationFormat
+     * @param {?} _enableSummariesForJit
      * @param {?} _symbolResolver
      */
-    function AotCompiler(_config, _host, _reflector, _metadataResolver, _templateParser, _styleCompiler, _viewCompiler, _ngModuleCompiler, _outputEmitter, _summaryResolver, _localeId, _translationFormat, _symbolResolver) {
+    function AotCompiler(_config, _host, _reflector, _metadataResolver, _templateParser, _styleCompiler, _viewCompiler, _ngModuleCompiler, _outputEmitter, _summaryResolver, _localeId, _translationFormat, _enableSummariesForJit, _symbolResolver) {
         this._config = _config;
         this._host = _host;
         this._reflector = _reflector;
@@ -40669,6 +40670,7 @@ var AotCompiler = (function () {
         this._summaryResolver = _summaryResolver;
         this._localeId = _localeId;
         this._translationFormat = _translationFormat;
+        this._enableSummariesForJit = _enableSummariesForJit;
         this._symbolResolver = _symbolResolver;
     }
     /**
@@ -40835,10 +40837,11 @@ var AotCompiler = (function () {
                 StmtModifier.Exported
             ]));
         });
-        return [
-            new GeneratedFile(srcFileUrl, summaryFileName(srcFileUrl), json),
-            this._codegenSourceModule(srcFileUrl, forJitOutputCtx)
-        ];
+        var /** @type {?} */ summaryJson = new GeneratedFile(srcFileUrl, summaryFileName(srcFileUrl), json);
+        if (this._enableSummariesForJit) {
+            return [summaryJson, this._codegenSourceModule(srcFileUrl, forJitOutputCtx)];
+        }
+        return [summaryJson];
     };
     /**
      * @param {?} outputCtx
@@ -42589,7 +42592,7 @@ function createAotCompiler(compilerHost, options) {
     var /** @type {?} */ resolver = new CompileMetadataResolver(config, new NgModuleResolver(staticReflector), new DirectiveResolver(staticReflector), new PipeResolver(staticReflector), summaryResolver, elementSchemaRegistry, normalizer, console, symbolCache, staticReflector);
     // TODO(vicb): do not pass options.i18nFormat here
     var /** @type {?} */ viewCompiler = new ViewCompiler(config, staticReflector, elementSchemaRegistry);
-    var /** @type {?} */ compiler = new AotCompiler(config, compilerHost, staticReflector, resolver, tmplParser, new StyleCompiler(urlResolver), viewCompiler, new NgModuleCompiler(staticReflector), new TypeScriptEmitter(), summaryResolver, options.locale || null, options.i18nFormat || null, symbolResolver);
+    var /** @type {?} */ compiler = new AotCompiler(config, compilerHost, staticReflector, resolver, tmplParser, new StyleCompiler(urlResolver), viewCompiler, new NgModuleCompiler(staticReflector), new TypeScriptEmitter(), summaryResolver, options.locale || null, options.i18nFormat || null, options.enableSummariesForJit || null, symbolResolver);
     return { compiler: compiler, reflector: staticReflector };
 }
 /**
@@ -46911,6 +46914,7 @@ var CodeGenerator = (function () {
             i18nFormat: cliOptions.i18nFormat,
             locale: cliOptions.locale, missingTranslation: missingTranslation,
             enableLegacyTemplate: options.enableLegacyTemplate !== false,
+            enableSummariesForJit: options.enableSummariesForJit !== false,
         }).compiler;
         return new CodeGenerator(options, program, tsCompilerHost, aotCompiler, ngCompilerHost);
     };
@@ -47033,7 +47037,7 @@ var core_1 = require$$0$12;
 /**
  * @stable
  */
-exports.VERSION = new core_1.Version('4.2.0-d56b7ed');
+exports.VERSION = new core_1.Version('4.2.0-90b0713');
 
 });
 
@@ -48932,8 +48936,13 @@ var NgTools_InternalApi_NG_2 = (function () {
             missingTranslation: options.missingTranslation,
             basePath: options.basePath
         };
+        var ngOptions = options.angularCompilerOptions;
+        if (ngOptions.enableSummariesForJit === undefined) {
+            // default to false
+            ngOptions.enableSummariesForJit = false;
+        }
         // Create the Code Generator.
-        var codeGenerator = codegen_1.CodeGenerator.create(options.angularCompilerOptions, cliOptions, options.program, options.host, hostContext);
+        var codeGenerator = codegen_1.CodeGenerator.create(ngOptions, cliOptions, options.program, options.host, hostContext);
         return codeGenerator.codegen();
     };
     /**
@@ -49034,7 +49043,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v4.2.0-d56b7ed
+ * @license Angular v4.2.0-90b0713
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -51659,7 +51668,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('4.2.0-d56b7ed');
+var VERSION$$1 = new Version('4.2.0-90b0713');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
