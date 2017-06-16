@@ -1,6 +1,6 @@
 {
   "name": "@angular/language-service",
-  "version": "4.2.2-2cc931e",
+  "version": "4.2.2-956a7e9",
   "description": "Angular - language services",
   "main": "./bundles/language-service.umd.js",
   "module": "./@angular/language-service.es5.js",
