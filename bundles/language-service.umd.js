@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.2.2-009651e
+ * @license Angular v4.2.2-00874c2
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2030,7 +2030,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v4.2.2-009651e
+ * @license Angular v4.2.2-00874c2
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2760,17 +2760,17 @@ ViewEncapsulation[ViewEncapsulation.None] = "None";
  */
 var ViewMetadata = (function () {
     /**
-     * @param {?=} __0
+     * @param {?=} opts
      */
-    function ViewMetadata(_a) {
-        var _b = _a === void 0 ? {} : _a, templateUrl = _b.templateUrl, template = _b.template, encapsulation = _b.encapsulation, styles = _b.styles, styleUrls = _b.styleUrls, animations = _b.animations, interpolation = _b.interpolation;
-        this.templateUrl = templateUrl;
-        this.template = template;
-        this.styleUrls = styleUrls;
-        this.styles = styles;
-        this.encapsulation = encapsulation;
-        this.animations = animations;
-        this.interpolation = interpolation;
+    function ViewMetadata(opts) {
+        if (opts === void 0) { opts = {}; }
+        this.templateUrl = opts.templateUrl;
+        this.template = opts.template;
+        this.styleUrls = opts.styleUrls;
+        this.styles = opts.styles;
+        this.encapsulation = opts.encapsulation;
+        this.animations = opts.animations;
+        this.interpolation = opts.interpolation;
     }
     return ViewMetadata;
 }());
@@ -2822,7 +2822,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('4.2.2-009651e');
+var VERSION$2 = new Version('4.2.2-00874c2');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -16979,7 +16979,7 @@ var core_es5 = Object.freeze({
 });
 
 /**
- * @license Angular v4.2.2-009651e
+ * @license Angular v4.2.2-00874c2
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -16998,7 +16998,7 @@ var core_es5 = Object.freeze({
 /**
  * \@stable
  */
-var VERSION$1 = new Version('4.2.2-009651e');
+var VERSION$1 = new Version('4.2.2-00874c2');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -47034,7 +47034,7 @@ var core_1 = require$$0$12;
 /**
  * @stable
  */
-exports.VERSION = new core_1.Version('4.2.2-009651e');
+exports.VERSION = new core_1.Version('4.2.2-00874c2');
 
 });
 
@@ -49040,7 +49040,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v4.2.2-009651e
+ * @license Angular v4.2.2-00874c2
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -51665,7 +51665,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('4.2.2-009651e');
+var VERSION$$1 = new Version('4.2.2-00874c2');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
