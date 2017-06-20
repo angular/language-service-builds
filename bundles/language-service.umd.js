@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.2.2-8c89cc4
+ * @license Angular v4.2.2-46ddf50
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2030,7 +2030,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v4.2.2-8c89cc4
+ * @license Angular v4.2.2-46ddf50
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2822,7 +2822,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('4.2.2-8c89cc4');
+var VERSION$2 = new Version('4.2.2-46ddf50');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -16979,7 +16979,7 @@ var core_es5 = Object.freeze({
 });
 
 /**
- * @license Angular v4.2.2-8c89cc4
+ * @license Angular v4.2.2-46ddf50
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -16998,7 +16998,7 @@ var core_es5 = Object.freeze({
 /**
  * \@stable
  */
-var VERSION$1 = new Version('4.2.2-8c89cc4');
+var VERSION$1 = new Version('4.2.2-46ddf50');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -45899,7 +45899,7 @@ var MetadataCollector = (function () {
                     // Record functions that return a single value. Record the parameter
                     // names substitution will be performed by the StaticReflector.
                     var functionDeclaration = node;
-                    if (isExported(functionDeclaration)) {
+                    if (isExported(functionDeclaration) && functionDeclaration.name) {
                         if (!metadata)
                             metadata = {};
                         var name_4 = exportedName(functionDeclaration);
@@ -47034,7 +47034,7 @@ var core_1 = require$$0$12;
 /**
  * @stable
  */
-exports.VERSION = new core_1.Version('4.2.2-8c89cc4');
+exports.VERSION = new core_1.Version('4.2.2-46ddf50');
 
 });
 
@@ -49046,7 +49046,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v4.2.2-8c89cc4
+ * @license Angular v4.2.2-46ddf50
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -51671,7 +51671,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('4.2.2-8c89cc4');
+var VERSION$$1 = new Version('4.2.2-46ddf50');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
