@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.2.2-00874c2
+ * @license Angular v4.2.2-8c89cc4
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2030,7 +2030,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v4.2.2-00874c2
+ * @license Angular v4.2.2-8c89cc4
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2822,7 +2822,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('4.2.2-00874c2');
+var VERSION$2 = new Version('4.2.2-8c89cc4');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -16979,7 +16979,7 @@ var core_es5 = Object.freeze({
 });
 
 /**
- * @license Angular v4.2.2-00874c2
+ * @license Angular v4.2.2-8c89cc4
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -16998,7 +16998,7 @@ var core_es5 = Object.freeze({
 /**
  * \@stable
  */
-var VERSION$1 = new Version('4.2.2-00874c2');
+var VERSION$1 = new Version('4.2.2-8c89cc4');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -47034,7 +47034,7 @@ var core_1 = require$$0$12;
 /**
  * @stable
  */
-exports.VERSION = new core_1.Version('4.2.2-00874c2');
+exports.VERSION = new core_1.Version('4.2.2-8c89cc4');
 
 });
 
@@ -48785,6 +48785,13 @@ function _assertRoute(map, route) {
             'load the proper one.');
     }
 }
+function flatten(list) {
+    return list.reduce(function (flat, item) {
+        var flatItem = Array.isArray(item) ? flatten(item) : item;
+        return flat.concat(flatItem);
+    }, []);
+}
+exports.flatten = flatten;
 /**
  * Extract all the LazyRoutes from a module. This extracts all `loadChildren` keys from this
  * module and all statically referred modules.
@@ -48792,9 +48799,8 @@ function _assertRoute(map, route) {
  */
 function _extractLazyRoutesFromStaticModule(staticSymbol, reflector, host, ROUTES) {
     var moduleMetadata = _getNgModuleMetadata(staticSymbol, reflector);
-    var allRoutes = (moduleMetadata.imports || [])
-        .filter(function (i) { return 'providers' in i; })
-        .reduce(function (mem, m) {
+    var imports = flatten(moduleMetadata.imports || []);
+    var allRoutes = imports.filter(function (i) { return 'providers' in i; }).reduce(function (mem, m) {
         return mem.concat(_collectRoutes(m.providers || [], reflector, ROUTES));
     }, _collectRoutes(moduleMetadata.providers || [], reflector, ROUTES));
     var lazyRoutes = _collectLoadChildren(allRoutes).reduce(function (acc, route) {
@@ -48803,7 +48809,7 @@ function _extractLazyRoutesFromStaticModule(staticSymbol, reflector, host, ROUTE
         acc.push({ routeDef: routeDef, absoluteFilePath: absoluteFilePath });
         return acc;
     }, []);
-    var importedSymbols = (moduleMetadata.imports || [])
+    var importedSymbols = imports
         .filter(function (i) { return i instanceof compiler_1.StaticSymbol || i.ngModule instanceof compiler_1.StaticSymbol; })
         .map(function (i) {
         if (i instanceof compiler_1.StaticSymbol)
@@ -49040,7 +49046,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v4.2.2-00874c2
+ * @license Angular v4.2.2-8c89cc4
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -51665,7 +51671,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('4.2.2-00874c2');
+var VERSION$$1 = new Version('4.2.2-8c89cc4');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
