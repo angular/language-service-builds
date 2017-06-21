@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.2.2-34cc3f2
+ * @license Angular v4.2.2-4352dd2
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2030,7 +2030,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v4.2.2-34cc3f2
+ * @license Angular v4.2.2-4352dd2
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2822,7 +2822,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('4.2.2-34cc3f2');
+var VERSION$2 = new Version('4.2.2-4352dd2');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -16979,7 +16979,7 @@ var core_es5 = Object.freeze({
 });
 
 /**
- * @license Angular v4.2.2-34cc3f2
+ * @license Angular v4.2.2-4352dd2
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -16998,7 +16998,7 @@ var core_es5 = Object.freeze({
 /**
  * \@stable
  */
-var VERSION$1 = new Version('4.2.2-34cc3f2');
+var VERSION$1 = new Version('4.2.2-4352dd2');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -40930,7 +40930,9 @@ var AotCompiler = (function () {
             }
             var /** @type {?} */ arity = _this._symbolResolver.getTypeArity(symbol) || 0;
             var _a = _this._symbolResolver.getImportAs(symbol) || symbol, filePath = _a.filePath, name = _a.name, members = _a.members;
-            var /** @type {?} */ moduleName = _this._symbolResolver.fileNameToModuleName(filePath, genFilePath);
+            var /** @type {?} */ importModule = _this._symbolResolver.fileNameToModuleName(filePath, genFilePath);
+            var /** @type {?} */ selfReference = _this._symbolResolver.fileNameToModuleName(genFilePath, genFilePath);
+            var /** @type {?} */ moduleName = importModule === selfReference ? null : importModule;
             // If we are in a type expression that refers to a generic type then supply
             // the required type parameters. If there were not enough type parameters
             // supplied, supply any as the type. Outside a type expression the reference
@@ -42087,9 +42089,6 @@ var StaticSymbolResolver = (function () {
      * @return {?}
      */
     StaticSymbolResolver.prototype.fileNameToModuleName = function (importedFilePath, containingFilePath) {
-        if (importedFilePath === containingFilePath) {
-            return null;
-        }
         return this.knownFileNameToModuleNames.get(importedFilePath) ||
             this.host.fileNameToModuleName(importedFilePath, containingFilePath);
     };
@@ -46356,7 +46355,7 @@ var CompilerHost = (function () {
     CompilerHost.prototype.fileNameToModuleName = function (importedFile, containingFile) {
         // If a file does not yet exist (because we compile it later), we still need to
         // assume it exists it so that the `resolve` method works!
-        if (!this.context.fileExists(importedFile)) {
+        if (importedFile !== containingFile && !this.context.fileExists(importedFile)) {
             this.context.assumeFileExists(importedFile);
         }
         containingFile = this.rewriteGenDirPath(containingFile);
@@ -47034,7 +47033,7 @@ var core_1 = require$$0$12;
 /**
  * @stable
  */
-exports.VERSION = new core_1.Version('4.2.2-34cc3f2');
+exports.VERSION = new core_1.Version('4.2.2-4352dd2');
 
 });
 
@@ -49046,7 +49045,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v4.2.2-34cc3f2
+ * @license Angular v4.2.2-4352dd2
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -51671,7 +51670,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('4.2.2-34cc3f2');
+var VERSION$$1 = new Version('4.2.2-4352dd2');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
