@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.3.0-beta.0-3165fd3
+ * @license Angular v4.3.0-beta.0-3097083
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -18,12 +18,13 @@ module.exports = function(provided) {
   return result;
 }
 
-define(['exports', 'fs', 'typescript', 'path', 'reflect-metadata'], function (exports, fs, require$$1, require$$2, reflectMetadata) { 'use strict';
+define(['exports', 'fs', 'typescript', 'path', 'reflect-metadata', 'minimist'], function (exports, fs, require$$0, require$$2, reflectMetadata, minimist) { 'use strict';
 
 var fs__default = 'default' in fs ? fs['default'] : fs;
-var require$$1__default = 'default' in require$$1 ? require$$1['default'] : require$$1;
+var require$$0__default = 'default' in require$$0 ? require$$0['default'] : require$$0;
 var require$$2__default = 'default' in require$$2 ? require$$2['default'] : require$$2;
 reflectMetadata = 'default' in reflectMetadata ? reflectMetadata['default'] : reflectMetadata;
+minimist = 'default' in minimist ? minimist['default'] : minimist;
 
 /*! *****************************************************************************
 Copyright (c) Microsoft Corporation. All rights reserved.
@@ -53,7 +54,9 @@ function __extends$1$1(d, b) {
 
 var commonjsGlobal = typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
-
+function commonjsRequire () {
+	throw new Error('Dynamic requires are not currently supported by rollup-plugin-commonjs');
+}
 
 
 
@@ -2030,7 +2033,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v4.3.0-beta.0-3165fd3
+ * @license Angular v4.3.0-beta.0-3097083
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2822,7 +2825,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('4.3.0-beta.0-3165fd3');
+var VERSION$2 = new Version('4.3.0-beta.0-3097083');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -16981,7 +16984,7 @@ var core_es5 = Object.freeze({
 });
 
 /**
- * @license Angular v4.3.0-beta.0-3165fd3
+ * @license Angular v4.3.0-beta.0-3097083
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -17000,7 +17003,7 @@ var core_es5 = Object.freeze({
 /**
  * \@stable
  */
-var VERSION$1 = new Version('4.3.0-beta.0-3165fd3');
+var VERSION$1 = new Version('4.3.0-beta.0-3097083');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -18663,20 +18666,31 @@ var SyncAsync = {
 };
 /**
  * @param {?} msg
+ * @param {?=} parseErrors
  * @return {?}
  */
-function syntaxError(msg) {
+function syntaxError(msg, parseErrors) {
     var /** @type {?} */ error = Error(msg);
     ((error))[ERROR_SYNTAX_ERROR] = true;
+    if (parseErrors)
+        ((error))[ERROR_PARSE_ERRORS] = parseErrors;
     return error;
 }
 var ERROR_SYNTAX_ERROR = 'ngSyntaxError';
+var ERROR_PARSE_ERRORS = 'ngParseErrors';
 /**
  * @param {?} error
  * @return {?}
  */
 function isSyntaxError(error) {
     return ((error))[ERROR_SYNTAX_ERROR];
+}
+/**
+ * @param {?} error
+ * @return {?}
+ */
+function getParseErrors(error) {
+    return ((error))[ERROR_PARSE_ERRORS] || [];
 }
 /**
  * @param {?} s
@@ -18943,13 +18957,6 @@ function rendererTypeName(compType) {
  */
 function hostViewClassName(compType) {
     return "HostView_" + identifierName({ reference: compType });
-}
-/**
- * @param {?} dirType
- * @return {?}
- */
-function dirWrapperClassName(dirType) {
-    return "Wrapper_" + identifierName({ reference: dirType });
 }
 /**
  * @param {?} compType
@@ -22723,11 +22730,16 @@ var ParseError = (function () {
     /**
      * @return {?}
      */
-    ParseError.prototype.toString = function () {
+    ParseError.prototype.contextualMessage = function () {
         var /** @type {?} */ ctx = this.span.start.getContext(100, 3);
-        var /** @type {?} */ contextStr = ctx ? " (\"" + ctx.before + "[" + ParseErrorLevel[this.level] + " ->]" + ctx.after + "\")" : '';
+        return ctx ? " (\"" + ctx.before + "[" + ParseErrorLevel[this.level] + " ->]" + ctx.after + "\")" : '';
+    };
+    /**
+     * @return {?}
+     */
+    ParseError.prototype.toString = function () {
         var /** @type {?} */ details = this.span.details ? ", " + this.span.details : '';
-        return "" + this.msg + contextStr + ": " + this.span.start + details;
+        return "" + this.msg + this.contextualMessage() + ": " + this.span.start + details;
     };
     return ParseError;
 }());
@@ -29778,7 +29790,7 @@ var TemplateParser = (function () {
         }
         if (errors.length > 0) {
             var /** @type {?} */ errorString = errors.join('\n');
-            throw syntaxError("Template parse errors:\n" + errorString);
+            throw syntaxError("Template parse errors:\n" + errorString, errors);
         }
         return { template: /** @type {?} */ ((result.templateAst)), pipes: /** @type {?} */ ((result.usedPipes)) };
     };
@@ -40709,7 +40721,17 @@ var AotCompiler = (function () {
     AotCompiler.prototype.emitAllStubs = function (analyzeResult) {
         var _this = this;
         var files = analyzeResult.files;
-        var /** @type {?} */ sourceModules = files.map(function (file) { return _this._compileStubFile(file.srcUrl, file.directives, file.ngModules); });
+        var /** @type {?} */ sourceModules = files.map(function (file) { return _this._compileStubFile(file.srcUrl, file.directives, file.pipes, file.ngModules, false); });
+        return flatten$1(sourceModules);
+    };
+    /**
+     * @param {?} analyzeResult
+     * @return {?}
+     */
+    AotCompiler.prototype.emitPartialStubs = function (analyzeResult) {
+        var _this = this;
+        var files = analyzeResult.files;
+        var /** @type {?} */ sourceModules = files.map(function (file) { return _this._compileStubFile(file.srcUrl, file.directives, file.pipes, file.ngModules, true); });
         return flatten$1(sourceModules);
     };
     /**
@@ -40725,15 +40747,26 @@ var AotCompiler = (function () {
     /**
      * @param {?} srcFileUrl
      * @param {?} directives
+     * @param {?} pipes
      * @param {?} ngModules
+     * @param {?} partial
      * @return {?}
      */
-    AotCompiler.prototype._compileStubFile = function (srcFileUrl, directives, ngModules) {
+    AotCompiler.prototype._compileStubFile = function (srcFileUrl, directives, pipes, ngModules, partial) {
         var _this = this;
+        // partial is true when we only need the files we are certain will produce a factory and/or
+        // summary.
+        // This is the normal case for `ngc` but if we assume libraryies are generating their own
+        // factories
+        // then we might need a factory for a file that re-exports a module or factory which we cannot
+        // know
+        // ahead of time so we need a stub generate for all non-.d.ts files. The .d.ts files do not need
+        // to
+        // be excluded here because they are excluded when the modules are analyzed. If a factory ends
+        // up
+        // not being needed, the factory file is not written in writeFile callback.
         var /** @type {?} */ fileSuffix = splitTypescriptSuffix(srcFileUrl, true)[1];
         var /** @type {?} */ generatedFiles = [];
-        var /** @type {?} */ jitSummaryStmts = [];
-        var /** @type {?} */ ngFactoryStms = [];
         var /** @type {?} */ ngFactoryOutputCtx = this._createOutputContext(ngfactoryFilePath(srcFileUrl, true));
         var /** @type {?} */ jitSummaryOutputCtx = this._createOutputContext(summaryForJitFileName(srcFileUrl, true));
         // create exports that user code can reference
@@ -40741,25 +40774,42 @@ var AotCompiler = (function () {
             _this._ngModuleCompiler.createStub(ngFactoryOutputCtx, ngModuleReference);
             createForJitStub(jitSummaryOutputCtx, ngModuleReference);
         });
-        // Note: we are creating stub ngfactory/ngsummary for all source files,
-        // as the real calculation requires almost the same logic as producing the real content for
-        // them.
-        // Our pipeline will filter out empty ones at the end.
-        generatedFiles.push(this._codegenSourceModule(srcFileUrl, ngFactoryOutputCtx));
-        generatedFiles.push(this._codegenSourceModule(srcFileUrl, jitSummaryOutputCtx));
+        var /** @type {?} */ partialJitStubRequired = false;
+        var /** @type {?} */ partialFactoryStubRequired = false;
         // create stubs for external stylesheets (always empty, as users should not import anything from
         // the generated code)
         directives.forEach(function (dirType) {
             var /** @type {?} */ compMeta = _this._metadataResolver.getDirectiveMetadata(/** @type {?} */ (dirType));
+            partialJitStubRequired = true;
             if (!compMeta.isComponent) {
                 return;
             } /** @type {?} */
             ((
             // Note: compMeta is a component and therefore template is non null.
             compMeta.template)).externalStylesheets.forEach(function (stylesheetMeta) {
-                generatedFiles.push(_this._codegenSourceModule(/** @type {?} */ ((stylesheetMeta.moduleUrl)), _this._createOutputContext(_stylesModuleUrl(/** @type {?} */ ((stylesheetMeta.moduleUrl)), _this._styleCompiler.needsStyleShim(compMeta), fileSuffix))));
+                var /** @type {?} */ styleContext = _this._createOutputContext(_stylesModuleUrl(/** @type {?} */ ((stylesheetMeta.moduleUrl)), _this._styleCompiler.needsStyleShim(compMeta), fileSuffix));
+                _createTypeReferenceStub(styleContext, Identifiers.ComponentFactory);
+                generatedFiles.push(_this._codegenSourceModule(/** @type {?} */ ((stylesheetMeta.moduleUrl)), styleContext));
             });
+            partialFactoryStubRequired = true;
         });
+        // If we need all the stubs to be generated then insert an arbitrary reference into the stub
+        if ((partialFactoryStubRequired || !partial) && ngFactoryOutputCtx.statements.length <= 0) {
+            _createTypeReferenceStub(ngFactoryOutputCtx, Identifiers.ComponentFactory);
+        }
+        if ((partialJitStubRequired || !partial || (pipes && pipes.length > 0)) &&
+            jitSummaryOutputCtx.statements.length <= 0) {
+            _createTypeReferenceStub(jitSummaryOutputCtx, Identifiers.ComponentFactory);
+        }
+        // Note: we are creating stub ngfactory/ngsummary for all source files,
+        // as the real calculation requires almost the same logic as producing the real content for
+        // them. Our pipeline will filter out empty ones at the end. Because of this filter, however,
+        // stub references to the reference type needs to be generated even if the user cannot
+        // refer to type from the `.d.ts` file to prevent the file being elided from the emit.
+        generatedFiles.push(this._codegenSourceModule(srcFileUrl, ngFactoryOutputCtx));
+        if (this._enableSummariesForJit) {
+            generatedFiles.push(this._codegenSourceModule(srcFileUrl, jitSummaryOutputCtx));
+        }
         return generatedFiles;
     };
     /**
@@ -40977,6 +41027,14 @@ var AotCompiler = (function () {
     };
     return AotCompiler;
 }());
+/**
+ * @param {?} outputCtx
+ * @param {?} reference
+ * @return {?}
+ */
+function _createTypeReferenceStub(outputCtx, reference) {
+    outputCtx.statements.push(importExpr(reference).toStmt());
+}
 /**
  * @param {?} symbolResolver
  * @param {?} compileResult
@@ -44515,6 +44573,7 @@ var compiler_es5 = Object.freeze({
 	Statement: Statement,
 	EmitterVisitorContext: EmitterVisitorContext,
 	ViewCompiler: ViewCompiler,
+	getParseErrors: getParseErrors,
 	isSyntaxError: isSyntaxError,
 	syntaxError: syntaxError,
 	TextAst: TextAst,
@@ -44551,7 +44610,6 @@ var compiler_es5 = Object.freeze({
 	viewClassName: viewClassName,
 	rendererTypeName: rendererTypeName,
 	hostViewClassName: hostViewClassName,
-	dirWrapperClassName: dirWrapperClassName,
 	componentFactoryName: componentFactoryName,
 	CompileSummaryKind: CompileSummaryKind,
 	tokenName: tokenName,
@@ -44833,7 +44891,7 @@ var evaluator = createCommonjsModule(function (module, exports) {
  * found in the LICENSE file at https://angular.io/license
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-var ts = require$$1__default;
+var ts = require$$0__default;
 var schema_1 = schema;
 // In TypeScript 2.1 the spread element kind was renamed.
 var spreadElementSyntaxKind = ts.SyntaxKind.SpreadElement || ts.SyntaxKind.SpreadElementExpression;
@@ -45458,7 +45516,7 @@ var symbols = createCommonjsModule(function (module, exports) {
  * found in the LICENSE file at https://angular.io/license
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-var ts = require$$1__default;
+var ts = require$$0__default;
 var Symbols = (function () {
     function Symbols(sourceFile) {
         this.sourceFile = sourceFile;
@@ -45577,7 +45635,7 @@ var collector = createCommonjsModule(function (module, exports) {
  * found in the LICENSE file at https://angular.io/license
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-var ts = require$$1__default;
+var ts = require$$0__default;
 var evaluator_1 = evaluator;
 var schema_1 = schema;
 var symbols_1 = symbols;
@@ -46280,7 +46338,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var tsc_wrapped_1 = collector;
 var fs$$1 = fs__default;
 var path = require$$2__default;
-var ts = require$$1__default;
+var ts = require$$0__default;
 var EXT = /(\.ts|\.d\.ts|\.js|\.jsx|\.tsx)$/;
 var DTS = /\.d\.ts$/;
 var NODE_MODULES = '/node_modules/';
@@ -46438,7 +46496,7 @@ var CompilerHost = (function () {
     CompilerHost.prototype.getMetadataFor = function (filePath) {
         if (!this.context.fileExists(filePath)) {
             // If the file doesn't exists then we cannot return metadata for the file.
-            // This will occur if the user refernced a declared module for which no file
+            // This will occur if the user referenced a declared module for which no file
             // exists for the module (i.e. jQuery or angularjs).
             return;
         }
@@ -46454,11 +46512,9 @@ var CompilerHost = (function () {
                 return [this.upgradeVersion1Metadata({ '__symbolic': 'module', 'version': 1, 'metadata': {} }, filePath)];
             }
         }
-        else {
-            var sf = this.getSourceFile(filePath);
-            var metadata = this.metadataCollector.getMetadata(sf);
-            return metadata ? [metadata] : [];
-        }
+        var sf = this.getSourceFile(filePath);
+        var metadata = this.metadataCollector.getMetadata(sf);
+        return metadata ? [metadata] : [];
     };
     CompilerHost.prototype.readMetadata = function (filePath, dtsFilePath) {
         var metadatas = this.resolverCache.get(filePath);
@@ -46508,7 +46564,9 @@ var CompilerHost = (function () {
         return v3Metadata;
     };
     CompilerHost.prototype.loadResource = function (filePath) {
-        return this.context.readResource(filePath);
+        if (this.context.readResource)
+            return this.context.readResource(filePath);
+        return this.context.readFile(filePath);
     };
     CompilerHost.prototype.loadSummary = function (filePath) {
         if (this.context.fileExists(filePath)) {
@@ -46702,7 +46760,7 @@ var __extends = (commonjsGlobal && commonjsGlobal.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var path = require$$2__default;
-var ts = require$$1__default;
+var ts = require$$0__default;
 var compiler_host_1 = compiler_host;
 var EXT = /(\.ts|\.d\.ts|\.js|\.jsx|\.tsx)$/;
 var DTS = /\.d\.ts$/;
@@ -46829,9 +46887,9 @@ exports.PathMappedCompilerHost = PathMappedCompilerHost;
 
 });
 
-var require$$1$10 = ( compiler_es5 && undefined ) || compiler_es5;
+var require$$1$8 = ( compiler_es5 && undefined ) || compiler_es5;
 
-var require$$0$12 = ( core_es5 && undefined ) || core_es5;
+var require$$0$13 = ( core_es5 && undefined ) || core_es5;
 
 var codegen = createCommonjsModule(function (module, exports) {
 "use strict";
@@ -46847,8 +46905,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * Transform template html and css into executable code.
  * Intended to be used in a build step.
  */
-var compiler = require$$1$10;
-var core_1 = require$$0$12;
+var compiler = require$$1$8;
+var core_1 = require$$0$13;
 var fs_1 = fs__default;
 var compiler_host_1 = compiler_host;
 var path_mapped_compiler_host_1 = path_mapped_compiler_host;
@@ -46944,7 +47002,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
  */
 // Must be imported first, because Angular decorators throw on load.
 
-var compiler = require$$1$10;
+var compiler = require$$1$8;
 var path = require$$2__default;
 var compiler_host_1 = compiler_host;
 var path_mapped_compiler_host_1 = path_mapped_compiler_host;
@@ -47038,11 +47096,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * @description
  * Entry point for all public APIs of the common package.
  */
-var core_1 = require$$0$12;
+var core_1 = require$$0$13;
 /**
  * @stable
  */
-exports.VERSION = new core_1.Version('4.3.0-beta.0-3165fd3');
+exports.VERSION = new core_1.Version('4.3.0-beta.0-3097083');
 
 });
 
@@ -47109,7 +47167,7 @@ var expression_type = createCommonjsModule(function (module, exports) {
  * found in the LICENSE file at https://angular.io/license
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-var compiler_1 = require$$1$10;
+var compiler_1 = require$$1$8;
 var symbols_1 = symbols$2;
 var DiagnosticKind;
 (function (DiagnosticKind) {
@@ -47532,7 +47590,7 @@ var __extends = (commonjsGlobal && commonjsGlobal.__extends) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-var compiler_1 = require$$1$10;
+var compiler_1 = require$$1$8;
 var expression_type_1 = expression_type;
 var symbols_1 = symbols$2;
 function getTemplateExpressionDiagnostics(info) {
@@ -47816,7 +47874,7 @@ var typescript_symbols = createCommonjsModule(function (module, exports) {
 Object.defineProperty(exports, "__esModule", { value: true });
 var fs$$1 = fs__default;
 var path = require$$2__default;
-var ts = require$$1__default;
+var ts = require$$0__default;
 var symbols_1 = symbols$2;
 // In TypeScript 2.1 these flags moved
 // These helpers work for both 2.0 and 2.1.
@@ -48697,6 +48755,1439 @@ function isTypescriptVersion(low, high) {
 
 });
 
+var api = createCommonjsModule(function (module, exports) {
+"use strict";
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+var DiagnosticCategory$$1;
+(function (DiagnosticCategory$$1) {
+    DiagnosticCategory$$1[DiagnosticCategory$$1["Warning"] = 0] = "Warning";
+    DiagnosticCategory$$1[DiagnosticCategory$$1["Error"] = 1] = "Error";
+    DiagnosticCategory$$1[DiagnosticCategory$$1["Message"] = 2] = "Message";
+})(DiagnosticCategory$$1 = exports.DiagnosticCategory || (exports.DiagnosticCategory = {}));
+var EmitFlags;
+(function (EmitFlags) {
+    EmitFlags[EmitFlags["DTS"] = 1] = "DTS";
+    EmitFlags[EmitFlags["JS"] = 2] = "JS";
+    EmitFlags[EmitFlags["Metadata"] = 4] = "Metadata";
+    EmitFlags[EmitFlags["I18nBundle"] = 8] = "I18nBundle";
+    EmitFlags[EmitFlags["Summary"] = 16] = "Summary";
+    EmitFlags[EmitFlags["Default"] = 3] = "Default";
+    EmitFlags[EmitFlags["All"] = 31] = "All";
+})(EmitFlags = exports.EmitFlags || (exports.EmitFlags = {}));
+
+});
+
+var module_filename_resolver = createCommonjsModule(function (module, exports) {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+var path = require$$2__default;
+var ts = require$$0__default;
+var EXT = /(\.ts|\.d\.ts|\.js|\.jsx|\.tsx)$/;
+var DTS = /\.d\.ts$/;
+var NODE_MODULES = '/node_modules/';
+var IS_GENERATED = /\.(ngfactory|ngstyle|ngsummary)$/;
+var SHALLOW_IMPORT = /^((\w|-)+|(@(\w|-)+(\/(\w|-)+)+))$/;
+function createModuleFilenameResolver(tsHost, options) {
+    var host = createModuleFilenameResolverHost(tsHost);
+    return options.rootDirs && options.rootDirs.length > 0 ?
+        new MultipleRootDirModuleFilenameResolver(host, options) :
+        new SingleRootDirModuleFilenameResolver(host, options);
+}
+exports.createModuleFilenameResolver = createModuleFilenameResolver;
+var SingleRootDirModuleFilenameResolver = (function () {
+    function SingleRootDirModuleFilenameResolver(host, options) {
+        this.host = host;
+        this.options = options;
+        this.moduleFileNames = new Map();
+        // normalize the path so that it never ends with '/'.
+        this.basePath = path.normalize(path.join(options.basePath, '.')).replace(/\\/g, '/');
+        this.genDir = path.normalize(path.join(options.genDir, '.')).replace(/\\/g, '/');
+        var genPath = path.relative(this.basePath, this.genDir);
+        this.isGenDirChildOfRootDir = genPath === '' || !genPath.startsWith('..');
+    }
+    SingleRootDirModuleFilenameResolver.prototype.moduleNameToFileName = function (m, containingFile) {
+        var key = m + ':' + (containingFile || '');
+        var result = this.moduleFileNames.get(key) || null;
+        if (!result) {
+            if (!containingFile) {
+                if (m.indexOf('.') === 0) {
+                    throw new Error('Resolution of relative paths requires a containing file.');
+                }
+                // Any containing file gives the same result for absolute imports
+                containingFile = this.getNgCanonicalFileName(path.join(this.basePath, 'index.ts'));
+            }
+            m = m.replace(EXT, '');
+            var resolved = ts.resolveModuleName(m, containingFile.replace(/\\/g, '/'), this.options, this.host)
+                .resolvedModule;
+            result = resolved ? this.getNgCanonicalFileName(resolved.resolvedFileName) : null;
+            this.moduleFileNames.set(key, result);
+        }
+        return result;
+    };
+    /**
+     * We want a moduleId that will appear in import statements in the generated code.
+     * These need to be in a form that system.js can load, so absolute file paths don't work.
+     *
+     * The `containingFile` is always in the `genDir`, where as the `importedFile` can be in
+     * `genDir`, `node_module` or `basePath`.  The `importedFile` is either a generated file or
+     * existing file.
+     *
+     *               | genDir   | node_module |  rootDir
+     * --------------+----------+-------------+----------
+     * generated     | relative |   relative  |   n/a
+     * existing file |   n/a    |   absolute  |  relative(*)
+     *
+     * NOTE: (*) the relative path is computed depending on `isGenDirChildOfRootDir`.
+     */
+    SingleRootDirModuleFilenameResolver.prototype.fileNameToModuleName = function (importedFile, containingFile) {
+        // If a file does not yet exist (because we compile it later), we still need to
+        // assume it exists it so that the `resolve` method works!
+        if (!this.host.fileExists(importedFile)) {
+            this.host.assumeFileExists(importedFile);
+        }
+        containingFile = this.rewriteGenDirPath(containingFile);
+        var containingDir = path.dirname(containingFile);
+        // drop extension
+        importedFile = importedFile.replace(EXT, '');
+        var nodeModulesIndex = importedFile.indexOf(NODE_MODULES);
+        var importModule = nodeModulesIndex === -1 ?
+            null :
+            importedFile.substring(nodeModulesIndex + NODE_MODULES.length);
+        var isGeneratedFile = IS_GENERATED.test(importedFile);
+        if (isGeneratedFile) {
+            // rewrite to genDir path
+            if (importModule) {
+                // it is generated, therefore we do a relative path to the factory
+                return this.dotRelative(containingDir, this.genDir + NODE_MODULES + importModule);
+            }
+            else {
+                // assume that import is also in `genDir`
+                importedFile = this.rewriteGenDirPath(importedFile);
+                return this.dotRelative(containingDir, importedFile);
+            }
+        }
+        else {
+            // user code import
+            if (importModule) {
+                return importModule;
+            }
+            else {
+                if (!this.isGenDirChildOfRootDir) {
+                    // assume that they are on top of each other.
+                    importedFile = importedFile.replace(this.basePath, this.genDir);
+                }
+                if (SHALLOW_IMPORT.test(importedFile)) {
+                    return importedFile;
+                }
+                return this.dotRelative(containingDir, importedFile);
+            }
+        }
+    };
+    // We use absolute paths on disk as canonical.
+    SingleRootDirModuleFilenameResolver.prototype.getNgCanonicalFileName = function (fileName) { return fileName; };
+    SingleRootDirModuleFilenameResolver.prototype.assumeFileExists = function (fileName) { this.host.assumeFileExists(fileName); };
+    SingleRootDirModuleFilenameResolver.prototype.dotRelative = function (from, to) {
+        var rPath = path.relative(from, to).replace(/\\/g, '/');
+        return rPath.startsWith('.') ? rPath : './' + rPath;
+    };
+    /**
+     * Moves the path into `genDir` folder while preserving the `node_modules` directory.
+     */
+    SingleRootDirModuleFilenameResolver.prototype.rewriteGenDirPath = function (filepath) {
+        var nodeModulesIndex = filepath.indexOf(NODE_MODULES);
+        if (nodeModulesIndex !== -1) {
+            // If we are in node_module, transplant them into `genDir`.
+            return path.join(this.genDir, filepath.substring(nodeModulesIndex));
+        }
+        else {
+            // pretend that containing file is on top of the `genDir` to normalize the paths.
+            // we apply the `genDir` => `rootDir` delta through `rootDirPrefix` later.
+            return filepath.replace(this.basePath, this.genDir);
+        }
+    };
+    return SingleRootDirModuleFilenameResolver;
+}());
+/**
+ * This version of the AotCompilerHost expects that the program will be compiled
+ * and executed with a "path mapped" directory structure, where generated files
+ * are in a parallel tree with the sources, and imported using a `./` relative
+ * import. This requires using TS `rootDirs` option and also teaching the module
+ * loader what to do.
+ */
+var MultipleRootDirModuleFilenameResolver = (function () {
+    function MultipleRootDirModuleFilenameResolver(host, options) {
+        this.host = host;
+        this.options = options;
+        // normalize the path so that it never ends with '/'.
+        this.basePath = path.normalize(path.join(options.basePath, '.')).replace(/\\/g, '/');
+    }
+    MultipleRootDirModuleFilenameResolver.prototype.getNgCanonicalFileName = function (fileName) {
+        if (!fileName)
+            return fileName;
+        // NB: the rootDirs should have been sorted longest-first
+        for (var _i = 0, _a = this.options.rootDirs || []; _i < _a.length; _i++) {
+            var dir = _a[_i];
+            if (fileName.indexOf(dir) === 0) {
+                fileName = fileName.substring(dir.length);
+            }
+        }
+        return fileName;
+    };
+    MultipleRootDirModuleFilenameResolver.prototype.assumeFileExists = function (fileName) { this.host.assumeFileExists(fileName); };
+    MultipleRootDirModuleFilenameResolver.prototype.moduleNameToFileName = function (m, containingFile) {
+        if (!containingFile) {
+            if (m.indexOf('.') === 0) {
+                throw new Error('Resolution of relative paths requires a containing file.');
+            }
+            // Any containing file gives the same result for absolute imports
+            containingFile = this.getNgCanonicalFileName(path.join(this.basePath, 'index.ts'));
+        }
+        for (var _i = 0, _a = this.options.rootDirs || ['']; _i < _a.length; _i++) {
+            var root = _a[_i];
+            var rootedContainingFile = path.join(root, containingFile);
+            var resolved = ts.resolveModuleName(m, rootedContainingFile, this.options, this.host).resolvedModule;
+            if (resolved) {
+                if (this.options.traceResolution) {
+                    console.error('resolve', m, containingFile, '=>', resolved.resolvedFileName);
+                }
+                return this.getNgCanonicalFileName(resolved.resolvedFileName);
+            }
+        }
+        return null;
+    };
+    /**
+     * We want a moduleId that will appear in import statements in the generated code.
+     * These need to be in a form that system.js can load, so absolute file paths don't work.
+     * Relativize the paths by checking candidate prefixes of the absolute path, to see if
+     * they are resolvable by the moduleResolution strategy from the CompilerHost.
+     */
+    MultipleRootDirModuleFilenameResolver.prototype.fileNameToModuleName = function (importedFile, containingFile) {
+        var _this = this;
+        if (this.options.traceResolution) {
+            console.error('getImportPath from containingFile', containingFile, 'to importedFile', importedFile);
+        }
+        // If a file does not yet exist (because we compile it later), we still need to
+        // assume it exists so that the `resolve` method works!
+        if (!this.host.fileExists(importedFile)) {
+            if (this.options.rootDirs && this.options.rootDirs.length > 0) {
+                this.host.assumeFileExists(path.join(this.options.rootDirs[0], importedFile));
+            }
+            else {
+                this.host.assumeFileExists(importedFile);
+            }
+        }
+        var resolvable = function (candidate) {
+            var resolved = _this.moduleNameToFileName(candidate, importedFile);
+            return resolved && resolved.replace(EXT, '') === importedFile.replace(EXT, '');
+        };
+        var importModuleName = importedFile.replace(EXT, '');
+        var parts = importModuleName.split(path.sep).filter(function (p) { return !!p; });
+        var foundRelativeImport;
+        for (var index = parts.length - 1; index >= 0; index--) {
+            var candidate_1 = parts.slice(index, parts.length).join(path.sep);
+            if (resolvable(candidate_1)) {
+                return candidate_1;
+            }
+            candidate_1 = '.' + path.sep + candidate_1;
+            if (resolvable(candidate_1)) {
+                foundRelativeImport = candidate_1;
+            }
+        }
+        if (foundRelativeImport)
+            return foundRelativeImport;
+        // Try a relative import
+        var candidate = path.relative(path.dirname(containingFile), importModuleName);
+        if (resolvable(candidate)) {
+            return candidate;
+        }
+        throw new Error("Unable to find any resolvable import for " + importedFile + " relative to " + containingFile);
+    };
+    return MultipleRootDirModuleFilenameResolver;
+}());
+function createModuleFilenameResolverHost(host) {
+    var assumedExists = new Set();
+    var resolveModuleNameHost = Object.create(host);
+    // When calling ts.resolveModuleName, additional allow checks for .d.ts files to be done based on
+    // checks for .ngsummary.json files, so that our codegen depends on fewer inputs and requires
+    // to be called less often.
+    // This is needed as we use ts.resolveModuleName in reflector_host and it should be able to
+    // resolve summary file names.
+    resolveModuleNameHost.fileExists = function (fileName) {
+        if (assumedExists.has(fileName)) {
+            return true;
+        }
+        if (host.fileExists(fileName)) {
+            return true;
+        }
+        if (DTS.test(fileName)) {
+            var base = fileName.substring(0, fileName.length - 5);
+            return host.fileExists(base + '.ngsummary.json');
+        }
+        return false;
+    };
+    resolveModuleNameHost.assumeFileExists = function (fileName) { return assumedExists.add(fileName); };
+    // Make sure we do not `host.realpath()` from TS as we do not want to resolve symlinks.
+    // https://github.com/Microsoft/TypeScript/issues/9552
+    resolveModuleNameHost.realpath = function (fileName) { return fileName; };
+    return resolveModuleNameHost;
+}
+
+});
+
+var check_types = createCommonjsModule(function (module, exports) {
+"use strict";
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+var compiler_1 = require$$1$8;
+var ts = require$$0__default;
+var stubCancellationToken = {
+    isCancellationRequested: function () { return false; },
+    throwIfCancellationRequested: function () { }
+};
+var TypeChecker = (function () {
+    function TypeChecker(program, tsOptions, compilerHost, aotCompilerHost, aotOptions, _analyzedModules, _generatedFiles) {
+        this.program = program;
+        this.tsOptions = tsOptions;
+        this.compilerHost = compilerHost;
+        this.aotCompilerHost = aotCompilerHost;
+        this.aotOptions = aotOptions;
+        this._analyzedModules = _analyzedModules;
+        this._generatedFiles = _generatedFiles;
+        this._currentCancellationToken = stubCancellationToken;
+        this._partial = false;
+    }
+    TypeChecker.prototype.getDiagnostics = function (fileName, cancellationToken) {
+        this._currentCancellationToken = cancellationToken || stubCancellationToken;
+        try {
+            return fileName ?
+                this.diagnosticsByFileName.get(fileName) || [] : (_a = []).concat.apply(_a, Array.from(this.diagnosticsByFileName.values()));
+        }
+        finally {
+            this._currentCancellationToken = stubCancellationToken;
+        }
+        var _a;
+    };
+    Object.defineProperty(TypeChecker.prototype, "partialResults", {
+        get: function () { return this._partial; },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(TypeChecker.prototype, "analyzedModules", {
+        get: function () {
+            return this._analyzedModules || (this._analyzedModules = this.aotCompiler.analyzeModulesSync(this.program.getSourceFiles().map(function (sf) { return sf.fileName; })));
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(TypeChecker.prototype, "diagnosticsByFileName", {
+        get: function () {
+            return this._diagnosticsByFile || this.createDiagnosticsByFile();
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(TypeChecker.prototype, "diagnosticProgram", {
+        get: function () {
+            return this._diagnosticProgram || this.createDiagnosticProgram();
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(TypeChecker.prototype, "generatedFiles", {
+        get: function () {
+            var result = this._generatedFiles;
+            if (!result) {
+                this._generatedFiles = result = this.aotCompiler.emitAllImpls(this.analyzedModules);
+            }
+            return result;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(TypeChecker.prototype, "aotCompiler", {
+        get: function () {
+            return this._aotCompiler || this.createCompilerAndReflector();
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(TypeChecker.prototype, "reflector", {
+        get: function () {
+            var result = this._reflector;
+            if (!result) {
+                this.createCompilerAndReflector();
+                result = this._reflector;
+            }
+            return result;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(TypeChecker.prototype, "factories", {
+        get: function () {
+            return this._factories || this.createFactories();
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(TypeChecker.prototype, "factoryNames", {
+        get: function () {
+            return this._factoryNames || (this.createFactories() && this._factoryNames);
+        },
+        enumerable: true,
+        configurable: true
+    });
+    TypeChecker.prototype.createCompilerAndReflector = function () {
+        var _a = compiler_1.createAotCompiler(this.aotCompilerHost, this.aotOptions), compiler = _a.compiler, reflector = _a.reflector;
+        this._reflector = reflector;
+        return this._aotCompiler = compiler;
+    };
+    TypeChecker.prototype.createDiagnosticProgram = function () {
+        // Create a program that is all the files from the original program plus the factories.
+        var existingFiles = this.program.getSourceFiles().map(function (source) { return source.fileName; });
+        var host = new TypeCheckingHost(this.compilerHost, this.program, this.factories);
+        return this._diagnosticProgram =
+            ts.createProgram(existingFiles.concat(this.factoryNames), this.tsOptions, host);
+    };
+    TypeChecker.prototype.createFactories = function () {
+        // Create all the factory files with enough information to map the diagnostics reported for the
+        // created file back to the original source.
+        var emitter = new compiler_1.TypeScriptEmitter();
+        var factorySources = this.generatedFiles.filter(function (file) { return file.stmts != null && file.stmts.length; })
+            .map(function (file) { return [file.genFileUrl, createFactoryInfo(emitter, file)]; });
+        this._factories = new Map(factorySources);
+        this._factoryNames = Array.from(this._factories.keys());
+        return this._factories;
+    };
+    TypeChecker.prototype.createDiagnosticsByFile = function () {
+        // Collect all the diagnostics binned by original source file name.
+        var result = new Map();
+        var diagnosticsFor = function (fileName) {
+            var r = result.get(fileName);
+            if (!r) {
+                r = [];
+                result.set(fileName, r);
+            }
+            return r;
+        };
+        var program = this.diagnosticProgram;
+        for (var _i = 0, _a = this.factoryNames; _i < _a.length; _i++) {
+            var factoryName = _a[_i];
+            if (this._currentCancellationToken.isCancellationRequested())
+                return result;
+            var sourceFile = program.getSourceFile(factoryName);
+            for (var _b = 0, _c = this.diagnosticProgram.getSemanticDiagnostics(sourceFile); _b < _c.length; _b++) {
+                var diagnostic = _c[_b];
+                var span = this.sourceSpanOf(diagnostic.file, diagnostic.start, diagnostic.length);
+                if (span) {
+                    var fileName = span.start.file.url;
+                    var diagnosticsList = diagnosticsFor(fileName);
+                    diagnosticsList.push({
+                        message: diagnosticMessageToString(diagnostic.messageText),
+                        category: diagnosticCategoryConverter(diagnostic.category), span: span
+                    });
+                }
+            }
+        }
+        return result;
+    };
+    TypeChecker.prototype.sourceSpanOf = function (source, start, length) {
+        // Find the corresponding TypeScript node
+        var info = this.factories.get(source.fileName);
+        if (info) {
+            var _a = ts.getLineAndCharacterOfPosition(source, start), line = _a.line, character = _a.character;
+            return info.context.spanOf(line, character);
+        }
+        return null;
+    };
+    return TypeChecker;
+}());
+exports.TypeChecker = TypeChecker;
+function diagnosticMessageToString(message) {
+    return ts.flattenDiagnosticMessageText(message, '\n');
+}
+function diagnosticCategoryConverter(kind) {
+    // The diagnostics kind matches ts.DiagnosticCategory. Review this code if this changes.
+    return kind;
+}
+function createFactoryInfo(emitter, file) {
+    var _a = emitter.emitStatementsAndContext(file.srcFileUrl, file.genFileUrl, file.stmts), sourceText = _a.sourceText, context = _a.context;
+    var source = ts.createSourceFile(file.genFileUrl, sourceText, ts.ScriptTarget.Latest, /* setParentNodes */ true);
+    return { source: source, context: context };
+}
+var TypeCheckingHost = (function () {
+    function TypeCheckingHost(host, originalProgram, factories) {
+        this.host = host;
+        this.originalProgram = originalProgram;
+        this.factories = factories;
+        this.writeFile = function () { throw new Error('Unexpected write in diagnostic program'); };
+    }
+    TypeCheckingHost.prototype.getSourceFile = function (fileName, languageVersion, onError) {
+        var originalSource = this.originalProgram.getSourceFile(fileName);
+        if (originalSource) {
+            return originalSource;
+        }
+        var factoryInfo = this.factories.get(fileName);
+        if (factoryInfo) {
+            return factoryInfo.source;
+        }
+        return this.host.getSourceFile(fileName, languageVersion, onError);
+    };
+    TypeCheckingHost.prototype.getDefaultLibFileName = function (options) {
+        return this.host.getDefaultLibFileName(options);
+    };
+    TypeCheckingHost.prototype.getCurrentDirectory = function () {
+        return this.host.getCurrentDirectory();
+    };
+    TypeCheckingHost.prototype.getDirectories = function (path) { return this.host.getDirectories(path); };
+    TypeCheckingHost.prototype.getCanonicalFileName = function (fileName) {
+        return this.host.getCanonicalFileName(fileName);
+    };
+    TypeCheckingHost.prototype.useCaseSensitiveFileNames = function () { return this.host.useCaseSensitiveFileNames(); };
+    TypeCheckingHost.prototype.getNewLine = function () { return this.host.getNewLine(); };
+    TypeCheckingHost.prototype.fileExists = function (fileName) {
+        return this.factories.has(fileName) || this.host.fileExists(fileName);
+    };
+    TypeCheckingHost.prototype.readFile = function (fileName) {
+        var factoryInfo = this.factories.get(fileName);
+        return (factoryInfo && factoryInfo.source.text) || this.host.readFile(fileName);
+    };
+    return TypeCheckingHost;
+}());
+
+});
+
+var node_emitter = createCommonjsModule(function (module, exports) {
+"use strict";
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+var compiler_1 = require$$1$8;
+var ts = require$$0__default;
+var METHOD_THIS_NAME = 'this';
+var CATCH_ERROR_NAME = 'error';
+var CATCH_STACK_NAME = 'stack';
+var TypeScriptNodeEmitter = (function () {
+    function TypeScriptNodeEmitter() {
+    }
+    TypeScriptNodeEmitter.prototype.updateSourceFile = function (sourceFile, stmts, preamble) {
+        var converter = new _NodeEmitterVisitor();
+        var statements = stmts.map(function (stmt) { return stmt.visitStatement(converter, null); }).filter(function (stmt) { return stmt != null; });
+        var newSourceFile = ts.updateSourceFileNode(sourceFile, converter.getReexports().concat(converter.getImports(), statements));
+        if (preamble) {
+            if (preamble.startsWith('/*') && preamble.endsWith('*/')) {
+                preamble = preamble.substr(2, preamble.length - 4);
+            }
+            if (!statements.length) {
+                statements.push(ts.createEmptyStatement());
+            }
+            statements[0] = ts.setSyntheticLeadingComments(statements[0], [{ kind: ts.SyntaxKind.MultiLineCommentTrivia, text: preamble, pos: -1, end: -1 }]);
+        }
+        return [newSourceFile, converter.getNodeMap()];
+    };
+    return TypeScriptNodeEmitter;
+}());
+exports.TypeScriptNodeEmitter = TypeScriptNodeEmitter;
+function createLiteral(value) {
+    if (value === null) {
+        return ts.createNull();
+    }
+    else if (value === undefined) {
+        return ts.createIdentifier('undefined');
+    }
+    else {
+        return ts.createLiteral(value);
+    }
+}
+/**
+ * Visits an output ast and produces the corresponding TypeScript synthetic nodes.
+ */
+var _NodeEmitterVisitor = (function () {
+    function _NodeEmitterVisitor() {
+        this._nodeMap = new Map();
+        this._importsWithPrefixes = new Map();
+        this._reexports = new Map();
+    }
+    _NodeEmitterVisitor.prototype.getReexports = function () {
+        return Array.from(this._reexports.entries())
+            .map(function (_a) {
+            var exportedFilePath = _a[0], reexports = _a[1];
+            return ts.createExportDeclaration(
+            /* decorators */ undefined, 
+            /* modifiers */ undefined, ts.createNamedExports(reexports.map(function (_a) {
+                var name = _a.name, as = _a.as;
+                return ts.createExportSpecifier(name, as);
+            })), 
+            /* moduleSpecifier */ createLiteral(exportedFilePath));
+        });
+    };
+    _NodeEmitterVisitor.prototype.getImports = function () {
+        return Array.from(this._importsWithPrefixes.entries())
+            .map(function (_a) {
+            var namespace = _a[0], prefix = _a[1];
+            return ts.createImportDeclaration(
+            /* decorators */ undefined, 
+            /* modifiers */ undefined, 
+            /* importClause */ ts.createImportClause(
+            /* name */ undefined, ts.createNamespaceImport(ts.createIdentifier(prefix))), 
+            /* moduleSpecifier */ createLiteral(namespace));
+        });
+    };
+    _NodeEmitterVisitor.prototype.getNodeMap = function () { return this._nodeMap; };
+    _NodeEmitterVisitor.prototype.record = function (ngNode, tsNode) {
+        var _this = this;
+        if (tsNode && !this._nodeMap.has(tsNode)) {
+            this._nodeMap.set(tsNode, ngNode);
+            ts.forEachChild(tsNode, function (child) { return _this.record(ngNode, tsNode); });
+        }
+        return tsNode;
+    };
+    _NodeEmitterVisitor.prototype.getModifiers = function (stmt) {
+        var modifiers = [];
+        if (stmt.hasModifier(compiler_1.StmtModifier.Exported)) {
+            modifiers.push(ts.createToken(ts.SyntaxKind.ExportKeyword));
+        }
+        return modifiers;
+    };
+    // StatementVisitor
+    _NodeEmitterVisitor.prototype.visitDeclareVarStmt = function (stmt) {
+        if (stmt.hasModifier(compiler_1.StmtModifier.Exported) && stmt.value instanceof compiler_1.ExternalExpr &&
+            !stmt.type) {
+            // check for a reexport
+            var _a = stmt.value.value, name_1 = _a.name, moduleName = _a.moduleName;
+            if (moduleName) {
+                var reexports = this._reexports.get(moduleName);
+                if (!reexports) {
+                    reexports = [];
+                    this._reexports.set(moduleName, reexports);
+                }
+                reexports.push({ name: name_1, as: stmt.name });
+                return null;
+            }
+        }
+        return this.record(stmt, ts.createVariableStatement(this.getModifiers(stmt), ts.createVariableDeclarationList([ts.createVariableDeclaration(ts.createIdentifier(stmt.name), 
+            /* type */ undefined, (stmt.value && stmt.value.visitExpression(this, null)) || undefined)])));
+    };
+    _NodeEmitterVisitor.prototype.visitDeclareFunctionStmt = function (stmt, context) {
+        return this.record(stmt, ts.createFunctionDeclaration(
+        /* decorators */ undefined, this.getModifiers(stmt), 
+        /* astrictToken */ undefined, stmt.name, /* typeParameters */ undefined, stmt.params.map(function (p) { return ts.createParameter(
+        /* decorators */ undefined, /* modifiers */ undefined, 
+        /* dotDotDotToken */ undefined, p.name); }), 
+        /* type */ undefined, this._visitStatements(stmt.statements)));
+    };
+    _NodeEmitterVisitor.prototype.visitExpressionStmt = function (stmt) {
+        return this.record(stmt, ts.createStatement(stmt.expr.visitExpression(this, null)));
+    };
+    _NodeEmitterVisitor.prototype.visitReturnStmt = function (stmt) {
+        return this.record(stmt, ts.createReturn(stmt.value ? stmt.value.visitExpression(this, null) : undefined));
+    };
+    _NodeEmitterVisitor.prototype.visitDeclareClassStmt = function (stmt) {
+        var _this = this;
+        var modifiers = this.getModifiers(stmt);
+        var fields = stmt.fields.map(function (field) { return ts.createProperty(
+        /* decorators */ undefined, /* modifiers */ undefined, field.name, 
+        /* questionToken */ undefined, 
+        /* type */ undefined, ts.createNull()); });
+        var getters = stmt.getters.map(function (getter) { return ts.createGetAccessor(
+        /* decorators */ undefined, /* modifiers */ undefined, getter.name, /* parameters */ [], 
+        /* type */ undefined, _this._visitStatements(getter.body)); });
+        var constructor = (stmt.constructorMethod && [ts.createConstructor(
+            /* decorators */ undefined, 
+            /* modifiers */ undefined, 
+            /* parameters */ stmt.constructorMethod.params.map(function (p) { return ts.createParameter(
+            /* decorators */ undefined, 
+            /* modifiers */ undefined, 
+            /* dotDotDotToken */ undefined, p.name); }), this._visitStatements(stmt.constructorMethod.body))]) ||
+            [];
+        // TODO {chuckj}: Determine what should be done for a method with a null name.
+        var methods = stmt.methods.filter(function (method) { return method.name; })
+            .map(function (method) { return ts.createMethodDeclaration(
+        /* decorators */ undefined, /* modifiers */ undefined, 
+        /* astriskToken */ undefined, method.name /* guarded by filter */, 
+        /* questionToken */ undefined, /* typeParameters */ undefined, method.params.map(function (p) { return ts.createParameter(
+        /* decorators */ undefined, /* modifiers */ undefined, 
+        /* dotDotDotToken */ undefined, p.name); }), 
+        /* type */ undefined, _this._visitStatements(method.body)); });
+        return this.record(stmt, ts.createClassDeclaration(
+        /* decorators */ undefined, modifiers, stmt.name, /* typeParameters*/ undefined, stmt.parent && [ts.createHeritageClause(ts.SyntaxKind.ExtendsKeyword, [stmt.parent.visitExpression(this, null)])] ||
+            [], fields.concat(getters, constructor, methods)));
+    };
+    _NodeEmitterVisitor.prototype.visitIfStmt = function (stmt) {
+        return this.record(stmt, ts.createIf(stmt.condition.visitExpression(this, null), this._visitStatements(stmt.trueCase), stmt.falseCase && stmt.falseCase.length && this._visitStatements(stmt.falseCase) ||
+            undefined));
+    };
+    _NodeEmitterVisitor.prototype.visitTryCatchStmt = function (stmt) {
+        return this.record(stmt, ts.createTry(this._visitStatements(stmt.bodyStmts), ts.createCatchClause(CATCH_ERROR_NAME, this._visitStatementsPrefix([ts.createVariableStatement(
+            /* modifiers */ undefined, [ts.createVariableDeclaration(CATCH_STACK_NAME, /* type */ undefined, ts.createPropertyAccess(ts.createIdentifier(CATCH_ERROR_NAME), ts.createIdentifier(CATCH_STACK_NAME)))])], stmt.catchStmts)), 
+        /* finallyBlock */ undefined));
+    };
+    _NodeEmitterVisitor.prototype.visitThrowStmt = function (stmt) {
+        return this.record(stmt, ts.createThrow(stmt.error.visitExpression(this, null)));
+    };
+    _NodeEmitterVisitor.prototype.visitCommentStmt = function (stmt) { return null; };
+    // ExpressionVisitor
+    _NodeEmitterVisitor.prototype.visitReadVarExpr = function (expr) {
+        switch (expr.builtin) {
+            case compiler_1.BuiltinVar.This:
+                return this.record(expr, ts.createIdentifier(METHOD_THIS_NAME));
+            case compiler_1.BuiltinVar.CatchError:
+                return this.record(expr, ts.createIdentifier(CATCH_ERROR_NAME));
+            case compiler_1.BuiltinVar.CatchStack:
+                return this.record(expr, ts.createIdentifier(CATCH_STACK_NAME));
+            case compiler_1.BuiltinVar.Super:
+                return this.record(expr, ts.createSuper());
+        }
+        if (expr.name) {
+            return this.record(expr, ts.createIdentifier(expr.name));
+        }
+        throw Error("Unexpected ReadVarExpr form");
+    };
+    _NodeEmitterVisitor.prototype.visitWriteVarExpr = function (expr) {
+        return this.record(expr, ts.createAssignment(ts.createIdentifier(expr.name), expr.value.visitExpression(this, null)));
+    };
+    _NodeEmitterVisitor.prototype.visitWriteKeyExpr = function (expr) {
+        return this.record(expr, ts.createAssignment(ts.createElementAccess(expr.receiver.visitExpression(this, null), expr.index.visitExpression(this, null)), expr.value.visitExpression(this, null)));
+    };
+    _NodeEmitterVisitor.prototype.visitWritePropExpr = function (expr) {
+        return this.record(expr, ts.createAssignment(ts.createPropertyAccess(expr.receiver.visitExpression(this, null), expr.name), expr.value.visitExpression(this, null)));
+    };
+    _NodeEmitterVisitor.prototype.visitInvokeMethodExpr = function (expr) {
+        var _this = this;
+        var methodName = getMethodName(expr);
+        return this.record(expr, ts.createCall(ts.createPropertyAccess(expr.receiver.visitExpression(this, null), methodName), 
+        /* typeArguments */ undefined, expr.args.map(function (arg) { return arg.visitExpression(_this, null); })));
+    };
+    _NodeEmitterVisitor.prototype.visitInvokeFunctionExpr = function (expr) {
+        var _this = this;
+        return this.record(expr, ts.createCall(expr.fn.visitExpression(this, null), /* typeArguments */ undefined, expr.args.map(function (arg) { return arg.visitExpression(_this, null); })));
+    };
+    _NodeEmitterVisitor.prototype.visitInstantiateExpr = function (expr) {
+        var _this = this;
+        return this.record(expr, ts.createNew(expr.classExpr.visitExpression(this, null), /* typeArguments */ undefined, expr.args.map(function (arg) { return arg.visitExpression(_this, null); })));
+    };
+    _NodeEmitterVisitor.prototype.visitLiteralExpr = function (expr) { return this.record(expr, createLiteral(expr.value)); };
+    _NodeEmitterVisitor.prototype.visitExternalExpr = function (expr) {
+        return this.record(expr, this._visitIdentifier(expr.value));
+    };
+    _NodeEmitterVisitor.prototype.visitConditionalExpr = function (expr) {
+        // TODO {chuckj}: Review use of ! on flaseCase. Should it be non-nullable?
+        return this.record(expr, ts.createConditional(expr.condition.visitExpression(this, null), expr.trueCase.visitExpression(this, null), expr.falseCase.visitExpression(this, null)));
+        
+    };
+    _NodeEmitterVisitor.prototype.visitNotExpr = function (expr) {
+        return this.record(expr, ts.createPrefix(ts.SyntaxKind.ExclamationToken, expr.condition.visitExpression(this, null)));
+    };
+    _NodeEmitterVisitor.prototype.visitAssertNotNullExpr = function (expr) {
+        return expr.condition.visitExpression(this, null);
+    };
+    _NodeEmitterVisitor.prototype.visitCastExpr = function (expr) {
+        return expr.value.visitExpression(this, null);
+    };
+    _NodeEmitterVisitor.prototype.visitFunctionExpr = function (expr) {
+        return this.record(expr, ts.createFunctionExpression(
+        /* modifiers */ undefined, /* astriskToken */ undefined, /* name */ undefined, 
+        /* typeParameters */ undefined, expr.params.map(function (p) { return ts.createParameter(
+        /* decorators */ undefined, /* modifiers */ undefined, 
+        /* dotDotDotToken */ undefined, p.name); }), 
+        /* type */ undefined, this._visitStatements(expr.statements)));
+    };
+    _NodeEmitterVisitor.prototype.visitBinaryOperatorExpr = function (expr) {
+        var binaryOperator;
+        switch (expr.operator) {
+            case compiler_1.BinaryOperator.And:
+                binaryOperator = ts.SyntaxKind.AmpersandAmpersandToken;
+                break;
+            case compiler_1.BinaryOperator.Bigger:
+                binaryOperator = ts.SyntaxKind.GreaterThanToken;
+                break;
+            case compiler_1.BinaryOperator.BiggerEquals:
+                binaryOperator = ts.SyntaxKind.GreaterThanEqualsToken;
+                break;
+            case compiler_1.BinaryOperator.Divide:
+                binaryOperator = ts.SyntaxKind.SlashToken;
+                break;
+            case compiler_1.BinaryOperator.Equals:
+                binaryOperator = ts.SyntaxKind.EqualsEqualsToken;
+                break;
+            case compiler_1.BinaryOperator.Identical:
+                binaryOperator = ts.SyntaxKind.EqualsEqualsEqualsToken;
+                break;
+            case compiler_1.BinaryOperator.Lower:
+                binaryOperator = ts.SyntaxKind.LessThanToken;
+                break;
+            case compiler_1.BinaryOperator.LowerEquals:
+                binaryOperator = ts.SyntaxKind.LessThanEqualsToken;
+                break;
+            case compiler_1.BinaryOperator.Minus:
+                binaryOperator = ts.SyntaxKind.MinusToken;
+                break;
+            case compiler_1.BinaryOperator.Modulo:
+                binaryOperator = ts.SyntaxKind.PercentToken;
+                break;
+            case compiler_1.BinaryOperator.Multiply:
+                binaryOperator = ts.SyntaxKind.AsteriskToken;
+                break;
+            case compiler_1.BinaryOperator.NotEquals:
+                binaryOperator = ts.SyntaxKind.ExclamationEqualsToken;
+                break;
+            case compiler_1.BinaryOperator.NotIdentical:
+                binaryOperator = ts.SyntaxKind.ExclamationEqualsEqualsToken;
+                break;
+            case compiler_1.BinaryOperator.Or:
+                binaryOperator = ts.SyntaxKind.BarBarToken;
+                break;
+            case compiler_1.BinaryOperator.Plus:
+                binaryOperator = ts.SyntaxKind.PlusToken;
+                break;
+            default:
+                throw new Error("Unknown operator: " + expr.operator);
+        }
+        return this.record(expr, ts.createBinary(expr.lhs.visitExpression(this, null), binaryOperator, expr.rhs.visitExpression(this, null)));
+    };
+    _NodeEmitterVisitor.prototype.visitReadPropExpr = function (expr) {
+        return this.record(expr, ts.createPropertyAccess(expr.receiver.visitExpression(this, null), expr.name));
+    };
+    _NodeEmitterVisitor.prototype.visitReadKeyExpr = function (expr) {
+        return this.record(expr, ts.createElementAccess(expr.receiver.visitExpression(this, null), expr.index.visitExpression(this, null)));
+    };
+    _NodeEmitterVisitor.prototype.visitLiteralArrayExpr = function (expr) {
+        var _this = this;
+        return this.record(expr, ts.createArrayLiteral(expr.entries.map(function (entry) { return entry.visitExpression(_this, null); })));
+    };
+    _NodeEmitterVisitor.prototype.visitLiteralMapExpr = function (expr) {
+        var _this = this;
+        return this.record(expr, ts.createObjectLiteral(expr.entries.map(function (entry) { return ts.createPropertyAssignment(entry.quoted ? ts.createLiteral(entry.key) : entry.key, entry.value.visitExpression(_this, null)); })));
+    };
+    _NodeEmitterVisitor.prototype.visitCommaExpr = function (expr) {
+        var _this = this;
+        return this.record(expr, expr.parts.map(function (e) { return e.visitExpression(_this, null); })
+            .reduce(function (left, right) {
+            return left ? ts.createBinary(left, ts.SyntaxKind.CommaToken, right) : right;
+        }, null));
+    };
+    _NodeEmitterVisitor.prototype._visitStatements = function (statements) {
+        return this._visitStatementsPrefix([], statements);
+    };
+    _NodeEmitterVisitor.prototype._visitStatementsPrefix = function (prefix, statements) {
+        var _this = this;
+        return ts.createBlock(prefix.concat(statements.map(function (stmt) { return stmt.visitStatement(_this, null); }).filter(function (f) { return f != null; })));
+    };
+    _NodeEmitterVisitor.prototype._visitIdentifier = function (value) {
+        var name = value.name, moduleName = value.moduleName;
+        var prefixIdent = null;
+        if (moduleName) {
+            var prefix = this._importsWithPrefixes.get(moduleName);
+            if (prefix == null) {
+                prefix = "i" + this._importsWithPrefixes.size;
+                this._importsWithPrefixes.set(moduleName, prefix);
+            }
+            prefixIdent = ts.createIdentifier(prefix);
+        }
+        // name can only be null during JIT which never executes this code.
+        var result = prefixIdent ? ts.createPropertyAccess(prefixIdent, name) : ts.createIdentifier(name);
+        return result;
+    };
+    return _NodeEmitterVisitor;
+}());
+function getMethodName(methodRef) {
+    if (methodRef.name) {
+        return methodRef.name;
+    }
+    else {
+        switch (methodRef.builtin) {
+            case compiler_1.BuiltinMethod.Bind:
+                return 'bind';
+            case compiler_1.BuiltinMethod.ConcatArray:
+                return 'concat';
+            case compiler_1.BuiltinMethod.SubscribeObservable:
+                return 'subscribe';
+        }
+    }
+    throw new Error('Unexpected method reference form');
+}
+
+});
+
+var node_emitter_transform = createCommonjsModule(function (module, exports) {
+"use strict";
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+var node_emitter_1 = node_emitter;
+function getAngularEmitterTransformFactory(generatedFiles) {
+    return function () {
+        var map = new Map(generatedFiles.filter(function (g) { return g.stmts && g.stmts.length; })
+            .map(function (g) { return [g.genFileUrl, g]; }));
+        var emitter = new node_emitter_1.TypeScriptNodeEmitter();
+        return function (sourceFile) {
+            var g = map.get(sourceFile.fileName);
+            if (g && g.stmts) {
+                var newSourceFile = emitter.updateSourceFile(sourceFile, g.stmts)[0];
+                return newSourceFile;
+            }
+            return sourceFile;
+        };
+    };
+}
+exports.getAngularEmitterTransformFactory = getAngularEmitterTransformFactory;
+
+});
+
+var program = createCommonjsModule(function (module, exports) {
+"use strict";
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+var compiler_1 = require$$1$8;
+var tsc_wrapped_1 = collector;
+var fs_1 = fs__default;
+var path = require$$2__default;
+var ts = require$$0__default;
+var compiler_host_1 = compiler_host;
+var check_types_1 = check_types;
+var api_1 = api;
+var api_2 = api;
+var node_emitter_transform_1 = node_emitter_transform;
+var GENERATED_FILES = /\.ngfactory\.js$|\.ngstyle\.js$|\.ngsummary\.js$/;
+var SUMMARY_JSON_FILES = /\.ngsummary.json$/;
+var emptyModules = {
+    ngModules: [],
+    ngModuleByPipeOrDirective: new Map(),
+    files: []
+};
+var AngularCompilerProgram = (function () {
+    function AngularCompilerProgram(rootNames, options, host, oldProgram) {
+        this.rootNames = rootNames;
+        this.options = options;
+        this.host = host;
+        this.oldProgram = oldProgram;
+        this._structuralDiagnostics = [];
+        this.oldTsProgram = oldProgram ? oldProgram.getTsProgram() : undefined;
+        this.tsProgram = ts.createProgram(rootNames, options, host, this.oldTsProgram);
+        this.srcNames = this.tsProgram.getSourceFiles().map(function (sf) { return sf.fileName; });
+        this.aotCompilerHost = new compiler_host_1.CompilerHost(this.tsProgram, options, host);
+        if (host.readResource) {
+            this.aotCompilerHost.loadResource = host.readResource.bind(host);
+        }
+        var compiler = compiler_1.createAotCompiler(this.aotCompilerHost, options).compiler;
+        this.compiler = compiler;
+        this.collector = new tsc_wrapped_1.MetadataCollector({ quotedNames: true });
+    }
+    // Program implementation
+    AngularCompilerProgram.prototype.getTsProgram = function () { return this.programWithStubs; };
+    AngularCompilerProgram.prototype.getTsOptionDiagnostics = function (cancellationToken) {
+        return this.tsProgram.getOptionsDiagnostics(cancellationToken);
+    };
+    AngularCompilerProgram.prototype.getNgOptionDiagnostics = function (cancellationToken) {
+        return getNgOptionDiagnostics(this.options);
+    };
+    AngularCompilerProgram.prototype.getTsSyntacticDiagnostics = function (sourceFile, cancellationToken) {
+        return this.tsProgram.getSyntacticDiagnostics(sourceFile, cancellationToken);
+    };
+    AngularCompilerProgram.prototype.getNgStructuralDiagnostics = function (cancellationToken) {
+        return this.structuralDiagnostics;
+    };
+    AngularCompilerProgram.prototype.getTsSemanticDiagnostics = function (sourceFile, cancellationToken) {
+        return this.programWithStubs.getSemanticDiagnostics(sourceFile, cancellationToken);
+    };
+    AngularCompilerProgram.prototype.getNgSemanticDiagnostics = function (fileName, cancellationToken) {
+        var compilerDiagnostics = this.generatedFileDiagnostics;
+        // If we have diagnostics during the parser phase the type check phase is not meaningful so skip
+        // it.
+        if (compilerDiagnostics && compilerDiagnostics.length)
+            return compilerDiagnostics;
+        return this.typeChecker.getDiagnostics(fileName, cancellationToken);
+    };
+    AngularCompilerProgram.prototype.loadNgStructureAsync = function () {
+        var _this = this;
+        return this.compiler.analyzeModulesAsync(this.rootNames)
+            .catch(this.catchAnalysisError.bind(this))
+            .then(function (analyzedModules) {
+            if (_this._analyzedModules) {
+                throw new Error('Angular structure loaded both synchronously and asynchronsly');
+            }
+            _this._analyzedModules = analyzedModules;
+        });
+    };
+    AngularCompilerProgram.prototype.getLazyRoutes = function (cancellationToken) { return {}; };
+    AngularCompilerProgram.prototype.emit = function (_a) {
+        var _this = this;
+        var _b = _a.emitFlags, emitFlags = _b === void 0 ? api_2.EmitFlags.Default : _b, cancellationToken = _a.cancellationToken;
+        var emitMap = new Map();
+        var result = this.programWithStubs.emit(
+        /* targetSourceFile */ undefined, createWriteFileCallback(emitFlags, this.host, this.collector, this.options, emitMap), cancellationToken, (emitFlags & (api_2.EmitFlags.DTS | api_2.EmitFlags.JS)) == api_2.EmitFlags.DTS, {
+            after: this.options.skipTemplateCodegen ? [] : [node_emitter_transform_1.getAngularEmitterTransformFactory(this.generatedFiles)]
+        });
+        this.generatedFiles.forEach(function (file) {
+            if (file.source && file.source.length && SUMMARY_JSON_FILES.test(file.genFileUrl)) {
+                // If we have emitted the ngsummary.ts file, ensure the ngsummary.json file is emitted to
+                // the same location.
+                var emittedFile = emitMap.get(file.srcFileUrl);
+                var fileName = emittedFile ?
+                    path.join(path.dirname(emittedFile), path.basename(file.genFileUrl)) :
+                    file.genFileUrl;
+                _this.host.writeFile(fileName, file.source, false, function (error) { });
+            }
+        });
+        return result;
+    };
+    Object.defineProperty(AngularCompilerProgram.prototype, "analyzedModules", {
+        // Private members
+        get: function () {
+            return this._analyzedModules || (this._analyzedModules = this.analyzeModules());
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(AngularCompilerProgram.prototype, "structuralDiagnostics", {
+        get: function () {
+            return this.analyzedModules && this._structuralDiagnostics;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(AngularCompilerProgram.prototype, "stubs", {
+        get: function () {
+            return this._stubs || (this._stubs = this.generateStubs());
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(AngularCompilerProgram.prototype, "stubFiles", {
+        get: function () {
+            return this._stubFiles ||
+                (this._stubFiles = this.stubs.reduce(function (files, generatedFile) {
+                    if (generatedFile.source || (generatedFile.stmts && generatedFile.stmts.length)) {
+                        return files.concat([generatedFile.genFileUrl]);
+                    }
+                    return files;
+                }, []));
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(AngularCompilerProgram.prototype, "programWithStubsHost", {
+        get: function () {
+            return this._programWithStubsHost || (this._programWithStubsHost = createProgramWithStubsHost(this.stubs, this.tsProgram, this.host));
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(AngularCompilerProgram.prototype, "programWithStubs", {
+        get: function () {
+            return this._programWithStubs || (this._programWithStubs = this.createProgramWithStubs());
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(AngularCompilerProgram.prototype, "generatedFiles", {
+        get: function () {
+            return this._generatedFiles || (this._generatedFiles = this.generateFiles());
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(AngularCompilerProgram.prototype, "typeChecker", {
+        get: function () {
+            return (this._typeChecker && !this._typeChecker.partialResults) ?
+                this._typeChecker :
+                (this._typeChecker = this.createTypeChecker());
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(AngularCompilerProgram.prototype, "generatedFileDiagnostics", {
+        get: function () {
+            return this.generatedFiles && this._generatedFileDiagnostics;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    AngularCompilerProgram.prototype.catchAnalysisError = function (e) {
+        if (compiler_1.isSyntaxError(e)) {
+            var parserErrors = compiler_1.getParseErrors(e);
+            if (parserErrors && parserErrors.length) {
+                this._structuralDiagnostics =
+                    parserErrors.map(function (e) { return ({
+                        message: e.contextualMessage(),
+                        category: api_1.DiagnosticCategory.Error,
+                        span: e.span
+                    }); });
+            }
+            else {
+                this._structuralDiagnostics = [{ message: e.message, category: api_1.DiagnosticCategory.Error }];
+            }
+            this._analyzedModules = emptyModules;
+            return emptyModules;
+        }
+        throw e;
+    };
+    AngularCompilerProgram.prototype.analyzeModules = function () {
+        try {
+            return this.compiler.analyzeModulesSync(this.srcNames);
+        }
+        catch (e) {
+            return this.catchAnalysisError(e);
+        }
+    };
+    AngularCompilerProgram.prototype.generateStubs = function () {
+        return this.options.skipTemplateCodegen ? [] :
+            this.options.generateCodeForLibraries === false ?
+                this.compiler.emitAllStubs(this.analyzedModules) :
+                this.compiler.emitPartialStubs(this.analyzedModules);
+    };
+    AngularCompilerProgram.prototype.generateFiles = function () {
+        try {
+            // Always generate the files if requested to ensure we capture any diagnostic errors but only
+            // keep the results if we are not skipping template code generation.
+            var result = this.compiler.emitAllImpls(this.analyzedModules);
+            return this.options.skipTemplateCodegen ? [] : result;
+        }
+        catch (e) {
+            if (compiler_1.isSyntaxError(e)) {
+                this._generatedFileDiagnostics = [{ message: e.message, category: api_1.DiagnosticCategory.Error }];
+                return [];
+            }
+            throw e;
+        }
+    };
+    AngularCompilerProgram.prototype.createTypeChecker = function () {
+        return new check_types_1.TypeChecker(this.tsProgram, this.options, this.host, this.aotCompilerHost, this.options, this.analyzedModules, this.generatedFiles);
+    };
+    AngularCompilerProgram.prototype.createProgramWithStubs = function () {
+        // If we are skipping code generation just use the original program.
+        // Otherwise, create a new program that includes the stub files.
+        return this.options.skipTemplateCodegen ?
+            this.tsProgram :
+            ts.createProgram(this.rootNames.concat(this.stubFiles), this.options, this.programWithStubsHost);
+    };
+    return AngularCompilerProgram;
+}());
+function createProgram(_a) {
+    var rootNames = _a.rootNames, options = _a.options, host = _a.host, oldProgram = _a.oldProgram;
+    return new AngularCompilerProgram(rootNames, options, host, oldProgram);
+}
+exports.createProgram = createProgram;
+function writeMetadata(emitFilePath, sourceFile, collector$$1, ngOptions) {
+    if (/\.js$/.test(emitFilePath)) {
+        var path_1 = emitFilePath.replace(/\.js$/, '.metadata.json');
+        // Beginning with 2.1, TypeScript transforms the source tree before emitting it.
+        // We need the original, unmodified, tree which might be several levels back
+        // depending on the number of transforms performed. All SourceFile's prior to 2.1
+        // will appear to be the original source since they didn't include an original field.
+        var collectableFile = sourceFile;
+        while (collectableFile.original) {
+            collectableFile = collectableFile.original;
+        }
+        var metadata = collector$$1.getMetadata(collectableFile, !!ngOptions.strictMetadataEmit);
+        if (metadata) {
+            var metadataText = JSON.stringify([metadata]);
+            fs_1.writeFileSync(path_1, metadataText, { encoding: 'utf-8' });
+        }
+    }
+}
+function createWriteFileCallback(emitFlags, host, collector$$1, ngOptions, emitMap) {
+    var withMetadata = function (fileName, data, writeByteOrderMark, onError, sourceFiles) {
+        var generatedFile = GENERATED_FILES.test(fileName);
+        if (!generatedFile || data != '') {
+            host.writeFile(fileName, data, writeByteOrderMark, onError, sourceFiles);
+        }
+        if (!generatedFile && sourceFiles && sourceFiles.length == 1) {
+            emitMap.set(sourceFiles[0].fileName, fileName);
+            writeMetadata(fileName, sourceFiles[0], collector$$1, ngOptions);
+        }
+    };
+    var withoutMetadata = function (fileName, data, writeByteOrderMark, onError, sourceFiles) {
+        var generatedFile = GENERATED_FILES.test(fileName);
+        if (!generatedFile || data != '') {
+            host.writeFile(fileName, data, writeByteOrderMark, onError, sourceFiles);
+        }
+        if (!generatedFile && sourceFiles && sourceFiles.length == 1) {
+            emitMap.set(sourceFiles[0].fileName, fileName);
+        }
+    };
+    return (emitFlags & api_2.EmitFlags.Metadata) != 0 ? withMetadata : withoutMetadata;
+}
+function getNgOptionDiagnostics(options) {
+    if (options.annotationsAs) {
+        switch (options.annotationsAs) {
+            case 'decorators':
+            case 'static fields':
+                break;
+            default:
+                return [{
+                        message: 'Angular compiler options "annotationsAs" only supports "static fields" and "decorators"',
+                        category: api_1.DiagnosticCategory.Error
+                    }];
+        }
+    }
+    return [];
+}
+function createProgramWithStubsHost(generatedFiles, originalProgram, originalHost) {
+    return new (function () {
+        function class_1() {
+            var _this = this;
+            this.getDefaultLibFileName = function (options) {
+                return originalHost.getDefaultLibFileName(options);
+            };
+            this.getCurrentDirectory = function () { return originalHost.getCurrentDirectory(); };
+            this.getCanonicalFileName = function (fileName) { return originalHost.getCanonicalFileName(fileName); };
+            this.useCaseSensitiveFileNames = function () { return originalHost.useCaseSensitiveFileNames(); };
+            this.getNewLine = function () { return originalHost.getNewLine(); };
+            this.fileExists = function (fileName) {
+                return _this.generatedFiles.has(fileName) || originalHost.fileExists(fileName);
+            };
+            this.generatedFiles =
+                new Map(generatedFiles.filter(function (g) { return g.source || (g.stmts && g.stmts.length); })
+                    .map(function (g) { return [g.genFileUrl, { g: g }]; }));
+            this.writeFile = originalHost.writeFile;
+            if (originalHost.getDirectories) {
+                this.getDirectories = function (path) { return originalHost.getDirectories(path); };
+            }
+            if (originalHost.directoryExists) {
+                this.directoryExists = function (directoryName) { return originalHost.directoryExists(directoryName); };
+            }
+            if (originalHost.getCancellationToken) {
+                this.getCancellationToken = function () { return originalHost.getCancellationToken(); };
+            }
+            if (originalHost.getDefaultLibLocation) {
+                this.getDefaultLibLocation = function () { return originalHost.getDefaultLibLocation(); };
+            }
+            if (originalHost.trace) {
+                this.trace = function (s) { return originalHost.trace(s); };
+            }
+        }
+        class_1.prototype.getSourceFile = function (fileName, languageVersion, onError) {
+            var data = this.generatedFiles.get(fileName);
+            if (data) {
+                return data.s || (data.s = ts.createSourceFile(fileName, data.g.source || compiler_1.toTypeScript(data.g), languageVersion));
+            }
+            return originalProgram.getSourceFile(fileName) ||
+                originalHost.getSourceFile(fileName, languageVersion, onError);
+        };
+        class_1.prototype.readFile = function (fileName) {
+            var data = this.generatedFiles.get(fileName);
+            if (data) {
+                return data.g.source || compiler_1.toTypeScript(data.g);
+            }
+            return originalHost.readFile(fileName);
+        };
+        return class_1;
+    }());
+}
+
+});
+
+var entry_points = createCommonjsModule(function (module, exports) {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+var module_filename_resolver_1 = module_filename_resolver;
+exports.createModuleFilenameResolver = module_filename_resolver_1.createModuleFilenameResolver;
+var program_1 = program;
+exports.createProgram = program_1.createProgram;
+function createHost(_a) {
+    var tsHost = _a.tsHost, options = _a.options;
+    var resolver = module_filename_resolver_1.createModuleFilenameResolver(tsHost, options);
+    var host = Object.create(tsHost);
+    host.moduleNameToFileName = resolver.moduleNameToFileName.bind(resolver);
+    host.fileNameToModuleName = resolver.fileNameToModuleName.bind(resolver);
+    host.getNgCanonicalFileName = resolver.getNgCanonicalFileName.bind(resolver);
+    host.assumeFileExists = resolver.assumeFileExists.bind(resolver);
+    // Make sure we do not `host.realpath()` from TS as we do not want to resolve symlinks.
+    // https://github.com/Microsoft/TypeScript/issues/9552
+    host.realpath = function (fileName) { return fileName; };
+    return host;
+}
+exports.createHost = createHost;
+
+});
+
+var ngc$1 = createCommonjsModule(function (module, exports) {
+"use strict";
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+// Must be imported first, because Angular decorators throw on load.
+
+var compiler_1 = require$$1$8;
+var tsc_wrapped_1 = collector;
+var fs$$1 = fs__default;
+var path = require$$2__default;
+var ts = require$$0__default;
+var api$$1 = api;
+var ng = entry_points;
+var TS_EXT = /\.ts$/;
+function isTsDiagnostics(diagnostics) {
+    return diagnostics && diagnostics[0] && (diagnostics[0].file || diagnostics[0].messageText);
+}
+function formatDiagnostics(cwd, diags) {
+    if (diags && diags.length) {
+        if (isTsDiagnostics(diags)) {
+            return ts.formatDiagnostics(diags, {
+                getCurrentDirectory: function () { return cwd; },
+                getCanonicalFileName: function (fileName) { return fileName; },
+                getNewLine: function () { return '\n'; }
+            });
+        }
+        else {
+            return diags
+                .map(function (d) {
+                var res = api$$1.DiagnosticCategory[d.category];
+                if (d.span) {
+                    res +=
+                        " at " + d.span.start.file.url + "(" + (d.span.start.line + 1) + "," + (d.span.start.col + 1) + ")";
+                }
+                if (d.span && d.span.details) {
+                    res += ": " + d.span.details + ", " + d.message + "\n";
+                }
+                else {
+                    res += ": " + d.message + "\n";
+                }
+                return res;
+            })
+                .join();
+        }
+    }
+    else
+        return '';
+}
+function check(cwd) {
+    var args = [];
+    for (var _i = 1; _i < arguments.length; _i++) {
+        args[_i - 1] = arguments[_i];
+    }
+    if (args.some(function (diags) { return !!(diags && diags[0]); })) {
+        throw compiler_1.syntaxError(args.map(function (diags) {
+            if (diags && diags[0]) {
+                return formatDiagnostics(cwd, diags);
+            }
+        })
+            .filter(function (message) { return !!message; })
+            .join(''));
+    }
+}
+function readConfiguration(project, basePath, existingOptions) {
+    // Allow a directory containing tsconfig.json as the project value
+    // Note, TS@next returns an empty array, while earlier versions throw
+    var projectFile = fs$$1.lstatSync(project).isDirectory() ? path.join(project, 'tsconfig.json') : project;
+    var _a = ts.readConfigFile(projectFile, ts.sys.readFile), config = _a.config, error = _a.error;
+    if (error)
+        check(basePath, [error]);
+    var parseConfigHost = {
+        useCaseSensitiveFileNames: true,
+        fileExists: fs$$1.existsSync,
+        readDirectory: ts.sys.readDirectory,
+        readFile: ts.sys.readFile
+    };
+    var parsed = ts.parseJsonConfigFileContent(config, parseConfigHost, basePath, existingOptions);
+    check(basePath, parsed.errors);
+    // Default codegen goes to the current directory
+    // Parsed options are already converted to absolute paths
+    var ngOptions = config.angularCompilerOptions || {};
+    // Ignore the genDir option
+    ngOptions.genDir = basePath;
+    for (var _i = 0, _b = Object.keys(parsed.options); _i < _b.length; _i++) {
+        var key = _b[_i];
+        ngOptions[key] = parsed.options[key];
+    }
+    return { parsed: parsed, ngOptions: ngOptions };
+}
+exports.readConfiguration = readConfiguration;
+function main(args, consoleError) {
+    if (consoleError === void 0) { consoleError = console.error; }
+    try {
+        var parsedArgs = minimist(args);
+        var project = parsedArgs.p || parsedArgs.project || '.';
+        var projectDir = fs$$1.lstatSync(project).isFile() ? path.dirname(project) : project;
+        // file names in tsconfig are resolved relative to this absolute path
+        var basePath_1 = path.resolve(process.cwd(), projectDir);
+        var _a = readConfiguration(project, basePath_1), parsed = _a.parsed, ngOptions = _a.ngOptions;
+        ngOptions.basePath = basePath_1;
+        var host = ts.createCompilerHost(parsed.options, true);
+        var rootFileNames_1 = parsed.fileNames.slice(0);
+        var addGeneratedFileName = function (fileName) {
+            if (fileName.startsWith(basePath_1) && TS_EXT.exec(fileName)) {
+                rootFileNames_1.push(fileName);
+            }
+        };
+        if (ngOptions.flatModuleOutFile && !ngOptions.skipMetadataEmit) {
+            var _b = tsc_wrapped_1.createBundleIndexHost(ngOptions, rootFileNames_1, host), bundleHost = _b.host, indexName = _b.indexName, errors = _b.errors;
+            if (errors)
+                check(basePath_1, errors);
+            if (indexName)
+                addGeneratedFileName(indexName);
+            host = bundleHost;
+        }
+        var ngHost = ng.createHost({ tsHost: host, options: ngOptions });
+        var ngProgram = ng.createProgram({ rootNames: rootFileNames_1, host: ngHost, options: ngOptions });
+        // Check parameter diagnostics
+        check(basePath_1, ngProgram.getTsOptionDiagnostics(), ngProgram.getNgOptionDiagnostics());
+        // Check syntactic diagnostics
+        check(basePath_1, ngProgram.getTsSyntacticDiagnostics());
+        // Check TypeScript semantic and Angular structure diagnostics
+        check(basePath_1, ngProgram.getTsSemanticDiagnostics(), ngProgram.getNgStructuralDiagnostics());
+        // Check Angular semantic diagnostics
+        check(basePath_1, ngProgram.getNgSemanticDiagnostics());
+        ngProgram.emit({
+            emitFlags: api$$1.EmitFlags.Default |
+                ((ngOptions.skipMetadataEmit || ngOptions.flatModuleOutFile) ? 0 : api$$1.EmitFlags.Metadata)
+        });
+    }
+    catch (e) {
+        if (compiler_1.isSyntaxError(e)) {
+            consoleError(e.message);
+            return 1;
+        }
+        else {
+            consoleError(e.stack);
+            consoleError('Compilation failed');
+            return 2;
+        }
+    }
+    return 0;
+}
+exports.main = main;
+// CLI entry point
+if (commonjsRequire.main === module) {
+    process.exit(main(process.argv.slice(2), function (s) { return console.error(s); }));
+}
+
+});
+
 var ngtools_impl = createCommonjsModule(function (module, exports) {
 "use strict";
 /**
@@ -48713,8 +50204,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * This API should be stable for NG 2. It can be removed in NG 4..., but should be replaced by
  * something else.
  */
-var compiler_1 = require$$1$10;
-var core_1 = require$$0$12;
+var compiler_1 = require$$1$8;
+var core_1 = require$$0$13;
 var ROUTER_MODULE_PATH = '@angular/router';
 var ROUTER_ROUTES_SYMBOL_NAME = 'ROUTES';
 // A route definition. Normally the short form 'path/to/module#ModuleClassName' is used by
@@ -48907,7 +50398,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * This API should be stable for NG 2. It can be removed in NG 4..., but should be replaced by
  * something else.
  */
-var compiler_1 = require$$1$10;
+var compiler_1 = require$$1$8;
 var codegen_1 = codegen;
 var compiler_host_1 = compiler_host;
 var extractor_1 = extractor;
@@ -49008,7 +50499,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-var compiler_1 = require$$1$10;
+var compiler_1 = require$$1$8;
 exports.StaticReflector = compiler_1.StaticReflector;
 exports.StaticSymbol = compiler_1.StaticSymbol;
 var codegen_1 = codegen;
@@ -49033,11 +50524,16 @@ exports.getPipesTable = typescript_symbols_1.getPipesTable;
 exports.getSymbolQuery = typescript_symbols_1.getSymbolQuery;
 var symbols_1 = symbols$2;
 exports.BuiltinType = symbols_1.BuiltinType;
+__export(api);
+__export(entry_points);
+var ngc_1 = ngc$1;
+exports.ngc = ngc_1.main;
 // TODO(hansl): moving to Angular 4 need to update this API.
 var ngtools_api_1 = ngtools_api;
 exports.__NGTOOLS_PRIVATE_API_2 = ngtools_api_1.NgTools_InternalApi_NG_2;
 
 });
+
 
 
 var BuiltinType$1 = index.BuiltinType;
@@ -49054,7 +50550,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v4.3.0-beta.0-3165fd3
+ * @license Angular v4.3.0-beta.0-3097083
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -50995,13 +52491,13 @@ var TypeScriptServiceHost = (function () {
                     result_1.push(templateSource);
                 }
                 else {
-                    require$$1.forEachChild(child, visit_1);
+                    require$$0.forEachChild(child, visit_1);
                 }
             };
             var sourceFile = this.getSourceFile(fileName);
             if (sourceFile) {
                 this.context = sourceFile.path || sourceFile.fileName;
-                require$$1.forEachChild(sourceFile, visit_1);
+                require$$0.forEachChild(sourceFile, visit_1);
             }
             return result_1.length ? result_1 : undefined;
         }
@@ -51017,10 +52513,10 @@ var TypeScriptServiceHost = (function () {
                     result.push(declaration);
                 }
                 else {
-                    require$$1.forEachChild(child, visit_2);
+                    require$$0.forEachChild(child, visit_2);
                 }
             };
-            require$$1.forEachChild(sourceFile, visit_2);
+            require$$0.forEachChild(sourceFile, visit_2);
         }
         return result;
     };
@@ -51137,8 +52633,8 @@ var TypeScriptServiceHost = (function () {
         var result = undefined;
         var t = this;
         switch (node.kind) {
-            case require$$1.SyntaxKind.NoSubstitutionTemplateLiteral:
-            case require$$1.SyntaxKind.StringLiteral:
+            case require$$0.SyntaxKind.NoSubstitutionTemplateLiteral:
+            case require$$0.SyntaxKind.StringLiteral:
                 var _a = this.getTemplateClassDeclFromNode(node), declaration = _a[0], decorator = _a[1];
                 if (declaration && declaration.name) {
                     var sourceFile = this.getSourceFile(fileName);
@@ -51239,8 +52735,8 @@ var TypeScriptServiceHost = (function () {
     TypeScriptServiceHost.prototype.getTemplateClassFromStaticSymbol = function (type) {
         var source = this.getSourceFile(type.filePath);
         if (source) {
-            var declarationNode = require$$1.forEachChild(source, function (child) {
-                if (child.kind === require$$1.SyntaxKind.ClassDeclaration) {
+            var declarationNode = require$$0.forEachChild(source, function (child) {
+                if (child.kind === require$$0.SyntaxKind.ClassDeclaration) {
                     var classDeclaration = child;
                     if (classDeclaration.name != null && classDeclaration.name.text === type.name) {
                         return classDeclaration;
@@ -51262,7 +52758,7 @@ var TypeScriptServiceHost = (function () {
         if (!parentNode) {
             return TypeScriptServiceHost.missingTemplate;
         }
-        if (parentNode.kind !== require$$1.SyntaxKind.PropertyAssignment) {
+        if (parentNode.kind !== require$$0.SyntaxKind.PropertyAssignment) {
             return TypeScriptServiceHost.missingTemplate;
         }
         else {
@@ -51272,20 +52768,20 @@ var TypeScriptServiceHost = (function () {
             }
         }
         parentNode = parentNode.parent; // ObjectLiteralExpression
-        if (!parentNode || parentNode.kind !== require$$1.SyntaxKind.ObjectLiteralExpression) {
+        if (!parentNode || parentNode.kind !== require$$0.SyntaxKind.ObjectLiteralExpression) {
             return TypeScriptServiceHost.missingTemplate;
         }
         parentNode = parentNode.parent; // CallExpression
-        if (!parentNode || parentNode.kind !== require$$1.SyntaxKind.CallExpression) {
+        if (!parentNode || parentNode.kind !== require$$0.SyntaxKind.CallExpression) {
             return TypeScriptServiceHost.missingTemplate;
         }
         var callTarget = parentNode.expression;
         var decorator = parentNode.parent; // Decorator
-        if (!decorator || decorator.kind !== require$$1.SyntaxKind.Decorator) {
+        if (!decorator || decorator.kind !== require$$0.SyntaxKind.Decorator) {
             return TypeScriptServiceHost.missingTemplate;
         }
         var declaration = decorator.parent; // ClassDeclaration
-        if (!declaration || declaration.kind !== require$$1.SyntaxKind.ClassDeclaration) {
+        if (!declaration || declaration.kind !== require$$0.SyntaxKind.ClassDeclaration) {
             return TypeScriptServiceHost.missingTemplate;
         }
         return [declaration, callTarget];
@@ -51298,11 +52794,11 @@ var TypeScriptServiceHost = (function () {
             [];
     };
     TypeScriptServiceHost.prototype.getDeclarationFromNode = function (sourceFile, node) {
-        if (node.kind == require$$1.SyntaxKind.ClassDeclaration && node.decorators &&
+        if (node.kind == require$$0.SyntaxKind.ClassDeclaration && node.decorators &&
             node.name) {
             for (var _i = 0, _a = node.decorators; _i < _a.length; _i++) {
                 var decorator = _a[_i];
-                if (decorator.expression && decorator.expression.kind == require$$1.SyntaxKind.CallExpression) {
+                if (decorator.expression && decorator.expression.kind == require$$0.SyntaxKind.CallExpression) {
                     var classDeclaration = node;
                     if (classDeclaration.name) {
                         var call = decorator.expression;
@@ -51341,16 +52837,16 @@ var TypeScriptServiceHost = (function () {
     };
     TypeScriptServiceHost.prototype.stringOf = function (node) {
         switch (node.kind) {
-            case require$$1.SyntaxKind.NoSubstitutionTemplateLiteral:
+            case require$$0.SyntaxKind.NoSubstitutionTemplateLiteral:
                 return node.text;
-            case require$$1.SyntaxKind.StringLiteral:
+            case require$$0.SyntaxKind.StringLiteral:
                 return node.text;
         }
     };
     TypeScriptServiceHost.prototype.findNode = function (sourceFile, position) {
         function find(node) {
             if (position >= node.getStart() && position < node.getEnd()) {
-                return require$$1.forEachChild(node, find) || node;
+                return require$$0.forEachChild(node, find) || node;
             }
         }
         return find(sourceFile);
@@ -51380,14 +52876,14 @@ function shrink(span, offset) {
 }
 function spanAt(sourceFile, line, column) {
     if (line != null && column != null) {
-        var position_1 = require$$1.getPositionOfLineAndCharacter(sourceFile, line, column);
+        var position_1 = require$$0.getPositionOfLineAndCharacter(sourceFile, line, column);
         var findChild = function findChild(node) {
-            if (node.kind > require$$1.SyntaxKind.LastToken && node.pos <= position_1 && node.end > position_1) {
-                var betterNode = require$$1.forEachChild(node, findChild);
+            if (node.kind > require$$0.SyntaxKind.LastToken && node.pos <= position_1 && node.end > position_1) {
+                var betterNode = require$$0.forEachChild(node, findChild);
                 return betterNode || node;
             }
         };
-        var node = require$$1.forEachChild(sourceFile, findChild);
+        var node = require$$0.forEachChild(sourceFile, findChild);
         if (node) {
             return { start: node.getStart(), end: node.getEnd() };
         }
@@ -51553,7 +53049,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
             start: d.span.start,
             length: d.span.end - d.span.start,
             messageText: d.message,
-            category: require$$1.DiagnosticCategory.Error,
+            category: require$$0.DiagnosticCategory.Error,
             code: 0,
             source: 'ng'
         };
@@ -51679,7 +53175,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('4.3.0-beta.0-3165fd3');
+var VERSION$$1 = new Version('4.3.0-beta.0-3097083');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
