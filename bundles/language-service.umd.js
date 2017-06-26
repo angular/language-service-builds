@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.3.0-beta.0-263c1a1
+ * @license Angular v4.3.0-beta.0-8786ba9
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2033,7 +2033,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v4.3.0-beta.0-263c1a1
+ * @license Angular v4.3.0-beta.0-8786ba9
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2825,7 +2825,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('4.3.0-beta.0-263c1a1');
+var VERSION$2 = new Version('4.3.0-beta.0-8786ba9');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -16041,7 +16041,7 @@ function animate$1(timings, styles) {
  * how animations in Angular are used.
  *
  * `group` specifies a list of animation steps that are all run in parallel. Grouped animations are
- * useful when a series of styles must be animated/closed off at different statrting/ending times.
+ * useful when a series of styles must be animated/closed off at different starting/ending times.
  *
  * The `group` function can either be used within a {\@link sequence sequence} or a {\@link transition
  * transition} and it will only continue to the next instruction once all of the inner animation
@@ -16984,7 +16984,7 @@ var core_es5 = Object.freeze({
 });
 
 /**
- * @license Angular v4.3.0-beta.0-263c1a1
+ * @license Angular v4.3.0-beta.0-8786ba9
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -17003,7 +17003,7 @@ var core_es5 = Object.freeze({
 /**
  * \@stable
  */
-var VERSION$1 = new Version('4.3.0-beta.0-263c1a1');
+var VERSION$1 = new Version('4.3.0-beta.0-8786ba9');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -47100,7 +47100,7 @@ var core_1 = require$$0$13;
 /**
  * @stable
  */
-exports.VERSION = new core_1.Version('4.3.0-beta.0-263c1a1');
+exports.VERSION = new core_1.Version('4.3.0-beta.0-8786ba9');
 
 });
 
@@ -50550,7 +50550,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v4.3.0-beta.0-263c1a1
+ * @license Angular v4.3.0-beta.0-8786ba9
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -53175,7 +53175,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('4.3.0-beta.0-263c1a1');
+var VERSION$$1 = new Version('4.3.0-beta.0-8786ba9');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
