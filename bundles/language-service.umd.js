@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.2.4-7205d7a
+ * @license Angular v4.2.4-7728d7e
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2030,7 +2030,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v4.2.4-7205d7a
+ * @license Angular v4.2.4-7728d7e
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2822,7 +2822,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('4.2.4-7205d7a');
+var VERSION$2 = new Version('4.2.4-7728d7e');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -16979,7 +16979,7 @@ var core_es5 = Object.freeze({
 });
 
 /**
- * @license Angular v4.2.4-7205d7a
+ * @license Angular v4.2.4-7728d7e
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -16998,7 +16998,7 @@ var core_es5 = Object.freeze({
 /**
  * \@stable
  */
-var VERSION$1 = new Version('4.2.4-7205d7a');
+var VERSION$1 = new Version('4.2.4-7728d7e');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -47033,7 +47033,7 @@ var core_1 = require$$0$12;
 /**
  * @stable
  */
-exports.VERSION = new core_1.Version('4.2.4-7205d7a');
+exports.VERSION = new core_1.Version('4.2.4-7728d7e');
 
 });
 
@@ -49045,7 +49045,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v4.2.4-7205d7a
+ * @license Angular v4.2.4-7728d7e
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -51670,7 +51670,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('4.2.4-7205d7a');
+var VERSION$$1 = new Version('4.2.4-7728d7e');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
