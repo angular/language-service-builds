@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.3.0-beta.1-b116901
+ * @license Angular v4.3.0-beta.1-70981c6
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -18,10 +18,10 @@ module.exports = function(provided) {
   return result;
 }
 
-define(['exports', 'typescript', 'fs', 'path', 'reflect-metadata', 'minimist'], function (exports, require$$0, fs, require$$2, reflectMetadata, minimist) { 'use strict';
+define(['exports', 'fs', 'typescript', 'path', 'reflect-metadata', 'minimist'], function (exports, fs, require$$0, require$$2, reflectMetadata, minimist) { 'use strict';
 
-var require$$0__default = 'default' in require$$0 ? require$$0['default'] : require$$0;
 var fs__default = 'default' in fs ? fs['default'] : fs;
+var require$$0__default = 'default' in require$$0 ? require$$0['default'] : require$$0;
 var require$$2__default = 'default' in require$$2 ? require$$2['default'] : require$$2;
 reflectMetadata = 'default' in reflectMetadata ? reflectMetadata['default'] : reflectMetadata;
 minimist = 'default' in minimist ? minimist['default'] : minimist;
@@ -2033,7 +2033,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v4.3.0-beta.1-b116901
+ * @license Angular v4.3.0-beta.1-70981c6
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2825,7 +2825,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('4.3.0-beta.1-b116901');
+var VERSION$2 = new Version('4.3.0-beta.1-70981c6');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -16924,7 +16924,7 @@ var core_es5 = Object.freeze({
 });
 
 /**
- * @license Angular v4.3.0-beta.1-b116901
+ * @license Angular v4.3.0-beta.1-70981c6
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -16943,7 +16943,7 @@ var core_es5 = Object.freeze({
 /**
  * \@stable
  */
-var VERSION$1 = new Version('4.3.0-beta.1-b116901');
+var VERSION$1 = new Version('4.3.0-beta.1-70981c6');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -46847,6 +46847,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
  */
 var compiler = require$$1$8;
 var core_1 = require$$0$13;
+var fs_1 = fs__default;
 var compiler_host_1 = compiler_host;
 var path_mapped_compiler_host_1 = path_mapped_compiler_host;
 var GENERATED_META_FILES = /\.json$/;
@@ -46893,7 +46894,7 @@ var CodeGenerator = (function () {
             if (!cliOptions.locale) {
                 throw new Error("The translation file (" + cliOptions.i18nFile + ") locale must be provided. Use the --locale option.");
             }
-            transContent = tsCompilerHost.readFile(cliOptions.i18nFile);
+            transContent = fs_1.readFileSync(cliOptions.i18nFile, 'utf8');
         }
         var missingTranslation = core_1.MissingTranslationStrategy.Warning;
         if (cliOptions.missingTranslation) {
@@ -47039,7 +47040,7 @@ var core_1 = require$$0$13;
 /**
  * @stable
  */
-exports.VERSION = new core_1.Version('4.3.0-beta.1-b116901');
+exports.VERSION = new core_1.Version('4.3.0-beta.1-70981c6');
 
 });
 
@@ -50489,7 +50490,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v4.3.0-beta.1-b116901
+ * @license Angular v4.3.0-beta.1-70981c6
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -53114,7 +53115,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('4.3.0-beta.1-b116901');
+var VERSION$$1 = new Version('4.3.0-beta.1-70981c6');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
