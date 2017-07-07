@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.3.0-beta.1-9c3386b
+ * @license Angular v4.3.0-beta.1-671a175
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2033,7 +2033,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v4.3.0-beta.1-9c3386b
+ * @license Angular v4.3.0-beta.1-671a175
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2825,7 +2825,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('4.3.0-beta.1-9c3386b');
+var VERSION$2 = new Version('4.3.0-beta.1-671a175');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -13499,10 +13499,18 @@ function pureArrayDef(argCount) {
     return _pureExpressionDef(32 /* TypePureArray */, new Array(argCount));
 }
 /**
- * @param {?} propertyNames
+ * @param {?} propToIndex
  * @return {?}
  */
-function pureObjectDef(propertyNames) {
+function pureObjectDef(propToIndex) {
+    var /** @type {?} */ keys = Object.keys(propToIndex);
+    var /** @type {?} */ nbKeys = keys.length;
+    var /** @type {?} */ propertyNames = new Array(nbKeys);
+    for (var /** @type {?} */ i = 0; i < nbKeys; i++) {
+        var /** @type {?} */ key = keys[i];
+        var /** @type {?} */ index = propToIndex[key];
+        propertyNames[index] = key;
+    }
     return _pureExpressionDef(64 /* TypePureObject */, propertyNames);
 }
 /**
@@ -16981,7 +16989,7 @@ var core_es5 = Object.freeze({
 });
 
 /**
- * @license Angular v4.3.0-beta.1-9c3386b
+ * @license Angular v4.3.0-beta.1-671a175
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -17000,7 +17008,7 @@ var core_es5 = Object.freeze({
 /**
  * \@stable
  */
-var VERSION$1 = new Version('4.3.0-beta.1-9c3386b');
+var VERSION$1 = new Version('4.3.0-beta.1-671a175');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -21897,7 +21905,7 @@ var _ParseAST = (function () {
             return '';
         }
         this.advance();
-        return n.toString();
+        return (n.toString());
     };
     /**
      * @return {?}
@@ -21909,7 +21917,7 @@ var _ParseAST = (function () {
             return '';
         }
         this.advance();
-        return n.toString();
+        return (n.toString());
     };
     /**
      * @return {?}
@@ -21947,7 +21955,7 @@ var _ParseAST = (function () {
                 this.error('Cannot have a pipe in an action expression');
             }
             do {
-                var /** @type {?} */ name = ((this.expectIdentifierOrKeyword()));
+                var /** @type {?} */ name = this.expectIdentifierOrKeyword();
                 var /** @type {?} */ args = [];
                 while (this.optionalCharacter($COLON)) {
                     args.push(this.parseExpression());
@@ -22246,8 +22254,9 @@ var _ParseAST = (function () {
         if (!this.optionalCharacter($RBRACE)) {
             this.rbracesExpected++;
             do {
-                var /** @type {?} */ key = ((this.expectIdentifierOrKeywordOrString()));
-                keys.push(key);
+                var /** @type {?} */ quoted = this.next.isString();
+                var /** @type {?} */ key = this.expectIdentifierOrKeywordOrString();
+                keys.push({ key: key, quoted: quoted });
                 this.expectCharacter($COLON);
                 values.push(this.parsePipe());
             } while (this.optionalCharacter($COMMA));
@@ -22264,7 +22273,7 @@ var _ParseAST = (function () {
     _ParseAST.prototype.parseAccessMemberOrMethodCall = function (receiver, isSafe) {
         if (isSafe === void 0) { isSafe = false; }
         var /** @type {?} */ start = receiver.span.start;
-        var /** @type {?} */ id = ((this.expectIdentifierOrKeyword()));
+        var /** @type {?} */ id = this.expectIdentifierOrKeyword();
         if (this.optionalCharacter($LPAREN)) {
             this.rparensExpected++;
             var /** @type {?} */ args = this.parseCallArguments();
@@ -34008,10 +34017,9 @@ var LiteralMapEntry = (function () {
     /**
      * @param {?} key
      * @param {?} value
-     * @param {?=} quoted
+     * @param {?} quoted
      */
     function LiteralMapEntry(key, value, quoted) {
-        if (quoted === void 0) { quoted = false; }
         this.key = key;
         this.value = value;
         this.quoted = quoted;
@@ -35114,13 +35122,11 @@ function literalArr(values, type, sourceSpan) {
 /**
  * @param {?} values
  * @param {?=} type
- * @param {?=} quoted
  * @return {?}
  */
-function literalMap(values, type, quoted) {
+function literalMap(values, type) {
     if (type === void 0) { type = null; }
-    if (quoted === void 0) { quoted = false; }
-    return new LiteralMapExpr(values.map(function (entry) { return new LiteralMapEntry(entry[0], entry[1], quoted); }), type, null);
+    return new LiteralMapExpr(values.map(function (e) { return new LiteralMapEntry(e.key, e.value, e.quoted); }), type, null);
 }
 /**
  * @param {?} expr
@@ -38199,7 +38205,14 @@ function convertActionBinding(localResolver, implicitReceiver, action, bindingId
         },
         createLiteralMapConverter: function (keys) {
             // Note: no caching for literal maps in actions.
-            return function (args) { return literalMap(/** @type {?} */ (keys.map(function (key, i) { return [key, args[i]]; }))); };
+            return function (values) {
+                var /** @type {?} */ entries = keys.map(function (k, i) { return ({
+                    key: k.key,
+                    value: values[i],
+                    quoted: k.quoted,
+                }); });
+                return literalMap(entries);
+            };
         },
         createPipeConverter: function (name) {
             throw new Error("Illegal State: Actions are not allowed to contain pipes. Pipe: " + name);
@@ -39155,9 +39168,9 @@ var ViewCompiler = (function () {
             renderComponentVarName = ((renderComponentVar.name));
             outputCtx.statements.push(renderComponentVar
                 .set(importExpr(Identifiers.createRendererType2).callFn([new LiteralMapExpr([
-                    new LiteralMapEntry('encapsulation', literal(template_1.encapsulation)),
-                    new LiteralMapEntry('styles', styles),
-                    new LiteralMapEntry('data', new LiteralMapExpr(customRenderData))
+                    new LiteralMapEntry('encapsulation', literal(template_1.encapsulation), false),
+                    new LiteralMapEntry('styles', styles, false),
+                    new LiteralMapEntry('data', new LiteralMapExpr(customRenderData), false)
                 ])]))
                 .toDeclStmt(importType(Identifiers.RendererType2), [StmtModifier.Final, StmtModifier.Exported]));
         }
@@ -39260,7 +39273,7 @@ var ViewBuilder = (function () {
                     nodeFlags: flags,
                     nodeDef: importExpr(Identifiers.queryDef).callFn([
                         literal(flags), literal(queryId),
-                        new LiteralMapExpr([new LiteralMapEntry(query.propertyName, literal(bindingType))])
+                        new LiteralMapExpr([new LiteralMapEntry(query.propertyName, literal(bindingType), false)])
                     ])
                 }); });
             });
@@ -39594,7 +39607,7 @@ var ViewBuilder = (function () {
                 nodeFlags: flags,
                 nodeDef: importExpr(Identifiers.queryDef).callFn([
                     literal(flags), literal(queryId),
-                    new LiteralMapExpr([new LiteralMapEntry(query.propertyName, literal(bindingType))])
+                    new LiteralMapExpr([new LiteralMapEntry(query.propertyName, literal(bindingType), false)])
                 ]),
             }); });
         });
@@ -39789,12 +39802,13 @@ var ViewBuilder = (function () {
             var /** @type {?} */ valueExpr_2 = importExpr(Identifiers.EMPTY_MAP);
             return function () { return valueExpr_2; };
         }
+        // function pureObjectDef(propToIndex: {[p: string]: number}): NodeDef
+        var /** @type {?} */ map = literalMap(keys.map(function (e, i) { return (Object.assign({}, e, { value: literal(i) })); }));
         var /** @type {?} */ nodeIndex = this.nodes.length;
-        // function pureObjectDef(propertyNames: string[]): NodeDef
         this.nodes.push(function () { return ({
             sourceSpan: sourceSpan,
             nodeFlags: 64 /* TypePureObject */,
-            nodeDef: importExpr(Identifiers.pureObjectDef).callFn([literalArr(keys.map(function (key) { return literal(key); }))])
+            nodeDef: importExpr(Identifiers.pureObjectDef).callFn([map])
         }); });
         return function (args) { return callCheckStmt(nodeIndex, args); };
     };
@@ -40573,7 +40587,7 @@ var ForJitSerializer = (function () {
              */
             Transformer.prototype.visitStringMap = function (map, context) {
                 var _this = this;
-                return new LiteralMapExpr(Object.keys(map).map(function (key) { return new LiteralMapEntry(key, visitValue(map[key], _this, context)); }));
+                return new LiteralMapExpr(Object.keys(map).map(function (key) { return new LiteralMapEntry(key, visitValue(map[key], _this, context), false); }));
             };
             /**
              * @param {?} value
@@ -43149,7 +43163,7 @@ var StatementInterpreter = (function () {
     StatementInterpreter.prototype.visitLiteralMapExpr = function (ast, ctx) {
         var _this = this;
         var /** @type {?} */ result = {};
-        ast.entries.forEach(function (entry) { return ((result))[entry.key] = entry.value.visitExpression(_this, ctx); });
+        ast.entries.forEach(function (entry) { return result[entry.key] = entry.value.visitExpression(_this, ctx); });
         return result;
     };
     /**
@@ -43492,7 +43506,7 @@ var JitEmitterVisitor = (function (_super) {
      * @return {?}
      */
     JitEmitterVisitor.prototype.createReturnStmt = function (ctx) {
-        var /** @type {?} */ stmt = new ReturnStatement(new LiteralMapExpr(this._evalExportedVars.map(function (resultVar) { return new LiteralMapEntry(resultVar, variable(resultVar)); })));
+        var /** @type {?} */ stmt = new ReturnStatement(new LiteralMapExpr(this._evalExportedVars.map(function (resultVar) { return new LiteralMapEntry(resultVar, variable(resultVar), false); })));
         stmt.visitStatement(this, ctx);
     };
     /**
@@ -47056,7 +47070,9 @@ var Extractor = (function () {
             default:
                 serializer = new compiler.Xliff();
         }
-        return bundle.write(serializer, function (sourcePath) { return sourcePath.replace(path.join(_this.options.basePath, '/'), ''); });
+        return bundle.write(serializer, function (sourcePath) { return _this.options.basePath ?
+            path.relative(_this.options.basePath, sourcePath) :
+            sourcePath; });
     };
     Extractor.prototype.getExtension = function (formatName) {
         var format = (formatName || 'xlf').toLowerCase();
@@ -47107,7 +47123,7 @@ var core_1 = require$$0$13;
 /**
  * @stable
  */
-exports.VERSION = new core_1.Version('4.3.0-beta.1-9c3386b');
+exports.VERSION = new core_1.Version('4.3.0-beta.1-671a175');
 
 });
 
@@ -49970,6 +49986,7 @@ function createProgramWithStubsHost(generatedFiles, originalProgram, originalHos
             this.getCanonicalFileName = function (fileName) { return originalHost.getCanonicalFileName(fileName); };
             this.useCaseSensitiveFileNames = function () { return originalHost.useCaseSensitiveFileNames(); };
             this.getNewLine = function () { return originalHost.getNewLine(); };
+            this.realPath = function (p) { return p; };
             this.fileExists = function (fileName) {
                 return _this.generatedFiles.has(fileName) || originalHost.fileExists(fileName);
             };
@@ -50047,6 +50064,14 @@ var ngc$1 = createCommonjsModule(function (module, exports) {
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
+var __assign = (commonjsGlobal && commonjsGlobal.__assign) || Object.assign || function(t) {
+    for (var s, i = 1, n = arguments.length; i < n; i++) {
+        s = arguments[i];
+        for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+            t[p] = s[p];
+    }
+    return t;
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 // Must be imported first, because Angular decorators throw on load.
 
@@ -50067,7 +50092,7 @@ function formatDiagnostics(cwd, diags) {
             return ts.formatDiagnostics(diags, {
                 getCurrentDirectory: function () { return cwd; },
                 getCanonicalFileName: function (fileName) { return fileName; },
-                getNewLine: function () { return '\n'; }
+                getNewLine: function () { return ts.sys.newLine; }
             });
         }
         else {
@@ -50127,25 +50152,48 @@ function readConfiguration(project, basePath, existingOptions) {
     var ngOptions = config.angularCompilerOptions || {};
     // Ignore the genDir option
     ngOptions.genDir = basePath;
-    for (var _i = 0, _b = Object.keys(parsed.options); _i < _b.length; _i++) {
-        var key = _b[_i];
-        ngOptions[key] = parsed.options[key];
-    }
     return { parsed: parsed, ngOptions: ngOptions };
 }
 exports.readConfiguration = readConfiguration;
-function main(args, consoleError) {
+function getProjectDirectory(project) {
+    var isFile;
+    try {
+        isFile = fs$$1.lstatSync(project).isFile();
+    }
+    catch (e) {
+        // Project doesn't exist. Assume it is a file has an extension. This case happens
+        // when the project file is passed to set basePath but no tsconfig.json file exists.
+        // It is used in tests to ensure that the options can be passed in without there being
+        // an actual config file.
+        isFile = path.extname(project) !== '';
+    }
+    // If project refers to a file, the project directory is the file's parent directory
+    // otherwise project is the project directory.
+    return isFile ? path.dirname(project) : project;
+}
+function main(args, consoleError, files, options, ngOptions) {
     if (consoleError === void 0) { consoleError = console.error; }
     try {
         var parsedArgs = minimist(args);
         var project = parsedArgs.p || parsedArgs.project || '.';
-        var projectDir = fs$$1.lstatSync(project).isFile() ? path.dirname(project) : project;
+        var projectDir = getProjectDirectory(project);
         // file names in tsconfig are resolved relative to this absolute path
         var basePath_1 = path.resolve(process.cwd(), projectDir);
-        var _a = readConfiguration(project, basePath_1), parsed = _a.parsed, ngOptions = _a.ngOptions;
+        if (!files || !options || !ngOptions) {
+            var _a = readConfiguration(project, basePath_1), parsed = _a.parsed, readNgOptions = _a.ngOptions;
+            if (!files)
+                files = parsed.fileNames;
+            if (!options)
+                options = parsed.options;
+            if (!ngOptions)
+                ngOptions = readNgOptions;
+        }
+        // Ignore what the tsconfig.json for baseDir and genDir
         ngOptions.basePath = basePath_1;
-        var host = ts.createCompilerHost(parsed.options, true);
-        var rootFileNames_1 = parsed.fileNames.slice(0);
+        ngOptions.genDir = basePath_1;
+        var host = ts.createCompilerHost(options, true);
+        host.realpath = function (p) { return p; };
+        var rootFileNames_1 = files.map(function (f) { return path.normalize(f); });
         var addGeneratedFileName = function (fileName) {
             if (fileName.startsWith(basePath_1) && TS_EXT.exec(fileName)) {
                 rootFileNames_1.push(fileName);
@@ -50159,8 +50207,9 @@ function main(args, consoleError) {
                 addGeneratedFileName(indexName);
             host = bundleHost;
         }
-        var ngHost = ng.createHost({ tsHost: host, options: ngOptions });
-        var ngProgram = ng.createProgram({ rootNames: rootFileNames_1, host: ngHost, options: ngOptions });
+        var ngHostOptions = __assign({}, options, ngOptions);
+        var ngHost = ng.createHost({ tsHost: host, options: ngHostOptions });
+        var ngProgram = ng.createProgram({ rootNames: rootFileNames_1, host: ngHost, options: ngHostOptions });
         // Check parameter diagnostics
         check(basePath_1, ngProgram.getTsOptionDiagnostics(), ngProgram.getNgOptionDiagnostics());
         // Check syntactic diagnostics
@@ -50557,7 +50606,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v4.3.0-beta.1-9c3386b
+ * @license Angular v4.3.0-beta.1-671a175
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -53186,7 +53235,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('4.3.0-beta.1-9c3386b');
+var VERSION$$1 = new Version('4.3.0-beta.1-671a175');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
