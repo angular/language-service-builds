@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.3.0-beta.1-ae27af7
+ * @license Angular v4.3.0-beta.1-227dbbc
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1296,7 +1296,7 @@ function locateSymbol(info) {
                 }
             },
             visitReference: function (ast) {
-                symbol_1 = info.template.query.getTypeSymbol(tokenReference(ast.value));
+                symbol_1 = ast.value && info.template.query.getTypeSymbol(tokenReference(ast.value));
                 span_1 = spanOf(ast);
             },
             visitVariable: function (ast) { },
@@ -2634,7 +2634,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version('4.3.0-beta.1-ae27af7');
+var VERSION = new Version('4.3.0-beta.1-227dbbc');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.

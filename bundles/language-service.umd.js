@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.3.0-beta.1-ae27af7
+ * @license Angular v4.3.0-beta.1-227dbbc
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2033,7 +2033,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v4.3.0-beta.1-ae27af7
+ * @license Angular v4.3.0-beta.1-227dbbc
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2825,7 +2825,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('4.3.0-beta.1-ae27af7');
+var VERSION$2 = new Version('4.3.0-beta.1-227dbbc');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -16924,7 +16924,7 @@ var core_es5 = Object.freeze({
 });
 
 /**
- * @license Angular v4.3.0-beta.1-ae27af7
+ * @license Angular v4.3.0-beta.1-227dbbc
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -16943,7 +16943,7 @@ var core_es5 = Object.freeze({
 /**
  * \@stable
  */
-var VERSION$1 = new Version('4.3.0-beta.1-ae27af7');
+var VERSION$1 = new Version('4.3.0-beta.1-227dbbc');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -47042,7 +47042,7 @@ var core_1 = require$$0$13;
 /**
  * @stable
  */
-exports.VERSION = new core_1.Version('4.3.0-beta.1-ae27af7');
+exports.VERSION = new core_1.Version('4.3.0-beta.1-227dbbc');
 
 });
 
@@ -47946,7 +47946,7 @@ var TypeScriptSymbolQuery = (function () {
     TypeScriptSymbolQuery.prototype.getTypeSymbol = function (type) {
         var context = { node: this.source, program: this.program, checker: this.checker };
         var typeSymbol = findClassSymbolInContext(type, context);
-        return new SymbolWrapper(typeSymbol, context);
+        return typeSymbol && new SymbolWrapper(typeSymbol, context);
     };
     TypeScriptSymbolQuery.prototype.createSymbolTable = function (symbols) {
         var result = new MapSymbolTable();
@@ -50492,7 +50492,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v4.3.0-beta.1-ae27af7
+ * @license Angular v4.3.0-beta.1-227dbbc
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -51783,7 +51783,7 @@ function locateSymbol(info) {
                 }
             },
             visitReference: function (ast) {
-                symbol_1 = info.template.query.getTypeSymbol(tokenReference(ast.value));
+                symbol_1 = ast.value && info.template.query.getTypeSymbol(tokenReference(ast.value));
                 span_1 = spanOf(ast);
             },
             visitVariable: function (ast) { },
@@ -53121,7 +53121,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('4.3.0-beta.1-ae27af7');
+var VERSION$$1 = new Version('4.3.0-beta.1-227dbbc');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
