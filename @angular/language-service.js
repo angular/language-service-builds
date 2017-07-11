@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.3.0-rc.0-20127c1
+ * @license Angular v4.3.0-rc.0-26b9492
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2629,7 +2629,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version('4.3.0-rc.0-20127c1');
+var VERSION = new Version('4.3.0-rc.0-26b9492');
 
 /**
  * @license
