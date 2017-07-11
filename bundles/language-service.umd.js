@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.2.6-dbfd717
+ * @license Angular v4.2.6-afd5d72
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2030,7 +2030,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v4.2.6-dbfd717
+ * @license Angular v4.2.6-afd5d72
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2822,7 +2822,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('4.2.6-dbfd717');
+var VERSION$2 = new Version('4.2.6-afd5d72');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -7923,7 +7923,7 @@ var ChangeDetectorRef = (function () {
      * class Cmp {
      *   numberOfTicks = 0;
      *
-     *   constructor(ref: ChangeDetectorRef) {
+     *   constructor(private ref: ChangeDetectorRef) {
      *     setInterval(() => {
      *       this.numberOfTicks ++
      *       // the following is required, otherwise the view will not be updated
@@ -16929,7 +16929,7 @@ var core_es5 = Object.freeze({
 });
 
 /**
- * @license Angular v4.2.6-dbfd717
+ * @license Angular v4.2.6-afd5d72
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -16948,7 +16948,7 @@ var core_es5 = Object.freeze({
 /**
  * \@stable
  */
-var VERSION$1 = new Version('4.2.6-dbfd717');
+var VERSION$1 = new Version('4.2.6-afd5d72');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -46998,7 +46998,7 @@ var core_1 = require$$0$12;
 /**
  * @stable
  */
-exports.VERSION = new core_1.Version('4.2.6-dbfd717');
+exports.VERSION = new core_1.Version('4.2.6-afd5d72');
 
 });
 
@@ -49010,7 +49010,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v4.2.6-dbfd717
+ * @license Angular v4.2.6-afd5d72
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -51635,7 +51635,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('4.2.6-dbfd717');
+var VERSION$$1 = new Version('4.2.6-afd5d72');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
