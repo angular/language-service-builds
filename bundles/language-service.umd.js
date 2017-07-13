@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.3.0-rc.0-bc3b2ac
+ * @license Angular v4.3.0-rc.0-ce0f4f0
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2033,7 +2033,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v4.3.0-rc.0-bc3b2ac
+ * @license Angular v4.3.0-rc.0-ce0f4f0
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2825,7 +2825,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('4.3.0-rc.0-bc3b2ac');
+var VERSION$2 = new Version('4.3.0-rc.0-ce0f4f0');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -16989,7 +16989,7 @@ var core_es5 = Object.freeze({
 });
 
 /**
- * @license Angular v4.3.0-rc.0-bc3b2ac
+ * @license Angular v4.3.0-rc.0-ce0f4f0
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -17008,7 +17008,7 @@ var core_es5 = Object.freeze({
 /**
  * \@stable
  */
-var VERSION$1 = new Version('4.3.0-rc.0-bc3b2ac');
+var VERSION$1 = new Version('4.3.0-rc.0-ce0f4f0');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -45259,6 +45259,9 @@ var Evaluator = (function () {
                 if (isFoldableError(expression_2)) {
                     return recordEntry(expression_2, node);
                 }
+                if (!elementAccessExpression.argumentExpression) {
+                    return recordEntry(errorSymbol('Expression form not supported', node), node);
+                }
                 var index = this.evaluateNode(elementAccessExpression.argumentExpression);
                 if (isFoldableError(expression_2)) {
                     return recordEntry(expression_2, node);
@@ -47123,7 +47126,7 @@ var core_1 = require$$0$13;
 /**
  * @stable
  */
-exports.VERSION = new core_1.Version('4.3.0-rc.0-bc3b2ac');
+exports.VERSION = new core_1.Version('4.3.0-rc.0-ce0f4f0');
 
 });
 
@@ -50606,7 +50609,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v4.3.0-rc.0-bc3b2ac
+ * @license Angular v4.3.0-rc.0-ce0f4f0
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -53235,7 +53238,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('4.3.0-rc.0-bc3b2ac');
+var VERSION$$1 = new Version('4.3.0-rc.0-ce0f4f0');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
