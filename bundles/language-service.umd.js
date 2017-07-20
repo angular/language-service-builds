@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.3.0-5344be5
+ * @license Angular v5.0.0-beta.0-54ea5b6
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2033,7 +2033,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v4.3.0-5344be5
+ * @license Angular v5.0.0-beta.0-54ea5b6
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2825,7 +2825,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('4.3.0-5344be5');
+var VERSION$2 = new Version('5.0.0-beta.0-54ea5b6');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -16356,7 +16356,7 @@ function keyframes$1(steps) {
  * ])
  * ```
  *
- * ### Transition Aliases (`:enter` and `:leave`)
+ * ### Using :enter and :leave
  *
  * Given that enter (insertion) and leave (removal) animations are so common, the `transition`
  * function accepts both `:enter` and `:leave` values which are aliases for the `void => *` and `*
@@ -16366,10 +16366,86 @@ function keyframes$1(steps) {
  * transition(":enter", [
  *   style({ opacity: 0 }),
  *   animate(500, style({ opacity: 1 }))
- * ])
+ * ]),
  * transition(":leave", [
  *   animate(500, style({ opacity: 0 }))
  * ])
+ * ```
+ *
+ * ### Using :increment and :decrement
+ * In addition to the :enter and :leave transition aliases, the :increment and :decrement aliases
+ * can be used to kick off a transition when a numeric value has increased or decreased in value.
+ *
+ * ```
+ * import {group, animate, query, transition, style, trigger} from '\@angular/animations';
+ * import {Component} from '\@angular/core';
+ *
+ * \@Component({
+ *   selector: 'banner-carousel-component',
+ *   styles: [`
+ *     .banner-container {
+ *        position:relative;
+ *        height:500px;
+ *        overflow:hidden;
+ *      }
+ *     .banner-container > .banner {
+ *        position:absolute;
+ *        left:0;
+ *        top:0;
+ *        font-size:200px;
+ *        line-height:500px;
+ *        font-weight:bold;
+ *        text-align:center;
+ *        width:100%;
+ *      }
+ *   `],
+ *   template: `
+ *     <button (click)="previous()">Previous</button>
+ *     <button (click)="next()">Next</button>
+ *     <hr>
+ *     <div [\@bannerAnimation]="selectedIndex" class="banner-container">
+ *       <div class="banner"> {{ banner }} </div>
+ *     </div>
+ *   `
+ *   animations: [
+ *     trigger('bannerAnimation', [
+ *       transition(":increment", group([
+ *         query(':enter', [
+ *           style({ left: '100%' }),
+ *           animate('0.5s ease-out', style('*'))
+ *         ]),
+ *         query(':leave', [
+ *           animate('0.5s ease-out', style({ left: '-100%' }))
+ *         ])
+ *       ])),
+ *       transition(":decrement", group([
+ *         query(':enter', [
+ *           style({ left: '-100%' }),
+ *           animate('0.5s ease-out', style('*'))
+ *         ]),
+ *         query(':leave', [
+ *           animate('0.5s ease-out', style({ left: '100%' }))
+ *         ])
+ *       ])),
+ *     ])
+ *   ]
+ * })
+ * class BannerCarouselComponent {
+ *   allBanners: string[] = ['1', '2', '3', '4'];
+ *   selectedIndex: number = 0;
+ *
+ *   get banners() {
+ *      return [this.allBanners[this.selectedIndex]];
+ *   }
+ *
+ *   previous() {
+ *     this.selectedIndex = Math.max(this.selectedIndex - 1, 0);
+ *   }
+ *
+ *   next() {
+ *     this.selectedIndex = Math.min(this.selectedIndex + 1, this.allBanners.length - 1);
+ *   }
+ * }
  * ```
  *
  * {\@example core/animation/ts/dsl/animation_example.ts region='Component'}
@@ -16989,7 +17065,7 @@ var core_es5 = Object.freeze({
 });
 
 /**
- * @license Angular v4.3.0-5344be5
+ * @license Angular v5.0.0-beta.0-54ea5b6
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -17008,7 +17084,7 @@ var core_es5 = Object.freeze({
 /**
  * \@stable
  */
-var VERSION$1 = new Version('4.3.0-5344be5');
+var VERSION$1 = new Version('5.0.0-beta.0-54ea5b6');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -26426,7 +26502,7 @@ var Xliff = (function (_super) {
                 contextTags.push(new CR(8), contextGroupTag);
             });
             var /** @type {?} */ transUnit = new Tag(_UNIT_TAG, { id: message.id, datatype: 'html' });
-            (_a = transUnit.children).push.apply(_a, [new CR(8), new Tag(_SOURCE_TAG, {}, visitor.serialize(message.nodes)), new CR(8), new Tag(_TARGET_TAG)].concat(contextTags));
+            (_a = transUnit.children).push.apply(_a, [new CR(8), new Tag(_SOURCE_TAG, {}, visitor.serialize(message.nodes))].concat(contextTags));
             if (message.description) {
                 transUnit.children.push(new CR(8), new Tag('note', { priority: '1', from: 'description' }, [new Text$2(message.description)]));
             }
@@ -47186,7 +47262,7 @@ var core_1 = require$$0$13;
 /**
  * @stable
  */
-exports.VERSION = new core_1.Version('4.3.0-5344be5');
+exports.VERSION = new core_1.Version('5.0.0-beta.0-54ea5b6');
 
 });
 
@@ -50669,7 +50745,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v4.3.0-5344be5
+ * @license Angular v5.0.0-beta.0-54ea5b6
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -53298,7 +53374,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('4.3.0-5344be5');
+var VERSION$$1 = new Version('5.0.0-beta.0-54ea5b6');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
