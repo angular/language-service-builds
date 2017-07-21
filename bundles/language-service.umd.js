@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.0.0-beta.0-abee785
+ * @license Angular v5.0.0-beta.0-b7a6f52
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2033,9 +2033,13 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v5.0.0-beta.0-abee785
+ * @license Angular v5.0.0-beta.0-b7a6f52
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
+ */
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
  */
 /**
  * Creates a token that can be used in a DI Provider.
@@ -2060,7 +2064,10 @@ var share_2 = share;
  * @deprecated since v4.0.0 because it does not support type information, use `InjectionToken<?>`
  * instead.
  */
-var OpaqueToken = (function () {
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */ var OpaqueToken = (function () {
     /**
      * @param {?} _desc
      */
@@ -2110,11 +2117,8 @@ var InjectionToken = (function (_super) {
     return InjectionToken;
 }(OpaqueToken));
 /**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
  */
 var __window = typeof window !== 'undefined' && window;
 var __self = typeof self !== 'undefined' && typeof WorkerGlobalScope !== 'undefined' &&
@@ -2185,14 +2189,34 @@ function stringify(token) {
     return newLineIndex === -1 ? res : res.substring(0, newLineIndex);
 }
 /**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
  */
 var _nextClassId = 0;
 var Reflect$1 = _global['Reflect'];
+/**
+ * An interface implemented by all Angular type decorators, which allows them to be used as ES7
+ * decorators as well as
+ * Angular DSL syntax.
+ *
+ * DSL syntax:
+ *
+ * ```
+ * var MyClass = ng
+ *   .Component({...})
+ *   .Class({...});
+ * ```
+ *
+ * ES7 syntax:
+ *
+ * ```
+ * \@ng.Component({...})
+ * class MyClass {...}
+ * ```
+ * \@stable
+ * @record
+ */
+function TypeDecorator() { }
 /**
  * @param {?} annotation
  * @return {?}
@@ -2402,7 +2426,7 @@ function makeDecorator(name, props, parentClass, chainFn) {
     }
     DecoratorFactory.prototype.toString = function () { return "@" + name; };
     ((DecoratorFactory)).annotationCls = DecoratorFactory;
-    return DecoratorFactory;
+    return (DecoratorFactory);
 }
 /**
  * @param {?=} props
@@ -2509,6 +2533,10 @@ function makePropDecorator(name, props, parentClass) {
     return PropDecoratorFactory;
 }
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * @license
  * Copyright Google Inc. All Rights Reserved.
  *
@@ -2551,6 +2579,12 @@ function makePropDecorator(name, props, parentClass) {
  */
 var ANALYZE_FOR_ENTRY_COMPONENTS = new InjectionToken('AnalyzeForEntryComponents');
 /**
+ * Type of the Attribute decorator / constructor function.
+ *
+ * \@stable
+ * @record
+ */
+/**
  * Attribute decorator and metadata.
  *
  * \@stable
@@ -2572,6 +2606,15 @@ var Query = (function () {
     return Query;
 }());
 /**
+ * Type of the ContentChildren decorator / constructor function.
+ *
+ * See {\@link ContentChildren}.
+ *
+ * \@stable
+ * @record
+ */
+function ContentChildrenDecorator() { }
+/**
  * ContentChildren decorator and metadata.
  *
  *  \@stable
@@ -2581,6 +2624,14 @@ var ContentChildren = makePropDecorator('ContentChildren', function (selector, d
     if (data === void 0) { data = {}; }
     return (Object.assign({ selector: selector, first: false, isViewQuery: false, descendants: false }, data));
 }, Query);
+/**
+ * Type of the ContentChild decorator / constructor function.
+ *
+ *
+ * \@stable
+ * @record
+ */
+function ContentChildDecorator() { }
 /**
  * ContentChild decorator and metadata.
  *
@@ -2592,6 +2643,15 @@ var ContentChild = makePropDecorator('ContentChild', function (selector, data) {
     return (Object.assign({ selector: selector, first: true, isViewQuery: false, descendants: true }, data));
 }, Query);
 /**
+ * Type of the ViewChildren decorator / constructor function.
+ *
+ * See {\@link ViewChildren}.
+ *
+ * \@stable
+ * @record
+ */
+function ViewChildrenDecorator() { }
+/**
  * ViewChildren decorator and metadata.
  *
  * \@stable
@@ -2602,12 +2662,25 @@ var ViewChildren = makePropDecorator('ViewChildren', function (selector, data) {
     return (Object.assign({ selector: selector, first: false, isViewQuery: true, descendants: true }, data));
 }, Query);
 /**
+ * Type of the ViewChild decorator / constructor function.
+ *
+ * See {\@link ViewChild}
+ *
+ * \@stable
+ * @record
+ */
+function ViewChildDecorator() { }
+/**
  * ViewChild decorator and metadata.
  *
  * \@stable
  * \@Annotation
  */
 var ViewChild = makePropDecorator('ViewChild', function (selector, data) { return (Object.assign({ selector: selector, first: true, isViewQuery: true, descendants: true }, data)); }, Query);
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
 var ChangeDetectionStrategy = {};
 ChangeDetectionStrategy.OnPush = 0;
 ChangeDetectionStrategy.Default = 1;
@@ -2635,12 +2708,23 @@ function isDefaultChangeDetectionStrategy(changeDetectionStrategy) {
         changeDetectionStrategy === ChangeDetectionStrategy.Default;
 }
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * @license
  * Copyright Google Inc. All Rights Reserved.
  *
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
+/**
+ * Type of the Directive decorator / constructor function.
+ *
+ * \@stable
+ * @record
+ */
+function DirectiveDecorator() { }
 /**
  * Directive decorator and metadata.
  *
@@ -2652,6 +2736,13 @@ var Directive = makeDecorator('Directive', function (dir) {
     return dir;
 });
 /**
+ * Type of the Component decorator / constructor function.
+ *
+ * \@stable
+ * @record
+ */
+function ComponentDecorator() { }
+/**
  * Component decorator and metadata.
  *
  * \@stable
@@ -2662,12 +2753,24 @@ var Component = makeDecorator('Component', function (c) {
     return (Object.assign({ changeDetection: ChangeDetectionStrategy.Default }, c));
 }, Directive);
 /**
+ * Type of the Pipe decorator / constructor function.
+ *
+ * \@stable
+ * @record
+ */
+/**
  * Pipe decorator and metadata.
  *
  * \@stable
  * \@Annotation
  */
 var Pipe = makeDecorator('Pipe', function (p) { return (Object.assign({ pure: true }, p)); });
+/**
+ * Type of the Input decorator / constructor function.
+ *
+ * \@stable
+ * @record
+ */
 /**
  * Input decorator and metadata.
  *
@@ -2676,12 +2779,24 @@ var Pipe = makeDecorator('Pipe', function (p) { return (Object.assign({ pure: tr
  */
 var Input = makePropDecorator('Input', function (bindingPropertyName) { return ({ bindingPropertyName: bindingPropertyName }); });
 /**
+ * Type of the Output decorator / constructor function.
+ *
+ * \@stable
+ * @record
+ */
+/**
  * Output decorator and metadata.
  *
  * \@stable
  * \@Annotation
  */
 var Output = makePropDecorator('Output', function (bindingPropertyName) { return ({ bindingPropertyName: bindingPropertyName }); });
+/**
+ * Type of the HostBinding decorator / constructor function.
+ *
+ * \@stable
+ * @record
+ */
 /**
  * HostBinding decorator and metadata.
  *
@@ -2690,6 +2805,12 @@ var Output = makePropDecorator('Output', function (bindingPropertyName) { return
  */
 var HostBinding = makePropDecorator('HostBinding', function (hostPropertyName) { return ({ hostPropertyName: hostPropertyName }); });
 /**
+ * Type of the HostListener decorator / constructor function.
+ *
+ * \@stable
+ * @record
+ */
+/**
  * HostListener decorator and metadata.
  *
  * \@stable
@@ -2697,12 +2818,156 @@ var HostBinding = makePropDecorator('HostBinding', function (hostPropertyName) {
  */
 var HostListener = makePropDecorator('HostListener', function (eventName, args) { return ({ eventName: eventName, args: args }); });
 /**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
  */
+/**
+ * A `changes` object whose keys are property names and
+ * values are instances of {\@link SimpleChange}. See {\@link OnChanges}
+ * \@stable
+ * @record
+ */
+function SimpleChanges() { }
+/**
+ * \@whatItDoes Lifecycle hook that is called when any data-bound property of a directive changes.
+ * \@howToUse
+ * {\@example core/ts/metadata/lifecycle_hooks_spec.ts region='OnChanges'}
+ *
+ * \@description
+ * `ngOnChanges` is called right after the data-bound properties have been checked and before view
+ * and content children are checked if at least one of them has changed.
+ * The `changes` parameter contains the changed properties.
+ *
+ * See {\@linkDocs guide/lifecycle-hooks#onchanges "Lifecycle Hooks Guide"}.
+ *
+ * \@stable
+ * @record
+ */
+function OnChanges() { }
+/**
+ * \@whatItDoes Lifecycle hook that is called after data-bound properties of a directive are
+ * initialized.
+ * \@howToUse
+ * {\@example core/ts/metadata/lifecycle_hooks_spec.ts region='OnInit'}
+ *
+ * \@description
+ * `ngOnInit` is called right after the directive's data-bound properties have been checked for the
+ * first time, and before any of its children have been checked. It is invoked only once when the
+ * directive is instantiated.
+ *
+ * See {\@linkDocs guide/lifecycle-hooks "Lifecycle Hooks Guide"}.
+ *
+ * \@stable
+ * @record
+ */
+function OnInit() { }
+/**
+ * \@whatItDoes Lifecycle hook that is called when Angular dirty checks a directive.
+ * \@howToUse
+ * {\@example core/ts/metadata/lifecycle_hooks_spec.ts region='DoCheck'}
+ *
+ * \@description
+ * `ngDoCheck` gets called to check the changes in the directives in addition to the default
+ * algorithm. The default change detection algorithm looks for differences by comparing
+ * bound-property values by reference across change detection runs.
+ *
+ * Note that a directive typically should not use both `DoCheck` and {\@link OnChanges} to respond to
+ * changes on the same input, as `ngOnChanges` will continue to be called when the default change
+ * detector detects changes.
+ *
+ * See {\@link KeyValueDiffers} and {\@link IterableDiffers} for implementing custom dirty checking
+ * for collections.
+ *
+ * See {\@linkDocs guide/lifecycle-hooks#docheck "Lifecycle Hooks Guide"}.
+ *
+ * \@stable
+ * @record
+ */
+function DoCheck() { }
+/**
+ * \@whatItDoes Lifecycle hook that is called when a directive, pipe or service is destroyed.
+ * \@howToUse
+ * {\@example core/ts/metadata/lifecycle_hooks_spec.ts region='OnDestroy'}
+ *
+ * \@description
+ * `ngOnDestroy` callback is typically used for any custom cleanup that needs to occur when the
+ * instance is destroyed.
+ *
+ * See {\@linkDocs guide/lifecycle-hooks "Lifecycle Hooks Guide"}.
+ *
+ * \@stable
+ * @record
+ */
+function OnDestroy() { }
+/**
+ *
+ * \@whatItDoes Lifecycle hook that is called after a directive's content has been fully
+ * initialized.
+ * \@howToUse
+ * {\@example core/ts/metadata/lifecycle_hooks_spec.ts region='AfterContentInit'}
+ *
+ * \@description
+ * See {\@linkDocs guide/lifecycle-hooks#aftercontent "Lifecycle Hooks Guide"}.
+ *
+ * \@stable
+ * @record
+ */
+function AfterContentInit() { }
+/**
+ * \@whatItDoes Lifecycle hook that is called after every check of a directive's content.
+ * \@howToUse
+ * {\@example core/ts/metadata/lifecycle_hooks_spec.ts region='AfterContentChecked'}
+ *
+ * \@description
+ * See {\@linkDocs guide/lifecycle-hooks#aftercontent "Lifecycle Hooks Guide"}.
+ *
+ * \@stable
+ * @record
+ */
+function AfterContentChecked() { }
+/**
+ * \@whatItDoes Lifecycle hook that is called after a component's view has been fully
+ * initialized.
+ * \@howToUse
+ * {\@example core/ts/metadata/lifecycle_hooks_spec.ts region='AfterViewInit'}
+ *
+ * \@description
+ * See {\@linkDocs guide/lifecycle-hooks#afterview "Lifecycle Hooks Guide"}.
+ *
+ * \@stable
+ * @record
+ */
+function AfterViewInit() { }
+/**
+ * \@whatItDoes Lifecycle hook that is called after every check of a component's view.
+ * \@howToUse
+ * {\@example core/ts/metadata/lifecycle_hooks_spec.ts region='AfterViewChecked'}
+ *
+ * \@description
+ * See {\@linkDocs guide/lifecycle-hooks#afterview "Lifecycle Hooks Guide"}.
+ *
+ * \@stable
+ * @record
+ */
+function AfterViewChecked() { }
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * A wrapper around a module that also includes the providers.
+ *
+ * \@stable
+ * @record
+ */
+function ModuleWithProviders() { }
+/**
+ * Interface for schema definitions in \@NgModules.
+ *
+ * \@experimental
+ * @record
+ */
+function SchemaMetadata() { }
 /**
  * Defines a schema that will allow:
  * - any non-Angular elements with a `-` in their name,
@@ -2723,12 +2988,22 @@ var NO_ERRORS_SCHEMA = {
     name: 'no-errors-schema'
 };
 /**
+ * Type of the NgModule decorator / constructor function.
+ *
+ * \@stable
+ * @record
+ */
+/**
  * NgModule decorator and metadata.
  *
  * \@stable
  * \@Annotation
  */
 var NgModule = makeDecorator('NgModule', function (ngModule) { return ngModule; });
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
 var ViewEncapsulation = {};
 ViewEncapsulation.Emulated = 0;
 ViewEncapsulation.Native = 1;
@@ -2778,18 +3053,22 @@ var ViewMetadata = (function () {
     return ViewMetadata;
 }());
 /**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
  */
 /**
  * \@whatItDoes Represents the version of Angular
  *
  * \@stable
  */
-var Version = (function () {
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */ var Version = (function () {
     /**
      * @param {?} full
      */
@@ -2825,7 +3104,11 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('5.0.0-beta.0-abee785');
+var VERSION$2 = new Version('5.0.0-beta.0-b7a6f52');
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -2833,6 +3116,13 @@ var VERSION$2 = new Version('5.0.0-beta.0-abee785');
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
+/**
+ * Type of the Inject decorator / constructor function.
+ *
+ * \@stable
+ * @record
+ */
+function InjectDecorator() { }
 /**
  * Inject decorator and metadata.
  *
@@ -2841,12 +3131,26 @@ var VERSION$2 = new Version('5.0.0-beta.0-abee785');
  */
 var Inject = makeParamDecorator('Inject', function (token) { return ({ token: token }); });
 /**
+ * Type of the Optional decorator / constructor function.
+ *
+ * \@stable
+ * @record
+ */
+function OptionalDecorator() { }
+/**
  * Optional decorator and metadata.
  *
  * \@stable
  * \@Annotation
  */
 var Optional = makeParamDecorator('Optional');
+/**
+ * Type of the Injectable decorator / constructor function.
+ *
+ * \@stable
+ * @record
+ */
+function InjectableDecorator() { }
 /**
  * Injectable decorator and metadata.
  *
@@ -2855,12 +3159,26 @@ var Optional = makeParamDecorator('Optional');
  */
 var Injectable = makeDecorator('Injectable');
 /**
+ * Type of the Self decorator / constructor function.
+ *
+ * \@stable
+ * @record
+ */
+function SelfDecorator() { }
+/**
  * Self decorator and metadata.
  *
  * \@stable
  * \@Annotation
  */
 var Self = makeParamDecorator('Self');
+/**
+ * Type of the SkipSelf decorator / constructor function.
+ *
+ * \@stable
+ * @record
+ */
+function SkipSelfDecorator() { }
 /**
  * SkipSelf decorator and metadata.
  *
@@ -2869,6 +3187,13 @@ var Self = makeParamDecorator('Self');
  */
 var SkipSelf = makeParamDecorator('SkipSelf');
 /**
+ * Type of the Host decorator / constructor function.
+ *
+ * \@stable
+ * @record
+ */
+function HostDecorator() { }
+/**
  * Host decorator and metadata.
  *
  * \@stable
@@ -2876,12 +3201,19 @@ var SkipSelf = makeParamDecorator('SkipSelf');
  */
 var Host = makeParamDecorator('Host');
 /**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
  */
+/**
+ * An interface that a function passed into {\@link forwardRef} has to implement.
+ *
+ * ### Example
+ *
+ * {\@example core/di/ts/forward_ref/forward_ref_spec.ts region='forward_ref_fn'}
+ * \@experimental
+ * @record
+ */
+function ForwardRefFn() { }
 /**
  * Allows to refer to references which are not yet defined.
  *
@@ -2925,11 +3257,8 @@ function resolveForwardRef(type) {
     }
 }
 /**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
  */
 var _THROW_IF_NOT_FOUND = new Object();
 var THROW_IF_NOT_FOUND = _THROW_IF_NOT_FOUND;
@@ -2974,38 +3303,13 @@ var _NullInjector = (function () {
 var Injector = (function () {
     function Injector() {
     }
-    /**
-     * Retrieves an instance from the injector based on the provided token.
-     * If not found:
-     * - Throws an error if no `notFoundValue` that is not equal to
-     * Injector.THROW_IF_NOT_FOUND is given
-     * - Returns the `notFoundValue` otherwise
-     * @abstract
-     * @template T
-     * @param {?} token
-     * @param {?=} notFoundValue
-     * @return {?}
-     */
-    Injector.prototype.get = function (token, notFoundValue) { };
-    /**
-     * @deprecated from v4.0.0 use Type<T> or InjectionToken<T>
-     * @suppress {duplicate}
-     * @abstract
-     * @param {?} token
-     * @param {?=} notFoundValue
-     * @return {?}
-     */
-    Injector.prototype.get = function (token, notFoundValue) { };
     return Injector;
 }());
 Injector.THROW_IF_NOT_FOUND = _THROW_IF_NOT_FOUND;
 Injector.NULL = new _NullInjector();
 /**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
  */
 var ERROR_COMPONENT_TYPE = 'ngComponentType';
 var ERROR_DEBUG_CONTEXT = 'ngDebugContext';
@@ -3048,6 +3352,10 @@ function defaultErrorLogger(console) {
     }
     console.error.apply(console, values);
 }
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -3152,6 +3460,10 @@ function wrappedError(message, originalError) {
     return error;
 }
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * @license
  * Copyright Google Inc. All Rights Reserved.
  *
@@ -3185,6 +3497,9 @@ function constructResolvingPath(keys) {
     }
     return '';
 }
+/**
+ * @record
+ */
 /**
  * @param {?} injector
  * @param {?} key
@@ -3399,6 +3714,10 @@ function mixingMultiProvidersWithRegularProvidersError(provider1, provider2) {
     return Error("Cannot mix multi providers and regular providers, got: " + provider1 + " " + provider2);
 }
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * @license
  * Copyright Google Inc. All Rights Reserved.
  *
@@ -3494,6 +3813,10 @@ var KeyRegistry = (function () {
 }());
 var _globalKeyRegistry = new KeyRegistry();
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * \@whatItDoes Represents a type that a Component or other object is instances of.
  *
  * \@description
@@ -3503,7 +3826,10 @@ var _globalKeyRegistry = new KeyRegistry();
  *
  * \@stable
  */
-var Type = Function;
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */ var Type = Function;
 /**
  * @param {?} v
  * @return {?}
@@ -3511,6 +3837,10 @@ var Type = Function;
 function isType(v) {
     return typeof v === 'function';
 }
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -3826,11 +4156,15 @@ function getParentCtor(ctor) {
     return parentCtor || Object;
 }
 /**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * @record
+ */
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
  */
 /**
  * Provides access to reflection data about symbols. Used internally by Angular
@@ -3928,6 +4262,10 @@ var Reflector = (function () {
     return Reflector;
 }());
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * @license
  * Copyright Google Inc. All Rights Reserved.
  *
@@ -3939,6 +4277,10 @@ var Reflector = (function () {
  * about symbols.
  */
 var reflector = new Reflector(new ReflectionCapabilities());
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -3971,6 +4313,26 @@ var ReflectiveDependency = (function () {
     return ReflectiveDependency;
 }());
 var _EMPTY_LIST = [];
+/**
+ * An internal resolved representation of a {\@link Provider} used by the {\@link Injector}.
+ *
+ * It is usually created automatically by `Injector.resolveAndCreate`.
+ *
+ * It can be created manually, as follows:
+ *
+ * ### Example ([live demo](http://plnkr.co/edit/RfEnhh8kUEI0G3qsnIeT?p%3Dpreview&p=preview))
+ *
+ * ```typescript
+ * var resolvedProviders = Injector.resolve([{ provide: 'message', useValue: 'Hello' }]);
+ * var injector = Injector.fromResolvedProviders(resolvedProviders);
+ *
+ * expect(injector.get('message')).toEqual('Hello');
+ * ```
+ *
+ * \@experimental
+ * @record
+ */
+function ResolvedReflectiveProvider() { }
 var ResolvedReflectiveProvider_ = (function () {
     /**
      * @param {?} key
@@ -4198,6 +4560,10 @@ function _createDependency(token, optional, visibility) {
     return new ReflectiveDependency(ReflectiveKey.get(token), optional, visibility);
 }
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * @license
  * Copyright Google Inc. All Rights Reserved.
  *
@@ -4345,146 +4711,6 @@ var ReflectiveInjector = (function () {
     ReflectiveInjector.fromResolvedProviders = function (providers, parent) {
         return new ReflectiveInjector_(providers, parent);
     };
-    /**
-     * Parent of this injector.
-     *
-     * <!-- TODO: Add a link to the section of the user guide talking about hierarchical injection.
-     * -->
-     *
-     * ### Example ([live demo](http://plnkr.co/edit/eosMGo?p=preview))
-     *
-     * ```typescript
-     * var parent = ReflectiveInjector.resolveAndCreate([]);
-     * var child = parent.resolveAndCreateChild([]);
-     * expect(child.parent).toBe(parent);
-     * ```
-     * @abstract
-     * @return {?}
-     */
-    ReflectiveInjector.prototype.parent = function () { };
-    /**
-     * Resolves an array of providers and creates a child injector from those providers.
-     *
-     * <!-- TODO: Add a link to the section of the user guide talking about hierarchical injection.
-     * -->
-     *
-     * The passed-in providers can be an array of `Type`, {\@link Provider},
-     * or a recursive array of more providers.
-     *
-     * ### Example ([live demo](http://plnkr.co/edit/opB3T4?p=preview))
-     *
-     * ```typescript
-     * class ParentProvider {}
-     * class ChildProvider {}
-     *
-     * var parent = ReflectiveInjector.resolveAndCreate([ParentProvider]);
-     * var child = parent.resolveAndCreateChild([ChildProvider]);
-     *
-     * expect(child.get(ParentProvider) instanceof ParentProvider).toBe(true);
-     * expect(child.get(ChildProvider) instanceof ChildProvider).toBe(true);
-     * expect(child.get(ParentProvider)).toBe(parent.get(ParentProvider));
-     * ```
-     *
-     * This function is slower than the corresponding `createChildFromResolved`
-     * because it needs to resolve the passed-in providers first.
-     * See {\@link ReflectiveInjector#resolve} and {\@link ReflectiveInjector#createChildFromResolved}.
-     * @abstract
-     * @param {?} providers
-     * @return {?}
-     */
-    ReflectiveInjector.prototype.resolveAndCreateChild = function (providers) { };
-    /**
-     * Creates a child injector from previously resolved providers.
-     *
-     * <!-- TODO: Add a link to the section of the user guide talking about hierarchical injection.
-     * -->
-     *
-     * This API is the recommended way to construct injectors in performance-sensitive parts.
-     *
-     * ### Example ([live demo](http://plnkr.co/edit/VhyfjN?p=preview))
-     *
-     * ```typescript
-     * class ParentProvider {}
-     * class ChildProvider {}
-     *
-     * var parentProviders = ReflectiveInjector.resolve([ParentProvider]);
-     * var childProviders = ReflectiveInjector.resolve([ChildProvider]);
-     *
-     * var parent = ReflectiveInjector.fromResolvedProviders(parentProviders);
-     * var child = parent.createChildFromResolved(childProviders);
-     *
-     * expect(child.get(ParentProvider) instanceof ParentProvider).toBe(true);
-     * expect(child.get(ChildProvider) instanceof ChildProvider).toBe(true);
-     * expect(child.get(ParentProvider)).toBe(parent.get(ParentProvider));
-     * ```
-     * @abstract
-     * @param {?} providers
-     * @return {?}
-     */
-    ReflectiveInjector.prototype.createChildFromResolved = function (providers) { };
-    /**
-     * Resolves a provider and instantiates an object in the context of the injector.
-     *
-     * The created object does not get cached by the injector.
-     *
-     * ### Example ([live demo](http://plnkr.co/edit/yvVXoB?p=preview))
-     *
-     * ```typescript
-     * \@Injectable()
-     * class Engine {
-     * }
-     *
-     * \@Injectable()
-     * class Car {
-     *   constructor(public engine:Engine) {}
-     * }
-     *
-     * var injector = ReflectiveInjector.resolveAndCreate([Engine]);
-     *
-     * var car = injector.resolveAndInstantiate(Car);
-     * expect(car.engine).toBe(injector.get(Engine));
-     * expect(car).not.toBe(injector.resolveAndInstantiate(Car));
-     * ```
-     * @abstract
-     * @param {?} provider
-     * @return {?}
-     */
-    ReflectiveInjector.prototype.resolveAndInstantiate = function (provider) { };
-    /**
-     * Instantiates an object using a resolved provider in the context of the injector.
-     *
-     * The created object does not get cached by the injector.
-     *
-     * ### Example ([live demo](http://plnkr.co/edit/ptCImQ?p=preview))
-     *
-     * ```typescript
-     * \@Injectable()
-     * class Engine {
-     * }
-     *
-     * \@Injectable()
-     * class Car {
-     *   constructor(public engine:Engine) {}
-     * }
-     *
-     * var injector = ReflectiveInjector.resolveAndCreate([Engine]);
-     * var carProvider = ReflectiveInjector.resolve([Car])[0];
-     * var car = injector.instantiateResolved(carProvider);
-     * expect(car.engine).toBe(injector.get(Engine));
-     * expect(car).not.toBe(injector.instantiateResolved(carProvider));
-     * ```
-     * @abstract
-     * @param {?} provider
-     * @return {?}
-     */
-    ReflectiveInjector.prototype.instantiateResolved = function (provider) { };
-    /**
-     * @abstract
-     * @param {?} token
-     * @param {?=} notFoundValue
-     * @return {?}
-     */
-    ReflectiveInjector.prototype.get = function (token, notFoundValue) { };
     return ReflectiveInjector;
 }());
 var ReflectiveInjector_ = (function () {
@@ -4500,10 +4726,10 @@ var ReflectiveInjector_ = (function () {
         this._constructionCounter = 0;
         this._providers = _providers;
         this._parent = _parent || null;
-        var len = _providers.length;
+        var /** @type {?} */ len = _providers.length;
         this.keyIds = new Array(len);
         this.objs = new Array(len);
-        for (var i = 0; i < len; i++) {
+        for (var /** @type {?} */ i = 0; i < len; i++) {
             this.keyIds[i] = _providers[i].key.id;
             this.objs[i] = UNDEFINED;
         }
@@ -4749,6 +4975,124 @@ function _mapProviders(injector, fn) {
     return res;
 }
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * \@whatItDoes Configures the {\@link Injector} to return an instance of `Type` when `Type' is used
+ * as token.
+ * \@howToUse
+ * ```
+ * \@Injectable()
+ * class MyService {}
+ *
+ * const provider: TypeProvider = MyService;
+ * ```
+ *
+ * \@description
+ *
+ * Create an instance by invoking the `new` operator and supplying additional arguments.
+ * This form is a short form of `TypeProvider`;
+ *
+ * For more details, see the {\@linkDocs guide/dependency-injection "Dependency Injection Guide"}.
+ *
+ * ### Example
+ *
+ * {\@example core/di/ts/provider_spec.ts region='TypeProvider'}
+ *
+ * \@stable
+ * @record
+ */
+function TypeProvider() { }
+/**
+ * \@whatItDoes Configures the {\@link Injector} to return a value for a token.
+ * \@howToUse
+ * ```
+ * const provider: ValueProvider = {provide: 'someToken', useValue: 'someValue'};
+ * ```
+ *
+ * \@description
+ * For more details, see the {\@linkDocs guide/dependency-injection "Dependency Injection Guide"}.
+ *
+ * ### Example
+ *
+ * {\@example core/di/ts/provider_spec.ts region='ValueProvider'}
+ *
+ * \@stable
+ * @record
+ */
+function ValueProvider() { }
+/**
+ * \@whatItDoes Configures the {\@link Injector} to return an instance of `useClass` for a token.
+ * \@howToUse
+ * ```
+ * \@Injectable()
+ * class MyService {}
+ *
+ * const provider: ClassProvider = {provide: 'someToken', useClass: MyService};
+ * ```
+ *
+ * \@description
+ * For more details, see the {\@linkDocs guide/dependency-injection "Dependency Injection Guide"}.
+ *
+ * ### Example
+ *
+ * {\@example core/di/ts/provider_spec.ts region='ClassProvider'}
+ *
+ * Note that following two providers are not equal:
+ * {\@example core/di/ts/provider_spec.ts region='ClassProviderDifference'}
+ *
+ * \@stable
+ * @record
+ */
+function ClassProvider() { }
+/**
+ * \@whatItDoes Configures the {\@link Injector} to return a value of another `useExisting` token.
+ * \@howToUse
+ * ```
+ * const provider: ExistingProvider = {provide: 'someToken', useExisting: 'someOtherToken'};
+ * ```
+ *
+ * \@description
+ * For more details, see the {\@linkDocs guide/dependency-injection "Dependency Injection Guide"}.
+ *
+ * ### Example
+ *
+ * {\@example core/di/ts/provider_spec.ts region='ExistingProvider'}
+ *
+ * \@stable
+ * @record
+ */
+function ExistingProvider() { }
+/**
+ * \@whatItDoes Configures the {\@link Injector} to return a value by invoking a `useFactory`
+ * function.
+ * \@howToUse
+ * ```
+ * function serviceFactory() { ... }
+ *
+ * const provider: FactoryProvider = {provide: 'someToken', useFactory: serviceFactory, deps: []};
+ * ```
+ *
+ * \@description
+ * For more details, see the {\@linkDocs guide/dependency-injection "Dependency Injection Guide"}.
+ *
+ * ### Example
+ *
+ * {\@example core/di/ts/provider_spec.ts region='FactoryProvider'}
+ *
+ * Dependencies can also be marked as optional:
+ * {\@example core/di/ts/provider_spec.ts region='FactoryProviderOptionalDeps'}
+ *
+ * \@stable
+ * @record
+ */
+function FactoryProvider() { }
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * @license
  * Copyright Google Inc. All Rights Reserved.
  *
@@ -4761,11 +5105,8 @@ function _mapProviders(injector, fn) {
  * The `di` module provides dependency injection container services.
  */
 /**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
  */
 /**
  * Determine if the argument is shaped like a Promise
@@ -4786,6 +5127,10 @@ function isObservable(obj) {
     // TODO use Symbol.observable when https://github.com/ReactiveX/rxjs/issues/2415 will be resolved
     return !!obj && typeof obj.subscribe === 'function';
 }
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -4866,12 +5211,14 @@ var ApplicationInitStatus = (function () {
 ApplicationInitStatus.decorators = [
     { type: Injectable },
 ];
-/**
- * @nocollapse
- */
+/** @nocollapse */
 ApplicationInitStatus.ctorParameters = function () { return [
     { type: Array, decorators: [{ type: Inject, args: [APP_INITIALIZER,] }, { type: Optional },] },
 ]; };
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -4903,7 +5250,7 @@ function _appIdRandomProviderFactory() {
 var APP_ID_RANDOM_PROVIDER = {
     provide: APP_ID,
     useFactory: _appIdRandomProviderFactory,
-    deps: [],
+    deps: /** @type {?} */ ([]),
 };
 /**
  * @return {?}
@@ -4936,6 +5283,10 @@ var APP_BOOTSTRAP_LISTENER = new InjectionToken('appBootstrapListener');
  */
 var PACKAGE_ROOT_URL = new InjectionToken('Application Packages Root URL');
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * @license
  * Copyright Google Inc. All Rights Reserved.
  *
@@ -4966,10 +5317,12 @@ var Console = (function () {
 Console.decorators = [
     { type: Injectable },
 ];
-/**
- * @nocollapse
- */
+/** @nocollapse */
 Console.ctorParameters = function () { return []; };
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -5072,9 +5425,7 @@ var Compiler = (function () {
 Compiler.decorators = [
     { type: Injectable },
 ];
-/**
- * @nocollapse
- */
+/** @nocollapse */
 Compiler.ctorParameters = function () { return []; };
 /**
  * Token to provide CompilerOptions in the platform injector.
@@ -5091,20 +5442,11 @@ var COMPILER_OPTIONS = new InjectionToken('compilerOptions');
 var CompilerFactory = (function () {
     function CompilerFactory() {
     }
-    /**
-     * @abstract
-     * @param {?=} options
-     * @return {?}
-     */
-    CompilerFactory.prototype.createCompiler = function (options) { };
     return CompilerFactory;
 }());
 /**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
  */
 /**
  * Represents an instance of a Component created via a {\@link ComponentFactory}.
@@ -5118,55 +5460,6 @@ var CompilerFactory = (function () {
 var ComponentRef = (function () {
     function ComponentRef() {
     }
-    /**
-     * Location of the Host Element of this Component Instance.
-     * @abstract
-     * @return {?}
-     */
-    ComponentRef.prototype.location = function () { };
-    /**
-     * The injector on which the component instance exists.
-     * @abstract
-     * @return {?}
-     */
-    ComponentRef.prototype.injector = function () { };
-    /**
-     * The instance of the Component.
-     * @abstract
-     * @return {?}
-     */
-    ComponentRef.prototype.instance = function () { };
-    /**
-     * The {\@link ViewRef} of the Host View of this Component instance.
-     * @abstract
-     * @return {?}
-     */
-    ComponentRef.prototype.hostView = function () { };
-    /**
-     * The {\@link ChangeDetectorRef} of the Component instance.
-     * @abstract
-     * @return {?}
-     */
-    ComponentRef.prototype.changeDetectorRef = function () { };
-    /**
-     * The component type.
-     * @abstract
-     * @return {?}
-     */
-    ComponentRef.prototype.componentType = function () { };
-    /**
-     * Destroys the component instance and all of the data structures associated with it.
-     * @abstract
-     * @return {?}
-     */
-    ComponentRef.prototype.destroy = function () { };
-    /**
-     * Allows to register a callback that will be called when the component is destroyed.
-     * @abstract
-     * @param {?} callback
-     * @return {?}
-     */
-    ComponentRef.prototype.onDestroy = function (callback) { };
     return ComponentRef;
 }());
 /**
@@ -5176,52 +5469,11 @@ var ComponentRef = (function () {
 var ComponentFactory = (function () {
     function ComponentFactory() {
     }
-    /**
-     * @abstract
-     * @return {?}
-     */
-    ComponentFactory.prototype.selector = function () { };
-    /**
-     * @abstract
-     * @return {?}
-     */
-    ComponentFactory.prototype.componentType = function () { };
-    /**
-     * selector for all <ng-content> elements in the component.
-     * @abstract
-     * @return {?}
-     */
-    ComponentFactory.prototype.ngContentSelectors = function () { };
-    /**
-     * the inputs of the component.
-     * @abstract
-     * @return {?}
-     */
-    ComponentFactory.prototype.inputs = function () { };
-    /**
-     * the outputs of the component.
-     * @abstract
-     * @return {?}
-     */
-    ComponentFactory.prototype.outputs = function () { };
-    /**
-     * Creates a new component.
-     * @abstract
-     * @param {?} injector
-     * @param {?=} projectableNodes
-     * @param {?=} rootSelectorOrNode
-     * @param {?=} ngModule
-     * @return {?}
-     */
-    ComponentFactory.prototype.create = function (injector, projectableNodes, rootSelectorOrNode, ngModule) { };
     return ComponentFactory;
 }());
 /**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
  */
 /**
  * @param {?} component
@@ -5257,13 +5509,6 @@ var _NullComponentFactoryResolver = (function () {
 var ComponentFactoryResolver = (function () {
     function ComponentFactoryResolver() {
     }
-    /**
-     * @abstract
-     * @template T
-     * @param {?} component
-     * @return {?}
-     */
-    ComponentFactoryResolver.prototype.resolveComponentFactory = function (component) { };
     return ComponentFactoryResolver;
 }());
 ComponentFactoryResolver.NULL = new _NullComponentFactoryResolver();
@@ -5277,8 +5522,8 @@ var CodegenComponentFactoryResolver = (function () {
         this._parent = _parent;
         this._ngModule = _ngModule;
         this._factories = new Map();
-        for (var i = 0; i < factories.length; i++) {
-            var factory = factories[i];
+        for (var /** @type {?} */ i = 0; i < factories.length; i++) {
+            var /** @type {?} */ factory = factories[i];
             this._factories.set(factory.componentType, factory);
         }
     }
@@ -5364,11 +5609,8 @@ var ComponentFactoryBoundToModule = (function (_super) {
     return ComponentFactoryBoundToModule;
 }(ComponentFactory));
 /**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
  */
 /**
  * Represents an instance of an NgModule created via a {\@link NgModuleFactory}.
@@ -5382,40 +5624,11 @@ var ComponentFactoryBoundToModule = (function (_super) {
 var NgModuleRef = (function () {
     function NgModuleRef() {
     }
-    /**
-     * The injector that contains all of the providers of the NgModule.
-     * @abstract
-     * @return {?}
-     */
-    NgModuleRef.prototype.injector = function () { };
-    /**
-     * The ComponentFactoryResolver to get hold of the ComponentFactories
-     * declared in the `entryComponents` property of the module.
-     * @abstract
-     * @return {?}
-     */
-    NgModuleRef.prototype.componentFactoryResolver = function () { };
-    /**
-     * The NgModule instance.
-     * @abstract
-     * @return {?}
-     */
-    NgModuleRef.prototype.instance = function () { };
-    /**
-     * Destroys the module instance and all of the data structures associated with it.
-     * @abstract
-     * @return {?}
-     */
-    NgModuleRef.prototype.destroy = function () { };
-    /**
-     * Allows to register a callback that will be called when the module is destroyed.
-     * @abstract
-     * @param {?} callback
-     * @return {?}
-     */
-    NgModuleRef.prototype.onDestroy = function (callback) { };
     return NgModuleRef;
 }());
+/**
+ * @record
+ */
 /**
  * \@experimental
  * @abstract
@@ -5423,25 +5636,31 @@ var NgModuleRef = (function () {
 var NgModuleFactory = (function () {
     function NgModuleFactory() {
     }
-    /**
-     * @abstract
-     * @return {?}
-     */
-    NgModuleFactory.prototype.moduleType = function () { };
-    /**
-     * @abstract
-     * @param {?} parentInjector
-     * @return {?}
-     */
-    NgModuleFactory.prototype.create = function (parentInjector) { };
     return NgModuleFactory;
 }());
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
  *
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
+ */
+/**
+ * A scope function for the Web Tracing Framework (WTF).
+ *
+ * \@experimental
+ * @record
+ */
+function WtfScopeFn() { }
+/**
+ * @record
+ */
+/**
+ * @record
  */
 var trace;
 var events;
@@ -5493,6 +5712,10 @@ function startTimeRange(rangeType, action) {
 function endTimeRange(range) {
     trace.endTimeRange(range);
 }
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -5574,6 +5797,10 @@ var wtfStartTimeRange = wtfEnabled ? startTimeRange : function (rangeType, actio
  * \@experimental
  */
 var wtfEndTimeRange = wtfEnabled ? endTimeRange : function (r) { return null; };
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -5688,11 +5915,8 @@ var EventEmitter = (function (_super) {
     return EventEmitter;
 }(Subject_2));
 /**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
  */
 /**
  * An injectable service for executing work inside or outside of the Angular zone.
@@ -5802,14 +6026,14 @@ var NgZone = (function () {
             throw new Error('Angular requires Zone.js prolyfill.');
         }
         Zone.assertZonePatched();
-        var self = this;
+        var /** @type {?} */ self = ((this));
         self._nesting = 0;
         self._outer = self._inner = Zone.current;
-        if (Zone['wtfZoneSpec']) {
-            self._inner = self._inner.fork(Zone['wtfZoneSpec']);
+        if (((Zone))['wtfZoneSpec']) {
+            self._inner = self._inner.fork(((Zone))['wtfZoneSpec']);
         }
-        if (enableLongStackTrace && Zone['longStackTraceZoneSpec']) {
-            self._inner = self._inner.fork(Zone['longStackTraceZoneSpec']);
+        if (enableLongStackTrace && ((Zone))['longStackTraceZoneSpec']) {
+            self._inner = self._inner.fork(((Zone))['longStackTraceZoneSpec']);
         }
         forkInnerZoneWithAngularBehavior(self);
     }
@@ -5938,7 +6162,7 @@ function forkInnerZoneWithAngularBehavior(zone) {
         },
         onHandleError: function (delegate, current, target, error) {
             delegate.handleError(target, error);
-            zone.onError.emit(error);
+            zone.runOutsideAngular(function () { return zone.onError.emit(error); });
             return false;
         }
     });
@@ -5962,6 +6186,10 @@ function onLeave(zone) {
     zone._nesting--;
     checkStable(zone);
 }
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -6109,9 +6337,7 @@ var Testability = (function () {
 Testability.decorators = [
     { type: Injectable },
 ];
-/**
- * @nocollapse
- */
+/** @nocollapse */
 Testability.ctorParameters = function () { return [
     { type: NgZone, },
 ]; };
@@ -6162,10 +6388,17 @@ var TestabilityRegistry = (function () {
 TestabilityRegistry.decorators = [
     { type: Injectable },
 ];
-/**
- * @nocollapse
- */
+/** @nocollapse */
 TestabilityRegistry.ctorParameters = function () { return []; };
+/**
+ * Adapter interface for retrieving the `Testability` service associated for a
+ * particular context.
+ *
+ * \@experimental Testability apis are primarily intended to be used by e2e test tool vendors like
+ * the Protractor team.
+ * @record
+ */
+function GetTestability() { }
 var _NoopGetTestability = (function () {
     function _NoopGetTestability() {
     }
@@ -6195,6 +6428,10 @@ function setTestabilityGetter(getter) {
     _testabilityGetter = getter;
 }
 var _testabilityGetter = new _NoopGetTestability();
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -6348,93 +6585,20 @@ function getPlatform() {
 var PlatformRef = (function () {
     function PlatformRef() {
     }
-    /**
-     * Creates an instance of an `\@NgModule` for the given platform
-     * for offline compilation.
-     *
-     * ## Simple Example
-     *
-     * ```typescript
-     * my_module.ts:
-     *
-     * \@NgModule({
-     *   imports: [BrowserModule]
-     * })
-     * class MyModule {}
-     *
-     * main.ts:
-     * import {MyModuleNgFactory} from './my_module.ngfactory';
-     * import {platformBrowser} from '\@angular/platform-browser';
-     *
-     * let moduleRef = platformBrowser().bootstrapModuleFactory(MyModuleNgFactory);
-     * ```
-     *
-     * \@experimental APIs related to application bootstrap are currently under review.
-     * @abstract
-     * @template M
-     * @param {?} moduleFactory
-     * @return {?}
-     */
-    PlatformRef.prototype.bootstrapModuleFactory = function (moduleFactory) { };
-    /**
-     * Creates an instance of an `\@NgModule` for a given platform using the given runtime compiler.
-     *
-     * ## Simple Example
-     *
-     * ```typescript
-     * \@NgModule({
-     *   imports: [BrowserModule]
-     * })
-     * class MyModule {}
-     *
-     * let moduleRef = platformBrowser().bootstrapModule(MyModule);
-     * ```
-     * \@stable
-     * @abstract
-     * @template M
-     * @param {?} moduleType
-     * @param {?=} compilerOptions
-     * @return {?}
-     */
-    PlatformRef.prototype.bootstrapModule = function (moduleType, compilerOptions) { };
-    /**
-     * Register a listener to be called when the platform is disposed.
-     * @abstract
-     * @param {?} callback
-     * @return {?}
-     */
-    PlatformRef.prototype.onDestroy = function (callback) { };
-    /**
-     * Retrieve the platform {\@link Injector}, which is the parent injector for
-     * every Angular application on the page and provides singleton providers.
-     * @abstract
-     * @return {?}
-     */
-    PlatformRef.prototype.injector = function () { };
-    /**
-     * Destroy the Angular platform and all Angular applications on the page.
-     * @abstract
-     * @return {?}
-     */
-    PlatformRef.prototype.destroy = function () { };
-    /**
-     * @abstract
-     * @return {?}
-     */
-    PlatformRef.prototype.destroyed = function () { };
     return PlatformRef;
 }());
 /**
  * @param {?} errorHandler
+ * @param {?} ngZone
  * @param {?} callback
  * @return {?}
  */
-function _callAndReportToErrorHandler(errorHandler, callback) {
+function _callAndReportToErrorHandler(errorHandler, ngZone, callback) {
     try {
         var /** @type {?} */ result = callback();
         if (isPromise(result)) {
             return result.catch(function (e) {
-                errorHandler.handleError(e);
+                ngZone.runOutsideAngular(function () { return errorHandler.handleError(e); });
                 // rethrow as the exception handler might not do it
                 throw e;
             });
@@ -6442,7 +6606,7 @@ function _callAndReportToErrorHandler(errorHandler, callback) {
         return result;
     }
     catch (e) {
-        errorHandler.handleError(e);
+        ngZone.runOutsideAngular(function () { return errorHandler.handleError(e); });
         // rethrow as the exception handler might not do it
         throw e;
     }
@@ -6528,8 +6692,8 @@ var PlatformRef_ = (function (_super) {
                 throw new Error('No ErrorHandler. Is platform module (BrowserModule) included?');
             }
             moduleRef.onDestroy(function () { return remove(_this._modules, moduleRef); }); /** @type {?} */
-            ((ngZone)).onError.subscribe({ next: function (error) { exceptionHandler.handleError(error); } });
-            return _callAndReportToErrorHandler(exceptionHandler, function () {
+            ((ngZone)).runOutsideAngular(function () { return ((ngZone)).onError.subscribe({ next: function (error) { exceptionHandler.handleError(error); } }); });
+            return _callAndReportToErrorHandler(exceptionHandler, /** @type {?} */ ((ngZone)), function () {
                 var /** @type {?} */ initStatus = moduleRef.injector.get(ApplicationInitStatus);
                 initStatus.runInitializers();
                 return initStatus.donePromise.then(function () {
@@ -6587,9 +6751,7 @@ var PlatformRef_ = (function (_super) {
 PlatformRef_.decorators = [
     { type: Injectable },
 ];
-/**
- * @nocollapse
- */
+/** @nocollapse */
 PlatformRef_.ctorParameters = function () { return [
     { type: Injector, },
 ]; };
@@ -6602,81 +6764,6 @@ PlatformRef_.ctorParameters = function () { return [
 var ApplicationRef = (function () {
     function ApplicationRef() {
     }
-    /**
-     * Bootstrap a new component at the root level of the application.
-     *
-     * ### Bootstrap process
-     *
-     * When bootstrapping a new root component into an application, Angular mounts the
-     * specified application component onto DOM elements identified by the [componentType]'s
-     * selector and kicks off automatic change detection to finish initializing the component.
-     *
-     * Optionally, a component can be mounted onto a DOM element that does not match the
-     * [componentType]'s selector.
-     *
-     * ### Example
-     * {\@example core/ts/platform/platform.ts region='longform'}
-     * @abstract
-     * @template C
-     * @param {?} componentFactory
-     * @param {?=} rootSelectorOrNode
-     * @return {?}
-     */
-    ApplicationRef.prototype.bootstrap = function (componentFactory, rootSelectorOrNode) { };
-    /**
-     * Invoke this method to explicitly process change detection and its side-effects.
-     *
-     * In development mode, `tick()` also performs a second change detection cycle to ensure that no
-     * further changes are detected. If additional changes are picked up during this second cycle,
-     * bindings in the app have side-effects that cannot be resolved in a single change detection
-     * pass.
-     * In this case, Angular throws an error, since an Angular application can only have one change
-     * detection pass during which all change detection must complete.
-     * @abstract
-     * @return {?}
-     */
-    ApplicationRef.prototype.tick = function () { };
-    /**
-     * Get a list of component types registered to this application.
-     * This list is populated even before the component is created.
-     * @abstract
-     * @return {?}
-     */
-    ApplicationRef.prototype.componentTypes = function () { };
-    /**
-     * Get a list of components registered to this application.
-     * @abstract
-     * @return {?}
-     */
-    ApplicationRef.prototype.components = function () { };
-    /**
-     * Attaches a view so that it will be dirty checked.
-     * The view will be automatically detached when it is destroyed.
-     * This will throw if the view is already attached to a ViewContainer.
-     * @abstract
-     * @param {?} view
-     * @return {?}
-     */
-    ApplicationRef.prototype.attachView = function (view) { };
-    /**
-     * Detaches a view from dirty checking again.
-     * @abstract
-     * @param {?} view
-     * @return {?}
-     */
-    ApplicationRef.prototype.detachView = function (view) { };
-    /**
-     * Returns the number of attached views.
-     * @abstract
-     * @return {?}
-     */
-    ApplicationRef.prototype.viewCount = function () { };
-    /**
-     * Returns an Observable that indicates when the application is stable or unstable.
-     * @abstract
-     * @return {?}
-     */
-    ApplicationRef.prototype.isStable = function () { };
     return ApplicationRef;
 }());
 /**
@@ -6710,7 +6797,7 @@ var ApplicationRef_ = (function (_super) {
         _this._stable = true;
         _this._enforceNoNewChanges = isDevMode();
         _this._zone.onMicrotaskEmpty.subscribe({ next: function () { _this._zone.run(function () { _this.tick(); }); } });
-        var isCurrentlyStable = new Observable_2(function (observer) {
+        var /** @type {?} */ isCurrentlyStable = new Observable_2(function (observer) {
             _this._stable = _this._zone.isStable && !_this._zone.hasPendingMacrotasks &&
                 !_this._zone.hasPendingMicrotasks;
             _this._zone.runOutsideAngular(function () {
@@ -6718,8 +6805,8 @@ var ApplicationRef_ = (function (_super) {
                 observer.complete();
             });
         });
-        var isStable = new Observable_2(function (observer) {
-            var stableSub = _this._zone.onStable.subscribe(function () {
+        var /** @type {?} */ isStable = new Observable_2(function (observer) {
+            var /** @type {?} */ stableSub = _this._zone.onStable.subscribe(function () {
                 NgZone.assertNotInAngularZone();
                 // Check whether there are no pending macro/micro tasks in the next tick
                 // to allow for NgZone to update the state.
@@ -6731,7 +6818,7 @@ var ApplicationRef_ = (function (_super) {
                     }
                 });
             });
-            var unstableSub = _this._zone.onUnstable.subscribe(function () {
+            var /** @type {?} */ unstableSub = _this._zone.onUnstable.subscribe(function () {
                 NgZone.assertInAngularZone();
                 if (_this._stable) {
                     _this._stable = false;
@@ -6825,6 +6912,7 @@ var ApplicationRef_ = (function (_super) {
      * @return {?}
      */
     ApplicationRef_.prototype.tick = function () {
+        var _this = this;
         if (this._runningTick) {
             throw new Error('ApplicationRef.tick is called recursively');
         }
@@ -6838,7 +6926,7 @@ var ApplicationRef_ = (function (_super) {
         }
         catch (e) {
             // Attention: Don't rethrow as it could cancel subscriptions to Observables!
-            this._exceptionHandler.handleError(e);
+            this._zone.runOutsideAngular(function () { return _this._exceptionHandler.handleError(e); });
         }
         finally {
             this._runningTick = false;
@@ -6893,9 +6981,7 @@ ApplicationRef_._tickScope = wtfCreateScope('ApplicationRef#tick()');
 ApplicationRef_.decorators = [
     { type: Injectable },
 ];
-/**
- * @nocollapse
- */
+/** @nocollapse */
 ApplicationRef_.ctorParameters = function () { return [
     { type: NgZone, },
     { type: Console, },
@@ -6917,6 +7003,10 @@ function remove(list, el) {
     }
 }
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * @license
  * Copyright Google Inc. All Rights Reserved.
  *
@@ -6924,6 +7014,10 @@ function remove(list, el) {
  * found in the LICENSE file at https://angular.io/license
  */
 // Public API for Zone
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -6960,38 +7054,13 @@ var RenderComponentType = (function () {
 var RenderDebugInfo = (function () {
     function RenderDebugInfo() {
     }
-    /**
-     * @abstract
-     * @return {?}
-     */
-    RenderDebugInfo.prototype.injector = function () { };
-    /**
-     * @abstract
-     * @return {?}
-     */
-    RenderDebugInfo.prototype.component = function () { };
-    /**
-     * @abstract
-     * @return {?}
-     */
-    RenderDebugInfo.prototype.providerTokens = function () { };
-    /**
-     * @abstract
-     * @return {?}
-     */
-    RenderDebugInfo.prototype.references = function () { };
-    /**
-     * @abstract
-     * @return {?}
-     */
-    RenderDebugInfo.prototype.context = function () { };
-    /**
-     * @abstract
-     * @return {?}
-     */
-    RenderDebugInfo.prototype.source = function () { };
     return RenderDebugInfo;
 }());
+/**
+ * @deprecated Use the `Renderer2` instead.
+ * @record
+ */
+function DirectRenderer() { }
 /**
  * @deprecated Use the `Renderer2` instead.
  * @abstract
@@ -6999,153 +7068,6 @@ var RenderDebugInfo = (function () {
 var Renderer = (function () {
     function Renderer() {
     }
-    /**
-     * @abstract
-     * @param {?} selectorOrNode
-     * @param {?=} debugInfo
-     * @return {?}
-     */
-    Renderer.prototype.selectRootElement = function (selectorOrNode, debugInfo) { };
-    /**
-     * @abstract
-     * @param {?} parentElement
-     * @param {?} name
-     * @param {?=} debugInfo
-     * @return {?}
-     */
-    Renderer.prototype.createElement = function (parentElement, name, debugInfo) { };
-    /**
-     * @abstract
-     * @param {?} hostElement
-     * @return {?}
-     */
-    Renderer.prototype.createViewRoot = function (hostElement) { };
-    /**
-     * @abstract
-     * @param {?} parentElement
-     * @param {?=} debugInfo
-     * @return {?}
-     */
-    Renderer.prototype.createTemplateAnchor = function (parentElement, debugInfo) { };
-    /**
-     * @abstract
-     * @param {?} parentElement
-     * @param {?} value
-     * @param {?=} debugInfo
-     * @return {?}
-     */
-    Renderer.prototype.createText = function (parentElement, value, debugInfo) { };
-    /**
-     * @abstract
-     * @param {?} parentElement
-     * @param {?} nodes
-     * @return {?}
-     */
-    Renderer.prototype.projectNodes = function (parentElement, nodes) { };
-    /**
-     * @abstract
-     * @param {?} node
-     * @param {?} viewRootNodes
-     * @return {?}
-     */
-    Renderer.prototype.attachViewAfter = function (node, viewRootNodes) { };
-    /**
-     * @abstract
-     * @param {?} viewRootNodes
-     * @return {?}
-     */
-    Renderer.prototype.detachView = function (viewRootNodes) { };
-    /**
-     * @abstract
-     * @param {?} hostElement
-     * @param {?} viewAllNodes
-     * @return {?}
-     */
-    Renderer.prototype.destroyView = function (hostElement, viewAllNodes) { };
-    /**
-     * @abstract
-     * @param {?} renderElement
-     * @param {?} name
-     * @param {?} callback
-     * @return {?}
-     */
-    Renderer.prototype.listen = function (renderElement, name, callback) { };
-    /**
-     * @abstract
-     * @param {?} target
-     * @param {?} name
-     * @param {?} callback
-     * @return {?}
-     */
-    Renderer.prototype.listenGlobal = function (target, name, callback) { };
-    /**
-     * @abstract
-     * @param {?} renderElement
-     * @param {?} propertyName
-     * @param {?} propertyValue
-     * @return {?}
-     */
-    Renderer.prototype.setElementProperty = function (renderElement, propertyName, propertyValue) { };
-    /**
-     * @abstract
-     * @param {?} renderElement
-     * @param {?} attributeName
-     * @param {?} attributeValue
-     * @return {?}
-     */
-    Renderer.prototype.setElementAttribute = function (renderElement, attributeName, attributeValue) { };
-    /**
-     * Used only in debug mode to serialize property changes to dom nodes as attributes.
-     * @abstract
-     * @param {?} renderElement
-     * @param {?} propertyName
-     * @param {?} propertyValue
-     * @return {?}
-     */
-    Renderer.prototype.setBindingDebugInfo = function (renderElement, propertyName, propertyValue) { };
-    /**
-     * @abstract
-     * @param {?} renderElement
-     * @param {?} className
-     * @param {?} isAdd
-     * @return {?}
-     */
-    Renderer.prototype.setElementClass = function (renderElement, className, isAdd) { };
-    /**
-     * @abstract
-     * @param {?} renderElement
-     * @param {?} styleName
-     * @param {?} styleValue
-     * @return {?}
-     */
-    Renderer.prototype.setElementStyle = function (renderElement, styleName, styleValue) { };
-    /**
-     * @abstract
-     * @param {?} renderElement
-     * @param {?} methodName
-     * @param {?=} args
-     * @return {?}
-     */
-    Renderer.prototype.invokeElementMethod = function (renderElement, methodName, args) { };
-    /**
-     * @abstract
-     * @param {?} renderNode
-     * @param {?} text
-     * @return {?}
-     */
-    Renderer.prototype.setText = function (renderNode, text) { };
-    /**
-     * @abstract
-     * @param {?} element
-     * @param {?} startingStyles
-     * @param {?} keyframes
-     * @param {?} duration
-     * @param {?} delay
-     * @param {?} easing
-     * @param {?=} previousPlayers
-     * @return {?}
-     */
-    Renderer.prototype.animate = function (element, startingStyles, keyframes, duration, delay, easing, previousPlayers) { };
     return Renderer;
 }());
 var Renderer2Interceptor = new InjectionToken('Renderer2Interceptor');
@@ -7168,14 +7090,13 @@ var Renderer2Interceptor = new InjectionToken('Renderer2Interceptor');
 var RootRenderer = (function () {
     function RootRenderer() {
     }
-    /**
-     * @abstract
-     * @param {?} componentType
-     * @return {?}
-     */
-    RootRenderer.prototype.renderComponent = function (componentType) { };
     return RootRenderer;
 }());
+/**
+ * \@experimental
+ * @record
+ */
+function RendererType2() { }
 /**
  * \@experimental
  * @abstract
@@ -7183,28 +7104,6 @@ var RootRenderer = (function () {
 var RendererFactory2 = (function () {
     function RendererFactory2() {
     }
-    /**
-     * @abstract
-     * @param {?} hostElement
-     * @param {?} type
-     * @return {?}
-     */
-    RendererFactory2.prototype.createRenderer = function (hostElement, type) { };
-    /**
-     * @abstract
-     * @return {?}
-     */
-    RendererFactory2.prototype.begin = function () { };
-    /**
-     * @abstract
-     * @return {?}
-     */
-    RendererFactory2.prototype.end = function () { };
-    /**
-     * @abstract
-     * @return {?}
-     */
-    RendererFactory2.prototype.whenRenderingDone = function () { };
     return RendererFactory2;
 }());
 var RendererStyleFlags2 = {};
@@ -7219,156 +7118,12 @@ RendererStyleFlags2[RendererStyleFlags2.DashCase] = "DashCase";
 var Renderer2 = (function () {
     function Renderer2() {
     }
-    /**
-     * This field can be used to store arbitrary data on this renderer instance.
-     * This is useful for renderers that delegate to other renderers.
-     * @abstract
-     * @return {?}
-     */
-    Renderer2.prototype.data = function () { };
-    /**
-     * @abstract
-     * @return {?}
-     */
-    Renderer2.prototype.destroy = function () { };
-    /**
-     * @abstract
-     * @param {?} name
-     * @param {?=} namespace
-     * @return {?}
-     */
-    Renderer2.prototype.createElement = function (name, namespace) { };
-    /**
-     * @abstract
-     * @param {?} value
-     * @return {?}
-     */
-    Renderer2.prototype.createComment = function (value) { };
-    /**
-     * @abstract
-     * @param {?} value
-     * @return {?}
-     */
-    Renderer2.prototype.createText = function (value) { };
-    /**
-     * @abstract
-     * @param {?} parent
-     * @param {?} newChild
-     * @return {?}
-     */
-    Renderer2.prototype.appendChild = function (parent, newChild) { };
-    /**
-     * @abstract
-     * @param {?} parent
-     * @param {?} newChild
-     * @param {?} refChild
-     * @return {?}
-     */
-    Renderer2.prototype.insertBefore = function (parent, newChild, refChild) { };
-    /**
-     * @abstract
-     * @param {?} parent
-     * @param {?} oldChild
-     * @return {?}
-     */
-    Renderer2.prototype.removeChild = function (parent, oldChild) { };
-    /**
-     * @abstract
-     * @param {?} selectorOrNode
-     * @return {?}
-     */
-    Renderer2.prototype.selectRootElement = function (selectorOrNode) { };
-    /**
-     * Attention: On WebWorkers, this will always return a value,
-     * as we are asking for a result synchronously. I.e.
-     * the caller can't rely on checking whether this is null or not.
-     * @abstract
-     * @param {?} node
-     * @return {?}
-     */
-    Renderer2.prototype.parentNode = function (node) { };
-    /**
-     * Attention: On WebWorkers, this will always return a value,
-     * as we are asking for a result synchronously. I.e.
-     * the caller can't rely on checking whether this is null or not.
-     * @abstract
-     * @param {?} node
-     * @return {?}
-     */
-    Renderer2.prototype.nextSibling = function (node) { };
-    /**
-     * @abstract
-     * @param {?} el
-     * @param {?} name
-     * @param {?} value
-     * @param {?=} namespace
-     * @return {?}
-     */
-    Renderer2.prototype.setAttribute = function (el, name, value, namespace) { };
-    /**
-     * @abstract
-     * @param {?} el
-     * @param {?} name
-     * @param {?=} namespace
-     * @return {?}
-     */
-    Renderer2.prototype.removeAttribute = function (el, name, namespace) { };
-    /**
-     * @abstract
-     * @param {?} el
-     * @param {?} name
-     * @return {?}
-     */
-    Renderer2.prototype.addClass = function (el, name) { };
-    /**
-     * @abstract
-     * @param {?} el
-     * @param {?} name
-     * @return {?}
-     */
-    Renderer2.prototype.removeClass = function (el, name) { };
-    /**
-     * @abstract
-     * @param {?} el
-     * @param {?} style
-     * @param {?} value
-     * @param {?=} flags
-     * @return {?}
-     */
-    Renderer2.prototype.setStyle = function (el, style, value, flags) { };
-    /**
-     * @abstract
-     * @param {?} el
-     * @param {?} style
-     * @param {?=} flags
-     * @return {?}
-     */
-    Renderer2.prototype.removeStyle = function (el, style, flags) { };
-    /**
-     * @abstract
-     * @param {?} el
-     * @param {?} name
-     * @param {?} value
-     * @return {?}
-     */
-    Renderer2.prototype.setProperty = function (el, name, value) { };
-    /**
-     * @abstract
-     * @param {?} node
-     * @param {?} value
-     * @return {?}
-     */
-    Renderer2.prototype.setValue = function (node, value) { };
-    /**
-     * @abstract
-     * @param {?} target
-     * @param {?} eventName
-     * @param {?} callback
-     * @return {?}
-     */
-    Renderer2.prototype.listen = function (target, eventName, callback) { };
     return Renderer2;
 }());
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -7377,7 +7132,14 @@ var Renderer2 = (function () {
  * found in the LICENSE file at https://angular.io/license
  */
 // Public API for render
-var ElementRef = (function () {
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */ var ElementRef = (function () {
     /**
      * @param {?} nativeElement
      */
@@ -7387,11 +7149,8 @@ var ElementRef = (function () {
     return ElementRef;
 }());
 /**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
  */
 /**
  * Used to load ng module factories.
@@ -7401,12 +7160,6 @@ var ElementRef = (function () {
 var NgModuleFactoryLoader = (function () {
     function NgModuleFactoryLoader() {
     }
-    /**
-     * @abstract
-     * @param {?} path
-     * @return {?}
-     */
-    NgModuleFactoryLoader.prototype.load = function (path) { };
     return NgModuleFactoryLoader;
 }());
 var moduleFactories = new Map();
@@ -7442,11 +7195,8 @@ function getModuleFactory(id) {
     return factory;
 }
 /**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
  */
 /**
  * An unmodifiable list of items that Angular keeps up to date when the state
@@ -7615,6 +7365,10 @@ function flatten$2(list) {
     }, []);
 }
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * @license
  * Copyright Google Inc. All Rights Reserved.
  *
@@ -7695,9 +7449,7 @@ var SystemJsNgModuleLoader = (function () {
 SystemJsNgModuleLoader.decorators = [
     { type: Injectable },
 ];
-/**
- * @nocollapse
- */
+/** @nocollapse */
 SystemJsNgModuleLoader.ctorParameters = function () { return [
     { type: Compiler, },
     { type: SystemJsNgModuleLoaderConfig, decorators: [{ type: Optional },] },
@@ -7715,11 +7467,8 @@ function checkNotEmpty(value, modulePath, exportName) {
     return value;
 }
 /**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
  */
 /**
  * Represents an Embedded Template that can be used to instantiate Embedded Views.
@@ -7738,25 +7487,11 @@ function checkNotEmpty(value, modulePath, exportName) {
 var TemplateRef = (function () {
     function TemplateRef() {
     }
-    /**
-     * @abstract
-     * @return {?}
-     */
-    TemplateRef.prototype.elementRef = function () { };
-    /**
-     * @abstract
-     * @param {?} context
-     * @return {?}
-     */
-    TemplateRef.prototype.createEmbeddedView = function (context) { };
     return TemplateRef;
 }());
 /**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
  */
 /**
  * Represents a container where one or more Views can be attached.
@@ -7780,330 +7515,27 @@ var TemplateRef = (function () {
 var ViewContainerRef = (function () {
     function ViewContainerRef() {
     }
-    /**
-     * Anchor element that specifies the location of this container in the containing View.
-     * <!-- TODO: rename to anchorElement -->
-     * @abstract
-     * @return {?}
-     */
-    ViewContainerRef.prototype.element = function () { };
-    /**
-     * @abstract
-     * @return {?}
-     */
-    ViewContainerRef.prototype.injector = function () { };
-    /**
-     * @abstract
-     * @return {?}
-     */
-    ViewContainerRef.prototype.parentInjector = function () { };
-    /**
-     * Destroys all Views in this container.
-     * @abstract
-     * @return {?}
-     */
-    ViewContainerRef.prototype.clear = function () { };
-    /**
-     * Returns the {\@link ViewRef} for the View located in this container at the specified index.
-     * @abstract
-     * @param {?} index
-     * @return {?}
-     */
-    ViewContainerRef.prototype.get = function (index) { };
-    /**
-     * Returns the number of Views currently attached to this container.
-     * @abstract
-     * @return {?}
-     */
-    ViewContainerRef.prototype.length = function () { };
-    /**
-     * Instantiates an Embedded View based on the {\@link TemplateRef `templateRef`} and inserts it
-     * into this container at the specified `index`.
-     *
-     * If `index` is not specified, the new View will be inserted as the last View in the container.
-     *
-     * Returns the {\@link ViewRef} for the newly created View.
-     * @abstract
-     * @template C
-     * @param {?} templateRef
-     * @param {?=} context
-     * @param {?=} index
-     * @return {?}
-     */
-    ViewContainerRef.prototype.createEmbeddedView = function (templateRef, context, index) { };
-    /**
-     * Instantiates a single {\@link Component} and inserts its Host View into this container at the
-     * specified `index`.
-     *
-     * The component is instantiated using its {\@link ComponentFactory} which can be
-     * obtained via {\@link ComponentFactoryResolver#resolveComponentFactory}.
-     *
-     * If `index` is not specified, the new View will be inserted as the last View in the container.
-     *
-     * You can optionally specify the {\@link Injector} that will be used as parent for the Component.
-     *
-     * Returns the {\@link ComponentRef} of the Host View created for the newly instantiated Component.
-     * @abstract
-     * @template C
-     * @param {?} componentFactory
-     * @param {?=} index
-     * @param {?=} injector
-     * @param {?=} projectableNodes
-     * @param {?=} ngModule
-     * @return {?}
-     */
-    ViewContainerRef.prototype.createComponent = function (componentFactory, index, injector, projectableNodes, ngModule) { };
-    /**
-     * Inserts a View identified by a {\@link ViewRef} into the container at the specified `index`.
-     *
-     * If `index` is not specified, the new View will be inserted as the last View in the container.
-     *
-     * Returns the inserted {\@link ViewRef}.
-     * @abstract
-     * @param {?} viewRef
-     * @param {?=} index
-     * @return {?}
-     */
-    ViewContainerRef.prototype.insert = function (viewRef, index) { };
-    /**
-     * Moves a View identified by a {\@link ViewRef} into the container at the specified `index`.
-     *
-     * Returns the inserted {\@link ViewRef}.
-     * @abstract
-     * @param {?} viewRef
-     * @param {?} currentIndex
-     * @return {?}
-     */
-    ViewContainerRef.prototype.move = function (viewRef, currentIndex) { };
-    /**
-     * Returns the index of the View, specified via {\@link ViewRef}, within the current container or
-     * `-1` if this container doesn't contain the View.
-     * @abstract
-     * @param {?} viewRef
-     * @return {?}
-     */
-    ViewContainerRef.prototype.indexOf = function (viewRef) { };
-    /**
-     * Destroys a View attached to this container at the specified `index`.
-     *
-     * If `index` is not specified, the last View in the container will be removed.
-     * @abstract
-     * @param {?=} index
-     * @return {?}
-     */
-    ViewContainerRef.prototype.remove = function (index) { };
-    /**
-     * Use along with {\@link #insert} to move a View within the current container.
-     *
-     * If the `index` param is omitted, the last {\@link ViewRef} is detached.
-     * @abstract
-     * @param {?=} index
-     * @return {?}
-     */
-    ViewContainerRef.prototype.detach = function (index) { };
     return ViewContainerRef;
 }());
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
 /**
  * \@stable
  * @abstract
  */
-var ChangeDetectorRef = (function () {
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */ var ChangeDetectorRef = (function () {
     function ChangeDetectorRef() {
     }
-    /**
-     * Marks all {\@link ChangeDetectionStrategy#OnPush} ancestors as to be checked.
-     *
-     * <!-- TODO: Add a link to a chapter on OnPush components -->
-     *
-     * ### Example ([live demo](http://plnkr.co/edit/GC512b?p=preview))
-     *
-     * ```typescript
-     * \@Component({
-     *   selector: 'cmp',
-     *   changeDetection: ChangeDetectionStrategy.OnPush,
-     *   template: `Number of ticks: {{numberOfTicks}}`
-     * })
-     * class Cmp {
-     *   numberOfTicks = 0;
-     *
-     *   constructor(private ref: ChangeDetectorRef) {
-     *     setInterval(() => {
-     *       this.numberOfTicks ++
-     *       // the following is required, otherwise the view will not be updated
-     *       this.ref.markForCheck();
-     *     }, 1000);
-     *   }
-     * }
-     *
-     * \@Component({
-     *   selector: 'app',
-     *   changeDetection: ChangeDetectionStrategy.OnPush,
-     *   template: `
-     *     <cmp><cmp>
-     *   `,
-     * })
-     * class App {
-     * }
-     * ```
-     * @abstract
-     * @return {?}
-     */
-    ChangeDetectorRef.prototype.markForCheck = function () { };
-    /**
-     * Detaches the change detector from the change detector tree.
-     *
-     * The detached change detector will not be checked until it is reattached.
-     *
-     * This can also be used in combination with {\@link ChangeDetectorRef#detectChanges} to implement
-     * local change
-     * detection checks.
-     *
-     * <!-- TODO: Add a link to a chapter on detach/reattach/local digest -->
-     * <!-- TODO: Add a live demo once ref.detectChanges is merged into master -->
-     *
-     * ### Example
-     *
-     * The following example defines a component with a large list of readonly data.
-     * Imagine the data changes constantly, many times per second. For performance reasons,
-     * we want to check and update the list every five seconds. We can do that by detaching
-     * the component's change detector and doing a local check every five seconds.
-     *
-     * ```typescript
-     * class DataProvider {
-     *   // in a real application the returned data will be different every time
-     *   get data() {
-     *     return [1,2,3,4,5];
-     *   }
-     * }
-     *
-     * \@Component({
-     *   selector: 'giant-list',
-     *   template: `
-     *     <li *ngFor="let d of dataProvider.data">Data {{d}}</lig>
-     *   `,
-     * })
-     * class GiantList {
-     *   constructor(private ref: ChangeDetectorRef, private dataProvider:DataProvider) {
-     *     ref.detach();
-     *     setInterval(() => {
-     *       this.ref.detectChanges();
-     *     }, 5000);
-     *   }
-     * }
-     *
-     * \@Component({
-     *   selector: 'app',
-     *   providers: [DataProvider],
-     *   template: `
-     *     <giant-list><giant-list>
-     *   `,
-     * })
-     * class App {
-     * }
-     * ```
-     * @abstract
-     * @return {?}
-     */
-    ChangeDetectorRef.prototype.detach = function () { };
-    /**
-     * Checks the change detector and its children.
-     *
-     * This can also be used in combination with {\@link ChangeDetectorRef#detach} to implement local
-     * change detection
-     * checks.
-     *
-     * <!-- TODO: Add a link to a chapter on detach/reattach/local digest -->
-     * <!-- TODO: Add a live demo once ref.detectChanges is merged into master -->
-     *
-     * ### Example
-     *
-     * The following example defines a component with a large list of readonly data.
-     * Imagine, the data changes constantly, many times per second. For performance reasons,
-     * we want to check and update the list every five seconds.
-     *
-     * We can do that by detaching the component's change detector and doing a local change detection
-     * check
-     * every five seconds.
-     *
-     * See {\@link ChangeDetectorRef#detach} for more information.
-     * @abstract
-     * @return {?}
-     */
-    ChangeDetectorRef.prototype.detectChanges = function () { };
-    /**
-     * Checks the change detector and its children, and throws if any changes are detected.
-     *
-     * This is used in development mode to verify that running change detection doesn't introduce
-     * other changes.
-     * @abstract
-     * @return {?}
-     */
-    ChangeDetectorRef.prototype.checkNoChanges = function () { };
-    /**
-     * Reattach the change detector to the change detector tree.
-     *
-     * This also marks OnPush ancestors as to be checked. This reattached change detector will be
-     * checked during the next change detection run.
-     *
-     * <!-- TODO: Add a link to a chapter on detach/reattach/local digest -->
-     *
-     * ### Example ([live demo](http://plnkr.co/edit/aUhZha?p=preview))
-     *
-     * The following example creates a component displaying `live` data. The component will detach
-     * its change detector from the main change detector tree when the component's live property
-     * is set to false.
-     *
-     * ```typescript
-     * class DataProvider {
-     *   data = 1;
-     *
-     *   constructor() {
-     *     setInterval(() => {
-     *       this.data = this.data * 2;
-     *     }, 500);
-     *   }
-     * }
-     *
-     * \@Component({
-     *   selector: 'live-data',
-     *   inputs: ['live'],
-     *   template: 'Data: {{dataProvider.data}}'
-     * })
-     * class LiveData {
-     *   constructor(private ref: ChangeDetectorRef, private dataProvider:DataProvider) {}
-     *
-     *   set live(value) {
-     *     if (value)
-     *       this.ref.reattach();
-     *     else
-     *       this.ref.detach();
-     *   }
-     * }
-     *
-     * \@Component({
-     *   selector: 'app',
-     *   providers: [DataProvider],
-     *   template: `
-     *     Live Update: <input type="checkbox" [(ngModel)]="live">
-     *     <live-data [live]="live"><live-data>
-     *   `,
-     * })
-     * class App {
-     *   live = true;
-     * }
-     * ```
-     * @abstract
-     * @return {?}
-     */
-    ChangeDetectorRef.prototype.reattach = function () { };
     return ChangeDetectorRef;
 }());
 /**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
  */
 /**
  * \@stable
@@ -8114,23 +7546,6 @@ var ViewRef = (function (_super) {
     function ViewRef() {
         return _super !== null && _super.apply(this, arguments) || this;
     }
-    /**
-     * Destroys the view and all of the data structures associated with it.
-     * @abstract
-     * @return {?}
-     */
-    ViewRef.prototype.destroy = function () { };
-    /**
-     * @abstract
-     * @return {?}
-     */
-    ViewRef.prototype.destroyed = function () { };
-    /**
-     * @abstract
-     * @param {?} callback
-     * @return {?}
-     */
-    ViewRef.prototype.onDestroy = function (callback) { };
     return ViewRef;
 }(ChangeDetectorRef));
 /**
@@ -8193,18 +7608,15 @@ var EmbeddedViewRef = (function (_super) {
     function EmbeddedViewRef() {
         return _super !== null && _super.apply(this, arguments) || this;
     }
-    /**
-     * @abstract
-     * @return {?}
-     */
-    EmbeddedViewRef.prototype.context = function () { };
-    /**
-     * @abstract
-     * @return {?}
-     */
-    EmbeddedViewRef.prototype.rootNodes = function () { };
     return EmbeddedViewRef;
 }(ViewRef));
+/**
+ * @record
+ */
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -8214,11 +7626,8 @@ var EmbeddedViewRef = (function (_super) {
  */
 // Public API for compiler
 /**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
  */
 var EventListener = (function () {
     /**
@@ -8501,6 +7910,18 @@ function removeDebugNodeFromIndex(node) {
     _nativeNodeToDebugNode.delete(node.nativeNode);
 }
 /**
+ * A boolean-valued function over a value, possibly including context information
+ * regarding that value's position in an array.
+ *
+ * \@experimental All debugging apis are currently experimental.
+ * @record
+ */
+function Predicate() { }
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * @license
  * Copyright Google Inc. All Rights Reserved.
  *
@@ -8665,6 +8086,10 @@ function iterateListLike(obj, fn) {
 function isJsObject(o) {
     return o !== null && (typeof o === 'function' || typeof o === 'object');
 }
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -9556,6 +8981,10 @@ function getPreviousIndex(item, addRemoveOffset, moveOffsets) {
     return previousIndex + addRemoveOffset + moveOffset;
 }
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * @license
  * Copyright Google Inc. All Rights Reserved.
  *
@@ -9901,12 +9330,66 @@ var KeyValueChangeRecord_ = (function () {
     return KeyValueChangeRecord_;
 }());
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * @license
  * Copyright Google Inc. All Rights Reserved.
  *
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
+/**
+ * A strategy for tracking changes over time to an iterable. Used by {\@link NgFor} to
+ * respond to changes in an iterable by effecting equivalent changes in the DOM.
+ *
+ * \@stable
+ * @record
+ */
+function IterableDiffer() { }
+/**
+ * An object describing the changes in the `Iterable` collection since last time
+ * `IterableDiffer#diff()` was invoked.
+ *
+ * \@stable
+ * @record
+ */
+function IterableChanges() { }
+/**
+ * Record representing the item change information.
+ *
+ * \@stable
+ * @record
+ */
+function IterableChangeRecord() { }
+/**
+ * @deprecated v4.0.0 - Use IterableChangeRecord instead.
+ * @record
+ */
+function CollectionChangeRecord() { }
+/**
+ * Nolonger used.
+ *
+ * @deprecated v4.0.0 - Use TrackByFunction instead
+ * @record
+ */
+function TrackByFn() { }
+/**
+ * An optional function passed into {\@link NgForOf} that defines how to track
+ * items in an iterable (e.g. fby index or id)
+ *
+ * \@stable
+ * @record
+ */
+function TrackByFunction() { }
+/**
+ * Provides a factory for {\@link IterableDiffer}.
+ *
+ * \@stable
+ * @record
+ */
+function IterableDifferFactory() { }
 /**
  * A repository of different iterable diffing strategies used by NgFor, NgClass, and others.
  * \@stable
@@ -9993,12 +9476,45 @@ function getTypeNameForDebugging(type) {
     return type['name'] || typeof type;
 }
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * @license
  * Copyright Google Inc. All Rights Reserved.
  *
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
+/**
+ * A differ that tracks changes made to an object over time.
+ *
+ * \@stable
+ * @record
+ */
+function KeyValueDiffer() { }
+/**
+ * An object describing the changes in the `Map` or `{[k:string]: string}` since last time
+ * `KeyValueDiffer#diff()` was invoked.
+ *
+ * \@stable
+ * @record
+ */
+function KeyValueChanges() { }
+/**
+ * Record representing the item change information.
+ *
+ * \@stable
+ * @record
+ */
+function KeyValueChangeRecord() { }
+/**
+ * Provides a factory for {\@link KeyValueDiffer}.
+ *
+ * \@stable
+ * @record
+ */
+function KeyValueDifferFactory() { }
 /**
  * A repository of different Map diffing strategies used by NgClass, NgStyle, and others.
  * \@stable
@@ -10074,6 +9590,48 @@ var KeyValueDiffers = (function () {
     return KeyValueDiffers;
 }());
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * To create a Pipe, you must implement this interface.
+ *
+ * Angular invokes the `transform` method with the value of a binding
+ * as the first argument, and any parameters as the second argument in list form.
+ *
+ * ## Syntax
+ *
+ * `value | pipeName[:arg0[:arg1...]]`
+ *
+ * ### Example ([live demo](http://plnkr.co/edit/f5oyIked9M2cKzvZNKHV?p=preview))
+ *
+ * The `RepeatPipe` below repeats the value as many times as indicated by the first argument:
+ *
+ * ```
+ * import {Pipe, PipeTransform} from '\@angular/core';
+ *
+ * \@Pipe({name: 'repeat'})
+ * export class RepeatPipe implements PipeTransform {
+ *   transform(value: any, times: number) {
+ *     return value.repeat(times);
+ *   }
+ * }
+ * ```
+ *
+ * Invoking `{{ 'ok' | repeat:3 }}` in a template produces `okokok`.
+ *
+ * \@stable
+ * @record
+ */
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */ function PipeTransform() { }
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * @license
  * Copyright Google Inc. All Rights Reserved.
  *
@@ -10091,6 +9649,10 @@ var iterableDiff = [new DefaultIterableDifferFactory()];
 var defaultIterableDiffers = new IterableDiffers(iterableDiff);
 var defaultKeyValueDiffers = new KeyValueDiffers(keyValDiff);
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * @license
  * Copyright Google Inc. All Rights Reserved.
  *
@@ -10101,6 +9663,10 @@ var defaultKeyValueDiffers = new KeyValueDiffers(keyValDiff);
  * @module
  * @description
  * Change detection enables data binding in Angular.
+ */
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
  */
 /**
  * @license
@@ -10131,6 +9697,10 @@ var _CORE_PLATFORM_PROVIDERS = [
  */
 var platformCore = createPlatformFactory(null, 'core', _CORE_PLATFORM_PROVIDERS);
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * @license
  * Copyright Google Inc. All Rights Reserved.
  *
@@ -10156,6 +9726,10 @@ MissingTranslationStrategy.Ignore = 2;
 MissingTranslationStrategy[MissingTranslationStrategy.Error] = "Error";
 MissingTranslationStrategy[MissingTranslationStrategy.Warning] = "Warning";
 MissingTranslationStrategy[MissingTranslationStrategy.Ignore] = "Ignore";
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -10214,12 +9788,14 @@ ApplicationModule.decorators = [
                 ]
             },] },
 ];
-/**
- * @nocollapse
- */
+/** @nocollapse */
 ApplicationModule.ctorParameters = function () { return [
     { type: ApplicationRef, },
 ]; };
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
 var SecurityContext = {};
 SecurityContext.NONE = 0;
 SecurityContext.HTML = 1;
@@ -10242,21 +9818,100 @@ SecurityContext[SecurityContext.RESOURCE_URL] = "RESOURCE_URL";
 var Sanitizer = (function () {
     function Sanitizer() {
     }
-    /**
-     * @abstract
-     * @param {?} context
-     * @param {?} value
-     * @return {?}
-     */
-    Sanitizer.prototype.sanitize = function (context, value) { };
     return Sanitizer;
 }());
 /**
- * @license
- * Copyright Google Inc. All Rights Reserved.
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * Factory for ViewDefinitions/NgModuleDefinitions.
+ * We use a function so we can reexeute it in case an error happens and use the given logger
+ * function to log the error from the definition of the node, which is shown in all browser
+ * logs.
+ * @record
+ */
+/**
+ * Function to call console.error at the right source location. This is an indirection
+ * via another function as browser will log the location that actually called
+ * `console.error`.
+ * @record
+ */
+/**
+ * @record
+ */
+/**
+ * @record
+ */
+/**
+ * @record
+ */
+/**
+ * @record
+ */
+function ViewDefinition() { }
+/**
+ * @record
+ */
+/**
+ * @record
+ */
+/**
+ * @record
+ */
+/**
+ * @record
+ */
+/**
+ * A node definition in the view.
  *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
+ * Note: We use one type for all nodes so that loops that loop over all nodes
+ * of a ViewDefinition stay monomorphic!
+ * @record
+ */
+/**
+ * @record
+ */
+/**
+ * @record
+ */
+/**
+ * @record
+ */
+/**
+ * @record
+ */
+/**
+ * @record
+ */
+/**
+ * @record
+ */
+/**
+ * @record
+ */
+/**
+ * @record
+ */
+/**
+ * @record
+ */
+/**
+ * @record
+ */
+/**
+ * @record
+ */
+/**
+ * @record
+ */
+/**
+ * View instance data.
+ * Attention: Adding fields to this is performance sensitive!
+ * @record
+ */
+/**
+ * @record
  */
 /**
  * Node instance data.
@@ -10270,6 +9925,12 @@ var Sanitizer = (function () {
  * purposes.
  */
 /**
+ * Data for an instantiated NodeType.Text.
+ *
+ * Attention: Adding fields to this is performance sensitive!
+ * @record
+ */
+/**
  * Accessor for view.nodes, enforcing that every usage site stays monomorphic.
  * @param {?} view
  * @param {?} index
@@ -10278,6 +9939,18 @@ var Sanitizer = (function () {
 function asTextData(view, index) {
     return (view.nodes[index]);
 }
+/**
+ * Data for an instantiated NodeType.Element.
+ *
+ * Attention: Adding fields to this is performance sensitive!
+ * @record
+ */
+/**
+ * @record
+ */
+/**
+ * @record
+ */
 /**
  * Accessor for view.nodes, enforcing that every usage site stays monomorphic.
  * @param {?} view
@@ -10288,6 +9961,12 @@ function asElementData(view, index) {
     return (view.nodes[index]);
 }
 /**
+ * Data for an instantiated NodeType.Provider.
+ *
+ * Attention: Adding fields to this is performance sensitive!
+ * @record
+ */
+/**
  * Accessor for view.nodes, enforcing that every usage site stays monomorphic.
  * @param {?} view
  * @param {?} index
@@ -10296,6 +9975,12 @@ function asElementData(view, index) {
 function asProviderData(view, index) {
     return (view.nodes[index]);
 }
+/**
+ * Data for an instantiated NodeType.PureExpression.
+ *
+ * Attention: Adding fields to this is performance sensitive!
+ * @record
+ */
 /**
  * Accessor for view.nodes, enforcing that every usage site stays monomorphic.
  * @param {?} view
@@ -10315,92 +10000,45 @@ function asQueryList(view, index) {
     return (view.nodes[index]);
 }
 /**
+ * @record
+ */
+/**
  * @abstract
  */
 var DebugContext = (function () {
     function DebugContext() {
     }
-    /**
-     * @abstract
-     * @return {?}
-     */
-    DebugContext.prototype.view = function () { };
-    /**
-     * @abstract
-     * @return {?}
-     */
-    DebugContext.prototype.nodeIndex = function () { };
-    /**
-     * @abstract
-     * @return {?}
-     */
-    DebugContext.prototype.injector = function () { };
-    /**
-     * @abstract
-     * @return {?}
-     */
-    DebugContext.prototype.component = function () { };
-    /**
-     * @abstract
-     * @return {?}
-     */
-    DebugContext.prototype.providerTokens = function () { };
-    /**
-     * @abstract
-     * @return {?}
-     */
-    DebugContext.prototype.references = function () { };
-    /**
-     * @abstract
-     * @return {?}
-     */
-    DebugContext.prototype.context = function () { };
-    /**
-     * @abstract
-     * @return {?}
-     */
-    DebugContext.prototype.componentRenderElement = function () { };
-    /**
-     * @abstract
-     * @return {?}
-     */
-    DebugContext.prototype.renderNode = function () { };
-    /**
-     * @abstract
-     * @param {?} console
-     * @param {...?} values
-     * @return {?}
-     */
-    DebugContext.prototype.logError = function (console) {
-        var values = [];
-        for (var _i = 1; _i < arguments.length; _i++) {
-            values[_i - 1] = arguments[_i];
-        }
-    };
     return DebugContext;
 }());
+/**
+ * @record
+ */
 /**
  * This object is used to prevent cycles in the source files and to have a place where
  * debug mode can hook it. It is lazily filled when `isDevMode` is known.
  */
 var Services = {
-    setCurrentNode: undefined,
-    createRootView: undefined,
-    createEmbeddedView: undefined,
-    createComponentView: undefined,
-    createNgModuleRef: undefined,
-    overrideProvider: undefined,
-    clearProviderOverrides: undefined,
-    checkAndUpdateView: undefined,
-    checkNoChangesView: undefined,
-    destroyView: undefined,
-    resolveDep: undefined,
-    createDebugContext: undefined,
-    handleEvent: undefined,
-    updateDirectives: undefined,
-    updateRenderer: undefined,
-    dirtyParentQueries: undefined,
+    setCurrentNode: /** @type {?} */ ((undefined)),
+    createRootView: /** @type {?} */ ((undefined)),
+    createEmbeddedView: /** @type {?} */ ((undefined)),
+    createComponentView: /** @type {?} */ ((undefined)),
+    createNgModuleRef: /** @type {?} */ ((undefined)),
+    overrideProvider: /** @type {?} */ ((undefined)),
+    clearProviderOverrides: /** @type {?} */ ((undefined)),
+    checkAndUpdateView: /** @type {?} */ ((undefined)),
+    checkNoChangesView: /** @type {?} */ ((undefined)),
+    destroyView: /** @type {?} */ ((undefined)),
+    resolveDep: /** @type {?} */ ((undefined)),
+    createDebugContext: /** @type {?} */ ((undefined)),
+    handleEvent: /** @type {?} */ ((undefined)),
+    updateDirectives: /** @type {?} */ ((undefined)),
+    updateRenderer: /** @type {?} */ ((undefined)),
+    dirtyParentQueries: /** @type {?} */ ((undefined)),
 };
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -10471,6 +10109,10 @@ function isViewDebugError(err) {
 function viewDestroyedError(action) {
     return new Error("ViewDestroyedError: Attempt to use a destroyed view: " + action);
 }
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -11021,11 +10663,8 @@ function _toStringWithNull(v) {
 var EMPTY_ARRAY = [];
 var EMPTY_MAP = {};
 /**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
  */
 /**
  * @param {?} flags
@@ -11412,6 +11051,10 @@ function setElementProperty(view, binding, renderNode$$1, name, value) {
     view.renderer.setProperty(renderNode$$1, name, renderValue);
 }
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * @license
  * Copyright Google Inc. All Rights Reserved.
  *
@@ -11606,6 +11249,10 @@ function callNgModuleLifecycle(ngModule, lifecycles) {
     }
 }
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * @license
  * Copyright Google Inc. All Rights Reserved.
  *
@@ -11788,11 +11435,8 @@ function removeFromArray(arr, index) {
     }
 }
 /**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
  */
 var EMPTY_CONTEXT = new Object();
 /**
@@ -12626,6 +12270,10 @@ var NgModuleRef_ = (function () {
     return NgModuleRef_;
 }());
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * @license
  * Copyright Google Inc. All Rights Reserved.
  *
@@ -13216,6 +12864,10 @@ function callProviderLifecycles(view, index, lifecycles) {
     }
 }
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * @license
  * Copyright Google Inc. All Rights Reserved.
  *
@@ -13423,11 +13075,8 @@ function getQueryValue(view, nodeDef, queryValueType) {
     }
 }
 /**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
  */
 /**
  * @param {?} ngContentIndex
@@ -13476,6 +13125,10 @@ function appendNgContent(view, renderHost, def) {
     var /** @type {?} */ ngContentIndex = ((def.ngContent)).index;
     visitProjectedRenderNodes(view, ngContentIndex, 1 /* AppendChild */, parentEl, null, undefined);
 }
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -13734,6 +13387,10 @@ function checkAndUpdatePureExpressionDynamic(view, def, values) {
     return changed;
 }
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * @license
  * Copyright Google Inc. All Rights Reserved.
  *
@@ -13902,11 +13559,8 @@ function _addInterpolationPart(value, binding) {
     return valueStr + binding.suffix;
 }
 /**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
  */
 /**
  * @param {?} flags
@@ -14488,7 +14142,7 @@ function checkNoChangesNodeDynamic(view, nodeDef, values) {
 function checkNoChangesQuery(view, nodeDef) {
     var /** @type {?} */ queryList = asQueryList(view, nodeDef.index);
     if (queryList.dirty) {
-        throw expressionChangedAfterItHasBeenCheckedError(Services.createDebugContext(view, nodeDef.index), "Query " + ((nodeDef.query)).id + " not dirty", "Query " + ((nodeDef.query)).id + " dirty", (view.state & 1 /* BeforeFirstCheck */) !== 0);
+        throw expressionChangedAfterItHasBeenCheckedError(Services.createDebugContext(view, nodeDef.index), "Query " + (((nodeDef.query))).id + " not dirty", "Query " + (((nodeDef.query))).id + " dirty", (view.state & 1 /* BeforeFirstCheck */) !== 0);
     }
 }
 /**
@@ -14695,6 +14349,10 @@ function execQueriesAction(view, queryFlags, staticDynamicQueryFlag, checkType) 
         }
     }
 }
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -15276,15 +14934,15 @@ var DebugContext_ = (function () {
             this.nodeIndex = nodeIndex = 0;
         }
         this.nodeDef = view.def.nodes[nodeIndex];
-        var elDef = this.nodeDef;
-        var elView = view;
+        var /** @type {?} */ elDef = this.nodeDef;
+        var /** @type {?} */ elView = view;
         while (elDef && (elDef.flags & 1 /* TypeElement */) === 0) {
-            elDef = elDef.parent;
+            elDef = ((elDef.parent));
         }
         if (!elDef) {
             while (!elDef && elView) {
-                elDef = viewParentEl(elView);
-                elView = elView.parent;
+                elDef = ((viewParentEl(elView)));
+                elView = ((elView.parent));
             }
         }
         this.elDef = elDef;
@@ -15791,6 +15449,10 @@ var DebugRenderer2 = (function () {
     return DebugRenderer2;
 }());
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * @license
  * Copyright Google Inc. All Rights Reserved.
  *
@@ -15850,11 +15512,8 @@ var NgModuleFactory_ = (function (_super) {
     return NgModuleFactory_;
 }(NgModuleFactory));
 /**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
  */
 /**
  * @license
@@ -15864,14 +15523,134 @@ var NgModuleFactory_ = (function (_super) {
  * found in the LICENSE file at https://angular.io/license
  */
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * @license
  * Copyright Google Inc. All Rights Reserved.
  *
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
+ */
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ * @record
+ */
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
  */
 /**
  * \@experimental Animation support is experimental.
+ */
+/**
+ * \@experimental Animation support is experimental.
+ * @record
+ */
+/**
+ * Metadata representing the entry of animations. Instances of this interface are provided via the
+ * animation DSL when the {\@link trigger trigger animation function} is called.
+ *
+ * \@experimental Animation support is experimental.
+ * @record
+ */
+/**
+ * Metadata representing the entry of animations. Instances of this interface are provided via the
+ * animation DSL when the {\@link state state animation function} is called.
+ *
+ * \@experimental Animation support is experimental.
+ * @record
+ */
+/**
+ * Metadata representing the entry of animations. Instances of this interface are provided via the
+ * animation DSL when the {\@link transition transition animation function} is called.
+ *
+ * \@experimental Animation support is experimental.
+ * @record
+ */
+/**
+ * \@experimental Animation support is experimental.
+ * @record
+ */
+/**
+ * \@experimental Animation support is experimental.
+ * @record
+ */
+/**
+ * Metadata representing the entry of animations. Instances of this interface are provided via the
+ * animation DSL when the {\@link keyframes keyframes animation function} is called.
+ *
+ * \@experimental Animation support is experimental.
+ * @record
+ */
+/**
+ * Metadata representing the entry of animations. Instances of this interface are provided via the
+ * animation DSL when the {\@link style style animation function} is called.
+ *
+ * \@experimental Animation support is experimental.
+ * @record
+ */
+/**
+ * Metadata representing the entry of animations. Instances of this interface are provided via the
+ * animation DSL when the {\@link animate animate animation function} is called.
+ *
+ * \@experimental Animation support is experimental.
+ * @record
+ */
+/**
+ * Metadata representing the entry of animations. Instances of this interface are provided via the
+ * animation DSL when the {\@link animateChild animateChild animation function} is called.
+ *
+ * \@experimental Animation support is experimental.
+ * @record
+ */
+/**
+ * Metadata representing the entry of animations. Instances of this interface are provided via the
+ * animation DSL when the {\@link useAnimation useAnimation animation function} is called.
+ *
+ * \@experimental Animation support is experimental.
+ * @record
+ */
+/**
+ * Metadata representing the entry of animations. Instances of this interface are provided via the
+ * animation DSL when the {\@link sequence sequence animation function} is called.
+ *
+ * \@experimental Animation support is experimental.
+ * @record
+ */
+/**
+ * Metadata representing the entry of animations. Instances of this interface are provided via the
+ * animation DSL when the {\@link group group animation function} is called.
+ *
+ * \@experimental Animation support is experimental.
+ * @record
+ */
+/**
+ * Metadata representing the entry of animations. Instances of this interface are provided via the
+ * animation DSL when the {\@link stagger stagger animation function} is called.
+ *
+ * \@experimental Animation support is experimental.
+ * @record
  */
 /**
  * `trigger` is an animation-specific function that is designed to be used inside of Angular's
@@ -16785,6 +16564,10 @@ function transition$1(stateChangeExpr, steps, options) {
  * @return {?}
  */
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * @license
  * Copyright Google Inc. All Rights Reserved.
  *
@@ -16795,6 +16578,51 @@ function transition$1(stateChangeExpr, steps, options) {
  * @deprecated This symbol has moved. Please Import from \@angular/animations instead!
  */
 var AUTO_STYLE$$1 = '*';
+/**
+ * @deprecated This symbol has moved. Please Import from \@angular/animations instead!
+ * @record
+ */
+function AnimationMetadata$$1() { }
+/**
+ * @deprecated This symbol has moved. Please Import from \@angular/animations instead!
+ * @record
+ */
+function AnimationTriggerMetadata$$1() { }
+/**
+ * @deprecated This symbol has moved. Please Import from \@angular/animations instead!
+ * @record
+ */
+function AnimationStateMetadata$$1() { }
+/**
+ * @deprecated This symbol has moved. Please Import from \@angular/animations instead!
+ * @record
+ */
+function AnimationTransitionMetadata$$1() { }
+/**
+ * @deprecated This symbol has moved. Please Import from \@angular/animations instead!
+ * @record
+ */
+function AnimationKeyframesSequenceMetadata$$1() { }
+/**
+ * @deprecated This symbol has moved. Please Import from \@angular/animations instead!
+ * @record
+ */
+function AnimationStyleMetadata$$1() { }
+/**
+ * @deprecated This symbol has moved. Please Import from \@angular/animations instead!
+ * @record
+ */
+function AnimationAnimateMetadata$$1() { }
+/**
+ * @deprecated This symbol has moved. Please Import from \@angular/animations instead!
+ * @record
+ */
+function AnimationSequenceMetadata$$1() { }
+/**
+ * @deprecated This symbol has moved. Please Import from \@angular/animations instead!
+ * @record
+ */
+function AnimationGroupMetadata$$1() { }
 /**
  * @deprecated This symbol has moved. Please Import from \@angular/animations instead!
  * @param {?} name
@@ -16863,12 +16691,18 @@ function keyframes$$1(steps) {
 function transition$$1(stateChangeExpr, steps) {
     return transition$1(stateChangeExpr, steps);
 }
+/**
+ * @deprecated This has been renamed to `AnimationEvent`. Please import it from \@angular/animations.
+ * @record
+ */
+function AnimationTransitionEvent() { }
 
 
 
 
 var core_es5 = Object.freeze({
 	Class: Class,
+	TypeDecorator: TypeDecorator,
 	createPlatform: createPlatform,
 	assertPlatform: assertPlatform,
 	destroyPlatform: destroyPlatform,
@@ -16890,6 +16724,8 @@ var core_es5 = Object.freeze({
 	DebugNode: DebugNode,
 	asNativeElements: asNativeElements,
 	getDebugNode: getDebugNode,
+	Predicate: Predicate,
+	GetTestability: GetTestability,
 	Testability: Testability,
 	TestabilityRegistry: TestabilityRegistry,
 	setTestabilityGetter: setTestabilityGetter,
@@ -16902,6 +16738,7 @@ var core_es5 = Object.freeze({
 	wtfLeave: wtfLeave,
 	wtfStartTimeRange: wtfStartTimeRange,
 	wtfEndTimeRange: wtfEndTimeRange,
+	WtfScopeFn: WtfScopeFn,
 	Type: Type,
 	EventEmitter: EventEmitter,
 	ErrorHandler: ErrorHandler,
@@ -16910,36 +16747,65 @@ var core_es5 = Object.freeze({
 	ANALYZE_FOR_ENTRY_COMPONENTS: ANALYZE_FOR_ENTRY_COMPONENTS,
 	Attribute: Attribute,
 	ContentChild: ContentChild,
+	ContentChildDecorator: ContentChildDecorator,
 	ContentChildren: ContentChildren,
+	ContentChildrenDecorator: ContentChildrenDecorator,
 	Query: Query,
 	ViewChild: ViewChild,
+	ViewChildDecorator: ViewChildDecorator,
 	ViewChildren: ViewChildren,
+	ViewChildrenDecorator: ViewChildrenDecorator,
 	Component: Component,
+	ComponentDecorator: ComponentDecorator,
 	Directive: Directive,
+	DirectiveDecorator: DirectiveDecorator,
 	HostBinding: HostBinding,
 	HostListener: HostListener,
 	Input: Input,
 	Output: Output,
 	Pipe: Pipe,
+	AfterContentChecked: AfterContentChecked,
+	AfterContentInit: AfterContentInit,
+	AfterViewChecked: AfterViewChecked,
+	AfterViewInit: AfterViewInit,
+	DoCheck: DoCheck,
+	OnChanges: OnChanges,
+	OnDestroy: OnDestroy,
+	OnInit: OnInit,
 	CUSTOM_ELEMENTS_SCHEMA: CUSTOM_ELEMENTS_SCHEMA,
+	ModuleWithProviders: ModuleWithProviders,
 	NO_ERRORS_SCHEMA: NO_ERRORS_SCHEMA,
 	NgModule: NgModule,
+	SchemaMetadata: SchemaMetadata,
 	ViewEncapsulation: ViewEncapsulation,
 	Version: Version,
 	VERSION: VERSION$2,
 	forwardRef: forwardRef,
 	resolveForwardRef: resolveForwardRef,
+	ForwardRefFn: ForwardRefFn,
 	Injector: Injector,
 	ReflectiveInjector: ReflectiveInjector,
+	TypeProvider: TypeProvider,
+	ValueProvider: ValueProvider,
+	ClassProvider: ClassProvider,
+	ExistingProvider: ExistingProvider,
+	FactoryProvider: FactoryProvider,
 	ResolvedReflectiveFactory: ResolvedReflectiveFactory,
+	ResolvedReflectiveProvider: ResolvedReflectiveProvider,
 	ReflectiveKey: ReflectiveKey,
 	InjectionToken: InjectionToken,
 	OpaqueToken: OpaqueToken,
+	InjectDecorator: InjectDecorator,
 	Inject: Inject,
+	OptionalDecorator: OptionalDecorator,
 	Optional: Optional,
+	InjectableDecorator: InjectableDecorator,
 	Injectable: Injectable,
+	SelfDecorator: SelfDecorator,
 	Self: Self,
+	SkipSelfDecorator: SkipSelfDecorator,
 	SkipSelf: SkipSelf,
+	HostDecorator: HostDecorator,
 	Host: Host,
 	NgZone: NgZone,
 	RenderComponentType: RenderComponentType,
@@ -16947,6 +16813,7 @@ var core_es5 = Object.freeze({
 	Renderer2: Renderer2,
 	RendererFactory2: RendererFactory2,
 	RendererStyleFlags2: RendererStyleFlags2,
+	RendererType2: RendererType2,
 	RootRenderer: RootRenderer,
 	COMPILER_OPTIONS: COMPILER_OPTIONS,
 	Compiler: Compiler,
@@ -16969,10 +16836,23 @@ var core_es5 = Object.freeze({
 	ViewRef: ViewRef,
 	ChangeDetectionStrategy: ChangeDetectionStrategy,
 	ChangeDetectorRef: ChangeDetectorRef,
+	CollectionChangeRecord: CollectionChangeRecord,
 	DefaultIterableDiffer: DefaultIterableDiffer,
+	IterableChangeRecord: IterableChangeRecord,
+	IterableChanges: IterableChanges,
+	IterableDiffer: IterableDiffer,
+	IterableDifferFactory: IterableDifferFactory,
 	IterableDiffers: IterableDiffers,
+	KeyValueChangeRecord: KeyValueChangeRecord,
+	KeyValueChanges: KeyValueChanges,
+	KeyValueDiffer: KeyValueDiffer,
+	KeyValueDifferFactory: KeyValueDifferFactory,
 	KeyValueDiffers: KeyValueDiffers,
+	PipeTransform: PipeTransform,
 	SimpleChange: SimpleChange,
+	SimpleChanges: SimpleChanges,
+	TrackByFn: TrackByFn,
+	TrackByFunction: TrackByFunction,
 	WrappedValue: WrappedValue,
 	platformCore: platformCore,
 	ɵALLOW_MULTIPLE_PLATFORMS: ALLOW_MULTIPLE_PLATFORMS,
@@ -16988,6 +16868,7 @@ var core_es5 = Object.freeze({
 	ɵCodegenComponentFactoryResolver: CodegenComponentFactoryResolver,
 	ɵViewMetadata: ViewMetadata,
 	ɵReflectionCapabilities: ReflectionCapabilities,
+	ɵDirectRenderer: DirectRenderer,
 	ɵRenderDebugInfo: RenderDebugInfo,
 	ɵglobal: _global,
 	ɵlooseIdentical: looseIdentical,
@@ -17001,6 +16882,7 @@ var core_es5 = Object.freeze({
 	ɵregisterModuleFactory: registerModuleFactory,
 	ɵEMPTY_ARRAY: EMPTY_ARRAY,
 	ɵEMPTY_MAP: EMPTY_MAP,
+	ɵViewDefinition: ViewDefinition,
 	ɵand: anchorDef,
 	ɵccf: createComponentFactory,
 	ɵcmf: createNgModuleFactory,
@@ -17025,6 +16907,15 @@ var core_es5 = Object.freeze({
 	ɵunv: unwrapValue,
 	ɵvid: viewDef,
 	AUTO_STYLE: AUTO_STYLE$$1,
+	AnimationMetadata: AnimationMetadata$$1,
+	AnimationTriggerMetadata: AnimationTriggerMetadata$$1,
+	AnimationStateMetadata: AnimationStateMetadata$$1,
+	AnimationTransitionMetadata: AnimationTransitionMetadata$$1,
+	AnimationKeyframesSequenceMetadata: AnimationKeyframesSequenceMetadata$$1,
+	AnimationStyleMetadata: AnimationStyleMetadata$$1,
+	AnimationAnimateMetadata: AnimationAnimateMetadata$$1,
+	AnimationSequenceMetadata: AnimationSequenceMetadata$$1,
+	AnimationGroupMetadata: AnimationGroupMetadata$$1,
 	trigger: trigger$$1,
 	animate: animate$$1,
 	group: group$$1,
@@ -17033,6 +16924,7 @@ var core_es5 = Object.freeze({
 	state: state$$1,
 	keyframes: keyframes$$1,
 	transition: transition$$1,
+	AnimationTransitionEvent: AnimationTransitionEvent,
 	ɵx: animate$1,
 	ɵy: group$1,
 	ɵbc: keyframes$1,
@@ -17065,9 +16957,13 @@ var core_es5 = Object.freeze({
 });
 
 /**
- * @license Angular v5.0.0-beta.0-abee785
+ * @license Angular v5.0.0-beta.0-b7a6f52
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
+ */
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
  */
 /**
  * @license
@@ -17084,14 +16980,16 @@ var core_es5 = Object.freeze({
 /**
  * \@stable
  */
-var VERSION$1 = new Version('5.0.0-beta.0-abee785');
+var VERSION$1 = new Version('5.0.0-beta.0-b7a6f52');
 /**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
  */
+/**
+ * An Abstract Syntax Tree node representing part of a parsed Angular template.
+ * @record
+ */
+function TemplateAst() { }
 /**
  * A segment of text within the template.
  */
@@ -17529,6 +17427,15 @@ PropertyBindingType[PropertyBindingType.Class] = "Class";
 PropertyBindingType[PropertyBindingType.Style] = "Style";
 PropertyBindingType[PropertyBindingType.Animation] = "Animation";
 /**
+ * @record
+ */
+function QueryMatch() { }
+/**
+ * A visitor for {\@link TemplateAst} trees that will process each node.
+ * @record
+ */
+function TemplateAstVisitor() { }
+/**
  * A visitor that accepts each node but doesn't do anything. It is intended to be used
  * as the base class for a visitor that is only interested in a subset of the node types.
  */
@@ -17706,11 +17613,18 @@ function templateVisitAll(visitor, asts, context) {
     return result;
 }
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * A token representing the a reference to a static type.
  *
  * This token is unique for a filePath and name and can be used as a hash table key.
  */
-var StaticSymbol = (function () {
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */ var StaticSymbol = (function () {
     /**
      * @param {?} filePath
      * @param {?} name
@@ -17758,6 +17672,10 @@ var StaticSymbolCache = (function () {
     };
     return StaticSymbolCache;
 }());
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
 var TagContentType = {};
 TagContentType.RAW_TEXT = 0;
 TagContentType.ESCAPABLE_RAW_TEXT = 1;
@@ -17765,6 +17683,10 @@ TagContentType.PARSABLE_DATA = 2;
 TagContentType[TagContentType.RAW_TEXT] = "RAW_TEXT";
 TagContentType[TagContentType.ESCAPABLE_RAW_TEXT] = "ESCAPABLE_RAW_TEXT";
 TagContentType[TagContentType.PARSABLE_DATA] = "PARSABLE_DATA";
+/**
+ * @record
+ */
+function TagDefinition() { }
 /**
  * @param {?} elementName
  * @return {?}
@@ -18075,6 +17997,10 @@ var NAMED_ENTITIES = {
     'zwnj': '\u200C',
 };
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * @license
  * Copyright Google Inc. All Rights Reserved.
  *
@@ -18191,6 +18117,10 @@ var _DEFAULT_TAG_DEFINITION = new HtmlTagDefinition();
 function getHtmlTagDefinition(tagName) {
     return TAG_DEFINITIONS[tagName.toLowerCase()] || _DEFAULT_TAG_DEFINITION;
 }
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -18609,6 +18539,10 @@ var SelectorContext = (function () {
     return SelectorContext;
 }());
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * @license
  * Copyright Google Inc. All Rights Reserved.
  *
@@ -18696,6 +18630,9 @@ function isDefined(val) {
 function noUndefined(val) {
     return val === undefined ? ((null)) : val;
 }
+/**
+ * @record
+ */
 var ValueTransformer = (function () {
     function ValueTransformer() {
     }
@@ -18820,6 +18757,13 @@ function utf8Encode(str) {
     }
     return encoded;
 }
+/**
+ * @record
+ */
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -19046,6 +18990,14 @@ function hostViewClassName(compType) {
 function componentFactoryName(compType) {
     return identifierName({ reference: compType }) + "NgFactory";
 }
+/**
+ * @record
+ */
+function ProxyClass() { }
+/**
+ * @record
+ */
+function CompileIdentifierMetadata() { }
 var CompileSummaryKind = {};
 CompileSummaryKind.Pipe = 0;
 CompileSummaryKind.Directive = 1;
@@ -19055,6 +19007,25 @@ CompileSummaryKind[CompileSummaryKind.Pipe] = "Pipe";
 CompileSummaryKind[CompileSummaryKind.Directive] = "Directive";
 CompileSummaryKind[CompileSummaryKind.NgModule] = "NgModule";
 CompileSummaryKind[CompileSummaryKind.Injectable] = "Injectable";
+/**
+ * A CompileSummary is the data needed to use a directive / pipe / module
+ * in other modules / components. However, this data is not enough to compile
+ * the directive / module itself.
+ * @record
+ */
+function CompileTypeSummary() { }
+/**
+ * @record
+ */
+function CompileDiDependencyMetadata() { }
+/**
+ * @record
+ */
+function CompileProviderMetadata() { }
+/**
+ * @record
+ */
+function CompileFactoryMetadata() { }
 /**
  * @param {?} token
  * @return {?}
@@ -19075,6 +19046,19 @@ function tokenReference(token) {
     }
 }
 /**
+ * @record
+ */
+function CompileTokenMetadata() { }
+/**
+ * Metadata regarding compilation of a type.
+ * @record
+ */
+function CompileTypeMetadata() { }
+/**
+ * @record
+ */
+function CompileQueryMetadata() { }
+/**
  * Metadata about a stylesheet
  */
 var CompileStylesheetMetadata = (function () {
@@ -19089,6 +19073,11 @@ var CompileStylesheetMetadata = (function () {
     }
     return CompileStylesheetMetadata;
 }());
+/**
+ * Summary Metadata regarding compilation of a template.
+ * @record
+ */
+function CompileTemplateSummary() { }
 /**
  * Metadata regarding compilation of a template.
  */
@@ -19124,6 +19113,14 @@ var CompileTemplateMetadata = (function () {
     };
     return CompileTemplateMetadata;
 }());
+/**
+ * @record
+ */
+function CompileEntryComponentMetadata() { }
+/**
+ * @record
+ */
+function CompileDirectiveSummary() { }
 /**
  * Metadata regarding compilation of a directive.
  */
@@ -19286,6 +19283,10 @@ function createHostComponentMeta(hostTypeReference, compMeta, hostViewType) {
         componentFactory: null
     });
 }
+/**
+ * @record
+ */
+function CompilePipeSummary() { }
 var CompilePipeMetadata = (function () {
     /**
      * @param {?} __0
@@ -19309,6 +19310,10 @@ var CompilePipeMetadata = (function () {
     };
     return CompilePipeMetadata;
 }());
+/**
+ * @record
+ */
+function CompileNgModuleSummary() { }
 /**
  * Metadata regarding compilation of a module.
  */
@@ -19530,11 +19535,8 @@ function templateJitUrl(ngModuleType, compMeta) {
     return sourceUrl(identifierName(ngModuleType) + "/" + identifierName(compMeta.type) + ".ngfactory.js");
 }
 /**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
  */
 /**
  * Provides access to reflection data about symbols that the compiler needs.
@@ -19543,46 +19545,12 @@ function templateJitUrl(ngModuleType, compMeta) {
 var CompileReflector = (function () {
     function CompileReflector() {
     }
-    /**
-     * @abstract
-     * @param {?} typeOrFunc
-     * @return {?}
-     */
-    CompileReflector.prototype.parameters = function (typeOrFunc) { };
-    /**
-     * @abstract
-     * @param {?} typeOrFunc
-     * @return {?}
-     */
-    CompileReflector.prototype.annotations = function (typeOrFunc) { };
-    /**
-     * @abstract
-     * @param {?} typeOrFunc
-     * @return {?}
-     */
-    CompileReflector.prototype.propMetadata = function (typeOrFunc) { };
-    /**
-     * @abstract
-     * @param {?} type
-     * @param {?} lcProperty
-     * @return {?}
-     */
-    CompileReflector.prototype.hasLifecycleHook = function (type, lcProperty) { };
-    /**
-     * @abstract
-     * @param {?} type
-     * @param {?} cmpMetadata
-     * @return {?}
-     */
-    CompileReflector.prototype.componentModuleUrl = function (type, cmpMetadata) { };
-    /**
-     * @abstract
-     * @param {?} ref
-     * @return {?}
-     */
-    CompileReflector.prototype.resolveExternalReference = function (ref) { };
     return CompileReflector;
 }());
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -19604,13 +19572,20 @@ var CompilerConfig = (function () {
     return CompilerConfig;
 }());
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * @license
  * Copyright Google Inc. All Rights Reserved.
  *
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-var ParserError = (function () {
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */ var ParserError = (function () {
     /**
      * @param {?} message
      * @param {?} input
@@ -20220,6 +20195,10 @@ var TemplateBinding = (function () {
     }
     return TemplateBinding;
 }());
+/**
+ * @record
+ */
+function AstVisitor() { }
 var NullAstVisitor = (function () {
     function NullAstVisitor() {
     }
@@ -20861,13 +20840,20 @@ function visitAstChildren(ast, visitor, context) {
     });
 }
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * @license
  * Copyright Google Inc. All Rights Reserved.
  *
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-var $EOF = 0;
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */ var $EOF = 0;
 var $TAB = 9;
 var $LF = 10;
 var $VTAB = 11;
@@ -20951,15 +20937,26 @@ function isAsciiHexDigit(code) {
     return code >= $a && code <= $f || code >= $A && code <= $F || isDigit(code);
 }
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * A replacement for \@Injectable to be used in the compiler, so that
  * we don't try to evaluate the metadata in the compiler during AoT.
  * This decorator is enough to make the compiler work with the ReflectiveInjector though.
  * \@Annotation
  * @return {?}
  */
-function CompilerInjectable() {
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */ function CompilerInjectable() {
     return function (x) { return x; };
 }
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -21013,6 +21010,10 @@ function assertInterpolationSymbols(identifier, value) {
     }
 }
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * @license
  * Copyright Google Inc. All Rights Reserved.
  *
@@ -21043,6 +21044,10 @@ var InterpolationConfig = (function () {
     return InterpolationConfig;
 }());
 var DEFAULT_INTERPOLATION_CONFIG = new InterpolationConfig('{{', '}}');
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -21088,9 +21093,7 @@ var Lexer = (function () {
 Lexer.decorators = [
     { type: CompilerInjectable },
 ];
-/**
- * @nocollapse
- */
+/** @nocollapse */
 Lexer.ctorParameters = function () { return []; };
 var Token = (function () {
     /**
@@ -21571,6 +21574,10 @@ function parseIntAutoRadix(text) {
     return result;
 }
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * @license
  * Copyright Google Inc. All Rights Reserved.
  *
@@ -21854,9 +21861,7 @@ var Parser = (function () {
 Parser.decorators = [
     { type: CompilerInjectable },
 ];
-/**
- * @nocollapse
- */
+/** @nocollapse */
 Parser.ctorParameters = function () { return [
     { type: Lexer, },
 ]; };
@@ -22655,6 +22660,10 @@ var SimpleExpressionChecker = (function () {
     return SimpleExpressionChecker;
 }());
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * @license
  * Copyright Google Inc. All Rights Reserved.
  *
@@ -22838,6 +22847,10 @@ function typeSourceSpan(kind, type) {
     return new ParseSourceSpan(new ParseLocation(sourceFile, -1, -1, -1), new ParseLocation(sourceFile, -1, -1, -1));
 }
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * A path is an ordered set of elements. Typically a path is to  a
  * particular offset in a source file. The head of the list is the top
  * most node. The tail is the node that contains the offset directly.
@@ -22854,7 +22867,10 @@ function typeSourceSpan(kind, type) {
  * 'c' at 9-10]` and the path the node at offset 1 would be
  * `['+' at 1-10, 'a' at 1-2]`.
  */
-var AstPath = (function () {
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */ var AstPath = (function () {
     /**
      * @param {?} path
      * @param {?=} position
@@ -22924,12 +22940,20 @@ var AstPath = (function () {
     return AstPath;
 }());
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * @license
  * Copyright Google Inc. All Rights Reserved.
  *
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
+/**
+ * @record
+ */
+function Node() { }
 var Text = (function () {
     /**
      * @param {?} value
@@ -23058,6 +23082,10 @@ var Comment = (function () {
     Comment.prototype.visit = function (visitor, context) { return visitor.visitComment(this, context); };
     return Comment;
 }());
+/**
+ * @record
+ */
+function Visitor() { }
 /**
  * @param {?} visitor
  * @param {?} nodes
@@ -23196,6 +23224,10 @@ function findNode(nodes, position) {
     visitAll(visitor, nodes);
     return new AstPath(path, position);
 }
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -23403,7 +23435,7 @@ var _Tokenizer = (function () {
     };
     /**
      * \@internal
-     * @return {?}
+     * @return {?} whether an ICU token has been created
      */
     _Tokenizer.prototype._tokenizeExpansionForm = function () {
         if (isExpansionFormStart(this._input, this._index, this._interpolationConfig)) {
@@ -24099,6 +24131,10 @@ function mergeTextTokens(srcTokens) {
     return dstTokens;
 }
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * @license
  * Copyright Google Inc. All Rights Reserved.
  *
@@ -24565,6 +24601,10 @@ function lastOnStack(stack, element) {
     return stack.length > 0 && stack[stack.length - 1] === element;
 }
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * @license
  * Copyright Google Inc. All Rights Reserved.
  *
@@ -25017,11 +25057,8 @@ function numberTimesBigInt(num, b) {
     return product;
 }
 /**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
  */
 var Message = (function () {
     /**
@@ -25054,6 +25091,12 @@ var Message = (function () {
     }
     return Message;
 }());
+/**
+ * @record
+ */
+/**
+ * @record
+ */
 var Text$1 = (function () {
     /**
      * @param {?} value
@@ -25174,6 +25217,9 @@ var IcuPlaceholder = (function () {
     IcuPlaceholder.prototype.visit = function (visitor, context) { return visitor.visitIcuPlaceholder(this, context); };
     return IcuPlaceholder;
 }());
+/**
+ * @record
+ */
 var CloneVisitor = (function () {
     function CloneVisitor() {
     }
@@ -25287,6 +25333,10 @@ var RecurseVisitor = (function () {
     
     return RecurseVisitor;
 }());
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -25425,6 +25475,10 @@ var PlaceholderRegistry = (function () {
     };
     return PlaceholderRegistry;
 }());
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -25596,6 +25650,10 @@ function _extractPlaceholderName(input) {
     return input.split(_CUSTOM_PH_EXP)[2];
 }
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * @license
  * Copyright Google Inc. All Rights Reserved.
  *
@@ -25616,6 +25674,10 @@ var I18nError = (function (_super) {
     }
     return I18nError;
 }(ParseError));
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -26118,6 +26180,10 @@ function _parseMessageMeta(i18n) {
     return { meaning: meaning, description: description, id: id };
 }
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * @license
  * Copyright Google Inc. All Rights Reserved.
  *
@@ -26153,6 +26219,10 @@ function getXmlTagDefinition(tagName) {
     return _TAG_DEFINITION;
 }
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * @license
  * Copyright Google Inc. All Rights Reserved.
  *
@@ -26177,6 +26247,10 @@ var XmlParser = (function (_super) {
     return XmlParser;
 }(Parser$1));
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * @license
  * Copyright Google Inc. All Rights Reserved.
  *
@@ -26190,32 +26264,19 @@ var Serializer = (function () {
     function Serializer() {
     }
     /**
-     * @abstract
-     * @param {?} messages
-     * @param {?} locale
-     * @return {?}
-     */
-    Serializer.prototype.write = function (messages, locale) { };
-    /**
-     * @abstract
-     * @param {?} content
-     * @param {?} url
-     * @return {?}
-     */
-    Serializer.prototype.load = function (content, url) { };
-    /**
-     * @abstract
-     * @param {?} message
-     * @return {?}
-     */
-    Serializer.prototype.digest = function (message) { };
-    /**
      * @param {?} message
      * @return {?}
      */
     Serializer.prototype.createNameMapper = function (message) { return null; };
     return Serializer;
 }());
+/**
+ * A `PlaceholderMapper` converts placeholder names from internal to serialized representation and
+ * back.
+ *
+ * It should be used for serialization format that put constraints on the placeholder names.
+ * @record
+ */
 /**
  * A simple mapper that take a function to transform an internal name to a public name
  */
@@ -26305,11 +26366,20 @@ var SimplePlaceholderMapper = (function (_super) {
     return SimplePlaceholderMapper;
 }(RecurseVisitor));
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * @license
  * Copyright Google Inc. All Rights Reserved.
  *
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
+ * @record
+ */
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
  */
 var _Visitor$1 = (function () {
     function _Visitor$1() {
@@ -26364,6 +26434,9 @@ var _visitor = new _Visitor$1();
 function serialize(nodes) {
     return nodes.map(function (node) { return node.visit(_visitor); }).join('');
 }
+/**
+ * @record
+ */
 var Declaration = (function () {
     /**
      * @param {?} unescapedAttrs
@@ -26463,6 +26536,10 @@ var _ESCAPED_CHARS = [
 function _escapeXml(text) {
     return _ESCAPED_CHARS.reduce(function (text, entry) { return text.replace(entry[0], entry[1]); }, text);
 }
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -26843,6 +26920,10 @@ function getCtypeForTag(tag) {
             return "x-" + tag;
     }
 }
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -27275,6 +27356,10 @@ function getTypeForTag(tag) {
     }
 }
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * @license
  * Copyright Google Inc. All Rights Reserved.
  *
@@ -27483,6 +27568,10 @@ var ExampleVisitor = (function () {
 function toPublicName(internalName) {
     return internalName.toUpperCase().replace(/[^A-Z0-9_]/g, '_');
 }
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -27760,6 +27849,10 @@ var XmlToI18n$2 = (function () {
     return XmlToI18n$2;
 }());
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * @license
  * Copyright Google Inc. All Rights Reserved.
  *
@@ -27788,10 +27881,12 @@ var HtmlParser = (function (_super) {
 HtmlParser.decorators = [
     { type: CompilerInjectable },
 ];
-/**
- * @nocollapse
- */
+/** @nocollapse */
 HtmlParser.ctorParameters = function () { return []; };
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -27817,7 +27912,7 @@ var TranslationBundle = (function () {
         this._i18nNodesByMsgId = _i18nNodesByMsgId;
         this.digest = digest;
         this.mapperFactory = mapperFactory;
-        this._i18nToHtml = new I18nToHtmlVisitor(_i18nNodesByMsgId, locale, digest, mapperFactory, missingTranslationStrategy, console);
+        this._i18nToHtml = new I18nToHtmlVisitor(_i18nNodesByMsgId, locale, digest, /** @type {?} */ ((mapperFactory)), missingTranslationStrategy, console);
     }
     /**
      * @param {?} content
@@ -28013,6 +28108,10 @@ var I18nToHtmlVisitor = (function () {
     return I18nToHtmlVisitor;
 }());
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * @license
  * Copyright Google Inc. All Rights Reserved.
  *
@@ -28031,7 +28130,7 @@ var I18NHtmlParser = (function () {
         if (missingTranslation === void 0) { missingTranslation = MissingTranslationStrategy.Warning; }
         this._htmlParser = _htmlParser;
         if (translations) {
-            var serializer = createSerializer(translationsFormat);
+            var /** @type {?} */ serializer = createSerializer(translationsFormat);
             this._translationBundle =
                 TranslationBundle.load(translations, 'i18n', serializer, missingTranslation, console);
         }
@@ -28078,6 +28177,10 @@ function createSerializer(format) {
             return new Xliff();
     }
 }
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -28213,6 +28316,10 @@ function createTokenForReference(reference) {
 function createTokenForExternalReference(reflector, reference) {
     return createTokenForReference(reflector.resolveExternalReference(reference));
 }
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -28367,6 +28474,10 @@ function _expandDefaultForm(ast, errors) {
     return new Element('ng-container', [switchAttr], children, ast.sourceSpan, ast.sourceSpan, ast.sourceSpan);
 }
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * @license
  * Copyright Google Inc. All Rights Reserved.
  *
@@ -28384,6 +28495,9 @@ var ProviderError = (function (_super) {
     }
     return ProviderError;
 }(ParseError));
+/**
+ * @record
+ */
 var ProviderViewContext = (function () {
     /**
      * @param {?} reflector
@@ -28429,7 +28543,7 @@ var ProviderElementContext = (function () {
         this._queriedTokens = new Map();
         this._attrs = {};
         attrs.forEach(function (attrAst) { return _this._attrs[attrAst.name] = attrAst.value; });
-        var directivesMeta = _directiveAsts.map(function (directiveAst) { return directiveAst.directive; });
+        var /** @type {?} */ directivesMeta = _directiveAsts.map(function (directiveAst) { return directiveAst.directive; });
         this._allProviders =
             _resolveProvidersFromDirectives(directivesMeta, _sourceSpan, viewContext.errors);
         this._contentQueries = _getContentQueries(contentQueryStartId, directivesMeta);
@@ -28437,11 +28551,11 @@ var ProviderElementContext = (function () {
             _this._addQueryReadsTo(provider.token, provider.token, _this._queriedTokens);
         });
         if (isTemplate) {
-            var templateRefId = createTokenForExternalReference(this.viewContext.reflector, Identifiers.TemplateRef);
+            var /** @type {?} */ templateRefId = createTokenForExternalReference(this.viewContext.reflector, Identifiers.TemplateRef);
             this._addQueryReadsTo(templateRefId, templateRefId, this._queriedTokens);
         }
         refs.forEach(function (refAst) {
-            var defaultQueryValue = refAst.value ||
+            var /** @type {?} */ defaultQueryValue = refAst.value ||
                 createTokenForExternalReference(_this.viewContext.reflector, Identifiers.ElementRef);
             _this._addQueryReadsTo({ value: refAst.name }, defaultQueryValue, _this._queriedTokens);
         });
@@ -28450,7 +28564,7 @@ var ProviderElementContext = (function () {
         }
         // create the providers that we know are eager first
         Array.from(this._allProviders.values()).forEach(function (provider) {
-            var eager = provider.eager || _this._queriedTokens.get(tokenReference(provider.token));
+            var /** @type {?} */ eager = provider.eager || _this._queriedTokens.get(tokenReference(provider.token));
             if (eager) {
                 _this._getOrCreateLocalProvider(provider.providerType, provider.token, true);
             }
@@ -28710,7 +28824,7 @@ var ProviderElementContext = (function () {
             }
         }
         if (!result) {
-            this.viewContext.errors.push(new ProviderError("No provider for " + tokenName(/** @type {?} */ ((dep.token))), this._sourceSpan));
+            this.viewContext.errors.push(new ProviderError("No provider for " + tokenName((((dep.token)))), this._sourceSpan));
         }
         return result;
     };
@@ -28731,7 +28845,7 @@ var NgModuleProviderAnalyzer = (function () {
         this._errors = [];
         this._allProviders = new Map();
         ngModule.transitiveModule.modules.forEach(function (ngModuleType) {
-            var ngModuleProvider = { token: { identifier: ngModuleType }, useClass: ngModuleType };
+            var /** @type {?} */ ngModuleProvider = { token: { identifier: ngModuleType }, useClass: ngModuleType };
             _resolveProviders([ngModuleProvider], ProviderAstType.PublicService, true, sourceSpan, _this._errors, _this._allProviders);
         });
         _resolveProviders(ngModule.transitiveModule.providers.map(function (entry) { return entry.provider; }).concat(extraProviders), ProviderAstType.PublicService, false, sourceSpan, this._errors, this._allProviders);
@@ -28844,7 +28958,7 @@ var NgModuleProviderAnalyzer = (function () {
                 result = { isValue: true, value: null };
             }
             else {
-                this._errors.push(new ProviderError("No provider for " + tokenName(/** @type {?} */ ((dep.token))), requestorSourceSpan));
+                this._errors.push(new ProviderError("No provider for " + tokenName((((dep.token)))), requestorSourceSpan));
             }
         }
         return result;
@@ -28973,11 +29087,8 @@ function _addQueryToTokenMap(map, query) {
     });
 }
 /**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
  */
 /**
  * @abstract
@@ -28985,79 +29096,11 @@ function _addQueryToTokenMap(map, query) {
 var ElementSchemaRegistry = (function () {
     function ElementSchemaRegistry() {
     }
-    /**
-     * @abstract
-     * @param {?} tagName
-     * @param {?} propName
-     * @param {?} schemaMetas
-     * @return {?}
-     */
-    ElementSchemaRegistry.prototype.hasProperty = function (tagName, propName, schemaMetas) { };
-    /**
-     * @abstract
-     * @param {?} tagName
-     * @param {?} schemaMetas
-     * @return {?}
-     */
-    ElementSchemaRegistry.prototype.hasElement = function (tagName, schemaMetas) { };
-    /**
-     * @abstract
-     * @param {?} elementName
-     * @param {?} propName
-     * @param {?} isAttribute
-     * @return {?}
-     */
-    ElementSchemaRegistry.prototype.securityContext = function (elementName, propName, isAttribute) { };
-    /**
-     * @abstract
-     * @return {?}
-     */
-    ElementSchemaRegistry.prototype.allKnownElementNames = function () { };
-    /**
-     * @abstract
-     * @param {?} propName
-     * @return {?}
-     */
-    ElementSchemaRegistry.prototype.getMappedPropName = function (propName) { };
-    /**
-     * @abstract
-     * @return {?}
-     */
-    ElementSchemaRegistry.prototype.getDefaultComponentElementName = function () { };
-    /**
-     * @abstract
-     * @param {?} name
-     * @return {?}
-     */
-    ElementSchemaRegistry.prototype.validateProperty = function (name) { };
-    /**
-     * @abstract
-     * @param {?} name
-     * @return {?}
-     */
-    ElementSchemaRegistry.prototype.validateAttribute = function (name) { };
-    /**
-     * @abstract
-     * @param {?} propName
-     * @return {?}
-     */
-    ElementSchemaRegistry.prototype.normalizeAnimationStyleProperty = function (propName) { };
-    /**
-     * @abstract
-     * @param {?} camelCaseProp
-     * @param {?} userProvidedProp
-     * @param {?} val
-     * @return {?}
-     */
-    ElementSchemaRegistry.prototype.normalizeAnimationStyleValue = function (camelCaseProp, userProvidedProp, val) { };
     return ElementSchemaRegistry;
 }());
 /**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
  */
 var StyleWithImports = (function () {
     /**
@@ -29108,6 +29151,10 @@ function extractStyleUrls(resolver, baseUrl, cssText) {
 var CSS_IMPORT_REGEXP = /@import\s+(?:url\()?\s*(?:(?:['"]([^'"]*))|([^;\)\s]*))[^;]*;?/g;
 var CSS_COMMENT_REGEXP = /\/\*.+?\*\//g;
 var URL_WITH_SCHEMA_REGEXP = /^([^:/?#]+):/;
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -29650,11 +29697,8 @@ function calcPossibleSecurityContexts(registry, selector, propName, isAttribute)
     return ctxs.length === 0 ? [SecurityContext.NONE] : Array.from(new Set(ctxs)).sort();
 }
 /**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
  */
 var NG_CONTENT_SELECT_ATTR = 'select';
 var LINK_ELEMENT = 'link';
@@ -29750,6 +29794,10 @@ function normalizeNgContentSelect(selectAttr) {
     }
     return selectAttr;
 }
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -29980,9 +30028,7 @@ var TemplateParser = (function () {
 TemplateParser.decorators = [
     { type: CompilerInjectable },
 ];
-/**
- * @nocollapse
- */
+/** @nocollapse */
 TemplateParser.ctorParameters = function () { return [
     { type: CompilerConfig, },
     { type: CompileReflector, },
@@ -30018,7 +30064,7 @@ var TemplateParseVisitor = (function () {
         // Note: queries start with id 1 so we can use the number in a Bloom filter!
         this.contentQueryStartId = providerViewContext.component.viewQueries.length + 1;
         directives.forEach(function (directive, index) {
-            var selector = CssSelector.parse(directive.selector);
+            var /** @type {?} */ selector = CssSelector.parse(/** @type {?} */ ((directive.selector)));
             _this.selectorMatcher.addSelectables(selector, directive);
             _this.directivesIndex.set(directive, index);
         });
@@ -30736,10 +30782,17 @@ function isTemplate(el, enableLegacyTemplate, reportDeprecation) {
     return false;
 }
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * An interface for retrieving documents by URL that the compiler uses
  * to load templates.
  */
-var ResourceLoader = (function () {
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */ var ResourceLoader = (function () {
     function ResourceLoader() {
     }
     /**
@@ -30749,6 +30802,10 @@ var ResourceLoader = (function () {
     ResourceLoader.prototype.get = function (url) { return ''; };
     return ResourceLoader;
 }());
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -30832,9 +30889,7 @@ var UrlResolver = (function () {
 UrlResolver.decorators = [
     { type: CompilerInjectable },
 ];
-/**
- * @nocollapse
- */
+/** @nocollapse */
 UrlResolver.ctorParameters = function () { return [
     { type: undefined, decorators: [{ type: Inject, args: [PACKAGE_ROOT_URL,] },] },
 ]; };
@@ -31087,12 +31142,20 @@ function _resolveUrl(base, url) {
     return _joinAndCanonicalizePath(parts);
 }
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * @license
  * Copyright Google Inc. All Rights Reserved.
  *
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
+/**
+ * @record
+ */
+function PrenormalizedTemplateMetadata() { }
 var DirectiveNormalizer = (function () {
     /**
      * @param {?} _resourceLoader
@@ -31274,9 +31337,7 @@ var DirectiveNormalizer = (function () {
 DirectiveNormalizer.decorators = [
     { type: CompilerInjectable },
 ];
-/**
- * @nocollapse
- */
+/** @nocollapse */
 DirectiveNormalizer.ctorParameters = function () { return [
     { type: ResourceLoader, },
     { type: UrlResolver, },
@@ -31361,6 +31422,10 @@ var TemplatePreparseVisitor = (function () {
     TemplatePreparseVisitor.prototype.visitText = function (ast, context) { return null; };
     return TemplatePreparseVisitor;
 }());
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -31537,9 +31602,7 @@ var DirectiveResolver = (function () {
 DirectiveResolver.decorators = [
     { type: CompilerInjectable },
 ];
-/**
- * @nocollapse
- */
+/** @nocollapse */
 DirectiveResolver.ctorParameters = function () { return [
     { type: CompileReflector, },
 ]; };
@@ -31564,6 +31627,10 @@ function findLast(arr, condition) {
     }
     return null;
 }
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -31655,11 +31722,8 @@ function stripSummaryForJitNameSuffix(symbolName) {
     return symbolName.replace(JIT_SUMMARY_NAME, '');
 }
 /**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
  */
 var LifecycleHooks = {};
 LifecycleHooks.OnInit = 0;
@@ -31725,6 +31789,10 @@ function getHookName(hook) {
     }
 }
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * @license
  * Copyright Google Inc. All Rights Reserved.
  *
@@ -31776,12 +31844,14 @@ var NgModuleResolver = (function () {
 NgModuleResolver.decorators = [
     { type: CompilerInjectable },
 ];
-/**
- * @nocollapse
- */
+/** @nocollapse */
 NgModuleResolver.ctorParameters = function () { return [
     { type: CompileReflector, },
 ]; };
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -31843,61 +31913,24 @@ var PipeResolver = (function () {
 PipeResolver.decorators = [
     { type: CompilerInjectable },
 ];
-/**
- * @nocollapse
- */
+/** @nocollapse */
 PipeResolver.ctorParameters = function () { return [
     { type: CompileReflector, },
 ]; };
 /**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
  */
+/**
+ * @record
+ */
+function Summary() { }
 /**
  * @abstract
  */
 var SummaryResolver = (function () {
     function SummaryResolver() {
     }
-    /**
-     * @abstract
-     * @param {?} fileName
-     * @return {?}
-     */
-    SummaryResolver.prototype.isLibraryFile = function (fileName) { };
-    /**
-     * @abstract
-     * @param {?} fileName
-     * @return {?}
-     */
-    SummaryResolver.prototype.getLibraryFileName = function (fileName) { };
-    /**
-     * @abstract
-     * @param {?} reference
-     * @return {?}
-     */
-    SummaryResolver.prototype.resolveSummary = function (reference) { };
-    /**
-     * @abstract
-     * @param {?} filePath
-     * @return {?}
-     */
-    SummaryResolver.prototype.getSymbolsOf = function (filePath) { };
-    /**
-     * @abstract
-     * @param {?} reference
-     * @return {?}
-     */
-    SummaryResolver.prototype.getImportAs = function (reference) { };
-    /**
-     * @abstract
-     * @param {?} summary
-     * @return {?}
-     */
-    SummaryResolver.prototype.addSummary = function (summary) { };
     return SummaryResolver;
 }());
 var JitSummaryResolver = (function () {
@@ -31944,10 +31977,12 @@ var JitSummaryResolver = (function () {
 JitSummaryResolver.decorators = [
     { type: CompilerInjectable },
 ];
-/**
- * @nocollapse
- */
+/** @nocollapse */
 JitSummaryResolver.ctorParameters = function () { return []; };
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -33066,9 +33101,7 @@ var CompileMetadataResolver = (function () {
 CompileMetadataResolver.decorators = [
     { type: CompilerInjectable },
 ];
-/**
- * @nocollapse
- */
+/** @nocollapse */
 CompileMetadataResolver.ctorParameters = function () { return [
     { type: CompilerConfig, },
     { type: NgModuleResolver, },
@@ -33172,11 +33205,8 @@ function componentStillLoadingError(compType) {
     return error;
 }
 /**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
  */
 var TypeModifier = {};
 TypeModifier.Const = 0;
@@ -33195,13 +33225,6 @@ var Type$1 = (function () {
             this.modifiers = [];
         }
     }
-    /**
-     * @abstract
-     * @param {?} visitor
-     * @param {?} context
-     * @return {?}
-     */
-    Type$1.prototype.visitType = function (visitor, context) { };
     /**
      * @param {?} modifier
      * @return {?}
@@ -33317,6 +33340,9 @@ var INT_TYPE = new BuiltinType(BuiltinTypeName.Int);
 var NUMBER_TYPE = new BuiltinType(BuiltinTypeName.Number);
 var STRING_TYPE = new BuiltinType(BuiltinTypeName.String);
 var FUNCTION_TYPE = new BuiltinType(BuiltinTypeName.Function);
+/**
+ * @record
+ */
 var BinaryOperator = {};
 BinaryOperator.Equals = 0;
 BinaryOperator.NotEquals = 1;
@@ -33360,13 +33386,6 @@ var Expression = (function () {
         this.type = type || null;
         this.sourceSpan = sourceSpan || null;
     }
-    /**
-     * @abstract
-     * @param {?} visitor
-     * @param {?} context
-     * @return {?}
-     */
-    Expression.prototype.visitExpression = function (visitor, context) { };
     /**
      * @param {?} name
      * @param {?=} sourceSpan
@@ -33587,7 +33606,7 @@ var ReadVarExpr = (function (_super) {
         }
         else {
             _this.name = null;
-            _this.builtin = name;
+            _this.builtin = (name);
         }
         return _this;
     }
@@ -33721,7 +33740,7 @@ var InvokeMethodExpr = (function (_super) {
         }
         else {
             _this.name = null;
-            _this.builtin = method;
+            _this.builtin = (method);
         }
         return _this;
     }
@@ -34149,6 +34168,10 @@ var CommaExpr = (function (_super) {
     };
     return CommaExpr;
 }(Expression));
+/**
+ * @record
+ */
+function ExpressionVisitor$1() { }
 var THIS_EXPR = new ReadVarExpr(BuiltinVar.This, null, null);
 var SUPER_EXPR = new ReadVarExpr(BuiltinVar.Super, null, null);
 var CATCH_ERROR_VAR = new ReadVarExpr(BuiltinVar.CatchError, null, null);
@@ -34174,13 +34197,6 @@ var Statement = (function () {
         this.modifiers = modifiers || [];
         this.sourceSpan = sourceSpan || null;
     }
-    /**
-     * @abstract
-     * @param {?} visitor
-     * @param {?} context
-     * @return {?}
-     */
-    Statement.prototype.visitStatement = function (visitor, context) { };
     /**
      * @param {?} modifier
      * @return {?}
@@ -34465,6 +34481,10 @@ var ThrowStmt = (function (_super) {
     };
     return ThrowStmt;
 }(Statement));
+/**
+ * @record
+ */
+function StatementVisitor() { }
 var AstTransformer$1 = (function () {
     function AstTransformer$1() {
     }
@@ -35240,6 +35260,10 @@ function literal(value, type, sourceSpan) {
     return new LiteralExpr(value, type, sourceSpan);
 }
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * @license
  * Copyright Google Inc. All Rights Reserved.
  *
@@ -35309,11 +35333,8 @@ var _ValueOutputAstTransformer = (function () {
     return _ValueOutputAstTransformer;
 }());
 /**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
  */
 /**
  * @param {?} ctx
@@ -35524,11 +35545,8 @@ function componentFactoryResolverProviderDef(reflector, ctx, flags, entryCompone
     return { providerExpr: providerExpr, flags: providerFlags, depsExpr: depsExpr, tokenExpr: tokenExpr(ctx, token) };
 }
 /**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
  */
 var NgModuleCompileResult = (function () {
     /**
@@ -35608,12 +35626,14 @@ var NgModuleCompiler = (function () {
 NgModuleCompiler.decorators = [
     { type: CompilerInjectable },
 ];
-/**
- * @nocollapse
- */
+/** @nocollapse */
 NgModuleCompiler.ctorParameters = function () { return [
     { type: CompileReflector, },
 ]; };
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -35803,11 +35823,8 @@ function toBase64Digit(value) {
     return B64_DIGITS[value];
 }
 /**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
  */
 var _SINGLE_QUOTE_ESCAPE_STRING_RE = /'|\\|\n|\r|\$/g;
 var _LEGAL_IDENTIFIER_RE = /^[$A-Z_][0-9A-Z_$]*$/i;
@@ -36069,20 +36086,6 @@ var AbstractEmitterVisitor = (function () {
         return null;
     };
     /**
-     * @abstract
-     * @param {?} ast
-     * @param {?} context
-     * @return {?}
-     */
-    AbstractEmitterVisitor.prototype.visitCastExpr = function (ast, context) { };
-    /**
-     * @abstract
-     * @param {?} stmt
-     * @param {?} ctx
-     * @return {?}
-     */
-    AbstractEmitterVisitor.prototype.visitDeclareClassStmt = function (stmt, ctx) { };
-    /**
      * @param {?} stmt
      * @param {?} ctx
      * @return {?}
@@ -36114,13 +36117,6 @@ var AbstractEmitterVisitor = (function () {
         return null;
     };
     /**
-     * @abstract
-     * @param {?} stmt
-     * @param {?} ctx
-     * @return {?}
-     */
-    AbstractEmitterVisitor.prototype.visitTryCatchStmt = function (stmt, ctx) { };
-    /**
      * @param {?} stmt
      * @param {?} ctx
      * @return {?}
@@ -36141,13 +36137,6 @@ var AbstractEmitterVisitor = (function () {
         lines.forEach(function (line) { ctx.println(stmt, "// " + line); });
         return null;
     };
-    /**
-     * @abstract
-     * @param {?} stmt
-     * @param {?} ctx
-     * @return {?}
-     */
-    AbstractEmitterVisitor.prototype.visitDeclareVarStmt = function (stmt, ctx) { };
     /**
      * @param {?} expr
      * @param {?} ctx
@@ -36224,12 +36213,6 @@ var AbstractEmitterVisitor = (function () {
         return null;
     };
     /**
-     * @abstract
-     * @param {?} method
-     * @return {?}
-     */
-    AbstractEmitterVisitor.prototype.getBuiltinMethodName = function (method) { };
-    /**
      * @param {?} expr
      * @param {?} ctx
      * @return {?}
@@ -36298,13 +36281,6 @@ var AbstractEmitterVisitor = (function () {
         return null;
     };
     /**
-     * @abstract
-     * @param {?} ast
-     * @param {?} ctx
-     * @return {?}
-     */
-    AbstractEmitterVisitor.prototype.visitExternalExpr = function (ast, ctx) { };
-    /**
      * @param {?} ast
      * @param {?} ctx
      * @return {?}
@@ -36338,20 +36314,6 @@ var AbstractEmitterVisitor = (function () {
         ast.condition.visitExpression(this, ctx);
         return null;
     };
-    /**
-     * @abstract
-     * @param {?} ast
-     * @param {?} ctx
-     * @return {?}
-     */
-    AbstractEmitterVisitor.prototype.visitFunctionExpr = function (ast, ctx) { };
-    /**
-     * @abstract
-     * @param {?} stmt
-     * @param {?} context
-     * @return {?}
-     */
-    AbstractEmitterVisitor.prototype.visitDeclareFunctionStmt = function (stmt, context) { };
     /**
      * @param {?} ast
      * @param {?} ctx
@@ -36573,11 +36535,8 @@ function _createIndent(count) {
     return res;
 }
 /**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
  */
 /**
  * @param {?} ast
@@ -37085,6 +37044,10 @@ var _TsEmitterVisitor = (function (_super) {
     return _TsEmitterVisitor;
 }(AbstractEmitterVisitor));
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * @license
  * Copyright Google Inc. All Rights Reserved.
  *
@@ -37135,6 +37098,10 @@ registerContext(SecurityContext.RESOURCE_URL, [
     'object|data',
     'script|src',
 ]);
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -37369,12 +37336,12 @@ var DomElementSchemaRegistry = (function (_super) {
         var _this = _super.call(this) || this;
         _this._schema = {};
         SCHEMA$1.forEach(function (encodedType) {
-            var type = {};
+            var /** @type {?} */ type = {};
             var _a = encodedType.split('|'), strType = _a[0], strProperties = _a[1];
-            var properties = strProperties.split(',');
+            var /** @type {?} */ properties = strProperties.split(',');
             var _b = strType.split('^'), typeNames = _b[0], superName = _b[1];
             typeNames.split(',').forEach(function (tag) { return _this._schema[tag.toLowerCase()] = type; });
-            var superType = superName && _this._schema[superName.toLowerCase()];
+            var /** @type {?} */ superType = superName && _this._schema[superName.toLowerCase()];
             if (superType) {
                 Object.keys(superType).forEach(function (prop) { type[prop] = superType[prop]; });
             }
@@ -37556,9 +37523,7 @@ var DomElementSchemaRegistry = (function (_super) {
 DomElementSchemaRegistry.decorators = [
     { type: CompilerInjectable },
 ];
-/**
- * @nocollapse
- */
+/** @nocollapse */
 DomElementSchemaRegistry.ctorParameters = function () { return []; };
 /**
  * @param {?} prop
@@ -37599,7 +37564,14 @@ function _isPixelDimensionStyle(prop) {
             return false;
     }
 }
-var ShadowCss = (function () {
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */ var ShadowCss = (function () {
     function ShadowCss() {
         this.strictStyling = true;
     }
@@ -37937,7 +37909,7 @@ var SafeSelector = (function () {
         // Replaces attribute selectors with placeholders.
         // The WS in [attr="va lue"] would otherwise be interpreted as a selector separator.
         selector = selector.replace(/(\[[^\]]*\])/g, function (_, keep) {
-            var replaceBy = "__ph-" + _this.index + "__";
+            var /** @type {?} */ replaceBy = "__ph-" + _this.index + "__";
             _this.placeholders.push(keep);
             _this.index++;
             return replaceBy;
@@ -37945,7 +37917,7 @@ var SafeSelector = (function () {
         // Replaces the expression in `:nth-child(2n + 1)` with a placeholder.
         // WS and "+" would otherwise be interpreted as selector separators.
         this._content = selector.replace(/(:nth-[-\w]+)(\([^)]+\))/g, function (_, pseudo, exp) {
-            var replaceBy = "__ph-" + _this.index + "__";
+            var /** @type {?} */ replaceBy = "__ph-" + _this.index + "__";
             _this.placeholders.push(exp);
             _this.index++;
             return pseudo + replaceBy;
@@ -38102,6 +38074,10 @@ function escapeBlocks(input) {
     return new StringWithEscapedBlocks(resultParts.join(''), escapedBlocks);
 }
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * @license
  * Copyright Google Inc. All Rights Reserved.
  *
@@ -38220,9 +38196,7 @@ var StyleCompiler = (function () {
 StyleCompiler.decorators = [
     { type: CompilerInjectable },
 ];
-/**
- * @nocollapse
- */
+/** @nocollapse */
 StyleCompiler.ctorParameters = function () { return [
     { type: UrlResolver, },
 ]; };
@@ -38238,6 +38212,10 @@ function getStylesVarName(component) {
     return result;
 }
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * @license
  * Copyright Google Inc. All Rights Reserved.
  *
@@ -38250,6 +38228,9 @@ var EventHandlerVars = (function () {
     return EventHandlerVars;
 }());
 EventHandlerVars.event = variable('$event');
+/**
+ * @record
+ */
 var ConvertActionBindingResult = (function () {
     /**
      * @param {?} stmts
@@ -38314,6 +38295,12 @@ function convertActionBinding(localResolver, implicitReceiver, action, bindingId
     }
     return new ConvertActionBindingResult(actionStmts, preventDefaultVar);
 }
+/**
+ * @record
+ */
+/**
+ * @record
+ */
 /**
  * @param {?} converterFactory
  * @param {?} ast
@@ -39190,6 +39177,10 @@ var BuiltinFunctionCall = (function (_super) {
     return BuiltinFunctionCall;
 }(FunctionCall));
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * @license
  * Copyright Google Inc. All Rights Reserved.
  *
@@ -39265,9 +39256,7 @@ var ViewCompiler = (function () {
 ViewCompiler.decorators = [
     { type: CompilerInjectable },
 ];
-/**
- * @nocollapse
- */
+/** @nocollapse */
 ViewCompiler.ctorParameters = function () { return [
     { type: CompilerConfig, },
     { type: CompileReflector, },
@@ -39308,8 +39297,7 @@ var ViewBuilder = (function () {
         // for the context in any embedded view. We keep this behaivor for now
         // to be able to introduce the new view compiler without too many errors.
         this.compType = this.embeddedViewIndex > 0 ?
-            DYNAMIC_TYPE :
-            expressionType(outputCtx.importExpr(this.component.type.reference));
+            DYNAMIC_TYPE : ((expressionType(outputCtx.importExpr(this.component.type.reference))));
     }
     Object.defineProperty(ViewBuilder.prototype, "viewName", {
         /**
@@ -40290,6 +40278,10 @@ function calcStaticDynamicQueryFlags(queryIds, queryId, isFirst) {
     return flags;
 }
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * @license
  * Copyright Google Inc. All Rights Reserved.
  *
@@ -40328,6 +40320,10 @@ function toTypeScript(file, preamble) {
     }
     return new TypeScriptEmitter().emitStatements(sourceUrl(file.srcFileUrl), file.genFileUrl, file.stmts, preamble);
 }
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -40738,6 +40734,10 @@ var FromJsonDeserializer = (function (_super) {
     return FromJsonDeserializer;
 }(ValueTransformer));
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * @license
  * Copyright Google Inc. All Rights Reserved.
  *
@@ -41147,6 +41147,14 @@ function _stylesModuleUrl(stylesheetUrl, shim, suffix) {
     return "" + stylesheetUrl + (shim ? '.shim' : '') + ".ngstyle" + suffix;
 }
 /**
+ * @record
+ */
+function NgAnalyzedModules() { }
+/**
+ * @record
+ */
+function NgAnalyzeModulesHost() { }
+/**
  * @param {?} programStaticSymbols
  * @param {?} host
  * @param {?} metadataResolver
@@ -41289,6 +41297,10 @@ function _createNgModules(programStaticSymbols, host, metadataResolver) {
     return { ngModules: Array.from(ngModules.values()), symbolsMissingModule: symbolsMissingModule };
 }
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * @license
  * Copyright Google Inc. All Rights Reserved.
  *
@@ -41428,7 +41440,7 @@ var StaticReflector = (function () {
                     var /** @type {?} */ requiredAnnotationTypes = ((this.annotationForParentClassWithSummaryKind.get(/** @type {?} */ ((summary.type.summaryKind)))));
                     var /** @type {?} */ typeHasRequiredAnnotation = requiredAnnotationTypes.some(function (requiredType) { return ownAnnotations_1.some(function (ann) { return ann instanceof requiredType; }); });
                     if (!typeHasRequiredAnnotation) {
-                        this.reportError(syntaxError("Class " + type.name + " in " + type.filePath + " extends from a " + CompileSummaryKind[((summary.type.summaryKind))] + " in another compilation unit without duplicating the decorator. " +
+                        this.reportError(syntaxError("Class " + type.name + " in " + type.filePath + " extends from a " + CompileSummaryKind[(((summary.type.summaryKind)))] + " in another compilation unit without duplicating the decorator. " +
                             ("Please add a " + requiredAnnotationTypes.map(function (type) { return _this.annotationNames.get(type); }).join(' or ') + " decorator to the class.")), type);
                     }
                 }
@@ -42080,12 +42092,6 @@ var BindingScope = (function () {
     function BindingScope() {
     }
     /**
-     * @abstract
-     * @param {?} name
-     * @return {?}
-     */
-    BindingScope.prototype.resolve = function (name) { };
-    /**
      * @return {?}
      */
     BindingScope.build = function () {
@@ -42138,11 +42144,8 @@ function positionalError(message, fileName, line, column) {
     return result;
 }
 /**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
  */
 var ResolvedStaticSymbol = (function () {
     /**
@@ -42155,6 +42158,13 @@ var ResolvedStaticSymbol = (function () {
     }
     return ResolvedStaticSymbol;
 }());
+/**
+ * The host of the SymbolResolverHost disconnects the implementation from TypeScript / other
+ * language
+ * services and from underlying file systems.
+ * @record
+ */
+function StaticSymbolResolverHost() { }
 var SUPPORTED_SCHEMA_VERSION = 3;
 /**
  * This class is responsible for loading metadata per symbol,
@@ -42658,12 +42668,13 @@ function unescapeIdentifier(identifier) {
     return identifier.startsWith('___') ? identifier.substr(1) : identifier;
 }
 /**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
  */
+/**
+ * @record
+ */
+function AotSummaryResolverHost() { }
 var AotSummaryResolver = (function () {
     /**
      * @param {?} host
@@ -42757,6 +42768,10 @@ var AotSummaryResolver = (function () {
     return AotSummaryResolver;
 }());
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * @license
  * Copyright Google Inc. All Rights Reserved.
  *
@@ -42794,6 +42809,28 @@ function createAotCompiler(compilerHost, options) {
     var /** @type {?} */ compiler = new AotCompiler(config, compilerHost, staticReflector, resolver, tmplParser, new StyleCompiler(urlResolver), viewCompiler, new NgModuleCompiler(staticReflector), new TypeScriptEmitter(), summaryResolver, options.locale || null, options.i18nFormat || null, options.enableSummariesForJit || null, symbolResolver);
     return { compiler: compiler, reflector: staticReflector };
 }
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * @record
+ */
+function AotCompilerOptions() { }
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * The host of the AotCompiler disconnects the implementation from TypeScript / other language
+ * services and from underlying file systems.
+ * @record
+ */
+function AotCompilerHost() { }
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -43342,6 +43379,10 @@ function _declareFn(varNames, statements, ctx, visitor) {
 var CATCH_ERROR_VAR$2 = 'error';
 var CATCH_STACK_VAR$2 = 'stack';
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * @license
  * Copyright Google Inc. All Rights Reserved.
  *
@@ -43570,6 +43611,10 @@ var AbstractJsEmitterVisitor = (function (_super) {
     return AbstractJsEmitterVisitor;
 }(AbstractEmitterVisitor));
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * @license
  * Copyright Google Inc. All Rights Reserved.
  *
@@ -43693,6 +43738,10 @@ var JitEmitterVisitor = (function (_super) {
     };
     return JitEmitterVisitor;
 }(AbstractJsEmitterVisitor));
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -44069,9 +44118,7 @@ var JitCompiler = (function () {
 JitCompiler.decorators = [
     { type: CompilerInjectable },
 ];
-/**
- * @nocollapse
- */
+/** @nocollapse */
 JitCompiler.ctorParameters = function () { return [
     { type: Injector, },
     { type: CompileMetadataResolver, },
@@ -44221,11 +44268,8 @@ function createOutputContext() {
     return { statements: [], genFilePath: '', importExpr: importExpr$$1 };
 }
 /**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
  */
 /**
  * A container for message extracted from the templates.
@@ -44348,6 +44392,10 @@ var MapPlaceholderNames = (function (_super) {
     return MapPlaceholderNames;
 }(CloneVisitor));
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * @license
  * Copyright Google Inc. All Rights Reserved.
  *
@@ -44357,6 +44405,12 @@ var MapPlaceholderNames = (function (_super) {
 /**
  * Extract i18n messages from source code
  */
+/**
+ * The host of the Extractor disconnects the implementation from TypeScript / other language
+ * services and from underlying file systems.
+ * @record
+ */
+function ExtractorHost() { }
 var Extractor = (function () {
     /**
      * @param {?} host
@@ -44426,11 +44480,19 @@ var Extractor = (function () {
     return Extractor;
 }());
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * @license
  * Copyright Google Inc. All Rights Reserved.
  *
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
+ */
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
  */
 /**
  * @license
@@ -44497,6 +44559,10 @@ var JitReflector = (function () {
     return JitReflector;
 }());
 /**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * @license
  * Copyright Google Inc. All Rights Reserved.
  *
@@ -44533,7 +44599,7 @@ var COMPILER_PROVIDERS = [
         provide: I18NHtmlParser,
         useFactory: function (parser, translations, format, config, console) {
             translations = translations || '';
-            var missingTranslation = translations ? config.missingTranslation : MissingTranslationStrategy.Ignore;
+            var /** @type {?} */ missingTranslation = translations ? ((config.missingTranslation)) : MissingTranslationStrategy.Ignore;
             return new I18NHtmlParser(parser, translations, format, missingTranslation, console);
         },
         deps: [
@@ -44570,7 +44636,7 @@ var JitCompilerFactory = (function () {
      * @param {?} defaultOptions
      */
     function JitCompilerFactory(defaultOptions) {
-        var compilerOptions = {
+        var /** @type {?} */ compilerOptions = {
             useDebug: isDevMode(),
             useJit: true,
             defaultEncapsulation: ViewEncapsulation.Emulated,
@@ -44611,9 +44677,7 @@ var JitCompilerFactory = (function () {
 JitCompilerFactory.decorators = [
     { type: CompilerInjectable },
 ];
-/**
- * @nocollapse
- */
+/** @nocollapse */
 JitCompilerFactory.ctorParameters = function () { return [
     { type: Array, decorators: [{ type: Inject, args: [COMPILER_OPTIONS,] },] },
 ]; };
@@ -44689,6 +44753,7 @@ var compiler_es5 = Object.freeze({
 	DeclareFunctionStmt: DeclareFunctionStmt,
 	DeclareVarStmt: DeclareVarStmt,
 	ExpressionStatement: ExpressionStatement,
+	ExpressionVisitor: ExpressionVisitor$1,
 	ExternalExpr: ExternalExpr,
 	ExternalReference: ExternalReference,
 	FunctionExpr: FunctionExpr,
@@ -44704,6 +44769,7 @@ var compiler_es5 = Object.freeze({
 	ReadPropExpr: ReadPropExpr,
 	ReadVarExpr: ReadVarExpr,
 	ReturnStatement: ReturnStatement,
+	StatementVisitor: StatementVisitor,
 	ThrowStmt: ThrowStmt,
 	TryCatchStmt: TryCatchStmt,
 	WriteKeyExpr: WriteKeyExpr,
@@ -44716,6 +44782,7 @@ var compiler_es5 = Object.freeze({
 	getParseErrors: getParseErrors,
 	isSyntaxError: isSyntaxError,
 	syntaxError: syntaxError,
+	TemplateAst: TemplateAst,
 	TextAst: TextAst,
 	BoundTextAst: BoundTextAst,
 	AttrAst: AttrAst,
@@ -44731,6 +44798,8 @@ var compiler_es5 = Object.freeze({
 	ProviderAstType: ProviderAstType,
 	NgContentAst: NgContentAst,
 	PropertyBindingType: PropertyBindingType,
+	QueryMatch: QueryMatch,
+	TemplateAstVisitor: TemplateAstVisitor,
 	NullTemplateVisitor: NullTemplateVisitor,
 	RecursiveTemplateAstVisitor: RecursiveTemplateAstVisitor,
 	templateVisitAll: templateVisitAll,
@@ -44751,14 +44820,28 @@ var compiler_es5 = Object.freeze({
 	rendererTypeName: rendererTypeName,
 	hostViewClassName: hostViewClassName,
 	componentFactoryName: componentFactoryName,
+	ProxyClass: ProxyClass,
+	CompileIdentifierMetadata: CompileIdentifierMetadata,
 	CompileSummaryKind: CompileSummaryKind,
+	CompileTypeSummary: CompileTypeSummary,
+	CompileDiDependencyMetadata: CompileDiDependencyMetadata,
+	CompileProviderMetadata: CompileProviderMetadata,
+	CompileFactoryMetadata: CompileFactoryMetadata,
 	tokenName: tokenName,
 	tokenReference: tokenReference,
+	CompileTokenMetadata: CompileTokenMetadata,
+	CompileTypeMetadata: CompileTypeMetadata,
+	CompileQueryMetadata: CompileQueryMetadata,
 	CompileStylesheetMetadata: CompileStylesheetMetadata,
+	CompileTemplateSummary: CompileTemplateSummary,
 	CompileTemplateMetadata: CompileTemplateMetadata,
+	CompileEntryComponentMetadata: CompileEntryComponentMetadata,
+	CompileDirectiveSummary: CompileDirectiveSummary,
 	CompileDirectiveMetadata: CompileDirectiveMetadata,
 	createHostComponentMeta: createHostComponentMeta,
+	CompilePipeSummary: CompilePipeSummary,
 	CompilePipeMetadata: CompilePipeMetadata,
+	CompileNgModuleSummary: CompileNgModuleSummary,
 	CompileNgModuleMetadata: CompileNgModuleMetadata,
 	TransitiveCompileNgModuleMetadata: TransitiveCompileNgModuleMetadata,
 	ProviderMeta: ProviderMeta,
@@ -44770,19 +44853,26 @@ var compiler_es5 = Object.freeze({
 	templateJitUrl: templateJitUrl,
 	createAotCompiler: createAotCompiler,
 	AotCompiler: AotCompiler,
+	NgAnalyzedModules: NgAnalyzedModules,
+	NgAnalyzeModulesHost: NgAnalyzeModulesHost,
 	analyzeNgModules: analyzeNgModules,
 	analyzeAndValidateNgModules: analyzeAndValidateNgModules,
 	extractProgramSymbols: extractProgramSymbols,
 	GeneratedFile: GeneratedFile,
 	toTypeScript: toTypeScript,
+	AotCompilerOptions: AotCompilerOptions,
+	AotCompilerHost: AotCompilerHost,
 	StaticReflector: StaticReflector,
 	StaticSymbol: StaticSymbol,
 	StaticSymbolCache: StaticSymbolCache,
 	ResolvedStaticSymbol: ResolvedStaticSymbol,
+	StaticSymbolResolverHost: StaticSymbolResolverHost,
 	StaticSymbolResolver: StaticSymbolResolver,
 	unescapeIdentifier: unescapeIdentifier,
+	AotSummaryResolverHost: AotSummaryResolverHost,
 	AotSummaryResolver: AotSummaryResolver,
 	AstPath: AstPath,
+	Summary: Summary,
 	SummaryResolver: SummaryResolver,
 	JitSummaryResolver: JitSummaryResolver,
 	COMPILER_PROVIDERS: COMPILER_PROVIDERS,
@@ -44798,6 +44888,7 @@ var compiler_es5 = Object.freeze({
 	ResourceLoader: ResourceLoader,
 	ElementSchemaRegistry: ElementSchemaRegistry,
 	Extractor: Extractor,
+	ExtractorHost: ExtractorHost,
 	I18NHtmlParser: I18NHtmlParser,
 	MessageBundle: MessageBundle,
 	Serializer: Serializer,
@@ -44805,6 +44896,7 @@ var compiler_es5 = Object.freeze({
 	Xliff2: Xliff2,
 	Xmb: Xmb,
 	Xtb: Xtb,
+	PrenormalizedTemplateMetadata: PrenormalizedTemplateMetadata,
 	DirectiveNormalizer: DirectiveNormalizer,
 	ParserError: ParserError,
 	ParseSpan: ParseSpan,
@@ -44832,6 +44924,7 @@ var compiler_es5 = Object.freeze({
 	FunctionCall: FunctionCall,
 	ASTWithSource: ASTWithSource,
 	TemplateBinding: TemplateBinding,
+	AstVisitor: AstVisitor,
 	NullAstVisitor: NullAstVisitor,
 	RecursiveAstVisitor: RecursiveAstVisitor,
 	AstTransformer: AstTransformer,
@@ -44848,12 +44941,14 @@ var compiler_es5 = Object.freeze({
 	_ParseAST: _ParseAST,
 	ERROR_COLLECTOR_TOKEN: ERROR_COLLECTOR_TOKEN,
 	CompileMetadataResolver: CompileMetadataResolver,
+	Node: Node,
 	Text: Text,
 	Expansion: Expansion,
 	ExpansionCase: ExpansionCase,
 	Attribute: Attribute$1,
 	Element: Element,
 	Comment: Comment,
+	Visitor: Visitor,
 	visitAll: visitAll,
 	RecursiveVisitor: RecursiveVisitor,
 	findNode: findNode,
@@ -44863,6 +44958,7 @@ var compiler_es5 = Object.freeze({
 	HtmlTagDefinition: HtmlTagDefinition,
 	getHtmlTagDefinition: getHtmlTagDefinition,
 	TagContentType: TagContentType,
+	TagDefinition: TagDefinition,
 	splitNsName: splitNsName,
 	isNgContainer: isNgContainer,
 	isNgContent: isNgContent,
@@ -47279,7 +47375,7 @@ var core_1 = require$$0$13;
 /**
  * @stable
  */
-exports.VERSION = new core_1.Version('5.0.0-beta.0-abee785');
+exports.VERSION = new core_1.Version('5.0.0-beta.0-b7a6f52');
 
 });
 
@@ -50440,11 +50536,6 @@ var RouteDef = (function () {
     return RouteDef;
 }());
 exports.RouteDef = RouteDef;
-/**
- *
- * @returns {LazyRouteMap}
- * @private
- */
 function listLazyRoutesOfModule(entryModule, host, reflector) {
     var entryRouteDef = RouteDef.fromString(entryModule);
     var containingFile = _resolveModule(entryRouteDef.path, entryRouteDef.path, host);
@@ -50485,7 +50576,6 @@ function _resolveModule(modulePath, containingFile, host) {
 }
 /**
  * Throw an exception if a route is in a route map, but does not point to the same module.
- * @private
  */
 function _assertRoute(map, route) {
     var r = route.routeDef.toString();
@@ -50535,7 +50625,6 @@ function _extractLazyRoutesFromStaticModule(staticSymbol, reflector, host, ROUTE
 }
 /**
  * Get the NgModule Metadata of a symbol.
- * @private
  */
 function _getNgModuleMetadata(staticSymbol, reflector) {
     var ngModules = reflector.annotations(staticSymbol).filter(function (s) { return s instanceof core_1.NgModule; });
@@ -50563,7 +50652,6 @@ function _collectRoutes(providers, reflector, ROUTES) {
 }
 /**
  * Return the loadChildren values of a list of Route.
- * @private
  */
 function _collectLoadChildren(routes) {
     return routes.reduce(function (m, r) {
@@ -50632,14 +50720,12 @@ var CustomLoaderModuleResolutionHostAdapter = (function (_super) {
 }(compiler_host_1.ModuleResolutionHostAdapter));
 /**
  * @internal
- * @private
  */
 var NgTools_InternalApi_NG_2 = (function () {
     function NgTools_InternalApi_NG_2() {
     }
     /**
      * @internal
-     * @private
      */
     NgTools_InternalApi_NG_2.codeGen = function (options) {
         var hostContext = new CustomLoaderModuleResolutionHostAdapter(options.readResource, options.host);
@@ -50661,7 +50747,6 @@ var NgTools_InternalApi_NG_2 = (function () {
     };
     /**
      * @internal
-     * @private
      */
     NgTools_InternalApi_NG_2.listLazyRoutes = function (options) {
         var angularCompilerOptions = options.angularCompilerOptions;
@@ -50683,7 +50768,6 @@ var NgTools_InternalApi_NG_2 = (function () {
     };
     /**
      * @internal
-     * @private
      */
     NgTools_InternalApi_NG_2.extractI18n = function (options) {
         var hostContext = new CustomLoaderModuleResolutionHostAdapter(options.readResource, options.host);
@@ -50762,7 +50846,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v5.0.0-beta.0-abee785
+ * @license Angular v5.0.0-beta.0-b7a6f52
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -51723,13 +51807,13 @@ function attributeValueCompletions(info, position, attr) {
     var mostSpecific = path$$1.tail;
     var dinfo = diagnosticInfoFromTemplateInfo(info);
     if (mostSpecific) {
-        var visitor = new ExpressionVisitor(info, position, attr, function () { return getExpressionScope(dinfo, path$$1, false); });
+        var visitor = new ExpressionVisitor$$1(info, position, attr, function () { return getExpressionScope(dinfo, path$$1, false); });
         mostSpecific.visit(visitor, null);
         if (!visitor.result || !visitor.result.length) {
             // Try allwoing widening the path
             var widerPath_1 = findTemplateAstAt(info.templateAst, position, /* allowWidening */ true);
             if (widerPath_1.tail) {
-                var widerVisitor = new ExpressionVisitor(info, position, attr, function () { return getExpressionScope(dinfo, widerPath_1, false); });
+                var widerVisitor = new ExpressionVisitor$$1(info, position, attr, function () { return getExpressionScope(dinfo, widerPath_1, false); });
                 widerPath_1.tail.visit(widerVisitor, null);
                 return widerVisitor.result;
             }
@@ -51768,7 +51852,7 @@ function interpolationCompletions(info, position) {
     var templatePath = findTemplateAstAt(info.templateAst, position);
     var mostSpecific = templatePath.tail;
     if (mostSpecific) {
-        var visitor = new ExpressionVisitor(info, position, undefined, function () { return getExpressionScope(diagnosticInfoFromTemplateInfo(info), templatePath, false); });
+        var visitor = new ExpressionVisitor$$1(info, position, undefined, function () { return getExpressionScope(diagnosticInfoFromTemplateInfo(info), templatePath, false); });
         mostSpecific.visit(visitor, null);
         return uniqueByName(visitor.result);
     }
@@ -51791,9 +51875,9 @@ function voidElementAttributeCompletions(info, path$$1) {
         }
     }
 }
-var ExpressionVisitor = (function (_super) {
-    __extends(ExpressionVisitor, _super);
-    function ExpressionVisitor(info, position, attr, getExpressionScope$$1) {
+var ExpressionVisitor$$1 = (function (_super) {
+    __extends(ExpressionVisitor$$1, _super);
+    function ExpressionVisitor$$1(info, position, attr, getExpressionScope$$1) {
         var _this = _super.call(this) || this;
         _this.info = info;
         _this.position = position;
@@ -51801,14 +51885,14 @@ var ExpressionVisitor = (function (_super) {
         _this.getExpressionScope = getExpressionScope$$1 || (function () { return info.template.members; });
         return _this;
     }
-    ExpressionVisitor.prototype.visitDirectiveProperty = function (ast) {
+    ExpressionVisitor$$1.prototype.visitDirectiveProperty = function (ast) {
         this.attributeValueCompletions(ast.value);
     };
-    ExpressionVisitor.prototype.visitElementProperty = function (ast) {
+    ExpressionVisitor$$1.prototype.visitElementProperty = function (ast) {
         this.attributeValueCompletions(ast.value);
     };
-    ExpressionVisitor.prototype.visitEvent = function (ast) { this.attributeValueCompletions(ast.handler); };
-    ExpressionVisitor.prototype.visitElement = function (ast) {
+    ExpressionVisitor$$1.prototype.visitEvent = function (ast) { this.attributeValueCompletions(ast.handler); };
+    ExpressionVisitor$$1.prototype.visitElement = function (ast) {
         var _this = this;
         if (this.attr && getSelectors(this.info) && this.attr.name.startsWith(TEMPLATE_ATTR_PREFIX)) {
             // The value is a template expression but the expression AST was not produced when the
@@ -51877,7 +51961,7 @@ var ExpressionVisitor = (function (_super) {
             }
         }
     };
-    ExpressionVisitor.prototype.visitBoundText = function (ast) {
+    ExpressionVisitor$$1.prototype.visitBoundText = function (ast) {
         var expressionPosition = this.position - ast.sourceSpan.start.offset;
         if (inSpan(expressionPosition, ast.value.span)) {
             var completions = getExpressionCompletions(this.getExpressionScope(), ast.value, expressionPosition, this.info.template.query);
@@ -51886,17 +51970,17 @@ var ExpressionVisitor = (function (_super) {
             }
         }
     };
-    ExpressionVisitor.prototype.attributeValueCompletions = function (value, position) {
+    ExpressionVisitor$$1.prototype.attributeValueCompletions = function (value, position) {
         var symbols = getExpressionCompletions(this.getExpressionScope(), value, position == null ? this.attributeValuePosition : position, this.info.template.query);
         if (symbols) {
             this.result = this.symbolsToCompletions(symbols);
         }
     };
-    ExpressionVisitor.prototype.symbolsToCompletions = function (symbols) {
+    ExpressionVisitor$$1.prototype.symbolsToCompletions = function (symbols) {
         return symbols.filter(function (s) { return !s.name.startsWith('__') && s.public; })
             .map(function (symbol) { return ({ kind: symbol.kind, name: symbol.name, sort: symbol.name }); });
     };
-    Object.defineProperty(ExpressionVisitor.prototype, "attributeValuePosition", {
+    Object.defineProperty(ExpressionVisitor$$1.prototype, "attributeValuePosition", {
         get: function () {
             if (this.attr && this.attr.valueSpan) {
                 return this.position - this.attr.valueSpan.start.offset - 1;
@@ -51906,7 +51990,7 @@ var ExpressionVisitor = (function (_super) {
         enumerable: true,
         configurable: true
     });
-    return ExpressionVisitor;
+    return ExpressionVisitor$$1;
 }(NullTemplateVisitor));
 function getSourceText(template, span) {
     return template.source.substring(span.start, span.end);
@@ -53391,7 +53475,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('5.0.0-beta.0-abee785');
+var VERSION$$1 = new Version('5.0.0-beta.0-b7a6f52');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
