@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.0.0-beta.0-e0a9625
+ * @license Angular v5.0.0-beta.0-abee785
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2033,7 +2033,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v5.0.0-beta.0-e0a9625
+ * @license Angular v5.0.0-beta.0-abee785
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2825,7 +2825,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('5.0.0-beta.0-e0a9625');
+var VERSION$2 = new Version('5.0.0-beta.0-abee785');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -17065,7 +17065,7 @@ var core_es5 = Object.freeze({
 });
 
 /**
- * @license Angular v5.0.0-beta.0-e0a9625
+ * @license Angular v5.0.0-beta.0-abee785
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -17084,7 +17084,7 @@ var core_es5 = Object.freeze({
 /**
  * \@stable
  */
-var VERSION$1 = new Version('5.0.0-beta.0-e0a9625');
+var VERSION$1 = new Version('5.0.0-beta.0-abee785');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -45077,7 +45077,7 @@ function getSourceFileOfNode(node) {
 }
 /* @internal */
 function errorSymbol(message, node, context, sourceFile) {
-    var result;
+    var result = undefined;
     if (node) {
         sourceFile = sourceFile || getSourceFileOfNode(node);
         if (sourceFile) {
@@ -45106,15 +45106,15 @@ var Evaluator = (function () {
         this.options = options;
     }
     Evaluator.prototype.nameOf = function (node) {
-        if (node.kind == ts.SyntaxKind.Identifier) {
+        if (node && node.kind == ts.SyntaxKind.Identifier) {
             return node.text;
         }
-        var result = this.evaluateNode(node);
+        var result = node && this.evaluateNode(node);
         if (schema_1.isMetadataError(result) || typeof result === 'string') {
             return result;
         }
         else {
-            return errorSymbol('Name expected', node, { received: node.getText() });
+            return errorSymbol('Name expected', node, { received: (node && node.getText()) || '<missing>' });
         }
     };
     /**
@@ -45315,30 +45315,30 @@ var Evaluator = (function () {
                         return recordEntry(this.evaluateNode(arrowFunction.body), node);
                     }
                 }
-                var args_1 = arrayOrEmpty(callExpression.arguments).map(function (arg) { return _this.evaluateNode(arg); });
-                if (!this.options.verboseInvalidExpression && args_1.some(schema_1.isMetadataError)) {
-                    return args_1.find(schema_1.isMetadataError);
+                var args = arrayOrEmpty(callExpression.arguments).map(function (arg) { return _this.evaluateNode(arg); });
+                if (!this.options.verboseInvalidExpression && args.some(schema_1.isMetadataError)) {
+                    return args.find(schema_1.isMetadataError);
                 }
                 if (this.isFoldable(callExpression)) {
                     if (isMethodCallOf(callExpression, 'concat')) {
                         var arrayValue = this.evaluateNode(callExpression.expression.expression);
                         if (isFoldableError(arrayValue))
                             return arrayValue;
-                        return arrayValue.concat(args_1[0]);
+                        return arrayValue.concat(args[0]);
                     }
                 }
                 // Always fold a CONST_EXPR even if the argument is not foldable.
                 if (isCallOf(callExpression, 'CONST_EXPR') &&
                     arrayOrEmpty(callExpression.arguments).length === 1) {
-                    return recordEntry(args_1[0], node);
+                    return recordEntry(args[0], node);
                 }
                 var expression = this.evaluateNode(callExpression.expression);
                 if (isFoldableError(expression)) {
                     return recordEntry(expression, node);
                 }
                 var result = { __symbolic: 'call', expression: expression };
-                if (args_1 && args_1.length) {
-                    result.arguments = args_1;
+                if (args && args.length) {
+                    result.arguments = args;
                 }
                 return recordEntry(result, node);
             case ts.SyntaxKind.NewExpression:
@@ -45429,10 +45429,10 @@ var Evaluator = (function () {
                 }
                 if (!schema_1.isMetadataModuleReferenceExpression(typeReference) &&
                     typeReferenceNode.typeArguments && typeReferenceNode.typeArguments.length) {
-                    var args_2 = typeReferenceNode.typeArguments.map(function (element) { return _this.evaluateNode(element); });
+                    var args_1 = typeReferenceNode.typeArguments.map(function (element) { return _this.evaluateNode(element); });
                     // TODO: Remove typecast when upgraded to 2.0 as it will be corretly inferred.
                     // Some versions of 1.9 do not infer this correctly.
-                    typeReference.arguments = args_2;
+                    typeReference.arguments = args_1;
                 }
                 return recordEntry(typeReference, node);
             case ts.SyntaxKind.UnionType:
@@ -45647,7 +45647,7 @@ exports.Evaluator = Evaluator;
 function isPropertyAssignment(node) {
     return node.kind == ts.SyntaxKind.PropertyAssignment;
 }
-var empty = [];
+var empty = ts.createNodeArray();
 function arrayOrEmpty(v) {
     return v || empty;
 }
@@ -45703,22 +45703,23 @@ var Symbols = (function () {
                     if (importEqualsDeclaration.moduleReference.kind ===
                         ts.SyntaxKind.ExternalModuleReference) {
                         var externalReference = importEqualsDeclaration.moduleReference;
-                        // An `import <identifier> = require(<module-specifier>);
-                        if (!externalReference.expression.parent) {
-                            // The `parent` field of a node is set by the TypeScript binder (run as
-                            // part of the type checker). Setting it here allows us to call `getText()`
-                            // even if the `SourceFile` was not type checked (which looks for `SourceFile`
-                            // in the parent chain). This doesn't damage the node as the binder unconditionally
-                            // sets the parent.
-                            externalReference.expression.parent = externalReference;
-                            externalReference.parent = _this.sourceFile;
+                        if (externalReference.expression) {
+                            // An `import <identifier> = require(<module-specifier>);
+                            if (!externalReference.expression.parent) {
+                                // The `parent` field of a node is set by the TypeScript binder (run as
+                                // part of the type checker). Setting it here allows us to call `getText()`
+                                // even if the `SourceFile` was not type checked (which looks for `SourceFile`
+                                // in the parent chain). This doesn't damage the node as the binder unconditionally
+                                // sets the parent.
+                                externalReference.expression.parent = externalReference;
+                                externalReference.parent = _this.sourceFile;
+                            }
+                            var from_1 = stripQuotes(externalReference.expression.getText());
+                            symbols.set(importEqualsDeclaration.name.text, { __symbolic: 'reference', module: from_1 });
+                            break;
                         }
-                        var from_1 = stripQuotes(externalReference.expression.getText());
-                        symbols.set(importEqualsDeclaration.name.text, { __symbolic: 'reference', module: from_1 });
                     }
-                    else {
-                        symbols.set(importEqualsDeclaration.name.text, { __symbolic: 'error', message: "Unsupported import syntax" });
-                    }
+                    symbols.set(importEqualsDeclaration.name.text, { __symbolic: 'error', message: "Unsupported import syntax" });
                     break;
                 case ts.SyntaxKind.ImportDeclaration:
                     var importDecl = node;
@@ -45832,7 +45833,7 @@ var MetadataCollector = (function () {
         var nodeMap = new Map();
         var evaluator$$1 = new evaluator_1.Evaluator(locals, nodeMap, this.options);
         var metadata;
-        var exports;
+        var exports = undefined;
         function objFromDecorator(decoratorNode) {
             return evaluator$$1.evaluateNode(decoratorNode.expression);
         }
@@ -45844,7 +45845,7 @@ var MetadataCollector = (function () {
             return evaluator_1.errorSymbol(message, node, context, sourceFile);
         }
         function maybeGetSimpleFunction(functionDeclaration) {
-            if (functionDeclaration.name.kind == ts.SyntaxKind.Identifier) {
+            if (functionDeclaration.name && functionDeclaration.name.kind == ts.SyntaxKind.Identifier) {
                 var nameNode = functionDeclaration.name;
                 var functionName = nameNode.text;
                 var functionBody = functionDeclaration.body;
@@ -46010,6 +46011,7 @@ var MetadataCollector = (function () {
                     var exportDeclaration = node;
                     var moduleSpecifier = exportDeclaration.moduleSpecifier, exportClause = exportDeclaration.exportClause;
                     if (!moduleSpecifier) {
+                        // If there is a module specifier there is also an exportClause
                         exportClause.elements.forEach(function (spec) {
                             var exportedAs = spec.name.text;
                             var name = (spec.propertyName || spec.name).text;
@@ -46018,10 +46020,12 @@ var MetadataCollector = (function () {
                     }
             }
         });
-        var isExportedIdentifier = function (identifier) { return exportMap.has(identifier.text); };
+        var isExportedIdentifier = function (identifier) {
+            return identifier && exportMap.has(identifier.text);
+        };
         var isExported = function (node) { return isExport(node) || isExportedIdentifier(node.name); };
         var exportedIdentifierName = function (identifier) {
-            return exportMap.get(identifier.text) || identifier.text;
+            return identifier && (exportMap.get(identifier.text) || identifier.text);
         };
         var exportedName = function (node) { return exportedIdentifierName(node.name); };
         // Predeclare classes and functions
@@ -46100,9 +46104,12 @@ var MetadataCollector = (function () {
                     var classDeclaration = node;
                     if (classDeclaration.name) {
                         if (isExported(classDeclaration)) {
-                            if (!metadata)
-                                metadata = {};
-                            metadata[exportedName(classDeclaration)] = classMetadataOf(classDeclaration);
+                            var name_4 = exportedName(classDeclaration);
+                            if (name_4) {
+                                if (!metadata)
+                                    metadata = {};
+                                metadata[name_4] = classMetadataOf(classDeclaration);
+                            }
                         }
                     }
                     // Otherwise don't record metadata for the class.
@@ -46110,9 +46117,12 @@ var MetadataCollector = (function () {
                 case ts.SyntaxKind.InterfaceDeclaration:
                     var interfaceDeclaration = node;
                     if (interfaceDeclaration.name && isExported(interfaceDeclaration)) {
-                        if (!metadata)
-                            metadata = {};
-                        metadata[exportedName(interfaceDeclaration)] = { __symbolic: 'interface' };
+                        var name_5 = exportedName(interfaceDeclaration);
+                        if (name_5) {
+                            if (!metadata)
+                                metadata = {};
+                            metadata[name_5] = { __symbolic: 'interface' };
+                        }
                     }
                     break;
                 case ts.SyntaxKind.FunctionDeclaration:
@@ -46120,12 +46130,14 @@ var MetadataCollector = (function () {
                     // names substitution will be performed by the StaticReflector.
                     var functionDeclaration = node;
                     if (isExported(functionDeclaration) && functionDeclaration.name) {
-                        if (!metadata)
-                            metadata = {};
-                        var name_4 = exportedName(functionDeclaration);
+                        var name_6 = exportedName(functionDeclaration);
                         var maybeFunc = maybeGetSimpleFunction(functionDeclaration);
-                        metadata[name_4] =
-                            maybeFunc ? recordEntry(maybeFunc.func, node) : { __symbolic: 'function' };
+                        if (name_6) {
+                            if (!metadata)
+                                metadata = {};
+                            metadata[name_6] =
+                                maybeFunc ? recordEntry(maybeFunc.func, node) : { __symbolic: 'function' };
+                        }
                     }
                     break;
                 case ts.SyntaxKind.EnumDeclaration:
@@ -46144,23 +46156,23 @@ var MetadataCollector = (function () {
                             else {
                                 enumValue = evaluator$$1.evaluateNode(member.initializer);
                             }
-                            var name_5 = undefined;
+                            var name_7 = undefined;
                             if (member.name.kind == ts.SyntaxKind.Identifier) {
                                 var identifier = member.name;
-                                name_5 = identifier.text;
-                                enumValueHolder[name_5] = enumValue;
+                                name_7 = identifier.text;
+                                enumValueHolder[name_7] = enumValue;
                                 writtenMembers++;
                             }
                             if (typeof enumValue === 'number') {
                                 nextDefaultValue = enumValue + 1;
                             }
-                            else if (name_5) {
+                            else if (name_7) {
                                 nextDefaultValue = {
                                     __symbolic: 'binary',
                                     operator: '+',
                                     left: {
                                         __symbolic: 'select',
-                                        expression: recordEntry({ __symbolic: 'reference', name: enumName }, node), name: name_5
+                                        expression: recordEntry({ __symbolic: 'reference', name: enumName }, node), name: name_7
                                     }
                                 };
                             }
@@ -46170,9 +46182,11 @@ var MetadataCollector = (function () {
                             }
                         }
                         if (writtenMembers) {
-                            if (!metadata)
-                                metadata = {};
-                            metadata[enumName] = recordEntry(enumValueHolder, node);
+                            if (enumName) {
+                                if (!metadata)
+                                    metadata = {};
+                                metadata[enumName] = recordEntry(enumValueHolder, node);
+                            }
                         }
                     }
                     break;
@@ -46191,9 +46205,12 @@ var MetadataCollector = (function () {
                             var exported = false;
                             if (isExport(variableStatement) || isExport(variableDeclaration) ||
                                 isExportedIdentifier(nameNode)) {
-                                if (!metadata)
-                                    metadata = {};
-                                metadata[exportedIdentifierName(nameNode)] = recordEntry(varValue, node);
+                                var name_8 = exportedIdentifierName(nameNode);
+                                if (name_8) {
+                                    if (!metadata)
+                                        metadata = {};
+                                    metadata[name_8] = recordEntry(varValue, node);
+                                }
                                 exported = true;
                             }
                             if (typeof varValue == 'string' || typeof varValue == 'number' ||
@@ -46221,13 +46238,13 @@ var MetadataCollector = (function () {
                             var report_1 = function (nameNode) {
                                 switch (nameNode.kind) {
                                     case ts.SyntaxKind.Identifier:
-                                        var name_6 = nameNode;
-                                        var varValue = errorSym('Destructuring not supported', name_6);
-                                        locals.define(name_6.text, varValue);
+                                        var name_9 = nameNode;
+                                        var varValue = errorSym('Destructuring not supported', name_9);
+                                        locals.define(name_9.text, varValue);
                                         if (isExport(node)) {
                                             if (!metadata)
                                                 metadata = {};
-                                            metadata[name_6.text] = varValue;
+                                            metadata[name_9.text] = varValue;
                                         }
                                         break;
                                     case ts.SyntaxKind.BindingElement:
@@ -46429,9 +46446,9 @@ function namesOf(parameters) {
             var bindingPattern = name;
             for (var _i = 0, _a = bindingPattern.elements; _i < _a.length; _i++) {
                 var element = _a[_i];
-                var name_7 = element.name;
-                if (name_7) {
-                    addNamesOf(name_7);
+                var name_10 = element.name;
+                if (name_10) {
+                    addNamesOf(name_10);
                 }
             }
         }
@@ -47134,8 +47151,8 @@ var CodeGenerator = (function () {
         }
         var aotCompiler = compiler.createAotCompiler(ngCompilerHost, {
             translations: transContent,
-            i18nFormat: cliOptions.i18nFormat,
-            locale: cliOptions.locale, missingTranslation: missingTranslation,
+            i18nFormat: cliOptions.i18nFormat || undefined,
+            locale: cliOptions.locale || undefined, missingTranslation: missingTranslation,
             enableLegacyTemplate: options.enableLegacyTemplate !== false,
             enableSummariesForJit: options.enableSummariesForJit !== false,
         }).compiler;
@@ -47262,7 +47279,7 @@ var core_1 = require$$0$13;
 /**
  * @stable
  */
-exports.VERSION = new core_1.Version('5.0.0-beta.0-e0a9625');
+exports.VERSION = new core_1.Version('5.0.0-beta.0-abee785');
 
 });
 
@@ -50745,7 +50762,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v5.0.0-beta.0-e0a9625
+ * @license Angular v5.0.0-beta.0-abee785
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -53374,7 +53391,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('5.0.0-beta.0-e0a9625');
+var VERSION$$1 = new Version('5.0.0-beta.0-abee785');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
