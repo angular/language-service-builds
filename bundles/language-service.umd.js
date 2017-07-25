@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.0.0-beta.0-6279e50
+ * @license Angular v5.0.0-beta.0-91ab39c
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2033,7 +2033,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v5.0.0-beta.0-6279e50
+ * @license Angular v5.0.0-beta.0-91ab39c
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -3104,7 +3104,7 @@ var ViewMetadata = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('5.0.0-beta.0-6279e50');
+var VERSION$2 = new Version('5.0.0-beta.0-91ab39c');
 /**
  * @fileoverview added by tsickle
  * @suppress {checkTypes} checked by tsc
@@ -16995,7 +16995,7 @@ var core_es5 = Object.freeze({
 });
 
 /**
- * @license Angular v5.0.0-beta.0-6279e50
+ * @license Angular v5.0.0-beta.0-91ab39c
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -17018,7 +17018,7 @@ var core_es5 = Object.freeze({
 /**
  * \@stable
  */
-var VERSION$1 = new Version('5.0.0-beta.0-6279e50');
+var VERSION$1 = new Version('5.0.0-beta.0-91ab39c');
 /**
  * @fileoverview added by tsickle
  * @suppress {checkTypes} checked by tsc
@@ -26709,12 +26709,12 @@ var _WriteVisitor = (function () {
      */
     _WriteVisitor.prototype.visitTagPlaceholder = function (ph, context) {
         var /** @type {?} */ ctype = getCtypeForTag(ph.tag);
-        var /** @type {?} */ startTagPh = new Tag(_PLACEHOLDER_TAG, { id: ph.startName, ctype: ctype });
         if (ph.isVoid) {
             // void tags have no children nor closing tags
-            return [startTagPh];
+            return [new Tag(_PLACEHOLDER_TAG, { id: ph.startName, ctype: ctype, 'equiv-text': "<" + ph.tag + "/>" })];
         }
-        var /** @type {?} */ closeTagPh = new Tag(_PLACEHOLDER_TAG, { id: ph.closeName, ctype: ctype });
+        var /** @type {?} */ startTagPh = new Tag(_PLACEHOLDER_TAG, { id: ph.startName, ctype: ctype, 'equiv-text': "<" + ph.tag + ">" });
+        var /** @type {?} */ closeTagPh = new Tag(_PLACEHOLDER_TAG, { id: ph.closeName, ctype: ctype, 'equiv-text': "</" + ph.tag + ">" });
         return [startTagPh].concat(this.serialize(ph.children), [closeTagPh]);
     };
     /**
@@ -26723,7 +26723,7 @@ var _WriteVisitor = (function () {
      * @return {?}
      */
     _WriteVisitor.prototype.visitPlaceholder = function (ph, context) {
-        return [new Tag(_PLACEHOLDER_TAG, { id: ph.name })];
+        return [new Tag(_PLACEHOLDER_TAG, { id: ph.name, 'equiv-text': "{{" + ph.value + "}}" })];
     };
     /**
      * @param {?} ph
@@ -26731,7 +26731,8 @@ var _WriteVisitor = (function () {
      * @return {?}
      */
     _WriteVisitor.prototype.visitIcuPlaceholder = function (ph, context) {
-        return [new Tag(_PLACEHOLDER_TAG, { id: ph.name })];
+        var /** @type {?} */ equivText = "{" + ph.value.expression + ", " + ph.value.type + ", " + Object.keys(ph.value.cases).map(function (value) { return value + ' {...}'; }).join(' ') + "}";
+        return [new Tag(_PLACEHOLDER_TAG, { id: ph.name, 'equiv-text': equivText })];
     };
     /**
      * @param {?} nodes
@@ -27124,8 +27125,9 @@ var _WriteVisitor$1 = (function () {
      * @return {?}
      */
     _WriteVisitor$1.prototype.visitPlaceholder = function (ph, context) {
+        var /** @type {?} */ idStr = (this._nextPlaceholderId++).toString();
         return [new Tag(_PLACEHOLDER_TAG$1, {
-                id: (this._nextPlaceholderId++).toString(),
+                id: idStr,
                 equiv: ph.name,
                 disp: "{{" + ph.value + "}}",
             })];
@@ -27136,7 +27138,9 @@ var _WriteVisitor$1 = (function () {
      * @return {?}
      */
     _WriteVisitor$1.prototype.visitIcuPlaceholder = function (ph, context) {
-        return [new Tag(_PLACEHOLDER_TAG$1, { id: (this._nextPlaceholderId++).toString() })];
+        var /** @type {?} */ cases = Object.keys(ph.value.cases).map(function (value) { return value + ' {...}'; }).join(' ');
+        var /** @type {?} */ idStr = (this._nextPlaceholderId++).toString();
+        return [new Tag(_PLACEHOLDER_TAG$1, { id: idStr, equiv: ph.name, disp: "{" + ph.value.expression + ", " + ph.value.type + ", " + cases + "}" })];
     };
     /**
      * @param {?} nodes
@@ -27528,7 +27532,8 @@ var _Visitor$2 = (function () {
      * @return {?}
      */
     _Visitor$2.prototype.visitPlaceholder = function (ph, context) {
-        return [new Tag(_PLACEHOLDER_TAG$2, { name: ph.name })];
+        var /** @type {?} */ exTag = new Tag(_EXEMPLE_TAG, {}, [new Text$2("{{" + ph.value + "}}")]);
+        return [new Tag(_PLACEHOLDER_TAG$2, { name: ph.name }, [exTag])];
     };
     /**
      * @param {?} ph
@@ -27536,7 +27541,10 @@ var _Visitor$2 = (function () {
      * @return {?}
      */
     _Visitor$2.prototype.visitIcuPlaceholder = function (ph, context) {
-        return [new Tag(_PLACEHOLDER_TAG$2, { name: ph.name })];
+        var /** @type {?} */ exTag = new Tag(_EXEMPLE_TAG, {}, [
+            new Text$2("{" + ph.value.expression + ", " + ph.value.type + ", " + Object.keys(ph.value.cases).map(function (value) { return value + ' {...}'; }).join(' ') + "}")
+        ]);
+        return [new Tag(_PLACEHOLDER_TAG$2, { name: ph.name }, [exTag])];
     };
     /**
      * @param {?} nodes
@@ -47413,7 +47421,7 @@ var core_1 = require$$0$13;
 /**
  * @stable
  */
-exports.VERSION = new core_1.Version('5.0.0-beta.0-6279e50');
+exports.VERSION = new core_1.Version('5.0.0-beta.0-91ab39c');
 
 });
 
@@ -50445,54 +50453,23 @@ function readConfiguration(project, basePath, existingOptions) {
     return { parsed: parsed, ngOptions: ngOptions };
 }
 exports.readConfiguration = readConfiguration;
-function getProjectDirectory(project) {
-    var isFile;
-    try {
-        isFile = fs$$1.lstatSync(project).isFile();
-    }
-    catch (e) {
-        // Project doesn't exist. Assume it is a file has an extension. This case happens
-        // when the project file is passed to set basePath but no tsconfig.json file exists.
-        // It is used in tests to ensure that the options can be passed in without there being
-        // an actual config file.
-        isFile = path.extname(project) !== '';
-    }
-    // If project refers to a file, the project directory is the file's parent directory
-    // otherwise project is the project directory.
-    return isFile ? path.dirname(project) : project;
-}
-function main(args, consoleError, files, options, ngOptions) {
+function performCompilation(basePath, files, options, ngOptions, consoleError, tsCompilerHost) {
     if (consoleError === void 0) { consoleError = console.error; }
     try {
-        var parsedArgs = minimist(args);
-        var project = parsedArgs.p || parsedArgs.project || '.';
-        var projectDir = getProjectDirectory(project);
-        // file names in tsconfig are resolved relative to this absolute path
-        var basePath_1 = path.resolve(process.cwd(), projectDir);
-        if (!files || !options || !ngOptions) {
-            var _a = readConfiguration(project, basePath_1), parsed = _a.parsed, readNgOptions = _a.ngOptions;
-            if (!files)
-                files = parsed.fileNames;
-            if (!options)
-                options = parsed.options;
-            if (!ngOptions)
-                ngOptions = readNgOptions;
-        }
-        // Ignore what the tsconfig.json for baseDir and genDir
-        ngOptions.basePath = basePath_1;
-        ngOptions.genDir = basePath_1;
-        var host = ts.createCompilerHost(options, true);
+        ngOptions.basePath = basePath;
+        ngOptions.genDir = basePath;
+        var host = tsCompilerHost || ts.createCompilerHost(options, true);
         host.realpath = function (p) { return p; };
         var rootFileNames_1 = files.map(function (f) { return path.normalize(f); });
         var addGeneratedFileName = function (fileName) {
-            if (fileName.startsWith(basePath_1) && TS_EXT.exec(fileName)) {
+            if (fileName.startsWith(basePath) && TS_EXT.exec(fileName)) {
                 rootFileNames_1.push(fileName);
             }
         };
         if (ngOptions.flatModuleOutFile && !ngOptions.skipMetadataEmit) {
-            var _b = tsc_wrapped_1.createBundleIndexHost(ngOptions, rootFileNames_1, host), bundleHost = _b.host, indexName = _b.indexName, errors = _b.errors;
+            var _a = tsc_wrapped_1.createBundleIndexHost(ngOptions, rootFileNames_1, host), bundleHost = _a.host, indexName = _a.indexName, errors = _a.errors;
             if (errors)
-                check(basePath_1, errors);
+                check(basePath, errors);
             if (indexName)
                 addGeneratedFileName(indexName);
             host = bundleHost;
@@ -50501,13 +50478,13 @@ function main(args, consoleError, files, options, ngOptions) {
         var ngHost = ng.createHost({ tsHost: host, options: ngHostOptions });
         var ngProgram = ng.createProgram({ rootNames: rootFileNames_1, host: ngHost, options: ngHostOptions });
         // Check parameter diagnostics
-        check(basePath_1, ngProgram.getTsOptionDiagnostics(), ngProgram.getNgOptionDiagnostics());
+        check(basePath, ngProgram.getTsOptionDiagnostics(), ngProgram.getNgOptionDiagnostics());
         // Check syntactic diagnostics
-        check(basePath_1, ngProgram.getTsSyntacticDiagnostics());
+        check(basePath, ngProgram.getTsSyntacticDiagnostics());
         // Check TypeScript semantic and Angular structure diagnostics
-        check(basePath_1, ngProgram.getTsSemanticDiagnostics(), ngProgram.getNgStructuralDiagnostics());
+        check(basePath, ngProgram.getTsSemanticDiagnostics(), ngProgram.getNgStructuralDiagnostics());
         // Check Angular semantic diagnostics
-        check(basePath_1, ngProgram.getNgSemanticDiagnostics());
+        check(basePath, ngProgram.getNgSemanticDiagnostics());
         ngProgram.emit({
             emitFlags: api$$1.EmitFlags.Default |
                 ((ngOptions.skipMetadataEmit || ngOptions.flatModuleOutFile) ? 0 : api$$1.EmitFlags.Metadata)
@@ -50515,16 +50492,30 @@ function main(args, consoleError, files, options, ngOptions) {
     }
     catch (e) {
         if (compiler_1.isSyntaxError(e)) {
+            console.error(e.message);
             consoleError(e.message);
             return 1;
         }
-        else {
-            consoleError(e.stack);
-            consoleError('Compilation failed');
-            return 2;
-        }
     }
     return 0;
+}
+exports.performCompilation = performCompilation;
+function main(args, consoleError) {
+    if (consoleError === void 0) { consoleError = console.error; }
+    try {
+        var parsedArgs = minimist(args);
+        var project = parsedArgs.p || parsedArgs.project || '.';
+        var projectDir = fs$$1.lstatSync(project).isFile() ? path.dirname(project) : project;
+        // file names in tsconfig are resolved relative to this absolute path
+        var basePath = path.resolve(process.cwd(), projectDir);
+        var _a = readConfiguration(project, basePath), parsed = _a.parsed, ngOptions = _a.ngOptions;
+        return performCompilation(basePath, parsed.fileNames, parsed.options, ngOptions, consoleError);
+    }
+    catch (e) {
+        consoleError(e.stack);
+        consoleError('Compilation failed');
+        return 2;
+    }
 }
 exports.main = main;
 // CLI entry point
@@ -50884,7 +50875,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v5.0.0-beta.0-6279e50
+ * @license Angular v5.0.0-beta.0-91ab39c
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -53513,7 +53504,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('5.0.0-beta.0-6279e50');
+var VERSION$$1 = new Version('5.0.0-beta.0-91ab39c');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
