@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.3.0-4ce29f3
+ * @license Angular v4.3.1-bcea196
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2033,7 +2033,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v4.3.0-4ce29f3
+ * @license Angular v4.3.1-bcea196
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2825,7 +2825,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('4.3.0-4ce29f3');
+var VERSION$2 = new Version('4.3.1-bcea196');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -5938,7 +5938,7 @@ function forkInnerZoneWithAngularBehavior(zone) {
         },
         onHandleError: function (delegate, current, target, error) {
             delegate.handleError(target, error);
-            zone.onError.emit(error);
+            zone.runOutsideAngular(function () { return zone.onError.emit(error); });
             return false;
         }
     });
@@ -6426,15 +6426,16 @@ var PlatformRef = (function () {
 }());
 /**
  * @param {?} errorHandler
+ * @param {?} ngZone
  * @param {?} callback
  * @return {?}
  */
-function _callAndReportToErrorHandler(errorHandler, callback) {
+function _callAndReportToErrorHandler(errorHandler, ngZone, callback) {
     try {
         var /** @type {?} */ result = callback();
         if (isPromise(result)) {
             return result.catch(function (e) {
-                errorHandler.handleError(e);
+                ngZone.runOutsideAngular(function () { return errorHandler.handleError(e); });
                 // rethrow as the exception handler might not do it
                 throw e;
             });
@@ -6442,7 +6443,7 @@ function _callAndReportToErrorHandler(errorHandler, callback) {
         return result;
     }
     catch (e) {
-        errorHandler.handleError(e);
+        ngZone.runOutsideAngular(function () { return errorHandler.handleError(e); });
         // rethrow as the exception handler might not do it
         throw e;
     }
@@ -6528,8 +6529,8 @@ var PlatformRef_ = (function (_super) {
                 throw new Error('No ErrorHandler. Is platform module (BrowserModule) included?');
             }
             moduleRef.onDestroy(function () { return remove(_this._modules, moduleRef); }); /** @type {?} */
-            ((ngZone)).onError.subscribe({ next: function (error) { exceptionHandler.handleError(error); } });
-            return _callAndReportToErrorHandler(exceptionHandler, function () {
+            ((ngZone)).runOutsideAngular(function () { return ((ngZone)).onError.subscribe({ next: function (error) { exceptionHandler.handleError(error); } }); });
+            return _callAndReportToErrorHandler(exceptionHandler, /** @type {?} */ ((ngZone)), function () {
                 var /** @type {?} */ initStatus = moduleRef.injector.get(ApplicationInitStatus);
                 initStatus.runInitializers();
                 return initStatus.donePromise.then(function () {
@@ -6825,6 +6826,7 @@ var ApplicationRef_ = (function (_super) {
      * @return {?}
      */
     ApplicationRef_.prototype.tick = function () {
+        var _this = this;
         if (this._runningTick) {
             throw new Error('ApplicationRef.tick is called recursively');
         }
@@ -6838,7 +6840,7 @@ var ApplicationRef_ = (function (_super) {
         }
         catch (e) {
             // Attention: Don't rethrow as it could cancel subscriptions to Observables!
-            this._exceptionHandler.handleError(e);
+            this._zone.runOutsideAngular(function () { return _this._exceptionHandler.handleError(e); });
         }
         finally {
             this._runningTick = false;
@@ -16989,7 +16991,7 @@ var core_es5 = Object.freeze({
 });
 
 /**
- * @license Angular v4.3.0-4ce29f3
+ * @license Angular v4.3.1-bcea196
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -17008,7 +17010,7 @@ var core_es5 = Object.freeze({
 /**
  * \@stable
  */
-var VERSION$1 = new Version('4.3.0-4ce29f3');
+var VERSION$1 = new Version('4.3.1-bcea196');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -23985,7 +23987,7 @@ function isExpansionFormStart(input, offset, interpolationConfig) {
  * @return {?}
  */
 function isExpansionCaseStart(peek) {
-    return peek === $EQ || isAsciiLetter(peek);
+    return peek === $EQ || isAsciiLetter(peek) || isDigit(peek);
 }
 /**
  * @param {?} code1
@@ -26426,7 +26428,7 @@ var Xliff = (function (_super) {
                 contextTags.push(new CR(8), contextGroupTag);
             });
             var /** @type {?} */ transUnit = new Tag(_UNIT_TAG, { id: message.id, datatype: 'html' });
-            (_a = transUnit.children).push.apply(_a, [new CR(8), new Tag(_SOURCE_TAG, {}, visitor.serialize(message.nodes)), new CR(8), new Tag(_TARGET_TAG)].concat(contextTags));
+            (_a = transUnit.children).push.apply(_a, [new CR(8), new Tag(_SOURCE_TAG, {}, visitor.serialize(message.nodes))].concat(contextTags));
             if (message.description) {
                 transUnit.children.push(new CR(8), new Tag('note', { priority: '1', from: 'description' }, [new Text$2(message.description)]));
             }
@@ -26929,8 +26931,9 @@ var _WriteVisitor$1 = (function () {
      * @return {?}
      */
     _WriteVisitor$1.prototype.visitPlaceholder = function (ph, context) {
+        var /** @type {?} */ idStr = (this._nextPlaceholderId++).toString();
         return [new Tag(_PLACEHOLDER_TAG$1, {
-                id: (this._nextPlaceholderId++).toString(),
+                id: idStr,
                 equiv: ph.name,
                 disp: "{{" + ph.value + "}}",
             })];
@@ -26941,7 +26944,9 @@ var _WriteVisitor$1 = (function () {
      * @return {?}
      */
     _WriteVisitor$1.prototype.visitIcuPlaceholder = function (ph, context) {
-        return [new Tag(_PLACEHOLDER_TAG$1, { id: (this._nextPlaceholderId++).toString() })];
+        var /** @type {?} */ cases = Object.keys(ph.value.cases).map(function (value) { return value + ' {...}'; }).join(' ');
+        var /** @type {?} */ idStr = (this._nextPlaceholderId++).toString();
+        return [new Tag(_PLACEHOLDER_TAG$1, { id: idStr, equiv: ph.name, disp: "{" + ph.value.expression + ", " + ph.value.type + ", " + cases + "}" })];
     };
     /**
      * @param {?} nodes
@@ -47186,7 +47191,7 @@ var core_1 = require$$0$13;
 /**
  * @stable
  */
-exports.VERSION = new core_1.Version('4.3.0-4ce29f3');
+exports.VERSION = new core_1.Version('4.3.1-bcea196');
 
 });
 
@@ -50218,54 +50223,23 @@ function readConfiguration(project, basePath, existingOptions) {
     return { parsed: parsed, ngOptions: ngOptions };
 }
 exports.readConfiguration = readConfiguration;
-function getProjectDirectory(project) {
-    var isFile;
-    try {
-        isFile = fs$$1.lstatSync(project).isFile();
-    }
-    catch (e) {
-        // Project doesn't exist. Assume it is a file has an extension. This case happens
-        // when the project file is passed to set basePath but no tsconfig.json file exists.
-        // It is used in tests to ensure that the options can be passed in without there being
-        // an actual config file.
-        isFile = path.extname(project) !== '';
-    }
-    // If project refers to a file, the project directory is the file's parent directory
-    // otherwise project is the project directory.
-    return isFile ? path.dirname(project) : project;
-}
-function main(args, consoleError, files, options, ngOptions) {
+function performCompilation(basePath, files, options, ngOptions, consoleError, tsCompilerHost) {
     if (consoleError === void 0) { consoleError = console.error; }
     try {
-        var parsedArgs = minimist(args);
-        var project = parsedArgs.p || parsedArgs.project || '.';
-        var projectDir = getProjectDirectory(project);
-        // file names in tsconfig are resolved relative to this absolute path
-        var basePath_1 = path.resolve(process.cwd(), projectDir);
-        if (!files || !options || !ngOptions) {
-            var _a = readConfiguration(project, basePath_1), parsed = _a.parsed, readNgOptions = _a.ngOptions;
-            if (!files)
-                files = parsed.fileNames;
-            if (!options)
-                options = parsed.options;
-            if (!ngOptions)
-                ngOptions = readNgOptions;
-        }
-        // Ignore what the tsconfig.json for baseDir and genDir
-        ngOptions.basePath = basePath_1;
-        ngOptions.genDir = basePath_1;
-        var host = ts.createCompilerHost(options, true);
+        ngOptions.basePath = basePath;
+        ngOptions.genDir = basePath;
+        var host = tsCompilerHost || ts.createCompilerHost(options, true);
         host.realpath = function (p) { return p; };
         var rootFileNames_1 = files.map(function (f) { return path.normalize(f); });
         var addGeneratedFileName = function (fileName) {
-            if (fileName.startsWith(basePath_1) && TS_EXT.exec(fileName)) {
+            if (fileName.startsWith(basePath) && TS_EXT.exec(fileName)) {
                 rootFileNames_1.push(fileName);
             }
         };
         if (ngOptions.flatModuleOutFile && !ngOptions.skipMetadataEmit) {
-            var _b = tsc_wrapped_1.createBundleIndexHost(ngOptions, rootFileNames_1, host), bundleHost = _b.host, indexName = _b.indexName, errors = _b.errors;
+            var _a = tsc_wrapped_1.createBundleIndexHost(ngOptions, rootFileNames_1, host), bundleHost = _a.host, indexName = _a.indexName, errors = _a.errors;
             if (errors)
-                check(basePath_1, errors);
+                check(basePath, errors);
             if (indexName)
                 addGeneratedFileName(indexName);
             host = bundleHost;
@@ -50274,13 +50248,13 @@ function main(args, consoleError, files, options, ngOptions) {
         var ngHost = ng.createHost({ tsHost: host, options: ngHostOptions });
         var ngProgram = ng.createProgram({ rootNames: rootFileNames_1, host: ngHost, options: ngHostOptions });
         // Check parameter diagnostics
-        check(basePath_1, ngProgram.getTsOptionDiagnostics(), ngProgram.getNgOptionDiagnostics());
+        check(basePath, ngProgram.getTsOptionDiagnostics(), ngProgram.getNgOptionDiagnostics());
         // Check syntactic diagnostics
-        check(basePath_1, ngProgram.getTsSyntacticDiagnostics());
+        check(basePath, ngProgram.getTsSyntacticDiagnostics());
         // Check TypeScript semantic and Angular structure diagnostics
-        check(basePath_1, ngProgram.getTsSemanticDiagnostics(), ngProgram.getNgStructuralDiagnostics());
+        check(basePath, ngProgram.getTsSemanticDiagnostics(), ngProgram.getNgStructuralDiagnostics());
         // Check Angular semantic diagnostics
-        check(basePath_1, ngProgram.getNgSemanticDiagnostics());
+        check(basePath, ngProgram.getNgSemanticDiagnostics());
         ngProgram.emit({
             emitFlags: api$$1.EmitFlags.Default |
                 ((ngOptions.skipMetadataEmit || ngOptions.flatModuleOutFile) ? 0 : api$$1.EmitFlags.Metadata)
@@ -50288,16 +50262,30 @@ function main(args, consoleError, files, options, ngOptions) {
     }
     catch (e) {
         if (compiler_1.isSyntaxError(e)) {
+            console.error(e.message);
             consoleError(e.message);
             return 1;
         }
-        else {
-            consoleError(e.stack);
-            consoleError('Compilation failed');
-            return 2;
-        }
     }
     return 0;
+}
+exports.performCompilation = performCompilation;
+function main(args, consoleError) {
+    if (consoleError === void 0) { consoleError = console.error; }
+    try {
+        var parsedArgs = minimist(args);
+        var project = parsedArgs.p || parsedArgs.project || '.';
+        var projectDir = fs$$1.lstatSync(project).isFile() ? path.dirname(project) : project;
+        // file names in tsconfig are resolved relative to this absolute path
+        var basePath = path.resolve(process.cwd(), projectDir);
+        var _a = readConfiguration(project, basePath), parsed = _a.parsed, ngOptions = _a.ngOptions;
+        return performCompilation(basePath, parsed.fileNames, parsed.options, ngOptions, consoleError);
+    }
+    catch (e) {
+        consoleError(e.stack);
+        consoleError('Compilation failed');
+        return 2;
+    }
 }
 exports.main = main;
 // CLI entry point
@@ -50669,7 +50657,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v4.3.0-4ce29f3
+ * @license Angular v4.3.1-bcea196
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -53298,7 +53286,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('4.3.0-4ce29f3');
+var VERSION$$1 = new Version('4.3.1-bcea196');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
