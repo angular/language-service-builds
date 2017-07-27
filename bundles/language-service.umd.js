@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.0.0-beta.0-086f4aa
+ * @license Angular v5.0.0-beta.0-fae47d8
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2033,7 +2033,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v5.0.0-beta.0-086f4aa
+ * @license Angular v5.0.0-beta.0-fae47d8
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -3104,7 +3104,7 @@ var ViewMetadata = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('5.0.0-beta.0-086f4aa');
+var VERSION$2 = new Version('5.0.0-beta.0-fae47d8');
 /**
  * @fileoverview added by tsickle
  * @suppress {checkTypes} checked by tsc
@@ -16995,7 +16995,7 @@ var core_es5 = Object.freeze({
 });
 
 /**
- * @license Angular v5.0.0-beta.0-086f4aa
+ * @license Angular v5.0.0-beta.0-fae47d8
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -17018,7 +17018,7 @@ var core_es5 = Object.freeze({
 /**
  * \@stable
  */
-var VERSION$1 = new Version('5.0.0-beta.0-086f4aa');
+var VERSION$1 = new Version('5.0.0-beta.0-fae47d8');
 /**
  * @fileoverview added by tsickle
  * @suppress {checkTypes} checked by tsc
@@ -47421,7 +47421,7 @@ var core_1 = require$$0$13;
 /**
  * @stable
  */
-exports.VERSION = new core_1.Version('5.0.0-beta.0-086f4aa');
+exports.VERSION = new core_1.Version('5.0.0-beta.0-fae47d8');
 
 });
 
@@ -50430,13 +50430,14 @@ function check(cwd) {
             .join(''));
     }
 }
-function readConfiguration(project, basePath, existingOptions) {
+function readConfiguration(project, basePath, checkFunc, existingOptions) {
+    if (checkFunc === void 0) { checkFunc = check; }
     // Allow a directory containing tsconfig.json as the project value
     // Note, TS@next returns an empty array, while earlier versions throw
     var projectFile = fs$$1.lstatSync(project).isDirectory() ? path.join(project, 'tsconfig.json') : project;
     var _a = ts.readConfigFile(projectFile, ts.sys.readFile), config = _a.config, error = _a.error;
     if (error)
-        check(basePath, [error]);
+        checkFunc(basePath, [error]);
     var parseConfigHost = {
         useCaseSensitiveFileNames: true,
         fileExists: fs$$1.existsSync,
@@ -50444,7 +50445,7 @@ function readConfiguration(project, basePath, existingOptions) {
         readFile: ts.sys.readFile
     };
     var parsed = ts.parseJsonConfigFileContent(config, parseConfigHost, basePath, existingOptions);
-    check(basePath, parsed.errors);
+    checkFunc(basePath, parsed.errors);
     // Default codegen goes to the current directory
     // Parsed options are already converted to absolute paths
     var ngOptions = config.angularCompilerOptions || {};
@@ -50453,8 +50454,9 @@ function readConfiguration(project, basePath, existingOptions) {
     return { parsed: parsed, ngOptions: ngOptions };
 }
 exports.readConfiguration = readConfiguration;
-function performCompilation(basePath, files, options, ngOptions, consoleError, tsCompilerHost) {
+function performCompilation(basePath, files, options, ngOptions, consoleError, checkFunc, tsCompilerHost) {
     if (consoleError === void 0) { consoleError = console.error; }
+    if (checkFunc === void 0) { checkFunc = check; }
     try {
         ngOptions.basePath = basePath;
         ngOptions.genDir = basePath;
@@ -50469,7 +50471,7 @@ function performCompilation(basePath, files, options, ngOptions, consoleError, t
         if (ngOptions.flatModuleOutFile && !ngOptions.skipMetadataEmit) {
             var _a = tsc_wrapped_1.createBundleIndexHost(ngOptions, rootFileNames_1, host), bundleHost = _a.host, indexName = _a.indexName, errors = _a.errors;
             if (errors)
-                check(basePath, errors);
+                checkFunc(basePath, errors);
             if (indexName)
                 addGeneratedFileName(indexName);
             host = bundleHost;
@@ -50478,13 +50480,13 @@ function performCompilation(basePath, files, options, ngOptions, consoleError, t
         var ngHost = ng.createHost({ tsHost: host, options: ngHostOptions });
         var ngProgram = ng.createProgram({ rootNames: rootFileNames_1, host: ngHost, options: ngHostOptions });
         // Check parameter diagnostics
-        check(basePath, ngProgram.getTsOptionDiagnostics(), ngProgram.getNgOptionDiagnostics());
+        checkFunc(basePath, ngProgram.getTsOptionDiagnostics(), ngProgram.getNgOptionDiagnostics());
         // Check syntactic diagnostics
-        check(basePath, ngProgram.getTsSyntacticDiagnostics());
+        checkFunc(basePath, ngProgram.getTsSyntacticDiagnostics());
         // Check TypeScript semantic and Angular structure diagnostics
-        check(basePath, ngProgram.getTsSemanticDiagnostics(), ngProgram.getNgStructuralDiagnostics());
+        checkFunc(basePath, ngProgram.getTsSemanticDiagnostics(), ngProgram.getNgStructuralDiagnostics());
         // Check Angular semantic diagnostics
-        check(basePath, ngProgram.getNgSemanticDiagnostics());
+        checkFunc(basePath, ngProgram.getNgSemanticDiagnostics());
         ngProgram.emit({
             emitFlags: api$$1.EmitFlags.Default |
                 ((ngOptions.skipMetadataEmit || ngOptions.flatModuleOutFile) ? 0 : api$$1.EmitFlags.Metadata)
@@ -50500,16 +50502,17 @@ function performCompilation(basePath, files, options, ngOptions, consoleError, t
     return 0;
 }
 exports.performCompilation = performCompilation;
-function main(args, consoleError) {
+function main(args, consoleError, checkFunc) {
     if (consoleError === void 0) { consoleError = console.error; }
+    if (checkFunc === void 0) { checkFunc = check; }
     try {
         var parsedArgs = minimist(args);
         var project = parsedArgs.p || parsedArgs.project || '.';
         var projectDir = fs$$1.lstatSync(project).isFile() ? path.dirname(project) : project;
         // file names in tsconfig are resolved relative to this absolute path
         var basePath = path.resolve(process.cwd(), projectDir);
-        var _a = readConfiguration(project, basePath), parsed = _a.parsed, ngOptions = _a.ngOptions;
-        return performCompilation(basePath, parsed.fileNames, parsed.options, ngOptions, consoleError);
+        var _a = readConfiguration(project, basePath, checkFunc), parsed = _a.parsed, ngOptions = _a.ngOptions;
+        return performCompilation(basePath, parsed.fileNames, parsed.options, ngOptions, consoleError, checkFunc);
     }
     catch (e) {
         consoleError(e.stack);
@@ -50878,7 +50881,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v5.0.0-beta.0-086f4aa
+ * @license Angular v5.0.0-beta.0-fae47d8
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -53507,7 +53510,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('5.0.0-beta.0-086f4aa');
+var VERSION$$1 = new Version('5.0.0-beta.0-fae47d8');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
