@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.0.0-beta.1-381471d
+ * @license Angular v5.0.0-beta.1-b6c4af6
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2033,7 +2033,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v5.0.0-beta.1-381471d
+ * @license Angular v5.0.0-beta.1-b6c4af6
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -3104,7 +3104,7 @@ var ViewMetadata = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('5.0.0-beta.1-381471d');
+var VERSION$2 = new Version('5.0.0-beta.1-b6c4af6');
 /**
  * @fileoverview added by tsickle
  * @suppress {checkTypes} checked by tsc
@@ -16995,7 +16995,7 @@ var core_es5 = Object.freeze({
 });
 
 /**
- * @license Angular v5.0.0-beta.1-381471d
+ * @license Angular v5.0.0-beta.1-b6c4af6
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -17018,7 +17018,7 @@ var core_es5 = Object.freeze({
 /**
  * \@stable
  */
-var VERSION$1 = new Version('5.0.0-beta.1-381471d');
+var VERSION$1 = new Version('5.0.0-beta.1-b6c4af6');
 /**
  * @fileoverview added by tsickle
  * @suppress {checkTypes} checked by tsc
@@ -45237,11 +45237,12 @@ exports.errorSymbol = errorSymbol;
  * possible.
  */
 var Evaluator = (function () {
-    function Evaluator(symbols, nodeMap, options) {
+    function Evaluator(symbols, nodeMap, options, recordExport) {
         if (options === void 0) { options = {}; }
         this.symbols = symbols;
         this.nodeMap = nodeMap;
         this.options = options;
+        this.recordExport = recordExport;
     }
     Evaluator.prototype.nameOf = function (node) {
         if (node && node.kind == ts.SyntaxKind.Identifier) {
@@ -45366,6 +45367,13 @@ var Evaluator = (function () {
         var t = this;
         var error;
         function recordEntry(entry, node) {
+            if (t.options.substituteExpression) {
+                var newEntry = t.options.substituteExpression(entry, node);
+                if (t.recordExport && newEntry != entry && schema_1.isMetadataGlobalReferenceExpression(newEntry)) {
+                    t.recordExport(newEntry.name, entry);
+                }
+                entry = newEntry;
+            }
             t.nodeMap.set(entry, node);
             return entry;
         }
@@ -45415,7 +45423,7 @@ var Evaluator = (function () {
                 if (this.options.quotedNames && quoted_1.length) {
                     obj_1['$quoted$'] = quoted_1;
                 }
-                return obj_1;
+                return recordEntry(obj_1, node);
             case ts.SyntaxKind.ArrayLiteralExpression:
                 var arr_1 = [];
                 ts.forEachChild(node, function (child) {
@@ -45439,7 +45447,7 @@ var Evaluator = (function () {
                 });
                 if (error)
                     return error;
-                return arr_1;
+                return recordEntry(arr_1, node);
             case spreadElementSyntaxKind:
                 var spreadExpression = this.evaluateNode(node.expression);
                 return recordEntry({ __symbolic: 'spread', expression: spreadExpression }, node);
@@ -45927,6 +45935,14 @@ var collector = createCommonjsModule(function (module, exports) {
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
+var __assign = (commonjsGlobal && commonjsGlobal.__assign) || Object.assign || function(t) {
+    for (var s, i = 1, n = arguments.length; i < n; i++) {
+        s = arguments[i];
+        for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+            t[p] = s[p];
+    }
+    return t;
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 var ts = require$$0__default;
 var evaluator_1 = evaluator;
@@ -45945,15 +45961,6 @@ var isStatic = ts.ModifierFlags ?
     }) :
     (function (node) { return !!((node.flags & ts.NodeFlags.Static)); });
 /**
- * A set of collector options to use when collecting metadata.
- */
-var CollectorOptions = (function () {
-    function CollectorOptions() {
-    }
-    return CollectorOptions;
-}());
-exports.CollectorOptions = CollectorOptions;
-/**
  * Collect decorator metadata from a TypeScript module.
  */
 var MetadataCollector = (function () {
@@ -45965,12 +45972,24 @@ var MetadataCollector = (function () {
      * Returns a JSON.stringify friendly form describing the decorators of the exported classes from
      * the source file that is expected to correspond to a module.
      */
-    MetadataCollector.prototype.getMetadata = function (sourceFile, strict) {
+    MetadataCollector.prototype.getMetadata = function (sourceFile, strict, substituteExpression) {
+        var _this = this;
         if (strict === void 0) { strict = false; }
         var locals = new symbols_1.Symbols(sourceFile);
         var nodeMap = new Map();
-        var evaluator$$1 = new evaluator_1.Evaluator(locals, nodeMap, this.options);
+        var composedSubstituter = substituteExpression && this.options.substituteExpression ?
+            function (value, node) {
+                return _this.options.substituteExpression(substituteExpression(value, node), node);
+            } :
+            substituteExpression;
+        var evaluatorOptions = substituteExpression ? __assign({}, this.options, { substituteExpression: composedSubstituter }) :
+            this.options;
         var metadata;
+        var evaluator$$1 = new evaluator_1.Evaluator(locals, nodeMap, evaluatorOptions, function (name, value) {
+            if (!metadata)
+                metadata = {};
+            metadata[name] = value;
+        });
         var exports = undefined;
         function objFromDecorator(decoratorNode) {
             return evaluator$$1.evaluateNode(decoratorNode.expression);
@@ -46659,12 +46678,13 @@ var GENERATED_FILES = /\.ngfactory\.ts$|\.ngstyle\.ts$|\.ngsummary\.ts$/;
 var GENERATED_OR_DTS_FILES = /\.d\.ts$|\.ngfactory\.ts$|\.ngstyle\.ts$|\.ngsummary\.ts$/;
 var SHALLOW_IMPORT = /^((\w|-)+|(@(\w|-)+(\/(\w|-)+)+))$/;
 var CompilerHost = (function () {
-    function CompilerHost(program, options, context, collectorOptions) {
+    function CompilerHost(program, options, context, collectorOptions, metadataProvider) {
+        if (metadataProvider === void 0) { metadataProvider = new tsc_wrapped_1.MetadataCollector(); }
         var _this = this;
         this.program = program;
         this.options = options;
         this.context = context;
-        this.metadataCollector = new tsc_wrapped_1.MetadataCollector();
+        this.metadataProvider = metadataProvider;
         this.resolverCache = new Map();
         this.flatModuleIndexCache = new Map();
         this.flatModuleIndexNames = new Set();
@@ -46825,7 +46845,7 @@ var CompilerHost = (function () {
             }
         }
         var sf = this.getSourceFile(filePath);
-        var metadata = this.metadataCollector.getMetadata(sf);
+        var metadata = this.metadataProvider.getMetadata(sf);
         return metadata ? [metadata] : [];
     };
     CompilerHost.prototype.readMetadata = function (filePath, dtsFilePath) {
@@ -46862,7 +46882,7 @@ var CompilerHost = (function () {
         for (var prop in v1Metadata.metadata) {
             v3Metadata.metadata[prop] = v1Metadata.metadata[prop];
         }
-        var exports = this.metadataCollector.getMetadata(this.getSourceFile(dtsFilePath));
+        var exports = this.metadataProvider.getMetadata(this.getSourceFile(dtsFilePath));
         if (exports) {
             for (var prop in exports.metadata) {
                 if (!v3Metadata.metadata[prop]) {
@@ -47187,7 +47207,7 @@ var PathMappedCompilerHost = (function (_super) {
             else {
                 var sf = this.getSourceFile(rootedPath);
                 sf.fileName = sf.fileName;
-                var metadata = this.metadataCollector.getMetadata(sf);
+                var metadata = this.metadataProvider.getMetadata(sf);
                 return metadata ? [metadata] : [];
             }
         }
@@ -47417,7 +47437,7 @@ var core_1 = require$$0$13;
 /**
  * @stable
  */
-exports.VERSION = new core_1.Version('5.0.0-beta.1-381471d');
+exports.VERSION = new core_1.Version('5.0.0-beta.1-b6c4af6');
 
 });
 
@@ -49103,6 +49123,13 @@ var EmitFlags;
 
 var module_filename_resolver = createCommonjsModule(function (module, exports) {
 "use strict";
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
 Object.defineProperty(exports, "__esModule", { value: true });
 var path = require$$2__default;
 var ts = require$$0__default;
@@ -49587,6 +49614,134 @@ var TypeCheckingHost = (function () {
 
 });
 
+var lower_expressions = createCommonjsModule(function (module, exports) {
+"use strict";
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+var tsc_wrapped_1 = collector;
+var ts = require$$0__default;
+function toMap(items, select) {
+    return new Map(items.map(function (i) { return [select(i), i]; }));
+}
+function transformSourceFile(sourceFile, requests, context) {
+    var inserts = [];
+    // Calculate the range of intersting locations. The transform will only visit nodes in this
+    // range to improve the performance on large files.
+    var locations = Array.from(requests.keys());
+    var min = Math.min.apply(Math, locations);
+    var max = Math.max.apply(Math, locations);
+    function visitSourceFile(sourceFile) {
+        function topLevelStatement(node) {
+            var declarations = [];
+            function visitNode(node) {
+                var nodeRequest = requests.get(node.pos);
+                if (nodeRequest && nodeRequest.kind == node.kind && nodeRequest.end == node.end) {
+                    // This node is requested to be rewritten as a reference to the exported name.
+                    // Record that the node needs to be moved to an exported variable with the given name
+                    var name_1 = nodeRequest.name;
+                    declarations.push({ name: name_1, node: node });
+                    return ts.createIdentifier(name_1);
+                }
+                if (node.pos <= max && node.end >= min)
+                    return ts.visitEachChild(node, visitNode, context);
+                return node;
+            }
+            var result = ts.visitEachChild(node, visitNode, context);
+            if (declarations.length) {
+                inserts.push({ priorTo: result, declarations: declarations });
+            }
+            return result;
+        }
+        var traversedSource = ts.visitEachChild(sourceFile, topLevelStatement, context);
+        if (inserts.length) {
+            // Insert the declarations before the rewritten statement that references them.
+            var insertMap = toMap(inserts, function (i) { return i.priorTo; });
+            var newStatements = traversedSource.statements.slice();
+            for (var i = newStatements.length; i >= 0; i--) {
+                var statement = newStatements[i];
+                var insert = insertMap.get(statement);
+                if (insert) {
+                    var declarations = insert.declarations.map(function (i) { return ts.createVariableDeclaration(i.name, /* type */ undefined, i.node); });
+                    var statement_1 = ts.createVariableStatement(
+                    /* modifiers */ undefined, ts.createVariableDeclarationList(declarations, ts.NodeFlags.Const));
+                    newStatements.splice(i, 0, statement_1);
+                }
+            }
+            // Insert an exports clause to export the declarations
+            newStatements.push(ts.createExportDeclaration(
+            /* decorators */ undefined, 
+            /* modifiers */ undefined, ts.createNamedExports(inserts
+                .reduce(function (accumulator, insert) { return accumulator.concat(insert.declarations); }, [])
+                .map(function (declaration) { return ts.createExportSpecifier(
+            /* propertyName */ undefined, declaration.name); }))));
+            return ts.updateSourceFileNode(traversedSource, newStatements);
+        }
+        return traversedSource;
+    }
+    return visitSourceFile(sourceFile);
+}
+function getExpressionLoweringTransformFactory(requestsMap) {
+    // Return the factory
+    return function (context) { return function (sourceFile) {
+        var requests = requestsMap.getRequests(sourceFile);
+        if (requests && requests.size) {
+            return transformSourceFile(sourceFile, requests, context);
+        }
+        return sourceFile;
+    }; };
+}
+exports.getExpressionLoweringTransformFactory = getExpressionLoweringTransformFactory;
+var LowerMetadataCache = (function () {
+    function LowerMetadataCache(options, strict) {
+        this.strict = strict;
+        this.metadataCache = new Map();
+        this.collector = new tsc_wrapped_1.MetadataCollector(options);
+    }
+    LowerMetadataCache.prototype.getMetadata = function (sourceFile) {
+        return this.ensureMetadataAndRequests(sourceFile).metadata;
+    };
+    LowerMetadataCache.prototype.getRequests = function (sourceFile) {
+        return this.ensureMetadataAndRequests(sourceFile).requests;
+    };
+    LowerMetadataCache.prototype.ensureMetadataAndRequests = function (sourceFile) {
+        var result = this.metadataCache.get(sourceFile.fileName);
+        if (!result) {
+            result = this.getMetadataAndRequests(sourceFile);
+            this.metadataCache.set(sourceFile.fileName, result);
+        }
+        return result;
+    };
+    LowerMetadataCache.prototype.getMetadataAndRequests = function (sourceFile) {
+        var identNumber = 0;
+        var freshIdent = function () { return '\u0275' + identNumber++; };
+        var requests = new Map();
+        var replaceNode = function (node) {
+            var name = freshIdent();
+            requests.set(node.pos, { name: name, kind: node.kind, location: node.pos, end: node.end });
+            return { __symbolic: 'reference', name: name };
+        };
+        var substituteExpression = function (value, node) {
+            if (node.kind === ts.SyntaxKind.ArrowFunction ||
+                node.kind === ts.SyntaxKind.FunctionExpression) {
+                return replaceNode(node);
+            }
+            return value;
+        };
+        var metadata = this.collector.getMetadata(sourceFile, this.strict, substituteExpression);
+        return { metadata: metadata, requests: requests };
+    };
+    return LowerMetadataCache;
+}());
+exports.LowerMetadataCache = LowerMetadataCache;
+
+});
+
 var node_emitter = createCommonjsModule(function (module, exports) {
 "use strict";
 /**
@@ -49985,7 +50140,6 @@ var program = createCommonjsModule(function (module, exports) {
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 var compiler_1 = require$$1$8;
-var tsc_wrapped_1 = collector;
 var fs_1 = fs__default;
 var path = require$$2__default;
 var ts = require$$0__default;
@@ -49993,6 +50147,7 @@ var compiler_host_1 = compiler_host;
 var check_types_1 = check_types;
 var api_1 = api;
 var api_2 = api;
+var lower_expressions_1 = lower_expressions;
 var node_emitter_transform_1 = node_emitter_transform;
 var GENERATED_FILES = /\.ngfactory\.js$|\.ngstyle\.js$|\.ngsummary\.js$/;
 var SUMMARY_JSON_FILES = /\.ngsummary.json$/;
@@ -50011,13 +50166,13 @@ var AngularCompilerProgram = (function () {
         this.oldTsProgram = oldProgram ? oldProgram.getTsProgram() : undefined;
         this.tsProgram = ts.createProgram(rootNames, options, host, this.oldTsProgram);
         this.srcNames = this.tsProgram.getSourceFiles().map(function (sf) { return sf.fileName; });
-        this.aotCompilerHost = new compiler_host_1.CompilerHost(this.tsProgram, options, host);
+        this.metadataCache = new lower_expressions_1.LowerMetadataCache({ quotedNames: true }, !!options.strictMetadataEmit);
+        this.aotCompilerHost = new compiler_host_1.CompilerHost(this.tsProgram, options, host, /* collectorOptions */ undefined, this.metadataCache);
         if (host.readResource) {
             this.aotCompilerHost.loadResource = host.readResource.bind(host);
         }
         var compiler = compiler_1.createAotCompiler(this.aotCompilerHost, options).compiler;
         this.compiler = compiler;
-        this.collector = new tsc_wrapped_1.MetadataCollector({ quotedNames: true });
     }
     // Program implementation
     AngularCompilerProgram.prototype.getTsProgram = function () { return this.programWithStubs; };
@@ -50061,9 +50216,7 @@ var AngularCompilerProgram = (function () {
         var _b = _a.emitFlags, emitFlags = _b === void 0 ? api_2.EmitFlags.Default : _b, cancellationToken = _a.cancellationToken;
         var emitMap = new Map();
         var result = this.programWithStubs.emit(
-        /* targetSourceFile */ undefined, createWriteFileCallback(emitFlags, this.host, this.collector, this.options, emitMap), cancellationToken, (emitFlags & (api_2.EmitFlags.DTS | api_2.EmitFlags.JS)) == api_2.EmitFlags.DTS, {
-            after: this.options.skipTemplateCodegen ? [] : [node_emitter_transform_1.getAngularEmitterTransformFactory(this.generatedFiles)]
-        });
+        /* targetSourceFile */ undefined, createWriteFileCallback(emitFlags, this.host, this.metadataCache, emitMap), cancellationToken, (emitFlags & (api_2.EmitFlags.DTS | api_2.EmitFlags.JS)) == api_2.EmitFlags.DTS, this.calculateTransforms());
         this.generatedFiles.forEach(function (file) {
             if (file.source && file.source.length && SUMMARY_JSON_FILES.test(file.genFileUrl)) {
                 // If we have emitted the ngsummary.ts file, ensure the ngsummary.json file is emitted to
@@ -50149,6 +50302,22 @@ var AngularCompilerProgram = (function () {
         enumerable: true,
         configurable: true
     });
+    AngularCompilerProgram.prototype.calculateTransforms = function () {
+        var before = [];
+        var after = [];
+        if (!this.options.disableExpressionLowering) {
+            before.push(lower_expressions_1.getExpressionLoweringTransformFactory(this.metadataCache));
+        }
+        if (!this.options.skipTemplateCodegen) {
+            after.push(node_emitter_transform_1.getAngularEmitterTransformFactory(this.generatedFiles));
+        }
+        var result = {};
+        if (before.length)
+            result.before = before;
+        if (after.length)
+            result.after = after;
+        return result;
+    };
     AngularCompilerProgram.prototype.catchAnalysisError = function (e) {
         if (compiler_1.isSyntaxError(e)) {
             var parserErrors = compiler_1.getParseErrors(e);
@@ -50214,7 +50383,7 @@ function createProgram(_a) {
     return new AngularCompilerProgram(rootNames, options, host, oldProgram);
 }
 exports.createProgram = createProgram;
-function writeMetadata(emitFilePath, sourceFile, collector$$1, ngOptions) {
+function writeMetadata(emitFilePath, sourceFile, metadataCache) {
     if (/\.js$/.test(emitFilePath)) {
         var path_1 = emitFilePath.replace(/\.js$/, '.metadata.json');
         // Beginning with 2.1, TypeScript transforms the source tree before emitting it.
@@ -50225,14 +50394,14 @@ function writeMetadata(emitFilePath, sourceFile, collector$$1, ngOptions) {
         while (collectableFile.original) {
             collectableFile = collectableFile.original;
         }
-        var metadata = collector$$1.getMetadata(collectableFile, !!ngOptions.strictMetadataEmit);
+        var metadata = metadataCache.getMetadata(collectableFile);
         if (metadata) {
             var metadataText = JSON.stringify([metadata]);
             fs_1.writeFileSync(path_1, metadataText, { encoding: 'utf-8' });
         }
     }
 }
-function createWriteFileCallback(emitFlags, host, collector$$1, ngOptions, emitMap) {
+function createWriteFileCallback(emitFlags, host, metadataCache, emitMap) {
     var withMetadata = function (fileName, data, writeByteOrderMark, onError, sourceFiles) {
         var generatedFile = GENERATED_FILES.test(fileName);
         if (!generatedFile || data != '') {
@@ -50240,7 +50409,7 @@ function createWriteFileCallback(emitFlags, host, collector$$1, ngOptions, emitM
         }
         if (!generatedFile && sourceFiles && sourceFiles.length == 1) {
             emitMap.set(sourceFiles[0].fileName, fileName);
-            writeMetadata(fileName, sourceFiles[0], collector$$1, ngOptions);
+            writeMetadata(fileName, sourceFiles[0], metadataCache);
         }
     };
     var withoutMetadata = function (fileName, data, writeByteOrderMark, onError, sourceFiles) {
@@ -50327,6 +50496,13 @@ function createProgramWithStubsHost(generatedFiles, originalProgram, originalHos
 
 var entry_points = createCommonjsModule(function (module, exports) {
 "use strict";
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
 Object.defineProperty(exports, "__esModule", { value: true });
 var module_filename_resolver_1 = module_filename_resolver;
 exports.createModuleFilenameResolver = module_filename_resolver_1.createModuleFilenameResolver;
@@ -50877,7 +51053,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v5.0.0-beta.1-381471d
+ * @license Angular v5.0.0-beta.1-b6c4af6
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -53506,7 +53682,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('5.0.0-beta.1-381471d');
+var VERSION$$1 = new Version('5.0.0-beta.1-b6c4af6');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
