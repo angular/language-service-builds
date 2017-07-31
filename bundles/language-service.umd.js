@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.0.0-beta.1-cc2a4c4
+ * @license Angular v5.0.0-beta.1-e64b54b
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2033,7 +2033,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v5.0.0-beta.1-cc2a4c4
+ * @license Angular v5.0.0-beta.1-e64b54b
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -3104,7 +3104,7 @@ var ViewMetadata = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('5.0.0-beta.1-cc2a4c4');
+var VERSION$2 = new Version('5.0.0-beta.1-e64b54b');
 /**
  * @fileoverview added by tsickle
  * @suppress {checkTypes} checked by tsc
@@ -16995,7 +16995,7 @@ var core_es5 = Object.freeze({
 });
 
 /**
- * @license Angular v5.0.0-beta.1-cc2a4c4
+ * @license Angular v5.0.0-beta.1-e64b54b
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -17018,7 +17018,7 @@ var core_es5 = Object.freeze({
 /**
  * \@stable
  */
-var VERSION$1 = new Version('5.0.0-beta.1-cc2a4c4');
+var VERSION$1 = new Version('5.0.0-beta.1-e64b54b');
 /**
  * @fileoverview added by tsickle
  * @suppress {checkTypes} checked by tsc
@@ -41764,7 +41764,6 @@ var StaticReflector = (function () {
                     if (calling.get(functionSymbol)) {
                         throw new Error('Recursion not supported');
                     }
-                    calling.set(functionSymbol, true);
                     try {
                         var /** @type {?} */ value_1 = targetFunction['value'];
                         if (value_1 && (depth != 0 || value_1.__symbolic != 'error')) {
@@ -41775,6 +41774,7 @@ var StaticReflector = (function () {
                             if (defaults && defaults.length > args.length) {
                                 args.push.apply(args, defaults.slice(args.length).map(function (value) { return simplify(value); }));
                             }
+                            calling.set(functionSymbol, true);
                             var /** @type {?} */ functionScope = BindingScope.build();
                             for (var /** @type {?} */ i = 0; i < parameters.length; i++) {
                                 functionScope.define(parameters[i], args[i]);
@@ -47437,7 +47437,7 @@ var core_1 = require$$0$13;
 /**
  * @stable
  */
-exports.VERSION = new core_1.Version('5.0.0-beta.1-cc2a4c4');
+exports.VERSION = new core_1.Version('5.0.0-beta.1-e64b54b');
 
 });
 
@@ -51053,7 +51053,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v5.0.0-beta.1-cc2a4c4
+ * @license Angular v5.0.0-beta.1-e64b54b
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -53682,7 +53682,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('5.0.0-beta.1-cc2a4c4');
+var VERSION$$1 = new Version('5.0.0-beta.1-e64b54b');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
