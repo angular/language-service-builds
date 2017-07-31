@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.0.0-beta.1-e64b54b
+ * @license Angular v5.0.0-beta.1-9479a10
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2033,7 +2033,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v5.0.0-beta.1-e64b54b
+ * @license Angular v5.0.0-beta.1-9479a10
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -3104,7 +3104,7 @@ var ViewMetadata = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('5.0.0-beta.1-e64b54b');
+var VERSION$2 = new Version('5.0.0-beta.1-9479a10');
 /**
  * @fileoverview added by tsickle
  * @suppress {checkTypes} checked by tsc
@@ -16995,7 +16995,7 @@ var core_es5 = Object.freeze({
 });
 
 /**
- * @license Angular v5.0.0-beta.1-e64b54b
+ * @license Angular v5.0.0-beta.1-9479a10
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -17018,7 +17018,7 @@ var core_es5 = Object.freeze({
 /**
  * \@stable
  */
-var VERSION$1 = new Version('5.0.0-beta.1-e64b54b');
+var VERSION$1 = new Version('5.0.0-beta.1-9479a10');
 /**
  * @fileoverview added by tsickle
  * @suppress {checkTypes} checked by tsc
@@ -47437,7 +47437,7 @@ var core_1 = require$$0$13;
 /**
  * @stable
  */
-exports.VERSION = new core_1.Version('5.0.0-beta.1-e64b54b');
+exports.VERSION = new core_1.Version('5.0.0-beta.1-9479a10');
 
 });
 
@@ -49593,9 +49593,7 @@ var TypeCheckingHost = (function () {
     TypeCheckingHost.prototype.getDefaultLibFileName = function (options) {
         return this.host.getDefaultLibFileName(options);
     };
-    TypeCheckingHost.prototype.getCurrentDirectory = function () {
-        return this.host.getCurrentDirectory();
-    };
+    TypeCheckingHost.prototype.getCurrentDirectory = function () { return this.host.getCurrentDirectory(); };
     TypeCheckingHost.prototype.getDirectories = function (path) { return this.host.getDirectories(path); };
     TypeCheckingHost.prototype.getCanonicalFileName = function (fileName) {
         return this.host.getCanonicalFileName(fileName);
@@ -50146,7 +50144,6 @@ var ts = require$$0__default;
 var compiler_host_1 = compiler_host;
 var check_types_1 = check_types;
 var api_1 = api;
-var api_2 = api;
 var lower_expressions_1 = lower_expressions;
 var node_emitter_transform_1 = node_emitter_transform;
 var GENERATED_FILES = /\.ngfactory\.js$|\.ngstyle\.js$|\.ngsummary\.js$/;
@@ -50213,10 +50210,10 @@ var AngularCompilerProgram = (function () {
     AngularCompilerProgram.prototype.getLazyRoutes = function (cancellationToken) { return {}; };
     AngularCompilerProgram.prototype.emit = function (_a) {
         var _this = this;
-        var _b = _a.emitFlags, emitFlags = _b === void 0 ? api_2.EmitFlags.Default : _b, cancellationToken = _a.cancellationToken;
+        var _b = _a.emitFlags, emitFlags = _b === void 0 ? api_1.EmitFlags.Default : _b, cancellationToken = _a.cancellationToken;
         var emitMap = new Map();
         var result = this.programWithStubs.emit(
-        /* targetSourceFile */ undefined, createWriteFileCallback(emitFlags, this.host, this.metadataCache, emitMap), cancellationToken, (emitFlags & (api_2.EmitFlags.DTS | api_2.EmitFlags.JS)) == api_2.EmitFlags.DTS, this.calculateTransforms());
+        /* targetSourceFile */ undefined, createWriteFileCallback(emitFlags, this.host, this.metadataCache, emitMap), cancellationToken, (emitFlags & (api_1.EmitFlags.DTS | api_1.EmitFlags.JS)) == api_1.EmitFlags.DTS, this.calculateTransforms());
         this.generatedFiles.forEach(function (file) {
             if (file.source && file.source.length && SUMMARY_JSON_FILES.test(file.genFileUrl)) {
                 // If we have emitted the ngsummary.ts file, ensure the ngsummary.json file is emitted to
@@ -50421,7 +50418,7 @@ function createWriteFileCallback(emitFlags, host, metadataCache, emitMap) {
             emitMap.set(sourceFiles[0].fileName, fileName);
         }
     };
-    return (emitFlags & api_2.EmitFlags.Metadata) != 0 ? withMetadata : withoutMetadata;
+    return (emitFlags & api_1.EmitFlags.Metadata) != 0 ? withMetadata : withoutMetadata;
 }
 function getNgOptionDiagnostics(options) {
     if (options.annotationsAs) {
@@ -51053,7 +51050,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v5.0.0-beta.1-e64b54b
+ * @license Angular v5.0.0-beta.1-9479a10
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -53682,7 +53679,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('5.0.0-beta.1-e64b54b');
+var VERSION$$1 = new Version('5.0.0-beta.1-9479a10');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
