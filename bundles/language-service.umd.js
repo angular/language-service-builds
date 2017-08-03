@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.3.3-4176832
+ * @license Angular v4.3.3-e7e7622
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2033,7 +2033,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v4.3.3-4176832
+ * @license Angular v4.3.3-e7e7622
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2825,7 +2825,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('4.3.3-4176832');
+var VERSION$2 = new Version('4.3.3-e7e7622');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -16991,7 +16991,7 @@ var core_es5 = Object.freeze({
 });
 
 /**
- * @license Angular v4.3.3-4176832
+ * @license Angular v4.3.3-e7e7622
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -17010,7 +17010,7 @@ var core_es5 = Object.freeze({
 /**
  * \@stable
  */
-var VERSION$1 = new Version('4.3.3-4176832');
+var VERSION$1 = new Version('4.3.3-e7e7622');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -29031,7 +29031,7 @@ function extractStyleUrls(resolver, baseUrl, cssText) {
     return new StyleWithImports(modifiedCssText, foundUrls);
 }
 var CSS_IMPORT_REGEXP = /@import\s+(?:url\()?\s*(?:(?:['"]([^'"]*))|([^;\)\s]*))[^;]*;?/g;
-var CSS_COMMENT_REGEXP = /\/\*.+?\*\//g;
+var CSS_COMMENT_REGEXP = /\/\*[\s\S]+?\*\//g;
 var URL_WITH_SCHEMA_REGEXP = /^([^:/?#]+):/;
 /**
  * @license
@@ -47187,7 +47187,7 @@ var core_1 = require$$0$13;
 /**
  * @stable
  */
-exports.VERSION = new core_1.Version('4.3.3-4176832');
+exports.VERSION = new core_1.Version('4.3.3-e7e7622');
 
 });
 
@@ -50664,7 +50664,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v4.3.3-4176832
+ * @license Angular v4.3.3-e7e7622
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -53293,7 +53293,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('4.3.3-4176832');
+var VERSION$$1 = new Version('4.3.3-e7e7622');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
