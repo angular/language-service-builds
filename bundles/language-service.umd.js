@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.3.3-3212f8c
+ * @license Angular v4.3.3-e0660b1
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2033,7 +2033,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v4.3.3-3212f8c
+ * @license Angular v4.3.3-e0660b1
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2825,7 +2825,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('4.3.3-3212f8c');
+var VERSION$2 = new Version('4.3.3-e0660b1');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -16216,10 +16216,11 @@ function style$1(tokens) {
  * \@experimental Animation support is experimental.
  * @param {?} name
  * @param {?} styles
+ * @param {?=} options
  * @return {?}
  */
-function state$1(name, styles) {
-    return { type: 0 /* State */, name: name, styles: styles };
+function state$1(name, styles, options) {
+    return { type: 0 /* State */, name: name, styles: styles, options: options };
 }
 /**
  * `keyframes` is an animation-specific function that is designed to be used inside of Angular's
@@ -16991,7 +16992,7 @@ var core_es5 = Object.freeze({
 });
 
 /**
- * @license Angular v4.3.3-3212f8c
+ * @license Angular v4.3.3-e0660b1
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -17010,7 +17011,7 @@ var core_es5 = Object.freeze({
 /**
  * \@stable
  */
-var VERSION$1 = new Version('4.3.3-3212f8c');
+var VERSION$1 = new Version('4.3.3-e0660b1');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -47187,7 +47188,7 @@ var core_1 = require$$0$13;
 /**
  * @stable
  */
-exports.VERSION = new core_1.Version('4.3.3-3212f8c');
+exports.VERSION = new core_1.Version('4.3.3-e0660b1');
 
 });
 
@@ -50664,7 +50665,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v4.3.3-3212f8c
+ * @license Angular v4.3.3-e0660b1
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -53293,7 +53294,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('4.3.3-3212f8c');
+var VERSION$$1 = new Version('4.3.3-e0660b1');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
