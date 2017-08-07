@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.0.0-beta.2-04b18a9
+ * @license Angular v5.0.0-beta.2-5b7432b
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -18,13 +18,12 @@ module.exports = function(provided) {
   return result;
 }
 
-define(['exports', 'fs', 'typescript', 'path', 'reflect-metadata', 'minimist'], function (exports, fs, require$$0, require$$2, reflectMetadata, minimist) { 'use strict';
+define(['exports', 'fs', 'typescript', 'path', 'reflect-metadata'], function (exports, fs, require$$0, require$$2, reflectMetadata) { 'use strict';
 
 var fs__default = 'default' in fs ? fs['default'] : fs;
 var require$$0__default = 'default' in require$$0 ? require$$0['default'] : require$$0;
 var require$$2__default = 'default' in require$$2 ? require$$2['default'] : require$$2;
 reflectMetadata = 'default' in reflectMetadata ? reflectMetadata['default'] : reflectMetadata;
-minimist = 'default' in minimist ? minimist['default'] : minimist;
 
 /*! *****************************************************************************
 Copyright (c) Microsoft Corporation. All rights reserved.
@@ -54,9 +53,7 @@ function __extends$1$1(d, b) {
 
 var commonjsGlobal = typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
-function commonjsRequire () {
-	throw new Error('Dynamic requires are not currently supported by rollup-plugin-commonjs');
-}
+
 
 
 
@@ -2033,7 +2030,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v5.0.0-beta.2-04b18a9
+ * @license Angular v5.0.0-beta.2-5b7432b
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -3104,7 +3101,7 @@ var ViewMetadata = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('5.0.0-beta.2-04b18a9');
+var VERSION$2 = new Version('5.0.0-beta.2-5b7432b');
 /**
  * @fileoverview added by tsickle
  * @suppress {checkTypes} checked by tsc
@@ -16996,7 +16993,7 @@ var core_es5 = Object.freeze({
 });
 
 /**
- * @license Angular v5.0.0-beta.2-04b18a9
+ * @license Angular v5.0.0-beta.2-5b7432b
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -17019,7 +17016,7 @@ var core_es5 = Object.freeze({
 /**
  * \@stable
  */
-var VERSION$1 = new Version('5.0.0-beta.2-04b18a9');
+var VERSION$1 = new Version('5.0.0-beta.2-5b7432b');
 /**
  * @fileoverview added by tsickle
  * @suppress {checkTypes} checked by tsc
@@ -47438,7 +47435,7 @@ var core_1 = require$$0$13;
 /**
  * @stable
  */
-exports.VERSION = new core_1.Version('5.0.0-beta.2-04b18a9');
+exports.VERSION = new core_1.Version('5.0.0-beta.2-5b7432b');
 
 });
 
@@ -50524,7 +50521,7 @@ exports.createHost = createHost;
 
 });
 
-var ngc$1 = createCommonjsModule(function (module, exports) {
+var performCompile = createCommonjsModule(function (module, exports) {
 "use strict";
 /**
  * @license
@@ -50542,8 +50539,6 @@ var __assign = (commonjsGlobal && commonjsGlobal.__assign) || Object.assign || f
     return t;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-// Must be imported first, because Angular decorators throw on load.
-
 var compiler_1 = require$$1$8;
 var tsc_wrapped_1 = collector;
 var fs$$1 = fs__default;
@@ -50586,7 +50581,14 @@ function formatDiagnostics(cwd, diags) {
     else
         return '';
 }
-function check(cwd) {
+/**
+ * Throw a syntax error exception with a message formatted for output
+ * if the args parameter contains diagnostics errors.
+ *
+ * @param cwd   The directory to report error as relative to.
+ * @param args  A list of potentially empty diagnostic errors.
+ */
+function throwOnDiagnostics(cwd) {
     var args = [];
     for (var _i = 1; _i < arguments.length; _i++) {
         args[_i - 1] = arguments[_i];
@@ -50601,8 +50603,9 @@ function check(cwd) {
             .join(''));
     }
 }
+exports.throwOnDiagnostics = throwOnDiagnostics;
 function readConfiguration(project, basePath, checkFunc, existingOptions) {
-    if (checkFunc === void 0) { checkFunc = check; }
+    if (checkFunc === void 0) { checkFunc = throwOnDiagnostics; }
     // Allow a directory containing tsconfig.json as the project value
     // Note, TS@next returns an empty array, while earlier versions throw
     var projectFile = fs$$1.lstatSync(project).isDirectory() ? path.join(project, 'tsconfig.json') : project;
@@ -50627,7 +50630,7 @@ function readConfiguration(project, basePath, checkFunc, existingOptions) {
 exports.readConfiguration = readConfiguration;
 function performCompilation(basePath, files, options, ngOptions, consoleError, checkFunc, tsCompilerHost) {
     if (consoleError === void 0) { consoleError = console.error; }
-    if (checkFunc === void 0) { checkFunc = check; }
+    if (checkFunc === void 0) { checkFunc = throwOnDiagnostics; }
     try {
         ngOptions.basePath = basePath;
         ngOptions.genDir = basePath;
@@ -50674,29 +50677,6 @@ function performCompilation(basePath, files, options, ngOptions, consoleError, c
     return 0;
 }
 exports.performCompilation = performCompilation;
-function main(args, consoleError, checkFunc) {
-    if (consoleError === void 0) { consoleError = console.error; }
-    if (checkFunc === void 0) { checkFunc = check; }
-    try {
-        var parsedArgs = minimist(args);
-        var project = parsedArgs.p || parsedArgs.project || '.';
-        var projectDir = fs$$1.lstatSync(project).isFile() ? path.dirname(project) : project;
-        // file names in tsconfig are resolved relative to this absolute path
-        var basePath = path.resolve(process.cwd(), projectDir);
-        var _a = readConfiguration(project, basePath, checkFunc), parsed = _a.parsed, ngOptions = _a.ngOptions;
-        return performCompilation(basePath, parsed.fileNames, parsed.options, ngOptions, consoleError, checkFunc);
-    }
-    catch (e) {
-        consoleError(e.stack);
-        consoleError('Compilation failed');
-        return 2;
-    }
-}
-exports.main = main;
-// CLI entry point
-if (commonjsRequire.main === module) {
-    process.exit(main(process.argv.slice(2), function (s) { return console.error(s); }));
-}
 
 });
 
@@ -51026,16 +51006,13 @@ var symbols_1 = symbols$2;
 exports.BuiltinType = symbols_1.BuiltinType;
 __export(api);
 __export(entry_points);
-var ngc_1 = ngc$1;
-exports.ngc = ngc_1.main;
-var ngc_2 = ngc$1;
-exports.performCompilation = ngc_2.performCompilation;
+var perform_compile_1 = performCompile;
+exports.performCompilation = perform_compile_1.performCompilation;
 // TODO(hansl): moving to Angular 4 need to update this API.
 var ngtools_api_1 = ngtools_api;
 exports.__NGTOOLS_PRIVATE_API_2 = ngtools_api_1.NgTools_InternalApi_NG_2;
 
 });
-
 
 
 
@@ -51053,7 +51030,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v5.0.0-beta.2-04b18a9
+ * @license Angular v5.0.0-beta.2-5b7432b
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -53682,7 +53659,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('5.0.0-beta.2-04b18a9');
+var VERSION$$1 = new Version('5.0.0-beta.2-5b7432b');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
