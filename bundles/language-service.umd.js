@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.0.0-beta.2-f0a5501
+ * @license Angular v5.0.0-beta.2-6f2038c
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2030,7 +2030,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v5.0.0-beta.2-f0a5501
+ * @license Angular v5.0.0-beta.2-6f2038c
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -3104,7 +3104,7 @@ var ViewMetadata = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('5.0.0-beta.2-f0a5501');
+var VERSION$2 = new Version('5.0.0-beta.2-6f2038c');
 /**
  * @fileoverview added by tsickle
  * @suppress {checkTypes} checked by tsc
@@ -17364,7 +17364,7 @@ var core_es5 = Object.freeze({
 });
 
 /**
- * @license Angular v5.0.0-beta.2-f0a5501
+ * @license Angular v5.0.0-beta.2-6f2038c
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -17387,7 +17387,7 @@ var core_es5 = Object.freeze({
 /**
  * \@stable
  */
-var VERSION$1 = new Version('5.0.0-beta.2-f0a5501');
+var VERSION$1 = new Version('5.0.0-beta.2-6f2038c');
 /**
  * @fileoverview added by tsickle
  * @suppress {checkTypes} checked by tsc
@@ -47822,7 +47822,7 @@ var core_1 = require$$0$13;
 /**
  * @stable
  */
-exports.VERSION = new core_1.Version('5.0.0-beta.2-f0a5501');
+exports.VERSION = new core_1.Version('5.0.0-beta.2-6f2038c');
 
 });
 
@@ -50012,6 +50012,23 @@ var ts = require$$0__default;
 function toMap(items, select) {
     return new Map(items.map(function (i) { return [select(i), i]; }));
 }
+// We will never lower expressions in a nested lexical scope so avoid entering them.
+// This also avoids a bug in TypeScript 2.3 where the lexical scopes get out of sync
+// when using visitEachChild.
+function isLexicalScope(node) {
+    switch (node.kind) {
+        case ts.SyntaxKind.ArrowFunction:
+        case ts.SyntaxKind.FunctionExpression:
+        case ts.SyntaxKind.FunctionDeclaration:
+        case ts.SyntaxKind.ClassExpression:
+        case ts.SyntaxKind.ClassDeclaration:
+        case ts.SyntaxKind.FunctionType:
+        case ts.SyntaxKind.TypeLiteral:
+        case ts.SyntaxKind.ArrayType:
+            return true;
+    }
+    return false;
+}
 function transformSourceFile(sourceFile, requests, context) {
     var inserts = [];
     // Calculate the range of intersting locations. The transform will only visit nodes in this
@@ -50031,11 +50048,13 @@ function transformSourceFile(sourceFile, requests, context) {
                     declarations.push({ name: name_1, node: node });
                     return ts.createIdentifier(name_1);
                 }
-                if (node.pos <= max && node.end >= min)
-                    return ts.visitEachChild(node, visitNode, context);
-                return node;
+                var result = node;
+                if (node.pos <= max && node.end >= min && !isLexicalScope(node)) {
+                    result = ts.visitEachChild(node, visitNode, context);
+                }
+                return result;
             }
-            var result = ts.visitEachChild(node, visitNode, context);
+            var result = (node.pos <= max && node.end >= min) ? ts.visitEachChild(node, visitNode, context) : node;
             if (declarations.length) {
                 inserts.push({ priorTo: result, declarations: declarations });
             }
@@ -50080,6 +50099,28 @@ function getExpressionLoweringTransformFactory(requestsMap) {
     }; };
 }
 exports.getExpressionLoweringTransformFactory = getExpressionLoweringTransformFactory;
+function shouldLower(node) {
+    if (node) {
+        switch (node.kind) {
+            case ts.SyntaxKind.SourceFile:
+            case ts.SyntaxKind.Decorator:
+                // Lower expressions that are local to the module scope or
+                // in a decorator.
+                return true;
+            case ts.SyntaxKind.ClassDeclaration:
+            case ts.SyntaxKind.InterfaceDeclaration:
+            case ts.SyntaxKind.EnumDeclaration:
+            case ts.SyntaxKind.FunctionDeclaration:
+                // Don't lower expressions in a declaration.
+                return false;
+            case ts.SyntaxKind.VariableDeclaration:
+                // Avoid lowering expressions already in an exported variable declaration
+                return (ts.getCombinedModifierFlags(node) & ts.ModifierFlags.Export) == 0;
+        }
+        return shouldLower(node.parent);
+    }
+    return true;
+}
 var LowerMetadataCache = (function () {
     function LowerMetadataCache(options, strict) {
         this.strict = strict;
@@ -50110,8 +50151,9 @@ var LowerMetadataCache = (function () {
             return { __symbolic: 'reference', name: name };
         };
         var substituteExpression = function (value, node) {
-            if (node.kind === ts.SyntaxKind.ArrowFunction ||
-                node.kind === ts.SyntaxKind.FunctionExpression) {
+            if ((node.kind === ts.SyntaxKind.ArrowFunction ||
+                node.kind === ts.SyntaxKind.FunctionExpression) &&
+                shouldLower(node)) {
                 return replaceNode(node);
             }
             return value;
@@ -50688,8 +50730,7 @@ var AngularCompilerProgram = (function () {
         var before = [];
         var after = [];
         if (!this.options.disableExpressionLowering) {
-            // TODO(chuckj): fix and re-enable + tests - see https://github.com/angular/angular/pull/18388
-            // before.push(getExpressionLoweringTransformFactory(this.metadataCache));
+            before.push(lower_expressions_1.getExpressionLoweringTransformFactory(this.metadataCache));
         }
         if (!this.options.skipTemplateCodegen) {
             after.push(node_emitter_transform_1.getAngularEmitterTransformFactory(this.generatedFiles));
@@ -51417,7 +51458,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v5.0.0-beta.2-f0a5501
+ * @license Angular v5.0.0-beta.2-6f2038c
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -54046,7 +54087,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('5.0.0-beta.2-f0a5501');
+var VERSION$$1 = new Version('5.0.0-beta.2-6f2038c');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
