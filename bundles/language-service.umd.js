@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.0.0-beta.2-1e18331
+ * @license Angular v5.0.0-beta.2-e54bd59
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2030,7 +2030,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v5.0.0-beta.2-1e18331
+ * @license Angular v5.0.0-beta.2-e54bd59
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -3104,7 +3104,7 @@ var ViewMetadata = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('5.0.0-beta.2-1e18331');
+var VERSION$2 = new Version('5.0.0-beta.2-e54bd59');
 /**
  * @fileoverview added by tsickle
  * @suppress {checkTypes} checked by tsc
@@ -12150,6 +12150,9 @@ var ViewContainerRef_ = (function () {
      * @return {?}
      */
     ViewContainerRef_.prototype.insert = function (viewRef, index) {
+        if (viewRef.destroyed) {
+            throw new Error('Cannot insert a destroyed View in a ViewContainer!');
+        }
         var /** @type {?} */ viewRef_ = (viewRef);
         var /** @type {?} */ viewData = viewRef_._view;
         attachEmbeddedView(this._view, this._data, index, viewData);
@@ -12162,6 +12165,9 @@ var ViewContainerRef_ = (function () {
      * @return {?}
      */
     ViewContainerRef_.prototype.move = function (viewRef, currentIndex) {
+        if (viewRef.destroyed) {
+            throw new Error('Cannot move a destroyed View in a ViewContainer!');
+        }
         var /** @type {?} */ previousIndex = this._embeddedViews.indexOf(viewRef._view);
         moveEmbeddedView(this._data, previousIndex, currentIndex);
         return viewRef;
@@ -17364,7 +17370,7 @@ var core_es5 = Object.freeze({
 });
 
 /**
- * @license Angular v5.0.0-beta.2-1e18331
+ * @license Angular v5.0.0-beta.2-e54bd59
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -17387,7 +17393,7 @@ var core_es5 = Object.freeze({
 /**
  * \@stable
  */
-var VERSION$1 = new Version('5.0.0-beta.2-1e18331');
+var VERSION$1 = new Version('5.0.0-beta.2-e54bd59');
 /**
  * @fileoverview added by tsickle
  * @suppress {checkTypes} checked by tsc
@@ -47822,7 +47828,7 @@ var core_1 = require$$0$13;
 /**
  * @stable
  */
-exports.VERSION = new core_1.Version('5.0.0-beta.2-1e18331');
+exports.VERSION = new core_1.Version('5.0.0-beta.2-e54bd59');
 
 });
 
@@ -51458,7 +51464,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v5.0.0-beta.2-1e18331
+ * @license Angular v5.0.0-beta.2-e54bd59
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -54087,7 +54093,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('5.0.0-beta.2-1e18331');
+var VERSION$$1 = new Version('5.0.0-beta.2-e54bd59');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
