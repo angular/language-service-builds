@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.0.0-beta.3-06faac8
+ * @license Angular v5.0.0-beta.3-679608d
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -18,12 +18,13 @@ module.exports = function(provided) {
   return result;
 }
 
-define(['exports', 'fs', 'typescript', 'path', 'reflect-metadata'], function (exports, fs, require$$0, require$$2, reflectMetadata) { 'use strict';
+define(['exports', 'fs', 'typescript', 'path', 'reflect-metadata', 'tsickle'], function (exports, fs, require$$0, require$$2, reflectMetadata, tsickle) { 'use strict';
 
 var fs__default = 'default' in fs ? fs['default'] : fs;
 var require$$0__default = 'default' in require$$0 ? require$$0['default'] : require$$0;
 var require$$2__default = 'default' in require$$2 ? require$$2['default'] : require$$2;
 reflectMetadata = 'default' in reflectMetadata ? reflectMetadata['default'] : reflectMetadata;
+tsickle = 'default' in tsickle ? tsickle['default'] : tsickle;
 
 /*! *****************************************************************************
 Copyright (c) Microsoft Corporation. All rights reserved.
@@ -2030,7 +2031,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v5.0.0-beta.3-06faac8
+ * @license Angular v5.0.0-beta.3-679608d
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -3104,7 +3105,7 @@ var ViewMetadata = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('5.0.0-beta.3-06faac8');
+var VERSION$2 = new Version('5.0.0-beta.3-679608d');
 /**
  * @fileoverview added by tsickle
  * @suppress {checkTypes} checked by tsc
@@ -17370,7 +17371,7 @@ var core_es5 = Object.freeze({
 });
 
 /**
- * @license Angular v5.0.0-beta.3-06faac8
+ * @license Angular v5.0.0-beta.3-679608d
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -17393,7 +17394,7 @@ var core_es5 = Object.freeze({
 /**
  * \@stable
  */
-var VERSION$1 = new Version('5.0.0-beta.3-06faac8');
+var VERSION$1 = new Version('5.0.0-beta.3-679608d');
 /**
  * @fileoverview added by tsickle
  * @suppress {checkTypes} checked by tsc
@@ -47828,7 +47829,7 @@ var core_1 = require$$0$13;
 /**
  * @stable
  */
-exports.VERSION = new core_1.Version('5.0.0-beta.3-06faac8');
+exports.VERSION = new core_1.Version('5.0.0-beta.3-679608d');
 
 });
 
@@ -48348,7 +48349,7 @@ function getReferences(info) {
                 name: reference.name,
                 kind: 'reference',
                 type: type || info.query.getBuiltinType(symbols_1.BuiltinType.Any),
-                get definition() { return getDefintionOf(info, reference); }
+                get definition() { return getDefinitionOf(info, reference); }
             });
         };
         for (var _i = 0, references_1 = references; _i < references_1.length; _i++) {
@@ -48374,7 +48375,7 @@ function getReferences(info) {
     compiler_1.templateVisitAll(visitor, info.templateAst);
     return result;
 }
-function getDefintionOf(info, ast) {
+function getDefinitionOf(info, ast) {
     if (info.fileName) {
         var templateOffset = info.offset;
         return [{
@@ -48415,7 +48416,7 @@ function getVarDeclarations(info, path) {
                 }
                 result.push({
                     name: name_1,
-                    kind: 'variable', type: type, get definition() { return getDefintionOf(info, variable); }
+                    kind: 'variable', type: type, get definition() { return getDefinitionOf(info, variable); }
                 });
             };
             for (var _i = 0, _a = current.variables; _i < _a.length; _i++) {
@@ -50037,17 +50038,23 @@ function isLexicalScope(node) {
 }
 function transformSourceFile(sourceFile, requests, context) {
     var inserts = [];
-    // Calculate the range of intersting locations. The transform will only visit nodes in this
+    // Calculate the range of interesting locations. The transform will only visit nodes in this
     // range to improve the performance on large files.
     var locations = Array.from(requests.keys());
     var min = Math.min.apply(Math, locations);
     var max = Math.max.apply(Math, locations);
+    // Visit nodes matching the request and synthetic nodes added by tsickle
+    function shouldVisit(pos, end) {
+        return (pos <= max && end >= min) || pos == -1;
+    }
     function visitSourceFile(sourceFile) {
         function topLevelStatement(node) {
             var declarations = [];
             function visitNode(node) {
-                var nodeRequest = requests.get(node.pos);
-                if (nodeRequest && nodeRequest.kind == node.kind && nodeRequest.end == node.end) {
+                // Get the original node before tsickle
+                var _a = ts.getOriginalNode(node), pos = _a.pos, end = _a.end, kind = _a.kind;
+                var nodeRequest = requests.get(pos);
+                if (nodeRequest && nodeRequest.kind == kind && nodeRequest.end == end) {
                     // This node is requested to be rewritten as a reference to the exported name.
                     // Record that the node needs to be moved to an exported variable with the given name
                     var name_1 = nodeRequest.name;
@@ -50055,12 +50062,14 @@ function transformSourceFile(sourceFile, requests, context) {
                     return ts.createIdentifier(name_1);
                 }
                 var result = node;
-                if (node.pos <= max && node.end >= min && !isLexicalScope(node)) {
+                if (shouldVisit(pos, end) && !isLexicalScope(node)) {
                     result = ts.visitEachChild(node, visitNode, context);
                 }
                 return result;
             }
-            var result = (node.pos <= max && node.end >= min) ? ts.visitEachChild(node, visitNode, context) : node;
+            // Get the original node before tsickle
+            var _a = ts.getOriginalNode(node), pos = _a.pos, end = _a.end;
+            var result = shouldVisit(pos, end) ? ts.visitEachChild(node, visitNode, context) : node;
             if (declarations.length) {
                 inserts.push({ priorTo: result, declarations: declarations });
             }
@@ -50193,7 +50202,9 @@ var TypeScriptNodeEmitter = (function () {
     }
     TypeScriptNodeEmitter.prototype.updateSourceFile = function (sourceFile, stmts, preamble) {
         var converter = new _NodeEmitterVisitor();
-        var statements = stmts.map(function (stmt) { return stmt.visitStatement(converter, null); }).filter(function (stmt) { return stmt != null; });
+        // [].concat flattens the result so that each `visit...` method can also return an array of
+        // stmts.
+        var statements = [].concat.apply([], stmts.map(function (stmt) { return stmt.visitStatement(converter, null); }).filter(function (stmt) { return stmt != null; }));
         var newSourceFile = ts.updateSourceFileNode(sourceFile, converter.getReexports().concat(converter.getImports(), statements));
         if (preamble) {
             if (preamble.startsWith('/*') && preamble.endsWith('*/')) {
@@ -50286,13 +50297,22 @@ var _NodeEmitterVisitor = (function () {
                 return null;
             }
         }
-        return this.record(stmt, ts.createVariableStatement(this.getModifiers(stmt), ts.createVariableDeclarationList([ts.createVariableDeclaration(ts.createIdentifier(stmt.name), 
-            /* type */ undefined, (stmt.value && stmt.value.visitExpression(this, null)) || undefined)])));
+        var varDeclList = ts.createVariableDeclarationList([ts.createVariableDeclaration(ts.createIdentifier(stmt.name), 
+            /* type */ undefined, (stmt.value && stmt.value.visitExpression(this, null)) || undefined)]);
+        if (stmt.hasModifier(compiler_1.StmtModifier.Exported)) {
+            // Note: We need to add an explicit variable and export declaration so that
+            // the variable can be referred in the same file as well.
+            var tsVarStmt = this.record(stmt, ts.createVariableStatement(/* modifiers */ [], varDeclList));
+            var exportStmt = this.record(stmt, ts.createExportDeclaration(
+            /*decorators*/ undefined, /*modifiers*/ undefined, ts.createNamedExports([ts.createExportSpecifier(stmt.name, stmt.name)])));
+            return [tsVarStmt, exportStmt];
+        }
+        return this.record(stmt, ts.createVariableStatement(this.getModifiers(stmt), varDeclList));
     };
     _NodeEmitterVisitor.prototype.visitDeclareFunctionStmt = function (stmt, context) {
         return this.record(stmt, ts.createFunctionDeclaration(
         /* decorators */ undefined, this.getModifiers(stmt), 
-        /* astrictToken */ undefined, stmt.name, /* typeParameters */ undefined, stmt.params.map(function (p) { return ts.createParameter(
+        /* asteriskToken */ undefined, stmt.name, /* typeParameters */ undefined, stmt.params.map(function (p) { return ts.createParameter(
         /* decorators */ undefined, /* modifiers */ undefined, 
         /* dotDotDotToken */ undefined, p.name); }), 
         /* type */ undefined, this._visitStatements(stmt.statements)));
@@ -50571,8 +50591,10 @@ var program = createCommonjsModule(function (module, exports) {
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 var compiler_1 = require$$1$8;
-var fs_1 = fs__default;
+var core_1 = require$$0$13;
+var fs$$1 = fs__default;
 var path = require$$2__default;
+var tsickle$$1 = tsickle;
 var ts = require$$0__default;
 var compiler_host_1 = compiler_host;
 var check_types_1 = check_types;
@@ -50595,14 +50617,17 @@ var AngularCompilerProgram = (function () {
         this._structuralDiagnostics = [];
         this.oldTsProgram = oldProgram ? oldProgram.getTsProgram() : undefined;
         this.tsProgram = ts.createProgram(rootNames, options, host, this.oldTsProgram);
-        this.srcNames = this.tsProgram.getSourceFiles().map(function (sf) { return sf.fileName; });
+        this.srcNames =
+            this.tsProgram.getSourceFiles()
+                .map(function (sf) { return sf.fileName; })
+                .filter(function (f) { return !f.match(/\.ngfactory\.[\w.]+$|\.ngstyle\.[\w.]+$|\.ngsummary\.[\w.]+$/); });
         this.metadataCache = new lower_expressions_1.LowerMetadataCache({ quotedNames: true }, !!options.strictMetadataEmit);
         this.aotCompilerHost = new compiler_host_1.CompilerHost(this.tsProgram, options, host, /* collectorOptions */ undefined, this.metadataCache);
         if (host.readResource) {
             this.aotCompilerHost.loadResource = host.readResource.bind(host);
         }
-        var compiler = compiler_1.createAotCompiler(this.aotCompilerHost, options).compiler;
-        this.compiler = compiler;
+        var aotOptions = getAotCompilerOptions(options);
+        this.compiler = compiler_1.createAotCompiler(this.aotCompilerHost, aotOptions).compiler;
     }
     // Program implementation
     AngularCompilerProgram.prototype.getTsProgram = function () { return this.programWithStubs; };
@@ -50645,19 +50670,42 @@ var AngularCompilerProgram = (function () {
         var _this = this;
         var _b = _a.emitFlags, emitFlags = _b === void 0 ? api_1.EmitFlags.Default : _b, cancellationToken = _a.cancellationToken;
         var emitMap = new Map();
-        var result = this.programWithStubs.emit(
-        /* targetSourceFile */ undefined, createWriteFileCallback(emitFlags, this.host, this.metadataCache, emitMap), cancellationToken, (emitFlags & (api_1.EmitFlags.DTS | api_1.EmitFlags.JS)) == api_1.EmitFlags.DTS, this.calculateTransforms());
+        var tsickleCompilerHostOptions = {
+            googmodule: false,
+            untyped: true,
+            convertIndexImportShorthand: true,
+            transformDecorators: this.options.annotationsAs !== 'decorators',
+            transformTypesToClosure: this.options.annotateForClosureCompiler,
+        };
+        var tsickleHost = {
+            shouldSkipTsickleProcessing: function (fileName) { return /\.d\.ts$/.test(fileName); },
+            pathToModuleName: function (context, importPath) { return ''; },
+            shouldIgnoreWarningsForPath: function (filePath) { return false; },
+            fileNameToModuleId: function (fileName) { return fileName; },
+        };
+        var expectedOut = this.options.expectedOut ?
+            this.options.expectedOut.map(function (f) { return path.resolve(process.cwd(), f); }) :
+            undefined;
+        var result = tsickle$$1.emitWithTsickle(this.programWithStubs, tsickleHost, tsickleCompilerHostOptions, this.host, this.options, 
+        /* targetSourceFile */ undefined, createWriteFileCallback(emitFlags, this.host, this.metadataCache, emitMap, expectedOut), cancellationToken, (emitFlags & (api_1.EmitFlags.DTS | api_1.EmitFlags.JS)) == api_1.EmitFlags.DTS, this.calculateTransforms());
         this.generatedFiles.forEach(function (file) {
+            // In order not to replicate the TS calculation of the out folder for files
+            // derive the out location for .json files from the out location of the .ts files
             if (file.source && file.source.length && SUMMARY_JSON_FILES.test(file.genFileUrl)) {
                 // If we have emitted the ngsummary.ts file, ensure the ngsummary.json file is emitted to
                 // the same location.
                 var emittedFile = emitMap.get(file.srcFileUrl);
-                var fileName = emittedFile ?
-                    path.join(path.dirname(emittedFile), path.basename(file.genFileUrl)) :
-                    file.genFileUrl;
-                _this.host.writeFile(fileName, file.source, false, function (error) { });
+                if (emittedFile) {
+                    var fileName = path.join(path.dirname(emittedFile), path.basename(file.genFileUrl));
+                    _this.host.writeFile(fileName, file.source, false, function (error) { });
+                }
             }
         });
+        // Ensure that expected output files exist.
+        for (var _i = 0, _c = expectedOut || []; _i < _c.length; _i++) {
+            var out = _c[_i];
+            fs$$1.appendFileSync(out, '', 'utf8');
+        }
         return result;
     };
     Object.defineProperty(AngularCompilerProgram.prototype, "analyzedModules", {
@@ -50733,20 +50781,14 @@ var AngularCompilerProgram = (function () {
         configurable: true
     });
     AngularCompilerProgram.prototype.calculateTransforms = function () {
-        var before = [];
-        var after = [];
+        var beforeTs = [];
         if (!this.options.disableExpressionLowering) {
-            before.push(lower_expressions_1.getExpressionLoweringTransformFactory(this.metadataCache));
+            beforeTs.push(lower_expressions_1.getExpressionLoweringTransformFactory(this.metadataCache));
         }
         if (!this.options.skipTemplateCodegen) {
-            after.push(node_emitter_transform_1.getAngularEmitterTransformFactory(this.generatedFiles));
+            beforeTs.push(node_emitter_transform_1.getAngularEmitterTransformFactory(this.generatedFiles));
         }
-        var result = {};
-        if (before.length)
-            result.before = before;
-        if (after.length)
-            result.after = after;
-        return result;
+        return { beforeTs: beforeTs };
     };
     AngularCompilerProgram.prototype.catchAnalysisError = function (e) {
         if (compiler_1.isSyntaxError(e)) {
@@ -50778,8 +50820,8 @@ var AngularCompilerProgram = (function () {
     AngularCompilerProgram.prototype.generateStubs = function () {
         return this.options.skipTemplateCodegen ? [] :
             this.options.generateCodeForLibraries === false ?
-                this.compiler.emitAllStubs(this.analyzedModules) :
-                this.compiler.emitPartialStubs(this.analyzedModules);
+                this.compiler.emitPartialStubs(this.analyzedModules) :
+                this.compiler.emitAllStubs(this.analyzedModules);
     };
     AngularCompilerProgram.prototype.generateFiles = function () {
         try {
@@ -50813,6 +50855,36 @@ function createProgram(_a) {
     return new AngularCompilerProgram(rootNames, options, host, oldProgram);
 }
 exports.createProgram = createProgram;
+// Compute the AotCompiler options
+function getAotCompilerOptions(options) {
+    var missingTranslation = core_1.MissingTranslationStrategy.Warning;
+    switch (options.i18nInMissingTranslations) {
+        case 'ignore':
+            missingTranslation = core_1.MissingTranslationStrategy.Ignore;
+            break;
+        case 'error':
+            missingTranslation = core_1.MissingTranslationStrategy.Error;
+            break;
+    }
+    var translations = '';
+    if (options.i18nInFile) {
+        if (!options.locale) {
+            throw new Error("The translation file (" + options.i18nInFile + ") locale must be provided.");
+        }
+        translations = fs$$1.readFileSync(options.i18nInFile, 'utf8');
+    }
+    else {
+        // No translations are provided, ignore any errors
+        // We still go through i18n to remove i18n attributes
+        missingTranslation = core_1.MissingTranslationStrategy.Ignore;
+    }
+    return {
+        locale: options.i18nInLocale,
+        i18nFormat: options.i18nInFormat || options.i18nOutFormat, translations: translations, missingTranslation: missingTranslation,
+        enableLegacyTemplate: options.enableLegacyTemplate,
+        enableSummariesForJit: true,
+    };
+}
 function writeMetadata(emitFilePath, sourceFile, metadataCache) {
     if (/\.js$/.test(emitFilePath)) {
         var path_1 = emitFilePath.replace(/\.js$/, '.metadata.json');
@@ -50827,31 +50899,27 @@ function writeMetadata(emitFilePath, sourceFile, metadataCache) {
         var metadata = metadataCache.getMetadata(collectableFile);
         if (metadata) {
             var metadataText = JSON.stringify([metadata]);
-            fs_1.writeFileSync(path_1, metadataText, { encoding: 'utf-8' });
+            fs$$1.writeFileSync(path_1, metadataText, { encoding: 'utf-8' });
         }
     }
 }
-function createWriteFileCallback(emitFlags, host, metadataCache, emitMap) {
-    var withMetadata = function (fileName, data, writeByteOrderMark, onError, sourceFiles) {
-        var generatedFile = GENERATED_FILES.test(fileName);
-        if (!generatedFile || data != '') {
-            host.writeFile(fileName, data, writeByteOrderMark, onError, sourceFiles);
+function createWriteFileCallback(emitFlags, host, metadataCache, emitMap, expectedOut) {
+    return function (fileName, data, writeByteOrderMark, onError, sourceFiles) {
+        var srcFile;
+        if (sourceFiles && sourceFiles.length == 1) {
+            srcFile = sourceFiles[0];
+            emitMap.set(srcFile.fileName, fileName);
         }
-        if (!generatedFile && sourceFiles && sourceFiles.length == 1) {
-            emitMap.set(sourceFiles[0].fileName, fileName);
-            writeMetadata(fileName, sourceFiles[0], metadataCache);
+        var absFile = path.resolve(process.cwd(), fileName);
+        var generatedFile = GENERATED_FILES.test(fileName);
+        // Don't emit unexpected files nor empty generated files
+        if ((!expectedOut || expectedOut.indexOf(absFile) > -1) && (!generatedFile || data)) {
+            host.writeFile(fileName, data, writeByteOrderMark, onError, sourceFiles);
+            if (srcFile && !generatedFile && (emitFlags & api_1.EmitFlags.Metadata) != 0) {
+                writeMetadata(fileName, srcFile, metadataCache);
+            }
         }
     };
-    var withoutMetadata = function (fileName, data, writeByteOrderMark, onError, sourceFiles) {
-        var generatedFile = GENERATED_FILES.test(fileName);
-        if (!generatedFile || data != '') {
-            host.writeFile(fileName, data, writeByteOrderMark, onError, sourceFiles);
-        }
-        if (!generatedFile && sourceFiles && sourceFiles.length == 1) {
-            emitMap.set(sourceFiles[0].fileName, fileName);
-        }
-    };
-    return (emitFlags & api_1.EmitFlags.Metadata) != 0 ? withMetadata : withoutMetadata;
 }
 function getNgOptionDiagnostics(options) {
     if (options.annotationsAs) {
@@ -51062,9 +51130,18 @@ function readConfiguration(project, basePath, checkFunc, existingOptions) {
     return { parsed: parsed, ngOptions: ngOptions };
 }
 exports.readConfiguration = readConfiguration;
+/**
+ * Returns an object with two properties:
+ * - `errorCode` is 0 when the compilation was successful,
+ * - `result` is an `EmitResult` when the errorCode is 0, `undefined` otherwise.
+ */
 function performCompilation(basePath, files, options, ngOptions, consoleError, checkFunc, tsCompilerHost) {
     if (consoleError === void 0) { consoleError = console.error; }
     if (checkFunc === void 0) { checkFunc = throwOnDiagnostics; }
+    var _a = ts.version.split('.'), major = _a[0], minor = _a[1];
+    if (+major < 2 || (+major === 2 && +minor < 3)) {
+        throw new Error('Must use TypeScript > 2.3 to have transformer support');
+    }
     try {
         ngOptions.basePath = basePath;
         ngOptions.genDir = basePath;
@@ -51077,7 +51154,7 @@ function performCompilation(basePath, files, options, ngOptions, consoleError, c
             }
         };
         if (ngOptions.flatModuleOutFile && !ngOptions.skipMetadataEmit) {
-            var _a = tsc_wrapped_1.createBundleIndexHost(ngOptions, rootFileNames_1, host), bundleHost = _a.host, indexName = _a.indexName, errors = _a.errors;
+            var _b = tsc_wrapped_1.createBundleIndexHost(ngOptions, rootFileNames_1, host), bundleHost = _b.host, indexName = _b.indexName, errors = _b.errors;
             if (errors)
                 checkFunc(basePath, errors);
             if (indexName)
@@ -51095,20 +51172,20 @@ function performCompilation(basePath, files, options, ngOptions, consoleError, c
         checkFunc(basePath, ngProgram.getTsSemanticDiagnostics(), ngProgram.getNgStructuralDiagnostics());
         // Check Angular semantic diagnostics
         checkFunc(basePath, ngProgram.getNgSemanticDiagnostics());
-        ngProgram.emit({
+        var result = ngProgram.emit({
             emitFlags: api$$1.EmitFlags.Default |
                 ((ngOptions.skipMetadataEmit || ngOptions.flatModuleOutFile) ? 0 : api$$1.EmitFlags.Metadata)
         });
+        checkFunc(basePath, result.diagnostics);
+        return { errorCode: 0, result: result };
     }
     catch (e) {
         if (compiler_1.isSyntaxError(e)) {
-            console.error(e.message);
             consoleError(e.message);
-            return 1;
+            return { errorCode: 1 };
         }
         throw e;
     }
-    return 0;
 }
 exports.performCompilation = performCompilation;
 
@@ -51464,7 +51541,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v5.0.0-beta.3-06faac8
+ * @license Angular v5.0.0-beta.3-679608d
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -54093,7 +54170,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('5.0.0-beta.3-06faac8');
+var VERSION$$1 = new Version('5.0.0-beta.3-679608d');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
