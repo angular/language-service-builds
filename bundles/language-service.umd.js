@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.3.4-d7be4f1
+ * @license Angular v4.3.4-972538b
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2033,7 +2033,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v4.3.4-d7be4f1
+ * @license Angular v4.3.4-972538b
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2825,7 +2825,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('4.3.4-d7be4f1');
+var VERSION$2 = new Version('4.3.4-972538b');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -12096,6 +12096,9 @@ var ViewContainerRef_ = (function () {
      * @return {?}
      */
     ViewContainerRef_.prototype.insert = function (viewRef, index) {
+        if (viewRef.destroyed) {
+            throw new Error('Cannot insert a destroyed View in a ViewContainer!');
+        }
         var /** @type {?} */ viewRef_ = (viewRef);
         var /** @type {?} */ viewData = viewRef_._view;
         attachEmbeddedView(this._view, this._data, index, viewData);
@@ -12108,6 +12111,9 @@ var ViewContainerRef_ = (function () {
      * @return {?}
      */
     ViewContainerRef_.prototype.move = function (viewRef, currentIndex) {
+        if (viewRef.destroyed) {
+            throw new Error('Cannot move a destroyed View in a ViewContainer!');
+        }
         var /** @type {?} */ previousIndex = this._embeddedViews.indexOf(viewRef._view);
         moveEmbeddedView(this._data, previousIndex, currentIndex);
         return viewRef;
@@ -16992,7 +16998,7 @@ var core_es5 = Object.freeze({
 });
 
 /**
- * @license Angular v4.3.4-d7be4f1
+ * @license Angular v4.3.4-972538b
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -17011,7 +17017,7 @@ var core_es5 = Object.freeze({
 /**
  * \@stable
  */
-var VERSION$1 = new Version('4.3.4-d7be4f1');
+var VERSION$1 = new Version('4.3.4-972538b');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -47188,7 +47194,7 @@ var core_1 = require$$0$13;
 /**
  * @stable
  */
-exports.VERSION = new core_1.Version('4.3.4-d7be4f1');
+exports.VERSION = new core_1.Version('4.3.4-972538b');
 
 });
 
@@ -50665,7 +50671,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v4.3.4-d7be4f1
+ * @license Angular v4.3.4-972538b
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -53294,7 +53300,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('4.3.4-d7be4f1');
+var VERSION$$1 = new Version('4.3.4-972538b');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
