@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.3.4-a618d6e
+ * @license Angular v4.3.4-259fc91
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2033,7 +2033,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v4.3.4-a618d6e
+ * @license Angular v4.3.4-259fc91
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2825,7 +2825,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('4.3.4-a618d6e');
+var VERSION$2 = new Version('4.3.4-259fc91');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -7930,7 +7930,7 @@ var ChangeDetectorRef = (function () {
      *
      *   constructor(private ref: ChangeDetectorRef) {
      *     setInterval(() => {
-     *       this.numberOfTicks ++
+     *       this.numberOfTicks++;
      *       // the following is required, otherwise the view will not be updated
      *       this.ref.markForCheck();
      *     }, 1000);
@@ -7981,11 +7981,11 @@ var ChangeDetectorRef = (function () {
      * \@Component({
      *   selector: 'giant-list',
      *   template: `
-     *     <li *ngFor="let d of dataProvider.data">Data {{d}}</lig>
+     *     <li *ngFor="let d of dataProvider.data">Data {{d}}</li>
      *   `,
      * })
      * class GiantList {
-     *   constructor(private ref: ChangeDetectorRef, private dataProvider:DataProvider) {
+     *   constructor(private ref: ChangeDetectorRef, private dataProvider: DataProvider) {
      *     ref.detach();
      *     setInterval(() => {
      *       this.ref.detectChanges();
@@ -8072,13 +8072,14 @@ var ChangeDetectorRef = (function () {
      *   template: 'Data: {{dataProvider.data}}'
      * })
      * class LiveData {
-     *   constructor(private ref: ChangeDetectorRef, private dataProvider:DataProvider) {}
+     *   constructor(private ref: ChangeDetectorRef, private dataProvider: DataProvider) {}
      *
      *   set live(value) {
-     *     if (value)
+     *     if (value) {
      *       this.ref.reattach();
-     *     else
+     *     } else {
      *       this.ref.detach();
+     *     }
      *   }
      * }
      *
@@ -16998,7 +16999,7 @@ var core_es5 = Object.freeze({
 });
 
 /**
- * @license Angular v4.3.4-a618d6e
+ * @license Angular v4.3.4-259fc91
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -17017,7 +17018,7 @@ var core_es5 = Object.freeze({
 /**
  * \@stable
  */
-var VERSION$1 = new Version('4.3.4-a618d6e');
+var VERSION$1 = new Version('4.3.4-259fc91');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -47194,7 +47195,7 @@ var core_1 = require$$0$13;
 /**
  * @stable
  */
-exports.VERSION = new core_1.Version('4.3.4-a618d6e');
+exports.VERSION = new core_1.Version('4.3.4-259fc91');
 
 });
 
@@ -50671,7 +50672,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v4.3.4-a618d6e
+ * @license Angular v4.3.4-259fc91
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -53300,7 +53301,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('4.3.4-a618d6e');
+var VERSION$$1 = new Version('4.3.4-259fc91');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
