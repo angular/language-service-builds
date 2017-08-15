@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.0.0-beta.3-77747e1
+ * @license Angular v5.0.0-beta.3-1cfa79c
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2031,7 +2031,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v5.0.0-beta.3-77747e1
+ * @license Angular v5.0.0-beta.3-1cfa79c
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2858,7 +2858,7 @@ var ViewMetadata = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('5.0.0-beta.3-77747e1');
+var VERSION$2 = new Version('5.0.0-beta.3-1cfa79c');
 /**
  * @fileoverview added by tsickle
  * @suppress {checkTypes} checked by tsc
@@ -8972,6 +8972,29 @@ var DefaultIterableDiffer = (function () {
         }
         return record;
     };
+    /**
+     * @return {?}
+     */
+    DefaultIterableDiffer.prototype.toString = function () {
+        var /** @type {?} */ list = [];
+        this.forEachItem(function (record) { return list.push(record); });
+        var /** @type {?} */ previous = [];
+        this.forEachPreviousItem(function (record) { return previous.push(record); });
+        var /** @type {?} */ additions = [];
+        this.forEachAddedItem(function (record) { return additions.push(record); });
+        var /** @type {?} */ moves = [];
+        this.forEachMovedItem(function (record) { return moves.push(record); });
+        var /** @type {?} */ removals = [];
+        this.forEachRemovedItem(function (record) { return removals.push(record); });
+        var /** @type {?} */ identityChanges = [];
+        this.forEachIdentityChange(function (record) { return identityChanges.push(record); });
+        return 'collection: ' + list.join(', ') + '\n' +
+            'previous: ' + previous.join(', ') + '\n' +
+            'additions: ' + additions.join(', ') + '\n' +
+            'moves: ' + moves.join(', ') + '\n' +
+            'removals: ' + removals.join(', ') + '\n' +
+            'identityChanges: ' + identityChanges.join(', ') + '\n';
+    };
     return DefaultIterableDiffer;
 }());
 /**
@@ -9028,6 +9051,14 @@ var IterableChangeRecord_ = (function () {
          */
         this._nextIdentityChange = null;
     }
+    /**
+     * @return {?}
+     */
+    IterableChangeRecord_.prototype.toString = function () {
+        return this.previousIndex === this.currentIndex ? stringify(this.item) :
+            stringify(this.item) + '[' +
+                stringify(this.previousIndex) + '->' + stringify(this.currentIndex) + ']';
+    };
     return IterableChangeRecord_;
 }());
 var _DuplicateItemRecordList = (function () {
@@ -9174,6 +9205,10 @@ var _DuplicateMap = (function () {
      * @return {?}
      */
     _DuplicateMap.prototype.clear = function () { this.map.clear(); };
+    /**
+     * @return {?}
+     */
+    _DuplicateMap.prototype.toString = function () { return '_DuplicateMap(' + stringify(this.map) + ')'; };
     return _DuplicateMap;
 }());
 /**
@@ -17162,7 +17197,7 @@ var core_es5 = Object.freeze({
 });
 
 /**
- * @license Angular v5.0.0-beta.3-77747e1
+ * @license Angular v5.0.0-beta.3-1cfa79c
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -17185,7 +17220,7 @@ var core_es5 = Object.freeze({
 /**
  * \@stable
  */
-var VERSION$1 = new Version('5.0.0-beta.3-77747e1');
+var VERSION$1 = new Version('5.0.0-beta.3-1cfa79c');
 /**
  * @fileoverview added by tsickle
  * @suppress {checkTypes} checked by tsc
@@ -47763,7 +47798,7 @@ var core_1 = require$$0$13;
 /**
  * @stable
  */
-exports.VERSION = new core_1.Version('5.0.0-beta.3-77747e1');
+exports.VERSION = new core_1.Version('5.0.0-beta.3-1cfa79c');
 
 });
 
@@ -51482,7 +51517,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v5.0.0-beta.3-77747e1
+ * @license Angular v5.0.0-beta.3-1cfa79c
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -54111,7 +54146,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('5.0.0-beta.3-77747e1');
+var VERSION$$1 = new Version('5.0.0-beta.3-1cfa79c');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
