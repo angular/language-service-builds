@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.0.0-beta.4-43226cb
+ * @license Angular v5.0.0-beta.4-0d45828
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2029,7 +2029,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v5.0.0-beta.4-43226cb
+ * @license Angular v5.0.0-beta.4-0d45828
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2564,7 +2564,7 @@ ViewEncapsulation[ViewEncapsulation.None] = "None";
 /**
  * \@stable
  */
-var VERSION$2 = new Version('5.0.0-beta.4-43226cb');
+var VERSION$2 = new Version('5.0.0-beta.4-0d45828');
 /**
  * Inject decorator and metadata.
  *
@@ -15483,7 +15483,7 @@ function transition$$1(stateChangeExpr, steps) {
 }
 
 /**
- * @license Angular v5.0.0-beta.4-43226cb
+ * @license Angular v5.0.0-beta.4-0d45828
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -15506,7 +15506,7 @@ function transition$$1(stateChangeExpr, steps) {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('5.0.0-beta.4-43226cb');
+var VERSION$1 = new Version('5.0.0-beta.4-0d45828');
 /**
  * @fileoverview added by tsickle
  * @suppress {checkTypes} checked by tsc
@@ -47682,7 +47682,7 @@ var ModuleResolutionHostAdapter = language_services.ModuleResolutionHostAdapter;
 var CompilerHost = language_services.CompilerHost;
 
 /**
- * @license Angular v5.0.0-beta.4-43226cb
+ * @license Angular v5.0.0-beta.4-0d45828
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -50312,7 +50312,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('5.0.0-beta.4-43226cb');
+var VERSION$$1 = new Version('5.0.0-beta.4-0d45828');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
