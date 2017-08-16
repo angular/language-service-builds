@@ -1,10 +1,10 @@
 /**
- * @license Angular v5.0.0-beta.3-75d484e
+ * @license Angular v5.0.0-beta.3-bc22ff1
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
 import { ASTWithSource, AotSummaryResolver, AstPath, Attribute, CompileMetadataResolver, CompilerConfig, CssSelector, DEFAULT_INTERPOLATION_CONFIG, DirectiveNormalizer, DirectiveResolver, DomElementSchemaRegistry, Element, ElementAst, HtmlParser, I18NHtmlParser, ImplicitReceiver, JitSummaryResolver, Lexer, NAMED_ENTITIES, NgModuleResolver, NullAstVisitor, NullTemplateVisitor, ParseSpan, ParseTreeResult, Parser, PipeResolver, PropertyRead, RecursiveTemplateAstVisitor, ResourceLoader, SelectorMatcher, StaticReflector, StaticSymbolCache, StaticSymbolResolver, TagContentType, TemplateParser, Text, analyzeNgModules, createOfflineCompileUrlResolver, extractProgramSymbols, findNode, getHtmlTagDefinition, identifierName, splitNsName, templateVisitAll, tokenReference, visitAstChildren } from '@angular/compiler';
-import { AstType, BuiltinType, CompilerHost, ModuleResolutionHostAdapter, getClassMembersFromDeclaration, getExpressionScope, getPipesTable, getSymbolQuery, getTemplateExpressionDiagnostics } from '@angular/compiler-cli';
+import { AstType, BuiltinType, CompilerHost, ModuleResolutionHostAdapter, getClassMembersFromDeclaration, getExpressionScope, getPipesTable, getSymbolQuery, getTemplateExpressionDiagnostics } from '@angular/compiler-cli/src/language_services';
 import { DiagnosticCategory, SyntaxKind, forEachChild, getPositionOfLineAndCharacter } from 'typescript';
 import { Version, ViewEncapsulation, ɵConsole } from '@angular/core';
 import { existsSync } from 'fs';
@@ -2634,7 +2634,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version('5.0.0-beta.3-75d484e');
+var VERSION = new Version('5.0.0-beta.3-bc22ff1');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
