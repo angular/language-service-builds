@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.3.5-3b571a4
+ * @license Angular v4.3.5-77ebd2b
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2033,7 +2033,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v4.3.5-3b571a4
+ * @license Angular v4.3.5-77ebd2b
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2825,7 +2825,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('4.3.5-3b571a4');
+var VERSION$2 = new Version('4.3.5-77ebd2b');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -13374,8 +13374,13 @@ function calcQueryValues(view, startIndex, endIndex, queryDef, values) {
         if (nodeDef.flags & 1 /* TypeElement */ && ((nodeDef.element)).template &&
             (((((nodeDef.element)).template)).nodeMatchedQueries & queryDef.filterId) ===
                 queryDef.filterId) {
-            // check embedded views that were attached at the place of their template.
             var /** @type {?} */ elementData = asElementData(view, i);
+            // check embedded views that were attached at the place of their template,
+            // but process child nodes first if some match the query (see issue #16568)
+            if ((nodeDef.childMatchedQueries & queryDef.filterId) === queryDef.filterId) {
+                calcQueryValues(view, i + 1, i + nodeDef.childCount, queryDef, values);
+                i += nodeDef.childCount;
+            }
             if (nodeDef.flags & 16777216 /* EmbeddedViews */) {
                 var /** @type {?} */ embeddedViews = ((elementData.viewContainer))._embeddedViews;
                 for (var /** @type {?} */ k = 0; k < embeddedViews.length; k++) {
@@ -16999,7 +17004,7 @@ var core_es5 = Object.freeze({
 });
 
 /**
- * @license Angular v4.3.5-3b571a4
+ * @license Angular v4.3.5-77ebd2b
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -17018,7 +17023,7 @@ var core_es5 = Object.freeze({
 /**
  * \@stable
  */
-var VERSION$1 = new Version('4.3.5-3b571a4');
+var VERSION$1 = new Version('4.3.5-77ebd2b');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -47195,7 +47200,7 @@ var core_1 = require$$0$13;
 /**
  * @stable
  */
-exports.VERSION = new core_1.Version('4.3.5-3b571a4');
+exports.VERSION = new core_1.Version('4.3.5-77ebd2b');
 
 });
 
@@ -50672,7 +50677,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v4.3.5-3b571a4
+ * @license Angular v4.3.5-77ebd2b
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -53301,7 +53306,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('4.3.5-3b571a4');
+var VERSION$$1 = new Version('4.3.5-77ebd2b');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
