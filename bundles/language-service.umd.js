@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.3.5-1f43713
+ * @license Angular v4.3.5-641be64
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2033,7 +2033,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v4.3.5-1f43713
+ * @license Angular v4.3.5-641be64
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2825,7 +2825,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('4.3.5-1f43713');
+var VERSION$2 = new Version('4.3.5-641be64');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -6720,16 +6720,21 @@ var ApplicationRef_ = (function (_super) {
             });
         });
         var isStable = new Observable_2(function (observer) {
-            var stableSub = _this._zone.onStable.subscribe(function () {
-                NgZone.assertNotInAngularZone();
-                // Check whether there are no pending macro/micro tasks in the next tick
-                // to allow for NgZone to update the state.
-                scheduleMicroTask(function () {
-                    if (!_this._stable && !_this._zone.hasPendingMacrotasks &&
-                        !_this._zone.hasPendingMicrotasks) {
-                        _this._stable = true;
-                        observer.next(true);
-                    }
+            // Create the subscription to onStable outside the Angular Zone so that
+            // the callback is run outside the Angular Zone.
+            var stableSub;
+            _this._zone.runOutsideAngular(function () {
+                stableSub = _this._zone.onStable.subscribe(function () {
+                    NgZone.assertNotInAngularZone();
+                    // Check whether there are no pending macro/micro tasks in the next tick
+                    // to allow for NgZone to update the state.
+                    scheduleMicroTask(function () {
+                        if (!_this._stable && !_this._zone.hasPendingMacrotasks &&
+                            !_this._zone.hasPendingMicrotasks) {
+                            _this._stable = true;
+                            observer.next(true);
+                        }
+                    });
                 });
             });
             var unstableSub = _this._zone.onUnstable.subscribe(function () {
@@ -17005,7 +17010,7 @@ var core_es5 = Object.freeze({
 });
 
 /**
- * @license Angular v4.3.5-1f43713
+ * @license Angular v4.3.5-641be64
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -17024,7 +17029,7 @@ var core_es5 = Object.freeze({
 /**
  * \@stable
  */
-var VERSION$1 = new Version('4.3.5-1f43713');
+var VERSION$1 = new Version('4.3.5-641be64');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -47201,7 +47206,7 @@ var core_1 = require$$0$13;
 /**
  * @stable
  */
-exports.VERSION = new core_1.Version('4.3.5-1f43713');
+exports.VERSION = new core_1.Version('4.3.5-641be64');
 
 });
 
@@ -50678,7 +50683,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v4.3.5-1f43713
+ * @license Angular v4.3.5-641be64
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -53307,7 +53312,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('4.3.5-1f43713');
+var VERSION$$1 = new Version('4.3.5-641be64');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
