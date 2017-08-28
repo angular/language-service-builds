@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.0.0-beta.4-3d2ee6c
+ * @license Angular v5.0.0-beta.4-f0c681a
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -51,7 +51,7 @@ function __extends$1$1(d, b) {
 }
 
 /**
- * @license Angular v5.0.0-beta.4-3d2ee6c
+ * @license Angular v5.0.0-beta.4-f0c681a
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -377,7 +377,7 @@ var Version = (function () {
 /**
  * @stable
  */
-var VERSION$1 = new Version('5.0.0-beta.4-3d2ee6c');
+var VERSION$1 = new Version('5.0.0-beta.4-f0c681a');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -25689,7 +25689,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v5.0.0-beta.4-3d2ee6c
+ * @license Angular v5.0.0-beta.4-f0c681a
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -26071,7 +26071,7 @@ ViewEncapsulation$1[ViewEncapsulation$1.None] = "None";
 /**
  * \@stable
  */
-var VERSION$3 = new Version$1('5.0.0-beta.4-3d2ee6c');
+var VERSION$3 = new Version$1('5.0.0-beta.4-f0c681a');
 /**
  * Inject decorator and metadata.
  *
@@ -37194,7 +37194,7 @@ var NgModuleFactory_ = (function (_super) {
 }(NgModuleFactory));
 
 /**
- * @license Angular v5.0.0-beta.4-3d2ee6c
+ * @license Angular v5.0.0-beta.4-f0c681a
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -39824,7 +39824,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version$1('5.0.0-beta.4-3d2ee6c');
+var VERSION$$1 = new Version$1('5.0.0-beta.4-f0c681a');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
