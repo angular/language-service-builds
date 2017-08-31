@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.0.0-beta.5-c7e1bda
+ * @license Angular v5.0.0-beta.5-cf7d47d
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -18,9 +18,9 @@ module.exports = function(provided) {
   return result;
 }
 
-define(['exports', 'typescript', 'fs', 'path'], function (exports, require$$0, fs, path) { 'use strict';
+define(['exports', 'typescript', 'fs', 'path'], function (exports, require$$1, fs, path) { 'use strict';
 
-var require$$0__default = 'default' in require$$0 ? require$$0['default'] : require$$0;
+var require$$1__default = 'default' in require$$1 ? require$$1['default'] : require$$1;
 var fs__default = 'default' in fs ? fs['default'] : fs;
 var path__default = 'default' in path ? path['default'] : path;
 
@@ -51,7 +51,7 @@ function __extends$1$1(d, b) {
 }
 
 /**
- * @license Angular v5.0.0-beta.5-c7e1bda
+ * @license Angular v5.0.0-beta.5-cf7d47d
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -377,7 +377,7 @@ var Version = (function () {
 /**
  * @stable
  */
-var VERSION$1 = new Version('5.0.0-beta.5-c7e1bda');
+var VERSION$1 = new Version('5.0.0-beta.5-cf7d47d');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -11906,10 +11906,10 @@ function debugOutputAstAsTypeScript(ast) {
 var TypeScriptEmitter = (function () {
     function TypeScriptEmitter() {
     }
-    TypeScriptEmitter.prototype.emitStatementsAndContext = function (srcFilePath, genFilePath, stmts, preamble, emitSourceMaps) {
+    TypeScriptEmitter.prototype.emitStatementsAndContext = function (srcFilePath, genFilePath, stmts, preamble, emitSourceMaps, referenceFilter) {
         if (preamble === void 0) { preamble = ''; }
         if (emitSourceMaps === void 0) { emitSourceMaps = true; }
-        var converter = new _TsEmitterVisitor();
+        var converter = new _TsEmitterVisitor(referenceFilter);
         var ctx = EmitterVisitorContext.createRoot();
         converter.visitAllStatements(stmts, ctx);
         var preambleLines = preamble ? preamble.split('\n') : [];
@@ -11941,8 +11941,9 @@ var TypeScriptEmitter = (function () {
 }());
 var _TsEmitterVisitor = (function (_super) {
     __extends$1$1(_TsEmitterVisitor, _super);
-    function _TsEmitterVisitor() {
+    function _TsEmitterVisitor(referenceFilter) {
         var _this = _super.call(this, false) || this;
+        _this.referenceFilter = referenceFilter;
         _this.typeExpression = 0;
         _this.importsWithPrefixes = new Map();
         _this.reexports = new Map();
@@ -12220,6 +12221,10 @@ var _TsEmitterVisitor = (function (_super) {
     _TsEmitterVisitor.prototype._visitIdentifier = function (value, typeParams, ctx) {
         var _this = this;
         var name = value.name, moduleName = value.moduleName;
+        if (this.referenceFilter && this.referenceFilter(value)) {
+            ctx.print(null, '(null as any)');
+            return;
+        }
         if (moduleName) {
             var prefix = this.importsWithPrefixes.get(moduleName);
             if (prefix == null) {
@@ -16505,14 +16510,14 @@ var AotCompiler = (function () {
     AotCompiler.prototype.analyzeModulesSync = function (rootFiles) {
         var _this = this;
         var programSymbols = extractProgramSymbols(this._symbolResolver, rootFiles, this._host);
-        var analyzeResult = analyzeAndValidateNgModules(programSymbols, this._host, this._metadataResolver);
+        var analyzeResult = analyzeAndValidateNgModules(programSymbols, this._host, this._symbolResolver, this._metadataResolver);
         analyzeResult.ngModules.forEach(function (ngModule) { return _this._metadataResolver.loadNgModuleDirectiveAndPipeMetadata(ngModule.type.reference, true); });
         return analyzeResult;
     };
     AotCompiler.prototype.analyzeModulesAsync = function (rootFiles) {
         var _this = this;
         var programSymbols = extractProgramSymbols(this._symbolResolver, rootFiles, this._host);
-        var analyzeResult = analyzeAndValidateNgModules(programSymbols, this._host, this._metadataResolver);
+        var analyzeResult = analyzeAndValidateNgModules(programSymbols, this._host, this._symbolResolver, this._metadataResolver);
         return Promise
             .all(analyzeResult.ngModules.map(function (ngModule) { return _this._metadataResolver.loadNgModuleDirectiveAndPipeMetadata(ngModule.type.reference, false); }))
             .then(function () { return analyzeResult; });
@@ -16747,19 +16752,21 @@ function _stylesModuleUrl(stylesheetUrl, shim, suffix) {
     return "" + stylesheetUrl + (shim ? '.shim' : '') + ".ngstyle" + suffix;
 }
 // Returns all the source files and a mapping from modules to directives
-function analyzeNgModules(programStaticSymbols, host, metadataResolver) {
-    var _a = _createNgModules(programStaticSymbols, host, metadataResolver), ngModules = _a.ngModules, symbolsMissingModule = _a.symbolsMissingModule;
-    return _analyzeNgModules(programStaticSymbols, ngModules, symbolsMissingModule, metadataResolver);
+function analyzeNgModules(programStaticSymbols, host, staticSymbolResolver, metadataResolver) {
+    var programStaticSymbolsWithDecorators = programStaticSymbols.filter(function (symbol) { return !symbol.filePath.endsWith('.d.ts') ||
+        staticSymbolResolver.hasDecorators(symbol.filePath); });
+    var _a = _createNgModules(programStaticSymbolsWithDecorators, host, metadataResolver), ngModules = _a.ngModules, symbolsMissingModule = _a.symbolsMissingModule;
+    return _analyzeNgModules(programStaticSymbols, programStaticSymbolsWithDecorators, ngModules, symbolsMissingModule, metadataResolver);
 }
-function analyzeAndValidateNgModules(programStaticSymbols, host, metadataResolver) {
-    var result = analyzeNgModules(programStaticSymbols, host, metadataResolver);
+function analyzeAndValidateNgModules(programStaticSymbols, host, staticSymbolResolver, metadataResolver) {
+    var result = analyzeNgModules(programStaticSymbols, host, staticSymbolResolver, metadataResolver);
     if (result.symbolsMissingModule && result.symbolsMissingModule.length) {
         var messages = result.symbolsMissingModule.map(function (s) { return "Cannot determine the module for class " + s.name + " in " + s.filePath + "! Add " + s.name + " to the NgModule to fix it."; });
         throw syntaxError(messages.join('\n'));
     }
     return result;
 }
-function _analyzeNgModules(programSymbols, ngModuleMetas, symbolsMissingModule, metadataResolver) {
+function _analyzeNgModules(programSymbols, programSymbolsWithDecorators, ngModuleMetas, symbolsMissingModule, metadataResolver) {
     var moduleMetasByRef = new Map();
     ngModuleMetas.forEach(function (ngModule) { return moduleMetasByRef.set(ngModule.type.reference, ngModule); });
     var ngModuleByPipeOrDirective = new Map();
@@ -16772,7 +16779,10 @@ function _analyzeNgModules(programSymbols, ngModuleMetas, symbolsMissingModule, 
     programSymbols.forEach(function (symbol) {
         var filePath = symbol.filePath;
         filePaths.add(filePath);
+    });
+    programSymbolsWithDecorators.forEach(function (symbol) {
         if (metadataResolver.isInjectable(symbol)) {
+            var filePath = symbol.filePath;
             ngInjectablesByFile.set(filePath, (ngInjectablesByFile.get(filePath) || []).concat(symbol));
         }
     });
@@ -17738,6 +17748,23 @@ var StaticSymbolResolver = (function () {
      */
     StaticSymbolResolver.prototype.getStaticSymbol = function (declarationFile, name, members) {
         return this.staticSymbolCache.get(declarationFile, name, members);
+    };
+    /**
+     * hasDecorators checks a file's metadata for the presense of decorators without evalutating the
+     * metada.
+     *
+     * @param filePath the absolute path to examine for decorators.
+     * @returns true if any class in the file has a decorator.
+     */
+    StaticSymbolResolver.prototype.hasDecorators = function (filePath) {
+        var metadata = this.getModuleMetadata(filePath);
+        if (metadata['metadata']) {
+            return Object.keys(metadata['metadata']).some(function (metadataKey) {
+                var entry = metadata['metadata'][metadataKey];
+                return entry && entry.__symbolic === 'class' && entry.decorators;
+            });
+        }
+        return false;
     };
     StaticSymbolResolver.prototype.getSymbolsOf = function (filePath) {
         // Note: Some users use libraries that were not compiled with ngc, i.e. they don't
@@ -19458,7 +19485,7 @@ var Extractor = (function () {
     Extractor.prototype.extract = function (rootFiles) {
         var _this = this;
         var programSymbols = extractProgramSymbols(this.staticSymbolResolver, rootFiles, this.host);
-        var _a = analyzeAndValidateNgModules(programSymbols, this.host, this.metadataResolver), files = _a.files, ngModules = _a.ngModules;
+        var _a = analyzeAndValidateNgModules(programSymbols, this.host, this.staticSymbolResolver, this.metadataResolver), files = _a.files, ngModules = _a.ngModules;
         return Promise
             .all(ngModules.map(function (ngModule) { return _this.metadataResolver.loadNgModuleDirectiveAndPipeMetadata(ngModule.type.reference, false); }))
             .then(function () {
@@ -19881,7 +19908,7 @@ var evaluator = createCommonjsModule(function (module, exports) {
  * found in the LICENSE file at https://angular.io/license
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-var ts = require$$0__default;
+var ts = require$$1__default;
 var schema_1 = schema;
 // In TypeScript 2.1 the spread element kind was renamed.
 var spreadElementSyntaxKind = ts.SyntaxKind.SpreadElement || ts.SyntaxKind.SpreadElementExpression;
@@ -20126,7 +20153,9 @@ var Evaluator = (function () {
                                 return true; // Stop the forEachChild.
                             }
                             else {
-                                obj_1[propertyName] = propertyValue;
+                                obj_1[propertyName] = isPropertyAssignment(assignment) ?
+                                    recordEntry(propertyValue, assignment.initializer) :
+                                    propertyValue;
                             }
                     }
                 });
@@ -20522,7 +20551,7 @@ var symbols = createCommonjsModule(function (module, exports) {
  * found in the LICENSE file at https://angular.io/license
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-var ts = require$$0__default;
+var ts = require$$1__default;
 var Symbols = (function () {
     function Symbols(sourceFile) {
         this.sourceFile = sourceFile;
@@ -20656,7 +20685,7 @@ var __assign = (commonjsGlobal && commonjsGlobal.__assign) || Object.assign || f
     return t;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var ts = require$$0__default;
+var ts = require$$1__default;
 var evaluator_1 = evaluator;
 var schema_1 = schema;
 var symbols_1 = symbols;
@@ -21371,7 +21400,7 @@ function expandedMessage(error) {
 
 });
 
-var require$$1$1 = ( compiler_es5 && undefined ) || compiler_es5;
+var require$$1$2 = ( compiler_es5 && undefined ) || compiler_es5;
 
 var compiler_host = createCommonjsModule(function (module, exports) {
 "use strict";
@@ -21393,11 +21422,11 @@ var __extends = (commonjsGlobal && commonjsGlobal.__extends) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-var compiler_1 = require$$1$1;
+var compiler_1 = require$$1$2;
 var tsc_wrapped_1 = collector;
 var fs$$1 = fs__default;
 var path$$1 = path__default;
-var ts = require$$0__default;
+var ts = require$$1__default;
 var EXT = /(\.ts|\.d\.ts|\.js|\.jsx|\.tsx)$/;
 var DTS = /\.d\.ts$/;
 var NODE_MODULES = '/node_modules/';
@@ -21816,6 +21845,32 @@ exports.NodeCompilerHostContext = NodeCompilerHostContext;
 
 });
 
+var api = createCommonjsModule(function (module, exports) {
+"use strict";
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.DEFAULT_ERROR_CODE = 100;
+exports.UNKNOWN_ERROR_CODE = 500;
+exports.SOURCE = 'angular';
+var EmitFlags;
+(function (EmitFlags) {
+    EmitFlags[EmitFlags["DTS"] = 1] = "DTS";
+    EmitFlags[EmitFlags["JS"] = 2] = "JS";
+    EmitFlags[EmitFlags["Metadata"] = 4] = "Metadata";
+    EmitFlags[EmitFlags["I18nBundle"] = 8] = "I18nBundle";
+    EmitFlags[EmitFlags["Summary"] = 16] = "Summary";
+    EmitFlags[EmitFlags["Default"] = 3] = "Default";
+    EmitFlags[EmitFlags["All"] = 31] = "All";
+})(EmitFlags = exports.EmitFlags || (exports.EmitFlags = {}));
+
+});
+
 var check_types = createCommonjsModule(function (module, exports) {
 "use strict";
 /**
@@ -21826,8 +21881,9 @@ var check_types = createCommonjsModule(function (module, exports) {
  * found in the LICENSE file at https://angular.io/license
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-var compiler_1 = require$$1$1;
-var ts = require$$0__default;
+var compiler_1 = require$$1$2;
+var ts = require$$1__default;
+var api_1 = api;
 var stubCancellationToken = {
     isCancellationRequested: function () { return false; },
     throwIfCancellationRequested: function () { }
@@ -21971,8 +22027,10 @@ var TypeChecker = (function () {
                     var fileName = span.start.file.url;
                     var diagnosticsList = diagnosticsFor(fileName);
                     diagnosticsList.push({
-                        message: diagnosticMessageToString(diagnostic.messageText),
-                        category: diagnostic.category, span: span
+                        messageText: diagnosticMessageToString(diagnostic.messageText),
+                        category: diagnostic.category, span: span,
+                        source: api_1.SOURCE,
+                        code: api_1.DEFAULT_ERROR_CODE
                     });
                 }
             }
@@ -21994,8 +22052,11 @@ exports.TypeChecker = TypeChecker;
 function diagnosticMessageToString(message) {
     return ts.flattenDiagnosticMessageText(message, '\n');
 }
+var REWRITE_PREFIX = /^\u0275[0-9]+$/;
 function createFactoryInfo(emitter, file) {
-    var _a = emitter.emitStatementsAndContext(file.srcFileUrl, file.genFileUrl, file.stmts), sourceText = _a.sourceText, context = _a.context;
+    var _a = emitter.emitStatementsAndContext(file.srcFileUrl, file.genFileUrl, file.stmts, 
+    /* preamble */ undefined, /* emitSourceMaps */ undefined, 
+    /* referenceFilter */ function (reference) { return !!(reference.name && REWRITE_PREFIX.test(reference.name)); }), sourceText = _a.sourceText, context = _a.context;
     var source = ts.createSourceFile(file.genFileUrl, sourceText, ts.ScriptTarget.Latest, /* setParentNodes */ true);
     return { source: source, context: context };
 }
@@ -22102,7 +22163,7 @@ var expression_type = createCommonjsModule(function (module, exports) {
  * found in the LICENSE file at https://angular.io/license
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-var compiler_1 = require$$1$1;
+var compiler_1 = require$$1$2;
 var symbols_1 = symbols$2;
 var DiagnosticKind;
 (function (DiagnosticKind) {
@@ -22525,7 +22586,7 @@ var __extends = (commonjsGlobal && commonjsGlobal.__extends) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-var compiler_1 = require$$1$1;
+var compiler_1 = require$$1$2;
 var expression_type_1 = expression_type;
 var symbols_1 = symbols$2;
 function getTemplateExpressionDiagnostics(info) {
@@ -22809,7 +22870,7 @@ var typescript_symbols = createCommonjsModule(function (module, exports) {
 Object.defineProperty(exports, "__esModule", { value: true });
 var fs$$1 = fs__default;
 var path$$1 = path__default;
-var ts = require$$0__default;
+var ts = require$$1__default;
 var symbols_1 = symbols$2;
 // In TypeScript 2.1 these flags moved
 // These helpers work for both 2.0 and 2.1.
@@ -25711,7 +25772,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v5.0.0-beta.5-c7e1bda
+ * @license Angular v5.0.0-beta.5-cf7d47d
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -26093,7 +26154,7 @@ ViewEncapsulation$1[ViewEncapsulation$1.None] = "None";
 /**
  * \@stable
  */
-var VERSION$3 = new Version$1('5.0.0-beta.5-c7e1bda');
+var VERSION$3 = new Version$1('5.0.0-beta.5-cf7d47d');
 /**
  * Inject decorator and metadata.
  *
@@ -37216,7 +37277,7 @@ var NgModuleFactory_ = (function (_super) {
 }(NgModuleFactory));
 
 /**
- * @license Angular v5.0.0-beta.5-c7e1bda
+ * @license Angular v5.0.0-beta.5-cf7d47d
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -39137,7 +39198,7 @@ var TypeScriptServiceHost = (function () {
             var analyzeHost = { isSourceFile: function (filePath) { return true; } };
             var programSymbols = extractProgramSymbols(this.staticSymbolResolver, this.program.getSourceFiles().map(function (sf) { return sf.fileName; }), analyzeHost);
             analyzedModules = this.analyzedModules =
-                analyzeNgModules(programSymbols, analyzeHost, this.resolver);
+                analyzeNgModules(programSymbols, analyzeHost, this.staticSymbolResolver, this.resolver);
         }
         return analyzedModules;
     };
@@ -39161,13 +39222,13 @@ var TypeScriptServiceHost = (function () {
                     result_1.push(templateSource);
                 }
                 else {
-                    require$$0.forEachChild(child, visit_1);
+                    require$$1.forEachChild(child, visit_1);
                 }
             };
             var sourceFile = this.getSourceFile(fileName);
             if (sourceFile) {
                 this.context = sourceFile.path || sourceFile.fileName;
-                require$$0.forEachChild(sourceFile, visit_1);
+                require$$1.forEachChild(sourceFile, visit_1);
             }
             return result_1.length ? result_1 : undefined;
         }
@@ -39183,10 +39244,10 @@ var TypeScriptServiceHost = (function () {
                     result.push(declaration);
                 }
                 else {
-                    require$$0.forEachChild(child, visit_2);
+                    require$$1.forEachChild(child, visit_2);
                 }
             };
-            require$$0.forEachChild(sourceFile, visit_2);
+            require$$1.forEachChild(sourceFile, visit_2);
         }
         return result;
     };
@@ -39303,8 +39364,8 @@ var TypeScriptServiceHost = (function () {
         var result = undefined;
         var t = this;
         switch (node.kind) {
-            case require$$0.SyntaxKind.NoSubstitutionTemplateLiteral:
-            case require$$0.SyntaxKind.StringLiteral:
+            case require$$1.SyntaxKind.NoSubstitutionTemplateLiteral:
+            case require$$1.SyntaxKind.StringLiteral:
                 var _a = this.getTemplateClassDeclFromNode(node), declaration = _a[0], decorator = _a[1];
                 if (declaration && declaration.name) {
                     var sourceFile = this.getSourceFile(fileName);
@@ -39406,8 +39467,8 @@ var TypeScriptServiceHost = (function () {
     TypeScriptServiceHost.prototype.getTemplateClassFromStaticSymbol = function (type) {
         var source = this.getSourceFile(type.filePath);
         if (source) {
-            var declarationNode = require$$0.forEachChild(source, function (child) {
-                if (child.kind === require$$0.SyntaxKind.ClassDeclaration) {
+            var declarationNode = require$$1.forEachChild(source, function (child) {
+                if (child.kind === require$$1.SyntaxKind.ClassDeclaration) {
                     var classDeclaration = child;
                     if (classDeclaration.name != null && classDeclaration.name.text === type.name) {
                         return classDeclaration;
@@ -39429,7 +39490,7 @@ var TypeScriptServiceHost = (function () {
         if (!parentNode) {
             return TypeScriptServiceHost.missingTemplate;
         }
-        if (parentNode.kind !== require$$0.SyntaxKind.PropertyAssignment) {
+        if (parentNode.kind !== require$$1.SyntaxKind.PropertyAssignment) {
             return TypeScriptServiceHost.missingTemplate;
         }
         else {
@@ -39439,20 +39500,20 @@ var TypeScriptServiceHost = (function () {
             }
         }
         parentNode = parentNode.parent; // ObjectLiteralExpression
-        if (!parentNode || parentNode.kind !== require$$0.SyntaxKind.ObjectLiteralExpression) {
+        if (!parentNode || parentNode.kind !== require$$1.SyntaxKind.ObjectLiteralExpression) {
             return TypeScriptServiceHost.missingTemplate;
         }
         parentNode = parentNode.parent; // CallExpression
-        if (!parentNode || parentNode.kind !== require$$0.SyntaxKind.CallExpression) {
+        if (!parentNode || parentNode.kind !== require$$1.SyntaxKind.CallExpression) {
             return TypeScriptServiceHost.missingTemplate;
         }
         var callTarget = parentNode.expression;
         var decorator = parentNode.parent; // Decorator
-        if (!decorator || decorator.kind !== require$$0.SyntaxKind.Decorator) {
+        if (!decorator || decorator.kind !== require$$1.SyntaxKind.Decorator) {
             return TypeScriptServiceHost.missingTemplate;
         }
         var declaration = decorator.parent; // ClassDeclaration
-        if (!declaration || declaration.kind !== require$$0.SyntaxKind.ClassDeclaration) {
+        if (!declaration || declaration.kind !== require$$1.SyntaxKind.ClassDeclaration) {
             return TypeScriptServiceHost.missingTemplate;
         }
         return [declaration, callTarget];
@@ -39465,11 +39526,11 @@ var TypeScriptServiceHost = (function () {
             [];
     };
     TypeScriptServiceHost.prototype.getDeclarationFromNode = function (sourceFile, node) {
-        if (node.kind == require$$0.SyntaxKind.ClassDeclaration && node.decorators &&
+        if (node.kind == require$$1.SyntaxKind.ClassDeclaration && node.decorators &&
             node.name) {
             for (var _i = 0, _a = node.decorators; _i < _a.length; _i++) {
                 var decorator = _a[_i];
-                if (decorator.expression && decorator.expression.kind == require$$0.SyntaxKind.CallExpression) {
+                if (decorator.expression && decorator.expression.kind == require$$1.SyntaxKind.CallExpression) {
                     var classDeclaration = node;
                     if (classDeclaration.name) {
                         var call = decorator.expression;
@@ -39508,16 +39569,16 @@ var TypeScriptServiceHost = (function () {
     };
     TypeScriptServiceHost.prototype.stringOf = function (node) {
         switch (node.kind) {
-            case require$$0.SyntaxKind.NoSubstitutionTemplateLiteral:
+            case require$$1.SyntaxKind.NoSubstitutionTemplateLiteral:
                 return node.text;
-            case require$$0.SyntaxKind.StringLiteral:
+            case require$$1.SyntaxKind.StringLiteral:
                 return node.text;
         }
     };
     TypeScriptServiceHost.prototype.findNode = function (sourceFile, position) {
         function find(node) {
             if (position >= node.getStart() && position < node.getEnd()) {
-                return require$$0.forEachChild(node, find) || node;
+                return require$$1.forEachChild(node, find) || node;
             }
         }
         return find(sourceFile);
@@ -39547,14 +39608,14 @@ function shrink(span, offset) {
 }
 function spanAt(sourceFile, line, column) {
     if (line != null && column != null) {
-        var position_1 = require$$0.getPositionOfLineAndCharacter(sourceFile, line, column);
+        var position_1 = require$$1.getPositionOfLineAndCharacter(sourceFile, line, column);
         var findChild = function findChild(node) {
-            if (node.kind > require$$0.SyntaxKind.LastToken && node.pos <= position_1 && node.end > position_1) {
-                var betterNode = require$$0.forEachChild(node, findChild);
+            if (node.kind > require$$1.SyntaxKind.LastToken && node.pos <= position_1 && node.end > position_1) {
+                var betterNode = require$$1.forEachChild(node, findChild);
                 return betterNode || node;
             }
         };
-        var node = require$$0.forEachChild(sourceFile, findChild);
+        var node = require$$1.forEachChild(sourceFile, findChild);
         if (node) {
             return { start: node.getStart(), end: node.getEnd() };
         }
@@ -39720,7 +39781,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
             start: d.span.start,
             length: d.span.end - d.span.start,
             messageText: d.message,
-            category: require$$0.DiagnosticCategory.Error,
+            category: require$$1.DiagnosticCategory.Error,
             code: 0,
             source: 'ng'
         };
@@ -39846,7 +39907,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version$1('5.0.0-beta.5-c7e1bda');
+var VERSION$$1 = new Version$1('5.0.0-beta.5-cf7d47d');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;

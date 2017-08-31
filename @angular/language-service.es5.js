@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.0.0-beta.5-c7e1bda
+ * @license Angular v5.0.0-beta.5-cf7d47d
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1926,7 +1926,7 @@ var TypeScriptServiceHost = (function () {
             var analyzeHost = { isSourceFile: function (filePath) { return true; } };
             var programSymbols = extractProgramSymbols(this.staticSymbolResolver, this.program.getSourceFiles().map(function (sf) { return sf.fileName; }), analyzeHost);
             analyzedModules = this.analyzedModules =
-                analyzeNgModules(programSymbols, analyzeHost, this.resolver);
+                analyzeNgModules(programSymbols, analyzeHost, this.staticSymbolResolver, this.resolver);
         }
         return analyzedModules;
     };
@@ -2635,7 +2635,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version('5.0.0-beta.5-c7e1bda');
+var VERSION = new Version('5.0.0-beta.5-cf7d47d');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
