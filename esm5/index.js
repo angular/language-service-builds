@@ -1,17 +1,15 @@
 /**
- * @license Angular v5.0.0-beta.5-ee04217
+ * @license Angular v5.0.0-beta.5-fd701b0
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
 import { ASTWithSource, AotSummaryResolver, AstPath, Attribute, CompileMetadataResolver, CompilerConfig, CssSelector, DEFAULT_INTERPOLATION_CONFIG, DirectiveNormalizer, DirectiveResolver, DomElementSchemaRegistry, Element, ElementAst, HtmlParser, I18NHtmlParser, ImplicitReceiver, JitSummaryResolver, Lexer, NAMED_ENTITIES, NgModuleResolver, NullAstVisitor, NullTemplateVisitor, ParseSpan, ParseTreeResult, Parser, PipeResolver, PropertyRead, RecursiveTemplateAstVisitor, ResourceLoader, SelectorMatcher, StaticReflector, StaticSymbolCache, StaticSymbolResolver, TagContentType, TemplateParser, Text, analyzeNgModules, createOfflineCompileUrlResolver, extractProgramSymbols, findNode, getHtmlTagDefinition, identifierName, splitNsName, templateVisitAll, tokenReference, visitAstChildren } from '@angular/compiler';
+import { __extends } from 'tslib';
 import { AstType, BuiltinType, CompilerHost, ModuleResolutionHostAdapter, getClassMembersFromDeclaration, getExpressionScope, getPipesTable, getSymbolQuery, getTemplateExpressionDiagnostics } from '@angular/compiler-cli/src/language_services';
 import { DiagnosticCategory, SyntaxKind, forEachChild, getPositionOfLineAndCharacter } from 'typescript';
-import * as ts from 'typescript';
 import { Version, ViewEncapsulation, ɵConsole } from '@angular/core';
 import { existsSync } from 'fs';
-import * as fs from 'fs';
 import { dirname, join } from 'path';
-import * as path from 'path';
 
 /**
  * @license
@@ -38,16 +36,6 @@ var DiagnosticKind;
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-var __extends$2 = (undefined && undefined.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 function isParseSourceSpan(value) {
     return value && !!value.start;
 }
@@ -138,7 +126,7 @@ function findTemplateAstAt(ast, position, allowWidening) {
     if (allowWidening === void 0) { allowWidening = false; }
     var path$$1 = [];
     var visitor = new (function (_super) {
-        __extends$2(class_1, _super);
+        __extends(class_1, _super);
         function class_1() {
             return _super !== null && _super.apply(this, arguments) || this;
         }
@@ -196,21 +184,11 @@ function findTemplateAstAt(ast, position, allowWidening) {
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-var __extends$1 = (undefined && undefined.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 function findAstAt(ast, position, excludeEmpty) {
     if (excludeEmpty === void 0) { excludeEmpty = false; }
     var path$$1 = [];
     var visitor = new (function (_super) {
-        __extends$1(class_1, _super);
+        __extends(class_1, _super);
         function class_1() {
             return _super !== null && _super.apply(this, arguments) || this;
         }
@@ -793,16 +771,6 @@ function propertyNames(elementName) {
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-var __extends = (undefined && undefined.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 var TEMPLATE_ATTR_PREFIX = '*';
 var hiddenHtmlElements = {
     html: true,
@@ -1735,16 +1703,6 @@ function findSuitableDefaultModule(modules) {
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-var __extends$4 = (undefined && undefined.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 var ReflectorModuleModuleResolutionHost = (function () {
     function ReflectorModuleModuleResolutionHost(host) {
         var _this = this;
@@ -1767,7 +1725,7 @@ var ReflectorModuleModuleResolutionHost = (function () {
 // reflector will collect errors instead of throwing, and second to all deferring the creation
 // of the program until it is actually needed.
 var ReflectorHost = (function (_super) {
-    __extends$4(ReflectorHost, _super);
+    __extends(ReflectorHost, _super);
     function ReflectorHost(getProgram, serviceHost, options) {
         var _this = _super.call(this, 
         // The ancestor value for program is overridden below so passing null here is safe.
@@ -1793,16 +1751,6 @@ var ReflectorHost = (function (_super) {
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-var __extends$3 = (undefined && undefined.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 /**
  * Create a `LanguageServiceHost`
  */
@@ -1819,7 +1767,7 @@ function createLanguageServiceFromTypescript(host, service) {
  * syntactically incorrect templates.
  */
 var DummyHtmlParser = (function (_super) {
-    __extends$3(DummyHtmlParser, _super);
+    __extends(DummyHtmlParser, _super);
     function DummyHtmlParser() {
         return _super !== null && _super.apply(this, arguments) || this;
     }
@@ -1834,7 +1782,7 @@ var DummyHtmlParser = (function (_super) {
  * Avoid loading resources in the language servcie by using a dummy loader.
  */
 var DummyResourceLoader = (function (_super) {
-    __extends$3(DummyResourceLoader, _super);
+    __extends(DummyResourceLoader, _super);
     function DummyResourceLoader() {
         return _super !== null && _super.apply(this, arguments) || this;
     }
@@ -2630,7 +2578,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version('5.0.0-beta.5-ee04217');
+var VERSION = new Version('5.0.0-beta.5-fd701b0');
 
 /**
  * @license
@@ -2646,4 +2594,4 @@ var VERSION = new Version('5.0.0-beta.5-ee04217');
  */
 
 export { createLanguageService, TypeScriptServiceHost, createLanguageServiceFromTypescript, VERSION, getExternalFiles, create };
-//# sourceMappingURL=language-service.js.map
+//# sourceMappingURL=index.js.map
