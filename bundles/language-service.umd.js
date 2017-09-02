@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.0.0-beta.5-185a941
+ * @license Angular v5.0.0-beta.5-6ab4966
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v5.0.0-beta.5-185a941
+ * @license Angular v5.0.0-beta.5-6ab4966
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -392,7 +392,7 @@ var Version = (function () {
 /**
  * @stable
  */
-var VERSION$1 = new Version('5.0.0-beta.5-185a941');
+var VERSION$1 = new Version('5.0.0-beta.5-6ab4966');
 
 /**
  * @license
@@ -17179,7 +17179,6 @@ var StaticReflector = (function () {
     };
     StaticReflector.prototype.initializeConversionMap = function () {
         this.injectionToken = this.findDeclaration(ANGULAR_CORE, 'InjectionToken');
-        this.opaqueToken = this.findDeclaration(ANGULAR_CORE, 'OpaqueToken');
         this.ROUTES = this.tryFindDeclaration(ANGULAR_ROUTER, 'ROUTES');
         this.ANALYZE_FOR_ENTRY_COMPONENTS =
             this.findDeclaration(ANGULAR_CORE, 'ANALYZE_FOR_ENTRY_COMPONENTS');
@@ -17320,8 +17319,8 @@ var StaticReflector = (function () {
                 }
                 if (expression instanceof StaticSymbol) {
                     // Stop simplification at builtin symbols or if we are in a reference context
-                    if (expression === self.injectionToken || expression === self.opaqueToken ||
-                        self.conversionMap.has(expression) || references > 0) {
+                    if (expression === self.injectionToken || self.conversionMap.has(expression) ||
+                        references > 0) {
                         return expression;
                     }
                     else {
@@ -17452,7 +17451,7 @@ var StaticReflector = (function () {
                                 // Determine if the function is a built-in conversion
                                 staticSymbol = simplifyInContext(context, expression['expression'], depth + 1, /* references */ 0);
                                 if (staticSymbol instanceof StaticSymbol) {
-                                    if (staticSymbol === self.injectionToken || staticSymbol === self.opaqueToken) {
+                                    if (staticSymbol === self.injectionToken) {
                                         // if somebody calls new InjectionToken, don't create an InjectionToken,
                                         // but rather return the symbol to which the InjectionToken is assigned to.
                                         return context;
@@ -25833,7 +25832,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v5.0.0-beta.5-185a941
+ * @license Angular v5.0.0-beta.5-6ab4966
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -25841,42 +25840,6 @@ var share_2 = share;
  * @fileoverview added by tsickle
  * @suppress {checkTypes} checked by tsc
  */
-/**
- * Creates a token that can be used in a DI Provider.
- *
- * ### Example ([live demo](http://plnkr.co/edit/Ys9ezXpj2Mnoy3Uc8KBp?p=preview))
- *
- * ```typescript
- * var t = new OpaqueToken("value");
- *
- * var injector = Injector.resolveAndCreate([
- *   {provide: t, useValue: "bindingValue"}
- * ]);
- *
- * expect(injector.get(t)).toEqual("bindingValue");
- * ```
- *
- * Using an `OpaqueToken` is preferable to using strings as tokens because of possible collisions
- * caused by multiple providers using the same string as two different tokens.
- *
- * Using an `OpaqueToken` is preferable to using an `Object` as tokens because it provides better
- * error messages.
- * @deprecated since v4.0.0 because it does not support type information, use `InjectionToken<?>`
- * instead.
- */
-var OpaqueToken = (function () {
-    /**
-     * @param {?} _desc
-     */
-    function OpaqueToken(_desc) {
-        this._desc = _desc;
-    }
-    /**
-     * @return {?}
-     */
-    OpaqueToken.prototype.toString = function () { return "Token " + this._desc; };
-    return OpaqueToken;
-}());
 /**
  * Creates a token that can be used in a DI Provider.
  *
@@ -25899,13 +25862,12 @@ var OpaqueToken = (function () {
  *
  * \@stable
  */
-var InjectionToken = (function (_super) {
-    __extends(InjectionToken, _super);
+var InjectionToken = (function () {
     /**
-     * @param {?} desc
+     * @param {?} _desc
      */
-    function InjectionToken(desc) {
-        return _super.call(this, desc) || this;
+    function InjectionToken(_desc) {
+        this._desc = _desc;
     }
     /**
      * @return {?}
@@ -25921,7 +25883,7 @@ var InjectionToken = (function (_super) {
         configurable: true
     });
     return InjectionToken;
-}(OpaqueToken));
+}());
 
 var ANNOTATIONS = '__annotations__';
 var PARAMETERS = '__paramaters__';
@@ -26244,7 +26206,7 @@ var Version$1 = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('5.0.0-beta.5-185a941');
+var VERSION$2 = new Version$1('5.0.0-beta.5-6ab4966');
 
 /**
  * Inject decorator and metadata.
@@ -30451,6 +30413,14 @@ var QueryList = (function () {
         enumerable: true,
         configurable: true
     });
+    /**
+     * internal
+     * @return {?}
+     */
+    QueryList.prototype.destroy = function () {
+        this._emitter.complete();
+        this._emitter.unsubscribe();
+    };
     return QueryList;
 }());
 /**
@@ -36252,6 +36222,9 @@ function destroyViewNodes(view) {
         else if (def.flags & NodeFlags.TypeText) {
             ((view.renderer.destroyNode))(asTextData(view, i).renderText);
         }
+        else if (def.flags & NodeFlags.TypeContentQuery || def.flags & NodeFlags.TypeViewQuery) {
+            asQueryList(view, i).destroy();
+        }
     }
 }
 /** @enum {number} */
@@ -37556,7 +37529,7 @@ var NgModuleFactory_ = (function (_super) {
 }(NgModuleFactory));
 
 /**
- * @license Angular v5.0.0-beta.5-185a941
+ * @license Angular v5.0.0-beta.5-6ab4966
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -40127,7 +40100,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('5.0.0-beta.5-185a941');
+var VERSION = new Version$1('5.0.0-beta.5-6ab4966');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
