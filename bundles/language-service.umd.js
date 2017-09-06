@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.4.0-RC.0-aeb98db
+ * @license Angular v4.4.0-RC.0-dd2d1be
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2033,7 +2033,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v4.4.0-RC.0-aeb98db
+ * @license Angular v4.4.0-RC.0-dd2d1be
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2825,7 +2825,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('4.4.0-RC.0-aeb98db');
+var VERSION$2 = new Version('4.4.0-RC.0-dd2d1be');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -17021,7 +17021,7 @@ var core_es5 = Object.freeze({
 });
 
 /**
- * @license Angular v4.4.0-RC.0-aeb98db
+ * @license Angular v4.4.0-RC.0-dd2d1be
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -17040,7 +17040,7 @@ var core_es5 = Object.freeze({
 /**
  * \@stable
  */
-var VERSION$1 = new Version('4.4.0-RC.0-aeb98db');
+var VERSION$1 = new Version('4.4.0-RC.0-dd2d1be');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -47387,7 +47387,7 @@ var core_1 = require$$0$13;
 /**
  * @stable
  */
-exports.VERSION = new core_1.Version('4.4.0-RC.0-aeb98db');
+exports.VERSION = new core_1.Version('4.4.0-RC.0-dd2d1be');
 
 });
 
@@ -50864,7 +50864,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v4.4.0-RC.0-aeb98db
+ * @license Angular v4.4.0-RC.0-dd2d1be
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -53493,7 +53493,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('4.4.0-RC.0-aeb98db');
+var VERSION$$1 = new Version('4.4.0-RC.0-dd2d1be');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
