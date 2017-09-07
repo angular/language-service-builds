@@ -16,10 +16,9 @@ export declare function createLanguageServiceFromTypescript(host: ts.LanguageSer
  * The language service never needs the normalized versions of the metadata. To avoid parsing
  * the content and resolving references, return an empty file. This also allows normalizing
  * template that are syntatically incorrect which is required to provide completions in
- * syntatically incorrect templates.
+ * syntactically incorrect templates.
  */
 export declare class DummyHtmlParser extends HtmlParser {
-    constructor();
     parse(source: string, url: string, parseExpansionForms?: boolean, interpolationConfig?: InterpolationConfig): ParseTreeResult;
 }
 /**
@@ -34,13 +33,14 @@ export declare class DummyResourceLoader extends ResourceLoader {
  * The `TypeScriptServiceHost` implements the Angular `LanguageServiceHost` using
  * the TypeScript language services.
  *
- * @expermental
+ * @experimental
  */
 export declare class TypeScriptServiceHost implements LanguageServiceHost {
     private host;
     private tsService;
     private _resolver;
     private _staticSymbolCache;
+    private _summaryResolver;
     private _staticSymbolResolver;
     private _reflector;
     private _reflectorHost;
@@ -54,6 +54,7 @@ export declare class TypeScriptServiceHost implements LanguageServiceHost {
     private fileToComponent;
     private templateReferences;
     private collectedErrors;
+    private fileVersions;
     constructor(host: ts.LanguageServiceHost, tsService: ts.LanguageService);
     setSite(service: LanguageService): void;
     /**
@@ -91,5 +92,4 @@ export declare class TypeScriptServiceHost implements LanguageServiceHost {
     private getDeclarationFromNode(sourceFile, node);
     private stringOf(node);
     private findNode(sourceFile, position);
-    private findLiteralType(kind, context);
 }
