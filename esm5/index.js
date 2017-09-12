@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.0.0-beta.6-112e777
+ * @license Angular v5.0.0-beta.6-ca5aeba
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -23,7 +23,17 @@ import { dirname, join } from 'path';
  *
  * @experimental
  */
+/**
+ * The kind of diagnostic message.
+ *
+ * @experimental
+ */
 var DiagnosticKind;
+/**
+ * The kind of diagnostic message.
+ *
+ * @experimental
+ */
 (function (DiagnosticKind) {
     DiagnosticKind[DiagnosticKind["Error"] = 0] = "Error";
     DiagnosticKind[DiagnosticKind["Warning"] = 1] = "Warning";
@@ -73,7 +83,7 @@ function hasTemplateReference(type) {
         for (var _i = 0, _a = type.diDeps; _i < _a.length; _i++) {
             var diDep = _a[_i];
             if (diDep.token && diDep.token.identifier &&
-                identifierName(diDep.token.identifier) == 'TemplateRef')
+                identifierName((diDep.token.identifier)) == 'TemplateRef')
                 return true;
         }
     }
@@ -82,7 +92,7 @@ function hasTemplateReference(type) {
 function getSelectors(info) {
     var map = new Map();
     var selectors = flatten(info.directives.map(function (directive) {
-        var selectors = CssSelector.parse(directive.selector);
+        var selectors = CssSelector.parse((directive.selector));
         selectors.forEach(function (selector) { return map.set(selector, directive); });
         return selectors;
     }));
@@ -212,7 +222,7 @@ function getExpressionCompletions(scope, ast, position, query) {
     var path$$1 = findAstAt(ast, position);
     if (path$$1.empty)
         return undefined;
-    var tail = path$$1.tail;
+    var tail = (path$$1.tail);
     var result = scope;
     function getType(ast) { return new AstType(scope, query, {}).getType(ast); }
     // If the completion request is in a not in a pipe or property access then the global scope
@@ -264,10 +274,10 @@ function getExpressionCompletions(scope, ast, position, query) {
     return result && result.values();
 }
 function getExpressionSymbol(scope, ast, position, query) {
-    var path$$1 = findAstAt(ast, position, /* excludeEmpty */ true);
+    var path$$1 = findAstAt(ast, position, /* excludeEmpty */ /* excludeEmpty */ true);
     if (path$$1.empty)
         return undefined;
-    var tail = path$$1.tail;
+    var tail = (path$$1.tail);
     function getType(ast) { return new AstType(scope, query, {}).getType(ast); }
     var symbol = undefined;
     var span = undefined;
@@ -535,7 +545,6 @@ function attributeNames(element) {
 // schema registry.
 var SCHEMA = [
     '[Element]|textContent,%classList,className,id,innerHTML,*beforecopy,*beforecut,*beforepaste,*copy,*cut,*paste,*search,*selectstart,*webkitfullscreenchange,*webkitfullscreenerror,*wheel,outerHTML,#scrollLeft,#scrollTop,slot' +
-        /* added manually to avoid breaking changes */
         ',*message,*mozfullscreenchange,*mozfullscreenerror,*mozpointerlockchange,*mozpointerlockerror,*webglcontextcreationerror,*webglcontextlost,*webglcontextrestored',
     '[HTMLElement]^[Element]|accessKey,contentEditable,dir,!draggable,!hidden,innerText,lang,*abort,*auxclick,*blur,*cancel,*canplay,*canplaythrough,*change,*click,*close,*contextmenu,*cuechange,*dblclick,*drag,*dragend,*dragenter,*dragleave,*dragover,*dragstart,*drop,*durationchange,*emptied,*ended,*error,*focus,*gotpointercapture,*input,*invalid,*keydown,*keypress,*keyup,*load,*loadeddata,*loadedmetadata,*loadstart,*lostpointercapture,*mousedown,*mouseenter,*mouseleave,*mousemove,*mouseout,*mouseover,*mouseup,*mousewheel,*pause,*play,*playing,*pointercancel,*pointerdown,*pointerenter,*pointerleave,*pointermove,*pointerout,*pointerover,*pointerup,*progress,*ratechange,*reset,*resize,*scroll,*seeked,*seeking,*select,*show,*stalled,*submit,*suspend,*timeupdate,*toggle,*volumechange,*waiting,outerText,!spellcheck,%style,#tabIndex,title,!translate',
     'abbr,address,article,aside,b,bdi,bdo,cite,code,dd,dfn,dt,em,figcaption,figure,footer,header,i,kbd,main,mark,nav,noscript,rb,rp,rt,rtc,ruby,s,samp,section,small,strong,sub,sup,u,var,wbr^[HTMLElement]|accessKey,contentEditable,dir,!draggable,!hidden,innerText,lang,*abort,*auxclick,*blur,*cancel,*canplay,*canplaythrough,*change,*click,*close,*contextmenu,*cuechange,*dblclick,*drag,*dragend,*dragenter,*dragleave,*dragover,*dragstart,*drop,*durationchange,*emptied,*ended,*error,*focus,*gotpointercapture,*input,*invalid,*keydown,*keypress,*keyup,*load,*loadeddata,*loadedmetadata,*loadstart,*lostpointercapture,*mousedown,*mouseenter,*mouseleave,*mousemove,*mouseout,*mouseover,*mouseup,*mousewheel,*pause,*play,*playing,*pointercancel,*pointerdown,*pointerenter,*pointerleave,*pointermove,*pointerout,*pointerover,*pointerup,*progress,*ratechange,*reset,*resize,*scroll,*seeked,*seeking,*select,*show,*stalled,*submit,*suspend,*timeupdate,*toggle,*volumechange,*waiting,outerText,!spellcheck,%style,#tabIndex,title,!translate',
@@ -864,11 +873,13 @@ function attributeCompletions(info, path$$1) {
 function attributeCompletionsForElement(info, elementName, element) {
     var attributes = getAttributeInfosForElement(info, elementName, element);
     // Map all the attributes to a completion
-    return attributes.map(function (attr) { return ({
-        kind: attr.fromHtml ? 'html attribute' : 'attribute',
-        name: nameOfAttr(attr),
-        sort: attr.name
-    }); });
+    return attributes.map(function (attr) {
+        return ({
+            kind: attr.fromHtml ? 'html attribute' : 'attribute',
+            name: nameOfAttr(attr),
+            sort: attr.name
+        });
+    });
 }
 function getAttributeInfosForElement(info, elementName, element) {
     var attributes = [];
@@ -893,7 +904,7 @@ function getAttributeInfosForElement(info, elementName, element) {
         var applicableSelectors = selectors.filter(function (selector) { return !selector.element || selector.element == elementName; });
         var selectorAndAttributeNames = applicableSelectors.map(function (selector) { return ({ selector: selector, attrs: selector.attrs.filter(function (a) { return !!a; }) }); });
         var attrs_1 = flatten(selectorAndAttributeNames.map(function (selectorAndAttr) {
-            var directive = selectorMap.get(selectorAndAttr.selector);
+            var directive = (selectorMap.get(selectorAndAttr.selector));
             var result = selectorAndAttr.attrs.map(function (name) { return ({ name: name, input: name in directive.inputs, output: name in directive.outputs }); });
             return result;
         }));
@@ -909,7 +920,7 @@ function getAttributeInfosForElement(info, elementName, element) {
         // All input and output properties of the matching directives should be added.
         var elementSelector = element ?
             createElementCssSelector(element) :
-            createElementCssSelector(new Element(elementName, [], [], null, null, null));
+            createElementCssSelector(new Element(elementName, [], [], (null), null, null));
         var matcher = new SelectorMatcher();
         matcher.addSelectables(selectors);
         matcher.match(elementSelector, function (selector) {
@@ -919,6 +930,7 @@ function getAttributeInfosForElement(info, elementName, element) {
                 attrs_1.push.apply(attrs_1, Object.keys(directive.outputs).map(function (name) { return ({ name: name, output: true }); }));
             }
         });
+        // If a name shows up twice, fold it into a single value.
         // If a name shows up twice, fold it into a single value.
         attrs_1 = foldAttrs(attrs_1);
         // Now expand them back out to ensure that input/output shows up as well as input and
@@ -936,7 +948,7 @@ function attributeValueCompletions(info, position, attr) {
         mostSpecific.visit(visitor, null);
         if (!visitor.result || !visitor.result.length) {
             // Try allwoing widening the path
-            var widerPath_1 = findTemplateAstAt(info.templateAst, position, /* allowWidening */ true);
+            var widerPath_1 = findTemplateAstAt(info.templateAst, position, /* allowWidening */ /* allowWidening */ true);
             if (widerPath_1.tail) {
                 var widerVisitor = new ExpressionVisitor(info, position, attr, function () { return getExpressionScope(dinfo, widerPath_1, false); });
                 widerPath_1.tail.visit(widerVisitor, null);
@@ -1034,7 +1046,7 @@ var ExpressionVisitor = (function (_super) {
                 return;
             var valueRelativePosition_1 = this.position - this.attr.valueSpan.start.offset - 1;
             var bindings = templateBindingResult.templateBindings;
-            var binding = bindings.find(function (binding) { return inSpan(valueRelativePosition_1, binding.span, /* exclusive */ true); }) ||
+            var binding = bindings.find(function (binding) { return inSpan(valueRelativePosition_1, binding.span, /* exclusive */ /* exclusive */ true); }) ||
                 bindings.find(function (binding) { return inSpan(valueRelativePosition_1, binding.span); });
             var keyCompletions = function () {
                 var keys = [];
@@ -1266,7 +1278,7 @@ function locateSymbol(info) {
             },
             visitVariable: function (ast) { },
             visitEvent: function (ast) {
-                if (!attributeValueSymbol_1(ast.handler, /* inEvent */ true)) {
+                if (!attributeValueSymbol_1(ast.handler, /* inEvent */ /* inEvent */ true)) {
                     symbol_1 = findOutputBinding(info, path$$1, ast);
                     symbol_1 = symbol_1 && new OverrideKindSymbol(symbol_1, 'event');
                     span_1 = spanOf(ast);
@@ -1278,7 +1290,7 @@ function locateSymbol(info) {
                 var expressionPosition = templatePosition - ast.sourceSpan.start.offset;
                 if (inSpan(expressionPosition, ast.value.span)) {
                     var dinfo = diagnosticInfoFromTemplateInfo(info);
-                    var scope = getExpressionScope(dinfo, path$$1, /* includeEvent */ false);
+                    var scope = getExpressionScope(dinfo, path$$1, /* includeEvent */ /* includeEvent */ false);
                     var result = getExpressionSymbol(scope, ast.value, expressionPosition, info.template.query);
                     if (result) {
                         symbol_1 = result.symbol;
@@ -1436,11 +1448,13 @@ function getTemplateDiagnostics(fileName, astProvider, templates) {
         var ast = astProvider.getTemplateAst(template, fileName);
         if (ast) {
             if (ast.parseErrors && ast.parseErrors.length) {
-                results.push.apply(results, ast.parseErrors.map(function (e) { return ({
-                    kind: DiagnosticKind.Error,
-                    span: offsetSpan(spanOf(e.span), template.span.start),
-                    message: e.msg
-                }); }));
+                results.push.apply(results, ast.parseErrors.map(function (e) {
+                    return ({
+                        kind: DiagnosticKind.Error,
+                        span: offsetSpan(spanOf(e.span), template.span.start),
+                        message: e.msg
+                    });
+                }));
             }
             else if (ast.templateAst && ast.htmlAst) {
                 var info = {
@@ -1624,7 +1638,7 @@ var LanguageServiceImpl = (function () {
                 var htmlParser = new I18NHtmlParser(rawHtmlParser);
                 var expressionParser = new Parser(new Lexer());
                 var config = new CompilerConfig();
-                var parser = new TemplateParser(config, this.host.resolver.getReflector(), expressionParser, new DomElementSchemaRegistry(), htmlParser, null, []);
+                var parser = new TemplateParser(config, this.host.resolver.getReflector(), expressionParser, new DomElementSchemaRegistry(), htmlParser, (null), []);
                 var htmlResult = htmlParser.parse(template.source, '', true);
                 var analyzedModules = this.host.getAnalyzedModules();
                 var errors = undefined;
@@ -1729,7 +1743,7 @@ var ReflectorHost = (function (_super) {
     function ReflectorHost(getProgram, serviceHost, options) {
         var _this = _super.call(this, 
         // The ancestor value for program is overridden below so passing null here is safe.
-        /* program */ null, options, new ModuleResolutionHostAdapter(new ReflectorModuleModuleResolutionHost(serviceHost)), { verboseInvalidExpression: true }) || this;
+        /* program */ (null), options, new ModuleResolutionHostAdapter(new ReflectorModuleModuleResolutionHost(serviceHost)), { verboseInvalidExpression: true }) || this;
         _this.getProgram = getProgram;
         return _this;
     }
@@ -1811,7 +1825,10 @@ var TypeScriptServiceHost = (function () {
         /**
          * Angular LanguageServiceHost implementation
          */
-        get: function () {
+        get: /**
+           * Angular LanguageServiceHost implementation
+           */
+        function () {
             var _this = this;
             this.validate();
             var result = this._resolver;
@@ -1995,7 +2012,7 @@ var TypeScriptServiceHost = (function () {
                 var module_1 = _a[_i];
                 for (var _b = 0, _c = module_1.declaredDirectives; _b < _c.length; _b++) {
                     var directive = _c[_b];
-                    var metadata = this.resolver.getNonNormalizedDirectiveMetadata(directive.reference).metadata;
+                    var metadata = (this.resolver.getNonNormalizedDirectiveMetadata(directive.reference)).metadata;
                     if (metadata.isComponent && metadata.template && metadata.template.templateUrl) {
                         var templateName = urlResolver.resolve(this.reflector.componentModuleUrl(directive.reference), metadata.template.templateUrl);
                         fileToComponent.set(templateName, directive.reference);
@@ -2113,7 +2130,7 @@ var TypeScriptServiceHost = (function () {
                     toSummaryFileName: function (sourceFilePath) { return sourceFilePath; },
                     fromSummaryFileName: function (filePath) { return filePath; },
                 }, this._staticSymbolCache);
-                result = this._staticSymbolResolver = new StaticSymbolResolver(this.reflectorHost, this._staticSymbolCache, this._summaryResolver, function (e, filePath) { return _this.collectError(e, filePath); });
+                result = this._staticSymbolResolver = new StaticSymbolResolver(this.reflectorHost, this._staticSymbolCache, this._summaryResolver, function (e, filePath) { return _this.collectError(e, (filePath)); });
             }
             return result;
         },
@@ -2126,7 +2143,7 @@ var TypeScriptServiceHost = (function () {
             var result = this._reflector;
             if (!result) {
                 var ssr = this.staticSymbolResolver;
-                result = this._reflector = new StaticReflector(this._summaryResolver, ssr, [], [], function (e, filePath) { return _this.collectError(e, filePath); });
+                result = this._reflector = new StaticReflector(this._summaryResolver, ssr, [], [], function (e, filePath) { return _this.collectError(e, (filePath)); });
             }
             return result;
         },
@@ -2152,7 +2169,15 @@ var TypeScriptServiceHost = (function () {
      * Given a template string node, see if it is an Angular template string, and if so return the
      * containing class.
      */
-    TypeScriptServiceHost.prototype.getTemplateClassDeclFromNode = function (currentToken) {
+    /**
+       * Given a template string node, see if it is an Angular template string, and if so return the
+       * containing class.
+       */
+    TypeScriptServiceHost.prototype.getTemplateClassDeclFromNode = /**
+       * Given a template string node, see if it is an Angular template string, and if so return the
+       * containing class.
+       */
+    function (currentToken) {
         // Verify we are in a 'template' property assignment, in an object literal, which is an call
         // arg, in a decorator
         var parentNode = currentToken.parent; // PropertyAssignment
@@ -2209,7 +2234,7 @@ var TypeScriptServiceHost = (function () {
                             var staticSymbol = this.reflector.getStaticSymbol(sourceFile.fileName, classDeclaration.name.text);
                             try {
                                 if (this.resolver.isDirective(staticSymbol)) {
-                                    var metadata = this.resolver.getNonNormalizedDirectiveMetadata(staticSymbol).metadata;
+                                    var metadata = (this.resolver.getNonNormalizedDirectiveMetadata(staticSymbol)).metadata;
                                     var declarationSpan = spanOf$1(target);
                                     return {
                                         type: staticSymbol,
@@ -2252,9 +2277,9 @@ var TypeScriptServiceHost = (function () {
         }
         return find(sourceFile);
     };
+    TypeScriptServiceHost.missingTemplate = [undefined, undefined];
     return TypeScriptServiceHost;
 }());
-TypeScriptServiceHost.missingTemplate = [undefined, undefined];
 function findTsConfig(fileName) {
     var dir = dirname(fileName);
     while (existsSync(dir)) {
@@ -2352,7 +2377,11 @@ function angularOnlyFilter(ls) {
         getCodeFixesAtPosition: function (fileName, start, end, errorCodes) { return []; },
         getEmitOutput: function (fileName) { return undefined; },
         getProgram: function () { return ls.getProgram(); },
-        dispose: function () { return ls.dispose(); }
+        dispose: function () { return ls.dispose(); },
+        getApplicableRefactors: function (fileName, positionOrRaneg) { return []; },
+        getEditsForRefactor: function (fileName, formatOptions, positionOrRange, refactorName, actionName) {
+            return undefined;
+        },
     };
 }
 function create(info /* ts.server.PluginCreateInfo */) {
@@ -2417,7 +2446,9 @@ function create(info /* ts.server.PluginCreateInfo */) {
             getDocumentHighlights: tryFilenameTwoCall(ls.getDocumentHighlights),
             /** @deprecated */
             getOccurrencesAtPosition: tryFilenameOneCall(ls.getOccurrencesAtPosition),
-            getNavigateToItems: function (searchValue, maxResultCount, fileName, excludeDtsFiles) { return tryCall(fileName, function () { return ls.getNavigateToItems(searchValue, maxResultCount, fileName, excludeDtsFiles); }); },
+            getNavigateToItems: function (searchValue, maxResultCount, fileName, excludeDtsFiles) {
+                return tryCall(fileName, function () { return ls.getNavigateToItems(searchValue, maxResultCount, fileName, excludeDtsFiles); });
+            },
             getNavigationBarItems: tryFilenameCall(ls.getNavigationBarItems),
             getNavigationTree: tryFilenameCall(ls.getNavigationTree),
             getOutliningSpans: tryFilenameCall(ls.getOutliningSpans),
@@ -2432,7 +2463,11 @@ function create(info /* ts.server.PluginCreateInfo */) {
             getCodeFixesAtPosition: tryFilenameFourCall(ls.getCodeFixesAtPosition),
             getEmitOutput: tryFilenameCall(ls.getEmitOutput),
             getProgram: function () { return ls.getProgram(); },
-            dispose: function () { return ls.dispose(); }
+            dispose: function () { return ls.dispose(); },
+            getApplicableRefactors: function (fileName, positionOrRaneg) { return []; },
+            getEditsForRefactor: function (fileName, formatOptions, positionOrRange, refactorName, actionName) {
+                return undefined;
+            },
         };
     }
     oldLS = typescriptOnly(oldLS);
@@ -2578,7 +2613,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version('5.0.0-beta.6-112e777');
+var VERSION = new Version('5.0.0-beta.6-ca5aeba');
 
 /**
  * @license
