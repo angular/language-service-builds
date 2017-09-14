@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.0.0-beta.7-4695c69
+ * @license Angular v5.0.0-beta.7-b6431c6
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v5.0.0-beta.7-4695c69
+ * @license Angular v5.0.0-beta.7-b6431c6
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -357,22 +357,11 @@ function isPromise(obj) {
 var Version = (function () {
     function Version(full) {
         this.full = full;
+        var splits = full.split('.');
+        this.major = splits[0];
+        this.minor = splits[1];
+        this.patch = splits.slice(2).join('.');
     }
-    Object.defineProperty(Version.prototype, "major", {
-        get: function () { return this.full.split('.')[0]; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(Version.prototype, "minor", {
-        get: function () { return this.full.split('.')[1]; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(Version.prototype, "patch", {
-        get: function () { return this.full.split('.').slice(2).join('.'); },
-        enumerable: true,
-        configurable: true
-    });
     return Version;
 }());
 
@@ -391,7 +380,7 @@ var Version = (function () {
 /**
  * @stable
  */
-var VERSION$1 = new Version('5.0.0-beta.7-4695c69');
+var VERSION$1 = new Version('5.0.0-beta.7-b6431c6');
 
 /**
  * @license
@@ -450,15 +439,11 @@ var BoundElementPropertyAst = (function () {
         this.value = value;
         this.unit = unit;
         this.sourceSpan = sourceSpan;
+        this.isAnimation = this.type === PropertyBindingType.Animation;
     }
     BoundElementPropertyAst.prototype.visit = function (visitor, context) {
         return visitor.visitElementProperty(this, context);
     };
-    Object.defineProperty(BoundElementPropertyAst.prototype, "isAnimation", {
-        get: function () { return this.type === PropertyBindingType.Animation; },
-        enumerable: true,
-        configurable: true
-    });
     return BoundElementPropertyAst;
 }());
 /**
@@ -472,6 +457,8 @@ var BoundEventAst = (function () {
         this.phase = phase;
         this.handler = handler;
         this.sourceSpan = sourceSpan;
+        this.fullName = BoundEventAst.calcFullName(this.name, this.target, this.phase);
+        this.isAnimation = !!this.phase;
     }
     BoundEventAst.calcFullName = function (name, target, phase) {
         if (target) {
@@ -487,16 +474,6 @@ var BoundEventAst = (function () {
     BoundEventAst.prototype.visit = function (visitor, context) {
         return visitor.visitEvent(this, context);
     };
-    Object.defineProperty(BoundEventAst.prototype, "fullName", {
-        get: function () { return BoundEventAst.calcFullName(this.name, this.target, this.phase); },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(BoundEventAst.prototype, "isAnimation", {
-        get: function () { return !!this.phase; },
-        enumerable: true,
-        configurable: true
-    });
     return BoundEventAst;
 }());
 /**
@@ -1815,10 +1792,11 @@ var CompileStylesheetMetadata = (function () {
  */
 var CompileTemplateMetadata = (function () {
     function CompileTemplateMetadata(_a) {
-        var encapsulation = _a.encapsulation, template = _a.template, templateUrl = _a.templateUrl, styles = _a.styles, styleUrls = _a.styleUrls, externalStylesheets = _a.externalStylesheets, animations = _a.animations, ngContentSelectors = _a.ngContentSelectors, interpolation = _a.interpolation, isInline = _a.isInline, preserveWhitespaces = _a.preserveWhitespaces;
+        var encapsulation = _a.encapsulation, template = _a.template, templateUrl = _a.templateUrl, htmlAst = _a.htmlAst, styles = _a.styles, styleUrls = _a.styleUrls, externalStylesheets = _a.externalStylesheets, animations = _a.animations, ngContentSelectors = _a.ngContentSelectors, interpolation = _a.interpolation, isInline = _a.isInline, preserveWhitespaces = _a.preserveWhitespaces;
         this.encapsulation = encapsulation;
         this.template = template;
         this.templateUrl = templateUrl;
+        this.htmlAst = htmlAst;
         this.styles = _normalizeArray(styles);
         this.styleUrls = _normalizeArray(styleUrls);
         this.externalStylesheets = _normalizeArray(externalStylesheets);
@@ -1954,15 +1932,18 @@ var CompileDirectiveMetadata = (function () {
 /**
  * Construct {@link CompileDirectiveMetadata} from {@link ComponentTypeMetadata} and a selector.
  */
-function createHostComponentMeta(hostTypeReference, compMeta, hostViewType) {
+function createHostComponentMeta(hostTypeReference, compMeta, hostViewType, htmlParser) {
     var template = CssSelector.parse((compMeta.selector))[0].getMatchingElementTemplate();
+    var templateUrl = '';
+    var htmlAst = htmlParser.parse(template, templateUrl);
     return CompileDirectiveMetadata.create({
         isHost: true,
         type: { reference: hostTypeReference, diDeps: [], lifecycleHooks: [] },
         template: new CompileTemplateMetadata({
             encapsulation: ViewEncapsulation.None,
             template: template,
-            templateUrl: '',
+            templateUrl: templateUrl,
+            htmlAst: htmlAst,
             styles: [],
             styleUrls: [],
             ngContentSelectors: [],
@@ -2661,7 +2642,8 @@ var DirectiveNormalizer = (function () {
         return new CompileTemplateMetadata({
             encapsulation: encapsulation,
             template: template,
-            templateUrl: templateAbsUrl, styles: styles, styleUrls: styleUrls,
+            templateUrl: templateAbsUrl,
+            htmlAst: rootNodesAndErrors, styles: styles, styleUrls: styleUrls,
             ngContentSelectors: visitor.ngContentSelectors,
             animations: prenormData.animations,
             interpolation: prenormData.interpolation, isInline: isInline,
@@ -2675,6 +2657,7 @@ var DirectiveNormalizer = (function () {
                 encapsulation: templateMeta.encapsulation,
                 template: templateMeta.template,
                 templateUrl: templateMeta.templateUrl,
+                htmlAst: templateMeta.htmlAst,
                 styles: templateMeta.styles,
                 styleUrls: templateMeta.styleUrls,
                 externalStylesheets: externalStylesheets,
@@ -8963,6 +8946,7 @@ var CompileMetadataResolver = (function () {
                 encapsulation: noUndefined(compMeta.encapsulation),
                 template: noUndefined(compMeta.template),
                 templateUrl: noUndefined(compMeta.templateUrl),
+                htmlAst: null,
                 styles: compMeta.styles || [],
                 styleUrls: compMeta.styleUrls || [],
                 animations: animations || [],
@@ -10763,7 +10747,7 @@ function importType(id, typeParams, typeModifiers) {
 }
 function expressionType(expr, typeModifiers) {
     if (typeModifiers === void 0) { typeModifiers = null; }
-    return expr != null ? new ExpressionType(expr, typeModifiers) : null;
+    return new ExpressionType(expr, typeModifiers);
 }
 function literalArr(values, type, sourceSpan) {
     return new LiteralArrayExpr(values, type, sourceSpan);
@@ -10825,8 +10809,8 @@ var ProviderElementContext = (function () {
         this._sourceSpan = _sourceSpan;
         this._transformedProviders = new Map();
         this._seenProviders = new Map();
-        this._hasViewContainer = false;
         this._queriedTokens = new Map();
+        this.transformedHasViewContainer = false;
         this._attrs = {};
         attrs.forEach(function (attrAst) { return _this._attrs[attrAst.name] = attrAst.value; });
         var directivesMeta = _directiveAsts.map(function (directiveAst) { return directiveAst.directive; });
@@ -10846,7 +10830,7 @@ var ProviderElementContext = (function () {
             _this._addQueryReadsTo({ value: refAst.name }, defaultQueryValue, _this._queriedTokens);
         });
         if (this._queriedTokens.get(this.viewContext.reflector.resolveExternalReference(Identifiers.ViewContainerRef))) {
-            this._hasViewContainer = true;
+            this.transformedHasViewContainer = true;
         }
         // create the providers that we know are eager first
         Array.from(this._allProviders.values()).forEach(function (provider) {
@@ -10891,11 +10875,6 @@ var ProviderElementContext = (function () {
             });
             return sortedDirectives;
         },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(ProviderElementContext.prototype, "transformedHasViewContainer", {
-        get: function () { return this._hasViewContainer; },
         enumerable: true,
         configurable: true
     });
@@ -11018,7 +10997,7 @@ var ProviderElementContext = (function () {
                 }
                 if (tokenReference(dep.token) ===
                     this.viewContext.reflector.resolveExternalReference(Identifiers.ViewContainerRef)) {
-                    this._hasViewContainer = true;
+                    this.transformedHasViewContainer = true;
                 }
             }
             // access the injector
@@ -14215,17 +14194,9 @@ var BoundProperty = (function () {
         this.expression = expression;
         this.type = type;
         this.sourceSpan = sourceSpan;
+        this.isLiteral = this.type === BoundPropertyType.LITERAL_ATTR;
+        this.isAnimation = this.type === BoundPropertyType.ANIMATION;
     }
-    Object.defineProperty(BoundProperty.prototype, "isLiteral", {
-        get: function () { return this.type === BoundPropertyType.LITERAL_ATTR; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(BoundProperty.prototype, "isAnimation", {
-        get: function () { return this.type === BoundPropertyType.ANIMATION; },
-        enumerable: true,
-        configurable: true
-    });
     return BoundProperty;
 }());
 /**
@@ -14660,7 +14631,9 @@ var TemplateParser = (function () {
         return { template: (result.templateAst), pipes: (result.usedPipes) };
     };
     TemplateParser.prototype.tryParse = function (component, template, directives, pipes, schemas, templateUrl, preserveWhitespaces) {
-        var htmlParseResult = this._htmlParser.parse(template, templateUrl, true, this.getInterpolationConfig(component));
+        var htmlParseResult = typeof template === 'string' ?
+            this._htmlParser.parse(template, templateUrl, true, this.getInterpolationConfig(component)) :
+            template;
         if (!preserveWhitespaces) {
             htmlParseResult = removeWhitespaces(htmlParseResult);
         }
@@ -15890,6 +15863,251 @@ var BuiltinFunctionCall = (function (_super) {
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
+/**
+ * Generates code that is used to type check templates.
+ */
+var TypeCheckCompiler = (function () {
+    function TypeCheckCompiler(options, reflector) {
+        this.options = options;
+        this.reflector = reflector;
+    }
+    TypeCheckCompiler.prototype.compileComponent = function (outputCtx, component, template, usedPipes) {
+        var _this = this;
+        var pipes = new Map();
+        usedPipes.forEach(function (p) { return pipes.set(p.name, p.type.reference); });
+        var embeddedViewCount = 0;
+        var viewBuilderFactory = function (parent) {
+            var embeddedViewIndex = embeddedViewCount++;
+            return new ViewBuilder(_this.options, _this.reflector, outputCtx, parent, component.type.reference, embeddedViewIndex, pipes, viewBuilderFactory);
+        };
+        var visitor = viewBuilderFactory(null);
+        visitor.visitAll([], template);
+        (_a = outputCtx.statements).push.apply(_a, visitor.build());
+        var _a;
+    };
+    return TypeCheckCompiler;
+}());
+var ViewBuilder = (function () {
+    function ViewBuilder(options, reflector, outputCtx, parent, component, embeddedViewIndex, pipes, viewBuilderFactory) {
+        this.options = options;
+        this.reflector = reflector;
+        this.outputCtx = outputCtx;
+        this.parent = parent;
+        this.component = component;
+        this.embeddedViewIndex = embeddedViewIndex;
+        this.pipes = pipes;
+        this.viewBuilderFactory = viewBuilderFactory;
+        this.outputVarTypes = new Map();
+        this.outputVarNames = new Map();
+        this.refOutputVars = new Map();
+        this.variables = [];
+        this.children = [];
+        this.updates = [];
+        this.actions = [];
+    }
+    ViewBuilder.prototype.getOrAddOutputVar = function (type) {
+        var varName = this.outputVarNames.get(type);
+        if (!varName) {
+            varName = "_v" + this.outputVarNames.size;
+            this.outputVarNames.set(type, varName);
+            this.outputVarTypes.set(varName, type);
+        }
+        return varName;
+    };
+    ViewBuilder.prototype.visitAll = function (variables, astNodes) {
+        this.variables = variables;
+        templateVisitAll(this, astNodes);
+    };
+    ViewBuilder.prototype.build = function (targetStatements) {
+        var _this = this;
+        if (targetStatements === void 0) { targetStatements = []; }
+        this.children.forEach(function (child) { return child.build(targetStatements); });
+        var viewStmts = [];
+        var bindingCount = 0;
+        this.updates.forEach(function (expression) {
+            var _a = _this.preprocessUpdateExpression(expression), sourceSpan = _a.sourceSpan, context = _a.context, value = _a.value;
+            var bindingId = "" + bindingCount++;
+            var nameResolver = context === _this.component ? _this : null;
+            var _b = convertPropertyBinding(nameResolver, variable(_this.getOrAddOutputVar(context)), value, bindingId), stmts = _b.stmts, currValExpr = _b.currValExpr;
+            stmts.push(new ExpressionStatement(currValExpr));
+            viewStmts.push.apply(viewStmts, stmts.map(function (stmt) { return applySourceSpanToStatementIfNeeded(stmt, sourceSpan); }));
+        });
+        this.actions.forEach(function (_a) {
+            var sourceSpan = _a.sourceSpan, context = _a.context, value = _a.value;
+            var bindingId = "" + bindingCount++;
+            var nameResolver = context === _this.component ? _this : null;
+            var stmts = convertActionBinding(nameResolver, variable(_this.getOrAddOutputVar(context)), value, bindingId).stmts;
+            viewStmts.push.apply(viewStmts, stmts.map(function (stmt) { return applySourceSpanToStatementIfNeeded(stmt, sourceSpan); }));
+        });
+        var viewName = "_View_" + this.component.name + "_" + this.embeddedViewIndex;
+        var params = [];
+        this.outputVarNames.forEach(function (varName, varType) {
+            var outputType = varType instanceof StaticSymbol ?
+                expressionType(_this.outputCtx.importExpr(varType)) :
+                new BuiltinType(varType);
+            params.push(new FnParam(varName, outputType));
+        });
+        var viewFactory = new DeclareFunctionStmt(viewName, params, viewStmts);
+        targetStatements.push(viewFactory);
+        return targetStatements;
+    };
+    ViewBuilder.prototype.visitBoundText = function (ast, context) {
+        var _this = this;
+        var astWithSource = ast.value;
+        var inter = astWithSource.ast;
+        inter.expressions.forEach(function (expr) {
+            return _this.updates.push({ context: _this.component, value: expr, sourceSpan: ast.sourceSpan });
+        });
+    };
+    ViewBuilder.prototype.visitEmbeddedTemplate = function (ast, context) {
+        this.visitElementOrTemplate(ast);
+        // Note: The old view compiler used to use an `any` type
+        // for the context in any embedded view.
+        // We keep this behaivor behind a flag for now.
+        if (this.options.fullTemplateTypeCheck) {
+            var childVisitor = this.viewBuilderFactory(this);
+            this.children.push(childVisitor);
+            childVisitor.visitAll(ast.variables, ast.children);
+        }
+    };
+    ViewBuilder.prototype.visitElement = function (ast, context) {
+        var _this = this;
+        this.visitElementOrTemplate(ast);
+        var inputDefs = [];
+        var updateRendererExpressions = [];
+        var outputDefs = [];
+        ast.inputs.forEach(function (inputAst) {
+            _this.updates.push({ context: _this.component, value: inputAst.value, sourceSpan: inputAst.sourceSpan });
+        });
+        templateVisitAll(this, ast.children);
+    };
+    ViewBuilder.prototype.visitElementOrTemplate = function (ast) {
+        var _this = this;
+        ast.directives.forEach(function (dirAst) { _this.visitDirective(dirAst); });
+        ast.references.forEach(function (ref) {
+            var outputVarType = (null);
+            // Note: The old view compiler used to use an `any` type
+            // for directives exposed via `exportAs`.
+            // We keep this behaivor behind a flag for now.
+            if (ref.value && ref.value.identifier && _this.options.fullTemplateTypeCheck) {
+                outputVarType = ref.value.identifier.reference;
+            }
+            else {
+                outputVarType = BuiltinTypeName.Dynamic;
+            }
+            _this.refOutputVars.set(ref.name, outputVarType);
+        });
+        ast.outputs.forEach(function (outputAst) {
+            _this.actions.push({ context: _this.component, value: outputAst.handler, sourceSpan: outputAst.sourceSpan });
+        });
+    };
+    ViewBuilder.prototype.visitDirective = function (dirAst) {
+        var _this = this;
+        var dirType = dirAst.directive.type.reference;
+        dirAst.inputs.forEach(function (input) {
+            return _this.updates.push({ context: _this.component, value: input.value, sourceSpan: input.sourceSpan });
+        });
+        // Note: The old view compiler used to use an `any` type
+        // for expressions in host properties / events.
+        // We keep this behaivor behind a flag for now.
+        if (this.options.fullTemplateTypeCheck) {
+            dirAst.hostProperties.forEach(function (inputAst) {
+                return _this.updates.push({ context: dirType, value: inputAst.value, sourceSpan: inputAst.sourceSpan });
+            });
+            dirAst.hostEvents.forEach(function (hostEventAst) {
+                return _this.actions.push({
+                    context: dirType,
+                    value: hostEventAst.handler,
+                    sourceSpan: hostEventAst.sourceSpan
+                });
+            });
+        }
+    };
+    ViewBuilder.prototype.getLocal = function (name) {
+        if (name == EventHandlerVars.event.name) {
+            return variable(this.getOrAddOutputVar(BuiltinTypeName.Dynamic));
+        }
+        for (var currBuilder = this; currBuilder; currBuilder = currBuilder.parent) {
+            var outputVarType = void 0;
+            // check references
+            outputVarType = currBuilder.refOutputVars.get(name);
+            if (outputVarType == null) {
+                // check variables
+                var varAst = currBuilder.variables.find(function (varAst) { return varAst.name === name; });
+                if (varAst) {
+                    outputVarType = BuiltinTypeName.Dynamic;
+                }
+            }
+            if (outputVarType != null) {
+                return variable(this.getOrAddOutputVar(outputVarType));
+            }
+        }
+        return null;
+    };
+    ViewBuilder.prototype.pipeOutputVar = function (name) {
+        var pipe = this.pipes.get(name);
+        if (!pipe) {
+            throw new Error("Illegal State: Could not find pipe " + name + " in template of " + this.component);
+        }
+        return this.getOrAddOutputVar(pipe);
+    };
+    ViewBuilder.prototype.preprocessUpdateExpression = function (expression) {
+        var _this = this;
+        return {
+            sourceSpan: expression.sourceSpan,
+            context: expression.context,
+            value: convertPropertyBindingBuiltins({
+                createLiteralArrayConverter: function (argCount) {
+                    return function (args) {
+                        return literalArr(args);
+                    };
+                },
+                createLiteralMapConverter: function (keys) {
+                    return function (values) {
+                        var entries = keys.map(function (k, i) {
+                            return ({
+                                key: k.key,
+                                value: values[i],
+                                quoted: k.quoted,
+                            });
+                        });
+                        return literalMap(entries);
+                    };
+                },
+                createPipeConverter: function (name, argCount) {
+                    return function (args) {
+                        // Note: The old view compiler used to use an `any` type
+                        // for pipe calls.
+                        // We keep this behaivor behind a flag for now.
+                        if (_this.options.fullTemplateTypeCheck) {
+                            return variable(_this.pipeOutputVar(name)).callMethod('transform', args);
+                        }
+                        else {
+                            return variable(_this.getOrAddOutputVar(BuiltinTypeName.Dynamic));
+                        }
+                    };
+                },
+            }, expression.value)
+        };
+    };
+    ViewBuilder.prototype.visitNgContent = function (ast, context) { };
+    ViewBuilder.prototype.visitText = function (ast, context) { };
+    ViewBuilder.prototype.visitDirectiveProperty = function (ast, context) { };
+    ViewBuilder.prototype.visitReference = function (ast, context) { };
+    ViewBuilder.prototype.visitVariable = function (ast, context) { };
+    ViewBuilder.prototype.visitEvent = function (ast, context) { };
+    ViewBuilder.prototype.visitElementProperty = function (ast, context) { };
+    ViewBuilder.prototype.visitAttr = function (ast, context) { };
+    return ViewBuilder;
+}());
+
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
 var CLASS_ATTR$1 = 'class';
 var STYLE_ATTR = 'style';
 var IMPLICIT_TEMPLATE_VAR = '\$implicit';
@@ -15929,7 +16147,7 @@ var ViewCompiler = (function () {
         }
         var viewBuilderFactory = function (parent) {
             var embeddedViewIndex = embeddedViewCount++;
-            return new ViewBuilder(_this._reflector, outputCtx, parent, component, embeddedViewIndex, usedPipes, staticQueryIds, viewBuilderFactory);
+            return new ViewBuilder$1(_this._reflector, outputCtx, parent, component, embeddedViewIndex, usedPipes, staticQueryIds, viewBuilderFactory);
         };
         var visitor = viewBuilderFactory(null);
         visitor.visitAll([], template);
@@ -15945,7 +16163,7 @@ var CHECK_VAR = variable('_ck');
 var COMP_VAR = variable('_co');
 var EVENT_NAME_VAR = variable('en');
 var ALLOW_DEFAULT_VAR = variable("ad");
-var ViewBuilder = (function () {
+var ViewBuilder$1 = (function () {
     function ViewBuilder(reflector, outputCtx, parent, component, embeddedViewIndex, usedPipes, staticQueryIds, viewBuilderFactory) {
         this.reflector = reflector;
         this.outputCtx = outputCtx;
@@ -15967,14 +16185,8 @@ var ViewBuilder = (function () {
         this.compType = this.embeddedViewIndex > 0 ?
             DYNAMIC_TYPE :
             expressionType(outputCtx.importExpr(this.component.type.reference));
+        this.viewName = viewClassName(this.component.type.reference, this.embeddedViewIndex);
     }
-    Object.defineProperty(ViewBuilder.prototype, "viewName", {
-        get: function () {
-            return viewClassName(this.component.type.reference, this.embeddedViewIndex);
-        },
-        enumerable: true,
-        configurable: true
-    });
     ViewBuilder.prototype.visitAll = function (variables, astNodes) {
         var _this = this;
         this.variables = variables;
@@ -17289,14 +17501,16 @@ var FromJsonDeserializer = (function (_super) {
  * found in the LICENSE file at https://angular.io/license
  */
 var AotCompiler = (function () {
-    function AotCompiler(_config, _host, _reflector, _metadataResolver, _templateParser, _styleCompiler, _viewCompiler, _ngModuleCompiler, _outputEmitter, _summaryResolver, _localeId, _translationFormat, _enableSummariesForJit, _symbolResolver) {
+    function AotCompiler(_config, _host, _reflector, _metadataResolver, _htmlParser, _templateParser, _styleCompiler, _viewCompiler, _typeCheckCompiler, _ngModuleCompiler, _outputEmitter, _summaryResolver, _localeId, _translationFormat, _enableSummariesForJit, _symbolResolver) {
         this._config = _config;
         this._host = _host;
         this._reflector = _reflector;
         this._metadataResolver = _metadataResolver;
+        this._htmlParser = _htmlParser;
         this._templateParser = _templateParser;
         this._styleCompiler = _styleCompiler;
         this._viewCompiler = _viewCompiler;
+        this._typeCheckCompiler = _typeCheckCompiler;
         this._ngModuleCompiler = _ngModuleCompiler;
         this._outputEmitter = _outputEmitter;
         this._summaryResolver = _summaryResolver;
@@ -17304,6 +17518,7 @@ var AotCompiler = (function () {
         this._translationFormat = _translationFormat;
         this._enableSummariesForJit = _enableSummariesForJit;
         this._symbolResolver = _symbolResolver;
+        this._templateAstCache = new Map();
     }
     AotCompiler.prototype.clearCache = function () { this._metadataResolver.clearCache(); };
     AotCompiler.prototype.analyzeModulesSync = function (rootFiles) {
@@ -17327,8 +17542,10 @@ var AotCompiler = (function () {
     };
     AotCompiler.prototype.emitAllStubs = function (analyzeResult) {
         var _this = this;
-        var files = analyzeResult.files;
-        var sourceModules = files.map(function (file) { return _this._compileStubFile(file.srcUrl, file.directives, file.pipes, file.ngModules); });
+        var files = analyzeResult.files, ngModuleByPipeOrDirective = analyzeResult.ngModuleByPipeOrDirective;
+        var sourceModules = files.map(function (file) {
+            return _this._compileStubFile(file.srcUrl, ngModuleByPipeOrDirective, file.directives, file.pipes, file.ngModules);
+        });
         return flatten$1(sourceModules);
     };
     AotCompiler.prototype.emitAllImpls = function (analyzeResult) {
@@ -17364,7 +17581,7 @@ var AotCompiler = (function () {
         }
         return messageBundle;
     };
-    AotCompiler.prototype._compileStubFile = function (srcFileUrl, directives, pipes, ngModules) {
+    AotCompiler.prototype._compileStubFile = function (srcFileUrl, ngModuleByPipeOrDirective, directives, pipes, ngModules) {
         var _this = this;
         var fileSuffix = splitTypescriptSuffix(srcFileUrl, true)[1];
         var generatedFiles = [];
@@ -17382,6 +17599,11 @@ var AotCompiler = (function () {
             if (!compMeta.isComponent) {
                 return;
             }
+            var ngModule = ngModuleByPipeOrDirective.get(dirType);
+            if (!ngModule) {
+                throw new Error("Internal Error: cannot determine the module for component " + identifierName(compMeta.type) + "!");
+            }
+            _this._compileComponentTypeCheckBlock(ngFactoryOutputCtx, compMeta, ngModule, ngModule.transitiveModule.directives);
             // Note: compMeta is a component and therefore template is non null.
             // Note: compMeta is a component and therefore template is non null.
             compMeta.template.externalStylesheets.forEach(function (stylesheetMeta) {
@@ -17501,7 +17723,7 @@ var AotCompiler = (function () {
     };
     AotCompiler.prototype._compileComponentFactory = function (outputCtx, compMeta, ngModule, fileSuffix) {
         var hostType = this._metadataResolver.getHostComponentType(compMeta.type.reference);
-        var hostMeta = createHostComponentMeta(hostType, compMeta, this._metadataResolver.getHostComponentViewClass(hostType));
+        var hostMeta = createHostComponentMeta(hostType, compMeta, this._metadataResolver.getHostComponentViewClass(hostType), this._htmlParser);
         var hostViewFactoryVar = this._compileComponent(outputCtx, hostMeta, ngModule, [compMeta.type], null, fileSuffix)
             .viewClassVar;
         var compFactoryVar = componentFactoryName(compMeta.type.reference);
@@ -17526,18 +17748,31 @@ var AotCompiler = (function () {
         ]))
             .toDeclStmt(importType(Identifiers.ComponentFactory, [(expressionType(outputCtx.importExpr(compMeta.type.reference)))], [TypeModifier.Const]), [StmtModifier.Final, StmtModifier.Exported]));
     };
-    AotCompiler.prototype._compileComponent = function (outputCtx, compMeta, ngModule, directiveIdentifiers, componentStyles, fileSuffix) {
+    AotCompiler.prototype._parseTemplate = function (compMeta, ngModule, directiveIdentifiers) {
         var _this = this;
+        var result = this._templateAstCache.get(compMeta.type.reference);
+        if (result) {
+            return result;
+        }
+        var preserveWhitespaces = compMeta.template.preserveWhitespaces;
         var directives = directiveIdentifiers.map(function (dir) { return _this._metadataResolver.getDirectiveSummary(dir.reference); });
         var pipes = ngModule.transitiveModule.pipes.map(function (pipe) { return _this._metadataResolver.getPipeSummary(pipe.reference); });
-        var preserveWhitespaces = compMeta.template.preserveWhitespaces;
-        var _a = this._templateParser.parse(compMeta, (compMeta.template.template), directives, pipes, ngModule.schemas, templateSourceUrl(ngModule.type, compMeta, (compMeta.template)), preserveWhitespaces), parsedTemplate = _a.template, usedPipes = _a.pipes;
+        result = this._templateParser.parse(compMeta, (compMeta.template.htmlAst), directives, pipes, ngModule.schemas, templateSourceUrl(ngModule.type, compMeta, (compMeta.template)), preserveWhitespaces);
+        this._templateAstCache.set(compMeta.type.reference, result);
+        return result;
+    };
+    AotCompiler.prototype._compileComponent = function (outputCtx, compMeta, ngModule, directiveIdentifiers, componentStyles, fileSuffix) {
+        var _a = this._parseTemplate(compMeta, ngModule, directiveIdentifiers), parsedTemplate = _a.template, usedPipes = _a.pipes;
         var stylesExpr = componentStyles ? variable(componentStyles.stylesVar) : literalArr([]);
         var viewResult = this._viewCompiler.compileComponent(outputCtx, compMeta, parsedTemplate, stylesExpr, usedPipes);
         if (componentStyles) {
             _resolveStyleStatements(this._symbolResolver, componentStyles, this._styleCompiler.needsStyleShim(compMeta), fileSuffix);
         }
         return viewResult;
+    };
+    AotCompiler.prototype._compileComponentTypeCheckBlock = function (outputCtx, compMeta, ngModule, directiveIdentifiers) {
+        var _a = this._parseTemplate(compMeta, ngModule, directiveIdentifiers), parsedTemplate = _a.template, usedPipes = _a.pipes;
+        this._typeCheckCompiler.compileComponent(outputCtx, compMeta, parsedTemplate, usedPipes);
     };
     AotCompiler.prototype._createOutputContext = function (genFilePath) {
         var _this = this;
@@ -19092,7 +19327,8 @@ function createAotCompiler(compilerHost, options) {
     var resolver = new CompileMetadataResolver(config, new NgModuleResolver(staticReflector), new DirectiveResolver(staticReflector), new PipeResolver(staticReflector), summaryResolver, elementSchemaRegistry, normalizer, console, symbolCache, staticReflector);
     // TODO(vicb): do not pass options.i18nFormat here
     var viewCompiler = new ViewCompiler(config, staticReflector, elementSchemaRegistry);
-    var compiler = new AotCompiler(config, compilerHost, staticReflector, resolver, tmplParser, new StyleCompiler(urlResolver), viewCompiler, new NgModuleCompiler(staticReflector), new TypeScriptEmitter(), summaryResolver, options.locale || null, options.i18nFormat || null, options.enableSummariesForJit || null, symbolResolver);
+    var typeCheckCompiler = new TypeCheckCompiler(options, staticReflector);
+    var compiler = new AotCompiler(config, compilerHost, staticReflector, resolver, htmlParser, tmplParser, new StyleCompiler(urlResolver), viewCompiler, typeCheckCompiler, new NgModuleCompiler(staticReflector), new TypeScriptEmitter(), summaryResolver, options.locale || null, options.i18nFormat || null, options.enableSummariesForJit || null, symbolResolver);
     return { compiler: compiler, reflector: staticReflector };
 }
 
@@ -19740,8 +19976,9 @@ var JitEmitterVisitor = (function (_super) {
  * application to XSS risks.  For more detail, see the [Security Guide](http://g.co/ng/security).
  */
 var JitCompiler = (function () {
-    function JitCompiler(_metadataResolver, _templateParser, _styleCompiler, _viewCompiler, _ngModuleCompiler, _summaryResolver, _reflector, _compilerConfig, _console, getExtraNgModuleProviders) {
+    function JitCompiler(_metadataResolver, _htmlParser, _templateParser, _styleCompiler, _viewCompiler, _ngModuleCompiler, _summaryResolver, _reflector, _compilerConfig, _console, getExtraNgModuleProviders) {
         this._metadataResolver = _metadataResolver;
+        this._htmlParser = _htmlParser;
         this._templateParser = _templateParser;
         this._styleCompiler = _styleCompiler;
         this._viewCompiler = _viewCompiler;
@@ -19918,7 +20155,7 @@ var JitCompiler = (function () {
             var compMeta = this._metadataResolver.getDirectiveMetadata(compType);
             assertComponent(compMeta);
             var hostClass = this._metadataResolver.getHostComponentType(compType);
-            var hostMeta = createHostComponentMeta(hostClass, compMeta, compMeta.componentFactory.viewDefFactory);
+            var hostMeta = createHostComponentMeta(hostClass, compMeta, compMeta.componentFactory.viewDefFactory, this._htmlParser);
             compiledTemplate =
                 new CompiledTemplate(true, compMeta.type, hostMeta, ngModule, [compMeta.type]);
             this._compiledHostTemplateCache.set(compType, compiledTemplate);
@@ -23433,263 +23670,6 @@ exports.NodeCompilerHostContext = NodeCompilerHostContext;
 
 });
 
-var api = createCommonjsModule(function (module, exports) {
-"use strict";
-/**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
- */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.DEFAULT_ERROR_CODE = 100;
-exports.UNKNOWN_ERROR_CODE = 500;
-exports.SOURCE = 'angular';
-var EmitFlags;
-(function (EmitFlags) {
-    EmitFlags[EmitFlags["DTS"] = 1] = "DTS";
-    EmitFlags[EmitFlags["JS"] = 2] = "JS";
-    EmitFlags[EmitFlags["Metadata"] = 4] = "Metadata";
-    EmitFlags[EmitFlags["I18nBundle"] = 8] = "I18nBundle";
-    EmitFlags[EmitFlags["Summary"] = 16] = "Summary";
-    EmitFlags[EmitFlags["Default"] = 3] = "Default";
-    EmitFlags[EmitFlags["All"] = 31] = "All";
-})(EmitFlags = exports.EmitFlags || (exports.EmitFlags = {}));
-
-});
-
-var check_types = createCommonjsModule(function (module, exports) {
-"use strict";
-/**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
- */
-Object.defineProperty(exports, "__esModule", { value: true });
-
-
-
-var stubCancellationToken = {
-    isCancellationRequested: function () { return false; },
-    throwIfCancellationRequested: function () { }
-};
-var TypeChecker = (function () {
-    function TypeChecker(program, tsOptions, compilerHost, aotCompilerHost, aotOptions, _analyzedModules, _generatedFiles) {
-        this.program = program;
-        this.tsOptions = tsOptions;
-        this.compilerHost = compilerHost;
-        this.aotCompilerHost = aotCompilerHost;
-        this.aotOptions = aotOptions;
-        this._analyzedModules = _analyzedModules;
-        this._generatedFiles = _generatedFiles;
-        this._currentCancellationToken = stubCancellationToken;
-        this._partial = false;
-    }
-    TypeChecker.prototype.getDiagnostics = function (fileName, cancellationToken) {
-        this._currentCancellationToken = cancellationToken || stubCancellationToken;
-        try {
-            return fileName ?
-                this.diagnosticsByFileName.get(fileName) || [] : (_a = []).concat.apply(_a, Array.from(this.diagnosticsByFileName.values()));
-        }
-        finally {
-            this._currentCancellationToken = stubCancellationToken;
-        }
-        var _a;
-    };
-    Object.defineProperty(TypeChecker.prototype, "partialResults", {
-        get: function () { return this._partial; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(TypeChecker.prototype, "analyzedModules", {
-        get: function () {
-            return this._analyzedModules || (this._analyzedModules = this.aotCompiler.analyzeModulesSync(this.program.getSourceFiles().map(function (sf) { return sf.fileName; })));
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(TypeChecker.prototype, "diagnosticsByFileName", {
-        get: function () {
-            return this._diagnosticsByFile || this.createDiagnosticsByFile();
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(TypeChecker.prototype, "diagnosticProgram", {
-        get: function () {
-            return this._diagnosticProgram || this.createDiagnosticProgram();
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(TypeChecker.prototype, "generatedFiles", {
-        get: function () {
-            var result = this._generatedFiles;
-            if (!result) {
-                this._generatedFiles = result = this.aotCompiler.emitAllImpls(this.analyzedModules);
-            }
-            return result;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(TypeChecker.prototype, "aotCompiler", {
-        get: function () {
-            return this._aotCompiler || this.createCompilerAndReflector();
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(TypeChecker.prototype, "reflector", {
-        get: function () {
-            var result = this._reflector;
-            if (!result) {
-                this.createCompilerAndReflector();
-                result = this._reflector;
-            }
-            return result;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(TypeChecker.prototype, "factories", {
-        get: function () {
-            return this._factories || this.createFactories();
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(TypeChecker.prototype, "factoryNames", {
-        get: function () {
-            return this._factoryNames || (this.createFactories() && this._factoryNames);
-        },
-        enumerable: true,
-        configurable: true
-    });
-    TypeChecker.prototype.createCompilerAndReflector = function () {
-        var _a = compiler_1.createAotCompiler(this.aotCompilerHost, this.aotOptions), compiler = _a.compiler, reflector = _a.reflector;
-        this._reflector = reflector;
-        return this._aotCompiler = compiler;
-    };
-    TypeChecker.prototype.createDiagnosticProgram = function () {
-        // Create a program that is all the files from the original program plus the factories.
-        var existingFiles = this.program.getSourceFiles().map(function (source) { return source.fileName; });
-        var host = new TypeCheckingHost(this.compilerHost, this.program, this.factories);
-        return this._diagnosticProgram =
-            ts__default.createProgram(existingFiles.concat(this.factoryNames), this.tsOptions, host);
-    };
-    TypeChecker.prototype.createFactories = function () {
-        // Create all the factory files with enough information to map the diagnostics reported for the
-        // created file back to the original source.
-        var emitter = new compiler_1.TypeScriptEmitter();
-        var factorySources = this.generatedFiles.filter(function (file) { return file.stmts != null && file.stmts.length; })
-            .map(function (file) { return [file.genFileUrl, createFactoryInfo(emitter, file)]; });
-        this._factories = new Map(factorySources);
-        this._factoryNames = Array.from(this._factories.keys());
-        return this._factories;
-    };
-    TypeChecker.prototype.createDiagnosticsByFile = function () {
-        // Collect all the diagnostics binned by original source file name.
-        var result = new Map();
-        var diagnosticsFor = function (fileName) {
-            var r = result.get(fileName);
-            if (!r) {
-                r = [];
-                result.set(fileName, r);
-            }
-            return r;
-        };
-        var program = this.diagnosticProgram;
-        for (var _i = 0, _a = this.factoryNames; _i < _a.length; _i++) {
-            var factoryName = _a[_i];
-            if (this._currentCancellationToken.isCancellationRequested())
-                return result;
-            var sourceFile = program.getSourceFile(factoryName);
-            for (var _b = 0, _c = this.diagnosticProgram.getSemanticDiagnostics(sourceFile); _b < _c.length; _b++) {
-                var diagnostic = _c[_b];
-                if (diagnostic.file && diagnostic.start) {
-                    var span = this.sourceSpanOf(diagnostic.file, diagnostic.start);
-                    if (span) {
-                        var fileName = span.start.file.url;
-                        var diagnosticsList = diagnosticsFor(fileName);
-                        diagnosticsList.push({
-                            messageText: diagnosticMessageToString(diagnostic.messageText),
-                            category: diagnostic.category, span: span,
-                            source: api.SOURCE,
-                            code: api.DEFAULT_ERROR_CODE
-                        });
-                    }
-                }
-            }
-        }
-        return result;
-    };
-    TypeChecker.prototype.sourceSpanOf = function (source, start) {
-        // Find the corresponding TypeScript node
-        var info = this.factories.get(source.fileName);
-        if (info) {
-            var _a = ts__default.getLineAndCharacterOfPosition(source, start), line = _a.line, character = _a.character;
-            return info.context.spanOf(line, character);
-        }
-        return null;
-    };
-    return TypeChecker;
-}());
-exports.TypeChecker = TypeChecker;
-function diagnosticMessageToString(message) {
-    return ts__default.flattenDiagnosticMessageText(message, '\n');
-}
-var REWRITE_PREFIX = /^\u0275[0-9]+$/;
-function createFactoryInfo(emitter, file) {
-    var _a = emitter.emitStatementsAndContext(file.srcFileUrl, file.genFileUrl, file.stmts, 
-    /* preamble */ undefined, /* emitSourceMaps */ undefined, 
-    /* referenceFilter */ function (reference) { return !!(reference.name && REWRITE_PREFIX.test(reference.name)); }), sourceText = _a.sourceText, context = _a.context;
-    var source = ts__default.createSourceFile(file.genFileUrl, sourceText, ts__default.ScriptTarget.Latest, /* setParentNodes */ true);
-    return { source: source, context: context };
-}
-var TypeCheckingHost = (function () {
-    function TypeCheckingHost(host, originalProgram, factories) {
-        this.host = host;
-        this.originalProgram = originalProgram;
-        this.factories = factories;
-        this.writeFile = function () { throw new Error('Unexpected write in diagnostic program'); };
-    }
-    TypeCheckingHost.prototype.getSourceFile = function (fileName, languageVersion, onError) {
-        var originalSource = this.originalProgram.getSourceFile(fileName);
-        if (originalSource) {
-            return originalSource;
-        }
-        var factoryInfo = this.factories.get(fileName);
-        if (factoryInfo) {
-            return factoryInfo.source;
-        }
-        return this.host.getSourceFile(fileName, languageVersion, onError);
-    };
-    TypeCheckingHost.prototype.getDefaultLibFileName = function (options) {
-        return this.host.getDefaultLibFileName(options);
-    };
-    TypeCheckingHost.prototype.getCurrentDirectory = function () { return this.host.getCurrentDirectory(); };
-    TypeCheckingHost.prototype.getDirectories = function (path$$1) { return this.host.getDirectories(path$$1); };
-    TypeCheckingHost.prototype.getCanonicalFileName = function (fileName) {
-        return this.host.getCanonicalFileName(fileName);
-    };
-    TypeCheckingHost.prototype.useCaseSensitiveFileNames = function () { return this.host.useCaseSensitiveFileNames(); };
-    TypeCheckingHost.prototype.getNewLine = function () { return this.host.getNewLine(); };
-    TypeCheckingHost.prototype.fileExists = function (fileName) {
-        return this.factories.has(fileName) || this.host.fileExists(fileName);
-    };
-    TypeCheckingHost.prototype.readFile = function (fileName) {
-        var factoryInfo = this.factories.get(fileName);
-        return (factoryInfo && factoryInfo.source.text) || this.host.readFile(fileName);
-    };
-    return TypeCheckingHost;
-}());
-
-});
-
 var symbols$2 = createCommonjsModule(function (module, exports) {
 "use strict";
 /**
@@ -24658,6 +24638,11 @@ var TypeWrapper = (function () {
     function TypeWrapper(tsType, context) {
         this.tsType = tsType;
         this.context = context;
+        this.kind = 'type';
+        this.language = 'typescript';
+        this.type = undefined;
+        this.container = undefined;
+        this.public = true;
         if (!tsType) {
             throw Error('Internal: null type');
         }
@@ -24667,31 +24652,6 @@ var TypeWrapper = (function () {
             var symbol = this.tsType.symbol;
             return (symbol && symbol.name) || '<anonymous>';
         },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(TypeWrapper.prototype, "kind", {
-        get: function () { return 'type'; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(TypeWrapper.prototype, "language", {
-        get: function () { return 'typescript'; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(TypeWrapper.prototype, "type", {
-        get: function () { return undefined; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(TypeWrapper.prototype, "container", {
-        get: function () { return undefined; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(TypeWrapper.prototype, "public", {
-        get: function () { return true; },
         enumerable: true,
         configurable: true
     });
@@ -24728,6 +24688,8 @@ var TypeWrapper = (function () {
 var SymbolWrapper = (function () {
     function SymbolWrapper(symbol, context) {
         this.context = context;
+        this.nullable = false;
+        this.language = 'typescript';
         this.symbol = symbol && context && (symbol.flags & ts__default.SymbolFlags.Alias) ?
             context.checker.getAliasedSymbol(symbol) :
             symbol;
@@ -24739,11 +24701,6 @@ var SymbolWrapper = (function () {
     });
     Object.defineProperty(SymbolWrapper.prototype, "kind", {
         get: function () { return this.callable ? 'method' : 'property'; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(SymbolWrapper.prototype, "language", {
-        get: function () { return 'typescript'; },
         enumerable: true,
         configurable: true
     });
@@ -24767,11 +24724,6 @@ var SymbolWrapper = (function () {
     });
     Object.defineProperty(SymbolWrapper.prototype, "callable", {
         get: function () { return typeCallable(this.tsType); },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(SymbolWrapper.prototype, "nullable", {
-        get: function () { return false; },
         enumerable: true,
         configurable: true
     });
@@ -24815,6 +24767,9 @@ var SymbolWrapper = (function () {
 var DeclaredSymbol = (function () {
     function DeclaredSymbol(declaration) {
         this.declaration = declaration;
+        this.language = 'ng-template';
+        this.nullable = false;
+        this.public = true;
     }
     Object.defineProperty(DeclaredSymbol.prototype, "name", {
         get: function () { return this.declaration.name; },
@@ -24823,11 +24778,6 @@ var DeclaredSymbol = (function () {
     });
     Object.defineProperty(DeclaredSymbol.prototype, "kind", {
         get: function () { return this.declaration.kind; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(DeclaredSymbol.prototype, "language", {
-        get: function () { return 'ng-template'; },
         enumerable: true,
         configurable: true
     });
@@ -24843,16 +24793,6 @@ var DeclaredSymbol = (function () {
     });
     Object.defineProperty(DeclaredSymbol.prototype, "callable", {
         get: function () { return this.declaration.type.callable; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(DeclaredSymbol.prototype, "nullable", {
-        get: function () { return false; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(DeclaredSymbol.prototype, "public", {
-        get: function () { return true; },
         enumerable: true,
         configurable: true
     });
@@ -25031,44 +24971,20 @@ var PipeSymbol = (function () {
     function PipeSymbol(pipe, context) {
         this.pipe = pipe;
         this.context = context;
+        this.kind = 'pipe';
+        this.language = 'typescript';
+        this.container = undefined;
+        this.callable = true;
+        this.nullable = false;
+        this.public = true;
     }
     Object.defineProperty(PipeSymbol.prototype, "name", {
         get: function () { return this.pipe.name; },
         enumerable: true,
         configurable: true
     });
-    Object.defineProperty(PipeSymbol.prototype, "kind", {
-        get: function () { return 'pipe'; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(PipeSymbol.prototype, "language", {
-        get: function () { return 'typescript'; },
-        enumerable: true,
-        configurable: true
-    });
     Object.defineProperty(PipeSymbol.prototype, "type", {
         get: function () { return new TypeWrapper(this.tsType, this.context); },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(PipeSymbol.prototype, "container", {
-        get: function () { return undefined; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(PipeSymbol.prototype, "callable", {
-        get: function () { return true; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(PipeSymbol.prototype, "nullable", {
-        get: function () { return false; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(PipeSymbol.prototype, "public", {
-        get: function () { return true; },
         enumerable: true,
         configurable: true
     });
@@ -25154,12 +25070,8 @@ function findClassSymbolInContext(type, context) {
 }
 var EmptyTable = (function () {
     function EmptyTable() {
+        this.size = 0;
     }
-    Object.defineProperty(EmptyTable.prototype, "size", {
-        get: function () { return 0; },
-        enumerable: true,
-        configurable: true
-    });
     EmptyTable.prototype.get = function (key) { return undefined; };
     EmptyTable.prototype.has = function (key) { return false; };
     EmptyTable.prototype.values = function () { return []; };
@@ -25370,8 +25282,6 @@ exports.CompilerHost = compiler_host.CompilerHost;
 exports.ModuleResolutionHostAdapter = compiler_host.ModuleResolutionHostAdapter;
 exports.NodeCompilerHostContext = compiler_host.NodeCompilerHostContext;
 
-exports.TypeChecker = check_types.TypeChecker;
-
 exports.getExpressionDiagnostics = expression_diagnostics.getExpressionDiagnostics;
 exports.getExpressionScope = expression_diagnostics.getExpressionScope;
 exports.getTemplateExpressionDiagnostics = expression_diagnostics.getTemplateExpressionDiagnostics;
@@ -25392,13 +25302,13 @@ exports.getSymbolQuery = typescript_symbols.getSymbolQuery;
 
 var language_services_1 = language_services.CompilerHost;
 var language_services_2 = language_services.ModuleResolutionHostAdapter;
-var language_services_6 = language_services.getExpressionScope;
-var language_services_7 = language_services.getTemplateExpressionDiagnostics;
-var language_services_8 = language_services.AstType;
-var language_services_11 = language_services.BuiltinType;
-var language_services_14 = language_services.getClassMembersFromDeclaration;
-var language_services_15 = language_services.getPipesTable;
-var language_services_16 = language_services.getSymbolQuery;
+var language_services_5 = language_services.getExpressionScope;
+var language_services_6 = language_services.getTemplateExpressionDiagnostics;
+var language_services_7 = language_services.AstType;
+var language_services_10 = language_services.BuiltinType;
+var language_services_13 = language_services.getClassMembersFromDeclaration;
+var language_services_14 = language_services.getPipesTable;
+var language_services_15 = language_services.getSymbolQuery;
 
 // CommonJS / Node have global context exposed as "global" variable.
 // We don't want to include the whole node.d.ts this this compilation unit so we'll just fake
@@ -27559,7 +27469,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v5.0.0-beta.7-4695c69
+ * @license Angular v5.0.0-beta.7-b6431c6
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -27975,7 +27885,7 @@ var Version$1 = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('5.0.0-beta.7-4695c69');
+var VERSION$2 = new Version$1('5.0.0-beta.7-b6431c6');
 
 /**
  * @fileoverview added by tsickle
@@ -32423,96 +32333,86 @@ function getPlatform() {
  * (e.g. {\@link platformBrowser}), or explicitly by calling the {\@link createPlatform} function.
  *
  * \@stable
- * @abstract
  */
 var PlatformRef = (function () {
-    function PlatformRef() {
-    }
-    return PlatformRef;
-}());
-/**
- * @param {?} errorHandler
- * @param {?} ngZone
- * @param {?} callback
- * @return {?}
- */
-function _callAndReportToErrorHandler(errorHandler, ngZone, callback) {
-    try {
-        var /** @type {?} */ result = callback();
-        if (isPromise$1(result)) {
-            return result.catch(function (e) {
-                ngZone.runOutsideAngular(function () { return errorHandler.handleError(e); });
-                // rethrow as the exception handler might not do it
-                throw e;
-            });
-        }
-        return result;
-    }
-    catch (/** @type {?} */ e) {
-        ngZone.runOutsideAngular(function () { return errorHandler.handleError(e); });
-        // rethrow as the exception handler might not do it
-        throw e;
-    }
-}
-/**
- * workaround https://github.com/angular/tsickle/issues/350
- * @suppress {checkTypes}
- */
-var PlatformRef_ = (function (_super) {
-    __extends(PlatformRef_, _super);
-    function PlatformRef_(_injector) {
-        var _this = _super.call(this) || this;
-        _this._injector = _injector;
-        _this._modules = [];
-        _this._destroyListeners = [];
-        _this._destroyed = false;
-        return _this;
+    /** @internal */
+    function PlatformRef(_injector) {
+        this._injector = _injector;
+        this._modules = [];
+        this._destroyListeners = [];
+        this._destroyed = false;
     }
     /**
-     * @param {?} callback
-     * @return {?}
+     * Creates an instance of an `@NgModule` for the given platform
+     * for offline compilation.
+     *
+     * ## Simple Example
+     *
+     * ```typescript
+     * my_module.ts:
+     *
+     * @NgModule({
+     *   imports: [BrowserModule]
+     * })
+     * class MyModule {}
+     *
+     * main.ts:
+     * import {MyModuleNgFactory} from './my_module.ngfactory';
+     * import {platformBrowser} from '@angular/platform-browser';
+     *
+     * let moduleRef = platformBrowser().bootstrapModuleFactory(MyModuleNgFactory);
+     * ```
+     *
+     * @experimental APIs related to application bootstrap are currently under review.
      */
-    PlatformRef_.prototype.onDestroy = /**
-     * @param {?} callback
-     * @return {?}
-     */
-    function (callback) { this._destroyListeners.push(callback); };
-    Object.defineProperty(PlatformRef_.prototype, "injector", {
-        get: /**
-         * @return {?}
-         */
-        function () { return this._injector; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(PlatformRef_.prototype, "destroyed", {
-        get: /**
-         * @return {?}
-         */
-        function () { return this._destroyed; },
-        enumerable: true,
-        configurable: true
-    });
     /**
-     * @return {?}
-     */
-    PlatformRef_.prototype.destroy = /**
-     * @return {?}
-     */
-    function () {
-        if (this._destroyed) {
-            throw new Error('The platform has already been destroyed!');
-        }
-        this._modules.slice().forEach(function (module) { return module.destroy(); });
-        this._destroyListeners.forEach(function (listener) { return listener(); });
-        this._destroyed = true;
-    };
-    /**
+     * Creates an instance of an `\@NgModule` for the given platform
+     * for offline compilation.
+     *
+     * ## Simple Example
+     *
+     * ```typescript
+     * my_module.ts:
+     *
+     * \@NgModule({
+     *   imports: [BrowserModule]
+     * })
+     * class MyModule {}
+     *
+     * main.ts:
+     * import {MyModuleNgFactory} from './my_module.ngfactory';
+     * import {platformBrowser} from '\@angular/platform-browser';
+     *
+     * let moduleRef = platformBrowser().bootstrapModuleFactory(MyModuleNgFactory);
+     * ```
+     *
+     * \@experimental APIs related to application bootstrap are currently under review.
      * @template M
      * @param {?} moduleFactory
      * @return {?}
      */
-    PlatformRef_.prototype.bootstrapModuleFactory = /**
+    PlatformRef.prototype.bootstrapModuleFactory = /**
+     * Creates an instance of an `\@NgModule` for the given platform
+     * for offline compilation.
+     *
+     * ## Simple Example
+     *
+     * ```typescript
+     * my_module.ts:
+     *
+     * \@NgModule({
+     *   imports: [BrowserModule]
+     * })
+     * class MyModule {}
+     *
+     * main.ts:
+     * import {MyModuleNgFactory} from './my_module.ngfactory';
+     * import {platformBrowser} from '\@angular/platform-browser';
+     *
+     * let moduleRef = platformBrowser().bootstrapModuleFactory(MyModuleNgFactory);
+     * ```
+     *
+     * \@experimental APIs related to application bootstrap are currently under review.
      * @template M
      * @param {?} moduleFactory
      * @return {?}
@@ -32526,7 +32426,7 @@ var PlatformRef_ = (function (_super) {
      * @param {?=} ngZone
      * @return {?}
      */
-    PlatformRef_.prototype._bootstrapModuleFactoryWithZone = /**
+    PlatformRef.prototype._bootstrapModuleFactoryWithZone = /**
      * @template M
      * @param {?} moduleFactory
      * @param {?=} ngZone
@@ -32562,12 +32462,53 @@ var PlatformRef_ = (function (_super) {
         });
     };
     /**
+     * Creates an instance of an `@NgModule` for a given platform using the given runtime compiler.
+     *
+     * ## Simple Example
+     *
+     * ```typescript
+     * @NgModule({
+     *   imports: [BrowserModule]
+     * })
+     * class MyModule {}
+     *
+     * let moduleRef = platformBrowser().bootstrapModule(MyModule);
+     * ```
+     * @stable
+     */
+    /**
+     * Creates an instance of an `\@NgModule` for a given platform using the given runtime compiler.
+     *
+     * ## Simple Example
+     *
+     * ```typescript
+     * \@NgModule({
+     *   imports: [BrowserModule]
+     * })
+     * class MyModule {}
+     *
+     * let moduleRef = platformBrowser().bootstrapModule(MyModule);
+     * ```
+     * \@stable
      * @template M
      * @param {?} moduleType
      * @param {?=} compilerOptions
      * @return {?}
      */
-    PlatformRef_.prototype.bootstrapModule = /**
+    PlatformRef.prototype.bootstrapModule = /**
+     * Creates an instance of an `\@NgModule` for a given platform using the given runtime compiler.
+     *
+     * ## Simple Example
+     *
+     * ```typescript
+     * \@NgModule({
+     *   imports: [BrowserModule]
+     * })
+     * class MyModule {}
+     *
+     * let moduleRef = platformBrowser().bootstrapModule(MyModule);
+     * ```
+     * \@stable
      * @template M
      * @param {?} moduleType
      * @param {?=} compilerOptions
@@ -32584,7 +32525,7 @@ var PlatformRef_ = (function (_super) {
      * @param {?=} ngZone
      * @return {?}
      */
-    PlatformRef_.prototype._bootstrapModuleWithZone = /**
+    PlatformRef.prototype._bootstrapModuleWithZone = /**
      * @template M
      * @param {?} moduleType
      * @param {?=} compilerOptions
@@ -32603,7 +32544,7 @@ var PlatformRef_ = (function (_super) {
      * @param {?} moduleRef
      * @return {?}
      */
-    PlatformRef_.prototype._moduleDoBootstrap = /**
+    PlatformRef.prototype._moduleDoBootstrap = /**
      * @param {?} moduleRef
      * @return {?}
      */
@@ -32621,49 +32562,111 @@ var PlatformRef_ = (function (_super) {
         }
         this._modules.push(moduleRef);
     };
-    PlatformRef_.decorators = [
-        { type: Injectable },
-    ];
-    /** @nocollapse */
-    PlatformRef_.ctorParameters = function () { return [
-        { type: Injector, },
-    ]; };
-    return PlatformRef_;
-}(PlatformRef));
+    /**
+     * Register a listener to be called when the platform is disposed.
+     */
+    /**
+     * Register a listener to be called when the platform is disposed.
+     * @param {?} callback
+     * @return {?}
+     */
+    PlatformRef.prototype.onDestroy = /**
+     * Register a listener to be called when the platform is disposed.
+     * @param {?} callback
+     * @return {?}
+     */
+    function (callback) { this._destroyListeners.push(callback); };
+    Object.defineProperty(PlatformRef.prototype, "injector", {
+        /**
+         * Retrieve the platform {@link Injector}, which is the parent injector for
+         * every Angular application on the page and provides singleton providers.
+         */
+        get: /**
+         * Retrieve the platform {\@link Injector}, which is the parent injector for
+         * every Angular application on the page and provides singleton providers.
+         * @return {?}
+         */
+        function () { return this._injector; },
+        enumerable: true,
+        configurable: true
+    });
+    /**
+     * Destroy the Angular platform and all Angular applications on the page.
+     */
+    /**
+     * Destroy the Angular platform and all Angular applications on the page.
+     * @return {?}
+     */
+    PlatformRef.prototype.destroy = /**
+     * Destroy the Angular platform and all Angular applications on the page.
+     * @return {?}
+     */
+    function () {
+        if (this._destroyed) {
+            throw new Error('The platform has already been destroyed!');
+        }
+        this._modules.slice().forEach(function (module) { return module.destroy(); });
+        this._destroyListeners.forEach(function (listener) { return listener(); });
+        this._destroyed = true;
+    };
+    Object.defineProperty(PlatformRef.prototype, "destroyed", {
+        get: /**
+         * @return {?}
+         */
+        function () { return this._destroyed; },
+        enumerable: true,
+        configurable: true
+    });
+    return PlatformRef;
+}());
+/**
+ * @param {?} errorHandler
+ * @param {?} ngZone
+ * @param {?} callback
+ * @return {?}
+ */
+function _callAndReportToErrorHandler(errorHandler, ngZone, callback) {
+    try {
+        var /** @type {?} */ result = callback();
+        if (isPromise$1(result)) {
+            return result.catch(function (e) {
+                ngZone.runOutsideAngular(function () { return errorHandler.handleError(e); });
+                // rethrow as the exception handler might not do it
+                throw e;
+            });
+        }
+        return result;
+    }
+    catch (/** @type {?} */ e) {
+        ngZone.runOutsideAngular(function () { return errorHandler.handleError(e); });
+        // rethrow as the exception handler might not do it
+        throw e;
+    }
+}
 /**
  * A reference to an Angular application running on a page.
  *
  * \@stable
- * @abstract
  */
 var ApplicationRef = (function () {
-    function ApplicationRef() {
-    }
-    return ApplicationRef;
-}());
-/**
- * workaround https://github.com/angular/tsickle/issues/350
- * @suppress {checkTypes}
- */
-var ApplicationRef_ = (function (_super) {
-    __extends(ApplicationRef_, _super);
-    function ApplicationRef_(_zone, _console, _injector, _exceptionHandler, _componentFactoryResolver, _initStatus) {
-        var _this = _super.call(this) || this;
-        _this._zone = _zone;
-        _this._console = _console;
-        _this._injector = _injector;
-        _this._exceptionHandler = _exceptionHandler;
-        _this._componentFactoryResolver = _componentFactoryResolver;
-        _this._initStatus = _initStatus;
-        _this._bootstrapListeners = [];
-        _this._rootComponents = [];
-        _this._rootComponentTypes = [];
-        _this._views = [];
-        _this._runningTick = false;
-        _this._enforceNoNewChanges = false;
-        _this._stable = true;
-        _this._enforceNoNewChanges = isDevMode();
-        _this._zone.onMicrotaskEmpty.subscribe({ next: function () { _this._zone.run(function () { _this.tick(); }); } });
+    /** @internal */
+    function ApplicationRef(_zone, _console, _injector, _exceptionHandler, _componentFactoryResolver, _initStatus) {
+        var _this = this;
+        this._zone = _zone;
+        this._console = _console;
+        this._injector = _injector;
+        this._exceptionHandler = _exceptionHandler;
+        this._componentFactoryResolver = _componentFactoryResolver;
+        this._initStatus = _initStatus;
+        this._bootstrapListeners = [];
+        this._rootComponents = [];
+        this._rootComponentTypes = [];
+        this._views = [];
+        this._runningTick = false;
+        this._enforceNoNewChanges = false;
+        this._stable = true;
+        this._enforceNoNewChanges = isDevMode();
+        this._zone.onMicrotaskEmpty.subscribe({ next: function () { _this._zone.run(function () { _this.tick(); }); } });
         var /** @type {?} */ isCurrentlyStable = new Observable_2(function (observer) {
             _this._stable = _this._zone.isStable && !_this._zone.hasPendingMacrotasks &&
                 !_this._zone.hasPendingMicrotasks;
@@ -32702,42 +32705,56 @@ var ApplicationRef_ = (function (_super) {
                 unstableSub.unsubscribe();
             };
         });
-        _this._isStable = merge_2(isCurrentlyStable, share_2.call(isStable));
-        return _this;
+        this._isStable = merge_2(isCurrentlyStable, share_2.call(isStable));
     }
     /**
-     * @param {?} viewRef
-     * @return {?}
+     * Bootstrap a new component at the root level of the application.
+     *
+     * ### Bootstrap process
+     *
+     * When bootstrapping a new root component into an application, Angular mounts the
+     * specified application component onto DOM elements identified by the [componentType]'s
+     * selector and kicks off automatic change detection to finish initializing the component.
+     *
+     * Optionally, a component can be mounted onto a DOM element that does not match the
+     * [componentType]'s selector.
+     *
+     * ### Example
+     * {@example core/ts/platform/platform.ts region='longform'}
      */
-    ApplicationRef_.prototype.attachView = /**
-     * @param {?} viewRef
-     * @return {?}
-     */
-    function (viewRef) {
-        var /** @type {?} */ view = (/** @type {?} */ (viewRef));
-        this._views.push(view);
-        view.attachToAppRef(this);
-    };
     /**
-     * @param {?} viewRef
-     * @return {?}
-     */
-    ApplicationRef_.prototype.detachView = /**
-     * @param {?} viewRef
-     * @return {?}
-     */
-    function (viewRef) {
-        var /** @type {?} */ view = (/** @type {?} */ (viewRef));
-        remove(this._views, view);
-        view.detachFromAppRef();
-    };
-    /**
+     * Bootstrap a new component at the root level of the application.
+     *
+     * ### Bootstrap process
+     *
+     * When bootstrapping a new root component into an application, Angular mounts the
+     * specified application component onto DOM elements identified by the [componentType]'s
+     * selector and kicks off automatic change detection to finish initializing the component.
+     *
+     * Optionally, a component can be mounted onto a DOM element that does not match the
+     * [componentType]'s selector.
+     *
+     * ### Example
+     * {\@example core/ts/platform/platform.ts region='longform'}
      * @template C
      * @param {?} componentOrFactory
      * @param {?=} rootSelectorOrNode
      * @return {?}
      */
-    ApplicationRef_.prototype.bootstrap = /**
+    ApplicationRef.prototype.bootstrap = /**
+     * Bootstrap a new component at the root level of the application.
+     *
+     * ### Bootstrap process
+     *
+     * When bootstrapping a new root component into an application, Angular mounts the
+     * specified application component onto DOM elements identified by the [componentType]'s
+     * selector and kicks off automatic change detection to finish initializing the component.
+     *
+     * Optionally, a component can be mounted onto a DOM element that does not match the
+     * [componentType]'s selector.
+     *
+     * ### Example
+     * {\@example core/ts/platform/platform.ts region='longform'}
      * @template C
      * @param {?} componentOrFactory
      * @param {?=} rootSelectorOrNode
@@ -32776,37 +32793,35 @@ var ApplicationRef_ = (function (_super) {
         return compRef;
     };
     /**
-     * @param {?} componentRef
-     * @return {?}
+     * Invoke this method to explicitly process change detection and its side-effects.
+     *
+     * In development mode, `tick()` also performs a second change detection cycle to ensure that no
+     * further changes are detected. If additional changes are picked up during this second cycle,
+     * bindings in the app have side-effects that cannot be resolved in a single change detection
+     * pass.
+     * In this case, Angular throws an error, since an Angular application can only have one change
+     * detection pass during which all change detection must complete.
      */
-    ApplicationRef_.prototype._loadComponent = /**
-     * @param {?} componentRef
-     * @return {?}
-     */
-    function (componentRef) {
-        this.attachView(componentRef.hostView);
-        this.tick();
-        this._rootComponents.push(componentRef);
-        // Get the listeners lazily to prevent DI cycles.
-        var /** @type {?} */ listeners = this._injector.get(APP_BOOTSTRAP_LISTENER, []).concat(this._bootstrapListeners);
-        listeners.forEach(function (listener) { return listener(componentRef); });
-    };
     /**
-     * @param {?} componentRef
+     * Invoke this method to explicitly process change detection and its side-effects.
+     *
+     * In development mode, `tick()` also performs a second change detection cycle to ensure that no
+     * further changes are detected. If additional changes are picked up during this second cycle,
+     * bindings in the app have side-effects that cannot be resolved in a single change detection
+     * pass.
+     * In this case, Angular throws an error, since an Angular application can only have one change
+     * detection pass during which all change detection must complete.
      * @return {?}
      */
-    ApplicationRef_.prototype._unloadComponent = /**
-     * @param {?} componentRef
-     * @return {?}
-     */
-    function (componentRef) {
-        this.detachView(componentRef.hostView);
-        remove(this._rootComponents, componentRef);
-    };
-    /**
-     * @return {?}
-     */
-    ApplicationRef_.prototype.tick = /**
+    ApplicationRef.prototype.tick = /**
+     * Invoke this method to explicitly process change detection and its side-effects.
+     *
+     * In development mode, `tick()` also performs a second change detection cycle to ensure that no
+     * further changes are detected. If additional changes are picked up during this second cycle,
+     * bindings in the app have side-effects that cannot be resolved in a single change detection
+     * pass.
+     * In this case, Angular throws an error, since an Angular application can only have one change
+     * detection pass during which all change detection must complete.
      * @return {?}
      */
     function () {
@@ -32814,7 +32829,7 @@ var ApplicationRef_ = (function (_super) {
         if (this._runningTick) {
             throw new Error('ApplicationRef.tick is called recursively');
         }
-        var /** @type {?} */ scope = ApplicationRef_._tickScope();
+        var /** @type {?} */ scope = ApplicationRef._tickScope();
         try {
             this._runningTick = true;
             this._views.forEach(function (view) { return view.detectChanges(); });
@@ -32831,42 +32846,133 @@ var ApplicationRef_ = (function (_super) {
             wtfLeave(scope);
         }
     };
-    /**
-     * @return {?}
-     */
-    ApplicationRef_.prototype.ngOnDestroy = /**
-     * @return {?}
-     */
-    function () {
-        // TODO(alxhub): Dispose of the NgZone.
-        this._views.slice().forEach(function (view) { return view.destroy(); });
-    };
-    Object.defineProperty(ApplicationRef_.prototype, "viewCount", {
-        get: /**
-         * @return {?}
+    Object.defineProperty(ApplicationRef.prototype, "componentTypes", {
+        /**
+         * Get a list of component types registered to this application.
+         * This list is populated even before the component is created.
          */
-        function () { return this._views.length; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(ApplicationRef_.prototype, "componentTypes", {
         get: /**
+         * Get a list of component types registered to this application.
+         * This list is populated even before the component is created.
          * @return {?}
          */
         function () { return this._rootComponentTypes; },
         enumerable: true,
         configurable: true
     });
-    Object.defineProperty(ApplicationRef_.prototype, "components", {
+    Object.defineProperty(ApplicationRef.prototype, "components", {
+        /**
+         * Get a list of components registered to this application.
+         */
         get: /**
+         * Get a list of components registered to this application.
          * @return {?}
          */
         function () { return this._rootComponents; },
         enumerable: true,
         configurable: true
     });
-    Object.defineProperty(ApplicationRef_.prototype, "isStable", {
+    /**
+     * Attaches a view so that it will be dirty checked.
+     * The view will be automatically detached when it is destroyed.
+     * This will throw if the view is already attached to a ViewContainer.
+     */
+    /**
+     * Attaches a view so that it will be dirty checked.
+     * The view will be automatically detached when it is destroyed.
+     * This will throw if the view is already attached to a ViewContainer.
+     * @param {?} viewRef
+     * @return {?}
+     */
+    ApplicationRef.prototype.attachView = /**
+     * Attaches a view so that it will be dirty checked.
+     * The view will be automatically detached when it is destroyed.
+     * This will throw if the view is already attached to a ViewContainer.
+     * @param {?} viewRef
+     * @return {?}
+     */
+    function (viewRef) {
+        var /** @type {?} */ view = (/** @type {?} */ (viewRef));
+        this._views.push(view);
+        view.attachToAppRef(this);
+    };
+    /**
+     * Detaches a view from dirty checking again.
+     */
+    /**
+     * Detaches a view from dirty checking again.
+     * @param {?} viewRef
+     * @return {?}
+     */
+    ApplicationRef.prototype.detachView = /**
+     * Detaches a view from dirty checking again.
+     * @param {?} viewRef
+     * @return {?}
+     */
+    function (viewRef) {
+        var /** @type {?} */ view = (/** @type {?} */ (viewRef));
+        remove(this._views, view);
+        view.detachFromAppRef();
+    };
+    /**
+     * @param {?} componentRef
+     * @return {?}
+     */
+    ApplicationRef.prototype._loadComponent = /**
+     * @param {?} componentRef
+     * @return {?}
+     */
+    function (componentRef) {
+        this.attachView(componentRef.hostView);
+        this.tick();
+        this._rootComponents.push(componentRef);
+        // Get the listeners lazily to prevent DI cycles.
+        var /** @type {?} */ listeners = this._injector.get(APP_BOOTSTRAP_LISTENER, []).concat(this._bootstrapListeners);
+        listeners.forEach(function (listener) { return listener(componentRef); });
+    };
+    /**
+     * @param {?} componentRef
+     * @return {?}
+     */
+    ApplicationRef.prototype._unloadComponent = /**
+     * @param {?} componentRef
+     * @return {?}
+     */
+    function (componentRef) {
+        this.detachView(componentRef.hostView);
+        remove(this._rootComponents, componentRef);
+    };
+    /** @internal */
+    /**
+     * \@internal
+     * @return {?}
+     */
+    ApplicationRef.prototype.ngOnDestroy = /**
+     * \@internal
+     * @return {?}
+     */
+    function () {
+        // TODO(alxhub): Dispose of the NgZone.
+        this._views.slice().forEach(function (view) { return view.destroy(); });
+    };
+    Object.defineProperty(ApplicationRef.prototype, "viewCount", {
+        /**
+         * Returns the number of attached views.
+         */
         get: /**
+         * Returns the number of attached views.
+         * @return {?}
+         */
+        function () { return this._views.length; },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(ApplicationRef.prototype, "isStable", {
+        /**
+         * Returns an Observable that indicates when the application is stable or unstable.
+         */
+        get: /**
+         * Returns an Observable that indicates when the application is stable or unstable.
          * @return {?}
          */
         function () { return this._isStable; },
@@ -32876,12 +32982,12 @@ var ApplicationRef_ = (function (_super) {
     /**
      * \@internal
      */
-    ApplicationRef_._tickScope = wtfCreateScope('ApplicationRef#tick()');
-    ApplicationRef_.decorators = [
+    ApplicationRef._tickScope = wtfCreateScope('ApplicationRef#tick()');
+    ApplicationRef.decorators = [
         { type: Injectable },
     ];
     /** @nocollapse */
-    ApplicationRef_.ctorParameters = function () { return [
+    ApplicationRef.ctorParameters = function () { return [
         { type: NgZone, },
         { type: Console, },
         { type: Injector, },
@@ -32889,8 +32995,8 @@ var ApplicationRef_ = (function (_super) {
         { type: ComponentFactoryResolver, },
         { type: ApplicationInitStatus, },
     ]; };
-    return ApplicationRef_;
-}(ApplicationRef));
+    return ApplicationRef;
+}());
 /**
  * @template T
  * @param {?} list
@@ -35835,8 +35941,7 @@ var defaultKeyValueDiffers = new KeyValueDiffers(keyValDiff);
 var _CORE_PLATFORM_PROVIDERS = [
     // Set a default platform name for platforms that don't set it explicitly.
     { provide: PLATFORM_ID, useValue: 'unknown' },
-    { provide: PlatformRef_, deps: [Injector] },
-    { provide: PlatformRef, useExisting: PlatformRef_ },
+    { provide: PlatformRef, deps: [Injector] },
     { provide: TestabilityRegistry, deps: [] },
     { provide: Console, deps: [] },
 ];
@@ -35913,8 +36018,7 @@ var ApplicationModule = (function () {
     ApplicationModule.decorators = [
         { type: NgModule, args: [{
                     providers: [
-                        ApplicationRef_,
-                        { provide: ApplicationRef, useExisting: ApplicationRef_ },
+                        ApplicationRef,
                         ApplicationInitStatus,
                         Compiler,
                         APP_ID_RANDOM_PROVIDER,
@@ -41065,7 +41169,7 @@ var NgModuleFactory_ = (function (_super) {
 }(NgModuleFactory));
 
 /**
- * @license Angular v5.0.0-beta.7-4695c69
+ * @license Angular v5.0.0-beta.7-b6431c6
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -41282,7 +41386,7 @@ function getExpressionCompletions(scope, ast, position, query) {
         return undefined;
     var tail = (path$$1.tail);
     var result = scope;
-    function getType(ast) { return new language_services_8(scope, query, {}).getType(ast); }
+    function getType(ast) { return new language_services_7(scope, query, {}).getType(ast); }
     // If the completion request is in a not in a pipe or property access then the global scope
     // (that is the scope of the implicit receiver) is the right scope as the user is typing the
     // beginning of an expression.
@@ -41318,7 +41422,7 @@ function getExpressionCompletions(scope, ast, position, query) {
         },
         visitQuote: function (ast) {
             // For a quote, return the members of any (if there are any).
-            result = query.getBuiltinType(language_services_11.Any).members();
+            result = query.getBuiltinType(language_services_10.Any).members();
         },
         visitSafeMethodCall: function (ast) {
             var receiverType = getType(ast.receiver);
@@ -41336,7 +41440,7 @@ function getExpressionSymbol(scope, ast, position, query) {
     if (path$$1.empty)
         return undefined;
     var tail = (path$$1.tail);
-    function getType(ast) { return new language_services_8(scope, query, {}).getType(ast); }
+    function getType(ast) { return new language_services_7(scope, query, {}).getType(ast); }
     var symbol = undefined;
     var span = undefined;
     // If the completion request is in a not in a pipe or property access then the global scope
@@ -42002,13 +42106,13 @@ function attributeValueCompletions(info, position, attr) {
     var mostSpecific = path$$1.tail;
     var dinfo = diagnosticInfoFromTemplateInfo(info);
     if (mostSpecific) {
-        var visitor = new ExpressionVisitor(info, position, attr, function () { return language_services_6(dinfo, path$$1, false); });
+        var visitor = new ExpressionVisitor(info, position, attr, function () { return language_services_5(dinfo, path$$1, false); });
         mostSpecific.visit(visitor, null);
         if (!visitor.result || !visitor.result.length) {
             // Try allwoing widening the path
             var widerPath_1 = findTemplateAstAt(info.templateAst, position, /* allowWidening */ /* allowWidening */ true);
             if (widerPath_1.tail) {
-                var widerVisitor = new ExpressionVisitor(info, position, attr, function () { return language_services_6(dinfo, widerPath_1, false); });
+                var widerVisitor = new ExpressionVisitor(info, position, attr, function () { return language_services_5(dinfo, widerPath_1, false); });
                 widerPath_1.tail.visit(widerVisitor, null);
                 return widerVisitor.result;
             }
@@ -42047,7 +42151,7 @@ function interpolationCompletions(info, position) {
     var templatePath = findTemplateAstAt(info.templateAst, position);
     var mostSpecific = templatePath.tail;
     if (mostSpecific) {
-        var visitor = new ExpressionVisitor(info, position, undefined, function () { return language_services_6(diagnosticInfoFromTemplateInfo(info), templatePath, false); });
+        var visitor = new ExpressionVisitor(info, position, undefined, function () { return language_services_5(diagnosticInfoFromTemplateInfo(info), templatePath, false); });
         mostSpecific.visit(visitor, null);
         return uniqueByName(visitor.result);
     }
@@ -42296,7 +42400,7 @@ function locateSymbol(info) {
             if (attribute) {
                 if (inSpan(templatePosition, spanOf(attribute.valueSpan))) {
                     var dinfo = diagnosticInfoFromTemplateInfo(info);
-                    var scope = language_services_6(dinfo, path$$1, inEvent);
+                    var scope = language_services_5(dinfo, path$$1, inEvent);
                     if (attribute.valueSpan) {
                         var expressionOffset = attribute.valueSpan.start.offset + 1;
                         var result = getExpressionSymbol(scope, ast, templatePosition - expressionOffset, info.template.query);
@@ -42348,7 +42452,7 @@ function locateSymbol(info) {
                 var expressionPosition = templatePosition - ast.sourceSpan.start.offset;
                 if (inSpan(expressionPosition, ast.value.span)) {
                     var dinfo = diagnosticInfoFromTemplateInfo(info);
-                    var scope = language_services_6(dinfo, path$$1, /* includeEvent */ /* includeEvent */ false);
+                    var scope = language_services_5(dinfo, path$$1, /* includeEvent */ /* includeEvent */ false);
                     var result = getExpressionSymbol(scope, ast.value, expressionPosition, info.template.query);
                     if (result) {
                         symbol_1 = result.symbol;
@@ -42522,7 +42626,7 @@ function getTemplateDiagnostics(fileName, astProvider, templates) {
                     query: template.query,
                     members: template.members
                 };
-                var expressionDiagnostics = language_services_7(info);
+                var expressionDiagnostics = language_services_6(info);
                 results.push.apply(results, expressionDiagnostics);
             }
             if (ast.errors) {
@@ -43092,12 +43196,12 @@ var TypeScriptServiceHost = (function () {
                 span: span,
                 type: type,
                 get members() {
-                    return language_services_14(t.program, t.checker, sourceFile, declaration);
+                    return language_services_13(t.program, t.checker, sourceFile, declaration);
                 },
                 get query() {
                     if (!queryCache) {
                         var pipes_1 = t.service.getPipesAt(fileName, node.getStart());
-                        queryCache = language_services_16(t.program, t.checker, sourceFile, function () { return language_services_15(sourceFile, t.program, t.checker, pipes_1); });
+                        queryCache = language_services_15(t.program, t.checker, sourceFile, function () { return language_services_14(sourceFile, t.program, t.checker, pipes_1); });
                     }
                     return queryCache;
                 }
@@ -43671,7 +43775,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('5.0.0-beta.7-4695c69');
+var VERSION = new Version$1('5.0.0-beta.7-b6431c6');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
