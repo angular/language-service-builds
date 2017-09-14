@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.0.0-beta.7-42c69d3
+ * @license Angular v5.0.0-beta.7-4695c69
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -18,11 +18,11 @@ module.exports = function(provided) {
   return result;
 }
 
-define(['exports', 'typescript', 'fs', 'path'], function (exports, ts, fs, path) { 'use strict';
+define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts) { 'use strict';
 
-var ts__default = 'default' in ts ? ts['default'] : ts;
 var fs__default = 'default' in fs ? fs['default'] : fs;
 var path__default = 'default' in path ? path['default'] : path;
+var ts__default = 'default' in ts ? ts['default'] : ts;
 
 /*! *****************************************************************************
 Copyright (c) Microsoft Corporation. All rights reserved.
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v5.0.0-beta.7-42c69d3
+ * @license Angular v5.0.0-beta.7-4695c69
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -391,7 +391,7 @@ var Version = (function () {
 /**
  * @stable
  */
-var VERSION$1 = new Version('5.0.0-beta.7-42c69d3');
+var VERSION$1 = new Version('5.0.0-beta.7-4695c69');
 
 /**
  * @license
@@ -22308,6 +22308,685 @@ function expandedMessage(error) {
 
 });
 
+var bundler = createCommonjsModule(function (module, exports) {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+
+
+
+
+// The character set used to produce private names.
+var PRIVATE_NAME_CHARS = 'abcdefghijklmnopqrstuvwxyz';
+var MetadataBundler = (function () {
+    function MetadataBundler(root, importAs, host) {
+        this.root = root;
+        this.importAs = importAs;
+        this.host = host;
+        this.symbolMap = new Map();
+        this.metadataCache = new Map();
+        this.exports = new Map();
+        this.rootModule = "./" + path__default.basename(root);
+    }
+    MetadataBundler.prototype.getMetadataBundle = function () {
+        // Export the root module. This also collects the transitive closure of all values referenced by
+        // the exports.
+        var exportedSymbols = this.exportAll(this.rootModule);
+        this.canonicalizeSymbols(exportedSymbols);
+        // TODO: exports? e.g. a module re-exports a symbol from another bundle
+        var metadata = this.getEntries(exportedSymbols);
+        var privates = Array.from(this.symbolMap.values())
+            .filter(function (s) { return s.referenced && s.isPrivate; })
+            .map(function (s) { return ({
+            privateName: s.privateName,
+            name: s.declaration.name,
+            module: s.declaration.module
+        }); });
+        var origins = Array.from(this.symbolMap.values())
+            .filter(function (s) { return s.referenced && !s.reexport; })
+            .reduce(function (p, s) {
+            p[s.isPrivate ? s.privateName : s.name] = s.declaration.module;
+            return p;
+        }, {});
+        var exports = this.getReExports(exportedSymbols);
+        return {
+            metadata: {
+                __symbolic: 'module',
+                version: schema.VERSION,
+                exports: exports.length ? exports : undefined, metadata: metadata, origins: origins,
+                importAs: this.importAs
+            },
+            privates: privates
+        };
+    };
+    MetadataBundler.resolveModule = function (importName, from) {
+        return resolveModule(importName, from);
+    };
+    MetadataBundler.prototype.getMetadata = function (moduleName) {
+        var result = this.metadataCache.get(moduleName);
+        if (!result) {
+            if (moduleName.startsWith('.')) {
+                var fullModuleName = resolveModule(moduleName, this.root);
+                result = this.host.getMetadataFor(fullModuleName);
+            }
+            this.metadataCache.set(moduleName, result);
+        }
+        return result;
+    };
+    MetadataBundler.prototype.exportAll = function (moduleName) {
+        var _this = this;
+        var module = this.getMetadata(moduleName);
+        var result = this.exports.get(moduleName);
+        if (result) {
+            return result;
+        }
+        result = [];
+        var exportSymbol = function (exportedSymbol, exportAs) {
+            var symbol = _this.symbolOf(moduleName, exportAs);
+            result.push(symbol);
+            exportedSymbol.reexportedAs = symbol;
+            symbol.exports = exportedSymbol;
+        };
+        // Export all the symbols defined in this module.
+        if (module && module.metadata) {
+            for (var key in module.metadata) {
+                var data = module.metadata[key];
+                if (schema.isMetadataImportedSymbolReferenceExpression(data)) {
+                    // This is a re-export of an imported symbol. Record this as a re-export.
+                    var exportFrom = resolveModule(data.module, moduleName);
+                    this.exportAll(exportFrom);
+                    var symbol = this.symbolOf(exportFrom, data.name);
+                    exportSymbol(symbol, key);
+                }
+                else {
+                    // Record that this symbol is exported by this module.
+                    result.push(this.symbolOf(moduleName, key));
+                }
+            }
+        }
+        // Export all the re-exports from this module
+        if (module && module.exports) {
+            for (var _i = 0, _a = module.exports; _i < _a.length; _i++) {
+                var exportDeclaration = _a[_i];
+                var exportFrom = resolveModule(exportDeclaration.from, moduleName);
+                // Record all the exports from the module even if we don't use it directly.
+                var exportedSymbols = this.exportAll(exportFrom);
+                if (exportDeclaration.export) {
+                    // Re-export all the named exports from a module.
+                    for (var _b = 0, _c = exportDeclaration.export; _b < _c.length; _b++) {
+                        var exportItem = _c[_b];
+                        var name_1 = typeof exportItem == 'string' ? exportItem : exportItem.name;
+                        var exportAs = typeof exportItem == 'string' ? exportItem : exportItem.as;
+                        var symbol = this.symbolOf(exportFrom, name_1);
+                        if (exportedSymbols && exportedSymbols.length == 1 && exportedSymbols[0].reexport &&
+                            exportedSymbols[0].name == '*') {
+                            // This is a named export from a module we have no metadata about. Record the named
+                            // export as a re-export.
+                            symbol.reexport = true;
+                        }
+                        exportSymbol(this.symbolOf(exportFrom, name_1), exportAs);
+                    }
+                }
+                else {
+                    // Re-export all the symbols from the module
+                    var exportedSymbols_1 = this.exportAll(exportFrom);
+                    for (var _d = 0, exportedSymbols_2 = exportedSymbols_1; _d < exportedSymbols_2.length; _d++) {
+                        var exportedSymbol = exportedSymbols_2[_d];
+                        var name_2 = exportedSymbol.name;
+                        exportSymbol(exportedSymbol, name_2);
+                    }
+                }
+            }
+        }
+        if (!module) {
+            // If no metadata is found for this import then it is considered external to the
+            // library and should be recorded as a re-export in the final metadata if it is
+            // eventually re-exported.
+            var symbol = this.symbolOf(moduleName, '*');
+            symbol.reexport = true;
+            result.push(symbol);
+        }
+        this.exports.set(moduleName, result);
+        return result;
+    };
+    /**
+     * Fill in the canonicalSymbol which is the symbol that should be imported by factories.
+     * The canonical symbol is the one exported by the index file for the bundle or definition
+     * symbol for private symbols that are not exported by bundle index.
+     */
+    MetadataBundler.prototype.canonicalizeSymbols = function (exportedSymbols) {
+        var symbols = Array.from(this.symbolMap.values());
+        this.exported = new Set(exportedSymbols);
+        symbols.forEach(this.canonicalizeSymbol, this);
+    };
+    MetadataBundler.prototype.canonicalizeSymbol = function (symbol) {
+        var rootExport = getRootExport(symbol);
+        var declaration = getSymbolDeclaration(symbol);
+        var isPrivate = !this.exported.has(rootExport);
+        var canonicalSymbol = isPrivate ? declaration : rootExport;
+        symbol.isPrivate = isPrivate;
+        symbol.declaration = declaration;
+        symbol.canonicalSymbol = canonicalSymbol;
+        symbol.reexport = declaration.reexport;
+    };
+    MetadataBundler.prototype.getEntries = function (exportedSymbols) {
+        var _this = this;
+        var result = {};
+        var exportedNames = new Set(exportedSymbols.map(function (s) { return s.name; }));
+        var privateName = 0;
+        function newPrivateName() {
+            while (true) {
+                var digits = [];
+                var index = privateName++;
+                var base = PRIVATE_NAME_CHARS;
+                while (!digits.length || index > 0) {
+                    digits.unshift(base[index % base.length]);
+                    index = Math.floor(index / base.length);
+                }
+                digits.unshift('\u0275');
+                var result_1 = digits.join('');
+                if (!exportedNames.has(result_1))
+                    return result_1;
+            }
+        }
+        exportedSymbols.forEach(function (symbol) { return _this.convertSymbol(symbol); });
+        var symbolsMap = new Map();
+        Array.from(this.symbolMap.values()).forEach(function (symbol) {
+            if (symbol.referenced && !symbol.reexport) {
+                var name_3 = symbol.name;
+                var declaredName = symbol.declaration.name;
+                if (symbol.isPrivate && !symbol.privateName) {
+                    name_3 = newPrivateName();
+                    symbol.privateName = name_3;
+                }
+                if (symbolsMap.has(declaredName)) {
+                    var names = symbolsMap.get(declaredName);
+                    names.push(name_3);
+                }
+                else {
+                    symbolsMap.set(declaredName, [name_3]);
+                }
+                result[name_3] = symbol.value;
+            }
+        });
+        // check for duplicated entries
+        symbolsMap.forEach(function (names, declaredName) {
+            if (names.length > 1) {
+                // prefer the export that uses the declared name (if any)
+                var reference_1 = names.indexOf(declaredName);
+                if (reference_1 === -1) {
+                    reference_1 = 0;
+                }
+                // keep one entry and replace the others by references
+                names.forEach(function (name, i) {
+                    if (i !== reference_1) {
+                        result[name] = { __symbolic: 'reference', name: names[reference_1] };
+                    }
+                });
+            }
+        });
+        return result;
+    };
+    MetadataBundler.prototype.getReExports = function (exportedSymbols) {
+        var modules = new Map();
+        var exportAlls = new Set();
+        for (var _i = 0, exportedSymbols_3 = exportedSymbols; _i < exportedSymbols_3.length; _i++) {
+            var symbol = exportedSymbols_3[_i];
+            if (symbol.reexport) {
+                // symbol.declaration is guarenteed to be defined during the phase this method is called.
+                var declaration = symbol.declaration;
+                var module_1 = declaration.module;
+                if (declaration.name == '*') {
+                    // Reexport all the symbols.
+                    exportAlls.add(declaration.module);
+                }
+                else {
+                    // Re-export the symbol as the exported name.
+                    var entry = modules.get(module_1);
+                    if (!entry) {
+                        entry = [];
+                        modules.set(module_1, entry);
+                    }
+                    var as = symbol.name;
+                    var name_4 = declaration.name;
+                    entry.push({ name: name_4, as: as });
+                }
+            }
+        }
+        return Array.from(exportAlls.values()).map(function (from) { return ({ from: from }); }).concat(Array.from(modules.entries()).map(function (_a) {
+            var from = _a[0], exports = _a[1];
+            return ({ export: exports, from: from });
+        }));
+    };
+    MetadataBundler.prototype.convertSymbol = function (symbol) {
+        // canonicalSymbol is ensured to be defined before this is called.
+        var canonicalSymbol = symbol.canonicalSymbol;
+        if (!canonicalSymbol.referenced) {
+            canonicalSymbol.referenced = true;
+            // declaration is ensured to be definded before this method is called.
+            var declaration = canonicalSymbol.declaration;
+            var module_2 = this.getMetadata(declaration.module);
+            if (module_2) {
+                var value = module_2.metadata[declaration.name];
+                if (value && !declaration.name.startsWith('___')) {
+                    canonicalSymbol.value = this.convertEntry(declaration.module, value);
+                }
+            }
+        }
+    };
+    MetadataBundler.prototype.convertEntry = function (moduleName, value) {
+        if (schema.isClassMetadata(value)) {
+            return this.convertClass(moduleName, value);
+        }
+        if (schema.isFunctionMetadata(value)) {
+            return this.convertFunction(moduleName, value);
+        }
+        if (schema.isInterfaceMetadata(value)) {
+            return value;
+        }
+        return this.convertValue(moduleName, value);
+    };
+    MetadataBundler.prototype.convertClass = function (moduleName, value) {
+        var _this = this;
+        return {
+            __symbolic: 'class',
+            arity: value.arity,
+            extends: this.convertExpression(moduleName, value.extends),
+            decorators: value.decorators && value.decorators.map(function (d) { return _this.convertExpression(moduleName, d); }),
+            members: this.convertMembers(moduleName, value.members),
+            statics: value.statics && this.convertStatics(moduleName, value.statics)
+        };
+    };
+    MetadataBundler.prototype.convertMembers = function (moduleName, members) {
+        var _this = this;
+        var result = {};
+        for (var name_5 in members) {
+            var value = members[name_5];
+            result[name_5] = value.map(function (v) { return _this.convertMember(moduleName, v); });
+        }
+        return result;
+    };
+    MetadataBundler.prototype.convertMember = function (moduleName, member) {
+        var _this = this;
+        var result = { __symbolic: member.__symbolic };
+        result.decorators =
+            member.decorators && member.decorators.map(function (d) { return _this.convertExpression(moduleName, d); });
+        if (schema.isMethodMetadata(member)) {
+            result.parameterDecorators = member.parameterDecorators &&
+                member.parameterDecorators.map(function (d) { return d && d.map(function (p) { return _this.convertExpression(moduleName, p); }); });
+            if (schema.isConstructorMetadata(member)) {
+                if (member.parameters) {
+                    result.parameters =
+                        member.parameters.map(function (p) { return _this.convertExpression(moduleName, p); });
+                }
+            }
+        }
+        return result;
+    };
+    MetadataBundler.prototype.convertStatics = function (moduleName, statics) {
+        var result = {};
+        for (var key in statics) {
+            var value = statics[key];
+            result[key] = schema.isFunctionMetadata(value) ? this.convertFunction(moduleName, value) : value;
+        }
+        return result;
+    };
+    MetadataBundler.prototype.convertFunction = function (moduleName, value) {
+        var _this = this;
+        return {
+            __symbolic: 'function',
+            parameters: value.parameters,
+            defaults: value.defaults && value.defaults.map(function (v) { return _this.convertValue(moduleName, v); }),
+            value: this.convertValue(moduleName, value.value)
+        };
+    };
+    MetadataBundler.prototype.convertValue = function (moduleName, value) {
+        var _this = this;
+        if (isPrimitive(value)) {
+            return value;
+        }
+        if (schema.isMetadataError(value)) {
+            return this.convertError(moduleName, value);
+        }
+        if (schema.isMetadataSymbolicExpression(value)) {
+            return this.convertExpression(moduleName, value);
+        }
+        if (Array.isArray(value)) {
+            return value.map(function (v) { return _this.convertValue(moduleName, v); });
+        }
+        // Otherwise it is a metadata object.
+        var object = value;
+        var result = {};
+        for (var key in object) {
+            result[key] = this.convertValue(moduleName, object[key]);
+        }
+        return result;
+    };
+    MetadataBundler.prototype.convertExpression = function (moduleName, value) {
+        if (value) {
+            switch (value.__symbolic) {
+                case 'error':
+                    return this.convertError(moduleName, value);
+                case 'reference':
+                    return this.convertReference(moduleName, value);
+                default:
+                    return this.convertExpressionNode(moduleName, value);
+            }
+        }
+        return value;
+    };
+    MetadataBundler.prototype.convertError = function (module, value) {
+        return {
+            __symbolic: 'error',
+            message: value.message,
+            line: value.line,
+            character: value.character,
+            context: value.context, module: module
+        };
+    };
+    MetadataBundler.prototype.convertReference = function (moduleName, value) {
+        var _this = this;
+        var createReference = function (symbol) {
+            var declaration = symbol.declaration;
+            if (declaration.module.startsWith('.')) {
+                // Reference to a symbol defined in the module. Ensure it is converted then return a
+                // references to the final symbol.
+                _this.convertSymbol(symbol);
+                return {
+                    __symbolic: 'reference',
+                    get name() {
+                        // Resolved lazily because private names are assigned late.
+                        var canonicalSymbol = symbol.canonicalSymbol;
+                        if (canonicalSymbol.isPrivate == null) {
+                            throw Error('Invalid state: isPrivate was not initialized');
+                        }
+                        return canonicalSymbol.isPrivate ? canonicalSymbol.privateName : canonicalSymbol.name;
+                    }
+                };
+            }
+            else {
+                // The symbol was a re-exported symbol from another module. Return a reference to the
+                // original imported symbol.
+                return { __symbolic: 'reference', name: declaration.name, module: declaration.module };
+            }
+        };
+        if (schema.isMetadataGlobalReferenceExpression(value)) {
+            var metadata = this.getMetadata(moduleName);
+            if (metadata && metadata.metadata && metadata.metadata[value.name]) {
+                // Reference to a symbol defined in the module
+                return createReference(this.canonicalSymbolOf(moduleName, value.name));
+            }
+            // If a reference has arguments, the arguments need to be converted.
+            if (value.arguments) {
+                return {
+                    __symbolic: 'reference',
+                    name: value.name,
+                    arguments: value.arguments.map(function (a) { return _this.convertValue(moduleName, a); })
+                };
+            }
+            // Global references without arguments (such as to Math or JSON) are unmodified.
+            return value;
+        }
+        if (schema.isMetadataImportedSymbolReferenceExpression(value)) {
+            // References to imported symbols are separated into two, references to bundled modules and
+            // references to modules external to the bundle. If the module reference is relative it is
+            // assumed to be in the bundle. If it is Global it is assumed to be outside the bundle.
+            // References to symbols outside the bundle are left unmodified. References to symbol inside
+            // the bundle need to be converted to a bundle import reference reachable from the bundle
+            // index.
+            if (value.module.startsWith('.')) {
+                // Reference is to a symbol defined inside the module. Convert the reference to a reference
+                // to the canonical symbol.
+                var referencedModule = resolveModule(value.module, moduleName);
+                var referencedName = value.name;
+                return createReference(this.canonicalSymbolOf(referencedModule, referencedName));
+            }
+            // Value is a reference to a symbol defined outside the module.
+            if (value.arguments) {
+                // If a reference has arguments the arguments need to be converted.
+                return {
+                    __symbolic: 'reference',
+                    name: value.name,
+                    module: value.module,
+                    arguments: value.arguments.map(function (a) { return _this.convertValue(moduleName, a); })
+                };
+            }
+            return value;
+        }
+        if (schema.isMetadataModuleReferenceExpression(value)) {
+            // Cannot support references to bundled modules as the internal modules of a bundle are erased
+            // by the bundler.
+            if (value.module.startsWith('.')) {
+                return {
+                    __symbolic: 'error',
+                    message: 'Unsupported bundled module reference',
+                    context: { module: value.module }
+                };
+            }
+            // References to unbundled modules are unmodified.
+            return value;
+        }
+    };
+    MetadataBundler.prototype.convertExpressionNode = function (moduleName, value) {
+        var result = { __symbolic: value.__symbolic };
+        for (var key in value) {
+            result[key] = this.convertValue(moduleName, value[key]);
+        }
+        return result;
+    };
+    MetadataBundler.prototype.symbolOf = function (module, name) {
+        var symbolKey = module + ":" + name;
+        var symbol = this.symbolMap.get(symbolKey);
+        if (!symbol) {
+            symbol = { module: module, name: name };
+            this.symbolMap.set(symbolKey, symbol);
+        }
+        return symbol;
+    };
+    MetadataBundler.prototype.canonicalSymbolOf = function (module, name) {
+        // Ensure the module has been seen.
+        this.exportAll(module);
+        var symbol = this.symbolOf(module, name);
+        if (!symbol.canonicalSymbol) {
+            this.canonicalizeSymbol(symbol);
+        }
+        return symbol;
+    };
+    return MetadataBundler;
+}());
+exports.MetadataBundler = MetadataBundler;
+var CompilerHostAdapter = (function () {
+    function CompilerHostAdapter(host) {
+        this.host = host;
+        this.collector = new collector.MetadataCollector();
+    }
+    CompilerHostAdapter.prototype.getMetadataFor = function (fileName) {
+        var sourceFile = this.host.getSourceFile(fileName + '.ts', ts__default.ScriptTarget.Latest);
+        return this.collector.getMetadata(sourceFile);
+    };
+    return CompilerHostAdapter;
+}());
+exports.CompilerHostAdapter = CompilerHostAdapter;
+function resolveModule(importName, from) {
+    if (importName.startsWith('.') && from) {
+        var normalPath = path__default.normalize(path__default.join(path__default.dirname(from), importName));
+        if (!normalPath.startsWith('.') && from.startsWith('.')) {
+            // path.normalize() preserves leading '../' but not './'. This adds it back.
+            normalPath = "." + path__default.sep + normalPath;
+        }
+        // Replace windows path delimiters with forward-slashes. Otherwise the paths are not
+        // TypeScript compatible when building the bundle.
+        return normalPath.replace(/\\/g, '/');
+    }
+    return importName;
+}
+function isPrimitive(o) {
+    return o === null || (typeof o !== 'function' && typeof o !== 'object');
+}
+function getRootExport(symbol) {
+    return symbol.reexportedAs ? getRootExport(symbol.reexportedAs) : symbol;
+}
+function getSymbolDeclaration(symbol) {
+    return symbol.exports ? getSymbolDeclaration(symbol.exports) : symbol;
+}
+
+});
+
+var index_writer = createCommonjsModule(function (module, exports) {
+"use strict";
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+var INDEX_HEADER = "/**\n * Generated bundle index. Do not edit.\n */\n";
+function privateEntriesToIndex(index, privates) {
+    var results = [INDEX_HEADER];
+    // Export all of the index symbols.
+    results.push("export * from '" + index + "';", '');
+    // Simplify the exports
+    var exports = new Map();
+    for (var _i = 0, privates_1 = privates; _i < privates_1.length; _i++) {
+        var entry = privates_1[_i];
+        var entries = exports.get(entry.module);
+        if (!entries) {
+            entries = [];
+            exports.set(entry.module, entries);
+        }
+        entries.push(entry);
+    }
+    var compareEntries = compare(function (e) { return e.name; });
+    var compareModules = compare(function (e) { return e[0]; });
+    var orderedExports = Array.from(exports)
+        .map(function (_a) {
+        var module = _a[0], entries = _a[1];
+        return [module, entries.sort(compareEntries)];
+    })
+        .sort(compareModules);
+    for (var _a = 0, orderedExports_1 = orderedExports; _a < orderedExports_1.length; _a++) {
+        var _b = orderedExports_1[_a], module_1 = _b[0], entries = _b[1];
+        var symbols = entries.map(function (e) { return e.name + " as " + e.privateName; });
+        results.push("export {" + symbols + "} from '" + module_1 + "';");
+    }
+    return results.join('\n');
+}
+exports.privateEntriesToIndex = privateEntriesToIndex;
+function compare(select) {
+    return function (a, b) {
+        var ak = select(a);
+        var bk = select(b);
+        return ak > bk ? 1 : ak < bk ? -1 : 0;
+    };
+}
+
+});
+
+var bundle_index_host = createCommonjsModule(function (module, exports) {
+"use strict";
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+
+
+
+
+
+var DTS = /\.d\.ts$/;
+var JS_EXT = /(\.js|)$/;
+function createSyntheticIndexHost(delegate, syntheticIndex) {
+    var normalSyntheticIndexName = path__default.normalize(syntheticIndex.name);
+    var indexContent = syntheticIndex.content;
+    var indexMetadata = syntheticIndex.metadata;
+    var newHost = Object.create(delegate);
+    newHost.fileExists = function (fileName) {
+        return path__default.normalize(fileName) == normalSyntheticIndexName || delegate.fileExists(fileName);
+    };
+    newHost.readFile = function (fileName) {
+        return path__default.normalize(fileName) == normalSyntheticIndexName ? indexContent :
+            delegate.readFile(fileName);
+    };
+    newHost.getSourceFile =
+        function (fileName, languageVersion, onError) {
+            if (path__default.normalize(fileName) == normalSyntheticIndexName) {
+                return ts__default.createSourceFile(fileName, indexContent, languageVersion, true);
+            }
+            return delegate.getSourceFile(fileName, languageVersion, onError);
+        };
+    newHost.writeFile =
+        function (fileName, data, writeByteOrderMark, onError, sourceFiles) {
+            delegate.writeFile(fileName, data, writeByteOrderMark, onError, sourceFiles);
+            if (fileName.match(DTS) && sourceFiles && sourceFiles.length == 1 &&
+                path__default.normalize(sourceFiles[0].fileName) == normalSyntheticIndexName) {
+                // If we are writing the synthetic index, write the metadata along side.
+                var metadataName = fileName.replace(DTS, '.metadata.json');
+                fs__default.writeFileSync(metadataName, indexMetadata, { encoding: 'utf8' });
+            }
+        };
+    return newHost;
+}
+function createBundleIndexHost(ngOptions, rootFiles, host) {
+    var files = rootFiles.filter(function (f) { return !DTS.test(f); });
+    if (files.length != 1) {
+        return {
+            host: host,
+            errors: [{
+                    file: null,
+                    start: null,
+                    length: null,
+                    messageText: 'Angular compiler option "flatModuleIndex" requires one and only one .ts file in the "files" field.',
+                    category: ts__default.DiagnosticCategory.Error,
+                    code: 0
+                }]
+        };
+    }
+    var file = files[0];
+    var indexModule = file.replace(/\.ts$/, '');
+    var bundler$$1 = new bundler.MetadataBundler(indexModule, ngOptions.flatModuleId, new bundler.CompilerHostAdapter(host));
+    var metadataBundle = bundler$$1.getMetadataBundle();
+    var metadata = JSON.stringify(metadataBundle.metadata);
+    var name = path__default.join(path__default.dirname(indexModule), ngOptions.flatModuleOutFile.replace(JS_EXT, '.ts'));
+    var libraryIndex = "./" + path__default.basename(indexModule);
+    var content = index_writer.privateEntriesToIndex(libraryIndex, metadataBundle.privates);
+    host = createSyntheticIndexHost(host, { name: name, content: content, metadata: metadata });
+    return { host: host, indexName: name };
+}
+exports.createBundleIndexHost = createBundleIndexHost;
+
+});
+
+var index$1 = createCommonjsModule(function (module, exports) {
+"use strict";
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+function __export(m) {
+    for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
+}
+Object.defineProperty(exports, "__esModule", { value: true });
+__export(collector);
+__export(schema);
+__export(bundle_index_host);
+
+});
+
 var compiler_1 = ( index && undefined ) || index;
 
 var compiler_host = createCommonjsModule(function (module, exports) {
@@ -22344,7 +23023,7 @@ var GENERATED_OR_DTS_FILES = /\.d\.ts$|\.ngfactory\.ts$|\.ngstyle\.ts$|\.ngsumma
 var SHALLOW_IMPORT = /^((\w|-)+|(@(\w|-)+(\/(\w|-)+)+))$/;
 var BaseAotCompilerHost = (function () {
     function BaseAotCompilerHost(program, options, context, metadataProvider) {
-        if (metadataProvider === void 0) { metadataProvider = new collector.MetadataCollector(); }
+        if (metadataProvider === void 0) { metadataProvider = new index$1.MetadataCollector(); }
         this.program = program;
         this.options = options;
         this.context = context;
@@ -22528,10 +23207,11 @@ var BaseAotCompilerHost = (function () {
     return BaseAotCompilerHost;
 }());
 exports.BaseAotCompilerHost = BaseAotCompilerHost;
+// TODO(tbosch): remove this once G3 uses the transformer compiler!
 var CompilerHost = (function (_super) {
     __extends(CompilerHost, _super);
     function CompilerHost(program, options, context, collectorOptions, metadataProvider) {
-        if (metadataProvider === void 0) { metadataProvider = new collector.MetadataCollector(collectorOptions); }
+        if (metadataProvider === void 0) { metadataProvider = new index$1.MetadataCollector(collectorOptions); }
         var _this = _super.call(this, program, options, context, metadataProvider) || this;
         _this.moduleFileNames = new Map();
         // normalize the path so that it never ends with '/'.
@@ -24677,6 +25357,14 @@ var language_services = createCommonjsModule(function (module, exports) {
  * found in the LICENSE file at https://angular.io/license
  */
 Object.defineProperty(exports, "__esModule", { value: true });
+/*
+
+The API from compiler-cli that language-service can see.
+It is important that none the exported modules require anything other than
+Angular modules and Typescript as this will indirectly add a dependency
+to the language service.
+
+*/
 
 exports.CompilerHost = compiler_host.CompilerHost;
 exports.ModuleResolutionHostAdapter = compiler_host.ModuleResolutionHostAdapter;
@@ -26871,7 +27559,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v5.0.0-beta.7-42c69d3
+ * @license Angular v5.0.0-beta.7-4695c69
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -27287,7 +27975,7 @@ var Version$1 = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('5.0.0-beta.7-42c69d3');
+var VERSION$2 = new Version$1('5.0.0-beta.7-4695c69');
 
 /**
  * @fileoverview added by tsickle
@@ -40377,7 +41065,7 @@ var NgModuleFactory_ = (function (_super) {
 }(NgModuleFactory));
 
 /**
- * @license Angular v5.0.0-beta.7-42c69d3
+ * @license Angular v5.0.0-beta.7-4695c69
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -42983,7 +43671,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('5.0.0-beta.7-42c69d3');
+var VERSION = new Version$1('5.0.0-beta.7-4695c69');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
