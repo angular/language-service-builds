@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.4.0-RC.0-e8d1858
+ * @license Angular v4.4.0-RC.0-0bafd03
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2033,7 +2033,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v4.4.0-RC.0-e8d1858
+ * @license Angular v4.4.0-RC.0-0bafd03
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2825,7 +2825,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('4.4.0-RC.0-e8d1858');
+var VERSION$2 = new Version('4.4.0-RC.0-0bafd03');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -17021,7 +17021,7 @@ var core_es5 = Object.freeze({
 });
 
 /**
- * @license Angular v4.4.0-RC.0-e8d1858
+ * @license Angular v4.4.0-RC.0-0bafd03
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -17040,7 +17040,7 @@ var core_es5 = Object.freeze({
 /**
  * \@stable
  */
-var VERSION$1 = new Version('4.4.0-RC.0-e8d1858');
+var VERSION$1 = new Version('4.4.0-RC.0-0bafd03');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -18577,6 +18577,10 @@ var SelectorContext = (function () {
  */
 var MODULE_SUFFIX = '';
 var DASH_CASE_REGEXP = /-+([a-z0-9])/g;
+/**
+ * @param {?} input
+ * @return {?}
+ */
 /**
  * @param {?} input
  * @return {?}
@@ -35925,6 +35929,9 @@ var _LEGAL_IDENTIFIER_RE = /^[$A-Z_][0-9A-Z_$]*$/i;
 var _INDENT_WITH = '  ';
 var CATCH_ERROR_VAR$1 = variable('error', null, null);
 var CATCH_STACK_VAR$1 = variable('stack', null, null);
+/**
+ * @abstract
+ */
 var _EmittedLine = (function () {
     /**
      * @param {?} indent
@@ -47380,7 +47387,7 @@ var core_1 = require$$0$13;
 /**
  * @stable
  */
-exports.VERSION = new core_1.Version('4.4.0-RC.0-e8d1858');
+exports.VERSION = new core_1.Version('4.4.0-RC.0-0bafd03');
 
 });
 
@@ -50857,7 +50864,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v4.4.0-RC.0-e8d1858
+ * @license Angular v4.4.0-RC.0-0bafd03
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -53486,7 +53493,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('4.4.0-RC.0-e8d1858');
+var VERSION$$1 = new Version('4.4.0-RC.0-0bafd03');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
