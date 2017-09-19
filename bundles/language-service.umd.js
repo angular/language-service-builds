@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.0.0-beta.7-b6b18c1
+ * @license Angular v5.0.0-beta.7-e17128e
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v5.0.0-beta.7-b6b18c1
+ * @license Angular v5.0.0-beta.7-e17128e
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -380,7 +380,7 @@ var Version = (function () {
 /**
  * @stable
  */
-var VERSION$1 = new Version('5.0.0-beta.7-b6b18c1');
+var VERSION$1 = new Version('5.0.0-beta.7-e17128e');
 
 /**
  * @license
@@ -27470,7 +27470,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v5.0.0-beta.7-b6b18c1
+ * @license Angular v5.0.0-beta.7-e17128e
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -27886,7 +27886,7 @@ var Version$1 = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('5.0.0-beta.7-b6b18c1');
+var VERSION$2 = new Version$1('5.0.0-beta.7-e17128e');
 
 /**
  * @fileoverview added by tsickle
@@ -41170,7 +41170,7 @@ var NgModuleFactory_ = (function (_super) {
 }(NgModuleFactory));
 
 /**
- * @license Angular v5.0.0-beta.7-b6b18c1
+ * @license Angular v5.0.0-beta.7-e17128e
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -43776,7 +43776,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('5.0.0-beta.7-b6b18c1');
+var VERSION = new Version$1('5.0.0-beta.7-e17128e');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
