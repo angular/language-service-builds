@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.0.0-beta.7-b14c2d1
+ * @license Angular v5.0.0-beta.7-2c4107c
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v5.0.0-beta.7-b14c2d1
+ * @license Angular v5.0.0-beta.7-2c4107c
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -380,7 +380,7 @@ var Version = (function () {
 /**
  * @stable
  */
-var VERSION$1 = new Version('5.0.0-beta.7-b14c2d1');
+var VERSION$1 = new Version('5.0.0-beta.7-2c4107c');
 
 /**
  * @license
@@ -16215,10 +16215,8 @@ var ViewCompileResult = (function () {
     return ViewCompileResult;
 }());
 var ViewCompiler = (function () {
-    function ViewCompiler(_config, _reflector, _schemaRegistry) {
-        this._config = _config;
+    function ViewCompiler(_reflector) {
         this._reflector = _reflector;
-        this._schemaRegistry = _schemaRegistry;
     }
     ViewCompiler.prototype.compileComponent = function (outputCtx, component, template, styles, usedPipes) {
         var _this = this;
@@ -16767,7 +16765,7 @@ var ViewBuilder$1 = (function () {
         }
         return null;
     };
-    ViewBuilder.prototype.createLiteralArrayConverter = function (sourceSpan, argCount) {
+    ViewBuilder.prototype._createLiteralArrayConverter = function (sourceSpan, argCount) {
         if (argCount === 0) {
             var valueExpr_1 = importExpr(Identifiers.EMPTY_ARRAY);
             return function () { return valueExpr_1; };
@@ -16783,7 +16781,7 @@ var ViewBuilder$1 = (function () {
         });
         return function (args) { return callCheckStmt(nodeIndex, args); };
     };
-    ViewBuilder.prototype.createLiteralMapConverter = function (sourceSpan, keys) {
+    ViewBuilder.prototype._createLiteralMapConverter = function (sourceSpan, keys) {
         if (keys.length === 0) {
             var valueExpr_2 = importExpr(Identifiers.EMPTY_MAP);
             return function () { return valueExpr_2; };
@@ -16800,7 +16798,7 @@ var ViewBuilder$1 = (function () {
         });
         return function (args) { return callCheckStmt(nodeIndex, args); };
     };
-    ViewBuilder.prototype.createPipeConverter = function (expression, name, argCount) {
+    ViewBuilder.prototype._createPipeConverter = function (expression, name, argCount) {
         var pipe = (this.usedPipes.find(function (pipeSummary) { return pipeSummary.name === name; }));
         if (pipe.pure) {
             var nodeIndex_1 = this.nodes.length;
@@ -16857,10 +16855,27 @@ var ViewBuilder$1 = (function () {
         });
         return nodeIndex;
     };
-    // Attention: This might create new nodeDefs (for pipes and literal arrays and literal maps)!
-    // Attention: This might create new nodeDefs (for pipes and literal arrays and literal maps)!
-    ViewBuilder.prototype._preprocessUpdateExpression = 
-    // Attention: This might create new nodeDefs (for pipes and literal arrays and literal maps)!
+    /**
+     * For the AST in `UpdateExpression.value`:
+     * - create nodes for pipes, literal arrays and, literal maps,
+     * - update the AST to replace pipes, literal arrays and, literal maps with calls to check fn.
+     *
+     * WARNING: This might create new nodeDefs (for pipes and literal arrays and literal maps)!
+     */
+    /**
+       * For the AST in `UpdateExpression.value`:
+       * - create nodes for pipes, literal arrays and, literal maps,
+       * - update the AST to replace pipes, literal arrays and, literal maps with calls to check fn.
+       *
+       * WARNING: This might create new nodeDefs (for pipes and literal arrays and literal maps)!
+       */
+    ViewBuilder.prototype._preprocessUpdateExpression = /**
+       * For the AST in `UpdateExpression.value`:
+       * - create nodes for pipes, literal arrays and, literal maps,
+       * - update the AST to replace pipes, literal arrays and, literal maps with calls to check fn.
+       *
+       * WARNING: This might create new nodeDefs (for pipes and literal arrays and literal maps)!
+       */
     function (expression) {
         var _this = this;
         return {
@@ -16870,13 +16885,13 @@ var ViewBuilder$1 = (function () {
             context: expression.context,
             value: convertPropertyBindingBuiltins({
                 createLiteralArrayConverter: function (argCount) {
-                    return _this.createLiteralArrayConverter(expression.sourceSpan, argCount);
+                    return _this._createLiteralArrayConverter(expression.sourceSpan, argCount);
                 },
                 createLiteralMapConverter: function (keys) {
-                    return _this.createLiteralMapConverter(expression.sourceSpan, keys);
+                    return _this._createLiteralMapConverter(expression.sourceSpan, keys);
                 },
                 createPipeConverter: function (name, argCount) {
-                    return _this.createPipeConverter(expression, name, argCount);
+                    return _this._createPipeConverter(expression, name, argCount);
                 }
             }, expression.value)
         };
@@ -19525,7 +19540,7 @@ function createAotCompiler(compilerHost, options) {
     var tmplParser = new TemplateParser(config, staticReflector, expressionParser, elementSchemaRegistry, htmlParser, console, []);
     var resolver = new CompileMetadataResolver(config, htmlParser, new NgModuleResolver(staticReflector), new DirectiveResolver(staticReflector), new PipeResolver(staticReflector), summaryResolver, elementSchemaRegistry, normalizer, console, symbolCache, staticReflector);
     // TODO(vicb): do not pass options.i18nFormat here
-    var viewCompiler = new ViewCompiler(config, staticReflector, elementSchemaRegistry);
+    var viewCompiler = new ViewCompiler(staticReflector);
     var typeCheckCompiler = new TypeCheckCompiler(options, staticReflector);
     var compiler = new AotCompiler(config, compilerHost, staticReflector, resolver, tmplParser, new StyleCompiler(urlResolver), viewCompiler, typeCheckCompiler, new NgModuleCompiler(staticReflector), new TypeScriptEmitter(), summaryResolver, options.locale || null, options.i18nFormat || null, options.enableSummariesForJit || null, symbolResolver);
     return { compiler: compiler, reflector: staticReflector };
@@ -27676,7 +27691,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v5.0.0-beta.7-b14c2d1
+ * @license Angular v5.0.0-beta.7-2c4107c
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -28065,7 +28080,7 @@ var Version$1 = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('5.0.0-beta.7-b14c2d1');
+var VERSION$2 = new Version$1('5.0.0-beta.7-2c4107c');
 
 /**
  * @fileoverview added by tsickle
@@ -39666,16 +39681,6 @@ function checkAndUpdateNodeDynamic(view, nodeDef, values) {
             changed = checkAndUpdatePureExpressionDynamic(view, nodeDef, values);
             break;
     }
-    if (changed) {
-        // Update oldValues after all bindings have been updated,
-        // as a setter for a property might update other properties.
-        var /** @type {?} */ bindLen = nodeDef.bindings.length;
-        var /** @type {?} */ bindingStart = nodeDef.bindingIndex;
-        var /** @type {?} */ oldValues = view.oldValues;
-        for (var /** @type {?} */ i = 0; i < bindLen; i++) {
-            oldValues[bindingStart + i] = values[i];
-        }
-    }
     return changed;
 }
 /**
@@ -41225,7 +41230,7 @@ var NgModuleFactory_ = (function (_super) {
 }(NgModuleFactory));
 
 /**
- * @license Angular v5.0.0-beta.7-b14c2d1
+ * @license Angular v5.0.0-beta.7-2c4107c
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -43826,7 +43831,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('5.0.0-beta.7-b14c2d1');
+var VERSION = new Version$1('5.0.0-beta.7-2c4107c');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
