@@ -1,10 +1,9 @@
 /**
- * @license Angular v5.0.0-beta.7-9d2236a
+ * @license Angular v5.0.0-beta.7-5751865
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
-import { ASTWithSource, AotSummaryResolver, AstPath, Attribute, CompileMetadataResolver, CompilerConfig, CssSelector, DEFAULT_INTERPOLATION_CONFIG, DirectiveNormalizer, DirectiveResolver, DomElementSchemaRegistry, Element, ElementAst, HtmlParser, I18NHtmlParser, ImplicitReceiver, JitSummaryResolver, Lexer, NAMED_ENTITIES, NgModuleResolver, NullAstVisitor, NullTemplateVisitor, ParseSpan, ParseTreeResult, Parser, PipeResolver, PropertyRead, RecursiveTemplateAstVisitor, ResourceLoader, SelectorMatcher, StaticReflector, StaticSymbolCache, StaticSymbolResolver, TagContentType, TemplateParser, Text, analyzeNgModules, createOfflineCompileUrlResolver, extractProgramSymbols, findNode, getHtmlTagDefinition, identifierName, splitNsName, templateVisitAll, tokenReference, visitAstChildren } from '@angular/compiler';
-import { __extends } from 'tslib';
+import { ASTWithSource, AotSummaryResolver, AstPath, Attribute, CompileMetadataResolver, CompilerConfig, CssSelector, DEFAULT_INTERPOLATION_CONFIG, DirectiveNormalizer, DirectiveResolver, DomElementSchemaRegistry, Element, ElementAst, HtmlParser, I18NHtmlParser, ImplicitReceiver, JitSummaryResolver, Lexer, NAMED_ENTITIES, NgModuleResolver, NullAstVisitor, NullTemplateVisitor, ParseSpan, ParseTreeResult, Parser, PipeResolver, PropertyRead, RecursiveTemplateAstVisitor, ResourceLoader, SelectorMatcher, StaticReflector, StaticSymbolCache, StaticSymbolResolver, TagContentType, TemplateParser, Text, analyzeNgModules, createOfflineCompileUrlResolver, findNode, getHtmlTagDefinition, identifierName, splitNsName, templateVisitAll, tokenReference, visitAstChildren } from '@angular/compiler';
 import { AstType, BuiltinType, CompilerHost, ModuleResolutionHostAdapter, getClassMembersFromDeclaration, getExpressionScope, getPipesTable, getSymbolQuery, getTemplateExpressionDiagnostics } from '@angular/compiler-cli/src/language_services';
 import { DiagnosticCategory, SyntaxKind, forEachChild, getPositionOfLineAndCharacter } from 'typescript';
 import { Version, ViewEncapsulation, ɵConsole } from '@angular/core';
@@ -80,8 +79,7 @@ function isNarrower(spanA, spanB) {
 }
 function hasTemplateReference(type) {
     if (type.diDeps) {
-        for (var _i = 0, _a = type.diDeps; _i < _a.length; _i++) {
-            var diDep = _a[_i];
+        for (let diDep of type.diDeps) {
             if (diDep.token && diDep.token.identifier &&
                 identifierName((diDep.token.identifier)) == 'TemplateRef')
                 return true;
@@ -90,17 +88,16 @@ function hasTemplateReference(type) {
     return false;
 }
 function getSelectors(info) {
-    var map = new Map();
-    var selectors = flatten(info.directives.map(function (directive) {
-        var selectors = CssSelector.parse((directive.selector));
-        selectors.forEach(function (selector) { return map.set(selector, directive); });
+    const map = new Map();
+    const selectors = flatten(info.directives.map(directive => {
+        const selectors = CssSelector.parse((directive.selector));
+        selectors.forEach(selector => map.set(selector, directive));
         return selectors;
     }));
-    return { selectors: selectors, map: map };
+    return { selectors, map };
 }
 function flatten(a) {
-    return (_a = []).concat.apply(_a, a);
-    var _a;
+    return [].concat(...a);
 }
 function removeSuffix(value, suffix) {
     if (value.endsWith(suffix))
@@ -109,10 +106,9 @@ function removeSuffix(value, suffix) {
 }
 function uniqueByName(elements) {
     if (elements) {
-        var result = [];
-        var set = new Set();
-        for (var _i = 0, elements_1 = elements; _i < elements_1.length; _i++) {
-            var element = elements_1[_i];
+        const result = [];
+        const set = new Set();
+        for (const element of elements) {
             if (!set.has(element.name)) {
                 set.add(element.name);
                 result.push(element);
@@ -132,18 +128,13 @@ function diagnosticInfoFromTemplateInfo(info) {
         templateAst: info.templateAst
     };
 }
-function findTemplateAstAt(ast, position, allowWidening) {
-    if (allowWidening === void 0) { allowWidening = false; }
-    var path$$1 = [];
-    var visitor = new (function (_super) {
-        __extends(class_1, _super);
-        function class_1() {
-            return _super !== null && _super.apply(this, arguments) || this;
-        }
-        class_1.prototype.visit = function (ast, context) {
-            var span = spanOf(ast);
+function findTemplateAstAt(ast, position, allowWidening = false) {
+    const path$$1 = [];
+    const visitor = new class extends RecursiveTemplateAstVisitor {
+        visit(ast, context) {
+            let span = spanOf(ast);
             if (inSpan(position, span)) {
-                var len = path$$1.length;
+                const len = path$$1.length;
                 if (!len || allowWidening || isNarrower(span, spanOf(path$$1[len - 1]))) {
                     path$$1.push(ast);
                 }
@@ -152,17 +143,17 @@ function findTemplateAstAt(ast, position, allowWidening) {
                 // Returning a value here will result in the children being skipped.
                 return true;
             }
-        };
-        class_1.prototype.visitEmbeddedTemplate = function (ast, context) {
-            return this.visitChildren(context, function (visit) {
+        }
+        visitEmbeddedTemplate(ast, context) {
+            return this.visitChildren(context, visit => {
                 // Ignore reference, variable and providers
                 visit(ast.attrs);
                 visit(ast.directives);
                 visit(ast.children);
             });
-        };
-        class_1.prototype.visitElement = function (ast, context) {
-            return this.visitChildren(context, function (visit) {
+        }
+        visitElement(ast, context) {
+            return this.visitChildren(context, visit => {
                 // Ingnore providers
                 visit(ast.attrs);
                 visit(ast.inputs);
@@ -171,18 +162,17 @@ function findTemplateAstAt(ast, position, allowWidening) {
                 visit(ast.directives);
                 visit(ast.children);
             });
-        };
-        class_1.prototype.visitDirective = function (ast, context) {
+        }
+        visitDirective(ast, context) {
             // Ignore the host properties of a directive
-            var result = this.visitChildren(context, function (visit) { visit(ast.inputs); });
+            const result = this.visitChildren(context, visit => { visit(ast.inputs); });
             // We never care about the diretive itself, just its inputs.
             if (path$$1[path$$1.length - 1] == ast) {
                 path$$1.pop();
             }
             return result;
-        };
-        return class_1;
-    }(RecursiveTemplateAstVisitor));
+        }
+    };
     templateVisitAll(visitor, ast);
     return new AstPath(path$$1, position);
 }
@@ -194,22 +184,16 @@ function findTemplateAstAt(ast, position, allowWidening) {
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-function findAstAt(ast, position, excludeEmpty) {
-    if (excludeEmpty === void 0) { excludeEmpty = false; }
-    var path$$1 = [];
-    var visitor = new (function (_super) {
-        __extends(class_1, _super);
-        function class_1() {
-            return _super !== null && _super.apply(this, arguments) || this;
-        }
-        class_1.prototype.visit = function (ast) {
+function findAstAt(ast, position, excludeEmpty = false) {
+    const path$$1 = [];
+    const visitor = new class extends NullAstVisitor {
+        visit(ast) {
             if ((!excludeEmpty || ast.span.start < ast.span.end) && inSpan(position, ast.span)) {
                 path$$1.push(ast);
                 visitAstChildren(ast, this);
             }
-        };
-        return class_1;
-    }(NullAstVisitor));
+        }
+    };
     // We never care about the ASTWithSource node and its visit() method calls its ast's visit so
     // the visit() method above would never see it.
     if (ast instanceof ASTWithSource) {
@@ -219,125 +203,125 @@ function findAstAt(ast, position, excludeEmpty) {
     return new AstPath(path$$1, position);
 }
 function getExpressionCompletions(scope, ast, position, query) {
-    var path$$1 = findAstAt(ast, position);
+    const path$$1 = findAstAt(ast, position);
     if (path$$1.empty)
         return undefined;
-    var tail = (path$$1.tail);
-    var result = scope;
+    const tail = (path$$1.tail);
+    let result = scope;
     function getType(ast) { return new AstType(scope, query, {}).getType(ast); }
     // If the completion request is in a not in a pipe or property access then the global scope
     // (that is the scope of the implicit receiver) is the right scope as the user is typing the
     // beginning of an expression.
     tail.visit({
-        visitBinary: function (ast) { },
-        visitChain: function (ast) { },
-        visitConditional: function (ast) { },
-        visitFunctionCall: function (ast) { },
-        visitImplicitReceiver: function (ast) { },
-        visitInterpolation: function (ast) { result = undefined; },
-        visitKeyedRead: function (ast) { },
-        visitKeyedWrite: function (ast) { },
-        visitLiteralArray: function (ast) { },
-        visitLiteralMap: function (ast) { },
-        visitLiteralPrimitive: function (ast) { },
-        visitMethodCall: function (ast) { },
-        visitPipe: function (ast) {
+        visitBinary(ast) { },
+        visitChain(ast) { },
+        visitConditional(ast) { },
+        visitFunctionCall(ast) { },
+        visitImplicitReceiver(ast) { },
+        visitInterpolation(ast) { result = undefined; },
+        visitKeyedRead(ast) { },
+        visitKeyedWrite(ast) { },
+        visitLiteralArray(ast) { },
+        visitLiteralMap(ast) { },
+        visitLiteralPrimitive(ast) { },
+        visitMethodCall(ast) { },
+        visitPipe(ast) {
             if (position >= ast.exp.span.end &&
                 (!ast.args || !ast.args.length || position < ast.args[0].span.start)) {
                 // We are in a position a pipe name is expected.
                 result = query.getPipes();
             }
         },
-        visitPrefixNot: function (ast) { },
-        visitNonNullAssert: function (ast) { },
-        visitPropertyRead: function (ast) {
-            var receiverType = getType(ast.receiver);
+        visitPrefixNot(ast) { },
+        visitNonNullAssert(ast) { },
+        visitPropertyRead(ast) {
+            const receiverType = getType(ast.receiver);
             result = receiverType ? receiverType.members() : scope;
         },
-        visitPropertyWrite: function (ast) {
-            var receiverType = getType(ast.receiver);
+        visitPropertyWrite(ast) {
+            const receiverType = getType(ast.receiver);
             result = receiverType ? receiverType.members() : scope;
         },
-        visitQuote: function (ast) {
+        visitQuote(ast) {
             // For a quote, return the members of any (if there are any).
             result = query.getBuiltinType(BuiltinType.Any).members();
         },
-        visitSafeMethodCall: function (ast) {
-            var receiverType = getType(ast.receiver);
+        visitSafeMethodCall(ast) {
+            const receiverType = getType(ast.receiver);
             result = receiverType ? receiverType.members() : scope;
         },
-        visitSafePropertyRead: function (ast) {
-            var receiverType = getType(ast.receiver);
+        visitSafePropertyRead(ast) {
+            const receiverType = getType(ast.receiver);
             result = receiverType ? receiverType.members() : scope;
         },
     });
     return result && result.values();
 }
 function getExpressionSymbol(scope, ast, position, query) {
-    var path$$1 = findAstAt(ast, position, /* excludeEmpty */ /* excludeEmpty */ true);
+    const path$$1 = findAstAt(ast, position, /* excludeEmpty */ /* excludeEmpty */ true);
     if (path$$1.empty)
         return undefined;
-    var tail = (path$$1.tail);
+    const tail = (path$$1.tail);
     function getType(ast) { return new AstType(scope, query, {}).getType(ast); }
-    var symbol = undefined;
-    var span = undefined;
+    let symbol = undefined;
+    let span = undefined;
     // If the completion request is in a not in a pipe or property access then the global scope
     // (that is the scope of the implicit receiver) is the right scope as the user is typing the
     // beginning of an expression.
     tail.visit({
-        visitBinary: function (ast) { },
-        visitChain: function (ast) { },
-        visitConditional: function (ast) { },
-        visitFunctionCall: function (ast) { },
-        visitImplicitReceiver: function (ast) { },
-        visitInterpolation: function (ast) { },
-        visitKeyedRead: function (ast) { },
-        visitKeyedWrite: function (ast) { },
-        visitLiteralArray: function (ast) { },
-        visitLiteralMap: function (ast) { },
-        visitLiteralPrimitive: function (ast) { },
-        visitMethodCall: function (ast) {
-            var receiverType = getType(ast.receiver);
+        visitBinary(ast) { },
+        visitChain(ast) { },
+        visitConditional(ast) { },
+        visitFunctionCall(ast) { },
+        visitImplicitReceiver(ast) { },
+        visitInterpolation(ast) { },
+        visitKeyedRead(ast) { },
+        visitKeyedWrite(ast) { },
+        visitLiteralArray(ast) { },
+        visitLiteralMap(ast) { },
+        visitLiteralPrimitive(ast) { },
+        visitMethodCall(ast) {
+            const receiverType = getType(ast.receiver);
             symbol = receiverType && receiverType.members().get(ast.name);
             span = ast.span;
         },
-        visitPipe: function (ast) {
+        visitPipe(ast) {
             if (position >= ast.exp.span.end &&
                 (!ast.args || !ast.args.length || position < ast.args[0].span.start)) {
                 // We are in a position a pipe name is expected.
-                var pipes = query.getPipes();
+                const pipes = query.getPipes();
                 if (pipes) {
                     symbol = pipes.get(ast.name);
                     span = ast.span;
                 }
             }
         },
-        visitPrefixNot: function (ast) { },
-        visitNonNullAssert: function (ast) { },
-        visitPropertyRead: function (ast) {
-            var receiverType = getType(ast.receiver);
+        visitPrefixNot(ast) { },
+        visitNonNullAssert(ast) { },
+        visitPropertyRead(ast) {
+            const receiverType = getType(ast.receiver);
             symbol = receiverType && receiverType.members().get(ast.name);
             span = ast.span;
         },
-        visitPropertyWrite: function (ast) {
-            var receiverType = getType(ast.receiver);
+        visitPropertyWrite(ast) {
+            const receiverType = getType(ast.receiver);
             symbol = receiverType && receiverType.members().get(ast.name);
             span = ast.span;
         },
-        visitQuote: function (ast) { },
-        visitSafeMethodCall: function (ast) {
-            var receiverType = getType(ast.receiver);
+        visitQuote(ast) { },
+        visitSafeMethodCall(ast) {
+            const receiverType = getType(ast.receiver);
             symbol = receiverType && receiverType.members().get(ast.name);
             span = ast.span;
         },
-        visitSafePropertyRead: function (ast) {
-            var receiverType = getType(ast.receiver);
+        visitSafePropertyRead(ast) {
+            const receiverType = getType(ast.receiver);
             symbol = receiverType && receiverType.members().get(ast.name);
             span = ast.span;
         },
     });
     if (symbol && span) {
-        return { symbol: symbol, span: span };
+        return { symbol, span };
     }
 }
 
@@ -348,7 +332,7 @@ function getExpressionSymbol(scope, ast, position, query) {
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-var values = [
+const values = [
     'ID',
     'CDATA',
     'NAME',
@@ -376,7 +360,7 @@ var values = [
     ['row', 'col', 'rowgroup', 'colgroup'],
     ['defer']
 ];
-var groups = [
+const groups = [
     { id: 0 },
     {
         onclick: 1,
@@ -438,7 +422,7 @@ var groups = [
     { ismap: 7 },
     { defer: 25, event: 1, for: 1 }
 ];
-var elements = {
+const elements = {
     TT: [0, 1, 2, 16, 44],
     I: [0, 1, 2, 16, 44],
     B: [0, 1, 2, 16, 44],
@@ -517,19 +501,18 @@ var elements = {
     NOSCRIPT: [0, 1, 2, 16, 44],
     HTML: [2]
 };
-var defaultAttributes = [0, 1, 2, 4];
+const defaultAttributes = [0, 1, 2, 4];
 function elementNames() {
-    return Object.keys(elements).sort().map(function (v) { return v.toLowerCase(); });
+    return Object.keys(elements).sort().map(v => v.toLowerCase());
 }
 function compose(indexes) {
-    var result = {};
+    const result = {};
     if (indexes) {
-        for (var _i = 0, indexes_1 = indexes; _i < indexes_1.length; _i++) {
-            var index = indexes_1[_i];
-            var group = groups[index];
-            for (var name_1 in group)
-                if (group.hasOwnProperty(name_1))
-                    result[name_1] = values[group[name_1]];
+        for (let index of indexes) {
+            const group = groups[index];
+            for (let name in group)
+                if (group.hasOwnProperty(name))
+                    result[name] = values[group[name]];
         }
     }
     return result;
@@ -543,7 +526,7 @@ function attributeNames(element) {
 // from the SCHEMA strings from the security context information. SCHEMA is copied here because
 // it would be an unnecessary risk to allow this array to be imported from the security context
 // schema registry.
-var SCHEMA = [
+const SCHEMA = [
     '[Element]|textContent,%classList,className,id,innerHTML,*beforecopy,*beforecut,*beforepaste,*copy,*cut,*paste,*search,*selectstart,*webkitfullscreenchange,*webkitfullscreenerror,*wheel,outerHTML,#scrollLeft,#scrollTop,slot' +
         ',*message,*mozfullscreenchange,*mozfullscreenerror,*mozpointerlockchange,*mozpointerlockerror,*webglcontextcreationerror,*webglcontextlost,*webglcontextrestored',
     '[HTMLElement]^[Element]|accessKey,contentEditable,dir,!draggable,!hidden,innerText,lang,*abort,*auxclick,*blur,*cancel,*canplay,*canplaythrough,*change,*click,*close,*contextmenu,*cuechange,*dblclick,*drag,*dragend,*dragenter,*dragleave,*dragover,*dragstart,*drop,*durationchange,*emptied,*ended,*error,*focus,*gotpointercapture,*input,*invalid,*keydown,*keypress,*keyup,*load,*loadeddata,*loadedmetadata,*loadstart,*lostpointercapture,*mousedown,*mouseenter,*mouseleave,*mousemove,*mouseout,*mouseover,*mouseup,*mousewheel,*pause,*play,*playing,*pointercancel,*pointerdown,*pointerenter,*pointerleave,*pointermove,*pointerout,*pointerover,*pointerup,*progress,*ratechange,*reset,*resize,*scroll,*seeked,*seeking,*select,*show,*stalled,*submit,*suspend,*timeupdate,*toggle,*volumechange,*waiting,outerText,!spellcheck,%style,#tabIndex,title,!translate',
@@ -697,30 +680,29 @@ var SCHEMA = [
     'time^[HTMLElement]|dateTime',
     ':svg:cursor^:svg:|',
 ];
-var EVENT = 'event';
-var BOOLEAN = 'boolean';
-var NUMBER = 'number';
-var STRING = 'string';
-var OBJECT = 'object';
-var SchemaInformation = (function () {
-    function SchemaInformation() {
-        var _this = this;
+const EVENT = 'event';
+const BOOLEAN = 'boolean';
+const NUMBER = 'number';
+const STRING = 'string';
+const OBJECT = 'object';
+class SchemaInformation {
+    constructor() {
         this.schema = {};
-        SCHEMA.forEach(function (encodedType) {
-            var parts = encodedType.split('|');
-            var properties = parts[1].split(',');
-            var typeParts = (parts[0] + '^').split('^');
-            var typeName = typeParts[0];
-            var type = {};
-            typeName.split(',').forEach(function (tag) { return _this.schema[tag.toLowerCase()] = type; });
-            var superName = typeParts[1];
-            var superType = superName && _this.schema[superName.toLowerCase()];
+        SCHEMA.forEach(encodedType => {
+            const parts = encodedType.split('|');
+            const properties = parts[1].split(',');
+            const typeParts = (parts[0] + '^').split('^');
+            const typeName = typeParts[0];
+            const type = {};
+            typeName.split(',').forEach(tag => this.schema[tag.toLowerCase()] = type);
+            const superName = typeParts[1];
+            const superType = superName && this.schema[superName.toLowerCase()];
             if (superType) {
-                for (var key in superType) {
+                for (const key in superType) {
                     type[key] = superType[key];
                 }
             }
-            properties.forEach(function (property) {
+            properties.forEach((property) => {
                 if (property == '') {
                 }
                 else if (property.startsWith('*')) {
@@ -741,31 +723,26 @@ var SchemaInformation = (function () {
             });
         });
     }
-    SchemaInformation.prototype.allKnownElements = function () { return Object.keys(this.schema); };
-    SchemaInformation.prototype.eventsOf = function (elementName) {
-        var elementType = this.schema[elementName.toLowerCase()] || {};
-        return Object.keys(elementType).filter(function (property) { return elementType[property] === EVENT; });
-    };
-    SchemaInformation.prototype.propertiesOf = function (elementName) {
-        var elementType = this.schema[elementName.toLowerCase()] || {};
-        return Object.keys(elementType).filter(function (property) { return elementType[property] !== EVENT; });
-    };
-    SchemaInformation.prototype.typeOf = function (elementName, property) {
+    allKnownElements() { return Object.keys(this.schema); }
+    eventsOf(elementName) {
+        const elementType = this.schema[elementName.toLowerCase()] || {};
+        return Object.keys(elementType).filter(property => elementType[property] === EVENT);
+    }
+    propertiesOf(elementName) {
+        const elementType = this.schema[elementName.toLowerCase()] || {};
+        return Object.keys(elementType).filter(property => elementType[property] !== EVENT);
+    }
+    typeOf(elementName, property) {
         return (this.schema[elementName.toLowerCase()] || {})[property];
-    };
-    Object.defineProperty(SchemaInformation, "instance", {
-        get: function () {
-            var result = SchemaInformation._instance;
-            if (!result) {
-                result = SchemaInformation._instance = new SchemaInformation();
-            }
-            return result;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    return SchemaInformation;
-}());
+    }
+    static get instance() {
+        let result = SchemaInformation._instance;
+        if (!result) {
+            result = SchemaInformation._instance = new SchemaInformation();
+        }
+        return result;
+    }
+}
 function eventNames(elementName) {
     return SchemaInformation.instance.eventsOf(elementName);
 }
@@ -780,8 +757,8 @@ function propertyNames(elementName) {
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-var TEMPLATE_ATTR_PREFIX = '*';
-var hiddenHtmlElements = {
+const TEMPLATE_ATTR_PREFIX = '*';
+const hiddenHtmlElements = {
     html: true,
     script: true,
     noscript: true,
@@ -792,166 +769,163 @@ var hiddenHtmlElements = {
     link: true,
 };
 function getTemplateCompletions(templateInfo) {
-    var result = undefined;
-    var htmlAst = templateInfo.htmlAst, templateAst = templateInfo.templateAst, template = templateInfo.template;
+    let result = undefined;
+    let { htmlAst, templateAst, template } = templateInfo;
     // The templateNode starts at the delimiter character so we add 1 to skip it.
     if (templateInfo.position != null) {
-        var templatePosition_1 = templateInfo.position - template.span.start;
-        var path_1 = findNode(htmlAst, templatePosition_1);
-        var mostSpecific = path_1.tail;
-        if (path_1.empty || !mostSpecific) {
-            result = elementCompletions(templateInfo, path_1);
+        let templatePosition = templateInfo.position - template.span.start;
+        let path$$1 = findNode(htmlAst, templatePosition);
+        let mostSpecific = path$$1.tail;
+        if (path$$1.empty || !mostSpecific) {
+            result = elementCompletions(templateInfo, path$$1);
         }
         else {
-            var astPosition_1 = templatePosition_1 - mostSpecific.sourceSpan.start.offset;
+            let astPosition = templatePosition - mostSpecific.sourceSpan.start.offset;
             mostSpecific.visit({
-                visitElement: function (ast) {
-                    var startTagSpan = spanOf(ast.sourceSpan);
-                    var tagLen = ast.name.length;
-                    if (templatePosition_1 <=
+                visitElement(ast) {
+                    let startTagSpan = spanOf(ast.sourceSpan);
+                    let tagLen = ast.name.length;
+                    if (templatePosition <=
                         startTagSpan.start + tagLen + 1 /* 1 for the opening angle bracked */) {
                         // If we are in the tag then return the element completions.
-                        result = elementCompletions(templateInfo, path_1);
+                        result = elementCompletions(templateInfo, path$$1);
                     }
-                    else if (templatePosition_1 < startTagSpan.end) {
+                    else if (templatePosition < startTagSpan.end) {
                         // We are in the attribute section of the element (but not in an attribute).
                         // Return the attribute completions.
-                        result = attributeCompletions(templateInfo, path_1);
+                        result = attributeCompletions(templateInfo, path$$1);
                     }
                 },
-                visitAttribute: function (ast) {
-                    if (!ast.valueSpan || !inSpan(templatePosition_1, spanOf(ast.valueSpan))) {
+                visitAttribute(ast) {
+                    if (!ast.valueSpan || !inSpan(templatePosition, spanOf(ast.valueSpan))) {
                         // We are in the name of an attribute. Show attribute completions.
-                        result = attributeCompletions(templateInfo, path_1);
+                        result = attributeCompletions(templateInfo, path$$1);
                     }
-                    else if (ast.valueSpan && inSpan(templatePosition_1, spanOf(ast.valueSpan))) {
-                        result = attributeValueCompletions(templateInfo, templatePosition_1, ast);
+                    else if (ast.valueSpan && inSpan(templatePosition, spanOf(ast.valueSpan))) {
+                        result = attributeValueCompletions(templateInfo, templatePosition, ast);
                     }
                 },
-                visitText: function (ast) {
+                visitText(ast) {
                     // Check if we are in a entity.
-                    result = entityCompletions(getSourceText(template, spanOf(ast)), astPosition_1);
+                    result = entityCompletions(getSourceText(template, spanOf(ast)), astPosition);
                     if (result)
                         return result;
-                    result = interpolationCompletions(templateInfo, templatePosition_1);
+                    result = interpolationCompletions(templateInfo, templatePosition);
                     if (result)
                         return result;
-                    var element = path_1.first(Element);
+                    let element = path$$1.first(Element);
                     if (element) {
-                        var definition = getHtmlTagDefinition(element.name);
+                        let definition = getHtmlTagDefinition(element.name);
                         if (definition.contentType === TagContentType.PARSABLE_DATA) {
-                            result = voidElementAttributeCompletions(templateInfo, path_1);
+                            result = voidElementAttributeCompletions(templateInfo, path$$1);
                             if (!result) {
                                 // If the element can hold content Show element completions.
-                                result = elementCompletions(templateInfo, path_1);
+                                result = elementCompletions(templateInfo, path$$1);
                             }
                         }
                     }
                     else {
                         // If no element container, implies parsable data so show elements.
-                        result = voidElementAttributeCompletions(templateInfo, path_1);
+                        result = voidElementAttributeCompletions(templateInfo, path$$1);
                         if (!result) {
-                            result = elementCompletions(templateInfo, path_1);
+                            result = elementCompletions(templateInfo, path$$1);
                         }
                     }
                 },
-                visitComment: function (ast) { },
-                visitExpansion: function (ast) { },
-                visitExpansionCase: function (ast) { }
+                visitComment(ast) { },
+                visitExpansion(ast) { },
+                visitExpansionCase(ast) { }
             }, null);
         }
     }
     return result;
 }
 function attributeCompletions(info, path$$1) {
-    var item = path$$1.tail instanceof Element ? path$$1.tail : path$$1.parentOf(path$$1.tail);
+    let item = path$$1.tail instanceof Element ? path$$1.tail : path$$1.parentOf(path$$1.tail);
     if (item instanceof Element) {
         return attributeCompletionsForElement(info, item.name, item);
     }
     return undefined;
 }
 function attributeCompletionsForElement(info, elementName, element) {
-    var attributes = getAttributeInfosForElement(info, elementName, element);
+    const attributes = getAttributeInfosForElement(info, elementName, element);
     // Map all the attributes to a completion
-    return attributes.map(function (attr) {
-        return ({
-            kind: attr.fromHtml ? 'html attribute' : 'attribute',
-            name: nameOfAttr(attr),
-            sort: attr.name
-        });
-    });
+    return attributes.map(attr => ({
+        kind: attr.fromHtml ? 'html attribute' : 'attribute',
+        name: nameOfAttr(attr),
+        sort: attr.name
+    }));
 }
 function getAttributeInfosForElement(info, elementName, element) {
-    var attributes = [];
+    let attributes = [];
     // Add html attributes
-    var htmlAttributes = attributeNames(elementName) || [];
+    let htmlAttributes = attributeNames(elementName) || [];
     if (htmlAttributes) {
-        attributes.push.apply(attributes, htmlAttributes.map(function (name) { return ({ name: name, fromHtml: true }); }));
+        attributes.push(...htmlAttributes.map(name => ({ name, fromHtml: true })));
     }
     // Add html properties
-    var htmlProperties = propertyNames(elementName);
+    let htmlProperties = propertyNames(elementName);
     if (htmlProperties) {
-        attributes.push.apply(attributes, htmlProperties.map(function (name) { return ({ name: name, input: true }); }));
+        attributes.push(...htmlProperties.map(name => ({ name, input: true })));
     }
     // Add html events
-    var htmlEvents = eventNames(elementName);
+    let htmlEvents = eventNames(elementName);
     if (htmlEvents) {
-        attributes.push.apply(attributes, htmlEvents.map(function (name) { return ({ name: name, output: true }); }));
+        attributes.push(...htmlEvents.map(name => ({ name, output: true })));
     }
-    var _a = getSelectors(info), selectors = _a.selectors, selectorMap = _a.map;
+    let { selectors, map: selectorMap } = getSelectors(info);
     if (selectors && selectors.length) {
         // All the attributes that are selectable should be shown.
-        var applicableSelectors = selectors.filter(function (selector) { return !selector.element || selector.element == elementName; });
-        var selectorAndAttributeNames = applicableSelectors.map(function (selector) { return ({ selector: selector, attrs: selector.attrs.filter(function (a) { return !!a; }) }); });
-        var attrs_1 = flatten(selectorAndAttributeNames.map(function (selectorAndAttr) {
-            var directive = (selectorMap.get(selectorAndAttr.selector));
-            var result = selectorAndAttr.attrs.map(function (name) { return ({ name: name, input: name in directive.inputs, output: name in directive.outputs }); });
+        const applicableSelectors = selectors.filter(selector => !selector.element || selector.element == elementName);
+        const selectorAndAttributeNames = applicableSelectors.map(selector => ({ selector, attrs: selector.attrs.filter(a => !!a) }));
+        let attrs = flatten(selectorAndAttributeNames.map(selectorAndAttr => {
+            const directive = (selectorMap.get(selectorAndAttr.selector));
+            const result = selectorAndAttr.attrs.map(name => ({ name, input: name in directive.inputs, output: name in directive.outputs }));
             return result;
         }));
         // Add template attribute if a directive contains a template reference
-        selectorAndAttributeNames.forEach(function (selectorAndAttr) {
-            var selector = selectorAndAttr.selector;
-            var directive = selectorMap.get(selector);
+        selectorAndAttributeNames.forEach(selectorAndAttr => {
+            const selector = selectorAndAttr.selector;
+            const directive = selectorMap.get(selector);
             if (directive && hasTemplateReference(directive.type) && selector.attrs.length &&
                 selector.attrs[0]) {
-                attrs_1.push({ name: selector.attrs[0], template: true });
+                attrs.push({ name: selector.attrs[0], template: true });
             }
         });
         // All input and output properties of the matching directives should be added.
-        var elementSelector = element ?
+        let elementSelector = element ?
             createElementCssSelector(element) :
             createElementCssSelector(new Element(elementName, [], [], (null), null, null));
-        var matcher = new SelectorMatcher();
+        let matcher = new SelectorMatcher();
         matcher.addSelectables(selectors);
-        matcher.match(elementSelector, function (selector) {
-            var directive = selectorMap.get(selector);
+        matcher.match(elementSelector, selector => {
+            let directive = selectorMap.get(selector);
             if (directive) {
-                attrs_1.push.apply(attrs_1, Object.keys(directive.inputs).map(function (name) { return ({ name: name, input: true }); }));
-                attrs_1.push.apply(attrs_1, Object.keys(directive.outputs).map(function (name) { return ({ name: name, output: true }); }));
+                attrs.push(...Object.keys(directive.inputs).map(name => ({ name, input: true })));
+                attrs.push(...Object.keys(directive.outputs).map(name => ({ name, output: true })));
             }
         });
         // If a name shows up twice, fold it into a single value.
-        // If a name shows up twice, fold it into a single value.
-        attrs_1 = foldAttrs(attrs_1);
+        attrs = foldAttrs(attrs);
         // Now expand them back out to ensure that input/output shows up as well as input and
         // output.
-        attributes.push.apply(attributes, flatten(attrs_1.map(expandedAttr)));
+        attributes.push(...flatten(attrs.map(expandedAttr)));
     }
     return attributes;
 }
 function attributeValueCompletions(info, position, attr) {
-    var path$$1 = findTemplateAstAt(info.templateAst, position);
-    var mostSpecific = path$$1.tail;
-    var dinfo = diagnosticInfoFromTemplateInfo(info);
+    const path$$1 = findTemplateAstAt(info.templateAst, position);
+    const mostSpecific = path$$1.tail;
+    const dinfo = diagnosticInfoFromTemplateInfo(info);
     if (mostSpecific) {
-        var visitor = new ExpressionVisitor(info, position, attr, function () { return getExpressionScope(dinfo, path$$1, false); });
+        const visitor = new ExpressionVisitor(info, position, attr, () => getExpressionScope(dinfo, path$$1, false));
         mostSpecific.visit(visitor, null);
         if (!visitor.result || !visitor.result.length) {
             // Try allwoing widening the path
-            var widerPath_1 = findTemplateAstAt(info.templateAst, position, /* allowWidening */ /* allowWidening */ true);
-            if (widerPath_1.tail) {
-                var widerVisitor = new ExpressionVisitor(info, position, attr, function () { return getExpressionScope(dinfo, widerPath_1, false); });
-                widerPath_1.tail.visit(widerVisitor, null);
+            const widerPath = findTemplateAstAt(info.templateAst, position, /* allowWidening */ /* allowWidening */ true);
+            if (widerPath.tail) {
+                const widerVisitor = new ExpressionVisitor(info, position, attr, () => getExpressionScope(dinfo, widerPath, false));
+                widerPath.tail.visit(widerVisitor, null);
                 return widerVisitor.result;
             }
         }
@@ -959,26 +933,26 @@ function attributeValueCompletions(info, position, attr) {
     }
 }
 function elementCompletions(info, path$$1) {
-    var htmlNames = elementNames().filter(function (name) { return !(name in hiddenHtmlElements); });
+    let htmlNames = elementNames().filter(name => !(name in hiddenHtmlElements));
     // Collect the elements referenced by the selectors
-    var directiveElements = getSelectors(info)
-        .selectors.map(function (selector) { return selector.element; })
-        .filter(function (name) { return !!name; });
-    var components = directiveElements.map(function (name) { return ({ kind: 'component', name: name, sort: name }); });
-    var htmlElements = htmlNames.map(function (name) { return ({ kind: 'element', name: name, sort: name }); });
+    let directiveElements = getSelectors(info)
+        .selectors.map(selector => selector.element)
+        .filter(name => !!name);
+    let components = directiveElements.map(name => ({ kind: 'component', name, sort: name }));
+    let htmlElements = htmlNames.map(name => ({ kind: 'element', name: name, sort: name }));
     // Return components and html elements
     return uniqueByName(htmlElements.concat(components));
 }
 function entityCompletions(value, position) {
     // Look for entity completions
-    var re = /&[A-Za-z]*;?(?!\d)/g;
-    var found;
-    var result = undefined;
+    const re = /&[A-Za-z]*;?(?!\d)/g;
+    let found;
+    let result = undefined;
     while (found = re.exec(value)) {
-        var len = found[0].length;
+        let len = found[0].length;
         if (position >= found.index && position < (found.index + len)) {
             result = Object.keys(NAMED_ENTITIES)
-                .map(function (name) { return ({ kind: 'entity', name: "&" + name + ";", sort: name }); });
+                .map(name => ({ kind: 'entity', name: `&${name};`, sort: name }));
             break;
         }
     }
@@ -986,10 +960,10 @@ function entityCompletions(value, position) {
 }
 function interpolationCompletions(info, position) {
     // Look for an interpolation in at the position.
-    var templatePath = findTemplateAstAt(info.templateAst, position);
-    var mostSpecific = templatePath.tail;
+    const templatePath = findTemplateAstAt(info.templateAst, position);
+    const mostSpecific = templatePath.tail;
     if (mostSpecific) {
-        var visitor = new ExpressionVisitor(info, position, undefined, function () { return getExpressionScope(diagnosticInfoFromTemplateInfo(info), templatePath, false); });
+        let visitor = new ExpressionVisitor(info, position, undefined, () => getExpressionScope(diagnosticInfoFromTemplateInfo(info), templatePath, false));
         mostSpecific.visit(visitor, null);
         return uniqueByName(visitor.result);
     }
@@ -1001,9 +975,9 @@ function interpolationCompletions(info, position) {
 // code checks for this case and returns element completions if it is detected or undefined
 // if it is not.
 function voidElementAttributeCompletions(info, path$$1) {
-    var tail = path$$1.tail;
+    let tail = path$$1.tail;
     if (tail instanceof Text) {
-        var match = tail.value.match(/<(\w(\w|\d|-)*:)?(\w(\w|\d|-)*)\s/);
+        let match = tail.value.match(/<(\w(\w|\d|-)*:)?(\w(\w|\d|-)*)\s/);
         // The position must be after the match, otherwise we are still in a place where elements
         // are expected (such as `<|a` or `<a|`; we only want attributes for `<a |` or after).
         if (match &&
@@ -1012,133 +986,125 @@ function voidElementAttributeCompletions(info, path$$1) {
         }
     }
 }
-var ExpressionVisitor = (function (_super) {
-    __extends(ExpressionVisitor, _super);
-    function ExpressionVisitor(info, position, attr, getExpressionScope$$1) {
-        var _this = _super.call(this) || this;
-        _this.info = info;
-        _this.position = position;
-        _this.attr = attr;
-        _this.getExpressionScope = getExpressionScope$$1 || (function () { return info.template.members; });
-        return _this;
+class ExpressionVisitor extends NullTemplateVisitor {
+    constructor(info, position, attr, getExpressionScope$$1) {
+        super();
+        this.info = info;
+        this.position = position;
+        this.attr = attr;
+        this.getExpressionScope = getExpressionScope$$1 || (() => info.template.members);
     }
-    ExpressionVisitor.prototype.visitDirectiveProperty = function (ast) {
+    visitDirectiveProperty(ast) {
         this.attributeValueCompletions(ast.value);
-    };
-    ExpressionVisitor.prototype.visitElementProperty = function (ast) {
+    }
+    visitElementProperty(ast) {
         this.attributeValueCompletions(ast.value);
-    };
-    ExpressionVisitor.prototype.visitEvent = function (ast) { this.attributeValueCompletions(ast.handler); };
-    ExpressionVisitor.prototype.visitElement = function (ast) {
-        var _this = this;
+    }
+    visitEvent(ast) { this.attributeValueCompletions(ast.handler); }
+    visitElement(ast) {
         if (this.attr && getSelectors(this.info) && this.attr.name.startsWith(TEMPLATE_ATTR_PREFIX)) {
             // The value is a template expression but the expression AST was not produced when the
             // TemplateAst was produce so
             // do that now.
-            var key_1 = this.attr.name.substr(TEMPLATE_ATTR_PREFIX.length);
+            const key = this.attr.name.substr(TEMPLATE_ATTR_PREFIX.length);
             // Find the selector
-            var selectorInfo = getSelectors(this.info);
-            var selectors = selectorInfo.selectors;
-            var selector_1 = selectors.filter(function (s) { return s.attrs.some(function (attr, i) { return i % 2 == 0 && attr == key_1; }); })[0];
-            var templateBindingResult = this.info.expressionParser.parseTemplateBindings(key_1, this.attr.value, null);
+            const selectorInfo = getSelectors(this.info);
+            const selectors = selectorInfo.selectors;
+            const selector = selectors.filter(s => s.attrs.some((attr, i) => i % 2 == 0 && attr == key))[0];
+            const templateBindingResult = this.info.expressionParser.parseTemplateBindings(key, this.attr.value, null);
             // find the template binding that contains the position
             if (!this.attr.valueSpan)
                 return;
-            var valueRelativePosition_1 = this.position - this.attr.valueSpan.start.offset - 1;
-            var bindings = templateBindingResult.templateBindings;
-            var binding = bindings.find(function (binding) { return inSpan(valueRelativePosition_1, binding.span, /* exclusive */ /* exclusive */ true); }) ||
-                bindings.find(function (binding) { return inSpan(valueRelativePosition_1, binding.span); });
-            var keyCompletions = function () {
-                var keys = [];
-                if (selector_1) {
-                    var attrNames = selector_1.attrs.filter(function (_, i) { return i % 2 == 0; });
-                    keys = attrNames.filter(function (name) { return name.startsWith(key_1) && name != key_1; })
-                        .map(function (name) { return lowerName(name.substr(key_1.length)); });
+            const valueRelativePosition = this.position - this.attr.valueSpan.start.offset - 1;
+            const bindings = templateBindingResult.templateBindings;
+            const binding = bindings.find(binding => inSpan(valueRelativePosition, binding.span, /* exclusive */ /* exclusive */ true)) ||
+                bindings.find(binding => inSpan(valueRelativePosition, binding.span));
+            const keyCompletions = () => {
+                let keys = [];
+                if (selector) {
+                    const attrNames = selector.attrs.filter((_, i) => i % 2 == 0);
+                    keys = attrNames.filter(name => name.startsWith(key) && name != key)
+                        .map(name => lowerName(name.substr(key.length)));
                 }
                 keys.push('let');
-                _this.result = keys.map(function (key) { return ({ kind: 'key', name: key, sort: key }); });
+                this.result = keys.map(key => ({ kind: 'key', name: key, sort: key }));
             };
-            if (!binding || (binding.key == key_1 && !binding.expression)) {
+            if (!binding || (binding.key == key && !binding.expression)) {
                 // We are in the root binding. We should return `let` and keys that are left in the
                 // selector.
                 keyCompletions();
             }
             else if (binding.keyIsVar) {
-                var equalLocation = this.attr.value.indexOf('=');
+                const equalLocation = this.attr.value.indexOf('=');
                 this.result = [];
-                if (equalLocation >= 0 && valueRelativePosition_1 >= equalLocation) {
+                if (equalLocation >= 0 && valueRelativePosition >= equalLocation) {
                     // We are after the '=' in a let clause. The valid values here are the members of the
                     // template reference's type parameter.
-                    var directiveMetadata = selectorInfo.map.get(selector_1);
+                    const directiveMetadata = selectorInfo.map.get(selector);
                     if (directiveMetadata) {
-                        var contextTable = this.info.template.query.getTemplateContext(directiveMetadata.type.reference);
+                        const contextTable = this.info.template.query.getTemplateContext(directiveMetadata.type.reference);
                         if (contextTable) {
                             this.result = this.symbolsToCompletions(contextTable.values());
                         }
                     }
                 }
-                else if (binding.key && valueRelativePosition_1 <= (binding.key.length - key_1.length)) {
+                else if (binding.key && valueRelativePosition <= (binding.key.length - key.length)) {
                     keyCompletions();
                 }
             }
             else {
                 // If the position is in the expression or after the key or there is no key, return the
                 // expression completions
-                if ((binding.expression && inSpan(valueRelativePosition_1, binding.expression.ast.span)) ||
+                if ((binding.expression && inSpan(valueRelativePosition, binding.expression.ast.span)) ||
                     (binding.key &&
-                        valueRelativePosition_1 > binding.span.start + (binding.key.length - key_1.length)) ||
+                        valueRelativePosition > binding.span.start + (binding.key.length - key.length)) ||
                     !binding.key) {
-                    var span = new ParseSpan(0, this.attr.value.length);
+                    const span = new ParseSpan(0, this.attr.value.length);
                     this.attributeValueCompletions(binding.expression ? binding.expression.ast :
-                        new PropertyRead(span, new ImplicitReceiver(span), ''), valueRelativePosition_1);
+                        new PropertyRead(span, new ImplicitReceiver(span), ''), valueRelativePosition);
                 }
                 else {
                     keyCompletions();
                 }
             }
         }
-    };
-    ExpressionVisitor.prototype.visitBoundText = function (ast) {
-        var expressionPosition = this.position - ast.sourceSpan.start.offset;
+    }
+    visitBoundText(ast) {
+        const expressionPosition = this.position - ast.sourceSpan.start.offset;
         if (inSpan(expressionPosition, ast.value.span)) {
-            var completions = getExpressionCompletions(this.getExpressionScope(), ast.value, expressionPosition, this.info.template.query);
+            const completions = getExpressionCompletions(this.getExpressionScope(), ast.value, expressionPosition, this.info.template.query);
             if (completions) {
                 this.result = this.symbolsToCompletions(completions);
             }
         }
-    };
-    ExpressionVisitor.prototype.attributeValueCompletions = function (value, position) {
-        var symbols = getExpressionCompletions(this.getExpressionScope(), value, position == null ? this.attributeValuePosition : position, this.info.template.query);
+    }
+    attributeValueCompletions(value, position) {
+        const symbols = getExpressionCompletions(this.getExpressionScope(), value, position == null ? this.attributeValuePosition : position, this.info.template.query);
         if (symbols) {
             this.result = this.symbolsToCompletions(symbols);
         }
-    };
-    ExpressionVisitor.prototype.symbolsToCompletions = function (symbols) {
-        return symbols.filter(function (s) { return !s.name.startsWith('__') && s.public; })
-            .map(function (symbol) { return ({ kind: symbol.kind, name: symbol.name, sort: symbol.name }); });
-    };
-    Object.defineProperty(ExpressionVisitor.prototype, "attributeValuePosition", {
-        get: function () {
-            if (this.attr && this.attr.valueSpan) {
-                return this.position - this.attr.valueSpan.start.offset - 1;
-            }
-            return 0;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    return ExpressionVisitor;
-}(NullTemplateVisitor));
+    }
+    symbolsToCompletions(symbols) {
+        return symbols.filter(s => !s.name.startsWith('__') && s.public)
+            .map(symbol => ({ kind: symbol.kind, name: symbol.name, sort: symbol.name }));
+    }
+    get attributeValuePosition() {
+        if (this.attr && this.attr.valueSpan) {
+            return this.position - this.attr.valueSpan.start.offset - 1;
+        }
+        return 0;
+    }
+}
 function getSourceText(template, span) {
     return template.source.substring(span.start, span.end);
 }
 function nameOfAttr(attr) {
-    var name = attr.name;
+    let name = attr.name;
     if (attr.output) {
         name = removeSuffix(name, 'Events');
         name = removeSuffix(name, 'Changed');
     }
-    var result = [name];
+    let result = [name];
     if (attr.input) {
         result.unshift('[');
         result.push(']');
@@ -1152,47 +1118,46 @@ function nameOfAttr(attr) {
     }
     return result.join('');
 }
-var templateAttr = /^(\w+:)?(template$|^\*)/;
+const templateAttr = /^(\w+:)?(template$|^\*)/;
 function createElementCssSelector(element) {
-    var cssSelector = new CssSelector();
-    var elNameNoNs = splitNsName(element.name)[1];
+    const cssSelector = new CssSelector();
+    let elNameNoNs = splitNsName(element.name)[1];
     cssSelector.setElement(elNameNoNs);
-    for (var _i = 0, _a = element.attrs; _i < _a.length; _i++) {
-        var attr = _a[_i];
+    for (let attr of element.attrs) {
         if (!attr.name.match(templateAttr)) {
-            var _b = splitNsName(attr.name), _ = _b[0], attrNameNoNs = _b[1];
+            let [_, attrNameNoNs] = splitNsName(attr.name);
             cssSelector.addAttribute(attrNameNoNs, attr.value);
             if (attr.name.toLowerCase() == 'class') {
-                var classes = attr.value.split(/s+/g);
-                classes.forEach(function (className) { return cssSelector.addClassName(className); });
+                const classes = attr.value.split(/s+/g);
+                classes.forEach(className => cssSelector.addClassName(className));
             }
         }
     }
     return cssSelector;
 }
 function foldAttrs(attrs) {
-    var inputOutput = new Map();
-    var templates = new Map();
-    var result = [];
-    attrs.forEach(function (attr) {
+    let inputOutput = new Map();
+    let templates = new Map();
+    let result = [];
+    attrs.forEach(attr => {
         if (attr.fromHtml) {
             return attr;
         }
         if (attr.template) {
-            var duplicate = templates.get(attr.name);
+            let duplicate = templates.get(attr.name);
             if (!duplicate) {
                 result.push({ name: attr.name, template: true });
                 templates.set(attr.name, attr);
             }
         }
         if (attr.input || attr.output) {
-            var duplicate = inputOutput.get(attr.name);
+            let duplicate = inputOutput.get(attr.name);
             if (duplicate) {
                 duplicate.input = duplicate.input || attr.input;
                 duplicate.output = duplicate.output || attr.output;
             }
             else {
-                var cloneAttr = { name: attr.name };
+                let cloneAttr = { name: attr.name };
                 if (attr.input)
                     cloneAttr.input = true;
                 if (attr.output)
@@ -1227,24 +1192,23 @@ function lowerName(name) {
 function locateSymbol(info) {
     if (!info.position)
         return undefined;
-    var templatePosition = info.position - info.template.span.start;
-    var path$$1 = findTemplateAstAt(info.templateAst, templatePosition);
+    const templatePosition = info.position - info.template.span.start;
+    const path$$1 = findTemplateAstAt(info.templateAst, templatePosition);
     if (path$$1.tail) {
-        var symbol_1 = undefined;
-        var span_1 = undefined;
-        var attributeValueSymbol_1 = function (ast, inEvent) {
-            if (inEvent === void 0) { inEvent = false; }
-            var attribute = findAttribute(info);
+        let symbol = undefined;
+        let span = undefined;
+        const attributeValueSymbol = (ast, inEvent = false) => {
+            const attribute = findAttribute(info);
             if (attribute) {
                 if (inSpan(templatePosition, spanOf(attribute.valueSpan))) {
-                    var dinfo = diagnosticInfoFromTemplateInfo(info);
-                    var scope = getExpressionScope(dinfo, path$$1, inEvent);
+                    const dinfo = diagnosticInfoFromTemplateInfo(info);
+                    const scope = getExpressionScope(dinfo, path$$1, inEvent);
                     if (attribute.valueSpan) {
-                        var expressionOffset = attribute.valueSpan.start.offset + 1;
-                        var result = getExpressionSymbol(scope, ast, templatePosition - expressionOffset, info.template.query);
+                        const expressionOffset = attribute.valueSpan.start.offset + 1;
+                        const result = getExpressionSymbol(scope, ast, templatePosition - expressionOffset, info.template.query);
                         if (result) {
-                            symbol_1 = result.symbol;
-                            span_1 = offsetSpan(result.span, expressionOffset);
+                            symbol = result.symbol;
+                            span = offsetSpan(result.span, expressionOffset);
                         }
                     }
                     return true;
@@ -1253,84 +1217,83 @@ function locateSymbol(info) {
             return false;
         };
         path$$1.tail.visit({
-            visitNgContent: function (ast) { },
-            visitEmbeddedTemplate: function (ast) { },
-            visitElement: function (ast) {
-                var component = ast.directives.find(function (d) { return d.directive.isComponent; });
+            visitNgContent(ast) { },
+            visitEmbeddedTemplate(ast) { },
+            visitElement(ast) {
+                const component = ast.directives.find(d => d.directive.isComponent);
                 if (component) {
-                    symbol_1 = info.template.query.getTypeSymbol(component.directive.type.reference);
-                    symbol_1 = symbol_1 && new OverrideKindSymbol(symbol_1, 'component');
-                    span_1 = spanOf(ast);
+                    symbol = info.template.query.getTypeSymbol(component.directive.type.reference);
+                    symbol = symbol && new OverrideKindSymbol(symbol, 'component');
+                    span = spanOf(ast);
                 }
                 else {
                     // Find a directive that matches the element name
-                    var directive = ast.directives.find(function (d) { return d.directive.selector != null && d.directive.selector.indexOf(ast.name) >= 0; });
+                    const directive = ast.directives.find(d => d.directive.selector != null && d.directive.selector.indexOf(ast.name) >= 0);
                     if (directive) {
-                        symbol_1 = info.template.query.getTypeSymbol(directive.directive.type.reference);
-                        symbol_1 = symbol_1 && new OverrideKindSymbol(symbol_1, 'directive');
-                        span_1 = spanOf(ast);
+                        symbol = info.template.query.getTypeSymbol(directive.directive.type.reference);
+                        symbol = symbol && new OverrideKindSymbol(symbol, 'directive');
+                        span = spanOf(ast);
                     }
                 }
             },
-            visitReference: function (ast) {
-                symbol_1 = ast.value && info.template.query.getTypeSymbol(tokenReference(ast.value));
-                span_1 = spanOf(ast);
+            visitReference(ast) {
+                symbol = ast.value && info.template.query.getTypeSymbol(tokenReference(ast.value));
+                span = spanOf(ast);
             },
-            visitVariable: function (ast) { },
-            visitEvent: function (ast) {
-                if (!attributeValueSymbol_1(ast.handler, /* inEvent */ /* inEvent */ true)) {
-                    symbol_1 = findOutputBinding(info, path$$1, ast);
-                    symbol_1 = symbol_1 && new OverrideKindSymbol(symbol_1, 'event');
-                    span_1 = spanOf(ast);
+            visitVariable(ast) { },
+            visitEvent(ast) {
+                if (!attributeValueSymbol(ast.handler, /* inEvent */ /* inEvent */ true)) {
+                    symbol = findOutputBinding(info, path$$1, ast);
+                    symbol = symbol && new OverrideKindSymbol(symbol, 'event');
+                    span = spanOf(ast);
                 }
             },
-            visitElementProperty: function (ast) { attributeValueSymbol_1(ast.value); },
-            visitAttr: function (ast) { },
-            visitBoundText: function (ast) {
-                var expressionPosition = templatePosition - ast.sourceSpan.start.offset;
+            visitElementProperty(ast) { attributeValueSymbol(ast.value); },
+            visitAttr(ast) { },
+            visitBoundText(ast) {
+                const expressionPosition = templatePosition - ast.sourceSpan.start.offset;
                 if (inSpan(expressionPosition, ast.value.span)) {
-                    var dinfo = diagnosticInfoFromTemplateInfo(info);
-                    var scope = getExpressionScope(dinfo, path$$1, /* includeEvent */ /* includeEvent */ false);
-                    var result = getExpressionSymbol(scope, ast.value, expressionPosition, info.template.query);
+                    const dinfo = diagnosticInfoFromTemplateInfo(info);
+                    const scope = getExpressionScope(dinfo, path$$1, /* includeEvent */ /* includeEvent */ false);
+                    const result = getExpressionSymbol(scope, ast.value, expressionPosition, info.template.query);
                     if (result) {
-                        symbol_1 = result.symbol;
-                        span_1 = offsetSpan(result.span, ast.sourceSpan.start.offset);
+                        symbol = result.symbol;
+                        span = offsetSpan(result.span, ast.sourceSpan.start.offset);
                     }
                 }
             },
-            visitText: function (ast) { },
-            visitDirective: function (ast) {
-                symbol_1 = info.template.query.getTypeSymbol(ast.directive.type.reference);
-                span_1 = spanOf(ast);
+            visitText(ast) { },
+            visitDirective(ast) {
+                symbol = info.template.query.getTypeSymbol(ast.directive.type.reference);
+                span = spanOf(ast);
             },
-            visitDirectiveProperty: function (ast) {
-                if (!attributeValueSymbol_1(ast.value)) {
-                    symbol_1 = findInputBinding(info, path$$1, ast);
-                    span_1 = spanOf(ast);
+            visitDirectiveProperty(ast) {
+                if (!attributeValueSymbol(ast.value)) {
+                    symbol = findInputBinding(info, path$$1, ast);
+                    span = spanOf(ast);
                 }
             }
         }, null);
-        if (symbol_1 && span_1) {
-            return { symbol: symbol_1, span: offsetSpan(span_1, info.template.span.start) };
+        if (symbol && span) {
+            return { symbol, span: offsetSpan(span, info.template.span.start) };
         }
     }
 }
 function findAttribute(info) {
     if (info.position) {
-        var templatePosition = info.position - info.template.span.start;
-        var path$$1 = findNode(info.htmlAst, templatePosition);
+        const templatePosition = info.position - info.template.span.start;
+        const path$$1 = findNode(info.htmlAst, templatePosition);
         return path$$1.first(Attribute);
     }
 }
 function findInputBinding(info, path$$1, binding) {
-    var element = path$$1.first(ElementAst);
+    const element = path$$1.first(ElementAst);
     if (element) {
-        for (var _i = 0, _a = element.directives; _i < _a.length; _i++) {
-            var directive = _a[_i];
-            var invertedInput = invertMap(directive.directive.inputs);
-            var fieldName = invertedInput[binding.templateName];
+        for (const directive of element.directives) {
+            const invertedInput = invertMap(directive.directive.inputs);
+            const fieldName = invertedInput[binding.templateName];
             if (fieldName) {
-                var classSymbol = info.template.query.getTypeSymbol(directive.directive.type.reference);
+                const classSymbol = info.template.query.getTypeSymbol(directive.directive.type.reference);
                 if (classSymbol) {
                     return classSymbol.members().get(fieldName);
                 }
@@ -1339,14 +1302,13 @@ function findInputBinding(info, path$$1, binding) {
     }
 }
 function findOutputBinding(info, path$$1, binding) {
-    var element = path$$1.first(ElementAst);
+    const element = path$$1.first(ElementAst);
     if (element) {
-        for (var _i = 0, _a = element.directives; _i < _a.length; _i++) {
-            var directive = _a[_i];
-            var invertedOutputs = invertMap(directive.directive.outputs);
-            var fieldName = invertedOutputs[binding.name];
+        for (const directive of element.directives) {
+            const invertedOutputs = invertMap(directive.directive.outputs);
+            const fieldName = invertedOutputs[binding.name];
             if (fieldName) {
-                var classSymbol = info.template.query.getTypeSymbol(directive.directive.type.reference);
+                const classSymbol = info.template.query.getTypeSymbol(directive.directive.type.reference);
                 if (classSymbol) {
                     return classSymbol.members().get(fieldName);
                 }
@@ -1355,73 +1317,35 @@ function findOutputBinding(info, path$$1, binding) {
     }
 }
 function invertMap(obj) {
-    var result = {};
-    for (var _i = 0, _a = Object.keys(obj); _i < _a.length; _i++) {
-        var name_1 = _a[_i];
-        var v = obj[name_1];
-        result[v] = name_1;
+    const result = {};
+    for (const name of Object.keys(obj)) {
+        const v = obj[name];
+        result[v] = name;
     }
     return result;
 }
 /**
  * Wrap a symbol and change its kind to component.
  */
-var OverrideKindSymbol = (function () {
-    function OverrideKindSymbol(sym, kindOverride) {
+class OverrideKindSymbol {
+    constructor(sym, kindOverride) {
         this.sym = sym;
         this.kindOverride = kindOverride;
     }
-    Object.defineProperty(OverrideKindSymbol.prototype, "name", {
-        get: function () { return this.sym.name; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(OverrideKindSymbol.prototype, "kind", {
-        get: function () { return this.kindOverride; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(OverrideKindSymbol.prototype, "language", {
-        get: function () { return this.sym.language; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(OverrideKindSymbol.prototype, "type", {
-        get: function () { return this.sym.type; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(OverrideKindSymbol.prototype, "container", {
-        get: function () { return this.sym.container; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(OverrideKindSymbol.prototype, "public", {
-        get: function () { return this.sym.public; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(OverrideKindSymbol.prototype, "callable", {
-        get: function () { return this.sym.callable; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(OverrideKindSymbol.prototype, "nullable", {
-        get: function () { return this.sym.nullable; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(OverrideKindSymbol.prototype, "definition", {
-        get: function () { return this.sym.definition; },
-        enumerable: true,
-        configurable: true
-    });
-    OverrideKindSymbol.prototype.members = function () { return this.sym.members(); };
-    OverrideKindSymbol.prototype.signatures = function () { return this.sym.signatures(); };
-    OverrideKindSymbol.prototype.selectSignature = function (types) { return this.sym.selectSignature(types); };
-    OverrideKindSymbol.prototype.indexed = function (argument) { return this.sym.indexed(argument); };
-    return OverrideKindSymbol;
-}());
+    get name() { return this.sym.name; }
+    get kind() { return this.kindOverride; }
+    get language() { return this.sym.language; }
+    get type() { return this.sym.type; }
+    get container() { return this.sym.container; }
+    get public() { return this.sym.public; }
+    get callable() { return this.sym.callable; }
+    get nullable() { return this.sym.nullable; }
+    get definition() { return this.sym.definition; }
+    members() { return this.sym.members(); }
+    signatures() { return this.sym.signatures(); }
+    selectSignature(types) { return this.sym.selectSignature(types); }
+    indexed(argument) { return this.sym.indexed(argument); }
+}
 
 /**
  * @license
@@ -1431,7 +1355,7 @@ var OverrideKindSymbol = (function () {
  * found in the LICENSE file at https://angular.io/license
  */
 function getDefinition(info) {
-    var result = locateSymbol(info);
+    const result = locateSymbol(info);
     return result && result.symbol.definition;
 }
 
@@ -1443,81 +1367,70 @@ function getDefinition(info) {
  * found in the LICENSE file at https://angular.io/license
  */
 function getTemplateDiagnostics(fileName, astProvider, templates) {
-    var results = [];
-    var _loop_1 = function (template) {
-        var ast = astProvider.getTemplateAst(template, fileName);
+    const results = [];
+    for (const template of templates) {
+        const ast = astProvider.getTemplateAst(template, fileName);
         if (ast) {
             if (ast.parseErrors && ast.parseErrors.length) {
-                results.push.apply(results, ast.parseErrors.map(function (e) {
-                    return ({
-                        kind: DiagnosticKind.Error,
-                        span: offsetSpan(spanOf(e.span), template.span.start),
-                        message: e.msg
-                    });
-                }));
+                results.push(...ast.parseErrors.map(e => ({
+                    kind: DiagnosticKind.Error,
+                    span: offsetSpan(spanOf(e.span), template.span.start),
+                    message: e.msg
+                })));
             }
             else if (ast.templateAst && ast.htmlAst) {
-                var info = {
+                const info = {
                     templateAst: ast.templateAst,
                     htmlAst: ast.htmlAst,
                     offset: template.span.start,
                     query: template.query,
                     members: template.members
                 };
-                var expressionDiagnostics = getTemplateExpressionDiagnostics(info);
-                results.push.apply(results, expressionDiagnostics);
+                const expressionDiagnostics = getTemplateExpressionDiagnostics(info);
+                results.push(...expressionDiagnostics);
             }
             if (ast.errors) {
-                results.push.apply(results, ast.errors.map(function (e) { return ({ kind: e.kind, span: e.span || template.span, message: e.message }); }));
+                results.push(...ast.errors.map(e => ({ kind: e.kind, span: e.span || template.span, message: e.message })));
             }
         }
-    };
-    for (var _i = 0, templates_1 = templates; _i < templates_1.length; _i++) {
-        var template = templates_1[_i];
-        _loop_1(template);
     }
     return results;
 }
 function getDeclarationDiagnostics(declarations, modules) {
-    var results = [];
-    var directives = undefined;
-    var _loop_2 = function (declaration) {
-        var report = function (message, span) {
+    const results = [];
+    let directives = undefined;
+    for (const declaration of declarations) {
+        const report = (message, span) => {
             results.push({
                 kind: DiagnosticKind.Error,
-                span: span || declaration.declarationSpan, message: message
+                span: span || declaration.declarationSpan, message
             });
         };
-        for (var _i = 0, _a = declaration.errors; _i < _a.length; _i++) {
-            var error = _a[_i];
+        for (const error of declaration.errors) {
             report(error.message, error.span);
         }
         if (declaration.metadata) {
             if (declaration.metadata.isComponent) {
                 if (!modules.ngModuleByPipeOrDirective.has(declaration.type)) {
-                    report("Component '" + declaration.type.name + "' is not included in a module and will not be available inside a template. Consider adding it to a NgModule declaration");
+                    report(`Component '${declaration.type.name}' is not included in a module and will not be available inside a template. Consider adding it to a NgModule declaration`);
                 }
                 if (!declaration.metadata.template.template &&
                     !declaration.metadata.template.templateUrl) {
-                    report("Component " + declaration.type.name + " must have a template or templateUrl");
+                    report(`Component ${declaration.type.name} must have a template or templateUrl`);
                 }
             }
             else {
                 if (!directives) {
                     directives = new Set();
-                    modules.ngModules.forEach(function (module) {
-                        module.declaredDirectives.forEach(function (directive) { directives.add(directive.reference); });
+                    modules.ngModules.forEach(module => {
+                        module.declaredDirectives.forEach(directive => { directives.add(directive.reference); });
                     });
                 }
                 if (!directives.has(declaration.type)) {
-                    report("Directive '" + declaration.type.name + "' is not included in a module and will not be available inside a template. Consider adding it to a NgModule declaration");
+                    report(`Directive '${declaration.type.name}' is not included in a module and will not be available inside a template. Consider adding it to a NgModule declaration`);
                 }
             }
         }
-    };
-    for (var _i = 0, declarations_1 = declarations; _i < declarations_1.length; _i++) {
-        var declaration = declarations_1[_i];
-        _loop_2(declaration);
     }
     return results;
 }
@@ -1530,14 +1443,14 @@ function getDeclarationDiagnostics(declarations, modules) {
  * found in the LICENSE file at https://angular.io/license
  */
 function getHover(info) {
-    var result = locateSymbol(info);
+    const result = locateSymbol(info);
     if (result) {
         return { text: hoverTextOf(result.symbol), span: result.span };
     }
 }
 function hoverTextOf(symbol) {
-    var result = [{ text: symbol.kind }, { text: ' ' }, { text: symbol.name, language: symbol.language }];
-    var container = symbol.container;
+    const result = [{ text: symbol.kind }, { text: ' ' }, { text: symbol.name, language: symbol.language }];
+    const container = symbol.container;
     if (container) {
         result.push({ text: ' of ' }, { text: container.name, language: container.language });
     }
@@ -1559,64 +1472,60 @@ function hoverTextOf(symbol) {
 function createLanguageService(host) {
     return new LanguageServiceImpl(host);
 }
-var LanguageServiceImpl = (function () {
-    function LanguageServiceImpl(host) {
+class LanguageServiceImpl {
+    constructor(host) {
         this.host = host;
     }
-    Object.defineProperty(LanguageServiceImpl.prototype, "metadataResolver", {
-        get: function () { return this.host.resolver; },
-        enumerable: true,
-        configurable: true
-    });
-    LanguageServiceImpl.prototype.getTemplateReferences = function () { return this.host.getTemplateReferences(); };
-    LanguageServiceImpl.prototype.getDiagnostics = function (fileName) {
-        var results = [];
-        var templates = this.host.getTemplates(fileName);
+    get metadataResolver() { return this.host.resolver; }
+    getTemplateReferences() { return this.host.getTemplateReferences(); }
+    getDiagnostics(fileName) {
+        let results = [];
+        let templates = this.host.getTemplates(fileName);
         if (templates && templates.length) {
-            results.push.apply(results, getTemplateDiagnostics(fileName, this, templates));
+            results.push(...getTemplateDiagnostics(fileName, this, templates));
         }
-        var declarations = this.host.getDeclarations(fileName);
+        let declarations = this.host.getDeclarations(fileName);
         if (declarations && declarations.length) {
-            var summary = this.host.getAnalyzedModules();
-            results.push.apply(results, getDeclarationDiagnostics(declarations, summary));
+            const summary = this.host.getAnalyzedModules();
+            results.push(...getDeclarationDiagnostics(declarations, summary));
         }
         return uniqueBySpan(results);
-    };
-    LanguageServiceImpl.prototype.getPipesAt = function (fileName, position) {
-        var templateInfo = this.getTemplateAstAtPosition(fileName, position);
+    }
+    getPipesAt(fileName, position) {
+        let templateInfo = this.getTemplateAstAtPosition(fileName, position);
         if (templateInfo) {
             return templateInfo.pipes;
         }
         return [];
-    };
-    LanguageServiceImpl.prototype.getCompletionsAt = function (fileName, position) {
-        var templateInfo = this.getTemplateAstAtPosition(fileName, position);
+    }
+    getCompletionsAt(fileName, position) {
+        let templateInfo = this.getTemplateAstAtPosition(fileName, position);
         if (templateInfo) {
             return getTemplateCompletions(templateInfo);
         }
-    };
-    LanguageServiceImpl.prototype.getDefinitionAt = function (fileName, position) {
-        var templateInfo = this.getTemplateAstAtPosition(fileName, position);
+    }
+    getDefinitionAt(fileName, position) {
+        let templateInfo = this.getTemplateAstAtPosition(fileName, position);
         if (templateInfo) {
             return getDefinition(templateInfo);
         }
-    };
-    LanguageServiceImpl.prototype.getHoverAt = function (fileName, position) {
-        var templateInfo = this.getTemplateAstAtPosition(fileName, position);
+    }
+    getHoverAt(fileName, position) {
+        let templateInfo = this.getTemplateAstAtPosition(fileName, position);
         if (templateInfo) {
             return getHover(templateInfo);
         }
-    };
-    LanguageServiceImpl.prototype.getTemplateAstAtPosition = function (fileName, position) {
-        var template = this.host.getTemplateAt(fileName, position);
+    }
+    getTemplateAstAtPosition(fileName, position) {
+        let template = this.host.getTemplateAt(fileName, position);
         if (template) {
-            var astResult = this.getTemplateAst(template, fileName);
+            let astResult = this.getTemplateAst(template, fileName);
             if (astResult && astResult.htmlAst && astResult.templateAst && astResult.directive &&
                 astResult.directives && astResult.pipes && astResult.expressionParser)
                 return {
-                    position: position,
-                    fileName: fileName,
-                    template: template,
+                    position,
+                    fileName,
+                    template,
                     htmlAst: astResult.htmlAst,
                     directive: astResult.directive,
                     directives: astResult.directives,
@@ -1626,64 +1535,61 @@ var LanguageServiceImpl = (function () {
                 };
         }
         return undefined;
-    };
-    LanguageServiceImpl.prototype.getTemplateAst = function (template, contextFile) {
-        var _this = this;
-        var result = undefined;
+    }
+    getTemplateAst(template, contextFile) {
+        let result = undefined;
         try {
-            var resolvedMetadata = this.metadataResolver.getNonNormalizedDirectiveMetadata(template.type);
-            var metadata = resolvedMetadata && resolvedMetadata.metadata;
+            const resolvedMetadata = this.metadataResolver.getNonNormalizedDirectiveMetadata(template.type);
+            const metadata = resolvedMetadata && resolvedMetadata.metadata;
             if (metadata) {
-                var rawHtmlParser = new HtmlParser();
-                var htmlParser = new I18NHtmlParser(rawHtmlParser);
-                var expressionParser = new Parser(new Lexer());
-                var config = new CompilerConfig();
-                var parser = new TemplateParser(config, this.host.resolver.getReflector(), expressionParser, new DomElementSchemaRegistry(), htmlParser, (null), []);
-                var htmlResult = htmlParser.parse(template.source, '', true);
-                var analyzedModules = this.host.getAnalyzedModules();
-                var errors = undefined;
-                var ngModule = analyzedModules.ngModuleByPipeOrDirective.get(template.type);
+                const rawHtmlParser = new HtmlParser();
+                const htmlParser = new I18NHtmlParser(rawHtmlParser);
+                const expressionParser = new Parser(new Lexer());
+                const config = new CompilerConfig();
+                const parser = new TemplateParser(config, this.host.resolver.getReflector(), expressionParser, new DomElementSchemaRegistry(), htmlParser, (null), []);
+                const htmlResult = htmlParser.parse(template.source, '', true);
+                const analyzedModules = this.host.getAnalyzedModules();
+                let errors = undefined;
+                let ngModule = analyzedModules.ngModuleByPipeOrDirective.get(template.type);
                 if (!ngModule) {
                     // Reported by the the declaration diagnostics.
                     ngModule = findSuitableDefaultModule(analyzedModules);
                 }
                 if (ngModule) {
-                    var resolvedDirectives = ngModule.transitiveModule.directives.map(function (d) { return _this.host.resolver.getNonNormalizedDirectiveMetadata(d.reference); });
-                    var directives = removeMissing(resolvedDirectives).map(function (d) { return d.metadata.toSummary(); });
-                    var pipes = ngModule.transitiveModule.pipes.map(function (p) { return _this.host.resolver.getOrLoadPipeMetadata(p.reference).toSummary(); });
-                    var schemas = ngModule.schemas;
-                    var parseResult = parser.tryParseHtml(htmlResult, metadata, directives, pipes, schemas);
+                    const resolvedDirectives = ngModule.transitiveModule.directives.map(d => this.host.resolver.getNonNormalizedDirectiveMetadata(d.reference));
+                    const directives = removeMissing(resolvedDirectives).map(d => d.metadata.toSummary());
+                    const pipes = ngModule.transitiveModule.pipes.map(p => this.host.resolver.getOrLoadPipeMetadata(p.reference).toSummary());
+                    const schemas = ngModule.schemas;
+                    const parseResult = parser.tryParseHtml(htmlResult, metadata, directives, pipes, schemas);
                     result = {
                         htmlAst: htmlResult.rootNodes,
                         templateAst: parseResult.templateAst,
-                        directive: metadata, directives: directives, pipes: pipes,
-                        parseErrors: parseResult.errors, expressionParser: expressionParser, errors: errors
+                        directive: metadata, directives, pipes,
+                        parseErrors: parseResult.errors, expressionParser, errors
                     };
                 }
             }
         }
         catch (e) {
-            var span = template.span;
+            let span = template.span;
             if (e.fileName == contextFile) {
                 span = template.query.getSpanAt(e.line, e.column) || span;
             }
-            result = { errors: [{ kind: DiagnosticKind.Error, message: e.message, span: span }] };
+            result = { errors: [{ kind: DiagnosticKind.Error, message: e.message, span }] };
         }
         return result || {};
-    };
-    return LanguageServiceImpl;
-}());
+    }
+}
 function removeMissing(values) {
-    return values.filter(function (e) { return !!e; });
+    return values.filter(e => !!e);
 }
 function uniqueBySpan(elements) {
     if (elements) {
-        var result = [];
-        var map = new Map();
-        for (var _i = 0, elements_1 = elements; _i < elements_1.length; _i++) {
-            var element = elements_1[_i];
-            var span = element.span;
-            var set = map.get(span.start);
+        const result = [];
+        const map = new Map();
+        for (const element of elements) {
+            let span = element.span;
+            let set = map.get(span.start);
             if (!set) {
                 set = new Set();
                 map.set(span.start, set);
@@ -1697,13 +1603,12 @@ function uniqueBySpan(elements) {
     }
 }
 function findSuitableDefaultModule(modules) {
-    var result = undefined;
-    var resultSize = 0;
-    for (var _i = 0, _a = modules.ngModules; _i < _a.length; _i++) {
-        var module_1 = _a[_i];
-        var moduleSize = module_1.transitiveModule.directives.length;
+    let result = undefined;
+    let resultSize = 0;
+    for (const module of modules.ngModules) {
+        const moduleSize = module.transitiveModule.directives.length;
         if (moduleSize > resultSize) {
-            result = module_1;
+            result = module;
             resultSize = moduleSize;
         }
     }
@@ -1717,46 +1622,37 @@ function findSuitableDefaultModule(modules) {
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-var ReflectorModuleModuleResolutionHost = (function () {
-    function ReflectorModuleModuleResolutionHost(host) {
-        var _this = this;
+class ReflectorModuleModuleResolutionHost {
+    constructor(host) {
         this.host = host;
         if (host.directoryExists)
-            this.directoryExists = function (directoryName) { return _this.host.directoryExists(directoryName); };
+            this.directoryExists = directoryName => this.host.directoryExists(directoryName);
     }
-    ReflectorModuleModuleResolutionHost.prototype.fileExists = function (fileName) { return !!this.host.getScriptSnapshot(fileName); };
-    ReflectorModuleModuleResolutionHost.prototype.readFile = function (fileName) {
-        var snapshot = this.host.getScriptSnapshot(fileName);
+    fileExists(fileName) { return !!this.host.getScriptSnapshot(fileName); }
+    readFile(fileName) {
+        let snapshot = this.host.getScriptSnapshot(fileName);
         if (snapshot) {
             return snapshot.getText(0, snapshot.getLength());
         }
         // Typescript readFile() declaration should be `readFile(fileName: string): string | undefined
         return undefined;
-    };
-    return ReflectorModuleModuleResolutionHost;
-}());
+    }
+}
 // This reflector host's purpose is to first set verboseInvalidExpressions to true so the
 // reflector will collect errors instead of throwing, and second to all deferring the creation
 // of the program until it is actually needed.
-var ReflectorHost = (function (_super) {
-    __extends(ReflectorHost, _super);
-    function ReflectorHost(getProgram, serviceHost, options) {
-        var _this = _super.call(this, 
+class ReflectorHost extends CompilerHost {
+    constructor(getProgram, serviceHost, options) {
+        super(
         // The ancestor value for program is overridden below so passing null here is safe.
-        /* program */ (null), options, new ModuleResolutionHostAdapter(new ReflectorModuleModuleResolutionHost(serviceHost)), { verboseInvalidExpression: true }) || this;
-        _this.getProgram = getProgram;
-        return _this;
+        /* program */ (null), options, new ModuleResolutionHostAdapter(new ReflectorModuleModuleResolutionHost(serviceHost)), { verboseInvalidExpression: true });
+        this.getProgram = getProgram;
     }
-    Object.defineProperty(ReflectorHost.prototype, "program", {
-        get: function () { return this.getProgram(); },
-        set: function (value) {
-            // Discard the result set by ancestor constructor
-        },
-        enumerable: true,
-        configurable: true
-    });
-    return ReflectorHost;
-}(CompilerHost));
+    get program() { return this.getProgram(); }
+    set program(value) {
+        // Discard the result set by ancestor constructor
+    }
+}
 
 /**
  * @license
@@ -1769,8 +1665,8 @@ var ReflectorHost = (function (_super) {
  * Create a `LanguageServiceHost`
  */
 function createLanguageServiceFromTypescript(host, service) {
-    var ngHost = new TypeScriptServiceHost(host, service);
-    var ngServer = createLanguageService(ngHost);
+    const ngHost = new TypeScriptServiceHost(host, service);
+    const ngServer = createLanguageService(ngHost);
     ngHost.setSite(ngServer);
     return ngServer;
 }
@@ -1780,29 +1676,17 @@ function createLanguageServiceFromTypescript(host, service) {
  * template that are syntatically incorrect which is required to provide completions in
  * syntactically incorrect templates.
  */
-var DummyHtmlParser = (function (_super) {
-    __extends(DummyHtmlParser, _super);
-    function DummyHtmlParser() {
-        return _super !== null && _super.apply(this, arguments) || this;
-    }
-    DummyHtmlParser.prototype.parse = function (source, url, parseExpansionForms, interpolationConfig) {
-        if (parseExpansionForms === void 0) { parseExpansionForms = false; }
-        if (interpolationConfig === void 0) { interpolationConfig = DEFAULT_INTERPOLATION_CONFIG; }
+class DummyHtmlParser extends HtmlParser {
+    parse(source, url, parseExpansionForms = false, interpolationConfig = DEFAULT_INTERPOLATION_CONFIG) {
         return new ParseTreeResult([], []);
-    };
-    return DummyHtmlParser;
-}(HtmlParser));
+    }
+}
 /**
  * Avoid loading resources in the language servcie by using a dummy loader.
  */
-var DummyResourceLoader = (function (_super) {
-    __extends(DummyResourceLoader, _super);
-    function DummyResourceLoader() {
-        return _super !== null && _super.apply(this, arguments) || this;
-    }
-    DummyResourceLoader.prototype.get = function (url) { return Promise.resolve(''); };
-    return DummyResourceLoader;
-}(ResourceLoader));
+class DummyResourceLoader extends ResourceLoader {
+    get(url) { return Promise.resolve(''); }
+}
 /**
  * An implemntation of a `LanguageServiceHost` for a TypeScript project.
  *
@@ -1811,8 +1695,8 @@ var DummyResourceLoader = (function (_super) {
  *
  * @experimental
  */
-var TypeScriptServiceHost = (function () {
-    function TypeScriptServiceHost(host, tsService) {
+class TypeScriptServiceHost {
+    constructor(host, tsService) {
         this.host = host;
         this.tsService = tsService;
         this._staticSymbolCache = new StaticSymbolCache();
@@ -1820,46 +1704,38 @@ var TypeScriptServiceHost = (function () {
         this.modulesOutOfDate = true;
         this.fileVersions = new Map();
     }
-    TypeScriptServiceHost.prototype.setSite = function (service) { this.service = service; };
-    Object.defineProperty(TypeScriptServiceHost.prototype, "resolver", {
-        /**
-         * Angular LanguageServiceHost implementation
-         */
-        get: /**
-           * Angular LanguageServiceHost implementation
-           */
-        function () {
-            var _this = this;
-            this.validate();
-            var result = this._resolver;
-            if (!result) {
-                var moduleResolver = new NgModuleResolver(this.reflector);
-                var directiveResolver = new DirectiveResolver(this.reflector);
-                var pipeResolver = new PipeResolver(this.reflector);
-                var elementSchemaRegistry = new DomElementSchemaRegistry();
-                var resourceLoader = new DummyResourceLoader();
-                var urlResolver = createOfflineCompileUrlResolver();
-                var htmlParser = new DummyHtmlParser();
-                // This tracks the CompileConfig in codegen.ts. Currently these options
-                // are hard-coded.
-                var config = new CompilerConfig({ defaultEncapsulation: ViewEncapsulation.Emulated, useJit: false });
-                var directiveNormalizer = new DirectiveNormalizer(resourceLoader, urlResolver, htmlParser, config);
-                result = this._resolver = new CompileMetadataResolver(config, moduleResolver, directiveResolver, pipeResolver, new JitSummaryResolver(), elementSchemaRegistry, directiveNormalizer, new ɵConsole(), this._staticSymbolCache, this.reflector, function (error, type) { return _this.collectError(error, type && type.filePath); });
-            }
-            return result;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    TypeScriptServiceHost.prototype.getTemplateReferences = function () {
+    setSite(service) { this.service = service; }
+    /**
+       * Angular LanguageServiceHost implementation
+       */
+    get resolver() {
+        this.validate();
+        let result = this._resolver;
+        if (!result) {
+            const moduleResolver = new NgModuleResolver(this.reflector);
+            const directiveResolver = new DirectiveResolver(this.reflector);
+            const pipeResolver = new PipeResolver(this.reflector);
+            const elementSchemaRegistry = new DomElementSchemaRegistry();
+            const resourceLoader = new DummyResourceLoader();
+            const urlResolver = createOfflineCompileUrlResolver();
+            const htmlParser = new DummyHtmlParser();
+            // This tracks the CompileConfig in codegen.ts. Currently these options
+            // are hard-coded.
+            const config = new CompilerConfig({ defaultEncapsulation: ViewEncapsulation.Emulated, useJit: false });
+            const directiveNormalizer = new DirectiveNormalizer(resourceLoader, urlResolver, htmlParser, config);
+            result = this._resolver = new CompileMetadataResolver(config, htmlParser, moduleResolver, directiveResolver, pipeResolver, new JitSummaryResolver(), elementSchemaRegistry, directiveNormalizer, new ɵConsole(), this._staticSymbolCache, this.reflector, (error, type) => this.collectError(error, type && type.filePath));
+        }
+        return result;
+    }
+    getTemplateReferences() {
         this.ensureTemplateMap();
         return this.templateReferences || [];
-    };
-    TypeScriptServiceHost.prototype.getTemplateAt = function (fileName, position) {
-        var sourceFile = this.getSourceFile(fileName);
+    }
+    getTemplateAt(fileName, position) {
+        let sourceFile = this.getSourceFile(fileName);
         if (sourceFile) {
             this.context = sourceFile.fileName;
-            var node = this.findNode(sourceFile, position);
+            let node = this.findNode(sourceFile, position);
             if (node) {
                 return this.getSourceFromNode(fileName, this.host.getScriptVersion(sourceFile.fileName), node);
             }
@@ -1867,80 +1743,78 @@ var TypeScriptServiceHost = (function () {
         else {
             this.ensureTemplateMap();
             // TODO: Cannocalize the file?
-            var componentType = this.fileToComponent.get(fileName);
+            const componentType = this.fileToComponent.get(fileName);
             if (componentType) {
                 return this.getSourceFromType(fileName, this.host.getScriptVersion(fileName), componentType);
             }
         }
         return undefined;
-    };
-    TypeScriptServiceHost.prototype.getAnalyzedModules = function () {
+    }
+    getAnalyzedModules() {
         this.validate();
         return this.ensureAnalyzedModules();
-    };
-    TypeScriptServiceHost.prototype.ensureAnalyzedModules = function () {
-        var analyzedModules = this.analyzedModules;
+    }
+    ensureAnalyzedModules() {
+        let analyzedModules = this.analyzedModules;
         if (!analyzedModules) {
-            var analyzeHost = { isSourceFile: function (filePath) { return true; } };
-            var programSymbols = extractProgramSymbols(this.staticSymbolResolver, this.program.getSourceFiles().map(function (sf) { return sf.fileName; }), analyzeHost);
+            const analyzeHost = { isSourceFile(filePath) { return true; } };
+            const programFiles = this.program.getSourceFiles().map(sf => sf.fileName);
             analyzedModules = this.analyzedModules =
-                analyzeNgModules(programSymbols, analyzeHost, this.staticSymbolResolver, this.resolver);
+                analyzeNgModules(programFiles, analyzeHost, this.staticSymbolResolver, this.resolver);
         }
         return analyzedModules;
-    };
-    TypeScriptServiceHost.prototype.getTemplates = function (fileName) {
-        var _this = this;
+    }
+    getTemplates(fileName) {
         this.ensureTemplateMap();
-        var componentType = this.fileToComponent.get(fileName);
+        const componentType = this.fileToComponent.get(fileName);
         if (componentType) {
-            var templateSource = this.getTemplateAt(fileName, 0);
+            const templateSource = this.getTemplateAt(fileName, 0);
             if (templateSource) {
                 return [templateSource];
             }
         }
         else {
-            var version_1 = this.host.getScriptVersion(fileName);
-            var result_1 = [];
+            let version$$1 = this.host.getScriptVersion(fileName);
+            let result = [];
             // Find each template string in the file
-            var visit_1 = function (child) {
-                var templateSource = _this.getSourceFromNode(fileName, version_1, child);
+            let visit = (child) => {
+                let templateSource = this.getSourceFromNode(fileName, version$$1, child);
                 if (templateSource) {
-                    result_1.push(templateSource);
+                    result.push(templateSource);
                 }
                 else {
-                    forEachChild(child, visit_1);
+                    forEachChild(child, visit);
                 }
             };
-            var sourceFile = this.getSourceFile(fileName);
+            let sourceFile = this.getSourceFile(fileName);
             if (sourceFile) {
                 this.context = sourceFile.path || sourceFile.fileName;
-                forEachChild(sourceFile, visit_1);
+                forEachChild(sourceFile, visit);
             }
-            return result_1.length ? result_1 : undefined;
+            return result.length ? result : undefined;
         }
-    };
-    TypeScriptServiceHost.prototype.getDeclarations = function (fileName) {
-        var _this = this;
-        var result = [];
-        var sourceFile = this.getSourceFile(fileName);
+    }
+    getDeclarations(fileName) {
+        const result = [];
+        const sourceFile = this.getSourceFile(fileName);
         if (sourceFile) {
-            var visit_2 = function (child) {
-                var declaration = _this.getDeclarationFromNode(sourceFile, child);
+            let visit = (child) => {
+                let declaration = this.getDeclarationFromNode(sourceFile, child);
                 if (declaration) {
                     result.push(declaration);
                 }
                 else {
-                    forEachChild(child, visit_2);
+                    forEachChild(child, visit);
                 }
             };
-            forEachChild(sourceFile, visit_2);
+            forEachChild(sourceFile, visit);
         }
         return result;
-    };
-    TypeScriptServiceHost.prototype.getSourceFile = function (fileName) {
+    }
+    getSourceFile(fileName) {
         return this.tsService.getProgram().getSourceFile(fileName);
-    };
-    TypeScriptServiceHost.prototype.updateAnalyzedModules = function () {
+    }
+    updateAnalyzedModules() {
         this.validate();
         if (this.modulesOutOfDate) {
             this.analyzedModules = null;
@@ -1950,71 +1824,57 @@ var TypeScriptServiceHost = (function () {
             this.ensureAnalyzedModules();
             this.modulesOutOfDate = false;
         }
-    };
-    Object.defineProperty(TypeScriptServiceHost.prototype, "program", {
-        get: function () { return this.tsService.getProgram(); },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(TypeScriptServiceHost.prototype, "checker", {
-        get: function () {
-            var checker = this._checker;
-            if (!checker) {
-                checker = this._checker = this.program.getTypeChecker();
-            }
-            return checker;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    TypeScriptServiceHost.prototype.validate = function () {
-        var _this = this;
-        var program = this.program;
+    }
+    get program() { return this.tsService.getProgram(); }
+    get checker() {
+        let checker = this._checker;
+        if (!checker) {
+            checker = this._checker = this.program.getTypeChecker();
+        }
+        return checker;
+    }
+    validate() {
+        const program = this.program;
         if (this._staticSymbolResolver && this.lastProgram != program) {
             // Invalidate file that have changed in the static symbol resolver
-            var invalidateFile = function (fileName) {
-                return _this._staticSymbolResolver.invalidateFile(fileName);
-            };
+            const invalidateFile = (fileName) => this._staticSymbolResolver.invalidateFile(fileName);
             this.clearCaches();
-            var seen_1 = new Set();
-            for (var _i = 0, _a = this.program.getSourceFiles(); _i < _a.length; _i++) {
-                var sourceFile = _a[_i];
-                var fileName = sourceFile.fileName;
-                seen_1.add(fileName);
-                var version$$1 = this.host.getScriptVersion(fileName);
-                var lastVersion = this.fileVersions.get(fileName);
+            const seen = new Set();
+            for (let sourceFile of this.program.getSourceFiles()) {
+                const fileName = sourceFile.fileName;
+                seen.add(fileName);
+                const version$$1 = this.host.getScriptVersion(fileName);
+                const lastVersion = this.fileVersions.get(fileName);
                 if (version$$1 != lastVersion) {
                     this.fileVersions.set(fileName, version$$1);
                     invalidateFile(fileName);
                 }
             }
             // Remove file versions that are no longer in the file and invalidate them.
-            var missing = Array.from(this.fileVersions.keys()).filter(function (f) { return !seen_1.has(f); });
-            missing.forEach(function (f) { return _this.fileVersions.delete(f); });
+            const missing = Array.from(this.fileVersions.keys()).filter(f => !seen.has(f));
+            missing.forEach(f => this.fileVersions.delete(f));
             missing.forEach(invalidateFile);
             this.lastProgram = program;
         }
-    };
-    TypeScriptServiceHost.prototype.clearCaches = function () {
+    }
+    clearCaches() {
         this._checker = null;
         this._typeCache = [];
         this._resolver = null;
         this.collectedErrors = null;
         this.modulesOutOfDate = true;
-    };
-    TypeScriptServiceHost.prototype.ensureTemplateMap = function () {
+    }
+    ensureTemplateMap() {
         if (!this.fileToComponent || !this.templateReferences) {
-            var fileToComponent = new Map();
-            var templateReference = [];
-            var ngModuleSummary = this.getAnalyzedModules();
-            var urlResolver = createOfflineCompileUrlResolver();
-            for (var _i = 0, _a = ngModuleSummary.ngModules; _i < _a.length; _i++) {
-                var module_1 = _a[_i];
-                for (var _b = 0, _c = module_1.declaredDirectives; _b < _c.length; _b++) {
-                    var directive = _c[_b];
-                    var metadata = (this.resolver.getNonNormalizedDirectiveMetadata(directive.reference)).metadata;
+            const fileToComponent = new Map();
+            const templateReference = [];
+            const ngModuleSummary = this.getAnalyzedModules();
+            const urlResolver = createOfflineCompileUrlResolver();
+            for (const module of ngModuleSummary.ngModules) {
+                for (const directive of module.declaredDirectives) {
+                    const { metadata } = (this.resolver.getNonNormalizedDirectiveMetadata(directive.reference));
                     if (metadata.isComponent && metadata.template && metadata.template.templateUrl) {
-                        var templateName = urlResolver.resolve(this.reflector.componentModuleUrl(directive.reference), metadata.template.templateUrl);
+                        const templateName = urlResolver.resolve(this.reflector.componentModuleUrl(directive.reference), metadata.template.templateUrl);
                         fileToComponent.set(templateName, directive.reference);
                         templateReference.push(templateName);
                     }
@@ -2023,139 +1883,124 @@ var TypeScriptServiceHost = (function () {
             this.fileToComponent = fileToComponent;
             this.templateReferences = templateReference;
         }
-    };
-    TypeScriptServiceHost.prototype.getSourceFromDeclaration = function (fileName, version$$1, source, span, type, declaration, node, sourceFile) {
-        var queryCache = undefined;
-        var t = this;
+    }
+    getSourceFromDeclaration(fileName, version$$1, source, span, type, declaration, node, sourceFile) {
+        let queryCache = undefined;
+        const t = this;
         if (declaration) {
             return {
                 version: version$$1,
-                source: source,
-                span: span,
-                type: type,
+                source,
+                span,
+                type,
                 get members() {
                     return getClassMembersFromDeclaration(t.program, t.checker, sourceFile, declaration);
                 },
                 get query() {
                     if (!queryCache) {
-                        var pipes_1 = t.service.getPipesAt(fileName, node.getStart());
-                        queryCache = getSymbolQuery(t.program, t.checker, sourceFile, function () { return getPipesTable(sourceFile, t.program, t.checker, pipes_1); });
+                        const pipes = t.service.getPipesAt(fileName, node.getStart());
+                        queryCache = getSymbolQuery(t.program, t.checker, sourceFile, () => getPipesTable(sourceFile, t.program, t.checker, pipes));
                     }
                     return queryCache;
                 }
             };
         }
-    };
-    TypeScriptServiceHost.prototype.getSourceFromNode = function (fileName, version$$1, node) {
-        var result = undefined;
-        var t = this;
+    }
+    getSourceFromNode(fileName, version$$1, node) {
+        let result = undefined;
+        const t = this;
         switch (node.kind) {
             case SyntaxKind.NoSubstitutionTemplateLiteral:
             case SyntaxKind.StringLiteral:
-                var _a = this.getTemplateClassDeclFromNode(node), declaration = _a[0], decorator = _a[1];
+                let [declaration, decorator] = this.getTemplateClassDeclFromNode(node);
                 if (declaration && declaration.name) {
-                    var sourceFile = this.getSourceFile(fileName);
+                    const sourceFile = this.getSourceFile(fileName);
                     return this.getSourceFromDeclaration(fileName, version$$1, this.stringOf(node) || '', shrink(spanOf$1(node)), this.reflector.getStaticSymbol(sourceFile.fileName, declaration.name.text), declaration, node, sourceFile);
                 }
                 break;
         }
         return result;
-    };
-    TypeScriptServiceHost.prototype.getSourceFromType = function (fileName, version$$1, type) {
-        var result = undefined;
-        var declaration = this.getTemplateClassFromStaticSymbol(type);
+    }
+    getSourceFromType(fileName, version$$1, type) {
+        let result = undefined;
+        const declaration = this.getTemplateClassFromStaticSymbol(type);
         if (declaration) {
-            var snapshot = this.host.getScriptSnapshot(fileName);
+            const snapshot = this.host.getScriptSnapshot(fileName);
             if (snapshot) {
-                var source = snapshot.getText(0, snapshot.getLength());
+                const source = snapshot.getText(0, snapshot.getLength());
                 result = this.getSourceFromDeclaration(fileName, version$$1, source, { start: 0, end: source.length }, type, declaration, declaration, declaration.getSourceFile());
             }
         }
         return result;
-    };
-    Object.defineProperty(TypeScriptServiceHost.prototype, "reflectorHost", {
-        get: function () {
-            var _this = this;
-            var result = this._reflectorHost;
-            if (!result) {
-                if (!this.context) {
-                    // Make up a context by finding the first script and using that as the base dir.
-                    this.context = this.host.getScriptFileNames()[0];
-                }
-                // Use the file context's directory as the base directory.
-                // The host's getCurrentDirectory() is not reliable as it is always "" in
-                // tsserver. We don't need the exact base directory, just one that contains
-                // a source file.
-                var source = this.tsService.getProgram().getSourceFile(this.context);
-                if (!source) {
-                    throw new Error('Internal error: no context could be determined');
-                }
-                var tsConfigPath = findTsConfig(source.fileName);
-                var basePath = dirname(tsConfigPath || this.context);
-                var options = { basePath: basePath, genDir: basePath };
-                var compilerOptions = this.host.getCompilationSettings();
-                if (compilerOptions && compilerOptions.baseUrl) {
-                    options.baseUrl = compilerOptions.baseUrl;
-                }
-                result = this._reflectorHost =
-                    new ReflectorHost(function () { return _this.tsService.getProgram(); }, this.host, options);
+    }
+    get reflectorHost() {
+        let result = this._reflectorHost;
+        if (!result) {
+            if (!this.context) {
+                // Make up a context by finding the first script and using that as the base dir.
+                this.context = this.host.getScriptFileNames()[0];
             }
-            return result;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    TypeScriptServiceHost.prototype.collectError = function (error, filePath) {
+            // Use the file context's directory as the base directory.
+            // The host's getCurrentDirectory() is not reliable as it is always "" in
+            // tsserver. We don't need the exact base directory, just one that contains
+            // a source file.
+            const source = this.tsService.getProgram().getSourceFile(this.context);
+            if (!source) {
+                throw new Error('Internal error: no context could be determined');
+            }
+            const tsConfigPath = findTsConfig(source.fileName);
+            const basePath = dirname(tsConfigPath || this.context);
+            const options = { basePath, genDir: basePath };
+            const compilerOptions = this.host.getCompilationSettings();
+            if (compilerOptions && compilerOptions.baseUrl) {
+                options.baseUrl = compilerOptions.baseUrl;
+            }
+            result = this._reflectorHost =
+                new ReflectorHost(() => this.tsService.getProgram(), this.host, options);
+        }
+        return result;
+    }
+    collectError(error, filePath) {
         if (filePath) {
-            var errorMap = this.collectedErrors;
+            let errorMap = this.collectedErrors;
             if (!errorMap || !this.collectedErrors) {
                 errorMap = this.collectedErrors = new Map();
             }
-            var errors = errorMap.get(filePath);
+            let errors = errorMap.get(filePath);
             if (!errors) {
                 errors = [];
                 this.collectedErrors.set(filePath, errors);
             }
             errors.push(error);
         }
-    };
-    Object.defineProperty(TypeScriptServiceHost.prototype, "staticSymbolResolver", {
-        get: function () {
-            var _this = this;
-            var result = this._staticSymbolResolver;
-            if (!result) {
-                this._summaryResolver = new AotSummaryResolver({
-                    loadSummary: function (filePath) { return null; },
-                    isSourceFile: function (sourceFilePath) { return true; },
-                    toSummaryFileName: function (sourceFilePath) { return sourceFilePath; },
-                    fromSummaryFileName: function (filePath) { return filePath; },
-                }, this._staticSymbolCache);
-                result = this._staticSymbolResolver = new StaticSymbolResolver(this.reflectorHost, this._staticSymbolCache, this._summaryResolver, function (e, filePath) { return _this.collectError(e, (filePath)); });
-            }
-            return result;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(TypeScriptServiceHost.prototype, "reflector", {
-        get: function () {
-            var _this = this;
-            var result = this._reflector;
-            if (!result) {
-                var ssr = this.staticSymbolResolver;
-                result = this._reflector = new StaticReflector(this._summaryResolver, ssr, [], [], function (e, filePath) { return _this.collectError(e, (filePath)); });
-            }
-            return result;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    TypeScriptServiceHost.prototype.getTemplateClassFromStaticSymbol = function (type) {
-        var source = this.getSourceFile(type.filePath);
+    }
+    get staticSymbolResolver() {
+        let result = this._staticSymbolResolver;
+        if (!result) {
+            this._summaryResolver = new AotSummaryResolver({
+                loadSummary(filePath) { return null; },
+                isSourceFile(sourceFilePath) { return true; },
+                toSummaryFileName(sourceFilePath) { return sourceFilePath; },
+                fromSummaryFileName(filePath) { return filePath; },
+            }, this._staticSymbolCache);
+            result = this._staticSymbolResolver = new StaticSymbolResolver(this.reflectorHost, this._staticSymbolCache, this._summaryResolver, (e, filePath) => this.collectError(e, (filePath)));
+        }
+        return result;
+    }
+    get reflector() {
+        let result = this._reflector;
+        if (!result) {
+            const ssr = this.staticSymbolResolver;
+            result = this._reflector = new StaticReflector(this._summaryResolver, ssr, [], [], (e, filePath) => this.collectError(e, (filePath)));
+        }
+        return result;
+    }
+    getTemplateClassFromStaticSymbol(type) {
+        const source = this.getSourceFile(type.filePath);
         if (source) {
-            var declarationNode = forEachChild(source, function (child) {
+            const declarationNode = forEachChild(source, child => {
                 if (child.kind === SyntaxKind.ClassDeclaration) {
-                    var classDeclaration = child;
+                    const classDeclaration = child;
                     if (classDeclaration.name != null && classDeclaration.name.text === type.name) {
                         return classDeclaration;
                     }
@@ -2164,23 +2009,15 @@ var TypeScriptServiceHost = (function () {
             return declarationNode;
         }
         return undefined;
-    };
-    /**
-     * Given a template string node, see if it is an Angular template string, and if so return the
-     * containing class.
-     */
+    }
     /**
        * Given a template string node, see if it is an Angular template string, and if so return the
        * containing class.
        */
-    TypeScriptServiceHost.prototype.getTemplateClassDeclFromNode = /**
-       * Given a template string node, see if it is an Angular template string, and if so return the
-       * containing class.
-       */
-    function (currentToken) {
+    getTemplateClassDeclFromNode(currentToken) {
         // Verify we are in a 'template' property assignment, in an object literal, which is an call
         // arg, in a decorator
-        var parentNode = currentToken.parent; // PropertyAssignment
+        let parentNode = currentToken.parent; // PropertyAssignment
         if (!parentNode) {
             return TypeScriptServiceHost.missingTemplate;
         }
@@ -2201,45 +2038,44 @@ var TypeScriptServiceHost = (function () {
         if (!parentNode || parentNode.kind !== SyntaxKind.CallExpression) {
             return TypeScriptServiceHost.missingTemplate;
         }
-        var callTarget = parentNode.expression;
-        var decorator = parentNode.parent; // Decorator
+        const callTarget = parentNode.expression;
+        let decorator = parentNode.parent; // Decorator
         if (!decorator || decorator.kind !== SyntaxKind.Decorator) {
             return TypeScriptServiceHost.missingTemplate;
         }
-        var declaration = decorator.parent; // ClassDeclaration
+        let declaration = decorator.parent; // ClassDeclaration
         if (!declaration || declaration.kind !== SyntaxKind.ClassDeclaration) {
             return TypeScriptServiceHost.missingTemplate;
         }
         return [declaration, callTarget];
-    };
-    TypeScriptServiceHost.prototype.getCollectedErrors = function (defaultSpan, sourceFile) {
-        var errors = (this.collectedErrors && this.collectedErrors.get(sourceFile.fileName));
-        return (errors && errors.map(function (e) {
+    }
+    getCollectedErrors(defaultSpan, sourceFile) {
+        const errors = (this.collectedErrors && this.collectedErrors.get(sourceFile.fileName));
+        return (errors && errors.map((e) => {
             return { message: e.message, span: spanAt(sourceFile, e.line, e.column) || defaultSpan };
         })) ||
             [];
-    };
-    TypeScriptServiceHost.prototype.getDeclarationFromNode = function (sourceFile, node) {
+    }
+    getDeclarationFromNode(sourceFile, node) {
         if (node.kind == SyntaxKind.ClassDeclaration && node.decorators &&
             node.name) {
-            for (var _i = 0, _a = node.decorators; _i < _a.length; _i++) {
-                var decorator = _a[_i];
+            for (const decorator of node.decorators) {
                 if (decorator.expression && decorator.expression.kind == SyntaxKind.CallExpression) {
-                    var classDeclaration = node;
+                    const classDeclaration = node;
                     if (classDeclaration.name) {
-                        var call = decorator.expression;
-                        var target = call.expression;
-                        var type = this.checker.getTypeAtLocation(target);
+                        const call = decorator.expression;
+                        const target = call.expression;
+                        const type = this.checker.getTypeAtLocation(target);
                         if (type) {
-                            var staticSymbol = this.reflector.getStaticSymbol(sourceFile.fileName, classDeclaration.name.text);
+                            const staticSymbol = this.reflector.getStaticSymbol(sourceFile.fileName, classDeclaration.name.text);
                             try {
                                 if (this.resolver.isDirective(staticSymbol)) {
-                                    var metadata = (this.resolver.getNonNormalizedDirectiveMetadata(staticSymbol)).metadata;
-                                    var declarationSpan = spanOf$1(target);
+                                    const { metadata } = (this.resolver.getNonNormalizedDirectiveMetadata(staticSymbol));
+                                    const declarationSpan = spanOf$1(target);
                                     return {
                                         type: staticSymbol,
-                                        declarationSpan: declarationSpan,
-                                        metadata: metadata,
+                                        declarationSpan,
+                                        metadata,
                                         errors: this.getCollectedErrors(declarationSpan, sourceFile)
                                     };
                                 }
@@ -2247,10 +2083,10 @@ var TypeScriptServiceHost = (function () {
                             catch (e) {
                                 if (e.message) {
                                     this.collectError(e, sourceFile.fileName);
-                                    var declarationSpan = spanOf$1(target);
+                                    const declarationSpan = spanOf$1(target);
                                     return {
                                         type: staticSymbol,
-                                        declarationSpan: declarationSpan,
+                                        declarationSpan,
                                         errors: this.getCollectedErrors(declarationSpan, sourceFile)
                                     };
                                 }
@@ -2260,33 +2096,32 @@ var TypeScriptServiceHost = (function () {
                 }
             }
         }
-    };
-    TypeScriptServiceHost.prototype.stringOf = function (node) {
+    }
+    stringOf(node) {
         switch (node.kind) {
             case SyntaxKind.NoSubstitutionTemplateLiteral:
                 return node.text;
             case SyntaxKind.StringLiteral:
                 return node.text;
         }
-    };
-    TypeScriptServiceHost.prototype.findNode = function (sourceFile, position) {
+    }
+    findNode(sourceFile, position) {
         function find(node) {
             if (position >= node.getStart() && position < node.getEnd()) {
                 return forEachChild(node, find) || node;
             }
         }
         return find(sourceFile);
-    };
-    TypeScriptServiceHost.missingTemplate = [undefined, undefined];
-    return TypeScriptServiceHost;
-}());
+    }
+}
+TypeScriptServiceHost.missingTemplate = [undefined, undefined];
 function findTsConfig(fileName) {
-    var dir = dirname(fileName);
+    let dir = dirname(fileName);
     while (existsSync(dir)) {
-        var candidate = join(dir, 'tsconfig.json');
+        const candidate = join(dir, 'tsconfig.json');
         if (existsSync(candidate))
             return candidate;
-        var parentDir = dirname(dir);
+        const parentDir = dirname(dir);
         if (parentDir === dir)
             break;
         dir = parentDir;
@@ -2302,14 +2137,14 @@ function shrink(span, offset) {
 }
 function spanAt(sourceFile, line, column) {
     if (line != null && column != null) {
-        var position_1 = getPositionOfLineAndCharacter(sourceFile, line, column);
-        var findChild = function findChild(node) {
-            if (node.kind > SyntaxKind.LastToken && node.pos <= position_1 && node.end > position_1) {
-                var betterNode = forEachChild(node, findChild);
+        const position = getPositionOfLineAndCharacter(sourceFile, line, column);
+        const findChild = function findChild(node) {
+            if (node.kind > SyntaxKind.LastToken && node.pos <= position && node.end > position) {
+                const betterNode = forEachChild(node, findChild);
                 return betterNode || node;
             }
         };
-        var node = forEachChild(sourceFile, findChild);
+        const node = forEachChild(sourceFile, findChild);
         if (node) {
             return { start: node.getStart(), end: node.getEnd() };
         }
@@ -2323,71 +2158,65 @@ function spanAt(sourceFile, line, column) {
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-var projectHostMap = new WeakMap();
+const projectHostMap = new WeakMap();
 function getExternalFiles(project) {
-    var host = projectHostMap.get(project);
+    const host = projectHostMap.get(project);
     if (host) {
         return host.getTemplateReferences();
     }
 }
-var angularOnlyResults = process.argv.indexOf('--angularOnlyResults') >= 0;
+const angularOnlyResults = process.argv.indexOf('--angularOnlyResults') >= 0;
 function angularOnlyFilter(ls) {
     return {
-        cleanupSemanticCache: function () { return ls.cleanupSemanticCache(); },
-        getSyntacticDiagnostics: function (fileName) { return []; },
-        getSemanticDiagnostics: function (fileName) { return []; },
-        getCompilerOptionsDiagnostics: function () { return []; },
-        getSyntacticClassifications: function (fileName, span) { return []; },
-        getSemanticClassifications: function (fileName, span) { return []; },
-        getEncodedSyntacticClassifications: function (fileName, span) { return ({ undefined: undefined }); },
-        getEncodedSemanticClassifications: function (fileName, span) { return undefined; },
-        getCompletionsAtPosition: function (fileName, position) { return undefined; },
-        getCompletionEntryDetails: function (fileName, position, entryName) {
-            return undefined;
-        },
-        getCompletionEntrySymbol: function (fileName, position, entryName) { return undefined; },
-        getQuickInfoAtPosition: function (fileName, position) { return undefined; },
-        getNameOrDottedNameSpan: function (fileName, startPos, endPos) { return undefined; },
-        getBreakpointStatementAtPosition: function (fileName, position) { return undefined; },
-        getSignatureHelpItems: function (fileName, position) { return undefined; },
-        getRenameInfo: function (fileName, position) { return undefined; },
-        findRenameLocations: function (fileName, position, findInStrings, findInComments) {
-            return [];
-        },
-        getDefinitionAtPosition: function (fileName, position) { return []; },
-        getTypeDefinitionAtPosition: function (fileName, position) { return []; },
-        getImplementationAtPosition: function (fileName, position) { return []; },
-        getReferencesAtPosition: function (fileName, position) { return []; },
-        findReferences: function (fileName, position) { return []; },
-        getDocumentHighlights: function (fileName, position, filesToSearch) { return []; },
+        cleanupSemanticCache: () => ls.cleanupSemanticCache(),
+        getSyntacticDiagnostics: fileName => [],
+        getSemanticDiagnostics: fileName => [],
+        getCompilerOptionsDiagnostics: () => [],
+        getSyntacticClassifications: (fileName, span) => [],
+        getSemanticClassifications: (fileName, span) => [],
+        getEncodedSyntacticClassifications: (fileName, span) => ({ undefined }),
+        getEncodedSemanticClassifications: (fileName, span) => undefined,
+        getCompletionsAtPosition: (fileName, position) => undefined,
+        getCompletionEntryDetails: (fileName, position, entryName) => undefined,
+        getCompletionEntrySymbol: (fileName, position, entryName) => undefined,
+        getQuickInfoAtPosition: (fileName, position) => undefined,
+        getNameOrDottedNameSpan: (fileName, startPos, endPos) => undefined,
+        getBreakpointStatementAtPosition: (fileName, position) => undefined,
+        getSignatureHelpItems: (fileName, position) => undefined,
+        getRenameInfo: (fileName, position) => undefined,
+        findRenameLocations: (fileName, position, findInStrings, findInComments) => [],
+        getDefinitionAtPosition: (fileName, position) => [],
+        getTypeDefinitionAtPosition: (fileName, position) => [],
+        getImplementationAtPosition: (fileName, position) => [],
+        getReferencesAtPosition: (fileName, position) => [],
+        findReferences: (fileName, position) => [],
+        getDocumentHighlights: (fileName, position, filesToSearch) => [],
         /** @deprecated */
-        getOccurrencesAtPosition: function (fileName, position) { return []; },
-        getNavigateToItems: function (searchValue) { return []; },
-        getNavigationBarItems: function (fileName) { return []; },
-        getNavigationTree: function (fileName) { return undefined; },
-        getOutliningSpans: function (fileName) { return []; },
-        getTodoComments: function (fileName, descriptors) { return []; },
-        getBraceMatchingAtPosition: function (fileName, position) { return []; },
-        getIndentationAtPosition: function (fileName, position, options) { return undefined; },
-        getFormattingEditsForRange: function (fileName, start, end, options) { return []; },
-        getFormattingEditsForDocument: function (fileName, options) { return []; },
-        getFormattingEditsAfterKeystroke: function (fileName, position, key, options) { return []; },
-        getDocCommentTemplateAtPosition: function (fileName, position) { return undefined; },
-        isValidBraceCompletionAtPosition: function (fileName, position, openingBrace) { return undefined; },
-        getCodeFixesAtPosition: function (fileName, start, end, errorCodes) { return []; },
-        getEmitOutput: function (fileName) { return undefined; },
-        getProgram: function () { return ls.getProgram(); },
-        dispose: function () { return ls.dispose(); },
-        getApplicableRefactors: function (fileName, positionOrRaneg) { return []; },
-        getEditsForRefactor: function (fileName, formatOptions, positionOrRange, refactorName, actionName) {
-            return undefined;
-        },
+        getOccurrencesAtPosition: (fileName, position) => [],
+        getNavigateToItems: searchValue => [],
+        getNavigationBarItems: fileName => [],
+        getNavigationTree: fileName => undefined,
+        getOutliningSpans: fileName => [],
+        getTodoComments: (fileName, descriptors) => [],
+        getBraceMatchingAtPosition: (fileName, position) => [],
+        getIndentationAtPosition: (fileName, position, options) => undefined,
+        getFormattingEditsForRange: (fileName, start, end, options) => [],
+        getFormattingEditsForDocument: (fileName, options) => [],
+        getFormattingEditsAfterKeystroke: (fileName, position, key, options) => [],
+        getDocCommentTemplateAtPosition: (fileName, position) => undefined,
+        isValidBraceCompletionAtPosition: (fileName, position, openingBrace) => undefined,
+        getCodeFixesAtPosition: (fileName, start, end, errorCodes) => [],
+        getEmitOutput: fileName => undefined,
+        getProgram: () => ls.getProgram(),
+        dispose: () => ls.dispose(),
+        getApplicableRefactors: (fileName, positionOrRaneg) => [],
+        getEditsForRefactor: (fileName, formatOptions, positionOrRange, refactorName, actionName) => undefined,
     };
 }
 function create(info /* ts.server.PluginCreateInfo */) {
     // Create the proxy
-    var proxy = Object.create(null);
-    var oldLS = info.languageService;
+    const proxy = Object.create(null);
+    let oldLS = info.languageService;
     if (angularOnlyResults) {
         oldLS = angularOnlyFilter(oldLS);
     }
@@ -2403,28 +2232,26 @@ function create(info /* ts.server.PluginCreateInfo */) {
         }
     }
     function tryFilenameCall(m) {
-        return function (fileName) { return tryCall(fileName, function () { return (m.call(ls, fileName)); }); };
+        return fileName => tryCall(fileName, () => (m.call(ls, fileName)));
     }
     function tryFilenameOneCall(m) {
-        return function (fileName, p) { return tryCall(fileName, function () { return (m.call(ls, fileName, p)); }); };
+        return (fileName, p) => tryCall(fileName, () => (m.call(ls, fileName, p)));
     }
     function tryFilenameTwoCall(m) {
-        return function (fileName, p1, p2) { return tryCall(fileName, function () { return (m.call(ls, fileName, p1, p2)); }); };
+        return (fileName, p1, p2) => tryCall(fileName, () => (m.call(ls, fileName, p1, p2)));
     }
     function tryFilenameThreeCall(m) {
-        return function (fileName, p1, p2, p3) { return tryCall(fileName, function () { return (m.call(ls, fileName, p1, p2, p3)); }); };
+        return (fileName, p1, p2, p3) => tryCall(fileName, () => (m.call(ls, fileName, p1, p2, p3)));
     }
     function tryFilenameFourCall(m) {
-        return function (fileName, p1, p2, p3, p4) {
-            return tryCall(fileName, function () { return (m.call(ls, fileName, p1, p2, p3, p4)); });
-        };
+        return (fileName, p1, p2, p3, p4) => tryCall(fileName, () => (m.call(ls, fileName, p1, p2, p3, p4)));
     }
     function typescriptOnly(ls) {
         return {
-            cleanupSemanticCache: function () { return ls.cleanupSemanticCache(); },
+            cleanupSemanticCache: () => ls.cleanupSemanticCache(),
             getSyntacticDiagnostics: tryFilenameCall(ls.getSyntacticDiagnostics),
             getSemanticDiagnostics: tryFilenameCall(ls.getSemanticDiagnostics),
-            getCompilerOptionsDiagnostics: function () { return ls.getCompilerOptionsDiagnostics(); },
+            getCompilerOptionsDiagnostics: () => ls.getCompilerOptionsDiagnostics(),
             getSyntacticClassifications: tryFilenameOneCall(ls.getSemanticClassifications),
             getSemanticClassifications: tryFilenameOneCall(ls.getSemanticClassifications),
             getEncodedSyntacticClassifications: tryFilenameOneCall(ls.getEncodedSyntacticClassifications),
@@ -2446,9 +2273,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
             getDocumentHighlights: tryFilenameTwoCall(ls.getDocumentHighlights),
             /** @deprecated */
             getOccurrencesAtPosition: tryFilenameOneCall(ls.getOccurrencesAtPosition),
-            getNavigateToItems: function (searchValue, maxResultCount, fileName, excludeDtsFiles) {
-                return tryCall(fileName, function () { return ls.getNavigateToItems(searchValue, maxResultCount, fileName, excludeDtsFiles); });
-            },
+            getNavigateToItems: (searchValue, maxResultCount, fileName, excludeDtsFiles) => tryCall(fileName, () => ls.getNavigateToItems(searchValue, maxResultCount, fileName, excludeDtsFiles)),
             getNavigationBarItems: tryFilenameCall(ls.getNavigationBarItems),
             getNavigationTree: tryFilenameCall(ls.getNavigationTree),
             getOutliningSpans: tryFilenameCall(ls.getOutliningSpans),
@@ -2462,27 +2287,22 @@ function create(info /* ts.server.PluginCreateInfo */) {
             isValidBraceCompletionAtPosition: tryFilenameTwoCall(ls.isValidBraceCompletionAtPosition),
             getCodeFixesAtPosition: tryFilenameFourCall(ls.getCodeFixesAtPosition),
             getEmitOutput: tryFilenameCall(ls.getEmitOutput),
-            getProgram: function () { return ls.getProgram(); },
-            dispose: function () { return ls.dispose(); },
-            getApplicableRefactors: function (fileName, positionOrRaneg) { return []; },
-            getEditsForRefactor: function (fileName, formatOptions, positionOrRange, refactorName, actionName) {
-                return undefined;
-            },
+            getProgram: () => ls.getProgram(),
+            dispose: () => ls.dispose(),
+            getApplicableRefactors: (fileName, positionOrRaneg) => [],
+            getEditsForRefactor: (fileName, formatOptions, positionOrRange, refactorName, actionName) => undefined,
         };
     }
     oldLS = typescriptOnly(oldLS);
-    var _loop_1 = function (k) {
+    for (const k in oldLS) {
         proxy[k] = function () { return oldLS[k].apply(oldLS, arguments); };
-    };
-    for (var k in oldLS) {
-        _loop_1(k);
     }
     function completionToEntry(c) {
         return { kind: c.kind, name: c.name, sortText: c.sort, kindModifiers: '' };
     }
     function diagnosticToDiagnostic(d, file) {
-        var result = {
-            file: file,
+        const result = {
+            file,
             start: d.span.start,
             length: d.span.end - d.span.start,
             messageText: d.message,
@@ -2497,24 +2317,24 @@ function create(info /* ts.server.PluginCreateInfo */) {
             return callback();
         }
         catch (e) {
-            info.project.projectService.logger.info("Failed to " + attempting + ": " + e.toString());
-            info.project.projectService.logger.info("Stack trace: " + e.stack);
+            info.project.projectService.logger.info(`Failed to ${attempting}: ${e.toString()}`);
+            info.project.projectService.logger.info(`Stack trace: ${e.stack}`);
             return null;
         }
     }
-    var serviceHost = new TypeScriptServiceHost(info.languageServiceHost, info.languageService);
-    var ls = createLanguageService(serviceHost);
+    const serviceHost = new TypeScriptServiceHost(info.languageServiceHost, info.languageService);
+    const ls = createLanguageService(serviceHost);
     serviceHost.setSite(ls);
     projectHostMap.set(info.project, serviceHost);
     proxy.getCompletionsAtPosition = function (fileName, position) {
-        var base = oldLS.getCompletionsAtPosition(fileName, position) || {
+        let base = oldLS.getCompletionsAtPosition(fileName, position) || {
             isGlobalCompletion: false,
             isMemberCompletion: false,
             isNewIdentifierLocation: false,
             entries: []
         };
-        tryOperation('get completions', function () {
-            var results = ls.getCompletionsAt(fileName, position);
+        tryOperation('get completions', () => {
+            const results = ls.getCompletionsAt(fileName, position);
             if (results && results.length) {
                 if (base === undefined) {
                     base = {
@@ -2524,8 +2344,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
                         entries: []
                     };
                 }
-                for (var _i = 0, results_1 = results; _i < results_1.length; _i++) {
-                    var entry = results_1[_i];
+                for (const entry of results) {
                     base.entries.push(completionToEntry(entry));
                 }
             }
@@ -2533,19 +2352,18 @@ function create(info /* ts.server.PluginCreateInfo */) {
         return base;
     };
     proxy.getQuickInfoAtPosition = function (fileName, position) {
-        var base = oldLS.getQuickInfoAtPosition(fileName, position);
+        let base = oldLS.getQuickInfoAtPosition(fileName, position);
         // TODO(vicb): the tags property has been removed in TS 2.2
-        tryOperation('get quick info', function () {
-            var ours = ls.getHoverAt(fileName, position);
+        tryOperation('get quick info', () => {
+            const ours = ls.getHoverAt(fileName, position);
             if (ours) {
-                var displayParts = [];
-                for (var _i = 0, _a = ours.text; _i < _a.length; _i++) {
-                    var part = _a[_i];
+                const displayParts = [];
+                for (const part of ours.text) {
                     displayParts.push({ kind: part.language || 'angular', text: part.text });
                 }
-                var tags = base && base.tags;
+                const tags = base && base.tags;
                 base = {
-                    displayParts: displayParts,
+                    displayParts,
                     documentation: [],
                     kind: 'angular',
                     kindModifiers: 'what does this do?',
@@ -2559,29 +2377,28 @@ function create(info /* ts.server.PluginCreateInfo */) {
         return base;
     };
     proxy.getSemanticDiagnostics = function (fileName) {
-        var result = oldLS.getSemanticDiagnostics(fileName);
-        var base = result || [];
-        tryOperation('get diagnostics', function () {
-            info.project.projectService.logger.info("Computing Angular semantic diagnostics...");
-            var ours = ls.getDiagnostics(fileName);
+        let result = oldLS.getSemanticDiagnostics(fileName);
+        const base = result || [];
+        tryOperation('get diagnostics', () => {
+            info.project.projectService.logger.info(`Computing Angular semantic diagnostics...`);
+            const ours = ls.getDiagnostics(fileName);
             if (ours && ours.length) {
-                var file_1 = oldLS.getProgram().getSourceFile(fileName);
-                base.push.apply(base, ours.map(function (d) { return diagnosticToDiagnostic(d, file_1); }));
+                const file = oldLS.getProgram().getSourceFile(fileName);
+                base.push.apply(base, ours.map(d => diagnosticToDiagnostic(d, file)));
             }
         });
         return base;
     };
     proxy.getDefinitionAtPosition = function (fileName, position) {
-        var base = oldLS.getDefinitionAtPosition(fileName, position);
+        let base = oldLS.getDefinitionAtPosition(fileName, position);
         if (base && base.length) {
             return base;
         }
-        return tryOperation('get definition', function () {
-            var ours = ls.getDefinitionAt(fileName, position);
+        return tryOperation('get definition', () => {
+            const ours = ls.getDefinitionAt(fileName, position);
             if (ours && ours.length) {
                 base = base || [];
-                for (var _i = 0, ours_1 = ours; _i < ours_1.length; _i++) {
-                    var loc = ours_1[_i];
+                for (const loc of ours) {
                     base.push({
                         fileName: loc.fileName,
                         textSpan: { start: loc.span.start, length: loc.span.end - loc.span.start },
@@ -2613,7 +2430,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version('5.0.0-beta.7-9d2236a');
+const VERSION = new Version('5.0.0-beta.7-5751865');
 
 /**
  * @license
@@ -2629,4 +2446,4 @@ var VERSION = new Version('5.0.0-beta.7-9d2236a');
  */
 
 export { createLanguageService, TypeScriptServiceHost, createLanguageServiceFromTypescript, VERSION, getExternalFiles, create };
-//# sourceMappingURL=index.js.map
+//# sourceMappingURL=language-service.js.map
