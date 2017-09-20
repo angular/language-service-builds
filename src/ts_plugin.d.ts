@@ -6,4 +6,5 @@
  * found in the LICENSE file at https://angular.io/license
  */
 import * as ts from 'typescript';
+export declare function getExternalFiles(project: any): string[] | undefined;
 export declare function create(info: any): ts.LanguageService;

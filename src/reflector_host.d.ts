@@ -1,14 +1,7 @@
-/**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
- */
-import { AngularCompilerOptions, CompilerHost } from '@angular/compiler-cli';
+import { CompilerHost, CompilerOptions } from '@angular/compiler-cli/src/language_services';
 import * as ts from 'typescript';
 export declare class ReflectorHost extends CompilerHost {
     private getProgram;
-    constructor(getProgram: () => ts.Program, serviceHost: ts.LanguageServiceHost, options: AngularCompilerOptions);
+    constructor(getProgram: () => ts.Program, serviceHost: ts.LanguageServiceHost, options: CompilerOptions);
     protected program: ts.Program;
 }
