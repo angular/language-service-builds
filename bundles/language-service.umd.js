@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.0.0-beta.7-5751865
+ * @license Angular v5.0.0-beta.7-b14c2d1
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v5.0.0-beta.7-5751865
+ * @license Angular v5.0.0-beta.7-b14c2d1
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -380,7 +380,7 @@ var Version = (function () {
 /**
  * @stable
  */
-var VERSION$1 = new Version('5.0.0-beta.7-5751865');
+var VERSION$1 = new Version('5.0.0-beta.7-b14c2d1');
 
 /**
  * @license
@@ -6405,7 +6405,7 @@ var _Visitor = (function () {
                         i18nCommentsWarned = true;
                         var details = comment.sourceSpan.details ? ", " + comment.sourceSpan.details : '';
                         // TODO(ocombe): use a log service once there is a public one available
-                        console.warn(" I18n comments are deprecated, use an <ng - container> element instead (" + comment.sourceSpan.start + details + ")");
+                        console.warn("I18n comments are deprecated, use an <ng-container> element instead (" + comment.sourceSpan.start + details + ")");
                     }
                     this._inI18nBlock = true;
                     this._blockStartDepth = this._depth;
@@ -27676,7 +27676,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v5.0.0-beta.7-5751865
+ * @license Angular v5.0.0-beta.7-b14c2d1
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -27709,6 +27709,10 @@ var share_2 = share;
 var InjectionToken = (function () {
     function InjectionToken(_desc) {
         this._desc = _desc;
+        /**
+         * \@internal
+         */
+        this.ngMetadataName = 'InjectionToken';
     }
     /**
      * @return {?}
@@ -27717,16 +27721,6 @@ var InjectionToken = (function () {
      * @return {?}
      */
     function () { return "InjectionToken " + this._desc; };
-    Object.defineProperty(InjectionToken.prototype, "ngMetadataName", {
-        /** @internal */
-        get: /**
-         * \@internal
-         * @return {?}
-         */
-        function () { return 'InjectionToken'; },
-        enumerable: true,
-        configurable: true
-    });
     return InjectionToken;
 }());
 
@@ -28062,37 +28056,16 @@ ViewEncapsulation$1[ViewEncapsulation$1.None] = "None";
 var Version$1 = (function () {
     function Version(full) {
         this.full = full;
+        this.major = full.split('.')[0];
+        this.minor = full.split('.')[1];
+        this.patch = full.split('.').slice(2).join('.');
     }
-    Object.defineProperty(Version.prototype, "major", {
-        get: /**
-         * @return {?}
-         */
-        function () { return this.full.split('.')[0]; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(Version.prototype, "minor", {
-        get: /**
-         * @return {?}
-         */
-        function () { return this.full.split('.')[1]; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(Version.prototype, "patch", {
-        get: /**
-         * @return {?}
-         */
-        function () { return this.full.split('.').slice(2).join('.'); },
-        enumerable: true,
-        configurable: true
-    });
     return Version;
 }());
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('5.0.0-beta.7-5751865');
+var VERSION$2 = new Version$1('5.0.0-beta.7-b14c2d1');
 
 /**
  * @fileoverview added by tsickle
@@ -29183,19 +29156,8 @@ var ReflectiveKey = (function () {
         if (!token) {
             throw new Error('Token must be defined!');
         }
+        this.displayName = stringify$1(this.token);
     }
-    Object.defineProperty(ReflectiveKey.prototype, "displayName", {
-        /**
-         * Returns a stringified token.
-         */
-        get: /**
-         * Returns a stringified token.
-         * @return {?}
-         */
-        function () { return stringify$1(this.token); },
-        enumerable: true,
-        configurable: true
-    });
     /**
      * Retrieves a `Key` for a token.
      */
@@ -30462,7 +30424,7 @@ var ReflectiveInjector_ = (function () {
          */
         this._constructionCounter = 0;
         this._providers = _providers;
-        this._parent = _parent || null;
+        this.parent = _parent || null;
         var /** @type {?} */ len = _providers.length;
         this.keyIds = new Array(len);
         this.objs = new Array(len);
@@ -30485,14 +30447,6 @@ var ReflectiveInjector_ = (function () {
         if (notFoundValue === void 0) { notFoundValue = THROW_IF_NOT_FOUND; }
         return this._getByKey(ReflectiveKey.get(token), null, notFoundValue);
     };
-    Object.defineProperty(ReflectiveInjector_.prototype, "parent", {
-        get: /**
-         * @return {?}
-         */
-        function () { return this._parent; },
-        enumerable: true,
-        configurable: true
-    });
     /**
      * @param {?} providers
      * @return {?}
@@ -30515,7 +30469,7 @@ var ReflectiveInjector_ = (function () {
      */
     function (providers) {
         var /** @type {?} */ inj = new ReflectiveInjector_(providers);
-        inj._parent = this;
+        (/** @type {?} */ (inj)).parent = this;
         return inj;
     };
     /**
@@ -30740,7 +30694,7 @@ var ReflectiveInjector_ = (function () {
     function (key, notFoundValue, visibility) {
         var /** @type {?} */ inj;
         if (visibility instanceof SkipSelf) {
-            inj = this._parent;
+            inj = this.parent;
         }
         else {
             inj = this;
@@ -30750,7 +30704,7 @@ var ReflectiveInjector_ = (function () {
             var /** @type {?} */ obj = inj_._getObjByKeyId(key.id);
             if (obj !== UNDEFINED)
                 return obj;
-            inj = inj_._parent;
+            inj = inj_.parent;
         }
         if (inj !== null) {
             return inj.get(key.token, notFoundValue);
@@ -30851,8 +30805,8 @@ var ApplicationInitStatus = (function () {
         var _this = this;
         this.appInits = appInits;
         this.initialized = false;
-        this._done = false;
-        this._donePromise = new Promise(function (res, rej) {
+        this.done = false;
+        this.donePromise = new Promise(function (res, rej) {
             _this.resolve = res;
             _this.reject = rej;
         });
@@ -30873,7 +30827,7 @@ var ApplicationInitStatus = (function () {
         }
         var /** @type {?} */ asyncInitPromises = [];
         var /** @type {?} */ complete = function () {
-            _this._done = true;
+            (/** @type {?} */ (_this)).done = true;
             _this.resolve();
         };
         if (this.appInits) {
@@ -30890,22 +30844,6 @@ var ApplicationInitStatus = (function () {
         }
         this.initialized = true;
     };
-    Object.defineProperty(ApplicationInitStatus.prototype, "done", {
-        get: /**
-         * @return {?}
-         */
-        function () { return this._done; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(ApplicationInitStatus.prototype, "donePromise", {
-        get: /**
-         * @return {?}
-         */
-        function () { return this._donePromise; },
-        enumerable: true,
-        configurable: true
-    });
     ApplicationInitStatus.decorators = [
         { type: Injectable },
     ];
@@ -32866,12 +32804,19 @@ var ApplicationRef = (function () {
         this._componentFactoryResolver = _componentFactoryResolver;
         this._initStatus = _initStatus;
         this._bootstrapListeners = [];
-        this._rootComponents = [];
-        this._rootComponentTypes = [];
         this._views = [];
         this._runningTick = false;
         this._enforceNoNewChanges = false;
         this._stable = true;
+        /**
+         * Get a list of component types registered to this application.
+         * This list is populated even before the component is created.
+         */
+        this.componentTypes = [];
+        /**
+         * Get a list of components registered to this application.
+         */
+        this.components = [];
         this._enforceNoNewChanges = isDevMode();
         this._zone.onMicrotaskEmpty.subscribe({ next: function () { _this._zone.run(function () { _this.tick(); }); } });
         var /** @type {?} */ isCurrentlyStable = new Observable_2(function (observer) {
@@ -32912,7 +32857,8 @@ var ApplicationRef = (function () {
                 unstableSub.unsubscribe();
             };
         });
-        this._isStable = merge_2(isCurrentlyStable, share_2.call(isStable));
+        (/** @type {?} */ (this)).isStable =
+            merge_2(isCurrentlyStable, share_2.call(isStable));
     }
     /**
      * Bootstrap a new component at the root level of the application.
@@ -32980,7 +32926,7 @@ var ApplicationRef = (function () {
             componentFactory =
                 /** @type {?} */ ((this._componentFactoryResolver.resolveComponentFactory(componentOrFactory)));
         }
-        this._rootComponentTypes.push(componentFactory.componentType);
+        this.componentTypes.push(componentFactory.componentType);
         // Create a factory associated with the current module if it's not bound to some other
         var /** @type {?} */ ngModule = componentFactory instanceof ComponentFactoryBoundToModule ?
             null :
@@ -33053,32 +32999,6 @@ var ApplicationRef = (function () {
             wtfLeave(scope);
         }
     };
-    Object.defineProperty(ApplicationRef.prototype, "componentTypes", {
-        /**
-         * Get a list of component types registered to this application.
-         * This list is populated even before the component is created.
-         */
-        get: /**
-         * Get a list of component types registered to this application.
-         * This list is populated even before the component is created.
-         * @return {?}
-         */
-        function () { return this._rootComponentTypes; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(ApplicationRef.prototype, "components", {
-        /**
-         * Get a list of components registered to this application.
-         */
-        get: /**
-         * Get a list of components registered to this application.
-         * @return {?}
-         */
-        function () { return this._rootComponents; },
-        enumerable: true,
-        configurable: true
-    });
     /**
      * Attaches a view so that it will be dirty checked.
      * The view will be automatically detached when it is destroyed.
@@ -33132,7 +33052,7 @@ var ApplicationRef = (function () {
     function (componentRef) {
         this.attachView(componentRef.hostView);
         this.tick();
-        this._rootComponents.push(componentRef);
+        this.components.push(componentRef);
         // Get the listeners lazily to prevent DI cycles.
         var /** @type {?} */ listeners = this._injector.get(APP_BOOTSTRAP_LISTENER, []).concat(this._bootstrapListeners);
         listeners.forEach(function (listener) { return listener(componentRef); });
@@ -33147,7 +33067,7 @@ var ApplicationRef = (function () {
      */
     function (componentRef) {
         this.detachView(componentRef.hostView);
-        remove(this._rootComponents, componentRef);
+        remove(this.components, componentRef);
     };
     /** @internal */
     /**
@@ -33171,18 +33091,6 @@ var ApplicationRef = (function () {
          * @return {?}
          */
         function () { return this._views.length; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(ApplicationRef.prototype, "isStable", {
-        /**
-         * Returns an Observable that indicates when the application is stable or unstable.
-         */
-        get: /**
-         * Returns an Observable that indicates when the application is stable or unstable.
-         * @return {?}
-         */
-        function () { return this._isStable; },
         enumerable: true,
         configurable: true
     });
@@ -33322,18 +33230,10 @@ var ElementRef = (function () {
  */
 var QueryList = (function () {
     function QueryList() {
-        this._dirty = true;
+        this.dirty = true;
         this._results = [];
-        this._emitter = new EventEmitter();
+        this.changes = new EventEmitter();
     }
-    Object.defineProperty(QueryList.prototype, "changes", {
-        get: /**
-         * @return {?}
-         */
-        function () { return this._emitter; },
-        enumerable: true,
-        configurable: true
-    });
     Object.defineProperty(QueryList.prototype, "length", {
         get: /**
          * @return {?}
@@ -33505,7 +33405,7 @@ var QueryList = (function () {
      */
     function (res) {
         this._results = flatten$2(res);
-        this._dirty = false;
+        (/** @type {?} */ (this)).dirty = false;
     };
     /**
      * @return {?}
@@ -33513,7 +33413,7 @@ var QueryList = (function () {
     QueryList.prototype.notifyOnChanges = /**
      * @return {?}
      */
-    function () { this._emitter.emit(this); };
+    function () { (/** @type {?} */ (this.changes)).emit(this); };
     /** internal */
     /**
      * internal
@@ -33523,17 +33423,7 @@ var QueryList = (function () {
      * internal
      * @return {?}
      */
-    function () { this._dirty = true; };
-    Object.defineProperty(QueryList.prototype, "dirty", {
-        /** internal */
-        get: /**
-         * internal
-         * @return {?}
-         */
-        function () { return this._dirty; },
-        enumerable: true,
-        configurable: true
-    });
+    function () { (/** @type {?} */ (this)).dirty = true; };
     /** internal */
     /**
      * internal
@@ -33544,8 +33434,8 @@ var QueryList = (function () {
      * @return {?}
      */
     function () {
-        this._emitter.complete();
-        this._emitter.unsubscribe();
+        (/** @type {?} */ (this.changes)).complete();
+        (/** @type {?} */ (this.changes)).unsubscribe();
     };
     return QueryList;
 }());
@@ -34213,8 +34103,7 @@ var trackByIdentity = function (index, item) { return item; };
  */
 var DefaultIterableDiffer = (function () {
     function DefaultIterableDiffer(trackByFn) {
-        this._length = 0;
-        this._collection = null;
+        this.length = 0;
         this._linkedRecords = null;
         this._unlinkedRecords = null;
         this._previousItHead = null;
@@ -34230,22 +34119,6 @@ var DefaultIterableDiffer = (function () {
         this._identityChangesTail = null;
         this._trackByFn = trackByFn || trackByIdentity;
     }
-    Object.defineProperty(DefaultIterableDiffer.prototype, "collection", {
-        get: /**
-         * @return {?}
-         */
-        function () { return this._collection; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(DefaultIterableDiffer.prototype, "length", {
-        get: /**
-         * @return {?}
-         */
-        function () { return this._length; },
-        enumerable: true,
-        configurable: true
-    });
     /**
      * @param {?} fn
      * @return {?}
@@ -34431,8 +34304,8 @@ var DefaultIterableDiffer = (function () {
         var /** @type {?} */ item;
         var /** @type {?} */ itemTrackBy;
         if (Array.isArray(collection)) {
-            this._length = collection.length;
-            for (var /** @type {?} */ index_1 = 0; index_1 < this._length; index_1++) {
+            (/** @type {?} */ (this)).length = collection.length;
+            for (var /** @type {?} */ index_1 = 0; index_1 < this.length; index_1++) {
                 item = collection[index_1];
                 itemTrackBy = this._trackByFn(index_1, item);
                 if (record === null || !looseIdentical(record.trackById, itemTrackBy)) {
@@ -34469,10 +34342,10 @@ var DefaultIterableDiffer = (function () {
                 record = record._next;
                 index++;
             });
-            this._length = index;
+            (/** @type {?} */ (this)).length = index;
         }
         this._truncate(record);
-        this._collection = collection;
+        (/** @type {?} */ (this)).collection = collection;
         return this.isDirty;
     };
     Object.defineProperty(DefaultIterableDiffer.prototype, "isDirty", {
@@ -37643,6 +37516,9 @@ var ComponentRef_ = (function (_super) {
         _this._viewRef = _viewRef;
         _this._component = _component;
         _this._elDef = _this._view.def.nodes[0];
+        _this.hostView = _viewRef;
+        _this.changeDetectorRef = _viewRef;
+        _this.instance = _component;
         return _this;
     }
     Object.defineProperty(ComponentRef_.prototype, "location", {
@@ -37663,33 +37539,6 @@ var ComponentRef_ = (function (_super) {
         enumerable: true,
         configurable: true
     });
-    Object.defineProperty(ComponentRef_.prototype, "instance", {
-        get: /**
-         * @return {?}
-         */
-        function () { return this._component; },
-        enumerable: true,
-        configurable: true
-    });
-    
-    Object.defineProperty(ComponentRef_.prototype, "hostView", {
-        get: /**
-         * @return {?}
-         */
-        function () { return this._viewRef; },
-        enumerable: true,
-        configurable: true
-    });
-    
-    Object.defineProperty(ComponentRef_.prototype, "changeDetectorRef", {
-        get: /**
-         * @return {?}
-         */
-        function () { return this._viewRef; },
-        enumerable: true,
-        configurable: true
-    });
-    
     Object.defineProperty(ComponentRef_.prototype, "componentType", {
         get: /**
          * @return {?}
@@ -41376,7 +41225,7 @@ var NgModuleFactory_ = (function (_super) {
 }(NgModuleFactory));
 
 /**
- * @license Angular v5.0.0-beta.7-5751865
+ * @license Angular v5.0.0-beta.7-b14c2d1
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -42738,15 +42587,10 @@ function invertMap(obj) {
 var OverrideKindSymbol = (function () {
     function OverrideKindSymbol(sym, kindOverride) {
         this.sym = sym;
-        this.kindOverride = kindOverride;
+        this.kind = kindOverride;
     }
     Object.defineProperty(OverrideKindSymbol.prototype, "name", {
         get: function () { return this.sym.name; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(OverrideKindSymbol.prototype, "kind", {
-        get: function () { return this.kindOverride; },
         enumerable: true,
         configurable: true
     });
@@ -43982,7 +43826,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('5.0.0-beta.7-5751865');
+var VERSION = new Version$1('5.0.0-beta.7-b14c2d1');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;

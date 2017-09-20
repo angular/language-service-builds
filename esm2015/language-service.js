@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.0.0-beta.7-5751865
+ * @license Angular v5.0.0-beta.7-b14c2d1
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1330,10 +1330,9 @@ function invertMap(obj) {
 class OverrideKindSymbol {
     constructor(sym, kindOverride) {
         this.sym = sym;
-        this.kindOverride = kindOverride;
+        this.kind = kindOverride;
     }
     get name() { return this.sym.name; }
-    get kind() { return this.kindOverride; }
     get language() { return this.sym.language; }
     get type() { return this.sym.type; }
     get container() { return this.sym.container; }
@@ -2430,7 +2429,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-const VERSION = new Version('5.0.0-beta.7-5751865');
+const VERSION = new Version('5.0.0-beta.7-b14c2d1');
 
 /**
  * @license
