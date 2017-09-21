@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.0.0-beta.7-4586fcc
+ * @license Angular v5.0.0-beta.7-4c73b52
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v5.0.0-beta.7-4586fcc
+ * @license Angular v5.0.0-beta.7-4c73b52
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -380,7 +380,7 @@ var Version = (function () {
 /**
  * @stable
  */
-var VERSION$1 = new Version('5.0.0-beta.7-4586fcc');
+var VERSION$1 = new Version('5.0.0-beta.7-4c73b52');
 
 /**
  * @license
@@ -16155,7 +16155,10 @@ var ViewBuilder = (function () {
             value: convertPropertyBindingBuiltins({
                 createLiteralArrayConverter: function (argCount) {
                     return function (args) {
-                        return literalArr(args);
+                        var arr = literalArr(args);
+                        // Note: The old view compiler used to use an `any` type
+                        // for arrays.
+                        return _this.options.fullTemplateTypeCheck ? arr : arr.cast(DYNAMIC_TYPE);
                     };
                 },
                 createLiteralMapConverter: function (keys) {
@@ -16167,20 +16170,20 @@ var ViewBuilder = (function () {
                                 quoted: k.quoted,
                             });
                         });
-                        return literalMap(entries);
+                        var map = literalMap(entries);
+                        // Note: The old view compiler used to use an `any` type
+                        // for maps.
+                        return _this.options.fullTemplateTypeCheck ? map : map.cast(DYNAMIC_TYPE);
                     };
                 },
                 createPipeConverter: function (name, argCount) {
                     return function (args) {
                         // Note: The old view compiler used to use an `any` type
-                        // for pipe calls.
-                        // We keep this behaivor behind a flag for now.
-                        if (_this.options.fullTemplateTypeCheck) {
-                            return variable(_this.pipeOutputVar(name)).callMethod('transform', args);
-                        }
-                        else {
-                            return variable(_this.getOutputVar(BuiltinTypeName.Dynamic));
-                        }
+                        // for pipes.
+                        var pipeExpr = _this.options.fullTemplateTypeCheck ?
+                            variable(_this.pipeOutputVar(name)) :
+                            variable(_this.getOutputVar(BuiltinTypeName.Dynamic));
+                        return pipeExpr.callMethod('transform', args);
                     };
                 },
             }, expression.value)
@@ -17732,21 +17735,14 @@ var AotCompiler = (function () {
                 });
             }
         });
-        // make sure we create a .ngfactory if we have a least one component
-        // in the file.
+        // Make sure we create a .ngfactory if we have a injectable/directive/pipe/NgModule
+        // or a reference to a non source file.
+        // Note: This is overestimating the required .ngfactory files as the real calculation is harder.
         // Only do this for StubEmitFlags.Basic, as adding a type check block
         // does not change this file (as we generate type check blocks based on NgModules).
         if (outputCtx.statements.length === 0 && (emitFlags & StubEmitFlags.Basic) &&
-            file.directives.some(function (dir) {
-                return _this._metadataResolver.getNonNormalizedDirectiveMetadata(dir).metadata.isComponent;
-            })) {
-            _createEmptyStub(outputCtx);
-        }
-        // make sure we create a .ngfactory if we reexport a non source file.
-        // Only do this for StubEmitFlags.Basic, as adding a type check block
-        // does not change this file (as we generate type check blocks based on NgModules).
-        if (outputCtx.statements.length === 0 && (emitFlags & StubEmitFlags.Basic) &&
-            file.exportsNonSourceFiles) {
+            (file.directives.length || file.pipes.length || file.injectables.length ||
+                file.ngModules.length || file.exportsNonSourceFiles)) {
             _createEmptyStub(outputCtx);
         }
         if (outputCtx.statements.length > 0) {
@@ -18086,24 +18082,31 @@ function analyzeFile(host, staticSymbolResolver, metadataResolver, fileName) {
             if (!symbolMeta || symbolMeta.__symbolic === 'error') {
                 return;
             }
-            exportsNonSourceFiles =
-                exportsNonSourceFiles || isValueExportingNonSourceFile(host, symbolMeta);
+            var isNgSymbol = false;
             if (symbolMeta.__symbolic === 'class') {
                 if (metadataResolver.isDirective(symbol)) {
+                    isNgSymbol = true;
                     directives.push(symbol);
                 }
                 else if (metadataResolver.isPipe(symbol)) {
+                    isNgSymbol = true;
                     pipes.push(symbol);
                 }
                 else if (metadataResolver.isInjectable(symbol)) {
+                    isNgSymbol = true;
                     injectables.push(symbol);
                 }
                 else {
                     var ngModule = metadataResolver.getNgModuleMetadata(symbol, false);
                     if (ngModule) {
+                        isNgSymbol = true;
                         ngModules.push(ngModule);
                     }
                 }
+            }
+            if (!isNgSymbol) {
+                exportsNonSourceFiles =
+                    exportsNonSourceFiles || isValueExportingNonSourceFile(host, symbolMeta);
             }
         });
     }
@@ -21002,7 +21005,6 @@ var compiler = Object.freeze({
 	templateJitUrl: templateJitUrl,
 	createAotUrlResolver: createAotUrlResolver,
 	createAotCompiler: createAotCompiler,
-	get StubEmitFlags () { return StubEmitFlags; },
 	AotCompiler: AotCompiler,
 	analyzeNgModules: analyzeNgModules,
 	analyzeAndValidateNgModules: analyzeAndValidateNgModules,
@@ -22053,18 +22055,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 
 
 
-// In TypeScript 2.1 these flags moved
-// These helpers work for both 2.0 and 2.1.
-var isExport = ts__default.ModifierFlags ?
-    (function (node) {
-        return !!(ts__default.getCombinedModifierFlags(node) & ts__default.ModifierFlags.Export);
-    }) :
-    (function (node) { return !!((node.flags & ts__default.NodeFlags.Export)); });
-var isStatic = ts__default.ModifierFlags ?
-    (function (node) {
-        return !!(ts__default.getCombinedModifierFlags(node) & ts__default.ModifierFlags.Static);
-    }) :
-    (function (node) { return !!((node.flags & ts__default.NodeFlags.Static)); });
+var isStatic = function (node) { return ts__default.getCombinedModifierFlags(node) & ts__default.ModifierFlags.Static; };
 /**
  * Collect decorator metadata from a TypeScript module.
  */
@@ -22282,6 +22273,9 @@ var MetadataCollector = (function () {
                     }
             }
         });
+        var isExport = function (node) {
+            return sourceFile.isDeclarationFile || ts__default.getCombinedModifierFlags(node) & ts__default.ModifierFlags.Export;
+        };
         var isExportedIdentifier = function (identifier) {
             return identifier && exportMap.has(identifier.text);
         };
@@ -27691,7 +27685,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v5.0.0-beta.7-4586fcc
+ * @license Angular v5.0.0-beta.7-4c73b52
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -28080,7 +28074,7 @@ var Version$1 = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('5.0.0-beta.7-4586fcc');
+var VERSION$2 = new Version$1('5.0.0-beta.7-4c73b52');
 
 /**
  * @fileoverview added by tsickle
@@ -41230,7 +41224,7 @@ var NgModuleFactory_ = (function (_super) {
 }(NgModuleFactory));
 
 /**
- * @license Angular v5.0.0-beta.7-4586fcc
+ * @license Angular v5.0.0-beta.7-4c73b52
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -43831,7 +43825,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('5.0.0-beta.7-4586fcc');
+var VERSION = new Version$1('5.0.0-beta.7-4c73b52');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
