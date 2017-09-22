@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.0.0-beta.7-9bbf009
+ * @license Angular v5.0.0-beta.7-0f5c70d
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v5.0.0-beta.7-9bbf009
+ * @license Angular v5.0.0-beta.7-0f5c70d
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -671,7 +671,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('5.0.0-beta.7-9bbf009');
+var VERSION$1 = new Version('5.0.0-beta.7-0f5c70d');
 
 /**
  * @fileoverview added by tsickle
@@ -2689,7 +2689,6 @@ var InterpolationConfig = (function () {
         assertInterpolationSymbols('interpolation', markers);
         return new InterpolationConfig(markers[0], markers[1]);
     };
-    
     return InterpolationConfig;
 }());
 var DEFAULT_INTERPOLATION_CONFIG = new InterpolationConfig('{{', '}}');
@@ -10002,7 +10001,6 @@ var RecurseVisitor = (function () {
      * @return {?}
      */
     function (text, context) { };
-    
     /**
      * @param {?} container
      * @param {?=} context
@@ -10056,7 +10054,6 @@ var RecurseVisitor = (function () {
      * @return {?}
      */
     function (ph, context) { };
-    
     /**
      * @param {?} ph
      * @param {?=} context
@@ -10068,7 +10065,6 @@ var RecurseVisitor = (function () {
      * @return {?}
      */
     function (ph, context) { };
-    
     return RecurseVisitor;
 }());
 
@@ -11579,7 +11575,6 @@ var Doctype = (function () {
         this.rootTag = rootTag;
         this.dtd = dtd;
     }
-    
     /**
      * @param {?} visitor
      * @return {?}
@@ -11618,7 +11613,6 @@ var Text$2 = (function () {
     function Text(unescapedValue) {
         this.value = _escapeXml(unescapedValue);
     }
-    
     /**
      * @param {?} visitor
      * @return {?}
@@ -22664,7 +22658,6 @@ var SafeSelector = (function () {
             return pseudo + replaceBy;
         });
     }
-    
     /**
      * @param {?} content
      * @return {?}
@@ -29176,7 +29169,6 @@ var AotCompiler = (function () {
         if (this.options.enableSummariesForJit) {
             return [summaryJson, this._codegenSourceModule(srcFileName, forJitOutputCtx)];
         }
-        
         return [summaryJson];
     };
     /**
@@ -31528,7 +31520,6 @@ var JitSummaryResolver = (function () {
      * @return {?}
      */
     function () { return false; };
-    
     /**
      * @param {?} fileName
      * @return {?}
@@ -31558,7 +31549,6 @@ var JitSummaryResolver = (function () {
     function (reference) {
         return this._summaries.get(reference) || null;
     };
-    
     /**
      * @return {?}
      */
@@ -31584,7 +31574,6 @@ var JitSummaryResolver = (function () {
      * @return {?}
      */
     function (summary) { this._summaries.set(summary.symbol, summary); };
-    
     return JitSummaryResolver;
 }());
 
@@ -36582,7 +36571,6 @@ var CompilerHost = (function (_super) {
         }
         return result;
     };
-    
     /**
      * We want a moduleId that will appear in import statements in the generated code.
      * These need to be in a form that system.js can load, so absolute file paths don't work.
@@ -36651,7 +36639,7 @@ var CompilerHost = (function (_super) {
     CompilerHost.prototype.rewriteGenDirPath = function (filepath) {
         var nodeModulesIndex = filepath.indexOf(NODE_MODULES);
         if (nodeModulesIndex !== -1) {
-            // If we are in node_modulse, transplant them into `genDir`.
+            // If we are in node_modules, transplant them into `genDir`.
             return path__default.join(this.genDir, filepath.substring(nodeModulesIndex));
         }
         else {
@@ -40528,7 +40516,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v5.0.0-beta.7-9bbf009
+ * @license Angular v5.0.0-beta.7-0f5c70d
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -40917,7 +40905,7 @@ var Version$1 = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('5.0.0-beta.7-9bbf009');
+var VERSION$2 = new Version$1('5.0.0-beta.7-0f5c70d');
 
 /**
  * @fileoverview added by tsickle
@@ -46543,7 +46531,6 @@ var EventListener = (function () {
         this.name = name;
         this.callback = callback;
     }
-    
     return EventListener;
 }());
 /**
@@ -48800,8 +48787,8 @@ var KeyValueDiffers = (function () {
      * {@link KeyValueDiffers} instance.
      *
      * The following example shows how to extend an existing list of factories,
-           * which will only be applied to the injector for this component and its children.
-           * This step is all that's required to make a new {@link KeyValueDiffer} available.
+     * which will only be applied to the injector for this component and its children.
+     * This step is all that's required to make a new {@link KeyValueDiffer} available.
      *
      * ### Example
      *
@@ -49102,7 +49089,6 @@ var Sanitizer = (function () {
 /**
  * @record
  */
-
 
 /**
  * @record
@@ -50576,7 +50562,6 @@ var ViewContainerRef_ = (function () {
         enumerable: true,
         configurable: true
     });
-    
     /**
      * @template C
      * @param {?} templateRef
@@ -54137,7 +54122,7 @@ var NgModuleFactory_ = (function (_super) {
 }(NgModuleFactory));
 
 /**
- * @license Angular v5.0.0-beta.7-9bbf009
+ * @license Angular v5.0.0-beta.7-0f5c70d
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -56711,7 +56696,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('5.0.0-beta.7-9bbf009');
+var VERSION = new Version$1('5.0.0-beta.7-0f5c70d');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
