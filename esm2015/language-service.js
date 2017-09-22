@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.0.0-beta.7-4c73b52
+ * @license Angular v5.0.0-beta.7-6e1896b
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -22,17 +22,7 @@ import { dirname, join } from 'path';
  *
  * @experimental
  */
-/**
- * The kind of diagnostic message.
- *
- * @experimental
- */
 var DiagnosticKind;
-/**
- * The kind of diagnostic message.
- *
- * @experimental
- */
 (function (DiagnosticKind) {
     DiagnosticKind[DiagnosticKind["Error"] = 0] = "Error";
     DiagnosticKind[DiagnosticKind["Warning"] = 1] = "Warning";
@@ -81,7 +71,7 @@ function hasTemplateReference(type) {
     if (type.diDeps) {
         for (let diDep of type.diDeps) {
             if (diDep.token && diDep.token.identifier &&
-                identifierName((diDep.token.identifier)) == 'TemplateRef')
+                identifierName(diDep.token.identifier) == 'TemplateRef')
                 return true;
         }
     }
@@ -90,7 +80,7 @@ function hasTemplateReference(type) {
 function getSelectors(info) {
     const map = new Map();
     const selectors = flatten(info.directives.map(directive => {
-        const selectors = CssSelector.parse((directive.selector));
+        const selectors = CssSelector.parse(directive.selector);
         selectors.forEach(selector => map.set(selector, directive));
         return selectors;
     }));
@@ -206,7 +196,7 @@ function getExpressionCompletions(scope, ast, position, query) {
     const path$$1 = findAstAt(ast, position);
     if (path$$1.empty)
         return undefined;
-    const tail = (path$$1.tail);
+    const tail = path$$1.tail;
     let result = scope;
     function getType(ast) { return new AstType(scope, query, {}).getType(ast); }
     // If the completion request is in a not in a pipe or property access then the global scope
@@ -258,10 +248,10 @@ function getExpressionCompletions(scope, ast, position, query) {
     return result && result.values();
 }
 function getExpressionSymbol(scope, ast, position, query) {
-    const path$$1 = findAstAt(ast, position, /* excludeEmpty */ /* excludeEmpty */ true);
+    const path$$1 = findAstAt(ast, position, /* excludeEmpty */ true);
     if (path$$1.empty)
         return undefined;
-    const tail = (path$$1.tail);
+    const tail = path$$1.tail;
     function getType(ast) { return new AstType(scope, query, {}).getType(ast); }
     let symbol = undefined;
     let span = undefined;
@@ -528,6 +518,7 @@ function attributeNames(element) {
 // schema registry.
 const SCHEMA = [
     '[Element]|textContent,%classList,className,id,innerHTML,*beforecopy,*beforecut,*beforepaste,*copy,*cut,*paste,*search,*selectstart,*webkitfullscreenchange,*webkitfullscreenerror,*wheel,outerHTML,#scrollLeft,#scrollTop,slot' +
+        /* added manually to avoid breaking changes */
         ',*message,*mozfullscreenchange,*mozfullscreenerror,*mozpointerlockchange,*mozpointerlockerror,*webglcontextcreationerror,*webglcontextlost,*webglcontextrestored',
     '[HTMLElement]^[Element]|accessKey,contentEditable,dir,!draggable,!hidden,innerText,lang,*abort,*auxclick,*blur,*cancel,*canplay,*canplaythrough,*change,*click,*close,*contextmenu,*cuechange,*dblclick,*drag,*dragend,*dragenter,*dragleave,*dragover,*dragstart,*drop,*durationchange,*emptied,*ended,*error,*focus,*gotpointercapture,*input,*invalid,*keydown,*keypress,*keyup,*load,*loadeddata,*loadedmetadata,*loadstart,*lostpointercapture,*mousedown,*mouseenter,*mouseleave,*mousemove,*mouseout,*mouseover,*mouseup,*mousewheel,*pause,*play,*playing,*pointercancel,*pointerdown,*pointerenter,*pointerleave,*pointermove,*pointerout,*pointerover,*pointerup,*progress,*ratechange,*reset,*resize,*scroll,*seeked,*seeking,*select,*show,*stalled,*submit,*suspend,*timeupdate,*toggle,*volumechange,*waiting,outerText,!spellcheck,%style,#tabIndex,title,!translate',
     'abbr,address,article,aside,b,bdi,bdo,cite,code,dd,dfn,dt,em,figcaption,figure,footer,header,i,kbd,main,mark,nav,noscript,rb,rp,rt,rtc,ruby,s,samp,section,small,strong,sub,sup,u,var,wbr^[HTMLElement]|accessKey,contentEditable,dir,!draggable,!hidden,innerText,lang,*abort,*auxclick,*blur,*cancel,*canplay,*canplaythrough,*change,*click,*close,*contextmenu,*cuechange,*dblclick,*drag,*dragend,*dragenter,*dragleave,*dragover,*dragstart,*drop,*durationchange,*emptied,*ended,*error,*focus,*gotpointercapture,*input,*invalid,*keydown,*keypress,*keyup,*load,*loadeddata,*loadedmetadata,*loadstart,*lostpointercapture,*mousedown,*mouseenter,*mouseleave,*mousemove,*mouseout,*mouseover,*mouseup,*mousewheel,*pause,*play,*playing,*pointercancel,*pointerdown,*pointerenter,*pointerleave,*pointermove,*pointerout,*pointerover,*pointerup,*progress,*ratechange,*reset,*resize,*scroll,*seeked,*seeking,*select,*show,*stalled,*submit,*suspend,*timeupdate,*toggle,*volumechange,*waiting,outerText,!spellcheck,%style,#tabIndex,title,!translate',
@@ -879,7 +870,7 @@ function getAttributeInfosForElement(info, elementName, element) {
         const applicableSelectors = selectors.filter(selector => !selector.element || selector.element == elementName);
         const selectorAndAttributeNames = applicableSelectors.map(selector => ({ selector, attrs: selector.attrs.filter(a => !!a) }));
         let attrs = flatten(selectorAndAttributeNames.map(selectorAndAttr => {
-            const directive = (selectorMap.get(selectorAndAttr.selector));
+            const directive = selectorMap.get(selectorAndAttr.selector);
             const result = selectorAndAttr.attrs.map(name => ({ name, input: name in directive.inputs, output: name in directive.outputs }));
             return result;
         }));
@@ -895,7 +886,7 @@ function getAttributeInfosForElement(info, elementName, element) {
         // All input and output properties of the matching directives should be added.
         let elementSelector = element ?
             createElementCssSelector(element) :
-            createElementCssSelector(new Element(elementName, [], [], (null), null, null));
+            createElementCssSelector(new Element(elementName, [], [], null, null, null));
         let matcher = new SelectorMatcher();
         matcher.addSelectables(selectors);
         matcher.match(elementSelector, selector => {
@@ -922,7 +913,7 @@ function attributeValueCompletions(info, position, attr) {
         mostSpecific.visit(visitor, null);
         if (!visitor.result || !visitor.result.length) {
             // Try allwoing widening the path
-            const widerPath = findTemplateAstAt(info.templateAst, position, /* allowWidening */ /* allowWidening */ true);
+            const widerPath = findTemplateAstAt(info.templateAst, position, /* allowWidening */ true);
             if (widerPath.tail) {
                 const widerVisitor = new ExpressionVisitor(info, position, attr, () => getExpressionScope(dinfo, widerPath, false));
                 widerPath.tail.visit(widerVisitor, null);
@@ -1017,7 +1008,7 @@ class ExpressionVisitor extends NullTemplateVisitor {
                 return;
             const valueRelativePosition = this.position - this.attr.valueSpan.start.offset - 1;
             const bindings = templateBindingResult.templateBindings;
-            const binding = bindings.find(binding => inSpan(valueRelativePosition, binding.span, /* exclusive */ /* exclusive */ true)) ||
+            const binding = bindings.find(binding => inSpan(valueRelativePosition, binding.span, /* exclusive */ true)) ||
                 bindings.find(binding => inSpan(valueRelativePosition, binding.span));
             const keyCompletions = () => {
                 let keys = [];
@@ -1242,7 +1233,7 @@ function locateSymbol(info) {
             },
             visitVariable(ast) { },
             visitEvent(ast) {
-                if (!attributeValueSymbol(ast.handler, /* inEvent */ /* inEvent */ true)) {
+                if (!attributeValueSymbol(ast.handler, /* inEvent */ true)) {
                     symbol = findOutputBinding(info, path$$1, ast);
                     symbol = symbol && new OverrideKindSymbol(symbol, 'event');
                     span = spanOf(ast);
@@ -1254,7 +1245,7 @@ function locateSymbol(info) {
                 const expressionPosition = templatePosition - ast.sourceSpan.start.offset;
                 if (inSpan(expressionPosition, ast.value.span)) {
                     const dinfo = diagnosticInfoFromTemplateInfo(info);
-                    const scope = getExpressionScope(dinfo, path$$1, /* includeEvent */ /* includeEvent */ false);
+                    const scope = getExpressionScope(dinfo, path$$1, /* includeEvent */ false);
                     const result = getExpressionSymbol(scope, ast.value, expressionPosition, info.template.query);
                     if (result) {
                         symbol = result.symbol;
@@ -1545,7 +1536,7 @@ class LanguageServiceImpl {
                 const htmlParser = new I18NHtmlParser(rawHtmlParser);
                 const expressionParser = new Parser(new Lexer());
                 const config = new CompilerConfig();
-                const parser = new TemplateParser(config, this.host.resolver.getReflector(), expressionParser, new DomElementSchemaRegistry(), htmlParser, (null), []);
+                const parser = new TemplateParser(config, this.host.resolver.getReflector(), expressionParser, new DomElementSchemaRegistry(), htmlParser, null, []);
                 const htmlResult = htmlParser.parse(template.source, '', true);
                 const analyzedModules = this.host.getAnalyzedModules();
                 let errors = undefined;
@@ -1644,7 +1635,7 @@ class ReflectorHost extends CompilerHost {
     constructor(getProgram, serviceHost, options) {
         super(
         // The ancestor value for program is overridden below so passing null here is safe.
-        /* program */ (null), options, new ModuleResolutionHostAdapter(new ReflectorModuleModuleResolutionHost(serviceHost)), { verboseInvalidExpression: true });
+        /* program */ null, options, new ModuleResolutionHostAdapter(new ReflectorModuleModuleResolutionHost(serviceHost)), { verboseInvalidExpression: true });
         this.getProgram = getProgram;
     }
     get program() { return this.getProgram(); }
@@ -1705,8 +1696,8 @@ class TypeScriptServiceHost {
     }
     setSite(service) { this.service = service; }
     /**
-       * Angular LanguageServiceHost implementation
-       */
+     * Angular LanguageServiceHost implementation
+     */
     get resolver() {
         this.validate();
         let result = this._resolver;
@@ -1871,7 +1862,7 @@ class TypeScriptServiceHost {
             const urlResolver = createOfflineCompileUrlResolver();
             for (const module of ngModuleSummary.ngModules) {
                 for (const directive of module.declaredDirectives) {
-                    const { metadata } = (this.resolver.getNonNormalizedDirectiveMetadata(directive.reference));
+                    const { metadata } = this.resolver.getNonNormalizedDirectiveMetadata(directive.reference);
                     if (metadata.isComponent && metadata.template && metadata.template.templateUrl) {
                         const templateName = urlResolver.resolve(this.reflector.componentModuleUrl(directive.reference), metadata.template.templateUrl);
                         fileToComponent.set(templateName, directive.reference);
@@ -1982,7 +1973,7 @@ class TypeScriptServiceHost {
                 toSummaryFileName(sourceFilePath) { return sourceFilePath; },
                 fromSummaryFileName(filePath) { return filePath; },
             }, this._staticSymbolCache);
-            result = this._staticSymbolResolver = new StaticSymbolResolver(this.reflectorHost, this._staticSymbolCache, this._summaryResolver, (e, filePath) => this.collectError(e, (filePath)));
+            result = this._staticSymbolResolver = new StaticSymbolResolver(this.reflectorHost, this._staticSymbolCache, this._summaryResolver, (e, filePath) => this.collectError(e, filePath));
         }
         return result;
     }
@@ -1990,7 +1981,7 @@ class TypeScriptServiceHost {
         let result = this._reflector;
         if (!result) {
             const ssr = this.staticSymbolResolver;
-            result = this._reflector = new StaticReflector(this._summaryResolver, ssr, [], [], (e, filePath) => this.collectError(e, (filePath)));
+            result = this._reflector = new StaticReflector(this._summaryResolver, ssr, [], [], (e, filePath) => this.collectError(e, filePath));
         }
         return result;
     }
@@ -2010,9 +2001,9 @@ class TypeScriptServiceHost {
         return undefined;
     }
     /**
-       * Given a template string node, see if it is an Angular template string, and if so return the
-       * containing class.
-       */
+     * Given a template string node, see if it is an Angular template string, and if so return the
+     * containing class.
+     */
     getTemplateClassDeclFromNode(currentToken) {
         // Verify we are in a 'template' property assignment, in an object literal, which is an call
         // arg, in a decorator
@@ -2069,7 +2060,7 @@ class TypeScriptServiceHost {
                             const staticSymbol = this.reflector.getStaticSymbol(sourceFile.fileName, classDeclaration.name.text);
                             try {
                                 if (this.resolver.isDirective(staticSymbol)) {
-                                    const { metadata } = (this.resolver.getNonNormalizedDirectiveMetadata(staticSymbol));
+                                    const { metadata } = this.resolver.getNonNormalizedDirectiveMetadata(staticSymbol);
                                     const declarationSpan = spanOf$1(target);
                                     return {
                                         type: staticSymbol,
@@ -2429,7 +2420,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-const VERSION = new Version('5.0.0-beta.7-4c73b52');
+const VERSION = new Version('5.0.0-beta.7-6e1896b');
 
 /**
  * @license
