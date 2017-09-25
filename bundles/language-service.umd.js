@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.4.3-5c99b01
+ * @license Angular v4.4.3-c7aa8a1
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2033,7 +2033,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v4.4.3-5c99b01
+ * @license Angular v4.4.3-c7aa8a1
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2825,7 +2825,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('4.4.3-5c99b01');
+var VERSION$2 = new Version('4.4.3-c7aa8a1');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -17028,7 +17028,7 @@ var core_es5 = Object.freeze({
 });
 
 /**
- * @license Angular v4.4.3-5c99b01
+ * @license Angular v4.4.3-c7aa8a1
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -17047,7 +17047,7 @@ var core_es5 = Object.freeze({
 /**
  * \@stable
  */
-var VERSION$1 = new Version('4.4.3-5c99b01');
+var VERSION$1 = new Version('4.4.3-c7aa8a1');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -28200,6 +28200,11 @@ function createTokenForExternalReference(reflector, reference) {
  */
 var PRESERVE_WS_ATTR_NAME = 'ngPreserveWhitespaces';
 var SKIP_WS_TRIM_TAGS = new Set(['pre', 'template', 'textarea', 'script', 'style']);
+// Equivalent to \s with \u00a0 (non-breaking space) excluded.
+// Based on https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp
+var WS_CHARS = ' \f\n\r\t\v\u1680\u180e\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff';
+var NO_WS_REGEXP = new RegExp("[^" + WS_CHARS + "]");
+var WS_REPLACE_REGEXP = new RegExp("[" + WS_CHARS + "]{2,}", 'g');
 /**
  * @param {?} attrs
  * @return {?}
@@ -28263,9 +28268,9 @@ var WhitespaceVisitor = (function () {
      * @return {?}
      */
     WhitespaceVisitor.prototype.visitText = function (text, context) {
-        var /** @type {?} */ isBlank = text.value.trim().length === 0;
-        if (!isBlank) {
-            return new Text(replaceNgsp(text.value).replace(/\s\s+/g, ' '), text.sourceSpan);
+        var /** @type {?} */ isNotBlank = text.value.match(NO_WS_REGEXP);
+        if (isNotBlank) {
+            return new Text(replaceNgsp(text.value).replace(WS_REPLACE_REGEXP, ' '), text.sourceSpan);
         }
         return null;
     };
@@ -47405,7 +47410,7 @@ var core_1 = require$$0$13;
 /**
  * @stable
  */
-exports.VERSION = new core_1.Version('4.4.3-5c99b01');
+exports.VERSION = new core_1.Version('4.4.3-c7aa8a1');
 
 });
 
@@ -50882,7 +50887,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v4.4.3-5c99b01
+ * @license Angular v4.4.3-c7aa8a1
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -53511,7 +53516,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('4.4.3-5c99b01');
+var VERSION$$1 = new Version('4.4.3-c7aa8a1');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
