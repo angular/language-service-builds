@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.0.0-beta.7-2cf52c1
+ * @license Angular v5.0.0-beta.7-f57b7df
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v5.0.0-beta.7-2cf52c1
+ * @license Angular v5.0.0-beta.7-f57b7df
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -671,7 +671,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('5.0.0-beta.7-2cf52c1');
+var VERSION$1 = new Version('5.0.0-beta.7-f57b7df');
 
 /**
  * @fileoverview added by tsickle
@@ -32819,22 +32819,6 @@ var JitCompiler = (function () {
      * @param {?} component
      * @return {?}
      */
-    JitCompiler.prototype.getNgContentSelectors = /**
-     * @param {?} component
-     * @return {?}
-     */
-    function (component) {
-        this._console.warn('Compiler.getNgContentSelectors is deprecated. Use ComponentFactory.ngContentSelectors instead!');
-        var /** @type {?} */ template = this._compiledTemplateCache.get(component);
-        if (!template) {
-            throw new Error("The component " + stringify(component) + " is not yet compiled!");
-        }
-        return /** @type {?} */ ((template.compMeta.template)).ngContentSelectors;
-    };
-    /**
-     * @param {?} component
-     * @return {?}
-     */
     JitCompiler.prototype.getComponentFactory = /**
      * @param {?} component
      * @return {?}
@@ -40532,7 +40516,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v5.0.0-beta.7-2cf52c1
+ * @license Angular v5.0.0-beta.7-f57b7df
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -40921,7 +40905,7 @@ var Version$1 = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('5.0.0-beta.7-2cf52c1');
+var VERSION$2 = new Version$1('5.0.0-beta.7-f57b7df');
 
 /**
  * @fileoverview added by tsickle
@@ -43916,35 +43900,6 @@ var Compiler = (function () {
     function (moduleType) {
         throw _throwError();
     };
-    /**
-     * Exposes the CSS-style selectors that have been used in `ngContent` directives within
-     * the template of the given component.
-     * This is used by the `upgrade` library to compile the appropriate transclude content
-     * in the AngularJS wrapper component.
-     *
-     * @deprecated since v4. Use ComponentFactory.ngContentSelectors instead.
-     */
-    /**
-     * Exposes the CSS-style selectors that have been used in `ngContent` directives within
-     * the template of the given component.
-     * This is used by the `upgrade` library to compile the appropriate transclude content
-     * in the AngularJS wrapper component.
-     *
-     * @deprecated since v4. Use ComponentFactory.ngContentSelectors instead.
-     * @param {?} component
-     * @return {?}
-     */
-    Compiler.prototype.getNgContentSelectors = /**
-     * Exposes the CSS-style selectors that have been used in `ngContent` directives within
-     * the template of the given component.
-     * This is used by the `upgrade` library to compile the appropriate transclude content
-     * in the AngularJS wrapper component.
-     *
-     * @deprecated since v4. Use ComponentFactory.ngContentSelectors instead.
-     * @param {?} component
-     * @return {?}
-     */
-    function (component) { throw _throwError(); };
     /**
      * Clears all caches.
      */
@@ -54138,7 +54093,7 @@ var NgModuleFactory_ = (function (_super) {
 }(NgModuleFactory));
 
 /**
- * @license Angular v5.0.0-beta.7-2cf52c1
+ * @license Angular v5.0.0-beta.7-f57b7df
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -56712,7 +56667,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('5.0.0-beta.7-2cf52c1');
+var VERSION = new Version$1('5.0.0-beta.7-f57b7df');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
