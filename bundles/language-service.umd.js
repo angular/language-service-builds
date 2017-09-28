@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.0.0-beta.7-b3db3f8
+ * @license Angular v5.0.0-beta.7-a9d32a3
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v5.0.0-beta.7-b3db3f8
+ * @license Angular v5.0.0-beta.7-a9d32a3
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -671,7 +671,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('5.0.0-beta.7-b3db3f8');
+var VERSION$1 = new Version('5.0.0-beta.7-a9d32a3');
 
 /**
  * @fileoverview added by tsickle
@@ -20265,7 +20265,7 @@ var EmitterVisitorContext = (function () {
     function (line, column) {
         var /** @type {?} */ emittedLine = this._lines[line - this._preambleLineCount];
         if (emittedLine) {
-            var /** @type {?} */ columnsLeft = column - emittedLine.indent;
+            var /** @type {?} */ columnsLeft = column - _createIndent(emittedLine.indent).length;
             for (var /** @type {?} */ partIndex = 0; partIndex < emittedLine.parts.length; partIndex++) {
                 var /** @type {?} */ part = emittedLine.parts[partIndex];
                 if (part.length > columnsLeft) {
@@ -40547,7 +40547,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v5.0.0-beta.7-b3db3f8
+ * @license Angular v5.0.0-beta.7-a9d32a3
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -40936,7 +40936,7 @@ var Version$1 = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('5.0.0-beta.7-b3db3f8');
+var VERSION$2 = new Version$1('5.0.0-beta.7-a9d32a3');
 
 /**
  * @fileoverview added by tsickle
@@ -54047,7 +54047,7 @@ var NgModuleFactory_ = (function (_super) {
 }(NgModuleFactory));
 
 /**
- * @license Angular v5.0.0-beta.7-b3db3f8
+ * @license Angular v5.0.0-beta.7-a9d32a3
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -56621,7 +56621,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('5.0.0-beta.7-b3db3f8');
+var VERSION = new Version$1('5.0.0-beta.7-a9d32a3');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
