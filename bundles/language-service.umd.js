@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.0.0-beta.7-14e8e88
+ * @license Angular v5.0.0-beta.7-7c1d3e0
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v5.0.0-beta.7-14e8e88
+ * @license Angular v5.0.0-beta.7-7c1d3e0
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -671,7 +671,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('5.0.0-beta.7-14e8e88');
+var VERSION$1 = new Version('5.0.0-beta.7-7c1d3e0');
 
 /**
  * @fileoverview added by tsickle
@@ -28183,7 +28183,7 @@ function toTypeScript(file, preamble) {
  * @return {?}
  */
 function serializeSummaries(srcFileName, forJitCtx, summaryResolver, symbolResolver, symbols, types) {
-    var /** @type {?} */ toJsonSerializer = new ToJsonSerializer(symbolResolver, summaryResolver);
+    var /** @type {?} */ toJsonSerializer = new ToJsonSerializer(symbolResolver, summaryResolver, srcFileName);
     var /** @type {?} */ forJitSerializer = new ForJitSerializer(forJitCtx, symbolResolver);
     // for symbols, we use everything except for the class metadata itself
     // (we keep the statics though), as the class metadata is contained in the
@@ -28202,7 +28202,7 @@ function serializeSummaries(srcFileName, forJitCtx, summaryResolver, symbolResol
             forJitSerializer.addLibType(summary.type);
         }
     });
-    var _a = toJsonSerializer.serialize(srcFileName), json = _a.json, exportAs = _a.exportAs;
+    var _a = toJsonSerializer.serialize(), json = _a.json, exportAs = _a.exportAs;
     forJitSerializer.serialize(exportAs);
     return { json: json, exportAs: exportAs };
 }
@@ -28239,15 +28239,17 @@ function createSummaryForJitFunction(outputCtx, reference, value) {
 }
 var ToJsonSerializer = (function (_super) {
     __extends(ToJsonSerializer, _super);
-    function ToJsonSerializer(symbolResolver, summaryResolver) {
+    function ToJsonSerializer(symbolResolver, summaryResolver, srcFileName) {
         var _this = _super.call(this) || this;
         _this.symbolResolver = symbolResolver;
         _this.summaryResolver = summaryResolver;
+        _this.srcFileName = srcFileName;
         _this.symbols = [];
         _this.indexBySymbol = new Map();
         _this.processedSummaryBySymbol = new Map();
         _this.processedSummaries = [];
         _this.unprocessedSymbolSummariesBySymbol = new Map();
+        _this.moduleName = symbolResolver.getKnownModuleName(srcFileName);
         return _this;
     }
     /**
@@ -28315,17 +28317,16 @@ var ToJsonSerializer = (function (_super) {
         }
     };
     /**
-     * @param {?} srcFileName
      * @return {?}
      */
     ToJsonSerializer.prototype.serialize = /**
-     * @param {?} srcFileName
      * @return {?}
      */
-    function (srcFileName) {
+    function () {
         var _this = this;
         var /** @type {?} */ exportAs = [];
         var /** @type {?} */ json = JSON.stringify({
+            moduleName: this.moduleName,
             summaries: this.processedSummaries,
             symbols: this.symbols.map(function (symbol, index) {
                 symbol.assertNoMembers();
@@ -28340,7 +28341,7 @@ var ToJsonSerializer = (function (_super) {
                 return {
                     __symbol: index,
                     name: symbol.name,
-                    filePath: _this.summaryResolver.toSummaryFileName(symbol.filePath, srcFileName),
+                    filePath: _this.summaryResolver.toSummaryFileName(symbol.filePath, _this.srcFileName),
                     importAs: importAs
                 };
             })
@@ -28677,7 +28678,7 @@ var FromJsonDeserializer = (function (_super) {
             }
         });
         var /** @type {?} */ summaries = visitValue(data.summaries, this, null);
-        return { summaries: summaries, importAs: importAs };
+        return { moduleName: data.moduleName, summaries: summaries, importAs: importAs };
     };
     /**
      * @param {?} map
@@ -30765,8 +30766,20 @@ var StaticSymbolResolver = (function () {
      * @return {?}
      */
     function (importedFilePath, containingFilePath) {
-        return this.knownFileNameToModuleNames.get(importedFilePath) ||
+        return this.summaryResolver.getKnownModuleName(importedFilePath) ||
+            this.knownFileNameToModuleNames.get(importedFilePath) ||
             this.host.fileNameToModuleName(importedFilePath, containingFilePath);
+    };
+    /**
+     * @param {?} filePath
+     * @return {?}
+     */
+    StaticSymbolResolver.prototype.getKnownModuleName = /**
+     * @param {?} filePath
+     * @return {?}
+     */
+    function (filePath) {
+        return this.knownFileNameToModuleNames.get(filePath) || null;
     };
     /**
      * @param {?} sourceSymbol
@@ -30992,6 +31005,11 @@ var StaticSymbolResolver = (function () {
         this.resolvedFilePaths.add(filePath);
         var /** @type {?} */ resolvedSymbols = [];
         var /** @type {?} */ metadata = this.getModuleMetadata(filePath);
+        if (metadata['importAs']) {
+            // Index bundle indices should use the importAs module name defined
+            // in the bundle.
+            this.knownFileNameToModuleNames.set(filePath, metadata['importAs']);
+        }
         // handle the symbols in one of the re-export location
         if (metadata['exports']) {
             var _loop_1 = function (moduleExport) {
@@ -31300,6 +31318,7 @@ var AotSummaryResolver = (function () {
         this.summaryCache = new Map();
         this.loadedFilePaths = new Map();
         this.importAs = new Map();
+        this.knownFileNameToModuleNames = new Map();
     }
     /**
      * @param {?} filePath
@@ -31385,6 +31404,22 @@ var AotSummaryResolver = (function () {
         return /** @type {?} */ ((this.importAs.get(staticSymbol)));
     };
     /**
+     * Converts a file path to a module name that can be used as an `import`.
+     */
+    /**
+     * Converts a file path to a module name that can be used as an `import`.
+     * @param {?} importedFilePath
+     * @return {?}
+     */
+    AotSummaryResolver.prototype.getKnownModuleName = /**
+     * Converts a file path to a module name that can be used as an `import`.
+     * @param {?} importedFilePath
+     * @return {?}
+     */
+    function (importedFilePath) {
+        return this.knownFileNameToModuleNames.get(importedFilePath) || null;
+    };
+    /**
      * @param {?} summary
      * @return {?}
      */
@@ -31421,8 +31456,11 @@ var AotSummaryResolver = (function () {
         hasSummary = json != null;
         this.loadedFilePaths.set(filePath, hasSummary);
         if (json) {
-            var _a = deserializeSummaries(this.staticSymbolCache, this, filePath, json), summaries = _a.summaries, importAs = _a.importAs;
+            var _a = deserializeSummaries(this.staticSymbolCache, this, filePath, json), moduleName = _a.moduleName, summaries = _a.summaries, importAs = _a.importAs;
             summaries.forEach(function (summary) { return _this.summaryCache.set(summary.symbol, summary); });
+            if (moduleName) {
+                this.knownFileNameToModuleNames.set(filePath, moduleName);
+            }
             importAs.forEach(function (importAs) {
                 _this.importAs.set(importAs.symbol, _this.staticSymbolCache.get(ngfactoryFilePath(filePath), importAs.importAs));
             });
@@ -31564,6 +31602,15 @@ var JitSummaryResolver = (function () {
      * @return {?}
      */
     function (reference) { return reference; };
+    /**
+     * @param {?} fileName
+     * @return {?}
+     */
+    JitSummaryResolver.prototype.getKnownModuleName = /**
+     * @param {?} fileName
+     * @return {?}
+     */
+    function (fileName) { return null; };
     /**
      * @param {?} summary
      * @return {?}
@@ -36305,23 +36352,6 @@ var BaseAotCompilerHost = (function () {
         this.flatModuleIndexNames = new Set();
         this.flatModuleIndexRedirectNames = new Set();
     }
-    BaseAotCompilerHost.prototype.getImportAs = function (fileName) {
-        // Note: `importAs` can only be in .metadata.json files
-        // So it is enough to call this.readMetadata, and we get the
-        // benefit that this is cached.
-        if (DTS.test(fileName)) {
-            var metadatas = this.readMetadata(fileName);
-            if (metadatas) {
-                for (var _i = 0, metadatas_1 = metadatas; _i < metadatas_1.length; _i++) {
-                    var metadata = metadatas_1[_i];
-                    if (metadata.importAs) {
-                        return metadata.importAs;
-                    }
-                }
-            }
-        }
-        return undefined;
-    };
     BaseAotCompilerHost.prototype.getMetadataFor = function (filePath) {
         if (!this.context.fileExists(filePath)) {
             // If the file doesn't exists then we cannot return metadata for the file.
@@ -36355,17 +36385,17 @@ var BaseAotCompilerHost = (function () {
         }
         try {
             var metadataOrMetadatas = JSON.parse(this.context.readFile(metadataPath));
-            var metadatas_2 = metadataOrMetadatas ?
+            var metadatas_1 = metadataOrMetadatas ?
                 (Array.isArray(metadataOrMetadatas) ? metadataOrMetadatas : [metadataOrMetadatas]) :
                 [];
-            if (metadatas_2.length) {
-                var maxMetadata = metadatas_2.reduce(function (p, c) { return p.version > c.version ? p : c; });
+            if (metadatas_1.length) {
+                var maxMetadata = metadatas_1.reduce(function (p, c) { return p.version > c.version ? p : c; });
                 if (maxMetadata.version < index.METADATA_VERSION) {
-                    metadatas_2.push(this.upgradeMetadataWithDtsData(maxMetadata, dtsFilePath));
+                    metadatas_1.push(this.upgradeMetadataWithDtsData(maxMetadata, dtsFilePath));
                 }
             }
-            this.resolverCache.set(dtsFilePath, metadatas_2);
-            return metadatas_2;
+            this.resolverCache.set(dtsFilePath, metadatas_1);
+            return metadatas_1;
         }
         catch (e) {
             console.error("Failed to read JSON file " + metadataPath);
@@ -36614,10 +36644,6 @@ var CompilerHost = (function (_super) {
      * NOTE: (*) the relative path is computed depending on `isGenDirChildOfRootDir`.
      */
     CompilerHost.prototype.fileNameToModuleName = function (importedFile, containingFile) {
-        var importAs = this.getImportAs(importedFile);
-        if (importAs) {
-            return importAs;
-        }
         // If a file does not yet exist (because we compile it later), we still need to
         // assume it exists it so that the `resolve` method works!
         if (importedFile !== containingFile && !this.context.fileExists(importedFile)) {
@@ -40547,7 +40573,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v5.0.0-beta.7-14e8e88
+ * @license Angular v5.0.0-beta.7-7c1d3e0
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -40936,7 +40962,7 @@ var Version$1 = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('5.0.0-beta.7-14e8e88');
+var VERSION$2 = new Version$1('5.0.0-beta.7-7c1d3e0');
 
 /**
  * @fileoverview added by tsickle
@@ -54124,7 +54150,7 @@ var NgModuleFactory_ = (function (_super) {
 }(NgModuleFactory));
 
 /**
- * @license Angular v5.0.0-beta.7-14e8e88
+ * @license Angular v5.0.0-beta.7-7c1d3e0
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -56698,7 +56724,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('5.0.0-beta.7-14e8e88');
+var VERSION = new Version$1('5.0.0-beta.7-7c1d3e0');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
