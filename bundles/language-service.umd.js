@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.4.3-2cd88bf
+ * @license Angular v4.4.3-c3b39ba
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2033,7 +2033,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v4.4.3-2cd88bf
+ * @license Angular v4.4.3-c3b39ba
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2825,7 +2825,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('4.4.3-2cd88bf');
+var VERSION$2 = new Version('4.4.3-c3b39ba');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -17028,7 +17028,7 @@ var core_es5 = Object.freeze({
 });
 
 /**
- * @license Angular v4.4.3-2cd88bf
+ * @license Angular v4.4.3-c3b39ba
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -17047,7 +17047,7 @@ var core_es5 = Object.freeze({
 /**
  * \@stable
  */
-var VERSION$1 = new Version('4.4.3-2cd88bf');
+var VERSION$1 = new Version('4.4.3-c3b39ba');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -36138,7 +36138,7 @@ var EmitterVisitorContext = (function () {
     EmitterVisitorContext.prototype.spanOf = function (line, column) {
         var /** @type {?} */ emittedLine = this._lines[line - this._preambleLineCount];
         if (emittedLine) {
-            var /** @type {?} */ columnsLeft = column - emittedLine.indent;
+            var /** @type {?} */ columnsLeft = column - _createIndent(emittedLine.indent).length;
             for (var /** @type {?} */ partIndex = 0; partIndex < emittedLine.parts.length; partIndex++) {
                 var /** @type {?} */ part = emittedLine.parts[partIndex];
                 if (part.length > columnsLeft) {
@@ -47410,7 +47410,7 @@ var core_1 = require$$0$13;
 /**
  * @stable
  */
-exports.VERSION = new core_1.Version('4.4.3-2cd88bf');
+exports.VERSION = new core_1.Version('4.4.3-c3b39ba');
 
 });
 
@@ -50887,7 +50887,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v4.4.3-2cd88bf
+ * @license Angular v4.4.3-c3b39ba
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -53516,7 +53516,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('4.4.3-2cd88bf');
+var VERSION$$1 = new Version('4.4.3-c3b39ba');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
