@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.0.0-beta.7-2b84b86
+ * @license Angular v5.0.0-beta.7-ff5b050
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v5.0.0-beta.7-2b84b86
+ * @license Angular v5.0.0-beta.7-ff5b050
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -671,7 +671,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('5.0.0-beta.7-2b84b86');
+var VERSION$1 = new Version('5.0.0-beta.7-ff5b050');
 
 /**
  * @fileoverview added by tsickle
@@ -20265,7 +20265,7 @@ var EmitterVisitorContext = (function () {
     function (line, column) {
         var /** @type {?} */ emittedLine = this._lines[line - this._preambleLineCount];
         if (emittedLine) {
-            var /** @type {?} */ columnsLeft = column - emittedLine.indent;
+            var /** @type {?} */ columnsLeft = column - _createIndent(emittedLine.indent).length;
             for (var /** @type {?} */ partIndex = 0; partIndex < emittedLine.parts.length; partIndex++) {
                 var /** @type {?} */ part = emittedLine.parts[partIndex];
                 if (part.length > columnsLeft) {
@@ -30193,7 +30193,9 @@ var StaticReflector = (function () {
                         var item = _a[_i];
                         // Check for a spread expression
                         if (item && item.__symbolic === 'spread') {
-                            var /** @type {?} */ spreadArray = simplify(item.expression);
+                            // We call with references as 0 because we require the actual value and cannot
+                            // tolerate a reference here.
+                            var /** @type {?} */ spreadArray = simplifyInContext(context, item.expression, depth, 0);
                             if (Array.isArray(spreadArray)) {
                                 for (var _b = 0, spreadArray_1 = spreadArray; _b < spreadArray_1.length; _b++) {
                                     var spreadItem = spreadArray_1[_b];
@@ -30211,9 +30213,10 @@ var StaticReflector = (function () {
                     return result_2;
                 }
                 if (expression instanceof StaticSymbol) {
-                    // Stop simplification at builtin symbols or if we are in a reference context
+                    // Stop simplification at builtin symbols or if we are in a reference context and
+                    // the symbol doesn't have members.
                     if (expression === self.injectionToken || self.conversionMap.has(expression) ||
-                        references > 0) {
+                        (references > 0 && !expression.members.length)) {
                         return expression;
                     }
                     else {
@@ -40544,7 +40547,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v5.0.0-beta.7-2b84b86
+ * @license Angular v5.0.0-beta.7-ff5b050
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -40933,7 +40936,7 @@ var Version$1 = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('5.0.0-beta.7-2b84b86');
+var VERSION$2 = new Version$1('5.0.0-beta.7-ff5b050');
 
 /**
  * @fileoverview added by tsickle
@@ -54044,7 +54047,7 @@ var NgModuleFactory_ = (function (_super) {
 }(NgModuleFactory));
 
 /**
- * @license Angular v5.0.0-beta.7-2b84b86
+ * @license Angular v5.0.0-beta.7-ff5b050
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -56618,7 +56621,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('5.0.0-beta.7-2b84b86');
+var VERSION = new Version$1('5.0.0-beta.7-ff5b050');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
