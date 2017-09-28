@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.0.0-beta.7-82e4923
+ * @license Angular v5.0.0-beta.7-c1b029a
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v5.0.0-beta.7-82e4923
+ * @license Angular v5.0.0-beta.7-c1b029a
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -671,7 +671,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('5.0.0-beta.7-82e4923');
+var VERSION$1 = new Version('5.0.0-beta.7-c1b029a');
 
 /**
  * @fileoverview added by tsickle
@@ -30000,6 +30000,7 @@ var StaticReflector = (function () {
      */
     function () {
         this.injectionToken = this.findDeclaration(ANGULAR_CORE, 'InjectionToken');
+        this.opaqueToken = this.findDeclaration(ANGULAR_CORE, 'OpaqueToken');
         this.ROUTES = this.tryFindDeclaration(ANGULAR_ROUTER, 'ROUTES');
         this.ANALYZE_FOR_ENTRY_COMPONENTS =
             this.findDeclaration(ANGULAR_CORE, 'ANALYZE_FOR_ENTRY_COMPONENTS');
@@ -30343,9 +30344,11 @@ var StaticReflector = (function () {
                                 // Determine if the function is a built-in conversion
                                 staticSymbol = simplifyInContext(context, expression['expression'], depth + 1, /* references */ 0);
                                 if (staticSymbol instanceof StaticSymbol) {
-                                    if (staticSymbol === self.injectionToken) {
+                                    if (staticSymbol === self.injectionToken || staticSymbol === self.opaqueToken) {
                                         // if somebody calls new InjectionToken, don't create an InjectionToken,
                                         // but rather return the symbol to which the InjectionToken is assigned to.
+                                        // OpaqueToken is supported too as it is required by the language service to
+                                        // support v4 and prior versions of Angular.
                                         return context;
                                     }
                                     var /** @type {?} */ argExpressions = expression['arguments'] || [];
@@ -40541,7 +40544,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v5.0.0-beta.7-82e4923
+ * @license Angular v5.0.0-beta.7-c1b029a
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -40930,7 +40933,7 @@ var Version$1 = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('5.0.0-beta.7-82e4923');
+var VERSION$2 = new Version$1('5.0.0-beta.7-c1b029a');
 
 /**
  * @fileoverview added by tsickle
@@ -54118,7 +54121,7 @@ var NgModuleFactory_ = (function (_super) {
 }(NgModuleFactory));
 
 /**
- * @license Angular v5.0.0-beta.7-82e4923
+ * @license Angular v5.0.0-beta.7-c1b029a
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -56692,7 +56695,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('5.0.0-beta.7-82e4923');
+var VERSION = new Version$1('5.0.0-beta.7-c1b029a');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
