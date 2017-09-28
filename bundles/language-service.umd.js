@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.0.0-beta.7-bed8ac7
+ * @license Angular v5.0.0-beta.7-14e8e88
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v5.0.0-beta.7-bed8ac7
+ * @license Angular v5.0.0-beta.7-14e8e88
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -671,7 +671,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('5.0.0-beta.7-bed8ac7');
+var VERSION$1 = new Version('5.0.0-beta.7-14e8e88');
 
 /**
  * @fileoverview added by tsickle
@@ -40547,7 +40547,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v5.0.0-beta.7-bed8ac7
+ * @license Angular v5.0.0-beta.7-14e8e88
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -40936,7 +40936,7 @@ var Version$1 = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('5.0.0-beta.7-bed8ac7');
+var VERSION$2 = new Version$1('5.0.0-beta.7-14e8e88');
 
 /**
  * @fileoverview added by tsickle
@@ -42747,8 +42747,15 @@ var ResolvedReflectiveProvider_ = (function () {
         this.key = key;
         this.resolvedFactories = resolvedFactories;
         this.multiProvider = multiProvider;
-        this.resolvedFactory = this.resolvedFactories[0];
     }
+    Object.defineProperty(ResolvedReflectiveProvider_.prototype, "resolvedFactory", {
+        get: /**
+         * @return {?}
+         */
+        function () { return this.resolvedFactories[0]; },
+        enumerable: true,
+        configurable: true
+    });
     return ResolvedReflectiveProvider_;
 }());
 /**
@@ -44056,13 +44063,48 @@ var ComponentFactoryBoundToModule = (function (_super) {
         var _this = _super.call(this) || this;
         _this.factory = factory;
         _this.ngModule = ngModule;
-        _this.selector = factory.selector;
-        _this.componentType = factory.componentType;
-        _this.ngContentSelectors = factory.ngContentSelectors;
-        _this.inputs = factory.inputs;
-        _this.outputs = factory.outputs;
         return _this;
     }
+    Object.defineProperty(ComponentFactoryBoundToModule.prototype, "selector", {
+        get: /**
+         * @return {?}
+         */
+        function () { return this.factory.selector; },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(ComponentFactoryBoundToModule.prototype, "componentType", {
+        get: /**
+         * @return {?}
+         */
+        function () { return this.factory.componentType; },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(ComponentFactoryBoundToModule.prototype, "ngContentSelectors", {
+        get: /**
+         * @return {?}
+         */
+        function () { return this.factory.ngContentSelectors; },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(ComponentFactoryBoundToModule.prototype, "inputs", {
+        get: /**
+         * @return {?}
+         */
+        function () { return this.factory.inputs; },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(ComponentFactoryBoundToModule.prototype, "outputs", {
+        get: /**
+         * @return {?}
+         */
+        function () { return this.factory.outputs; },
+        enumerable: true,
+        configurable: true
+    });
     /**
      * @param {?} injector
      * @param {?=} projectableNodes
@@ -46104,6 +46146,30 @@ var QueryList = (function () {
         this._results = [];
         this.changes = new EventEmitter();
     }
+    Object.defineProperty(QueryList.prototype, "length", {
+        get: /**
+         * @return {?}
+         */
+        function () { return this._results.length; },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(QueryList.prototype, "first", {
+        get: /**
+         * @return {?}
+         */
+        function () { return this._results[0]; },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(QueryList.prototype, "last", {
+        get: /**
+         * @return {?}
+         */
+        function () { return this._results[this.length - 1]; },
+        enumerable: true,
+        configurable: true
+    });
     /**
      * See
      * [Array.map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map)
@@ -46252,9 +46318,6 @@ var QueryList = (function () {
     function (res) {
         this._results = flatten$2(res);
         (/** @type {?} */ (this)).dirty = false;
-        (/** @type {?} */ (this)).length = this._results.length;
-        (/** @type {?} */ (this)).last = this._results[this.length - 1];
-        (/** @type {?} */ (this)).first = this._results[0];
     };
     /**
      * @return {?}
@@ -51159,7 +51222,6 @@ var NgModuleRef_ = (function () {
         this._def = _def;
         this._destroyListeners = [];
         this._destroyed = false;
-        this.injector = this;
         initNgModule(this);
     }
     /**
@@ -51189,6 +51251,14 @@ var NgModuleRef_ = (function () {
          * @return {?}
          */
         function () { return this.get(ComponentFactoryResolver); },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(NgModuleRef_.prototype, "injector", {
+        get: /**
+         * @return {?}
+         */
+        function () { return this; },
         enumerable: true,
         configurable: true
     });
@@ -53682,8 +53752,15 @@ var DebugRendererFactory2 = (function () {
 var DebugRenderer2 = (function () {
     function DebugRenderer2(delegate) {
         this.delegate = delegate;
-        this.data = this.delegate.data;
     }
+    Object.defineProperty(DebugRenderer2.prototype, "data", {
+        get: /**
+         * @return {?}
+         */
+        function () { return this.delegate.data; },
+        enumerable: true,
+        configurable: true
+    });
     /**
      * @param {?} node
      * @return {?}
@@ -54047,7 +54124,7 @@ var NgModuleFactory_ = (function (_super) {
 }(NgModuleFactory));
 
 /**
- * @license Angular v5.0.0-beta.7-bed8ac7
+ * @license Angular v5.0.0-beta.7-14e8e88
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -56621,7 +56698,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('5.0.0-beta.7-bed8ac7');
+var VERSION = new Version$1('5.0.0-beta.7-14e8e88');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
