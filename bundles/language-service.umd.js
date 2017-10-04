@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.0.0-rc.0-c80e02b
+ * @license Angular v5.0.0-rc.0-01f7112
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v5.0.0-rc.0-c80e02b
+ * @license Angular v5.0.0-rc.0-01f7112
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -671,7 +671,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('5.0.0-rc.0-c80e02b');
+var VERSION$1 = new Version('5.0.0-rc.0-01f7112');
 
 /**
  * @fileoverview added by tsickle
@@ -1465,113 +1465,6 @@ var StaticSymbolCache = (function () {
 // group 2: "event" from "(event)"
 // group 3: "@trigger" from "@trigger"
 var HOST_REG_EXP = /^(?:(?:\[([^\]]+)\])|(?:\(([^\)]+)\)))|(\@[-\w]+)$/;
-var CompileAnimationEntryMetadata = (function () {
-    function CompileAnimationEntryMetadata(name, definitions) {
-        if (name === void 0) { name = null; }
-        if (definitions === void 0) { definitions = null; }
-        this.name = name;
-        this.definitions = definitions;
-    }
-    return CompileAnimationEntryMetadata;
-}());
-/**
- * @abstract
- */
-var CompileAnimationStateMetadata = (function () {
-    function CompileAnimationStateMetadata() {
-    }
-    return CompileAnimationStateMetadata;
-}());
-var CompileAnimationStateDeclarationMetadata = (function (_super) {
-    __extends(CompileAnimationStateDeclarationMetadata, _super);
-    function CompileAnimationStateDeclarationMetadata(stateNameExpr, styles) {
-        var _this = _super.call(this) || this;
-        _this.stateNameExpr = stateNameExpr;
-        _this.styles = styles;
-        return _this;
-    }
-    return CompileAnimationStateDeclarationMetadata;
-}(CompileAnimationStateMetadata));
-var CompileAnimationStateTransitionMetadata = (function (_super) {
-    __extends(CompileAnimationStateTransitionMetadata, _super);
-    function CompileAnimationStateTransitionMetadata(stateChangeExpr, steps) {
-        var _this = _super.call(this) || this;
-        _this.stateChangeExpr = stateChangeExpr;
-        _this.steps = steps;
-        return _this;
-    }
-    return CompileAnimationStateTransitionMetadata;
-}(CompileAnimationStateMetadata));
-/**
- * @abstract
- */
-var CompileAnimationMetadata = (function () {
-    function CompileAnimationMetadata() {
-    }
-    return CompileAnimationMetadata;
-}());
-var CompileAnimationKeyframesSequenceMetadata = (function (_super) {
-    __extends(CompileAnimationKeyframesSequenceMetadata, _super);
-    function CompileAnimationKeyframesSequenceMetadata(steps) {
-        if (steps === void 0) { steps = []; }
-        var _this = _super.call(this) || this;
-        _this.steps = steps;
-        return _this;
-    }
-    return CompileAnimationKeyframesSequenceMetadata;
-}(CompileAnimationMetadata));
-var CompileAnimationStyleMetadata = (function (_super) {
-    __extends(CompileAnimationStyleMetadata, _super);
-    function CompileAnimationStyleMetadata(offset, styles) {
-        if (styles === void 0) { styles = null; }
-        var _this = _super.call(this) || this;
-        _this.offset = offset;
-        _this.styles = styles;
-        return _this;
-    }
-    return CompileAnimationStyleMetadata;
-}(CompileAnimationMetadata));
-var CompileAnimationAnimateMetadata = (function (_super) {
-    __extends(CompileAnimationAnimateMetadata, _super);
-    function CompileAnimationAnimateMetadata(timings, styles) {
-        if (timings === void 0) { timings = 0; }
-        if (styles === void 0) { styles = null; }
-        var _this = _super.call(this) || this;
-        _this.timings = timings;
-        _this.styles = styles;
-        return _this;
-    }
-    return CompileAnimationAnimateMetadata;
-}(CompileAnimationMetadata));
-/**
- * @abstract
- */
-var CompileAnimationWithStepsMetadata = (function (_super) {
-    __extends(CompileAnimationWithStepsMetadata, _super);
-    function CompileAnimationWithStepsMetadata(steps) {
-        if (steps === void 0) { steps = null; }
-        var _this = _super.call(this) || this;
-        _this.steps = steps;
-        return _this;
-    }
-    return CompileAnimationWithStepsMetadata;
-}(CompileAnimationMetadata));
-var CompileAnimationSequenceMetadata = (function (_super) {
-    __extends(CompileAnimationSequenceMetadata, _super);
-    function CompileAnimationSequenceMetadata(steps) {
-        if (steps === void 0) { steps = null; }
-        return _super.call(this, steps) || this;
-    }
-    return CompileAnimationSequenceMetadata;
-}(CompileAnimationWithStepsMetadata));
-var CompileAnimationGroupMetadata = (function (_super) {
-    __extends(CompileAnimationGroupMetadata, _super);
-    function CompileAnimationGroupMetadata(steps) {
-        if (steps === void 0) { steps = null; }
-        return _super.call(this, steps) || this;
-    }
-    return CompileAnimationGroupMetadata;
-}(CompileAnimationWithStepsMetadata));
 /**
  * @param {?} name
  * @return {?}
@@ -1764,7 +1657,6 @@ var CompileTemplateMetadata = (function () {
      */
     function () {
         return {
-            animations: this.animations.map(function (anim) { return anim.name; }),
             ngContentSelectors: this.ngContentSelectors,
             encapsulation: this.encapsulation,
         };
@@ -2125,7 +2017,7 @@ function flatten$1(list) {
  * @param {?} url
  * @return {?}
  */
-function sourceUrl(url) {
+function jitSourceUrl(url) {
     // Note: We need 3 "/" so that ng shows up as a separate domain
     // in the chrome dev tools.
     return url.replace(/(\w+:\/\/[\w:-]+)?(\/+)?/, 'ng:///');
@@ -2151,9 +2043,7 @@ function templateSourceUrl(ngModuleType, compMeta, templateMeta) {
     else {
         url = /** @type {?} */ ((templateMeta.templateUrl));
     }
-    // always prepend ng:// to make angular resources easy to find and not clobber
-    // user resources.
-    return sourceUrl(url);
+    return compMeta.type.reference instanceof StaticSymbol ? url : jitSourceUrl(url);
 }
 /**
  * @param {?} meta
@@ -2163,14 +2053,14 @@ function templateSourceUrl(ngModuleType, compMeta, templateMeta) {
 function sharedStylesheetJitUrl(meta, id) {
     var /** @type {?} */ pathParts = /** @type {?} */ ((meta.moduleUrl)).split(/\/\\/g);
     var /** @type {?} */ baseName = pathParts[pathParts.length - 1];
-    return sourceUrl("css/" + id + baseName + ".ngstyle.js");
+    return jitSourceUrl("css/" + id + baseName + ".ngstyle.js");
 }
 /**
  * @param {?} moduleMeta
  * @return {?}
  */
 function ngModuleJitUrl(moduleMeta) {
-    return sourceUrl(identifierName(moduleMeta.type) + "/module.ngfactory.js");
+    return jitSourceUrl(identifierName(moduleMeta.type) + "/module.ngfactory.js");
 }
 /**
  * @param {?} ngModuleType
@@ -2178,7 +2068,7 @@ function ngModuleJitUrl(moduleMeta) {
  * @return {?}
  */
 function templateJitUrl(ngModuleType, compMeta) {
-    return sourceUrl(identifierName(ngModuleType) + "/" + identifierName(compMeta.type) + ".ngfactory.js");
+    return jitSourceUrl(identifierName(ngModuleType) + "/" + identifierName(compMeta.type) + ".ngfactory.js");
 }
 
 /**
@@ -20599,18 +20489,16 @@ var EmitterVisitorContext = (function () {
             .join('\n');
     };
     /**
-     * @param {?} sourceFilePath
      * @param {?} genFilePath
      * @param {?=} startsAtLine
      * @return {?}
      */
     EmitterVisitorContext.prototype.toSourceMapGenerator = /**
-     * @param {?} sourceFilePath
      * @param {?} genFilePath
      * @param {?=} startsAtLine
      * @return {?}
      */
-    function (sourceFilePath, genFilePath, startsAtLine) {
+    function (genFilePath, startsAtLine) {
         if (startsAtLine === void 0) { startsAtLine = 0; }
         var /** @type {?} */ map = new SourceMapGenerator(genFilePath);
         var /** @type {?} */ firstOffsetMapped = false;
@@ -20619,7 +20507,7 @@ var EmitterVisitorContext = (function () {
                 // Add a single space so that tools won't try to load the file from disk.
                 // Note: We are using virtual urls like `ng:///`, so we have to
                 // provide a content here.
-                map.addSource(sourceFilePath, ' ').addMapping(0, sourceFilePath, 0, 0);
+                map.addSource(genFilePath, ' ').addMapping(0, genFilePath, 0, 0);
                 firstOffsetMapped = true;
             }
         };
@@ -21349,7 +21237,6 @@ var TypeScriptEmitter = (function () {
     function TypeScriptEmitter() {
     }
     /**
-     * @param {?} srcFilePath
      * @param {?} genFilePath
      * @param {?} stmts
      * @param {?=} preamble
@@ -21358,7 +21245,6 @@ var TypeScriptEmitter = (function () {
      * @return {?}
      */
     TypeScriptEmitter.prototype.emitStatementsAndContext = /**
-     * @param {?} srcFilePath
      * @param {?} genFilePath
      * @param {?} stmts
      * @param {?=} preamble
@@ -21366,7 +21252,7 @@ var TypeScriptEmitter = (function () {
      * @param {?=} referenceFilter
      * @return {?}
      */
-    function (srcFilePath, genFilePath, stmts, preamble, emitSourceMaps, referenceFilter) {
+    function (genFilePath, stmts, preamble, emitSourceMaps, referenceFilter) {
         if (preamble === void 0) { preamble = ''; }
         if (emitSourceMaps === void 0) { emitSourceMaps = true; }
         var /** @type {?} */ converter = new _TsEmitterVisitor(referenceFilter);
@@ -21383,7 +21269,7 @@ var TypeScriptEmitter = (function () {
                 ("ort * as " + prefix + " from '" + importedModuleName + "';"));
         });
         var /** @type {?} */ sm = emitSourceMaps ?
-            ctx.toSourceMapGenerator(srcFilePath, genFilePath, preambleLines.length).toJsComment() :
+            ctx.toSourceMapGenerator(genFilePath, preambleLines.length).toJsComment() :
             '';
         var /** @type {?} */ lines = preambleLines.concat([ctx.toSource(), sm]);
         if (sm) {
@@ -21394,22 +21280,20 @@ var TypeScriptEmitter = (function () {
         return { sourceText: lines.join('\n'), context: ctx };
     };
     /**
-     * @param {?} srcFilePath
      * @param {?} genFilePath
      * @param {?} stmts
      * @param {?=} preamble
      * @return {?}
      */
     TypeScriptEmitter.prototype.emitStatements = /**
-     * @param {?} srcFilePath
      * @param {?} genFilePath
      * @param {?} stmts
      * @param {?=} preamble
      * @return {?}
      */
-    function (srcFilePath, genFilePath, stmts, preamble) {
+    function (genFilePath, stmts, preamble) {
         if (preamble === void 0) { preamble = ''; }
-        return this.emitStatementsAndContext(srcFilePath, genFilePath, stmts, preamble).sourceText;
+        return this.emitStatementsAndContext(genFilePath, stmts, preamble).sourceText;
     };
     return TypeScriptEmitter;
 }());
@@ -28611,7 +28495,7 @@ function toTypeScript(file, preamble) {
     if (!file.stmts) {
         throw new Error("Illegal state: No stmts present on GeneratedFile " + file.genFileUrl);
     }
-    return new TypeScriptEmitter().emitStatements(sourceUrl(file.srcFileUrl), file.genFileUrl, file.stmts, preamble);
+    return new TypeScriptEmitter().emitStatements(file.genFileUrl, file.stmts, preamble);
 }
 
 /**
@@ -33104,8 +32988,8 @@ var AbstractJsEmitterVisitor = (function (_super) {
  * @param {?} createSourceMap
  * @return {?}
  */
-function evalExpression(sourceUrl$$1, ctx, vars, createSourceMap) {
-    var /** @type {?} */ fnBody = ctx.toSource() + "\n//# sourceURL=" + sourceUrl$$1;
+function evalExpression(sourceUrl, ctx, vars, createSourceMap) {
+    var /** @type {?} */ fnBody = ctx.toSource() + "\n//# sourceURL=" + sourceUrl;
     var /** @type {?} */ fnArgNames = [];
     var /** @type {?} */ fnArgValues = [];
     for (var /** @type {?} */ argName in vars) {
@@ -33120,7 +33004,7 @@ function evalExpression(sourceUrl$$1, ctx, vars, createSourceMap) {
         // We don't want to hard code this fact, so we auto detect it via an empty function first.
         var /** @type {?} */ emptyFn = new (Function.bind.apply(Function, [void 0].concat(fnArgNames.concat('return null;'))))().toString();
         var /** @type {?} */ headerLines = emptyFn.slice(0, emptyFn.indexOf('return null;')).split('\n').length - 1;
-        fnBody += "\n" + ctx.toSourceMapGenerator(sourceUrl$$1, sourceUrl$$1, headerLines).toJsComment();
+        fnBody += "\n" + ctx.toSourceMapGenerator(sourceUrl, headerLines).toJsComment();
     }
     return new (Function.bind.apply(Function, [void 0].concat(fnArgNames.concat(fnBody))))().apply(void 0, fnArgValues);
 }
@@ -33131,12 +33015,12 @@ function evalExpression(sourceUrl$$1, ctx, vars, createSourceMap) {
  * @param {?} createSourceMaps
  * @return {?}
  */
-function jitStatements(sourceUrl$$1, statements, reflector, createSourceMaps) {
+function jitStatements(sourceUrl, statements, reflector, createSourceMaps) {
     var /** @type {?} */ converter = new JitEmitterVisitor(reflector);
     var /** @type {?} */ ctx = EmitterVisitorContext.createRoot();
     converter.visitAllStatements(statements, ctx);
     converter.createReturnStmt(ctx);
-    return evalExpression(sourceUrl$$1, ctx, converter.getArgs(), createSourceMaps);
+    return evalExpression(sourceUrl, ctx, converter.getArgs(), createSourceMaps);
 }
 var JitEmitterVisitor = (function (_super) {
     __extends(JitEmitterVisitor, _super);
@@ -33690,12 +33574,12 @@ var JitCompiler = (function () {
      * @param {?} statements
      * @return {?}
      */
-    function (sourceUrl$$1, statements) {
+    function (sourceUrl, statements) {
         if (!this._compilerConfig.useJit) {
             return interpretStatements(statements, this._reflector);
         }
         else {
-            return jitStatements(sourceUrl$$1, statements, this._reflector, this._compilerConfig.jitDevMode);
+            return jitStatements(sourceUrl, statements, this._reflector, this._compilerConfig.jitDevMode);
         }
     };
     return JitCompiler;
@@ -34302,17 +34186,6 @@ var compiler = Object.freeze({
 	NullTemplateVisitor: NullTemplateVisitor,
 	RecursiveTemplateAstVisitor: RecursiveTemplateAstVisitor,
 	templateVisitAll: templateVisitAll,
-	CompileAnimationEntryMetadata: CompileAnimationEntryMetadata,
-	CompileAnimationStateMetadata: CompileAnimationStateMetadata,
-	CompileAnimationStateDeclarationMetadata: CompileAnimationStateDeclarationMetadata,
-	CompileAnimationStateTransitionMetadata: CompileAnimationStateTransitionMetadata,
-	CompileAnimationMetadata: CompileAnimationMetadata,
-	CompileAnimationKeyframesSequenceMetadata: CompileAnimationKeyframesSequenceMetadata,
-	CompileAnimationStyleMetadata: CompileAnimationStyleMetadata,
-	CompileAnimationAnimateMetadata: CompileAnimationAnimateMetadata,
-	CompileAnimationWithStepsMetadata: CompileAnimationWithStepsMetadata,
-	CompileAnimationSequenceMetadata: CompileAnimationSequenceMetadata,
-	CompileAnimationGroupMetadata: CompileAnimationGroupMetadata,
 	identifierName: identifierName,
 	identifierModuleUrl: identifierModuleUrl,
 	viewClassName: viewClassName,
@@ -34330,7 +34203,6 @@ var compiler = Object.freeze({
 	TransitiveCompileNgModuleMetadata: TransitiveCompileNgModuleMetadata,
 	ProviderMeta: ProviderMeta,
 	flatten: flatten$1,
-	sourceUrl: sourceUrl,
 	templateSourceUrl: templateSourceUrl,
 	sharedStylesheetJitUrl: sharedStylesheetJitUrl,
 	ngModuleJitUrl: ngModuleJitUrl,
@@ -41043,7 +40915,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v5.0.0-rc.0-c80e02b
+ * @license Angular v5.0.0-rc.0-01f7112
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -41432,7 +41304,7 @@ var Version$1 = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('5.0.0-rc.0-c80e02b');
+var VERSION$2 = new Version$1('5.0.0-rc.0-01f7112');
 
 /**
  * @fileoverview added by tsickle
@@ -54565,7 +54437,7 @@ var NgModuleFactory_ = (function (_super) {
 }(NgModuleFactory));
 
 /**
- * @license Angular v5.0.0-rc.0-c80e02b
+ * @license Angular v5.0.0-rc.0-01f7112
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -57139,7 +57011,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('5.0.0-rc.0-c80e02b');
+var VERSION = new Version$1('5.0.0-rc.0-01f7112');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
