@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.4.4-6b96b06
+ * @license Angular v4.4.4-95f3b1d
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2033,7 +2033,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v4.4.4-6b96b06
+ * @license Angular v4.4.4-95f3b1d
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2825,7 +2825,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('4.4.4-6b96b06');
+var VERSION$2 = new Version('4.4.4-95f3b1d');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -17023,7 +17023,7 @@ var core_es5 = Object.freeze({
 });
 
 /**
- * @license Angular v4.4.4-6b96b06
+ * @license Angular v4.4.4-95f3b1d
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -17042,7 +17042,7 @@ var core_es5 = Object.freeze({
 /**
  * \@stable
  */
-var VERSION$1 = new Version('4.4.4-6b96b06');
+var VERSION$1 = new Version('4.4.4-95f3b1d');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -41905,7 +41905,7 @@ var StaticReflector = (function () {
                     else {
                         var /** @type {?} */ staticSymbol = expression;
                         var /** @type {?} */ declarationValue = resolveReferenceValue(staticSymbol);
-                        if (declarationValue) {
+                        if (declarationValue != null) {
                             return simplifyInContext(staticSymbol, declarationValue, depth + 1, references);
                         }
                         else {
@@ -41987,8 +41987,8 @@ var StaticReflector = (function () {
                                 }
                                 return null;
                             case 'index':
-                                var /** @type {?} */ indexTarget = simplify(expression['expression']);
-                                var /** @type {?} */ index = simplify(expression['index']);
+                                var /** @type {?} */ indexTarget = simplifyInContext(context, expression['expression'], depth, 0);
+                                var /** @type {?} */ index = simplifyInContext(context, expression['index'], depth, 0);
                                 if (indexTarget && isPrimitive(index))
                                     return indexTarget[index];
                                 return null;
@@ -42001,7 +42001,7 @@ var StaticReflector = (function () {
                                     selectContext =
                                         self.getStaticSymbol(selectTarget.filePath, selectTarget.name, members);
                                     var /** @type {?} */ declarationValue = resolveReferenceValue(selectContext);
-                                    if (declarationValue) {
+                                    if (declarationValue != null) {
                                         return simplifyInContext(selectContext, declarationValue, depth + 1, references);
                                     }
                                     else {
@@ -47398,7 +47398,7 @@ var core_1 = require$$0$13;
 /**
  * @stable
  */
-exports.VERSION = new core_1.Version('4.4.4-6b96b06');
+exports.VERSION = new core_1.Version('4.4.4-95f3b1d');
 
 });
 
@@ -50876,7 +50876,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v4.4.4-6b96b06
+ * @license Angular v4.4.4-95f3b1d
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -53505,7 +53505,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('4.4.4-6b96b06');
+var VERSION$$1 = new Version('4.4.4-95f3b1d');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
