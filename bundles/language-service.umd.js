@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.4.4-544a7ad
+ * @license Angular v4.4.4-df91fd0
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2033,7 +2033,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v4.4.4-544a7ad
+ * @license Angular v4.4.4-df91fd0
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2825,7 +2825,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('4.4.4-544a7ad');
+var VERSION$2 = new Version('4.4.4-df91fd0');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -8245,7 +8245,6 @@ var EventListener = (function () {
         this.name = name;
         this.callback = callback;
     }
-    
     return EventListener;
 }());
 /**
@@ -11948,7 +11947,6 @@ var ComponentRef_ = (function (_super) {
         enumerable: true,
         configurable: true
     });
-    
     Object.defineProperty(ComponentRef_.prototype, "hostView", {
         /**
          * @return {?}
@@ -11957,7 +11955,6 @@ var ComponentRef_ = (function (_super) {
         enumerable: true,
         configurable: true
     });
-    
     Object.defineProperty(ComponentRef_.prototype, "changeDetectorRef", {
         /**
          * @return {?}
@@ -11966,7 +11963,6 @@ var ComponentRef_ = (function (_super) {
         enumerable: true,
         configurable: true
     });
-    
     Object.defineProperty(ComponentRef_.prototype, "componentType", {
         /**
          * @return {?}
@@ -12073,7 +12069,6 @@ var ViewContainerRef_ = (function () {
         enumerable: true,
         configurable: true
     });
-    
     /**
      * @template C
      * @param {?} templateRef
@@ -17028,7 +17023,7 @@ var core_es5 = Object.freeze({
 });
 
 /**
- * @license Angular v4.4.4-544a7ad
+ * @license Angular v4.4.4-df91fd0
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -17047,7 +17042,7 @@ var core_es5 = Object.freeze({
 /**
  * \@stable
  */
-var VERSION$1 = new Version('4.4.4-544a7ad');
+var VERSION$1 = new Version('4.4.4-df91fd0');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -21018,7 +21013,6 @@ var InterpolationConfig = (function () {
         assertInterpolationSymbols('interpolation', markers);
         return new InterpolationConfig(markers[0], markers[1]);
     };
-    
     return InterpolationConfig;
 }());
 var DEFAULT_INTERPOLATION_CONFIG = new InterpolationConfig('{{', '}}');
@@ -25218,7 +25212,6 @@ var RecurseVisitor = (function () {
      * @return {?}
      */
     RecurseVisitor.prototype.visitText = function (text, context) { };
-    
     /**
      * @param {?} container
      * @param {?=} context
@@ -25252,14 +25245,12 @@ var RecurseVisitor = (function () {
      * @return {?}
      */
     RecurseVisitor.prototype.visitPlaceholder = function (ph, context) { };
-    
     /**
      * @param {?} ph
      * @param {?=} context
      * @return {?}
      */
     RecurseVisitor.prototype.visitIcuPlaceholder = function (ph, context) { };
-    
     return RecurseVisitor;
 }());
 /**
@@ -26366,7 +26357,6 @@ var Doctype = (function () {
         this.rootTag = rootTag;
         this.dtd = dtd;
     }
-    
     /**
      * @param {?} visitor
      * @return {?}
@@ -26405,7 +26395,6 @@ var Text$2 = (function () {
     function Text$2(unescapedValue) {
         this.value = _escapeXml(unescapedValue);
     }
-    
     /**
      * @param {?} visitor
      * @return {?}
@@ -32034,7 +32023,6 @@ var JitSummaryResolver = (function () {
      * @return {?}
      */
     JitSummaryResolver.prototype.isLibraryFile = function (fileName) { return false; };
-    
     /**
      * @param {?} fileName
      * @return {?}
@@ -32047,7 +32035,6 @@ var JitSummaryResolver = (function () {
     JitSummaryResolver.prototype.resolveSummary = function (reference) {
         return this._summaries.get(reference) || null;
     };
-    
     /**
      * @param {?} filePath
      * @return {?}
@@ -32063,7 +32050,6 @@ var JitSummaryResolver = (function () {
      * @return {?}
      */
     JitSummaryResolver.prototype.addSummary = function (summary) { this._summaries.set(summary.symbol, summary); };
-    
     return JitSummaryResolver;
 }());
 JitSummaryResolver.decorators = [
@@ -38078,7 +38064,6 @@ var SafeSelector = (function () {
             return pseudo + replaceBy;
         });
     }
-    
     /**
      * @param {?} content
      * @return {?}
@@ -46157,7 +46142,9 @@ var MetadataCollector = (function () {
             }
         });
         var isExportedIdentifier = function (identifier) { return exportMap.has(identifier.text); };
-        var isExported = function (node) { return isExport(node) || isExportedIdentifier(node.name); };
+        var isExported = function (node) {
+            return isExport(node) || isExportedIdentifier(node.name);
+        };
         var exportedIdentifierName = function (identifier) {
             return exportMap.get(identifier.text) || identifier.text;
         };
@@ -46709,7 +46696,6 @@ var CompilerHost = (function () {
         }
         return result;
     };
-    
     /**
      * We want a moduleId that will appear in import statements in the generated code.
      * These need to be in a form that system.js can load, so absolute file paths don't work.
@@ -47412,7 +47398,7 @@ var core_1 = require$$0$13;
 /**
  * @stable
  */
-exports.VERSION = new core_1.Version('4.4.4-544a7ad');
+exports.VERSION = new core_1.Version('4.4.4-df91fd0');
 
 });
 
@@ -49568,7 +49554,9 @@ var TypeCheckingHost = (function () {
     TypeCheckingHost.prototype.getDefaultLibFileName = function (options) {
         return this.host.getDefaultLibFileName(options);
     };
-    TypeCheckingHost.prototype.getCurrentDirectory = function () { return this.host.getCurrentDirectory(); };
+    TypeCheckingHost.prototype.getCurrentDirectory = function () {
+        return this.host.getCurrentDirectory();
+    };
     TypeCheckingHost.prototype.getDirectories = function (path) { return this.host.getDirectories(path); };
     TypeCheckingHost.prototype.getCanonicalFileName = function (fileName) {
         return this.host.getCanonicalFileName(fileName);
@@ -49808,7 +49796,6 @@ var _NodeEmitterVisitor = (function () {
     _NodeEmitterVisitor.prototype.visitConditionalExpr = function (expr) {
         // TODO {chuckj}: Review use of ! on flaseCase. Should it be non-nullable?
         return this.record(expr, ts.createConditional(expr.condition.visitExpression(this, null), expr.trueCase.visitExpression(this, null), expr.falseCase.visitExpression(this, null)));
-        
     };
     _NodeEmitterVisitor.prototype.visitNotExpr = function (expr) {
         return this.record(expr, ts.createPrefix(ts.SyntaxKind.ExclamationToken, expr.condition.visitExpression(this, null)));
@@ -50889,7 +50876,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v4.4.4-544a7ad
+ * @license Angular v4.4.4-df91fd0
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -53518,7 +53505,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('4.4.4-544a7ad');
+var VERSION$$1 = new Version('4.4.4-df91fd0');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
