@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.4.5-18f1b01
+ * @license Angular v4.4.5-f983a6c
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2033,7 +2033,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v4.4.5-18f1b01
+ * @license Angular v4.4.5-f983a6c
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2825,7 +2825,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('4.4.5-18f1b01');
+var VERSION$2 = new Version('4.4.5-f983a6c');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -15900,6 +15900,11 @@ var NgModuleFactory_ = (function (_super) {
  * the
  * trigger is bound to (in the form of `[\@triggerName]="expression"`.
  *
+ * Animation trigger bindings strigify values and then match the previous and current values against
+ * any linked transitions. If a boolean value is provided into the trigger binding then it will both
+ * be represented as `1` or `true` and `0` or `false` for a true and false boolean values
+ * respectively.
+ *
  * ### Usage
  *
  * `trigger` will create an animation trigger reference based on the provided `name` value. The
@@ -16385,6 +16390,21 @@ function keyframes$1(steps) {
  * ])
  * ```
  *
+ * ### Boolean values
+ * if a trigger binding value is a boolean value then it can be matched using a transition
+ * expression that compares `true` and `false` or `1` and `0`.
+ *
+ * ```
+ * // in the template
+ * <div [\@openClose]="open ? true : false">...</div>
+ *
+ * // in the component metadata
+ * trigger('openClose', [
+ *   state('true', style({ height: '*' })),
+ *   state('false', style({ height: '0px' })),
+ *   transition('false <=> true', animate(500))
+ * ])
+ * ```
  * {\@example core/animation/ts/dsl/animation_example.ts region='Component'}
  *
  * \@experimental Animation support is experimental.
@@ -17002,7 +17022,7 @@ var core_es5 = Object.freeze({
 });
 
 /**
- * @license Angular v4.4.5-18f1b01
+ * @license Angular v4.4.5-f983a6c
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -17021,7 +17041,7 @@ var core_es5 = Object.freeze({
 /**
  * \@stable
  */
-var VERSION$1 = new Version('4.4.5-18f1b01');
+var VERSION$1 = new Version('4.4.5-f983a6c');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -47237,7 +47257,7 @@ var core_1 = require$$0$13;
 /**
  * @stable
  */
-exports.VERSION = new core_1.Version('4.4.5-18f1b01');
+exports.VERSION = new core_1.Version('4.4.5-f983a6c');
 
 });
 
@@ -50715,7 +50735,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v4.4.5-18f1b01
+ * @license Angular v4.4.5-f983a6c
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -53344,7 +53364,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('4.4.5-18f1b01');
+var VERSION$$1 = new Version('4.4.5-f983a6c');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
