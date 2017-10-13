@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.0.0-rc.2-653a211
+ * @license Angular v5.0.0-rc.2-02394d2
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v5.0.0-rc.2-653a211
+ * @license Angular v5.0.0-rc.2-02394d2
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -671,7 +671,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('5.0.0-rc.2-653a211');
+var VERSION$1 = new Version('5.0.0-rc.2-02394d2');
 
 /**
  * @fileoverview added by tsickle
@@ -40915,7 +40915,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v5.0.0-rc.2-653a211
+ * @license Angular v5.0.0-rc.2-02394d2
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -41163,11 +41163,11 @@ var Attribute$1$1 = makeParamDecorator('Attribute', function (attributeName) { r
 /** @enum {number} */
 var ChangeDetectionStrategy$1 = {
     /**
-       * `OnPush` means that the change detector's mode will be set to `CheckOnce` during hydration.
+       * `OnPush` means that the change detector's mode will be initially set to `CheckOnce`.
        */
     OnPush: 0,
     /**
-       * `Default` means that the change detector's mode will be set to `CheckAlways` during hydration.
+       * `Default` means that the change detector's mode will be initially set to `CheckAlways`.
        */
     Default: 1,
 };
@@ -41304,7 +41304,7 @@ var Version$1 = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('5.0.0-rc.2-653a211');
+var VERSION$2 = new Version$1('5.0.0-rc.2-02394d2');
 
 /**
  * @fileoverview added by tsickle
@@ -54465,7 +54465,7 @@ var NgModuleFactory_ = (function (_super) {
 }(NgModuleFactory));
 
 /**
- * @license Angular v5.0.0-rc.2-653a211
+ * @license Angular v5.0.0-rc.2-02394d2
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -57039,7 +57039,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('5.0.0-rc.2-653a211');
+var VERSION = new Version$1('5.0.0-rc.2-02394d2');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
