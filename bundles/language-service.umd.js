@@ -1,5 +1,5 @@
 /**
- * @license Angular v4.4.5-4acd322
+ * @license Angular v4.4.5-591dcc2
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2033,7 +2033,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v4.4.5-4acd322
+ * @license Angular v4.4.5-591dcc2
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2825,7 +2825,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version('4.4.5-4acd322');
+var VERSION$2 = new Version('4.4.5-591dcc2');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -16409,7 +16409,7 @@ function transition$1(stateChangeExpr, steps, options) {
  * var fadeAnimation = animation([
  *   style({ opacity: '{{ start }}' }),
  *   animate('{{ time }}',
- *     style({ opacity: '{{ end }}'))
+ *     style({ opacity: '{{ end }}'}))
  * ], { params: { time: '1000ms', start: 0, end: 1 }});
  * ```
  *
@@ -17002,7 +17002,7 @@ var core_es5 = Object.freeze({
 });
 
 /**
- * @license Angular v4.4.5-4acd322
+ * @license Angular v4.4.5-591dcc2
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -17021,7 +17021,7 @@ var core_es5 = Object.freeze({
 /**
  * \@stable
  */
-var VERSION$1 = new Version('4.4.5-4acd322');
+var VERSION$1 = new Version('4.4.5-591dcc2');
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -47237,7 +47237,7 @@ var core_1 = require$$0$13;
 /**
  * @stable
  */
-exports.VERSION = new core_1.Version('4.4.5-4acd322');
+exports.VERSION = new core_1.Version('4.4.5-591dcc2');
 
 });
 
@@ -50715,7 +50715,7 @@ var ModuleResolutionHostAdapter = index.ModuleResolutionHostAdapter;
 var CompilerHost = index.CompilerHost;
 
 /**
- * @license Angular v4.4.5-4acd322
+ * @license Angular v4.4.5-591dcc2
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -53344,7 +53344,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION$$1 = new Version('4.4.5-4acd322');
+var VERSION$$1 = new Version('4.4.5-591dcc2');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
