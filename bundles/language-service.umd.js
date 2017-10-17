@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.0.0-rc.2-d035175
+ * @license Angular v5.0.0-rc.2-15a8429
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v5.0.0-rc.2-d035175
+ * @license Angular v5.0.0-rc.2-15a8429
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -671,7 +671,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('5.0.0-rc.2-d035175');
+var VERSION$1 = new Version('5.0.0-rc.2-15a8429');
 
 /**
  * @fileoverview added by tsickle
@@ -29311,7 +29311,7 @@ var AotCompiler = (function () {
             // These can be used by the type check block for components,
             // and they also cause TypeScript to include these files into the program too,
             // which will make them part of the analyzedFiles.
-            var /** @type {?} */ externalReferences = ngModuleMeta.declaredDirectives.map(function (d) { return d.reference; }).concat(ngModuleMeta.declaredPipes.map(function (d) { return d.reference; }), ngModuleMeta.importedModules.map(function (m) { return m.type.reference; }), ngModuleMeta.exportedModules.map(function (m) { return m.type.reference; }));
+            var /** @type {?} */ externalReferences = ngModuleMeta.transitiveModule.directives.map(function (d) { return d.reference; }).concat(ngModuleMeta.transitiveModule.pipes.map(function (d) { return d.reference; }), ngModuleMeta.importedModules.map(function (m) { return m.type.reference; }), ngModuleMeta.exportedModules.map(function (m) { return m.type.reference; }));
             var /** @type {?} */ externalReferenceVars = new Map();
             externalReferences.forEach(function (ref, typeIndex) {
                 if (_this._host.isSourceFile(ref.filePath)) {
@@ -40915,7 +40915,7 @@ function share() {
 var share_2 = share;
 
 /**
- * @license Angular v5.0.0-rc.2-d035175
+ * @license Angular v5.0.0-rc.2-15a8429
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -41304,7 +41304,7 @@ var Version$1 = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('5.0.0-rc.2-d035175');
+var VERSION$2 = new Version$1('5.0.0-rc.2-15a8429');
 
 /**
  * @fileoverview added by tsickle
@@ -54465,7 +54465,7 @@ var NgModuleFactory_ = (function (_super) {
 }(NgModuleFactory));
 
 /**
- * @license Angular v5.0.0-rc.2-d035175
+ * @license Angular v5.0.0-rc.2-15a8429
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -57039,7 +57039,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('5.0.0-rc.2-d035175');
+var VERSION = new Version$1('5.0.0-rc.2-15a8429');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
