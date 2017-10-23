@@ -1,12 +1,12 @@
 /**
- * @license Angular v5.0.0-rc.3-5da96c7
+ * @license Angular v5.0.0-rc.3-fc0b1d5
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
 import { ASTWithSource, AotSummaryResolver, AstPath, Attribute, CompileMetadataResolver, CompilerConfig, CssSelector, DEFAULT_INTERPOLATION_CONFIG, DirectiveNormalizer, DirectiveResolver, DomElementSchemaRegistry, Element, ElementAst, HtmlParser, I18NHtmlParser, ImplicitReceiver, JitSummaryResolver, Lexer, NAMED_ENTITIES, NgModuleResolver, NullAstVisitor, NullTemplateVisitor, ParseSpan, ParseTreeResult, Parser, PipeResolver, PropertyRead, RecursiveTemplateAstVisitor, ResourceLoader, SelectorMatcher, StaticReflector, StaticSymbolCache, StaticSymbolResolver, TagContentType, TemplateParser, Text, analyzeNgModules, createOfflineCompileUrlResolver, findNode, getHtmlTagDefinition, identifierName, splitNsName, templateVisitAll, tokenReference, visitAstChildren } from '@angular/compiler';
 import { __extends } from 'tslib';
-import { AstType, BuiltinType, CompilerHost, ModuleResolutionHostAdapter, getClassMembersFromDeclaration, getExpressionScope, getPipesTable, getSymbolQuery, getTemplateExpressionDiagnostics } from '@angular/compiler-cli/src/language_services';
-import { DiagnosticCategory, SyntaxKind, forEachChild, getPositionOfLineAndCharacter } from 'typescript';
+import { AstType, BuiltinType, MetadataCollector, createMetadataReaderCache, getClassMembersFromDeclaration, getExpressionScope, getPipesTable, getSymbolQuery, getTemplateExpressionDiagnostics, readMetadata } from '@angular/compiler-cli/src/language_services';
+import { DiagnosticCategory, SyntaxKind, createModuleResolutionCache, forEachChild, getPositionOfLineAndCharacter, resolveModuleName } from 'typescript';
 import { Version, ViewEncapsulation, ɵConsole } from '@angular/core';
 import { existsSync } from 'fs';
 import { dirname, join } from 'path';
@@ -1699,9 +1699,13 @@ function findSuitableDefaultModule(modules) {
  * found in the LICENSE file at https://angular.io/license
  */
 var ReflectorModuleModuleResolutionHost = (function () {
-    function ReflectorModuleModuleResolutionHost(host) {
+    function ReflectorModuleModuleResolutionHost(host, getProgram) {
         var _this = this;
         this.host = host;
+        this.getProgram = getProgram;
+        // Note: verboseInvalidExpressions is important so that
+        // the collector will collect errors instead of throwing
+        this.metadataCollector = new MetadataCollector({ verboseInvalidExpression: true });
         if (host.directoryExists)
             this.directoryExists = function (directoryName) { return _this.host.directoryExists(directoryName); };
     }
@@ -1714,30 +1718,41 @@ var ReflectorModuleModuleResolutionHost = (function () {
         // Typescript readFile() declaration should be `readFile(fileName: string): string | undefined
         return undefined;
     };
+    ReflectorModuleModuleResolutionHost.prototype.getSourceFileMetadata = function (fileName) {
+        var sf = this.getProgram().getSourceFile(fileName);
+        return sf ? this.metadataCollector.getMetadata(sf) : undefined;
+    };
+    ReflectorModuleModuleResolutionHost.prototype.cacheMetadata = function (fileName) {
+        // Don't cache the metadata for .ts files as they might change in the editor!
+        return fileName.endsWith('.d.ts');
+    };
     return ReflectorModuleModuleResolutionHost;
 }());
-// This reflector host's purpose is to first set verboseInvalidExpressions to true so the
-// reflector will collect errors instead of throwing, and second to all deferring the creation
-// of the program until it is actually needed.
-var ReflectorHost = (function (_super) {
-    __extends(ReflectorHost, _super);
+var ReflectorHost = (function () {
     function ReflectorHost(getProgram, serviceHost, options) {
-        var _this = _super.call(this, 
-        // The ancestor value for program is overridden below so passing null here is safe.
-        /* program */ null, options, new ModuleResolutionHostAdapter(new ReflectorModuleModuleResolutionHost(serviceHost)), { verboseInvalidExpression: true }) || this;
-        _this.getProgram = getProgram;
-        return _this;
+        this.options = options;
+        this.metadataReaderCache = createMetadataReaderCache();
+        this.hostAdapter = new ReflectorModuleModuleResolutionHost(serviceHost, getProgram);
+        this.moduleResolutionCache =
+            createModuleResolutionCache(serviceHost.getCurrentDirectory(), function (s) { return s; });
     }
-    Object.defineProperty(ReflectorHost.prototype, "program", {
-        get: function () { return this.getProgram(); },
-        set: function (value) {
-            // Discard the result set by ancestor constructor
-        },
-        enumerable: true,
-        configurable: true
-    });
+    ReflectorHost.prototype.getMetadataFor = function (modulePath) {
+        return readMetadata(modulePath, this.hostAdapter, this.metadataReaderCache);
+    };
+    ReflectorHost.prototype.moduleNameToFileName = function (moduleName, containingFile) {
+        if (!containingFile) {
+            if (moduleName.indexOf('.') === 0) {
+                throw new Error('Resolution of relative paths requires a containing file.');
+            }
+            // Any containing file gives the same result for absolute imports
+            containingFile = join(this.options.basePath, 'index.ts');
+        }
+        var resolved = resolveModuleName(moduleName, containingFile, this.options, this.hostAdapter)
+            .resolvedModule;
+        return resolved ? resolved.resolvedFileName : null;
+    };
     return ReflectorHost;
-}(CompilerHost));
+}());
 
 /**
  * @license
@@ -2581,7 +2596,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version('5.0.0-rc.3-5da96c7');
+var VERSION = new Version('5.0.0-rc.3-fc0b1d5');
 
 /**
  * @license
