@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.0.0-rc.9-7553ce9
+ * @license Angular v5.0.0-rc.9-005a78b
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v5.0.0-rc.9-7553ce9
+ * @license Angular v5.0.0-rc.9-005a78b
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -677,7 +677,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('5.0.0-rc.9-7553ce9');
+var VERSION$1 = new Version('5.0.0-rc.9-005a78b');
 
 /**
  * @fileoverview added by tsickle
@@ -41239,7 +41239,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v5.0.0-rc.9-7553ce9
+ * @license Angular v5.0.0-rc.9-005a78b
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -41628,7 +41628,7 @@ var Version$1 = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('5.0.0-rc.9-7553ce9');
+var VERSION$2 = new Version$1('5.0.0-rc.9-005a78b');
 
 /**
  * @fileoverview added by tsickle
@@ -54789,7 +54789,7 @@ var NgModuleFactory_ = (function (_super) {
 }(NgModuleFactory));
 
 /**
- * @license Angular v5.0.0-rc.9-7553ce9
+ * @license Angular v5.0.0-rc.9-005a78b
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -57243,7 +57243,13 @@ function create(info /* ts.server.PluginCreateInfo */) {
         _loop_1(k);
     }
     function completionToEntry(c) {
-        return { kind: c.kind, name: c.name, sortText: c.sort, kindModifiers: '' };
+        return {
+            // TODO: remove any and fix type error.
+            kind: c.kind,
+            name: c.name,
+            sortText: c.sort,
+            kindModifiers: ''
+        };
     }
     function diagnosticToDiagnostic(d, file) {
         var result = {
@@ -57351,9 +57357,10 @@ function create(info /* ts.server.PluginCreateInfo */) {
                         fileName: loc.fileName,
                         textSpan: { start: loc.span.start, length: loc.span.end - loc.span.start },
                         name: '',
+                        // TODO: remove any and fix type error.
                         kind: 'definition',
                         containerName: loc.fileName,
-                        containerKind: 'file'
+                        containerKind: 'file',
                     });
                 }
             }
@@ -57378,7 +57385,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('5.0.0-rc.9-7553ce9');
+var VERSION = new Version$1('5.0.0-rc.9-005a78b');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
