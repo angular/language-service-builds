@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.1.0-beta.0-3db7112
+ * @license Angular v5.1.0-beta.0-132c071
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2603,7 +2603,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version('5.1.0-beta.0-3db7112');
+var VERSION = new Version('5.1.0-beta.0-132c071');
 
 /**
  * @license
