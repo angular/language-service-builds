@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.1.0-beta.0-a99eb16
+ * @license Angular v5.1.0-beta.0-f076401
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v5.1.0-beta.0-a99eb16
+ * @license Angular v5.1.0-beta.0-f076401
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -677,7 +677,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('5.1.0-beta.0-a99eb16');
+var VERSION$1 = new Version('5.1.0-beta.0-f076401');
 
 /**
  * @fileoverview added by tsickle
@@ -41239,7 +41239,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v5.1.0-beta.0-a99eb16
+ * @license Angular v5.1.0-beta.0-f076401
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -41628,7 +41628,7 @@ var Version$1 = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('5.1.0-beta.0-a99eb16');
+var VERSION$2 = new Version$1('5.1.0-beta.0-f076401');
 
 /**
  * @fileoverview added by tsickle
@@ -41863,7 +41863,6 @@ function resolveForwardRef$1(type) {
  * @fileoverview added by tsickle
  * @suppress {checkTypes} checked by tsc
  */
-var SOURCE = '__source';
 var _THROW_IF_NOT_FOUND = new Object();
 var THROW_IF_NOT_FOUND = _THROW_IF_NOT_FOUND;
 var _NullInjector = (function () {
@@ -41925,7 +41924,7 @@ var Injector = (function () {
      * ### Example
      *
      * {\@example core/di/ts/provider_spec.ts region='ConstructorProvider'}
-     * @param {?} options
+     * @param {?} providers
      * @param {?=} parent
      * @return {?}
      */
@@ -41935,17 +41934,12 @@ var Injector = (function () {
      * ### Example
      *
      * {\@example core/di/ts/provider_spec.ts region='ConstructorProvider'}
-     * @param {?} options
+     * @param {?} providers
      * @param {?=} parent
      * @return {?}
      */
-    function (options, parent) {
-        if (Array.isArray(options)) {
-            return new StaticInjector(options, parent);
-        }
-        else {
-            return new StaticInjector(options.providers, options.parent, options.name || null);
-        }
+    function (providers, parent) {
+        return new StaticInjector(providers, parent);
     };
     Injector.THROW_IF_NOT_FOUND = _THROW_IF_NOT_FOUND;
     Injector.NULL = new _NullInjector();
@@ -41968,11 +41962,9 @@ var NULL_INJECTOR = Injector.NULL;
 var NEW_LINE = /\n/gm;
 var NO_NEW_LINE = 'ɵ';
 var StaticInjector = (function () {
-    function StaticInjector(providers, parent, source) {
+    function StaticInjector(providers, parent) {
         if (parent === void 0) { parent = NULL_INJECTOR; }
-        if (source === void 0) { source = null; }
         this.parent = parent;
-        this.source = source;
         var /** @type {?} */ records = this._records = new Map();
         records.set(Injector, /** @type {?} */ ({ token: Injector, fn: IDENT, deps: EMPTY, value: this, useNew: false }));
         recursivelyProcessProviders(records, providers);
@@ -41994,10 +41986,7 @@ var StaticInjector = (function () {
         }
         catch (/** @type {?} */ e) {
             var /** @type {?} */ tokenPath = e[NG_TEMP_TOKEN_PATH];
-            if (token[SOURCE]) {
-                tokenPath.unshift(token[SOURCE]);
-            }
-            e.message = formatError('\n' + e.message, tokenPath, this.source);
+            e.message = formatError('\n' + e.message, tokenPath);
             e[NG_TOKEN_PATH] = tokenPath;
             e[NG_TEMP_TOKEN_PATH] = null;
             throw e;
@@ -42233,11 +42222,9 @@ function computeDeps(provider) {
 /**
  * @param {?} text
  * @param {?} obj
- * @param {?=} source
  * @return {?}
  */
-function formatError(text, obj, source) {
-    if (source === void 0) { source = null; }
+function formatError(text, obj) {
     text = text && text.charAt(0) === '\n' && text.charAt(1) == NO_NEW_LINE ? text.substr(2) : text;
     var /** @type {?} */ context = stringify$1(obj);
     if (obj instanceof Array) {
@@ -42253,7 +42240,7 @@ function formatError(text, obj, source) {
         }
         context = "{" + parts.join(', ') + "}";
     }
-    return "StaticInjectorError" + (source ? '(' + source + ')' : '') + "[" + context + "]: " + text.replace(NEW_LINE, '\n  ');
+    return "StaticInjectorError[" + context + "]: " + text.replace(NEW_LINE, '\n  ');
 }
 /**
  * @param {?} text
@@ -46034,8 +46021,7 @@ function createPlatform(injector) {
  */
 function createPlatformFactory(parentPlatformFactory, name, providers) {
     if (providers === void 0) { providers = []; }
-    var /** @type {?} */ desc = "Platform: " + name;
-    var /** @type {?} */ marker = new InjectionToken(desc);
+    var /** @type {?} */ marker = new InjectionToken("Platform: " + name);
     return function (extraProviders) {
         if (extraProviders === void 0) { extraProviders = []; }
         var /** @type {?} */ platform = getPlatform();
@@ -46044,8 +46030,7 @@ function createPlatformFactory(parentPlatformFactory, name, providers) {
                 parentPlatformFactory(providers.concat(extraProviders).concat({ provide: marker, useValue: true }));
             }
             else {
-                var /** @type {?} */ injectedProviders = providers.concat(extraProviders).concat({ provide: marker, useValue: true });
-                createPlatform(Injector.create({ providers: injectedProviders, name: desc }));
+                createPlatform(Injector.create(providers.concat(extraProviders).concat({ provide: marker, useValue: true })));
             }
         }
         return assertPlatform(marker);
@@ -46187,11 +46172,10 @@ var PlatformRef = (function () {
         // pass that as parent to the NgModuleFactory.
         var /** @type {?} */ ngZoneOption = options ? options.ngZone : undefined;
         var /** @type {?} */ ngZone = getNgZone(ngZoneOption);
-        var /** @type {?} */ providers = [{ provide: NgZone, useValue: ngZone }];
         // Attention: Don't use ApplicationRef.run here,
         // as we want to be sure that all possible constructor calls are inside `ngZone.run`!
         return ngZone.run(function () {
-            var /** @type {?} */ ngZoneInjector = Injector.create({ providers: providers, parent: _this.injector, name: moduleFactory.moduleType.name });
+            var /** @type {?} */ ngZoneInjector = Injector.create([{ provide: NgZone, useValue: ngZone }], _this.injector);
             var /** @type {?} */ moduleRef = /** @type {?} */ (moduleFactory.create(ngZoneInjector));
             var /** @type {?} */ exceptionHandler = moduleRef.injector.get(ErrorHandler, null);
             if (!exceptionHandler) {
@@ -50248,10 +50232,9 @@ function isEmbeddedView(view) {
 }
 /**
  * @param {?} deps
- * @param {?=} sourceName
  * @return {?}
  */
-function splitDepsDsl(deps, sourceName) {
+function splitDepsDsl(deps) {
     return deps.map(function (value) {
         var /** @type {?} */ token;
         var /** @type {?} */ flags;
@@ -50261,9 +50244,6 @@ function splitDepsDsl(deps, sourceName) {
         else {
             flags = 0 /* None */;
             token = value;
-        }
-        if (token && (typeof token === 'function' || typeof token === 'object') && sourceName) {
-            Object.defineProperty(token, SOURCE, { value: sourceName, configurable: true });
         }
         return { flags: flags, token: token, tokenKey: tokenKey(token) };
     });
@@ -54811,7 +54791,7 @@ var NgModuleFactory_ = (function (_super) {
 }(NgModuleFactory));
 
 /**
- * @license Angular v5.1.0-beta.0-a99eb16
+ * @license Angular v5.1.0-beta.0-f076401
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -57407,7 +57387,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('5.1.0-beta.0-a99eb16');
+var VERSION = new Version$1('5.1.0-beta.0-f076401');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
