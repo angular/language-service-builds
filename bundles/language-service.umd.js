@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.1.0-beta.0-b489259
+ * @license Angular v5.1.0-beta.0-6e8e3bd
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v5.1.0-beta.0-b489259
+ * @license Angular v5.1.0-beta.0-6e8e3bd
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -677,7 +677,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('5.1.0-beta.0-b489259');
+var VERSION$1 = new Version('5.1.0-beta.0-6e8e3bd');
 
 /**
  * @fileoverview added by tsickle
@@ -33397,6 +33397,7 @@ var JitCompiler = (function () {
         this._compiledDirectiveWrapperCache = new Map();
         this._compiledNgModuleCache = new Map();
         this._sharedStylesheetCount = 0;
+        this._addedAotSummaries = new Set();
     }
     /**
      * @param {?} moduleType
@@ -33463,11 +33464,33 @@ var JitCompiler = (function () {
      * @return {?}
      */
     function (summaries) {
-        var _this = this;
         this.clearCache();
-        flattenSummaries(summaries).forEach(function (summary) {
-            _this._summaryResolver.addSummary({ symbol: summary.type.reference, metadata: null, type: summary });
-        });
+        this._addAotSummaries(summaries);
+    };
+    /**
+     * @param {?} fn
+     * @return {?}
+     */
+    JitCompiler.prototype._addAotSummaries = /**
+     * @param {?} fn
+     * @return {?}
+     */
+    function (fn$$1) {
+        if (this._addedAotSummaries.has(fn$$1)) {
+            return;
+        }
+        this._addedAotSummaries.add(fn$$1);
+        var /** @type {?} */ summaries = fn$$1();
+        for (var /** @type {?} */ i = 0; i < summaries.length; i++) {
+            var /** @type {?} */ entry = summaries[i];
+            if (typeof entry === 'function') {
+                this._addAotSummaries(entry);
+            }
+            else {
+                var /** @type {?} */ summary = /** @type {?} */ (entry);
+                this._summaryResolver.addSummary({ symbol: summary.type.reference, metadata: null, type: summary });
+            }
+        }
     };
     /**
      * @param {?} ref
@@ -33659,6 +33682,7 @@ var JitCompiler = (function () {
      * @return {?}
      */
     function () {
+        // Note: don't clear the _addedAotSummaries, as they don't change!
         this._metadataResolver.clearCache();
         this._compiledTemplateCache.clear();
         this._compiledHostTemplateCache.clear();
@@ -33848,31 +33872,6 @@ function assertComponent(meta) {
     if (!meta.isComponent) {
         throw new Error("Could not compile '" + identifierName(meta.type) + "' because it is not a component.");
     }
-}
-/**
- * @param {?} fn
- * @param {?=} out
- * @param {?=} seen
- * @return {?}
- */
-function flattenSummaries(fn$$1, out, seen) {
-    if (out === void 0) { out = []; }
-    if (seen === void 0) { seen = new Set(); }
-    if (seen.has(fn$$1)) {
-        return out;
-    }
-    seen.add(fn$$1);
-    var /** @type {?} */ summaries = fn$$1();
-    for (var /** @type {?} */ i = 0; i < summaries.length; i++) {
-        var /** @type {?} */ entry = summaries[i];
-        if (typeof entry === 'function') {
-            flattenSummaries(entry, out, seen);
-        }
-        else {
-            out.push(entry);
-        }
-    }
-    return out;
 }
 /**
  * @return {?}
@@ -41241,7 +41240,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v5.1.0-beta.0-b489259
+ * @license Angular v5.1.0-beta.0-6e8e3bd
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -41630,7 +41629,7 @@ var Version$1 = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('5.1.0-beta.0-b489259');
+var VERSION$2 = new Version$1('5.1.0-beta.0-6e8e3bd');
 
 /**
  * @fileoverview added by tsickle
@@ -49970,7 +49969,8 @@ var Services = {
     createComponentView: /** @type {?} */ ((undefined)),
     createNgModuleRef: /** @type {?} */ ((undefined)),
     overrideProvider: /** @type {?} */ ((undefined)),
-    clearProviderOverrides: /** @type {?} */ ((undefined)),
+    overrideComponentView: /** @type {?} */ ((undefined)),
+    clearOverrides: /** @type {?} */ ((undefined)),
     checkAndUpdateView: /** @type {?} */ ((undefined)),
     checkNoChangesView: /** @type {?} */ ((undefined)),
     destroyView: /** @type {?} */ ((undefined)),
@@ -51021,6 +51021,13 @@ function removeFromArray(arr, index) {
  * @suppress {checkTypes} checked by tsc
  */
 var EMPTY_CONTEXT = new Object();
+/**
+ * @param {?} componentFactory
+ * @return {?}
+ */
+function getComponentViewDefinitionFactory(componentFactory) {
+    return (/** @type {?} */ (componentFactory)).viewDefFactory;
+}
 var ComponentFactory_ = (function (_super) {
     __extends(ComponentFactory_, _super);
     function ComponentFactory_(selector, componentType, viewDefFactory, _inputs, _outputs, ngContentSelectors) {
@@ -53560,7 +53567,8 @@ function initServicesIfNeeded() {
     Services.createComponentView = services.createComponentView;
     Services.createNgModuleRef = services.createNgModuleRef;
     Services.overrideProvider = services.overrideProvider;
-    Services.clearProviderOverrides = services.clearProviderOverrides;
+    Services.overrideComponentView = services.overrideComponentView;
+    Services.clearOverrides = services.clearOverrides;
     Services.checkAndUpdateView = services.checkAndUpdateView;
     Services.checkNoChangesView = services.checkNoChangesView;
     Services.destroyView = services.destroyView;
@@ -53582,7 +53590,8 @@ function createProdServices() {
         createComponentView: createComponentView,
         createNgModuleRef: createNgModuleRef,
         overrideProvider: NOOP,
-        clearProviderOverrides: NOOP,
+        overrideComponentView: NOOP,
+        clearOverrides: NOOP,
         checkAndUpdateView: checkAndUpdateView,
         checkNoChangesView: checkNoChangesView,
         destroyView: destroyView,
@@ -53611,7 +53620,8 @@ function createDebugServices() {
         createComponentView: debugCreateComponentView,
         createNgModuleRef: debugCreateNgModuleRef,
         overrideProvider: debugOverrideProvider,
-        clearProviderOverrides: debugClearProviderOverrides,
+        overrideComponentView: debugOverrideComponentView,
+        clearOverrides: debugClearOverrides,
         checkAndUpdateView: debugCheckAndUpdateView,
         checkNoChangesView: debugCheckNoChangesView,
         destroyView: debugDestroyView,
@@ -53686,8 +53696,14 @@ function debugCreateEmbeddedView(parentView, anchorDef, viewDef$$1, context) {
  * @return {?}
  */
 function debugCreateComponentView(parentView, nodeDef, viewDef$$1, hostElement) {
-    var /** @type {?} */ defWithOverride = applyProviderOverridesToView(viewDef$$1);
-    return callWithDebugContext(DebugAction.create, createComponentView, null, [parentView, nodeDef, defWithOverride, hostElement]);
+    var /** @type {?} */ overrideComponentView = viewDefOverrides.get(/** @type {?} */ ((/** @type {?} */ ((/** @type {?} */ ((nodeDef.element)).componentProvider)).provider)).token);
+    if (overrideComponentView) {
+        viewDef$$1 = overrideComponentView;
+    }
+    else {
+        viewDef$$1 = applyProviderOverridesToView(viewDef$$1);
+    }
+    return callWithDebugContext(DebugAction.create, createComponentView, null, [parentView, nodeDef, viewDef$$1, hostElement]);
 }
 /**
  * @param {?} moduleType
@@ -53701,6 +53717,7 @@ function debugCreateNgModuleRef(moduleType, parentInjector, bootstrapComponents,
     return createNgModuleRef(moduleType, parentInjector, bootstrapComponents, defWithOverride);
 }
 var providerOverrides = new Map();
+var viewDefOverrides = new Map();
 /**
  * @param {?} override
  * @return {?}
@@ -53709,10 +53726,21 @@ function debugOverrideProvider(override) {
     providerOverrides.set(override.token, override);
 }
 /**
+ * @param {?} comp
+ * @param {?} compFactory
  * @return {?}
  */
-function debugClearProviderOverrides() {
+function debugOverrideComponentView(comp, compFactory) {
+    var /** @type {?} */ hostViewDef = resolveDefinition(getComponentViewDefinitionFactory(compFactory));
+    var /** @type {?} */ compViewDef = resolveDefinition(/** @type {?} */ ((/** @type {?} */ ((hostViewDef.nodes[0].element)).componentView)));
+    viewDefOverrides.set(comp, compViewDef);
+}
+/**
+ * @return {?}
+ */
+function debugClearOverrides() {
     providerOverrides.clear();
+    viewDefOverrides.clear();
 }
 /**
  * @param {?} def
@@ -54793,7 +54821,7 @@ var NgModuleFactory_ = (function (_super) {
 }(NgModuleFactory));
 
 /**
- * @license Angular v5.1.0-beta.0-b489259
+ * @license Angular v5.1.0-beta.0-6e8e3bd
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -57389,7 +57417,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('5.1.0-beta.0-b489259');
+var VERSION = new Version$1('5.1.0-beta.0-6e8e3bd');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
