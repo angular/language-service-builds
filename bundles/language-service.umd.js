@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.0.0-7083791
+ * @license Angular v5.0.0-3ab0963
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v5.0.0-7083791
+ * @license Angular v5.0.0-3ab0963
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -677,7 +677,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('5.0.0-7083791');
+var VERSION$1 = new Version('5.0.0-3ab0963');
 
 /**
  * @fileoverview added by tsickle
@@ -15281,14 +15281,16 @@ var CompileMetadataResolver = (function () {
      * @return {?}
      */
     function (type) {
-        if (this.isDirective(type)) {
-            return 'directive';
-        }
-        if (this.isPipe(type)) {
-            return 'pipe';
-        }
-        if (this.isNgModule(type)) {
-            return 'module';
+        if (isValidType(type)) {
+            if (this.isDirective(type)) {
+                return 'directive';
+            }
+            if (this.isPipe(type)) {
+                return 'pipe';
+            }
+            if (this.isNgModule(type)) {
+                return 'module';
+            }
         }
         if ((/** @type {?} */ (type)).provide) {
             return 'provider';
@@ -41239,7 +41241,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v5.0.0-7083791
+ * @license Angular v5.0.0-3ab0963
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -41628,7 +41630,7 @@ var Version$1 = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('5.0.0-7083791');
+var VERSION$2 = new Version$1('5.0.0-3ab0963');
 
 /**
  * @fileoverview added by tsickle
@@ -54791,7 +54793,7 @@ var NgModuleFactory_ = (function (_super) {
 }(NgModuleFactory));
 
 /**
- * @license Angular v5.0.0-7083791
+ * @license Angular v5.0.0-3ab0963
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -57380,7 +57382,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('5.0.0-7083791');
+var VERSION = new Version$1('5.0.0-3ab0963');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
