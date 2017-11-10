@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.1.0-beta.0-fb4b90a
+ * @license Angular v5.1.0-beta.0-161f88f
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1966,6 +1966,9 @@ class TypeScriptServiceHost {
             if (compilerOptions && compilerOptions.baseUrl) {
                 options.baseUrl = compilerOptions.baseUrl;
             }
+            if (compilerOptions && compilerOptions.paths) {
+                options.paths = compilerOptions.paths;
+            }
             result = this._reflectorHost =
                 new ReflectorHost(() => this.tsService.getProgram(), this.host, options);
         }
@@ -2448,7 +2451,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-const VERSION = new Version('5.1.0-beta.0-fb4b90a');
+const VERSION = new Version('5.1.0-beta.0-161f88f');
 
 /**
  * @license
