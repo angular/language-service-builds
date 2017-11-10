@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.0.1-2ca6bdd
+ * @license Angular v5.0.1-aa3d75b
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v5.0.1-2ca6bdd
+ * @license Angular v5.0.1-aa3d75b
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -677,7 +677,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('5.0.1-2ca6bdd');
+var VERSION$1 = new Version('5.0.1-aa3d75b');
 
 /**
  * @fileoverview added by tsickle
@@ -30114,16 +30114,16 @@ function analyzeFile(host, staticSymbolResolver, metadataResolver, fileName) {
                     isNgSymbol = true;
                     pipes.push(symbol);
                 }
-                else if (metadataResolver.isInjectable(symbol)) {
-                    isNgSymbol = true;
-                    injectables.push(symbol);
-                }
-                else {
+                else if (metadataResolver.isNgModule(symbol)) {
                     var /** @type {?} */ ngModule = metadataResolver.getNgModuleMetadata(symbol, false);
                     if (ngModule) {
                         isNgSymbol = true;
                         ngModules.push(ngModule);
                     }
+                }
+                else if (metadataResolver.isInjectable(symbol)) {
+                    isNgSymbol = true;
+                    injectables.push(symbol);
                 }
             }
             if (!isNgSymbol) {
@@ -41256,7 +41256,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v5.0.1-2ca6bdd
+ * @license Angular v5.0.1-aa3d75b
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -41645,7 +41645,7 @@ var Version$1 = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('5.0.1-2ca6bdd');
+var VERSION$2 = new Version$1('5.0.1-aa3d75b');
 
 /**
  * @fileoverview added by tsickle
@@ -45228,7 +45228,7 @@ var NgZone = (function () {
          */
         this.onError = new EventEmitter(false);
         if (typeof Zone == 'undefined') {
-            throw new Error('Angular requires Zone.js prolyfill.');
+            throw new Error("In this configuration Angular requires Zone.js");
         }
         Zone.assertZonePatched();
         var /** @type {?} */ self = /** @type {?} */ ((this));
@@ -54808,7 +54808,7 @@ var NgModuleFactory_ = (function (_super) {
 }(NgModuleFactory));
 
 /**
- * @license Angular v5.0.1-2ca6bdd
+ * @license Angular v5.0.1-aa3d75b
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -57397,7 +57397,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('5.0.1-2ca6bdd');
+var VERSION = new Version$1('5.0.1-aa3d75b');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
