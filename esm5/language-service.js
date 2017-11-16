@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.1.0-beta.0-f8658cd
+ * @license Angular v5.1.0-beta.0-336041a
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -125,7 +125,7 @@ function diagnosticInfoFromTemplateInfo(info) {
 function findTemplateAstAt(ast, position, allowWidening) {
     if (allowWidening === void 0) { allowWidening = false; }
     var path$$1 = [];
-    var visitor = new (function (_super) {
+    var visitor = new /** @class */ (function (_super) {
         __extends(class_1, _super);
         function class_1() {
             return _super !== null && _super.apply(this, arguments) || this;
@@ -187,7 +187,7 @@ function findTemplateAstAt(ast, position, allowWidening) {
 function findAstAt(ast, position, excludeEmpty) {
     if (excludeEmpty === void 0) { excludeEmpty = false; }
     var path$$1 = [];
-    var visitor = new (function (_super) {
+    var visitor = new /** @class */ (function (_super) {
         __extends(class_1, _super);
         function class_1() {
             return _super !== null && _super.apply(this, arguments) || this;
@@ -693,7 +693,7 @@ var BOOLEAN = 'boolean';
 var NUMBER = 'number';
 var STRING = 'string';
 var OBJECT = 'object';
-var SchemaInformation = (function () {
+var SchemaInformation = /** @class */ (function () {
     function SchemaInformation() {
         var _this = this;
         this.schema = {};
@@ -1000,7 +1000,7 @@ function voidElementAttributeCompletions(info, path$$1) {
         }
     }
 }
-var ExpressionVisitor = (function (_super) {
+var ExpressionVisitor = /** @class */ (function (_super) {
     __extends(ExpressionVisitor, _super);
     function ExpressionVisitor(info, position, attr, getExpressionScope$$1) {
         var _this = _super.call(this) || this;
@@ -1354,7 +1354,7 @@ function invertMap(obj) {
 /**
  * Wrap a symbol and change its kind to component.
  */
-var OverrideKindSymbol = (function () {
+var OverrideKindSymbol = /** @class */ (function () {
     function OverrideKindSymbol(sym, kindOverride) {
         this.sym = sym;
         this.kind = kindOverride;
@@ -1540,7 +1540,7 @@ function hoverTextOf(symbol) {
 function createLanguageService(host) {
     return new LanguageServiceImpl(host);
 }
-var LanguageServiceImpl = (function () {
+var LanguageServiceImpl = /** @class */ (function () {
     function LanguageServiceImpl(host) {
         this.host = host;
     }
@@ -1698,7 +1698,7 @@ function findSuitableDefaultModule(modules) {
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-var ReflectorModuleModuleResolutionHost = (function () {
+var ReflectorModuleModuleResolutionHost = /** @class */ (function () {
     function ReflectorModuleModuleResolutionHost(host, getProgram) {
         var _this = this;
         this.host = host;
@@ -1728,7 +1728,7 @@ var ReflectorModuleModuleResolutionHost = (function () {
     };
     return ReflectorModuleModuleResolutionHost;
 }());
-var ReflectorHost = (function () {
+var ReflectorHost = /** @class */ (function () {
     function ReflectorHost(getProgram, serviceHost, options) {
         this.options = options;
         this.metadataReaderCache = createMetadataReaderCache();
@@ -1776,7 +1776,7 @@ function createLanguageServiceFromTypescript(host, service) {
  * template that are syntatically incorrect which is required to provide completions in
  * syntactically incorrect templates.
  */
-var DummyHtmlParser = (function (_super) {
+var DummyHtmlParser = /** @class */ (function (_super) {
     __extends(DummyHtmlParser, _super);
     function DummyHtmlParser() {
         return _super !== null && _super.apply(this, arguments) || this;
@@ -1791,7 +1791,7 @@ var DummyHtmlParser = (function (_super) {
 /**
  * Avoid loading resources in the language servcie by using a dummy loader.
  */
-var DummyResourceLoader = (function (_super) {
+var DummyResourceLoader = /** @class */ (function (_super) {
     __extends(DummyResourceLoader, _super);
     function DummyResourceLoader() {
         return _super !== null && _super.apply(this, arguments) || this;
@@ -1807,7 +1807,7 @@ var DummyResourceLoader = (function (_super) {
  *
  * @experimental
  */
-var TypeScriptServiceHost = (function () {
+var TypeScriptServiceHost = /** @class */ (function () {
     function TypeScriptServiceHost(host, tsService) {
         this.host = host;
         this.tsService = tsService;
@@ -2606,7 +2606,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version('5.1.0-beta.0-f8658cd');
+var VERSION = new Version('5.1.0-beta.0-336041a');
 
 /**
  * @license
