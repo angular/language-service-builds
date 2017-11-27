@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.1.0-beta.2-330bb2a
+ * @license Angular v5.1.0-beta.2-a53a040
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v5.1.0-beta.2-330bb2a
+ * @license Angular v5.1.0-beta.2-a53a040
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -696,7 +696,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('5.1.0-beta.2-330bb2a');
+var VERSION$1 = new Version('5.1.0-beta.2-a53a040');
 
 /**
  * @fileoverview added by tsickle
@@ -41656,7 +41656,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v5.1.0-beta.2-330bb2a
+ * @license Angular v5.1.0-beta.2-a53a040
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -42087,7 +42087,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('5.1.0-beta.2-330bb2a');
+var VERSION$2 = new Version$1('5.1.0-beta.2-a53a040');
 
 /**
  * @fileoverview added by tsickle
@@ -45665,7 +45665,7 @@ var EventEmitter = /** @class */ (function (_super) {
  * import {NgIf} from '\@angular/common';
  *
  * \@Component({
- *   selector: 'ng-zone-demo'.
+ *   selector: 'ng-zone-demo',
  *   template: `
  *     <h2>Demo: NgZone</h2>
  *
@@ -45697,9 +45697,10 @@ var EventEmitter = /** @class */ (function (_super) {
  *     this.progress = 0;
  *     this._ngZone.runOutsideAngular(() => {
  *       this._increaseProgress(() => {
- *       // reenter the Angular zone and display done
- *       this._ngZone.run(() => {console.log('Outside Done!') });
- *     }}));
+ *         // reenter the Angular zone and display done
+ *         this._ngZone.run(() => { console.log('Outside Done!'); });
+ *       });
+ *     });
  *   }
  *
  *   _increaseProgress(doneCallback: () => void) {
@@ -45707,7 +45708,7 @@ var EventEmitter = /** @class */ (function (_super) {
  *     console.log(`Current progress: ${this.progress}%`);
  *
  *     if (this.progress < 100) {
- *       window.setTimeout(() => this._increaseProgress(doneCallback)), 10)
+ *       window.setTimeout(() => this._increaseProgress(doneCallback), 10);
  *     } else {
  *       doneCallback();
  *     }
@@ -55475,7 +55476,7 @@ var NgModuleFactory_ = /** @class */ (function (_super) {
 }(NgModuleFactory));
 
 /**
- * @license Angular v5.1.0-beta.2-330bb2a
+ * @license Angular v5.1.0-beta.2-a53a040
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -58074,7 +58075,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('5.1.0-beta.2-330bb2a');
+var VERSION = new Version$1('5.1.0-beta.2-a53a040');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
