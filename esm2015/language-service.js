@@ -1,9 +1,9 @@
 /**
- * @license Angular v5.1.0-beta.2-a53a040
+ * @license Angular v5.1.0-beta.2-24bf3e2
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
-import { ASTWithSource, AotSummaryResolver, AstPath, Attribute, CompileMetadataResolver, CompilerConfig, CssSelector, DEFAULT_INTERPOLATION_CONFIG, DirectiveNormalizer, DirectiveResolver, DomElementSchemaRegistry, Element, ElementAst, HtmlParser, I18NHtmlParser, ImplicitReceiver, JitSummaryResolver, Lexer, NAMED_ENTITIES, NgModuleResolver, NullAstVisitor, NullTemplateVisitor, ParseSpan, ParseTreeResult, Parser, PipeResolver, PropertyRead, RecursiveTemplateAstVisitor, ResourceLoader, SelectorMatcher, StaticReflector, StaticSymbolCache, StaticSymbolResolver, TagContentType, TemplateParser, Text, analyzeNgModules, createOfflineCompileUrlResolver, findNode, getHtmlTagDefinition, identifierName, splitNsName, templateVisitAll, tokenReference, visitAstChildren } from '@angular/compiler';
+import { ASTWithSource, AotSummaryResolver, AstPath, Attribute, CompileMetadataResolver, CompilerConfig, CssSelector, DEFAULT_INTERPOLATION_CONFIG, DirectiveNormalizer, DirectiveResolver, DomElementSchemaRegistry, Element, ElementAst, HtmlParser, I18NHtmlParser, ImplicitReceiver, JitSummaryResolver, Lexer, NAMED_ENTITIES, NgModuleResolver, NullAstVisitor, NullTemplateVisitor, ParseSpan, ParseTreeResult, Parser, PipeResolver, PropertyRead, RecursiveTemplateAstVisitor, ResourceLoader, SelectorMatcher, StaticReflector, StaticSymbolCache, StaticSymbolResolver, TagContentType, TemplateParser, Text, analyzeNgModules, createOfflineCompileUrlResolver, findNode, getHtmlTagDefinition, identifierName, isFormattedError, splitNsName, templateVisitAll, tokenReference, visitAstChildren } from '@angular/compiler';
 import { AstType, BuiltinType, MetadataCollector, createMetadataReaderCache, getClassMembersFromDeclaration, getExpressionScope, getPipesTable, getSymbolQuery, getTemplateExpressionDiagnostics, readMetadata } from '@angular/compiler-cli/src/language_services';
 import { DiagnosticCategory, SyntaxKind, createModuleResolutionCache, forEachChild, getPositionOfLineAndCharacter, resolveModuleName } from 'typescript';
 import { Version, ViewEncapsulation, ɵConsole } from '@angular/core';
@@ -2066,7 +2066,13 @@ class TypeScriptServiceHost {
     getCollectedErrors(defaultSpan, sourceFile) {
         const errors = (this.collectedErrors && this.collectedErrors.get(sourceFile.fileName));
         return (errors && errors.map((e) => {
-            return { message: e.message, span: spanAt(sourceFile, e.line, e.column) || defaultSpan };
+            const line = e.line || (e.position && e.position.line);
+            const column = e.column || (e.position && e.position.column);
+            const span = spanAt(sourceFile, line, column) || defaultSpan;
+            if (isFormattedError(e)) {
+                return errorToDiagnosticWithChain(e, span);
+            }
+            return { message: e.message, span };
         })) ||
             [];
     }
@@ -2163,6 +2169,12 @@ function spanAt(sourceFile, line, column) {
             return { start: node.getStart(), end: node.getEnd() };
         }
     }
+}
+function convertChain(chain) {
+    return { message: chain.message, next: chain.next ? convertChain(chain.next) : undefined };
+}
+function errorToDiagnosticWithChain(error, span) {
+    return { message: error.chain ? convertChain(error.chain) : error.message, span };
 }
 
 /**
@@ -2320,12 +2332,26 @@ function create(info /* ts.server.PluginCreateInfo */) {
             kindModifiers: ''
         };
     }
+    function diagnosticChainToDiagnosticChain(chain) {
+        return {
+            messageText: chain.message,
+            category: DiagnosticCategory.Error,
+            code: 0,
+            next: chain.next ? diagnosticChainToDiagnosticChain(chain.next) : undefined
+        };
+    }
+    function diagnosticMessageToDiagnosticMessageText(message) {
+        if (typeof message === 'string') {
+            return message;
+        }
+        return diagnosticChainToDiagnosticChain(message);
+    }
     function diagnosticToDiagnostic(d, file) {
         const result = {
             file,
             start: d.span.start,
             length: d.span.end - d.span.start,
-            messageText: d.message,
+            messageText: diagnosticMessageToDiagnosticMessageText(d.message),
             category: DiagnosticCategory.Error,
             code: 0,
             source: 'ng'
@@ -2451,7 +2477,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-const VERSION = new Version('5.1.0-beta.2-a53a040');
+const VERSION = new Version('5.1.0-beta.2-24bf3e2');
 
 /**
  * @license
