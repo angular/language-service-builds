@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.1.0-beta.2-ba850b3
+ * @license Angular v5.1.0-beta.2-b9e4d62
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v5.1.0-beta.2-ba850b3
+ * @license Angular v5.1.0-beta.2-b9e4d62
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -696,7 +696,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('5.1.0-beta.2-ba850b3');
+var VERSION$1 = new Version('5.1.0-beta.2-b9e4d62');
 
 /**
  * @fileoverview added by tsickle
@@ -42008,7 +42008,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v5.1.0-beta.2-ba850b3
+ * @license Angular v5.1.0-beta.2-b9e4d62
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -42439,7 +42439,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('5.1.0-beta.2-ba850b3');
+var VERSION$2 = new Version$1('5.1.0-beta.2-b9e4d62');
 
 /**
  * @fileoverview added by tsickle
@@ -55828,7 +55828,7 @@ var NgModuleFactory_ = /** @class */ (function (_super) {
 }(NgModuleFactory));
 
 /**
- * @license Angular v5.1.0-beta.2-ba850b3
+ * @license Angular v5.1.0-beta.2-b9e4d62
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -57299,9 +57299,12 @@ function getDeclarationDiagnostics(declarations, modules) {
                 if (!modules.ngModuleByPipeOrDirective.has(declaration.type)) {
                     report("Component '" + declaration.type.name + "' is not included in a module and will not be available inside a template. Consider adding it to a NgModule declaration");
                 }
-                if (!declaration.metadata.template.template &&
-                    !declaration.metadata.template.templateUrl) {
-                    report("Component " + declaration.type.name + " must have a template or templateUrl");
+                var _b = declaration.metadata.template, template = _b.template, templateUrl = _b.templateUrl;
+                if (template === null && !templateUrl) {
+                    report("Component '" + declaration.type.name + "' must have a template or templateUrl");
+                }
+                else if (template && templateUrl) {
+                    report("Component '" + declaration.type.name + "' must not have both template and templateUrl");
                 }
             }
             else {
@@ -57695,10 +57698,20 @@ var TypeScriptServiceHost = /** @class */ (function () {
     TypeScriptServiceHost.prototype.ensureAnalyzedModules = function () {
         var analyzedModules = this.analyzedModules;
         if (!analyzedModules) {
-            var analyzeHost = { isSourceFile: function (filePath) { return true; } };
-            var programFiles = this.program.getSourceFiles().map(function (sf) { return sf.fileName; });
-            analyzedModules = this.analyzedModules =
-                analyzeNgModules(programFiles, analyzeHost, this.staticSymbolResolver, this.resolver);
+            if (this.host.getScriptFileNames().length === 0) {
+                analyzedModules = {
+                    files: [],
+                    ngModuleByPipeOrDirective: new Map(),
+                    ngModules: [],
+                };
+            }
+            else {
+                var analyzeHost = { isSourceFile: function (filePath) { return true; } };
+                var programFiles = this.program.getSourceFiles().map(function (sf) { return sf.fileName; });
+                analyzedModules =
+                    analyzeNgModules(programFiles, analyzeHost, this.staticSymbolResolver, this.resolver);
+            }
+            this.analyzedModules = analyzedModules;
         }
         return analyzedModules;
     };
@@ -57894,7 +57907,11 @@ var TypeScriptServiceHost = /** @class */ (function () {
             if (!result) {
                 if (!this.context) {
                     // Make up a context by finding the first script and using that as the base dir.
-                    this.context = this.host.getScriptFileNames()[0];
+                    var scriptFileNames = this.host.getScriptFileNames();
+                    if (0 === scriptFileNames.length) {
+                        throw new Error('Internal error: no script file names found');
+                    }
+                    this.context = scriptFileNames[0];
                 }
                 // Use the file context's directory as the base directory.
                 // The host's getCurrentDirectory() is not reliable as it is always "" in
@@ -58453,7 +58470,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('5.1.0-beta.2-ba850b3');
+var VERSION = new Version$1('5.1.0-beta.2-b9e4d62');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
