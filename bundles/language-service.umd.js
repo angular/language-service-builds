@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.0.4-445d833
+ * @license Angular v5.0.5-9dc310e
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v5.0.4-445d833
+ * @license Angular v5.0.5-9dc310e
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -677,7 +677,7 @@ var Version = (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('5.0.4-445d833');
+var VERSION$1 = new Version('5.0.5-9dc310e');
 
 /**
  * @fileoverview added by tsickle
@@ -37627,6 +37627,8 @@ var MetadataCollector = (function () {
                 __symbolic: 'module',
                 version: this.options.version || schema.METADATA_VERSION, metadata: metadata
             };
+            if (sourceFile.moduleName)
+                result.importAs = sourceFile.moduleName;
             if (exports)
                 result.exports = exports;
             return result;
@@ -38734,6 +38736,8 @@ function upgradeMetadataWithDtsData(host, oldMetadata, dtsFilePath) {
                 newMetadata.metadata[prop] = dtsMetadata.metadata[prop];
             }
         }
+        if (dtsMetadata['importAs'])
+            newMetadata['importAs'] = dtsMetadata['importAs'];
         // Only copy exports from exports from metadata prior to version 3.
         // Starting with version 3 the collector began collecting exports and
         // this should be redundant. Also, with bundler will rewrite the exports
@@ -41297,7 +41301,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v5.0.4-445d833
+ * @license Angular v5.0.5-9dc310e
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -41686,7 +41690,7 @@ var Version$1 = (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('5.0.4-445d833');
+var VERSION$2 = new Version$1('5.0.5-9dc310e');
 
 /**
  * @fileoverview added by tsickle
@@ -54850,7 +54854,7 @@ var NgModuleFactory_ = (function (_super) {
 }(NgModuleFactory));
 
 /**
- * @license Angular v5.0.4-445d833
+ * @license Angular v5.0.5-9dc310e
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -57439,7 +57443,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('5.0.4-445d833');
+var VERSION = new Version$1('5.0.5-9dc310e');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
