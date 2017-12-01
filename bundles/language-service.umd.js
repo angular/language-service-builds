@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.1.0-rc.0-b9a91a5
+ * @license Angular v5.1.0-rc.0-f841fbe
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v5.1.0-rc.0-b9a91a5
+ * @license Angular v5.1.0-rc.0-f841fbe
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -696,7 +696,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('5.1.0-rc.0-b9a91a5');
+var VERSION$1 = new Version('5.1.0-rc.0-f841fbe');
 
 /**
  * @fileoverview added by tsickle
@@ -38338,6 +38338,8 @@ var MetadataCollector = /** @class */ (function () {
                 __symbolic: 'module',
                 version: this.options.version || schema.METADATA_VERSION, metadata: metadata
             };
+            if (sourceFile.moduleName)
+                result.importAs = sourceFile.moduleName;
             if (exports)
                 result.exports = exports;
             return result;
@@ -39445,6 +39447,8 @@ function upgradeMetadataWithDtsData(host, oldMetadata, dtsFilePath) {
                 newMetadata.metadata[prop] = dtsMetadata.metadata[prop];
             }
         }
+        if (dtsMetadata['importAs'])
+            newMetadata['importAs'] = dtsMetadata['importAs'];
         // Only copy exports from exports from metadata prior to version 3.
         // Starting with version 3 the collector began collecting exports and
         // this should be redundant. Also, with bundler will rewrite the exports
@@ -42008,7 +42012,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v5.1.0-rc.0-b9a91a5
+ * @license Angular v5.1.0-rc.0-f841fbe
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -42439,7 +42443,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('5.1.0-rc.0-b9a91a5');
+var VERSION$2 = new Version$1('5.1.0-rc.0-f841fbe');
 
 /**
  * @fileoverview added by tsickle
@@ -55828,7 +55832,7 @@ var NgModuleFactory_ = /** @class */ (function (_super) {
 }(NgModuleFactory));
 
 /**
- * @license Angular v5.1.0-rc.0-b9a91a5
+ * @license Angular v5.1.0-rc.0-f841fbe
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -58470,7 +58474,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('5.1.0-rc.0-b9a91a5');
+var VERSION = new Version$1('5.1.0-rc.0-f841fbe');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
