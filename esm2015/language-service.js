@@ -1,11 +1,11 @@
 /**
- * @license Angular v5.0.0-beta.7-3215c4b
+ * @license Angular v5.1.0-5a0076f
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
-import { ASTWithSource, AotSummaryResolver, AstPath, Attribute, CompileMetadataResolver, CompilerConfig, CssSelector, DEFAULT_INTERPOLATION_CONFIG, DirectiveNormalizer, DirectiveResolver, DomElementSchemaRegistry, Element, ElementAst, HtmlParser, I18NHtmlParser, ImplicitReceiver, JitSummaryResolver, Lexer, NAMED_ENTITIES, NgModuleResolver, NullAstVisitor, NullTemplateVisitor, ParseSpan, ParseTreeResult, Parser, PipeResolver, PropertyRead, RecursiveTemplateAstVisitor, ResourceLoader, SelectorMatcher, StaticReflector, StaticSymbolCache, StaticSymbolResolver, TagContentType, TemplateParser, Text, analyzeNgModules, createOfflineCompileUrlResolver, extractProgramSymbols, findNode, getHtmlTagDefinition, identifierName, splitNsName, templateVisitAll, tokenReference, visitAstChildren } from '@angular/compiler';
-import { AstType, BuiltinType, CompilerHost, ModuleResolutionHostAdapter, getClassMembersFromDeclaration, getExpressionScope, getPipesTable, getSymbolQuery, getTemplateExpressionDiagnostics } from '@angular/compiler-cli/src/language_services';
-import { DiagnosticCategory, SyntaxKind, forEachChild, getPositionOfLineAndCharacter } from 'typescript';
+import { ASTWithSource, AotSummaryResolver, AstPath, Attribute, CompileMetadataResolver, CompilerConfig, CssSelector, DEFAULT_INTERPOLATION_CONFIG, DirectiveNormalizer, DirectiveResolver, DomElementSchemaRegistry, Element, ElementAst, HtmlParser, I18NHtmlParser, ImplicitReceiver, JitSummaryResolver, Lexer, NAMED_ENTITIES, NgModuleResolver, NullAstVisitor, NullTemplateVisitor, ParseSpan, ParseTreeResult, Parser, PipeResolver, PropertyRead, RecursiveTemplateAstVisitor, ResourceLoader, SelectorMatcher, StaticReflector, StaticSymbolCache, StaticSymbolResolver, TagContentType, TemplateParser, Text, analyzeNgModules, createOfflineCompileUrlResolver, findNode, getHtmlTagDefinition, identifierName, isFormattedError, splitNsName, templateVisitAll, tokenReference, visitAstChildren } from '@angular/compiler';
+import { AstType, BuiltinType, MetadataCollector, createMetadataReaderCache, getClassMembersFromDeclaration, getExpressionScope, getPipesTable, getSymbolQuery, getTemplateExpressionDiagnostics, readMetadata } from '@angular/compiler-cli/src/language_services';
+import { DiagnosticCategory, SyntaxKind, createModuleResolutionCache, forEachChild, getPositionOfLineAndCharacter, resolveModuleName } from 'typescript';
 import { Version, ViewEncapsulation, ɵConsole } from '@angular/core';
 import { existsSync } from 'fs';
 import { dirname, join } from 'path';
@@ -22,17 +22,7 @@ import { dirname, join } from 'path';
  *
  * @experimental
  */
-/**
- * The kind of diagnostic message.
- *
- * @experimental
- */
 var DiagnosticKind;
-/**
- * The kind of diagnostic message.
- *
- * @experimental
- */
 (function (DiagnosticKind) {
     DiagnosticKind[DiagnosticKind["Error"] = 0] = "Error";
     DiagnosticKind[DiagnosticKind["Warning"] = 1] = "Warning";
@@ -81,7 +71,7 @@ function hasTemplateReference(type) {
     if (type.diDeps) {
         for (let diDep of type.diDeps) {
             if (diDep.token && diDep.token.identifier &&
-                identifierName((diDep.token.identifier)) == 'TemplateRef')
+                identifierName(diDep.token.identifier) == 'TemplateRef')
                 return true;
         }
     }
@@ -90,7 +80,7 @@ function hasTemplateReference(type) {
 function getSelectors(info) {
     const map = new Map();
     const selectors = flatten(info.directives.map(directive => {
-        const selectors = CssSelector.parse((directive.selector));
+        const selectors = CssSelector.parse(directive.selector);
         selectors.forEach(selector => map.set(selector, directive));
         return selectors;
     }));
@@ -206,7 +196,7 @@ function getExpressionCompletions(scope, ast, position, query) {
     const path$$1 = findAstAt(ast, position);
     if (path$$1.empty)
         return undefined;
-    const tail = (path$$1.tail);
+    const tail = path$$1.tail;
     let result = scope;
     function getType(ast) { return new AstType(scope, query, {}).getType(ast); }
     // If the completion request is in a not in a pipe or property access then the global scope
@@ -258,10 +248,10 @@ function getExpressionCompletions(scope, ast, position, query) {
     return result && result.values();
 }
 function getExpressionSymbol(scope, ast, position, query) {
-    const path$$1 = findAstAt(ast, position, /* excludeEmpty */ /* excludeEmpty */ true);
+    const path$$1 = findAstAt(ast, position, /* excludeEmpty */ true);
     if (path$$1.empty)
         return undefined;
-    const tail = (path$$1.tail);
+    const tail = path$$1.tail;
     function getType(ast) { return new AstType(scope, query, {}).getType(ast); }
     let symbol = undefined;
     let span = undefined;
@@ -528,6 +518,7 @@ function attributeNames(element) {
 // schema registry.
 const SCHEMA = [
     '[Element]|textContent,%classList,className,id,innerHTML,*beforecopy,*beforecut,*beforepaste,*copy,*cut,*paste,*search,*selectstart,*webkitfullscreenchange,*webkitfullscreenerror,*wheel,outerHTML,#scrollLeft,#scrollTop,slot' +
+        /* added manually to avoid breaking changes */
         ',*message,*mozfullscreenchange,*mozfullscreenerror,*mozpointerlockchange,*mozpointerlockerror,*webglcontextcreationerror,*webglcontextlost,*webglcontextrestored',
     '[HTMLElement]^[Element]|accessKey,contentEditable,dir,!draggable,!hidden,innerText,lang,*abort,*auxclick,*blur,*cancel,*canplay,*canplaythrough,*change,*click,*close,*contextmenu,*cuechange,*dblclick,*drag,*dragend,*dragenter,*dragleave,*dragover,*dragstart,*drop,*durationchange,*emptied,*ended,*error,*focus,*gotpointercapture,*input,*invalid,*keydown,*keypress,*keyup,*load,*loadeddata,*loadedmetadata,*loadstart,*lostpointercapture,*mousedown,*mouseenter,*mouseleave,*mousemove,*mouseout,*mouseover,*mouseup,*mousewheel,*pause,*play,*playing,*pointercancel,*pointerdown,*pointerenter,*pointerleave,*pointermove,*pointerout,*pointerover,*pointerup,*progress,*ratechange,*reset,*resize,*scroll,*seeked,*seeking,*select,*show,*stalled,*submit,*suspend,*timeupdate,*toggle,*volumechange,*waiting,outerText,!spellcheck,%style,#tabIndex,title,!translate',
     'abbr,address,article,aside,b,bdi,bdo,cite,code,dd,dfn,dt,em,figcaption,figure,footer,header,i,kbd,main,mark,nav,noscript,rb,rp,rt,rtc,ruby,s,samp,section,small,strong,sub,sup,u,var,wbr^[HTMLElement]|accessKey,contentEditable,dir,!draggable,!hidden,innerText,lang,*abort,*auxclick,*blur,*cancel,*canplay,*canplaythrough,*change,*click,*close,*contextmenu,*cuechange,*dblclick,*drag,*dragend,*dragenter,*dragleave,*dragover,*dragstart,*drop,*durationchange,*emptied,*ended,*error,*focus,*gotpointercapture,*input,*invalid,*keydown,*keypress,*keyup,*load,*loadeddata,*loadedmetadata,*loadstart,*lostpointercapture,*mousedown,*mouseenter,*mouseleave,*mousemove,*mouseout,*mouseover,*mouseup,*mousewheel,*pause,*play,*playing,*pointercancel,*pointerdown,*pointerenter,*pointerleave,*pointermove,*pointerout,*pointerover,*pointerup,*progress,*ratechange,*reset,*resize,*scroll,*seeked,*seeking,*select,*show,*stalled,*submit,*suspend,*timeupdate,*toggle,*volumechange,*waiting,outerText,!spellcheck,%style,#tabIndex,title,!translate',
@@ -879,7 +870,7 @@ function getAttributeInfosForElement(info, elementName, element) {
         const applicableSelectors = selectors.filter(selector => !selector.element || selector.element == elementName);
         const selectorAndAttributeNames = applicableSelectors.map(selector => ({ selector, attrs: selector.attrs.filter(a => !!a) }));
         let attrs = flatten(selectorAndAttributeNames.map(selectorAndAttr => {
-            const directive = (selectorMap.get(selectorAndAttr.selector));
+            const directive = selectorMap.get(selectorAndAttr.selector);
             const result = selectorAndAttr.attrs.map(name => ({ name, input: name in directive.inputs, output: name in directive.outputs }));
             return result;
         }));
@@ -895,7 +886,7 @@ function getAttributeInfosForElement(info, elementName, element) {
         // All input and output properties of the matching directives should be added.
         let elementSelector = element ?
             createElementCssSelector(element) :
-            createElementCssSelector(new Element(elementName, [], [], (null), null, null));
+            createElementCssSelector(new Element(elementName, [], [], null, null, null));
         let matcher = new SelectorMatcher();
         matcher.addSelectables(selectors);
         matcher.match(elementSelector, selector => {
@@ -922,7 +913,7 @@ function attributeValueCompletions(info, position, attr) {
         mostSpecific.visit(visitor, null);
         if (!visitor.result || !visitor.result.length) {
             // Try allwoing widening the path
-            const widerPath = findTemplateAstAt(info.templateAst, position, /* allowWidening */ /* allowWidening */ true);
+            const widerPath = findTemplateAstAt(info.templateAst, position, /* allowWidening */ true);
             if (widerPath.tail) {
                 const widerVisitor = new ExpressionVisitor(info, position, attr, () => getExpressionScope(dinfo, widerPath, false));
                 widerPath.tail.visit(widerVisitor, null);
@@ -1017,7 +1008,7 @@ class ExpressionVisitor extends NullTemplateVisitor {
                 return;
             const valueRelativePosition = this.position - this.attr.valueSpan.start.offset - 1;
             const bindings = templateBindingResult.templateBindings;
-            const binding = bindings.find(binding => inSpan(valueRelativePosition, binding.span, /* exclusive */ /* exclusive */ true)) ||
+            const binding = bindings.find(binding => inSpan(valueRelativePosition, binding.span, /* exclusive */ true)) ||
                 bindings.find(binding => inSpan(valueRelativePosition, binding.span));
             const keyCompletions = () => {
                 let keys = [];
@@ -1242,7 +1233,7 @@ function locateSymbol(info) {
             },
             visitVariable(ast) { },
             visitEvent(ast) {
-                if (!attributeValueSymbol(ast.handler, /* inEvent */ /* inEvent */ true)) {
+                if (!attributeValueSymbol(ast.handler, /* inEvent */ true)) {
                     symbol = findOutputBinding(info, path$$1, ast);
                     symbol = symbol && new OverrideKindSymbol(symbol, 'event');
                     span = spanOf(ast);
@@ -1254,7 +1245,7 @@ function locateSymbol(info) {
                 const expressionPosition = templatePosition - ast.sourceSpan.start.offset;
                 if (inSpan(expressionPosition, ast.value.span)) {
                     const dinfo = diagnosticInfoFromTemplateInfo(info);
-                    const scope = getExpressionScope(dinfo, path$$1, /* includeEvent */ /* includeEvent */ false);
+                    const scope = getExpressionScope(dinfo, path$$1, /* includeEvent */ false);
                     const result = getExpressionSymbol(scope, ast.value, expressionPosition, info.template.query);
                     if (result) {
                         symbol = result.symbol;
@@ -1330,10 +1321,9 @@ function invertMap(obj) {
 class OverrideKindSymbol {
     constructor(sym, kindOverride) {
         this.sym = sym;
-        this.kindOverride = kindOverride;
+        this.kind = kindOverride;
     }
     get name() { return this.sym.name; }
-    get kind() { return this.kindOverride; }
     get language() { return this.sym.language; }
     get type() { return this.sym.type; }
     get container() { return this.sym.container; }
@@ -1414,9 +1404,12 @@ function getDeclarationDiagnostics(declarations, modules) {
                 if (!modules.ngModuleByPipeOrDirective.has(declaration.type)) {
                     report(`Component '${declaration.type.name}' is not included in a module and will not be available inside a template. Consider adding it to a NgModule declaration`);
                 }
-                if (!declaration.metadata.template.template &&
-                    !declaration.metadata.template.templateUrl) {
-                    report(`Component ${declaration.type.name} must have a template or templateUrl`);
+                const { template, templateUrl } = declaration.metadata.template;
+                if (template === null && !templateUrl) {
+                    report(`Component '${declaration.type.name}' must have a template or templateUrl`);
+                }
+                else if (template && templateUrl) {
+                    report(`Component '${declaration.type.name}' must not have both template and templateUrl`);
                 }
             }
             else {
@@ -1546,7 +1539,7 @@ class LanguageServiceImpl {
                 const htmlParser = new I18NHtmlParser(rawHtmlParser);
                 const expressionParser = new Parser(new Lexer());
                 const config = new CompilerConfig();
-                const parser = new TemplateParser(config, this.host.resolver.getReflector(), expressionParser, new DomElementSchemaRegistry(), htmlParser, (null), []);
+                const parser = new TemplateParser(config, this.host.resolver.getReflector(), expressionParser, new DomElementSchemaRegistry(), htmlParser, null, []);
                 const htmlResult = htmlParser.parse(template.source, '', true);
                 const analyzedModules = this.host.getAnalyzedModules();
                 let errors = undefined;
@@ -1623,8 +1616,12 @@ function findSuitableDefaultModule(modules) {
  * found in the LICENSE file at https://angular.io/license
  */
 class ReflectorModuleModuleResolutionHost {
-    constructor(host) {
+    constructor(host, getProgram) {
         this.host = host;
+        this.getProgram = getProgram;
+        // Note: verboseInvalidExpressions is important so that
+        // the collector will collect errors instead of throwing
+        this.metadataCollector = new MetadataCollector({ verboseInvalidExpression: true });
         if (host.directoryExists)
             this.directoryExists = directoryName => this.host.directoryExists(directoryName);
     }
@@ -1637,20 +1634,37 @@ class ReflectorModuleModuleResolutionHost {
         // Typescript readFile() declaration should be `readFile(fileName: string): string | undefined
         return undefined;
     }
-}
-// This reflector host's purpose is to first set verboseInvalidExpressions to true so the
-// reflector will collect errors instead of throwing, and second to all deferring the creation
-// of the program until it is actually needed.
-class ReflectorHost extends CompilerHost {
-    constructor(getProgram, serviceHost, options) {
-        super(
-        // The ancestor value for program is overridden below so passing null here is safe.
-        /* program */ (null), options, new ModuleResolutionHostAdapter(new ReflectorModuleModuleResolutionHost(serviceHost)), { verboseInvalidExpression: true });
-        this.getProgram = getProgram;
+    getSourceFileMetadata(fileName) {
+        const sf = this.getProgram().getSourceFile(fileName);
+        return sf ? this.metadataCollector.getMetadata(sf) : undefined;
     }
-    get program() { return this.getProgram(); }
-    set program(value) {
-        // Discard the result set by ancestor constructor
+    cacheMetadata(fileName) {
+        // Don't cache the metadata for .ts files as they might change in the editor!
+        return fileName.endsWith('.d.ts');
+    }
+}
+class ReflectorHost {
+    constructor(getProgram, serviceHost, options) {
+        this.options = options;
+        this.metadataReaderCache = createMetadataReaderCache();
+        this.hostAdapter = new ReflectorModuleModuleResolutionHost(serviceHost, getProgram);
+        this.moduleResolutionCache =
+            createModuleResolutionCache(serviceHost.getCurrentDirectory(), (s) => s);
+    }
+    getMetadataFor(modulePath) {
+        return readMetadata(modulePath, this.hostAdapter, this.metadataReaderCache);
+    }
+    moduleNameToFileName(moduleName, containingFile) {
+        if (!containingFile) {
+            if (moduleName.indexOf('.') === 0) {
+                throw new Error('Resolution of relative paths requires a containing file.');
+            }
+            // Any containing file gives the same result for absolute imports
+            containingFile = join(this.options.basePath, 'index.ts');
+        }
+        const resolved = resolveModuleName(moduleName, containingFile, this.options, this.hostAdapter)
+            .resolvedModule;
+        return resolved ? resolved.resolvedFileName : null;
     }
 }
 
@@ -1706,8 +1720,8 @@ class TypeScriptServiceHost {
     }
     setSite(service) { this.service = service; }
     /**
-       * Angular LanguageServiceHost implementation
-       */
+     * Angular LanguageServiceHost implementation
+     */
     get resolver() {
         this.validate();
         let result = this._resolver;
@@ -1723,7 +1737,7 @@ class TypeScriptServiceHost {
             // are hard-coded.
             const config = new CompilerConfig({ defaultEncapsulation: ViewEncapsulation.Emulated, useJit: false });
             const directiveNormalizer = new DirectiveNormalizer(resourceLoader, urlResolver, htmlParser, config);
-            result = this._resolver = new CompileMetadataResolver(config, moduleResolver, directiveResolver, pipeResolver, new JitSummaryResolver(), elementSchemaRegistry, directiveNormalizer, new ɵConsole(), this._staticSymbolCache, this.reflector, (error, type) => this.collectError(error, type && type.filePath));
+            result = this._resolver = new CompileMetadataResolver(config, htmlParser, moduleResolver, directiveResolver, pipeResolver, new JitSummaryResolver(), elementSchemaRegistry, directiveNormalizer, new ɵConsole(), this._staticSymbolCache, this.reflector, (error, type) => this.collectError(error, type && type.filePath));
         }
         return result;
     }
@@ -1757,10 +1771,20 @@ class TypeScriptServiceHost {
     ensureAnalyzedModules() {
         let analyzedModules = this.analyzedModules;
         if (!analyzedModules) {
-            const analyzeHost = { isSourceFile(filePath) { return true; } };
-            const programSymbols = extractProgramSymbols(this.staticSymbolResolver, this.program.getSourceFiles().map(sf => sf.fileName), analyzeHost);
-            analyzedModules = this.analyzedModules =
-                analyzeNgModules(programSymbols, analyzeHost, this.staticSymbolResolver, this.resolver);
+            if (this.host.getScriptFileNames().length === 0) {
+                analyzedModules = {
+                    files: [],
+                    ngModuleByPipeOrDirective: new Map(),
+                    ngModules: [],
+                };
+            }
+            else {
+                const analyzeHost = { isSourceFile(filePath) { return true; } };
+                const programFiles = this.program.getSourceFiles().map(sf => sf.fileName);
+                analyzedModules =
+                    analyzeNgModules(programFiles, analyzeHost, this.staticSymbolResolver, this.resolver);
+            }
+            this.analyzedModules = analyzedModules;
         }
         return analyzedModules;
     }
@@ -1872,7 +1896,7 @@ class TypeScriptServiceHost {
             const urlResolver = createOfflineCompileUrlResolver();
             for (const module of ngModuleSummary.ngModules) {
                 for (const directive of module.declaredDirectives) {
-                    const { metadata } = (this.resolver.getNonNormalizedDirectiveMetadata(directive.reference));
+                    const { metadata } = this.resolver.getNonNormalizedDirectiveMetadata(directive.reference);
                     if (metadata.isComponent && metadata.template && metadata.template.templateUrl) {
                         const templateName = urlResolver.resolve(this.reflector.componentModuleUrl(directive.reference), metadata.template.templateUrl);
                         fileToComponent.set(templateName, directive.reference);
@@ -1938,7 +1962,11 @@ class TypeScriptServiceHost {
         if (!result) {
             if (!this.context) {
                 // Make up a context by finding the first script and using that as the base dir.
-                this.context = this.host.getScriptFileNames()[0];
+                const scriptFileNames = this.host.getScriptFileNames();
+                if (0 === scriptFileNames.length) {
+                    throw new Error('Internal error: no script file names found');
+                }
+                this.context = scriptFileNames[0];
             }
             // Use the file context's directory as the base directory.
             // The host's getCurrentDirectory() is not reliable as it is always "" in
@@ -1954,6 +1982,9 @@ class TypeScriptServiceHost {
             const compilerOptions = this.host.getCompilationSettings();
             if (compilerOptions && compilerOptions.baseUrl) {
                 options.baseUrl = compilerOptions.baseUrl;
+            }
+            if (compilerOptions && compilerOptions.paths) {
+                options.paths = compilerOptions.paths;
             }
             result = this._reflectorHost =
                 new ReflectorHost(() => this.tsService.getProgram(), this.host, options);
@@ -1983,7 +2014,7 @@ class TypeScriptServiceHost {
                 toSummaryFileName(sourceFilePath) { return sourceFilePath; },
                 fromSummaryFileName(filePath) { return filePath; },
             }, this._staticSymbolCache);
-            result = this._staticSymbolResolver = new StaticSymbolResolver(this.reflectorHost, this._staticSymbolCache, this._summaryResolver, (e, filePath) => this.collectError(e, (filePath)));
+            result = this._staticSymbolResolver = new StaticSymbolResolver(this.reflectorHost, this._staticSymbolCache, this._summaryResolver, (e, filePath) => this.collectError(e, filePath));
         }
         return result;
     }
@@ -1991,7 +2022,7 @@ class TypeScriptServiceHost {
         let result = this._reflector;
         if (!result) {
             const ssr = this.staticSymbolResolver;
-            result = this._reflector = new StaticReflector(this._summaryResolver, ssr, [], [], (e, filePath) => this.collectError(e, (filePath)));
+            result = this._reflector = new StaticReflector(this._summaryResolver, ssr, [], [], (e, filePath) => this.collectError(e, filePath));
         }
         return result;
     }
@@ -2011,9 +2042,9 @@ class TypeScriptServiceHost {
         return undefined;
     }
     /**
-       * Given a template string node, see if it is an Angular template string, and if so return the
-       * containing class.
-       */
+     * Given a template string node, see if it is an Angular template string, and if so return the
+     * containing class.
+     */
     getTemplateClassDeclFromNode(currentToken) {
         // Verify we are in a 'template' property assignment, in an object literal, which is an call
         // arg, in a decorator
@@ -2052,7 +2083,13 @@ class TypeScriptServiceHost {
     getCollectedErrors(defaultSpan, sourceFile) {
         const errors = (this.collectedErrors && this.collectedErrors.get(sourceFile.fileName));
         return (errors && errors.map((e) => {
-            return { message: e.message, span: spanAt(sourceFile, e.line, e.column) || defaultSpan };
+            const line = e.line || (e.position && e.position.line);
+            const column = e.column || (e.position && e.position.column);
+            const span = spanAt(sourceFile, line, column) || defaultSpan;
+            if (isFormattedError(e)) {
+                return errorToDiagnosticWithChain(e, span);
+            }
+            return { message: e.message, span };
         })) ||
             [];
     }
@@ -2070,7 +2107,7 @@ class TypeScriptServiceHost {
                             const staticSymbol = this.reflector.getStaticSymbol(sourceFile.fileName, classDeclaration.name.text);
                             try {
                                 if (this.resolver.isDirective(staticSymbol)) {
-                                    const { metadata } = (this.resolver.getNonNormalizedDirectiveMetadata(staticSymbol));
+                                    const { metadata } = this.resolver.getNonNormalizedDirectiveMetadata(staticSymbol);
                                     const declarationSpan = spanOf$1(target);
                                     return {
                                         type: staticSymbol,
@@ -2149,6 +2186,12 @@ function spanAt(sourceFile, line, column) {
             return { start: node.getStart(), end: node.getEnd() };
         }
     }
+}
+function convertChain(chain) {
+    return { message: chain.message, next: chain.next ? convertChain(chain.next) : undefined };
+}
+function errorToDiagnosticWithChain(error, span) {
+    return { message: error.chain ? convertChain(error.chain) : error.message, span };
 }
 
 /**
@@ -2298,14 +2341,34 @@ function create(info /* ts.server.PluginCreateInfo */) {
         proxy[k] = function () { return oldLS[k].apply(oldLS, arguments); };
     }
     function completionToEntry(c) {
-        return { kind: c.kind, name: c.name, sortText: c.sort, kindModifiers: '' };
+        return {
+            // TODO: remove any and fix type error.
+            kind: c.kind,
+            name: c.name,
+            sortText: c.sort,
+            kindModifiers: ''
+        };
+    }
+    function diagnosticChainToDiagnosticChain(chain) {
+        return {
+            messageText: chain.message,
+            category: DiagnosticCategory.Error,
+            code: 0,
+            next: chain.next ? diagnosticChainToDiagnosticChain(chain.next) : undefined
+        };
+    }
+    function diagnosticMessageToDiagnosticMessageText(message) {
+        if (typeof message === 'string') {
+            return message;
+        }
+        return diagnosticChainToDiagnosticChain(message);
     }
     function diagnosticToDiagnostic(d, file) {
         const result = {
             file,
             start: d.span.start,
             length: d.span.end - d.span.start,
-            messageText: d.message,
+            messageText: diagnosticMessageToDiagnosticMessageText(d.message),
             category: DiagnosticCategory.Error,
             code: 0,
             source: 'ng'
@@ -2403,9 +2466,10 @@ function create(info /* ts.server.PluginCreateInfo */) {
                         fileName: loc.fileName,
                         textSpan: { start: loc.span.start, length: loc.span.end - loc.span.start },
                         name: '',
+                        // TODO: remove any and fix type error.
                         kind: 'definition',
                         containerName: loc.fileName,
-                        containerKind: 'file'
+                        containerKind: 'file',
                     });
                 }
             }
@@ -2430,7 +2494,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-const VERSION = new Version('5.0.0-beta.7-3215c4b');
+const VERSION = new Version('5.1.0-5a0076f');
 
 /**
  * @license
@@ -2446,4 +2510,4 @@ const VERSION = new Version('5.0.0-beta.7-3215c4b');
  */
 
 export { createLanguageService, TypeScriptServiceHost, createLanguageServiceFromTypescript, VERSION, getExternalFiles, create };
-//# sourceMappingURL=index.js.map
+//# sourceMappingURL=language-service.js.map
