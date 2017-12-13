@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.1.0-be9a737
+ * @license Angular v5.1.0-d6da798
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v5.1.0-be9a737
+ * @license Angular v5.1.0-d6da798
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -696,7 +696,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('5.1.0-be9a737');
+var VERSION$1 = new Version('5.1.0-d6da798');
 
 /**
  * @fileoverview added by tsickle
@@ -32650,13 +32650,15 @@ var AotSummaryResolver = /** @class */ (function () {
      * @return {?}
      */
     function (staticSymbol) {
-        staticSymbol.assertNoMembers();
-        var /** @type {?} */ summary = this.summaryCache.get(staticSymbol);
+        var /** @type {?} */ rootSymbol = staticSymbol.members.length ?
+            this.staticSymbolCache.get(staticSymbol.filePath, staticSymbol.name) :
+            staticSymbol;
+        var /** @type {?} */ summary = this.summaryCache.get(rootSymbol);
         if (!summary) {
             this._loadSummaryFile(staticSymbol.filePath);
             summary = /** @type {?} */ ((this.summaryCache.get(staticSymbol)));
         }
-        return summary || null;
+        return (rootSymbol === staticSymbol && summary) || null;
     };
     /**
      * @param {?} filePath
@@ -41929,7 +41931,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v5.1.0-be9a737
+ * @license Angular v5.1.0-d6da798
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -42360,7 +42362,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('5.1.0-be9a737');
+var VERSION$2 = new Version$1('5.1.0-d6da798');
 
 /**
  * @fileoverview added by tsickle
@@ -55803,7 +55805,7 @@ var NgModuleFactory_ = /** @class */ (function (_super) {
 }(NgModuleFactory));
 
 /**
- * @license Angular v5.1.0-be9a737
+ * @license Angular v5.1.0-d6da798
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -58445,7 +58447,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('5.1.0-be9a737');
+var VERSION = new Version$1('5.1.0-d6da798');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
