@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.2.0-beta.0-e48f477
+ * @license Angular v5.2.0-beta.0-82bcd83
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v5.2.0-beta.0-e48f477
+ * @license Angular v5.2.0-beta.0-82bcd83
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -696,7 +696,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('5.2.0-beta.0-e48f477');
+var VERSION$1 = new Version('5.2.0-beta.0-82bcd83');
 
 /**
  * @fileoverview added by tsickle
@@ -25930,7 +25930,7 @@ function convertPropertyBinding(localResolver, implicitReceiver, expressionWitho
     else if (form == BindingForm.TrySimple) {
         return new ConvertPropertyBindingResult([], outputExpr);
     }
-    stmts.push(currValExpr.set(outputExpr).toDeclStmt(null, [StmtModifier.Final]));
+    stmts.push(currValExpr.set(outputExpr).toDeclStmt(DYNAMIC_TYPE, [StmtModifier.Final]));
     return new ConvertPropertyBindingResult(stmts, currValExpr);
 }
 /**
@@ -26306,7 +26306,12 @@ var _AstToIrVisitor = /** @class */ (function () {
      * @return {?}
      */
     function (ast, mode) {
-        return convertToStatementIfNeeded(mode, literal(ast.value));
+        // For literal values of null, undefined, true, or false allow type inteference
+        // to infer the type.
+        var /** @type {?} */ type = ast.value === null || ast.value === undefined || ast.value === true || ast.value === true ?
+            INFERRED_TYPE :
+            undefined;
+        return convertToStatementIfNeeded(mode, literal(ast.value, type));
     };
     /**
      * @param {?} name
@@ -27068,7 +27073,12 @@ var ViewBuilder = /** @class */ (function () {
                 var input = _c[_b];
                 var /** @type {?} */ guard = directive.directive.guards[input.directiveName];
                 if (guard) {
-                    result.push({ guard: guard, expression: /** @type {?} */ ({ context: this.component, value: input.value }) });
+                    var /** @type {?} */ useIf = guard === 'UseIf';
+                    result.push({
+                        guard: guard,
+                        useIf: useIf,
+                        expression: /** @type {?} */ ({ context: this.component, value: input.value })
+                    });
                 }
             }
         }
@@ -27130,8 +27140,8 @@ var ViewBuilder = /** @class */ (function () {
                 // are unlikely to affect type narrowing.
                 var _c = convertPropertyBinding(nameResolver, variable(this.getOutputVar(context)), value, bindingId, BindingForm.TrySimple), stmts = _c.stmts, currValExpr = _c.currValExpr;
                 if (stmts.length == 0) {
-                    var /** @type {?} */ callGuard = this.ctx.importExpr(guard.guard).callFn([currValExpr]);
-                    guardExpression = guardExpression ? guardExpression.and(callGuard) : callGuard;
+                    var /** @type {?} */ guardClause = guard.useIf ? currValExpr : this.ctx.importExpr(guard.guard).callFn([currValExpr]);
+                    guardExpression = guardExpression ? guardExpression.and(guardClause) : guardClause;
                 }
             }
             if (guardExpression) {
@@ -31533,6 +31543,7 @@ var USE_VALUE = 'useValue';
 var PROVIDE = 'provide';
 var REFERENCE_SET = new Set([USE_VALUE, 'useFactory', 'data']);
 var TYPEGUARD_POSTFIX = 'TypeGuard';
+var USE_IF = 'UseIf';
 /**
  * @param {?} value
  * @return {?}
@@ -31883,8 +31894,18 @@ var StaticReflector = /** @class */ (function () {
         var /** @type {?} */ result = {};
         for (var _i = 0, staticMembers_1 = staticMembers; _i < staticMembers_1.length; _i++) {
             var name_1 = staticMembers_1[_i];
-            result[name_1.substr(0, name_1.length - TYPEGUARD_POSTFIX.length)] =
-                this.getStaticSymbol(type.filePath, type.name, [name_1]);
+            if (name_1.endsWith(TYPEGUARD_POSTFIX)) {
+                var /** @type {?} */ property = name_1.substr(0, name_1.length - TYPEGUARD_POSTFIX.length);
+                var /** @type {?} */ value = void 0;
+                if (property.endsWith(USE_IF)) {
+                    property = name_1.substr(0, property.length - USE_IF.length);
+                    value = USE_IF;
+                }
+                else {
+                    value = this.getStaticSymbol(type.filePath, type.name, [name_1]);
+                }
+                result[property] = value;
+            }
         }
         return result;
     };
@@ -42066,7 +42087,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v5.2.0-beta.0-e48f477
+ * @license Angular v5.2.0-beta.0-82bcd83
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -42497,7 +42518,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('5.2.0-beta.0-e48f477');
+var VERSION$2 = new Version$1('5.2.0-beta.0-82bcd83');
 
 /**
  * @fileoverview added by tsickle
@@ -55892,7 +55913,7 @@ var NgModuleFactory_ = /** @class */ (function (_super) {
 }(NgModuleFactory));
 
 /**
- * @license Angular v5.2.0-beta.0-e48f477
+ * @license Angular v5.2.0-beta.0-82bcd83
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -58534,7 +58555,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('5.2.0-beta.0-e48f477');
+var VERSION = new Version$1('5.2.0-beta.0-82bcd83');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
