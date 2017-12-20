@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.1.1-57bed3f
+ * @license Angular v5.1.1-a36dfd4
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v5.1.1-57bed3f
+ * @license Angular v5.1.1-a36dfd4
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -696,7 +696,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('5.1.1-57bed3f');
+var VERSION$1 = new Version('5.1.1-a36dfd4');
 
 /**
  * @fileoverview added by tsickle
@@ -15167,16 +15167,19 @@ var CompileMetadataResolver = /** @class */ (function () {
     };
     /**
      * @param {?} moduleType
+     * @param {?=} alreadyCollecting
      * @return {?}
      */
     CompileMetadataResolver.prototype.getNgModuleSummary = /**
      * @param {?} moduleType
+     * @param {?=} alreadyCollecting
      * @return {?}
      */
-    function (moduleType) {
+    function (moduleType, alreadyCollecting) {
+        if (alreadyCollecting === void 0) { alreadyCollecting = null; }
         var /** @type {?} */ moduleSummary = /** @type {?} */ (this._loadSummary(moduleType, CompileSummaryKind.NgModule));
         if (!moduleSummary) {
-            var /** @type {?} */ moduleMeta = this.getNgModuleMetadata(moduleType, false);
+            var /** @type {?} */ moduleMeta = this.getNgModuleMetadata(moduleType, false, alreadyCollecting);
             moduleSummary = moduleMeta ? moduleMeta.toSummary() : null;
             if (moduleSummary) {
                 this._summaryCache.set(moduleType, moduleSummary);
@@ -15220,16 +15223,19 @@ var CompileMetadataResolver = /** @class */ (function () {
     /**
      * @param {?} moduleType
      * @param {?=} throwIfNotFound
+     * @param {?=} alreadyCollecting
      * @return {?}
      */
     CompileMetadataResolver.prototype.getNgModuleMetadata = /**
      * @param {?} moduleType
      * @param {?=} throwIfNotFound
+     * @param {?=} alreadyCollecting
      * @return {?}
      */
-    function (moduleType, throwIfNotFound) {
+    function (moduleType, throwIfNotFound, alreadyCollecting) {
         var _this = this;
         if (throwIfNotFound === void 0) { throwIfNotFound = true; }
+        if (alreadyCollecting === void 0) { alreadyCollecting = null; }
         moduleType = resolveForwardRef(moduleType);
         var /** @type {?} */ compileMeta = this._ngModuleCache.get(moduleType);
         if (compileMeta) {
@@ -15264,7 +15270,15 @@ var CompileMetadataResolver = /** @class */ (function () {
                 if (importedModuleType) {
                     if (_this._checkSelfImport(moduleType, importedModuleType))
                         return;
-                    var /** @type {?} */ importedModuleSummary = _this.getNgModuleSummary(importedModuleType);
+                    if (!alreadyCollecting)
+                        alreadyCollecting = new Set();
+                    if (alreadyCollecting.has(importedModuleType)) {
+                        _this._reportError(syntaxError(_this._getTypeDescriptor(importedModuleType) + " '" + stringifyType(importedType) + "' is imported recursively by the module '" + stringifyType(moduleType) + "'."), moduleType);
+                        return;
+                    }
+                    alreadyCollecting.add(importedModuleType);
+                    var /** @type {?} */ importedModuleSummary = _this.getNgModuleSummary(importedModuleType, alreadyCollecting);
+                    alreadyCollecting.delete(importedModuleType);
                     if (!importedModuleSummary) {
                         _this._reportError(syntaxError("Unexpected " + _this._getTypeDescriptor(importedType) + " '" + stringifyType(importedType) + "' imported by the module '" + stringifyType(moduleType) + "'. Please add a @NgModule annotation."), moduleType);
                         return;
@@ -15283,7 +15297,15 @@ var CompileMetadataResolver = /** @class */ (function () {
                     _this._reportError(syntaxError("Unexpected value '" + stringifyType(exportedType) + "' exported by the module '" + stringifyType(moduleType) + "'"), moduleType);
                     return;
                 }
-                var /** @type {?} */ exportedModuleSummary = _this.getNgModuleSummary(exportedType);
+                if (!alreadyCollecting)
+                    alreadyCollecting = new Set();
+                if (alreadyCollecting.has(exportedType)) {
+                    _this._reportError(syntaxError(_this._getTypeDescriptor(exportedType) + " '" + stringify(exportedType) + "' is exported recursively by the module '" + stringifyType(moduleType) + "'"), moduleType);
+                    return;
+                }
+                alreadyCollecting.add(exportedType);
+                var /** @type {?} */ exportedModuleSummary = _this.getNgModuleSummary(exportedType, alreadyCollecting);
+                alreadyCollecting.delete(exportedType);
                 if (exportedModuleSummary) {
                     exportedModules.push(exportedModuleSummary);
                 }
@@ -41938,7 +41960,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v5.1.1-57bed3f
+ * @license Angular v5.1.1-a36dfd4
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -42369,7 +42391,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('5.1.1-57bed3f');
+var VERSION$2 = new Version$1('5.1.1-a36dfd4');
 
 /**
  * @fileoverview added by tsickle
@@ -55812,7 +55834,7 @@ var NgModuleFactory_ = /** @class */ (function (_super) {
 }(NgModuleFactory));
 
 /**
- * @license Angular v5.1.1-57bed3f
+ * @license Angular v5.1.1-a36dfd4
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -58454,7 +58476,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('5.1.1-57bed3f');
+var VERSION = new Version$1('5.1.1-a36dfd4');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
