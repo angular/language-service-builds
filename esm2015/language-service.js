@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.2.0-beta.1-83c1383
+ * @license Angular v5.2.0-beta.1-83d207d
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2248,12 +2248,14 @@ function angularOnlyFilter(ls) {
         getFormattingEditsAfterKeystroke: (fileName, position, key, options) => [],
         getDocCommentTemplateAtPosition: (fileName, position) => undefined,
         isValidBraceCompletionAtPosition: (fileName, position, openingBrace) => undefined,
+        getSpanOfEnclosingComment: (fileName, position, onlyMultiLine) => undefined,
         getCodeFixesAtPosition: (fileName, start, end, errorCodes) => [],
+        applyCodeActionCommand: (action) => Promise.resolve(undefined),
         getEmitOutput: fileName => undefined,
         getProgram: () => ls.getProgram(),
         dispose: () => ls.dispose(),
         getApplicableRefactors: (fileName, positionOrRaneg) => [],
-        getEditsForRefactor: (fileName, formatOptions, positionOrRange, refactorName, actionName) => undefined,
+        getEditsForRefactor: (fileName, formatOptions, positionOrRange, refactorName, actionName) => undefined
     };
 }
 function create(info /* ts.server.PluginCreateInfo */) {
@@ -2299,9 +2301,9 @@ function create(info /* ts.server.PluginCreateInfo */) {
             getSemanticClassifications: tryFilenameOneCall(ls.getSemanticClassifications),
             getEncodedSyntacticClassifications: tryFilenameOneCall(ls.getEncodedSyntacticClassifications),
             getEncodedSemanticClassifications: tryFilenameOneCall(ls.getEncodedSemanticClassifications),
-            getCompletionsAtPosition: tryFilenameOneCall(ls.getCompletionsAtPosition),
-            getCompletionEntryDetails: tryFilenameTwoCall(ls.getCompletionEntryDetails),
-            getCompletionEntrySymbol: tryFilenameTwoCall(ls.getCompletionEntrySymbol),
+            getCompletionsAtPosition: tryFilenameTwoCall(ls.getCompletionsAtPosition),
+            getCompletionEntryDetails: tryFilenameFourCall(ls.getCompletionEntryDetails),
+            getCompletionEntrySymbol: tryFilenameThreeCall(ls.getCompletionEntrySymbol),
             getQuickInfoAtPosition: tryFilenameOneCall(ls.getQuickInfoAtPosition),
             getNameOrDottedNameSpan: tryFilenameTwoCall(ls.getNameOrDottedNameSpan),
             getBreakpointStatementAtPosition: tryFilenameOneCall(ls.getBreakpointStatementAtPosition),
@@ -2328,12 +2330,14 @@ function create(info /* ts.server.PluginCreateInfo */) {
             getFormattingEditsAfterKeystroke: tryFilenameThreeCall(ls.getFormattingEditsAfterKeystroke),
             getDocCommentTemplateAtPosition: tryFilenameOneCall(ls.getDocCommentTemplateAtPosition),
             isValidBraceCompletionAtPosition: tryFilenameTwoCall(ls.isValidBraceCompletionAtPosition),
+            getSpanOfEnclosingComment: tryFilenameTwoCall(ls.getSpanOfEnclosingComment),
             getCodeFixesAtPosition: tryFilenameFourCall(ls.getCodeFixesAtPosition),
+            applyCodeActionCommand: ((action) => tryCall(undefined, () => ls.applyCodeActionCommand(action))),
             getEmitOutput: tryFilenameCall(ls.getEmitOutput),
             getProgram: () => ls.getProgram(),
             dispose: () => ls.dispose(),
-            getApplicableRefactors: (fileName, positionOrRaneg) => [],
-            getEditsForRefactor: (fileName, formatOptions, positionOrRange, refactorName, actionName) => undefined,
+            getApplicableRefactors: tryFilenameOneCall(ls.getApplicableRefactors),
+            getEditsForRefactor: tryFilenameFourCall(ls.getEditsForRefactor)
         };
     }
     oldLS = typescriptOnly(oldLS);
@@ -2389,8 +2393,8 @@ function create(info /* ts.server.PluginCreateInfo */) {
     const ls = createLanguageService(serviceHost);
     serviceHost.setSite(ls);
     projectHostMap.set(info.project, serviceHost);
-    proxy.getCompletionsAtPosition = function (fileName, position) {
-        let base = oldLS.getCompletionsAtPosition(fileName, position) || {
+    proxy.getCompletionsAtPosition = function (fileName, position, options) {
+        let base = oldLS.getCompletionsAtPosition(fileName, position, options) || {
             isGlobalCompletion: false,
             isMemberCompletion: false,
             isNewIdentifierLocation: false,
@@ -2494,7 +2498,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-const VERSION = new Version('5.2.0-beta.1-83c1383');
+const VERSION = new Version('5.2.0-beta.1-83d207d');
 
 /**
  * @license

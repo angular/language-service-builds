@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.2.0-beta.1-83c1383
+ * @license Angular v5.2.0-beta.1-83d207d
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v5.2.0-beta.1-83c1383
+ * @license Angular v5.2.0-beta.1-83d207d
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -689,14 +689,9 @@ var Version = /** @class */ (function () {
  * found in the LICENSE file at https://angular.io/license
  */
 /**
- * @module
- * @description
- * Entry point for all public APIs of the common package.
- */
-/**
  * \@stable
  */
-var VERSION$1 = new Version('5.2.0-beta.1-83c1383');
+var VERSION$1 = new Version('5.2.0-beta.1-83d207d');
 
 /**
  * @fileoverview added by tsickle
@@ -7440,13 +7435,6 @@ var SimpleExpressionChecker = /** @class */ (function () {
 /**
  * @fileoverview added by tsickle
  * @suppress {checkTypes} checked by tsc
- */
-/**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
  */
 var ParseLocation = /** @class */ (function () {
     function ParseLocation(file, offset, line, col) {
@@ -29832,13 +29820,6 @@ function unwrapResolvedMetadata(metadata) {
  * @suppress {checkTypes} checked by tsc
  */
 /**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
- */
-/**
  * @param {?} srcFileName
  * @param {?} forJitCtx
  * @param {?} summaryResolver
@@ -35169,9 +35150,6 @@ var ResourceLoader = /** @class */ (function () {
  * found in the LICENSE file at https://angular.io/license
  */
 /**
- * Extract i18n messages from source code
- */
-/**
  * The host of the Extractor disconnects the implementation from TypeScript / other language
  * services and from underlying file systems.
  * @record
@@ -39230,7 +39208,7 @@ var CompilerHostAdapter = /** @class */ (function () {
     }
     CompilerHostAdapter.prototype.getMetadataFor = function (fileName) {
         var sourceFile = this.host.getSourceFile(fileName + '.ts', ts__default.ScriptTarget.Latest);
-        return this.collector.getMetadata(sourceFile);
+        return sourceFile && this.collector.getMetadata(sourceFile);
     };
     return CompilerHostAdapter;
 }());
@@ -42109,7 +42087,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v5.2.0-beta.1-83c1383
+ * @license Angular v5.2.0-beta.1-83d207d
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -42540,7 +42518,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('5.2.0-beta.1-83c1383');
+var VERSION$2 = new Version$1('5.2.0-beta.1-83d207d');
 
 /**
  * @fileoverview added by tsickle
@@ -47750,7 +47728,6 @@ var Renderer2 = /** @class */ (function () {
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-// Public API for render
 
 /**
  * @fileoverview added by tsickle
@@ -48205,7 +48182,6 @@ var EmbeddedViewRef = /** @class */ (function (_super) {
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-// Public API for compiler
 
 /**
  * @fileoverview added by tsickle
@@ -50601,11 +50577,6 @@ var defaultKeyValueDiffers = new KeyValueDiffers(keyValDiff);
  *
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
- */
-/**
- * @module
- * @description
- * Change detection enables data binding in Angular.
  */
 
 /**
@@ -56695,7 +56666,7 @@ function initViewStaticData(viewIndex, parent) {
 var NO_CHANGE = /** @type {?} */ ({});
 
 /**
- * @license Angular v5.2.0-beta.1-83c1383
+ * @license Angular v5.2.0-beta.1-83d207d
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59079,14 +59050,16 @@ function angularOnlyFilter(ls) {
         getFormattingEditsAfterKeystroke: function (fileName, position, key, options) { return []; },
         getDocCommentTemplateAtPosition: function (fileName, position) { return undefined; },
         isValidBraceCompletionAtPosition: function (fileName, position, openingBrace) { return undefined; },
+        getSpanOfEnclosingComment: function (fileName, position, onlyMultiLine) { return undefined; },
         getCodeFixesAtPosition: function (fileName, start, end, errorCodes) { return []; },
+        applyCodeActionCommand: function (action) { return Promise.resolve(undefined); },
         getEmitOutput: function (fileName) { return undefined; },
         getProgram: function () { return ls.getProgram(); },
         dispose: function () { return ls.dispose(); },
         getApplicableRefactors: function (fileName, positionOrRaneg) { return []; },
         getEditsForRefactor: function (fileName, formatOptions, positionOrRange, refactorName, actionName) {
             return undefined;
-        },
+        }
     };
 }
 function create(info /* ts.server.PluginCreateInfo */) {
@@ -59134,9 +59107,9 @@ function create(info /* ts.server.PluginCreateInfo */) {
             getSemanticClassifications: tryFilenameOneCall(ls.getSemanticClassifications),
             getEncodedSyntacticClassifications: tryFilenameOneCall(ls.getEncodedSyntacticClassifications),
             getEncodedSemanticClassifications: tryFilenameOneCall(ls.getEncodedSemanticClassifications),
-            getCompletionsAtPosition: tryFilenameOneCall(ls.getCompletionsAtPosition),
-            getCompletionEntryDetails: tryFilenameTwoCall(ls.getCompletionEntryDetails),
-            getCompletionEntrySymbol: tryFilenameTwoCall(ls.getCompletionEntrySymbol),
+            getCompletionsAtPosition: tryFilenameTwoCall(ls.getCompletionsAtPosition),
+            getCompletionEntryDetails: tryFilenameFourCall(ls.getCompletionEntryDetails),
+            getCompletionEntrySymbol: tryFilenameThreeCall(ls.getCompletionEntrySymbol),
             getQuickInfoAtPosition: tryFilenameOneCall(ls.getQuickInfoAtPosition),
             getNameOrDottedNameSpan: tryFilenameTwoCall(ls.getNameOrDottedNameSpan),
             getBreakpointStatementAtPosition: tryFilenameOneCall(ls.getBreakpointStatementAtPosition),
@@ -59163,14 +59136,14 @@ function create(info /* ts.server.PluginCreateInfo */) {
             getFormattingEditsAfterKeystroke: tryFilenameThreeCall(ls.getFormattingEditsAfterKeystroke),
             getDocCommentTemplateAtPosition: tryFilenameOneCall(ls.getDocCommentTemplateAtPosition),
             isValidBraceCompletionAtPosition: tryFilenameTwoCall(ls.isValidBraceCompletionAtPosition),
+            getSpanOfEnclosingComment: tryFilenameTwoCall(ls.getSpanOfEnclosingComment),
             getCodeFixesAtPosition: tryFilenameFourCall(ls.getCodeFixesAtPosition),
+            applyCodeActionCommand: (function (action) { return tryCall(undefined, function () { return ls.applyCodeActionCommand(action); }); }),
             getEmitOutput: tryFilenameCall(ls.getEmitOutput),
             getProgram: function () { return ls.getProgram(); },
             dispose: function () { return ls.dispose(); },
-            getApplicableRefactors: function (fileName, positionOrRaneg) { return []; },
-            getEditsForRefactor: function (fileName, formatOptions, positionOrRange, refactorName, actionName) {
-                return undefined;
-            },
+            getApplicableRefactors: tryFilenameOneCall(ls.getApplicableRefactors),
+            getEditsForRefactor: tryFilenameFourCall(ls.getEditsForRefactor)
         };
     }
     oldLS = typescriptOnly(oldLS);
@@ -59229,8 +59202,8 @@ function create(info /* ts.server.PluginCreateInfo */) {
     var ls = createLanguageService(serviceHost);
     serviceHost.setSite(ls);
     projectHostMap.set(info.project, serviceHost);
-    proxy.getCompletionsAtPosition = function (fileName, position) {
-        var base = oldLS.getCompletionsAtPosition(fileName, position) || {
+    proxy.getCompletionsAtPosition = function (fileName, position, options) {
+        var base = oldLS.getCompletionsAtPosition(fileName, position, options) || {
             isGlobalCompletion: false,
             isMemberCompletion: false,
             isNewIdentifierLocation: false,
@@ -59337,7 +59310,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('5.2.0-beta.1-83c1383');
+var VERSION = new Version$1('5.2.0-beta.1-83d207d');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
