@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.2.0-beta.1-d8abf70
+ * @license Angular v5.2.0-beta.1-9f538a6
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v5.2.0-beta.1-d8abf70
+ * @license Angular v5.2.0-beta.1-9f538a6
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -691,7 +691,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('5.2.0-beta.1-d8abf70');
+var VERSION$1 = new Version('5.2.0-beta.1-9f538a6');
 
 /**
  * @fileoverview added by tsickle
@@ -40318,8 +40318,8 @@ exports.$$observable = exports.observable;
 });
 
 /* tslint:disable:no-empty */
-function noop$1() { }
-var noop_2 = noop$1;
+function noop$1$1() { }
+var noop_2 = noop$1$1;
 
 
 var noop_1 = {
@@ -42087,7 +42087,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v5.2.0-beta.1-d8abf70
+ * @license Angular v5.2.0-beta.1-9f538a6
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -42518,7 +42518,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('5.2.0-beta.1-d8abf70');
+var VERSION$2 = new Version$1('5.2.0-beta.1-9f538a6');
 
 /**
  * @fileoverview added by tsickle
@@ -56049,6 +56049,12 @@ function assertNodeType(node, type) {
     assertEqual(node.flags & 3 /* TYPE_MASK */, type, 'Node.type', typeSerializer);
 }
 /**
+ * @param {?} node
+ * @param {...?} types
+ * @return {?}
+ */
+
+/**
  * @param {?} type
  * @return {?}
  */
@@ -56261,6 +56267,47 @@ function isDifferent(a, b) {
     // test checks if both a and b are not NaN
     return !(a !== a && b !== b) && a !== b;
 }
+/**
+ * Creates an ElementRef for a given node injector and stores it on the injector.
+ * Or, if the ElementRef already exists, retrieves the existing ElementRef.
+ *
+ * @param {?} di The node injector where we should store a created ElementRef
+ * @return {?} The ElementRef instance to use
+ */
+
+/**
+ * Creates a TemplateRef and stores it on the injector. Or, if the TemplateRef already
+ * exists, retrieves the existing TemplateRef.
+ *
+ * @template T
+ * @param {?} di The node injector where we should store a created TemplateRef
+ * @return {?} The TemplateRef instance to use
+ */
+
+/**
+ * Creates a ViewContainerRef and stores it on the injector. Or, if the ViewContainerRef
+ * already exists, retrieves the existing ViewContainerRef.
+ *
+ * @param {?} di
+ * @return {?} The ViewContainerRef instance to use
+ */
+
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+/**
+ * A predicate which determines if a given element/directive should be included in the query
+ * @record
+ */
+
 var QueryList_ = /** @class */ (function () {
     function QueryList_() {
         this.dirty = false;
@@ -56666,7 +56713,7 @@ function initViewStaticData(viewIndex, parent) {
 var NO_CHANGE = /** @type {?} */ ({});
 
 /**
- * @license Angular v5.2.0-beta.1-d8abf70
+ * @license Angular v5.2.0-beta.1-9f538a6
  * (c) 2010-2017 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59310,7 +59357,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('5.2.0-beta.1-d8abf70');
+var VERSION = new Version$1('5.2.0-beta.1-9f538a6');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
