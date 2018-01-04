@@ -1,6 +1,6 @@
 /**
- * @license Angular v5.2.0-rc.0-dcc3eba
- * (c) 2010-2017 Google, Inc. https://angular.io/
+ * @license Angular v5.2.0-rc.0-b5934fc
+ * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
 import { ASTWithSource, AotSummaryResolver, AstPath, Attribute, CompileMetadataResolver, CompilerConfig, CssSelector, DEFAULT_INTERPOLATION_CONFIG, DirectiveNormalizer, DirectiveResolver, DomElementSchemaRegistry, Element, ElementAst, HtmlParser, I18NHtmlParser, ImplicitReceiver, JitSummaryResolver, Lexer, NAMED_ENTITIES, NgModuleResolver, NullAstVisitor, NullTemplateVisitor, ParseSpan, ParseTreeResult, Parser, PipeResolver, PropertyRead, RecursiveTemplateAstVisitor, ResourceLoader, SelectorMatcher, StaticReflector, StaticSymbolCache, StaticSymbolResolver, TagContentType, TemplateParser, Text, analyzeNgModules, createOfflineCompileUrlResolver, findNode, getHtmlTagDefinition, identifierName, isFormattedError, splitNsName, templateVisitAll, tokenReference, visitAstChildren } from '@angular/compiler';
@@ -2498,7 +2498,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-const VERSION = new Version('5.2.0-rc.0-dcc3eba');
+const VERSION = new Version('5.2.0-rc.0-b5934fc');
 
 /**
  * @license
