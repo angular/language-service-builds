@@ -1,17 +1,15 @@
 /**
- * @license Angular v4.2.2-ee03ff1
- * (c) 2010-2017 Google, Inc. https://angular.io/
+ * @license Angular v5.2.0-rc.0-7bec6a2
+ * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
-import { ASTWithSource, AotSummaryResolver, AstPath, Attribute, CompileMetadataResolver, CompilerConfig, CssSelector, DEFAULT_INTERPOLATION_CONFIG, DirectiveNormalizer, DirectiveResolver, DomElementSchemaRegistry, Element, ElementAst, HtmlParser, I18NHtmlParser, ImplicitReceiver, JitSummaryResolver, Lexer, NAMED_ENTITIES, NgModuleResolver, NullAstVisitor, NullTemplateVisitor, ParseSpan, ParseTreeResult, Parser, PipeResolver, PropertyRead, RecursiveTemplateAstVisitor, ResourceLoader, SelectorMatcher, StaticReflector, StaticSymbolCache, StaticSymbolResolver, TagContentType, TemplateParser, Text, analyzeNgModules, createOfflineCompileUrlResolver, extractProgramSymbols, findNode, getHtmlTagDefinition, identifierName, splitNsName, templateVisitAll, tokenReference, visitAstChildren } from '@angular/compiler';
-import { AstType, BuiltinType, CompilerHost, ModuleResolutionHostAdapter, getClassMembersFromDeclaration, getExpressionScope, getPipesTable, getSymbolQuery, getTemplateExpressionDiagnostics } from '@angular/compiler-cli';
-import { DiagnosticCategory, SyntaxKind, forEachChild, getPositionOfLineAndCharacter } from 'typescript';
-import * as ts from 'typescript';
+import { ASTWithSource, AotSummaryResolver, AstPath, Attribute, CompileMetadataResolver, CompilerConfig, CssSelector, DEFAULT_INTERPOLATION_CONFIG, DirectiveNormalizer, DirectiveResolver, DomElementSchemaRegistry, Element, ElementAst, HtmlParser, I18NHtmlParser, ImplicitReceiver, JitSummaryResolver, Lexer, NAMED_ENTITIES, NgModuleResolver, NullAstVisitor, NullTemplateVisitor, ParseSpan, ParseTreeResult, Parser, PipeResolver, PropertyRead, RecursiveTemplateAstVisitor, ResourceLoader, SelectorMatcher, StaticReflector, StaticSymbolCache, StaticSymbolResolver, TagContentType, TemplateParser, Text, analyzeNgModules, createOfflineCompileUrlResolver, findNode, getHtmlTagDefinition, identifierName, isFormattedError, splitNsName, templateVisitAll, tokenReference, visitAstChildren } from '@angular/compiler';
+import { __extends } from 'tslib';
+import { AstType, BuiltinType, MetadataCollector, createMetadataReaderCache, getClassMembersFromDeclaration, getExpressionScope, getPipesTable, getSymbolQuery, getTemplateExpressionDiagnostics, readMetadata } from '@angular/compiler-cli/src/language_services';
+import { DiagnosticCategory, SyntaxKind, createModuleResolutionCache, forEachChild, getPositionOfLineAndCharacter, resolveModuleName } from 'typescript';
 import { Version, ViewEncapsulation, ɵConsole } from '@angular/core';
 import { existsSync } from 'fs';
-import * as fs from 'fs';
 import { dirname, join } from 'path';
-import * as path from 'path';
 
 /**
  * @license
@@ -38,16 +36,6 @@ var DiagnosticKind;
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-var __extends$2 = (undefined && undefined.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 function isParseSourceSpan(value) {
     return value && !!value.start;
 }
@@ -137,8 +125,8 @@ function diagnosticInfoFromTemplateInfo(info) {
 function findTemplateAstAt(ast, position, allowWidening) {
     if (allowWidening === void 0) { allowWidening = false; }
     var path$$1 = [];
-    var visitor = new (function (_super) {
-        __extends$2(class_1, _super);
+    var visitor = new /** @class */ (function (_super) {
+        __extends(class_1, _super);
         function class_1() {
             return _super !== null && _super.apply(this, arguments) || this;
         }
@@ -196,21 +184,11 @@ function findTemplateAstAt(ast, position, allowWidening) {
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-var __extends$1 = (undefined && undefined.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 function findAstAt(ast, position, excludeEmpty) {
     if (excludeEmpty === void 0) { excludeEmpty = false; }
     var path$$1 = [];
-    var visitor = new (function (_super) {
-        __extends$1(class_1, _super);
+    var visitor = new /** @class */ (function (_super) {
+        __extends(class_1, _super);
         function class_1() {
             return _super !== null && _super.apply(this, arguments) || this;
         }
@@ -550,16 +528,19 @@ function attributeNames(element) {
     return Object.keys(compose(elements[element.toUpperCase()] || defaultAttributes)).sort();
 }
 
-// This section is describes the DOM property surface of a DOM element and is dervided from
+// This section is describes the DOM property surface of a DOM element and is derivgulp formated
+// from
 // from the SCHEMA strings from the security context information. SCHEMA is copied here because
 // it would be an unnecessary risk to allow this array to be imported from the security context
 // schema registry.
 var SCHEMA = [
-    '[Element]|textContent,%classList,className,id,innerHTML,*beforecopy,*beforecut,*beforepaste,*copy,*cut,*paste,*search,*selectstart,*webkitfullscreenchange,*webkitfullscreenerror,*wheel,outerHTML,#scrollLeft,#scrollTop',
-    '[HTMLElement]^[Element]|accessKey,contentEditable,dir,!draggable,!hidden,innerText,lang,*abort,*beforecopy,*beforecut,*beforepaste,*blur,*cancel,*canplay,*canplaythrough,*change,*click,*close,*contextmenu,*copy,*cuechange,*cut,*dblclick,*drag,*dragend,*dragenter,*dragleave,*dragover,*dragstart,*drop,*durationchange,*emptied,*ended,*error,*focus,*input,*invalid,*keydown,*keypress,*keyup,*load,*loadeddata,*loadedmetadata,*loadstart,*message,*mousedown,*mouseenter,*mouseleave,*mousemove,*mouseout,*mouseover,*mouseup,*mousewheel,*mozfullscreenchange,*mozfullscreenerror,*mozpointerlockchange,*mozpointerlockerror,*paste,*pause,*play,*playing,*progress,*ratechange,*reset,*resize,*scroll,*search,*seeked,*seeking,*select,*selectstart,*show,*stalled,*submit,*suspend,*timeupdate,*toggle,*volumechange,*waiting,*webglcontextcreationerror,*webglcontextlost,*webglcontextrestored,*webkitfullscreenchange,*webkitfullscreenerror,*wheel,outerText,!spellcheck,%style,#tabIndex,title,!translate',
-    'abbr,address,article,aside,b,bdi,bdo,cite,code,dd,dfn,dt,em,figcaption,figure,footer,header,i,kbd,main,mark,nav,noscript,rb,rp,rt,rtc,ruby,s,samp,section,small,strong,sub,sup,u,var,wbr^[HTMLElement]|accessKey,contentEditable,dir,!draggable,!hidden,innerText,lang,*abort,*beforecopy,*beforecut,*beforepaste,*blur,*cancel,*canplay,*canplaythrough,*change,*click,*close,*contextmenu,*copy,*cuechange,*cut,*dblclick,*drag,*dragend,*dragenter,*dragleave,*dragover,*dragstart,*drop,*durationchange,*emptied,*ended,*error,*focus,*input,*invalid,*keydown,*keypress,*keyup,*load,*loadeddata,*loadedmetadata,*loadstart,*message,*mousedown,*mouseenter,*mouseleave,*mousemove,*mouseout,*mouseover,*mouseup,*mousewheel,*mozfullscreenchange,*mozfullscreenerror,*mozpointerlockchange,*mozpointerlockerror,*paste,*pause,*play,*playing,*progress,*ratechange,*reset,*resize,*scroll,*search,*seeked,*seeking,*select,*selectstart,*show,*stalled,*submit,*suspend,*timeupdate,*toggle,*volumechange,*waiting,*webglcontextcreationerror,*webglcontextlost,*webglcontextrestored,*webkitfullscreenchange,*webkitfullscreenerror,*wheel,outerText,!spellcheck,%style,#tabIndex,title,!translate',
-    'media^[HTMLElement]|!autoplay,!controls,%crossOrigin,#currentTime,!defaultMuted,#defaultPlaybackRate,!disableRemotePlayback,!loop,!muted,*encrypted,#playbackRate,preload,src,%srcObject,#volume',
-    ':svg:^[HTMLElement]|*abort,*blur,*cancel,*canplay,*canplaythrough,*change,*click,*close,*contextmenu,*cuechange,*dblclick,*drag,*dragend,*dragenter,*dragleave,*dragover,*dragstart,*drop,*durationchange,*emptied,*ended,*error,*focus,*input,*invalid,*keydown,*keypress,*keyup,*load,*loadeddata,*loadedmetadata,*loadstart,*mousedown,*mouseenter,*mouseleave,*mousemove,*mouseout,*mouseover,*mouseup,*mousewheel,*pause,*play,*playing,*progress,*ratechange,*reset,*resize,*scroll,*seeked,*seeking,*select,*show,*stalled,*submit,*suspend,*timeupdate,*toggle,*volumechange,*waiting,%style,#tabIndex',
+    '[Element]|textContent,%classList,className,id,innerHTML,*beforecopy,*beforecut,*beforepaste,*copy,*cut,*paste,*search,*selectstart,*webkitfullscreenchange,*webkitfullscreenerror,*wheel,outerHTML,#scrollLeft,#scrollTop,slot' +
+        /* added manually to avoid breaking changes */
+        ',*message,*mozfullscreenchange,*mozfullscreenerror,*mozpointerlockchange,*mozpointerlockerror,*webglcontextcreationerror,*webglcontextlost,*webglcontextrestored',
+    '[HTMLElement]^[Element]|accessKey,contentEditable,dir,!draggable,!hidden,innerText,lang,*abort,*auxclick,*blur,*cancel,*canplay,*canplaythrough,*change,*click,*close,*contextmenu,*cuechange,*dblclick,*drag,*dragend,*dragenter,*dragleave,*dragover,*dragstart,*drop,*durationchange,*emptied,*ended,*error,*focus,*gotpointercapture,*input,*invalid,*keydown,*keypress,*keyup,*load,*loadeddata,*loadedmetadata,*loadstart,*lostpointercapture,*mousedown,*mouseenter,*mouseleave,*mousemove,*mouseout,*mouseover,*mouseup,*mousewheel,*pause,*play,*playing,*pointercancel,*pointerdown,*pointerenter,*pointerleave,*pointermove,*pointerout,*pointerover,*pointerup,*progress,*ratechange,*reset,*resize,*scroll,*seeked,*seeking,*select,*show,*stalled,*submit,*suspend,*timeupdate,*toggle,*volumechange,*waiting,outerText,!spellcheck,%style,#tabIndex,title,!translate',
+    'abbr,address,article,aside,b,bdi,bdo,cite,code,dd,dfn,dt,em,figcaption,figure,footer,header,i,kbd,main,mark,nav,noscript,rb,rp,rt,rtc,ruby,s,samp,section,small,strong,sub,sup,u,var,wbr^[HTMLElement]|accessKey,contentEditable,dir,!draggable,!hidden,innerText,lang,*abort,*auxclick,*blur,*cancel,*canplay,*canplaythrough,*change,*click,*close,*contextmenu,*cuechange,*dblclick,*drag,*dragend,*dragenter,*dragleave,*dragover,*dragstart,*drop,*durationchange,*emptied,*ended,*error,*focus,*gotpointercapture,*input,*invalid,*keydown,*keypress,*keyup,*load,*loadeddata,*loadedmetadata,*loadstart,*lostpointercapture,*mousedown,*mouseenter,*mouseleave,*mousemove,*mouseout,*mouseover,*mouseup,*mousewheel,*pause,*play,*playing,*pointercancel,*pointerdown,*pointerenter,*pointerleave,*pointermove,*pointerout,*pointerover,*pointerup,*progress,*ratechange,*reset,*resize,*scroll,*seeked,*seeking,*select,*show,*stalled,*submit,*suspend,*timeupdate,*toggle,*volumechange,*waiting,outerText,!spellcheck,%style,#tabIndex,title,!translate',
+    'media^[HTMLElement]|!autoplay,!controls,%controlsList,%crossOrigin,#currentTime,!defaultMuted,#defaultPlaybackRate,!disableRemotePlayback,!loop,!muted,*encrypted,*waitingforkey,#playbackRate,preload,src,%srcObject,#volume',
+    ':svg:^[HTMLElement]|*abort,*auxclick,*blur,*cancel,*canplay,*canplaythrough,*change,*click,*close,*contextmenu,*cuechange,*dblclick,*drag,*dragend,*dragenter,*dragleave,*dragover,*dragstart,*drop,*durationchange,*emptied,*ended,*error,*focus,*gotpointercapture,*input,*invalid,*keydown,*keypress,*keyup,*load,*loadeddata,*loadedmetadata,*loadstart,*lostpointercapture,*mousedown,*mouseenter,*mouseleave,*mousemove,*mouseout,*mouseover,*mouseup,*mousewheel,*pause,*play,*playing,*pointercancel,*pointerdown,*pointerenter,*pointerleave,*pointermove,*pointerout,*pointerover,*pointerup,*progress,*ratechange,*reset,*resize,*scroll,*seeked,*seeking,*select,*show,*stalled,*submit,*suspend,*timeupdate,*toggle,*volumechange,*waiting,%style,#tabIndex',
     ':svg:graphics^:svg:|',
     ':svg:animation^:svg:|*begin,*end,*repeat',
     ':svg:geometry^:svg:|',
@@ -568,7 +549,7 @@ var SCHEMA = [
     ':svg:textContent^:svg:graphics|',
     ':svg:textPositioning^:svg:textContent|',
     'a^[HTMLElement]|charset,coords,download,hash,host,hostname,href,hreflang,name,password,pathname,ping,port,protocol,referrerPolicy,rel,rev,search,shape,target,text,type,username',
-    'area^[HTMLElement]|alt,coords,hash,host,hostname,href,!noHref,password,pathname,ping,port,protocol,referrerPolicy,search,shape,target,username',
+    'area^[HTMLElement]|alt,coords,download,hash,host,hostname,href,!noHref,password,pathname,ping,port,protocol,referrerPolicy,rel,search,shape,target,username',
     'audio^media|',
     'br^[HTMLElement]|clear',
     'base^[HTMLElement]|href,target',
@@ -595,11 +576,10 @@ var SCHEMA = [
     'iframe^[HTMLElement]|align,!allowFullscreen,frameBorder,height,longDesc,marginHeight,marginWidth,name,referrerPolicy,%sandbox,scrolling,src,srcdoc,width',
     'img^[HTMLElement]|align,alt,border,%crossOrigin,#height,#hspace,!isMap,longDesc,lowsrc,name,referrerPolicy,sizes,src,srcset,useMap,#vspace,#width',
     'input^[HTMLElement]|accept,align,alt,autocapitalize,autocomplete,!autofocus,!checked,!defaultChecked,defaultValue,dirName,!disabled,%files,formAction,formEnctype,formMethod,!formNoValidate,formTarget,#height,!incremental,!indeterminate,max,#maxLength,min,#minLength,!multiple,name,pattern,placeholder,!readOnly,!required,selectionDirection,#selectionEnd,#selectionStart,#size,src,step,type,useMap,value,%valueAsDate,#valueAsNumber,#width',
-    'keygen^[HTMLElement]|!autofocus,challenge,!disabled,keytype,name',
     'li^[HTMLElement]|type,#value',
     'label^[HTMLElement]|htmlFor',
     'legend^[HTMLElement]|align',
-    'link^[HTMLElement]|as,charset,%crossOrigin,!disabled,href,hreflang,integrity,media,rel,%relList,rev,%sizes,target,type',
+    'link^[HTMLElement]|as,charset,%crossOrigin,!disabled,href,hreflang,integrity,media,referrerPolicy,rel,%relList,rev,%sizes,target,type',
     'map^[HTMLElement]|name',
     'marquee^[HTMLElement]|behavior,bgColor,direction,height,#hspace,#loop,#scrollAmount,#scrollDelay,!trueSpeed,#vspace,width',
     'menu^[HTMLElement]|!compact',
@@ -620,6 +600,7 @@ var SCHEMA = [
     'script^[HTMLElement]|!async,charset,%crossOrigin,!defer,event,htmlFor,integrity,src,text,type',
     'select^[HTMLElement]|!autofocus,!disabled,#length,!multiple,name,!required,#selectedIndex,#size,value',
     'shadow^[HTMLElement]|',
+    'slot^[HTMLElement]|name',
     'source^[HTMLElement]|media,sizes,src,srcset,type',
     'span^[HTMLElement]|',
     'style^[HTMLElement]|!disabled,media,type',
@@ -642,7 +623,6 @@ var SCHEMA = [
     ':svg:animateTransform^:svg:animation|',
     ':svg:circle^:svg:geometry|',
     ':svg:clipPath^:svg:graphics|',
-    ':svg:cursor^:svg:|',
     ':svg:defs^:svg:graphics|',
     ':svg:desc^:svg:|',
     ':svg:discard^:svg:|',
@@ -702,16 +682,18 @@ var SCHEMA = [
     ':svg:use^:svg:graphics|',
     ':svg:view^:svg:|#zoomAndPan',
     'data^[HTMLElement]|value',
+    'keygen^[HTMLElement]|!autofocus,challenge,!disabled,form,keytype,name',
     'menuitem^[HTMLElement]|type,label,icon,!disabled,!checked,radiogroup,!default',
     'summary^[HTMLElement]|',
     'time^[HTMLElement]|dateTime',
+    ':svg:cursor^:svg:|',
 ];
 var EVENT = 'event';
 var BOOLEAN = 'boolean';
 var NUMBER = 'number';
 var STRING = 'string';
 var OBJECT = 'object';
-var SchemaInformation = (function () {
+var SchemaInformation = /** @class */ (function () {
     function SchemaInformation() {
         var _this = this;
         this.schema = {};
@@ -789,16 +771,6 @@ function propertyNames(elementName) {
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-var __extends = (undefined && undefined.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 var TEMPLATE_ATTR_PREFIX = '*';
 var hiddenHtmlElements = {
     html: true,
@@ -1028,7 +1000,7 @@ function voidElementAttributeCompletions(info, path$$1) {
         }
     }
 }
-var ExpressionVisitor = (function (_super) {
+var ExpressionVisitor = /** @class */ (function (_super) {
     __extends(ExpressionVisitor, _super);
     function ExpressionVisitor(info, position, attr, getExpressionScope$$1) {
         var _this = _super.call(this) || this;
@@ -1289,7 +1261,7 @@ function locateSymbol(info) {
                 }
             },
             visitReference: function (ast) {
-                symbol_1 = info.template.query.getTypeSymbol(tokenReference(ast.value));
+                symbol_1 = ast.value && info.template.query.getTypeSymbol(tokenReference(ast.value));
                 span_1 = spanOf(ast);
             },
             visitVariable: function (ast) { },
@@ -1382,18 +1354,13 @@ function invertMap(obj) {
 /**
  * Wrap a symbol and change its kind to component.
  */
-var OverrideKindSymbol = (function () {
+var OverrideKindSymbol = /** @class */ (function () {
     function OverrideKindSymbol(sym, kindOverride) {
         this.sym = sym;
-        this.kindOverride = kindOverride;
+        this.kind = kindOverride;
     }
     Object.defineProperty(OverrideKindSymbol.prototype, "name", {
         get: function () { return this.sym.name; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(OverrideKindSymbol.prototype, "kind", {
-        get: function () { return this.kindOverride; },
         enumerable: true,
         configurable: true
     });
@@ -1511,9 +1478,12 @@ function getDeclarationDiagnostics(declarations, modules) {
                 if (!modules.ngModuleByPipeOrDirective.has(declaration.type)) {
                     report("Component '" + declaration.type.name + "' is not included in a module and will not be available inside a template. Consider adding it to a NgModule declaration");
                 }
-                if (!declaration.metadata.template.template &&
-                    !declaration.metadata.template.templateUrl) {
-                    report("Component " + declaration.type.name + " must have a template or templateUrl");
+                var _b = declaration.metadata.template, template = _b.template, templateUrl = _b.templateUrl;
+                if (template === null && !templateUrl) {
+                    report("Component '" + declaration.type.name + "' must have a template or templateUrl");
+                }
+                else if (template && templateUrl) {
+                    report("Component '" + declaration.type.name + "' must not have both template and templateUrl");
                 }
             }
             else {
@@ -1573,7 +1543,7 @@ function hoverTextOf(symbol) {
 function createLanguageService(host) {
     return new LanguageServiceImpl(host);
 }
-var LanguageServiceImpl = (function () {
+var LanguageServiceImpl = /** @class */ (function () {
     function LanguageServiceImpl(host) {
         this.host = host;
     }
@@ -1731,20 +1701,14 @@ function findSuitableDefaultModule(modules) {
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-var __extends$4 = (undefined && undefined.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-var ReflectorModuleModuleResolutionHost = (function () {
-    function ReflectorModuleModuleResolutionHost(host) {
+var ReflectorModuleModuleResolutionHost = /** @class */ (function () {
+    function ReflectorModuleModuleResolutionHost(host, getProgram) {
         var _this = this;
         this.host = host;
+        this.getProgram = getProgram;
+        // Note: verboseInvalidExpressions is important so that
+        // the collector will collect errors instead of throwing
+        this.metadataCollector = new MetadataCollector({ verboseInvalidExpression: true });
         if (host.directoryExists)
             this.directoryExists = function (directoryName) { return _this.host.directoryExists(directoryName); };
     }
@@ -1757,30 +1721,41 @@ var ReflectorModuleModuleResolutionHost = (function () {
         // Typescript readFile() declaration should be `readFile(fileName: string): string | undefined
         return undefined;
     };
+    ReflectorModuleModuleResolutionHost.prototype.getSourceFileMetadata = function (fileName) {
+        var sf = this.getProgram().getSourceFile(fileName);
+        return sf ? this.metadataCollector.getMetadata(sf) : undefined;
+    };
+    ReflectorModuleModuleResolutionHost.prototype.cacheMetadata = function (fileName) {
+        // Don't cache the metadata for .ts files as they might change in the editor!
+        return fileName.endsWith('.d.ts');
+    };
     return ReflectorModuleModuleResolutionHost;
 }());
-// This reflector host's purpose is to first set verboseInvalidExpressions to true so the
-// reflector will collect errors instead of throwing, and second to all deferring the creation
-// of the program until it is actually needed.
-var ReflectorHost = (function (_super) {
-    __extends$4(ReflectorHost, _super);
+var ReflectorHost = /** @class */ (function () {
     function ReflectorHost(getProgram, serviceHost, options) {
-        var _this = _super.call(this, 
-        // The ancestor value for program is overridden below so passing null here is safe.
-        /* program */ null, options, new ModuleResolutionHostAdapter(new ReflectorModuleModuleResolutionHost(serviceHost)), { verboseInvalidExpression: true }) || this;
-        _this.getProgram = getProgram;
-        return _this;
+        this.options = options;
+        this.metadataReaderCache = createMetadataReaderCache();
+        this.hostAdapter = new ReflectorModuleModuleResolutionHost(serviceHost, getProgram);
+        this.moduleResolutionCache =
+            createModuleResolutionCache(serviceHost.getCurrentDirectory(), function (s) { return s; });
     }
-    Object.defineProperty(ReflectorHost.prototype, "program", {
-        get: function () { return this.getProgram(); },
-        set: function (value) {
-            // Discard the result set by ancestor constructor
-        },
-        enumerable: true,
-        configurable: true
-    });
+    ReflectorHost.prototype.getMetadataFor = function (modulePath) {
+        return readMetadata(modulePath, this.hostAdapter, this.metadataReaderCache);
+    };
+    ReflectorHost.prototype.moduleNameToFileName = function (moduleName, containingFile) {
+        if (!containingFile) {
+            if (moduleName.indexOf('.') === 0) {
+                throw new Error('Resolution of relative paths requires a containing file.');
+            }
+            // Any containing file gives the same result for absolute imports
+            containingFile = join(this.options.basePath, 'index.ts');
+        }
+        var resolved = resolveModuleName(moduleName, containingFile, this.options, this.hostAdapter)
+            .resolvedModule;
+        return resolved ? resolved.resolvedFileName : null;
+    };
     return ReflectorHost;
-}(CompilerHost));
+}());
 
 /**
  * @license
@@ -1789,16 +1764,6 @@ var ReflectorHost = (function (_super) {
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-var __extends$3 = (undefined && undefined.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 /**
  * Create a `LanguageServiceHost`
  */
@@ -1814,8 +1779,8 @@ function createLanguageServiceFromTypescript(host, service) {
  * template that are syntatically incorrect which is required to provide completions in
  * syntactically incorrect templates.
  */
-var DummyHtmlParser = (function (_super) {
-    __extends$3(DummyHtmlParser, _super);
+var DummyHtmlParser = /** @class */ (function (_super) {
+    __extends(DummyHtmlParser, _super);
     function DummyHtmlParser() {
         return _super !== null && _super.apply(this, arguments) || this;
     }
@@ -1829,8 +1794,8 @@ var DummyHtmlParser = (function (_super) {
 /**
  * Avoid loading resources in the language servcie by using a dummy loader.
  */
-var DummyResourceLoader = (function (_super) {
-    __extends$3(DummyResourceLoader, _super);
+var DummyResourceLoader = /** @class */ (function (_super) {
+    __extends(DummyResourceLoader, _super);
     function DummyResourceLoader() {
         return _super !== null && _super.apply(this, arguments) || this;
     }
@@ -1845,7 +1810,7 @@ var DummyResourceLoader = (function (_super) {
  *
  * @experimental
  */
-var TypeScriptServiceHost = (function () {
+var TypeScriptServiceHost = /** @class */ (function () {
     function TypeScriptServiceHost(host, tsService) {
         this.host = host;
         this.tsService = tsService;
@@ -1875,7 +1840,7 @@ var TypeScriptServiceHost = (function () {
                 // are hard-coded.
                 var config = new CompilerConfig({ defaultEncapsulation: ViewEncapsulation.Emulated, useJit: false });
                 var directiveNormalizer = new DirectiveNormalizer(resourceLoader, urlResolver, htmlParser, config);
-                result = this._resolver = new CompileMetadataResolver(config, moduleResolver, directiveResolver, pipeResolver, new JitSummaryResolver(), elementSchemaRegistry, directiveNormalizer, new ɵConsole(), this._staticSymbolCache, this.reflector, function (error, type) { return _this.collectError(error, type && type.filePath); });
+                result = this._resolver = new CompileMetadataResolver(config, htmlParser, moduleResolver, directiveResolver, pipeResolver, new JitSummaryResolver(), elementSchemaRegistry, directiveNormalizer, new ɵConsole(), this._staticSymbolCache, this.reflector, function (error, type) { return _this.collectError(error, type && type.filePath); });
             }
             return result;
         },
@@ -1912,10 +1877,20 @@ var TypeScriptServiceHost = (function () {
     TypeScriptServiceHost.prototype.ensureAnalyzedModules = function () {
         var analyzedModules = this.analyzedModules;
         if (!analyzedModules) {
-            var analyzeHost = { isSourceFile: function (filePath) { return true; } };
-            var programSymbols = extractProgramSymbols(this.staticSymbolResolver, this.program.getSourceFiles().map(function (sf) { return sf.fileName; }), analyzeHost);
-            analyzedModules = this.analyzedModules =
-                analyzeNgModules(programSymbols, analyzeHost, this.resolver);
+            if (this.host.getScriptFileNames().length === 0) {
+                analyzedModules = {
+                    files: [],
+                    ngModuleByPipeOrDirective: new Map(),
+                    ngModules: [],
+                };
+            }
+            else {
+                var analyzeHost = { isSourceFile: function (filePath) { return true; } };
+                var programFiles = this.program.getSourceFiles().map(function (sf) { return sf.fileName; });
+                analyzedModules =
+                    analyzeNgModules(programFiles, analyzeHost, this.staticSymbolResolver, this.resolver);
+            }
+            this.analyzedModules = analyzedModules;
         }
         return analyzedModules;
     };
@@ -2111,7 +2086,11 @@ var TypeScriptServiceHost = (function () {
             if (!result) {
                 if (!this.context) {
                     // Make up a context by finding the first script and using that as the base dir.
-                    this.context = this.host.getScriptFileNames()[0];
+                    var scriptFileNames = this.host.getScriptFileNames();
+                    if (0 === scriptFileNames.length) {
+                        throw new Error('Internal error: no script file names found');
+                    }
+                    this.context = scriptFileNames[0];
                 }
                 // Use the file context's directory as the base directory.
                 // The host's getCurrentDirectory() is not reliable as it is always "" in
@@ -2127,6 +2106,9 @@ var TypeScriptServiceHost = (function () {
                 var compilerOptions = this.host.getCompilationSettings();
                 if (compilerOptions && compilerOptions.baseUrl) {
                     options.baseUrl = compilerOptions.baseUrl;
+                }
+                if (compilerOptions && compilerOptions.paths) {
+                    options.paths = compilerOptions.paths;
                 }
                 result = this._reflectorHost =
                     new ReflectorHost(function () { return _this.tsService.getProgram(); }, this.host, options);
@@ -2158,7 +2140,8 @@ var TypeScriptServiceHost = (function () {
                 this._summaryResolver = new AotSummaryResolver({
                     loadSummary: function (filePath) { return null; },
                     isSourceFile: function (sourceFilePath) { return true; },
-                    getOutputFileName: function (sourceFilePath) { return sourceFilePath; }
+                    toSummaryFileName: function (sourceFilePath) { return sourceFilePath; },
+                    fromSummaryFileName: function (filePath) { return filePath; },
                 }, this._staticSymbolCache);
                 result = this._staticSymbolResolver = new StaticSymbolResolver(this.reflectorHost, this._staticSymbolCache, this._summaryResolver, function (e, filePath) { return _this.collectError(e, filePath); });
             }
@@ -2237,7 +2220,13 @@ var TypeScriptServiceHost = (function () {
     TypeScriptServiceHost.prototype.getCollectedErrors = function (defaultSpan, sourceFile) {
         var errors = (this.collectedErrors && this.collectedErrors.get(sourceFile.fileName));
         return (errors && errors.map(function (e) {
-            return { message: e.message, span: spanAt(sourceFile, e.line, e.column) || defaultSpan };
+            var line = e.line || (e.position && e.position.line);
+            var column = e.column || (e.position && e.position.column);
+            var span = spanAt(sourceFile, line, column) || defaultSpan;
+            if (isFormattedError(e)) {
+                return errorToDiagnosticWithChain(e, span);
+            }
+            return { message: e.message, span: span };
         })) ||
             [];
     };
@@ -2299,9 +2288,9 @@ var TypeScriptServiceHost = (function () {
         }
         return find(sourceFile);
     };
+    TypeScriptServiceHost.missingTemplate = [undefined, undefined];
     return TypeScriptServiceHost;
 }());
-TypeScriptServiceHost.missingTemplate = [undefined, undefined];
 function findTsConfig(fileName) {
     var dir = dirname(fileName);
     while (existsSync(dir)) {
@@ -2336,6 +2325,12 @@ function spanAt(sourceFile, line, column) {
             return { start: node.getStart(), end: node.getEnd() };
         }
     }
+}
+function convertChain(chain) {
+    return { message: chain.message, next: chain.next ? convertChain(chain.next) : undefined };
+}
+function errorToDiagnosticWithChain(error, span) {
+    return { message: error.chain ? convertChain(error.chain) : error.message, span: span };
 }
 
 /**
@@ -2396,10 +2391,16 @@ function angularOnlyFilter(ls) {
         getFormattingEditsAfterKeystroke: function (fileName, position, key, options) { return []; },
         getDocCommentTemplateAtPosition: function (fileName, position) { return undefined; },
         isValidBraceCompletionAtPosition: function (fileName, position, openingBrace) { return undefined; },
+        getSpanOfEnclosingComment: function (fileName, position, onlyMultiLine) { return undefined; },
         getCodeFixesAtPosition: function (fileName, start, end, errorCodes) { return []; },
+        applyCodeActionCommand: function (action) { return Promise.resolve(undefined); },
         getEmitOutput: function (fileName) { return undefined; },
         getProgram: function () { return ls.getProgram(); },
-        dispose: function () { return ls.dispose(); }
+        dispose: function () { return ls.dispose(); },
+        getApplicableRefactors: function (fileName, positionOrRaneg) { return []; },
+        getEditsForRefactor: function (fileName, formatOptions, positionOrRange, refactorName, actionName) {
+            return undefined;
+        }
     };
 }
 function create(info /* ts.server.PluginCreateInfo */) {
@@ -2447,9 +2448,9 @@ function create(info /* ts.server.PluginCreateInfo */) {
             getSemanticClassifications: tryFilenameOneCall(ls.getSemanticClassifications),
             getEncodedSyntacticClassifications: tryFilenameOneCall(ls.getEncodedSyntacticClassifications),
             getEncodedSemanticClassifications: tryFilenameOneCall(ls.getEncodedSemanticClassifications),
-            getCompletionsAtPosition: tryFilenameOneCall(ls.getCompletionsAtPosition),
-            getCompletionEntryDetails: tryFilenameTwoCall(ls.getCompletionEntryDetails),
-            getCompletionEntrySymbol: tryFilenameTwoCall(ls.getCompletionEntrySymbol),
+            getCompletionsAtPosition: tryFilenameTwoCall(ls.getCompletionsAtPosition),
+            getCompletionEntryDetails: tryFilenameFourCall(ls.getCompletionEntryDetails),
+            getCompletionEntrySymbol: tryFilenameThreeCall(ls.getCompletionEntrySymbol),
             getQuickInfoAtPosition: tryFilenameOneCall(ls.getQuickInfoAtPosition),
             getNameOrDottedNameSpan: tryFilenameTwoCall(ls.getNameOrDottedNameSpan),
             getBreakpointStatementAtPosition: tryFilenameOneCall(ls.getBreakpointStatementAtPosition),
@@ -2476,10 +2477,14 @@ function create(info /* ts.server.PluginCreateInfo */) {
             getFormattingEditsAfterKeystroke: tryFilenameThreeCall(ls.getFormattingEditsAfterKeystroke),
             getDocCommentTemplateAtPosition: tryFilenameOneCall(ls.getDocCommentTemplateAtPosition),
             isValidBraceCompletionAtPosition: tryFilenameTwoCall(ls.isValidBraceCompletionAtPosition),
+            getSpanOfEnclosingComment: tryFilenameTwoCall(ls.getSpanOfEnclosingComment),
             getCodeFixesAtPosition: tryFilenameFourCall(ls.getCodeFixesAtPosition),
+            applyCodeActionCommand: (function (action) { return tryCall(undefined, function () { return ls.applyCodeActionCommand(action); }); }),
             getEmitOutput: tryFilenameCall(ls.getEmitOutput),
             getProgram: function () { return ls.getProgram(); },
-            dispose: function () { return ls.dispose(); }
+            dispose: function () { return ls.dispose(); },
+            getApplicableRefactors: tryFilenameOneCall(ls.getApplicableRefactors),
+            getEditsForRefactor: tryFilenameFourCall(ls.getEditsForRefactor)
         };
     }
     oldLS = typescriptOnly(oldLS);
@@ -2490,14 +2495,34 @@ function create(info /* ts.server.PluginCreateInfo */) {
         _loop_1(k);
     }
     function completionToEntry(c) {
-        return { kind: c.kind, name: c.name, sortText: c.sort, kindModifiers: '' };
+        return {
+            // TODO: remove any and fix type error.
+            kind: c.kind,
+            name: c.name,
+            sortText: c.sort,
+            kindModifiers: ''
+        };
+    }
+    function diagnosticChainToDiagnosticChain(chain) {
+        return {
+            messageText: chain.message,
+            category: DiagnosticCategory.Error,
+            code: 0,
+            next: chain.next ? diagnosticChainToDiagnosticChain(chain.next) : undefined
+        };
+    }
+    function diagnosticMessageToDiagnosticMessageText(message) {
+        if (typeof message === 'string') {
+            return message;
+        }
+        return diagnosticChainToDiagnosticChain(message);
     }
     function diagnosticToDiagnostic(d, file) {
         var result = {
             file: file,
             start: d.span.start,
             length: d.span.end - d.span.start,
-            messageText: d.message,
+            messageText: diagnosticMessageToDiagnosticMessageText(d.message),
             category: DiagnosticCategory.Error,
             code: 0,
             source: 'ng'
@@ -2518,8 +2543,8 @@ function create(info /* ts.server.PluginCreateInfo */) {
     var ls = createLanguageService(serviceHost);
     serviceHost.setSite(ls);
     projectHostMap.set(info.project, serviceHost);
-    proxy.getCompletionsAtPosition = function (fileName, position) {
-        var base = oldLS.getCompletionsAtPosition(fileName, position) || {
+    proxy.getCompletionsAtPosition = function (fileName, position, options) {
+        var base = oldLS.getCompletionsAtPosition(fileName, position, options) || {
             isGlobalCompletion: false,
             isMemberCompletion: false,
             isNewIdentifierLocation: false,
@@ -2598,9 +2623,10 @@ function create(info /* ts.server.PluginCreateInfo */) {
                         fileName: loc.fileName,
                         textSpan: { start: loc.span.start, length: loc.span.end - loc.span.start },
                         name: '',
+                        // TODO: remove any and fix type error.
                         kind: 'definition',
                         containerName: loc.fileName,
-                        containerKind: 'file'
+                        containerKind: 'file',
                     });
                 }
             }
@@ -2625,7 +2651,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version('4.2.2-ee03ff1');
+var VERSION = new Version('5.2.0-rc.0-7bec6a2');
 
 /**
  * @license
