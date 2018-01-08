@@ -1,6 +1,6 @@
 /**
- * @license Angular v5.2.0-beta.0-057b357
- * (c) 2010-2017 Google, Inc. https://angular.io/
+ * @license Angular v5.2.0-rc.0-d2808aa
+ * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
 
@@ -59,8 +59,8 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v5.2.0-beta.0-057b357
- * (c) 2010-2017 Google, Inc. https://angular.io/
+ * @license Angular v5.2.0-rc.0-d2808aa
+ * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
 /**
@@ -689,14 +689,9 @@ var Version = /** @class */ (function () {
  * found in the LICENSE file at https://angular.io/license
  */
 /**
- * @module
- * @description
- * Entry point for all public APIs of the common package.
- */
-/**
  * \@stable
  */
-var VERSION$1 = new Version('5.2.0-beta.0-057b357');
+var VERSION$1 = new Version('5.2.0-rc.0-d2808aa');
 
 /**
  * @fileoverview added by tsickle
@@ -7440,13 +7435,6 @@ var SimpleExpressionChecker = /** @class */ (function () {
 /**
  * @fileoverview added by tsickle
  * @suppress {checkTypes} checked by tsc
- */
-/**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
  */
 var ParseLocation = /** @class */ (function () {
     function ParseLocation(file, offset, line, col) {
@@ -15180,16 +15168,19 @@ var CompileMetadataResolver = /** @class */ (function () {
     };
     /**
      * @param {?} moduleType
+     * @param {?=} alreadyCollecting
      * @return {?}
      */
     CompileMetadataResolver.prototype.getNgModuleSummary = /**
      * @param {?} moduleType
+     * @param {?=} alreadyCollecting
      * @return {?}
      */
-    function (moduleType) {
+    function (moduleType, alreadyCollecting) {
+        if (alreadyCollecting === void 0) { alreadyCollecting = null; }
         var /** @type {?} */ moduleSummary = /** @type {?} */ (this._loadSummary(moduleType, CompileSummaryKind.NgModule));
         if (!moduleSummary) {
-            var /** @type {?} */ moduleMeta = this.getNgModuleMetadata(moduleType, false);
+            var /** @type {?} */ moduleMeta = this.getNgModuleMetadata(moduleType, false, alreadyCollecting);
             moduleSummary = moduleMeta ? moduleMeta.toSummary() : null;
             if (moduleSummary) {
                 this._summaryCache.set(moduleType, moduleSummary);
@@ -15233,16 +15224,19 @@ var CompileMetadataResolver = /** @class */ (function () {
     /**
      * @param {?} moduleType
      * @param {?=} throwIfNotFound
+     * @param {?=} alreadyCollecting
      * @return {?}
      */
     CompileMetadataResolver.prototype.getNgModuleMetadata = /**
      * @param {?} moduleType
      * @param {?=} throwIfNotFound
+     * @param {?=} alreadyCollecting
      * @return {?}
      */
-    function (moduleType, throwIfNotFound) {
+    function (moduleType, throwIfNotFound, alreadyCollecting) {
         var _this = this;
         if (throwIfNotFound === void 0) { throwIfNotFound = true; }
+        if (alreadyCollecting === void 0) { alreadyCollecting = null; }
         moduleType = resolveForwardRef(moduleType);
         var /** @type {?} */ compileMeta = this._ngModuleCache.get(moduleType);
         if (compileMeta) {
@@ -15277,7 +15271,15 @@ var CompileMetadataResolver = /** @class */ (function () {
                 if (importedModuleType) {
                     if (_this._checkSelfImport(moduleType, importedModuleType))
                         return;
-                    var /** @type {?} */ importedModuleSummary = _this.getNgModuleSummary(importedModuleType);
+                    if (!alreadyCollecting)
+                        alreadyCollecting = new Set();
+                    if (alreadyCollecting.has(importedModuleType)) {
+                        _this._reportError(syntaxError(_this._getTypeDescriptor(importedModuleType) + " '" + stringifyType(importedType) + "' is imported recursively by the module '" + stringifyType(moduleType) + "'."), moduleType);
+                        return;
+                    }
+                    alreadyCollecting.add(importedModuleType);
+                    var /** @type {?} */ importedModuleSummary = _this.getNgModuleSummary(importedModuleType, alreadyCollecting);
+                    alreadyCollecting.delete(importedModuleType);
                     if (!importedModuleSummary) {
                         _this._reportError(syntaxError("Unexpected " + _this._getTypeDescriptor(importedType) + " '" + stringifyType(importedType) + "' imported by the module '" + stringifyType(moduleType) + "'. Please add a @NgModule annotation."), moduleType);
                         return;
@@ -15296,7 +15298,15 @@ var CompileMetadataResolver = /** @class */ (function () {
                     _this._reportError(syntaxError("Unexpected value '" + stringifyType(exportedType) + "' exported by the module '" + stringifyType(moduleType) + "'"), moduleType);
                     return;
                 }
-                var /** @type {?} */ exportedModuleSummary = _this.getNgModuleSummary(exportedType);
+                if (!alreadyCollecting)
+                    alreadyCollecting = new Set();
+                if (alreadyCollecting.has(exportedType)) {
+                    _this._reportError(syntaxError(_this._getTypeDescriptor(exportedType) + " '" + stringify(exportedType) + "' is exported recursively by the module '" + stringifyType(moduleType) + "'"), moduleType);
+                    return;
+                }
+                alreadyCollecting.add(exportedType);
+                var /** @type {?} */ exportedModuleSummary = _this.getNgModuleSummary(exportedType, alreadyCollecting);
+                alreadyCollecting.delete(exportedType);
                 if (exportedModuleSummary) {
                     exportedModules.push(exportedModuleSummary);
                 }
@@ -29724,7 +29734,7 @@ var StaticSymbolResolver = /** @class */ (function () {
             if (moduleMetadatas) {
                 var /** @type {?} */ maxVersion_1 = -1;
                 moduleMetadatas.forEach(function (md) {
-                    if (md['version'] > maxVersion_1) {
+                    if (md && md['version'] > maxVersion_1) {
                         maxVersion_1 = md['version'];
                         moduleMetadata = md;
                     }
@@ -29808,13 +29818,6 @@ function unwrapResolvedMetadata(metadata) {
 /**
  * @fileoverview added by tsickle
  * @suppress {checkTypes} checked by tsc
- */
-/**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
  */
 /**
  * @param {?} srcFileName
@@ -35147,9 +35150,6 @@ var ResourceLoader = /** @class */ (function () {
  * found in the LICENSE file at https://angular.io/license
  */
 /**
- * Extract i18n messages from source code
- */
-/**
  * The host of the Extractor disconnects the implementation from TypeScript / other language
  * services and from underlying file systems.
  * @record
@@ -39208,7 +39208,7 @@ var CompilerHostAdapter = /** @class */ (function () {
     }
     CompilerHostAdapter.prototype.getMetadataFor = function (fileName) {
         var sourceFile = this.host.getSourceFile(fileName + '.ts', ts__default.ScriptTarget.Latest);
-        return this.collector.getMetadata(sourceFile);
+        return sourceFile && this.collector.getMetadata(sourceFile);
     };
     return CompilerHostAdapter;
 }());
@@ -40318,8 +40318,8 @@ exports.$$observable = exports.observable;
 });
 
 /* tslint:disable:no-empty */
-function noop$1() { }
-var noop_2 = noop$1;
+function noop$1$1() { }
+var noop_2 = noop$1$1;
 
 
 var noop_1 = {
@@ -42087,8 +42087,8 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v5.2.0-beta.0-057b357
- * (c) 2010-2017 Google, Inc. https://angular.io/
+ * @license Angular v5.2.0-rc.0-d2808aa
+ * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
 /**
@@ -42518,7 +42518,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('5.2.0-beta.0-057b357');
+var VERSION$2 = new Version$1('5.2.0-rc.0-d2808aa');
 
 /**
  * @fileoverview added by tsickle
@@ -47728,7 +47728,6 @@ var Renderer2 = /** @class */ (function () {
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-// Public API for render
 
 /**
  * @fileoverview added by tsickle
@@ -48183,7 +48182,6 @@ var EmbeddedViewRef = /** @class */ (function (_super) {
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-// Public API for compiler
 
 /**
  * @fileoverview added by tsickle
@@ -50579,11 +50577,6 @@ var defaultKeyValueDiffers = new KeyValueDiffers(keyValDiff);
  *
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
- */
-/**
- * @module
- * @description
- * Change detection enables data binding in Angular.
  */
 
 /**
@@ -55913,8 +55906,815 @@ var NgModuleFactory_ = /** @class */ (function (_super) {
 }(NgModuleFactory));
 
 /**
- * @license Angular v5.2.0-beta.0-057b357
- * (c) 2010-2017 Google, Inc. https://angular.io/
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+// The functions in this file verify that the assumptions we are making
+// about state in an instruction are correct before implementing any logic.
+// They are meant only to be called in dev mode as sanity checks.
+/**
+ * Stringifies values such that strings are wrapped in explicit quotation marks and
+ * other types are stringified normally. Used in error messages (e.g. assertThrow)
+ * to make it clear that certain values are of the string type when comparing.
+ *
+ * e.g. `expected "3" to be 3` is easier to understand than `expected 3 to be 3`.
+ *
+ * @param {?} value The value to be stringified
+ * @return {?} The stringified value
+ */
+function stringifyValueForError(value) {
+    return typeof value === 'string' ? "\"" + value + "\"" : '' + value;
+}
+/**
+ * @param {?} actual
+ * @param {?} name
+ * @return {?}
+ */
+
+/**
+ * @template T
+ * @param {?} actual
+ * @param {?} expected
+ * @param {?} name
+ * @param {?=} serializer
+ * @return {?}
+ */
+function assertEqual(actual, expected, name, serializer) {
+    (actual != expected) && assertThrow(actual, expected, name, '==', serializer);
+}
+/**
+ * @template T
+ * @param {?} actual
+ * @param {?} name
+ * @return {?}
+ */
+function assertNotNull$1(actual, name) {
+    assertNotEqual(actual, null, name);
+}
+/**
+ * @template T
+ * @param {?} actual
+ * @param {?} expected
+ * @param {?} name
+ * @return {?}
+ */
+function assertNotEqual(actual, expected, name) {
+    (actual == expected) && assertThrow(actual, expected, name, '!=');
+}
+/**
+ * Throws an error with a message constructed from the arguments.
+ *
+ * @template T
+ * @param {?} actual The actual value (e.g. 3)
+ * @param {?} expected The expected value (e.g. 5)
+ * @param {?} name The name of the value being checked (e.g. attrs.length)
+ * @param {?} operator The comparison operator (e.g. <, >, ==)
+ * @param {?=} serializer Function that maps a value to its display value
+ * @return {?}
+ */
+function assertThrow(actual, expected, name, operator, serializer) {
+    if (serializer === void 0) { serializer = stringifyValueForError; }
+    throw new Error("ASSERT: expected " + name + " " + operator + " " + serializer(expected) + " but was " + serializer(actual) + "!");
+}
+
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+if (typeof ngDevMode == 'undefined') {
+    if (typeof window != 'undefined')
+        (/** @type {?} */ (window)).ngDevMode = true;
+    if (typeof self != 'undefined')
+        (/** @type {?} */ (self)).ngDevMode = true;
+    if (typeof global != 'undefined')
+        (/** @type {?} */ (global)).ngDevMode = true;
+}
+
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+/**
+ * @param {?} node
+ * @param {?} type
+ * @return {?}
+ */
+function assertNodeType(node, type) {
+    assertNotEqual(node, null, 'node');
+    assertEqual(node.flags & 3 /* TYPE_MASK */, type, 'Node.type', typeSerializer);
+}
+/**
+ * @param {?} node
+ * @param {...?} types
+ * @return {?}
+ */
+
+/**
+ * @param {?} type
+ * @return {?}
+ */
+function typeSerializer(type) {
+    if (type == 1 /* Projection */)
+        return 'Projection';
+    if (type == 0 /* Container */)
+        return 'Container';
+    if (type == 2 /* View */)
+        return 'View';
+    if (type == 3 /* Element */)
+        return 'Element';
+    return '??? ' + type + ' ???';
+}
+
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+/**
+ * Finds the closest DOM node above a given container in the hierarchy.
+ *
+ * This is necessary to add or remove elements from the DOM when a view
+ * is added or removed from the container. e.g. parent.removeChild(...)
+ *
+ * @param {?} containerNode The container node whose parent must be found
+ * @return {?} Closest DOM node above the container
+ */
+function findNativeParent(containerNode) {
+    var /** @type {?} */ container = containerNode;
+    while (container) {
+        ngDevMode && assertNodeType(container, 0 /* Container */);
+        var /** @type {?} */ renderParent = container.data.renderParent;
+        if (renderParent !== null) {
+            return renderParent.native;
+        }
+        var /** @type {?} */ viewOrElement = /** @type {?} */ ((container.parent));
+        ngDevMode && assertNotNull$1(viewOrElement, 'container.parent');
+        if ((viewOrElement.flags & 3 /* TYPE_MASK */) === 3 /* Element */) {
+            // we are an LElement, which means we are past the last LContainer.
+            // This means than we have not been projected so just ignore.
+            return null;
+        }
+        ngDevMode && assertNodeType(viewOrElement, 2 /* View */);
+        container = (/** @type {?} */ (viewOrElement)).parent;
+    }
+    return null;
+}
+/**
+ * Finds the DOM element before which a certain view should be inserting its
+ * child elements.
+ *
+ * If the view has a next (e.g. for loop), elements should be inserted before
+ * the next view's first child element. Otherwise, the container's comment
+ * anchor is the marker.
+ *
+ * @param {?} index The index of the view to check
+ * @param {?} state ContainerState of the parent container
+ * @param {?} native Comment anchor for container
+ * @return {?} The DOM element for which the view should insert elements
+ */
+function findBeforeNode(index, state, native) {
+    var /** @type {?} */ views = state.views;
+    // Find the node to insert in front of
+    return index + 1 < views.length ?
+        (/** @type {?} */ (views[index + 1].child)).native :
+        native;
+}
+/**
+ * @param {?} container
+ * @param {?} rootNode
+ * @param {?} insertMode
+ * @param {?=} beforeNode
+ * @return {?}
+ */
+function addRemoveViewFromContainer(container, rootNode, insertMode, beforeNode) {
+    ngDevMode && assertNodeType(container, 0 /* Container */);
+    ngDevMode && assertNodeType(rootNode, 2 /* View */);
+    var /** @type {?} */ parent = findNativeParent(container);
+    var /** @type {?} */ node = rootNode.child;
+    if (parent) {
+        while (node) {
+            var /** @type {?} */ type = node.flags & 3;
+            var /** @type {?} */ nextNode = null;
+            var /** @type {?} */ renderer = container.view.renderer;
+            var /** @type {?} */ isFnRenderer = (/** @type {?} */ (renderer)).listen;
+            if (type === 3 /* Element */) {
+                insertMode ? (isFnRenderer ? /** @type {?} */ (((/** @type {?} */ (renderer))
+                    .insertBefore))(parent, /** @type {?} */ ((node.native)), /** @type {?} */ (beforeNode)) :
+                    parent.insertBefore(/** @type {?} */ ((node.native)), /** @type {?} */ (beforeNode), true)) :
+                    (isFnRenderer ? /** @type {?} */ (((/** @type {?} */ (renderer))
+                        .removeChild))(/** @type {?} */ (parent), /** @type {?} */ ((node.native))) :
+                        parent.removeChild(/** @type {?} */ ((node.native))));
+                nextNode = node.next;
+            }
+            else if (type === 0 /* Container */) {
+                // if we get to a container, it must be a root node of a view because we are only
+                // propagating down into child views / containers and not child elements
+                var /** @type {?} */ childContainerData = (/** @type {?} */ (node)).data;
+                insertMode ? (isFnRenderer ? /** @type {?} */ (((/** @type {?} */ (renderer))
+                    .appendChild))(/** @type {?} */ (parent), /** @type {?} */ ((node.native))) :
+                    parent.appendChild(/** @type {?} */ ((node.native)))) :
+                    (isFnRenderer ? /** @type {?} */ (((/** @type {?} */ (renderer))
+                        .removeChild))(/** @type {?} */ (parent), /** @type {?} */ ((node.native))) :
+                        parent.removeChild(/** @type {?} */ ((node.native))));
+                nextNode = childContainerData.views.length ? childContainerData.views[0].child : null;
+            }
+            else if (type === 1 /* Projection */) {
+                nextNode = (/** @type {?} */ (node)).data[0];
+            }
+            else {
+                nextNode = (/** @type {?} */ (node)).child;
+            }
+            if (nextNode === null) {
+                while (node && !node.next) {
+                    node = node.parent;
+                    if (node === rootNode)
+                        node = null;
+                }
+                node = node && node.next;
+            }
+            else {
+                node = nextNode;
+            }
+        }
+    }
+}
+/**
+ * Sets a next on the view node, so views in for loops can easily jump from
+ * one view to the next to add/remove elements. Also adds the ViewState (view.data)
+ * to the view tree for easy traversal when cleaning up the view.
+ *
+ * @param {?} view The view to set up
+ * @param {?} next The view's new next
+ * @return {?}
+ */
+function setViewNext(view, next) {
+    view.next = next;
+    view.data.next = next ? next.data : null;
+}
+/**
+ * Appends a projected node to the DOM, or in the case of a projected container,
+ * appends the nodes from all of the container's active views to the DOM. Also stores the
+ * node in the given projectedNodes array.
+ *
+ * @param {?} projectedNodes Array to store the projected node
+ * @param {?} node The node to process
+ * @param {?} currentParent The last parent element to be processed
+ * @param {?} currentView The current view's ViewState
+ * @return {?}
+ */
+
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+/**
+ * A utility function to match an Ivy node static data against a simple CSS selector
+ *
+ * @param {?} lNodeStaticData
+ * @param {?} selector
+ * @return {?} true if node matches the selector.
+ */
+
+/**
+ * @param {?} lNodeStaticData
+ * @param {?} selector
+ * @return {?}
+ */
+
+/**
+ * @param {?} lNodeStaticData
+ * @param {?} selector
+ * @return {?}
+ */
+
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+/**
+ * Must use this method for CD (instead of === ) since NaN !== NaN
+ * @param {?} a
+ * @param {?} b
+ * @return {?}
+ */
+function isDifferent(a, b) {
+    // NaN is the only value that is not equal to itself so the first
+    // test checks if both a and b are not NaN
+    return !(a !== a && b !== b) && a !== b;
+}
+/**
+ * Creates an ElementRef for a given node injector and stores it on the injector.
+ * Or, if the ElementRef already exists, retrieves the existing ElementRef.
+ *
+ * @param {?} di The node injector where we should store a created ElementRef
+ * @return {?} The ElementRef instance to use
+ */
+
+/**
+ * Creates a TemplateRef and stores it on the injector. Or, if the TemplateRef already
+ * exists, retrieves the existing TemplateRef.
+ *
+ * @template T
+ * @param {?} di The node injector where we should store a created TemplateRef
+ * @return {?} The TemplateRef instance to use
+ */
+
+/**
+ * Creates a ViewContainerRef and stores it on the injector. Or, if the ViewContainerRef
+ * already exists, retrieves the existing ViewContainerRef.
+ *
+ * @param {?} di
+ * @return {?} The ViewContainerRef instance to use
+ */
+
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+/**
+ * A predicate which determines if a given element/directive should be included in the query
+ * @record
+ */
+
+var QueryList_ = /** @class */ (function () {
+    function QueryList_() {
+        this.dirty = false;
+        /**
+         * \@internal
+         */
+        this._valuesTree = null;
+        /**
+         * \@internal
+         */
+        this._values = null;
+    }
+    Object.defineProperty(QueryList_.prototype, "length", {
+        get: /**
+         * @return {?}
+         */
+        function () {
+            ngDevMode && assertNotNull$1(this._values, 'refreshed');
+            return /** @type {?} */ ((this._values)).length;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(QueryList_.prototype, "first", {
+        get: /**
+         * @return {?}
+         */
+        function () {
+            ngDevMode && assertNotNull$1(this._values, 'refreshed');
+            var /** @type {?} */ values = /** @type {?} */ ((this._values));
+            return values.length ? values[0] : null;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(QueryList_.prototype, "last", {
+        get: /**
+         * @return {?}
+         */
+        function () {
+            ngDevMode && assertNotNull$1(this._values, 'refreshed');
+            var /** @type {?} */ values = /** @type {?} */ ((this._values));
+            return values.length ? values[values.length - 1] : null;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    /** @internal */
+    /**
+     * \@internal
+     * @return {?}
+     */
+    QueryList_.prototype._refresh = /**
+     * \@internal
+     * @return {?}
+     */
+    function () {
+        // TODO(misko): needs more logic to flatten tree.
+        if (this._values === null) {
+            this._values = this._valuesTree;
+            return true;
+        }
+        return false;
+    };
+    /**
+     * @template U
+     * @param {?} fn
+     * @return {?}
+     */
+    QueryList_.prototype.map = /**
+     * @template U
+     * @param {?} fn
+     * @return {?}
+     */
+    function (fn) {
+        throw new Error('Method not implemented.');
+    };
+    /**
+     * @param {?} fn
+     * @return {?}
+     */
+    QueryList_.prototype.filter = /**
+     * @param {?} fn
+     * @return {?}
+     */
+    function (fn) {
+        throw new Error('Method not implemented.');
+    };
+    /**
+     * @param {?} fn
+     * @return {?}
+     */
+    QueryList_.prototype.find = /**
+     * @param {?} fn
+     * @return {?}
+     */
+    function (fn) {
+        throw new Error('Method not implemented.');
+    };
+    /**
+     * @template U
+     * @param {?} fn
+     * @param {?} init
+     * @return {?}
+     */
+    QueryList_.prototype.reduce = /**
+     * @template U
+     * @param {?} fn
+     * @param {?} init
+     * @return {?}
+     */
+    function (fn, init) {
+        throw new Error('Method not implemented.');
+    };
+    /**
+     * @param {?} fn
+     * @return {?}
+     */
+    QueryList_.prototype.forEach = /**
+     * @param {?} fn
+     * @return {?}
+     */
+    function (fn) {
+        throw new Error('Method not implemented.');
+    };
+    /**
+     * @param {?} fn
+     * @return {?}
+     */
+    QueryList_.prototype.some = /**
+     * @param {?} fn
+     * @return {?}
+     */
+    function (fn) {
+        throw new Error('Method not implemented.');
+    };
+    /**
+     * @return {?}
+     */
+    QueryList_.prototype.toArray = /**
+     * @return {?}
+     */
+    function () {
+        ngDevMode && assertNotNull$1(this._values, 'refreshed');
+        return /** @type {?} */ ((this._values));
+    };
+    /**
+     * @return {?}
+     */
+    QueryList_.prototype.toString = /**
+     * @return {?}
+     */
+    function () { throw new Error('Method not implemented.'); };
+    /**
+     * @param {?} res
+     * @return {?}
+     */
+    QueryList_.prototype.reset = /**
+     * @param {?} res
+     * @return {?}
+     */
+    function (res) { throw new Error('Method not implemented.'); };
+    /**
+     * @return {?}
+     */
+    QueryList_.prototype.notifyOnChanges = /**
+     * @return {?}
+     */
+    function () { throw new Error('Method not implemented.'); };
+    /**
+     * @return {?}
+     */
+    QueryList_.prototype.setDirty = /**
+     * @return {?}
+     */
+    function () { throw new Error('Method not implemented.'); };
+    /**
+     * @return {?}
+     */
+    QueryList_.prototype.destroy = /**
+     * @return {?}
+     */
+    function () { throw new Error('Method not implemented.'); };
+    return QueryList_;
+}());
+
+/**
+ * This property gets set before entering a template.
+ *
+ * This renderer can be one of two varieties of Renderer3:
+ *
+ * - ObjectedOrientedRenderer3
+ *
+ * This is the native browser API style, e.g. operations are methods on individual objects
+ * like HTMLElement. With this style, no additional code is needed as a facade (reducing payload
+ * size).
+ *
+ * - ProceduralRenderer3
+ *
+ * In non-native browser environments (e.g. platforms such as web-workers), this is the facade
+ * that enables element manipulation. This also facilitates backwards compatibility with
+ * Renderer2.
+ */
+var renderer;
+/**
+ * Used to set the parent property when nodes are created.
+ */
+var previousOrParentNode;
+/**
+ * If `isParent` is:
+ *  - `true`: then `previousOrParentNode` points to a parent node.
+ *  - `false`: then `previousOrParentNode` points to previous node (sibling).
+ */
+var isParent;
+/**
+ * The current template's static data (shared between all templates of a
+ * given type).
+ *
+ * Each node's static data is stored at the same index that it's stored
+ * in the data array. Any nodes that do not have static data store a null
+ * value to avoid a sparse array.
+ */
+var ngStaticData;
+/**
+ * State of the current view being processed.
+ */
+var currentView;
+// The initialization has to be after the `let`, otherwise `createViewState` can't see `let`.
+currentView = createViewState(/** @type {?} */ ((null)), /** @type {?} */ ((null)), []);
+var currentQuery;
+/**
+ * This property gets set before entering a template.
+ */
+var creationMode;
+/**
+ * An array of nodes (text, element, container, etc), their bindings, and
+ * any local variables that need to be stored between invocations.
+ */
+var data;
+/**
+ * Points to the next binding index to read or write to.
+ */
+var bindingIndex;
+/**
+ * When a view is destroyed, listeners need to be released
+ * and onDestroy callbacks need to be called. This cleanup array
+ * stores both listener data (in chunks of 4) and onDestroy data
+ * (in chunks of 2), as they'll be processed at the same time.
+ *
+ * If it's a listener being stored:
+ * 1st index is: event name to remove
+ * 2nd index is: native element
+ * 3rd index is: listener function
+ * 4th index is: useCapture boolean
+ *
+ * If it's an onDestroy function:
+ * 1st index is: onDestroy function
+ * 2nd index is: context for function
+ */
+var cleanup;
+/**
+ * Swap the current state with a new state.
+ *
+ * For performance reasons we store the state in the top level of the module.
+ * This way we minimize the number of properties to read. Whenever a new view
+ * is entered we have to store the state for later, and when the view is
+ * exited the state has to be restored
+ *
+ * @param {?} newViewState New state to become active
+ * @param {?} host Element to which the View is a child of
+ * @return {?} the previous state;
+ */
+function enterView(newViewState, host) {
+    var /** @type {?} */ oldViewState = currentView;
+    data = newViewState.data;
+    bindingIndex = newViewState.bindingStartIndex || 0;
+    ngStaticData = newViewState.ngStaticData;
+    if (creationMode = !data) {
+        // Absence of data implies creationMode.
+        (/** @type {?} */ (newViewState)).data = data = [];
+    }
+    cleanup = newViewState.cleanup;
+    renderer = newViewState.renderer;
+    if (host != null) {
+        previousOrParentNode = host;
+        isParent = true;
+    }
+    currentView = newViewState;
+    return /** @type {?} */ ((oldViewState));
+}
+/**
+ * @param {?} viewId
+ * @param {?} renderer
+ * @param {?} ngStaticData
+ * @return {?}
+ */
+function createViewState(viewId, renderer, ngStaticData) {
+    var /** @type {?} */ newView = {
+        parent: currentView,
+        id: viewId,
+        // -1 for component views
+        node: /** @type {?} */ ((null)),
+        // until we initialize it in createNode.
+        data: /** @type {?} */ ((null)),
+        // Hack use as a marker for creationMode
+        ngStaticData: ngStaticData,
+        cleanup: null,
+        renderer: renderer,
+        child: null,
+        tail: null,
+        next: null,
+        bindingStartIndex: null
+    };
+    return newView;
+}
+/**
+ * @param {?} index
+ * @param {?} type
+ * @param {?} native
+ * @param {?=} state
+ * @return {?}
+ */
+function createLNode(index, type, native, state) {
+    var /** @type {?} */ parent = isParent ? previousOrParentNode :
+        previousOrParentNode && /** @type {?} */ (previousOrParentNode.parent);
+    var /** @type {?} */ query = (isParent ? currentQuery : previousOrParentNode && previousOrParentNode.query) ||
+        parent && parent.query && parent.query.child();
+    var /** @type {?} */ isState = state != null;
+    var /** @type {?} */ node = {
+        flags: type,
+        native: /** @type {?} */ (native),
+        view: currentView,
+        parent: /** @type {?} */ (parent),
+        child: null,
+        next: null,
+        nodeInjector: parent ? parent.nodeInjector : null,
+        data: isState ? /** @type {?} */ (state) : null,
+        query: query,
+        staticData: null
+    };
+    if ((type & 2 /* ViewOrElement */) === 2 /* ViewOrElement */ && isState) {
+        // Bit of a hack to bust through the readonly because there is a circular dep between
+        // ViewState and LNode.
+        ngDevMode && assertEqual((/** @type {?} */ (state)).node, null, 'viewState.node');
+        (/** @type {?} */ ((state))).node = node;
+    }
+    if (index != null) {
+        // We are Element or Container
+        ngDevMode && assertEqual(data.length, index, 'data.length not in sequence');
+        data[index] = node;
+        // Every node adds a value to the static data array to avoid a sparse array
+        if (index >= ngStaticData.length) {
+            ngStaticData[index] = null;
+        }
+        else {
+            node.staticData = /** @type {?} */ (ngStaticData[index]);
+        }
+        // Now link ourselves into the tree.
+        if (isParent) {
+            currentQuery = null;
+            if (previousOrParentNode.view === currentView ||
+                (previousOrParentNode.flags & 3 /* TYPE_MASK */) === 2 /* View */) {
+                // We are in the same view, which means we are adding content node to the parent View.
+                ngDevMode && assertEqual(previousOrParentNode.child, null, 'previousNode.child');
+                previousOrParentNode.child = node;
+            }
+            else {
+                // We are adding component view, so we don't link parent node child to this node.
+            }
+        }
+        else if (previousOrParentNode) {
+            ngDevMode && assertEqual(previousOrParentNode.next, null, 'previousNode.next');
+            previousOrParentNode.next = node;
+        }
+    }
+    previousOrParentNode = node;
+    isParent = true;
+    return node;
+}
+/**
+ * Initialize the static data for the active view.
+ *
+ * Each embedded view needs to set the global ngStaticData variable to the static data for
+ * that view. Otherwise, the view's static data for a particular node would overwrite
+ * the staticdata for a node in the view above it with the same index (since it's in the
+ * same template).
+ *
+ * @param {?} viewIndex The index of the view's static data in containerStatic
+ * @param {?} parent The parent container in which to look for the view's static data
+ * @return {?} NgStaticData
+ */
+function initViewStaticData(viewIndex, parent) {
+    ngDevMode && assertNodeType(parent, 0 /* Container */);
+    var /** @type {?} */ containerStatic = (/** @type {?} */ (((parent)).staticData)).containerStatic;
+    if (viewIndex >= containerStatic.length || containerStatic[viewIndex] == null) {
+        containerStatic[viewIndex] = [];
+    }
+    return containerStatic[viewIndex];
+}
+/**
+ * A special value which designates that a value has not changed.
+ */
+var NO_CHANGE = /** @type {?} */ ({});
+
+/**
+ * @license Angular v5.2.0-rc.0-d2808aa
+ * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
 /**
@@ -55987,9 +56787,9 @@ function hasTemplateReference(type) {
 }
 function getSelectors(info) {
     var map = new Map();
-    var selectors = flatten(info.directives.map(function (directive) {
-        var selectors = CssSelector.parse(directive.selector);
-        selectors.forEach(function (selector) { return map.set(selector, directive); });
+    var selectors = flatten(info.directives.map(function (directive$$1) {
+        var selectors = CssSelector.parse(directive$$1.selector);
+        selectors.forEach(function (selector) { return map.set(selector, directive$$1); });
         return selectors;
     }));
     return { selectors: selectors, map: map };
@@ -56799,15 +57599,15 @@ function getAttributeInfosForElement(info, elementName, element) {
         var applicableSelectors = selectors.filter(function (selector) { return !selector.element || selector.element == elementName; });
         var selectorAndAttributeNames = applicableSelectors.map(function (selector) { return ({ selector: selector, attrs: selector.attrs.filter(function (a) { return !!a; }) }); });
         var attrs_1 = flatten(selectorAndAttributeNames.map(function (selectorAndAttr) {
-            var directive = selectorMap.get(selectorAndAttr.selector);
-            var result = selectorAndAttr.attrs.map(function (name) { return ({ name: name, input: name in directive.inputs, output: name in directive.outputs }); });
+            var directive$$1 = selectorMap.get(selectorAndAttr.selector);
+            var result = selectorAndAttr.attrs.map(function (name) { return ({ name: name, input: name in directive$$1.inputs, output: name in directive$$1.outputs }); });
             return result;
         }));
         // Add template attribute if a directive contains a template reference
         selectorAndAttributeNames.forEach(function (selectorAndAttr) {
             var selector = selectorAndAttr.selector;
-            var directive = selectorMap.get(selector);
-            if (directive && hasTemplateReference(directive.type) && selector.attrs.length &&
+            var directive$$1 = selectorMap.get(selector);
+            if (directive$$1 && hasTemplateReference(directive$$1.type) && selector.attrs.length &&
                 selector.attrs[0]) {
                 attrs_1.push({ name: selector.attrs[0], template: true });
             }
@@ -56819,10 +57619,10 @@ function getAttributeInfosForElement(info, elementName, element) {
         var matcher = new SelectorMatcher();
         matcher.addSelectables(selectors);
         matcher.match(elementSelector, function (selector) {
-            var directive = selectorMap.get(selector);
-            if (directive) {
-                attrs_1.push.apply(attrs_1, Object.keys(directive.inputs).map(function (name) { return ({ name: name, input: true }); }));
-                attrs_1.push.apply(attrs_1, Object.keys(directive.outputs).map(function (name) { return ({ name: name, output: true }); }));
+            var directive$$1 = selectorMap.get(selector);
+            if (directive$$1) {
+                attrs_1.push.apply(attrs_1, Object.keys(directive$$1.inputs).map(function (name) { return ({ name: name, input: true }); }));
+                attrs_1.push.apply(attrs_1, Object.keys(directive$$1.outputs).map(function (name) { return ({ name: name, output: true }); }));
             }
         });
         // If a name shows up twice, fold it into a single value.
@@ -57158,9 +57958,9 @@ function locateSymbol(info) {
                 }
                 else {
                     // Find a directive that matches the element name
-                    var directive = ast.directives.find(function (d) { return d.directive.selector != null && d.directive.selector.indexOf(ast.name) >= 0; });
-                    if (directive) {
-                        symbol_1 = info.template.query.getTypeSymbol(directive.directive.type.reference);
+                    var directive$$1 = ast.directives.find(function (d) { return d.directive.selector != null && d.directive.selector.indexOf(ast.name) >= 0; });
+                    if (directive$$1) {
+                        symbol_1 = info.template.query.getTypeSymbol(directive$$1.directive.type.reference);
                         symbol_1 = symbol_1 && new OverrideKindSymbol(symbol_1, 'directive');
                         span_1 = spanOf(ast);
                     }
@@ -57220,11 +58020,11 @@ function findInputBinding(info, path$$1, binding) {
     var element = path$$1.first(ElementAst);
     if (element) {
         for (var _i = 0, _a = element.directives; _i < _a.length; _i++) {
-            var directive = _a[_i];
-            var invertedInput = invertMap(directive.directive.inputs);
+            var directive$$1 = _a[_i];
+            var invertedInput = invertMap(directive$$1.directive.inputs);
             var fieldName = invertedInput[binding.templateName];
             if (fieldName) {
-                var classSymbol = info.template.query.getTypeSymbol(directive.directive.type.reference);
+                var classSymbol = info.template.query.getTypeSymbol(directive$$1.directive.type.reference);
                 if (classSymbol) {
                     return classSymbol.members().get(fieldName);
                 }
@@ -57236,11 +58036,11 @@ function findOutputBinding(info, path$$1, binding) {
     var element = path$$1.first(ElementAst);
     if (element) {
         for (var _i = 0, _a = element.directives; _i < _a.length; _i++) {
-            var directive = _a[_i];
-            var invertedOutputs = invertMap(directive.directive.outputs);
+            var directive$$1 = _a[_i];
+            var invertedOutputs = invertMap(directive$$1.directive.outputs);
             var fieldName = invertedOutputs[binding.name];
             if (fieldName) {
-                var classSymbol = info.template.query.getTypeSymbol(directive.directive.type.reference);
+                var classSymbol = info.template.query.getTypeSymbol(directive$$1.directive.type.reference);
                 if (classSymbol) {
                     return classSymbol.members().get(fieldName);
                 }
@@ -57396,7 +58196,7 @@ function getDeclarationDiagnostics(declarations, modules) {
                 if (!directives) {
                     directives = new Set();
                     modules.ngModules.forEach(function (module) {
-                        module.declaredDirectives.forEach(function (directive) { directives.add(directive.reference); });
+                        module.declaredDirectives.forEach(function (directive$$1) { directives.add(directive$$1.reference); });
                     });
                 }
                 if (!directives.has(declaration.type)) {
@@ -57923,11 +58723,11 @@ var TypeScriptServiceHost = /** @class */ (function () {
             for (var _i = 0, _a = ngModuleSummary.ngModules; _i < _a.length; _i++) {
                 var module_1 = _a[_i];
                 for (var _b = 0, _c = module_1.declaredDirectives; _b < _c.length; _b++) {
-                    var directive = _c[_b];
-                    var metadata = this.resolver.getNonNormalizedDirectiveMetadata(directive.reference).metadata;
+                    var directive$$1 = _c[_b];
+                    var metadata = this.resolver.getNonNormalizedDirectiveMetadata(directive$$1.reference).metadata;
                     if (metadata.isComponent && metadata.template && metadata.template.templateUrl) {
-                        var templateName = urlResolver.resolve(this.reflector.componentModuleUrl(directive.reference), metadata.template.templateUrl);
-                        fileToComponent.set(templateName, directive.reference);
+                        var templateName = urlResolver.resolve(this.reflector.componentModuleUrl(directive$$1.reference), metadata.template.templateUrl);
+                        fileToComponent.set(templateName, directive$$1.reference);
                         templateReference.push(templateName);
                     }
                 }
@@ -58297,14 +59097,16 @@ function angularOnlyFilter(ls) {
         getFormattingEditsAfterKeystroke: function (fileName, position, key, options) { return []; },
         getDocCommentTemplateAtPosition: function (fileName, position) { return undefined; },
         isValidBraceCompletionAtPosition: function (fileName, position, openingBrace) { return undefined; },
+        getSpanOfEnclosingComment: function (fileName, position, onlyMultiLine) { return undefined; },
         getCodeFixesAtPosition: function (fileName, start, end, errorCodes) { return []; },
+        applyCodeActionCommand: function (action) { return Promise.resolve(undefined); },
         getEmitOutput: function (fileName) { return undefined; },
         getProgram: function () { return ls.getProgram(); },
         dispose: function () { return ls.dispose(); },
         getApplicableRefactors: function (fileName, positionOrRaneg) { return []; },
         getEditsForRefactor: function (fileName, formatOptions, positionOrRange, refactorName, actionName) {
             return undefined;
-        },
+        }
     };
 }
 function create(info /* ts.server.PluginCreateInfo */) {
@@ -58352,9 +59154,9 @@ function create(info /* ts.server.PluginCreateInfo */) {
             getSemanticClassifications: tryFilenameOneCall(ls.getSemanticClassifications),
             getEncodedSyntacticClassifications: tryFilenameOneCall(ls.getEncodedSyntacticClassifications),
             getEncodedSemanticClassifications: tryFilenameOneCall(ls.getEncodedSemanticClassifications),
-            getCompletionsAtPosition: tryFilenameOneCall(ls.getCompletionsAtPosition),
-            getCompletionEntryDetails: tryFilenameTwoCall(ls.getCompletionEntryDetails),
-            getCompletionEntrySymbol: tryFilenameTwoCall(ls.getCompletionEntrySymbol),
+            getCompletionsAtPosition: tryFilenameTwoCall(ls.getCompletionsAtPosition),
+            getCompletionEntryDetails: tryFilenameFourCall(ls.getCompletionEntryDetails),
+            getCompletionEntrySymbol: tryFilenameThreeCall(ls.getCompletionEntrySymbol),
             getQuickInfoAtPosition: tryFilenameOneCall(ls.getQuickInfoAtPosition),
             getNameOrDottedNameSpan: tryFilenameTwoCall(ls.getNameOrDottedNameSpan),
             getBreakpointStatementAtPosition: tryFilenameOneCall(ls.getBreakpointStatementAtPosition),
@@ -58381,14 +59183,14 @@ function create(info /* ts.server.PluginCreateInfo */) {
             getFormattingEditsAfterKeystroke: tryFilenameThreeCall(ls.getFormattingEditsAfterKeystroke),
             getDocCommentTemplateAtPosition: tryFilenameOneCall(ls.getDocCommentTemplateAtPosition),
             isValidBraceCompletionAtPosition: tryFilenameTwoCall(ls.isValidBraceCompletionAtPosition),
+            getSpanOfEnclosingComment: tryFilenameTwoCall(ls.getSpanOfEnclosingComment),
             getCodeFixesAtPosition: tryFilenameFourCall(ls.getCodeFixesAtPosition),
+            applyCodeActionCommand: (function (action) { return tryCall(undefined, function () { return ls.applyCodeActionCommand(action); }); }),
             getEmitOutput: tryFilenameCall(ls.getEmitOutput),
             getProgram: function () { return ls.getProgram(); },
             dispose: function () { return ls.dispose(); },
-            getApplicableRefactors: function (fileName, positionOrRaneg) { return []; },
-            getEditsForRefactor: function (fileName, formatOptions, positionOrRange, refactorName, actionName) {
-                return undefined;
-            },
+            getApplicableRefactors: tryFilenameOneCall(ls.getApplicableRefactors),
+            getEditsForRefactor: tryFilenameFourCall(ls.getEditsForRefactor)
         };
     }
     oldLS = typescriptOnly(oldLS);
@@ -58447,8 +59249,8 @@ function create(info /* ts.server.PluginCreateInfo */) {
     var ls = createLanguageService(serviceHost);
     serviceHost.setSite(ls);
     projectHostMap.set(info.project, serviceHost);
-    proxy.getCompletionsAtPosition = function (fileName, position) {
-        var base = oldLS.getCompletionsAtPosition(fileName, position) || {
+    proxy.getCompletionsAtPosition = function (fileName, position, options) {
+        var base = oldLS.getCompletionsAtPosition(fileName, position, options) || {
             isGlobalCompletion: false,
             isMemberCompletion: false,
             isNewIdentifierLocation: false,
@@ -58555,7 +59357,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('5.2.0-beta.0-057b357');
+var VERSION = new Version$1('5.2.0-rc.0-d2808aa');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;

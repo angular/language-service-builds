@@ -1,6 +1,6 @@
 /**
- * @license Angular v5.2.0-beta.0-057b357
- * (c) 2010-2017 Google, Inc. https://angular.io/
+ * @license Angular v5.2.0-rc.0-d2808aa
+ * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
 import { ASTWithSource, AotSummaryResolver, AstPath, Attribute, CompileMetadataResolver, CompilerConfig, CssSelector, DEFAULT_INTERPOLATION_CONFIG, DirectiveNormalizer, DirectiveResolver, DomElementSchemaRegistry, Element, ElementAst, HtmlParser, I18NHtmlParser, ImplicitReceiver, JitSummaryResolver, Lexer, NAMED_ENTITIES, NgModuleResolver, NullAstVisitor, NullTemplateVisitor, ParseSpan, ParseTreeResult, Parser, PipeResolver, PropertyRead, RecursiveTemplateAstVisitor, ResourceLoader, SelectorMatcher, StaticReflector, StaticSymbolCache, StaticSymbolResolver, TagContentType, TemplateParser, Text, analyzeNgModules, createOfflineCompileUrlResolver, findNode, getHtmlTagDefinition, identifierName, isFormattedError, splitNsName, templateVisitAll, tokenReference, visitAstChildren } from '@angular/compiler';
@@ -2391,14 +2391,16 @@ function angularOnlyFilter(ls) {
         getFormattingEditsAfterKeystroke: function (fileName, position, key, options) { return []; },
         getDocCommentTemplateAtPosition: function (fileName, position) { return undefined; },
         isValidBraceCompletionAtPosition: function (fileName, position, openingBrace) { return undefined; },
+        getSpanOfEnclosingComment: function (fileName, position, onlyMultiLine) { return undefined; },
         getCodeFixesAtPosition: function (fileName, start, end, errorCodes) { return []; },
+        applyCodeActionCommand: function (action) { return Promise.resolve(undefined); },
         getEmitOutput: function (fileName) { return undefined; },
         getProgram: function () { return ls.getProgram(); },
         dispose: function () { return ls.dispose(); },
         getApplicableRefactors: function (fileName, positionOrRaneg) { return []; },
         getEditsForRefactor: function (fileName, formatOptions, positionOrRange, refactorName, actionName) {
             return undefined;
-        },
+        }
     };
 }
 function create(info /* ts.server.PluginCreateInfo */) {
@@ -2446,9 +2448,9 @@ function create(info /* ts.server.PluginCreateInfo */) {
             getSemanticClassifications: tryFilenameOneCall(ls.getSemanticClassifications),
             getEncodedSyntacticClassifications: tryFilenameOneCall(ls.getEncodedSyntacticClassifications),
             getEncodedSemanticClassifications: tryFilenameOneCall(ls.getEncodedSemanticClassifications),
-            getCompletionsAtPosition: tryFilenameOneCall(ls.getCompletionsAtPosition),
-            getCompletionEntryDetails: tryFilenameTwoCall(ls.getCompletionEntryDetails),
-            getCompletionEntrySymbol: tryFilenameTwoCall(ls.getCompletionEntrySymbol),
+            getCompletionsAtPosition: tryFilenameTwoCall(ls.getCompletionsAtPosition),
+            getCompletionEntryDetails: tryFilenameFourCall(ls.getCompletionEntryDetails),
+            getCompletionEntrySymbol: tryFilenameThreeCall(ls.getCompletionEntrySymbol),
             getQuickInfoAtPosition: tryFilenameOneCall(ls.getQuickInfoAtPosition),
             getNameOrDottedNameSpan: tryFilenameTwoCall(ls.getNameOrDottedNameSpan),
             getBreakpointStatementAtPosition: tryFilenameOneCall(ls.getBreakpointStatementAtPosition),
@@ -2475,14 +2477,14 @@ function create(info /* ts.server.PluginCreateInfo */) {
             getFormattingEditsAfterKeystroke: tryFilenameThreeCall(ls.getFormattingEditsAfterKeystroke),
             getDocCommentTemplateAtPosition: tryFilenameOneCall(ls.getDocCommentTemplateAtPosition),
             isValidBraceCompletionAtPosition: tryFilenameTwoCall(ls.isValidBraceCompletionAtPosition),
+            getSpanOfEnclosingComment: tryFilenameTwoCall(ls.getSpanOfEnclosingComment),
             getCodeFixesAtPosition: tryFilenameFourCall(ls.getCodeFixesAtPosition),
+            applyCodeActionCommand: (function (action) { return tryCall(undefined, function () { return ls.applyCodeActionCommand(action); }); }),
             getEmitOutput: tryFilenameCall(ls.getEmitOutput),
             getProgram: function () { return ls.getProgram(); },
             dispose: function () { return ls.dispose(); },
-            getApplicableRefactors: function (fileName, positionOrRaneg) { return []; },
-            getEditsForRefactor: function (fileName, formatOptions, positionOrRange, refactorName, actionName) {
-                return undefined;
-            },
+            getApplicableRefactors: tryFilenameOneCall(ls.getApplicableRefactors),
+            getEditsForRefactor: tryFilenameFourCall(ls.getEditsForRefactor)
         };
     }
     oldLS = typescriptOnly(oldLS);
@@ -2541,8 +2543,8 @@ function create(info /* ts.server.PluginCreateInfo */) {
     var ls = createLanguageService(serviceHost);
     serviceHost.setSite(ls);
     projectHostMap.set(info.project, serviceHost);
-    proxy.getCompletionsAtPosition = function (fileName, position) {
-        var base = oldLS.getCompletionsAtPosition(fileName, position) || {
+    proxy.getCompletionsAtPosition = function (fileName, position, options) {
+        var base = oldLS.getCompletionsAtPosition(fileName, position, options) || {
             isGlobalCompletion: false,
             isMemberCompletion: false,
             isNewIdentifierLocation: false,
@@ -2649,7 +2651,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version('5.2.0-beta.0-057b357');
+var VERSION = new Version('5.2.0-rc.0-d2808aa');
 
 /**
  * @license
