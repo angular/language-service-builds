@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.2.0-rc.0-229b76c
+ * @license Angular v5.2.0-rc.0-3db91ff
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v5.2.0-rc.0-229b76c
+ * @license Angular v5.2.0-rc.0-3db91ff
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -691,7 +691,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('5.2.0-rc.0-229b76c');
+var VERSION$1 = new Version('5.2.0-rc.0-3db91ff');
 
 /**
  * @fileoverview added by tsickle
@@ -42087,7 +42087,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v5.2.0-rc.0-229b76c
+ * @license Angular v5.2.0-rc.0-3db91ff
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -42518,7 +42518,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('5.2.0-rc.0-229b76c');
+var VERSION$2 = new Version$1('5.2.0-rc.0-3db91ff');
 
 /**
  * @fileoverview added by tsickle
@@ -56569,6 +56569,10 @@ var bindingIndex;
  */
 var cleanup;
 /**
+ * Index in the data array at which view hooks begin to be stored.
+ */
+var viewHookStartIndex;
+/**
  * Swap the current state with a new state.
  *
  * For performance reasons we store the state in the top level of the module.
@@ -56585,10 +56589,8 @@ function enterView(newViewState, host) {
     data = newViewState.data;
     bindingIndex = newViewState.bindingStartIndex || 0;
     ngStaticData = newViewState.ngStaticData;
-    if (creationMode = !data) {
-        // Absence of data implies creationMode.
-        (/** @type {?} */ (newViewState)).data = data = [];
-    }
+    creationMode = newViewState.creationMode;
+    viewHookStartIndex = newViewState.viewHookStartIndex;
     cleanup = newViewState.cleanup;
     renderer = newViewState.renderer;
     if (host != null) {
@@ -56611,15 +56613,16 @@ function createViewState(viewId, renderer, ngStaticData) {
         // -1 for component views
         node: /** @type {?} */ ((null)),
         // until we initialize it in createNode.
-        data: /** @type {?} */ ((null)),
-        // Hack use as a marker for creationMode
+        data: [],
         ngStaticData: ngStaticData,
         cleanup: null,
         renderer: renderer,
         child: null,
         tail: null,
         next: null,
-        bindingStartIndex: null
+        bindingStartIndex: null,
+        creationMode: true,
+        viewHookStartIndex: null
     };
     return newView;
 }
@@ -56713,7 +56716,7 @@ function initViewStaticData(viewIndex, parent) {
 var NO_CHANGE = /** @type {?} */ ({});
 
 /**
- * @license Angular v5.2.0-rc.0-229b76c
+ * @license Angular v5.2.0-rc.0-3db91ff
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59357,7 +59360,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('5.2.0-rc.0-229b76c');
+var VERSION = new Version$1('5.2.0-rc.0-3db91ff');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
