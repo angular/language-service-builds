@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.2.0-7493b8a
+ * @license Angular v5.2.0-e3e2fc0
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v5.2.0-7493b8a
+ * @license Angular v5.2.0-e3e2fc0
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -691,7 +691,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('5.2.0-7493b8a');
+var VERSION$1 = new Version('5.2.0-e3e2fc0');
 
 /**
  * @fileoverview added by tsickle
@@ -31572,6 +31572,7 @@ var StaticReflector = /** @class */ (function () {
         this.methodCache = new Map();
         this.staticCache = new Map();
         this.conversionMap = new Map();
+        this.resolvedExternalReferences = new Map();
         this.annotationForParentClassWithSummaryKind = new Map();
         this.initializeConversionMap();
         knownMetadataClasses.forEach(function (kc) {
@@ -31606,11 +31607,21 @@ var StaticReflector = /** @class */ (function () {
      * @return {?}
      */
     function (ref, containingFile) {
+        var /** @type {?} */ key = undefined;
+        if (!containingFile) {
+            key = ref.moduleName + ":" + ref.name;
+            var /** @type {?} */ declarationSymbol_1 = this.resolvedExternalReferences.get(key);
+            if (declarationSymbol_1)
+                return declarationSymbol_1;
+        }
         var /** @type {?} */ refSymbol = this.symbolResolver.getSymbolByModule(/** @type {?} */ ((ref.moduleName)), /** @type {?} */ ((ref.name)), containingFile);
         var /** @type {?} */ declarationSymbol = this.findSymbolDeclaration(refSymbol);
         if (!containingFile) {
             this.symbolResolver.recordModuleNameForFileName(refSymbol.filePath, /** @type {?} */ ((ref.moduleName)));
             this.symbolResolver.recordImportAs(declarationSymbol, refSymbol);
+        }
+        if (key) {
+            this.resolvedExternalReferences.set(key, declarationSymbol);
         }
         return declarationSymbol;
     };
@@ -42087,7 +42098,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v5.2.0-7493b8a
+ * @license Angular v5.2.0-e3e2fc0
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -42518,7 +42529,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('5.2.0-7493b8a');
+var VERSION$2 = new Version$1('5.2.0-e3e2fc0');
 
 /**
  * @fileoverview added by tsickle
@@ -56716,7 +56727,7 @@ function initViewStaticData(viewIndex, parent) {
 var NO_CHANGE = /** @type {?} */ ({});
 
 /**
- * @license Angular v5.2.0-7493b8a
+ * @license Angular v5.2.0-e3e2fc0
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59360,7 +59371,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('5.2.0-7493b8a');
+var VERSION = new Version$1('5.2.0-e3e2fc0');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
