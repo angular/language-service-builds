@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.2.0-c0080d7
+ * @license Angular v5.2.0-5eaaac3
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v5.2.0-c0080d7
+ * @license Angular v5.2.0-5eaaac3
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -691,7 +691,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('5.2.0-c0080d7');
+var VERSION$1 = new Version('5.2.0-5eaaac3');
 
 /**
  * @fileoverview added by tsickle
@@ -42100,7 +42100,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v5.2.0-c0080d7
+ * @license Angular v5.2.0-5eaaac3
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -42531,7 +42531,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('5.2.0-c0080d7');
+var VERSION$2 = new Version$1('5.2.0-5eaaac3');
 
 /**
  * @fileoverview added by tsickle
@@ -55967,7 +55967,10 @@ var NgModuleFactory_ = /** @class */ (function (_super) {
  * @return {?} The stringified value
  */
 function stringifyValueForError(value) {
-    return typeof value === 'string' ? "\"" + value + "\"" : '' + value;
+    if (value && value.native && value.native.outerHTML) {
+        return value.native.outerHTML;
+    }
+    return typeof value === 'string' ? "\"" + value + "\"" : value;
 }
 /**
  * @param {?} actual
@@ -55985,6 +55988,16 @@ function stringifyValueForError(value) {
  */
 function assertEqual(actual, expected, name, serializer) {
     (actual != expected) && assertThrow(actual, expected, name, '==', serializer);
+}
+/**
+ * @template T
+ * @param {?} actual
+ * @param {?} expected
+ * @param {?} name
+ * @return {?}
+ */
+function assertLessThan(actual, expected, name) {
+    (actual < expected) && assertThrow(actual, expected, name, '>');
 }
 /**
  * @template T
@@ -56018,7 +56031,9 @@ function assertNotEqual(actual, expected, name) {
  */
 function assertThrow(actual, expected, name, operator, serializer) {
     if (serializer === void 0) { serializer = stringifyValueForError; }
-    throw new Error("ASSERT: expected " + name + " " + operator + " " + serializer(expected) + " but was " + serializer(actual) + "!");
+    var /** @type {?} */ error = "ASSERT: expected " + name + " " + operator + " " + serializer(expected) + " but was " + serializer(actual) + "!";
+    debugger; // leave `debugger` here to aid in debugging.
+    throw new Error(error);
 }
 
 /**
@@ -56214,6 +56229,39 @@ function addRemoveViewFromContainer(container, rootNode, insertMode, beforeNode)
 function setViewNext(view, next) {
     view.next = next;
     view.data.next = next ? next.data : null;
+}
+/**
+ * Appends the provided child element to the provided parent, if appropriate.
+ *
+ * If the parent is a view, the element will be appended as part of viewEnd(), so
+ * the element should not be appended now. Similarly, if the child is a content child
+ * of a parent component, the child will be appended to the right position later by
+ * the content projection system. Otherwise, append normally.
+ *
+ * @param {?} parent The parent to which to append the child
+ * @param {?} child The child that should be appended
+ * @param {?} currentView The current LView
+ * @return {?} Whether or not the child was appended
+ */
+function appendChild(parent, child, currentView) {
+    // Only add native child element to parent element if the parent element is regular Element.
+    // If parent is:
+    // - Regular element => add child
+    // - Component host element =>
+    //    - Current View, and parent view same => content => don't add -> parent component will
+    //    re-project if needed.
+    //    - Current View, and parent view different => view => add Child
+    // - View element => View's get added separately.
+    if (child !== null && (parent.flags & 3 /* TYPE_MASK */) === 3 /* Element */ &&
+        (parent.view !==
+            currentView /* Crossing View Boundaries, it is Component, but add Element of View */
+            || parent.data === null /* Regular Element. */)) {
+        // We only add element if not in View or not projected.
+        var /** @type {?} */ renderer = currentView.renderer;
+        (/** @type {?} */ (renderer)).listen ? /** @type {?} */ (((/** @type {?} */ (renderer)).appendChild))(/** @type {?} */ (((parent.native))), child) : /** @type {?} */ ((parent.native)).appendChild(child);
+        return true;
+    }
+    return false;
 }
 /**
  * Appends a projected node to the DOM, or in the case of a projected container,
@@ -56508,6 +56556,53 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
+ * Subset of API needed for appending elements and text nodes.
+ * @record
+ */
+
+/**
+ * Subset of API needed for writing attributes, properties, and setting up
+ * listeners on Element.
+ * @record
+ */
+
+/**
+ * @record
+ */
+
+/**
+ * @record
+ */
+
+/**
+ * @record
+ */
+
+/**
+ * @record
+ */
+
+// Note: This hack is necessary so we don't erroneously get a circular dependency
+// failure based on types.
+
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+/**
+ * Directive (D) sets a property on all component instances using this constant as a key and the
+ * component's host node (LElement) as the value. This is used in methods like detectChanges to
+ * facilitate jumping from an instance to the host node.
+ */
+var NG_HOST_SYMBOL = '__ngHostLNode__';
+/**
  * This property gets set before entering a template.
  *
  * This renderer can be one of two varieties of Renderer3:
@@ -56525,6 +56620,7 @@ var QueryList_ = /** @class */ (function () {
  * Renderer2.
  */
 var renderer;
+var rendererFactory;
 /**
  * Used to set the parent property when nodes are created.
  */
@@ -56704,6 +56800,196 @@ function createLNode(index, type, native, state) {
     return node;
 }
 /**
+ * This function instantiates a directive with a correct queryName. It is a hack since we should
+ * compute the query value only once and store it with the template (rather than on each invocation)
+ * @param {?} index
+ * @param {?} directiveTypes
+ * @param {?} localRefs
+ * @return {?}
+ */
+function hack_declareDirectives(index, directiveTypes, localRefs) {
+    if (directiveTypes) {
+        // TODO(mhevery): This assumes that the directives come in correct order, which
+        // is not guaranteed. Must be refactored to take it into account.
+        for (var /** @type {?} */ i = 0; i < directiveTypes.length; i++) {
+            // MEGAMORPHIC: `ngDirectiveDef` is a megamorphic property access here.
+            // This is OK, since we will refactor this code and store the result in `TView.data`
+            // which means that we will be reading this value only once. We are trading clean/simple
+            // template
+            // code for slight startup(first run) performance. (No impact on subsequent runs)
+            // TODO(misko): refactor this to store the `DirectiveDef` in `TView.data`.
+            var /** @type {?} */ directiveType = directiveTypes[i];
+            var /** @type {?} */ directiveDef = directiveType.ngDirectiveDef;
+            (/** @type {?} */ (directiveDef)).type = directiveType;
+            directiveCreate(++index, directiveDef.n(), directiveDef, hack_findQueryName(directiveDef, localRefs));
+        }
+    }
+}
+/**
+ * This function returns the queryName for a directive. It is a hack since we should
+ * compute the query value only once and store it with the template (rather than on each invocation)
+ * @param {?} directiveDef
+ * @param {?} localRefs
+ * @param {?=} defaultExport
+ * @return {?}
+ */
+function hack_findQueryName(directiveDef, localRefs, defaultExport) {
+    var /** @type {?} */ exportAs = directiveDef && directiveDef.exportAs || defaultExport;
+    if (exportAs != null && localRefs) {
+        for (var /** @type {?} */ i = 0; i < localRefs.length; i = i + 2) {
+            var /** @type {?} */ local = localRefs[i];
+            var /** @type {?} */ toExportAs = localRefs[i | 1];
+            if (toExportAs === exportAs || toExportAs === defaultExport) {
+                return local;
+            }
+        }
+    }
+    return null;
+}
+/**
+ * Gets static data from a template function or creates a new static
+ * data array if it doesn't already exist.
+ *
+ * @param {?} template The template from which to get static data
+ * @return {?} NgStaticData
+ */
+function getTemplateStatic(template) {
+    return template.ngStaticData || (template.ngStaticData = /** @type {?} */ ([]));
+}
+/**
+ * @param {?} native
+ * @param {?} attrs
+ * @return {?}
+ */
+function setUpAttributes(native, attrs) {
+    ngDevMode && assertEqual(attrs.length % 2, 0, 'attrs.length % 2');
+    var /** @type {?} */ isProceduralRenderer = (/** @type {?} */ (renderer)).setAttribute;
+    for (var /** @type {?} */ i = 0; i < attrs.length; i += 2) {
+        isProceduralRenderer ? /** @type {?} */ (((/** @type {?} */ (renderer)).setAttribute))(native, attrs[i], attrs[i | 1]) :
+            native.setAttribute(attrs[i], attrs[i | 1]);
+    }
+}
+/**
+ * Constructs a TNode object from the arguments.
+ *
+ * @param {?} tagName
+ * @param {?} attrs
+ * @param {?} containerStatic
+ * @param {?} localName
+ * @return {?} the TNode object
+ */
+function createTNode(tagName, attrs, containerStatic, localName) {
+    return {
+        tagName: tagName,
+        attrs: attrs,
+        localNames: localName ? [localName, -1] : null,
+        initialInputs: undefined,
+        inputs: undefined,
+        outputs: undefined,
+        containerStatic: containerStatic
+    };
+}
+/**
+ * Create a directive.
+ *
+ * NOTE: directives can be created in order other than the index order. They can also
+ *       be retrieved before they are created in which case the value will be null.
+ *
+ * @template T
+ * @param {?} index Each directive in a `View` will have a unique index. Directives can
+ *        be created or retrieved out of order.
+ * @param {?} directive The directive instance.
+ * @param {?} directiveDef DirectiveDef object which contains information about the template.
+ * @param {?=} queryName Name under which the query can retrieve the directive instance.
+ * @return {?}
+ */
+function directiveCreate(index, directive, directiveDef, queryName) {
+    var /** @type {?} */ instance;
+    ngDevMode && assertEqual(currentView.bindingStartIndex, null, 'bindingStartIndex');
+    ngDevMode && assertPreviousIsParent();
+    var /** @type {?} */ flags = /** @type {?} */ ((previousOrParentNode)).flags;
+    var /** @type {?} */ size = flags & 4092;
+    if (size === 0) {
+        flags = (index << 12 /* INDX_SHIFT */) | 4 /* SIZE_SKIP */ | flags & 3 /* TYPE_MASK */;
+    }
+    else {
+        flags += 4 /* SIZE_SKIP */;
+    } /** @type {?} */
+    ((previousOrParentNode)).flags = flags;
+    ngDevMode && assertDataInRange(index - 1);
+    Object.defineProperty(directive, NG_HOST_SYMBOL, { enumerable: false, value: previousOrParentNode });
+    data[index] = instance = directive;
+    if (index >= ngStaticData.length) {
+        ngStaticData[index] = /** @type {?} */ ((directiveDef));
+        if (queryName) {
+            ngDevMode && assertNotNull$1(previousOrParentNode.tNode, 'previousOrParentNode.staticData');
+            var /** @type {?} */ nodeStaticData = /** @type {?} */ ((/** @type {?} */ ((previousOrParentNode)).tNode));
+            (nodeStaticData.localNames || (nodeStaticData.localNames = [])).push(queryName, index);
+        }
+    }
+    var /** @type {?} */ diPublic = /** @type {?} */ ((directiveDef)).diPublic;
+    if (diPublic) {
+        diPublic(/** @type {?} */ ((directiveDef)));
+    }
+    var /** @type {?} */ staticData = /** @type {?} */ ((previousOrParentNode.tNode));
+    if (staticData && staticData.attrs) {
+        setInputsFromAttrs(instance, /** @type {?} */ ((directiveDef)).inputs, staticData);
+    }
+    return instance;
+}
+/**
+ * Sets initial input properties on directive instances from attribute data
+ *
+ * @template T
+ * @param {?} instance Instance of the directive on which to set the initial inputs
+ * @param {?} inputs The list of inputs from the directive def
+ * @param {?} tNode The static data for this node
+ * @return {?}
+ */
+function setInputsFromAttrs(instance, inputs, tNode) {
+    var /** @type {?} */ directiveIndex = ((previousOrParentNode.flags & 4092 /* SIZE_MASK */) >> 2 /* SIZE_SHIFT */) - 1;
+    var /** @type {?} */ initialInputData = /** @type {?} */ (tNode.initialInputs);
+    if (initialInputData === undefined || directiveIndex >= initialInputData.length) {
+        initialInputData = generateInitialInputs(directiveIndex, inputs, tNode);
+    }
+    var /** @type {?} */ initialInputs = initialInputData[directiveIndex];
+    if (initialInputs) {
+        for (var /** @type {?} */ i = 0; i < initialInputs.length; i += 2) {
+            (/** @type {?} */ (instance))[initialInputs[i]] = initialInputs[i | 1];
+        }
+    }
+}
+/**
+ * Generates initialInputData for a node and stores it in the template's static storage
+ * so subsequent template invocations don't have to recalculate it.
+ *
+ * initialInputData is an array containing values that need to be set as input properties
+ * for directives on this node, but only once on creation. We need this array to support
+ * the case where you set an \@Input property of a directive using attribute-like syntax.
+ * e.g. if you have a `name` \@Input, you can set it once like this:
+ *
+ * <my-component name="Bess"></my-component>
+ *
+ * @param {?} directiveIndex Index to store the initial input data
+ * @param {?} inputs The list of inputs from the directive def
+ * @param {?} tNode The static data on this node
+ * @return {?}
+ */
+function generateInitialInputs(directiveIndex, inputs, tNode) {
+    var /** @type {?} */ initialInputData = tNode.initialInputs || (tNode.initialInputs = []);
+    initialInputData[directiveIndex] = null;
+    var /** @type {?} */ attrs = /** @type {?} */ ((tNode.attrs));
+    for (var /** @type {?} */ i = 0; i < attrs.length; i += 2) {
+        var /** @type {?} */ attrName = attrs[i];
+        var /** @type {?} */ minifiedInputName = inputs[attrName];
+        if (minifiedInputName !== undefined) {
+            var /** @type {?} */ inputsToStore = initialInputData[directiveIndex] || (initialInputData[directiveIndex] = []);
+            inputsToStore.push(minifiedInputName, attrs[i | 1]);
+        }
+    }
+    return initialInputData;
+}
+/**
  * Initialize the static data for the active view.
  *
  * Each embedded view needs to set the global ngStaticData variable to the static data for
@@ -56724,12 +57010,197 @@ function initViewStaticData(viewIndex, parent) {
     return containerStatic[viewIndex];
 }
 /**
+ * Instruction to distribute projectable nodes among <ng-content> occurrences in a given template.
+ * It takes all the selectors from the entire component's template and decides where
+ * each projected node belongs (it re-distributes nodes among "buckets" where each "bucket" is
+ * backed by a selector).
+ *
+ * @param {?=} selectors
+ * @return {?}
+ */
+
+/**
+ * Inserts previously re-distributed projected nodes. This instruction must be preceded by a call
+ * to the projectionDef instruction.
+ *
+ * @param {?} nodeIndex
+ * @param {?} localIndex - index under which distribution of projected nodes was memorized
+ * @param {?=} selectorIndex - 0 means <ng-content> without any selector
+ * @return {?}
+ */
+
+/**
+ * Adds a LView or a LContainer to the end of the current view tree.
+ *
+ * This structure will be used to traverse through nested views to remove listeners
+ * and call onDestroy callbacks.
+ *
+ * @template T
+ * @param {?} state The LView or LContainer to add to the view tree
+ * @return {?} The state passed in
+ */
+function addToViewTree(state) {
+    currentView.tail ? (currentView.tail.next = state) : (currentView.child = state);
+    currentView.tail = state;
+    return state;
+}
+/**
  * A special value which designates that a value has not changed.
  */
 var NO_CHANGE = /** @type {?} */ ({});
+/**
+ * Create an interpolation bindings with 2 arguments.
+ *
+ * @param {?} prefix
+ * @param {?} v0 value checked for change
+ * @param {?} i0
+ * @param {?} v1 value checked for change
+ * @param {?} suffix
+ * @return {?}
+ */
 
 /**
- * @license Angular v5.2.0-c0080d7
+ * Create an interpolation bindings with 3 arguments.
+ *
+ * @param {?} prefix
+ * @param {?} v0
+ * @param {?} i0
+ * @param {?} v1
+ * @param {?} i1
+ * @param {?} v2
+ * @param {?} suffix
+ * @return {?}
+ */
+
+/**
+ * Create an interpolation binding with 4 arguments.
+ *
+ * @param {?} prefix
+ * @param {?} v0
+ * @param {?} i0
+ * @param {?} v1
+ * @param {?} i1
+ * @param {?} v2
+ * @param {?} i2
+ * @param {?} v3
+ * @param {?} suffix
+ * @return {?}
+ */
+
+/**
+ * Create an interpolation binding with 5 arguments.
+ *
+ * @param {?} prefix
+ * @param {?} v0
+ * @param {?} i0
+ * @param {?} v1
+ * @param {?} i1
+ * @param {?} v2
+ * @param {?} i2
+ * @param {?} v3
+ * @param {?} i3
+ * @param {?} v4
+ * @param {?} suffix
+ * @return {?}
+ */
+
+/**
+ * Create an interpolation binding with 6 arguments.
+ *
+ * @param {?} prefix
+ * @param {?} v0
+ * @param {?} i0
+ * @param {?} v1
+ * @param {?} i1
+ * @param {?} v2
+ * @param {?} i2
+ * @param {?} v3
+ * @param {?} i3
+ * @param {?} v4
+ * @param {?} i4
+ * @param {?} v5
+ * @param {?} suffix
+ * @return {?}
+ */
+
+/**
+ * Create an interpolation binding with 7 arguments.
+ *
+ * @param {?} prefix
+ * @param {?} v0
+ * @param {?} i0
+ * @param {?} v1
+ * @param {?} i1
+ * @param {?} v2
+ * @param {?} i2
+ * @param {?} v3
+ * @param {?} i3
+ * @param {?} v4
+ * @param {?} i4
+ * @param {?} v5
+ * @param {?} i5
+ * @param {?} v6
+ * @param {?} suffix
+ * @return {?}
+ */
+
+/**
+ * Create an interpolation binding with 8 arguments.
+ *
+ * @param {?} prefix
+ * @param {?} v0
+ * @param {?} i0
+ * @param {?} v1
+ * @param {?} i1
+ * @param {?} v2
+ * @param {?} i2
+ * @param {?} v3
+ * @param {?} i3
+ * @param {?} v4
+ * @param {?} i4
+ * @param {?} v5
+ * @param {?} i5
+ * @param {?} v6
+ * @param {?} i6
+ * @param {?} v7
+ * @param {?} suffix
+ * @return {?}
+ */
+
+/**
+ * @template T
+ * @param {?} index
+ * @param {?=} value
+ * @return {?}
+ */
+
+/**
+ * @template T
+ * @param {?} predicate
+ * @param {?=} descend
+ * @param {?=} read
+ * @return {?}
+ */
+
+/**
+ * @return {?}
+ */
+function assertPreviousIsParent() {
+    assertEqual(isParent, true, 'isParent');
+}
+/**
+ * @param {?} index
+ * @param {?=} arr
+ * @return {?}
+ */
+function assertDataInRange(index, arr) {
+    if (arr == null)
+        arr = data;
+    assertLessThan(arr ? arr.length : 0, index, 'data.length');
+}
+
+/**
+ * @license Angular v5.2.0-5eaaac3
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -58243,9 +58714,9 @@ function getHover(info) {
 }
 function hoverTextOf(symbol) {
     var result = [{ text: symbol.kind }, { text: ' ' }, { text: symbol.name, language: symbol.language }];
-    var container = symbol.container;
-    if (container) {
-        result.push({ text: ' of ' }, { text: container.name, language: container.language });
+    var container$$1 = symbol.container;
+    if (container$$1) {
+        result.push({ text: ' of ' }, { text: container$$1.name, language: container$$1.language });
     }
     return result;
 }
@@ -59374,7 +59845,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('5.2.0-c0080d7');
+var VERSION = new Version$1('5.2.0-5eaaac3');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
