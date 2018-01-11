@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.2.0-9b84a32
+ * @license Angular v5.2.0-6af3672
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v5.2.0-9b84a32
+ * @license Angular v5.2.0-6af3672
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -691,7 +691,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('5.2.0-9b84a32');
+var VERSION$1 = new Version('5.2.0-6af3672');
 
 /**
  * @fileoverview added by tsickle
@@ -42100,7 +42100,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v5.2.0-9b84a32
+ * @license Angular v5.2.0-6af3672
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -42531,7 +42531,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('5.2.0-9b84a32');
+var VERSION$2 = new Version$1('5.2.0-6af3672');
 
 /**
  * @fileoverview added by tsickle
@@ -56099,6 +56099,67 @@ function typeSerializer(type) {
 }
 
 /**
+ * Subset of API needed for appending elements and text nodes.
+ * @record
+ */
+
+/**
+ * Subset of API needed for writing attributes, properties, and setting up
+ * listeners on Element.
+ * @record
+ */
+
+/**
+ * @record
+ */
+
+/**
+ * @record
+ */
+
+/**
+ * @record
+ */
+
+/**
+ * @record
+ */
+
+// Note: This hack is necessary so we don't erroneously get a circular dependency
+// failure based on types.
+
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+/**
+ * `LView` stores all of the information needed to process the instructions as
+ * they are invoked from the template. Each embedded view and component view has its
+ * own `LView`. When processing a particular view, we set the `currentView` to that
+ * `LView`. When that view is done processing, the `currentView` is set back to
+ * whatever the original `currentView` was before(the parent `LView`).
+ *
+ * Keeping separate state for each view facilities view insertion / deletion, so we
+ * don't have to edit the data array based on which views are present.
+ * @record
+ */
+
+/**
+ * Interface necessary to work with view tree traversal
+ * @record
+ */
+
+// Note: This hack is necessary so we don't erroneously get a circular dependency
+// failure based on types.
+
+/**
  * @fileoverview added by tsickle
  * @suppress {checkTypes} checked by tsc
  */
@@ -56365,6 +56426,92 @@ function isDifferent(a, b) {
  * found in the LICENSE file at https://angular.io/license
  */
 /**
+ * @record
+ */
+
+/**
+ * @record
+ */
+
+/**
+ * `DirectiveDef` is a compiled version of the Directive used by the renderer instructions.
+ * @record
+ */
+
+/**
+ * @record
+ */
+
+/**
+ * Private: do not export
+ * @record
+ */
+
+/**
+ * Private: do not export
+ * @record
+ */
+
+/**
+ * @record
+ */
+
+/**
+ * @record
+ */
+
+// Note: This hack is necessary so we don't erroneously get a circular dependency
+// failure based on types.
+
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+/**
+ * @record
+ */
+
+// Note: This hack is necessary so we don't erroneously get a circular dependency
+// failure based on types.
+
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+/**
+ * Used for tracking queries (e.g. ViewChild, ContentChild).
+ * @record
+ */
+
+// Note: This hack is necessary so we don't erroneously get a circular dependency
+// failure based on types.
+
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+/**
  * A predicate which determines if a given element/directive should be included in the query
  * @record
  */
@@ -56556,34 +56703,9 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * Subset of API needed for appending elements and text nodes.
- * @record
+ * @param {?} query
+ * @return {?}
  */
-
-/**
- * Subset of API needed for writing attributes, properties, and setting up
- * listeners on Element.
- * @record
- */
-
-/**
- * @record
- */
-
-/**
- * @record
- */
-
-/**
- * @record
- */
-
-/**
- * @record
- */
-
-// Note: This hack is necessary so we don't erroneously get a circular dependency
-// failure based on types.
 
 /**
  * @fileoverview added by tsickle
@@ -57200,7 +57322,7 @@ function assertDataInRange(index, arr) {
 }
 
 /**
- * @license Angular v5.2.0-9b84a32
+ * @license Angular v5.2.0-6af3672
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59845,7 +59967,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('5.2.0-9b84a32');
+var VERSION = new Version$1('5.2.0-6af3672');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
