@@ -18,4 +18,5 @@ export declare class ReflectorHost implements StaticSymbolResolverHost {
         [key: string]: any;
     }[] | undefined;
     moduleNameToFileName(moduleName: string, containingFile?: string): string | null;
+    getOutputName(filePath: string): string;
 }

@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.2.0-6a97b5b
+ * @license Angular v5.2.0-a931a41
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1754,6 +1754,7 @@ var ReflectorHost = /** @class */ (function () {
             .resolvedModule;
         return resolved ? resolved.resolvedFileName : null;
     };
+    ReflectorHost.prototype.getOutputName = function (filePath) { return filePath; };
     return ReflectorHost;
 }());
 
@@ -2651,7 +2652,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version('5.2.0-6a97b5b');
+var VERSION = new Version('5.2.0-a931a41');
 
 /**
  * @license
