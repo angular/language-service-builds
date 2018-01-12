@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.2.0-2d44a2a
+ * @license Angular v5.2.0-43e1520
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v5.2.0-2d44a2a
+ * @license Angular v5.2.0-43e1520
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -691,7 +691,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('5.2.0-2d44a2a');
+var VERSION$1 = new Version('5.2.0-43e1520');
 
 /**
  * @fileoverview added by tsickle
@@ -42100,7 +42100,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v5.2.0-2d44a2a
+ * @license Angular v5.2.0-43e1520
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -42531,7 +42531,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('5.2.0-2d44a2a');
+var VERSION$2 = new Version$1('5.2.0-43e1520');
 
 /**
  * @fileoverview added by tsickle
@@ -57322,7 +57322,7 @@ function assertDataInRange(index, arr) {
 }
 
 /**
- * @license Angular v5.2.0-2d44a2a
+ * @license Angular v5.2.0-43e1520
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59187,7 +59187,7 @@ var TypeScriptServiceHost = /** @class */ (function () {
         return undefined;
     };
     TypeScriptServiceHost.prototype.getAnalyzedModules = function () {
-        this.validate();
+        this.updateAnalyzedModules();
         return this.ensureAnalyzedModules();
     };
     TypeScriptServiceHost.prototype.ensureAnalyzedModules = function () {
@@ -59292,7 +59292,7 @@ var TypeScriptServiceHost = /** @class */ (function () {
     TypeScriptServiceHost.prototype.validate = function () {
         var _this = this;
         var program = this.program;
-        if (this._staticSymbolResolver && this.lastProgram != program) {
+        if (this.lastProgram !== program) {
             // Invalidate file that have changed in the static symbol resolver
             var invalidateFile = function (fileName) {
                 return _this._staticSymbolResolver.invalidateFile(fileName);
@@ -59307,13 +59307,17 @@ var TypeScriptServiceHost = /** @class */ (function () {
                 var lastVersion = this.fileVersions.get(fileName);
                 if (version$$1 != lastVersion) {
                     this.fileVersions.set(fileName, version$$1);
-                    invalidateFile(fileName);
+                    if (this._staticSymbolResolver) {
+                        invalidateFile(fileName);
+                    }
                 }
             }
             // Remove file versions that are no longer in the file and invalidate them.
             var missing = Array.from(this.fileVersions.keys()).filter(function (f) { return !seen_1.has(f); });
             missing.forEach(function (f) { return _this.fileVersions.delete(f); });
-            missing.forEach(invalidateFile);
+            if (this._staticSymbolResolver) {
+                missing.forEach(invalidateFile);
+            }
             this.lastProgram = program;
         }
     };
@@ -59967,7 +59971,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('5.2.0-2d44a2a');
+var VERSION = new Version$1('5.2.0-43e1520');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
