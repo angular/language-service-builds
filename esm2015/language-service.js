@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.2.0-d5393c7
+ * @license Angular v5.2.0-cc9419d
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1766,7 +1766,7 @@ class TypeScriptServiceHost {
         return undefined;
     }
     getAnalyzedModules() {
-        this.validate();
+        this.updateAnalyzedModules();
         return this.ensureAnalyzedModules();
     }
     ensureAnalyzedModules() {
@@ -1860,7 +1860,7 @@ class TypeScriptServiceHost {
     }
     validate() {
         const program = this.program;
-        if (this._staticSymbolResolver && this.lastProgram != program) {
+        if (this.lastProgram !== program) {
             // Invalidate file that have changed in the static symbol resolver
             const invalidateFile = (fileName) => this._staticSymbolResolver.invalidateFile(fileName);
             this.clearCaches();
@@ -1872,13 +1872,17 @@ class TypeScriptServiceHost {
                 const lastVersion = this.fileVersions.get(fileName);
                 if (version$$1 != lastVersion) {
                     this.fileVersions.set(fileName, version$$1);
-                    invalidateFile(fileName);
+                    if (this._staticSymbolResolver) {
+                        invalidateFile(fileName);
+                    }
                 }
             }
             // Remove file versions that are no longer in the file and invalidate them.
             const missing = Array.from(this.fileVersions.keys()).filter(f => !seen.has(f));
             missing.forEach(f => this.fileVersions.delete(f));
-            missing.forEach(invalidateFile);
+            if (this._staticSymbolResolver) {
+                missing.forEach(invalidateFile);
+            }
             this.lastProgram = program;
         }
     }
@@ -2499,7 +2503,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-const VERSION = new Version('5.2.0-d5393c7');
+const VERSION = new Version('5.2.0-cc9419d');
 
 /**
  * @license

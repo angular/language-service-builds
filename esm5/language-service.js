@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.2.0-d5393c7
+ * @license Angular v5.2.0-cc9419d
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1872,7 +1872,7 @@ var TypeScriptServiceHost = /** @class */ (function () {
         return undefined;
     };
     TypeScriptServiceHost.prototype.getAnalyzedModules = function () {
-        this.validate();
+        this.updateAnalyzedModules();
         return this.ensureAnalyzedModules();
     };
     TypeScriptServiceHost.prototype.ensureAnalyzedModules = function () {
@@ -1977,7 +1977,7 @@ var TypeScriptServiceHost = /** @class */ (function () {
     TypeScriptServiceHost.prototype.validate = function () {
         var _this = this;
         var program = this.program;
-        if (this._staticSymbolResolver && this.lastProgram != program) {
+        if (this.lastProgram !== program) {
             // Invalidate file that have changed in the static symbol resolver
             var invalidateFile = function (fileName) {
                 return _this._staticSymbolResolver.invalidateFile(fileName);
@@ -1992,13 +1992,17 @@ var TypeScriptServiceHost = /** @class */ (function () {
                 var lastVersion = this.fileVersions.get(fileName);
                 if (version$$1 != lastVersion) {
                     this.fileVersions.set(fileName, version$$1);
-                    invalidateFile(fileName);
+                    if (this._staticSymbolResolver) {
+                        invalidateFile(fileName);
+                    }
                 }
             }
             // Remove file versions that are no longer in the file and invalidate them.
             var missing = Array.from(this.fileVersions.keys()).filter(function (f) { return !seen_1.has(f); });
             missing.forEach(function (f) { return _this.fileVersions.delete(f); });
-            missing.forEach(invalidateFile);
+            if (this._staticSymbolResolver) {
+                missing.forEach(invalidateFile);
+            }
             this.lastProgram = program;
         }
     };
@@ -2652,7 +2656,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version('5.2.0-d5393c7');
+var VERSION = new Version('5.2.0-cc9419d');
 
 /**
  * @license
