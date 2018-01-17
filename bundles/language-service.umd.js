@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.2.0-3bcc0e6
+ * @license Angular v5.2.0-fb4d84d
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v5.2.0-3bcc0e6
+ * @license Angular v5.2.0-fb4d84d
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -691,7 +691,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('5.2.0-3bcc0e6');
+var VERSION$1 = new Version('5.2.0-fb4d84d');
 
 /**
  * @fileoverview added by tsickle
@@ -42100,7 +42100,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v5.2.0-3bcc0e6
+ * @license Angular v5.2.0-fb4d84d
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -42531,7 +42531,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('5.2.0-3bcc0e6');
+var VERSION$2 = new Version$1('5.2.0-fb4d84d');
 
 /**
  * @fileoverview added by tsickle
@@ -50319,11 +50319,8 @@ var IterableDiffers = /** @class */ (function () {
         if (parent != null) {
             var /** @type {?} */ copied = parent.factories.slice();
             factories = factories.concat(copied);
-            return new IterableDiffers(factories);
         }
-        else {
-            return new IterableDiffers(factories);
-        }
+        return new IterableDiffers(factories);
     };
     /**
      * Takes an array of {@link IterableDifferFactory} and returns a provider used to extend the
@@ -56187,6 +56184,14 @@ function typeSerializer(type) {
  * @record
  */
 
+/**
+ * The static data for an LView (shared between all templates of a
+ * given type).
+ *
+ * Stored on the template function as ngPrivateData.
+ * @record
+ */
+
 // Note: This hack is necessary so we don't erroneously get a circular dependency
 // failure based on types.
 
@@ -56785,20 +56790,20 @@ var previousOrParentNode;
  */
 var isParent;
 /**
- * The current template's static data (shared between all templates of a
- * given type).
+ * Static data that corresponds to the instance-specific data array on an LView.
  *
- * Each node's static data is stored at the same index that it's stored
- * in the data array. Any nodes that do not have static data store a null
- * value to avoid a sparse array.
+ * Each node's static data is stored in tData at the same index that it's stored
+ * in the data array. Each directive's definition is stored here at the same index
+ * as its directive instance in the data array. Any nodes that do not have static
+ * data store a null value in tData to avoid a sparse array.
  */
-var ngStaticData;
+var tData;
 /**
  * State of the current view being processed.
  */
 var currentView;
 // The initialization has to be after the `let`, otherwise `createLView` can't see `let`.
-currentView = createLView(/** @type {?} */ ((null)), /** @type {?} */ ((null)), []);
+currentView = createLView(/** @type {?} */ ((null)), /** @type {?} */ ((null)), { data: [] });
 var currentQuery;
 /**
  * This property gets set before entering a template.
@@ -56850,7 +56855,7 @@ function enterView(newView, host) {
     var /** @type {?} */ oldView = currentView;
     data = newView.data;
     bindingIndex = newView.bindingStartIndex || 0;
-    ngStaticData = newView.ngStaticData;
+    tData = newView.tView.data;
     creationMode = newView.creationMode;
     viewHookStartIndex = newView.viewHookStartIndex;
     cleanup = newView.cleanup;
@@ -56865,10 +56870,10 @@ function enterView(newView, host) {
 /**
  * @param {?} viewId
  * @param {?} renderer
- * @param {?} ngStaticData
+ * @param {?} tView
  * @return {?}
  */
-function createLView(viewId, renderer, ngStaticData) {
+function createLView(viewId, renderer, tView) {
     var /** @type {?} */ newView = {
         parent: currentView,
         id: viewId,
@@ -56876,7 +56881,7 @@ function createLView(viewId, renderer, ngStaticData) {
         node: /** @type {?} */ ((null)),
         // until we initialize it in createNode.
         data: [],
-        ngStaticData: ngStaticData,
+        tView: tView,
         cleanup: null,
         renderer: renderer,
         child: null,
@@ -56924,11 +56929,11 @@ function createLNode(index, type, native, state) {
         ngDevMode && assertEqual(data.length, index, 'data.length not in sequence');
         data[index] = node;
         // Every node adds a value to the static data array to avoid a sparse array
-        if (index >= ngStaticData.length) {
-            ngStaticData[index] = null;
+        if (index >= tData.length) {
+            tData[index] = null;
         }
         else {
-            node.tNode = /** @type {?} */ (ngStaticData[index]);
+            node.tNode = /** @type {?} */ (tData[index]);
         }
         // Now link ourselves into the tree.
         if (isParent) {
@@ -57000,14 +57005,14 @@ function hack_findQueryName(directiveDef, localRefs, defaultExport) {
     return null;
 }
 /**
- * Gets static data from a template function or creates a new static
- * data array if it doesn't already exist.
+ * Gets TView from a template function or creates a new TView
+ * if it doesn't already exist.
  *
  * @param {?} template The template from which to get static data
- * @return {?} NgStaticData
+ * @return {?} TView
  */
-function getTemplateStatic(template) {
-    return template.ngStaticData || (template.ngStaticData = /** @type {?} */ ([]));
+function getOrCreateTView(template) {
+    return template.ngPrivateData || (template.ngPrivateData = /** @type {?} */ ({ data: [] }));
 }
 /**
  * @param {?} native
@@ -57027,11 +57032,11 @@ function setUpAttributes(native, attrs) {
  *
  * @param {?} tagName
  * @param {?} attrs
- * @param {?} containerStatic
+ * @param {?} data
  * @param {?} localName
  * @return {?} the TNode object
  */
-function createTNode(tagName, attrs, containerStatic, localName) {
+function createTNode(tagName, attrs, data, localName) {
     return {
         tagName: tagName,
         attrs: attrs,
@@ -57039,7 +57044,7 @@ function createTNode(tagName, attrs, containerStatic, localName) {
         initialInputs: undefined,
         inputs: undefined,
         outputs: undefined,
-        containerStatic: containerStatic
+        data: data
     };
 }
 /**
@@ -57072,21 +57077,21 @@ function directiveCreate(index, directive, directiveDef, queryName) {
     ngDevMode && assertDataInRange(index - 1);
     Object.defineProperty(directive, NG_HOST_SYMBOL, { enumerable: false, value: previousOrParentNode });
     data[index] = instance = directive;
-    if (index >= ngStaticData.length) {
-        ngStaticData[index] = /** @type {?} */ ((directiveDef));
+    if (index >= tData.length) {
+        tData[index] = /** @type {?} */ ((directiveDef));
         if (queryName) {
-            ngDevMode && assertNotNull$1(previousOrParentNode.tNode, 'previousOrParentNode.staticData');
-            var /** @type {?} */ nodeStaticData = /** @type {?} */ ((/** @type {?} */ ((previousOrParentNode)).tNode));
-            (nodeStaticData.localNames || (nodeStaticData.localNames = [])).push(queryName, index);
+            ngDevMode && assertNotNull$1(previousOrParentNode.tNode, 'previousOrParentNode.tNode');
+            var /** @type {?} */ tNode_1 = /** @type {?} */ ((/** @type {?} */ ((previousOrParentNode)).tNode));
+            (tNode_1.localNames || (tNode_1.localNames = [])).push(queryName, index);
         }
     }
     var /** @type {?} */ diPublic = /** @type {?} */ ((directiveDef)).diPublic;
     if (diPublic) {
         diPublic(/** @type {?} */ ((directiveDef)));
     }
-    var /** @type {?} */ staticData = /** @type {?} */ ((previousOrParentNode.tNode));
-    if (staticData && staticData.attrs) {
-        setInputsFromAttrs(instance, /** @type {?} */ ((directiveDef)).inputs, staticData);
+    var /** @type {?} */ tNode = /** @type {?} */ ((previousOrParentNode.tNode));
+    if (tNode && tNode.attrs) {
+        setInputsFromAttrs(instance, /** @type {?} */ ((directiveDef)).inputs, tNode);
     }
     return instance;
 }
@@ -57143,24 +57148,24 @@ function generateInitialInputs(directiveIndex, inputs, tNode) {
     return initialInputData;
 }
 /**
- * Initialize the static data for the active view.
+ * Initialize the TView (e.g. static data) for the active embedded view.
  *
- * Each embedded view needs to set the global ngStaticData variable to the static data for
+ * Each embedded view needs to set the global tData variable to the static data for
  * that view. Otherwise, the view's static data for a particular node would overwrite
- * the staticdata for a node in the view above it with the same index (since it's in the
+ * the static data for a node in the view above it with the same index (since it's in the
  * same template).
  *
- * @param {?} viewIndex The index of the view's static data in containerStatic
+ * @param {?} viewIndex The index of the TView in TContainer
  * @param {?} parent The parent container in which to look for the view's static data
- * @return {?} NgStaticData
+ * @return {?} TView
  */
-function initViewStaticData(viewIndex, parent) {
+function getOrCreateEmbeddedTView(viewIndex, parent) {
     ngDevMode && assertNodeType(parent, 0 /* Container */);
-    var /** @type {?} */ containerStatic = (/** @type {?} */ (((parent)).tNode)).containerStatic;
-    if (viewIndex >= containerStatic.length || containerStatic[viewIndex] == null) {
-        containerStatic[viewIndex] = [];
+    var /** @type {?} */ tContainer = (/** @type {?} */ (((parent)).tNode)).data;
+    if (viewIndex >= tContainer.length || tContainer[viewIndex] == null) {
+        tContainer[viewIndex] = /** @type {?} */ ({ data: [] });
     }
-    return containerStatic[viewIndex];
+    return tContainer[viewIndex];
 }
 /**
  * Instruction to distribute projectable nodes among <ng-content> occurrences in a given template.
@@ -57353,7 +57358,7 @@ function assertDataInRange(index, arr) {
 }
 
 /**
- * @license Angular v5.2.0-3bcc0e6
+ * @license Angular v5.2.0-fb4d84d
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -60002,7 +60007,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('5.2.0-3bcc0e6');
+var VERSION = new Version$1('5.2.0-fb4d84d');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
