@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.2.0-54e7576
+ * @license Angular v5.2.0-4556532
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v5.2.0-54e7576
+ * @license Angular v5.2.0-4556532
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -691,7 +691,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('5.2.0-54e7576');
+var VERSION$1 = new Version('5.2.0-4556532');
 
 /**
  * @fileoverview added by tsickle
@@ -42100,7 +42100,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v5.2.0-54e7576
+ * @license Angular v5.2.0-4556532
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -42531,7 +42531,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('5.2.0-54e7576');
+var VERSION$2 = new Version$1('5.2.0-4556532');
 
 /**
  * @fileoverview added by tsickle
@@ -51251,7 +51251,8 @@ function checkAndUpdateBinding(view, def, bindingIdx, value) {
 function checkBindingNoChanges(view, def, bindingIdx, value) {
     var /** @type {?} */ oldValue = view.oldValues[def.bindingIndex + bindingIdx];
     if ((view.state & 1 /* BeforeFirstCheck */) || !devModeEqual(oldValue, value)) {
-        throw expressionChangedAfterItHasBeenCheckedError(Services.createDebugContext(view, def.nodeIndex), oldValue, value, (view.state & 1 /* BeforeFirstCheck */) !== 0);
+        var /** @type {?} */ bindingName = def.bindings[def.bindingIndex].name;
+        throw expressionChangedAfterItHasBeenCheckedError(Services.createDebugContext(view, def.nodeIndex), bindingName + ": " + oldValue, bindingName + ": " + value, (view.state & 1 /* BeforeFirstCheck */) !== 0);
     }
 }
 /**
@@ -56770,7 +56771,7 @@ function initViewStaticData(viewIndex, parent) {
 var NO_CHANGE = /** @type {?} */ ({});
 
 /**
- * @license Angular v5.2.0-54e7576
+ * @license Angular v5.2.0-4556532
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59419,7 +59420,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('5.2.0-54e7576');
+var VERSION = new Version$1('5.2.0-4556532');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
