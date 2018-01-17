@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.2.0-d3333f0
+ * @license Angular v5.2.0-54e7576
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v5.2.0-d3333f0
+ * @license Angular v5.2.0-54e7576
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -691,7 +691,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('5.2.0-d3333f0');
+var VERSION$1 = new Version('5.2.0-54e7576');
 
 /**
  * @fileoverview added by tsickle
@@ -42100,7 +42100,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v5.2.0-d3333f0
+ * @license Angular v5.2.0-54e7576
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -42531,7 +42531,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('5.2.0-d3333f0');
+var VERSION$2 = new Version$1('5.2.0-54e7576');
 
 /**
  * @fileoverview added by tsickle
@@ -46674,13 +46674,23 @@ var Testability = /** @class */ (function () {
     function () {
         var _this = this;
         if (this.isStable()) {
-            // Schedules the call backs in a new frame so that it is always async.
-            scheduleMicroTask(function () {
-                while (_this._callbacks.length !== 0) {
-                    (/** @type {?} */ ((_this._callbacks.pop())))(_this._didWork);
-                }
-                _this._didWork = false;
-            });
+            if (this._callbacks.length !== 0) {
+                // Schedules the call backs after a macro task run outside of the angular zone to make sure
+                // no new task are added
+                this._ngZone.runOutsideAngular(function () {
+                    setTimeout(function () {
+                        if (_this.isStable()) {
+                            while (_this._callbacks.length !== 0) {
+                                (/** @type {?} */ ((_this._callbacks.pop())))(_this._didWork);
+                            }
+                            _this._didWork = false;
+                        }
+                    });
+                });
+            }
+            else {
+                this._didWork = false;
+            }
         }
         else {
             // Not Ready
@@ -56760,7 +56770,7 @@ function initViewStaticData(viewIndex, parent) {
 var NO_CHANGE = /** @type {?} */ ({});
 
 /**
- * @license Angular v5.2.0-d3333f0
+ * @license Angular v5.2.0-54e7576
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59409,7 +59419,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('5.2.0-d3333f0');
+var VERSION = new Version$1('5.2.0-54e7576');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
