@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.9.9-6-beta.0-21e37e4
+ * @license Angular v5.9.9-6-beta.0-0b38a03
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v5.9.9-6-beta.0-21e37e4
+ * @license Angular v5.9.9-6-beta.0-0b38a03
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -698,7 +698,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('5.9.9-6-beta.0-21e37e4');
+var VERSION$1 = new Version('5.9.9-6-beta.0-0b38a03');
 
 /**
  * @fileoverview added by tsickle
@@ -43005,7 +43005,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v5.9.9-6-beta.0-21e37e4
+ * @license Angular v5.9.9-6-beta.0-0b38a03
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -43436,7 +43436,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('5.9.9-6-beta.0-21e37e4');
+var VERSION$2 = new Version$1('5.9.9-6-beta.0-0b38a03');
 
 /**
  * @fileoverview added by tsickle
@@ -58264,7 +58264,7 @@ function assertDataInRange(index, arr) {
 }
 
 /**
- * @license Angular v5.9.9-6-beta.0-21e37e4
+ * @license Angular v5.9.9-6-beta.0-0b38a03
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -58338,9 +58338,9 @@ function hasTemplateReference(type) {
 }
 function getSelectors(info) {
     var map = new Map();
-    var selectors = flatten(info.directives.map(function (directive$$1) {
-        var selectors = CssSelector.parse(directive$$1.selector);
-        selectors.forEach(function (selector) { return map.set(selector, directive$$1); });
+    var selectors = flatten(info.directives.map(function (directive) {
+        var selectors = CssSelector.parse(directive.selector);
+        selectors.forEach(function (selector) { return map.set(selector, directive); });
         return selectors;
     }));
     return { selectors: selectors, map: map };
@@ -59150,15 +59150,15 @@ function getAttributeInfosForElement(info, elementName, element) {
         var applicableSelectors = selectors.filter(function (selector) { return !selector.element || selector.element == elementName; });
         var selectorAndAttributeNames = applicableSelectors.map(function (selector) { return ({ selector: selector, attrs: selector.attrs.filter(function (a) { return !!a; }) }); });
         var attrs_1 = flatten(selectorAndAttributeNames.map(function (selectorAndAttr) {
-            var directive$$1 = selectorMap.get(selectorAndAttr.selector);
-            var result = selectorAndAttr.attrs.map(function (name) { return ({ name: name, input: name in directive$$1.inputs, output: name in directive$$1.outputs }); });
+            var directive = selectorMap.get(selectorAndAttr.selector);
+            var result = selectorAndAttr.attrs.map(function (name) { return ({ name: name, input: name in directive.inputs, output: name in directive.outputs }); });
             return result;
         }));
         // Add template attribute if a directive contains a template reference
         selectorAndAttributeNames.forEach(function (selectorAndAttr) {
             var selector = selectorAndAttr.selector;
-            var directive$$1 = selectorMap.get(selector);
-            if (directive$$1 && hasTemplateReference(directive$$1.type) && selector.attrs.length &&
+            var directive = selectorMap.get(selector);
+            if (directive && hasTemplateReference(directive.type) && selector.attrs.length &&
                 selector.attrs[0]) {
                 attrs_1.push({ name: selector.attrs[0], template: true });
             }
@@ -59170,10 +59170,10 @@ function getAttributeInfosForElement(info, elementName, element) {
         var matcher = new SelectorMatcher();
         matcher.addSelectables(selectors);
         matcher.match(elementSelector, function (selector) {
-            var directive$$1 = selectorMap.get(selector);
-            if (directive$$1) {
-                attrs_1.push.apply(attrs_1, Object.keys(directive$$1.inputs).map(function (name) { return ({ name: name, input: true }); }));
-                attrs_1.push.apply(attrs_1, Object.keys(directive$$1.outputs).map(function (name) { return ({ name: name, output: true }); }));
+            var directive = selectorMap.get(selector);
+            if (directive) {
+                attrs_1.push.apply(attrs_1, Object.keys(directive.inputs).map(function (name) { return ({ name: name, input: true }); }));
+                attrs_1.push.apply(attrs_1, Object.keys(directive.outputs).map(function (name) { return ({ name: name, output: true }); }));
             }
         });
         // If a name shows up twice, fold it into a single value.
@@ -59509,9 +59509,9 @@ function locateSymbol(info) {
                 }
                 else {
                     // Find a directive that matches the element name
-                    var directive$$1 = ast.directives.find(function (d) { return d.directive.selector != null && d.directive.selector.indexOf(ast.name) >= 0; });
-                    if (directive$$1) {
-                        symbol_1 = info.template.query.getTypeSymbol(directive$$1.directive.type.reference);
+                    var directive = ast.directives.find(function (d) { return d.directive.selector != null && d.directive.selector.indexOf(ast.name) >= 0; });
+                    if (directive) {
+                        symbol_1 = info.template.query.getTypeSymbol(directive.directive.type.reference);
                         symbol_1 = symbol_1 && new OverrideKindSymbol(symbol_1, 'directive');
                         span_1 = spanOf(ast);
                     }
@@ -59571,11 +59571,11 @@ function findInputBinding(info, path$$1, binding) {
     var element = path$$1.first(ElementAst);
     if (element) {
         for (var _i = 0, _a = element.directives; _i < _a.length; _i++) {
-            var directive$$1 = _a[_i];
-            var invertedInput = invertMap(directive$$1.directive.inputs);
+            var directive = _a[_i];
+            var invertedInput = invertMap(directive.directive.inputs);
             var fieldName = invertedInput[binding.templateName];
             if (fieldName) {
-                var classSymbol = info.template.query.getTypeSymbol(directive$$1.directive.type.reference);
+                var classSymbol = info.template.query.getTypeSymbol(directive.directive.type.reference);
                 if (classSymbol) {
                     return classSymbol.members().get(fieldName);
                 }
@@ -59587,11 +59587,11 @@ function findOutputBinding(info, path$$1, binding) {
     var element = path$$1.first(ElementAst);
     if (element) {
         for (var _i = 0, _a = element.directives; _i < _a.length; _i++) {
-            var directive$$1 = _a[_i];
-            var invertedOutputs = invertMap(directive$$1.directive.outputs);
+            var directive = _a[_i];
+            var invertedOutputs = invertMap(directive.directive.outputs);
             var fieldName = invertedOutputs[binding.name];
             if (fieldName) {
-                var classSymbol = info.template.query.getTypeSymbol(directive$$1.directive.type.reference);
+                var classSymbol = info.template.query.getTypeSymbol(directive.directive.type.reference);
                 if (classSymbol) {
                     return classSymbol.members().get(fieldName);
                 }
@@ -59747,7 +59747,7 @@ function getDeclarationDiagnostics(declarations, modules) {
                 if (!directives) {
                     directives = new Set();
                     modules.ngModules.forEach(function (module) {
-                        module.declaredDirectives.forEach(function (directive$$1) { directives.add(directive$$1.reference); });
+                        module.declaredDirectives.forEach(function (directive) { directives.add(directive.reference); });
                     });
                 }
                 if (!directives.has(declaration.type)) {
@@ -60279,11 +60279,11 @@ var TypeScriptServiceHost = /** @class */ (function () {
             for (var _i = 0, _a = ngModuleSummary.ngModules; _i < _a.length; _i++) {
                 var module_1 = _a[_i];
                 for (var _b = 0, _c = module_1.declaredDirectives; _b < _c.length; _b++) {
-                    var directive$$1 = _c[_b];
-                    var metadata = this.resolver.getNonNormalizedDirectiveMetadata(directive$$1.reference).metadata;
+                    var directive = _c[_b];
+                    var metadata = this.resolver.getNonNormalizedDirectiveMetadata(directive.reference).metadata;
                     if (metadata.isComponent && metadata.template && metadata.template.templateUrl) {
-                        var templateName = urlResolver.resolve(this.reflector.componentModuleUrl(directive$$1.reference), metadata.template.templateUrl);
-                        fileToComponent.set(templateName, directive$$1.reference);
+                        var templateName = urlResolver.resolve(this.reflector.componentModuleUrl(directive.reference), metadata.template.templateUrl);
+                        fileToComponent.set(templateName, directive.reference);
                         templateReference.push(templateName);
                     }
                 }
@@ -60913,7 +60913,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('5.9.9-6-beta.0-21e37e4');
+var VERSION = new Version$1('5.9.9-6-beta.0-0b38a03');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
