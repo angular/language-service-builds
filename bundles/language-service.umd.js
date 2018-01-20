@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.9.9-6-beta.0-0b38a03
+ * @license Angular v5.9.9-6-beta.0-88045a5
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v5.9.9-6-beta.0-0b38a03
+ * @license Angular v5.9.9-6-beta.0-88045a5
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -698,7 +698,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('5.9.9-6-beta.0-0b38a03');
+var VERSION$1 = new Version('5.9.9-6-beta.0-88045a5');
 
 /**
  * @fileoverview added by tsickle
@@ -43005,7 +43005,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v5.9.9-6-beta.0-0b38a03
+ * @license Angular v5.9.9-6-beta.0-88045a5
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -43436,7 +43436,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('5.9.9-6-beta.0-0b38a03');
+var VERSION$2 = new Version$1('5.9.9-6-beta.0-88045a5');
 
 /**
  * @fileoverview added by tsickle
@@ -58264,7 +58264,7 @@ function assertDataInRange(index, arr) {
 }
 
 /**
- * @license Angular v5.9.9-6-beta.0-0b38a03
+ * @license Angular v5.9.9-6-beta.0-88045a5
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -60913,7 +60913,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('5.9.9-6-beta.0-0b38a03');
+var VERSION = new Version$1('5.9.9-6-beta.0-88045a5');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
