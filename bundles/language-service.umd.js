@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.9.9-6-beta.0-95fbb7d
+ * @license Angular v5.9.9-6-beta.0-8baff18
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v5.9.9-6-beta.0-95fbb7d
+ * @license Angular v5.9.9-6-beta.0-8baff18
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -698,7 +698,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('5.9.9-6-beta.0-95fbb7d');
+var VERSION$1 = new Version('5.9.9-6-beta.0-8baff18');
 
 /**
  * @fileoverview added by tsickle
@@ -16232,7 +16232,7 @@ var BuiltinType = /** @class */ (function (_super) {
      * @return {?}
      */
     function (visitor, context) {
-        return visitor.visitBuiltintType(this, context);
+        return visitor.visitBuiltinType(this, context);
     };
     return BuiltinType;
 }(Type$1));
@@ -17240,10 +17240,11 @@ var FnParam = /** @class */ (function () {
 }());
 var FunctionExpr = /** @class */ (function (_super) {
     __extends(FunctionExpr, _super);
-    function FunctionExpr(params, statements, type, sourceSpan) {
+    function FunctionExpr(params, statements, type, sourceSpan, name) {
         var _this = _super.call(this, type, sourceSpan) || this;
         _this.params = params;
         _this.statements = statements;
+        _this.name = name;
         return _this;
     }
     /**
@@ -18466,7 +18467,7 @@ var RecursiveAstVisitor$1 = /** @class */ (function () {
      * @param {?} context
      * @return {?}
      */
-    RecursiveAstVisitor.prototype.visitBuiltintType = /**
+    RecursiveAstVisitor.prototype.visitBuiltinType = /**
      * @param {?} type
      * @param {?} context
      * @return {?}
@@ -19222,10 +19223,11 @@ function assertNotNull(expr, sourceSpan) {
  * @param {?} body
  * @param {?=} type
  * @param {?=} sourceSpan
+ * @param {?=} name
  * @return {?}
  */
-function fn(params, body, type, sourceSpan) {
-    return new FunctionExpr(params, body, type, sourceSpan);
+function fn(params, body, type, sourceSpan, name) {
+    return new FunctionExpr(params, body, type, sourceSpan, name);
 }
 /**
  * @param {?} condition
@@ -21865,11 +21867,18 @@ var _TsEmitterVisitor = /** @class */ (function (_super) {
      * @return {?}
      */
     function (ast, ctx) {
+        if (ast.name) {
+            ctx.print(ast, 'function ');
+            ctx.print(ast, ast.name);
+        }
         ctx.print(ast, "(");
         this._visitParams(ast.params, ctx);
         ctx.print(ast, ")");
         this._printColonType(ast.type, ctx, 'void');
-        ctx.println(ast, " => {");
+        if (!ast.name) {
+            ctx.print(ast, " => ");
+        }
+        ctx.println(ast, '{');
         ctx.incIndent();
         this.visitAllStatements(ast.statements, ctx);
         ctx.decIndent();
@@ -21931,7 +21940,7 @@ var _TsEmitterVisitor = /** @class */ (function (_super) {
      * @param {?} ctx
      * @return {?}
      */
-    _TsEmitterVisitor.prototype.visitBuiltintType = /**
+    _TsEmitterVisitor.prototype.visitBuiltinType = /**
      * @param {?} type
      * @param {?} ctx
      * @return {?}
@@ -29290,7 +29299,6 @@ var Identifiers$1 = /** @class */ (function () {
     Identifiers.bind6 = { name: 'ɵb6', moduleName: CORE$1 };
     Identifiers.bind7 = { name: 'ɵb7', moduleName: CORE$1 };
     Identifiers.bind8 = { name: 'ɵb8', moduleName: CORE$1 };
-    Identifiers.bind9 = { name: 'ɵb9', moduleName: CORE$1 };
     Identifiers.bindV = { name: 'ɵbV', moduleName: CORE$1 };
     Identifiers.memory = { name: 'ɵm', moduleName: CORE$1 };
     Identifiers.refreshComponent = { name: 'ɵr', moduleName: CORE$1 };
@@ -29379,11 +29387,13 @@ function compileComponent(outputCtx, component, template, reflector) {
             });
         }
     }
-    // e.g. `factory: () => new MyApp(injectElementRef())`
+    // e.g. `factory: function MyApp_Factory() { return new MyApp(injectElementRef()); }`
     var /** @type {?} */ templateFactory = createFactory(component.type, outputCtx, reflector);
     definitionMapValues.push({ key: 'factory', value: templateFactory, quoted: false });
-    // e.g. `template: function(_ctx, _cm) {...}`
-    var /** @type {?} */ templateFunctionExpression = new TemplateDefinitionBuilder(outputCtx, outputCtx.constantPool, CONTEXT_NAME, ROOT_SCOPE.nestedScope())
+    // e.g. `template: function MyComponent_Template(_ctx, _cm) {...}`
+    var /** @type {?} */ templateTypeName = component.type.reference.name;
+    var /** @type {?} */ templateName = templateTypeName ? templateTypeName + "_Template" : null;
+    var /** @type {?} */ templateFunctionExpression = new TemplateDefinitionBuilder(outputCtx, outputCtx.constantPool, reflector, CONTEXT_NAME, ROOT_SCOPE.nestedScope(), 0, templateTypeName, templateName)
         .buildTemplateFunction(template);
     definitionMapValues.push({ key: 'template', value: templateFunctionExpression, quoted: false });
     var /** @type {?} */ className = /** @type {?} */ ((identifierName(component.type)));
@@ -29438,8 +29448,6 @@ function interpolate(args) {
             return importExpr(Identifiers$1.bind7).callFn(args);
         case 17:
             return importExpr(Identifiers$1.bind8).callFn(args);
-        case 19:
-            return importExpr(Identifiers$1.bind9).callFn(args);
     }
     (args.length > 19 && args.length % 2 == 1) ||
         error("Invalid interpolation argument length " + args.length);
@@ -29512,13 +29520,16 @@ var BindingScope = /** @class */ (function () {
 }());
 var ROOT_SCOPE = new BindingScope(null).set('$event', '$event');
 var TemplateDefinitionBuilder = /** @class */ (function () {
-    function TemplateDefinitionBuilder(outputCtx, constantPool, contextParameter, bindingScope, level) {
+    function TemplateDefinitionBuilder(outputCtx, constantPool, reflector, contextParameter, bindingScope, level, contextName, templateName) {
         if (level === void 0) { level = 0; }
         this.outputCtx = outputCtx;
         this.constantPool = constantPool;
+        this.reflector = reflector;
         this.contextParameter = contextParameter;
         this.bindingScope = bindingScope;
         this.level = level;
+        this.contextName = contextName;
+        this.templateName = templateName;
         this._dataIndex = 0;
         this._bindingContext = 0;
         this._referenceIndex = 0;
@@ -29558,7 +29569,7 @@ var TemplateDefinitionBuilder = /** @class */ (function () {
         ], this._prefix.concat([
             // Creating mode (i.e. if (cm) { ... })
             ifStmt(variable(CREATION_MODE_FLAG), this._creationMode)
-        ], this._bindingMode, this._hostMode, this._refreshMode, this._postfix), INFERRED_TYPE);
+        ], this._bindingMode, this._hostMode, this._refreshMode, this._postfix), INFERRED_TYPE, null, this.templateName);
     };
     /**
      * @param {?} name
@@ -29734,7 +29745,16 @@ var TemplateDefinitionBuilder = /** @class */ (function () {
      */
     function (ast) {
         var /** @type {?} */ templateIndex = this.allocateDataSlot();
-        var /** @type {?} */ templateName = "C" + templateIndex + "Template";
+        var /** @type {?} */ templateRef = this.reflector.resolveExternalReference(Identifiers.TemplateRef);
+        var /** @type {?} */ templateDirective = ast.directives.find(function (directive) {
+            return directive.directive.type.diDeps.some(function (dependency) {
+                return dependency.token != null && (tokenReference(dependency.token) == templateRef);
+            });
+        });
+        var /** @type {?} */ contextName = this.contextName && templateDirective && templateDirective.directive.type.reference.name ?
+            this.contextName + "_" + templateDirective.directive.type.reference.name :
+            null;
+        var /** @type {?} */ templateName = contextName ? contextName + "_Template_" + templateIndex : "Template_" + templateIndex;
         var /** @type {?} */ templateContext = "ctx" + this.level;
         var _a = this._computeDirectivesArray(ast.directives), directivesArray = _a.directivesArray, directiveIndexMap = _a.directiveIndexMap;
         // e.g. C(1, C1Template)
@@ -29746,7 +29766,7 @@ var TemplateDefinitionBuilder = /** @class */ (function () {
         // e.g. cr();
         this.instruction(this._refreshMode, ast.sourceSpan, Identifiers$1.containerRefreshEnd);
         // Create the template function
-        var /** @type {?} */ templateVisitor = new TemplateDefinitionBuilder(this.outputCtx, this.constantPool, templateContext, this.bindingScope.nestedScope(), this.level + 1);
+        var /** @type {?} */ templateVisitor = new TemplateDefinitionBuilder(this.outputCtx, this.constantPool, this.reflector, templateContext, this.bindingScope.nestedScope(), this.level + 1, contextName, templateName);
         var /** @type {?} */ templateFunctionExpr = templateVisitor.buildTemplateFunction(ast.children);
         this._postfix.push(templateFunctionExpr.toDeclStmt(templateName, null));
     };
@@ -29921,7 +29941,7 @@ function createFactory(type, outputCtx, reflector) {
             unsupported('dependency without a token');
         }
     }
-    return fn([], [new ReturnStatement(new InstantiateExpr(outputCtx.importExpr(type.reference), args))], INFERRED_TYPE);
+    return fn([], [new ReturnStatement(new InstantiateExpr(outputCtx.importExpr(type.reference), args))], INFERRED_TYPE, null, type.reference.name ? type.reference.name + "_Factory" : null);
 }
 /**
  * @template T
@@ -35060,7 +35080,7 @@ var AbstractJsEmitterVisitor = /** @class */ (function (_super) {
      * @return {?}
      */
     function (ast, ctx) {
-        ctx.print(ast, "function(");
+        ctx.print(ast, "function" + (ast.name ? ' ' + ast.name : '') + "(");
         this._visitParams(ast.params, ctx);
         ctx.println(ast, ") {");
         ctx.incIndent();
@@ -38601,9 +38621,6 @@ var Evaluator = /** @class */ (function () {
                     }
                 }
                 var args = arrayOrEmpty(callExpression.arguments).map(function (arg) { return _this.evaluateNode(arg); });
-                if (!this.options.verboseInvalidExpression && args.some(schema.isMetadataError)) {
-                    return args.find(schema.isMetadataError);
-                }
                 if (this.isFoldable(callExpression)) {
                     if (isMethodCallOf(callExpression, 'concat')) {
                         var arrayValue = this.evaluateNode(callExpression.expression.expression);
@@ -39317,7 +39334,7 @@ var MetadataCollector = /** @class */ (function () {
             return identifier && (exportMap.get(identifier.text) || identifier.text);
         };
         var exportedName = function (node) { return exportedIdentifierName(node.name); };
-        // Predeclare classes and functions
+        // Pre-declare classes and functions
         ts__default.forEachChild(sourceFile, function (node) {
             switch (node.kind) {
                 case ts__default.SyntaxKind.ClassDeclaration:
@@ -39478,7 +39495,7 @@ var MetadataCollector = /** @class */ (function () {
                             }
                             else {
                                 nextDefaultValue =
-                                    recordEntry(errorSym('Unsuppported enum member name', member.name), node);
+                                    recordEntry(errorSym('Unsupported enum member name', member.name), node);
                             }
                         }
                         if (writtenMembers) {
@@ -43180,7 +43197,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v5.9.9-6-beta.0-95fbb7d
+ * @license Angular v5.9.9-6-beta.0-8baff18
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -43611,7 +43628,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('5.9.9-6-beta.0-95fbb7d');
+var VERSION$2 = new Version$1('5.9.9-6-beta.0-8baff18');
 
 /**
  * @fileoverview added by tsickle
@@ -57106,7 +57123,7 @@ function assertEqual(actual, expected, name, serializer) {
  * @return {?}
  */
 function assertLessThan(actual, expected, name) {
-    (actual < expected) && assertThrow(actual, expected, name, '>');
+    (actual >= expected) && assertThrow(actual, expected, name, '<');
 }
 /**
  * @template T
@@ -57190,7 +57207,20 @@ function assertNodeType(node, type) {
  * @param {...?} types
  * @return {?}
  */
-
+function assertNodeOfPossibleTypes(node) {
+    var types = [];
+    for (var _i = 1; _i < arguments.length; _i++) {
+        types[_i - 1] = arguments[_i];
+    }
+    assertNotEqual(node, null, 'node');
+    var /** @type {?} */ nodeType = (node.flags & 3 /* TYPE_MASK */);
+    for (var /** @type {?} */ i = 0; i < types.length; i++) {
+        if (nodeType === types[i]) {
+            return;
+        }
+    }
+    throw new Error("Expected node of possible types: " + types.map(typeSerializer).join(', ') + " but got " + typeSerializer(nodeType));
+}
 /**
  * @param {?} type
  * @return {?}
@@ -57396,6 +57426,47 @@ function addRemoveViewFromContainer(container, rootNode, insertMode, beforeNode)
     }
 }
 /**
+ * Inserts a view into a container.
+ *
+ * This adds the view to the container's array of active views in the correct
+ * position. It also adds the view's elements to the DOM if the container isn't a
+ * root node of another view (in that case, the view's elements will be added when
+ * the container's parent view is added later).
+ *
+ * @param {?} container The container into which the view should be inserted
+ * @param {?} newView The view to insert
+ * @param {?} index The index at which to insert the view
+ * @return {?} The inserted view
+ */
+function insertView(container, newView, index) {
+    var /** @type {?} */ state = container.data;
+    var /** @type {?} */ views = state.views;
+    if (index > 0) {
+        // This is a new view, we need to add it to the children.
+        setViewNext(views[index - 1], newView);
+    }
+    if (index < views.length && views[index].data.id !== newView.data.id) {
+        // View ID change replace the view.
+        setViewNext(newView, views[index]);
+        views.splice(index, 0, newView);
+    }
+    else if (index >= views.length) {
+        views.push(newView);
+    }
+    if (state.nextIndex <= index) {
+        state.nextIndex++;
+    }
+    // If the container's renderParent is null, we know that it is a root node of its own parent view
+    // and we should wait until that parent processes its nodes (otherwise, we will insert this view's
+    // nodes twice - once now and once when its parent inserts its views).
+    if (container.data.renderParent !== null) {
+        addRemoveViewFromContainer(container, newView, true, findBeforeNode(index, state, container.native));
+    }
+    // Notify query that view has been inserted
+    container.query && container.query.insertView(container, newView, index);
+    return newView;
+}
+/**
  * Sets a next on the view node, so views in for loops can easily jump from
  * one view to the next to add/remove elements. Also adds the LView (view.data)
  * to the view tree for easy traversal when cleaning up the view.
@@ -57507,322 +57578,27 @@ function isDifferent(a, b) {
     return !(a !== a && b !== b) && a !== b;
 }
 /**
- * Creates an ElementRef for a given node injector and stores it on the injector.
- * Or, if the ElementRef already exists, retrieves the existing ElementRef.
- *
- * @param {?} di The node injector where we should store a created ElementRef
- * @return {?} The ElementRef instance to use
- */
-
-/**
- * Creates a TemplateRef and stores it on the injector. Or, if the TemplateRef already
- * exists, retrieves the existing TemplateRef.
- *
- * @template T
- * @param {?} di The node injector where we should store a created TemplateRef
- * @return {?} The TemplateRef instance to use
- */
-
-/**
- * Creates a ViewContainerRef and stores it on the injector. Or, if the ViewContainerRef
- * already exists, retrieves the existing ViewContainerRef.
- *
- * @param {?} di
- * @return {?} The ViewContainerRef instance to use
- */
-
-/**
- * @fileoverview added by tsickle
- * @suppress {checkTypes} checked by tsc
- */
-/**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
- */
-/**
- * @record
- */
-
-/**
- * @record
- */
-
-/**
- * `DirectiveDef` is a compiled version of the Directive used by the renderer instructions.
- * @record
- */
-
-/**
- * @record
- */
-
-/**
- * Private: do not export
- * @record
- */
-
-/**
- * Private: do not export
- * @record
- */
-
-/**
- * @record
- */
-
-/**
- * @record
- */
-
-// Note: This hack is necessary so we don't erroneously get a circular dependency
-// failure based on types.
-
-/**
- * @fileoverview added by tsickle
- * @suppress {checkTypes} checked by tsc
- */
-/**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
- */
-/**
- * @record
- */
-
-// Note: This hack is necessary so we don't erroneously get a circular dependency
-// failure based on types.
-
-/**
- * @fileoverview added by tsickle
- * @suppress {checkTypes} checked by tsc
- */
-/**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
- */
-/**
- * Used for tracking queries (e.g. ViewChild, ContentChild).
- * @record
- */
-
-// Note: This hack is necessary so we don't erroneously get a circular dependency
-// failure based on types.
-
-/**
- * @fileoverview added by tsickle
- * @suppress {checkTypes} checked by tsc
- */
-/**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
- */
-/**
- * A predicate which determines if a given element/directive should be included in the query
- * @record
- */
-
-var QueryList_ = /** @class */ (function () {
-    function QueryList_() {
-        this.dirty = false;
-        /**
-         * \@internal
-         */
-        this._valuesTree = null;
-        /**
-         * \@internal
-         */
-        this._values = null;
-    }
-    Object.defineProperty(QueryList_.prototype, "length", {
-        get: /**
-         * @return {?}
-         */
-        function () {
-            ngDevMode && assertNotNull$1(this._values, 'refreshed');
-            return /** @type {?} */ ((this._values)).length;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(QueryList_.prototype, "first", {
-        get: /**
-         * @return {?}
-         */
-        function () {
-            ngDevMode && assertNotNull$1(this._values, 'refreshed');
-            var /** @type {?} */ values = /** @type {?} */ ((this._values));
-            return values.length ? values[0] : null;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(QueryList_.prototype, "last", {
-        get: /**
-         * @return {?}
-         */
-        function () {
-            ngDevMode && assertNotNull$1(this._values, 'refreshed');
-            var /** @type {?} */ values = /** @type {?} */ ((this._values));
-            return values.length ? values[values.length - 1] : null;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    /** @internal */
-    /**
-     * \@internal
-     * @return {?}
-     */
-    QueryList_.prototype._refresh = /**
-     * \@internal
-     * @return {?}
-     */
-    function () {
-        // TODO(misko): needs more logic to flatten tree.
-        if (this._values === null) {
-            this._values = this._valuesTree;
-            return true;
-        }
-        return false;
-    };
-    /**
-     * @template U
-     * @param {?} fn
-     * @return {?}
-     */
-    QueryList_.prototype.map = /**
-     * @template U
-     * @param {?} fn
-     * @return {?}
-     */
-    function (fn) {
-        throw new Error('Method not implemented.');
-    };
-    /**
-     * @param {?} fn
-     * @return {?}
-     */
-    QueryList_.prototype.filter = /**
-     * @param {?} fn
-     * @return {?}
-     */
-    function (fn) {
-        throw new Error('Method not implemented.');
-    };
-    /**
-     * @param {?} fn
-     * @return {?}
-     */
-    QueryList_.prototype.find = /**
-     * @param {?} fn
-     * @return {?}
-     */
-    function (fn) {
-        throw new Error('Method not implemented.');
-    };
-    /**
-     * @template U
-     * @param {?} fn
-     * @param {?} init
-     * @return {?}
-     */
-    QueryList_.prototype.reduce = /**
-     * @template U
-     * @param {?} fn
-     * @param {?} init
-     * @return {?}
-     */
-    function (fn, init) {
-        throw new Error('Method not implemented.');
-    };
-    /**
-     * @param {?} fn
-     * @return {?}
-     */
-    QueryList_.prototype.forEach = /**
-     * @param {?} fn
-     * @return {?}
-     */
-    function (fn) {
-        throw new Error('Method not implemented.');
-    };
-    /**
-     * @param {?} fn
-     * @return {?}
-     */
-    QueryList_.prototype.some = /**
-     * @param {?} fn
-     * @return {?}
-     */
-    function (fn) {
-        throw new Error('Method not implemented.');
-    };
-    /**
-     * @return {?}
-     */
-    QueryList_.prototype.toArray = /**
-     * @return {?}
-     */
-    function () {
-        ngDevMode && assertNotNull$1(this._values, 'refreshed');
-        return /** @type {?} */ ((this._values));
-    };
-    /**
-     * @return {?}
-     */
-    QueryList_.prototype.toString = /**
-     * @return {?}
-     */
-    function () { throw new Error('Method not implemented.'); };
-    /**
-     * @param {?} res
-     * @return {?}
-     */
-    QueryList_.prototype.reset = /**
-     * @param {?} res
-     * @return {?}
-     */
-    function (res) { throw new Error('Method not implemented.'); };
-    /**
-     * @return {?}
-     */
-    QueryList_.prototype.notifyOnChanges = /**
-     * @return {?}
-     */
-    function () { throw new Error('Method not implemented.'); };
-    /**
-     * @return {?}
-     */
-    QueryList_.prototype.setDirty = /**
-     * @return {?}
-     */
-    function () { throw new Error('Method not implemented.'); };
-    /**
-     * @return {?}
-     */
-    QueryList_.prototype.destroy = /**
-     * @return {?}
-     */
-    function () { throw new Error('Method not implemented.'); };
-    return QueryList_;
-}());
-
-/**
- * @param {?} query
+ * @param {?} value
  * @return {?}
  */
+function stringify$1$1(value) {
+    if (typeof value == 'function')
+        return value.name || value;
+    if (typeof value == 'string')
+        return value;
+    if (value == null)
+        return '';
+    return '' + value;
+}
+/**
+ *  Function that throws a "not implemented" error so it's clear certain
+ *  behaviors/methods aren't yet ready.
+ *
+ * @return {?} Not implemented error
+ */
+function notImplemented() {
+    return new Error('NotImplemented');
+}
 
 /**
  * @fileoverview added by tsickle
@@ -57949,12 +57725,26 @@ function enterView(newView, host) {
     return /** @type {?} */ ((oldView));
 }
 /**
+ * Used in lieu of enterView to make it clear when we are exiting a child view. This makes
+ * the direction of traversal (up or down the view tree) a bit clearer.
+ * @param {?} newView
+ * @return {?}
+ */
+function leaveView(newView) {
+    executeViewHooks();
+    enterView(newView, null);
+}
+/**
  * @param {?} viewId
  * @param {?} renderer
  * @param {?} tView
+ * @param {?=} template
+ * @param {?=} context
  * @return {?}
  */
-function createLView(viewId, renderer, tView) {
+function createLView(viewId, renderer, tView, template, context) {
+    if (template === void 0) { template = null; }
+    if (context === void 0) { context = null; }
     var /** @type {?} */ newView = {
         parent: currentView,
         id: viewId,
@@ -57970,7 +57760,10 @@ function createLView(viewId, renderer, tView) {
         next: null,
         bindingStartIndex: null,
         creationMode: true,
-        viewHookStartIndex: null
+        viewHookStartIndex: null,
+        template: template,
+        context: context,
+        dynamicViewCount: 0,
     };
     return newView;
 }
@@ -58037,6 +57830,48 @@ function createLNode(index, type, native, state) {
     previousOrParentNode = node;
     isParent = true;
     return node;
+}
+/**
+ *
+ * @template T
+ * @param {?} hostNode
+ * @param {?} template Template function with the instructions.
+ * @param {?} context to pass into the template.
+ * @param {?} providedRendererFactory
+ * @param {?} host Existing node to render into.
+ * @return {?}
+ */
+
+/**
+ * @template T
+ * @param {?} viewNode
+ * @param {?} template
+ * @param {?} context
+ * @param {?} renderer
+ * @return {?}
+ */
+function renderEmbeddedTemplate(viewNode, template, context, renderer) {
+    var /** @type {?} */ _isParent = isParent;
+    var /** @type {?} */ _previousOrParentNode = previousOrParentNode;
+    try {
+        isParent = true;
+        previousOrParentNode = /** @type {?} */ ((null));
+        var /** @type {?} */ cm = false;
+        if (viewNode == null) {
+            var /** @type {?} */ view = createLView(-1, renderer, { data: [] }, template, context);
+            viewNode = createLNode(null, 2 /* View */, null, view);
+            cm = true;
+        }
+        enterView(viewNode.data, viewNode);
+        template(context, cm);
+    }
+    finally {
+        refreshDynamicChildren();
+        leaveView(/** @type {?} */ ((/** @type {?} */ ((currentView)).parent)));
+        isParent = _isParent;
+        previousOrParentNode = _previousOrParentNode;
+    }
+    return viewNode;
 }
 /**
  * This function instantiates a directive with a correct queryName. It is a hack since we should
@@ -58229,6 +58064,56 @@ function generateInitialInputs(directiveIndex, inputs, tNode) {
     return initialInputData;
 }
 /**
+ * @param {?} lifecycle
+ * @param {?=} self
+ * @param {?=} method
+ * @return {?}
+ */
+
+/**
+ * Iterates over view hook functions and calls them.
+ * @return {?}
+ */
+function executeViewHooks() {
+    if (viewHookStartIndex == null)
+        return;
+    // Instead of using splice to remove init hooks after their first run (expensive), we
+    // shift over the AFTER_CHECKED hooks as we call them and truncate once at the end.
+    var /** @type {?} */ checkIndex = /** @type {?} */ (viewHookStartIndex);
+    var /** @type {?} */ writeIndex = checkIndex;
+    while (checkIndex < data.length) {
+        // Call lifecycle hook with its context
+        data[checkIndex + 1].call(data[checkIndex + 2]);
+        if (data[checkIndex] === 16 /* AFTER_VIEW_CHECKED */) {
+            // We know if the writeIndex falls behind that there is an init that needs to
+            // be overwritten.
+            if (writeIndex < checkIndex) {
+                data[writeIndex] = data[checkIndex];
+                data[writeIndex + 1] = data[checkIndex + 1];
+                data[writeIndex + 2] = data[checkIndex + 2];
+            }
+            writeIndex += 3;
+        }
+        checkIndex += 3;
+    }
+    // Truncate once at the writeIndex
+    data.length = writeIndex;
+}
+/**
+ * @return {?}
+ */
+function refreshDynamicChildren() {
+    for (var /** @type {?} */ current = currentView.child; current !== null; current = current.next) {
+        if (current.dynamicViewCount !== 0 && (/** @type {?} */ (current)).views) {
+            var /** @type {?} */ container_1 = /** @type {?} */ (current);
+            for (var /** @type {?} */ i = 0; i < container_1.views.length; i++) {
+                var /** @type {?} */ view = container_1.views[i];
+                renderEmbeddedTemplate(view, /** @type {?} */ ((view.data.template)), /** @type {?} */ ((view.data.context)), renderer);
+            }
+        }
+    }
+}
+/**
  * Initialize the TView (e.g. static data) for the active embedded view.
  *
  * Each embedded view needs to set the global tData variable to the static data for
@@ -58288,125 +58173,6 @@ function addToViewTree(state) {
  */
 var NO_CHANGE = /** @type {?} */ ({});
 /**
- * Create an interpolation bindings with 2 arguments.
- *
- * @param {?} prefix
- * @param {?} v0 value checked for change
- * @param {?} i0
- * @param {?} v1 value checked for change
- * @param {?} suffix
- * @return {?}
- */
-
-/**
- * Create an interpolation bindings with 3 arguments.
- *
- * @param {?} prefix
- * @param {?} v0
- * @param {?} i0
- * @param {?} v1
- * @param {?} i1
- * @param {?} v2
- * @param {?} suffix
- * @return {?}
- */
-
-/**
- * Create an interpolation binding with 4 arguments.
- *
- * @param {?} prefix
- * @param {?} v0
- * @param {?} i0
- * @param {?} v1
- * @param {?} i1
- * @param {?} v2
- * @param {?} i2
- * @param {?} v3
- * @param {?} suffix
- * @return {?}
- */
-
-/**
- * Create an interpolation binding with 5 arguments.
- *
- * @param {?} prefix
- * @param {?} v0
- * @param {?} i0
- * @param {?} v1
- * @param {?} i1
- * @param {?} v2
- * @param {?} i2
- * @param {?} v3
- * @param {?} i3
- * @param {?} v4
- * @param {?} suffix
- * @return {?}
- */
-
-/**
- * Create an interpolation binding with 6 arguments.
- *
- * @param {?} prefix
- * @param {?} v0
- * @param {?} i0
- * @param {?} v1
- * @param {?} i1
- * @param {?} v2
- * @param {?} i2
- * @param {?} v3
- * @param {?} i3
- * @param {?} v4
- * @param {?} i4
- * @param {?} v5
- * @param {?} suffix
- * @return {?}
- */
-
-/**
- * Create an interpolation binding with 7 arguments.
- *
- * @param {?} prefix
- * @param {?} v0
- * @param {?} i0
- * @param {?} v1
- * @param {?} i1
- * @param {?} v2
- * @param {?} i2
- * @param {?} v3
- * @param {?} i3
- * @param {?} v4
- * @param {?} i4
- * @param {?} v5
- * @param {?} i5
- * @param {?} v6
- * @param {?} suffix
- * @return {?}
- */
-
-/**
- * Create an interpolation binding with 8 arguments.
- *
- * @param {?} prefix
- * @param {?} v0
- * @param {?} i0
- * @param {?} v1
- * @param {?} i1
- * @param {?} v2
- * @param {?} i2
- * @param {?} v3
- * @param {?} i3
- * @param {?} v4
- * @param {?} i4
- * @param {?} v5
- * @param {?} i5
- * @param {?} v6
- * @param {?} i6
- * @param {?} v7
- * @param {?} suffix
- * @return {?}
- */
-
-/**
  * @template T
  * @param {?} index
  * @param {?=} value
@@ -58414,13 +58180,20 @@ var NO_CHANGE = /** @type {?} */ ({});
  */
 
 /**
- * @template T
- * @param {?} predicate
- * @param {?=} descend
- * @param {?=} read
+ * @param {?} QueryType
  * @return {?}
  */
 
+/**
+ * @return {?}
+ */
+
+/**
+ * @return {?}
+ */
+function getRenderer() {
+    return renderer;
+}
 /**
  * @return {?}
  */
@@ -58435,11 +58208,611 @@ function assertPreviousIsParent() {
 function assertDataInRange(index, arr) {
     if (arr == null)
         arr = data;
-    assertLessThan(arr ? arr.length : 0, index, 'data.length');
+    assertLessThan(index, arr ? arr.length : 0, 'data.length');
 }
 
+var ReadFromInjectorFn = /** @class */ (function () {
+    function ReadFromInjectorFn(read) {
+        this.read = read;
+    }
+    return ReadFromInjectorFn;
+}());
 /**
- * @license Angular v5.9.9-6-beta.0-95fbb7d
+ * Creates an ElementRef for a given node injector and stores it on the injector.
+ * Or, if the ElementRef already exists, retrieves the existing ElementRef.
+ *
+ * @param {?} di The node injector where we should store a created ElementRef
+ * @return {?} The ElementRef instance to use
+ */
+function getOrCreateElementRef(di) {
+    return di.elementRef || (di.elementRef = new ElementRef$1(di.node.native));
+}
+var QUERY_READ_TEMPLATE_REF = /** @type {?} */ ((/** @type {?} */ (new ReadFromInjectorFn(function (injector) { return getOrCreateTemplateRef(injector); }))));
+var QUERY_READ_CONTAINER_REF = /** @type {?} */ ((/** @type {?} */ (new ReadFromInjectorFn(function (injector) { return getOrCreateContainerRef(injector); }))));
+var QUERY_READ_ELEMENT_REF = /** @type {?} */ ((/** @type {?} */ (new ReadFromInjectorFn(function (injector) { return getOrCreateElementRef(injector); }))));
+var QUERY_READ_FROM_NODE = (/** @type {?} */ ((new ReadFromInjectorFn(function (injector, node, directiveIdx) {
+    ngDevMode && assertNodeOfPossibleTypes(node, 0 /* Container */, 3 /* Element */);
+    if (directiveIdx > -1) {
+        return node.view.data[directiveIdx];
+    }
+    else if ((node.flags & 3 /* TYPE_MASK */) === 3 /* Element */) {
+        return getOrCreateElementRef(injector);
+    }
+    else if ((node.flags & 3 /* TYPE_MASK */) === 0 /* Container */) {
+        return getOrCreateTemplateRef(injector);
+    }
+    throw new Error('fail');
+}))));
+/**
+ * A ref to a node's native element.
+ */
+var ElementRef$1 = /** @class */ (function () {
+    function ElementRef(nativeElement) {
+        this.nativeElement = nativeElement;
+    }
+    return ElementRef;
+}());
+/**
+ * Creates a ViewContainerRef and stores it on the injector. Or, if the ViewContainerRef
+ * already exists, retrieves the existing ViewContainerRef.
+ *
+ * @param {?} di
+ * @return {?} The ViewContainerRef instance to use
+ */
+function getOrCreateContainerRef(di) {
+    return di.viewContainerRef ||
+        (di.viewContainerRef = new ViewContainerRef$1(/** @type {?} */ (di.node)));
+}
+/**
+ * A ref to a container that enables adding and removing views from that container
+ * imperatively.
+ */
+var ViewContainerRef$1 = /** @class */ (function () {
+    function ViewContainerRef(_node) {
+        this._node = _node;
+    }
+    /**
+     * @return {?}
+     */
+    ViewContainerRef.prototype.clear = /**
+     * @return {?}
+     */
+    function () { throw notImplemented(); };
+    /**
+     * @param {?} index
+     * @return {?}
+     */
+    ViewContainerRef.prototype.get = /**
+     * @param {?} index
+     * @return {?}
+     */
+    function (index) { throw notImplemented(); };
+    /**
+     * @template C
+     * @param {?} templateRef
+     * @param {?=} context
+     * @param {?=} index
+     * @return {?}
+     */
+    ViewContainerRef.prototype.createEmbeddedView = /**
+     * @template C
+     * @param {?} templateRef
+     * @param {?=} context
+     * @param {?=} index
+     * @return {?}
+     */
+    function (templateRef, context, index) {
+        var /** @type {?} */ viewRef = templateRef.createEmbeddedView(/** @type {?} */ ((context)));
+        this.insert(viewRef, index);
+        return viewRef;
+    };
+    /**
+     * @template C
+     * @param {?} componentFactory
+     * @param {?=} index
+     * @param {?=} injector
+     * @param {?=} projectableNodes
+     * @param {?=} ngModule
+     * @return {?}
+     */
+    ViewContainerRef.prototype.createComponent = /**
+     * @template C
+     * @param {?} componentFactory
+     * @param {?=} index
+     * @param {?=} injector
+     * @param {?=} projectableNodes
+     * @param {?=} ngModule
+     * @return {?}
+     */
+    function (componentFactory, index, injector, projectableNodes, ngModule) {
+        throw notImplemented();
+    };
+    /**
+     * @param {?} viewRef
+     * @param {?=} index
+     * @return {?}
+     */
+    ViewContainerRef.prototype.insert = /**
+     * @param {?} viewRef
+     * @param {?=} index
+     * @return {?}
+     */
+    function (viewRef, index) {
+        if (index == null) {
+            index = this._node.data.views.length;
+        }
+        else {
+            // +1 because it's legal to insert at the end.
+            ngDevMode && assertLessThan(index, this._node.data.views.length + 1, 'index');
+        }
+        var /** @type {?} */ lView = (/** @type {?} */ (viewRef))._lViewNode;
+        insertView(this._node, lView, index);
+        // If the view is dynamic (has a template), it needs to be counted both at the container
+        // level and at the node above the container.
+        if (lView.data.template !== null) {
+            // Increment the container view count.
+            this._node.data.dynamicViewCount++;
+            // Look for the parent node and increment its dynamic view count.
+            if (this._node.parent !== null && this._node.parent.data !== null) {
+                ngDevMode &&
+                    assertNodeOfPossibleTypes(this._node.parent, 2 /* View */, 3 /* Element */);
+                this._node.parent.data.dynamicViewCount++;
+            }
+        }
+        return viewRef;
+    };
+    /**
+     * @param {?} viewRef
+     * @param {?} currentIndex
+     * @return {?}
+     */
+    ViewContainerRef.prototype.move = /**
+     * @param {?} viewRef
+     * @param {?} currentIndex
+     * @return {?}
+     */
+    function (viewRef, currentIndex) {
+        throw notImplemented();
+    };
+    /**
+     * @param {?} viewRef
+     * @return {?}
+     */
+    ViewContainerRef.prototype.indexOf = /**
+     * @param {?} viewRef
+     * @return {?}
+     */
+    function (viewRef) { throw notImplemented(); };
+    /**
+     * @param {?=} index
+     * @return {?}
+     */
+    ViewContainerRef.prototype.remove = /**
+     * @param {?=} index
+     * @return {?}
+     */
+    function (index) { throw notImplemented(); };
+    /**
+     * @param {?=} index
+     * @return {?}
+     */
+    ViewContainerRef.prototype.detach = /**
+     * @param {?=} index
+     * @return {?}
+     */
+    function (index) { throw notImplemented(); };
+    return ViewContainerRef;
+}());
+/**
+ * Creates a TemplateRef and stores it on the injector. Or, if the TemplateRef already
+ * exists, retrieves the existing TemplateRef.
+ *
+ * @template T
+ * @param {?} di The node injector where we should store a created TemplateRef
+ * @return {?} The TemplateRef instance to use
+ */
+function getOrCreateTemplateRef(di) {
+    ngDevMode && assertNodeType(di.node, 0 /* Container */);
+    var /** @type {?} */ data = (/** @type {?} */ (di.node)).data;
+    return di.templateRef || (di.templateRef = new TemplateRef$1(getOrCreateElementRef(di), /** @type {?} */ ((data.template)), getRenderer()));
+}
+var TemplateRef$1 = /** @class */ (function () {
+    function TemplateRef(elementRef, template, _renderer) {
+        this._renderer = _renderer;
+        this.elementRef = elementRef;
+        this._template = template;
+    }
+    /**
+     * @param {?} context
+     * @return {?}
+     */
+    TemplateRef.prototype.createEmbeddedView = /**
+     * @param {?} context
+     * @return {?}
+     */
+    function (context) {
+        var /** @type {?} */ viewNode = renderEmbeddedTemplate(null, this._template, context, this._renderer);
+        return new EmbeddedViewRef$2(viewNode, this._template, context);
+    };
+    return TemplateRef;
+}());
+var EmbeddedViewRef$2 = /** @class */ (function () {
+    function EmbeddedViewRef(viewNode, template, context) {
+        this._lViewNode = viewNode;
+        this.context = context;
+    }
+    /**
+     * @return {?}
+     */
+    EmbeddedViewRef.prototype.destroy = /**
+     * @return {?}
+     */
+    function () { notImplemented(); };
+    /**
+     * @param {?} callback
+     * @return {?}
+     */
+    EmbeddedViewRef.prototype.onDestroy = /**
+     * @param {?} callback
+     * @return {?}
+     */
+    function (callback) { notImplemented(); };
+    /**
+     * @return {?}
+     */
+    EmbeddedViewRef.prototype.markForCheck = /**
+     * @return {?}
+     */
+    function () { notImplemented(); };
+    /**
+     * @return {?}
+     */
+    EmbeddedViewRef.prototype.detach = /**
+     * @return {?}
+     */
+    function () { notImplemented(); };
+    /**
+     * @return {?}
+     */
+    EmbeddedViewRef.prototype.detectChanges = /**
+     * @return {?}
+     */
+    function () { notImplemented(); };
+    /**
+     * @return {?}
+     */
+    EmbeddedViewRef.prototype.checkNoChanges = /**
+     * @return {?}
+     */
+    function () { notImplemented(); };
+    /**
+     * @return {?}
+     */
+    EmbeddedViewRef.prototype.reattach = /**
+     * @return {?}
+     */
+    function () { notImplemented(); };
+    return EmbeddedViewRef;
+}());
+
+/**
+ * Create a directive definition object.
+ *
+ * # Example
+ * ```
+ * class MyDirective {
+ *   // Generated by Angular Template Compiler
+ *   // [Symbol] syntax will not be supported by TypeScript until v2.7
+ *   static [DIRECTIVE_DEF_SYMBOL] = defineDirective({
+ *     ...
+ *   });
+ * }
+ * ```
+ */
+
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+/**
+ * @record
+ */
+
+/**
+ * @record
+ */
+
+/**
+ * `DirectiveDef` is a compiled version of the Directive used by the renderer instructions.
+ * @record
+ */
+
+/**
+ * @record
+ */
+
+/**
+ * Private: do not export
+ * @record
+ */
+
+/**
+ * Private: do not export
+ * @record
+ */
+
+/**
+ * @record
+ */
+
+/**
+ * @record
+ */
+
+// Note: This hack is necessary so we don't erroneously get a circular dependency
+// failure based on types.
+
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+/**
+ * @record
+ */
+
+// Note: This hack is necessary so we don't erroneously get a circular dependency
+// failure based on types.
+
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+/**
+ * Used for tracking queries (e.g. ViewChild, ContentChild).
+ * @record
+ */
+
+// Note: This hack is necessary so we don't erroneously get a circular dependency
+// failure based on types.
+
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+/**
+ * @template T
+ * @param {?} predicate
+ * @param {?=} descend
+ * @param {?=} read
+ * @return {?}
+ */
+
+/**
+ * @param {?} query
+ * @return {?}
+ */
+
+/**
+ * A predicate which determines if a given element/directive should be included in the query
+ * @record
+ */
+
+var QueryList_ = /** @class */ (function () {
+    function QueryList_() {
+        this.dirty = false;
+        /**
+         * \@internal
+         */
+        this._valuesTree = null;
+        /**
+         * \@internal
+         */
+        this._values = null;
+    }
+    Object.defineProperty(QueryList_.prototype, "length", {
+        get: /**
+         * @return {?}
+         */
+        function () {
+            ngDevMode && assertNotNull$1(this._values, 'refreshed');
+            return /** @type {?} */ ((this._values)).length;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(QueryList_.prototype, "first", {
+        get: /**
+         * @return {?}
+         */
+        function () {
+            ngDevMode && assertNotNull$1(this._values, 'refreshed');
+            var /** @type {?} */ values = /** @type {?} */ ((this._values));
+            return values.length ? values[0] : null;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(QueryList_.prototype, "last", {
+        get: /**
+         * @return {?}
+         */
+        function () {
+            ngDevMode && assertNotNull$1(this._values, 'refreshed');
+            var /** @type {?} */ values = /** @type {?} */ ((this._values));
+            return values.length ? values[values.length - 1] : null;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    /** @internal */
+    /**
+     * \@internal
+     * @return {?}
+     */
+    QueryList_.prototype._refresh = /**
+     * \@internal
+     * @return {?}
+     */
+    function () {
+        // TODO(misko): needs more logic to flatten tree.
+        if (this._values === null) {
+            this._values = this._valuesTree;
+            return true;
+        }
+        return false;
+    };
+    /**
+     * @template U
+     * @param {?} fn
+     * @return {?}
+     */
+    QueryList_.prototype.map = /**
+     * @template U
+     * @param {?} fn
+     * @return {?}
+     */
+    function (fn) {
+        throw new Error('Method not implemented.');
+    };
+    /**
+     * @param {?} fn
+     * @return {?}
+     */
+    QueryList_.prototype.filter = /**
+     * @param {?} fn
+     * @return {?}
+     */
+    function (fn) {
+        throw new Error('Method not implemented.');
+    };
+    /**
+     * @param {?} fn
+     * @return {?}
+     */
+    QueryList_.prototype.find = /**
+     * @param {?} fn
+     * @return {?}
+     */
+    function (fn) {
+        throw new Error('Method not implemented.');
+    };
+    /**
+     * @template U
+     * @param {?} fn
+     * @param {?} init
+     * @return {?}
+     */
+    QueryList_.prototype.reduce = /**
+     * @template U
+     * @param {?} fn
+     * @param {?} init
+     * @return {?}
+     */
+    function (fn, init) {
+        throw new Error('Method not implemented.');
+    };
+    /**
+     * @param {?} fn
+     * @return {?}
+     */
+    QueryList_.prototype.forEach = /**
+     * @param {?} fn
+     * @return {?}
+     */
+    function (fn) {
+        throw new Error('Method not implemented.');
+    };
+    /**
+     * @param {?} fn
+     * @return {?}
+     */
+    QueryList_.prototype.some = /**
+     * @param {?} fn
+     * @return {?}
+     */
+    function (fn) {
+        throw new Error('Method not implemented.');
+    };
+    /**
+     * @return {?}
+     */
+    QueryList_.prototype.toArray = /**
+     * @return {?}
+     */
+    function () {
+        ngDevMode && assertNotNull$1(this._values, 'refreshed');
+        return /** @type {?} */ ((this._values));
+    };
+    /**
+     * @return {?}
+     */
+    QueryList_.prototype.toString = /**
+     * @return {?}
+     */
+    function () { throw new Error('Method not implemented.'); };
+    /**
+     * @param {?} res
+     * @return {?}
+     */
+    QueryList_.prototype.reset = /**
+     * @param {?} res
+     * @return {?}
+     */
+    function (res) { throw new Error('Method not implemented.'); };
+    /**
+     * @return {?}
+     */
+    QueryList_.prototype.notifyOnChanges = /**
+     * @return {?}
+     */
+    function () { throw new Error('Method not implemented.'); };
+    /**
+     * @return {?}
+     */
+    QueryList_.prototype.setDirty = /**
+     * @return {?}
+     */
+    function () { throw new Error('Method not implemented.'); };
+    /**
+     * @return {?}
+     */
+    QueryList_.prototype.destroy = /**
+     * @return {?}
+     */
+    function () { throw new Error('Method not implemented.'); };
+    return QueryList_;
+}());
+
+/**
+ * @license Angular v5.9.9-6-beta.0-8baff18
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -61088,7 +61461,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('5.9.9-6-beta.0-95fbb7d');
+var VERSION = new Version$1('5.9.9-6-beta.0-8baff18');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
