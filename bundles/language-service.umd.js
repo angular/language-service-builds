@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.2.1-21f7669
+ * @license Angular v5.2.1-52970c0
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v5.2.1-21f7669
+ * @license Angular v5.2.1-52970c0
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -691,7 +691,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('5.2.1-21f7669');
+var VERSION$1 = new Version('5.2.1-52970c0');
 
 /**
  * @fileoverview added by tsickle
@@ -37537,9 +37537,6 @@ var Evaluator = /** @class */ (function () {
                     }
                 }
                 var args = arrayOrEmpty(callExpression.arguments).map(function (arg) { return _this.evaluateNode(arg); });
-                if (!this.options.verboseInvalidExpression && args.some(schema.isMetadataError)) {
-                    return args.find(schema.isMetadataError);
-                }
                 if (this.isFoldable(callExpression)) {
                     if (isMethodCallOf(callExpression, 'concat')) {
                         var arrayValue = this.evaluateNode(callExpression.expression.expression);
@@ -38253,7 +38250,7 @@ var MetadataCollector = /** @class */ (function () {
             return identifier && (exportMap.get(identifier.text) || identifier.text);
         };
         var exportedName = function (node) { return exportedIdentifierName(node.name); };
-        // Predeclare classes and functions
+        // Pre-declare classes and functions
         ts__default.forEachChild(sourceFile, function (node) {
             switch (node.kind) {
                 case ts__default.SyntaxKind.ClassDeclaration:
@@ -38414,7 +38411,7 @@ var MetadataCollector = /** @class */ (function () {
                             }
                             else {
                                 nextDefaultValue =
-                                    recordEntry(errorSym('Unsuppported enum member name', member.name), node);
+                                    recordEntry(errorSym('Unsupported enum member name', member.name), node);
                             }
                         }
                         if (writtenMembers) {
@@ -42107,7 +42104,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v5.2.1-21f7669
+ * @license Angular v5.2.1-52970c0
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -42538,7 +42535,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('5.2.1-21f7669');
+var VERSION$2 = new Version$1('5.2.1-52970c0');
 
 /**
  * @fileoverview added by tsickle
@@ -56768,7 +56765,7 @@ function initViewStaticData(viewIndex, parent) {
 var NO_CHANGE = /** @type {?} */ ({});
 
 /**
- * @license Angular v5.2.1-21f7669
+ * @license Angular v5.2.1-52970c0
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59417,7 +59414,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('5.2.1-21f7669');
+var VERSION = new Version$1('5.2.1-52970c0');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
