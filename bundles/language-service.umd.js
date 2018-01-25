@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-beta.1-d08785d
+ * @license Angular v6.0.0-beta.1-3e03dbe
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v6.0.0-beta.1-d08785d
+ * @license Angular v6.0.0-beta.1-3e03dbe
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -698,7 +698,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('6.0.0-beta.1-d08785d');
+var VERSION$1 = new Version('6.0.0-beta.1-3e03dbe');
 
 /**
  * @fileoverview added by tsickle
@@ -43196,7 +43196,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v6.0.0-beta.1-d08785d
+ * @license Angular v6.0.0-beta.1-3e03dbe
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -43627,7 +43627,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('6.0.0-beta.1-d08785d');
+var VERSION$2 = new Version$1('6.0.0-beta.1-3e03dbe');
 
 /**
  * @fileoverview added by tsickle
@@ -57610,6 +57610,132 @@ function notImplemented() {
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
+/** @enum {number} */
+/**
+ * If this is the first template pass, any ngOnInit or ngDoCheck hooks will be queued into
+ * TView.initHooks during directiveCreate.
+ *
+ * The directive index and hook type are encoded into one number (1st bit: type, remaining bits:
+ * directive index), then saved in the even indices of the initHooks array. The odd indices
+ * hold the hook functions themselves.
+ *
+ * @param {?} index The index of the directive in LView.data
+ * @param {?} onInit
+ * @param {?} doCheck
+ * @param {?} tView The current TView
+ * @return {?}
+ */
+function queueInitHooks(index, onInit, doCheck, tView) {
+    if (tView.firstTemplatePass === true) {
+        if (onInit != null) {
+            (tView.initHooks || (tView.initHooks = [])).push(getInitFlags(index), onInit);
+        }
+        if (doCheck != null) {
+            (tView.initHooks || (tView.initHooks = [])).push(getCheckFlags(index), doCheck);
+        }
+    }
+}
+/**
+ * Queues afterContentInit and afterContentChecked hooks on TView
+ * @param {?} def
+ * @param {?} tView
+ * @param {?} i
+ * @return {?}
+ */
+function queueContentHooks(def, tView, i) {
+    if (def.afterContentInit != null) {
+        (tView.contentHooks || (tView.contentHooks = [])).push(getInitFlags(i), def.afterContentInit);
+    }
+    if (def.afterContentChecked != null) {
+        (tView.contentHooks || (tView.contentHooks = [])).push(getCheckFlags(i), def.afterContentChecked);
+    }
+}
+/**
+ * Queues afterViewInit and afterViewChecked hooks on TView
+ * @param {?} def
+ * @param {?} tView
+ * @param {?} i
+ * @return {?}
+ */
+function queueViewHooks(def, tView, i) {
+    if (def.afterViewInit != null) {
+        (tView.viewHooks || (tView.viewHooks = [])).push(getInitFlags(i), def.afterViewInit);
+    }
+    if (def.afterViewChecked != null) {
+        (tView.viewHooks || (tView.viewHooks = [])).push(getCheckFlags(i), def.afterViewChecked);
+    }
+}
+/**
+ * Queues onDestroy hooks on TView
+ * @param {?} def
+ * @param {?} tView
+ * @param {?} i
+ * @return {?}
+ */
+function queueDestroyHooks(def, tView, i) {
+    if (def.onDestroy != null) {
+        (tView.destroyHooks || (tView.destroyHooks = [])).push(i, def.onDestroy);
+    }
+}
+/**
+ * Generates flags for init-only hooks
+ * @param {?} index
+ * @return {?}
+ */
+function getInitFlags(index) {
+    return index << 1 /* INDX_SHIFT */;
+}
+/**
+ * Generates flags for hooks called every change detection run
+ * @param {?} index
+ * @return {?}
+ */
+function getCheckFlags(index) {
+    return (index << 1 /* INDX_SHIFT */) | 1 /* ON_CHECK */;
+}
+/**
+ * Iterates over afterViewInit and afterViewChecked functions and calls them.
+ *
+ * @param {?} currentView The current view
+ * @return {?}
+ */
+function executeViewHooks(currentView) {
+    var /** @type {?} */ viewHooks = currentView.tView.viewHooks;
+    if (viewHooks != null) {
+        executeLifecycleHooks(currentView, viewHooks);
+    }
+}
+/**
+ * Calls lifecycle hooks with their contexts, skipping init hooks if it's not
+ * creation mode.
+ *
+ * @param {?} currentView The current view
+ * @param {?} arr The array in which the hooks are found
+ * @return {?}
+ */
+function executeLifecycleHooks(currentView, arr) {
+    var /** @type {?} */ data = currentView.data;
+    var /** @type {?} */ creationMode = currentView.creationMode;
+    for (var /** @type {?} */ i = 0; i < arr.length; i += 2) {
+        var /** @type {?} */ flags = /** @type {?} */ (arr[i]);
+        var /** @type {?} */ initOnly = (flags & 1 /* TYPE_MASK */) === 0;
+        if (initOnly === false || creationMode) {
+            (/** @type {?} */ (arr[i | 1])).call(data[flags >> 1 /* INDX_SHIFT */]);
+        }
+    }
+}
+
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
 /**
  * Directive (D) sets a property on all component instances using this constant as a key and the
  * component's host node (LElement) as the value. This is used in methods like detectChanges to
@@ -57659,7 +57785,7 @@ var tData;
  */
 var currentView;
 // The initialization has to be after the `let`, otherwise `createLView` can't see `let`.
-currentView = createLView(/** @type {?} */ ((null)), /** @type {?} */ ((null)), { data: [] });
+currentView = createLView(/** @type {?} */ ((null)), /** @type {?} */ ((null)), createTView());
 var currentQuery;
 /**
  * This property gets set before entering a template.
@@ -57675,10 +57801,11 @@ var data;
  */
 var bindingIndex;
 /**
- * When a view is destroyed, listeners need to be released
- * and onDestroy callbacks need to be called. This cleanup array
- * stores both listener data (in chunks of 4) and onDestroy data
- * (in chunks of 2), as they'll be processed at the same time.
+ * When a view is destroyed, listeners need to be released and outputs need to be
+ * unsubscribed. This cleanup array stores both listener data (in chunks of 4)
+ * and output data (in chunks of 2) for a particular view. Combining the arrays
+ * saves on memory (70 bytes per array) and on a few bytes of code size (for two
+ * separate for loops).
  *
  * If it's a listener being stored:
  * 1st index is: event name to remove
@@ -57686,15 +57813,11 @@ var bindingIndex;
  * 3rd index is: listener function
  * 4th index is: useCapture boolean
  *
- * If it's an onDestroy function:
- * 1st index is: onDestroy function
+ * If it's an output subscription:
+ * 1st index is: unsubscribe function
  * 2nd index is: context for function
  */
 var cleanup;
-/**
- * Index in the data array at which view hooks begin to be stored.
- */
-var viewHookStartIndex;
 /**
  * Swap the current state with a new state.
  *
@@ -57713,7 +57836,6 @@ function enterView(newView, host) {
     bindingIndex = newView.bindingStartIndex || 0;
     tData = newView.tView.data;
     creationMode = newView.creationMode;
-    viewHookStartIndex = newView.viewHookStartIndex;
     cleanup = newView.cleanup;
     renderer = newView.renderer;
     if (host != null) {
@@ -57730,7 +57852,10 @@ function enterView(newView, host) {
  * @return {?}
  */
 function leaveView(newView) {
-    executeViewHooks();
+    executeViewHooks(currentView);
+    currentView.creationMode = false;
+    currentView.lifecycleStage = 1 /* INIT */;
+    currentView.tView.firstTemplatePass = false;
     enterView(newView, null);
 }
 /**
@@ -57759,10 +57884,10 @@ function createLView(viewId, renderer, tView, template, context) {
         next: null,
         bindingStartIndex: null,
         creationMode: true,
-        viewHookStartIndex: null,
         template: template,
         context: context,
         dynamicViewCount: 0,
+        lifecycleStage: 1 /* INIT */
     };
     return newView;
 }
@@ -57857,7 +57982,7 @@ function renderEmbeddedTemplate(viewNode, template, context, renderer) {
         previousOrParentNode = /** @type {?} */ ((null));
         var /** @type {?} */ cm = false;
         if (viewNode == null) {
-            var /** @type {?} */ view = createLView(-1, renderer, { data: [] }, template, context);
+            var /** @type {?} */ view = createLView(-1, renderer, createTView(), template, context);
             viewNode = createLNode(null, 2 /* View */, null, view);
             cm = true;
         }
@@ -57893,7 +58018,6 @@ function hack_declareDirectives(index, directiveTypes, localRefs) {
             // TODO(misko): refactor this to store the `DirectiveDef` in `TView.data`.
             var /** @type {?} */ directiveType = directiveTypes[i];
             var /** @type {?} */ directiveDef = directiveType.ngDirectiveDef;
-            (/** @type {?} */ (directiveDef)).type = directiveType;
             directiveCreate(++index, directiveDef.n(), directiveDef, hack_findQueryName(directiveDef, localRefs));
         }
     }
@@ -57927,7 +58051,21 @@ function hack_findQueryName(directiveDef, localRefs, defaultExport) {
  * @return {?} TView
  */
 function getOrCreateTView(template) {
-    return template.ngPrivateData || (template.ngPrivateData = /** @type {?} */ ({ data: [] }));
+    return template.ngPrivateData || (template.ngPrivateData = /** @type {?} */ (createTView()));
+}
+/**
+ * Creates a TView instance
+ * @return {?}
+ */
+function createTView() {
+    return {
+        data: [],
+        firstTemplatePass: true,
+        initHooks: null,
+        contentHooks: null,
+        viewHooks: null,
+        destroyHooks: null
+    };
 }
 /**
  * @param {?} native
@@ -58008,6 +58146,9 @@ function directiveCreate(index, directive, directiveDef, queryName) {
     if (tNode && tNode.attrs) {
         setInputsFromAttrs(instance, /** @type {?} */ ((directiveDef)).inputs, tNode);
     }
+    // Init hooks are queued now so ngOnInit is called in host components before
+    // any projected components.
+    queueInitHooks(index, directiveDef.onInit, directiveDef.doCheck, currentView.tView);
     return instance;
 }
 /**
@@ -58063,42 +58204,6 @@ function generateInitialInputs(directiveIndex, inputs, tNode) {
     return initialInputData;
 }
 /**
- * @param {?} lifecycle
- * @param {?=} self
- * @param {?=} method
- * @return {?}
- */
-
-/**
- * Iterates over view hook functions and calls them.
- * @return {?}
- */
-function executeViewHooks() {
-    if (viewHookStartIndex == null)
-        return;
-    // Instead of using splice to remove init hooks after their first run (expensive), we
-    // shift over the AFTER_CHECKED hooks as we call them and truncate once at the end.
-    var /** @type {?} */ checkIndex = /** @type {?} */ (viewHookStartIndex);
-    var /** @type {?} */ writeIndex = checkIndex;
-    while (checkIndex < data.length) {
-        // Call lifecycle hook with its context
-        data[checkIndex + 1].call(data[checkIndex + 2]);
-        if (data[checkIndex] === 16 /* AFTER_VIEW_CHECKED */) {
-            // We know if the writeIndex falls behind that there is an init that needs to
-            // be overwritten.
-            if (writeIndex < checkIndex) {
-                data[writeIndex] = data[checkIndex];
-                data[writeIndex + 1] = data[checkIndex + 1];
-                data[writeIndex + 2] = data[checkIndex + 2];
-            }
-            writeIndex += 3;
-        }
-        checkIndex += 3;
-    }
-    // Truncate once at the writeIndex
-    data.length = writeIndex;
-}
-/**
  * @return {?}
  */
 function refreshDynamicChildren() {
@@ -58128,7 +58233,7 @@ function getOrCreateEmbeddedTView(viewIndex, parent) {
     ngDevMode && assertNodeType(parent, 0 /* Container */);
     var /** @type {?} */ tContainer = (/** @type {?} */ (((parent)).tNode)).data;
     if (viewIndex >= tContainer.length || tContainer[viewIndex] == null) {
-        tContainer[viewIndex] = /** @type {?} */ ({ data: [] });
+        tContainer[viewIndex] = createTView();
     }
     return tContainer[viewIndex];
 }
@@ -58546,16 +58651,6 @@ var EmbeddedViewRef$2 = /** @class */ (function () {
  */
 
 /**
- * Private: do not export
- * @record
- */
-
-/**
- * Private: do not export
- * @record
- */
-
-/**
  * @record
  */
 
@@ -58819,7 +58914,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-beta.1-d08785d
+ * @license Angular v6.0.0-beta.1-3e03dbe
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -61468,7 +61563,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('6.0.0-beta.1-d08785d');
+var VERSION = new Version$1('6.0.0-beta.1-3e03dbe');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
