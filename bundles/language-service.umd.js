@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-beta.1-3e03dbe
+ * @license Angular v6.0.0-beta.1-5269ce2
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v6.0.0-beta.1-3e03dbe
+ * @license Angular v6.0.0-beta.1-5269ce2
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -698,7 +698,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('6.0.0-beta.1-3e03dbe');
+var VERSION$1 = new Version('6.0.0-beta.1-5269ce2');
 
 /**
  * @fileoverview added by tsickle
@@ -43196,7 +43196,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v6.0.0-beta.1-3e03dbe
+ * @license Angular v6.0.0-beta.1-5269ce2
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -43627,7 +43627,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('6.0.0-beta.1-3e03dbe');
+var VERSION$2 = new Version$1('6.0.0-beta.1-5269ce2');
 
 /**
  * @fileoverview added by tsickle
@@ -57461,8 +57461,6 @@ function insertView(container, newView, index) {
     if (container.data.renderParent !== null) {
         addRemoveViewFromContainer(container, newView, true, findBeforeNode(index, state, container.native));
     }
-    // Notify query that view has been inserted
-    container.query && container.query.insertView(container, newView, index);
     return newView;
 }
 /**
@@ -57597,6 +57595,32 @@ function stringify$1$1(value) {
  */
 function notImplemented() {
     return new Error('NotImplemented');
+}
+/**
+ * Flattens an array in non-recursive way. Input arrays are not modified.
+ * @param {?} list
+ * @return {?}
+ */
+function flatten$1$1(list) {
+    var /** @type {?} */ result = [];
+    var /** @type {?} */ i = 0;
+    while (i < list.length) {
+        var /** @type {?} */ item = list[i];
+        if (Array.isArray(item)) {
+            if (item.length > 0) {
+                list = item.concat(list.slice(i + 1));
+                i = 0;
+            }
+            else {
+                i++;
+            }
+        }
+        else {
+            result.push(item);
+            i++;
+        }
+    }
+    return result;
 }
 
 /**
@@ -57843,6 +57867,7 @@ function enterView(newView, host) {
         isParent = true;
     }
     currentView = newView;
+    currentQuery = newView.query;
     return /** @type {?} */ ((oldView));
 }
 /**
@@ -57887,7 +57912,8 @@ function createLView(viewId, renderer, tView, template, context) {
         template: template,
         context: context,
         dynamicViewCount: 0,
-        lifecycleStage: 1 /* INIT */
+        lifecycleStage: 1 /* INIT */,
+        query: null,
     };
     return newView;
 }
@@ -58710,34 +58736,18 @@ var EmbeddedViewRef$2 = /** @class */ (function () {
  * found in the LICENSE file at https://angular.io/license
  */
 /**
- * @template T
- * @param {?} predicate
- * @param {?=} descend
- * @param {?=} read
- * @return {?}
- */
-
-/**
- * @param {?} query
- * @return {?}
- */
-
-/**
  * A predicate which determines if a given element/directive should be included in the query
  * @record
  */
 
 var QueryList_ = /** @class */ (function () {
     function QueryList_() {
-        this.dirty = false;
-        /**
-         * \@internal
-         */
-        this._valuesTree = null;
-        /**
-         * \@internal
-         */
+        this.dirty = true;
         this._values = null;
+        /**
+         * \@internal
+         */
+        this._valuesTree = [];
     }
     Object.defineProperty(QueryList_.prototype, "length", {
         get: /**
@@ -58774,23 +58784,6 @@ var QueryList_ = /** @class */ (function () {
         enumerable: true,
         configurable: true
     });
-    /** @internal */
-    /**
-     * \@internal
-     * @return {?}
-     */
-    QueryList_.prototype._refresh = /**
-     * \@internal
-     * @return {?}
-     */
-    function () {
-        // TODO(misko): needs more logic to flatten tree.
-        if (this._values === null) {
-            this._values = this._valuesTree;
-            return true;
-        }
-        return false;
-    };
     /**
      * @template U
      * @param {?} fn
@@ -58879,7 +58872,10 @@ var QueryList_ = /** @class */ (function () {
     QueryList_.prototype.toString = /**
      * @return {?}
      */
-    function () { throw new Error('Method not implemented.'); };
+    function () {
+        ngDevMode && assertNotNull$1(this._values, 'refreshed');
+        return /** @type {?} */ ((this._values)).toString();
+    };
     /**
      * @param {?} res
      * @return {?}
@@ -58888,7 +58884,10 @@ var QueryList_ = /** @class */ (function () {
      * @param {?} res
      * @return {?}
      */
-    function (res) { throw new Error('Method not implemented.'); };
+    function (res) {
+        this._values = flatten$1$1(res);
+        (/** @type {?} */ (this)).dirty = false;
+    };
     /**
      * @return {?}
      */
@@ -58902,7 +58901,7 @@ var QueryList_ = /** @class */ (function () {
     QueryList_.prototype.setDirty = /**
      * @return {?}
      */
-    function () { throw new Error('Method not implemented.'); };
+    function () { (/** @type {?} */ (this)).dirty = true; };
     /**
      * @return {?}
      */
@@ -58914,7 +58913,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-beta.1-3e03dbe
+ * @license Angular v6.0.0-beta.1-5269ce2
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -61563,7 +61562,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('6.0.0-beta.1-3e03dbe');
+var VERSION = new Version$1('6.0.0-beta.1-5269ce2');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
