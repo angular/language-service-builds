@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.2.2-ba045e8
+ * @license Angular v5.2.2-d159ad8
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v5.2.2-ba045e8
+ * @license Angular v5.2.2-d159ad8
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -691,7 +691,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('5.2.2-ba045e8');
+var VERSION$1 = new Version('5.2.2-d159ad8');
 
 /**
  * @fileoverview added by tsickle
@@ -42103,7 +42103,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v5.2.2-ba045e8
+ * @license Angular v5.2.2-d159ad8
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -42534,7 +42534,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('5.2.2-ba045e8');
+var VERSION$2 = new Version$1('5.2.2-d159ad8');
 
 /**
  * @fileoverview added by tsickle
@@ -56764,7 +56764,7 @@ function initViewStaticData(viewIndex, parent) {
 var NO_CHANGE = /** @type {?} */ ({});
 
 /**
- * @license Angular v5.2.2-ba045e8
+ * @license Angular v5.2.2-d159ad8
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -58505,7 +58505,7 @@ var ReflectorHost = /** @class */ (function () {
                 throw new Error('Resolution of relative paths requires a containing file.');
             }
             // Any containing file gives the same result for absolute imports
-            containingFile = path.join(this.options.basePath, 'index.ts');
+            containingFile = path.join(this.options.basePath, 'index.ts').replace(/\\/g, '/');
         }
         var resolved = ts.resolveModuleName(moduleName, containingFile, this.options, this.hostAdapter)
             .resolvedModule;
@@ -59413,7 +59413,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('5.2.2-ba045e8');
+var VERSION = new Version$1('5.2.2-d159ad8');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
