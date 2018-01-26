@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-beta.1-3b7bab7
+ * @license Angular v6.0.0-beta.1-676d9c2
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v6.0.0-beta.1-3b7bab7
+ * @license Angular v6.0.0-beta.1-676d9c2
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -698,7 +698,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('6.0.0-beta.1-3b7bab7');
+var VERSION$1 = new Version('6.0.0-beta.1-676d9c2');
 
 /**
  * @fileoverview added by tsickle
@@ -43216,7 +43216,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v6.0.0-beta.1-3b7bab7
+ * @license Angular v6.0.0-beta.1-676d9c2
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -43647,7 +43647,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('6.0.0-beta.1-3b7bab7');
+var VERSION$2 = new Version$1('6.0.0-beta.1-676d9c2');
 
 /**
  * @fileoverview added by tsickle
@@ -58973,7 +58973,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-beta.1-3b7bab7
+ * @license Angular v6.0.0-beta.1-676d9c2
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -60714,7 +60714,7 @@ var ReflectorHost = /** @class */ (function () {
                 throw new Error('Resolution of relative paths requires a containing file.');
             }
             // Any containing file gives the same result for absolute imports
-            containingFile = path.join(this.options.basePath, 'index.ts');
+            containingFile = path.join(this.options.basePath, 'index.ts').replace(/\\/g, '/');
         }
         var resolved = ts.resolveModuleName(moduleName, containingFile, this.options, this.hostAdapter)
             .resolvedModule;
@@ -61622,7 +61622,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('6.0.0-beta.1-3b7bab7');
+var VERSION = new Version$1('6.0.0-beta.1-676d9c2');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
