@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-beta.1-bbb8f38
+ * @license Angular v6.0.0-beta.1-f9381e4
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v6.0.0-beta.1-bbb8f38
+ * @license Angular v6.0.0-beta.1-f9381e4
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -698,7 +698,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('6.0.0-beta.1-bbb8f38');
+var VERSION$1 = new Version('6.0.0-beta.1-f9381e4');
 
 /**
  * @fileoverview added by tsickle
@@ -43216,7 +43216,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v6.0.0-beta.1-bbb8f38
+ * @license Angular v6.0.0-beta.1-f9381e4
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -43647,7 +43647,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('6.0.0-beta.1-bbb8f38');
+var VERSION$2 = new Version$1('6.0.0-beta.1-f9381e4');
 
 /**
  * @fileoverview added by tsickle
@@ -58763,7 +58763,7 @@ var EmbeddedViewRef$2 = /** @class */ (function () {
 var QueryList_ = /** @class */ (function () {
     function QueryList_() {
         this.dirty = true;
-        this._values = null;
+        this._values = [];
         /**
          * \@internal
          */
@@ -58773,10 +58773,7 @@ var QueryList_ = /** @class */ (function () {
         get: /**
          * @return {?}
          */
-        function () {
-            ngDevMode && assertNotNull$1(this._values, 'refreshed');
-            return /** @type {?} */ ((this._values)).length;
-        },
+        function () { return this._values.length; },
         enumerable: true,
         configurable: true
     });
@@ -58785,8 +58782,7 @@ var QueryList_ = /** @class */ (function () {
          * @return {?}
          */
         function () {
-            ngDevMode && assertNotNull$1(this._values, 'refreshed');
-            var /** @type {?} */ values = /** @type {?} */ ((this._values));
+            var /** @type {?} */ values = this._values;
             return values.length ? values[0] : null;
         },
         enumerable: true,
@@ -58797,84 +58793,127 @@ var QueryList_ = /** @class */ (function () {
          * @return {?}
          */
         function () {
-            ngDevMode && assertNotNull$1(this._values, 'refreshed');
-            var /** @type {?} */ values = /** @type {?} */ ((this._values));
+            var /** @type {?} */ values = this._values;
             return values.length ? values[values.length - 1] : null;
         },
         enumerable: true,
         configurable: true
     });
     /**
+     * See
+     * [Array.map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map)
+     */
+    /**
+     * See
+     * [Array.map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map)
      * @template U
      * @param {?} fn
      * @return {?}
      */
     QueryList_.prototype.map = /**
+     * See
+     * [Array.map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map)
      * @template U
      * @param {?} fn
      * @return {?}
      */
-    function (fn) {
-        throw new Error('Method not implemented.');
-    };
+    function (fn) { return this._values.map(fn); };
     /**
+     * See
+     * [Array.filter](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter)
+     */
+    /**
+     * See
+     * [Array.filter](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter)
      * @param {?} fn
      * @return {?}
      */
     QueryList_.prototype.filter = /**
+     * See
+     * [Array.filter](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter)
      * @param {?} fn
      * @return {?}
      */
     function (fn) {
-        throw new Error('Method not implemented.');
+        return this._values.filter(fn);
     };
     /**
+     * See
+     * [Array.find](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/find)
+     */
+    /**
+     * See
+     * [Array.find](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/find)
      * @param {?} fn
      * @return {?}
      */
     QueryList_.prototype.find = /**
+     * See
+     * [Array.find](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/find)
      * @param {?} fn
      * @return {?}
      */
     function (fn) {
-        throw new Error('Method not implemented.');
+        return this._values.find(fn);
     };
     /**
+     * See
+     * [Array.reduce](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce)
+     */
+    /**
+     * See
+     * [Array.reduce](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce)
      * @template U
      * @param {?} fn
      * @param {?} init
      * @return {?}
      */
     QueryList_.prototype.reduce = /**
+     * See
+     * [Array.reduce](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce)
      * @template U
      * @param {?} fn
      * @param {?} init
      * @return {?}
      */
     function (fn, init) {
-        throw new Error('Method not implemented.');
+        return this._values.reduce(fn, init);
     };
     /**
+     * See
+     * [Array.forEach](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach)
+     */
+    /**
+     * See
+     * [Array.forEach](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach)
      * @param {?} fn
      * @return {?}
      */
     QueryList_.prototype.forEach = /**
+     * See
+     * [Array.forEach](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach)
      * @param {?} fn
      * @return {?}
      */
-    function (fn) {
-        throw new Error('Method not implemented.');
-    };
+    function (fn) { this._values.forEach(fn); };
     /**
+     * See
+     * [Array.some](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/some)
+     */
+    /**
+     * See
+     * [Array.some](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/some)
      * @param {?} fn
      * @return {?}
      */
     QueryList_.prototype.some = /**
+     * See
+     * [Array.some](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/some)
      * @param {?} fn
      * @return {?}
      */
     function (fn) {
-        throw new Error('Method not implemented.');
+        return this._values.some(fn);
     };
     /**
      * @return {?}
@@ -58882,20 +58921,21 @@ var QueryList_ = /** @class */ (function () {
     QueryList_.prototype.toArray = /**
      * @return {?}
      */
-    function () {
-        ngDevMode && assertNotNull$1(this._values, 'refreshed');
-        return /** @type {?} */ ((this._values));
-    };
+    function () { return this._values.slice(0); };
+    /**
+     * @return {?}
+     */
+    QueryList_.prototype[getSymbolIterator()] = /**
+     * @return {?}
+     */
+    function () { return (/** @type {?} */ (this._values))[getSymbolIterator()](); };
     /**
      * @return {?}
      */
     QueryList_.prototype.toString = /**
      * @return {?}
      */
-    function () {
-        ngDevMode && assertNotNull$1(this._values, 'refreshed');
-        return /** @type {?} */ ((this._values)).toString();
-    };
+    function () { return this._values.toString(); };
     /**
      * @param {?} res
      * @return {?}
@@ -58933,7 +58973,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-beta.1-bbb8f38
+ * @license Angular v6.0.0-beta.1-f9381e4
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -61582,7 +61622,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('6.0.0-beta.1-bbb8f38');
+var VERSION = new Version$1('6.0.0-beta.1-f9381e4');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
