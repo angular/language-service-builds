@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-beta.1-dcca799
+ * @license Angular v6.0.0-beta.1-2af19c9
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v6.0.0-beta.1-dcca799
+ * @license Angular v6.0.0-beta.1-2af19c9
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -698,7 +698,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('6.0.0-beta.1-dcca799');
+var VERSION$1 = new Version('6.0.0-beta.1-2af19c9');
 
 /**
  * @fileoverview added by tsickle
@@ -43216,7 +43216,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v6.0.0-beta.1-dcca799
+ * @license Angular v6.0.0-beta.1-2af19c9
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -43647,7 +43647,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('6.0.0-beta.1-dcca799');
+var VERSION$2 = new Version$1('6.0.0-beta.1-2af19c9');
 
 /**
  * @fileoverview added by tsickle
@@ -52354,7 +52354,7 @@ function checkAndUpdateBinding(view, def, bindingIdx, value) {
 function checkBindingNoChanges(view, def, bindingIdx, value) {
     var /** @type {?} */ oldValue = view.oldValues[def.bindingIndex + bindingIdx];
     if ((view.state & 1 /* BeforeFirstCheck */) || !devModeEqual(oldValue, value)) {
-        var /** @type {?} */ bindingName = def.bindings[def.bindingIndex].name;
+        var /** @type {?} */ bindingName = def.bindings[bindingIdx].name;
         throw expressionChangedAfterItHasBeenCheckedError(Services.createDebugContext(view, def.nodeIndex), bindingName + ": " + oldValue, bindingName + ": " + value, (view.state & 1 /* BeforeFirstCheck */) !== 0);
     }
 }
@@ -58973,7 +58973,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-beta.1-dcca799
+ * @license Angular v6.0.0-beta.1-2af19c9
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -61622,7 +61622,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('6.0.0-beta.1-dcca799');
+var VERSION = new Version$1('6.0.0-beta.1-2af19c9');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
