@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-beta.1-6245637
+ * @license Angular v6.0.0-beta.1-87754ad
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v6.0.0-beta.1-6245637
+ * @license Angular v6.0.0-beta.1-87754ad
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -698,7 +698,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('6.0.0-beta.1-6245637');
+var VERSION$1 = new Version('6.0.0-beta.1-87754ad');
 
 /**
  * @fileoverview added by tsickle
@@ -29354,6 +29354,8 @@ var IMPLICIT_REFERENCE = '$implicit';
  */
 function compileDirective(outputCtx, directive, reflector) {
     var /** @type {?} */ definitionMapValues = [];
+    // e.g. 'type: MyDirective`
+    definitionMapValues.push({ key: 'type', value: outputCtx.importExpr(directive.type.reference), quoted: false });
     // e.g. `factory: () => new MyApp(injectElementRef())`
     var /** @type {?} */ templateFactory = createFactory(directive.type, outputCtx, reflector);
     definitionMapValues.push({ key: 'factory', value: templateFactory, quoted: false });
@@ -29371,7 +29373,9 @@ function compileDirective(outputCtx, directive, reflector) {
  */
 function compileComponent(outputCtx, component, template, reflector) {
     var /** @type {?} */ definitionMapValues = [];
-    // e.g. `tag: 'my-app'
+    // e.g. `type: MyApp`
+    definitionMapValues.push({ key: 'type', value: outputCtx.importExpr(component.type.reference), quoted: false });
+    // e.g. `tag: 'my-app'`
     // This is optional and only included if the first selector of a component has element.
     var /** @type {?} */ selector = component.selector && CssSelector.parse(component.selector);
     var /** @type {?} */ firstSelector = selector && selector[0];
@@ -43216,7 +43220,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v6.0.0-beta.1-6245637
+ * @license Angular v6.0.0-beta.1-87754ad
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -43647,7 +43651,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('6.0.0-beta.1-6245637');
+var VERSION$2 = new Version$1('6.0.0-beta.1-87754ad');
 
 /**
  * @fileoverview added by tsickle
@@ -59061,7 +59065,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-beta.1-6245637
+ * @license Angular v6.0.0-beta.1-87754ad
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -61710,7 +61714,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('6.0.0-beta.1-6245637');
+var VERSION = new Version$1('6.0.0-beta.1-87754ad');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
