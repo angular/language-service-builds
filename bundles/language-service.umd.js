@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-beta.1-285dd6b
+ * @license Angular v6.0.0-beta.1-407b5cf
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v6.0.0-beta.1-285dd6b
+ * @license Angular v6.0.0-beta.1-407b5cf
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -698,7 +698,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('6.0.0-beta.1-285dd6b');
+var VERSION$1 = new Version('6.0.0-beta.1-407b5cf');
 
 /**
  * @fileoverview added by tsickle
@@ -43329,7 +43329,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v6.0.0-beta.1-285dd6b
+ * @license Angular v6.0.0-beta.1-407b5cf
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -43760,7 +43760,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('6.0.0-beta.1-285dd6b');
+var VERSION$2 = new Version$1('6.0.0-beta.1-407b5cf');
 
 /**
  * @fileoverview added by tsickle
@@ -58028,7 +58028,7 @@ var tData;
 var currentView;
 // The initialization has to be after the `let`, otherwise `createLView` can't see `let`.
 currentView = createLView(/** @type {?} */ ((null)), /** @type {?} */ ((null)), createTView());
-var currentQuery;
+var currentQueries;
 /**
  * This property gets set before entering a template.
  */
@@ -58085,7 +58085,7 @@ function enterView(newView, host) {
         isParent = true;
     }
     currentView = newView;
-    currentQuery = newView.query;
+    currentQueries = newView.queries;
     return /** @type {?} */ ((oldView));
 }
 /**
@@ -58131,7 +58131,7 @@ function createLView(viewId, renderer, tView, template, context) {
         context: context,
         dynamicViewCount: 0,
         lifecycleStage: 1 /* INIT */,
-        query: null,
+        queries: null,
     };
     return newView;
 }
@@ -58145,8 +58145,8 @@ function createLView(viewId, renderer, tView, template, context) {
 function createLNode(index, type, native, state) {
     var /** @type {?} */ parent = isParent ? previousOrParentNode :
         previousOrParentNode && /** @type {?} */ (previousOrParentNode.parent);
-    var /** @type {?} */ query = (isParent ? currentQuery : previousOrParentNode && previousOrParentNode.query) ||
-        parent && parent.query && parent.query.child();
+    var /** @type {?} */ queries = (isParent ? currentQueries : previousOrParentNode && previousOrParentNode.queries) ||
+        parent && parent.queries && parent.queries.child();
     var /** @type {?} */ isState = state != null;
     var /** @type {?} */ node = {
         flags: type,
@@ -58157,7 +58157,7 @@ function createLNode(index, type, native, state) {
         next: null,
         nodeInjector: parent ? parent.nodeInjector : null,
         data: isState ? /** @type {?} */ (state) : null,
-        query: query,
+        queries: queries,
         tNode: null,
         pNextOrParent: null
     };
@@ -58180,7 +58180,7 @@ function createLNode(index, type, native, state) {
         }
         // Now link ourselves into the tree.
         if (isParent) {
-            currentQuery = null;
+            currentQueries = null;
             if (previousOrParentNode.view === currentView ||
                 (previousOrParentNode.flags & 3 /* TYPE_MASK */) === 2 /* View */) {
                 // We are in the same view, which means we are adding content node to the parent View.
@@ -58958,6 +58958,15 @@ var EmbeddedViewRef$2 = /** @class */ (function () {
  */
 /**
  * A predicate which determines if a given element/directive should be included in the query
+ * results.
+ * @record
+ */
+
+/**
+ * An object representing a query, which is a combination of:
+ * - query predicate to determines if a given element/directive should be included in the query
+ * - values collected based on a predicate
+ * - `QueryList` to which collected values should be reported
  * @record
  */
 
@@ -59178,7 +59187,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-beta.1-285dd6b
+ * @license Angular v6.0.0-beta.1-407b5cf
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -61827,7 +61836,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('6.0.0-beta.1-285dd6b');
+var VERSION = new Version$1('6.0.0-beta.1-407b5cf');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
