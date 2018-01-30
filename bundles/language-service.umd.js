@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-beta.1-120bdee
+ * @license Angular v6.0.0-beta.1-02483a0
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v6.0.0-beta.1-120bdee
+ * @license Angular v6.0.0-beta.1-02483a0
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -698,7 +698,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('6.0.0-beta.1-120bdee');
+var VERSION$1 = new Version('6.0.0-beta.1-02483a0');
 
 /**
  * @fileoverview added by tsickle
@@ -43329,7 +43329,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v6.0.0-beta.1-120bdee
+ * @license Angular v6.0.0-beta.1-02483a0
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -43760,7 +43760,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('6.0.0-beta.1-120bdee');
+var VERSION$2 = new Version$1('6.0.0-beta.1-02483a0');
 
 /**
  * @fileoverview added by tsickle
@@ -57370,115 +57370,6 @@ function typeSerializer(type) {
 }
 
 /**
- * @fileoverview added by tsickle
- * @suppress {checkTypes} checked by tsc
- */
-/**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
- */
-/**
- * If this is the first template pass, any ngOnInit or ngDoCheck hooks will be queued into
- * TView.initHooks during directiveCreate.
- *
- * The directive index and hook type are encoded into one number (1st bit: type, remaining bits:
- * directive index), then saved in the even indices of the initHooks array. The odd indices
- * hold the hook functions themselves.
- *
- * @param {?} index The index of the directive in LView.data
- * @param {?} onInit
- * @param {?} doCheck
- * @param {?} tView The current TView
- * @return {?}
- */
-function queueInitHooks(index, onInit, doCheck, tView) {
-    if (tView.firstTemplatePass === true) {
-        if (onInit != null) {
-            (tView.initHooks || (tView.initHooks = [])).push(index, onInit);
-        }
-        if (doCheck != null) {
-            (tView.initHooks || (tView.initHooks = [])).push(index, doCheck);
-            (tView.checkHooks || (tView.checkHooks = [])).push(index, doCheck);
-        }
-    }
-}
-/**
- * Queues afterContentInit and afterContentChecked hooks on TView
- * @param {?} def
- * @param {?} tView
- * @param {?} i
- * @return {?}
- */
-function queueContentHooks(def, tView, i) {
-    if (def.afterContentInit != null) {
-        (tView.contentHooks || (tView.contentHooks = [])).push(i, def.afterContentInit);
-    }
-    if (def.afterContentChecked != null) {
-        (tView.contentHooks || (tView.contentHooks = [])).push(i, def.afterContentChecked);
-        (tView.contentCheckHooks || (tView.contentCheckHooks = [])).push(i, def.afterContentChecked);
-    }
-}
-/**
- * Queues afterViewInit and afterViewChecked hooks on TView
- * @param {?} def
- * @param {?} tView
- * @param {?} i
- * @return {?}
- */
-function queueViewHooks(def, tView, i) {
-    if (def.afterViewInit != null) {
-        (tView.viewHooks || (tView.viewHooks = [])).push(i, def.afterViewInit);
-    }
-    if (def.afterViewChecked != null) {
-        (tView.viewHooks || (tView.viewHooks = [])).push(i, def.afterViewChecked);
-        (tView.viewCheckHooks || (tView.viewCheckHooks = [])).push(i, def.afterViewChecked);
-    }
-}
-/**
- * Queues onDestroy hooks on TView
- * @param {?} def
- * @param {?} tView
- * @param {?} i
- * @return {?}
- */
-function queueDestroyHooks(def, tView, i) {
-    if (def.onDestroy != null) {
-        (tView.destroyHooks || (tView.destroyHooks = [])).push(i, def.onDestroy);
-    }
-}
-/**
- * Iterates over afterViewInit and afterViewChecked functions and calls them.
- *
- * @param {?} data
- * @param {?} allHooks
- * @param {?} checkHooks
- * @param {?} creationMode
- * @return {?}
- */
-function executeHooks(data, allHooks, checkHooks, creationMode) {
-    var /** @type {?} */ hooksToCall = creationMode ? allHooks : checkHooks;
-    if (hooksToCall != null) {
-        callHooks(data, hooksToCall);
-    }
-}
-/**
- * Calls lifecycle hooks with their contexts, skipping init hooks if it's not
- * creation mode.
- *
- * @param {?} data
- * @param {?} arr The array in which the hooks are found
- * @return {?}
- */
-function callHooks(data, arr) {
-    for (var /** @type {?} */ i = 0; i < arr.length; i += 2) {
-        (/** @type {?} */ (arr[i | 1])).call(data[/** @type {?} */ (arr[i])]);
-    }
-}
-
-/**
  * Subset of API needed for appending elements and text nodes.
  * @record
  */
@@ -57961,6 +57852,132 @@ function flatten$1$1(list) {
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
+/** @enum {number} */
+/**
+ * If this is the first template pass, any ngOnInit or ngDoCheck hooks will be queued into
+ * TView.initHooks during directiveCreate.
+ *
+ * The directive index and hook type are encoded into one number (1st bit: type, remaining bits:
+ * directive index), then saved in the even indices of the initHooks array. The odd indices
+ * hold the hook functions themselves.
+ *
+ * @param {?} index The index of the directive in LView.data
+ * @param {?} onInit
+ * @param {?} doCheck
+ * @param {?} tView The current TView
+ * @return {?}
+ */
+function queueInitHooks(index, onInit, doCheck, tView) {
+    if (tView.firstTemplatePass === true) {
+        if (onInit != null) {
+            (tView.initHooks || (tView.initHooks = [])).push(getInitFlags(index), onInit);
+        }
+        if (doCheck != null) {
+            (tView.initHooks || (tView.initHooks = [])).push(getCheckFlags(index), doCheck);
+        }
+    }
+}
+/**
+ * Queues afterContentInit and afterContentChecked hooks on TView
+ * @param {?} def
+ * @param {?} tView
+ * @param {?} i
+ * @return {?}
+ */
+function queueContentHooks(def, tView, i) {
+    if (def.afterContentInit != null) {
+        (tView.contentHooks || (tView.contentHooks = [])).push(getInitFlags(i), def.afterContentInit);
+    }
+    if (def.afterContentChecked != null) {
+        (tView.contentHooks || (tView.contentHooks = [])).push(getCheckFlags(i), def.afterContentChecked);
+    }
+}
+/**
+ * Queues afterViewInit and afterViewChecked hooks on TView
+ * @param {?} def
+ * @param {?} tView
+ * @param {?} i
+ * @return {?}
+ */
+function queueViewHooks(def, tView, i) {
+    if (def.afterViewInit != null) {
+        (tView.viewHooks || (tView.viewHooks = [])).push(getInitFlags(i), def.afterViewInit);
+    }
+    if (def.afterViewChecked != null) {
+        (tView.viewHooks || (tView.viewHooks = [])).push(getCheckFlags(i), def.afterViewChecked);
+    }
+}
+/**
+ * Queues onDestroy hooks on TView
+ * @param {?} def
+ * @param {?} tView
+ * @param {?} i
+ * @return {?}
+ */
+function queueDestroyHooks(def, tView, i) {
+    if (def.onDestroy != null) {
+        (tView.destroyHooks || (tView.destroyHooks = [])).push(i, def.onDestroy);
+    }
+}
+/**
+ * Generates flags for init-only hooks
+ * @param {?} index
+ * @return {?}
+ */
+function getInitFlags(index) {
+    return index << 1 /* INDX_SHIFT */;
+}
+/**
+ * Generates flags for hooks called every change detection run
+ * @param {?} index
+ * @return {?}
+ */
+function getCheckFlags(index) {
+    return (index << 1 /* INDX_SHIFT */) | 1 /* ON_CHECK */;
+}
+/**
+ * Iterates over afterViewInit and afterViewChecked functions and calls them.
+ *
+ * @param {?} currentView The current view
+ * @return {?}
+ */
+function executeViewHooks(currentView) {
+    var /** @type {?} */ viewHooks = currentView.tView.viewHooks;
+    if (viewHooks != null) {
+        executeLifecycleHooks(currentView, viewHooks);
+    }
+}
+/**
+ * Calls lifecycle hooks with their contexts, skipping init hooks if it's not
+ * creation mode.
+ *
+ * @param {?} currentView The current view
+ * @param {?} arr The array in which the hooks are found
+ * @return {?}
+ */
+function executeLifecycleHooks(currentView, arr) {
+    var /** @type {?} */ data = currentView.data;
+    var /** @type {?} */ creationMode = currentView.creationMode;
+    for (var /** @type {?} */ i = 0; i < arr.length; i += 2) {
+        var /** @type {?} */ flags = /** @type {?} */ (arr[i]);
+        var /** @type {?} */ initOnly = (flags & 1 /* TYPE_MASK */) === 0;
+        if (initOnly === false || creationMode) {
+            (/** @type {?} */ (arr[i | 1])).call(data[flags >> 1 /* INDX_SHIFT */]);
+        }
+    }
+}
+
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
 /**
  * Directive (D) sets a property on all component instances using this constant as a key and the
  * component's host node (LElement) as the value. This is used in methods like detectChanges to
@@ -58078,7 +58095,7 @@ function enterView(newView, host) {
  * @return {?}
  */
 function leaveView(newView) {
-    executeHooks(currentView.data, currentView.tView.viewHooks, currentView.tView.viewCheckHooks, creationMode);
+    executeViewHooks(currentView);
     currentView.creationMode = false;
     currentView.lifecycleStage = 1 /* INIT */;
     currentView.tView.firstTemplatePass = false;
@@ -58290,11 +58307,8 @@ function createTView() {
         data: [],
         firstTemplatePass: true,
         initHooks: null,
-        checkHooks: null,
         contentHooks: null,
-        contentCheckHooks: null,
         viewHooks: null,
-        viewCheckHooks: null,
         destroyHooks: null
     };
 }
@@ -59160,7 +59174,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-beta.1-120bdee
+ * @license Angular v6.0.0-beta.1-02483a0
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -61809,7 +61823,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('6.0.0-beta.1-120bdee');
+var VERSION = new Version$1('6.0.0-beta.1-02483a0');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
