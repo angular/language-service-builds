@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-beta.1-9dca5f2
+ * @license Angular v6.0.0-beta.1-c83c416
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v6.0.0-beta.1-9dca5f2
+ * @license Angular v6.0.0-beta.1-c83c416
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -698,7 +698,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('6.0.0-beta.1-9dca5f2');
+var VERSION$1 = new Version('6.0.0-beta.1-c83c416');
 
 /**
  * @fileoverview added by tsickle
@@ -29273,7 +29273,6 @@ var Identifiers$1 = /** @class */ (function () {
     /* Methods */
     Identifiers.NEW_METHOD = 'n';
     Identifiers.HOST_BINDING_METHOD = 'h';
-    Identifiers.REFRESH_METHOD = 'r';
     /* Instructions */
     Identifiers.createElement = { name: 'ɵE', moduleName: CORE$1 };
     Identifiers.elementEnd = { name: 'ɵe', moduleName: CORE$1 };
@@ -29783,10 +29782,8 @@ var TemplateDefinitionBuilder = /** @class */ (function () {
                 (_c = this._bindingMode).push.apply(_c, convertedBinding.stmts);
                 this.instruction(this._bindingMode, directive.sourceSpan, Identifiers$1.elementProperty, literal(nodeIndex), literal(input.templateName), importExpr(Identifiers$1.bind).callFn([convertedBinding.currValExpr]));
             }
-            // e.g. TodoComponentDef.r(0, 0);
-            this._refreshMode.push(this.definitionOf(directiveType, kind)
-                .callMethod(Identifiers$1.REFRESH_METHOD, [literal(directiveIndex), literal(nodeIndex)])
-                .toStmt());
+            // e.g. r(0, 0);
+            this.instruction(this._refreshMode, directive.sourceSpan, Identifiers$1.refreshComponent, literal(directiveIndex), literal(nodeIndex));
         }
         var _c;
     };
@@ -43329,7 +43326,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v6.0.0-beta.1-9dca5f2
+ * @license Angular v6.0.0-beta.1-c83c416
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -43760,7 +43757,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('6.0.0-beta.1-9dca5f2');
+var VERSION$2 = new Version$1('6.0.0-beta.1-c83c416');
 
 /**
  * @fileoverview added by tsickle
@@ -59173,7 +59170,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-beta.1-9dca5f2
+ * @license Angular v6.0.0-beta.1-c83c416
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -61822,7 +61819,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('6.0.0-beta.1-9dca5f2');
+var VERSION = new Version$1('6.0.0-beta.1-c83c416');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
