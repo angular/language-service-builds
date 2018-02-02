@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.2.3-11ec80a
+ * @license Angular v5.2.3-aa9ba7f
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v5.2.3-11ec80a
+ * @license Angular v5.2.3-aa9ba7f
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -691,7 +691,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('5.2.3-11ec80a');
+var VERSION$1 = new Version('5.2.3-aa9ba7f');
 
 /**
  * @fileoverview added by tsickle
@@ -42103,7 +42103,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v5.2.3-11ec80a
+ * @license Angular v5.2.3-aa9ba7f
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -42534,7 +42534,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('5.2.3-11ec80a');
+var VERSION$2 = new Version$1('5.2.3-aa9ba7f');
 
 /**
  * @fileoverview added by tsickle
@@ -42648,6 +42648,7 @@ var __self = typeof self !== 'undefined' && typeof WorkerGlobalScope !== 'undefi
     self instanceof WorkerGlobalScope && self;
 var __global = typeof global !== 'undefined' && global;
 var _global = __window || __global || __self;
+var promise = Promise.resolve(0);
 var _symbolIterator = null;
 /**
  * @return {?}
@@ -42677,7 +42678,13 @@ function getSymbolIterator() {
  * @return {?}
  */
 function scheduleMicroTask(fn) {
-    Zone.current.scheduleMicroTask('scheduleMicrotask', fn);
+    if (typeof Zone === 'undefined') {
+        // use promise to schedule microTask instead of use Zone
+        promise.then(function () { fn && fn.apply(null, null); });
+    }
+    else {
+        Zone.current.scheduleMicroTask('scheduleMicrotask', fn);
+    }
 }
 /**
  * @param {?} a
@@ -56764,7 +56771,7 @@ function initViewStaticData(viewIndex, parent) {
 var NO_CHANGE = /** @type {?} */ ({});
 
 /**
- * @license Angular v5.2.3-11ec80a
+ * @license Angular v5.2.3-aa9ba7f
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59413,7 +59420,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('5.2.3-11ec80a');
+var VERSION = new Version$1('5.2.3-aa9ba7f');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
