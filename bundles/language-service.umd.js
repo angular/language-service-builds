@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-beta.2-1242839
+ * @license Angular v6.0.0-beta.2-f816666
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v6.0.0-beta.2-1242839
+ * @license Angular v6.0.0-beta.2-f816666
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -698,7 +698,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('6.0.0-beta.2-1242839');
+var VERSION$1 = new Version('6.0.0-beta.2-f816666');
 
 /**
  * @fileoverview added by tsickle
@@ -29360,6 +29360,10 @@ function compileDirective(outputCtx, directive, reflector) {
     // e.g. `factory: () => new MyApp(injectElementRef())`
     var /** @type {?} */ templateFactory = createFactory(directive.type, outputCtx, reflector);
     definitionMapValues.push({ key: 'factory', value: templateFactory, quoted: false });
+    // e.g 'inputs: {a: 'a'}`
+    if (Object.getOwnPropertyNames(directive.inputs).length > 0) {
+        definitionMapValues.push({ key: 'inputs', quoted: false, value: mapToExpression(directive.inputs) });
+    }
     var /** @type {?} */ className = /** @type {?} */ ((identifierName(directive.type)));
     className || error("Cannot resolver the name of " + directive.type);
     // Create the partial class to be merged with the actual class.
@@ -29404,6 +29408,18 @@ function compileComponent(outputCtx, component, template, reflector) {
     var /** @type {?} */ templateFunctionExpression = new TemplateDefinitionBuilder(outputCtx, outputCtx.constantPool, reflector, CONTEXT_NAME, ROOT_SCOPE.nestedScope(), 0, /** @type {?} */ ((component.template)).ngContentSelectors, templateTypeName, templateName)
         .buildTemplateFunction(template, []);
     definitionMapValues.push({ key: 'template', value: templateFunctionExpression, quoted: false });
+    // e.g `inputs: {a: 'a'}`
+    if (Object.getOwnPropertyNames(component.inputs).length > 0) {
+        definitionMapValues.push({ key: 'inputs', quoted: false, value: mapToExpression(component.inputs) });
+    }
+    // e.g. `features: [NgOnChangesFeature(MyComponent)]`
+    var /** @type {?} */ features = [];
+    if (component.type.lifecycleHooks.some(function (lifecycle) { return lifecycle == LifecycleHooks.OnChanges; })) {
+        features.push(importExpr(Identifiers$1.NgOnChangesFeature, null, null).callFn([outputCtx.importExpr(component.type.reference)]));
+    }
+    if (features.length) {
+        definitionMapValues.push({ key: 'features', quoted: false, value: literalArr(features) });
+    }
     var /** @type {?} */ className = /** @type {?} */ ((identifierName(component.type)));
     className || error("Cannot resolver the name of " + component.type);
     // Create the partial class to be merged with the actual class.
@@ -29449,9 +29465,9 @@ function interpolate(args) {
         case 17:
             return importExpr(Identifiers$1.bind8).callFn(args);
     }
-    (args.length > 19 && args.length % 2 == 1) ||
+    (args.length >= 19 && args.length % 2 == 1) ||
         error("Invalid interpolation argument length " + args.length);
-    return importExpr(Identifiers$1.bindV).callFn(args);
+    return importExpr(Identifiers$1.bindV).callFn([literalArr(args)]);
 }
 var BindingScope = /** @class */ (function () {
     function BindingScope(parent) {
@@ -29600,12 +29616,12 @@ var TemplateDefinitionBuilder = /** @class */ (function () {
             }
         }
         templateVisitAll(this, asts);
+        var /** @type {?} */ creationMode = this._creationMode.length > 0 ?
+            [ifStmt(variable(CREATION_MODE_FLAG), this._creationMode)] :
+            [];
         return fn([
             new FnParam(this.contextParameter, null), new FnParam(CREATION_MODE_FLAG, BOOL_TYPE)
-        ], this._prefix.concat([
-            // Creating mode (i.e. if (cm) { ... })
-            ifStmt(variable(CREATION_MODE_FLAG), this._creationMode)
-        ], this._bindingMode, this._hostMode, this._refreshMode, this._postfix), INFERRED_TYPE, null, this.templateName);
+        ], this._prefix.concat(creationMode, this._bindingMode, this._hostMode, this._refreshMode, this._postfix), INFERRED_TYPE, null, this.templateName);
     };
     /**
      * @param {?} name
@@ -29782,6 +29798,10 @@ var TemplateDefinitionBuilder = /** @class */ (function () {
                 (_c = this._bindingMode).push.apply(_c, convertedBinding.stmts);
                 this.instruction(this._bindingMode, directive.sourceSpan, Identifiers$1.elementProperty, literal(nodeIndex), literal(input.templateName), importExpr(Identifiers$1.bind).callFn([convertedBinding.currValExpr]));
             }
+            // e.g. MyDirective.ngDirectiveDef.h(0, 0);
+            this._hostMode.push(this.definitionOf(directiveType, kind)
+                .callMethod(Identifiers$1.HOST_BINDING_METHOD, [literal(directiveIndex), literal(nodeIndex)])
+                .toStmt());
             // e.g. r(0, 0);
             this.instruction(this._refreshMode, directive.sourceSpan, Identifiers$1.refreshComponent, literal(directiveIndex), literal(nodeIndex));
         }
@@ -30086,6 +30106,13 @@ function asLiteral(value) {
         return literalArr(value.map(asLiteral));
     }
     return literal(value, INFERRED_TYPE);
+}
+/**
+ * @param {?} map
+ * @return {?}
+ */
+function mapToExpression(map) {
+    return literalMap(Object.getOwnPropertyNames(map).map(function (key) { return ({ key: key, quoted: false, value: literal(map[key]) }); }));
 }
 var _a;
 
@@ -43330,7 +43357,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v6.0.0-beta.2-1242839
+ * @license Angular v6.0.0-beta.2-f816666
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -43761,7 +43788,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('6.0.0-beta.2-1242839');
+var VERSION$2 = new Version$1('6.0.0-beta.2-f816666');
 
 /**
  * @fileoverview added by tsickle
@@ -59183,7 +59210,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-beta.2-1242839
+ * @license Angular v6.0.0-beta.2-f816666
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -61832,7 +61859,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('6.0.0-beta.2-1242839');
+var VERSION = new Version$1('6.0.0-beta.2-f816666');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
