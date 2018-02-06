@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.2.3-f0396f1
+ * @license Angular v5.2.3-c6645e7
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v5.2.3-f0396f1
+ * @license Angular v5.2.3-c6645e7
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -691,7 +691,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('5.2.3-f0396f1');
+var VERSION$1 = new Version('5.2.3-c6645e7');
 
 /**
  * @fileoverview added by tsickle
@@ -42103,7 +42103,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v5.2.3-f0396f1
+ * @license Angular v5.2.3-c6645e7
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -42534,7 +42534,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('5.2.3-f0396f1');
+var VERSION$2 = new Version$1('5.2.3-c6645e7');
 
 /**
  * @fileoverview added by tsickle
@@ -46060,7 +46060,11 @@ var EventEmitter = /** @class */ (function (_super) {
                     this.__isAsync ? function () { setTimeout(function () { return complete(); }); } : function () { complete(); };
             }
         }
-        return _super.prototype.subscribe.call(this, schedulerFn, errorFn, completeFn);
+        var /** @type {?} */ sink = _super.prototype.subscribe.call(this, schedulerFn, errorFn, completeFn);
+        if (generatorOrNext instanceof Subscription_2) {
+            generatorOrNext.add(sink);
+        }
+        return sink;
     };
     return EventEmitter;
 }(Subject_2));
@@ -56771,7 +56775,7 @@ function initViewStaticData(viewIndex, parent) {
 var NO_CHANGE = /** @type {?} */ ({});
 
 /**
- * @license Angular v5.2.3-f0396f1
+ * @license Angular v5.2.3-c6645e7
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59420,7 +59424,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('5.2.3-f0396f1');
+var VERSION = new Version$1('5.2.3-c6645e7');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
