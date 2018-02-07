@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-beta.3-7a406a3
+ * @license Angular v6.0.0-beta.3-efc67ee
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v6.0.0-beta.3-7a406a3
+ * @license Angular v6.0.0-beta.3-efc67ee
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -698,7 +698,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('6.0.0-beta.3-7a406a3');
+var VERSION$1 = new Version('6.0.0-beta.3-efc67ee');
 
 /**
  * @fileoverview added by tsickle
@@ -43357,7 +43357,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v6.0.0-beta.3-7a406a3
+ * @license Angular v6.0.0-beta.3-efc67ee
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -43794,7 +43794,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('6.0.0-beta.3-7a406a3');
+var VERSION$2 = new Version$1('6.0.0-beta.3-efc67ee');
 
 /**
  * @fileoverview added by tsickle
@@ -58957,7 +58957,7 @@ var EmbeddedViewRef$2 = /** @class */ (function () {
  */
 
 /**
- * Invokes a pure pipe with 4 arguments.
+ * Invokes a pipe with 1 arguments.
  *
  * This instruction acts as a guard to {\@link PipeTransform#transform} invoking
  * the pipe only when an input to the pipe changes.
@@ -58968,7 +58968,7 @@ var EmbeddedViewRef$2 = /** @class */ (function () {
  */
 
 /**
- * Invokes a pure pipe with 4 arguments.
+ * Invokes a pipe with 2 arguments.
  *
  * This instruction acts as a guard to {\@link PipeTransform#transform} invoking
  * the pipe only when an input to the pipe changes.
@@ -58980,7 +58980,7 @@ var EmbeddedViewRef$2 = /** @class */ (function () {
  */
 
 /**
- * Invokes a pure pipe with 4 arguments.
+ * Invokes a pipe with 3 arguments.
  *
  * This instruction acts as a guard to {\@link PipeTransform#transform} invoking
  * the pipe only when an input to the pipe changes.
@@ -58993,7 +58993,7 @@ var EmbeddedViewRef$2 = /** @class */ (function () {
  */
 
 /**
- * Invokes a pure pipe with 4 arguments.
+ * Invokes a pipe with 4 arguments.
  *
  * This instruction acts as a guard to {\@link PipeTransform#transform} invoking
  * the pipe only when an input to the pipe changes.
@@ -59007,7 +59007,7 @@ var EmbeddedViewRef$2 = /** @class */ (function () {
  */
 
 /**
- * Invokes a pure pipe with variable number of arguments.
+ * Invokes a pipe with variable number of arguments.
  *
  * This instruction acts as a guard to {\@link PipeTransform#transform} invoking
  * the pipe only when an input to the pipe changes.
@@ -59344,7 +59344,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-beta.3-7a406a3
+ * @license Angular v6.0.0-beta.3-efc67ee
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -61993,7 +61993,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('6.0.0-beta.3-7a406a3');
+var VERSION = new Version$1('6.0.0-beta.3-efc67ee');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
