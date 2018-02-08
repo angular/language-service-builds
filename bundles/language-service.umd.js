@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-beta.3-67cf712
+ * @license Angular v6.0.0-beta.3-3f5a3d6
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v6.0.0-beta.3-67cf712
+ * @license Angular v6.0.0-beta.3-3f5a3d6
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -698,7 +698,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('6.0.0-beta.3-67cf712');
+var VERSION$1 = new Version('6.0.0-beta.3-3f5a3d6');
 
 /**
  * @fileoverview added by tsickle
@@ -43357,7 +43357,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v6.0.0-beta.3-67cf712
+ * @license Angular v6.0.0-beta.3-3f5a3d6
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -43794,7 +43794,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('6.0.0-beta.3-67cf712');
+var VERSION$2 = new Version$1('6.0.0-beta.3-3f5a3d6');
 
 /**
  * @fileoverview added by tsickle
@@ -57525,6 +57525,24 @@ function callHooks(data, arr) {
 }
 
 /**
+ * Object Oriented style of API needed to create elements and text nodes.
+ *
+ * This is the native browser API style, e.g. operations are methods on individual objects
+ * like HTMLElement. With this style, no additional code is needed as a facade
+ * (reducing payload size).
+ *
+ * @record
+ */
+
+/**
+ * Returns wether the `renderer` is a `ProceduralRenderer3`
+ * @param {?} renderer
+ * @return {?}
+ */
+function isProceduralRenderer(renderer) {
+    return !!((/** @type {?} */ (renderer)).listen);
+}
+/**
  * Subset of API needed for appending elements and text nodes.
  * @record
  */
@@ -57741,14 +57759,16 @@ function addRemoveViewFromContainer(container, rootNode, insertMode, beforeNode)
             var /** @type {?} */ type = node.flags & 3;
             var /** @type {?} */ nextNode = null;
             var /** @type {?} */ renderer = container.view.renderer;
-            var /** @type {?} */ isFnRenderer = (/** @type {?} */ (renderer)).listen;
             if (type === 3 /* Element */) {
-                insertMode ? (isFnRenderer ? /** @type {?} */ (((/** @type {?} */ (renderer))
-                    .insertBefore))(parent, /** @type {?} */ ((node.native)), /** @type {?} */ (beforeNode)) :
-                    parent.insertBefore(/** @type {?} */ ((node.native)), /** @type {?} */ (beforeNode), true)) :
-                    (isFnRenderer ? /** @type {?} */ (((/** @type {?} */ (renderer))
-                        .removeChild))(/** @type {?} */ (parent), /** @type {?} */ ((node.native))) :
-                        parent.removeChild(/** @type {?} */ ((node.native))));
+                if (insertMode) {
+                    isProceduralRenderer(renderer) ?
+                        renderer.insertBefore(parent, /** @type {?} */ ((node.native)), /** @type {?} */ (beforeNode)) :
+                        parent.insertBefore(/** @type {?} */ ((node.native)), /** @type {?} */ (beforeNode), true);
+                }
+                else {
+                    isProceduralRenderer(renderer) ? renderer.removeChild(/** @type {?} */ (parent), /** @type {?} */ ((node.native))) :
+                        parent.removeChild(/** @type {?} */ ((node.native)));
+                }
                 nextNode = node.next;
             }
             else if (type === 0 /* Container */) {
@@ -57834,40 +57854,31 @@ function setViewNext(view, next) {
     view.data.next = next ? next.data : null;
 }
 /**
- * Returns whether a child native element should be inserted now in the given parent.
+ * Returns whether a native element should be inserted in the given parent.
  *
- * If the parent is a view, the element will be appended as part of viewEnd(), so
- * the element should not be appended now. Similarly, if the child is a content child
- * of a parent component, the child will be appended to the right position later by
- * the content projection system.
+ * The native node can be inserted when its parent is:
+ * - A regular element => Yes
+ * - A component host element =>
+ *    - if the `currentView` === the parent `view`: The element is in the content (vs the
+ *      template)
+ *      => don't add as the parent component will project if needed.
+ *    - `currentView` !== the parent `view` => The element is in the template (vs the content),
+ *      add it
+ * - View element => delay insertion, will be done on `viewEnd()`
  *
  * @param {?} parent The parent in which to insert the child
- * @param {?} view
- * @return {?} Whether the child element should be inserted now.
+ * @param {?} currentView The LView being processed
+ * @return {?} boolean Whether the child element should be inserted.
  */
-function canInsertNativeNode(parent, view) {
-    // Only add native child element to parent element if the parent element is regular Element.
-    // If parent is:
-    // - Regular element => add child
-    // - Component host element =>
-    //    - Current View, and parent view same => content => don't add -> parent component will
-    //    re-project if needed.
-    //    - Current View, and parent view different => view => add Child
-    // - View element => View's get added separately.
-    return ((parent.flags & 3 /* TYPE_MASK */) === 3 /* Element */ &&
-        (parent.view !== view /* Crossing View Boundaries, it is Component, but add Element of View */
-            || parent.data === null /* Regular Element. */));
-    // we are adding to an Element which is either:
-    // - Not a component (will not be re-projected, just added)
-    // - View of the Component
+function canInsertNativeNode(parent, currentView) {
+    var /** @type {?} */ parentIsElement = (parent.flags & 3 /* TYPE_MASK */) === 3;
+    return parentIsElement &&
+        (parent.view !== currentView || parent.data === null /* Regular Element. */);
 }
 /**
- * Appends the provided child element to the provided parent, if appropriate.
+ * Appends the `child` element to the `parent`.
  *
- * If the parent is a view, the element will be appended as part of viewEnd(), so
- * the element should not be appended now. Similarly, if the child is a content child
- * of a parent component, the child will be appended to the right position later by
- * the content projection system. Otherwise, append normally.
+ * The element insertion might be delayed {\@link canInsertNativeNode}
  *
  * @param {?} parent The parent to which to append the child
  * @param {?} child The child that should be appended
@@ -57878,7 +57889,7 @@ function appendChild(parent, child, currentView) {
     if (child !== null && canInsertNativeNode(parent, currentView)) {
         // We only add element if not in View or not projected.
         var /** @type {?} */ renderer = currentView.renderer;
-        (/** @type {?} */ (renderer)).listen ? /** @type {?} */ (((/** @type {?} */ (renderer)).appendChild))(/** @type {?} */ (((parent.native))), child) : /** @type {?} */ ((parent.native)).appendChild(child);
+        isProceduralRenderer(renderer) ? renderer.appendChild(/** @type {?} */ (((parent.native))), child) : /** @type {?} */ ((parent.native)).appendChild(child);
         return true;
     }
     return false;
@@ -58359,9 +58370,9 @@ function createTView() {
  */
 function setUpAttributes(native, attrs) {
     ngDevMode && assertEqual(attrs.length % 2, 0, 'attrs.length % 2');
-    var /** @type {?} */ isProceduralRenderer = (/** @type {?} */ (renderer)).setAttribute;
+    var /** @type {?} */ isProceduralRenderer$$1 = (/** @type {?} */ (renderer)).setAttribute;
     for (var /** @type {?} */ i = 0; i < attrs.length; i += 2) {
-        isProceduralRenderer ? /** @type {?} */ (((/** @type {?} */ (renderer)).setAttribute))(native, attrs[i], attrs[i | 1]) :
+        isProceduralRenderer$$1 ? /** @type {?} */ (((/** @type {?} */ (renderer)).setAttribute))(native, attrs[i], attrs[i | 1]) :
             native.setAttribute(attrs[i], attrs[i | 1]);
     }
 }
@@ -59344,7 +59355,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-beta.3-67cf712
+ * @license Angular v6.0.0-beta.3-3f5a3d6
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -61993,7 +62004,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('6.0.0-beta.3-67cf712');
+var VERSION = new Version$1('6.0.0-beta.3-3f5a3d6');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
