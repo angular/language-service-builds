@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-beta.3-b58c352
+ * @license Angular v6.0.0-beta.3-cd25939
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v6.0.0-beta.3-b58c352
+ * @license Angular v6.0.0-beta.3-cd25939
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -698,7 +698,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('6.0.0-beta.3-b58c352');
+var VERSION$1 = new Version('6.0.0-beta.3-cd25939');
 
 /**
  * @fileoverview added by tsickle
@@ -43357,7 +43357,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v6.0.0-beta.3-b58c352
+ * @license Angular v6.0.0-beta.3-cd25939
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -43794,7 +43794,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('6.0.0-beta.3-b58c352');
+var VERSION$2 = new Version$1('6.0.0-beta.3-cd25939');
 
 /**
  * @fileoverview added by tsickle
@@ -59344,7 +59344,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-beta.3-b58c352
+ * @license Angular v6.0.0-beta.3-cd25939
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -61993,7 +61993,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('6.0.0-beta.3-b58c352');
+var VERSION = new Version$1('6.0.0-beta.3-cd25939');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
