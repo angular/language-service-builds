@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-beta.3-62e7b9d
+ * @license Angular v6.0.0-beta.3-235a235
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v6.0.0-beta.3-62e7b9d
+ * @license Angular v6.0.0-beta.3-235a235
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -84,7 +84,7 @@ var __assign = Object.assign || function __assign(t) {
  */
 function Inject() { }
 var createInject = makeMetadataFactory('Inject', function (token) { return ({ token: token }); });
-var createInjectionToken = makeMetadataFactory('InjectionToken', function (desc) { return ({ _desc: desc }); });
+var createInjectionToken = makeMetadataFactory('InjectionToken', function (desc) { return ({ _desc: desc, ngInjectableDef: undefined }); });
 /**
  * @record
  */
@@ -178,6 +178,14 @@ function ModuleWithProviders() { }
 /**
  * @record
  */
+function Injectable() { }
+var createInjectable = makeMetadataFactory('Injectable', function (injectable) {
+    if (injectable === void 0) { injectable = {}; }
+    return injectable;
+});
+/**
+ * @record
+ */
 function SchemaMetadata() { }
 var CUSTOM_ELEMENTS_SCHEMA = {
     name: 'custom-elements'
@@ -186,7 +194,6 @@ var NO_ERRORS_SCHEMA = {
     name: 'no-errors-schema'
 };
 var createOptional = makeMetadataFactory('Optional');
-var createInjectable = makeMetadataFactory('Injectable');
 var createSelf = makeMetadataFactory('Self');
 var createSkipSelf = makeMetadataFactory('SkipSelf');
 var createHost = makeMetadataFactory('Host');
@@ -243,6 +250,7 @@ var NodeFlags = {
     TypeViewQuery: 134217728,
     StaticQuery: 268435456,
     DynamicQuery: 536870912,
+    TypeModuleProvider: 1073741824,
     CatQuery: 201326592,
     // mutually exclusive values...
     Types: 201347067,
@@ -252,7 +260,16 @@ var DepFlags = {
     None: 0,
     SkipSelf: 1,
     Optional: 2,
+    Self: 4,
     Value: 8,
+};
+/** @enum {number} */
+var InjectFlags = {
+    Default: 0,
+    /** Skip the node that is requesting injection. */
+    SkipSelf: 1,
+    /** Don't descend into ancestors of the node requesting injection. */
+    Self: 2,
 };
 /** @enum {number} */
 var ArgumentType = { Inline: 0, Dynamic: 1, };
@@ -352,11 +369,12 @@ var core = Object.freeze({
 	NgModule: NgModule,
 	createNgModule: createNgModule,
 	ModuleWithProviders: ModuleWithProviders,
+	Injectable: Injectable,
+	createInjectable: createInjectable,
 	SchemaMetadata: SchemaMetadata,
 	CUSTOM_ELEMENTS_SCHEMA: CUSTOM_ELEMENTS_SCHEMA,
 	NO_ERRORS_SCHEMA: NO_ERRORS_SCHEMA,
 	createOptional: createOptional,
-	createInjectable: createInjectable,
 	createSelf: createSelf,
 	createSkipSelf: createSkipSelf,
 	createHost: createHost,
@@ -364,6 +382,7 @@ var core = Object.freeze({
 	SecurityContext: SecurityContext,
 	NodeFlags: NodeFlags,
 	DepFlags: DepFlags,
+	InjectFlags: InjectFlags,
 	ArgumentType: ArgumentType,
 	BindingFlags: BindingFlags,
 	QueryBindingType: QueryBindingType,
@@ -698,7 +717,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('6.0.0-beta.3-62e7b9d');
+var VERSION$1 = new Version('6.0.0-beta.3-235a235');
 
 /**
  * @fileoverview added by tsickle
@@ -1036,7 +1055,7 @@ var DirectiveAst = /** @class */ (function () {
  * A provider declared on an element
  */
 var ProviderAst = /** @class */ (function () {
-    function ProviderAst(token, multiProvider, eager, providers, providerType, lifecycleHooks, sourceSpan) {
+    function ProviderAst(token, multiProvider, eager, providers, providerType, lifecycleHooks, sourceSpan, isModule) {
         this.token = token;
         this.multiProvider = multiProvider;
         this.eager = eager;
@@ -1044,6 +1063,7 @@ var ProviderAst = /** @class */ (function () {
         this.providerType = providerType;
         this.lifecycleHooks = lifecycleHooks;
         this.sourceSpan = sourceSpan;
+        this.isModule = isModule;
     }
     /**
      * @param {?} visitor
@@ -1646,6 +1666,10 @@ function tokenReference(token) {
         return token.value;
     }
 }
+/**
+ * @record
+ */
+
 /**
  * @record
  */
@@ -13809,123 +13833,6 @@ function createSerializer(format) {
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-var STRIP_SRC_FILE_SUFFIXES = /(\.ts|\.d\.ts|\.js|\.jsx|\.tsx)$/;
-var GENERATED_FILE = /\.ngfactory\.|\.ngsummary\./;
-var JIT_SUMMARY_FILE = /\.ngsummary\./;
-var JIT_SUMMARY_NAME = /NgSummary$/;
-/**
- * @param {?} filePath
- * @param {?=} forceSourceFile
- * @return {?}
- */
-function ngfactoryFilePath(filePath, forceSourceFile) {
-    if (forceSourceFile === void 0) { forceSourceFile = false; }
-    var /** @type {?} */ urlWithSuffix = splitTypescriptSuffix(filePath, forceSourceFile);
-    return urlWithSuffix[0] + ".ngfactory" + normalizeGenFileSuffix(urlWithSuffix[1]);
-}
-/**
- * @param {?} filePath
- * @return {?}
- */
-function stripGeneratedFileSuffix(filePath) {
-    return filePath.replace(GENERATED_FILE, '.');
-}
-/**
- * @param {?} filePath
- * @return {?}
- */
-function isGeneratedFile(filePath) {
-    return GENERATED_FILE.test(filePath);
-}
-/**
- * @param {?} path
- * @param {?=} forceSourceFile
- * @return {?}
- */
-function splitTypescriptSuffix(path$$1, forceSourceFile) {
-    if (forceSourceFile === void 0) { forceSourceFile = false; }
-    if (path$$1.endsWith('.d.ts')) {
-        return [path$$1.slice(0, -5), forceSourceFile ? '.ts' : '.d.ts'];
-    }
-    var /** @type {?} */ lastDot = path$$1.lastIndexOf('.');
-    if (lastDot !== -1) {
-        return [path$$1.substring(0, lastDot), path$$1.substring(lastDot)];
-    }
-    return [path$$1, ''];
-}
-/**
- * @param {?} srcFileSuffix
- * @return {?}
- */
-function normalizeGenFileSuffix(srcFileSuffix) {
-    return srcFileSuffix === '.tsx' ? '.ts' : srcFileSuffix;
-}
-/**
- * @param {?} fileName
- * @return {?}
- */
-function summaryFileName(fileName) {
-    var /** @type {?} */ fileNameWithoutSuffix = fileName.replace(STRIP_SRC_FILE_SUFFIXES, '');
-    return fileNameWithoutSuffix + ".ngsummary.json";
-}
-/**
- * @param {?} fileName
- * @param {?=} forceSourceFile
- * @return {?}
- */
-function summaryForJitFileName(fileName, forceSourceFile) {
-    if (forceSourceFile === void 0) { forceSourceFile = false; }
-    var /** @type {?} */ urlWithSuffix = splitTypescriptSuffix(stripGeneratedFileSuffix(fileName), forceSourceFile);
-    return urlWithSuffix[0] + ".ngsummary" + urlWithSuffix[1];
-}
-/**
- * @param {?} filePath
- * @return {?}
- */
-function stripSummaryForJitFileSuffix(filePath) {
-    return filePath.replace(JIT_SUMMARY_FILE, '.');
-}
-/**
- * @param {?} symbolName
- * @return {?}
- */
-function summaryForJitName(symbolName) {
-    return symbolName + "NgSummary";
-}
-/**
- * @param {?} symbolName
- * @return {?}
- */
-function stripSummaryForJitNameSuffix(symbolName) {
-    return symbolName.replace(JIT_SUMMARY_NAME, '');
-}
-var LOWERED_SYMBOL = /\u0275\d+/;
-/**
- * @param {?} name
- * @return {?}
- */
-function isLoweredSymbol(name) {
-    return LOWERED_SYMBOL.test(name);
-}
-/**
- * @param {?} id
- * @return {?}
- */
-function createLoweredSymbol(id) {
-    return "\u0275" + id;
-}
-
-/**
- * @fileoverview added by tsickle
- * @suppress {checkTypes} checked by tsc
- */
-/**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
- */
 var CORE = '@angular/core';
 var Identifiers = /** @class */ (function () {
     function Identifiers() {
@@ -13970,7 +13877,9 @@ var Identifiers = /** @class */ (function () {
         name: 'ɵregisterModuleFactory',
         moduleName: CORE,
     };
+    Identifiers.inject = { name: 'inject', moduleName: CORE };
     Identifiers.Injector = { name: 'Injector', moduleName: CORE };
+    Identifiers.defineInjectable = { name: 'defineInjectable', moduleName: CORE };
     Identifiers.ViewEncapsulation = {
         name: 'ViewEncapsulation',
         moduleName: CORE,
@@ -14038,2124 +13947,6 @@ function createTokenForReference(reference) {
  */
 function createTokenForExternalReference(reflector, reference) {
     return createTokenForReference(reflector.resolveExternalReference(reference));
-}
-
-/**
- * @fileoverview added by tsickle
- * @suppress {checkTypes} checked by tsc
- */
-/**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
- */
-/** @enum {number} */
-var LifecycleHooks = {
-    OnInit: 0,
-    OnDestroy: 1,
-    DoCheck: 2,
-    OnChanges: 3,
-    AfterContentInit: 4,
-    AfterContentChecked: 5,
-    AfterViewInit: 6,
-    AfterViewChecked: 7,
-};
-LifecycleHooks[LifecycleHooks.OnInit] = "OnInit";
-LifecycleHooks[LifecycleHooks.OnDestroy] = "OnDestroy";
-LifecycleHooks[LifecycleHooks.DoCheck] = "DoCheck";
-LifecycleHooks[LifecycleHooks.OnChanges] = "OnChanges";
-LifecycleHooks[LifecycleHooks.AfterContentInit] = "AfterContentInit";
-LifecycleHooks[LifecycleHooks.AfterContentChecked] = "AfterContentChecked";
-LifecycleHooks[LifecycleHooks.AfterViewInit] = "AfterViewInit";
-LifecycleHooks[LifecycleHooks.AfterViewChecked] = "AfterViewChecked";
-var LIFECYCLE_HOOKS_VALUES = [
-    LifecycleHooks.OnInit, LifecycleHooks.OnDestroy, LifecycleHooks.DoCheck, LifecycleHooks.OnChanges,
-    LifecycleHooks.AfterContentInit, LifecycleHooks.AfterContentChecked, LifecycleHooks.AfterViewInit,
-    LifecycleHooks.AfterViewChecked
-];
-/**
- * @param {?} reflector
- * @param {?} hook
- * @param {?} token
- * @return {?}
- */
-function hasLifecycleHook(reflector, hook, token) {
-    return reflector.hasLifecycleHook(token, getHookName(hook));
-}
-/**
- * @param {?} reflector
- * @param {?} token
- * @return {?}
- */
-function getAllLifecycleHooks(reflector, token) {
-    return LIFECYCLE_HOOKS_VALUES.filter(function (hook) { return hasLifecycleHook(reflector, hook, token); });
-}
-/**
- * @param {?} hook
- * @return {?}
- */
-function getHookName(hook) {
-    switch (hook) {
-        case LifecycleHooks.OnInit:
-            return 'ngOnInit';
-        case LifecycleHooks.OnDestroy:
-            return 'ngOnDestroy';
-        case LifecycleHooks.DoCheck:
-            return 'ngDoCheck';
-        case LifecycleHooks.OnChanges:
-            return 'ngOnChanges';
-        case LifecycleHooks.AfterContentInit:
-            return 'ngAfterContentInit';
-        case LifecycleHooks.AfterContentChecked:
-            return 'ngAfterContentChecked';
-        case LifecycleHooks.AfterViewInit:
-            return 'ngAfterViewInit';
-        case LifecycleHooks.AfterViewChecked:
-            return 'ngAfterViewChecked';
-    }
-}
-
-/**
- * @fileoverview added by tsickle
- * @suppress {checkTypes} checked by tsc
- */
-/**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
- */
-var _SELECTOR_REGEXP = new RegExp('(\\:not\\()|' + //":not("
-    '([-\\w]+)|' + // "tag"
-    '(?:\\.([-\\w]+))|' + // ".class"
-    '(?:\\[([-.\\w*]+)(?:=([\"\']?)([^\\]\"\']*)\\5)?\\])|' + // "[name]", "[name=value]",
-    '(\\))|' + // ")"
-    '(\\s*,\\s*)', // ","
-'g');
-/**
- * A css selector contains an element name,
- * css classes and attribute/value pairs with the purpose
- * of selecting subsets out of them.
- */
-var CssSelector = /** @class */ (function () {
-    function CssSelector() {
-        this.element = null;
-        this.classNames = [];
-        this.attrs = [];
-        this.notSelectors = [];
-    }
-    /**
-     * @param {?} selector
-     * @return {?}
-     */
-    CssSelector.parse = /**
-     * @param {?} selector
-     * @return {?}
-     */
-    function (selector) {
-        var /** @type {?} */ results = [];
-        var /** @type {?} */ _addResult = function (res, cssSel) {
-            if (cssSel.notSelectors.length > 0 && !cssSel.element && cssSel.classNames.length == 0 &&
-                cssSel.attrs.length == 0) {
-                cssSel.element = '*';
-            }
-            res.push(cssSel);
-        };
-        var /** @type {?} */ cssSelector = new CssSelector();
-        var /** @type {?} */ match;
-        var /** @type {?} */ current = cssSelector;
-        var /** @type {?} */ inNot = false;
-        _SELECTOR_REGEXP.lastIndex = 0;
-        while (match = _SELECTOR_REGEXP.exec(selector)) {
-            if (match[1]) {
-                if (inNot) {
-                    throw new Error('Nesting :not is not allowed in a selector');
-                }
-                inNot = true;
-                current = new CssSelector();
-                cssSelector.notSelectors.push(current);
-            }
-            if (match[2]) {
-                current.setElement(match[2]);
-            }
-            if (match[3]) {
-                current.addClassName(match[3]);
-            }
-            if (match[4]) {
-                current.addAttribute(match[4], match[6]);
-            }
-            if (match[7]) {
-                inNot = false;
-                current = cssSelector;
-            }
-            if (match[8]) {
-                if (inNot) {
-                    throw new Error('Multiple selectors in :not are not supported');
-                }
-                _addResult(results, cssSelector);
-                cssSelector = current = new CssSelector();
-            }
-        }
-        _addResult(results, cssSelector);
-        return results;
-    };
-    /**
-     * @return {?}
-     */
-    CssSelector.prototype.isElementSelector = /**
-     * @return {?}
-     */
-    function () {
-        return this.hasElementSelector() && this.classNames.length == 0 && this.attrs.length == 0 &&
-            this.notSelectors.length === 0;
-    };
-    /**
-     * @return {?}
-     */
-    CssSelector.prototype.hasElementSelector = /**
-     * @return {?}
-     */
-    function () { return !!this.element; };
-    /**
-     * @param {?=} element
-     * @return {?}
-     */
-    CssSelector.prototype.setElement = /**
-     * @param {?=} element
-     * @return {?}
-     */
-    function (element) {
-        if (element === void 0) { element = null; }
-        this.element = element;
-    };
-    /** Gets a template string for an element that matches the selector. */
-    /**
-     * Gets a template string for an element that matches the selector.
-     * @return {?}
-     */
-    CssSelector.prototype.getMatchingElementTemplate = /**
-     * Gets a template string for an element that matches the selector.
-     * @return {?}
-     */
-    function () {
-        var /** @type {?} */ tagName = this.element || 'div';
-        var /** @type {?} */ classAttr = this.classNames.length > 0 ? " class=\"" + this.classNames.join(' ') + "\"" : '';
-        var /** @type {?} */ attrs = '';
-        for (var /** @type {?} */ i = 0; i < this.attrs.length; i += 2) {
-            var /** @type {?} */ attrName = this.attrs[i];
-            var /** @type {?} */ attrValue = this.attrs[i + 1] !== '' ? "=\"" + this.attrs[i + 1] + "\"" : '';
-            attrs += " " + attrName + attrValue;
-        }
-        return getHtmlTagDefinition(tagName).isVoid ? "<" + tagName + classAttr + attrs + "/>" :
-            "<" + tagName + classAttr + attrs + "></" + tagName + ">";
-    };
-    /**
-     * @return {?}
-     */
-    CssSelector.prototype.getAttrs = /**
-     * @return {?}
-     */
-    function () {
-        var /** @type {?} */ result = [];
-        if (this.classNames.length > 0) {
-            result.push('class', this.classNames.join(' '));
-        }
-        return result.concat(this.attrs);
-    };
-    /**
-     * @param {?} name
-     * @param {?=} value
-     * @return {?}
-     */
-    CssSelector.prototype.addAttribute = /**
-     * @param {?} name
-     * @param {?=} value
-     * @return {?}
-     */
-    function (name, value) {
-        if (value === void 0) { value = ''; }
-        this.attrs.push(name, value && value.toLowerCase() || '');
-    };
-    /**
-     * @param {?} name
-     * @return {?}
-     */
-    CssSelector.prototype.addClassName = /**
-     * @param {?} name
-     * @return {?}
-     */
-    function (name) { this.classNames.push(name.toLowerCase()); };
-    /**
-     * @return {?}
-     */
-    CssSelector.prototype.toString = /**
-     * @return {?}
-     */
-    function () {
-        var /** @type {?} */ res = this.element || '';
-        if (this.classNames) {
-            this.classNames.forEach(function (klass) { return res += "." + klass; });
-        }
-        if (this.attrs) {
-            for (var /** @type {?} */ i = 0; i < this.attrs.length; i += 2) {
-                var /** @type {?} */ name_1 = this.attrs[i];
-                var /** @type {?} */ value = this.attrs[i + 1];
-                res += "[" + name_1 + (value ? '=' + value : '') + "]";
-            }
-        }
-        this.notSelectors.forEach(function (notSelector) { return res += ":not(" + notSelector + ")"; });
-        return res;
-    };
-    return CssSelector;
-}());
-/**
- * Reads a list of CssSelectors and allows to calculate which ones
- * are contained in a given CssSelector.
- */
-var SelectorMatcher = /** @class */ (function () {
-    function SelectorMatcher() {
-        this._elementMap = new Map();
-        this._elementPartialMap = new Map();
-        this._classMap = new Map();
-        this._classPartialMap = new Map();
-        this._attrValueMap = new Map();
-        this._attrValuePartialMap = new Map();
-        this._listContexts = [];
-    }
-    /**
-     * @param {?} notSelectors
-     * @return {?}
-     */
-    SelectorMatcher.createNotMatcher = /**
-     * @param {?} notSelectors
-     * @return {?}
-     */
-    function (notSelectors) {
-        var /** @type {?} */ notMatcher = new SelectorMatcher();
-        notMatcher.addSelectables(notSelectors, null);
-        return notMatcher;
-    };
-    /**
-     * @param {?} cssSelectors
-     * @param {?=} callbackCtxt
-     * @return {?}
-     */
-    SelectorMatcher.prototype.addSelectables = /**
-     * @param {?} cssSelectors
-     * @param {?=} callbackCtxt
-     * @return {?}
-     */
-    function (cssSelectors, callbackCtxt) {
-        var /** @type {?} */ listContext = /** @type {?} */ ((null));
-        if (cssSelectors.length > 1) {
-            listContext = new SelectorListContext(cssSelectors);
-            this._listContexts.push(listContext);
-        }
-        for (var /** @type {?} */ i = 0; i < cssSelectors.length; i++) {
-            this._addSelectable(cssSelectors[i], callbackCtxt, listContext);
-        }
-    };
-    /**
-     * Add an object that can be found later on by calling `match`.
-     * @param {?} cssSelector A css selector
-     * @param {?} callbackCtxt An opaque object that will be given to the callback of the `match` function
-     * @param {?} listContext
-     * @return {?}
-     */
-    SelectorMatcher.prototype._addSelectable = /**
-     * Add an object that can be found later on by calling `match`.
-     * @param {?} cssSelector A css selector
-     * @param {?} callbackCtxt An opaque object that will be given to the callback of the `match` function
-     * @param {?} listContext
-     * @return {?}
-     */
-    function (cssSelector, callbackCtxt, listContext) {
-        var /** @type {?} */ matcher = this;
-        var /** @type {?} */ element = cssSelector.element;
-        var /** @type {?} */ classNames = cssSelector.classNames;
-        var /** @type {?} */ attrs = cssSelector.attrs;
-        var /** @type {?} */ selectable = new SelectorContext(cssSelector, callbackCtxt, listContext);
-        if (element) {
-            var /** @type {?} */ isTerminal = attrs.length === 0 && classNames.length === 0;
-            if (isTerminal) {
-                this._addTerminal(matcher._elementMap, element, selectable);
-            }
-            else {
-                matcher = this._addPartial(matcher._elementPartialMap, element);
-            }
-        }
-        if (classNames) {
-            for (var /** @type {?} */ i = 0; i < classNames.length; i++) {
-                var /** @type {?} */ isTerminal = attrs.length === 0 && i === classNames.length - 1;
-                var /** @type {?} */ className = classNames[i];
-                if (isTerminal) {
-                    this._addTerminal(matcher._classMap, className, selectable);
-                }
-                else {
-                    matcher = this._addPartial(matcher._classPartialMap, className);
-                }
-            }
-        }
-        if (attrs) {
-            for (var /** @type {?} */ i = 0; i < attrs.length; i += 2) {
-                var /** @type {?} */ isTerminal = i === attrs.length - 2;
-                var /** @type {?} */ name_2 = attrs[i];
-                var /** @type {?} */ value = attrs[i + 1];
-                if (isTerminal) {
-                    var /** @type {?} */ terminalMap = matcher._attrValueMap;
-                    var /** @type {?} */ terminalValuesMap = terminalMap.get(name_2);
-                    if (!terminalValuesMap) {
-                        terminalValuesMap = new Map();
-                        terminalMap.set(name_2, terminalValuesMap);
-                    }
-                    this._addTerminal(terminalValuesMap, value, selectable);
-                }
-                else {
-                    var /** @type {?} */ partialMap = matcher._attrValuePartialMap;
-                    var /** @type {?} */ partialValuesMap = partialMap.get(name_2);
-                    if (!partialValuesMap) {
-                        partialValuesMap = new Map();
-                        partialMap.set(name_2, partialValuesMap);
-                    }
-                    matcher = this._addPartial(partialValuesMap, value);
-                }
-            }
-        }
-    };
-    /**
-     * @param {?} map
-     * @param {?} name
-     * @param {?} selectable
-     * @return {?}
-     */
-    SelectorMatcher.prototype._addTerminal = /**
-     * @param {?} map
-     * @param {?} name
-     * @param {?} selectable
-     * @return {?}
-     */
-    function (map, name, selectable) {
-        var /** @type {?} */ terminalList = map.get(name);
-        if (!terminalList) {
-            terminalList = [];
-            map.set(name, terminalList);
-        }
-        terminalList.push(selectable);
-    };
-    /**
-     * @param {?} map
-     * @param {?} name
-     * @return {?}
-     */
-    SelectorMatcher.prototype._addPartial = /**
-     * @param {?} map
-     * @param {?} name
-     * @return {?}
-     */
-    function (map, name) {
-        var /** @type {?} */ matcher = map.get(name);
-        if (!matcher) {
-            matcher = new SelectorMatcher();
-            map.set(name, matcher);
-        }
-        return matcher;
-    };
-    /**
-     * Find the objects that have been added via `addSelectable`
-     * whose css selector is contained in the given css selector.
-     * @param cssSelector A css selector
-     * @param matchedCallback This callback will be called with the object handed into `addSelectable`
-     * @return boolean true if a match was found
-    */
-    /**
-     * Find the objects that have been added via `addSelectable`
-     * whose css selector is contained in the given css selector.
-     * @param {?} cssSelector A css selector
-     * @param {?} matchedCallback This callback will be called with the object handed into `addSelectable`
-     * @return {?} boolean true if a match was found
-     */
-    SelectorMatcher.prototype.match = /**
-     * Find the objects that have been added via `addSelectable`
-     * whose css selector is contained in the given css selector.
-     * @param {?} cssSelector A css selector
-     * @param {?} matchedCallback This callback will be called with the object handed into `addSelectable`
-     * @return {?} boolean true if a match was found
-     */
-    function (cssSelector, matchedCallback) {
-        var /** @type {?} */ result = false;
-        var /** @type {?} */ element = /** @type {?} */ ((cssSelector.element));
-        var /** @type {?} */ classNames = cssSelector.classNames;
-        var /** @type {?} */ attrs = cssSelector.attrs;
-        for (var /** @type {?} */ i = 0; i < this._listContexts.length; i++) {
-            this._listContexts[i].alreadyMatched = false;
-        }
-        result = this._matchTerminal(this._elementMap, element, cssSelector, matchedCallback) || result;
-        result = this._matchPartial(this._elementPartialMap, element, cssSelector, matchedCallback) ||
-            result;
-        if (classNames) {
-            for (var /** @type {?} */ i = 0; i < classNames.length; i++) {
-                var /** @type {?} */ className = classNames[i];
-                result =
-                    this._matchTerminal(this._classMap, className, cssSelector, matchedCallback) || result;
-                result =
-                    this._matchPartial(this._classPartialMap, className, cssSelector, matchedCallback) ||
-                        result;
-            }
-        }
-        if (attrs) {
-            for (var /** @type {?} */ i = 0; i < attrs.length; i += 2) {
-                var /** @type {?} */ name_3 = attrs[i];
-                var /** @type {?} */ value = attrs[i + 1];
-                var /** @type {?} */ terminalValuesMap = /** @type {?} */ ((this._attrValueMap.get(name_3)));
-                if (value) {
-                    result =
-                        this._matchTerminal(terminalValuesMap, '', cssSelector, matchedCallback) || result;
-                }
-                result =
-                    this._matchTerminal(terminalValuesMap, value, cssSelector, matchedCallback) || result;
-                var /** @type {?} */ partialValuesMap = /** @type {?} */ ((this._attrValuePartialMap.get(name_3)));
-                if (value) {
-                    result = this._matchPartial(partialValuesMap, '', cssSelector, matchedCallback) || result;
-                }
-                result =
-                    this._matchPartial(partialValuesMap, value, cssSelector, matchedCallback) || result;
-            }
-        }
-        return result;
-    };
-    /** @internal */
-    /**
-     * \@internal
-     * @param {?} map
-     * @param {?} name
-     * @param {?} cssSelector
-     * @param {?} matchedCallback
-     * @return {?}
-     */
-    SelectorMatcher.prototype._matchTerminal = /**
-     * \@internal
-     * @param {?} map
-     * @param {?} name
-     * @param {?} cssSelector
-     * @param {?} matchedCallback
-     * @return {?}
-     */
-    function (map, name, cssSelector, matchedCallback) {
-        if (!map || typeof name !== 'string') {
-            return false;
-        }
-        var /** @type {?} */ selectables = map.get(name) || [];
-        var /** @type {?} */ starSelectables = /** @type {?} */ ((map.get('*')));
-        if (starSelectables) {
-            selectables = selectables.concat(starSelectables);
-        }
-        if (selectables.length === 0) {
-            return false;
-        }
-        var /** @type {?} */ selectable;
-        var /** @type {?} */ result = false;
-        for (var /** @type {?} */ i = 0; i < selectables.length; i++) {
-            selectable = selectables[i];
-            result = selectable.finalize(cssSelector, matchedCallback) || result;
-        }
-        return result;
-    };
-    /** @internal */
-    /**
-     * \@internal
-     * @param {?} map
-     * @param {?} name
-     * @param {?} cssSelector
-     * @param {?} matchedCallback
-     * @return {?}
-     */
-    SelectorMatcher.prototype._matchPartial = /**
-     * \@internal
-     * @param {?} map
-     * @param {?} name
-     * @param {?} cssSelector
-     * @param {?} matchedCallback
-     * @return {?}
-     */
-    function (map, name, cssSelector, matchedCallback) {
-        if (!map || typeof name !== 'string') {
-            return false;
-        }
-        var /** @type {?} */ nestedSelector = map.get(name);
-        if (!nestedSelector) {
-            return false;
-        }
-        // TODO(perf): get rid of recursion and measure again
-        // TODO(perf): don't pass the whole selector into the recursion,
-        // but only the not processed parts
-        return nestedSelector.match(cssSelector, matchedCallback);
-    };
-    return SelectorMatcher;
-}());
-var SelectorListContext = /** @class */ (function () {
-    function SelectorListContext(selectors) {
-        this.selectors = selectors;
-        this.alreadyMatched = false;
-    }
-    return SelectorListContext;
-}());
-var SelectorContext = /** @class */ (function () {
-    function SelectorContext(selector, cbContext, listContext) {
-        this.selector = selector;
-        this.cbContext = cbContext;
-        this.listContext = listContext;
-        this.notSelectors = selector.notSelectors;
-    }
-    /**
-     * @param {?} cssSelector
-     * @param {?} callback
-     * @return {?}
-     */
-    SelectorContext.prototype.finalize = /**
-     * @param {?} cssSelector
-     * @param {?} callback
-     * @return {?}
-     */
-    function (cssSelector, callback) {
-        var /** @type {?} */ result = true;
-        if (this.notSelectors.length > 0 && (!this.listContext || !this.listContext.alreadyMatched)) {
-            var /** @type {?} */ notMatcher = SelectorMatcher.createNotMatcher(this.notSelectors);
-            result = !notMatcher.match(cssSelector, null);
-        }
-        if (result && callback && (!this.listContext || !this.listContext.alreadyMatched)) {
-            if (this.listContext) {
-                this.listContext.alreadyMatched = true;
-            }
-            callback(this.selector, this.cbContext);
-        }
-        return result;
-    };
-    return SelectorContext;
-}());
-
-/**
- * @fileoverview added by tsickle
- * @suppress {checkTypes} checked by tsc
- */
-/**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
- */
-var ERROR_COMPONENT_TYPE = 'ngComponentType';
-var CompileMetadataResolver = /** @class */ (function () {
-    function CompileMetadataResolver(_config, _htmlParser, _ngModuleResolver, _directiveResolver, _pipeResolver, _summaryResolver, _schemaRegistry, _directiveNormalizer, _console, _staticSymbolCache, _reflector, _errorCollector) {
-        this._config = _config;
-        this._htmlParser = _htmlParser;
-        this._ngModuleResolver = _ngModuleResolver;
-        this._directiveResolver = _directiveResolver;
-        this._pipeResolver = _pipeResolver;
-        this._summaryResolver = _summaryResolver;
-        this._schemaRegistry = _schemaRegistry;
-        this._directiveNormalizer = _directiveNormalizer;
-        this._console = _console;
-        this._staticSymbolCache = _staticSymbolCache;
-        this._reflector = _reflector;
-        this._errorCollector = _errorCollector;
-        this._nonNormalizedDirectiveCache = new Map();
-        this._directiveCache = new Map();
-        this._summaryCache = new Map();
-        this._pipeCache = new Map();
-        this._ngModuleCache = new Map();
-        this._ngModuleOfTypes = new Map();
-    }
-    /**
-     * @return {?}
-     */
-    CompileMetadataResolver.prototype.getReflector = /**
-     * @return {?}
-     */
-    function () { return this._reflector; };
-    /**
-     * @param {?} type
-     * @return {?}
-     */
-    CompileMetadataResolver.prototype.clearCacheFor = /**
-     * @param {?} type
-     * @return {?}
-     */
-    function (type) {
-        var /** @type {?} */ dirMeta = this._directiveCache.get(type);
-        this._directiveCache.delete(type);
-        this._nonNormalizedDirectiveCache.delete(type);
-        this._summaryCache.delete(type);
-        this._pipeCache.delete(type);
-        this._ngModuleOfTypes.delete(type);
-        // Clear all of the NgModule as they contain transitive information!
-        this._ngModuleCache.clear();
-        if (dirMeta) {
-            this._directiveNormalizer.clearCacheFor(dirMeta);
-        }
-    };
-    /**
-     * @return {?}
-     */
-    CompileMetadataResolver.prototype.clearCache = /**
-     * @return {?}
-     */
-    function () {
-        this._directiveCache.clear();
-        this._nonNormalizedDirectiveCache.clear();
-        this._summaryCache.clear();
-        this._pipeCache.clear();
-        this._ngModuleCache.clear();
-        this._ngModuleOfTypes.clear();
-        this._directiveNormalizer.clearCache();
-    };
-    /**
-     * @param {?} baseType
-     * @param {?} name
-     * @return {?}
-     */
-    CompileMetadataResolver.prototype._createProxyClass = /**
-     * @param {?} baseType
-     * @param {?} name
-     * @return {?}
-     */
-    function (baseType, name) {
-        var /** @type {?} */ delegate = null;
-        var /** @type {?} */ proxyClass = /** @type {?} */ (function () {
-            if (!delegate) {
-                throw new Error("Illegal state: Class " + name + " for type " + stringify(baseType) + " is not compiled yet!");
-            }
-            return delegate.apply(this, arguments);
-        });
-        proxyClass.setDelegate = function (d) {
-            delegate = d;
-            (/** @type {?} */ (proxyClass)).prototype = d.prototype;
-        };
-        // Make stringify work correctly
-        (/** @type {?} */ (proxyClass)).overriddenName = name;
-        return proxyClass;
-    };
-    /**
-     * @param {?} dirType
-     * @param {?} name
-     * @return {?}
-     */
-    CompileMetadataResolver.prototype.getGeneratedClass = /**
-     * @param {?} dirType
-     * @param {?} name
-     * @return {?}
-     */
-    function (dirType, name) {
-        if (dirType instanceof StaticSymbol) {
-            return this._staticSymbolCache.get(ngfactoryFilePath(dirType.filePath), name);
-        }
-        else {
-            return this._createProxyClass(dirType, name);
-        }
-    };
-    /**
-     * @param {?} dirType
-     * @return {?}
-     */
-    CompileMetadataResolver.prototype.getComponentViewClass = /**
-     * @param {?} dirType
-     * @return {?}
-     */
-    function (dirType) {
-        return this.getGeneratedClass(dirType, viewClassName(dirType, 0));
-    };
-    /**
-     * @param {?} dirType
-     * @return {?}
-     */
-    CompileMetadataResolver.prototype.getHostComponentViewClass = /**
-     * @param {?} dirType
-     * @return {?}
-     */
-    function (dirType) {
-        return this.getGeneratedClass(dirType, hostViewClassName(dirType));
-    };
-    /**
-     * @param {?} dirType
-     * @return {?}
-     */
-    CompileMetadataResolver.prototype.getHostComponentType = /**
-     * @param {?} dirType
-     * @return {?}
-     */
-    function (dirType) {
-        var /** @type {?} */ name = identifierName({ reference: dirType }) + "_Host";
-        if (dirType instanceof StaticSymbol) {
-            return this._staticSymbolCache.get(dirType.filePath, name);
-        }
-        else {
-            var /** @type {?} */ HostClass = /** @type {?} */ (function HostClass() { });
-            HostClass.overriddenName = name;
-            return HostClass;
-        }
-    };
-    /**
-     * @param {?} dirType
-     * @return {?}
-     */
-    CompileMetadataResolver.prototype.getRendererType = /**
-     * @param {?} dirType
-     * @return {?}
-     */
-    function (dirType) {
-        if (dirType instanceof StaticSymbol) {
-            return this._staticSymbolCache.get(ngfactoryFilePath(dirType.filePath), rendererTypeName(dirType));
-        }
-        else {
-            // returning an object as proxy,
-            // that we fill later during runtime compilation.
-            return /** @type {?} */ ({});
-        }
-    };
-    /**
-     * @param {?} selector
-     * @param {?} dirType
-     * @param {?} inputs
-     * @param {?} outputs
-     * @return {?}
-     */
-    CompileMetadataResolver.prototype.getComponentFactory = /**
-     * @param {?} selector
-     * @param {?} dirType
-     * @param {?} inputs
-     * @param {?} outputs
-     * @return {?}
-     */
-    function (selector, dirType, inputs, outputs) {
-        if (dirType instanceof StaticSymbol) {
-            return this._staticSymbolCache.get(ngfactoryFilePath(dirType.filePath), componentFactoryName(dirType));
-        }
-        else {
-            var /** @type {?} */ hostView = this.getHostComponentViewClass(dirType);
-            // Note: ngContentSelectors will be filled later once the template is
-            // loaded.
-            var /** @type {?} */ createComponentFactory = this._reflector.resolveExternalReference(Identifiers.createComponentFactory);
-            return createComponentFactory(selector, dirType, /** @type {?} */ (hostView), inputs, outputs, []);
-        }
-    };
-    /**
-     * @param {?} factory
-     * @param {?} ngContentSelectors
-     * @return {?}
-     */
-    CompileMetadataResolver.prototype.initComponentFactory = /**
-     * @param {?} factory
-     * @param {?} ngContentSelectors
-     * @return {?}
-     */
-    function (factory, ngContentSelectors) {
-        if (!(factory instanceof StaticSymbol)) {
-            (_a = (/** @type {?} */ (factory)).ngContentSelectors).push.apply(_a, ngContentSelectors);
-        }
-        var _a;
-    };
-    /**
-     * @param {?} type
-     * @param {?} kind
-     * @return {?}
-     */
-    CompileMetadataResolver.prototype._loadSummary = /**
-     * @param {?} type
-     * @param {?} kind
-     * @return {?}
-     */
-    function (type, kind) {
-        var /** @type {?} */ typeSummary = this._summaryCache.get(type);
-        if (!typeSummary) {
-            var /** @type {?} */ summary = this._summaryResolver.resolveSummary(type);
-            typeSummary = summary ? summary.type : null;
-            this._summaryCache.set(type, typeSummary || null);
-        }
-        return typeSummary && typeSummary.summaryKind === kind ? typeSummary : null;
-    };
-    /**
-     * @param {?} compMeta
-     * @param {?=} hostViewType
-     * @return {?}
-     */
-    CompileMetadataResolver.prototype.getHostComponentMetadata = /**
-     * @param {?} compMeta
-     * @param {?=} hostViewType
-     * @return {?}
-     */
-    function (compMeta, hostViewType) {
-        var /** @type {?} */ hostType = this.getHostComponentType(compMeta.type.reference);
-        if (!hostViewType) {
-            hostViewType = this.getHostComponentViewClass(hostType);
-        }
-        // Note: ! is ok here as this method should only be called with normalized directive
-        // metadata, which always fills in the selector.
-        var /** @type {?} */ template = CssSelector.parse(/** @type {?} */ ((compMeta.selector)))[0].getMatchingElementTemplate();
-        var /** @type {?} */ templateUrl = '';
-        var /** @type {?} */ htmlAst = this._htmlParser.parse(template, templateUrl);
-        return CompileDirectiveMetadata.create({
-            isHost: true,
-            type: { reference: hostType, diDeps: [], lifecycleHooks: [] },
-            template: new CompileTemplateMetadata({
-                encapsulation: ViewEncapsulation.None,
-                template: template,
-                templateUrl: templateUrl,
-                htmlAst: htmlAst,
-                styles: [],
-                styleUrls: [],
-                ngContentSelectors: [],
-                animations: [],
-                isInline: true,
-                externalStylesheets: [],
-                interpolation: null,
-                preserveWhitespaces: false,
-            }),
-            exportAs: null,
-            changeDetection: ChangeDetectionStrategy.Default,
-            inputs: [],
-            outputs: [],
-            host: {},
-            isComponent: true,
-            selector: '*',
-            providers: [],
-            viewProviders: [],
-            queries: [],
-            guards: {},
-            viewQueries: [],
-            componentViewType: hostViewType,
-            rendererType: /** @type {?} */ ({ id: '__Host__', encapsulation: ViewEncapsulation.None, styles: [], data: {} }),
-            entryComponents: [],
-            componentFactory: null
-        });
-    };
-    /**
-     * @param {?} ngModuleType
-     * @param {?} directiveType
-     * @param {?} isSync
-     * @return {?}
-     */
-    CompileMetadataResolver.prototype.loadDirectiveMetadata = /**
-     * @param {?} ngModuleType
-     * @param {?} directiveType
-     * @param {?} isSync
-     * @return {?}
-     */
-    function (ngModuleType, directiveType, isSync) {
-        var _this = this;
-        if (this._directiveCache.has(directiveType)) {
-            return null;
-        }
-        directiveType = resolveForwardRef(directiveType);
-        var _a = /** @type {?} */ ((this.getNonNormalizedDirectiveMetadata(directiveType))), annotation = _a.annotation, metadata = _a.metadata;
-        var /** @type {?} */ createDirectiveMetadata = function (templateMetadata) {
-            var /** @type {?} */ normalizedDirMeta = new CompileDirectiveMetadata({
-                isHost: false,
-                type: metadata.type,
-                isComponent: metadata.isComponent,
-                selector: metadata.selector,
-                exportAs: metadata.exportAs,
-                changeDetection: metadata.changeDetection,
-                inputs: metadata.inputs,
-                outputs: metadata.outputs,
-                hostListeners: metadata.hostListeners,
-                hostProperties: metadata.hostProperties,
-                hostAttributes: metadata.hostAttributes,
-                providers: metadata.providers,
-                viewProviders: metadata.viewProviders,
-                queries: metadata.queries,
-                guards: metadata.guards,
-                viewQueries: metadata.viewQueries,
-                entryComponents: metadata.entryComponents,
-                componentViewType: metadata.componentViewType,
-                rendererType: metadata.rendererType,
-                componentFactory: metadata.componentFactory,
-                template: templateMetadata
-            });
-            if (templateMetadata) {
-                _this.initComponentFactory(/** @type {?} */ ((metadata.componentFactory)), templateMetadata.ngContentSelectors);
-            }
-            _this._directiveCache.set(directiveType, normalizedDirMeta);
-            _this._summaryCache.set(directiveType, normalizedDirMeta.toSummary());
-            return null;
-        };
-        if (metadata.isComponent) {
-            var /** @type {?} */ template = /** @type {?} */ ((metadata.template));
-            var /** @type {?} */ templateMeta = this._directiveNormalizer.normalizeTemplate({
-                ngModuleType: ngModuleType,
-                componentType: directiveType,
-                moduleUrl: this._reflector.componentModuleUrl(directiveType, annotation),
-                encapsulation: template.encapsulation,
-                template: template.template,
-                templateUrl: template.templateUrl,
-                styles: template.styles,
-                styleUrls: template.styleUrls,
-                animations: template.animations,
-                interpolation: template.interpolation,
-                preserveWhitespaces: template.preserveWhitespaces
-            });
-            if (isPromise(templateMeta) && isSync) {
-                this._reportError(componentStillLoadingError(directiveType), directiveType);
-                return null;
-            }
-            return SyncAsync.then(templateMeta, createDirectiveMetadata);
-        }
-        else {
-            // directive
-            createDirectiveMetadata(null);
-            return null;
-        }
-    };
-    /**
-     * @param {?} directiveType
-     * @return {?}
-     */
-    CompileMetadataResolver.prototype.getNonNormalizedDirectiveMetadata = /**
-     * @param {?} directiveType
-     * @return {?}
-     */
-    function (directiveType) {
-        var _this = this;
-        directiveType = resolveForwardRef(directiveType);
-        if (!directiveType) {
-            return null;
-        }
-        var /** @type {?} */ cacheEntry = this._nonNormalizedDirectiveCache.get(directiveType);
-        if (cacheEntry) {
-            return cacheEntry;
-        }
-        var /** @type {?} */ dirMeta = this._directiveResolver.resolve(directiveType, false);
-        if (!dirMeta) {
-            return null;
-        }
-        var /** @type {?} */ nonNormalizedTemplateMetadata = /** @type {?} */ ((undefined));
-        if (createComponent.isTypeOf(dirMeta)) {
-            // component
-            var /** @type {?} */ compMeta = /** @type {?} */ (dirMeta);
-            assertArrayOfStrings('styles', compMeta.styles);
-            assertArrayOfStrings('styleUrls', compMeta.styleUrls);
-            assertInterpolationSymbols('interpolation', compMeta.interpolation);
-            var /** @type {?} */ animations = compMeta.animations;
-            nonNormalizedTemplateMetadata = new CompileTemplateMetadata({
-                encapsulation: noUndefined(compMeta.encapsulation),
-                template: noUndefined(compMeta.template),
-                templateUrl: noUndefined(compMeta.templateUrl),
-                htmlAst: null,
-                styles: compMeta.styles || [],
-                styleUrls: compMeta.styleUrls || [],
-                animations: animations || [],
-                interpolation: noUndefined(compMeta.interpolation),
-                isInline: !!compMeta.template,
-                externalStylesheets: [],
-                ngContentSelectors: [],
-                preserveWhitespaces: noUndefined(dirMeta.preserveWhitespaces),
-            });
-        }
-        var /** @type {?} */ changeDetectionStrategy = /** @type {?} */ ((null));
-        var /** @type {?} */ viewProviders = [];
-        var /** @type {?} */ entryComponentMetadata = [];
-        var /** @type {?} */ selector = dirMeta.selector;
-        if (createComponent.isTypeOf(dirMeta)) {
-            // Component
-            var /** @type {?} */ compMeta = /** @type {?} */ (dirMeta);
-            changeDetectionStrategy = /** @type {?} */ ((compMeta.changeDetection));
-            if (compMeta.viewProviders) {
-                viewProviders = this._getProvidersMetadata(compMeta.viewProviders, entryComponentMetadata, "viewProviders for \"" + stringifyType(directiveType) + "\"", [], directiveType);
-            }
-            if (compMeta.entryComponents) {
-                entryComponentMetadata = flattenAndDedupeArray(compMeta.entryComponents)
-                    .map(function (type) { return ((_this._getEntryComponentMetadata(type))); })
-                    .concat(entryComponentMetadata);
-            }
-            if (!selector) {
-                selector = this._schemaRegistry.getDefaultComponentElementName();
-            }
-        }
-        else {
-            // Directive
-            if (!selector) {
-                this._reportError(syntaxError("Directive " + stringifyType(directiveType) + " has no selector, please add it!"), directiveType);
-                selector = 'error';
-            }
-        }
-        var /** @type {?} */ providers = [];
-        if (dirMeta.providers != null) {
-            providers = this._getProvidersMetadata(dirMeta.providers, entryComponentMetadata, "providers for \"" + stringifyType(directiveType) + "\"", [], directiveType);
-        }
-        var /** @type {?} */ queries = [];
-        var /** @type {?} */ viewQueries = [];
-        if (dirMeta.queries != null) {
-            queries = this._getQueriesMetadata(dirMeta.queries, false, directiveType);
-            viewQueries = this._getQueriesMetadata(dirMeta.queries, true, directiveType);
-        }
-        var /** @type {?} */ metadata = CompileDirectiveMetadata.create({
-            isHost: false,
-            selector: selector,
-            exportAs: noUndefined(dirMeta.exportAs),
-            isComponent: !!nonNormalizedTemplateMetadata,
-            type: this._getTypeMetadata(directiveType),
-            template: nonNormalizedTemplateMetadata,
-            changeDetection: changeDetectionStrategy,
-            inputs: dirMeta.inputs || [],
-            outputs: dirMeta.outputs || [],
-            host: dirMeta.host || {},
-            providers: providers || [],
-            viewProviders: viewProviders || [],
-            queries: queries || [],
-            guards: dirMeta.guards || {},
-            viewQueries: viewQueries || [],
-            entryComponents: entryComponentMetadata,
-            componentViewType: nonNormalizedTemplateMetadata ? this.getComponentViewClass(directiveType) :
-                null,
-            rendererType: nonNormalizedTemplateMetadata ? this.getRendererType(directiveType) : null,
-            componentFactory: null
-        });
-        if (nonNormalizedTemplateMetadata) {
-            metadata.componentFactory =
-                this.getComponentFactory(selector, directiveType, metadata.inputs, metadata.outputs);
-        }
-        cacheEntry = { metadata: metadata, annotation: dirMeta };
-        this._nonNormalizedDirectiveCache.set(directiveType, cacheEntry);
-        return cacheEntry;
-    };
-    /**
-     * Gets the metadata for the given directive.
-     * This assumes `loadNgModuleDirectiveAndPipeMetadata` has been called first.
-     */
-    /**
-     * Gets the metadata for the given directive.
-     * This assumes `loadNgModuleDirectiveAndPipeMetadata` has been called first.
-     * @param {?} directiveType
-     * @return {?}
-     */
-    CompileMetadataResolver.prototype.getDirectiveMetadata = /**
-     * Gets the metadata for the given directive.
-     * This assumes `loadNgModuleDirectiveAndPipeMetadata` has been called first.
-     * @param {?} directiveType
-     * @return {?}
-     */
-    function (directiveType) {
-        var /** @type {?} */ dirMeta = /** @type {?} */ ((this._directiveCache.get(directiveType)));
-        if (!dirMeta) {
-            this._reportError(syntaxError("Illegal state: getDirectiveMetadata can only be called after loadNgModuleDirectiveAndPipeMetadata for a module that declares it. Directive " + stringifyType(directiveType) + "."), directiveType);
-        }
-        return dirMeta;
-    };
-    /**
-     * @param {?} dirType
-     * @return {?}
-     */
-    CompileMetadataResolver.prototype.getDirectiveSummary = /**
-     * @param {?} dirType
-     * @return {?}
-     */
-    function (dirType) {
-        var /** @type {?} */ dirSummary = /** @type {?} */ (this._loadSummary(dirType, CompileSummaryKind.Directive));
-        if (!dirSummary) {
-            this._reportError(syntaxError("Illegal state: Could not load the summary for directive " + stringifyType(dirType) + "."), dirType);
-        }
-        return dirSummary;
-    };
-    /**
-     * @param {?} type
-     * @return {?}
-     */
-    CompileMetadataResolver.prototype.isDirective = /**
-     * @param {?} type
-     * @return {?}
-     */
-    function (type) {
-        return !!this._loadSummary(type, CompileSummaryKind.Directive) ||
-            this._directiveResolver.isDirective(type);
-    };
-    /**
-     * @param {?} type
-     * @return {?}
-     */
-    CompileMetadataResolver.prototype.isPipe = /**
-     * @param {?} type
-     * @return {?}
-     */
-    function (type) {
-        return !!this._loadSummary(type, CompileSummaryKind.Pipe) ||
-            this._pipeResolver.isPipe(type);
-    };
-    /**
-     * @param {?} type
-     * @return {?}
-     */
-    CompileMetadataResolver.prototype.isNgModule = /**
-     * @param {?} type
-     * @return {?}
-     */
-    function (type) {
-        return !!this._loadSummary(type, CompileSummaryKind.NgModule) ||
-            this._ngModuleResolver.isNgModule(type);
-    };
-    /**
-     * @param {?} moduleType
-     * @param {?=} alreadyCollecting
-     * @return {?}
-     */
-    CompileMetadataResolver.prototype.getNgModuleSummary = /**
-     * @param {?} moduleType
-     * @param {?=} alreadyCollecting
-     * @return {?}
-     */
-    function (moduleType, alreadyCollecting) {
-        if (alreadyCollecting === void 0) { alreadyCollecting = null; }
-        var /** @type {?} */ moduleSummary = /** @type {?} */ (this._loadSummary(moduleType, CompileSummaryKind.NgModule));
-        if (!moduleSummary) {
-            var /** @type {?} */ moduleMeta = this.getNgModuleMetadata(moduleType, false, alreadyCollecting);
-            moduleSummary = moduleMeta ? moduleMeta.toSummary() : null;
-            if (moduleSummary) {
-                this._summaryCache.set(moduleType, moduleSummary);
-            }
-        }
-        return moduleSummary;
-    };
-    /**
-     * Loads the declared directives and pipes of an NgModule.
-     */
-    /**
-     * Loads the declared directives and pipes of an NgModule.
-     * @param {?} moduleType
-     * @param {?} isSync
-     * @param {?=} throwIfNotFound
-     * @return {?}
-     */
-    CompileMetadataResolver.prototype.loadNgModuleDirectiveAndPipeMetadata = /**
-     * Loads the declared directives and pipes of an NgModule.
-     * @param {?} moduleType
-     * @param {?} isSync
-     * @param {?=} throwIfNotFound
-     * @return {?}
-     */
-    function (moduleType, isSync, throwIfNotFound) {
-        var _this = this;
-        if (throwIfNotFound === void 0) { throwIfNotFound = true; }
-        var /** @type {?} */ ngModule = this.getNgModuleMetadata(moduleType, throwIfNotFound);
-        var /** @type {?} */ loading = [];
-        if (ngModule) {
-            ngModule.declaredDirectives.forEach(function (id) {
-                var /** @type {?} */ promise = _this.loadDirectiveMetadata(moduleType, id.reference, isSync);
-                if (promise) {
-                    loading.push(promise);
-                }
-            });
-            ngModule.declaredPipes.forEach(function (id) { return _this._loadPipeMetadata(id.reference); });
-        }
-        return Promise.all(loading);
-    };
-    /**
-     * @param {?} moduleType
-     * @param {?=} throwIfNotFound
-     * @param {?=} alreadyCollecting
-     * @return {?}
-     */
-    CompileMetadataResolver.prototype.getNgModuleMetadata = /**
-     * @param {?} moduleType
-     * @param {?=} throwIfNotFound
-     * @param {?=} alreadyCollecting
-     * @return {?}
-     */
-    function (moduleType, throwIfNotFound, alreadyCollecting) {
-        var _this = this;
-        if (throwIfNotFound === void 0) { throwIfNotFound = true; }
-        if (alreadyCollecting === void 0) { alreadyCollecting = null; }
-        moduleType = resolveForwardRef(moduleType);
-        var /** @type {?} */ compileMeta = this._ngModuleCache.get(moduleType);
-        if (compileMeta) {
-            return compileMeta;
-        }
-        var /** @type {?} */ meta = this._ngModuleResolver.resolve(moduleType, throwIfNotFound);
-        if (!meta) {
-            return null;
-        }
-        var /** @type {?} */ declaredDirectives = [];
-        var /** @type {?} */ exportedNonModuleIdentifiers = [];
-        var /** @type {?} */ declaredPipes = [];
-        var /** @type {?} */ importedModules = [];
-        var /** @type {?} */ exportedModules = [];
-        var /** @type {?} */ providers = [];
-        var /** @type {?} */ entryComponents = [];
-        var /** @type {?} */ bootstrapComponents = [];
-        var /** @type {?} */ schemas = [];
-        if (meta.imports) {
-            flattenAndDedupeArray(meta.imports).forEach(function (importedType) {
-                var /** @type {?} */ importedModuleType = /** @type {?} */ ((undefined));
-                if (isValidType(importedType)) {
-                    importedModuleType = importedType;
-                }
-                else if (importedType && importedType.ngModule) {
-                    var /** @type {?} */ moduleWithProviders = importedType;
-                    importedModuleType = moduleWithProviders.ngModule;
-                    if (moduleWithProviders.providers) {
-                        providers.push.apply(providers, _this._getProvidersMetadata(moduleWithProviders.providers, entryComponents, "provider for the NgModule '" + stringifyType(importedModuleType) + "'", [], importedType));
-                    }
-                }
-                if (importedModuleType) {
-                    if (_this._checkSelfImport(moduleType, importedModuleType))
-                        return;
-                    if (!alreadyCollecting)
-                        alreadyCollecting = new Set();
-                    if (alreadyCollecting.has(importedModuleType)) {
-                        _this._reportError(syntaxError(_this._getTypeDescriptor(importedModuleType) + " '" + stringifyType(importedType) + "' is imported recursively by the module '" + stringifyType(moduleType) + "'."), moduleType);
-                        return;
-                    }
-                    alreadyCollecting.add(importedModuleType);
-                    var /** @type {?} */ importedModuleSummary = _this.getNgModuleSummary(importedModuleType, alreadyCollecting);
-                    alreadyCollecting.delete(importedModuleType);
-                    if (!importedModuleSummary) {
-                        _this._reportError(syntaxError("Unexpected " + _this._getTypeDescriptor(importedType) + " '" + stringifyType(importedType) + "' imported by the module '" + stringifyType(moduleType) + "'. Please add a @NgModule annotation."), moduleType);
-                        return;
-                    }
-                    importedModules.push(importedModuleSummary);
-                }
-                else {
-                    _this._reportError(syntaxError("Unexpected value '" + stringifyType(importedType) + "' imported by the module '" + stringifyType(moduleType) + "'"), moduleType);
-                    return;
-                }
-            });
-        }
-        if (meta.exports) {
-            flattenAndDedupeArray(meta.exports).forEach(function (exportedType) {
-                if (!isValidType(exportedType)) {
-                    _this._reportError(syntaxError("Unexpected value '" + stringifyType(exportedType) + "' exported by the module '" + stringifyType(moduleType) + "'"), moduleType);
-                    return;
-                }
-                if (!alreadyCollecting)
-                    alreadyCollecting = new Set();
-                if (alreadyCollecting.has(exportedType)) {
-                    _this._reportError(syntaxError(_this._getTypeDescriptor(exportedType) + " '" + stringify(exportedType) + "' is exported recursively by the module '" + stringifyType(moduleType) + "'"), moduleType);
-                    return;
-                }
-                alreadyCollecting.add(exportedType);
-                var /** @type {?} */ exportedModuleSummary = _this.getNgModuleSummary(exportedType, alreadyCollecting);
-                alreadyCollecting.delete(exportedType);
-                if (exportedModuleSummary) {
-                    exportedModules.push(exportedModuleSummary);
-                }
-                else {
-                    exportedNonModuleIdentifiers.push(_this._getIdentifierMetadata(exportedType));
-                }
-            });
-        }
-        // Note: This will be modified later, so we rely on
-        // getting a new instance every time!
-        var /** @type {?} */ transitiveModule = this._getTransitiveNgModuleMetadata(importedModules, exportedModules);
-        if (meta.declarations) {
-            flattenAndDedupeArray(meta.declarations).forEach(function (declaredType) {
-                if (!isValidType(declaredType)) {
-                    _this._reportError(syntaxError("Unexpected value '" + stringifyType(declaredType) + "' declared by the module '" + stringifyType(moduleType) + "'"), moduleType);
-                    return;
-                }
-                var /** @type {?} */ declaredIdentifier = _this._getIdentifierMetadata(declaredType);
-                if (_this.isDirective(declaredType)) {
-                    transitiveModule.addDirective(declaredIdentifier);
-                    declaredDirectives.push(declaredIdentifier);
-                    _this._addTypeToModule(declaredType, moduleType);
-                }
-                else if (_this.isPipe(declaredType)) {
-                    transitiveModule.addPipe(declaredIdentifier);
-                    transitiveModule.pipes.push(declaredIdentifier);
-                    declaredPipes.push(declaredIdentifier);
-                    _this._addTypeToModule(declaredType, moduleType);
-                }
-                else {
-                    _this._reportError(syntaxError("Unexpected " + _this._getTypeDescriptor(declaredType) + " '" + stringifyType(declaredType) + "' declared by the module '" + stringifyType(moduleType) + "'. Please add a @Pipe/@Directive/@Component annotation."), moduleType);
-                    return;
-                }
-            });
-        }
-        var /** @type {?} */ exportedDirectives = [];
-        var /** @type {?} */ exportedPipes = [];
-        exportedNonModuleIdentifiers.forEach(function (exportedId) {
-            if (transitiveModule.directivesSet.has(exportedId.reference)) {
-                exportedDirectives.push(exportedId);
-                transitiveModule.addExportedDirective(exportedId);
-            }
-            else if (transitiveModule.pipesSet.has(exportedId.reference)) {
-                exportedPipes.push(exportedId);
-                transitiveModule.addExportedPipe(exportedId);
-            }
-            else {
-                _this._reportError(syntaxError("Can't export " + _this._getTypeDescriptor(exportedId.reference) + " " + stringifyType(exportedId.reference) + " from " + stringifyType(moduleType) + " as it was neither declared nor imported!"), moduleType);
-                return;
-            }
-        });
-        // The providers of the module have to go last
-        // so that they overwrite any other provider we already added.
-        if (meta.providers) {
-            providers.push.apply(providers, this._getProvidersMetadata(meta.providers, entryComponents, "provider for the NgModule '" + stringifyType(moduleType) + "'", [], moduleType));
-        }
-        if (meta.entryComponents) {
-            entryComponents.push.apply(entryComponents, flattenAndDedupeArray(meta.entryComponents)
-                .map(function (type) { return ((_this._getEntryComponentMetadata(type))); }));
-        }
-        if (meta.bootstrap) {
-            flattenAndDedupeArray(meta.bootstrap).forEach(function (type) {
-                if (!isValidType(type)) {
-                    _this._reportError(syntaxError("Unexpected value '" + stringifyType(type) + "' used in the bootstrap property of module '" + stringifyType(moduleType) + "'"), moduleType);
-                    return;
-                }
-                bootstrapComponents.push(_this._getIdentifierMetadata(type));
-            });
-        }
-        entryComponents.push.apply(entryComponents, bootstrapComponents.map(function (type) { return ((_this._getEntryComponentMetadata(type.reference))); }));
-        if (meta.schemas) {
-            schemas.push.apply(schemas, flattenAndDedupeArray(meta.schemas));
-        }
-        compileMeta = new CompileNgModuleMetadata({
-            type: this._getTypeMetadata(moduleType),
-            providers: providers,
-            entryComponents: entryComponents,
-            bootstrapComponents: bootstrapComponents,
-            schemas: schemas,
-            declaredDirectives: declaredDirectives,
-            exportedDirectives: exportedDirectives,
-            declaredPipes: declaredPipes,
-            exportedPipes: exportedPipes,
-            importedModules: importedModules,
-            exportedModules: exportedModules,
-            transitiveModule: transitiveModule,
-            id: meta.id || null,
-        });
-        entryComponents.forEach(function (id) { return transitiveModule.addEntryComponent(id); });
-        providers.forEach(function (provider) { return transitiveModule.addProvider(provider, /** @type {?} */ ((compileMeta)).type); });
-        transitiveModule.addModule(compileMeta.type);
-        this._ngModuleCache.set(moduleType, compileMeta);
-        return compileMeta;
-    };
-    /**
-     * @param {?} moduleType
-     * @param {?} importedModuleType
-     * @return {?}
-     */
-    CompileMetadataResolver.prototype._checkSelfImport = /**
-     * @param {?} moduleType
-     * @param {?} importedModuleType
-     * @return {?}
-     */
-    function (moduleType, importedModuleType) {
-        if (moduleType === importedModuleType) {
-            this._reportError(syntaxError("'" + stringifyType(moduleType) + "' module can't import itself"), moduleType);
-            return true;
-        }
-        return false;
-    };
-    /**
-     * @param {?} type
-     * @return {?}
-     */
-    CompileMetadataResolver.prototype._getTypeDescriptor = /**
-     * @param {?} type
-     * @return {?}
-     */
-    function (type) {
-        if (isValidType(type)) {
-            if (this.isDirective(type)) {
-                return 'directive';
-            }
-            if (this.isPipe(type)) {
-                return 'pipe';
-            }
-            if (this.isNgModule(type)) {
-                return 'module';
-            }
-        }
-        if ((/** @type {?} */ (type)).provide) {
-            return 'provider';
-        }
-        return 'value';
-    };
-    /**
-     * @param {?} type
-     * @param {?} moduleType
-     * @return {?}
-     */
-    CompileMetadataResolver.prototype._addTypeToModule = /**
-     * @param {?} type
-     * @param {?} moduleType
-     * @return {?}
-     */
-    function (type, moduleType) {
-        var /** @type {?} */ oldModule = this._ngModuleOfTypes.get(type);
-        if (oldModule && oldModule !== moduleType) {
-            this._reportError(syntaxError("Type " + stringifyType(type) + " is part of the declarations of 2 modules: " + stringifyType(oldModule) + " and " + stringifyType(moduleType) + "! " +
-                ("Please consider moving " + stringifyType(type) + " to a higher module that imports " + stringifyType(oldModule) + " and " + stringifyType(moduleType) + ". ") +
-                ("You can also create a new NgModule that exports and includes " + stringifyType(type) + " then import that NgModule in " + stringifyType(oldModule) + " and " + stringifyType(moduleType) + ".")), moduleType);
-            return;
-        }
-        this._ngModuleOfTypes.set(type, moduleType);
-    };
-    /**
-     * @param {?} importedModules
-     * @param {?} exportedModules
-     * @return {?}
-     */
-    CompileMetadataResolver.prototype._getTransitiveNgModuleMetadata = /**
-     * @param {?} importedModules
-     * @param {?} exportedModules
-     * @return {?}
-     */
-    function (importedModules, exportedModules) {
-        // collect `providers` / `entryComponents` from all imported and all exported modules
-        var /** @type {?} */ result = new TransitiveCompileNgModuleMetadata();
-        var /** @type {?} */ modulesByToken = new Map();
-        importedModules.concat(exportedModules).forEach(function (modSummary) {
-            modSummary.modules.forEach(function (mod) { return result.addModule(mod); });
-            modSummary.entryComponents.forEach(function (comp) { return result.addEntryComponent(comp); });
-            var /** @type {?} */ addedTokens = new Set();
-            modSummary.providers.forEach(function (entry) {
-                var /** @type {?} */ tokenRef = tokenReference(entry.provider.token);
-                var /** @type {?} */ prevModules = modulesByToken.get(tokenRef);
-                if (!prevModules) {
-                    prevModules = new Set();
-                    modulesByToken.set(tokenRef, prevModules);
-                }
-                var /** @type {?} */ moduleRef = entry.module.reference;
-                // Note: the providers of one module may still contain multiple providers
-                // per token (e.g. for multi providers), and we need to preserve these.
-                if (addedTokens.has(tokenRef) || !prevModules.has(moduleRef)) {
-                    prevModules.add(moduleRef);
-                    addedTokens.add(tokenRef);
-                    result.addProvider(entry.provider, entry.module);
-                }
-            });
-        });
-        exportedModules.forEach(function (modSummary) {
-            modSummary.exportedDirectives.forEach(function (id) { return result.addExportedDirective(id); });
-            modSummary.exportedPipes.forEach(function (id) { return result.addExportedPipe(id); });
-        });
-        importedModules.forEach(function (modSummary) {
-            modSummary.exportedDirectives.forEach(function (id) { return result.addDirective(id); });
-            modSummary.exportedPipes.forEach(function (id) { return result.addPipe(id); });
-        });
-        return result;
-    };
-    /**
-     * @param {?} type
-     * @return {?}
-     */
-    CompileMetadataResolver.prototype._getIdentifierMetadata = /**
-     * @param {?} type
-     * @return {?}
-     */
-    function (type) {
-        type = resolveForwardRef(type);
-        return { reference: type };
-    };
-    /**
-     * @param {?} type
-     * @return {?}
-     */
-    CompileMetadataResolver.prototype.isInjectable = /**
-     * @param {?} type
-     * @return {?}
-     */
-    function (type) {
-        var /** @type {?} */ annotations = this._reflector.annotations(type);
-        return annotations.some(function (ann) { return createInjectable.isTypeOf(ann); });
-    };
-    /**
-     * @param {?} type
-     * @return {?}
-     */
-    CompileMetadataResolver.prototype.getInjectableSummary = /**
-     * @param {?} type
-     * @return {?}
-     */
-    function (type) {
-        return {
-            summaryKind: CompileSummaryKind.Injectable,
-            type: this._getTypeMetadata(type, null, false)
-        };
-    };
-    /**
-     * @param {?} type
-     * @param {?=} dependencies
-     * @return {?}
-     */
-    CompileMetadataResolver.prototype._getInjectableMetadata = /**
-     * @param {?} type
-     * @param {?=} dependencies
-     * @return {?}
-     */
-    function (type, dependencies) {
-        if (dependencies === void 0) { dependencies = null; }
-        var /** @type {?} */ typeSummary = this._loadSummary(type, CompileSummaryKind.Injectable);
-        if (typeSummary) {
-            return typeSummary.type;
-        }
-        return this._getTypeMetadata(type, dependencies);
-    };
-    /**
-     * @param {?} type
-     * @param {?=} dependencies
-     * @param {?=} throwOnUnknownDeps
-     * @return {?}
-     */
-    CompileMetadataResolver.prototype._getTypeMetadata = /**
-     * @param {?} type
-     * @param {?=} dependencies
-     * @param {?=} throwOnUnknownDeps
-     * @return {?}
-     */
-    function (type, dependencies, throwOnUnknownDeps) {
-        if (dependencies === void 0) { dependencies = null; }
-        if (throwOnUnknownDeps === void 0) { throwOnUnknownDeps = true; }
-        var /** @type {?} */ identifier = this._getIdentifierMetadata(type);
-        return {
-            reference: identifier.reference,
-            diDeps: this._getDependenciesMetadata(identifier.reference, dependencies, throwOnUnknownDeps),
-            lifecycleHooks: getAllLifecycleHooks(this._reflector, identifier.reference),
-        };
-    };
-    /**
-     * @param {?} factory
-     * @param {?=} dependencies
-     * @return {?}
-     */
-    CompileMetadataResolver.prototype._getFactoryMetadata = /**
-     * @param {?} factory
-     * @param {?=} dependencies
-     * @return {?}
-     */
-    function (factory, dependencies) {
-        if (dependencies === void 0) { dependencies = null; }
-        factory = resolveForwardRef(factory);
-        return { reference: factory, diDeps: this._getDependenciesMetadata(factory, dependencies) };
-    };
-    /**
-     * Gets the metadata for the given pipe.
-     * This assumes `loadNgModuleDirectiveAndPipeMetadata` has been called first.
-     */
-    /**
-     * Gets the metadata for the given pipe.
-     * This assumes `loadNgModuleDirectiveAndPipeMetadata` has been called first.
-     * @param {?} pipeType
-     * @return {?}
-     */
-    CompileMetadataResolver.prototype.getPipeMetadata = /**
-     * Gets the metadata for the given pipe.
-     * This assumes `loadNgModuleDirectiveAndPipeMetadata` has been called first.
-     * @param {?} pipeType
-     * @return {?}
-     */
-    function (pipeType) {
-        var /** @type {?} */ pipeMeta = this._pipeCache.get(pipeType);
-        if (!pipeMeta) {
-            this._reportError(syntaxError("Illegal state: getPipeMetadata can only be called after loadNgModuleDirectiveAndPipeMetadata for a module that declares it. Pipe " + stringifyType(pipeType) + "."), pipeType);
-        }
-        return pipeMeta || null;
-    };
-    /**
-     * @param {?} pipeType
-     * @return {?}
-     */
-    CompileMetadataResolver.prototype.getPipeSummary = /**
-     * @param {?} pipeType
-     * @return {?}
-     */
-    function (pipeType) {
-        var /** @type {?} */ pipeSummary = /** @type {?} */ (this._loadSummary(pipeType, CompileSummaryKind.Pipe));
-        if (!pipeSummary) {
-            this._reportError(syntaxError("Illegal state: Could not load the summary for pipe " + stringifyType(pipeType) + "."), pipeType);
-        }
-        return pipeSummary;
-    };
-    /**
-     * @param {?} pipeType
-     * @return {?}
-     */
-    CompileMetadataResolver.prototype.getOrLoadPipeMetadata = /**
-     * @param {?} pipeType
-     * @return {?}
-     */
-    function (pipeType) {
-        var /** @type {?} */ pipeMeta = this._pipeCache.get(pipeType);
-        if (!pipeMeta) {
-            pipeMeta = this._loadPipeMetadata(pipeType);
-        }
-        return pipeMeta;
-    };
-    /**
-     * @param {?} pipeType
-     * @return {?}
-     */
-    CompileMetadataResolver.prototype._loadPipeMetadata = /**
-     * @param {?} pipeType
-     * @return {?}
-     */
-    function (pipeType) {
-        pipeType = resolveForwardRef(pipeType);
-        var /** @type {?} */ pipeAnnotation = /** @type {?} */ ((this._pipeResolver.resolve(pipeType)));
-        var /** @type {?} */ pipeMeta = new CompilePipeMetadata({
-            type: this._getTypeMetadata(pipeType),
-            name: pipeAnnotation.name,
-            pure: !!pipeAnnotation.pure
-        });
-        this._pipeCache.set(pipeType, pipeMeta);
-        this._summaryCache.set(pipeType, pipeMeta.toSummary());
-        return pipeMeta;
-    };
-    /**
-     * @param {?} typeOrFunc
-     * @param {?} dependencies
-     * @param {?=} throwOnUnknownDeps
-     * @return {?}
-     */
-    CompileMetadataResolver.prototype._getDependenciesMetadata = /**
-     * @param {?} typeOrFunc
-     * @param {?} dependencies
-     * @param {?=} throwOnUnknownDeps
-     * @return {?}
-     */
-    function (typeOrFunc, dependencies, throwOnUnknownDeps) {
-        var _this = this;
-        if (throwOnUnknownDeps === void 0) { throwOnUnknownDeps = true; }
-        var /** @type {?} */ hasUnknownDeps = false;
-        var /** @type {?} */ params = dependencies || this._reflector.parameters(typeOrFunc) || [];
-        var /** @type {?} */ dependenciesMetadata = params.map(function (param) {
-            var /** @type {?} */ isAttribute = false;
-            var /** @type {?} */ isHost = false;
-            var /** @type {?} */ isSelf = false;
-            var /** @type {?} */ isSkipSelf = false;
-            var /** @type {?} */ isOptional = false;
-            var /** @type {?} */ token = null;
-            if (Array.isArray(param)) {
-                param.forEach(function (paramEntry) {
-                    if (createHost.isTypeOf(paramEntry)) {
-                        isHost = true;
-                    }
-                    else if (createSelf.isTypeOf(paramEntry)) {
-                        isSelf = true;
-                    }
-                    else if (createSkipSelf.isTypeOf(paramEntry)) {
-                        isSkipSelf = true;
-                    }
-                    else if (createOptional.isTypeOf(paramEntry)) {
-                        isOptional = true;
-                    }
-                    else if (createAttribute.isTypeOf(paramEntry)) {
-                        isAttribute = true;
-                        token = paramEntry.attributeName;
-                    }
-                    else if (createInject.isTypeOf(paramEntry)) {
-                        token = paramEntry.token;
-                    }
-                    else if (createInjectionToken.isTypeOf(paramEntry) || paramEntry instanceof StaticSymbol) {
-                        token = paramEntry;
-                    }
-                    else if (isValidType(paramEntry) && token == null) {
-                        token = paramEntry;
-                    }
-                });
-            }
-            else {
-                token = param;
-            }
-            if (token == null) {
-                hasUnknownDeps = true;
-                return /** @type {?} */ ((null));
-            }
-            return {
-                isAttribute: isAttribute,
-                isHost: isHost,
-                isSelf: isSelf,
-                isSkipSelf: isSkipSelf,
-                isOptional: isOptional,
-                token: _this._getTokenMetadata(token)
-            };
-        });
-        if (hasUnknownDeps) {
-            var /** @type {?} */ depsTokens = dependenciesMetadata.map(function (dep) { return dep ? stringifyType(dep.token) : '?'; }).join(', ');
-            var /** @type {?} */ message = "Can't resolve all parameters for " + stringifyType(typeOrFunc) + ": (" + depsTokens + ").";
-            if (throwOnUnknownDeps || this._config.strictInjectionParameters) {
-                this._reportError(syntaxError(message), typeOrFunc);
-            }
-            else {
-                this._console.warn("Warning: " + message + " This will become an error in Angular v6.x");
-            }
-        }
-        return dependenciesMetadata;
-    };
-    /**
-     * @param {?} token
-     * @return {?}
-     */
-    CompileMetadataResolver.prototype._getTokenMetadata = /**
-     * @param {?} token
-     * @return {?}
-     */
-    function (token) {
-        token = resolveForwardRef(token);
-        var /** @type {?} */ compileToken;
-        if (typeof token === 'string') {
-            compileToken = { value: token };
-        }
-        else {
-            compileToken = { identifier: { reference: token } };
-        }
-        return compileToken;
-    };
-    /**
-     * @param {?} providers
-     * @param {?} targetEntryComponents
-     * @param {?=} debugInfo
-     * @param {?=} compileProviders
-     * @param {?=} type
-     * @return {?}
-     */
-    CompileMetadataResolver.prototype._getProvidersMetadata = /**
-     * @param {?} providers
-     * @param {?} targetEntryComponents
-     * @param {?=} debugInfo
-     * @param {?=} compileProviders
-     * @param {?=} type
-     * @return {?}
-     */
-    function (providers, targetEntryComponents, debugInfo, compileProviders, type) {
-        var _this = this;
-        if (compileProviders === void 0) { compileProviders = []; }
-        providers.forEach(function (provider, providerIdx) {
-            if (Array.isArray(provider)) {
-                _this._getProvidersMetadata(provider, targetEntryComponents, debugInfo, compileProviders);
-            }
-            else {
-                provider = resolveForwardRef(provider);
-                var /** @type {?} */ providerMeta = /** @type {?} */ ((undefined));
-                if (provider && typeof provider === 'object' && provider.hasOwnProperty('provide')) {
-                    _this._validateProvider(provider);
-                    providerMeta = new ProviderMeta(provider.provide, provider);
-                }
-                else if (isValidType(provider)) {
-                    providerMeta = new ProviderMeta(provider, { useClass: provider });
-                }
-                else if (provider === void 0) {
-                    _this._reportError(syntaxError("Encountered undefined provider! Usually this means you have a circular dependencies (might be caused by using 'barrel' index.ts files."));
-                    return;
-                }
-                else {
-                    var /** @type {?} */ providersInfo = (/** @type {?} */ (providers.reduce(function (soFar, seenProvider, seenProviderIdx) {
-                        if (seenProviderIdx < providerIdx) {
-                            soFar.push("" + stringifyType(seenProvider));
-                        }
-                        else if (seenProviderIdx == providerIdx) {
-                            soFar.push("?" + stringifyType(seenProvider) + "?");
-                        }
-                        else if (seenProviderIdx == providerIdx + 1) {
-                            soFar.push('...');
-                        }
-                        return soFar;
-                    }, [])))
-                        .join(', ');
-                    _this._reportError(syntaxError("Invalid " + (debugInfo ? debugInfo : 'provider') + " - only instances of Provider and Type are allowed, got: [" + providersInfo + "]"), type);
-                    return;
-                }
-                if (providerMeta.token ===
-                    _this._reflector.resolveExternalReference(Identifiers.ANALYZE_FOR_ENTRY_COMPONENTS)) {
-                    targetEntryComponents.push.apply(targetEntryComponents, _this._getEntryComponentsFromProvider(providerMeta, type));
-                }
-                else {
-                    compileProviders.push(_this.getProviderMetadata(providerMeta));
-                }
-            }
-        });
-        return compileProviders;
-    };
-    /**
-     * @param {?} provider
-     * @return {?}
-     */
-    CompileMetadataResolver.prototype._validateProvider = /**
-     * @param {?} provider
-     * @return {?}
-     */
-    function (provider) {
-        if (provider.hasOwnProperty('useClass') && provider.useClass == null) {
-            this._reportError(syntaxError("Invalid provider for " + stringifyType(provider.provide) + ". useClass cannot be " + provider.useClass + ".\n           Usually it happens when:\n           1. There's a circular dependency (might be caused by using index.ts (barrel) files).\n           2. Class was used before it was declared. Use forwardRef in this case."));
-        }
-    };
-    /**
-     * @param {?} provider
-     * @param {?=} type
-     * @return {?}
-     */
-    CompileMetadataResolver.prototype._getEntryComponentsFromProvider = /**
-     * @param {?} provider
-     * @param {?=} type
-     * @return {?}
-     */
-    function (provider, type) {
-        var _this = this;
-        var /** @type {?} */ components = [];
-        var /** @type {?} */ collectedIdentifiers = [];
-        if (provider.useFactory || provider.useExisting || provider.useClass) {
-            this._reportError(syntaxError("The ANALYZE_FOR_ENTRY_COMPONENTS token only supports useValue!"), type);
-            return [];
-        }
-        if (!provider.multi) {
-            this._reportError(syntaxError("The ANALYZE_FOR_ENTRY_COMPONENTS token only supports 'multi = true'!"), type);
-            return [];
-        }
-        extractIdentifiers(provider.useValue, collectedIdentifiers);
-        collectedIdentifiers.forEach(function (identifier) {
-            var /** @type {?} */ entry = _this._getEntryComponentMetadata(identifier.reference, false);
-            if (entry) {
-                components.push(entry);
-            }
-        });
-        return components;
-    };
-    /**
-     * @param {?} dirType
-     * @param {?=} throwIfNotFound
-     * @return {?}
-     */
-    CompileMetadataResolver.prototype._getEntryComponentMetadata = /**
-     * @param {?} dirType
-     * @param {?=} throwIfNotFound
-     * @return {?}
-     */
-    function (dirType, throwIfNotFound) {
-        if (throwIfNotFound === void 0) { throwIfNotFound = true; }
-        var /** @type {?} */ dirMeta = this.getNonNormalizedDirectiveMetadata(dirType);
-        if (dirMeta && dirMeta.metadata.isComponent) {
-            return { componentType: dirType, componentFactory: /** @type {?} */ ((dirMeta.metadata.componentFactory)) };
-        }
-        var /** @type {?} */ dirSummary = /** @type {?} */ (this._loadSummary(dirType, CompileSummaryKind.Directive));
-        if (dirSummary && dirSummary.isComponent) {
-            return { componentType: dirType, componentFactory: /** @type {?} */ ((dirSummary.componentFactory)) };
-        }
-        if (throwIfNotFound) {
-            throw syntaxError(dirType.name + " cannot be used as an entry component.");
-        }
-        return null;
-    };
-    /**
-     * @param {?} provider
-     * @return {?}
-     */
-    CompileMetadataResolver.prototype.getProviderMetadata = /**
-     * @param {?} provider
-     * @return {?}
-     */
-    function (provider) {
-        var /** @type {?} */ compileDeps = /** @type {?} */ ((undefined));
-        var /** @type {?} */ compileTypeMetadata = /** @type {?} */ ((null));
-        var /** @type {?} */ compileFactoryMetadata = /** @type {?} */ ((null));
-        var /** @type {?} */ token = this._getTokenMetadata(provider.token);
-        if (provider.useClass) {
-            compileTypeMetadata = this._getInjectableMetadata(provider.useClass, provider.dependencies);
-            compileDeps = compileTypeMetadata.diDeps;
-            if (provider.token === provider.useClass) {
-                // use the compileTypeMetadata as it contains information about lifecycleHooks...
-                token = { identifier: compileTypeMetadata };
-            }
-        }
-        else if (provider.useFactory) {
-            compileFactoryMetadata = this._getFactoryMetadata(provider.useFactory, provider.dependencies);
-            compileDeps = compileFactoryMetadata.diDeps;
-        }
-        return {
-            token: token,
-            useClass: compileTypeMetadata,
-            useValue: provider.useValue,
-            useFactory: compileFactoryMetadata,
-            useExisting: provider.useExisting ? this._getTokenMetadata(provider.useExisting) : undefined,
-            deps: compileDeps,
-            multi: provider.multi
-        };
-    };
-    /**
-     * @param {?} queries
-     * @param {?} isViewQuery
-     * @param {?} directiveType
-     * @return {?}
-     */
-    CompileMetadataResolver.prototype._getQueriesMetadata = /**
-     * @param {?} queries
-     * @param {?} isViewQuery
-     * @param {?} directiveType
-     * @return {?}
-     */
-    function (queries, isViewQuery, directiveType) {
-        var _this = this;
-        var /** @type {?} */ res = [];
-        Object.keys(queries).forEach(function (propertyName) {
-            var /** @type {?} */ query = queries[propertyName];
-            if (query.isViewQuery === isViewQuery) {
-                res.push(_this._getQueryMetadata(query, propertyName, directiveType));
-            }
-        });
-        return res;
-    };
-    /**
-     * @param {?} selector
-     * @return {?}
-     */
-    CompileMetadataResolver.prototype._queryVarBindings = /**
-     * @param {?} selector
-     * @return {?}
-     */
-    function (selector) { return selector.split(/\s*,\s*/); };
-    /**
-     * @param {?} q
-     * @param {?} propertyName
-     * @param {?} typeOrFunc
-     * @return {?}
-     */
-    CompileMetadataResolver.prototype._getQueryMetadata = /**
-     * @param {?} q
-     * @param {?} propertyName
-     * @param {?} typeOrFunc
-     * @return {?}
-     */
-    function (q, propertyName, typeOrFunc) {
-        var _this = this;
-        var /** @type {?} */ selectors;
-        if (typeof q.selector === 'string') {
-            selectors =
-                this._queryVarBindings(q.selector).map(function (varName) { return _this._getTokenMetadata(varName); });
-        }
-        else {
-            if (!q.selector) {
-                this._reportError(syntaxError("Can't construct a query for the property \"" + propertyName + "\" of \"" + stringifyType(typeOrFunc) + "\" since the query selector wasn't defined."), typeOrFunc);
-                selectors = [];
-            }
-            else {
-                selectors = [this._getTokenMetadata(q.selector)];
-            }
-        }
-        return {
-            selectors: selectors,
-            first: q.first,
-            descendants: q.descendants, propertyName: propertyName,
-            read: q.read ? this._getTokenMetadata(q.read) : /** @type {?} */ ((null))
-        };
-    };
-    /**
-     * @param {?} error
-     * @param {?=} type
-     * @param {?=} otherType
-     * @return {?}
-     */
-    CompileMetadataResolver.prototype._reportError = /**
-     * @param {?} error
-     * @param {?=} type
-     * @param {?=} otherType
-     * @return {?}
-     */
-    function (error$$1, type, otherType) {
-        if (this._errorCollector) {
-            this._errorCollector(error$$1, type);
-            if (otherType) {
-                this._errorCollector(error$$1, otherType);
-            }
-        }
-        else {
-            throw error$$1;
-        }
-    };
-    return CompileMetadataResolver;
-}());
-/**
- * @param {?} tree
- * @param {?=} out
- * @return {?}
- */
-function flattenArray(tree, out) {
-    if (out === void 0) { out = []; }
-    if (tree) {
-        for (var /** @type {?} */ i = 0; i < tree.length; i++) {
-            var /** @type {?} */ item = resolveForwardRef(tree[i]);
-            if (Array.isArray(item)) {
-                flattenArray(item, out);
-            }
-            else {
-                out.push(item);
-            }
-        }
-    }
-    return out;
-}
-/**
- * @param {?} array
- * @return {?}
- */
-function dedupeArray(array) {
-    if (array) {
-        return Array.from(new Set(array));
-    }
-    return [];
-}
-/**
- * @param {?} tree
- * @return {?}
- */
-function flattenAndDedupeArray(tree) {
-    return dedupeArray(flattenArray(tree));
-}
-/**
- * @param {?} value
- * @return {?}
- */
-function isValidType(value) {
-    return (value instanceof StaticSymbol) || (value instanceof Type);
-}
-/**
- * @param {?} value
- * @param {?} targetIdentifiers
- * @return {?}
- */
-function extractIdentifiers(value, targetIdentifiers) {
-    visitValue(value, new _CompileValueConverter(), targetIdentifiers);
-}
-var _CompileValueConverter = /** @class */ (function (_super) {
-    __extends(_CompileValueConverter, _super);
-    function _CompileValueConverter() {
-        return _super !== null && _super.apply(this, arguments) || this;
-    }
-    /**
-     * @param {?} value
-     * @param {?} targetIdentifiers
-     * @return {?}
-     */
-    _CompileValueConverter.prototype.visitOther = /**
-     * @param {?} value
-     * @param {?} targetIdentifiers
-     * @return {?}
-     */
-    function (value, targetIdentifiers) {
-        targetIdentifiers.push({ reference: value });
-    };
-    return _CompileValueConverter;
-}(ValueTransformer));
-/**
- * @param {?} type
- * @return {?}
- */
-function stringifyType(type) {
-    if (type instanceof StaticSymbol) {
-        return type.name + " in " + type.filePath;
-    }
-    else {
-        return stringify(type);
-    }
-}
-/**
- * Indicates that a component is still being loaded in a synchronous compile.
- * @param {?} compType
- * @return {?}
- */
-function componentStillLoadingError(compType) {
-    var /** @type {?} */ error$$1 = Error("Can't compile synchronously as " + stringify(compType) + " is still being loaded!");
-    (/** @type {?} */ (error$$1))[ERROR_COMPONENT_TYPE] = compType;
-    return error$$1;
 }
 
 /**
@@ -19259,6 +17050,2510 @@ function literal(value, type, sourceSpan) {
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
+var QUOTED_KEYS = '$quoted$';
+/**
+ * @param {?} ctx
+ * @param {?} value
+ * @param {?=} type
+ * @return {?}
+ */
+function convertValueToOutputAst(ctx, value, type) {
+    if (type === void 0) { type = null; }
+    return visitValue(value, new _ValueOutputAstTransformer(ctx), type);
+}
+var _ValueOutputAstTransformer = /** @class */ (function () {
+    function _ValueOutputAstTransformer(ctx) {
+        this.ctx = ctx;
+    }
+    /**
+     * @param {?} arr
+     * @param {?} type
+     * @return {?}
+     */
+    _ValueOutputAstTransformer.prototype.visitArray = /**
+     * @param {?} arr
+     * @param {?} type
+     * @return {?}
+     */
+    function (arr, type) {
+        var _this = this;
+        return literalArr(arr.map(function (value) { return visitValue(value, _this, null); }), type);
+    };
+    /**
+     * @param {?} map
+     * @param {?} type
+     * @return {?}
+     */
+    _ValueOutputAstTransformer.prototype.visitStringMap = /**
+     * @param {?} map
+     * @param {?} type
+     * @return {?}
+     */
+    function (map, type) {
+        var _this = this;
+        var /** @type {?} */ entries = [];
+        var /** @type {?} */ quotedSet = new Set(map && map[QUOTED_KEYS]);
+        Object.keys(map).forEach(function (key) {
+            entries.push(new LiteralMapEntry(key, visitValue(map[key], _this, null), quotedSet.has(key)));
+        });
+        return new LiteralMapExpr(entries, type);
+    };
+    /**
+     * @param {?} value
+     * @param {?} type
+     * @return {?}
+     */
+    _ValueOutputAstTransformer.prototype.visitPrimitive = /**
+     * @param {?} value
+     * @param {?} type
+     * @return {?}
+     */
+    function (value, type) { return literal(value, type); };
+    /**
+     * @param {?} value
+     * @param {?} type
+     * @return {?}
+     */
+    _ValueOutputAstTransformer.prototype.visitOther = /**
+     * @param {?} value
+     * @param {?} type
+     * @return {?}
+     */
+    function (value, type) {
+        if (value instanceof Expression) {
+            return value;
+        }
+        else {
+            return this.ctx.importExpr(value);
+        }
+    };
+    return _ValueOutputAstTransformer;
+}());
+
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+/**
+ * @param {?} key
+ * @param {?} value
+ * @return {?}
+ */
+function mapEntry(key, value) {
+    return { key: key, value: value, quoted: false };
+}
+var InjectableCompiler = /** @class */ (function () {
+    function InjectableCompiler(reflector) {
+        this.reflector = reflector;
+    }
+    /**
+     * @param {?} deps
+     * @param {?} ctx
+     * @return {?}
+     */
+    InjectableCompiler.prototype.depsArray = /**
+     * @param {?} deps
+     * @param {?} ctx
+     * @return {?}
+     */
+    function (deps, ctx) {
+        return deps.map(function (dep) {
+            var /** @type {?} */ token = dep;
+            var /** @type {?} */ defaultValue = undefined;
+            var /** @type {?} */ args = [token];
+            var /** @type {?} */ flags = 0;
+            if (Array.isArray(dep)) {
+                for (var /** @type {?} */ i = 0; i < dep.length; i++) {
+                    var /** @type {?} */ v = dep[i];
+                    if (v) {
+                        if (v.ngMetadataName === 'Optional') {
+                            defaultValue = null;
+                        }
+                        else if (v.ngMetadataName === 'SkipSelf') {
+                            flags |= 1 /* SkipSelf */;
+                        }
+                        else if (v.ngMetadataName === 'Self') {
+                            flags |= 2 /* Self */;
+                        }
+                        else if (v.ngMetadataName === 'Inject') {
+                            throw new Error('@Inject() is not implemented');
+                        }
+                        else {
+                            token = v;
+                        }
+                    }
+                }
+                args = [ctx.importExpr(token), literal(defaultValue), literal(flags)];
+            }
+            else {
+                args = [ctx.importExpr(token)];
+            }
+            return importExpr(Identifiers.inject).callFn(args);
+        });
+    };
+    /**
+     * @param {?} injectable
+     * @param {?} ctx
+     * @return {?}
+     */
+    InjectableCompiler.prototype.factoryFor = /**
+     * @param {?} injectable
+     * @param {?} ctx
+     * @return {?}
+     */
+    function (injectable, ctx) {
+        var /** @type {?} */ retValue;
+        if (injectable.useExisting) {
+            retValue = importExpr(Identifiers.inject).callFn([ctx.importExpr(injectable.useExisting)]);
+        }
+        else if (injectable.useFactory) {
+            var /** @type {?} */ deps = injectable.deps || [];
+            if (deps.length > 0) {
+                retValue = ctx.importExpr(injectable.useFactory).callFn(this.depsArray(deps, ctx));
+            }
+            else {
+                return ctx.importExpr(injectable.useFactory);
+            }
+        }
+        else if (injectable.useValue) {
+            retValue = convertValueToOutputAst(ctx, injectable.useValue);
+        }
+        else {
+            var /** @type {?} */ clazz = injectable.useClass || injectable.symbol;
+            var /** @type {?} */ depArgs = this.depsArray(this.reflector.parameters(clazz), ctx);
+            retValue = new InstantiateExpr(ctx.importExpr(clazz), depArgs);
+        }
+        return fn([], [new ReturnStatement(retValue)], undefined, undefined, injectable.symbol.name + '_Factory');
+    };
+    /**
+     * @param {?} injectable
+     * @param {?} ctx
+     * @return {?}
+     */
+    InjectableCompiler.prototype.injectableDef = /**
+     * @param {?} injectable
+     * @param {?} ctx
+     * @return {?}
+     */
+    function (injectable, ctx) {
+        var /** @type {?} */ def = [
+            mapEntry('factory', this.factoryFor(injectable, ctx)),
+            mapEntry('token', ctx.importExpr(injectable.type.reference)),
+            mapEntry('scope', ctx.importExpr(/** @type {?} */ ((injectable.module)))),
+        ];
+        return importExpr(Identifiers.defineInjectable).callFn([literalMap(def)]);
+    };
+    /**
+     * @param {?} injectable
+     * @param {?} ctx
+     * @return {?}
+     */
+    InjectableCompiler.prototype.compile = /**
+     * @param {?} injectable
+     * @param {?} ctx
+     * @return {?}
+     */
+    function (injectable, ctx) {
+        if (injectable.module) {
+            var /** @type {?} */ className = /** @type {?} */ ((identifierName(injectable.type)));
+            var /** @type {?} */ clazz = new ClassStmt(className, null, [
+                new ClassField('ngInjectableDef', INFERRED_TYPE, [StmtModifier.Static], this.injectableDef(injectable, ctx)),
+            ], [], new ClassMethod(null, [], []), []);
+            ctx.statements.push(clazz);
+        }
+    };
+    return InjectableCompiler;
+}());
+
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+var STRIP_SRC_FILE_SUFFIXES = /(\.ts|\.d\.ts|\.js|\.jsx|\.tsx)$/;
+var GENERATED_FILE = /\.ngfactory\.|\.ngsummary\./;
+var JIT_SUMMARY_FILE = /\.ngsummary\./;
+var JIT_SUMMARY_NAME = /NgSummary$/;
+/**
+ * @param {?} filePath
+ * @param {?=} forceSourceFile
+ * @return {?}
+ */
+function ngfactoryFilePath(filePath, forceSourceFile) {
+    if (forceSourceFile === void 0) { forceSourceFile = false; }
+    var /** @type {?} */ urlWithSuffix = splitTypescriptSuffix(filePath, forceSourceFile);
+    return urlWithSuffix[0] + ".ngfactory" + normalizeGenFileSuffix(urlWithSuffix[1]);
+}
+/**
+ * @param {?} filePath
+ * @return {?}
+ */
+function stripGeneratedFileSuffix(filePath) {
+    return filePath.replace(GENERATED_FILE, '.');
+}
+/**
+ * @param {?} filePath
+ * @return {?}
+ */
+function isGeneratedFile(filePath) {
+    return GENERATED_FILE.test(filePath);
+}
+/**
+ * @param {?} path
+ * @param {?=} forceSourceFile
+ * @return {?}
+ */
+function splitTypescriptSuffix(path$$1, forceSourceFile) {
+    if (forceSourceFile === void 0) { forceSourceFile = false; }
+    if (path$$1.endsWith('.d.ts')) {
+        return [path$$1.slice(0, -5), forceSourceFile ? '.ts' : '.d.ts'];
+    }
+    var /** @type {?} */ lastDot = path$$1.lastIndexOf('.');
+    if (lastDot !== -1) {
+        return [path$$1.substring(0, lastDot), path$$1.substring(lastDot)];
+    }
+    return [path$$1, ''];
+}
+/**
+ * @param {?} srcFileSuffix
+ * @return {?}
+ */
+function normalizeGenFileSuffix(srcFileSuffix) {
+    return srcFileSuffix === '.tsx' ? '.ts' : srcFileSuffix;
+}
+/**
+ * @param {?} fileName
+ * @return {?}
+ */
+function summaryFileName(fileName) {
+    var /** @type {?} */ fileNameWithoutSuffix = fileName.replace(STRIP_SRC_FILE_SUFFIXES, '');
+    return fileNameWithoutSuffix + ".ngsummary.json";
+}
+/**
+ * @param {?} fileName
+ * @param {?=} forceSourceFile
+ * @return {?}
+ */
+function summaryForJitFileName(fileName, forceSourceFile) {
+    if (forceSourceFile === void 0) { forceSourceFile = false; }
+    var /** @type {?} */ urlWithSuffix = splitTypescriptSuffix(stripGeneratedFileSuffix(fileName), forceSourceFile);
+    return urlWithSuffix[0] + ".ngsummary" + urlWithSuffix[1];
+}
+/**
+ * @param {?} filePath
+ * @return {?}
+ */
+function stripSummaryForJitFileSuffix(filePath) {
+    return filePath.replace(JIT_SUMMARY_FILE, '.');
+}
+/**
+ * @param {?} symbolName
+ * @return {?}
+ */
+function summaryForJitName(symbolName) {
+    return symbolName + "NgSummary";
+}
+/**
+ * @param {?} symbolName
+ * @return {?}
+ */
+function stripSummaryForJitNameSuffix(symbolName) {
+    return symbolName.replace(JIT_SUMMARY_NAME, '');
+}
+var LOWERED_SYMBOL = /\u0275\d+/;
+/**
+ * @param {?} name
+ * @return {?}
+ */
+function isLoweredSymbol(name) {
+    return LOWERED_SYMBOL.test(name);
+}
+/**
+ * @param {?} id
+ * @return {?}
+ */
+function createLoweredSymbol(id) {
+    return "\u0275" + id;
+}
+
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+/** @enum {number} */
+var LifecycleHooks = {
+    OnInit: 0,
+    OnDestroy: 1,
+    DoCheck: 2,
+    OnChanges: 3,
+    AfterContentInit: 4,
+    AfterContentChecked: 5,
+    AfterViewInit: 6,
+    AfterViewChecked: 7,
+};
+LifecycleHooks[LifecycleHooks.OnInit] = "OnInit";
+LifecycleHooks[LifecycleHooks.OnDestroy] = "OnDestroy";
+LifecycleHooks[LifecycleHooks.DoCheck] = "DoCheck";
+LifecycleHooks[LifecycleHooks.OnChanges] = "OnChanges";
+LifecycleHooks[LifecycleHooks.AfterContentInit] = "AfterContentInit";
+LifecycleHooks[LifecycleHooks.AfterContentChecked] = "AfterContentChecked";
+LifecycleHooks[LifecycleHooks.AfterViewInit] = "AfterViewInit";
+LifecycleHooks[LifecycleHooks.AfterViewChecked] = "AfterViewChecked";
+var LIFECYCLE_HOOKS_VALUES = [
+    LifecycleHooks.OnInit, LifecycleHooks.OnDestroy, LifecycleHooks.DoCheck, LifecycleHooks.OnChanges,
+    LifecycleHooks.AfterContentInit, LifecycleHooks.AfterContentChecked, LifecycleHooks.AfterViewInit,
+    LifecycleHooks.AfterViewChecked
+];
+/**
+ * @param {?} reflector
+ * @param {?} hook
+ * @param {?} token
+ * @return {?}
+ */
+function hasLifecycleHook(reflector, hook, token) {
+    return reflector.hasLifecycleHook(token, getHookName(hook));
+}
+/**
+ * @param {?} reflector
+ * @param {?} token
+ * @return {?}
+ */
+function getAllLifecycleHooks(reflector, token) {
+    return LIFECYCLE_HOOKS_VALUES.filter(function (hook) { return hasLifecycleHook(reflector, hook, token); });
+}
+/**
+ * @param {?} hook
+ * @return {?}
+ */
+function getHookName(hook) {
+    switch (hook) {
+        case LifecycleHooks.OnInit:
+            return 'ngOnInit';
+        case LifecycleHooks.OnDestroy:
+            return 'ngOnDestroy';
+        case LifecycleHooks.DoCheck:
+            return 'ngDoCheck';
+        case LifecycleHooks.OnChanges:
+            return 'ngOnChanges';
+        case LifecycleHooks.AfterContentInit:
+            return 'ngAfterContentInit';
+        case LifecycleHooks.AfterContentChecked:
+            return 'ngAfterContentChecked';
+        case LifecycleHooks.AfterViewInit:
+            return 'ngAfterViewInit';
+        case LifecycleHooks.AfterViewChecked:
+            return 'ngAfterViewChecked';
+    }
+}
+
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+var _SELECTOR_REGEXP = new RegExp('(\\:not\\()|' + //":not("
+    '([-\\w]+)|' + // "tag"
+    '(?:\\.([-\\w]+))|' + // ".class"
+    '(?:\\[([-.\\w*]+)(?:=([\"\']?)([^\\]\"\']*)\\5)?\\])|' + // "[name]", "[name=value]",
+    '(\\))|' + // ")"
+    '(\\s*,\\s*)', // ","
+'g');
+/**
+ * A css selector contains an element name,
+ * css classes and attribute/value pairs with the purpose
+ * of selecting subsets out of them.
+ */
+var CssSelector = /** @class */ (function () {
+    function CssSelector() {
+        this.element = null;
+        this.classNames = [];
+        this.attrs = [];
+        this.notSelectors = [];
+    }
+    /**
+     * @param {?} selector
+     * @return {?}
+     */
+    CssSelector.parse = /**
+     * @param {?} selector
+     * @return {?}
+     */
+    function (selector) {
+        var /** @type {?} */ results = [];
+        var /** @type {?} */ _addResult = function (res, cssSel) {
+            if (cssSel.notSelectors.length > 0 && !cssSel.element && cssSel.classNames.length == 0 &&
+                cssSel.attrs.length == 0) {
+                cssSel.element = '*';
+            }
+            res.push(cssSel);
+        };
+        var /** @type {?} */ cssSelector = new CssSelector();
+        var /** @type {?} */ match;
+        var /** @type {?} */ current = cssSelector;
+        var /** @type {?} */ inNot = false;
+        _SELECTOR_REGEXP.lastIndex = 0;
+        while (match = _SELECTOR_REGEXP.exec(selector)) {
+            if (match[1]) {
+                if (inNot) {
+                    throw new Error('Nesting :not is not allowed in a selector');
+                }
+                inNot = true;
+                current = new CssSelector();
+                cssSelector.notSelectors.push(current);
+            }
+            if (match[2]) {
+                current.setElement(match[2]);
+            }
+            if (match[3]) {
+                current.addClassName(match[3]);
+            }
+            if (match[4]) {
+                current.addAttribute(match[4], match[6]);
+            }
+            if (match[7]) {
+                inNot = false;
+                current = cssSelector;
+            }
+            if (match[8]) {
+                if (inNot) {
+                    throw new Error('Multiple selectors in :not are not supported');
+                }
+                _addResult(results, cssSelector);
+                cssSelector = current = new CssSelector();
+            }
+        }
+        _addResult(results, cssSelector);
+        return results;
+    };
+    /**
+     * @return {?}
+     */
+    CssSelector.prototype.isElementSelector = /**
+     * @return {?}
+     */
+    function () {
+        return this.hasElementSelector() && this.classNames.length == 0 && this.attrs.length == 0 &&
+            this.notSelectors.length === 0;
+    };
+    /**
+     * @return {?}
+     */
+    CssSelector.prototype.hasElementSelector = /**
+     * @return {?}
+     */
+    function () { return !!this.element; };
+    /**
+     * @param {?=} element
+     * @return {?}
+     */
+    CssSelector.prototype.setElement = /**
+     * @param {?=} element
+     * @return {?}
+     */
+    function (element) {
+        if (element === void 0) { element = null; }
+        this.element = element;
+    };
+    /** Gets a template string for an element that matches the selector. */
+    /**
+     * Gets a template string for an element that matches the selector.
+     * @return {?}
+     */
+    CssSelector.prototype.getMatchingElementTemplate = /**
+     * Gets a template string for an element that matches the selector.
+     * @return {?}
+     */
+    function () {
+        var /** @type {?} */ tagName = this.element || 'div';
+        var /** @type {?} */ classAttr = this.classNames.length > 0 ? " class=\"" + this.classNames.join(' ') + "\"" : '';
+        var /** @type {?} */ attrs = '';
+        for (var /** @type {?} */ i = 0; i < this.attrs.length; i += 2) {
+            var /** @type {?} */ attrName = this.attrs[i];
+            var /** @type {?} */ attrValue = this.attrs[i + 1] !== '' ? "=\"" + this.attrs[i + 1] + "\"" : '';
+            attrs += " " + attrName + attrValue;
+        }
+        return getHtmlTagDefinition(tagName).isVoid ? "<" + tagName + classAttr + attrs + "/>" :
+            "<" + tagName + classAttr + attrs + "></" + tagName + ">";
+    };
+    /**
+     * @return {?}
+     */
+    CssSelector.prototype.getAttrs = /**
+     * @return {?}
+     */
+    function () {
+        var /** @type {?} */ result = [];
+        if (this.classNames.length > 0) {
+            result.push('class', this.classNames.join(' '));
+        }
+        return result.concat(this.attrs);
+    };
+    /**
+     * @param {?} name
+     * @param {?=} value
+     * @return {?}
+     */
+    CssSelector.prototype.addAttribute = /**
+     * @param {?} name
+     * @param {?=} value
+     * @return {?}
+     */
+    function (name, value) {
+        if (value === void 0) { value = ''; }
+        this.attrs.push(name, value && value.toLowerCase() || '');
+    };
+    /**
+     * @param {?} name
+     * @return {?}
+     */
+    CssSelector.prototype.addClassName = /**
+     * @param {?} name
+     * @return {?}
+     */
+    function (name) { this.classNames.push(name.toLowerCase()); };
+    /**
+     * @return {?}
+     */
+    CssSelector.prototype.toString = /**
+     * @return {?}
+     */
+    function () {
+        var /** @type {?} */ res = this.element || '';
+        if (this.classNames) {
+            this.classNames.forEach(function (klass) { return res += "." + klass; });
+        }
+        if (this.attrs) {
+            for (var /** @type {?} */ i = 0; i < this.attrs.length; i += 2) {
+                var /** @type {?} */ name_1 = this.attrs[i];
+                var /** @type {?} */ value = this.attrs[i + 1];
+                res += "[" + name_1 + (value ? '=' + value : '') + "]";
+            }
+        }
+        this.notSelectors.forEach(function (notSelector) { return res += ":not(" + notSelector + ")"; });
+        return res;
+    };
+    return CssSelector;
+}());
+/**
+ * Reads a list of CssSelectors and allows to calculate which ones
+ * are contained in a given CssSelector.
+ */
+var SelectorMatcher = /** @class */ (function () {
+    function SelectorMatcher() {
+        this._elementMap = new Map();
+        this._elementPartialMap = new Map();
+        this._classMap = new Map();
+        this._classPartialMap = new Map();
+        this._attrValueMap = new Map();
+        this._attrValuePartialMap = new Map();
+        this._listContexts = [];
+    }
+    /**
+     * @param {?} notSelectors
+     * @return {?}
+     */
+    SelectorMatcher.createNotMatcher = /**
+     * @param {?} notSelectors
+     * @return {?}
+     */
+    function (notSelectors) {
+        var /** @type {?} */ notMatcher = new SelectorMatcher();
+        notMatcher.addSelectables(notSelectors, null);
+        return notMatcher;
+    };
+    /**
+     * @param {?} cssSelectors
+     * @param {?=} callbackCtxt
+     * @return {?}
+     */
+    SelectorMatcher.prototype.addSelectables = /**
+     * @param {?} cssSelectors
+     * @param {?=} callbackCtxt
+     * @return {?}
+     */
+    function (cssSelectors, callbackCtxt) {
+        var /** @type {?} */ listContext = /** @type {?} */ ((null));
+        if (cssSelectors.length > 1) {
+            listContext = new SelectorListContext(cssSelectors);
+            this._listContexts.push(listContext);
+        }
+        for (var /** @type {?} */ i = 0; i < cssSelectors.length; i++) {
+            this._addSelectable(cssSelectors[i], callbackCtxt, listContext);
+        }
+    };
+    /**
+     * Add an object that can be found later on by calling `match`.
+     * @param {?} cssSelector A css selector
+     * @param {?} callbackCtxt An opaque object that will be given to the callback of the `match` function
+     * @param {?} listContext
+     * @return {?}
+     */
+    SelectorMatcher.prototype._addSelectable = /**
+     * Add an object that can be found later on by calling `match`.
+     * @param {?} cssSelector A css selector
+     * @param {?} callbackCtxt An opaque object that will be given to the callback of the `match` function
+     * @param {?} listContext
+     * @return {?}
+     */
+    function (cssSelector, callbackCtxt, listContext) {
+        var /** @type {?} */ matcher = this;
+        var /** @type {?} */ element = cssSelector.element;
+        var /** @type {?} */ classNames = cssSelector.classNames;
+        var /** @type {?} */ attrs = cssSelector.attrs;
+        var /** @type {?} */ selectable = new SelectorContext(cssSelector, callbackCtxt, listContext);
+        if (element) {
+            var /** @type {?} */ isTerminal = attrs.length === 0 && classNames.length === 0;
+            if (isTerminal) {
+                this._addTerminal(matcher._elementMap, element, selectable);
+            }
+            else {
+                matcher = this._addPartial(matcher._elementPartialMap, element);
+            }
+        }
+        if (classNames) {
+            for (var /** @type {?} */ i = 0; i < classNames.length; i++) {
+                var /** @type {?} */ isTerminal = attrs.length === 0 && i === classNames.length - 1;
+                var /** @type {?} */ className = classNames[i];
+                if (isTerminal) {
+                    this._addTerminal(matcher._classMap, className, selectable);
+                }
+                else {
+                    matcher = this._addPartial(matcher._classPartialMap, className);
+                }
+            }
+        }
+        if (attrs) {
+            for (var /** @type {?} */ i = 0; i < attrs.length; i += 2) {
+                var /** @type {?} */ isTerminal = i === attrs.length - 2;
+                var /** @type {?} */ name_2 = attrs[i];
+                var /** @type {?} */ value = attrs[i + 1];
+                if (isTerminal) {
+                    var /** @type {?} */ terminalMap = matcher._attrValueMap;
+                    var /** @type {?} */ terminalValuesMap = terminalMap.get(name_2);
+                    if (!terminalValuesMap) {
+                        terminalValuesMap = new Map();
+                        terminalMap.set(name_2, terminalValuesMap);
+                    }
+                    this._addTerminal(terminalValuesMap, value, selectable);
+                }
+                else {
+                    var /** @type {?} */ partialMap = matcher._attrValuePartialMap;
+                    var /** @type {?} */ partialValuesMap = partialMap.get(name_2);
+                    if (!partialValuesMap) {
+                        partialValuesMap = new Map();
+                        partialMap.set(name_2, partialValuesMap);
+                    }
+                    matcher = this._addPartial(partialValuesMap, value);
+                }
+            }
+        }
+    };
+    /**
+     * @param {?} map
+     * @param {?} name
+     * @param {?} selectable
+     * @return {?}
+     */
+    SelectorMatcher.prototype._addTerminal = /**
+     * @param {?} map
+     * @param {?} name
+     * @param {?} selectable
+     * @return {?}
+     */
+    function (map, name, selectable) {
+        var /** @type {?} */ terminalList = map.get(name);
+        if (!terminalList) {
+            terminalList = [];
+            map.set(name, terminalList);
+        }
+        terminalList.push(selectable);
+    };
+    /**
+     * @param {?} map
+     * @param {?} name
+     * @return {?}
+     */
+    SelectorMatcher.prototype._addPartial = /**
+     * @param {?} map
+     * @param {?} name
+     * @return {?}
+     */
+    function (map, name) {
+        var /** @type {?} */ matcher = map.get(name);
+        if (!matcher) {
+            matcher = new SelectorMatcher();
+            map.set(name, matcher);
+        }
+        return matcher;
+    };
+    /**
+     * Find the objects that have been added via `addSelectable`
+     * whose css selector is contained in the given css selector.
+     * @param cssSelector A css selector
+     * @param matchedCallback This callback will be called with the object handed into `addSelectable`
+     * @return boolean true if a match was found
+    */
+    /**
+     * Find the objects that have been added via `addSelectable`
+     * whose css selector is contained in the given css selector.
+     * @param {?} cssSelector A css selector
+     * @param {?} matchedCallback This callback will be called with the object handed into `addSelectable`
+     * @return {?} boolean true if a match was found
+     */
+    SelectorMatcher.prototype.match = /**
+     * Find the objects that have been added via `addSelectable`
+     * whose css selector is contained in the given css selector.
+     * @param {?} cssSelector A css selector
+     * @param {?} matchedCallback This callback will be called with the object handed into `addSelectable`
+     * @return {?} boolean true if a match was found
+     */
+    function (cssSelector, matchedCallback) {
+        var /** @type {?} */ result = false;
+        var /** @type {?} */ element = /** @type {?} */ ((cssSelector.element));
+        var /** @type {?} */ classNames = cssSelector.classNames;
+        var /** @type {?} */ attrs = cssSelector.attrs;
+        for (var /** @type {?} */ i = 0; i < this._listContexts.length; i++) {
+            this._listContexts[i].alreadyMatched = false;
+        }
+        result = this._matchTerminal(this._elementMap, element, cssSelector, matchedCallback) || result;
+        result = this._matchPartial(this._elementPartialMap, element, cssSelector, matchedCallback) ||
+            result;
+        if (classNames) {
+            for (var /** @type {?} */ i = 0; i < classNames.length; i++) {
+                var /** @type {?} */ className = classNames[i];
+                result =
+                    this._matchTerminal(this._classMap, className, cssSelector, matchedCallback) || result;
+                result =
+                    this._matchPartial(this._classPartialMap, className, cssSelector, matchedCallback) ||
+                        result;
+            }
+        }
+        if (attrs) {
+            for (var /** @type {?} */ i = 0; i < attrs.length; i += 2) {
+                var /** @type {?} */ name_3 = attrs[i];
+                var /** @type {?} */ value = attrs[i + 1];
+                var /** @type {?} */ terminalValuesMap = /** @type {?} */ ((this._attrValueMap.get(name_3)));
+                if (value) {
+                    result =
+                        this._matchTerminal(terminalValuesMap, '', cssSelector, matchedCallback) || result;
+                }
+                result =
+                    this._matchTerminal(terminalValuesMap, value, cssSelector, matchedCallback) || result;
+                var /** @type {?} */ partialValuesMap = /** @type {?} */ ((this._attrValuePartialMap.get(name_3)));
+                if (value) {
+                    result = this._matchPartial(partialValuesMap, '', cssSelector, matchedCallback) || result;
+                }
+                result =
+                    this._matchPartial(partialValuesMap, value, cssSelector, matchedCallback) || result;
+            }
+        }
+        return result;
+    };
+    /** @internal */
+    /**
+     * \@internal
+     * @param {?} map
+     * @param {?} name
+     * @param {?} cssSelector
+     * @param {?} matchedCallback
+     * @return {?}
+     */
+    SelectorMatcher.prototype._matchTerminal = /**
+     * \@internal
+     * @param {?} map
+     * @param {?} name
+     * @param {?} cssSelector
+     * @param {?} matchedCallback
+     * @return {?}
+     */
+    function (map, name, cssSelector, matchedCallback) {
+        if (!map || typeof name !== 'string') {
+            return false;
+        }
+        var /** @type {?} */ selectables = map.get(name) || [];
+        var /** @type {?} */ starSelectables = /** @type {?} */ ((map.get('*')));
+        if (starSelectables) {
+            selectables = selectables.concat(starSelectables);
+        }
+        if (selectables.length === 0) {
+            return false;
+        }
+        var /** @type {?} */ selectable;
+        var /** @type {?} */ result = false;
+        for (var /** @type {?} */ i = 0; i < selectables.length; i++) {
+            selectable = selectables[i];
+            result = selectable.finalize(cssSelector, matchedCallback) || result;
+        }
+        return result;
+    };
+    /** @internal */
+    /**
+     * \@internal
+     * @param {?} map
+     * @param {?} name
+     * @param {?} cssSelector
+     * @param {?} matchedCallback
+     * @return {?}
+     */
+    SelectorMatcher.prototype._matchPartial = /**
+     * \@internal
+     * @param {?} map
+     * @param {?} name
+     * @param {?} cssSelector
+     * @param {?} matchedCallback
+     * @return {?}
+     */
+    function (map, name, cssSelector, matchedCallback) {
+        if (!map || typeof name !== 'string') {
+            return false;
+        }
+        var /** @type {?} */ nestedSelector = map.get(name);
+        if (!nestedSelector) {
+            return false;
+        }
+        // TODO(perf): get rid of recursion and measure again
+        // TODO(perf): don't pass the whole selector into the recursion,
+        // but only the not processed parts
+        return nestedSelector.match(cssSelector, matchedCallback);
+    };
+    return SelectorMatcher;
+}());
+var SelectorListContext = /** @class */ (function () {
+    function SelectorListContext(selectors) {
+        this.selectors = selectors;
+        this.alreadyMatched = false;
+    }
+    return SelectorListContext;
+}());
+var SelectorContext = /** @class */ (function () {
+    function SelectorContext(selector, cbContext, listContext) {
+        this.selector = selector;
+        this.cbContext = cbContext;
+        this.listContext = listContext;
+        this.notSelectors = selector.notSelectors;
+    }
+    /**
+     * @param {?} cssSelector
+     * @param {?} callback
+     * @return {?}
+     */
+    SelectorContext.prototype.finalize = /**
+     * @param {?} cssSelector
+     * @param {?} callback
+     * @return {?}
+     */
+    function (cssSelector, callback) {
+        var /** @type {?} */ result = true;
+        if (this.notSelectors.length > 0 && (!this.listContext || !this.listContext.alreadyMatched)) {
+            var /** @type {?} */ notMatcher = SelectorMatcher.createNotMatcher(this.notSelectors);
+            result = !notMatcher.match(cssSelector, null);
+        }
+        if (result && callback && (!this.listContext || !this.listContext.alreadyMatched)) {
+            if (this.listContext) {
+                this.listContext.alreadyMatched = true;
+            }
+            callback(this.selector, this.cbContext);
+        }
+        return result;
+    };
+    return SelectorContext;
+}());
+
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+var ERROR_COMPONENT_TYPE = 'ngComponentType';
+var CompileMetadataResolver = /** @class */ (function () {
+    function CompileMetadataResolver(_config, _htmlParser, _ngModuleResolver, _directiveResolver, _pipeResolver, _summaryResolver, _schemaRegistry, _directiveNormalizer, _console, _staticSymbolCache, _reflector, _errorCollector) {
+        this._config = _config;
+        this._htmlParser = _htmlParser;
+        this._ngModuleResolver = _ngModuleResolver;
+        this._directiveResolver = _directiveResolver;
+        this._pipeResolver = _pipeResolver;
+        this._summaryResolver = _summaryResolver;
+        this._schemaRegistry = _schemaRegistry;
+        this._directiveNormalizer = _directiveNormalizer;
+        this._console = _console;
+        this._staticSymbolCache = _staticSymbolCache;
+        this._reflector = _reflector;
+        this._errorCollector = _errorCollector;
+        this._nonNormalizedDirectiveCache = new Map();
+        this._directiveCache = new Map();
+        this._summaryCache = new Map();
+        this._pipeCache = new Map();
+        this._ngModuleCache = new Map();
+        this._ngModuleOfTypes = new Map();
+    }
+    /**
+     * @return {?}
+     */
+    CompileMetadataResolver.prototype.getReflector = /**
+     * @return {?}
+     */
+    function () { return this._reflector; };
+    /**
+     * @param {?} type
+     * @return {?}
+     */
+    CompileMetadataResolver.prototype.clearCacheFor = /**
+     * @param {?} type
+     * @return {?}
+     */
+    function (type) {
+        var /** @type {?} */ dirMeta = this._directiveCache.get(type);
+        this._directiveCache.delete(type);
+        this._nonNormalizedDirectiveCache.delete(type);
+        this._summaryCache.delete(type);
+        this._pipeCache.delete(type);
+        this._ngModuleOfTypes.delete(type);
+        // Clear all of the NgModule as they contain transitive information!
+        this._ngModuleCache.clear();
+        if (dirMeta) {
+            this._directiveNormalizer.clearCacheFor(dirMeta);
+        }
+    };
+    /**
+     * @return {?}
+     */
+    CompileMetadataResolver.prototype.clearCache = /**
+     * @return {?}
+     */
+    function () {
+        this._directiveCache.clear();
+        this._nonNormalizedDirectiveCache.clear();
+        this._summaryCache.clear();
+        this._pipeCache.clear();
+        this._ngModuleCache.clear();
+        this._ngModuleOfTypes.clear();
+        this._directiveNormalizer.clearCache();
+    };
+    /**
+     * @param {?} baseType
+     * @param {?} name
+     * @return {?}
+     */
+    CompileMetadataResolver.prototype._createProxyClass = /**
+     * @param {?} baseType
+     * @param {?} name
+     * @return {?}
+     */
+    function (baseType, name) {
+        var /** @type {?} */ delegate = null;
+        var /** @type {?} */ proxyClass = /** @type {?} */ (function () {
+            if (!delegate) {
+                throw new Error("Illegal state: Class " + name + " for type " + stringify(baseType) + " is not compiled yet!");
+            }
+            return delegate.apply(this, arguments);
+        });
+        proxyClass.setDelegate = function (d) {
+            delegate = d;
+            (/** @type {?} */ (proxyClass)).prototype = d.prototype;
+        };
+        // Make stringify work correctly
+        (/** @type {?} */ (proxyClass)).overriddenName = name;
+        return proxyClass;
+    };
+    /**
+     * @param {?} dirType
+     * @param {?} name
+     * @return {?}
+     */
+    CompileMetadataResolver.prototype.getGeneratedClass = /**
+     * @param {?} dirType
+     * @param {?} name
+     * @return {?}
+     */
+    function (dirType, name) {
+        if (dirType instanceof StaticSymbol) {
+            return this._staticSymbolCache.get(ngfactoryFilePath(dirType.filePath), name);
+        }
+        else {
+            return this._createProxyClass(dirType, name);
+        }
+    };
+    /**
+     * @param {?} dirType
+     * @return {?}
+     */
+    CompileMetadataResolver.prototype.getComponentViewClass = /**
+     * @param {?} dirType
+     * @return {?}
+     */
+    function (dirType) {
+        return this.getGeneratedClass(dirType, viewClassName(dirType, 0));
+    };
+    /**
+     * @param {?} dirType
+     * @return {?}
+     */
+    CompileMetadataResolver.prototype.getHostComponentViewClass = /**
+     * @param {?} dirType
+     * @return {?}
+     */
+    function (dirType) {
+        return this.getGeneratedClass(dirType, hostViewClassName(dirType));
+    };
+    /**
+     * @param {?} dirType
+     * @return {?}
+     */
+    CompileMetadataResolver.prototype.getHostComponentType = /**
+     * @param {?} dirType
+     * @return {?}
+     */
+    function (dirType) {
+        var /** @type {?} */ name = identifierName({ reference: dirType }) + "_Host";
+        if (dirType instanceof StaticSymbol) {
+            return this._staticSymbolCache.get(dirType.filePath, name);
+        }
+        else {
+            var /** @type {?} */ HostClass = /** @type {?} */ (function HostClass() { });
+            HostClass.overriddenName = name;
+            return HostClass;
+        }
+    };
+    /**
+     * @param {?} dirType
+     * @return {?}
+     */
+    CompileMetadataResolver.prototype.getRendererType = /**
+     * @param {?} dirType
+     * @return {?}
+     */
+    function (dirType) {
+        if (dirType instanceof StaticSymbol) {
+            return this._staticSymbolCache.get(ngfactoryFilePath(dirType.filePath), rendererTypeName(dirType));
+        }
+        else {
+            // returning an object as proxy,
+            // that we fill later during runtime compilation.
+            return /** @type {?} */ ({});
+        }
+    };
+    /**
+     * @param {?} selector
+     * @param {?} dirType
+     * @param {?} inputs
+     * @param {?} outputs
+     * @return {?}
+     */
+    CompileMetadataResolver.prototype.getComponentFactory = /**
+     * @param {?} selector
+     * @param {?} dirType
+     * @param {?} inputs
+     * @param {?} outputs
+     * @return {?}
+     */
+    function (selector, dirType, inputs, outputs) {
+        if (dirType instanceof StaticSymbol) {
+            return this._staticSymbolCache.get(ngfactoryFilePath(dirType.filePath), componentFactoryName(dirType));
+        }
+        else {
+            var /** @type {?} */ hostView = this.getHostComponentViewClass(dirType);
+            // Note: ngContentSelectors will be filled later once the template is
+            // loaded.
+            var /** @type {?} */ createComponentFactory = this._reflector.resolveExternalReference(Identifiers.createComponentFactory);
+            return createComponentFactory(selector, dirType, /** @type {?} */ (hostView), inputs, outputs, []);
+        }
+    };
+    /**
+     * @param {?} factory
+     * @param {?} ngContentSelectors
+     * @return {?}
+     */
+    CompileMetadataResolver.prototype.initComponentFactory = /**
+     * @param {?} factory
+     * @param {?} ngContentSelectors
+     * @return {?}
+     */
+    function (factory, ngContentSelectors) {
+        if (!(factory instanceof StaticSymbol)) {
+            (_a = (/** @type {?} */ (factory)).ngContentSelectors).push.apply(_a, ngContentSelectors);
+        }
+        var _a;
+    };
+    /**
+     * @param {?} type
+     * @param {?} kind
+     * @return {?}
+     */
+    CompileMetadataResolver.prototype._loadSummary = /**
+     * @param {?} type
+     * @param {?} kind
+     * @return {?}
+     */
+    function (type, kind) {
+        var /** @type {?} */ typeSummary = this._summaryCache.get(type);
+        if (!typeSummary) {
+            var /** @type {?} */ summary = this._summaryResolver.resolveSummary(type);
+            typeSummary = summary ? summary.type : null;
+            this._summaryCache.set(type, typeSummary || null);
+        }
+        return typeSummary && typeSummary.summaryKind === kind ? typeSummary : null;
+    };
+    /**
+     * @param {?} compMeta
+     * @param {?=} hostViewType
+     * @return {?}
+     */
+    CompileMetadataResolver.prototype.getHostComponentMetadata = /**
+     * @param {?} compMeta
+     * @param {?=} hostViewType
+     * @return {?}
+     */
+    function (compMeta, hostViewType) {
+        var /** @type {?} */ hostType = this.getHostComponentType(compMeta.type.reference);
+        if (!hostViewType) {
+            hostViewType = this.getHostComponentViewClass(hostType);
+        }
+        // Note: ! is ok here as this method should only be called with normalized directive
+        // metadata, which always fills in the selector.
+        var /** @type {?} */ template = CssSelector.parse(/** @type {?} */ ((compMeta.selector)))[0].getMatchingElementTemplate();
+        var /** @type {?} */ templateUrl = '';
+        var /** @type {?} */ htmlAst = this._htmlParser.parse(template, templateUrl);
+        return CompileDirectiveMetadata.create({
+            isHost: true,
+            type: { reference: hostType, diDeps: [], lifecycleHooks: [] },
+            template: new CompileTemplateMetadata({
+                encapsulation: ViewEncapsulation.None,
+                template: template,
+                templateUrl: templateUrl,
+                htmlAst: htmlAst,
+                styles: [],
+                styleUrls: [],
+                ngContentSelectors: [],
+                animations: [],
+                isInline: true,
+                externalStylesheets: [],
+                interpolation: null,
+                preserveWhitespaces: false,
+            }),
+            exportAs: null,
+            changeDetection: ChangeDetectionStrategy.Default,
+            inputs: [],
+            outputs: [],
+            host: {},
+            isComponent: true,
+            selector: '*',
+            providers: [],
+            viewProviders: [],
+            queries: [],
+            guards: {},
+            viewQueries: [],
+            componentViewType: hostViewType,
+            rendererType: /** @type {?} */ ({ id: '__Host__', encapsulation: ViewEncapsulation.None, styles: [], data: {} }),
+            entryComponents: [],
+            componentFactory: null
+        });
+    };
+    /**
+     * @param {?} ngModuleType
+     * @param {?} directiveType
+     * @param {?} isSync
+     * @return {?}
+     */
+    CompileMetadataResolver.prototype.loadDirectiveMetadata = /**
+     * @param {?} ngModuleType
+     * @param {?} directiveType
+     * @param {?} isSync
+     * @return {?}
+     */
+    function (ngModuleType, directiveType, isSync) {
+        var _this = this;
+        if (this._directiveCache.has(directiveType)) {
+            return null;
+        }
+        directiveType = resolveForwardRef(directiveType);
+        var _a = /** @type {?} */ ((this.getNonNormalizedDirectiveMetadata(directiveType))), annotation = _a.annotation, metadata = _a.metadata;
+        var /** @type {?} */ createDirectiveMetadata = function (templateMetadata) {
+            var /** @type {?} */ normalizedDirMeta = new CompileDirectiveMetadata({
+                isHost: false,
+                type: metadata.type,
+                isComponent: metadata.isComponent,
+                selector: metadata.selector,
+                exportAs: metadata.exportAs,
+                changeDetection: metadata.changeDetection,
+                inputs: metadata.inputs,
+                outputs: metadata.outputs,
+                hostListeners: metadata.hostListeners,
+                hostProperties: metadata.hostProperties,
+                hostAttributes: metadata.hostAttributes,
+                providers: metadata.providers,
+                viewProviders: metadata.viewProviders,
+                queries: metadata.queries,
+                guards: metadata.guards,
+                viewQueries: metadata.viewQueries,
+                entryComponents: metadata.entryComponents,
+                componentViewType: metadata.componentViewType,
+                rendererType: metadata.rendererType,
+                componentFactory: metadata.componentFactory,
+                template: templateMetadata
+            });
+            if (templateMetadata) {
+                _this.initComponentFactory(/** @type {?} */ ((metadata.componentFactory)), templateMetadata.ngContentSelectors);
+            }
+            _this._directiveCache.set(directiveType, normalizedDirMeta);
+            _this._summaryCache.set(directiveType, normalizedDirMeta.toSummary());
+            return null;
+        };
+        if (metadata.isComponent) {
+            var /** @type {?} */ template = /** @type {?} */ ((metadata.template));
+            var /** @type {?} */ templateMeta = this._directiveNormalizer.normalizeTemplate({
+                ngModuleType: ngModuleType,
+                componentType: directiveType,
+                moduleUrl: this._reflector.componentModuleUrl(directiveType, annotation),
+                encapsulation: template.encapsulation,
+                template: template.template,
+                templateUrl: template.templateUrl,
+                styles: template.styles,
+                styleUrls: template.styleUrls,
+                animations: template.animations,
+                interpolation: template.interpolation,
+                preserveWhitespaces: template.preserveWhitespaces
+            });
+            if (isPromise(templateMeta) && isSync) {
+                this._reportError(componentStillLoadingError(directiveType), directiveType);
+                return null;
+            }
+            return SyncAsync.then(templateMeta, createDirectiveMetadata);
+        }
+        else {
+            // directive
+            createDirectiveMetadata(null);
+            return null;
+        }
+    };
+    /**
+     * @param {?} directiveType
+     * @return {?}
+     */
+    CompileMetadataResolver.prototype.getNonNormalizedDirectiveMetadata = /**
+     * @param {?} directiveType
+     * @return {?}
+     */
+    function (directiveType) {
+        var _this = this;
+        directiveType = resolveForwardRef(directiveType);
+        if (!directiveType) {
+            return null;
+        }
+        var /** @type {?} */ cacheEntry = this._nonNormalizedDirectiveCache.get(directiveType);
+        if (cacheEntry) {
+            return cacheEntry;
+        }
+        var /** @type {?} */ dirMeta = this._directiveResolver.resolve(directiveType, false);
+        if (!dirMeta) {
+            return null;
+        }
+        var /** @type {?} */ nonNormalizedTemplateMetadata = /** @type {?} */ ((undefined));
+        if (createComponent.isTypeOf(dirMeta)) {
+            // component
+            var /** @type {?} */ compMeta = /** @type {?} */ (dirMeta);
+            assertArrayOfStrings('styles', compMeta.styles);
+            assertArrayOfStrings('styleUrls', compMeta.styleUrls);
+            assertInterpolationSymbols('interpolation', compMeta.interpolation);
+            var /** @type {?} */ animations = compMeta.animations;
+            nonNormalizedTemplateMetadata = new CompileTemplateMetadata({
+                encapsulation: noUndefined(compMeta.encapsulation),
+                template: noUndefined(compMeta.template),
+                templateUrl: noUndefined(compMeta.templateUrl),
+                htmlAst: null,
+                styles: compMeta.styles || [],
+                styleUrls: compMeta.styleUrls || [],
+                animations: animations || [],
+                interpolation: noUndefined(compMeta.interpolation),
+                isInline: !!compMeta.template,
+                externalStylesheets: [],
+                ngContentSelectors: [],
+                preserveWhitespaces: noUndefined(dirMeta.preserveWhitespaces),
+            });
+        }
+        var /** @type {?} */ changeDetectionStrategy = /** @type {?} */ ((null));
+        var /** @type {?} */ viewProviders = [];
+        var /** @type {?} */ entryComponentMetadata = [];
+        var /** @type {?} */ selector = dirMeta.selector;
+        if (createComponent.isTypeOf(dirMeta)) {
+            // Component
+            var /** @type {?} */ compMeta = /** @type {?} */ (dirMeta);
+            changeDetectionStrategy = /** @type {?} */ ((compMeta.changeDetection));
+            if (compMeta.viewProviders) {
+                viewProviders = this._getProvidersMetadata(compMeta.viewProviders, entryComponentMetadata, "viewProviders for \"" + stringifyType(directiveType) + "\"", [], directiveType);
+            }
+            if (compMeta.entryComponents) {
+                entryComponentMetadata = flattenAndDedupeArray(compMeta.entryComponents)
+                    .map(function (type) { return ((_this._getEntryComponentMetadata(type))); })
+                    .concat(entryComponentMetadata);
+            }
+            if (!selector) {
+                selector = this._schemaRegistry.getDefaultComponentElementName();
+            }
+        }
+        else {
+            // Directive
+            if (!selector) {
+                this._reportError(syntaxError("Directive " + stringifyType(directiveType) + " has no selector, please add it!"), directiveType);
+                selector = 'error';
+            }
+        }
+        var /** @type {?} */ providers = [];
+        if (dirMeta.providers != null) {
+            providers = this._getProvidersMetadata(dirMeta.providers, entryComponentMetadata, "providers for \"" + stringifyType(directiveType) + "\"", [], directiveType);
+        }
+        var /** @type {?} */ queries = [];
+        var /** @type {?} */ viewQueries = [];
+        if (dirMeta.queries != null) {
+            queries = this._getQueriesMetadata(dirMeta.queries, false, directiveType);
+            viewQueries = this._getQueriesMetadata(dirMeta.queries, true, directiveType);
+        }
+        var /** @type {?} */ metadata = CompileDirectiveMetadata.create({
+            isHost: false,
+            selector: selector,
+            exportAs: noUndefined(dirMeta.exportAs),
+            isComponent: !!nonNormalizedTemplateMetadata,
+            type: this._getTypeMetadata(directiveType),
+            template: nonNormalizedTemplateMetadata,
+            changeDetection: changeDetectionStrategy,
+            inputs: dirMeta.inputs || [],
+            outputs: dirMeta.outputs || [],
+            host: dirMeta.host || {},
+            providers: providers || [],
+            viewProviders: viewProviders || [],
+            queries: queries || [],
+            guards: dirMeta.guards || {},
+            viewQueries: viewQueries || [],
+            entryComponents: entryComponentMetadata,
+            componentViewType: nonNormalizedTemplateMetadata ? this.getComponentViewClass(directiveType) :
+                null,
+            rendererType: nonNormalizedTemplateMetadata ? this.getRendererType(directiveType) : null,
+            componentFactory: null
+        });
+        if (nonNormalizedTemplateMetadata) {
+            metadata.componentFactory =
+                this.getComponentFactory(selector, directiveType, metadata.inputs, metadata.outputs);
+        }
+        cacheEntry = { metadata: metadata, annotation: dirMeta };
+        this._nonNormalizedDirectiveCache.set(directiveType, cacheEntry);
+        return cacheEntry;
+    };
+    /**
+     * Gets the metadata for the given directive.
+     * This assumes `loadNgModuleDirectiveAndPipeMetadata` has been called first.
+     */
+    /**
+     * Gets the metadata for the given directive.
+     * This assumes `loadNgModuleDirectiveAndPipeMetadata` has been called first.
+     * @param {?} directiveType
+     * @return {?}
+     */
+    CompileMetadataResolver.prototype.getDirectiveMetadata = /**
+     * Gets the metadata for the given directive.
+     * This assumes `loadNgModuleDirectiveAndPipeMetadata` has been called first.
+     * @param {?} directiveType
+     * @return {?}
+     */
+    function (directiveType) {
+        var /** @type {?} */ dirMeta = /** @type {?} */ ((this._directiveCache.get(directiveType)));
+        if (!dirMeta) {
+            this._reportError(syntaxError("Illegal state: getDirectiveMetadata can only be called after loadNgModuleDirectiveAndPipeMetadata for a module that declares it. Directive " + stringifyType(directiveType) + "."), directiveType);
+        }
+        return dirMeta;
+    };
+    /**
+     * @param {?} dirType
+     * @return {?}
+     */
+    CompileMetadataResolver.prototype.getDirectiveSummary = /**
+     * @param {?} dirType
+     * @return {?}
+     */
+    function (dirType) {
+        var /** @type {?} */ dirSummary = /** @type {?} */ (this._loadSummary(dirType, CompileSummaryKind.Directive));
+        if (!dirSummary) {
+            this._reportError(syntaxError("Illegal state: Could not load the summary for directive " + stringifyType(dirType) + "."), dirType);
+        }
+        return dirSummary;
+    };
+    /**
+     * @param {?} type
+     * @return {?}
+     */
+    CompileMetadataResolver.prototype.isDirective = /**
+     * @param {?} type
+     * @return {?}
+     */
+    function (type) {
+        return !!this._loadSummary(type, CompileSummaryKind.Directive) ||
+            this._directiveResolver.isDirective(type);
+    };
+    /**
+     * @param {?} type
+     * @return {?}
+     */
+    CompileMetadataResolver.prototype.isPipe = /**
+     * @param {?} type
+     * @return {?}
+     */
+    function (type) {
+        return !!this._loadSummary(type, CompileSummaryKind.Pipe) ||
+            this._pipeResolver.isPipe(type);
+    };
+    /**
+     * @param {?} type
+     * @return {?}
+     */
+    CompileMetadataResolver.prototype.isNgModule = /**
+     * @param {?} type
+     * @return {?}
+     */
+    function (type) {
+        return !!this._loadSummary(type, CompileSummaryKind.NgModule) ||
+            this._ngModuleResolver.isNgModule(type);
+    };
+    /**
+     * @param {?} moduleType
+     * @param {?=} alreadyCollecting
+     * @return {?}
+     */
+    CompileMetadataResolver.prototype.getNgModuleSummary = /**
+     * @param {?} moduleType
+     * @param {?=} alreadyCollecting
+     * @return {?}
+     */
+    function (moduleType, alreadyCollecting) {
+        if (alreadyCollecting === void 0) { alreadyCollecting = null; }
+        var /** @type {?} */ moduleSummary = /** @type {?} */ (this._loadSummary(moduleType, CompileSummaryKind.NgModule));
+        if (!moduleSummary) {
+            var /** @type {?} */ moduleMeta = this.getNgModuleMetadata(moduleType, false, alreadyCollecting);
+            moduleSummary = moduleMeta ? moduleMeta.toSummary() : null;
+            if (moduleSummary) {
+                this._summaryCache.set(moduleType, moduleSummary);
+            }
+        }
+        return moduleSummary;
+    };
+    /**
+     * Loads the declared directives and pipes of an NgModule.
+     */
+    /**
+     * Loads the declared directives and pipes of an NgModule.
+     * @param {?} moduleType
+     * @param {?} isSync
+     * @param {?=} throwIfNotFound
+     * @return {?}
+     */
+    CompileMetadataResolver.prototype.loadNgModuleDirectiveAndPipeMetadata = /**
+     * Loads the declared directives and pipes of an NgModule.
+     * @param {?} moduleType
+     * @param {?} isSync
+     * @param {?=} throwIfNotFound
+     * @return {?}
+     */
+    function (moduleType, isSync, throwIfNotFound) {
+        var _this = this;
+        if (throwIfNotFound === void 0) { throwIfNotFound = true; }
+        var /** @type {?} */ ngModule = this.getNgModuleMetadata(moduleType, throwIfNotFound);
+        var /** @type {?} */ loading = [];
+        if (ngModule) {
+            ngModule.declaredDirectives.forEach(function (id) {
+                var /** @type {?} */ promise = _this.loadDirectiveMetadata(moduleType, id.reference, isSync);
+                if (promise) {
+                    loading.push(promise);
+                }
+            });
+            ngModule.declaredPipes.forEach(function (id) { return _this._loadPipeMetadata(id.reference); });
+        }
+        return Promise.all(loading);
+    };
+    /**
+     * @param {?} moduleType
+     * @param {?=} throwIfNotFound
+     * @param {?=} alreadyCollecting
+     * @return {?}
+     */
+    CompileMetadataResolver.prototype.getNgModuleMetadata = /**
+     * @param {?} moduleType
+     * @param {?=} throwIfNotFound
+     * @param {?=} alreadyCollecting
+     * @return {?}
+     */
+    function (moduleType, throwIfNotFound, alreadyCollecting) {
+        var _this = this;
+        if (throwIfNotFound === void 0) { throwIfNotFound = true; }
+        if (alreadyCollecting === void 0) { alreadyCollecting = null; }
+        moduleType = resolveForwardRef(moduleType);
+        var /** @type {?} */ compileMeta = this._ngModuleCache.get(moduleType);
+        if (compileMeta) {
+            return compileMeta;
+        }
+        var /** @type {?} */ meta = this._ngModuleResolver.resolve(moduleType, throwIfNotFound);
+        if (!meta) {
+            return null;
+        }
+        var /** @type {?} */ declaredDirectives = [];
+        var /** @type {?} */ exportedNonModuleIdentifiers = [];
+        var /** @type {?} */ declaredPipes = [];
+        var /** @type {?} */ importedModules = [];
+        var /** @type {?} */ exportedModules = [];
+        var /** @type {?} */ providers = [];
+        var /** @type {?} */ entryComponents = [];
+        var /** @type {?} */ bootstrapComponents = [];
+        var /** @type {?} */ schemas = [];
+        if (meta.imports) {
+            flattenAndDedupeArray(meta.imports).forEach(function (importedType) {
+                var /** @type {?} */ importedModuleType = /** @type {?} */ ((undefined));
+                if (isValidType(importedType)) {
+                    importedModuleType = importedType;
+                }
+                else if (importedType && importedType.ngModule) {
+                    var /** @type {?} */ moduleWithProviders = importedType;
+                    importedModuleType = moduleWithProviders.ngModule;
+                    if (moduleWithProviders.providers) {
+                        providers.push.apply(providers, _this._getProvidersMetadata(moduleWithProviders.providers, entryComponents, "provider for the NgModule '" + stringifyType(importedModuleType) + "'", [], importedType));
+                    }
+                }
+                if (importedModuleType) {
+                    if (_this._checkSelfImport(moduleType, importedModuleType))
+                        return;
+                    if (!alreadyCollecting)
+                        alreadyCollecting = new Set();
+                    if (alreadyCollecting.has(importedModuleType)) {
+                        _this._reportError(syntaxError(_this._getTypeDescriptor(importedModuleType) + " '" + stringifyType(importedType) + "' is imported recursively by the module '" + stringifyType(moduleType) + "'."), moduleType);
+                        return;
+                    }
+                    alreadyCollecting.add(importedModuleType);
+                    var /** @type {?} */ importedModuleSummary = _this.getNgModuleSummary(importedModuleType, alreadyCollecting);
+                    alreadyCollecting.delete(importedModuleType);
+                    if (!importedModuleSummary) {
+                        _this._reportError(syntaxError("Unexpected " + _this._getTypeDescriptor(importedType) + " '" + stringifyType(importedType) + "' imported by the module '" + stringifyType(moduleType) + "'. Please add a @NgModule annotation."), moduleType);
+                        return;
+                    }
+                    importedModules.push(importedModuleSummary);
+                }
+                else {
+                    _this._reportError(syntaxError("Unexpected value '" + stringifyType(importedType) + "' imported by the module '" + stringifyType(moduleType) + "'"), moduleType);
+                    return;
+                }
+            });
+        }
+        if (meta.exports) {
+            flattenAndDedupeArray(meta.exports).forEach(function (exportedType) {
+                if (!isValidType(exportedType)) {
+                    _this._reportError(syntaxError("Unexpected value '" + stringifyType(exportedType) + "' exported by the module '" + stringifyType(moduleType) + "'"), moduleType);
+                    return;
+                }
+                if (!alreadyCollecting)
+                    alreadyCollecting = new Set();
+                if (alreadyCollecting.has(exportedType)) {
+                    _this._reportError(syntaxError(_this._getTypeDescriptor(exportedType) + " '" + stringify(exportedType) + "' is exported recursively by the module '" + stringifyType(moduleType) + "'"), moduleType);
+                    return;
+                }
+                alreadyCollecting.add(exportedType);
+                var /** @type {?} */ exportedModuleSummary = _this.getNgModuleSummary(exportedType, alreadyCollecting);
+                alreadyCollecting.delete(exportedType);
+                if (exportedModuleSummary) {
+                    exportedModules.push(exportedModuleSummary);
+                }
+                else {
+                    exportedNonModuleIdentifiers.push(_this._getIdentifierMetadata(exportedType));
+                }
+            });
+        }
+        // Note: This will be modified later, so we rely on
+        // getting a new instance every time!
+        var /** @type {?} */ transitiveModule = this._getTransitiveNgModuleMetadata(importedModules, exportedModules);
+        if (meta.declarations) {
+            flattenAndDedupeArray(meta.declarations).forEach(function (declaredType) {
+                if (!isValidType(declaredType)) {
+                    _this._reportError(syntaxError("Unexpected value '" + stringifyType(declaredType) + "' declared by the module '" + stringifyType(moduleType) + "'"), moduleType);
+                    return;
+                }
+                var /** @type {?} */ declaredIdentifier = _this._getIdentifierMetadata(declaredType);
+                if (_this.isDirective(declaredType)) {
+                    transitiveModule.addDirective(declaredIdentifier);
+                    declaredDirectives.push(declaredIdentifier);
+                    _this._addTypeToModule(declaredType, moduleType);
+                }
+                else if (_this.isPipe(declaredType)) {
+                    transitiveModule.addPipe(declaredIdentifier);
+                    transitiveModule.pipes.push(declaredIdentifier);
+                    declaredPipes.push(declaredIdentifier);
+                    _this._addTypeToModule(declaredType, moduleType);
+                }
+                else {
+                    _this._reportError(syntaxError("Unexpected " + _this._getTypeDescriptor(declaredType) + " '" + stringifyType(declaredType) + "' declared by the module '" + stringifyType(moduleType) + "'. Please add a @Pipe/@Directive/@Component annotation."), moduleType);
+                    return;
+                }
+            });
+        }
+        var /** @type {?} */ exportedDirectives = [];
+        var /** @type {?} */ exportedPipes = [];
+        exportedNonModuleIdentifiers.forEach(function (exportedId) {
+            if (transitiveModule.directivesSet.has(exportedId.reference)) {
+                exportedDirectives.push(exportedId);
+                transitiveModule.addExportedDirective(exportedId);
+            }
+            else if (transitiveModule.pipesSet.has(exportedId.reference)) {
+                exportedPipes.push(exportedId);
+                transitiveModule.addExportedPipe(exportedId);
+            }
+            else {
+                _this._reportError(syntaxError("Can't export " + _this._getTypeDescriptor(exportedId.reference) + " " + stringifyType(exportedId.reference) + " from " + stringifyType(moduleType) + " as it was neither declared nor imported!"), moduleType);
+                return;
+            }
+        });
+        // The providers of the module have to go last
+        // so that they overwrite any other provider we already added.
+        if (meta.providers) {
+            providers.push.apply(providers, this._getProvidersMetadata(meta.providers, entryComponents, "provider for the NgModule '" + stringifyType(moduleType) + "'", [], moduleType));
+        }
+        if (meta.entryComponents) {
+            entryComponents.push.apply(entryComponents, flattenAndDedupeArray(meta.entryComponents)
+                .map(function (type) { return ((_this._getEntryComponentMetadata(type))); }));
+        }
+        if (meta.bootstrap) {
+            flattenAndDedupeArray(meta.bootstrap).forEach(function (type) {
+                if (!isValidType(type)) {
+                    _this._reportError(syntaxError("Unexpected value '" + stringifyType(type) + "' used in the bootstrap property of module '" + stringifyType(moduleType) + "'"), moduleType);
+                    return;
+                }
+                bootstrapComponents.push(_this._getIdentifierMetadata(type));
+            });
+        }
+        entryComponents.push.apply(entryComponents, bootstrapComponents.map(function (type) { return ((_this._getEntryComponentMetadata(type.reference))); }));
+        if (meta.schemas) {
+            schemas.push.apply(schemas, flattenAndDedupeArray(meta.schemas));
+        }
+        compileMeta = new CompileNgModuleMetadata({
+            type: this._getTypeMetadata(moduleType),
+            providers: providers,
+            entryComponents: entryComponents,
+            bootstrapComponents: bootstrapComponents,
+            schemas: schemas,
+            declaredDirectives: declaredDirectives,
+            exportedDirectives: exportedDirectives,
+            declaredPipes: declaredPipes,
+            exportedPipes: exportedPipes,
+            importedModules: importedModules,
+            exportedModules: exportedModules,
+            transitiveModule: transitiveModule,
+            id: meta.id || null,
+        });
+        entryComponents.forEach(function (id) { return transitiveModule.addEntryComponent(id); });
+        providers.forEach(function (provider) { return transitiveModule.addProvider(provider, /** @type {?} */ ((compileMeta)).type); });
+        transitiveModule.addModule(compileMeta.type);
+        this._ngModuleCache.set(moduleType, compileMeta);
+        return compileMeta;
+    };
+    /**
+     * @param {?} moduleType
+     * @param {?} importedModuleType
+     * @return {?}
+     */
+    CompileMetadataResolver.prototype._checkSelfImport = /**
+     * @param {?} moduleType
+     * @param {?} importedModuleType
+     * @return {?}
+     */
+    function (moduleType, importedModuleType) {
+        if (moduleType === importedModuleType) {
+            this._reportError(syntaxError("'" + stringifyType(moduleType) + "' module can't import itself"), moduleType);
+            return true;
+        }
+        return false;
+    };
+    /**
+     * @param {?} type
+     * @return {?}
+     */
+    CompileMetadataResolver.prototype._getTypeDescriptor = /**
+     * @param {?} type
+     * @return {?}
+     */
+    function (type) {
+        if (isValidType(type)) {
+            if (this.isDirective(type)) {
+                return 'directive';
+            }
+            if (this.isPipe(type)) {
+                return 'pipe';
+            }
+            if (this.isNgModule(type)) {
+                return 'module';
+            }
+        }
+        if ((/** @type {?} */ (type)).provide) {
+            return 'provider';
+        }
+        return 'value';
+    };
+    /**
+     * @param {?} type
+     * @param {?} moduleType
+     * @return {?}
+     */
+    CompileMetadataResolver.prototype._addTypeToModule = /**
+     * @param {?} type
+     * @param {?} moduleType
+     * @return {?}
+     */
+    function (type, moduleType) {
+        var /** @type {?} */ oldModule = this._ngModuleOfTypes.get(type);
+        if (oldModule && oldModule !== moduleType) {
+            this._reportError(syntaxError("Type " + stringifyType(type) + " is part of the declarations of 2 modules: " + stringifyType(oldModule) + " and " + stringifyType(moduleType) + "! " +
+                ("Please consider moving " + stringifyType(type) + " to a higher module that imports " + stringifyType(oldModule) + " and " + stringifyType(moduleType) + ". ") +
+                ("You can also create a new NgModule that exports and includes " + stringifyType(type) + " then import that NgModule in " + stringifyType(oldModule) + " and " + stringifyType(moduleType) + ".")), moduleType);
+            return;
+        }
+        this._ngModuleOfTypes.set(type, moduleType);
+    };
+    /**
+     * @param {?} importedModules
+     * @param {?} exportedModules
+     * @return {?}
+     */
+    CompileMetadataResolver.prototype._getTransitiveNgModuleMetadata = /**
+     * @param {?} importedModules
+     * @param {?} exportedModules
+     * @return {?}
+     */
+    function (importedModules, exportedModules) {
+        // collect `providers` / `entryComponents` from all imported and all exported modules
+        var /** @type {?} */ result = new TransitiveCompileNgModuleMetadata();
+        var /** @type {?} */ modulesByToken = new Map();
+        importedModules.concat(exportedModules).forEach(function (modSummary) {
+            modSummary.modules.forEach(function (mod) { return result.addModule(mod); });
+            modSummary.entryComponents.forEach(function (comp) { return result.addEntryComponent(comp); });
+            var /** @type {?} */ addedTokens = new Set();
+            modSummary.providers.forEach(function (entry) {
+                var /** @type {?} */ tokenRef = tokenReference(entry.provider.token);
+                var /** @type {?} */ prevModules = modulesByToken.get(tokenRef);
+                if (!prevModules) {
+                    prevModules = new Set();
+                    modulesByToken.set(tokenRef, prevModules);
+                }
+                var /** @type {?} */ moduleRef = entry.module.reference;
+                // Note: the providers of one module may still contain multiple providers
+                // per token (e.g. for multi providers), and we need to preserve these.
+                if (addedTokens.has(tokenRef) || !prevModules.has(moduleRef)) {
+                    prevModules.add(moduleRef);
+                    addedTokens.add(tokenRef);
+                    result.addProvider(entry.provider, entry.module);
+                }
+            });
+        });
+        exportedModules.forEach(function (modSummary) {
+            modSummary.exportedDirectives.forEach(function (id) { return result.addExportedDirective(id); });
+            modSummary.exportedPipes.forEach(function (id) { return result.addExportedPipe(id); });
+        });
+        importedModules.forEach(function (modSummary) {
+            modSummary.exportedDirectives.forEach(function (id) { return result.addDirective(id); });
+            modSummary.exportedPipes.forEach(function (id) { return result.addPipe(id); });
+        });
+        return result;
+    };
+    /**
+     * @param {?} type
+     * @return {?}
+     */
+    CompileMetadataResolver.prototype._getIdentifierMetadata = /**
+     * @param {?} type
+     * @return {?}
+     */
+    function (type) {
+        type = resolveForwardRef(type);
+        return { reference: type };
+    };
+    /**
+     * @param {?} type
+     * @return {?}
+     */
+    CompileMetadataResolver.prototype.isInjectable = /**
+     * @param {?} type
+     * @return {?}
+     */
+    function (type) {
+        var /** @type {?} */ annotations = this._reflector.tryAnnotations(type);
+        return annotations.some(function (ann) { return createInjectable.isTypeOf(ann); });
+    };
+    /**
+     * @param {?} type
+     * @return {?}
+     */
+    CompileMetadataResolver.prototype.getInjectableSummary = /**
+     * @param {?} type
+     * @return {?}
+     */
+    function (type) {
+        return {
+            summaryKind: CompileSummaryKind.Injectable,
+            type: this._getTypeMetadata(type, null, false)
+        };
+    };
+    /**
+     * @param {?} type
+     * @param {?=} dependencies
+     * @param {?=} throwOnUnknownDeps
+     * @return {?}
+     */
+    CompileMetadataResolver.prototype.getInjectableMetadata = /**
+     * @param {?} type
+     * @param {?=} dependencies
+     * @param {?=} throwOnUnknownDeps
+     * @return {?}
+     */
+    function (type, dependencies, throwOnUnknownDeps) {
+        if (dependencies === void 0) { dependencies = null; }
+        if (throwOnUnknownDeps === void 0) { throwOnUnknownDeps = true; }
+        var /** @type {?} */ typeSummary = this._loadSummary(type, CompileSummaryKind.Injectable);
+        var /** @type {?} */ typeMetadata = typeSummary ?
+            typeSummary.type :
+            this._getTypeMetadata(type, dependencies, throwOnUnknownDeps);
+        var /** @type {?} */ annotations = this._reflector.annotations(type).filter(function (ann) { return createInjectable.isTypeOf(ann); });
+        if (annotations.length === 0) {
+            return null;
+        }
+        var /** @type {?} */ meta = annotations[annotations.length - 1];
+        return {
+            symbol: type,
+            type: typeMetadata,
+            module: meta.scope || undefined,
+            useValue: meta.useValue,
+            useClass: meta.useClass,
+            useExisting: meta.useExisting,
+            useFactory: meta.useFactory,
+            deps: meta.deps,
+        };
+    };
+    /**
+     * @param {?} type
+     * @param {?=} dependencies
+     * @param {?=} throwOnUnknownDeps
+     * @return {?}
+     */
+    CompileMetadataResolver.prototype._getTypeMetadata = /**
+     * @param {?} type
+     * @param {?=} dependencies
+     * @param {?=} throwOnUnknownDeps
+     * @return {?}
+     */
+    function (type, dependencies, throwOnUnknownDeps) {
+        if (dependencies === void 0) { dependencies = null; }
+        if (throwOnUnknownDeps === void 0) { throwOnUnknownDeps = true; }
+        var /** @type {?} */ identifier = this._getIdentifierMetadata(type);
+        return {
+            reference: identifier.reference,
+            diDeps: this._getDependenciesMetadata(identifier.reference, dependencies, throwOnUnknownDeps),
+            lifecycleHooks: getAllLifecycleHooks(this._reflector, identifier.reference),
+        };
+    };
+    /**
+     * @param {?} factory
+     * @param {?=} dependencies
+     * @return {?}
+     */
+    CompileMetadataResolver.prototype._getFactoryMetadata = /**
+     * @param {?} factory
+     * @param {?=} dependencies
+     * @return {?}
+     */
+    function (factory, dependencies) {
+        if (dependencies === void 0) { dependencies = null; }
+        factory = resolveForwardRef(factory);
+        return { reference: factory, diDeps: this._getDependenciesMetadata(factory, dependencies) };
+    };
+    /**
+     * Gets the metadata for the given pipe.
+     * This assumes `loadNgModuleDirectiveAndPipeMetadata` has been called first.
+     */
+    /**
+     * Gets the metadata for the given pipe.
+     * This assumes `loadNgModuleDirectiveAndPipeMetadata` has been called first.
+     * @param {?} pipeType
+     * @return {?}
+     */
+    CompileMetadataResolver.prototype.getPipeMetadata = /**
+     * Gets the metadata for the given pipe.
+     * This assumes `loadNgModuleDirectiveAndPipeMetadata` has been called first.
+     * @param {?} pipeType
+     * @return {?}
+     */
+    function (pipeType) {
+        var /** @type {?} */ pipeMeta = this._pipeCache.get(pipeType);
+        if (!pipeMeta) {
+            this._reportError(syntaxError("Illegal state: getPipeMetadata can only be called after loadNgModuleDirectiveAndPipeMetadata for a module that declares it. Pipe " + stringifyType(pipeType) + "."), pipeType);
+        }
+        return pipeMeta || null;
+    };
+    /**
+     * @param {?} pipeType
+     * @return {?}
+     */
+    CompileMetadataResolver.prototype.getPipeSummary = /**
+     * @param {?} pipeType
+     * @return {?}
+     */
+    function (pipeType) {
+        var /** @type {?} */ pipeSummary = /** @type {?} */ (this._loadSummary(pipeType, CompileSummaryKind.Pipe));
+        if (!pipeSummary) {
+            this._reportError(syntaxError("Illegal state: Could not load the summary for pipe " + stringifyType(pipeType) + "."), pipeType);
+        }
+        return pipeSummary;
+    };
+    /**
+     * @param {?} pipeType
+     * @return {?}
+     */
+    CompileMetadataResolver.prototype.getOrLoadPipeMetadata = /**
+     * @param {?} pipeType
+     * @return {?}
+     */
+    function (pipeType) {
+        var /** @type {?} */ pipeMeta = this._pipeCache.get(pipeType);
+        if (!pipeMeta) {
+            pipeMeta = this._loadPipeMetadata(pipeType);
+        }
+        return pipeMeta;
+    };
+    /**
+     * @param {?} pipeType
+     * @return {?}
+     */
+    CompileMetadataResolver.prototype._loadPipeMetadata = /**
+     * @param {?} pipeType
+     * @return {?}
+     */
+    function (pipeType) {
+        pipeType = resolveForwardRef(pipeType);
+        var /** @type {?} */ pipeAnnotation = /** @type {?} */ ((this._pipeResolver.resolve(pipeType)));
+        var /** @type {?} */ pipeMeta = new CompilePipeMetadata({
+            type: this._getTypeMetadata(pipeType),
+            name: pipeAnnotation.name,
+            pure: !!pipeAnnotation.pure
+        });
+        this._pipeCache.set(pipeType, pipeMeta);
+        this._summaryCache.set(pipeType, pipeMeta.toSummary());
+        return pipeMeta;
+    };
+    /**
+     * @param {?} typeOrFunc
+     * @param {?} dependencies
+     * @param {?=} throwOnUnknownDeps
+     * @return {?}
+     */
+    CompileMetadataResolver.prototype._getDependenciesMetadata = /**
+     * @param {?} typeOrFunc
+     * @param {?} dependencies
+     * @param {?=} throwOnUnknownDeps
+     * @return {?}
+     */
+    function (typeOrFunc, dependencies, throwOnUnknownDeps) {
+        var _this = this;
+        if (throwOnUnknownDeps === void 0) { throwOnUnknownDeps = true; }
+        var /** @type {?} */ hasUnknownDeps = false;
+        var /** @type {?} */ params = dependencies || this._reflector.parameters(typeOrFunc) || [];
+        var /** @type {?} */ dependenciesMetadata = params.map(function (param) {
+            var /** @type {?} */ isAttribute = false;
+            var /** @type {?} */ isHost = false;
+            var /** @type {?} */ isSelf = false;
+            var /** @type {?} */ isSkipSelf = false;
+            var /** @type {?} */ isOptional = false;
+            var /** @type {?} */ token = null;
+            if (Array.isArray(param)) {
+                param.forEach(function (paramEntry) {
+                    if (createHost.isTypeOf(paramEntry)) {
+                        isHost = true;
+                    }
+                    else if (createSelf.isTypeOf(paramEntry)) {
+                        isSelf = true;
+                    }
+                    else if (createSkipSelf.isTypeOf(paramEntry)) {
+                        isSkipSelf = true;
+                    }
+                    else if (createOptional.isTypeOf(paramEntry)) {
+                        isOptional = true;
+                    }
+                    else if (createAttribute.isTypeOf(paramEntry)) {
+                        isAttribute = true;
+                        token = paramEntry.attributeName;
+                    }
+                    else if (createInject.isTypeOf(paramEntry)) {
+                        token = paramEntry.token;
+                    }
+                    else if (createInjectionToken.isTypeOf(paramEntry) || paramEntry instanceof StaticSymbol) {
+                        token = paramEntry;
+                    }
+                    else if (isValidType(paramEntry) && token == null) {
+                        token = paramEntry;
+                    }
+                });
+            }
+            else {
+                token = param;
+            }
+            if (token == null) {
+                hasUnknownDeps = true;
+                return /** @type {?} */ ((null));
+            }
+            return {
+                isAttribute: isAttribute,
+                isHost: isHost,
+                isSelf: isSelf,
+                isSkipSelf: isSkipSelf,
+                isOptional: isOptional,
+                token: _this._getTokenMetadata(token)
+            };
+        });
+        if (hasUnknownDeps) {
+            var /** @type {?} */ depsTokens = dependenciesMetadata.map(function (dep) { return dep ? stringifyType(dep.token) : '?'; }).join(', ');
+            var /** @type {?} */ message = "Can't resolve all parameters for " + stringifyType(typeOrFunc) + ": (" + depsTokens + ").";
+            if (throwOnUnknownDeps || this._config.strictInjectionParameters) {
+                this._reportError(syntaxError(message), typeOrFunc);
+            }
+            else {
+                this._console.warn("Warning: " + message + " This will become an error in Angular v6.x");
+            }
+        }
+        return dependenciesMetadata;
+    };
+    /**
+     * @param {?} token
+     * @return {?}
+     */
+    CompileMetadataResolver.prototype._getTokenMetadata = /**
+     * @param {?} token
+     * @return {?}
+     */
+    function (token) {
+        token = resolveForwardRef(token);
+        var /** @type {?} */ compileToken;
+        if (typeof token === 'string') {
+            compileToken = { value: token };
+        }
+        else {
+            compileToken = { identifier: { reference: token } };
+        }
+        return compileToken;
+    };
+    /**
+     * @param {?} providers
+     * @param {?} targetEntryComponents
+     * @param {?=} debugInfo
+     * @param {?=} compileProviders
+     * @param {?=} type
+     * @return {?}
+     */
+    CompileMetadataResolver.prototype._getProvidersMetadata = /**
+     * @param {?} providers
+     * @param {?} targetEntryComponents
+     * @param {?=} debugInfo
+     * @param {?=} compileProviders
+     * @param {?=} type
+     * @return {?}
+     */
+    function (providers, targetEntryComponents, debugInfo, compileProviders, type) {
+        var _this = this;
+        if (compileProviders === void 0) { compileProviders = []; }
+        providers.forEach(function (provider, providerIdx) {
+            if (Array.isArray(provider)) {
+                _this._getProvidersMetadata(provider, targetEntryComponents, debugInfo, compileProviders);
+            }
+            else {
+                provider = resolveForwardRef(provider);
+                var /** @type {?} */ providerMeta = /** @type {?} */ ((undefined));
+                if (provider && typeof provider === 'object' && provider.hasOwnProperty('provide')) {
+                    _this._validateProvider(provider);
+                    providerMeta = new ProviderMeta(provider.provide, provider);
+                }
+                else if (isValidType(provider)) {
+                    providerMeta = new ProviderMeta(provider, { useClass: provider });
+                }
+                else if (provider === void 0) {
+                    _this._reportError(syntaxError("Encountered undefined provider! Usually this means you have a circular dependencies (might be caused by using 'barrel' index.ts files."));
+                    return;
+                }
+                else {
+                    var /** @type {?} */ providersInfo = (/** @type {?} */ (providers.reduce(function (soFar, seenProvider, seenProviderIdx) {
+                        if (seenProviderIdx < providerIdx) {
+                            soFar.push("" + stringifyType(seenProvider));
+                        }
+                        else if (seenProviderIdx == providerIdx) {
+                            soFar.push("?" + stringifyType(seenProvider) + "?");
+                        }
+                        else if (seenProviderIdx == providerIdx + 1) {
+                            soFar.push('...');
+                        }
+                        return soFar;
+                    }, [])))
+                        .join(', ');
+                    _this._reportError(syntaxError("Invalid " + (debugInfo ? debugInfo : 'provider') + " - only instances of Provider and Type are allowed, got: [" + providersInfo + "]"), type);
+                    return;
+                }
+                if (providerMeta.token ===
+                    _this._reflector.resolveExternalReference(Identifiers.ANALYZE_FOR_ENTRY_COMPONENTS)) {
+                    targetEntryComponents.push.apply(targetEntryComponents, _this._getEntryComponentsFromProvider(providerMeta, type));
+                }
+                else {
+                    compileProviders.push(_this.getProviderMetadata(providerMeta));
+                }
+            }
+        });
+        return compileProviders;
+    };
+    /**
+     * @param {?} provider
+     * @return {?}
+     */
+    CompileMetadataResolver.prototype._validateProvider = /**
+     * @param {?} provider
+     * @return {?}
+     */
+    function (provider) {
+        if (provider.hasOwnProperty('useClass') && provider.useClass == null) {
+            this._reportError(syntaxError("Invalid provider for " + stringifyType(provider.provide) + ". useClass cannot be " + provider.useClass + ".\n           Usually it happens when:\n           1. There's a circular dependency (might be caused by using index.ts (barrel) files).\n           2. Class was used before it was declared. Use forwardRef in this case."));
+        }
+    };
+    /**
+     * @param {?} provider
+     * @param {?=} type
+     * @return {?}
+     */
+    CompileMetadataResolver.prototype._getEntryComponentsFromProvider = /**
+     * @param {?} provider
+     * @param {?=} type
+     * @return {?}
+     */
+    function (provider, type) {
+        var _this = this;
+        var /** @type {?} */ components = [];
+        var /** @type {?} */ collectedIdentifiers = [];
+        if (provider.useFactory || provider.useExisting || provider.useClass) {
+            this._reportError(syntaxError("The ANALYZE_FOR_ENTRY_COMPONENTS token only supports useValue!"), type);
+            return [];
+        }
+        if (!provider.multi) {
+            this._reportError(syntaxError("The ANALYZE_FOR_ENTRY_COMPONENTS token only supports 'multi = true'!"), type);
+            return [];
+        }
+        extractIdentifiers(provider.useValue, collectedIdentifiers);
+        collectedIdentifiers.forEach(function (identifier) {
+            var /** @type {?} */ entry = _this._getEntryComponentMetadata(identifier.reference, false);
+            if (entry) {
+                components.push(entry);
+            }
+        });
+        return components;
+    };
+    /**
+     * @param {?} dirType
+     * @param {?=} throwIfNotFound
+     * @return {?}
+     */
+    CompileMetadataResolver.prototype._getEntryComponentMetadata = /**
+     * @param {?} dirType
+     * @param {?=} throwIfNotFound
+     * @return {?}
+     */
+    function (dirType, throwIfNotFound) {
+        if (throwIfNotFound === void 0) { throwIfNotFound = true; }
+        var /** @type {?} */ dirMeta = this.getNonNormalizedDirectiveMetadata(dirType);
+        if (dirMeta && dirMeta.metadata.isComponent) {
+            return { componentType: dirType, componentFactory: /** @type {?} */ ((dirMeta.metadata.componentFactory)) };
+        }
+        var /** @type {?} */ dirSummary = /** @type {?} */ (this._loadSummary(dirType, CompileSummaryKind.Directive));
+        if (dirSummary && dirSummary.isComponent) {
+            return { componentType: dirType, componentFactory: /** @type {?} */ ((dirSummary.componentFactory)) };
+        }
+        if (throwIfNotFound) {
+            throw syntaxError(dirType.name + " cannot be used as an entry component.");
+        }
+        return null;
+    };
+    /**
+     * @param {?} type
+     * @param {?=} dependencies
+     * @return {?}
+     */
+    CompileMetadataResolver.prototype._getInjectableTypeMetadata = /**
+     * @param {?} type
+     * @param {?=} dependencies
+     * @return {?}
+     */
+    function (type, dependencies) {
+        if (dependencies === void 0) { dependencies = null; }
+        var /** @type {?} */ typeSummary = this._loadSummary(type, CompileSummaryKind.Injectable);
+        if (typeSummary) {
+            return typeSummary.type;
+        }
+        return this._getTypeMetadata(type, dependencies);
+    };
+    /**
+     * @param {?} provider
+     * @return {?}
+     */
+    CompileMetadataResolver.prototype.getProviderMetadata = /**
+     * @param {?} provider
+     * @return {?}
+     */
+    function (provider) {
+        var /** @type {?} */ compileDeps = /** @type {?} */ ((undefined));
+        var /** @type {?} */ compileTypeMetadata = /** @type {?} */ ((null));
+        var /** @type {?} */ compileFactoryMetadata = /** @type {?} */ ((null));
+        var /** @type {?} */ token = this._getTokenMetadata(provider.token);
+        if (provider.useClass) {
+            compileTypeMetadata =
+                this._getInjectableTypeMetadata(provider.useClass, provider.dependencies);
+            compileDeps = compileTypeMetadata.diDeps;
+            if (provider.token === provider.useClass) {
+                // use the compileTypeMetadata as it contains information about lifecycleHooks...
+                token = { identifier: compileTypeMetadata };
+            }
+        }
+        else if (provider.useFactory) {
+            compileFactoryMetadata = this._getFactoryMetadata(provider.useFactory, provider.dependencies);
+            compileDeps = compileFactoryMetadata.diDeps;
+        }
+        return {
+            token: token,
+            useClass: compileTypeMetadata,
+            useValue: provider.useValue,
+            useFactory: compileFactoryMetadata,
+            useExisting: provider.useExisting ? this._getTokenMetadata(provider.useExisting) : undefined,
+            deps: compileDeps,
+            multi: provider.multi
+        };
+    };
+    /**
+     * @param {?} queries
+     * @param {?} isViewQuery
+     * @param {?} directiveType
+     * @return {?}
+     */
+    CompileMetadataResolver.prototype._getQueriesMetadata = /**
+     * @param {?} queries
+     * @param {?} isViewQuery
+     * @param {?} directiveType
+     * @return {?}
+     */
+    function (queries, isViewQuery, directiveType) {
+        var _this = this;
+        var /** @type {?} */ res = [];
+        Object.keys(queries).forEach(function (propertyName) {
+            var /** @type {?} */ query = queries[propertyName];
+            if (query.isViewQuery === isViewQuery) {
+                res.push(_this._getQueryMetadata(query, propertyName, directiveType));
+            }
+        });
+        return res;
+    };
+    /**
+     * @param {?} selector
+     * @return {?}
+     */
+    CompileMetadataResolver.prototype._queryVarBindings = /**
+     * @param {?} selector
+     * @return {?}
+     */
+    function (selector) { return selector.split(/\s*,\s*/); };
+    /**
+     * @param {?} q
+     * @param {?} propertyName
+     * @param {?} typeOrFunc
+     * @return {?}
+     */
+    CompileMetadataResolver.prototype._getQueryMetadata = /**
+     * @param {?} q
+     * @param {?} propertyName
+     * @param {?} typeOrFunc
+     * @return {?}
+     */
+    function (q, propertyName, typeOrFunc) {
+        var _this = this;
+        var /** @type {?} */ selectors;
+        if (typeof q.selector === 'string') {
+            selectors =
+                this._queryVarBindings(q.selector).map(function (varName) { return _this._getTokenMetadata(varName); });
+        }
+        else {
+            if (!q.selector) {
+                this._reportError(syntaxError("Can't construct a query for the property \"" + propertyName + "\" of \"" + stringifyType(typeOrFunc) + "\" since the query selector wasn't defined."), typeOrFunc);
+                selectors = [];
+            }
+            else {
+                selectors = [this._getTokenMetadata(q.selector)];
+            }
+        }
+        return {
+            selectors: selectors,
+            first: q.first,
+            descendants: q.descendants, propertyName: propertyName,
+            read: q.read ? this._getTokenMetadata(q.read) : /** @type {?} */ ((null))
+        };
+    };
+    /**
+     * @param {?} error
+     * @param {?=} type
+     * @param {?=} otherType
+     * @return {?}
+     */
+    CompileMetadataResolver.prototype._reportError = /**
+     * @param {?} error
+     * @param {?=} type
+     * @param {?=} otherType
+     * @return {?}
+     */
+    function (error$$1, type, otherType) {
+        if (this._errorCollector) {
+            this._errorCollector(error$$1, type);
+            if (otherType) {
+                this._errorCollector(error$$1, otherType);
+            }
+        }
+        else {
+            throw error$$1;
+        }
+    };
+    return CompileMetadataResolver;
+}());
+/**
+ * @param {?} tree
+ * @param {?=} out
+ * @return {?}
+ */
+function flattenArray(tree, out) {
+    if (out === void 0) { out = []; }
+    if (tree) {
+        for (var /** @type {?} */ i = 0; i < tree.length; i++) {
+            var /** @type {?} */ item = resolveForwardRef(tree[i]);
+            if (Array.isArray(item)) {
+                flattenArray(item, out);
+            }
+            else {
+                out.push(item);
+            }
+        }
+    }
+    return out;
+}
+/**
+ * @param {?} array
+ * @return {?}
+ */
+function dedupeArray(array) {
+    if (array) {
+        return Array.from(new Set(array));
+    }
+    return [];
+}
+/**
+ * @param {?} tree
+ * @return {?}
+ */
+function flattenAndDedupeArray(tree) {
+    return dedupeArray(flattenArray(tree));
+}
+/**
+ * @param {?} value
+ * @return {?}
+ */
+function isValidType(value) {
+    return (value instanceof StaticSymbol) || (value instanceof Type);
+}
+/**
+ * @param {?} value
+ * @param {?} targetIdentifiers
+ * @return {?}
+ */
+function extractIdentifiers(value, targetIdentifiers) {
+    visitValue(value, new _CompileValueConverter(), targetIdentifiers);
+}
+var _CompileValueConverter = /** @class */ (function (_super) {
+    __extends(_CompileValueConverter, _super);
+    function _CompileValueConverter() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    /**
+     * @param {?} value
+     * @param {?} targetIdentifiers
+     * @return {?}
+     */
+    _CompileValueConverter.prototype.visitOther = /**
+     * @param {?} value
+     * @param {?} targetIdentifiers
+     * @return {?}
+     */
+    function (value, targetIdentifiers) {
+        targetIdentifiers.push({ reference: value });
+    };
+    return _CompileValueConverter;
+}(ValueTransformer));
+/**
+ * @param {?} type
+ * @return {?}
+ */
+function stringifyType(type) {
+    if (type instanceof StaticSymbol) {
+        return type.name + " in " + type.filePath;
+    }
+    else {
+        return stringify(type);
+    }
+}
+/**
+ * Indicates that a component is still being loaded in a synchronous compile.
+ * @param {?} compType
+ * @return {?}
+ */
+function componentStillLoadingError(compType) {
+    var /** @type {?} */ error$$1 = Error("Can't compile synchronously as " + stringify(compType) + " is still being loaded!");
+    (/** @type {?} */ (error$$1))[ERROR_COMPONENT_TYPE] = compType;
+    return error$$1;
+}
+
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
 var ProviderError = /** @class */ (function (_super) {
     __extends(ProviderError, _super);
     function ProviderError(message, span) {
@@ -19601,7 +19896,7 @@ var ProviderElementContext = /** @class */ (function () {
                     result = dep;
                 }
                 else {
-                    result = dep.isOptional ? result = { isValue: true, value: null } : null;
+                    result = dep.isOptional ? { isValue: true, value: null } : null;
                 }
             }
         }
@@ -19622,9 +19917,9 @@ var NgModuleProviderAnalyzer = /** @class */ (function () {
         this._allProviders = new Map();
         ngModule.transitiveModule.modules.forEach(function (ngModuleType) {
             var /** @type {?} */ ngModuleProvider = { token: { identifier: ngModuleType }, useClass: ngModuleType };
-            _resolveProviders([ngModuleProvider], ProviderAstType.PublicService, true, sourceSpan, _this._errors, _this._allProviders);
+            _resolveProviders([ngModuleProvider], ProviderAstType.PublicService, true, sourceSpan, _this._errors, _this._allProviders, /* isModule */ /* isModule */ true);
         });
-        _resolveProviders(ngModule.transitiveModule.providers.map(function (entry) { return entry.provider; }).concat(extraProviders), ProviderAstType.PublicService, false, sourceSpan, this._errors, this._allProviders);
+        _resolveProviders(ngModule.transitiveModule.providers.map(function (entry) { return entry.provider; }).concat(extraProviders), ProviderAstType.PublicService, false, sourceSpan, this._errors, this._allProviders, /* isModule */ false);
     }
     /**
      * @return {?}
@@ -19742,16 +20037,7 @@ var NgModuleProviderAnalyzer = /** @class */ (function () {
                 foundLocal = true;
             }
         }
-        var /** @type {?} */ result = dep;
-        if (dep.isSelf && !foundLocal) {
-            if (dep.isOptional) {
-                result = { isValue: true, value: null };
-            }
-            else {
-                this._errors.push(new ProviderError("No provider for " + tokenName((/** @type {?} */ ((dep.token)))), requestorSourceSpan));
-            }
-        }
-        return result;
+        return dep;
     };
     return NgModuleProviderAnalyzer;
 }());
@@ -19779,7 +20065,7 @@ function _transformProvider(provider, _a) {
  */
 function _transformProviderAst(provider, _a) {
     var eager = _a.eager, providers = _a.providers;
-    return new ProviderAst(provider.token, provider.multiProvider, provider.eager || eager, providers, provider.providerType, provider.lifecycleHooks, provider.sourceSpan);
+    return new ProviderAst(provider.token, provider.multiProvider, provider.eager || eager, providers, provider.providerType, provider.lifecycleHooks, provider.sourceSpan, provider.isModule);
 }
 /**
  * @param {?} directives
@@ -19791,13 +20077,13 @@ function _resolveProvidersFromDirectives(directives, sourceSpan, targetErrors) {
     var /** @type {?} */ providersByToken = new Map();
     directives.forEach(function (directive) {
         var /** @type {?} */ dirProvider = { token: { identifier: directive.type }, useClass: directive.type };
-        _resolveProviders([dirProvider], directive.isComponent ? ProviderAstType.Component : ProviderAstType.Directive, true, sourceSpan, targetErrors, providersByToken);
+        _resolveProviders([dirProvider], directive.isComponent ? ProviderAstType.Component : ProviderAstType.Directive, true, sourceSpan, targetErrors, providersByToken, /* isModule */ /* isModule */ false);
     });
     // Note: directives need to be able to overwrite providers of a component!
     var /** @type {?} */ directivesWithComponentFirst = directives.filter(function (dir) { return dir.isComponent; }).concat(directives.filter(function (dir) { return !dir.isComponent; }));
     directivesWithComponentFirst.forEach(function (directive) {
-        _resolveProviders(directive.providers, ProviderAstType.PublicService, false, sourceSpan, targetErrors, providersByToken);
-        _resolveProviders(directive.viewProviders, ProviderAstType.PrivateService, false, sourceSpan, targetErrors, providersByToken);
+        _resolveProviders(directive.providers, ProviderAstType.PublicService, false, sourceSpan, targetErrors, providersByToken, /* isModule */ /* isModule */ false);
+        _resolveProviders(directive.viewProviders, ProviderAstType.PrivateService, false, sourceSpan, targetErrors, providersByToken, /* isModule */ /* isModule */ false);
     });
     return providersByToken;
 }
@@ -19808,9 +20094,10 @@ function _resolveProvidersFromDirectives(directives, sourceSpan, targetErrors) {
  * @param {?} sourceSpan
  * @param {?} targetErrors
  * @param {?} targetProvidersByToken
+ * @param {?} isModule
  * @return {?}
  */
-function _resolveProviders(providers, providerType, eager, sourceSpan, targetErrors, targetProvidersByToken) {
+function _resolveProviders(providers, providerType, eager, sourceSpan, targetErrors, targetProvidersByToken, isModule) {
     providers.forEach(function (provider) {
         var /** @type {?} */ resolvedProvider = targetProvidersByToken.get(tokenReference(provider.token));
         if (resolvedProvider != null && !!resolvedProvider.multiProvider !== !!provider.multi) {
@@ -19822,7 +20109,7 @@ function _resolveProviders(providers, providerType, eager, sourceSpan, targetErr
                 (/** @type {?} */ (provider.token.identifier)).lifecycleHooks :
                 [];
             var /** @type {?} */ isUseValue = !(provider.useClass || provider.useExisting || provider.useFactory);
-            resolvedProvider = new ProviderAst(provider.token, !!provider.multi, eager || isUseValue, [provider], providerType, lifecycleHooks, sourceSpan);
+            resolvedProvider = new ProviderAst(provider.token, !!provider.multi, eager || isUseValue, [provider], providerType, lifecycleHooks, sourceSpan, isModule);
             targetProvidersByToken.set(tokenReference(provider.token), resolvedProvider);
         }
         else {
@@ -19888,97 +20175,6 @@ function _addQueryToTokenMap(map, query) {
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-var QUOTED_KEYS = '$quoted$';
-/**
- * @param {?} ctx
- * @param {?} value
- * @param {?=} type
- * @return {?}
- */
-function convertValueToOutputAst(ctx, value, type) {
-    if (type === void 0) { type = null; }
-    return visitValue(value, new _ValueOutputAstTransformer(ctx), type);
-}
-var _ValueOutputAstTransformer = /** @class */ (function () {
-    function _ValueOutputAstTransformer(ctx) {
-        this.ctx = ctx;
-    }
-    /**
-     * @param {?} arr
-     * @param {?} type
-     * @return {?}
-     */
-    _ValueOutputAstTransformer.prototype.visitArray = /**
-     * @param {?} arr
-     * @param {?} type
-     * @return {?}
-     */
-    function (arr, type) {
-        var _this = this;
-        return literalArr(arr.map(function (value) { return visitValue(value, _this, null); }), type);
-    };
-    /**
-     * @param {?} map
-     * @param {?} type
-     * @return {?}
-     */
-    _ValueOutputAstTransformer.prototype.visitStringMap = /**
-     * @param {?} map
-     * @param {?} type
-     * @return {?}
-     */
-    function (map, type) {
-        var _this = this;
-        var /** @type {?} */ entries = [];
-        var /** @type {?} */ quotedSet = new Set(map && map[QUOTED_KEYS]);
-        Object.keys(map).forEach(function (key) {
-            entries.push(new LiteralMapEntry(key, visitValue(map[key], _this, null), quotedSet.has(key)));
-        });
-        return new LiteralMapExpr(entries, type);
-    };
-    /**
-     * @param {?} value
-     * @param {?} type
-     * @return {?}
-     */
-    _ValueOutputAstTransformer.prototype.visitPrimitive = /**
-     * @param {?} value
-     * @param {?} type
-     * @return {?}
-     */
-    function (value, type) { return literal(value, type); };
-    /**
-     * @param {?} value
-     * @param {?} type
-     * @return {?}
-     */
-    _ValueOutputAstTransformer.prototype.visitOther = /**
-     * @param {?} value
-     * @param {?} type
-     * @return {?}
-     */
-    function (value, type) {
-        if (value instanceof Expression) {
-            return value;
-        }
-        else {
-            return this.ctx.importExpr(value);
-        }
-    };
-    return _ValueOutputAstTransformer;
-}());
-
-/**
- * @fileoverview added by tsickle
- * @suppress {checkTypes} checked by tsc
- */
-/**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
- */
 /**
  * @param {?} ctx
  * @param {?} providerAst
@@ -19991,6 +20187,9 @@ function providerDef(ctx, providerAst) {
     }
     if (providerAst.providerType === ProviderAstType.PrivateService) {
         flags |= 8192 /* PrivateProvider */;
+    }
+    if (providerAst.isModule) {
+        flags |= 1073741824 /* TypeModuleProvider */;
     }
     providerAst.lifecycleHooks.forEach(function (lifecycleHook) {
         // for regular providers, we only support ngOnDestroy
@@ -20113,7 +20312,7 @@ function tokenExpr(ctx, tokenMeta) {
  */
 function depDef(ctx, dep) {
     // Note: the following fields have already been normalized out by provider_analyzer:
-    // - isAttribute, isSelf, isHost
+    // - isAttribute, isHost
     var /** @type {?} */ expr = dep.isValue ? convertValueToOutputAst(ctx, dep.value) : tokenExpr(ctx, /** @type {?} */ ((dep.token)));
     var /** @type {?} */ flags = 0;
     if (dep.isSkipSelf) {
@@ -20121,6 +20320,9 @@ function depDef(ctx, dep) {
     }
     if (dep.isOptional) {
         flags |= 2 /* Optional */;
+    }
+    if (dep.isSelf) {
+        flags |= 4 /* Self */;
     }
     if (dep.isValue) {
         flags |= 8 /* Value */;
@@ -30261,6 +30463,7 @@ function parseLazyRoute(route, reflector, module) {
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
+var TS = /^(?!.*\.d\.ts$).*\.ts$/;
 var ResolvedStaticSymbol = /** @class */ (function () {
     function ResolvedStaticSymbol(symbol, metadata) {
         this.symbol = symbol;
@@ -30769,7 +30972,8 @@ var StaticSymbolResolver = /** @class */ (function () {
         // (e.g. their constructor parameters).
         // We do this to prevent introducing deep imports
         // as we didn't generate .ngfactory.ts files with proper reexports.
-        if (this.summaryResolver.isLibraryFile(sourceSymbol.filePath) && metadata &&
+        var /** @type {?} */ isTsFile = TS.test(sourceSymbol.filePath);
+        if (this.summaryResolver.isLibraryFile(sourceSymbol.filePath) && !isTsFile && metadata &&
             metadata['__symbolic'] === 'class') {
             var /** @type {?} */ transformedMeta_1 = { __symbolic: 'class', arity: metadata.arity };
             return new ResolvedStaticSymbol(sourceSymbol, transformedMeta_1);
@@ -31634,7 +31838,7 @@ StubEmitFlags[StubEmitFlags.Basic] = "Basic";
 StubEmitFlags[StubEmitFlags.TypeCheck] = "TypeCheck";
 StubEmitFlags[StubEmitFlags.All] = "All";
 var AotCompiler = /** @class */ (function () {
-    function AotCompiler(_config, _options, _host, _reflector, _metadataResolver, _templateParser, _styleCompiler, _viewCompiler, _typeCheckCompiler, _ngModuleCompiler, _outputEmitter, _summaryResolver, _symbolResolver) {
+    function AotCompiler(_config, _options, _host, _reflector, _metadataResolver, _templateParser, _styleCompiler, _viewCompiler, _typeCheckCompiler, _ngModuleCompiler, _injectableCompiler, _outputEmitter, _summaryResolver, _symbolResolver) {
         this._config = _config;
         this._options = _options;
         this._host = _host;
@@ -31645,11 +31849,13 @@ var AotCompiler = /** @class */ (function () {
         this._viewCompiler = _viewCompiler;
         this._typeCheckCompiler = _typeCheckCompiler;
         this._ngModuleCompiler = _ngModuleCompiler;
+        this._injectableCompiler = _injectableCompiler;
         this._outputEmitter = _outputEmitter;
         this._summaryResolver = _summaryResolver;
         this._symbolResolver = _symbolResolver;
         this._templateAstCache = new Map();
         this._analyzedFiles = new Map();
+        this._analyzedFilesForInjectables = new Map();
     }
     /**
      * @return {?}
@@ -31705,6 +31911,22 @@ var AotCompiler = /** @class */ (function () {
             analyzedFile =
                 analyzeFile(this._host, this._symbolResolver, this._metadataResolver, fileName);
             this._analyzedFiles.set(fileName, analyzedFile);
+        }
+        return analyzedFile;
+    };
+    /**
+     * @param {?} fileName
+     * @return {?}
+     */
+    AotCompiler.prototype._analyzeFileForInjectables = /**
+     * @param {?} fileName
+     * @return {?}
+     */
+    function (fileName) {
+        var /** @type {?} */ analyzedFile = this._analyzedFilesForInjectables.get(fileName);
+        if (!analyzedFile) {
+            analyzedFile = analyzeFileForInjectables(this._host, this._symbolResolver, this._metadataResolver, fileName);
+            this._analyzedFilesForInjectables.set(fileName, analyzedFile);
         }
         return analyzedFile;
     };
@@ -31818,13 +32040,15 @@ var AotCompiler = /** @class */ (function () {
     };
     /**
      * @param {?} fileNames
+     * @param {?} tsFiles
      * @return {?}
      */
     AotCompiler.prototype.loadFilesAsync = /**
      * @param {?} fileNames
+     * @param {?} tsFiles
      * @return {?}
      */
-    function (fileNames) {
+    function (fileNames, tsFiles) {
         var _this = this;
         var /** @type {?} */ files = fileNames.map(function (fileName) { return _this._analyzeFile(fileName); });
         var /** @type {?} */ loadingPromises = [];
@@ -31833,17 +32057,25 @@ var AotCompiler = /** @class */ (function () {
                 return loadingPromises.push(_this._metadataResolver.loadNgModuleDirectiveAndPipeMetadata(ngModule.type.reference, false));
             });
         });
-        return Promise.all(loadingPromises).then(function (_) { return mergeAndValidateNgFiles(files); });
+        var /** @type {?} */ analyzedInjectables = tsFiles.map(function (tsFile) { return _this._analyzeFileForInjectables(tsFile); });
+        return Promise.all(loadingPromises).then(function (_) {
+            return ({
+                analyzedModules: mergeAndValidateNgFiles(files),
+                analyzedInjectables: analyzedInjectables,
+            });
+        });
     };
     /**
      * @param {?} fileNames
+     * @param {?} tsFiles
      * @return {?}
      */
     AotCompiler.prototype.loadFilesSync = /**
      * @param {?} fileNames
+     * @param {?} tsFiles
      * @return {?}
      */
-    function (fileNames) {
+    function (fileNames, tsFiles) {
         var _this = this;
         var /** @type {?} */ files = fileNames.map(function (fileName) { return _this._analyzeFile(fileName); });
         files.forEach(function (file) {
@@ -31851,7 +32083,11 @@ var AotCompiler = /** @class */ (function () {
                 return _this._metadataResolver.loadNgModuleDirectiveAndPipeMetadata(ngModule.type.reference, true);
             });
         });
-        return mergeAndValidateNgFiles(files);
+        var /** @type {?} */ analyzedInjectables = tsFiles.map(function (tsFile) { return _this._analyzeFileForInjectables(tsFile); });
+        return {
+            analyzedModules: mergeAndValidateNgFiles(files),
+            analyzedInjectables: analyzedInjectables,
+        };
     };
     /**
      * @param {?} outputCtx
@@ -32037,7 +32273,43 @@ var AotCompiler = /** @class */ (function () {
                 compileDirective(context, directiveMetadata, _this._reflector);
             }
         });
-        if (context.statements) {
+        injectables.forEach(function (injectable) { return _this._injectableCompiler.compile(injectable, context); });
+        if (context.statements && context.statements.length > 0) {
+            return [{ fileName: fileName, statements: context.constantPool.statements.concat(context.statements) }];
+        }
+        return [];
+    };
+    /**
+     * @param {?} files
+     * @return {?}
+     */
+    AotCompiler.prototype.emitAllPartialModules2 = /**
+     * @param {?} files
+     * @return {?}
+     */
+    function (files) {
+        var _this = this;
+        // Using reduce like this is a select many pattern (where map is a select pattern)
+        return files.reduce(function (r, file) {
+            r.push.apply(r, _this._emitPartialModule2(file.fileName, file.injectables));
+            return r;
+        }, []);
+    };
+    /**
+     * @param {?} fileName
+     * @param {?} injectables
+     * @return {?}
+     */
+    AotCompiler.prototype._emitPartialModule2 = /**
+     * @param {?} fileName
+     * @param {?} injectables
+     * @return {?}
+     */
+    function (fileName, injectables) {
+        var _this = this;
+        var /** @type {?} */ context = this._createOutputContext(fileName);
+        injectables.forEach(function (injectable) { return _this._injectableCompiler.compile(injectable, context); });
+        if (context.statements && context.statements.length > 0) {
             return [{ fileName: fileName, statements: context.constantPool.statements.concat(context.statements) }];
         }
         return [];
@@ -32156,8 +32428,8 @@ var AotCompiler = /** @class */ (function () {
             });
         }), injectables.map(function (ref) {
             return ({
-                summary: /** @type {?} */ ((_this._metadataResolver.getInjectableSummary(ref))),
-                metadata: /** @type {?} */ ((_this._metadataResolver.getInjectableSummary(ref))).type
+                summary: /** @type {?} */ ((_this._metadataResolver.getInjectableSummary(ref.symbol))),
+                metadata: /** @type {?} */ ((_this._metadataResolver.getInjectableSummary(ref.symbol))).type
             });
         }));
         var /** @type {?} */ forJitOutputCtx = this._options.enableSummariesForJit ?
@@ -32482,6 +32754,10 @@ function _stylesModuleUrl(stylesheetUrl, shim, suffix) {
  */
 
 /**
+ * @record
+ */
+
+/**
  * @param {?} fileNames
  * @param {?} host
  * @param {?} staticSymbolResolver
@@ -32584,7 +32860,10 @@ function analyzeFile(host, staticSymbolResolver, metadataResolver, fileName) {
                 }
                 else if (metadataResolver.isInjectable(symbol)) {
                     isNgSymbol = true;
-                    injectables.push(symbol);
+                    var /** @type {?} */ injectable = metadataResolver.getInjectableMetadata(symbol, null, false);
+                    if (injectable) {
+                        injectables.push(injectable);
+                    }
                 }
             }
             if (!isNgSymbol) {
@@ -32596,6 +32875,36 @@ function analyzeFile(host, staticSymbolResolver, metadataResolver, fileName) {
     return {
         fileName: fileName, directives: directives, pipes: pipes, ngModules: ngModules, injectables: injectables, exportsNonSourceFiles: exportsNonSourceFiles,
     };
+}
+/**
+ * @param {?} host
+ * @param {?} staticSymbolResolver
+ * @param {?} metadataResolver
+ * @param {?} fileName
+ * @return {?}
+ */
+function analyzeFileForInjectables(host, staticSymbolResolver, metadataResolver, fileName) {
+    var /** @type {?} */ injectables = [];
+    if (staticSymbolResolver.hasDecorators(fileName)) {
+        staticSymbolResolver.getSymbolsOf(fileName).forEach(function (symbol) {
+            var /** @type {?} */ resolvedSymbol = staticSymbolResolver.resolveSymbol(symbol);
+            var /** @type {?} */ symbolMeta = resolvedSymbol.metadata;
+            if (!symbolMeta || symbolMeta.__symbolic === 'error') {
+                return;
+            }
+            var /** @type {?} */ isNgSymbol = false;
+            if (symbolMeta.__symbolic === 'class') {
+                if (metadataResolver.isInjectable(symbol)) {
+                    isNgSymbol = true;
+                    var /** @type {?} */ injectable = metadataResolver.getInjectableMetadata(symbol, null, false);
+                    if (injectable) {
+                        injectables.push(injectable);
+                    }
+                }
+            }
+        });
+    }
+    return { fileName: fileName, injectables: injectables };
 }
 /**
  * @param {?} host
@@ -32927,6 +33236,24 @@ var StaticReflector = /** @class */ (function () {
      * @param {?} type
      * @return {?}
      */
+    StaticReflector.prototype.tryAnnotations = /**
+     * @param {?} type
+     * @return {?}
+     */
+    function (type) {
+        var /** @type {?} */ originalRecorder = this.errorRecorder;
+        this.errorRecorder = function (error$$1, fileName) { };
+        try {
+            return this.annotations(type);
+        }
+        finally {
+            this.errorRecorder = originalRecorder;
+        }
+    };
+    /**
+     * @param {?} type
+     * @return {?}
+     */
     StaticReflector.prototype.annotations = /**
      * @param {?} type
      * @return {?}
@@ -33204,13 +33531,13 @@ var StaticReflector = /** @class */ (function () {
      * @return {?}
      */
     function () {
+        this._registerDecoratorOrConstructor(this.findDeclaration(ANGULAR_CORE, 'Injectable'), createInjectable);
         this.injectionToken = this.findDeclaration(ANGULAR_CORE, 'InjectionToken');
         this.opaqueToken = this.findDeclaration(ANGULAR_CORE, 'OpaqueToken');
         this.ROUTES = this.tryFindDeclaration(ANGULAR_ROUTER, 'ROUTES');
         this.ANALYZE_FOR_ENTRY_COMPONENTS =
             this.findDeclaration(ANGULAR_CORE, 'ANALYZE_FOR_ENTRY_COMPONENTS');
         this._registerDecoratorOrConstructor(this.findDeclaration(ANGULAR_CORE, 'Host'), createHost);
-        this._registerDecoratorOrConstructor(this.findDeclaration(ANGULAR_CORE, 'Injectable'), createInjectable);
         this._registerDecoratorOrConstructor(this.findDeclaration(ANGULAR_CORE, 'Self'), createSelf);
         this._registerDecoratorOrConstructor(this.findDeclaration(ANGULAR_CORE, 'SkipSelf'), createSkipSelf);
         this._registerDecoratorOrConstructor(this.findDeclaration(ANGULAR_CORE, 'Inject'), createInject);
@@ -34226,7 +34553,7 @@ function createAotCompiler(compilerHost, options, errorCollector) {
     // TODO(vicb): do not pass options.i18nFormat here
     var /** @type {?} */ viewCompiler = new ViewCompiler(staticReflector);
     var /** @type {?} */ typeCheckCompiler = new TypeCheckCompiler(options, staticReflector);
-    var /** @type {?} */ compiler = new AotCompiler(config, options, compilerHost, staticReflector, resolver, tmplParser, new StyleCompiler(urlResolver), viewCompiler, typeCheckCompiler, new NgModuleCompiler(staticReflector), new TypeScriptEmitter(), summaryResolver, symbolResolver);
+    var /** @type {?} */ compiler = new AotCompiler(config, options, compilerHost, staticReflector, resolver, tmplParser, new StyleCompiler(urlResolver), viewCompiler, typeCheckCompiler, new NgModuleCompiler(staticReflector), new InjectableCompiler(staticReflector), new TypeScriptEmitter(), summaryResolver, symbolResolver);
     return { compiler: compiler, reflector: staticReflector };
 }
 
@@ -36595,6 +36922,7 @@ var compiler = Object.freeze({
 	analyzeNgModules: analyzeNgModules,
 	analyzeAndValidateNgModules: analyzeAndValidateNgModules,
 	analyzeFile: analyzeFile,
+	analyzeFileForInjectables: analyzeFileForInjectables,
 	mergeAnalyzedFiles: mergeAnalyzedFiles,
 	GeneratedFile: GeneratedFile,
 	toTypeScript: toTypeScript,
@@ -40698,6 +41026,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 
 exports.GENERATED_FILES = /(.*?)\.(ngfactory|shim\.ngstyle|ngstyle|ngsummary)\.(js|d\.ts|ts)$/;
 exports.DTS = /\.d\.ts$/;
+exports.TS = /^(?!.*\.d\.ts$).*\.ts$/;
 // Note: This is an internal property in TypeScript. Use it only for assertions and tests.
 function tsStructureIsReused(program) {
     return program.structureIsReused;
@@ -43357,7 +43686,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v6.0.0-beta.3-62e7b9d
+ * @license Angular v6.0.0-beta.3-235a235
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -43373,44 +43702,113 @@ var share_3 = share;
  * found in the LICENSE file at https://angular.io/license
  */
 /**
- * Creates a token that can be used in a DI Provider.
+ * \@whatItDoes Represents a type that a Component or other object is instances of.
  *
- * Use an `InjectionToken` whenever the type you are injecting is not reified (does not have a
- * runtime representation) such as when injecting an interface, callable type, array or
- * parametrized type.
+ * \@description
  *
- * `InjectionToken` is parameterized on `T` which is the type of object which will be returned by
- * the `Injector`. This provides additional level of type safety.
- *
- * ```
- * interface MyInterface {...}
- * var myInterface = injector.get(new InjectionToken<MyInterface>('SomeToken'));
- * // myInterface is inferred to be MyInterface.
- * ```
- *
- * ### Example
- *
- * {\@example core/di/ts/injector_spec.ts region='InjectionToken'}
+ * An example of a `Type` is `MyCustomComponent` class, which in JavaScript is be represented by
+ * the `MyCustomComponent` constructor function.
  *
  * \@stable
  */
-var InjectionToken = /** @class */ (function () {
-    function InjectionToken(_desc) {
-        this._desc = _desc;
-        /**
-         * \@internal
-         */
-        this.ngMetadataName = 'InjectionToken';
+var Type$1$1 = Function;
+/**
+ * @param {?} v
+ * @return {?}
+ */
+function isType(v) {
+    return typeof v === 'function';
+}
+
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+var __window = typeof window !== 'undefined' && window;
+var __self = typeof self !== 'undefined' && typeof WorkerGlobalScope !== 'undefined' &&
+    self instanceof WorkerGlobalScope && self;
+var __global = typeof global !== 'undefined' && global;
+var _global = __window || __global || __self;
+var promise = Promise.resolve(0);
+var _symbolIterator = null;
+/**
+ * @return {?}
+ */
+function getSymbolIterator() {
+    if (!_symbolIterator) {
+        var /** @type {?} */ Symbol_1 = _global['Symbol'];
+        if (Symbol_1 && Symbol_1.iterator) {
+            _symbolIterator = Symbol_1.iterator;
+        }
+        else {
+            // es6-shim specific logic
+            var /** @type {?} */ keys = Object.getOwnPropertyNames(Map.prototype);
+            for (var /** @type {?} */ i = 0; i < keys.length; ++i) {
+                var /** @type {?} */ key = keys[i];
+                if (key !== 'entries' && key !== 'size' &&
+                    (/** @type {?} */ (Map)).prototype[key] === Map.prototype['entries']) {
+                    _symbolIterator = key;
+                }
+            }
+        }
     }
-    /**
-     * @return {?}
-     */
-    InjectionToken.prototype.toString = /**
-     * @return {?}
-     */
-    function () { return "InjectionToken " + this._desc; };
-    return InjectionToken;
-}());
+    return _symbolIterator;
+}
+/**
+ * @param {?} fn
+ * @return {?}
+ */
+function scheduleMicroTask(fn) {
+    if (typeof Zone === 'undefined') {
+        // use promise to schedule microTask instead of use Zone
+        promise.then(function () { fn && fn.apply(null, null); });
+    }
+    else {
+        Zone.current.scheduleMicroTask('scheduleMicrotask', fn);
+    }
+}
+/**
+ * @param {?} a
+ * @param {?} b
+ * @return {?}
+ */
+function looseIdentical(a, b) {
+    return a === b || typeof a === 'number' && typeof b === 'number' && isNaN(a) && isNaN(b);
+}
+/**
+ * @param {?} token
+ * @return {?}
+ */
+function stringify$1(token) {
+    if (typeof token === 'string') {
+        return token;
+    }
+    if (token instanceof Array) {
+        return '[' + token.map(stringify$1).join(', ') + ']';
+    }
+    if (token == null) {
+        return '' + token;
+    }
+    if (token.overriddenName) {
+        return "" + token.overriddenName;
+    }
+    if (token.name) {
+        return "" + token.name;
+    }
+    var /** @type {?} */ res = token.toString();
+    if (res == null) {
+        return '' + res;
+    }
+    var /** @type {?} */ newLineIndex = res.indexOf('\n');
+    return newLineIndex === -1 ? res : res.substring(0, newLineIndex);
+}
 
 /**
  * @fileoverview added by tsickle
@@ -43447,21 +43845,27 @@ var PROP_METADATA = '__prop__metadata__';
  * @param {?=} props
  * @param {?=} parentClass
  * @param {?=} chainFn
+ * @param {?=} typeFn
  * @return {?}
  */
-function makeDecorator(name, props, parentClass, chainFn) {
+function makeDecorator(name, props, parentClass, chainFn, typeFn) {
     var /** @type {?} */ metaCtor = makeMetadataCtor(props);
     /**
-     * @param {?} objOrType
+     * @param {...?} args
      * @return {?}
      */
-    function DecoratorFactory(objOrType) {
+    function DecoratorFactory() {
+        var args = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            args[_i] = arguments[_i];
+        }
         if (this instanceof DecoratorFactory) {
-            metaCtor.call(this, objOrType);
+            metaCtor.call.apply(metaCtor, [this].concat(args));
             return this;
         }
-        var /** @type {?} */ annotationInstance = new (/** @type {?} */ (DecoratorFactory))(objOrType);
+        var /** @type {?} */ annotationInstance = new ((_a = (/** @type {?} */ (DecoratorFactory))).bind.apply(_a, [void 0].concat(args)))();
         var /** @type {?} */ TypeDecorator = /** @type {?} */ (function TypeDecorator(cls) {
+            typeFn && typeFn.apply(void 0, [cls].concat(args));
             // Use of Object.defineProperty is important since it creates non-enumerable property which
             // prevents the property is copied during subclassing.
             var /** @type {?} */ annotations = cls.hasOwnProperty(ANNOTATIONS) ?
@@ -43473,6 +43877,7 @@ function makeDecorator(name, props, parentClass, chainFn) {
         if (chainFn)
             chainFn(TypeDecorator);
         return TypeDecorator;
+        var _a;
     }
     if (parentClass) {
         DecoratorFactory.prototype = Object.create(parentClass.prototype);
@@ -43552,6 +43957,1237 @@ function makeParamDecorator(name, props, parentClass) {
     (/** @type {?} */ (ParamDecoratorFactory)).annotationCls = ParamDecoratorFactory;
     return ParamDecoratorFactory;
 }
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+/**
+ * Attention: This regex has to hold even if the code is minified!
+ */
+var DELEGATE_CTOR = /^function\s+\S+\(\)\s*{[\s\S]+\.apply\(this,\s*arguments\)/;
+var ReflectionCapabilities = /** @class */ (function () {
+    function ReflectionCapabilities(reflect) {
+        this._reflect = reflect || _global['Reflect'];
+    }
+    /**
+     * @return {?}
+     */
+    ReflectionCapabilities.prototype.isReflectionEnabled = /**
+     * @return {?}
+     */
+    function () { return true; };
+    /**
+     * @template T
+     * @param {?} t
+     * @return {?}
+     */
+    ReflectionCapabilities.prototype.factory = /**
+     * @template T
+     * @param {?} t
+     * @return {?}
+     */
+    function (t) { return function () {
+        var args = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            args[_i] = arguments[_i];
+        }
+        return new (t.bind.apply(t, [void 0].concat(args)))();
+    }; };
+    /** @internal */
+    /**
+     * \@internal
+     * @param {?} paramTypes
+     * @param {?} paramAnnotations
+     * @return {?}
+     */
+    ReflectionCapabilities.prototype._zipTypesAndAnnotations = /**
+     * \@internal
+     * @param {?} paramTypes
+     * @param {?} paramAnnotations
+     * @return {?}
+     */
+    function (paramTypes, paramAnnotations) {
+        var /** @type {?} */ result;
+        if (typeof paramTypes === 'undefined') {
+            result = new Array(paramAnnotations.length);
+        }
+        else {
+            result = new Array(paramTypes.length);
+        }
+        for (var /** @type {?} */ i = 0; i < result.length; i++) {
+            // TS outputs Object for parameters without types, while Traceur omits
+            // the annotations. For now we preserve the Traceur behavior to aid
+            // migration, but this can be revisited.
+            if (typeof paramTypes === 'undefined') {
+                result[i] = [];
+            }
+            else if (paramTypes[i] != Object) {
+                result[i] = [paramTypes[i]];
+            }
+            else {
+                result[i] = [];
+            }
+            if (paramAnnotations && paramAnnotations[i] != null) {
+                result[i] = result[i].concat(paramAnnotations[i]);
+            }
+        }
+        return result;
+    };
+    /**
+     * @param {?} type
+     * @param {?} parentCtor
+     * @return {?}
+     */
+    ReflectionCapabilities.prototype._ownParameters = /**
+     * @param {?} type
+     * @param {?} parentCtor
+     * @return {?}
+     */
+    function (type, parentCtor) {
+        // If we have no decorators, we only have function.length as metadata.
+        // In that case, to detect whether a child class declared an own constructor or not,
+        // we need to look inside of that constructor to check whether it is
+        // just calling the parent.
+        // This also helps to work around for https://github.com/Microsoft/TypeScript/issues/12439
+        // that sets 'design:paramtypes' to []
+        // if a class inherits from another class but has no ctor declared itself.
+        if (DELEGATE_CTOR.exec(type.toString())) {
+            return null;
+        }
+        // Prefer the direct API.
+        if ((/** @type {?} */ (type)).parameters && (/** @type {?} */ (type)).parameters !== parentCtor.parameters) {
+            return (/** @type {?} */ (type)).parameters;
+        }
+        // API of tsickle for lowering decorators to properties on the class.
+        var /** @type {?} */ tsickleCtorParams = (/** @type {?} */ (type)).ctorParameters;
+        if (tsickleCtorParams && tsickleCtorParams !== parentCtor.ctorParameters) {
+            // Newer tsickle uses a function closure
+            // Retain the non-function case for compatibility with older tsickle
+            var /** @type {?} */ ctorParameters = typeof tsickleCtorParams === 'function' ? tsickleCtorParams() : tsickleCtorParams;
+            var /** @type {?} */ paramTypes_1 = ctorParameters.map(function (ctorParam) { return ctorParam && ctorParam.type; });
+            var /** @type {?} */ paramAnnotations_1 = ctorParameters.map(function (ctorParam) {
+                return ctorParam && convertTsickleDecoratorIntoMetadata(ctorParam.decorators);
+            });
+            return this._zipTypesAndAnnotations(paramTypes_1, paramAnnotations_1);
+        }
+        // API for metadata created by invoking the decorators.
+        var /** @type {?} */ paramAnnotations = type.hasOwnProperty(PARAMETERS) && (/** @type {?} */ (type))[PARAMETERS];
+        var /** @type {?} */ paramTypes = this._reflect && this._reflect.getOwnMetadata &&
+            this._reflect.getOwnMetadata('design:paramtypes', type);
+        if (paramTypes || paramAnnotations) {
+            return this._zipTypesAndAnnotations(paramTypes, paramAnnotations);
+        }
+        // If a class has no decorators, at least create metadata
+        // based on function.length.
+        // Note: We know that this is a real constructor as we checked
+        // the content of the constructor above.
+        return new Array((/** @type {?} */ (type.length))).fill(undefined);
+    };
+    /**
+     * @param {?} type
+     * @return {?}
+     */
+    ReflectionCapabilities.prototype.parameters = /**
+     * @param {?} type
+     * @return {?}
+     */
+    function (type) {
+        // Note: only report metadata if we have at least one class decorator
+        // to stay in sync with the static reflector.
+        if (!isType(type)) {
+            return [];
+        }
+        var /** @type {?} */ parentCtor = getParentCtor(type);
+        var /** @type {?} */ parameters = this._ownParameters(type, parentCtor);
+        if (!parameters && parentCtor !== Object) {
+            parameters = this.parameters(parentCtor);
+        }
+        return parameters || [];
+    };
+    /**
+     * @param {?} typeOrFunc
+     * @param {?} parentCtor
+     * @return {?}
+     */
+    ReflectionCapabilities.prototype._ownAnnotations = /**
+     * @param {?} typeOrFunc
+     * @param {?} parentCtor
+     * @return {?}
+     */
+    function (typeOrFunc, parentCtor) {
+        // Prefer the direct API.
+        if ((/** @type {?} */ (typeOrFunc)).annotations && (/** @type {?} */ (typeOrFunc)).annotations !== parentCtor.annotations) {
+            var /** @type {?} */ annotations = (/** @type {?} */ (typeOrFunc)).annotations;
+            if (typeof annotations === 'function' && annotations.annotations) {
+                annotations = annotations.annotations;
+            }
+            return annotations;
+        }
+        // API of tsickle for lowering decorators to properties on the class.
+        if ((/** @type {?} */ (typeOrFunc)).decorators && (/** @type {?} */ (typeOrFunc)).decorators !== parentCtor.decorators) {
+            return convertTsickleDecoratorIntoMetadata((/** @type {?} */ (typeOrFunc)).decorators);
+        }
+        // API for metadata created by invoking the decorators.
+        if (typeOrFunc.hasOwnProperty(ANNOTATIONS)) {
+            return (/** @type {?} */ (typeOrFunc))[ANNOTATIONS];
+        }
+        return null;
+    };
+    /**
+     * @param {?} typeOrFunc
+     * @return {?}
+     */
+    ReflectionCapabilities.prototype.annotations = /**
+     * @param {?} typeOrFunc
+     * @return {?}
+     */
+    function (typeOrFunc) {
+        if (!isType(typeOrFunc)) {
+            return [];
+        }
+        var /** @type {?} */ parentCtor = getParentCtor(typeOrFunc);
+        var /** @type {?} */ ownAnnotations = this._ownAnnotations(typeOrFunc, parentCtor) || [];
+        var /** @type {?} */ parentAnnotations = parentCtor !== Object ? this.annotations(parentCtor) : [];
+        return parentAnnotations.concat(ownAnnotations);
+    };
+    /**
+     * @param {?} typeOrFunc
+     * @param {?} parentCtor
+     * @return {?}
+     */
+    ReflectionCapabilities.prototype._ownPropMetadata = /**
+     * @param {?} typeOrFunc
+     * @param {?} parentCtor
+     * @return {?}
+     */
+    function (typeOrFunc, parentCtor) {
+        // Prefer the direct API.
+        if ((/** @type {?} */ (typeOrFunc)).propMetadata &&
+            (/** @type {?} */ (typeOrFunc)).propMetadata !== parentCtor.propMetadata) {
+            var /** @type {?} */ propMetadata = (/** @type {?} */ (typeOrFunc)).propMetadata;
+            if (typeof propMetadata === 'function' && propMetadata.propMetadata) {
+                propMetadata = propMetadata.propMetadata;
+            }
+            return propMetadata;
+        }
+        // API of tsickle for lowering decorators to properties on the class.
+        if ((/** @type {?} */ (typeOrFunc)).propDecorators &&
+            (/** @type {?} */ (typeOrFunc)).propDecorators !== parentCtor.propDecorators) {
+            var /** @type {?} */ propDecorators_1 = (/** @type {?} */ (typeOrFunc)).propDecorators;
+            var /** @type {?} */ propMetadata_1 = /** @type {?} */ ({});
+            Object.keys(propDecorators_1).forEach(function (prop) {
+                propMetadata_1[prop] = convertTsickleDecoratorIntoMetadata(propDecorators_1[prop]);
+            });
+            return propMetadata_1;
+        }
+        // API for metadata created by invoking the decorators.
+        if (typeOrFunc.hasOwnProperty(PROP_METADATA)) {
+            return (/** @type {?} */ (typeOrFunc))[PROP_METADATA];
+        }
+        return null;
+    };
+    /**
+     * @param {?} typeOrFunc
+     * @return {?}
+     */
+    ReflectionCapabilities.prototype.propMetadata = /**
+     * @param {?} typeOrFunc
+     * @return {?}
+     */
+    function (typeOrFunc) {
+        if (!isType(typeOrFunc)) {
+            return {};
+        }
+        var /** @type {?} */ parentCtor = getParentCtor(typeOrFunc);
+        var /** @type {?} */ propMetadata = {};
+        if (parentCtor !== Object) {
+            var /** @type {?} */ parentPropMetadata_1 = this.propMetadata(parentCtor);
+            Object.keys(parentPropMetadata_1).forEach(function (propName) {
+                propMetadata[propName] = parentPropMetadata_1[propName];
+            });
+        }
+        var /** @type {?} */ ownPropMetadata = this._ownPropMetadata(typeOrFunc, parentCtor);
+        if (ownPropMetadata) {
+            Object.keys(ownPropMetadata).forEach(function (propName) {
+                var /** @type {?} */ decorators = [];
+                if (propMetadata.hasOwnProperty(propName)) {
+                    decorators.push.apply(decorators, propMetadata[propName]);
+                }
+                decorators.push.apply(decorators, ownPropMetadata[propName]);
+                propMetadata[propName] = decorators;
+            });
+        }
+        return propMetadata;
+    };
+    /**
+     * @param {?} type
+     * @param {?} lcProperty
+     * @return {?}
+     */
+    ReflectionCapabilities.prototype.hasLifecycleHook = /**
+     * @param {?} type
+     * @param {?} lcProperty
+     * @return {?}
+     */
+    function (type, lcProperty) {
+        return type instanceof Type$1$1 && lcProperty in type.prototype;
+    };
+    /**
+     * @param {?} type
+     * @return {?}
+     */
+    ReflectionCapabilities.prototype.guards = /**
+     * @param {?} type
+     * @return {?}
+     */
+    function (type) { return {}; };
+    /**
+     * @param {?} name
+     * @return {?}
+     */
+    ReflectionCapabilities.prototype.getter = /**
+     * @param {?} name
+     * @return {?}
+     */
+    function (name) { return /** @type {?} */ (new Function('o', 'return o.' + name + ';')); };
+    /**
+     * @param {?} name
+     * @return {?}
+     */
+    ReflectionCapabilities.prototype.setter = /**
+     * @param {?} name
+     * @return {?}
+     */
+    function (name) {
+        return /** @type {?} */ (new Function('o', 'v', 'return o.' + name + ' = v;'));
+    };
+    /**
+     * @param {?} name
+     * @return {?}
+     */
+    ReflectionCapabilities.prototype.method = /**
+     * @param {?} name
+     * @return {?}
+     */
+    function (name) {
+        var /** @type {?} */ functionBody = "if (!o." + name + ") throw new Error('\"" + name + "\" is undefined');\n        return o." + name + ".apply(o, args);";
+        return /** @type {?} */ (new Function('o', 'args', functionBody));
+    };
+    // There is not a concept of import uri in Js, but this is useful in developing Dart applications.
+    /**
+     * @param {?} type
+     * @return {?}
+     */
+    ReflectionCapabilities.prototype.importUri = /**
+     * @param {?} type
+     * @return {?}
+     */
+    function (type) {
+        // StaticSymbol
+        if (typeof type === 'object' && type['filePath']) {
+            return type['filePath'];
+        }
+        // Runtime type
+        return "./" + stringify$1(type);
+    };
+    /**
+     * @param {?} type
+     * @return {?}
+     */
+    ReflectionCapabilities.prototype.resourceUri = /**
+     * @param {?} type
+     * @return {?}
+     */
+    function (type) { return "./" + stringify$1(type); };
+    /**
+     * @param {?} name
+     * @param {?} moduleUrl
+     * @param {?} members
+     * @param {?} runtime
+     * @return {?}
+     */
+    ReflectionCapabilities.prototype.resolveIdentifier = /**
+     * @param {?} name
+     * @param {?} moduleUrl
+     * @param {?} members
+     * @param {?} runtime
+     * @return {?}
+     */
+    function (name, moduleUrl, members, runtime) {
+        return runtime;
+    };
+    /**
+     * @param {?} enumIdentifier
+     * @param {?} name
+     * @return {?}
+     */
+    ReflectionCapabilities.prototype.resolveEnum = /**
+     * @param {?} enumIdentifier
+     * @param {?} name
+     * @return {?}
+     */
+    function (enumIdentifier, name) { return enumIdentifier[name]; };
+    return ReflectionCapabilities;
+}());
+/**
+ * @param {?} decoratorInvocations
+ * @return {?}
+ */
+function convertTsickleDecoratorIntoMetadata(decoratorInvocations) {
+    if (!decoratorInvocations) {
+        return [];
+    }
+    return decoratorInvocations.map(function (decoratorInvocation) {
+        var /** @type {?} */ decoratorType = decoratorInvocation.type;
+        var /** @type {?} */ annotationCls = decoratorType.annotationCls;
+        var /** @type {?} */ annotationArgs = decoratorInvocation.args ? decoratorInvocation.args : [];
+        return new (annotationCls.bind.apply(annotationCls, [void 0].concat(annotationArgs)))();
+    });
+}
+/**
+ * @param {?} ctor
+ * @return {?}
+ */
+function getParentCtor(ctor) {
+    var /** @type {?} */ parentProto = Object.getPrototypeOf(ctor.prototype);
+    var /** @type {?} */ parentCtor = parentProto ? parentProto.constructor : null;
+    // Note: We always use `Object` as the null value
+    // to simplify checking later on.
+    return parentCtor || Object;
+}
+
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+/**
+ * @template T
+ * @param {?} objWithPropertyToExtract
+ * @param {?} target
+ * @return {?}
+ */
+function getClosureSafeProperty(objWithPropertyToExtract, target) {
+    for (var /** @type {?} */ key in objWithPropertyToExtract) {
+        if (objWithPropertyToExtract[key] === target) {
+            return key;
+        }
+    }
+    throw Error('Could not find renamed property on target object.');
+}
+
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+/**
+ * An interface that a function passed into {\@link forwardRef} has to implement.
+ *
+ * ### Example
+ *
+ * {\@example core/di/ts/forward_ref/forward_ref_spec.ts region='forward_ref_fn'}
+ * \@experimental
+ * @record
+ */
+
+/**
+ * Allows to refer to references which are not yet defined.
+ *
+ * For instance, `forwardRef` is used when the `token` which we need to refer to for the purposes of
+ * DI is declared,
+ * but not yet defined. It is also used when the `token` which we use when creating a query is not
+ * yet defined.
+ *
+ * ### Example
+ * {\@example core/di/ts/forward_ref/forward_ref_spec.ts region='forward_ref'}
+ * \@experimental
+ * @param {?} forwardRefFn
+ * @return {?}
+ */
+function forwardRef(forwardRefFn) {
+    (/** @type {?} */ (forwardRefFn)).__forward_ref__ = forwardRef;
+    (/** @type {?} */ (forwardRefFn)).toString = function () { return stringify$1(this()); };
+    return (/** @type {?} */ (/** @type {?} */ (forwardRefFn)));
+}
+/**
+ * Lazily retrieves the reference value from a forwardRef.
+ *
+ * Acts as the identity function when given a non-forward-ref value.
+ *
+ * ### Example ([live demo](http://plnkr.co/edit/GU72mJrk1fiodChcmiDR?p=preview))
+ *
+ * {\@example core/di/ts/forward_ref/forward_ref_spec.ts region='resolve_forward_ref'}
+ *
+ * See: {\@link forwardRef}
+ * \@experimental
+ * @param {?} type
+ * @return {?}
+ */
+function resolveForwardRef$1(type) {
+    if (typeof type === 'function' && type.hasOwnProperty('__forward_ref__') &&
+        type.__forward_ref__ === forwardRef) {
+        return (/** @type {?} */ (type))();
+    }
+    else {
+        return type;
+    }
+}
+
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+/**
+ * Type of the Inject decorator / constructor function.
+ *
+ * \@stable
+ * @record
+ */
+
+/**
+ * Inject decorator and metadata.
+ *
+ * \@stable
+ * \@Annotation
+ */
+var Inject$1 = makeParamDecorator('Inject', function (token) { return ({ token: token }); });
+/**
+ * Type of the Optional decorator / constructor function.
+ *
+ * \@stable
+ * @record
+ */
+
+/**
+ * Optional decorator and metadata.
+ *
+ * \@stable
+ * \@Annotation
+ */
+var Optional = makeParamDecorator('Optional');
+/**
+ * Type of the Self decorator / constructor function.
+ *
+ * \@stable
+ * @record
+ */
+
+/**
+ * Self decorator and metadata.
+ *
+ * \@stable
+ * \@Annotation
+ */
+var Self = makeParamDecorator('Self');
+/**
+ * Type of the SkipSelf decorator / constructor function.
+ *
+ * \@stable
+ * @record
+ */
+
+/**
+ * SkipSelf decorator and metadata.
+ *
+ * \@stable
+ * \@Annotation
+ */
+var SkipSelf = makeParamDecorator('SkipSelf');
+/**
+ * Type of the Host decorator / constructor function.
+ *
+ * \@stable
+ * @record
+ */
+
+/**
+ * Host decorator and metadata.
+ *
+ * \@stable
+ * \@Annotation
+ */
+var Host = makeParamDecorator('Host');
+
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+var SOURCE = '__source';
+var _THROW_IF_NOT_FOUND = new Object();
+var THROW_IF_NOT_FOUND = _THROW_IF_NOT_FOUND;
+var _NullInjector = /** @class */ (function () {
+    function _NullInjector() {
+    }
+    /**
+     * @param {?} token
+     * @param {?=} notFoundValue
+     * @return {?}
+     */
+    _NullInjector.prototype.get = /**
+     * @param {?} token
+     * @param {?=} notFoundValue
+     * @return {?}
+     */
+    function (token, notFoundValue) {
+        if (notFoundValue === void 0) { notFoundValue = _THROW_IF_NOT_FOUND; }
+        if (notFoundValue === _THROW_IF_NOT_FOUND) {
+            throw new Error("NullInjectorError: No provider for " + stringify$1(token) + "!");
+        }
+        return notFoundValue;
+    };
+    return _NullInjector;
+}());
+/**
+ * \@whatItDoes Injector interface
+ * \@howToUse
+ * ```
+ * const injector: Injector = ...;
+ * injector.get(...);
+ * ```
+ *
+ * \@description
+ * For more details, see the {\@linkDocs guide/dependency-injection "Dependency Injection Guide"}.
+ *
+ * ### Example
+ *
+ * {\@example core/di/ts/injector_spec.ts region='Injector'}
+ *
+ * `Injector` returns itself when given `Injector` as a token:
+ * {\@example core/di/ts/injector_spec.ts region='injectInjector'}
+ *
+ * \@stable
+ * @abstract
+ */
+var Injector = /** @class */ (function () {
+    function Injector() {
+    }
+    /**
+     * Create a new Injector which is configure using `StaticProvider`s.
+     *
+     * ### Example
+     *
+     * {@example core/di/ts/provider_spec.ts region='ConstructorProvider'}
+     */
+    /**
+     * Create a new Injector which is configure using `StaticProvider`s.
+     *
+     * ### Example
+     *
+     * {\@example core/di/ts/provider_spec.ts region='ConstructorProvider'}
+     * @param {?} options
+     * @param {?=} parent
+     * @return {?}
+     */
+    Injector.create = /**
+     * Create a new Injector which is configure using `StaticProvider`s.
+     *
+     * ### Example
+     *
+     * {\@example core/di/ts/provider_spec.ts region='ConstructorProvider'}
+     * @param {?} options
+     * @param {?=} parent
+     * @return {?}
+     */
+    function (options, parent) {
+        if (Array.isArray(options)) {
+            return new StaticInjector(options, parent);
+        }
+        else {
+            return new StaticInjector(options.providers, options.parent, options.name || null);
+        }
+    };
+    Injector.THROW_IF_NOT_FOUND = _THROW_IF_NOT_FOUND;
+    Injector.NULL = new _NullInjector();
+    return Injector;
+}());
+var IDENT = function (value) {
+    return value;
+};
+var EMPTY = /** @type {?} */ ([]);
+var CIRCULAR = IDENT;
+var MULTI_PROVIDER_FN = function () {
+    return Array.prototype.slice.call(arguments);
+};
+var GET_PROPERTY_NAME$1 = /** @type {?} */ ({});
+var ɵ2 = GET_PROPERTY_NAME$1;
+var USE_VALUE$1 = getClosureSafeProperty$1({ provide: String, useValue: ɵ2 });
+var NG_TOKEN_PATH = 'ngTokenPath';
+var NG_TEMP_TOKEN_PATH = 'ngTempTokenPath';
+var NULL_INJECTOR = Injector.NULL;
+var NEW_LINE = /\n/gm;
+var NO_NEW_LINE = 'ɵ';
+var StaticInjector = /** @class */ (function () {
+    function StaticInjector(providers, parent, source) {
+        if (parent === void 0) { parent = NULL_INJECTOR; }
+        if (source === void 0) { source = null; }
+        this.parent = parent;
+        this.source = source;
+        var /** @type {?} */ records = this._records = new Map();
+        records.set(Injector, /** @type {?} */ ({ token: Injector, fn: IDENT, deps: EMPTY, value: this, useNew: false }));
+        recursivelyProcessProviders(records, providers);
+    }
+    /**
+     * @param {?} token
+     * @param {?=} notFoundValue
+     * @param {?=} flags
+     * @return {?}
+     */
+    StaticInjector.prototype.get = /**
+     * @param {?} token
+     * @param {?=} notFoundValue
+     * @param {?=} flags
+     * @return {?}
+     */
+    function (token, notFoundValue, flags) {
+        if (flags === void 0) { flags = 0 /* Default */; }
+        var /** @type {?} */ record = this._records.get(token);
+        try {
+            return tryResolveToken(token, record, this._records, this.parent, notFoundValue, flags);
+        }
+        catch (/** @type {?} */ e) {
+            var /** @type {?} */ tokenPath = e[NG_TEMP_TOKEN_PATH];
+            if (token[SOURCE]) {
+                tokenPath.unshift(token[SOURCE]);
+            }
+            e.message = formatError('\n' + e.message, tokenPath, this.source);
+            e[NG_TOKEN_PATH] = tokenPath;
+            e[NG_TEMP_TOKEN_PATH] = null;
+            throw e;
+        }
+    };
+    /**
+     * @return {?}
+     */
+    StaticInjector.prototype.toString = /**
+     * @return {?}
+     */
+    function () {
+        var /** @type {?} */ tokens = /** @type {?} */ ([]), /** @type {?} */ records = this._records;
+        records.forEach(function (v, token) { return tokens.push(stringify$1(token)); });
+        return "StaticInjector[" + tokens.join(', ') + "]";
+    };
+    return StaticInjector;
+}());
+/**
+ * @param {?} provider
+ * @return {?}
+ */
+function resolveProvider(provider) {
+    var /** @type {?} */ deps = computeDeps(provider);
+    var /** @type {?} */ fn = IDENT;
+    var /** @type {?} */ value = EMPTY;
+    var /** @type {?} */ useNew = false;
+    var /** @type {?} */ provide = resolveForwardRef$1(provider.provide);
+    if (USE_VALUE$1 in provider) {
+        // We need to use USE_VALUE in provider since provider.useValue could be defined as undefined.
+        value = (/** @type {?} */ (provider)).useValue;
+    }
+    else if ((/** @type {?} */ (provider)).useFactory) {
+        fn = (/** @type {?} */ (provider)).useFactory;
+    }
+    else if ((/** @type {?} */ (provider)).useExisting) {
+        // Just use IDENT
+    }
+    else if ((/** @type {?} */ (provider)).useClass) {
+        useNew = true;
+        fn = resolveForwardRef$1((/** @type {?} */ (provider)).useClass);
+    }
+    else if (typeof provide == 'function') {
+        useNew = true;
+        fn = provide;
+    }
+    else {
+        throw staticError('StaticProvider does not have [useValue|useFactory|useExisting|useClass] or [provide] is not newable', provider);
+    }
+    return { deps: deps, fn: fn, useNew: useNew, value: value };
+}
+/**
+ * @param {?} token
+ * @return {?}
+ */
+function multiProviderMixError(token) {
+    return staticError('Cannot mix multi providers and regular providers', token);
+}
+/**
+ * @param {?} records
+ * @param {?} provider
+ * @return {?}
+ */
+function recursivelyProcessProviders(records, provider) {
+    if (provider) {
+        provider = resolveForwardRef$1(provider);
+        if (provider instanceof Array) {
+            // if we have an array recurse into the array
+            for (var /** @type {?} */ i = 0; i < provider.length; i++) {
+                recursivelyProcessProviders(records, provider[i]);
+            }
+        }
+        else if (typeof provider === 'function') {
+            // Functions were supported in ReflectiveInjector, but are not here. For safety give useful
+            // error messages
+            throw staticError('Function/Class not supported', provider);
+        }
+        else if (provider && typeof provider === 'object' && provider.provide) {
+            // At this point we have what looks like a provider: {provide: ?, ....}
+            var /** @type {?} */ token = resolveForwardRef$1(provider.provide);
+            var /** @type {?} */ resolvedProvider = resolveProvider(provider);
+            if (provider.multi === true) {
+                // This is a multi provider.
+                var /** @type {?} */ multiProvider = records.get(token);
+                if (multiProvider) {
+                    if (multiProvider.fn !== MULTI_PROVIDER_FN) {
+                        throw multiProviderMixError(token);
+                    }
+                }
+                else {
+                    // Create a placeholder factory which will look up the constituents of the multi provider.
+                    records.set(token, multiProvider = /** @type {?} */ ({
+                        token: provider.provide,
+                        deps: [],
+                        useNew: false,
+                        fn: MULTI_PROVIDER_FN,
+                        value: EMPTY
+                    }));
+                }
+                // Treat the provider as the token.
+                token = provider;
+                multiProvider.deps.push({ token: token, options: 6 /* Default */ });
+            }
+            var /** @type {?} */ record = records.get(token);
+            if (record && record.fn == MULTI_PROVIDER_FN) {
+                throw multiProviderMixError(token);
+            }
+            records.set(token, resolvedProvider);
+        }
+        else {
+            throw staticError('Unexpected provider', provider);
+        }
+    }
+}
+/**
+ * @param {?} token
+ * @param {?} record
+ * @param {?} records
+ * @param {?} parent
+ * @param {?} notFoundValue
+ * @param {?} flags
+ * @return {?}
+ */
+function tryResolveToken(token, record, records, parent, notFoundValue, flags) {
+    try {
+        return resolveToken(token, record, records, parent, notFoundValue, flags);
+    }
+    catch (/** @type {?} */ e) {
+        // ensure that 'e' is of type Error.
+        if (!(e instanceof Error)) {
+            e = new Error(e);
+        }
+        var /** @type {?} */ path$$1 = e[NG_TEMP_TOKEN_PATH] = e[NG_TEMP_TOKEN_PATH] || [];
+        path$$1.unshift(token);
+        if (record && record.value == CIRCULAR) {
+            // Reset the Circular flag.
+            record.value = EMPTY;
+        }
+        throw e;
+    }
+}
+/**
+ * @param {?} token
+ * @param {?} record
+ * @param {?} records
+ * @param {?} parent
+ * @param {?} notFoundValue
+ * @param {?} flags
+ * @return {?}
+ */
+function resolveToken(token, record, records, parent, notFoundValue, flags) {
+    var /** @type {?} */ value;
+    if (record && !(flags & 1 /* SkipSelf */)) {
+        // If we don't have a record, this implies that we don't own the provider hence don't know how
+        // to resolve it.
+        value = record.value;
+        if (value == CIRCULAR) {
+            throw Error(NO_NEW_LINE + 'Circular dependency');
+        }
+        else if (value === EMPTY) {
+            record.value = CIRCULAR;
+            var /** @type {?} */ obj = undefined;
+            var /** @type {?} */ useNew = record.useNew;
+            var /** @type {?} */ fn = record.fn;
+            var /** @type {?} */ depRecords = record.deps;
+            var /** @type {?} */ deps = EMPTY;
+            if (depRecords.length) {
+                deps = [];
+                for (var /** @type {?} */ i = 0; i < depRecords.length; i++) {
+                    var /** @type {?} */ depRecord = depRecords[i];
+                    var /** @type {?} */ options = depRecord.options;
+                    var /** @type {?} */ childRecord = options & 2 /* CheckSelf */ ? records.get(depRecord.token) : undefined;
+                    deps.push(tryResolveToken(
+                    // Current Token to resolve
+                    depRecord.token, childRecord, records, 
+                    // If we don't know how to resolve dependency and we should not check parent for it,
+                    // than pass in Null injector.
+                    !childRecord && !(options & 4 /* CheckParent */) ? NULL_INJECTOR : parent, options & 1 /* Optional */ ? null : Injector.THROW_IF_NOT_FOUND, 0 /* Default */));
+                }
+            }
+            record.value = value = useNew ? new ((_a = (/** @type {?} */ (fn))).bind.apply(_a, [void 0].concat(deps)))() : fn.apply(obj, deps);
+        }
+    }
+    else if (!(flags & 2 /* Self */)) {
+        value = parent.get(token, notFoundValue, 0 /* Default */);
+    }
+    return value;
+    var _a;
+}
+/**
+ * @param {?} provider
+ * @return {?}
+ */
+function computeDeps(provider) {
+    var /** @type {?} */ deps = EMPTY;
+    var /** @type {?} */ providerDeps = (/** @type {?} */ (provider)).deps;
+    if (providerDeps && providerDeps.length) {
+        deps = [];
+        for (var /** @type {?} */ i = 0; i < providerDeps.length; i++) {
+            var /** @type {?} */ options = 6;
+            var /** @type {?} */ token = resolveForwardRef$1(providerDeps[i]);
+            if (token instanceof Array) {
+                for (var /** @type {?} */ j = 0, /** @type {?} */ annotations = token; j < annotations.length; j++) {
+                    var /** @type {?} */ annotation = annotations[j];
+                    if (annotation instanceof Optional || annotation == Optional) {
+                        options = options | 1 /* Optional */;
+                    }
+                    else if (annotation instanceof SkipSelf || annotation == SkipSelf) {
+                        options = options & ~2 /* CheckSelf */;
+                    }
+                    else if (annotation instanceof Self || annotation == Self) {
+                        options = options & ~4 /* CheckParent */;
+                    }
+                    else if (annotation instanceof Inject$1) {
+                        token = (/** @type {?} */ (annotation)).token;
+                    }
+                    else {
+                        token = resolveForwardRef$1(annotation);
+                    }
+                }
+            }
+            deps.push({ token: token, options: options });
+        }
+    }
+    else if ((/** @type {?} */ (provider)).useExisting) {
+        var /** @type {?} */ token = resolveForwardRef$1((/** @type {?} */ (provider)).useExisting);
+        deps = [{ token: token, options: 6 /* Default */ }];
+    }
+    else if (!providerDeps && !(USE_VALUE$1 in provider)) {
+        // useValue & useExisting are the only ones which are exempt from deps all others need it.
+        throw staticError('\'deps\' required', provider);
+    }
+    return deps;
+}
+/**
+ * @param {?} text
+ * @param {?} obj
+ * @param {?=} source
+ * @return {?}
+ */
+function formatError(text, obj, source) {
+    if (source === void 0) { source = null; }
+    text = text && text.charAt(0) === '\n' && text.charAt(1) == NO_NEW_LINE ? text.substr(2) : text;
+    var /** @type {?} */ context = stringify$1(obj);
+    if (obj instanceof Array) {
+        context = obj.map(stringify$1).join(' -> ');
+    }
+    else if (typeof obj === 'object') {
+        var /** @type {?} */ parts = /** @type {?} */ ([]);
+        for (var /** @type {?} */ key in obj) {
+            if (obj.hasOwnProperty(key)) {
+                var /** @type {?} */ value = obj[key];
+                parts.push(key + ':' + (typeof value === 'string' ? JSON.stringify(value) : stringify$1(value)));
+            }
+        }
+        context = "{" + parts.join(', ') + "}";
+    }
+    return "StaticInjectorError" + (source ? '(' + source + ')' : '') + "[" + context + "]: " + text.replace(NEW_LINE, '\n  ');
+}
+/**
+ * @param {?} text
+ * @param {?} obj
+ * @return {?}
+ */
+function staticError(text, obj) {
+    return new Error(formatError(text, obj));
+}
+/**
+ * @template T
+ * @param {?} objWithPropertyToExtract
+ * @return {?}
+ */
+function getClosureSafeProperty$1(objWithPropertyToExtract) {
+    for (var /** @type {?} */ key in objWithPropertyToExtract) {
+        if (objWithPropertyToExtract[key] === GET_PROPERTY_NAME$1) {
+            return key;
+        }
+    }
+    throw Error('!prop');
+}
+var _currentInjector = null;
+/**
+ * @param {?} injector
+ * @return {?}
+ */
+function setCurrentInjector(injector) {
+    var /** @type {?} */ former = _currentInjector;
+    _currentInjector = injector;
+    return former;
+}
+/**
+ * @template T
+ * @param {?} token
+ * @param {?=} notFoundValue
+ * @param {?=} flags
+ * @return {?}
+ */
+function inject(token, notFoundValue, flags) {
+    if (flags === void 0) { flags = 0 /* Default */; }
+    if (_currentInjector === null) {
+        throw new Error("inject() must be called from an injection context");
+    }
+    return _currentInjector.get(token, notFoundValue, flags);
+}
+/**
+ * @param {?} types
+ * @return {?}
+ */
+function injectArgs(types) {
+    var /** @type {?} */ args = [];
+    for (var /** @type {?} */ i = 0; i < types.length; i++) {
+        var /** @type {?} */ arg = types[i];
+        if (Array.isArray(arg)) {
+            if (arg.length === 0) {
+                throw new Error('Arguments array must have arguments.');
+            }
+            var /** @type {?} */ type = undefined;
+            var /** @type {?} */ defaultValue = undefined;
+            var /** @type {?} */ flags = 0;
+            for (var /** @type {?} */ j = 0; j < arg.length; j++) {
+                var /** @type {?} */ meta = arg[j];
+                if (meta instanceof Optional || meta.__proto__.ngMetadataName === 'Optional') {
+                    defaultValue = null;
+                }
+                else if (meta instanceof SkipSelf || meta.__proto__.ngMetadataName === 'SkipSelf') {
+                    flags |= 1 /* SkipSelf */;
+                }
+                else if (meta instanceof Self || meta.__proto__.ngMetadataName === 'Self') {
+                    flags |= 2 /* Self */;
+                }
+                else if (meta instanceof Inject$1) {
+                    type = meta.token;
+                }
+                else {
+                    type = meta;
+                }
+            }
+            args.push(inject(/** @type {?} */ ((type)), defaultValue, 0 /* Default */));
+        }
+        else {
+            args.push(inject(arg));
+        }
+    }
+    return args;
+}
+
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+var GET_PROPERTY_NAME = /** @type {?} */ ({});
+var ɵ0 = GET_PROPERTY_NAME;
+var USE_VALUE$1$1 = getClosureSafeProperty({ provide: String, useValue: ɵ0 }, GET_PROPERTY_NAME);
+/**
+ * Type of the Injectable decorator / constructor function.
+ *
+ * \@stable
+ * @record
+ */
+
+var EMPTY_ARRAY = [];
+/**
+ * @param {?} type
+ * @param {?=} provider
+ * @return {?}
+ */
+function convertInjectableProviderToFactory(type, provider) {
+    if (!provider) {
+        var /** @type {?} */ reflectionCapabilities = new ReflectionCapabilities();
+        var /** @type {?} */ deps_1 = reflectionCapabilities.parameters(type);
+        // TODO - convert to flags.
+        return function () { return new (type.bind.apply(type, [void 0].concat(injectArgs(/** @type {?} */ (deps_1)))))(); };
+    }
+    if (USE_VALUE$1$1 in provider) {
+        var /** @type {?} */ valueProvider_1 = (/** @type {?} */ (provider));
+        return function () { return valueProvider_1.useValue; };
+    }
+    else if ((/** @type {?} */ (provider)).useExisting) {
+        var /** @type {?} */ existingProvider_1 = (/** @type {?} */ (provider));
+        return function () { return inject(existingProvider_1.useExisting); };
+    }
+    else if ((/** @type {?} */ (provider)).useFactory) {
+        var /** @type {?} */ factoryProvider_1 = (/** @type {?} */ (provider));
+        return function () { return factoryProvider_1.useFactory.apply(factoryProvider_1, injectArgs(factoryProvider_1.deps || EMPTY_ARRAY)); };
+    }
+    else if ((/** @type {?} */ (provider)).useClass) {
+        var /** @type {?} */ classProvider_1 = (/** @type {?} */ (provider));
+        var /** @type {?} */ deps_2 = (/** @type {?} */ (provider)).deps;
+        if (!deps_2) {
+            var /** @type {?} */ reflectionCapabilities = new ReflectionCapabilities();
+            deps_2 = reflectionCapabilities.parameters(type);
+        }
+        return function () {
+            return new ((_a = classProvider_1.useClass).bind.apply(_a, [void 0].concat(injectArgs(deps_2))))();
+            var _a;
+        };
+    }
+    else {
+        var /** @type {?} */ deps_3 = (/** @type {?} */ (provider)).deps;
+        if (!deps_3) {
+            var /** @type {?} */ reflectionCapabilities = new ReflectionCapabilities();
+            deps_3 = reflectionCapabilities.parameters(type);
+        }
+        return function () { return new (type.bind.apply(type, [void 0].concat(injectArgs(/** @type {?} */ ((deps_3))))))(); };
+    }
+}
+/**
+ * Define injectable
+ *
+ * \@experimental
+ * @param {?} opts
+ * @return {?}
+ */
+function defineInjectable(opts) {
+    return opts;
+}
+/**
+ * Injectable decorator and metadata.
+ *
+ * \@stable
+ * \@Annotation
+ */
+var Injectable$1 = makeDecorator('Injectable', undefined, undefined, undefined, function (injectableType, options) {
+    if (options && options.scope) {
+        (/** @type {?} */ (injectableType)).ngInjectableDef = defineInjectable({
+            scope: options.scope,
+            factory: convertInjectableProviderToFactory(injectableType, options)
+        });
+    }
+});
+/**
+ * Type representing injectable service.
+ *
+ * \@experimental
+ * @record
+ */
+
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+/**
+ * Creates a token that can be used in a DI Provider.
+ *
+ * Use an `InjectionToken` whenever the type you are injecting is not reified (does not have a
+ * runtime representation) such as when injecting an interface, callable type, array or
+ * parametrized type.
+ *
+ * `InjectionToken` is parameterized on `T` which is the type of object which will be returned by
+ * the `Injector`. This provides additional level of type safety.
+ *
+ * ```
+ * interface MyInterface {...}
+ * var myInterface = injector.get(new InjectionToken<MyInterface>('SomeToken'));
+ * // myInterface is inferred to be MyInterface.
+ * ```
+ *
+ * ### Example
+ *
+ * {\@example core/di/ts/injector_spec.ts region='InjectionToken'}
+ *
+ * \@stable
+ */
+var InjectionToken = /** @class */ (function () {
+    function InjectionToken(_desc, options) {
+        this._desc = _desc;
+        /**
+         * \@internal
+         */
+        this.ngMetadataName = 'InjectionToken';
+        if (options !== undefined) {
+            this.ngInjectableDef = defineInjectable({
+                scope: options.scope,
+                factory: convertInjectableProviderToFactory(/** @type {?} */ (this), options),
+            });
+        }
+        else {
+            this.ngInjectableDef = undefined;
+        }
+    }
+    /**
+     * @return {?}
+     */
+    InjectionToken.prototype.toString = /**
+     * @return {?}
+     */
+    function () { return "InjectionToken " + this._desc; };
+    return InjectionToken;
+}());
+
 /**
  * @fileoverview added by tsickle
  * @suppress {checkTypes} checked by tsc
@@ -43794,682 +45430,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('6.0.0-beta.3-62e7b9d');
-
-/**
- * @fileoverview added by tsickle
- * @suppress {checkTypes} checked by tsc
- */
-/**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
- */
-/**
- * Type of the Inject decorator / constructor function.
- *
- * \@stable
- * @record
- */
-
-/**
- * Inject decorator and metadata.
- *
- * \@stable
- * \@Annotation
- */
-var Inject$1 = makeParamDecorator('Inject', function (token) { return ({ token: token }); });
-/**
- * Type of the Optional decorator / constructor function.
- *
- * \@stable
- * @record
- */
-
-/**
- * Optional decorator and metadata.
- *
- * \@stable
- * \@Annotation
- */
-var Optional = makeParamDecorator('Optional');
-/**
- * Type of the Injectable decorator / constructor function.
- *
- * \@stable
- * @record
- */
-
-/**
- * Injectable decorator and metadata.
- *
- * \@stable
- * \@Annotation
- */
-var Injectable = makeDecorator('Injectable');
-/**
- * Type of the Self decorator / constructor function.
- *
- * \@stable
- * @record
- */
-
-/**
- * Self decorator and metadata.
- *
- * \@stable
- * \@Annotation
- */
-var Self = makeParamDecorator('Self');
-/**
- * Type of the SkipSelf decorator / constructor function.
- *
- * \@stable
- * @record
- */
-
-/**
- * SkipSelf decorator and metadata.
- *
- * \@stable
- * \@Annotation
- */
-var SkipSelf = makeParamDecorator('SkipSelf');
-/**
- * Type of the Host decorator / constructor function.
- *
- * \@stable
- * @record
- */
-
-/**
- * Host decorator and metadata.
- *
- * \@stable
- * \@Annotation
- */
-var Host = makeParamDecorator('Host');
-
-/**
- * @fileoverview added by tsickle
- * @suppress {checkTypes} checked by tsc
- */
-/**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
- */
-var __window = typeof window !== 'undefined' && window;
-var __self = typeof self !== 'undefined' && typeof WorkerGlobalScope !== 'undefined' &&
-    self instanceof WorkerGlobalScope && self;
-var __global = typeof global !== 'undefined' && global;
-var _global = __window || __global || __self;
-var promise = Promise.resolve(0);
-var _symbolIterator = null;
-/**
- * @return {?}
- */
-function getSymbolIterator() {
-    if (!_symbolIterator) {
-        var /** @type {?} */ Symbol_1 = _global['Symbol'];
-        if (Symbol_1 && Symbol_1.iterator) {
-            _symbolIterator = Symbol_1.iterator;
-        }
-        else {
-            // es6-shim specific logic
-            var /** @type {?} */ keys = Object.getOwnPropertyNames(Map.prototype);
-            for (var /** @type {?} */ i = 0; i < keys.length; ++i) {
-                var /** @type {?} */ key = keys[i];
-                if (key !== 'entries' && key !== 'size' &&
-                    (/** @type {?} */ (Map)).prototype[key] === Map.prototype['entries']) {
-                    _symbolIterator = key;
-                }
-            }
-        }
-    }
-    return _symbolIterator;
-}
-/**
- * @param {?} fn
- * @return {?}
- */
-function scheduleMicroTask(fn) {
-    if (typeof Zone === 'undefined') {
-        // use promise to schedule microTask instead of use Zone
-        promise.then(function () { fn && fn.apply(null, null); });
-    }
-    else {
-        Zone.current.scheduleMicroTask('scheduleMicrotask', fn);
-    }
-}
-/**
- * @param {?} a
- * @param {?} b
- * @return {?}
- */
-function looseIdentical(a, b) {
-    return a === b || typeof a === 'number' && typeof b === 'number' && isNaN(a) && isNaN(b);
-}
-/**
- * @param {?} token
- * @return {?}
- */
-function stringify$1(token) {
-    if (typeof token === 'string') {
-        return token;
-    }
-    if (token instanceof Array) {
-        return '[' + token.map(stringify$1).join(', ') + ']';
-    }
-    if (token == null) {
-        return '' + token;
-    }
-    if (token.overriddenName) {
-        return "" + token.overriddenName;
-    }
-    if (token.name) {
-        return "" + token.name;
-    }
-    var /** @type {?} */ res = token.toString();
-    if (res == null) {
-        return '' + res;
-    }
-    var /** @type {?} */ newLineIndex = res.indexOf('\n');
-    return newLineIndex === -1 ? res : res.substring(0, newLineIndex);
-}
-
-/**
- * @fileoverview added by tsickle
- * @suppress {checkTypes} checked by tsc
- */
-/**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
- */
-/**
- * An interface that a function passed into {\@link forwardRef} has to implement.
- *
- * ### Example
- *
- * {\@example core/di/ts/forward_ref/forward_ref_spec.ts region='forward_ref_fn'}
- * \@experimental
- * @record
- */
-
-/**
- * Allows to refer to references which are not yet defined.
- *
- * For instance, `forwardRef` is used when the `token` which we need to refer to for the purposes of
- * DI is declared,
- * but not yet defined. It is also used when the `token` which we use when creating a query is not
- * yet defined.
- *
- * ### Example
- * {\@example core/di/ts/forward_ref/forward_ref_spec.ts region='forward_ref'}
- * \@experimental
- * @param {?} forwardRefFn
- * @return {?}
- */
-function forwardRef(forwardRefFn) {
-    (/** @type {?} */ (forwardRefFn)).__forward_ref__ = forwardRef;
-    (/** @type {?} */ (forwardRefFn)).toString = function () { return stringify$1(this()); };
-    return (/** @type {?} */ (/** @type {?} */ (forwardRefFn)));
-}
-/**
- * Lazily retrieves the reference value from a forwardRef.
- *
- * Acts as the identity function when given a non-forward-ref value.
- *
- * ### Example ([live demo](http://plnkr.co/edit/GU72mJrk1fiodChcmiDR?p=preview))
- *
- * {\@example core/di/ts/forward_ref/forward_ref_spec.ts region='resolve_forward_ref'}
- *
- * See: {\@link forwardRef}
- * \@experimental
- * @param {?} type
- * @return {?}
- */
-function resolveForwardRef$1(type) {
-    if (typeof type === 'function' && type.hasOwnProperty('__forward_ref__') &&
-        type.__forward_ref__ === forwardRef) {
-        return (/** @type {?} */ (type))();
-    }
-    else {
-        return type;
-    }
-}
-
-/**
- * @fileoverview added by tsickle
- * @suppress {checkTypes} checked by tsc
- */
-/**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
- */
-var SOURCE = '__source';
-var _THROW_IF_NOT_FOUND = new Object();
-var THROW_IF_NOT_FOUND = _THROW_IF_NOT_FOUND;
-var _NullInjector = /** @class */ (function () {
-    function _NullInjector() {
-    }
-    /**
-     * @param {?} token
-     * @param {?=} notFoundValue
-     * @return {?}
-     */
-    _NullInjector.prototype.get = /**
-     * @param {?} token
-     * @param {?=} notFoundValue
-     * @return {?}
-     */
-    function (token, notFoundValue) {
-        if (notFoundValue === void 0) { notFoundValue = _THROW_IF_NOT_FOUND; }
-        if (notFoundValue === _THROW_IF_NOT_FOUND) {
-            throw new Error("NullInjectorError: No provider for " + stringify$1(token) + "!");
-        }
-        return notFoundValue;
-    };
-    return _NullInjector;
-}());
-/**
- * \@whatItDoes Injector interface
- * \@howToUse
- * ```
- * const injector: Injector = ...;
- * injector.get(...);
- * ```
- *
- * \@description
- * For more details, see the {\@linkDocs guide/dependency-injection "Dependency Injection Guide"}.
- *
- * ### Example
- *
- * {\@example core/di/ts/injector_spec.ts region='Injector'}
- *
- * `Injector` returns itself when given `Injector` as a token:
- * {\@example core/di/ts/injector_spec.ts region='injectInjector'}
- *
- * \@stable
- * @abstract
- */
-var Injector = /** @class */ (function () {
-    function Injector() {
-    }
-    /**
-     * Create a new Injector which is configure using `StaticProvider`s.
-     *
-     * ### Example
-     *
-     * {@example core/di/ts/provider_spec.ts region='ConstructorProvider'}
-     */
-    /**
-     * Create a new Injector which is configure using `StaticProvider`s.
-     *
-     * ### Example
-     *
-     * {\@example core/di/ts/provider_spec.ts region='ConstructorProvider'}
-     * @param {?} options
-     * @param {?=} parent
-     * @return {?}
-     */
-    Injector.create = /**
-     * Create a new Injector which is configure using `StaticProvider`s.
-     *
-     * ### Example
-     *
-     * {\@example core/di/ts/provider_spec.ts region='ConstructorProvider'}
-     * @param {?} options
-     * @param {?=} parent
-     * @return {?}
-     */
-    function (options, parent) {
-        if (Array.isArray(options)) {
-            return new StaticInjector(options, parent);
-        }
-        else {
-            return new StaticInjector(options.providers, options.parent, options.name || null);
-        }
-    };
-    Injector.THROW_IF_NOT_FOUND = _THROW_IF_NOT_FOUND;
-    Injector.NULL = new _NullInjector();
-    return Injector;
-}());
-var IDENT = function (value) {
-    return value;
-};
-var EMPTY = /** @type {?} */ ([]);
-var CIRCULAR = IDENT;
-var MULTI_PROVIDER_FN = function () {
-    return Array.prototype.slice.call(arguments);
-};
-var GET_PROPERTY_NAME = /** @type {?} */ ({});
-var ɵ2 = GET_PROPERTY_NAME;
-var USE_VALUE$1 = getClosureSafeProperty({ provide: String, useValue: ɵ2 });
-var NG_TOKEN_PATH = 'ngTokenPath';
-var NG_TEMP_TOKEN_PATH = 'ngTempTokenPath';
-var NULL_INJECTOR = Injector.NULL;
-var NEW_LINE = /\n/gm;
-var NO_NEW_LINE = 'ɵ';
-var StaticInjector = /** @class */ (function () {
-    function StaticInjector(providers, parent, source) {
-        if (parent === void 0) { parent = NULL_INJECTOR; }
-        if (source === void 0) { source = null; }
-        this.parent = parent;
-        this.source = source;
-        var /** @type {?} */ records = this._records = new Map();
-        records.set(Injector, /** @type {?} */ ({ token: Injector, fn: IDENT, deps: EMPTY, value: this, useNew: false }));
-        recursivelyProcessProviders(records, providers);
-    }
-    /**
-     * @param {?} token
-     * @param {?=} notFoundValue
-     * @return {?}
-     */
-    StaticInjector.prototype.get = /**
-     * @param {?} token
-     * @param {?=} notFoundValue
-     * @return {?}
-     */
-    function (token, notFoundValue) {
-        var /** @type {?} */ record = this._records.get(token);
-        try {
-            return tryResolveToken(token, record, this._records, this.parent, notFoundValue);
-        }
-        catch (/** @type {?} */ e) {
-            var /** @type {?} */ tokenPath = e[NG_TEMP_TOKEN_PATH];
-            if (token[SOURCE]) {
-                tokenPath.unshift(token[SOURCE]);
-            }
-            e.message = formatError('\n' + e.message, tokenPath, this.source);
-            e[NG_TOKEN_PATH] = tokenPath;
-            e[NG_TEMP_TOKEN_PATH] = null;
-            throw e;
-        }
-    };
-    /**
-     * @return {?}
-     */
-    StaticInjector.prototype.toString = /**
-     * @return {?}
-     */
-    function () {
-        var /** @type {?} */ tokens = /** @type {?} */ ([]), /** @type {?} */ records = this._records;
-        records.forEach(function (v, token) { return tokens.push(stringify$1(token)); });
-        return "StaticInjector[" + tokens.join(', ') + "]";
-    };
-    return StaticInjector;
-}());
-/**
- * @param {?} provider
- * @return {?}
- */
-function resolveProvider(provider) {
-    var /** @type {?} */ deps = computeDeps(provider);
-    var /** @type {?} */ fn = IDENT;
-    var /** @type {?} */ value = EMPTY;
-    var /** @type {?} */ useNew = false;
-    var /** @type {?} */ provide = resolveForwardRef$1(provider.provide);
-    if (USE_VALUE$1 in provider) {
-        // We need to use USE_VALUE in provider since provider.useValue could be defined as undefined.
-        value = (/** @type {?} */ (provider)).useValue;
-    }
-    else if ((/** @type {?} */ (provider)).useFactory) {
-        fn = (/** @type {?} */ (provider)).useFactory;
-    }
-    else if ((/** @type {?} */ (provider)).useExisting) {
-        // Just use IDENT
-    }
-    else if ((/** @type {?} */ (provider)).useClass) {
-        useNew = true;
-        fn = resolveForwardRef$1((/** @type {?} */ (provider)).useClass);
-    }
-    else if (typeof provide == 'function') {
-        useNew = true;
-        fn = provide;
-    }
-    else {
-        throw staticError('StaticProvider does not have [useValue|useFactory|useExisting|useClass] or [provide] is not newable', provider);
-    }
-    return { deps: deps, fn: fn, useNew: useNew, value: value };
-}
-/**
- * @param {?} token
- * @return {?}
- */
-function multiProviderMixError(token) {
-    return staticError('Cannot mix multi providers and regular providers', token);
-}
-/**
- * @param {?} records
- * @param {?} provider
- * @return {?}
- */
-function recursivelyProcessProviders(records, provider) {
-    if (provider) {
-        provider = resolveForwardRef$1(provider);
-        if (provider instanceof Array) {
-            // if we have an array recurse into the array
-            for (var /** @type {?} */ i = 0; i < provider.length; i++) {
-                recursivelyProcessProviders(records, provider[i]);
-            }
-        }
-        else if (typeof provider === 'function') {
-            // Functions were supported in ReflectiveInjector, but are not here. For safety give useful
-            // error messages
-            throw staticError('Function/Class not supported', provider);
-        }
-        else if (provider && typeof provider === 'object' && provider.provide) {
-            // At this point we have what looks like a provider: {provide: ?, ....}
-            var /** @type {?} */ token = resolveForwardRef$1(provider.provide);
-            var /** @type {?} */ resolvedProvider = resolveProvider(provider);
-            if (provider.multi === true) {
-                // This is a multi provider.
-                var /** @type {?} */ multiProvider = records.get(token);
-                if (multiProvider) {
-                    if (multiProvider.fn !== MULTI_PROVIDER_FN) {
-                        throw multiProviderMixError(token);
-                    }
-                }
-                else {
-                    // Create a placeholder factory which will look up the constituents of the multi provider.
-                    records.set(token, multiProvider = /** @type {?} */ ({
-                        token: provider.provide,
-                        deps: [],
-                        useNew: false,
-                        fn: MULTI_PROVIDER_FN,
-                        value: EMPTY
-                    }));
-                }
-                // Treat the provider as the token.
-                token = provider;
-                multiProvider.deps.push({ token: token, options: 6 /* Default */ });
-            }
-            var /** @type {?} */ record = records.get(token);
-            if (record && record.fn == MULTI_PROVIDER_FN) {
-                throw multiProviderMixError(token);
-            }
-            records.set(token, resolvedProvider);
-        }
-        else {
-            throw staticError('Unexpected provider', provider);
-        }
-    }
-}
-/**
- * @param {?} token
- * @param {?} record
- * @param {?} records
- * @param {?} parent
- * @param {?} notFoundValue
- * @return {?}
- */
-function tryResolveToken(token, record, records, parent, notFoundValue) {
-    try {
-        return resolveToken(token, record, records, parent, notFoundValue);
-    }
-    catch (/** @type {?} */ e) {
-        // ensure that 'e' is of type Error.
-        if (!(e instanceof Error)) {
-            e = new Error(e);
-        }
-        var /** @type {?} */ path$$1 = e[NG_TEMP_TOKEN_PATH] = e[NG_TEMP_TOKEN_PATH] || [];
-        path$$1.unshift(token);
-        if (record && record.value == CIRCULAR) {
-            // Reset the Circular flag.
-            record.value = EMPTY;
-        }
-        throw e;
-    }
-}
-/**
- * @param {?} token
- * @param {?} record
- * @param {?} records
- * @param {?} parent
- * @param {?} notFoundValue
- * @return {?}
- */
-function resolveToken(token, record, records, parent, notFoundValue) {
-    var /** @type {?} */ value;
-    if (record) {
-        // If we don't have a record, this implies that we don't own the provider hence don't know how
-        // to resolve it.
-        value = record.value;
-        if (value == CIRCULAR) {
-            throw Error(NO_NEW_LINE + 'Circular dependency');
-        }
-        else if (value === EMPTY) {
-            record.value = CIRCULAR;
-            var /** @type {?} */ obj = undefined;
-            var /** @type {?} */ useNew = record.useNew;
-            var /** @type {?} */ fn = record.fn;
-            var /** @type {?} */ depRecords = record.deps;
-            var /** @type {?} */ deps = EMPTY;
-            if (depRecords.length) {
-                deps = [];
-                for (var /** @type {?} */ i = 0; i < depRecords.length; i++) {
-                    var /** @type {?} */ depRecord = depRecords[i];
-                    var /** @type {?} */ options = depRecord.options;
-                    var /** @type {?} */ childRecord = options & 2 /* CheckSelf */ ? records.get(depRecord.token) : undefined;
-                    deps.push(tryResolveToken(
-                    // Current Token to resolve
-                    depRecord.token, childRecord, records, 
-                    // If we don't know how to resolve dependency and we should not check parent for it,
-                    // than pass in Null injector.
-                    !childRecord && !(options & 4 /* CheckParent */) ? NULL_INJECTOR : parent, options & 1 /* Optional */ ? null : Injector.THROW_IF_NOT_FOUND));
-                }
-            }
-            record.value = value = useNew ? new ((_a = (/** @type {?} */ (fn))).bind.apply(_a, [void 0].concat(deps)))() : fn.apply(obj, deps);
-        }
-    }
-    else {
-        value = parent.get(token, notFoundValue);
-    }
-    return value;
-    var _a;
-}
-/**
- * @param {?} provider
- * @return {?}
- */
-function computeDeps(provider) {
-    var /** @type {?} */ deps = EMPTY;
-    var /** @type {?} */ providerDeps = (/** @type {?} */ (provider)).deps;
-    if (providerDeps && providerDeps.length) {
-        deps = [];
-        for (var /** @type {?} */ i = 0; i < providerDeps.length; i++) {
-            var /** @type {?} */ options = 6;
-            var /** @type {?} */ token = resolveForwardRef$1(providerDeps[i]);
-            if (token instanceof Array) {
-                for (var /** @type {?} */ j = 0, /** @type {?} */ annotations = token; j < annotations.length; j++) {
-                    var /** @type {?} */ annotation = annotations[j];
-                    if (annotation instanceof Optional || annotation == Optional) {
-                        options = options | 1 /* Optional */;
-                    }
-                    else if (annotation instanceof SkipSelf || annotation == SkipSelf) {
-                        options = options & ~2 /* CheckSelf */;
-                    }
-                    else if (annotation instanceof Self || annotation == Self) {
-                        options = options & ~4 /* CheckParent */;
-                    }
-                    else if (annotation instanceof Inject$1) {
-                        token = (/** @type {?} */ (annotation)).token;
-                    }
-                    else {
-                        token = resolveForwardRef$1(annotation);
-                    }
-                }
-            }
-            deps.push({ token: token, options: options });
-        }
-    }
-    else if ((/** @type {?} */ (provider)).useExisting) {
-        var /** @type {?} */ token = resolveForwardRef$1((/** @type {?} */ (provider)).useExisting);
-        deps = [{ token: token, options: 6 /* Default */ }];
-    }
-    else if (!providerDeps && !(USE_VALUE$1 in provider)) {
-        // useValue & useExisting are the only ones which are exempt from deps all others need it.
-        throw staticError('\'deps\' required', provider);
-    }
-    return deps;
-}
-/**
- * @param {?} text
- * @param {?} obj
- * @param {?=} source
- * @return {?}
- */
-function formatError(text, obj, source) {
-    if (source === void 0) { source = null; }
-    text = text && text.charAt(0) === '\n' && text.charAt(1) == NO_NEW_LINE ? text.substr(2) : text;
-    var /** @type {?} */ context = stringify$1(obj);
-    if (obj instanceof Array) {
-        context = obj.map(stringify$1).join(' -> ');
-    }
-    else if (typeof obj === 'object') {
-        var /** @type {?} */ parts = /** @type {?} */ ([]);
-        for (var /** @type {?} */ key in obj) {
-            if (obj.hasOwnProperty(key)) {
-                var /** @type {?} */ value = obj[key];
-                parts.push(key + ':' + (typeof value === 'string' ? JSON.stringify(value) : stringify$1(value)));
-            }
-        }
-        context = "{" + parts.join(', ') + "}";
-    }
-    return "StaticInjectorError" + (source ? '(' + source + ')' : '') + "[" + context + "]: " + text.replace(NEW_LINE, '\n  ');
-}
-/**
- * @param {?} text
- * @param {?} obj
- * @return {?}
- */
-function staticError(text, obj) {
-    return new Error(formatError(text, obj));
-}
-/**
- * @template T
- * @param {?} objWithPropertyToExtract
- * @return {?}
- */
-function getClosureSafeProperty(objWithPropertyToExtract) {
-    for (var /** @type {?} */ key in objWithPropertyToExtract) {
-        if (objWithPropertyToExtract[key] === GET_PROPERTY_NAME) {
-            return key;
-        }
-    }
-    throw Error('!prop');
-}
+var VERSION$2 = new Version$1('6.0.0-beta.3-235a235');
 
 /**
  * @fileoverview added by tsickle
@@ -44998,442 +45959,6 @@ var KeyRegistry = /** @class */ (function () {
     return KeyRegistry;
 }());
 var _globalKeyRegistry = new KeyRegistry();
-
-/**
- * @fileoverview added by tsickle
- * @suppress {checkTypes} checked by tsc
- */
-/**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
- */
-/**
- * \@whatItDoes Represents a type that a Component or other object is instances of.
- *
- * \@description
- *
- * An example of a `Type` is `MyCustomComponent` class, which in JavaScript is be represented by
- * the `MyCustomComponent` constructor function.
- *
- * \@stable
- */
-var Type$1$1 = Function;
-/**
- * @param {?} v
- * @return {?}
- */
-function isType(v) {
-    return typeof v === 'function';
-}
-
-/**
- * @fileoverview added by tsickle
- * @suppress {checkTypes} checked by tsc
- */
-/**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
- */
-/**
- * Attention: This regex has to hold even if the code is minified!
- */
-var DELEGATE_CTOR = /^function\s+\S+\(\)\s*{[\s\S]+\.apply\(this,\s*arguments\)/;
-var ReflectionCapabilities = /** @class */ (function () {
-    function ReflectionCapabilities(reflect) {
-        this._reflect = reflect || _global['Reflect'];
-    }
-    /**
-     * @return {?}
-     */
-    ReflectionCapabilities.prototype.isReflectionEnabled = /**
-     * @return {?}
-     */
-    function () { return true; };
-    /**
-     * @template T
-     * @param {?} t
-     * @return {?}
-     */
-    ReflectionCapabilities.prototype.factory = /**
-     * @template T
-     * @param {?} t
-     * @return {?}
-     */
-    function (t) { return function () {
-        var args = [];
-        for (var _i = 0; _i < arguments.length; _i++) {
-            args[_i] = arguments[_i];
-        }
-        return new (t.bind.apply(t, [void 0].concat(args)))();
-    }; };
-    /** @internal */
-    /**
-     * \@internal
-     * @param {?} paramTypes
-     * @param {?} paramAnnotations
-     * @return {?}
-     */
-    ReflectionCapabilities.prototype._zipTypesAndAnnotations = /**
-     * \@internal
-     * @param {?} paramTypes
-     * @param {?} paramAnnotations
-     * @return {?}
-     */
-    function (paramTypes, paramAnnotations) {
-        var /** @type {?} */ result;
-        if (typeof paramTypes === 'undefined') {
-            result = new Array(paramAnnotations.length);
-        }
-        else {
-            result = new Array(paramTypes.length);
-        }
-        for (var /** @type {?} */ i = 0; i < result.length; i++) {
-            // TS outputs Object for parameters without types, while Traceur omits
-            // the annotations. For now we preserve the Traceur behavior to aid
-            // migration, but this can be revisited.
-            if (typeof paramTypes === 'undefined') {
-                result[i] = [];
-            }
-            else if (paramTypes[i] != Object) {
-                result[i] = [paramTypes[i]];
-            }
-            else {
-                result[i] = [];
-            }
-            if (paramAnnotations && paramAnnotations[i] != null) {
-                result[i] = result[i].concat(paramAnnotations[i]);
-            }
-        }
-        return result;
-    };
-    /**
-     * @param {?} type
-     * @param {?} parentCtor
-     * @return {?}
-     */
-    ReflectionCapabilities.prototype._ownParameters = /**
-     * @param {?} type
-     * @param {?} parentCtor
-     * @return {?}
-     */
-    function (type, parentCtor) {
-        // If we have no decorators, we only have function.length as metadata.
-        // In that case, to detect whether a child class declared an own constructor or not,
-        // we need to look inside of that constructor to check whether it is
-        // just calling the parent.
-        // This also helps to work around for https://github.com/Microsoft/TypeScript/issues/12439
-        // that sets 'design:paramtypes' to []
-        // if a class inherits from another class but has no ctor declared itself.
-        if (DELEGATE_CTOR.exec(type.toString())) {
-            return null;
-        }
-        // Prefer the direct API.
-        if ((/** @type {?} */ (type)).parameters && (/** @type {?} */ (type)).parameters !== parentCtor.parameters) {
-            return (/** @type {?} */ (type)).parameters;
-        }
-        // API of tsickle for lowering decorators to properties on the class.
-        var /** @type {?} */ tsickleCtorParams = (/** @type {?} */ (type)).ctorParameters;
-        if (tsickleCtorParams && tsickleCtorParams !== parentCtor.ctorParameters) {
-            // Newer tsickle uses a function closure
-            // Retain the non-function case for compatibility with older tsickle
-            var /** @type {?} */ ctorParameters = typeof tsickleCtorParams === 'function' ? tsickleCtorParams() : tsickleCtorParams;
-            var /** @type {?} */ paramTypes_1 = ctorParameters.map(function (ctorParam) { return ctorParam && ctorParam.type; });
-            var /** @type {?} */ paramAnnotations_1 = ctorParameters.map(function (ctorParam) {
-                return ctorParam && convertTsickleDecoratorIntoMetadata(ctorParam.decorators);
-            });
-            return this._zipTypesAndAnnotations(paramTypes_1, paramAnnotations_1);
-        }
-        // API for metadata created by invoking the decorators.
-        var /** @type {?} */ paramAnnotations = type.hasOwnProperty(PARAMETERS) && (/** @type {?} */ (type))[PARAMETERS];
-        var /** @type {?} */ paramTypes = this._reflect && this._reflect.getOwnMetadata &&
-            this._reflect.getOwnMetadata('design:paramtypes', type);
-        if (paramTypes || paramAnnotations) {
-            return this._zipTypesAndAnnotations(paramTypes, paramAnnotations);
-        }
-        // If a class has no decorators, at least create metadata
-        // based on function.length.
-        // Note: We know that this is a real constructor as we checked
-        // the content of the constructor above.
-        return new Array((/** @type {?} */ (type.length))).fill(undefined);
-    };
-    /**
-     * @param {?} type
-     * @return {?}
-     */
-    ReflectionCapabilities.prototype.parameters = /**
-     * @param {?} type
-     * @return {?}
-     */
-    function (type) {
-        // Note: only report metadata if we have at least one class decorator
-        // to stay in sync with the static reflector.
-        if (!isType(type)) {
-            return [];
-        }
-        var /** @type {?} */ parentCtor = getParentCtor(type);
-        var /** @type {?} */ parameters = this._ownParameters(type, parentCtor);
-        if (!parameters && parentCtor !== Object) {
-            parameters = this.parameters(parentCtor);
-        }
-        return parameters || [];
-    };
-    /**
-     * @param {?} typeOrFunc
-     * @param {?} parentCtor
-     * @return {?}
-     */
-    ReflectionCapabilities.prototype._ownAnnotations = /**
-     * @param {?} typeOrFunc
-     * @param {?} parentCtor
-     * @return {?}
-     */
-    function (typeOrFunc, parentCtor) {
-        // Prefer the direct API.
-        if ((/** @type {?} */ (typeOrFunc)).annotations && (/** @type {?} */ (typeOrFunc)).annotations !== parentCtor.annotations) {
-            var /** @type {?} */ annotations = (/** @type {?} */ (typeOrFunc)).annotations;
-            if (typeof annotations === 'function' && annotations.annotations) {
-                annotations = annotations.annotations;
-            }
-            return annotations;
-        }
-        // API of tsickle for lowering decorators to properties on the class.
-        if ((/** @type {?} */ (typeOrFunc)).decorators && (/** @type {?} */ (typeOrFunc)).decorators !== parentCtor.decorators) {
-            return convertTsickleDecoratorIntoMetadata((/** @type {?} */ (typeOrFunc)).decorators);
-        }
-        // API for metadata created by invoking the decorators.
-        if (typeOrFunc.hasOwnProperty(ANNOTATIONS)) {
-            return (/** @type {?} */ (typeOrFunc))[ANNOTATIONS];
-        }
-        return null;
-    };
-    /**
-     * @param {?} typeOrFunc
-     * @return {?}
-     */
-    ReflectionCapabilities.prototype.annotations = /**
-     * @param {?} typeOrFunc
-     * @return {?}
-     */
-    function (typeOrFunc) {
-        if (!isType(typeOrFunc)) {
-            return [];
-        }
-        var /** @type {?} */ parentCtor = getParentCtor(typeOrFunc);
-        var /** @type {?} */ ownAnnotations = this._ownAnnotations(typeOrFunc, parentCtor) || [];
-        var /** @type {?} */ parentAnnotations = parentCtor !== Object ? this.annotations(parentCtor) : [];
-        return parentAnnotations.concat(ownAnnotations);
-    };
-    /**
-     * @param {?} typeOrFunc
-     * @param {?} parentCtor
-     * @return {?}
-     */
-    ReflectionCapabilities.prototype._ownPropMetadata = /**
-     * @param {?} typeOrFunc
-     * @param {?} parentCtor
-     * @return {?}
-     */
-    function (typeOrFunc, parentCtor) {
-        // Prefer the direct API.
-        if ((/** @type {?} */ (typeOrFunc)).propMetadata &&
-            (/** @type {?} */ (typeOrFunc)).propMetadata !== parentCtor.propMetadata) {
-            var /** @type {?} */ propMetadata = (/** @type {?} */ (typeOrFunc)).propMetadata;
-            if (typeof propMetadata === 'function' && propMetadata.propMetadata) {
-                propMetadata = propMetadata.propMetadata;
-            }
-            return propMetadata;
-        }
-        // API of tsickle for lowering decorators to properties on the class.
-        if ((/** @type {?} */ (typeOrFunc)).propDecorators &&
-            (/** @type {?} */ (typeOrFunc)).propDecorators !== parentCtor.propDecorators) {
-            var /** @type {?} */ propDecorators_1 = (/** @type {?} */ (typeOrFunc)).propDecorators;
-            var /** @type {?} */ propMetadata_1 = /** @type {?} */ ({});
-            Object.keys(propDecorators_1).forEach(function (prop) {
-                propMetadata_1[prop] = convertTsickleDecoratorIntoMetadata(propDecorators_1[prop]);
-            });
-            return propMetadata_1;
-        }
-        // API for metadata created by invoking the decorators.
-        if (typeOrFunc.hasOwnProperty(PROP_METADATA)) {
-            return (/** @type {?} */ (typeOrFunc))[PROP_METADATA];
-        }
-        return null;
-    };
-    /**
-     * @param {?} typeOrFunc
-     * @return {?}
-     */
-    ReflectionCapabilities.prototype.propMetadata = /**
-     * @param {?} typeOrFunc
-     * @return {?}
-     */
-    function (typeOrFunc) {
-        if (!isType(typeOrFunc)) {
-            return {};
-        }
-        var /** @type {?} */ parentCtor = getParentCtor(typeOrFunc);
-        var /** @type {?} */ propMetadata = {};
-        if (parentCtor !== Object) {
-            var /** @type {?} */ parentPropMetadata_1 = this.propMetadata(parentCtor);
-            Object.keys(parentPropMetadata_1).forEach(function (propName) {
-                propMetadata[propName] = parentPropMetadata_1[propName];
-            });
-        }
-        var /** @type {?} */ ownPropMetadata = this._ownPropMetadata(typeOrFunc, parentCtor);
-        if (ownPropMetadata) {
-            Object.keys(ownPropMetadata).forEach(function (propName) {
-                var /** @type {?} */ decorators = [];
-                if (propMetadata.hasOwnProperty(propName)) {
-                    decorators.push.apply(decorators, propMetadata[propName]);
-                }
-                decorators.push.apply(decorators, ownPropMetadata[propName]);
-                propMetadata[propName] = decorators;
-            });
-        }
-        return propMetadata;
-    };
-    /**
-     * @param {?} type
-     * @param {?} lcProperty
-     * @return {?}
-     */
-    ReflectionCapabilities.prototype.hasLifecycleHook = /**
-     * @param {?} type
-     * @param {?} lcProperty
-     * @return {?}
-     */
-    function (type, lcProperty) {
-        return type instanceof Type$1$1 && lcProperty in type.prototype;
-    };
-    /**
-     * @param {?} type
-     * @return {?}
-     */
-    ReflectionCapabilities.prototype.guards = /**
-     * @param {?} type
-     * @return {?}
-     */
-    function (type) { return {}; };
-    /**
-     * @param {?} name
-     * @return {?}
-     */
-    ReflectionCapabilities.prototype.getter = /**
-     * @param {?} name
-     * @return {?}
-     */
-    function (name) { return /** @type {?} */ (new Function('o', 'return o.' + name + ';')); };
-    /**
-     * @param {?} name
-     * @return {?}
-     */
-    ReflectionCapabilities.prototype.setter = /**
-     * @param {?} name
-     * @return {?}
-     */
-    function (name) {
-        return /** @type {?} */ (new Function('o', 'v', 'return o.' + name + ' = v;'));
-    };
-    /**
-     * @param {?} name
-     * @return {?}
-     */
-    ReflectionCapabilities.prototype.method = /**
-     * @param {?} name
-     * @return {?}
-     */
-    function (name) {
-        var /** @type {?} */ functionBody = "if (!o." + name + ") throw new Error('\"" + name + "\" is undefined');\n        return o." + name + ".apply(o, args);";
-        return /** @type {?} */ (new Function('o', 'args', functionBody));
-    };
-    // There is not a concept of import uri in Js, but this is useful in developing Dart applications.
-    /**
-     * @param {?} type
-     * @return {?}
-     */
-    ReflectionCapabilities.prototype.importUri = /**
-     * @param {?} type
-     * @return {?}
-     */
-    function (type) {
-        // StaticSymbol
-        if (typeof type === 'object' && type['filePath']) {
-            return type['filePath'];
-        }
-        // Runtime type
-        return "./" + stringify$1(type);
-    };
-    /**
-     * @param {?} type
-     * @return {?}
-     */
-    ReflectionCapabilities.prototype.resourceUri = /**
-     * @param {?} type
-     * @return {?}
-     */
-    function (type) { return "./" + stringify$1(type); };
-    /**
-     * @param {?} name
-     * @param {?} moduleUrl
-     * @param {?} members
-     * @param {?} runtime
-     * @return {?}
-     */
-    ReflectionCapabilities.prototype.resolveIdentifier = /**
-     * @param {?} name
-     * @param {?} moduleUrl
-     * @param {?} members
-     * @param {?} runtime
-     * @return {?}
-     */
-    function (name, moduleUrl, members, runtime) {
-        return runtime;
-    };
-    /**
-     * @param {?} enumIdentifier
-     * @param {?} name
-     * @return {?}
-     */
-    ReflectionCapabilities.prototype.resolveEnum = /**
-     * @param {?} enumIdentifier
-     * @param {?} name
-     * @return {?}
-     */
-    function (enumIdentifier, name) { return enumIdentifier[name]; };
-    return ReflectionCapabilities;
-}());
-/**
- * @param {?} decoratorInvocations
- * @return {?}
- */
-function convertTsickleDecoratorIntoMetadata(decoratorInvocations) {
-    if (!decoratorInvocations) {
-        return [];
-    }
-    return decoratorInvocations.map(function (decoratorInvocation) {
-        var /** @type {?} */ decoratorType = decoratorInvocation.type;
-        var /** @type {?} */ annotationCls = decoratorType.annotationCls;
-        var /** @type {?} */ annotationArgs = decoratorInvocation.args ? decoratorInvocation.args : [];
-        return new (annotationCls.bind.apply(annotationCls, [void 0].concat(annotationArgs)))();
-    });
-}
-/**
- * @param {?} ctor
- * @return {?}
- */
-function getParentCtor(ctor) {
-    var /** @type {?} */ parentProto = Object.getPrototypeOf(ctor.prototype);
-    var /** @type {?} */ parentCtor = parentProto ? parentProto.constructor : null;
-    // Note: We always use `Object` as the null value
-    // to simplify checking later on.
-    return parentCtor || Object;
-}
 
 /**
  * @fileoverview added by tsickle
@@ -46646,7 +47171,7 @@ var ApplicationInitStatus = /** @class */ (function () {
         this.initialized = true;
     };
     ApplicationInitStatus.decorators = [
-        { type: Injectable },
+        { type: Injectable$1 },
     ];
     /** @nocollapse */
     ApplicationInitStatus.ctorParameters = function () { return [
@@ -46763,7 +47288,7 @@ var Console = /** @class */ (function () {
         console.warn(message);
     };
     Console.decorators = [
-        { type: Injectable },
+        { type: Injectable$1 },
     ];
     /** @nocollapse */
     Console.ctorParameters = function () { return []; };
@@ -46887,7 +47412,7 @@ var Compiler = /** @class */ (function () {
      */
     function (type) { };
     Compiler.decorators = [
-        { type: Injectable },
+        { type: Injectable$1 },
     ];
     /** @nocollapse */
     Compiler.ctorParameters = function () { return []; };
@@ -48016,7 +48541,7 @@ var Testability = /** @class */ (function () {
         return [];
     };
     Testability.decorators = [
-        { type: Injectable },
+        { type: Injectable$1 },
     ];
     /** @nocollapse */
     Testability.ctorParameters = function () { return [
@@ -48147,7 +48672,7 @@ var TestabilityRegistry = /** @class */ (function () {
         return _testabilityGetter.findTestabilityInTree(this, elem, findInAncestors);
     };
     TestabilityRegistry.decorators = [
-        { type: Injectable },
+        { type: Injectable$1 },
     ];
     /** @nocollapse */
     TestabilityRegistry.ctorParameters = function () { return []; };
@@ -48566,7 +49091,7 @@ var PlatformRef = /** @class */ (function () {
         configurable: true
     });
     PlatformRef.decorators = [
-        { type: Injectable },
+        { type: Injectable$1 },
     ];
     /** @nocollapse */
     PlatformRef.ctorParameters = function () { return [
@@ -48939,7 +49464,7 @@ var ApplicationRef = /** @class */ (function () {
      */
     ApplicationRef._tickScope = wtfCreateScope('ApplicationRef#tick()');
     ApplicationRef.decorators = [
-        { type: Injectable },
+        { type: Injectable$1 },
     ];
     /** @nocollapse */
     ApplicationRef.ctorParameters = function () { return [
@@ -52218,6 +52743,10 @@ var Sanitizer = /** @class */ (function () {
  */
 
 /**
+ * @record
+ */
+
+/**
  * View instance data.
  * Attention: Adding fields to this is performance sensitive!
  * @record
@@ -53133,7 +53662,35 @@ function resolveNgModuleDep(data, depDef, notFoundValue) {
         }
         return providerInstance === UNDEFINED_VALUE ? undefined : providerInstance;
     }
+    else if (depDef.token.ngInjectableDef && targetsModule(data, depDef.token.ngInjectableDef)) {
+        var /** @type {?} */ injectableDef_1 = /** @type {?} */ (depDef.token.ngInjectableDef);
+        var /** @type {?} */ key = tokenKey$$1;
+        var /** @type {?} */ index = data._providers.length;
+        data._def.providersByKey[depDef.tokenKey] = {
+            flags: 1024 /* TypeFactoryProvider */ | 4096 /* LazyProvider */,
+            value: injectableDef_1.factory,
+            deps: [], index: index,
+            token: depDef.token,
+        };
+        var /** @type {?} */ former = setCurrentInjector(data);
+        try {
+            data._providers[index] = UNDEFINED_VALUE;
+            return (data._providers[index] =
+                _createProviderInstance$1(data, data._def.providersByKey[depDef.tokenKey]));
+        }
+        finally {
+            setCurrentInjector(former);
+        }
+    }
     return data._parent.get(depDef.token, notFoundValue);
+}
+/**
+ * @param {?} ngModule
+ * @param {?} def
+ * @return {?}
+ */
+function targetsModule(ngModule, def) {
+    return def.scope != null && ngModule._def.modules.indexOf(def.scope) > -1;
 }
 /**
  * @param {?} ngModule
@@ -54326,16 +54883,26 @@ var NgModuleRef_ = /** @class */ (function () {
     /**
      * @param {?} token
      * @param {?=} notFoundValue
+     * @param {?=} injectFlags
      * @return {?}
      */
     NgModuleRef_.prototype.get = /**
      * @param {?} token
      * @param {?=} notFoundValue
+     * @param {?=} injectFlags
      * @return {?}
      */
-    function (token, notFoundValue) {
+    function (token, notFoundValue, injectFlags) {
         if (notFoundValue === void 0) { notFoundValue = Injector.THROW_IF_NOT_FOUND; }
-        return resolveNgModuleDep(this, { token: token, tokenKey: tokenKey(token), flags: 0 /* None */ }, notFoundValue);
+        if (injectFlags === void 0) { injectFlags = 0 /* Default */; }
+        var /** @type {?} */ flags = 0;
+        if (injectFlags & 1 /* SkipSelf */) {
+            flags |= 1 /* SkipSelf */;
+        }
+        else if (injectFlags & 2 /* Self */) {
+            flags |= 4 /* Self */;
+        }
+        return resolveNgModuleDep(this, { token: token, tokenKey: tokenKey(token), flags: flags }, notFoundValue);
     };
     Object.defineProperty(NgModuleRef_.prototype, "instance", {
         get: /**
@@ -54670,48 +55237,52 @@ function resolveDep(view, elDef, allowPrivateServices, depDef, notFoundValue) {
         allowPrivateServices = false;
         elDef = /** @type {?} */ ((elDef.parent));
     }
-    while (view) {
+    var /** @type {?} */ searchView = view;
+    while (searchView) {
         if (elDef) {
             switch (tokenKey$$1) {
                 case RendererV1TokenKey: {
-                    var /** @type {?} */ compView = findCompView(view, elDef, allowPrivateServices);
+                    var /** @type {?} */ compView = findCompView(searchView, elDef, allowPrivateServices);
                     return createRendererV1(compView);
                 }
                 case Renderer2TokenKey: {
-                    var /** @type {?} */ compView = findCompView(view, elDef, allowPrivateServices);
+                    var /** @type {?} */ compView = findCompView(searchView, elDef, allowPrivateServices);
                     return compView.renderer;
                 }
                 case ElementRefTokenKey:
-                    return new ElementRef(asElementData(view, elDef.nodeIndex).renderElement);
+                    return new ElementRef(asElementData(searchView, elDef.nodeIndex).renderElement);
                 case ViewContainerRefTokenKey:
-                    return asElementData(view, elDef.nodeIndex).viewContainer;
+                    return asElementData(searchView, elDef.nodeIndex).viewContainer;
                 case TemplateRefTokenKey: {
                     if (/** @type {?} */ ((elDef.element)).template) {
-                        return asElementData(view, elDef.nodeIndex).template;
+                        return asElementData(searchView, elDef.nodeIndex).template;
                     }
                     break;
                 }
                 case ChangeDetectorRefTokenKey: {
-                    var /** @type {?} */ cdView = findCompView(view, elDef, allowPrivateServices);
+                    var /** @type {?} */ cdView = findCompView(searchView, elDef, allowPrivateServices);
                     return createChangeDetectorRef(cdView);
                 }
                 case InjectorRefTokenKey:
-                    return createInjector(view, elDef);
+                    return createInjector(searchView, elDef);
                 default:
                     var /** @type {?} */ providerDef_1 = /** @type {?} */ (((allowPrivateServices ? /** @type {?} */ ((elDef.element)).allProviders : /** @type {?} */ ((elDef.element)).publicProviders)))[tokenKey$$1];
                     if (providerDef_1) {
-                        var /** @type {?} */ providerData = asProviderData(view, providerDef_1.nodeIndex);
+                        var /** @type {?} */ providerData = asProviderData(searchView, providerDef_1.nodeIndex);
                         if (!providerData) {
-                            providerData = { instance: _createProviderInstance(view, providerDef_1) };
-                            view.nodes[providerDef_1.nodeIndex] = /** @type {?} */ (providerData);
+                            providerData = { instance: _createProviderInstance(searchView, providerDef_1) };
+                            searchView.nodes[providerDef_1.nodeIndex] = /** @type {?} */ (providerData);
                         }
                         return providerData.instance;
                     }
             }
         }
-        allowPrivateServices = isComponentView(view);
-        elDef = /** @type {?} */ ((viewParentEl(view)));
-        view = /** @type {?} */ ((view.parent));
+        allowPrivateServices = isComponentView(searchView);
+        elDef = /** @type {?} */ ((viewParentEl(searchView)));
+        searchView = /** @type {?} */ ((searchView.parent));
+        if (depDef.flags & 4 /* Self */) {
+            searchView = null;
+        }
     }
     var /** @type {?} */ value = startView.root.injector.get(depDef.token, NOT_FOUND_CHECK_ONLY_ELEMENT_INJECTOR);
     if (value !== NOT_FOUND_CHECK_ONLY_ELEMENT_INJECTOR ||
@@ -59355,7 +59926,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-beta.3-62e7b9d
+ * @license Angular v6.0.0-beta.3-235a235
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -62004,7 +62575,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('6.0.0-beta.3-62e7b9d');
+var VERSION = new Version$1('6.0.0-beta.3-235a235');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
