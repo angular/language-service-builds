@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-beta.3-72f8abd
+ * @license Angular v6.0.0-beta.3-a589ca0
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v6.0.0-beta.3-72f8abd
+ * @license Angular v6.0.0-beta.3-a589ca0
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -717,7 +717,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('6.0.0-beta.3-72f8abd');
+var VERSION$1 = new Version('6.0.0-beta.3-a589ca0');
 
 /**
  * @fileoverview added by tsickle
@@ -41927,14 +41927,14 @@ var noop_1 = {
 };
 
 /* tslint:enable:max-line-length */
-function pipe() {
+function pipe$1() {
     var fns = [];
     for (var _i = 0; _i < arguments.length; _i++) {
         fns[_i - 0] = arguments[_i];
     }
     return pipeFromArray(fns);
 }
-var pipe_2 = pipe;
+var pipe_2 = pipe$1;
 /* @internal */
 function pipeFromArray(fns) {
     if (!fns) {
@@ -43687,7 +43687,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v6.0.0-beta.3-72f8abd
+ * @license Angular v6.0.0-beta.3-a589ca0
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -45431,7 +45431,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('6.0.0-beta.3-72f8abd');
+var VERSION$2 = new Version$1('6.0.0-beta.3-a589ca0');
 
 /**
  * @fileoverview added by tsickle
@@ -58467,55 +58467,6 @@ function appendChild(parent, child, currentView) {
     return false;
 }
 /**
- * Appends a projected node to the DOM, or in the case of a projected container,
- * appends the nodes from all of the container's active views to the DOM.
- *
- * @param {?} node The node to process
- * @param {?} currentParent The last parent element to be processed
- * @param {?} currentView Current LView
- * @return {?}
- */
-
-/**
- * @fileoverview added by tsickle
- * @suppress {checkTypes} checked by tsc
- */
-/**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
- */
-/**
- * A utility function to match an Ivy node static data against a simple CSS selector
- *
- * @param {?} tNode
- * @param {?} selector
- * @return {?} true if node matches the selector.
- */
-
-/**
- * @param {?} tNode
- * @param {?} selector
- * @return {?}
- */
-
-/**
- * @param {?} tNode
- * @param {?} selector
- * @return {?}
- */
-
-/**
- * Checks a given node against matching selectors and returns
- * selector index (or 0 if none matched);
- * @param {?} tNode
- * @param {?} selectors
- * @return {?}
- */
-
-/**
  * @fileoverview added by tsickle
  * @suppress {checkTypes} checked by tsc
  */
@@ -59105,28 +59056,6 @@ function getOrCreateEmbeddedTView(viewIndex, parent) {
     return tContainer[viewIndex];
 }
 /**
- * Instruction to distribute projectable nodes among <ng-content> occurrences in a given template.
- * It takes all the selectors from the entire component's template and decides where
- * each projected node belongs (it re-distributes nodes among "buckets" where each "bucket" is
- * backed by a selector).
- *
- * @param {?} index
- * @param {?=} selectors
- * @return {?}
- */
-
-/**
- * Inserts previously re-distributed projected nodes. This instruction must be preceded by a call
- * to the projectionDef instruction.
- *
- * @param {?} nodeIndex
- * @param {?} localIndex - index under which distribution of projected nodes was memorized
- * @param {?=} selectorIndex - 0 means <ng-content> without any selector
- * @param {?=} attrs - attributes attached to the ng-content node, if present
- * @return {?}
- */
-
-/**
  * Adds a LView or a LContainer to the end of the current view tree.
  *
  * This structure will be used to traverse through nested views to remove listeners
@@ -59154,31 +59083,20 @@ function initBindings() {
     }
 }
 /**
- * @template T
- * @param {?} index
- * @param {?=} value
- * @return {?}
- */
-
-/**
- * Gets the binding at the current bindingIndex
- * @return {?}
- */
-
-/**
- * @param {?} QueryType
- * @return {?}
- */
-
-/**
- * @return {?}
- */
-
-/**
  * @return {?}
  */
 function getRenderer() {
     return renderer;
+}
+/**
+ * @template T
+ * @param {?} instanceOrArray
+ * @return {?}
+ */
+function getDirectiveInstance(instanceOrArray) {
+    // Directives with content queries store an array in data[directiveIndex]
+    // with the instance as the first index
+    return Array.isArray(instanceOrArray) ? instanceOrArray[0] : instanceOrArray;
 }
 /**
  * @return {?}
@@ -59204,6 +59122,116 @@ function assertDataNext(index) {
     assertEqual(data.length, index, 'data.length not in sequence');
 }
 
+/**
+ * @template T
+ * @param {?} component
+ * @param {?=} scheduler
+ * @return {?}
+ */
+
+/**
+ * @template T
+ * @param {?} component
+ * @return {?}
+ */
+
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+/**
+ * If a directive is diPublic, bloomAdd sets a property on the instance with this constant as
+ * the key and the directive's unique ID as the value. This allows us to map directives to their
+ * bloom filter bit for DI.
+ */
+var NG_ELEMENT_ID = '__NG_ELEMENT_ID__';
+/**
+ * The number of slots in each bloom filter (used by DI). The larger this number, the fewer
+ * directives that will share slots, and thus, the fewer false positives when checking for
+ * the existence of a directive.
+ */
+var BLOOM_SIZE = 128;
+/**
+ * Constructs an injection error with the given text and token.
+ *
+ * @param {?} text The text of the error
+ * @param {?} token The token associated with the error
+ * @return {?} The error that was created
+ */
+function createInjectionError(text$$1, token) {
+    return new Error("ElementInjector: " + text$$1 + " [" + stringify$1$1(token) + "]");
+}
+/**
+ * Given a directive type, this function returns the bit in an injector's bloom filter
+ * that should be used to determine whether or not the directive is present.
+ *
+ * When the directive was added to the bloom filter, it was given a unique ID that can be
+ * retrieved on the class. Since there are only BLOOM_SIZE slots per bloom filter, the directive's
+ * ID must be modulo-ed by BLOOM_SIZE to get the correct bloom bit (directives share slots after
+ * BLOOM_SIZE is reached).
+ *
+ * @param {?} type The directive type
+ * @return {?} The bloom bit to check for the directive
+ */
+function bloomHashBit(type) {
+    var /** @type {?} */ id = (/** @type {?} */ (type))[NG_ELEMENT_ID];
+    return typeof id === 'number' ? id % BLOOM_SIZE : null;
+}
+/**
+ * Finds the closest injector that might have a certain directive.
+ *
+ * Each directive corresponds to a bit in an injector's bloom filter. Given the bloom bit to
+ * check and a starting injector, this function traverses up injectors until it finds an
+ * injector that contains a 1 for that bit in its bloom filter. A 1 indicates that the
+ * injector may have that directive. It only *may* have the directive because directives begin
+ * to share bloom filter bits after the BLOOM_SIZE is reached, and it could correspond to a
+ * different directive sharing the bit.
+ *
+ * Note: We can skip checking further injectors up the tree if an injector's cbf structure
+ * has a 0 for that bloom bit. Since cbf contains the merged value of all the parent
+ * injectors, a 0 in the bloom bit indicates that the parents definitely do not contain
+ * the directive and do not need to be checked.
+ *
+ * @param {?} startInjector
+ * @param {?} bloomBit The bit to check in each injector's bloom filter
+ * @return {?} An injector that might have the directive
+ */
+function bloomFindPossibleInjector(startInjector, bloomBit) {
+    // Create a mask that targets the specific bit associated with the directive we're looking for.
+    // JS bit operations are 32 bits, so this will be a number between 2^0 and 2^31, corresponding
+    // to bit positions 0 - 31 in a 32 bit integer.
+    var /** @type {?} */ mask = 1 << bloomBit;
+    // Traverse up the injector tree until we find a potential match or until we know there *isn't* a
+    // match.
+    var /** @type {?} */ injector = startInjector;
+    while (injector) {
+        // Our bloom filter size is 128 bits, which is four 32-bit bloom filter buckets:
+        // bf0 = [0 - 31], bf1 = [32 - 63], bf2 = [64 - 95], bf3 = [96 - 127]
+        // Get the bloom filter value from the appropriate bucket based on the directive's bloomBit.
+        var /** @type {?} */ value = bloomBit < 64 ? (bloomBit < 32 ? injector.bf0 : injector.bf1) :
+            (bloomBit < 96 ? injector.bf2 : injector.bf3);
+        // If the bloom filter value has the bit corresponding to the directive's bloomBit flipped on,
+        // this injector is a potential match.
+        if ((value & mask) === mask) {
+            return injector;
+        }
+        // If the current injector does not have the directive, check the bloom filters for the ancestor
+        // injectors (cbf0 - cbf3). These filters capture *all* ancestor injectors.
+        value = bloomBit < 64 ? (bloomBit < 32 ? injector.cbf0 : injector.cbf1) :
+            (bloomBit < 96 ? injector.cbf2 : injector.cbf3);
+        // If the ancestor bloom filter value has the bit corresponding to the directive, traverse up to
+        // find the specific injector. If the ancestor bloom filter does not have the bit, we can abort.
+        injector = (value & mask) ? injector.parent : null;
+    }
+    return null;
+}
 var ReadFromInjectorFn = /** @class */ (function () {
     function ReadFromInjectorFn(read) {
         this.read = read;
@@ -59490,230 +59518,6 @@ var EmbeddedViewRef$2 = /** @class */ (function () {
     return EmbeddedViewRef;
 }());
 
-/**
- * Create a directive definition object.
- *
- * # Example
- * ```
- * class MyDirective {
- *   // Generated by Angular Template Compiler
- *   // [Symbol] syntax will not be supported by TypeScript until v2.7
- *   static ngDirectiveDef = defineDirective({
- *     ...
- *   });
- * }
- * ```
- */
-
-/**
- * Create a pipe definition object.
- *
- * # Example
- * ```
- * class MyPipe implements PipeTransform {
- *   // Generated by Angular Template Compiler
- *   static ngPipeDef = definePipe({
- *     ...
- *   });
- * }
- * ```
- * @template T
- * @param {?} __0
- * @return {?}
- */
-
-/**
- * @fileoverview added by tsickle
- * @suppress {checkTypes} checked by tsc
- */
-/**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
- */
-/**
- * Create a pipe.
- *
- * @template T
- * @param {?} index Pipe index where the pipe will be stored.
- * @param {?} pipeDef Pipe definition object for registering life cycle hooks.
- * @param {?} pipe A Pipe instance.
- * @return {?}
- */
-
-/**
- * Invokes a pipe with 1 arguments.
- *
- * This instruction acts as a guard to {\@link PipeTransform#transform} invoking
- * the pipe only when an input to the pipe changes.
- *
- * @param {?} index Pipe index where the pipe was stored on creation.
- * @param {?} v1 1st argument to {\@link PipeTransform#transform}.
- * @return {?}
- */
-
-/**
- * Invokes a pipe with 2 arguments.
- *
- * This instruction acts as a guard to {\@link PipeTransform#transform} invoking
- * the pipe only when an input to the pipe changes.
- *
- * @param {?} index Pipe index where the pipe was stored on creation.
- * @param {?} v1 1st argument to {\@link PipeTransform#transform}.
- * @param {?} v2 2nd argument to {\@link PipeTransform#transform}.
- * @return {?}
- */
-
-/**
- * Invokes a pipe with 3 arguments.
- *
- * This instruction acts as a guard to {\@link PipeTransform#transform} invoking
- * the pipe only when an input to the pipe changes.
- *
- * @param {?} index Pipe index where the pipe was stored on creation.
- * @param {?} v1 1st argument to {\@link PipeTransform#transform}.
- * @param {?} v2 2nd argument to {\@link PipeTransform#transform}.
- * @param {?} v3 4rd argument to {\@link PipeTransform#transform}.
- * @return {?}
- */
-
-/**
- * Invokes a pipe with 4 arguments.
- *
- * This instruction acts as a guard to {\@link PipeTransform#transform} invoking
- * the pipe only when an input to the pipe changes.
- *
- * @param {?} index Pipe index where the pipe was stored on creation.
- * @param {?} v1 1st argument to {\@link PipeTransform#transform}.
- * @param {?} v2 2nd argument to {\@link PipeTransform#transform}.
- * @param {?} v3 3rd argument to {\@link PipeTransform#transform}.
- * @param {?} v4 4th argument to {\@link PipeTransform#transform}.
- * @return {?}
- */
-
-/**
- * Invokes a pipe with variable number of arguments.
- *
- * This instruction acts as a guard to {\@link PipeTransform#transform} invoking
- * the pipe only when an input to the pipe changes.
- *
- * @param {?} index Pipe index where the pipe was stored on creation.
- * @param {?} values Array of arguments to pass to {\@link PipeTransform#transform} method.
- * @return {?}
- */
-
-/**
- * @fileoverview added by tsickle
- * @suppress {checkTypes} checked by tsc
- */
-/**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
- */
-/**
- * @record
- */
-
-/**
- * @record
- */
-
-/**
- * @record
- */
-
-/**
- * `DirectiveDef` is a compiled version of the Directive used by the renderer instructions.
- * @record
- */
-
-/**
- * @record
- */
-
-/**
- *
- * @record
- */
-
-/**
- * @record
- */
-
-/**
- * @record
- */
-
-// Note: This hack is necessary so we don't erroneously get a circular dependency
-// failure based on types.
-
-/**
- * @fileoverview added by tsickle
- * @suppress {checkTypes} checked by tsc
- */
-/**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
- */
-/**
- * @record
- */
-
-// Note: This hack is necessary so we don't erroneously get a circular dependency
-// failure based on types.
-
-/**
- * @fileoverview added by tsickle
- * @suppress {checkTypes} checked by tsc
- */
-/**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
- */
-/**
- * Used for tracking queries (e.g. ViewChild, ContentChild).
- * @record
- */
-
-// Note: This hack is necessary so we don't erroneously get a circular dependency
-// failure based on types.
-
-/**
- * @fileoverview added by tsickle
- * @suppress {checkTypes} checked by tsc
- */
-/**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
- */
-/**
- * A predicate which determines if a given element/directive should be included in the query
- * results.
- * @record
- */
-
-/**
- * An object representing a query, which is a combination of:
- * - query predicate to determines if a given element/directive should be included in the query
- * - values collected based on a predicate
- * - `QueryList` to which collected values should be reported
- * @record
- */
-
 var QueryList_ = /** @class */ (function () {
     function QueryList_() {
         this.dirty = true;
@@ -59931,7 +59735,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-beta.3-72f8abd
+ * @license Angular v6.0.0-beta.3-a589ca0
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -60132,13 +59936,13 @@ function findAstAt(ast, position, excludeEmpty) {
     visitor.visit(ast);
     return new AstPath(path$$1, position);
 }
-function getExpressionCompletions(scope, ast, position, query) {
+function getExpressionCompletions(scope, ast, position, query$$1) {
     var path$$1 = findAstAt(ast, position);
     if (path$$1.empty)
         return undefined;
     var tail = path$$1.tail;
     var result = scope;
-    function getType(ast) { return new language_services_4(scope, query, {}).getType(ast); }
+    function getType(ast) { return new language_services_4(scope, query$$1, {}).getType(ast); }
     // If the completion request is in a not in a pipe or property access then the global scope
     // (that is the scope of the implicit receiver) is the right scope as the user is typing the
     // beginning of an expression.
@@ -60159,7 +59963,7 @@ function getExpressionCompletions(scope, ast, position, query) {
             if (position >= ast.exp.span.end &&
                 (!ast.args || !ast.args.length || position < ast.args[0].span.start)) {
                 // We are in a position a pipe name is expected.
-                result = query.getPipes();
+                result = query$$1.getPipes();
             }
         },
         visitPrefixNot: function (ast) { },
@@ -60174,7 +59978,7 @@ function getExpressionCompletions(scope, ast, position, query) {
         },
         visitQuote: function (ast) {
             // For a quote, return the members of any (if there are any).
-            result = query.getBuiltinType(language_services_7.Any).members();
+            result = query$$1.getBuiltinType(language_services_7.Any).members();
         },
         visitSafeMethodCall: function (ast) {
             var receiverType = getType(ast.receiver);
@@ -60187,12 +59991,12 @@ function getExpressionCompletions(scope, ast, position, query) {
     });
     return result && result.values();
 }
-function getExpressionSymbol(scope, ast, position, query) {
+function getExpressionSymbol(scope, ast, position, query$$1) {
     var path$$1 = findAstAt(ast, position, /* excludeEmpty */ true);
     if (path$$1.empty)
         return undefined;
     var tail = path$$1.tail;
-    function getType(ast) { return new language_services_4(scope, query, {}).getType(ast); }
+    function getType(ast) { return new language_services_4(scope, query$$1, {}).getType(ast); }
     var symbol = undefined;
     var span = undefined;
     // If the completion request is in a not in a pipe or property access then the global scope
@@ -60219,7 +60023,7 @@ function getExpressionSymbol(scope, ast, position, query) {
             if (position >= ast.exp.span.end &&
                 (!ast.args || !ast.args.length || position < ast.args[0].span.start)) {
                 // We are in a position a pipe name is expected.
-                var pipes = query.getPipes();
+                var pipes = query$$1.getPipes();
                 if (pipes) {
                     symbol = pipes.get(ast.name);
                     span = ast.span;
@@ -62580,7 +62384,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('6.0.0-beta.3-72f8abd');
+var VERSION = new Version$1('6.0.0-beta.3-a589ca0');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
