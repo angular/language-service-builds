@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-beta.4-0aa9b46
+ * @license Angular v6.0.0-beta.4-03d93c9
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v6.0.0-beta.4-0aa9b46
+ * @license Angular v6.0.0-beta.4-03d93c9
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -717,7 +717,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('6.0.0-beta.4-0aa9b46');
+var VERSION$1 = new Version('6.0.0-beta.4-03d93c9');
 
 /**
  * @fileoverview added by tsickle
@@ -43687,7 +43687,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v6.0.0-beta.4-0aa9b46
+ * @license Angular v6.0.0-beta.4-03d93c9
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -45431,7 +45431,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('6.0.0-beta.4-0aa9b46');
+var VERSION$2 = new Version$1('6.0.0-beta.4-03d93c9');
 
 /**
  * @fileoverview added by tsickle
@@ -57833,24 +57833,8 @@ var NgModuleFactory_ = /** @class */ (function (_super) {
 // about state in an instruction are correct before implementing any logic.
 // They are meant only to be called in dev mode as sanity checks.
 /**
- * Stringifies values such that strings are wrapped in explicit quotation marks and
- * other types are stringified normally. Used in error messages (e.g. assertThrow)
- * to make it clear that certain values are of the string type when comparing.
- *
- * e.g. `expected "3" to be 3` is easier to understand than `expected 3 to be 3`.
- *
- * @param {?} value The value to be stringified
- * @return {?} The stringified value
- */
-function stringifyValueForError(value) {
-    if (value && value.native && value.native.outerHTML) {
-        return value.native.outerHTML;
-    }
-    return typeof value === 'string' ? "\"" + value + "\"" : value;
-}
-/**
  * @param {?} actual
- * @param {?} name
+ * @param {?} msg
  * @return {?}
  */
 
@@ -57858,58 +57842,54 @@ function stringifyValueForError(value) {
  * @template T
  * @param {?} actual
  * @param {?} expected
- * @param {?} name
- * @param {?=} serializer
+ * @param {?} msg
  * @return {?}
  */
-function assertEqual(actual, expected, name, serializer) {
-    (actual != expected) && assertThrow(actual, expected, name, '==', serializer);
+function assertEqual(actual, expected, msg) {
+    if (actual != expected) {
+        throwError(msg);
+    }
 }
 /**
  * @template T
  * @param {?} actual
  * @param {?} expected
- * @param {?} name
+ * @param {?} msg
  * @return {?}
  */
-function assertLessThan(actual, expected, name) {
-    (actual >= expected) && assertThrow(actual, expected, name, '<');
+function assertLessThan(actual, expected, msg) {
+    if (actual >= expected) {
+        throwError(msg);
+    }
 }
 /**
  * @template T
  * @param {?} actual
- * @param {?} name
+ * @param {?} msg
  * @return {?}
  */
-function assertNotNull$1(actual, name) {
-    assertNotEqual(actual, null, name);
+function assertNull(actual, msg) {
+    if (actual != null) {
+        throwError(msg);
+    }
 }
 /**
  * @template T
  * @param {?} actual
- * @param {?} expected
- * @param {?} name
+ * @param {?} msg
  * @return {?}
  */
-function assertNotEqual(actual, expected, name) {
-    (actual == expected) && assertThrow(actual, expected, name, '!=');
+function assertNotNull$1(actual, msg) {
+    if (actual == null) {
+        throwError(msg);
+    }
 }
 /**
- * Throws an error with a message constructed from the arguments.
- *
- * @template T
- * @param {?} actual The actual value (e.g. 3)
- * @param {?} expected The expected value (e.g. 5)
- * @param {?} name The name of the value being checked (e.g. attrs.length)
- * @param {?} operator The comparison operator (e.g. <, >, ==)
- * @param {?=} serializer Function that maps a value to its display value
+ * @param {?} msg
  * @return {?}
  */
-function assertThrow(actual, expected, name, operator, serializer) {
-    if (serializer === void 0) { serializer = stringifyValueForError; }
-    var /** @type {?} */ error = "ASSERT: expected " + name + " " + operator + " " + serializer(expected) + " but was " + serializer(actual) + "!";
-    debugger; // leave `debugger` here to aid in debugging.
-    throw new Error(error);
+function throwError(msg) {
+    throw new Error("ASSERTION ERROR: " + msg);
 }
 
 /**
@@ -57949,8 +57929,8 @@ if (typeof ngDevMode == 'undefined') {
  * @return {?}
  */
 function assertNodeType(node, type) {
-    assertNotEqual(node, null, 'node');
-    assertEqual(node.flags & 3 /* TYPE_MASK */, type, 'Node.type', typeSerializer);
+    assertNotNull$1(node, 'should be called with a node');
+    assertEqual(node.flags & 3 /* TYPE_MASK */, type, "should be a " + typeName(type));
 }
 /**
  * @param {?} node
@@ -57962,20 +57942,16 @@ function assertNodeOfPossibleTypes(node) {
     for (var _i = 1; _i < arguments.length; _i++) {
         types[_i - 1] = arguments[_i];
     }
-    assertNotEqual(node, null, 'node');
-    var /** @type {?} */ nodeType = (node.flags & 3 /* TYPE_MASK */);
-    for (var /** @type {?} */ i = 0; i < types.length; i++) {
-        if (nodeType === types[i]) {
-            return;
-        }
-    }
-    throw new Error("Expected node of possible types: " + types.map(typeSerializer).join(', ') + " but got " + typeSerializer(nodeType));
+    assertNotNull$1(node, 'should be called with a node');
+    var /** @type {?} */ nodeType = node.flags & 3;
+    var /** @type {?} */ found = types.some(function (type) { return nodeType === type; });
+    assertEqual(found, true, "Should be one of " + types.map(typeName).join(', '));
 }
 /**
  * @param {?} type
  * @return {?}
  */
-function typeSerializer(type) {
+function typeName(type) {
     if (type == 1 /* Projection */)
         return 'Projection';
     if (type == 0 /* Container */)
@@ -57984,7 +57960,7 @@ function typeSerializer(type) {
         return 'View';
     if (type == 3 /* Element */)
         return 'Element';
-    return '??? ' + type + ' ???';
+    return '<unknown>';
 }
 
 /**
@@ -58734,7 +58710,7 @@ function createLNode(index, type, native, state) {
     if ((type & 2 /* ViewOrElement */) === 2 /* ViewOrElement */ && isState) {
         // Bit of a hack to bust through the readonly because there is a circular dep between
         // LView and LNode.
-        ngDevMode && assertEqual((/** @type {?} */ (state)).node, null, 'lView.node');
+        ngDevMode && assertNull((/** @type {?} */ (state)).node, 'LView.node should not have been initialized');
         (/** @type {?} */ ((state))).node = node;
     }
     if (index != null) {
@@ -58754,7 +58730,7 @@ function createLNode(index, type, native, state) {
             if (previousOrParentNode.view === currentView ||
                 (previousOrParentNode.flags & 3 /* TYPE_MASK */) === 2 /* View */) {
                 // We are in the same view, which means we are adding content node to the parent View.
-                ngDevMode && assertEqual(previousOrParentNode.child, null, 'previousNode.child');
+                ngDevMode && assertNull(previousOrParentNode.child, "previousOrParentNode's child should not have been set.");
                 previousOrParentNode.child = node;
             }
             else {
@@ -58762,7 +58738,7 @@ function createLNode(index, type, native, state) {
             }
         }
         else if (previousOrParentNode) {
-            ngDevMode && assertEqual(previousOrParentNode.next, null, 'previousNode.next');
+            ngDevMode && assertNull(previousOrParentNode.next, "previousOrParentNode's next property should not have been set.");
             previousOrParentNode.next = node;
         }
     }
@@ -58891,7 +58867,7 @@ function createTView() {
  * @return {?}
  */
 function setUpAttributes(native, attrs) {
-    ngDevMode && assertEqual(attrs.length % 2, 0, 'attrs.length % 2');
+    ngDevMode && assertEqual(attrs.length % 2, 0, 'each attribute should have a key and a value');
     var /** @type {?} */ isProc = isProceduralRenderer(renderer);
     for (var /** @type {?} */ i = 0; i < attrs.length; i += 2) {
         isProc ? (/** @type {?} */ (renderer)).setAttribute(native, attrs[i], attrs[i | 1]) :
@@ -58934,7 +58910,8 @@ function createTNode(tagName, attrs, data, localName) {
  */
 function directiveCreate(index, directive, directiveDef, queryName) {
     var /** @type {?} */ instance;
-    ngDevMode && assertEqual(currentView.bindingStartIndex, null, 'bindingStartIndex');
+    ngDevMode &&
+        assertNull(currentView.bindingStartIndex, 'directives should be created before any bindings');
     ngDevMode && assertPreviousIsParent();
     var /** @type {?} */ flags = /** @type {?} */ ((previousOrParentNode)).flags;
     var /** @type {?} */ size = flags & 4092;
@@ -59102,7 +59079,7 @@ function getDirectiveInstance(instanceOrArray) {
  * @return {?}
  */
 function assertPreviousIsParent() {
-    assertEqual(isParent, true, 'isParent');
+    assertEqual(isParent, true, 'previousOrParentNode should be a parent');
 }
 /**
  * @param {?} index
@@ -59112,14 +59089,14 @@ function assertPreviousIsParent() {
 function assertDataInRange(index, arr) {
     if (arr == null)
         arr = data;
-    assertLessThan(index, arr ? arr.length : 0, 'data.length');
+    assertLessThan(index, arr ? arr.length : 0, 'index expected to be a valid data index');
 }
 /**
  * @param {?} index
  * @return {?}
  */
 function assertDataNext(index) {
-    assertEqual(data.length, index, 'data.length not in sequence');
+    assertEqual(data.length, index, 'index expected to be at the end of data');
 }
 
 /**
@@ -59735,7 +59712,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-beta.4-0aa9b46
+ * @license Angular v6.0.0-beta.4-03d93c9
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -62384,7 +62361,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('6.0.0-beta.4-0aa9b46');
+var VERSION = new Version$1('6.0.0-beta.4-03d93c9');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
