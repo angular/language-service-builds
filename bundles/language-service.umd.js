@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-beta.4-7ac34e4
+ * @license Angular v6.0.0-beta.4-5dd2b51
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v6.0.0-beta.4-7ac34e4
+ * @license Angular v6.0.0-beta.4-5dd2b51
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -717,7 +717,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('6.0.0-beta.4-7ac34e4');
+var VERSION$1 = new Version('6.0.0-beta.4-5dd2b51');
 
 /**
  * @fileoverview added by tsickle
@@ -29492,15 +29492,15 @@ var Identifiers$1 = /** @class */ (function () {
     Identifiers.directiveInput = { name: 'ɵi', moduleName: CORE$1 };
     Identifiers.textCreateBound = { name: 'ɵt', moduleName: CORE$1 };
     Identifiers.bind = { name: 'ɵb', moduleName: CORE$1 };
-    Identifiers.bind1 = { name: 'ɵb1', moduleName: CORE$1 };
-    Identifiers.bind2 = { name: 'ɵb2', moduleName: CORE$1 };
-    Identifiers.bind3 = { name: 'ɵb3', moduleName: CORE$1 };
-    Identifiers.bind4 = { name: 'ɵb4', moduleName: CORE$1 };
-    Identifiers.bind5 = { name: 'ɵb5', moduleName: CORE$1 };
-    Identifiers.bind6 = { name: 'ɵb6', moduleName: CORE$1 };
-    Identifiers.bind7 = { name: 'ɵb7', moduleName: CORE$1 };
-    Identifiers.bind8 = { name: 'ɵb8', moduleName: CORE$1 };
-    Identifiers.bindV = { name: 'ɵbV', moduleName: CORE$1 };
+    Identifiers.interpolation1 = { name: 'ɵi1', moduleName: CORE$1 };
+    Identifiers.interpolation2 = { name: 'ɵi2', moduleName: CORE$1 };
+    Identifiers.interpolation3 = { name: 'ɵi3', moduleName: CORE$1 };
+    Identifiers.interpolation4 = { name: 'ɵi4', moduleName: CORE$1 };
+    Identifiers.interpolation5 = { name: 'ɵi5', moduleName: CORE$1 };
+    Identifiers.interpolation6 = { name: 'ɵi6', moduleName: CORE$1 };
+    Identifiers.interpolation7 = { name: 'ɵi7', moduleName: CORE$1 };
+    Identifiers.interpolation8 = { name: 'ɵi8', moduleName: CORE$1 };
+    Identifiers.interpolationV = { name: 'ɵiV', moduleName: CORE$1 };
     Identifiers.memory = { name: 'ɵm', moduleName: CORE$1 };
     Identifiers.projection = { name: 'ɵP', moduleName: CORE$1 };
     Identifiers.projectionDef = { name: 'ɵpD', moduleName: CORE$1 };
@@ -29652,25 +29652,25 @@ function interpolate(args) {
     args = args.slice(1); // Ignore the length prefix added for render2
     switch (args.length) {
         case 3:
-            return importExpr(Identifiers$1.bind1).callFn(args);
+            return importExpr(Identifiers$1.interpolation1).callFn(args);
         case 5:
-            return importExpr(Identifiers$1.bind2).callFn(args);
+            return importExpr(Identifiers$1.interpolation2).callFn(args);
         case 7:
-            return importExpr(Identifiers$1.bind3).callFn(args);
+            return importExpr(Identifiers$1.interpolation3).callFn(args);
         case 9:
-            return importExpr(Identifiers$1.bind4).callFn(args);
+            return importExpr(Identifiers$1.interpolation4).callFn(args);
         case 11:
-            return importExpr(Identifiers$1.bind5).callFn(args);
+            return importExpr(Identifiers$1.interpolation5).callFn(args);
         case 13:
-            return importExpr(Identifiers$1.bind6).callFn(args);
+            return importExpr(Identifiers$1.interpolation6).callFn(args);
         case 15:
-            return importExpr(Identifiers$1.bind7).callFn(args);
+            return importExpr(Identifiers$1.interpolation7).callFn(args);
         case 17:
-            return importExpr(Identifiers$1.bind8).callFn(args);
+            return importExpr(Identifiers$1.interpolation8).callFn(args);
     }
     (args.length >= 19 && args.length % 2 == 1) ||
         error("Invalid interpolation argument length " + args.length);
-    return importExpr(Identifiers$1.bindV).callFn([literalArr(args)]);
+    return importExpr(Identifiers$1.interpolationV).callFn([literalArr(args)]);
 }
 var BindingScope = /** @class */ (function () {
     function BindingScope(parent) {
@@ -43689,7 +43689,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v6.0.0-beta.4-7ac34e4
+ * @license Angular v6.0.0-beta.4-5dd2b51
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -45433,7 +45433,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('6.0.0-beta.4-7ac34e4');
+var VERSION$2 = new Version$1('6.0.0-beta.4-5dd2b51');
 
 /**
  * @fileoverview added by tsickle
@@ -59087,9 +59087,16 @@ function addToViewTree(state) {
  */
 var NO_CHANGE = /** @type {?} */ ({});
 /**
+ *  Initializes the binding start index. Will get inlined.
+ *
+ *  This function must be called before any binding related function is called
+ *  (ie `bind()`, `interpolationX()`, `pureFunctionX()`)
  * @return {?}
  */
 function initBindings() {
+    // `bindingIndex` is initialized when the view is first entered when not in creation mode
+    ngDevMode &&
+        assertEqual(creationMode, true, 'should only be called in creationMode for performance reasons');
     if (currentView.bindingStartIndex == null) {
         bindingIndex = currentView.bindingStartIndex = data.length;
     }
@@ -59747,7 +59754,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-beta.4-7ac34e4
+ * @license Angular v6.0.0-beta.4-5dd2b51
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -62396,7 +62403,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('6.0.0-beta.4-7ac34e4');
+var VERSION = new Version$1('6.0.0-beta.4-5dd2b51');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
