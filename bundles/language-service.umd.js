@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-beta.4-029dbf0
+ * @license Angular v6.0.0-beta.4-7ac34e4
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v6.0.0-beta.4-029dbf0
+ * @license Angular v6.0.0-beta.4-7ac34e4
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -717,7 +717,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('6.0.0-beta.4-029dbf0');
+var VERSION$1 = new Version('6.0.0-beta.4-7ac34e4');
 
 /**
  * @fileoverview added by tsickle
@@ -43689,7 +43689,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v6.0.0-beta.4-029dbf0
+ * @license Angular v6.0.0-beta.4-7ac34e4
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -45433,7 +45433,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('6.0.0-beta.4-029dbf0');
+var VERSION$2 = new Version$1('6.0.0-beta.4-7ac34e4');
 
 /**
  * @fileoverview added by tsickle
@@ -47069,6 +47069,30 @@ function _mapProviders(injector, fn) {
     }
     return res;
 }
+
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+/**
+ * A scope which targets the root injector.
+ *
+ * When specified as the `scope` parameter to `\@Injectable` or `InjectionToken`, this special
+ * scope indicates the provider for the service or token being configured belongs in the root
+ * injector. This is loosely equivalent to the convention of having a `forRoot()` static
+ * function within a module that configures the provider, and expecting users to only import that
+ * module via its `forRoot()` function in the root injector.
+ *
+ * \@experimental
+ */
+var APP_ROOT_SCOPE = /** @type {?} */ (new InjectionToken('The presence of this token marks an injector as being the root injector.'));
 
 /**
  * @fileoverview added by tsickle
@@ -53689,11 +53713,20 @@ function resolveNgModuleDep(data, depDef, notFoundValue) {
 }
 /**
  * @param {?} ngModule
+ * @param {?} scope
+ * @return {?}
+ */
+function moduleTransitivelyPresent(ngModule, scope) {
+    return ngModule._def.modules.indexOf(scope) > -1;
+}
+/**
+ * @param {?} ngModule
  * @param {?} def
  * @return {?}
  */
 function targetsModule(ngModule, def) {
-    return def.scope != null && ngModule._def.modules.indexOf(def.scope) > -1;
+    return def.scope != null && (moduleTransitivelyPresent(ngModule, def.scope) ||
+        def.scope === APP_ROOT_SCOPE && ngModule._def.isRoot);
 }
 /**
  * @param {?} ngModule
@@ -59714,7 +59747,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-beta.4-029dbf0
+ * @license Angular v6.0.0-beta.4-7ac34e4
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -62363,7 +62396,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('6.0.0-beta.4-029dbf0');
+var VERSION = new Version$1('6.0.0-beta.4-7ac34e4');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
