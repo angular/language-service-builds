@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-beta.4-f628797
+ * @license Angular v6.0.0-beta.4-f755db7
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v6.0.0-beta.4-f628797
+ * @license Angular v6.0.0-beta.4-f755db7
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -717,7 +717,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('6.0.0-beta.4-f628797');
+var VERSION$1 = new Version('6.0.0-beta.4-f755db7');
 
 /**
  * @fileoverview added by tsickle
@@ -17184,13 +17184,15 @@ var InjectableCompiler = /** @class */ (function () {
                             flags |= 2 /* Self */;
                         }
                         else if (v.ngMetadataName === 'Inject') {
-                            throw new Error('@Inject() is not implemented');
+                            token = v.token;
                         }
                         else {
                             token = v;
                         }
                     }
                 }
+            }
+            if (flags !== 0 /* Default */ || defaultValue !== undefined) {
                 args = [ctx.importExpr(token), literal(defaultValue), literal(flags)];
             }
             else {
@@ -29492,15 +29494,15 @@ var Identifiers$1 = /** @class */ (function () {
     Identifiers.directiveInput = { name: 'ɵi', moduleName: CORE$1 };
     Identifiers.textCreateBound = { name: 'ɵt', moduleName: CORE$1 };
     Identifiers.bind = { name: 'ɵb', moduleName: CORE$1 };
-    Identifiers.bind1 = { name: 'ɵb1', moduleName: CORE$1 };
-    Identifiers.bind2 = { name: 'ɵb2', moduleName: CORE$1 };
-    Identifiers.bind3 = { name: 'ɵb3', moduleName: CORE$1 };
-    Identifiers.bind4 = { name: 'ɵb4', moduleName: CORE$1 };
-    Identifiers.bind5 = { name: 'ɵb5', moduleName: CORE$1 };
-    Identifiers.bind6 = { name: 'ɵb6', moduleName: CORE$1 };
-    Identifiers.bind7 = { name: 'ɵb7', moduleName: CORE$1 };
-    Identifiers.bind8 = { name: 'ɵb8', moduleName: CORE$1 };
-    Identifiers.bindV = { name: 'ɵbV', moduleName: CORE$1 };
+    Identifiers.interpolation1 = { name: 'ɵi1', moduleName: CORE$1 };
+    Identifiers.interpolation2 = { name: 'ɵi2', moduleName: CORE$1 };
+    Identifiers.interpolation3 = { name: 'ɵi3', moduleName: CORE$1 };
+    Identifiers.interpolation4 = { name: 'ɵi4', moduleName: CORE$1 };
+    Identifiers.interpolation5 = { name: 'ɵi5', moduleName: CORE$1 };
+    Identifiers.interpolation6 = { name: 'ɵi6', moduleName: CORE$1 };
+    Identifiers.interpolation7 = { name: 'ɵi7', moduleName: CORE$1 };
+    Identifiers.interpolation8 = { name: 'ɵi8', moduleName: CORE$1 };
+    Identifiers.interpolationV = { name: 'ɵiV', moduleName: CORE$1 };
     Identifiers.memory = { name: 'ɵm', moduleName: CORE$1 };
     Identifiers.projection = { name: 'ɵP', moduleName: CORE$1 };
     Identifiers.projectionDef = { name: 'ɵpD', moduleName: CORE$1 };
@@ -29652,25 +29654,25 @@ function interpolate(args) {
     args = args.slice(1); // Ignore the length prefix added for render2
     switch (args.length) {
         case 3:
-            return importExpr(Identifiers$1.bind1).callFn(args);
+            return importExpr(Identifiers$1.interpolation1).callFn(args);
         case 5:
-            return importExpr(Identifiers$1.bind2).callFn(args);
+            return importExpr(Identifiers$1.interpolation2).callFn(args);
         case 7:
-            return importExpr(Identifiers$1.bind3).callFn(args);
+            return importExpr(Identifiers$1.interpolation3).callFn(args);
         case 9:
-            return importExpr(Identifiers$1.bind4).callFn(args);
+            return importExpr(Identifiers$1.interpolation4).callFn(args);
         case 11:
-            return importExpr(Identifiers$1.bind5).callFn(args);
+            return importExpr(Identifiers$1.interpolation5).callFn(args);
         case 13:
-            return importExpr(Identifiers$1.bind6).callFn(args);
+            return importExpr(Identifiers$1.interpolation6).callFn(args);
         case 15:
-            return importExpr(Identifiers$1.bind7).callFn(args);
+            return importExpr(Identifiers$1.interpolation7).callFn(args);
         case 17:
-            return importExpr(Identifiers$1.bind8).callFn(args);
+            return importExpr(Identifiers$1.interpolation8).callFn(args);
     }
     (args.length >= 19 && args.length % 2 == 1) ||
         error("Invalid interpolation argument length " + args.length);
-    return importExpr(Identifiers$1.bindV).callFn([literalArr(args)]);
+    return importExpr(Identifiers$1.interpolationV).callFn([literalArr(args)]);
 }
 var BindingScope = /** @class */ (function () {
     function BindingScope(parent) {
@@ -39132,9 +39134,6 @@ var Evaluator = /** @class */ (function () {
             case ts__default.SyntaxKind.NewExpression:
                 var newExpression = node;
                 var newArgs = arrayOrEmpty(newExpression.arguments).map(function (arg) { return _this.evaluateNode(arg); });
-                if (!this.options.verboseInvalidExpression && newArgs.some(schema.isMetadataError)) {
-                    return recordEntry(newArgs.find(schema.isMetadataError), node);
-                }
                 var newTarget = this.evaluateNode(newExpression.expression);
                 if (schema.isMetadataError(newTarget)) {
                     return recordEntry(newTarget, node);
@@ -40797,6 +40796,8 @@ var CompilerHostAdapter = /** @class */ (function () {
         this.collector = new collector.MetadataCollector();
     }
     CompilerHostAdapter.prototype.getMetadataFor = function (fileName) {
+        if (!this.host.fileExists(fileName + '.ts'))
+            return undefined;
         var sourceFile = this.host.getSourceFile(fileName + '.ts', ts__default.ScriptTarget.Latest);
         return sourceFile && this.collector.getMetadata(sourceFile);
     };
@@ -43687,7 +43688,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v6.0.0-beta.4-f628797
+ * @license Angular v6.0.0-beta.4-f755db7
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -45172,7 +45173,7 @@ var InjectionToken = /** @class */ (function () {
         if (options !== undefined) {
             this.ngInjectableDef = defineInjectable({
                 scope: options.scope,
-                factory: convertInjectableProviderToFactory(/** @type {?} */ (this), options),
+                factory: options.factory,
             });
         }
         else {
@@ -45431,7 +45432,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('6.0.0-beta.4-f628797');
+var VERSION$2 = new Version$1('6.0.0-beta.4-f755db7');
 
 /**
  * @fileoverview added by tsickle
@@ -47067,6 +47068,30 @@ function _mapProviders(injector, fn) {
     }
     return res;
 }
+
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+/**
+ * A scope which targets the root injector.
+ *
+ * When specified as the `scope` parameter to `\@Injectable` or `InjectionToken`, this special
+ * scope indicates the provider for the service or token being configured belongs in the root
+ * injector. This is loosely equivalent to the convention of having a `forRoot()` static
+ * function within a module that configures the provider, and expecting users to only import that
+ * module via its `forRoot()` function in the root injector.
+ *
+ * \@experimental
+ */
+var APP_ROOT_SCOPE = /** @type {?} */ (new InjectionToken('The presence of this token marks an injector as being the root injector.'));
 
 /**
  * @fileoverview added by tsickle
@@ -53687,11 +53712,20 @@ function resolveNgModuleDep(data, depDef, notFoundValue) {
 }
 /**
  * @param {?} ngModule
+ * @param {?} scope
+ * @return {?}
+ */
+function moduleTransitivelyPresent(ngModule, scope) {
+    return ngModule._def.modules.indexOf(scope) > -1;
+}
+/**
+ * @param {?} ngModule
  * @param {?} def
  * @return {?}
  */
 function targetsModule(ngModule, def) {
-    return def.scope != null && ngModule._def.modules.indexOf(def.scope) > -1;
+    return def.scope != null && (moduleTransitivelyPresent(ngModule, def.scope) ||
+        def.scope === APP_ROOT_SCOPE && ngModule._def.isRoot);
 }
 /**
  * @param {?} ngModule
@@ -57833,24 +57867,8 @@ var NgModuleFactory_ = /** @class */ (function (_super) {
 // about state in an instruction are correct before implementing any logic.
 // They are meant only to be called in dev mode as sanity checks.
 /**
- * Stringifies values such that strings are wrapped in explicit quotation marks and
- * other types are stringified normally. Used in error messages (e.g. assertThrow)
- * to make it clear that certain values are of the string type when comparing.
- *
- * e.g. `expected "3" to be 3` is easier to understand than `expected 3 to be 3`.
- *
- * @param {?} value The value to be stringified
- * @return {?} The stringified value
- */
-function stringifyValueForError(value) {
-    if (value && value.native && value.native.outerHTML) {
-        return value.native.outerHTML;
-    }
-    return typeof value === 'string' ? "\"" + value + "\"" : value;
-}
-/**
  * @param {?} actual
- * @param {?} name
+ * @param {?} msg
  * @return {?}
  */
 
@@ -57858,58 +57876,54 @@ function stringifyValueForError(value) {
  * @template T
  * @param {?} actual
  * @param {?} expected
- * @param {?} name
- * @param {?=} serializer
+ * @param {?} msg
  * @return {?}
  */
-function assertEqual(actual, expected, name, serializer) {
-    (actual != expected) && assertThrow(actual, expected, name, '==', serializer);
+function assertEqual(actual, expected, msg) {
+    if (actual != expected) {
+        throwError(msg);
+    }
 }
 /**
  * @template T
  * @param {?} actual
  * @param {?} expected
- * @param {?} name
+ * @param {?} msg
  * @return {?}
  */
-function assertLessThan(actual, expected, name) {
-    (actual >= expected) && assertThrow(actual, expected, name, '<');
+function assertLessThan(actual, expected, msg) {
+    if (actual >= expected) {
+        throwError(msg);
+    }
 }
 /**
  * @template T
  * @param {?} actual
- * @param {?} name
+ * @param {?} msg
  * @return {?}
  */
-function assertNotNull$1(actual, name) {
-    assertNotEqual(actual, null, name);
+function assertNull(actual, msg) {
+    if (actual != null) {
+        throwError(msg);
+    }
 }
 /**
  * @template T
  * @param {?} actual
- * @param {?} expected
- * @param {?} name
+ * @param {?} msg
  * @return {?}
  */
-function assertNotEqual(actual, expected, name) {
-    (actual == expected) && assertThrow(actual, expected, name, '!=');
+function assertNotNull$1(actual, msg) {
+    if (actual == null) {
+        throwError(msg);
+    }
 }
 /**
- * Throws an error with a message constructed from the arguments.
- *
- * @template T
- * @param {?} actual The actual value (e.g. 3)
- * @param {?} expected The expected value (e.g. 5)
- * @param {?} name The name of the value being checked (e.g. attrs.length)
- * @param {?} operator The comparison operator (e.g. <, >, ==)
- * @param {?=} serializer Function that maps a value to its display value
+ * @param {?} msg
  * @return {?}
  */
-function assertThrow(actual, expected, name, operator, serializer) {
-    if (serializer === void 0) { serializer = stringifyValueForError; }
-    var /** @type {?} */ error = "ASSERT: expected " + name + " " + operator + " " + serializer(expected) + " but was " + serializer(actual) + "!";
-    debugger; // leave `debugger` here to aid in debugging.
-    throw new Error(error);
+function throwError(msg) {
+    throw new Error("ASSERTION ERROR: " + msg);
 }
 
 /**
@@ -57949,8 +57963,8 @@ if (typeof ngDevMode == 'undefined') {
  * @return {?}
  */
 function assertNodeType(node, type) {
-    assertNotEqual(node, null, 'node');
-    assertEqual(node.flags & 3 /* TYPE_MASK */, type, 'Node.type', typeSerializer);
+    assertNotNull$1(node, 'should be called with a node');
+    assertEqual(node.flags & 3 /* TYPE_MASK */, type, "should be a " + typeName(type));
 }
 /**
  * @param {?} node
@@ -57962,20 +57976,16 @@ function assertNodeOfPossibleTypes(node) {
     for (var _i = 1; _i < arguments.length; _i++) {
         types[_i - 1] = arguments[_i];
     }
-    assertNotEqual(node, null, 'node');
-    var /** @type {?} */ nodeType = (node.flags & 3 /* TYPE_MASK */);
-    for (var /** @type {?} */ i = 0; i < types.length; i++) {
-        if (nodeType === types[i]) {
-            return;
-        }
-    }
-    throw new Error("Expected node of possible types: " + types.map(typeSerializer).join(', ') + " but got " + typeSerializer(nodeType));
+    assertNotNull$1(node, 'should be called with a node');
+    var /** @type {?} */ nodeType = node.flags & 3;
+    var /** @type {?} */ found = types.some(function (type) { return nodeType === type; });
+    assertEqual(found, true, "Should be one of " + types.map(typeName).join(', '));
 }
 /**
  * @param {?} type
  * @return {?}
  */
-function typeSerializer(type) {
+function typeName(type) {
     if (type == 1 /* Projection */)
         return 'Projection';
     if (type == 0 /* Container */)
@@ -57984,7 +57994,7 @@ function typeSerializer(type) {
         return 'View';
     if (type == 3 /* Element */)
         return 'Element';
-    return '??? ' + type + ' ???';
+    return '<unknown>';
 }
 
 /**
@@ -58734,7 +58744,7 @@ function createLNode(index, type, native, state) {
     if ((type & 2 /* ViewOrElement */) === 2 /* ViewOrElement */ && isState) {
         // Bit of a hack to bust through the readonly because there is a circular dep between
         // LView and LNode.
-        ngDevMode && assertEqual((/** @type {?} */ (state)).node, null, 'lView.node');
+        ngDevMode && assertNull((/** @type {?} */ (state)).node, 'LView.node should not have been initialized');
         (/** @type {?} */ ((state))).node = node;
     }
     if (index != null) {
@@ -58754,7 +58764,7 @@ function createLNode(index, type, native, state) {
             if (previousOrParentNode.view === currentView ||
                 (previousOrParentNode.flags & 3 /* TYPE_MASK */) === 2 /* View */) {
                 // We are in the same view, which means we are adding content node to the parent View.
-                ngDevMode && assertEqual(previousOrParentNode.child, null, 'previousNode.child');
+                ngDevMode && assertNull(previousOrParentNode.child, "previousOrParentNode's child should not have been set.");
                 previousOrParentNode.child = node;
             }
             else {
@@ -58762,7 +58772,7 @@ function createLNode(index, type, native, state) {
             }
         }
         else if (previousOrParentNode) {
-            ngDevMode && assertEqual(previousOrParentNode.next, null, 'previousNode.next');
+            ngDevMode && assertNull(previousOrParentNode.next, "previousOrParentNode's next property should not have been set.");
             previousOrParentNode.next = node;
         }
     }
@@ -58891,7 +58901,7 @@ function createTView() {
  * @return {?}
  */
 function setUpAttributes(native, attrs) {
-    ngDevMode && assertEqual(attrs.length % 2, 0, 'attrs.length % 2');
+    ngDevMode && assertEqual(attrs.length % 2, 0, 'each attribute should have a key and a value');
     var /** @type {?} */ isProc = isProceduralRenderer(renderer);
     for (var /** @type {?} */ i = 0; i < attrs.length; i += 2) {
         isProc ? (/** @type {?} */ (renderer)).setAttribute(native, attrs[i], attrs[i | 1]) :
@@ -58934,7 +58944,8 @@ function createTNode(tagName, attrs, data, localName) {
  */
 function directiveCreate(index, directive, directiveDef, queryName) {
     var /** @type {?} */ instance;
-    ngDevMode && assertEqual(currentView.bindingStartIndex, null, 'bindingStartIndex');
+    ngDevMode &&
+        assertNull(currentView.bindingStartIndex, 'directives should be created before any bindings');
     ngDevMode && assertPreviousIsParent();
     var /** @type {?} */ flags = /** @type {?} */ ((previousOrParentNode)).flags;
     var /** @type {?} */ size = flags & 4092;
@@ -59075,9 +59086,16 @@ function addToViewTree(state) {
  */
 var NO_CHANGE = /** @type {?} */ ({});
 /**
+ *  Initializes the binding start index. Will get inlined.
+ *
+ *  This function must be called before any binding related function is called
+ *  (ie `bind()`, `interpolationX()`, `pureFunctionX()`)
  * @return {?}
  */
 function initBindings() {
+    // `bindingIndex` is initialized when the view is first entered when not in creation mode
+    ngDevMode &&
+        assertEqual(creationMode, true, 'should only be called in creationMode for performance reasons');
     if (currentView.bindingStartIndex == null) {
         bindingIndex = currentView.bindingStartIndex = data.length;
     }
@@ -59102,7 +59120,7 @@ function getDirectiveInstance(instanceOrArray) {
  * @return {?}
  */
 function assertPreviousIsParent() {
-    assertEqual(isParent, true, 'isParent');
+    assertEqual(isParent, true, 'previousOrParentNode should be a parent');
 }
 /**
  * @param {?} index
@@ -59112,14 +59130,14 @@ function assertPreviousIsParent() {
 function assertDataInRange(index, arr) {
     if (arr == null)
         arr = data;
-    assertLessThan(index, arr ? arr.length : 0, 'data.length');
+    assertLessThan(index, arr ? arr.length : 0, 'index expected to be a valid data index');
 }
 /**
  * @param {?} index
  * @return {?}
  */
 function assertDataNext(index) {
-    assertEqual(data.length, index, 'data.length not in sequence');
+    assertEqual(data.length, index, 'index expected to be at the end of data');
 }
 
 /**
@@ -59735,7 +59753,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-beta.4-f628797
+ * @license Angular v6.0.0-beta.4-f755db7
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -62384,7 +62402,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('6.0.0-beta.4-f628797');
+var VERSION = new Version$1('6.0.0-beta.4-f755db7');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
