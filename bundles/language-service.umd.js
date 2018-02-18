@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-beta.4-4ec40c6
+ * @license Angular v6.0.0-beta.4-ac2b04a
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v6.0.0-beta.4-4ec40c6
+ * @license Angular v6.0.0-beta.4-ac2b04a
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -717,7 +717,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('6.0.0-beta.4-4ec40c6');
+var VERSION$1 = new Version('6.0.0-beta.4-ac2b04a');
 
 /**
  * @fileoverview added by tsickle
@@ -43688,7 +43688,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v6.0.0-beta.4-4ec40c6
+ * @license Angular v6.0.0-beta.4-ac2b04a
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -45432,7 +45432,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('6.0.0-beta.4-4ec40c6');
+var VERSION$2 = new Version$1('6.0.0-beta.4-ac2b04a');
 
 /**
  * @fileoverview added by tsickle
@@ -58198,6 +58198,12 @@ function isProceduralRenderer(renderer) {
  * @record
  */
 
+/**
+ * RootContext contains information which is shared for all components which
+ * were bootstrapped with {\@link renderComponent}.
+ * @record
+ */
+
 // Note: This hack is necessary so we don't erroneously get a circular dependency
 // failure based on types.
 
@@ -58616,10 +58622,13 @@ var isParent;
 var tData;
 /**
  * State of the current view being processed.
+ *
+ * NOTE: we cheat here and initialize it to `null` even thought the type does not
+ * contain `null`. This is because we expect this value to be not `null` as soon
+ * as we enter the view. Declaring the type as `null` would require us to place `!`
+ * in most instructions since they all assume that `currentView` is defined.
  */
-var currentView;
-// The initialization has to be after the `let`, otherwise `createLView` can't see `let`.
-currentView = createLView(/** @type {?} */ ((null)), /** @type {?} */ ((null)), createTView());
+var currentView = /** @type {?} */ ((null));
 var currentQueries;
 /**
  * This property gets set before entering a template.
@@ -58666,18 +58675,18 @@ var cleanup;
  */
 function enterView(newView, host) {
     var /** @type {?} */ oldView = currentView;
-    data = newView.data;
-    bindingIndex = newView.bindingStartIndex || 0;
-    tData = newView.tView.data;
-    creationMode = newView.creationMode;
-    cleanup = newView.cleanup;
-    renderer = newView.renderer;
+    data = newView && newView.data;
+    bindingIndex = newView && newView.bindingStartIndex || 0;
+    tData = newView && newView.tView.data;
+    creationMode = newView && newView.creationMode;
+    cleanup = newView && newView.cleanup;
+    renderer = newView && newView.renderer;
     if (host != null) {
         previousOrParentNode = host;
         isParent = true;
     }
     currentView = newView;
-    currentQueries = newView.queries;
+    currentQueries = newView && newView.queries;
     return /** @type {?} */ ((oldView));
 }
 /**
@@ -58697,13 +58706,11 @@ function leaveView(newView) {
  * @param {?} viewId
  * @param {?} renderer
  * @param {?} tView
- * @param {?=} template
- * @param {?=} context
+ * @param {?} template
+ * @param {?} context
  * @return {?}
  */
 function createLView(viewId, renderer, tView, template, context) {
-    if (template === void 0) { template = null; }
-    if (context === void 0) { context = null; }
     var /** @type {?} */ newView = {
         parent: currentView,
         id: viewId,
@@ -59153,16 +59160,43 @@ function assertDataNext(index) {
 }
 
 /**
+ * Retrieve the host element of the component.
+ *
+ * Use this function to retrieve the host element of the component. The host
+ * element is the element which the component is associated with.
+ *
  * @template T
- * @param {?} component
- * @param {?=} scheduler
+ * @param {?} component Component for which the host element should be retrieved.
  * @return {?}
  */
 
 /**
- * @template T
- * @param {?} component
+ * Retrieves the rendered text for a given component.
+ *
+ * This function retrieves the host element of a component and
+ * and then returns the `textContent` for that element. This implies
+ * that the text returned will include re-projected content of
+ * the component as well.
+ *
+ * @param {?} component The component to return the content text for.
  * @return {?}
+ */
+
+/**
+ * Wait on component until it is rendered.
+ *
+ * This function returns a `Promise` which is resolved when the component's
+ * change detection is executed. This is determined by finding the scheduler
+ * associated with the `component`'s render tree and waiting until the scheduler
+ * flushes. If nothing is scheduled, the function returns a resolved promise.
+ *
+ * Example:
+ * ```
+ * await whenRendered(myComponent);
+ * ```
+ *
+ * @param {?} component Component to wait upon
+ * @return {?} Promise which resolves when the component is rendered.
  */
 
 /**
@@ -59765,7 +59799,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-beta.4-4ec40c6
+ * @license Angular v6.0.0-beta.4-ac2b04a
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -62414,7 +62448,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('6.0.0-beta.4-4ec40c6');
+var VERSION = new Version$1('6.0.0-beta.4-ac2b04a');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
