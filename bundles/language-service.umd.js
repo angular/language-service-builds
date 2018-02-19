@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-beta.4-3ceee99
+ * @license Angular v6.0.0-beta.4-a8b5465
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v6.0.0-beta.4-3ceee99
+ * @license Angular v6.0.0-beta.4-a8b5465
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -717,7 +717,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('6.0.0-beta.4-3ceee99');
+var VERSION$1 = new Version('6.0.0-beta.4-a8b5465');
 
 /**
  * @fileoverview added by tsickle
@@ -29503,7 +29503,7 @@ var Identifiers$1 = /** @class */ (function () {
     Identifiers.interpolation7 = { name: 'ɵi7', moduleName: CORE$1 };
     Identifiers.interpolation8 = { name: 'ɵi8', moduleName: CORE$1 };
     Identifiers.interpolationV = { name: 'ɵiV', moduleName: CORE$1 };
-    Identifiers.memory = { name: 'ɵm', moduleName: CORE$1 };
+    Identifiers.load = { name: 'ɵld', moduleName: CORE$1 };
     Identifiers.projection = { name: 'ɵP', moduleName: CORE$1 };
     Identifiers.projectionDef = { name: 'ɵpD', moduleName: CORE$1 };
     Identifiers.refreshComponent = { name: 'ɵr', moduleName: CORE$1 };
@@ -29927,7 +29927,7 @@ var TemplateDefinitionBuilder = /** @class */ (function () {
                 // Generate the update temporary.
                 var /** @type {?} */ variableName = _this.bindingScope.freshReferenceName();
                 _this._bindingMode.push(variable(variableName, INFERRED_TYPE)
-                    .set(importExpr(Identifiers$1.memory).callFn([literal(slot)]))
+                    .set(importExpr(Identifiers$1.load).callFn([literal(slot)]))
                     .toDeclStmt(INFERRED_TYPE, [StmtModifier.Final]));
                 _this.bindingScope.set(reference.name, variableName);
                 return [reference.name, reference.originalValue];
@@ -43688,7 +43688,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v6.0.0-beta.4-3ceee99
+ * @license Angular v6.0.0-beta.4-a8b5465
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -45432,7 +45432,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('6.0.0-beta.4-3ceee99');
+var VERSION$2 = new Version$1('6.0.0-beta.4-a8b5465');
 
 /**
  * @fileoverview added by tsickle
@@ -58602,6 +58602,13 @@ var NG_HOST_SYMBOL = '__ngHostLNode__';
 var renderer;
 var rendererFactory;
 /**
+ * @return {?}
+ */
+function getRenderer() {
+    // top level variables should not be exported for performance reason (PERF_NOTES.md)
+    return renderer;
+}
+/**
  * Used to set the parent property when nodes are created.
  */
 var previousOrParentNode;
@@ -59121,12 +59128,6 @@ function initBindings() {
     if (currentView.bindingStartIndex == null) {
         bindingIndex = currentView.bindingStartIndex = data.length;
     }
-}
-/**
- * @return {?}
- */
-function getRenderer() {
-    return renderer;
 }
 /**
  * @template T
@@ -59802,7 +59803,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-beta.4-3ceee99
+ * @license Angular v6.0.0-beta.4-a8b5465
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -62451,7 +62452,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('6.0.0-beta.4-3ceee99');
+var VERSION = new Version$1('6.0.0-beta.4-a8b5465');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
