@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.2.5-612cfec
+ * @license Angular v5.2.5-5ec38f2
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v5.2.5-612cfec
+ * @license Angular v5.2.5-5ec38f2
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -691,7 +691,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('5.2.5-612cfec');
+var VERSION$1 = new Version('5.2.5-5ec38f2');
 
 /**
  * @fileoverview added by tsickle
@@ -42106,7 +42106,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v5.2.5-612cfec
+ * @license Angular v5.2.5-5ec38f2
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -42537,7 +42537,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('5.2.5-612cfec');
+var VERSION$2 = new Version$1('5.2.5-5ec38f2');
 
 /**
  * @fileoverview added by tsickle
@@ -44171,7 +44171,7 @@ function convertTsickleDecoratorIntoMetadata(decoratorInvocations) {
  * @return {?}
  */
 function getParentCtor(ctor) {
-    var /** @type {?} */ parentProto = Object.getPrototypeOf(ctor.prototype);
+    var /** @type {?} */ parentProto = ctor.prototype ? Object.getPrototypeOf(ctor.prototype) : null;
     var /** @type {?} */ parentCtor = parentProto ? parentProto.constructor : null;
     // Note: We always use `Object` as the null value
     // to simplify checking later on.
@@ -56779,7 +56779,7 @@ function initViewStaticData(viewIndex, parent) {
 var NO_CHANGE = /** @type {?} */ ({});
 
 /**
- * @license Angular v5.2.5-612cfec
+ * @license Angular v5.2.5-5ec38f2
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59428,7 +59428,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('5.2.5-612cfec');
+var VERSION = new Version$1('5.2.5-5ec38f2');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
