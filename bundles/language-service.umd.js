@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-beta.5-aabe16c
+ * @license Angular v6.0.0-beta.5-9eaf1bb
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v6.0.0-beta.5-aabe16c
+ * @license Angular v6.0.0-beta.5-9eaf1bb
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -717,7 +717,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('6.0.0-beta.5-aabe16c');
+var VERSION$1 = new Version('6.0.0-beta.5-9eaf1bb');
 
 /**
  * @fileoverview added by tsickle
@@ -44211,7 +44211,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v6.0.0-beta.5-aabe16c
+ * @license Angular v6.0.0-beta.5-9eaf1bb
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -45959,7 +45959,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('6.0.0-beta.5-aabe16c');
+var VERSION$2 = new Version$1('6.0.0-beta.5-9eaf1bb');
 
 /**
  * @fileoverview added by tsickle
@@ -59378,6 +59378,17 @@ function renderEmbeddedTemplate(viewNode, template, context, renderer) {
     return viewNode;
 }
 /**
+ * Sets the context for a ChangeDetectorRef to the given instance.
+ * @param {?} injector
+ * @param {?} instance
+ * @return {?}
+ */
+function initChangeDetectorIfExisting(injector, instance) {
+    if (injector && injector.changeDetectorRef != null) {
+        (/** @type {?} */ (injector.changeDetectorRef))._setComponentContext(instance);
+    }
+}
+/**
  * This function instantiates a directive with a correct queryName. It is a hack since we should
  * compute the query value only once and store it with the template (rather than on each invocation)
  * @param {?} index
@@ -59708,6 +59719,119 @@ function assertDataInRange(index, arr) {
 function assertDataNext(index) {
     assertEqual(data.length, index, 'index expected to be at the end of data');
 }
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+var ViewRef$1 = /** @class */ (function () {
+    function ViewRef(context) {
+        this.context = /** @type {?} */ ((context));
+    }
+    /** @internal */
+    /**
+     * \@internal
+     * @param {?} context
+     * @return {?}
+     */
+    ViewRef.prototype._setComponentContext = /**
+     * \@internal
+     * @param {?} context
+     * @return {?}
+     */
+    function (context) { this.context = context; };
+    /**
+     * @return {?}
+     */
+    ViewRef.prototype.destroy = /**
+     * @return {?}
+     */
+    function () { notImplemented(); };
+    /**
+     * @param {?} callback
+     * @return {?}
+     */
+    ViewRef.prototype.onDestroy = /**
+     * @param {?} callback
+     * @return {?}
+     */
+    function (callback) { notImplemented(); };
+    /**
+     * @return {?}
+     */
+    ViewRef.prototype.markForCheck = /**
+     * @return {?}
+     */
+    function () { notImplemented(); };
+    /**
+     * @return {?}
+     */
+    ViewRef.prototype.detach = /**
+     * @return {?}
+     */
+    function () { notImplemented(); };
+    /**
+     * @return {?}
+     */
+    ViewRef.prototype.detectChanges = /**
+     * @return {?}
+     */
+    function () { notImplemented(); };
+    /**
+     * @return {?}
+     */
+    ViewRef.prototype.checkNoChanges = /**
+     * @return {?}
+     */
+    function () { notImplemented(); };
+    /**
+     * @return {?}
+     */
+    ViewRef.prototype.reattach = /**
+     * @return {?}
+     */
+    function () { notImplemented(); };
+    return ViewRef;
+}());
+var EmbeddedViewRef$1 = /** @class */ (function (_super) {
+    __extends(EmbeddedViewRef, _super);
+    function EmbeddedViewRef(viewNode, template, context) {
+        var _this = _super.call(this, context) || this;
+        _this._lViewNode = viewNode;
+        return _this;
+    }
+    return EmbeddedViewRef;
+}(ViewRef$1));
+/**
+ * Interface for destroy logic. Implemented by addDestroyable.
+ * @record
+ */
+
+/**
+ * Decorates an object with destroy logic (implementing the DestroyRef interface)
+ * and returns the enhanced object.
+ *
+ * @template T, C
+ * @param {?} obj The object to decorate
+ * @return {?} The object with destroy logic
+ */
+function addDestroyable(obj) {
+    var /** @type {?} */ destroyFn = null;
+    obj.destroyed = false;
+    obj.destroy = function () {
+        destroyFn && destroyFn.forEach(function (fn) { return fn(); });
+        this.destroyed = true;
+    };
+    obj.onDestroy = function (fn) { return (destroyFn || (destroyFn = [])).push(fn); };
+    return obj;
+}
+
 /**
  * Retrieve the host element of the component.
  *
@@ -60068,67 +60192,9 @@ var TemplateRef$1 = /** @class */ (function () {
      */
     function (context) {
         var /** @type {?} */ viewNode = renderEmbeddedTemplate(null, this._template, context, this._renderer);
-        return new EmbeddedViewRef$2(viewNode, this._template, context);
+        return addDestroyable(new EmbeddedViewRef$1(viewNode, this._template, context));
     };
     return TemplateRef;
-}());
-var EmbeddedViewRef$2 = /** @class */ (function () {
-    function EmbeddedViewRef(viewNode, template, context) {
-        this._lViewNode = viewNode;
-        this.context = context;
-    }
-    /**
-     * @return {?}
-     */
-    EmbeddedViewRef.prototype.destroy = /**
-     * @return {?}
-     */
-    function () { notImplemented(); };
-    /**
-     * @param {?} callback
-     * @return {?}
-     */
-    EmbeddedViewRef.prototype.onDestroy = /**
-     * @param {?} callback
-     * @return {?}
-     */
-    function (callback) { notImplemented(); };
-    /**
-     * @return {?}
-     */
-    EmbeddedViewRef.prototype.markForCheck = /**
-     * @return {?}
-     */
-    function () { notImplemented(); };
-    /**
-     * @return {?}
-     */
-    EmbeddedViewRef.prototype.detach = /**
-     * @return {?}
-     */
-    function () { notImplemented(); };
-    /**
-     * @return {?}
-     */
-    EmbeddedViewRef.prototype.detectChanges = /**
-     * @return {?}
-     */
-    function () { notImplemented(); };
-    /**
-     * @return {?}
-     */
-    EmbeddedViewRef.prototype.checkNoChanges = /**
-     * @return {?}
-     */
-    function () { notImplemented(); };
-    /**
-     * @return {?}
-     */
-    EmbeddedViewRef.prototype.reattach = /**
-     * @return {?}
-     */
-    function () { notImplemented(); };
-    return EmbeddedViewRef;
 }());
 
 var QueryList_ = /** @class */ (function () {
@@ -60348,7 +60414,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-beta.5-aabe16c
+ * @license Angular v6.0.0-beta.5-9eaf1bb
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -62997,7 +63063,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('6.0.0-beta.5-aabe16c');
+var VERSION = new Version$1('6.0.0-beta.5-9eaf1bb');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
