@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-beta.5-930ecac
+ * @license Angular v6.0.0-beta.5-7d65356
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v6.0.0-beta.5-930ecac
+ * @license Angular v6.0.0-beta.5-7d65356
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -717,7 +717,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('6.0.0-beta.5-930ecac');
+var VERSION$1 = new Version('6.0.0-beta.5-7d65356');
 
 /**
  * @fileoverview added by tsickle
@@ -44211,7 +44211,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v6.0.0-beta.5-930ecac
+ * @license Angular v6.0.0-beta.5-7d65356
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -45959,7 +45959,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('6.0.0-beta.5-930ecac');
+var VERSION$2 = new Version$1('6.0.0-beta.5-7d65356');
 
 /**
  * @fileoverview added by tsickle
@@ -59212,7 +59212,7 @@ function enterView(newView, host) {
     data = newView && newView.data;
     bindingIndex = newView && newView.bindingStartIndex || 0;
     tData = newView && newView.tView.data;
-    creationMode = newView && newView.creationMode;
+    creationMode = newView && (newView.flags & 1 /* CreationMode */) === 1 /* CreationMode */;
     cleanup = newView && newView.cleanup;
     renderer = newView && newView.renderer;
     if (host != null) {
@@ -59231,7 +59231,8 @@ function enterView(newView, host) {
  */
 function leaveView(newView) {
     executeHooks(currentView.data, currentView.tView.viewHooks, currentView.tView.viewCheckHooks, creationMode);
-    currentView.creationMode = false;
+    // Views should be clean and in update mode after being checked, so these bits are cleared
+    currentView.flags &= ~(1 /* CreationMode */ | 4 /* Dirty */);
     currentView.lifecycleStage = 1 /* INIT */;
     currentView.tView.firstTemplatePass = false;
     enterView(newView, null);
@@ -59242,13 +59243,15 @@ function leaveView(newView) {
  * @param {?} tView
  * @param {?} template
  * @param {?} context
+ * @param {?} flags
  * @return {?}
  */
-function createLView(viewId, renderer, tView, template, context) {
+function createLView(viewId, renderer, tView, template, context, flags) {
     var /** @type {?} */ newView = {
         parent: currentView,
         id: viewId,
         // -1 for component views
+        flags: flags | 1 /* CreationMode */,
         node: /** @type {?} */ ((null)),
         // until we initialize it in createNode.
         data: [],
@@ -59259,7 +59262,6 @@ function createLView(viewId, renderer, tView, template, context) {
         tail: null,
         next: null,
         bindingStartIndex: null,
-        creationMode: true,
         template: template,
         context: context,
         dynamicViewCount: 0,
@@ -59360,7 +59362,7 @@ function renderEmbeddedTemplate(viewNode, template, context, renderer) {
         previousOrParentNode = /** @type {?} */ ((null));
         var /** @type {?} */ cm = false;
         if (viewNode == null) {
-            var /** @type {?} */ view = createLView(-1, renderer, createTView(), template, context);
+            var /** @type {?} */ view = createLView(-1, renderer, createTView(), template, context, 2 /* CheckAlways */);
             viewNode = createLNode(null, 2 /* View */, null, view);
             cm = true;
         }
@@ -59638,6 +59640,23 @@ function addToViewTree(state) {
     return state;
 }
 /**
+ * Mark the component as dirty (needing change detection).
+ *
+ * Marking a component dirty will schedule a change detection on this
+ * component at some point in the future. Marking an already dirty
+ * component as dirty is a noop. Only one outstanding change detection
+ * can be scheduled per component tree. (Two components bootstrapped with
+ * separate `renderComponent` will have separate schedulers)
+ *
+ * When the root component is bootstrapped with `renderComponent`, a scheduler
+ * can be provided.
+ *
+ * @template T
+ * @param {?} component Component to mark as dirty.
+ * @return {?}
+ */
+
+/**
  * A special value which designates that a value has not changed.
  */
 var NO_CHANGE = /** @type {?} */ ({});
@@ -59689,7 +59708,6 @@ function assertDataInRange(index, arr) {
 function assertDataNext(index) {
     assertEqual(data.length, index, 'index expected to be at the end of data');
 }
-
 /**
  * Retrieve the host element of the component.
  *
@@ -60330,7 +60348,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-beta.5-930ecac
+ * @license Angular v6.0.0-beta.5-7d65356
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -62979,7 +62997,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('6.0.0-beta.5-930ecac');
+var VERSION = new Version$1('6.0.0-beta.5-7d65356');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
