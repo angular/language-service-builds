@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-beta.6-0e311e3
+ * @license Angular v6.0.0-beta.6-dd53447
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v6.0.0-beta.6-0e311e3
+ * @license Angular v6.0.0-beta.6-dd53447
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -717,7 +717,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('6.0.0-beta.6-0e311e3');
+var VERSION$1 = new Version('6.0.0-beta.6-dd53447');
 
 /**
  * @fileoverview added by tsickle
@@ -17547,11 +17547,12 @@ var InjectableCompiler = /** @class */ (function () {
                     }
                 }
             }
+            var /** @type {?} */ tokenExpr = typeof token === 'string' ? literal(token) : ctx.importExpr(token);
             if (flags !== 0 /* Default */ || defaultValue !== undefined) {
-                args = [ctx.importExpr(token), literal(defaultValue), literal(flags)];
+                args = [tokenExpr, literal(defaultValue), literal(flags)];
             }
             else {
-                args = [ctx.importExpr(token)];
+                args = [tokenExpr];
             }
             return importExpr(Identifiers.inject).callFn(args);
         });
@@ -44211,7 +44212,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v6.0.0-beta.6-0e311e3
+ * @license Angular v6.0.0-beta.6-dd53447
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -45959,7 +45960,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('6.0.0-beta.6-0e311e3');
+var VERSION$2 = new Version$1('6.0.0-beta.6-dd53447');
 
 /**
  * @fileoverview added by tsickle
@@ -60414,7 +60415,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-beta.6-0e311e3
+ * @license Angular v6.0.0-beta.6-dd53447
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -63063,7 +63064,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('6.0.0-beta.6-0e311e3');
+var VERSION = new Version$1('6.0.0-beta.6-dd53447');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
