@@ -1,5 +1,5 @@
 /**
- * @license Angular v5.2.0-2717a3e
+ * @license Angular v6.0.0-beta.6-371ec91
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1748,7 +1748,7 @@ var ReflectorHost = /** @class */ (function () {
                 throw new Error('Resolution of relative paths requires a containing file.');
             }
             // Any containing file gives the same result for absolute imports
-            containingFile = join(this.options.basePath, 'index.ts');
+            containingFile = join(this.options.basePath, 'index.ts').replace(/\\/g, '/');
         }
         var resolved = resolveModuleName(moduleName, containingFile, this.options, this.hostAdapter)
             .resolvedModule;
@@ -2656,7 +2656,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version('5.2.0-2717a3e');
+var VERSION = new Version('6.0.0-beta.6-371ec91');
 
 /**
  * @license
