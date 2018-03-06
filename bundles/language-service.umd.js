@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-beta.6-f86d8ae
+ * @license Angular v6.0.0-beta.6-2c75acc
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v6.0.0-beta.6-f86d8ae
+ * @license Angular v6.0.0-beta.6-2c75acc
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -717,7 +717,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('6.0.0-beta.6-f86d8ae');
+var VERSION$1 = new Version('6.0.0-beta.6-2c75acc');
 
 /**
  * @fileoverview added by tsickle
@@ -44649,7 +44649,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v6.0.0-beta.6-f86d8ae
+ * @license Angular v6.0.0-beta.6-2c75acc
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -46397,7 +46397,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('6.0.0-beta.6-f86d8ae');
+var VERSION$2 = new Version$1('6.0.0-beta.6-2c75acc');
 
 /**
  * @fileoverview added by tsickle
@@ -58935,6 +58935,26 @@ if (typeof ngDevMode == 'undefined') {
  * found in the LICENSE file at https://angular.io/license
  */
 /**
+ * Linked list of projected nodes (using the pNextOrParent property).
+ * @record
+ */
+
+var NG_PROJECT_AS_ATTR_NAME = 'ngProjectAs';
+// Note: This hack is necessary so we don't erroneously get a circular dependency
+// failure based on types.
+
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+/**
  * @param {?} node
  * @param {?} type
  * @return {?}
@@ -59908,8 +59928,12 @@ function setUpAttributes(native, attrs) {
     ngDevMode && assertEqual(attrs.length % 2, 0, 'each attribute should have a key and a value');
     var /** @type {?} */ isProc = isProceduralRenderer(renderer);
     for (var /** @type {?} */ i = 0; i < attrs.length; i += 2) {
-        isProc ? (/** @type {?} */ (renderer)).setAttribute(native, attrs[i], attrs[i | 1]) :
-            native.setAttribute(attrs[i], attrs[i | 1]);
+        var /** @type {?} */ attrName = attrs[i];
+        if (attrName !== NG_PROJECT_AS_ATTR_NAME) {
+            var /** @type {?} */ attrVal = attrs[i + 1];
+            isProc ? (/** @type {?} */ (renderer)).setAttribute(native, attrName, attrVal) :
+                native.setAttribute(attrName, attrVal);
+        }
     }
 }
 /**
@@ -60852,7 +60876,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-beta.6-f86d8ae
+ * @license Angular v6.0.0-beta.6-2c75acc
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -63501,7 +63525,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('6.0.0-beta.6-f86d8ae');
+var VERSION = new Version$1('6.0.0-beta.6-2c75acc');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
