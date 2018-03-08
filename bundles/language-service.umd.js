@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-beta.7-8407fcc
+ * @license Angular v6.0.0-beta.7-4c089c1
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v6.0.0-beta.7-8407fcc
+ * @license Angular v6.0.0-beta.7-4c089c1
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -717,7 +717,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('6.0.0-beta.7-8407fcc');
+var VERSION$1 = new Version('6.0.0-beta.7-4c089c1');
 
 /**
  * @fileoverview added by tsickle
@@ -44649,7 +44649,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v6.0.0-beta.7-8407fcc
+ * @license Angular v6.0.0-beta.7-4c089c1
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -46397,7 +46397,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('6.0.0-beta.7-8407fcc');
+var VERSION$2 = new Version$1('6.0.0-beta.7-4c089c1');
 
 /**
  * @fileoverview added by tsickle
@@ -58992,97 +58992,6 @@ function throwError(msg) {
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-if (typeof ngDevMode == 'undefined') {
-    if (typeof window != 'undefined')
-        (/** @type {?} */ (window)).ngDevMode = true;
-    if (typeof self != 'undefined')
-        (/** @type {?} */ (self)).ngDevMode = true;
-    if (typeof global != 'undefined')
-        (/** @type {?} */ (global)).ngDevMode = true;
-}
-
-/**
- * @fileoverview added by tsickle
- * @suppress {checkTypes} checked by tsc
- */
-/**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
- */
-/**
- * Linked list of projected nodes (using the pNextOrParent property).
- * @record
- */
-
-var NG_PROJECT_AS_ATTR_NAME = 'ngProjectAs';
-// Note: This hack is necessary so we don't erroneously get a circular dependency
-// failure based on types.
-
-/**
- * @fileoverview added by tsickle
- * @suppress {checkTypes} checked by tsc
- */
-/**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
- */
-/**
- * @param {?} node
- * @param {?} type
- * @return {?}
- */
-function assertNodeType(node, type) {
-    assertNotNull$1(node, 'should be called with a node');
-    assertEqual(node.flags & 3 /* TYPE_MASK */, type, "should be a " + typeName(type));
-}
-/**
- * @param {?} node
- * @param {...?} types
- * @return {?}
- */
-function assertNodeOfPossibleTypes(node) {
-    var types = [];
-    for (var _i = 1; _i < arguments.length; _i++) {
-        types[_i - 1] = arguments[_i];
-    }
-    assertNotNull$1(node, 'should be called with a node');
-    var /** @type {?} */ nodeType = node.flags & 3;
-    var /** @type {?} */ found = types.some(function (type) { return nodeType === type; });
-    assertEqual(found, true, "Should be one of " + types.map(typeName).join(', '));
-}
-/**
- * @param {?} type
- * @return {?}
- */
-function typeName(type) {
-    if (type == 1 /* Projection */)
-        return 'Projection';
-    if (type == 0 /* Container */)
-        return 'Container';
-    if (type == 2 /* View */)
-        return 'View';
-    if (type == 3 /* Element */)
-        return 'Element';
-    return '<unknown>';
-}
-
-/**
- * @fileoverview added by tsickle
- * @suppress {checkTypes} checked by tsc
- */
-/**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
- */
 /**
  * If this is the first template pass, any ngOnInit or ngDoCheck hooks will be queued into
  * TView.initHooks during directiveCreate.
@@ -59179,6 +59088,97 @@ function callHooks(data, arr) {
     for (var /** @type {?} */ i = 0; i < arr.length; i += 2) {
         (/** @type {?} */ (arr[i | 1])).call(data[/** @type {?} */ (arr[i])]);
     }
+}
+
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+if (typeof ngDevMode == 'undefined') {
+    if (typeof window != 'undefined')
+        (/** @type {?} */ (window)).ngDevMode = true;
+    if (typeof self != 'undefined')
+        (/** @type {?} */ (self)).ngDevMode = true;
+    if (typeof global != 'undefined')
+        (/** @type {?} */ (global)).ngDevMode = true;
+}
+
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+/**
+ * Linked list of projected nodes (using the pNextOrParent property).
+ * @record
+ */
+
+var NG_PROJECT_AS_ATTR_NAME = 'ngProjectAs';
+// Note: This hack is necessary so we don't erroneously get a circular dependency
+// failure based on types.
+
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+/**
+ * @param {?} node
+ * @param {?} type
+ * @return {?}
+ */
+function assertNodeType(node, type) {
+    assertNotNull$1(node, 'should be called with a node');
+    assertEqual(node.flags & 3 /* TYPE_MASK */, type, "should be a " + typeName(type));
+}
+/**
+ * @param {?} node
+ * @param {...?} types
+ * @return {?}
+ */
+function assertNodeOfPossibleTypes(node) {
+    var types = [];
+    for (var _i = 1; _i < arguments.length; _i++) {
+        types[_i - 1] = arguments[_i];
+    }
+    assertNotNull$1(node, 'should be called with a node');
+    var /** @type {?} */ nodeType = node.flags & 3;
+    var /** @type {?} */ found = types.some(function (type) { return nodeType === type; });
+    assertEqual(found, true, "Should be one of " + types.map(typeName).join(', '));
+}
+/**
+ * @param {?} type
+ * @return {?}
+ */
+function typeName(type) {
+    if (type == 1 /* Projection */)
+        return 'Projection';
+    if (type == 0 /* Container */)
+        return 'Container';
+    if (type == 2 /* View */)
+        return 'View';
+    if (type == 3 /* Element */)
+        return 'Element';
+    return '<unknown>';
 }
 
 /**
@@ -60191,6 +60191,48 @@ function addToViewTree(state) {
     return state;
 }
 /**
+ * Synchronously perform change detection on a component (and possibly its sub-components).
+ *
+ * This function triggers change detection in a synchronous way on a component. There should
+ * be very little reason to call this function directly since a preferred way to do change
+ * detection is to {\@link markDirty} the component and wait for the scheduler to call this method
+ * at some future point in time. This is because a single user action often results in many
+ * components being invalidated and calling change detection on each component synchronously
+ * would be inefficient. It is better to wait until all components are marked as dirty and
+ * then perform single change detection across all of the components
+ *
+ * @template T
+ * @param {?} component The component which the change detection should be performed on.
+ * @return {?}
+ */
+function detectChanges(component) {
+    var /** @type {?} */ hostNode = _getComponentHostLElementNode(component);
+    ngDevMode && assertNotNull$1(hostNode.data, 'Component host node should be attached to an LView');
+    detectChangesInternal(/** @type {?} */ (hostNode.data), hostNode, component);
+}
+/**
+ * Checks the view of the component provided. Does not gate on dirty checks or execute doCheck.
+ * @template T
+ * @param {?} hostView
+ * @param {?} hostNode
+ * @param {?} component
+ * @return {?}
+ */
+function detectChangesInternal(hostView, hostNode, component) {
+    var /** @type {?} */ componentIndex = hostNode.flags >> 12;
+    var /** @type {?} */ template = (/** @type {?} */ (hostNode.view.tView.data[componentIndex])).template;
+    var /** @type {?} */ oldView = enterView(hostView, hostNode);
+    if (template != null) {
+        try {
+            template(component, creationMode);
+        }
+        finally {
+            refreshDynamicChildren();
+            leaveView(oldView);
+        }
+    }
+}
+/**
  * Mark the component as dirty (needing change detection).
  *
  * Marking a component dirty will schedule a change detection on this
@@ -60260,6 +60302,17 @@ function assertDataNext(index) {
     assertEqual(data.length, index, 'index expected to be at the end of data');
 }
 /**
+ * @template T
+ * @param {?} component
+ * @return {?}
+ */
+function _getComponentHostLElementNode(component) {
+    ngDevMode && assertNotNull$1(component, 'expecting component got null');
+    var /** @type {?} */ lElementNode = /** @type {?} */ ((/** @type {?} */ (component))[NG_HOST_SYMBOL]);
+    ngDevMode && assertNotNull$1(component, 'object is not a component');
+    return lElementNode;
+}
+/**
  * @fileoverview added by tsickle
  * @suppress {checkTypes} checked by tsc
  */
@@ -60322,7 +60375,7 @@ var ViewRef$1 = /** @class */ (function () {
     ViewRef.prototype.detectChanges = /**
      * @return {?}
      */
-    function () { notImplemented(); };
+    function () { detectChanges(this.context); };
     /**
      * @return {?}
      */
@@ -60371,6 +60424,23 @@ function addDestroyable(obj) {
     obj.onDestroy = function (fn) { return (destroyFn || (destroyFn = [])).push(fn); };
     return obj;
 }
+
+/**
+ * Used to enable lifecycle hooks on the root component.
+ *
+ * Include this feature when calling `renderComponent` if the root component
+ * you are rendering has lifecycle hooks defined. Otherwise, the hooks won't
+ * be called properly.
+ *
+ * Example:
+ *
+ * ```
+ * renderComponent(AppComponent, {features: [RootLifecycleHooks]});
+ * ```
+ * @param {?} component
+ * @param {?} def
+ * @return {?}
+ */
 
 /**
  * Retrieve the host element of the component.
@@ -60954,7 +61024,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-beta.7-8407fcc
+ * @license Angular v6.0.0-beta.7-4c089c1
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -63603,7 +63673,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('6.0.0-beta.7-8407fcc');
+var VERSION = new Version$1('6.0.0-beta.7-4c089c1');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
