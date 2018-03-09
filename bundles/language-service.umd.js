@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-beta.7-b0b9ca3
+ * @license Angular v6.0.0-beta.7-b26a905
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v6.0.0-beta.7-b0b9ca3
+ * @license Angular v6.0.0-beta.7-b26a905
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -717,7 +717,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('6.0.0-beta.7-b0b9ca3');
+var VERSION$1 = new Version('6.0.0-beta.7-b26a905');
 
 /**
  * @fileoverview added by tsickle
@@ -44798,7 +44798,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v6.0.0-beta.7-b0b9ca3
+ * @license Angular v6.0.0-beta.7-b26a905
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -46546,7 +46546,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('6.0.0-beta.7-b0b9ca3');
+var VERSION$2 = new Version$1('6.0.0-beta.7-b26a905');
 
 /**
  * @fileoverview added by tsickle
@@ -59936,7 +59936,7 @@ function createLView(viewId, renderer, tView, template, context, flags) {
         parent: currentView,
         id: viewId,
         // -1 for component views
-        flags: flags | 1 /* CreationMode */,
+        flags: flags | 1 /* CreationMode */ | 8 /* Attached */,
         node: /** @type {?} */ ((null)),
         // until we initialize it in createNode.
         data: [],
@@ -60473,7 +60473,8 @@ function _getComponentHostLElementNode(component) {
  * found in the LICENSE file at https://angular.io/license
  */
 var ViewRef$1 = /** @class */ (function () {
-    function ViewRef(context) {
+    function ViewRef(_view, context) {
+        this._view = _view;
         this.context = /** @type {?} */ ((context));
     }
     /** @internal */
@@ -60512,12 +60513,50 @@ var ViewRef$1 = /** @class */ (function () {
      */
     function () { notImplemented(); };
     /**
+     * Detaches a view from the change detection tree.
+     *
+     * Detached views will not be checked during change detection runs, even if the view
+     * is dirty. This can be used in combination with detectChanges to implement local
+     * change detection checks.
+     */
+    /**
+     * Detaches a view from the change detection tree.
+     *
+     * Detached views will not be checked during change detection runs, even if the view
+     * is dirty. This can be used in combination with detectChanges to implement local
+     * change detection checks.
      * @return {?}
      */
     ViewRef.prototype.detach = /**
+     * Detaches a view from the change detection tree.
+     *
+     * Detached views will not be checked during change detection runs, even if the view
+     * is dirty. This can be used in combination with detectChanges to implement local
+     * change detection checks.
      * @return {?}
      */
-    function () { notImplemented(); };
+    function () { this._view.flags &= ~8 /* Attached */; };
+    /**
+     * Re-attaches a view to the change detection tree.
+     *
+     * This can be used to re-attach views that were previously detached from the tree
+     * using detach(). Views are attached to the tree by default.
+     */
+    /**
+     * Re-attaches a view to the change detection tree.
+     *
+     * This can be used to re-attach views that were previously detached from the tree
+     * using detach(). Views are attached to the tree by default.
+     * @return {?}
+     */
+    ViewRef.prototype.reattach = /**
+     * Re-attaches a view to the change detection tree.
+     *
+     * This can be used to re-attach views that were previously detached from the tree
+     * using detach(). Views are attached to the tree by default.
+     * @return {?}
+     */
+    function () { this._view.flags |= 8 /* Attached */; };
     /**
      * @return {?}
      */
@@ -60532,19 +60571,12 @@ var ViewRef$1 = /** @class */ (function () {
      * @return {?}
      */
     function () { notImplemented(); };
-    /**
-     * @return {?}
-     */
-    ViewRef.prototype.reattach = /**
-     * @return {?}
-     */
-    function () { notImplemented(); };
     return ViewRef;
 }());
 var EmbeddedViewRef$1 = /** @class */ (function (_super) {
     __extends(EmbeddedViewRef, _super);
     function EmbeddedViewRef(viewNode, template, context) {
-        var _this = _super.call(this, context) || this;
+        var _this = _super.call(this, viewNode.data, context) || this;
         _this._lViewNode = viewNode;
         return _this;
     }
@@ -61173,7 +61205,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-beta.7-b0b9ca3
+ * @license Angular v6.0.0-beta.7-b26a905
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -63822,7 +63854,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('6.0.0-beta.7-b0b9ca3');
+var VERSION = new Version$1('6.0.0-beta.7-b26a905');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
