@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-beta.7-0d8deb0
+ * @license Angular v6.0.0-beta.7-fa451bc
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v6.0.0-beta.7-0d8deb0
+ * @license Angular v6.0.0-beta.7-fa451bc
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -717,7 +717,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('6.0.0-beta.7-0d8deb0');
+var VERSION$1 = new Version('6.0.0-beta.7-fa451bc');
 
 /**
  * @fileoverview added by tsickle
@@ -44798,7 +44798,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v6.0.0-beta.7-0d8deb0
+ * @license Angular v6.0.0-beta.7-fa451bc
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -46546,7 +46546,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('6.0.0-beta.7-0d8deb0');
+var VERSION$2 = new Version$1('6.0.0-beta.7-fa451bc');
 
 /**
  * @fileoverview added by tsickle
@@ -59211,6 +59211,35 @@ function queueDestroyHooks(def, tView, i) {
     }
 }
 /**
+ * Calls onInit and doCheck calls if they haven't already been called.
+ *
+ * @param {?} currentView The current view
+ * @param {?} tView
+ * @param {?} creationMode
+ * @return {?}
+ */
+function executeInitHooks(currentView, tView, creationMode) {
+    if (currentView.lifecycleStage === 1 /* INIT */) {
+        executeHooks(currentView.data, tView.initHooks, tView.checkHooks, creationMode);
+        currentView.lifecycleStage = 2 /* CONTENT_INIT */;
+    }
+}
+/**
+ * Calls all afterContentInit and afterContentChecked hooks for the view, then splices
+ * out afterContentInit hooks to prep for the next run in update mode.
+ *
+ * @param {?} currentView The current view
+ * @param {?} tView
+ * @param {?} creationMode
+ * @return {?}
+ */
+function executeContentHooks(currentView, tView, creationMode) {
+    if (currentView.lifecycleStage < 3 /* VIEW_INIT */) {
+        executeHooks(currentView.data, tView.contentHooks, tView.contentCheckHooks, creationMode);
+        currentView.lifecycleStage = 3 /* VIEW_INIT */;
+    }
+}
+/**
  * Iterates over afterViewInit and afterViewChecked functions and calls them.
  *
  * @param {?} data
@@ -59795,6 +59824,11 @@ function flatten$1$1(list) {
  */
 var NG_HOST_SYMBOL = '__ngHostLNode__';
 /**
+ * A permanent marker promise which signifies that the current CD tree is
+ * clean.
+ */
+var _CLEAN_PROMISE = Promise.resolve(null);
+/**
  * This property gets set before entering a template.
  *
  * This renderer can be one of two varieties of Renderer3:
@@ -60063,6 +60097,36 @@ function renderEmbeddedTemplate(viewNode, template, context, renderer) {
     return viewNode;
 }
 /**
+ * @template T
+ * @param {?} node
+ * @param {?} hostView
+ * @param {?} componentOrContext
+ * @param {?=} template
+ * @return {?}
+ */
+function renderComponentOrTemplate(node, hostView, componentOrContext, template) {
+    var /** @type {?} */ oldView = enterView(hostView, node);
+    try {
+        if (rendererFactory.begin) {
+            rendererFactory.begin();
+        }
+        if (template) {
+            template(/** @type {?} */ ((componentOrContext)), creationMode);
+        }
+        else {
+            // Element was stored at 0 and directive was stored at 1 in renderComponent
+            // so to refresh the component, refresh() needs to be called with (1, 0)
+            directiveRefresh(1, 0);
+        }
+    }
+    finally {
+        if (rendererFactory.end) {
+            rendererFactory.end();
+        }
+        leaveView(oldView);
+    }
+}
+/**
  * Sets the context for a ChangeDetectorRef to the given instance.
  * @param {?} injector
  * @param {?} instance
@@ -60325,6 +60389,43 @@ function getOrCreateEmbeddedTView(viewIndex, parent) {
     return tContainer[viewIndex];
 }
 /**
+ * Refreshes the directive, triggering init and content hooks.
+ *
+ * When it is a component, it also enters the component's view and processes it to update bindings,
+ * queries, etc.
+ *
+ * @template T
+ * @param {?} directiveIndex
+ * @param {?} elementIndex
+ * @return {?}
+ */
+function directiveRefresh(directiveIndex, elementIndex) {
+    executeInitHooks(currentView, currentView.tView, creationMode);
+    executeContentHooks(currentView, currentView.tView, creationMode);
+    var /** @type {?} */ template = (/** @type {?} */ (tData[directiveIndex])).template;
+    if (template != null) {
+        ngDevMode && assertDataInRange(elementIndex);
+        var /** @type {?} */ element = /** @type {?} */ (((data))[elementIndex]);
+        ngDevMode && assertNodeType(element, 3 /* Element */);
+        ngDevMode &&
+            assertNotNull$1(element.data, "Component's host node should have an LView attached.");
+        var /** @type {?} */ hostView = /** @type {?} */ ((element.data));
+        // Only attached CheckAlways components or attached, dirty OnPush components should be checked
+        if (viewAttached(hostView) && hostView.flags & (2 /* CheckAlways */ | 4 /* Dirty */)) {
+            ngDevMode && assertDataInRange(directiveIndex);
+            detectChangesInternal(hostView, element, getDirectiveInstance(data[directiveIndex]));
+        }
+    }
+}
+/**
+ * Returns a boolean for whether the view is attached
+ * @param {?} view
+ * @return {?}
+ */
+function viewAttached(view) {
+    return (view.flags & 8 /* Attached */) === 8 /* Attached */;
+}
+/**
  * Adds a LView or a LContainer to the end of the current view tree.
  *
  * This structure will be used to traverse through nested views to remove listeners
@@ -60338,6 +60439,84 @@ function addToViewTree(state) {
     currentView.tail ? (currentView.tail.next = state) : (currentView.child = state);
     currentView.tail = state;
     return state;
+}
+/**
+ * Marks current view and all ancestors dirty
+ * @param {?} view
+ * @return {?}
+ */
+function markViewDirty(view) {
+    var /** @type {?} */ currentView = view;
+    while (currentView.parent != null) {
+        currentView.flags |= 4 /* Dirty */;
+        currentView = currentView.parent;
+    }
+    currentView.flags |= 4 /* Dirty */;
+    ngDevMode && assertNotNull$1(/** @type {?} */ ((currentView)).context, 'rootContext');
+    scheduleTick(/** @type {?} */ (((currentView)).context));
+}
+/**
+ * Used to schedule change detection on the whole application.
+ *
+ * Unlike `tick`, `scheduleTick` coalesces multiple calls into one change detection run.
+ * It is usually called indirectly by calling `markDirty` when the view needs to be
+ * re-rendered.
+ *
+ * Typically `scheduleTick` uses `requestAnimationFrame` to coalesce multiple
+ * `scheduleTick` requests. The scheduling function can be overridden in
+ * `renderComponent`'s `scheduler` option.
+ * @template T
+ * @param {?} rootContext
+ * @return {?}
+ */
+function scheduleTick(rootContext) {
+    if (rootContext.clean == _CLEAN_PROMISE) {
+        var /** @type {?} */ res_1;
+        rootContext.clean = new Promise(function (r) { return res_1 = r; });
+        rootContext.scheduler(function () {
+            tick(rootContext.component); /** @type {?} */
+            ((res_1))(null);
+            rootContext.clean = _CLEAN_PROMISE;
+        });
+    }
+}
+/**
+ * Used to perform change detection on the whole application.
+ *
+ * This is equivalent to `detectChanges`, but invoked on root component. Additionally, `tick`
+ * executes lifecycle hooks and conditionally checks components based on their
+ * `ChangeDetectionStrategy` and dirtiness.
+ *
+ * The preferred way to trigger change detection is to call `markDirty`. `markDirty` internally
+ * schedules `tick` using a scheduler in order to coalesce multiple `markDirty` calls into a
+ * single change detection run. By default, the scheduler is `requestAnimationFrame`, but can
+ * be changed when calling `renderComponent` and providing the `scheduler` option.
+ * @template T
+ * @param {?} component
+ * @return {?}
+ */
+function tick(component) {
+    var /** @type {?} */ rootView = getRootView(component);
+    var /** @type {?} */ rootComponent = (/** @type {?} */ (rootView.context)).component;
+    var /** @type {?} */ hostNode = _getComponentHostLElementNode(rootComponent);
+    ngDevMode && assertNotNull$1(hostNode.data, 'Component host node should be attached to an LView');
+    renderComponentOrTemplate(hostNode, rootView, rootComponent);
+}
+/**
+ * Retrieve the root view from any component by walking the parent `LView` until
+ * reaching the root `LView`.
+ *
+ * @param {?} component any component
+ * @return {?}
+ */
+function getRootView(component) {
+    ngDevMode && assertNotNull$1(component, 'component');
+    var /** @type {?} */ lElementNode = _getComponentHostLElementNode(component);
+    var /** @type {?} */ lView = lElementNode.view;
+    while (lView.parent) {
+        lView = lView.parent;
+    }
+    return lView;
 }
 /**
  * Synchronously perform change detection on a component (and possibly its sub-components).
@@ -60506,33 +60685,263 @@ var ViewRef$1 = /** @class */ (function () {
      */
     function (callback) { notImplemented(); };
     /**
+     * Marks a view and all of its ancestors dirty.
+     *
+     * It also triggers change detection by calling `scheduleTick` internally, which coalesces
+     * multiple `markForCheck` calls to into one change detection run.
+     *
+     * This can be used to ensure an {@link ChangeDetectionStrategy#OnPush OnPush} component is
+     * checked when it needs to be re-rendered but the two normal triggers haven't marked it
+     * dirty (i.e. inputs haven't changed and events haven't fired in the view).
+     *
+     * <!-- TODO: Add a link to a chapter on OnPush components -->
+     *
+     * ### Example ([live demo](https://stackblitz.com/edit/angular-kx7rrw))
+     *
+     * ```typescript
+     * @Component({
+     *   selector: 'my-app',
+     *   template: `Number of ticks: {{numberOfTicks}}`
+     *   changeDetection: ChangeDetectionStrategy.OnPush,
+     * })
+     * class AppComponent {
+     *   numberOfTicks = 0;
+     *
+     *   constructor(private ref: ChangeDetectorRef) {
+     *     setInterval(() => {
+     *       this.numberOfTicks++;
+     *       // the following is required, otherwise the view will not be updated
+     *       this.ref.markForCheck();
+     *     }, 1000);
+     *   }
+     * }
+     * ```
+     */
+    /**
+     * Marks a view and all of its ancestors dirty.
+     *
+     * It also triggers change detection by calling `scheduleTick` internally, which coalesces
+     * multiple `markForCheck` calls to into one change detection run.
+     *
+     * This can be used to ensure an {\@link ChangeDetectionStrategy#OnPush OnPush} component is
+     * checked when it needs to be re-rendered but the two normal triggers haven't marked it
+     * dirty (i.e. inputs haven't changed and events haven't fired in the view).
+     *
+     * <!-- TODO: Add a link to a chapter on OnPush components -->
+     *
+     * ### Example ([live demo](https://stackblitz.com/edit/angular-kx7rrw))
+     *
+     * ```typescript
+     * \@Component({
+     *   selector: 'my-app',
+     *   template: `Number of ticks: {{numberOfTicks}}`
+     *   changeDetection: ChangeDetectionStrategy.OnPush,
+     * })
+     * class AppComponent {
+     *   numberOfTicks = 0;
+     *
+     *   constructor(private ref: ChangeDetectorRef) {
+     *     setInterval(() => {
+     *       this.numberOfTicks++;
+     *       // the following is required, otherwise the view will not be updated
+     *       this.ref.markForCheck();
+     *     }, 1000);
+     *   }
+     * }
+     * ```
      * @return {?}
      */
     ViewRef.prototype.markForCheck = /**
+     * Marks a view and all of its ancestors dirty.
+     *
+     * It also triggers change detection by calling `scheduleTick` internally, which coalesces
+     * multiple `markForCheck` calls to into one change detection run.
+     *
+     * This can be used to ensure an {\@link ChangeDetectionStrategy#OnPush OnPush} component is
+     * checked when it needs to be re-rendered but the two normal triggers haven't marked it
+     * dirty (i.e. inputs haven't changed and events haven't fired in the view).
+     *
+     * <!-- TODO: Add a link to a chapter on OnPush components -->
+     *
+     * ### Example ([live demo](https://stackblitz.com/edit/angular-kx7rrw))
+     *
+     * ```typescript
+     * \@Component({
+     *   selector: 'my-app',
+     *   template: `Number of ticks: {{numberOfTicks}}`
+     *   changeDetection: ChangeDetectionStrategy.OnPush,
+     * })
+     * class AppComponent {
+     *   numberOfTicks = 0;
+     *
+     *   constructor(private ref: ChangeDetectorRef) {
+     *     setInterval(() => {
+     *       this.numberOfTicks++;
+     *       // the following is required, otherwise the view will not be updated
+     *       this.ref.markForCheck();
+     *     }, 1000);
+     *   }
+     * }
+     * ```
      * @return {?}
      */
-    function () { notImplemented(); };
+    function () { markViewDirty(this._view); };
     /**
-     * Detaches a view from the change detection tree.
+     * Detaches the view from the change detection tree.
      *
-     * Detached views will not be checked during change detection runs, even if the view
-     * is dirty. This can be used in combination with detectChanges to implement local
-     * change detection checks.
+     * Detached views will not be checked during change detection runs until they are
+     * re-attached, even if they are dirty. `detach` can be used in combination with
+     * {@link ChangeDetectorRef#detectChanges detectChanges} to implement local change
+     * detection checks.
+     *
+     * <!-- TODO: Add a link to a chapter on detach/reattach/local digest -->
+     * <!-- TODO: Add a live demo once ref.detectChanges is merged into master -->
+     *
+     * ### Example
+     *
+     * The following example defines a component with a large list of readonly data.
+     * Imagine the data changes constantly, many times per second. For performance reasons,
+     * we want to check and update the list every five seconds. We can do that by detaching
+     * the component's change detector and doing a local check every five seconds.
+     *
+     * ```typescript
+     * class DataProvider {
+     *   // in a real application the returned data will be different every time
+     *   get data() {
+     *     return [1,2,3,4,5];
+     *   }
+     * }
+     *
+     * @Component({
+     *   selector: 'giant-list',
+     *   template: `
+     *     <li *ngFor="let d of dataProvider.data">Data {{d}}</li>
+     *   `,
+     * })
+     * class GiantList {
+     *   constructor(private ref: ChangeDetectorRef, private dataProvider: DataProvider) {
+     *     ref.detach();
+     *     setInterval(() => {
+     *       this.ref.detectChanges();
+     *     }, 5000);
+     *   }
+     * }
+     *
+     * @Component({
+     *   selector: 'app',
+     *   providers: [DataProvider],
+     *   template: `
+     *     <giant-list><giant-list>
+     *   `,
+     * })
+     * class App {
+     * }
+     * ```
      */
     /**
-     * Detaches a view from the change detection tree.
+     * Detaches the view from the change detection tree.
      *
-     * Detached views will not be checked during change detection runs, even if the view
-     * is dirty. This can be used in combination with detectChanges to implement local
-     * change detection checks.
+     * Detached views will not be checked during change detection runs until they are
+     * re-attached, even if they are dirty. `detach` can be used in combination with
+     * {\@link ChangeDetectorRef#detectChanges detectChanges} to implement local change
+     * detection checks.
+     *
+     * <!-- TODO: Add a link to a chapter on detach/reattach/local digest -->
+     * <!-- TODO: Add a live demo once ref.detectChanges is merged into master -->
+     *
+     * ### Example
+     *
+     * The following example defines a component with a large list of readonly data.
+     * Imagine the data changes constantly, many times per second. For performance reasons,
+     * we want to check and update the list every five seconds. We can do that by detaching
+     * the component's change detector and doing a local check every five seconds.
+     *
+     * ```typescript
+     * class DataProvider {
+     *   // in a real application the returned data will be different every time
+     *   get data() {
+     *     return [1,2,3,4,5];
+     *   }
+     * }
+     *
+     * \@Component({
+     *   selector: 'giant-list',
+     *   template: `
+     *     <li *ngFor="let d of dataProvider.data">Data {{d}}</li>
+     *   `,
+     * })
+     * class GiantList {
+     *   constructor(private ref: ChangeDetectorRef, private dataProvider: DataProvider) {
+     *     ref.detach();
+     *     setInterval(() => {
+     *       this.ref.detectChanges();
+     *     }, 5000);
+     *   }
+     * }
+     *
+     * \@Component({
+     *   selector: 'app',
+     *   providers: [DataProvider],
+     *   template: `
+     *     <giant-list><giant-list>
+     *   `,
+     * })
+     * class App {
+     * }
+     * ```
      * @return {?}
      */
     ViewRef.prototype.detach = /**
-     * Detaches a view from the change detection tree.
+     * Detaches the view from the change detection tree.
      *
-     * Detached views will not be checked during change detection runs, even if the view
-     * is dirty. This can be used in combination with detectChanges to implement local
-     * change detection checks.
+     * Detached views will not be checked during change detection runs until they are
+     * re-attached, even if they are dirty. `detach` can be used in combination with
+     * {\@link ChangeDetectorRef#detectChanges detectChanges} to implement local change
+     * detection checks.
+     *
+     * <!-- TODO: Add a link to a chapter on detach/reattach/local digest -->
+     * <!-- TODO: Add a live demo once ref.detectChanges is merged into master -->
+     *
+     * ### Example
+     *
+     * The following example defines a component with a large list of readonly data.
+     * Imagine the data changes constantly, many times per second. For performance reasons,
+     * we want to check and update the list every five seconds. We can do that by detaching
+     * the component's change detector and doing a local check every five seconds.
+     *
+     * ```typescript
+     * class DataProvider {
+     *   // in a real application the returned data will be different every time
+     *   get data() {
+     *     return [1,2,3,4,5];
+     *   }
+     * }
+     *
+     * \@Component({
+     *   selector: 'giant-list',
+     *   template: `
+     *     <li *ngFor="let d of dataProvider.data">Data {{d}}</li>
+     *   `,
+     * })
+     * class GiantList {
+     *   constructor(private ref: ChangeDetectorRef, private dataProvider: DataProvider) {
+     *     ref.detach();
+     *     setInterval(() => {
+     *       this.ref.detectChanges();
+     *     }, 5000);
+     *   }
+     * }
+     *
+     * \@Component({
+     *   selector: 'app',
+     *   providers: [DataProvider],
+     *   template: `
+     *     <giant-list><giant-list>
+     *   `,
+     * })
+     * class App {
+     * }
+     * ```
      * @return {?}
      */
     function () { this._view.flags &= ~8 /* Attached */; };
@@ -60540,27 +60949,230 @@ var ViewRef$1 = /** @class */ (function () {
      * Re-attaches a view to the change detection tree.
      *
      * This can be used to re-attach views that were previously detached from the tree
-     * using detach(). Views are attached to the tree by default.
+     * using {@link ChangeDetectorRef#detach detach}. Views are attached to the tree by default.
+     *
+     * <!-- TODO: Add a link to a chapter on detach/reattach/local digest -->
+     *
+     * ### Example ([live demo](https://stackblitz.com/edit/angular-ymgsxw))
+     *
+     * The following example creates a component displaying `live` data. The component will detach
+     * its change detector from the main change detector tree when the component's live property
+     * is set to false.
+     *
+     * ```typescript
+     * class DataProvider {
+     *   data = 1;
+     *
+     *   constructor() {
+     *     setInterval(() => {
+     *       this.data = this.data * 2;
+     *     }, 500);
+     *   }
+     * }
+     *
+     * @Component({
+     *   selector: 'live-data',
+     *   inputs: ['live'],
+     *   template: 'Data: {{dataProvider.data}}'
+     * })
+     * class LiveData {
+     *   constructor(private ref: ChangeDetectorRef, private dataProvider: DataProvider) {}
+     *
+     *   set live(value) {
+     *     if (value) {
+     *       this.ref.reattach();
+     *     } else {
+     *       this.ref.detach();
+     *     }
+     *   }
+     * }
+     *
+     * @Component({
+     *   selector: 'my-app',
+     *   providers: [DataProvider],
+     *   template: `
+     *     Live Update: <input type="checkbox" [(ngModel)]="live">
+     *     <live-data [live]="live"><live-data>
+     *   `,
+     * })
+     * class AppComponent {
+     *   live = true;
+     * }
+     * ```
      */
     /**
      * Re-attaches a view to the change detection tree.
      *
      * This can be used to re-attach views that were previously detached from the tree
-     * using detach(). Views are attached to the tree by default.
+     * using {\@link ChangeDetectorRef#detach detach}. Views are attached to the tree by default.
+     *
+     * <!-- TODO: Add a link to a chapter on detach/reattach/local digest -->
+     *
+     * ### Example ([live demo](https://stackblitz.com/edit/angular-ymgsxw))
+     *
+     * The following example creates a component displaying `live` data. The component will detach
+     * its change detector from the main change detector tree when the component's live property
+     * is set to false.
+     *
+     * ```typescript
+     * class DataProvider {
+     *   data = 1;
+     *
+     *   constructor() {
+     *     setInterval(() => {
+     *       this.data = this.data * 2;
+     *     }, 500);
+     *   }
+     * }
+     *
+     * \@Component({
+     *   selector: 'live-data',
+     *   inputs: ['live'],
+     *   template: 'Data: {{dataProvider.data}}'
+     * })
+     * class LiveData {
+     *   constructor(private ref: ChangeDetectorRef, private dataProvider: DataProvider) {}
+     *
+     *   set live(value) {
+     *     if (value) {
+     *       this.ref.reattach();
+     *     } else {
+     *       this.ref.detach();
+     *     }
+     *   }
+     * }
+     *
+     * \@Component({
+     *   selector: 'my-app',
+     *   providers: [DataProvider],
+     *   template: `
+     *     Live Update: <input type="checkbox" [(ngModel)]="live">
+     *     <live-data [live]="live"><live-data>
+     *   `,
+     * })
+     * class AppComponent {
+     *   live = true;
+     * }
+     * ```
      * @return {?}
      */
     ViewRef.prototype.reattach = /**
      * Re-attaches a view to the change detection tree.
      *
      * This can be used to re-attach views that were previously detached from the tree
-     * using detach(). Views are attached to the tree by default.
+     * using {\@link ChangeDetectorRef#detach detach}. Views are attached to the tree by default.
+     *
+     * <!-- TODO: Add a link to a chapter on detach/reattach/local digest -->
+     *
+     * ### Example ([live demo](https://stackblitz.com/edit/angular-ymgsxw))
+     *
+     * The following example creates a component displaying `live` data. The component will detach
+     * its change detector from the main change detector tree when the component's live property
+     * is set to false.
+     *
+     * ```typescript
+     * class DataProvider {
+     *   data = 1;
+     *
+     *   constructor() {
+     *     setInterval(() => {
+     *       this.data = this.data * 2;
+     *     }, 500);
+     *   }
+     * }
+     *
+     * \@Component({
+     *   selector: 'live-data',
+     *   inputs: ['live'],
+     *   template: 'Data: {{dataProvider.data}}'
+     * })
+     * class LiveData {
+     *   constructor(private ref: ChangeDetectorRef, private dataProvider: DataProvider) {}
+     *
+     *   set live(value) {
+     *     if (value) {
+     *       this.ref.reattach();
+     *     } else {
+     *       this.ref.detach();
+     *     }
+     *   }
+     * }
+     *
+     * \@Component({
+     *   selector: 'my-app',
+     *   providers: [DataProvider],
+     *   template: `
+     *     Live Update: <input type="checkbox" [(ngModel)]="live">
+     *     <live-data [live]="live"><live-data>
+     *   `,
+     * })
+     * class AppComponent {
+     *   live = true;
+     * }
+     * ```
      * @return {?}
      */
     function () { this._view.flags |= 8 /* Attached */; };
     /**
+     * Checks the view and its children.
+     *
+     * This can also be used in combination with {@link ChangeDetectorRef#detach detach} to implement
+     * local change detection checks.
+     *
+     * <!-- TODO: Add a link to a chapter on detach/reattach/local digest -->
+     * <!-- TODO: Add a live demo once ref.detectChanges is merged into master -->
+     *
+     * ### Example
+     *
+     * The following example defines a component with a large list of readonly data.
+     * Imagine, the data changes constantly, many times per second. For performance reasons,
+     * we want to check and update the list every five seconds.
+     *
+     * We can do that by detaching the component's change detector and doing a local change detection
+     * check every five seconds.
+     *
+     * See {@link ChangeDetectorRef#detach detach} for more information.
+     */
+    /**
+     * Checks the view and its children.
+     *
+     * This can also be used in combination with {\@link ChangeDetectorRef#detach detach} to implement
+     * local change detection checks.
+     *
+     * <!-- TODO: Add a link to a chapter on detach/reattach/local digest -->
+     * <!-- TODO: Add a live demo once ref.detectChanges is merged into master -->
+     *
+     * ### Example
+     *
+     * The following example defines a component with a large list of readonly data.
+     * Imagine, the data changes constantly, many times per second. For performance reasons,
+     * we want to check and update the list every five seconds.
+     *
+     * We can do that by detaching the component's change detector and doing a local change detection
+     * check every five seconds.
+     *
+     * See {\@link ChangeDetectorRef#detach detach} for more information.
      * @return {?}
      */
     ViewRef.prototype.detectChanges = /**
+     * Checks the view and its children.
+     *
+     * This can also be used in combination with {\@link ChangeDetectorRef#detach detach} to implement
+     * local change detection checks.
+     *
+     * <!-- TODO: Add a link to a chapter on detach/reattach/local digest -->
+     * <!-- TODO: Add a live demo once ref.detectChanges is merged into master -->
+     *
+     * ### Example
+     *
+     * The following example defines a component with a large list of readonly data.
+     * Imagine, the data changes constantly, many times per second. For performance reasons,
+     * we want to check and update the list every five seconds.
+     *
+     * We can do that by detaching the component's change detector and doing a local change detection
+     * check every five seconds.
+     *
+     * See {\@link ChangeDetectorRef#detach detach} for more information.
      * @return {?}
      */
     function () { detectChanges(this.context); };
@@ -61205,7 +61817,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-beta.7-0d8deb0
+ * @license Angular v6.0.0-beta.7-fa451bc
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -63854,7 +64466,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('6.0.0-beta.7-0d8deb0');
+var VERSION = new Version$1('6.0.0-beta.7-fa451bc');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
