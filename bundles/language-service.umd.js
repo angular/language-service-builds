@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-beta.7-f95730b
+ * @license Angular v6.0.0-beta.7-6e00410
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v6.0.0-beta.7-f95730b
+ * @license Angular v6.0.0-beta.7-6e00410
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -717,7 +717,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('6.0.0-beta.7-f95730b');
+var VERSION$1 = new Version('6.0.0-beta.7-6e00410');
 
 /**
  * @fileoverview added by tsickle
@@ -44529,7 +44529,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v6.0.0-beta.7-f95730b
+ * @license Angular v6.0.0-beta.7-6e00410
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -46016,13 +46016,13 @@ var InjectionToken = /** @class */ (function () {
          */
         this.ngMetadataName = 'InjectionToken';
         if (options !== undefined) {
-            this.ngInjectableDef = defineInjectable({
+            /** @nocollapse */ this.ngInjectableDef = defineInjectable({
                 scope: options.scope,
                 factory: options.factory,
             });
         }
         else {
-            this.ngInjectableDef = undefined;
+            /** @nocollapse */ this.ngInjectableDef = undefined;
         }
     }
     /**
@@ -46277,7 +46277,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('6.0.0-beta.7-f95730b');
+var VERSION$2 = new Version$1('6.0.0-beta.7-6e00410');
 
 /**
  * @fileoverview added by tsickle
@@ -61608,7 +61608,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-beta.7-f95730b
+ * @license Angular v6.0.0-beta.7-6e00410
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -64269,7 +64269,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('6.0.0-beta.7-f95730b');
+var VERSION = new Version$1('6.0.0-beta.7-6e00410');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
