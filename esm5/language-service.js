@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-beta.7-0bf6fa5
+ * @license Angular v6.0.0-beta.7-3f70aba
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2066,7 +2066,9 @@ var TypeScriptServiceHost = /** @class */ (function () {
                 var _a = this.getTemplateClassDeclFromNode(node), declaration = _a[0], decorator = _a[1];
                 if (declaration && declaration.name) {
                     var sourceFile = this.getSourceFile(fileName);
-                    return this.getSourceFromDeclaration(fileName, version$$1, this.stringOf(node) || '', shrink(spanOf$1(node)), this.reflector.getStaticSymbol(sourceFile.fileName, declaration.name.text), declaration, node, sourceFile);
+                    if (sourceFile) {
+                        return this.getSourceFromDeclaration(fileName, version$$1, this.stringOf(node) || '', shrink(spanOf$1(node)), this.reflector.getStaticSymbol(sourceFile.fileName, declaration.name.text), declaration, node, sourceFile);
+                    }
                 }
                 break;
         }
@@ -2405,7 +2407,11 @@ function angularOnlyFilter(ls) {
         getApplicableRefactors: function (fileName, positionOrRaneg) { return []; },
         getEditsForRefactor: function (fileName, formatOptions, positionOrRange, refactorName, actionName) {
             return undefined;
-        }
+        },
+        getDefinitionAndBoundSpan: function (fileName, position) {
+            return ({ definitions: [], textSpan: { start: 0, length: 0 } });
+        },
+        getCombinedCodeFix: function (scope, fixId, formatOptions) { return ({ changes: [], commands: undefined }); }
     };
 }
 function create(info /* ts.server.PluginCreateInfo */) {
@@ -2489,7 +2495,11 @@ function create(info /* ts.server.PluginCreateInfo */) {
             getProgram: function () { return ls.getProgram(); },
             dispose: function () { return ls.dispose(); },
             getApplicableRefactors: tryFilenameOneCall(ls.getApplicableRefactors),
-            getEditsForRefactor: tryFilenameFourCall(ls.getEditsForRefactor)
+            getEditsForRefactor: tryFilenameFourCall(ls.getEditsForRefactor),
+            getDefinitionAndBoundSpan: tryFilenameOneCall(ls.getDefinitionAndBoundSpan),
+            getCombinedCodeFix: function (scope, fixId, formatOptions) {
+                return tryCall(undefined, function () { return ls.getCombinedCodeFix(scope, fixId, formatOptions); });
+            }
         };
     }
     oldLS = typescriptOnly(oldLS);
@@ -2608,7 +2618,9 @@ function create(info /* ts.server.PluginCreateInfo */) {
             var ours = ls.getDiagnostics(fileName);
             if (ours && ours.length) {
                 var file_1 = oldLS.getProgram().getSourceFile(fileName);
-                base.push.apply(base, ours.map(function (d) { return diagnosticToDiagnostic(d, file_1); }));
+                if (file_1) {
+                    base.push.apply(base, ours.map(function (d) { return diagnosticToDiagnostic(d, file_1); }));
+                }
             }
         });
         return base;
@@ -2656,7 +2668,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version('6.0.0-beta.7-0bf6fa5');
+var VERSION = new Version('6.0.0-beta.7-3f70aba');
 
 /**
  * @license

@@ -67,7 +67,7 @@ export declare class TypeScriptServiceHost implements LanguageServiceHost {
     private ensureAnalyzedModules();
     getTemplates(fileName: string): TemplateSources;
     getDeclarations(fileName: string): Declarations;
-    getSourceFile(fileName: string): ts.SourceFile;
+    getSourceFile(fileName: string): ts.SourceFile | undefined;
     updateAnalyzedModules(): void;
     private readonly program;
     private readonly checker;
