@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-beta.7-21e44c6
+ * @license Angular v6.0.0-beta.7-db56836
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v6.0.0-beta.7-21e44c6
+ * @license Angular v6.0.0-beta.7-db56836
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -717,7 +717,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('6.0.0-beta.7-21e44c6');
+var VERSION$1 = new Version('6.0.0-beta.7-db56836');
 
 /**
  * @fileoverview added by tsickle
@@ -17745,10 +17745,19 @@ var InjectableCompiler = /** @class */ (function () {
      * @return {?}
      */
     function (injectable, ctx) {
+        var /** @type {?} */ providedIn = NULL_EXPR;
+        if (injectable.providedIn) {
+            if (typeof injectable.providedIn === 'string') {
+                providedIn = literal(injectable.providedIn);
+            }
+            else {
+                providedIn = ctx.importExpr(injectable.providedIn);
+            }
+        }
         var /** @type {?} */ def = [
             mapEntry('factory', this.factoryFor(injectable, ctx)),
             mapEntry('token', ctx.importExpr(injectable.type.reference)),
-            mapEntry('scope', ctx.importExpr(/** @type {?} */ ((injectable.module)))),
+            mapEntry('providedIn', providedIn),
         ];
         return importExpr(Identifiers.defineInjectable).callFn([literalMap(def)]);
     };
@@ -17763,7 +17772,7 @@ var InjectableCompiler = /** @class */ (function () {
      * @return {?}
      */
     function (injectable, ctx) {
-        if (injectable.module) {
+        if (injectable.providedIn) {
             var /** @type {?} */ className = /** @type {?} */ ((identifierName(injectable.type)));
             var /** @type {?} */ clazz = new ClassStmt(className, null, [
                 new ClassField('ngInjectableDef', INFERRED_TYPE, [StmtModifier.Static], this.injectableDef(injectable, ctx)),
@@ -19452,7 +19461,7 @@ var CompileMetadataResolver = /** @class */ (function () {
         return {
             symbol: type,
             type: typeMetadata,
-            module: meta.scope || undefined,
+            providedIn: meta.providedIn,
             useValue: meta.useValue,
             useClass: meta.useClass,
             useExisting: meta.useExisting,
@@ -44529,7 +44538,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v6.0.0-beta.7-21e44c6
+ * @license Angular v6.0.0-beta.7-db56836
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -45945,14 +45954,19 @@ function convertInjectableProviderToFactory(type, provider) {
     }
 }
 /**
- * Define injectable
+ * Construct an `InjectableDef` which defines how a token will be constructed by the DI system, and
+ * in which injectors (if any) it will be available.
  *
  * \@experimental
+ * @template T
  * @param {?} opts
  * @return {?}
  */
 function defineInjectable(opts) {
-    return opts;
+    return {
+        providedIn: opts.providedIn || null,
+        factory: opts.factory,
+    };
 }
 /**
  * Injectable decorator and metadata.
@@ -45961,13 +45975,17 @@ function defineInjectable(opts) {
  * \@Annotation
  */
 var Injectable$1 = makeDecorator('Injectable', undefined, undefined, undefined, function (injectableType, options) {
-    if (options && options.scope) {
+    if (options && options.providedIn) {
         (/** @type {?} */ (injectableType)).ngInjectableDef = defineInjectable({
-            scope: options.scope,
+            providedIn: options.providedIn,
             factory: convertInjectableProviderToFactory(injectableType, options)
         });
     }
 });
+/**
+ * @record
+ */
+
 /**
  * Type representing injectable service.
  *
@@ -46017,7 +46035,7 @@ var InjectionToken = /** @class */ (function () {
         this.ngMetadataName = 'InjectionToken';
         if (options !== undefined) {
             /** @nocollapse */ this.ngInjectableDef = defineInjectable({
-                scope: options.scope,
+                providedIn: options.providedIn || 'root',
                 factory: options.factory,
             });
         }
@@ -46277,7 +46295,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('6.0.0-beta.7-21e44c6');
+var VERSION$2 = new Version$1('6.0.0-beta.7-db56836');
 
 /**
  * @fileoverview added by tsickle
@@ -47913,30 +47931,6 @@ function _mapProviders(injector, fn) {
     }
     return res;
 }
-
-/**
- * @fileoverview added by tsickle
- * @suppress {checkTypes} checked by tsc
- */
-/**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
- */
-/**
- * A scope which targets the root injector.
- *
- * When specified as the `scope` parameter to `\@Injectable` or `InjectionToken`, this special
- * scope indicates the provider for the service or token being configured belongs in the root
- * injector. This is loosely equivalent to the convention of having a `forRoot()` static
- * function within a module that configures the provider, and expecting users to only import that
- * module via its `forRoot()` function in the root injector.
- *
- * \@experimental
- */
-var APP_ROOT_SCOPE = /** @type {?} */ (new InjectionToken('The presence of this token marks an injector as being the root injector.'));
 
 /**
  * @fileoverview added by tsickle
@@ -53473,6 +53467,24 @@ var ApplicationModule = /** @class */ (function () {
  * found in the LICENSE file at https://angular.io/license
  */
 /**
+ * An internal token whose presence in an injector indicates that the injector should treat itself
+ * as a root scoped injector when processing requests for unknown tokens which may indicate
+ * they are provided in the root scope.
+ */
+var APP_ROOT = new InjectionToken('The presence of this token marks an injector as being the root injector.');
+
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+/**
  * @param {?} tags
  * @return {?}
  */
@@ -53640,10 +53652,6 @@ var Sanitizer = /** @class */ (function () {
  *
  * Note: We use one type for all nodes so that loops that loop over all nodes
  * of a ViewDefinition stay monomorphic!
- * @record
- */
-
-/**
  * @record
  */
 
@@ -54612,12 +54620,12 @@ function resolveNgModuleDep(data, depDef, notFoundValue) {
         return providerInstance === UNDEFINED_VALUE ? undefined : providerInstance;
     }
     else if (depDef.token.ngInjectableDef && targetsModule(data, depDef.token.ngInjectableDef)) {
-        var /** @type {?} */ injectableDef_1 = /** @type {?} */ (depDef.token.ngInjectableDef);
+        var /** @type {?} */ injectableDef = /** @type {?} */ (depDef.token.ngInjectableDef);
         var /** @type {?} */ key = tokenKey$$1;
         var /** @type {?} */ index = data._providers.length;
         data._def.providersByKey[depDef.tokenKey] = {
             flags: 1024 /* TypeFactoryProvider */ | 4096 /* LazyProvider */,
-            value: injectableDef_1.factory,
+            value: injectableDef.factory,
             deps: [], index: index,
             token: depDef.token,
         };
@@ -54647,8 +54655,8 @@ function moduleTransitivelyPresent(ngModule, scope) {
  * @return {?}
  */
 function targetsModule(ngModule, def) {
-    return def.scope != null && (moduleTransitivelyPresent(ngModule, def.scope) ||
-        def.scope === APP_ROOT_SCOPE && ngModule._def.isRoot);
+    return def.providedIn != null && (moduleTransitivelyPresent(ngModule, def.providedIn) ||
+        def.providedIn === 'root' && ngModule._def.isRoot);
 }
 /**
  * @param {?} ngModule
@@ -57655,6 +57663,7 @@ function debugCreateNgModuleRef(moduleType, parentInjector, bootstrapComponents,
     return createNgModuleRef(moduleType, parentInjector, bootstrapComponents, defWithOverride);
 }
 var providerOverrides = new Map();
+var providerOverridesWithScope = new Map();
 var viewDefOverrides = new Map();
 /**
  * @param {?} override
@@ -57662,6 +57671,10 @@ var viewDefOverrides = new Map();
  */
 function debugOverrideProvider(override) {
     providerOverrides.set(override.token, override);
+    if (typeof override.token === 'function' && override.token.ngInjectableDef &&
+        typeof override.token.ngInjectableDef.providedIn === 'function') {
+        providerOverridesWithScope.set(/** @type {?} */ (override.token), override);
+    }
 }
 /**
  * @param {?} comp
@@ -57678,6 +57691,7 @@ function debugOverrideComponentView(comp, compFactory) {
  */
 function debugClearOverrides() {
     providerOverrides.clear();
+    providerOverridesWithScope.clear();
     viewDefOverrides.clear();
 }
 /**
@@ -57774,6 +57788,14 @@ function applyProviderOverridesToNgModule(def) {
                 hasDeprecatedOverrides = hasDeprecatedOverrides || override.deprecatedBehavior;
             }
         });
+        def.modules.forEach(function (module) {
+            providerOverridesWithScope.forEach(function (override, token) {
+                if (token.ngInjectableDef.providedIn === module) {
+                    hasOverrides = true;
+                    hasDeprecatedOverrides = hasDeprecatedOverrides || override.deprecatedBehavior;
+                }
+            });
+        });
         return { hasOverrides: hasOverrides, hasDeprecatedOverrides: hasDeprecatedOverrides };
     }
     /**
@@ -57795,6 +57817,22 @@ function applyProviderOverridesToNgModule(def) {
                 provider.deps = splitDepsDsl(override.deps);
                 provider.value = override.value;
             }
+        }
+        if (providerOverridesWithScope.size > 0) {
+            var /** @type {?} */ moduleSet_1 = new Set(def.modules);
+            providerOverridesWithScope.forEach(function (override, token) {
+                if (moduleSet_1.has(token.ngInjectableDef.providedIn)) {
+                    var /** @type {?} */ provider = {
+                        token: token,
+                        flags: override.flags | (hasDeprecatedOverrides ? 4096 /* LazyProvider */ : 0 /* None */),
+                        deps: splitDepsDsl(override.deps),
+                        value: override.value,
+                        index: def.providers.length,
+                    };
+                    def.providers.push(provider);
+                    def.providersByKey[tokenKey(token)] = provider;
+                }
+            });
         }
     }
 }
@@ -61608,7 +61646,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-beta.7-21e44c6
+ * @license Angular v6.0.0-beta.7-db56836
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -64269,7 +64307,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('6.0.0-beta.7-21e44c6');
+var VERSION = new Version$1('6.0.0-beta.7-db56836');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
