@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-beta.7-4ac606b
+ * @license Angular v6.0.0-beta.7-b1365d1
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v6.0.0-beta.7-4ac606b
+ * @license Angular v6.0.0-beta.7-b1365d1
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -717,7 +717,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('6.0.0-beta.7-4ac606b');
+var VERSION$1 = new Version('6.0.0-beta.7-b1365d1');
 
 /**
  * @fileoverview added by tsickle
@@ -44538,7 +44538,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v6.0.0-beta.7-4ac606b
+ * @license Angular v6.0.0-beta.7-b1365d1
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -46295,7 +46295,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('6.0.0-beta.7-4ac606b');
+var VERSION$2 = new Version$1('6.0.0-beta.7-b1365d1');
 
 /**
  * @fileoverview added by tsickle
@@ -58990,22 +58990,7 @@ function queueDestroyHooks(def, tView, i) {
 function executeInitHooks(currentView, tView, creationMode) {
     if (currentView.lifecycleStage === 1 /* INIT */) {
         executeHooks(currentView.data, tView.initHooks, tView.checkHooks, creationMode);
-        currentView.lifecycleStage = 2 /* CONTENT_INIT */;
-    }
-}
-/**
- * Calls all afterContentInit and afterContentChecked hooks for the view, then splices
- * out afterContentInit hooks to prep for the next run in update mode.
- *
- * @param {?} currentView The current view
- * @param {?} tView
- * @param {?} creationMode
- * @return {?}
- */
-function executeContentHooks(currentView, tView, creationMode) {
-    if (currentView.lifecycleStage < 3 /* VIEW_INIT */) {
-        executeHooks(currentView.data, tView.contentHooks, tView.contentCheckHooks, creationMode);
-        currentView.lifecycleStage = 3 /* VIEW_INIT */;
+        currentView.lifecycleStage = 2 /* AFTER_INIT */;
     }
 }
 /**
@@ -59730,8 +59715,32 @@ function leaveView(newView) {
     // Views should be clean and in update mode after being checked, so these bits are cleared
     currentView.flags &= ~(1 /* CreationMode */ | 4 /* Dirty */);
     currentView.lifecycleStage = 1 /* INIT */;
-    currentView.tView.firstTemplatePass = false;
     enterView(newView, null);
+}
+/**
+ * Refreshes the views of child components, triggering any init/content hooks existing.
+ * @return {?}
+ */
+function refreshChildComponents() {
+    executeInitAndContentHooks();
+    // This needs to be set before children are processed to support recursive components
+    currentView.tView.firstTemplatePass = false;
+    var /** @type {?} */ components = currentView.tView.components;
+    if (components != null) {
+        for (var /** @type {?} */ i = 0; i < components.length; i++) {
+            componentRefresh(components[i] + 1, components[i]);
+        }
+    }
+}
+/**
+ * @return {?}
+ */
+function executeInitAndContentHooks() {
+    if (!checkNoChangesMode) {
+        var /** @type {?} */ tView = currentView.tView;
+        executeInitHooks(currentView, tView, creationMode);
+        executeHooks(currentView.data, tView.contentHooks, tView.contentCheckHooks, creationMode);
+    }
 }
 /**
  * @param {?} viewId
@@ -59864,9 +59873,10 @@ function renderEmbeddedTemplate(viewNode, template, context, renderer) {
         }
         enterView(viewNode.data, viewNode);
         template(context, cm);
+        refreshDynamicChildren();
+        refreshChildComponents();
     }
     finally {
-        refreshDynamicChildren();
         leaveView(/** @type {?} */ ((/** @type {?} */ ((currentView)).parent)));
         isParent = _isParent;
         previousOrParentNode = _previousOrParentNode;
@@ -59889,11 +59899,13 @@ function renderComponentOrTemplate(node, hostView, componentOrContext, template)
         }
         if (template) {
             template(/** @type {?} */ ((componentOrContext)), creationMode);
+            refreshChildComponents();
         }
         else {
+            executeInitAndContentHooks();
             // Element was stored at 0 and directive was stored at 1 in renderComponent
             // so to refresh the component, refresh() needs to be called with (1, 0)
-            directiveRefresh(1, 0);
+            componentRefresh(1, 0);
         }
     }
     finally {
@@ -59901,6 +59913,16 @@ function renderComponentOrTemplate(node, hostView, componentOrContext, template)
             rendererFactory.end();
         }
         leaveView(oldView);
+    }
+}
+/**
+ * Stores index of component so it will be queued for refresh during change detection.
+ * @param {?} index
+ * @return {?}
+ */
+function storeComponentIndex(index) {
+    if (currentView.tView.firstTemplatePass) {
+        (currentView.tView.components || (currentView.tView.components = [])).push(index);
     }
 }
 /**
@@ -59984,7 +60006,8 @@ function createTView() {
         contentCheckHooks: null,
         viewHooks: null,
         viewCheckHooks: null,
-        destroyHooks: null
+        destroyHooks: null,
+        components: null
     };
 }
 /**
@@ -60166,7 +60189,7 @@ function getOrCreateEmbeddedTView(viewIndex, parent) {
     return tContainer[viewIndex];
 }
 /**
- * Refreshes the directive, triggering init and content hooks.
+ * Refreshes the directive.
  *
  * When it is a component, it also enters the component's view and processes it to update bindings,
  * queries, etc.
@@ -60176,11 +60199,7 @@ function getOrCreateEmbeddedTView(viewIndex, parent) {
  * @param {?} elementIndex
  * @return {?}
  */
-function directiveRefresh(directiveIndex, elementIndex) {
-    if (!checkNoChangesMode) {
-        executeInitHooks(currentView, currentView.tView, creationMode);
-        executeContentHooks(currentView, currentView.tView, creationMode);
-    }
+function componentRefresh(directiveIndex, elementIndex) {
     var /** @type {?} */ template = (/** @type {?} */ (tData[directiveIndex])).template;
     if (template != null) {
         ngDevMode && assertDataInRange(elementIndex);
@@ -60368,9 +60387,10 @@ function detectChangesInternal(hostView, hostNode, component) {
     if (template != null) {
         try {
             template(component, creationMode);
+            refreshDynamicChildren();
+            refreshChildComponents();
         }
         finally {
-            refreshDynamicChildren();
             leaveView(oldView);
         }
     }
@@ -61646,7 +61666,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-beta.7-4ac606b
+ * @license Angular v6.0.0-beta.7-b1365d1
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -64307,7 +64327,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('6.0.0-beta.7-4ac606b');
+var VERSION = new Version$1('6.0.0-beta.7-b1365d1');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
