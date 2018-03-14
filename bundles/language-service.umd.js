@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-beta.7-9df13ad
+ * @license Angular v6.0.0-beta.7-c09bd67
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v6.0.0-beta.7-9df13ad
+ * @license Angular v6.0.0-beta.7-c09bd67
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -717,7 +717,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('6.0.0-beta.7-9df13ad');
+var VERSION$1 = new Version('6.0.0-beta.7-c09bd67');
 
 /**
  * @fileoverview added by tsickle
@@ -44538,7 +44538,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v6.0.0-beta.7-9df13ad
+ * @license Angular v6.0.0-beta.7-c09bd67
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -46295,7 +46295,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('6.0.0-beta.7-9df13ad');
+var VERSION$2 = new Version$1('6.0.0-beta.7-c09bd67');
 
 /**
  * @fileoverview added by tsickle
@@ -59478,6 +59478,48 @@ function addRemoveViewFromContainer(container, rootNode, insertMode, beforeNode)
     }
 }
 /**
+ * Traverses the tree of component views and containers to remove listeners and
+ * call onDestroy callbacks.
+ *
+ * Notes:
+ *  - Because it's used for onDestroy calls, it needs to be bottom-up.
+ *  - Must process containers instead of their views to avoid splicing
+ *  when views are destroyed and re-added.
+ *  - Using a while loop because it's faster than recursion
+ *  - Destroy only called on movement to sibling or movement to parent (laterally or up)
+ *
+ *  \@param rootView The view to destroy
+ * @param {?} rootView
+ * @return {?}
+ */
+function destroyViewTree(rootView) {
+    var /** @type {?} */ viewOrContainer = rootView;
+    while (viewOrContainer) {
+        var /** @type {?} */ next = null;
+        if (viewOrContainer.views && viewOrContainer.views.length) {
+            next = viewOrContainer.views[0].data;
+        }
+        else if (viewOrContainer.child) {
+            next = viewOrContainer.child;
+        }
+        else if (viewOrContainer.next) {
+            cleanUpView(/** @type {?} */ (viewOrContainer));
+            next = viewOrContainer.next;
+        }
+        if (next == null) {
+            // If the viewOrContainer is the rootView, then the cleanup is done twice.
+            // Without this check, ngOnDestroy would be called twice for a directive on an element.
+            while (viewOrContainer && !/** @type {?} */ ((viewOrContainer)).next && viewOrContainer !== rootView) {
+                cleanUpView(/** @type {?} */ (viewOrContainer));
+                viewOrContainer = getParentState(viewOrContainer, rootView);
+            }
+            cleanUpView(/** @type {?} */ (viewOrContainer) || rootView);
+            next = viewOrContainer && viewOrContainer.next;
+        }
+        viewOrContainer = next;
+    }
+}
+/**
  * Inserts a view into a container.
  *
  * This adds the view to the container's array of active views in the correct
@@ -59497,16 +59539,12 @@ function insertView(container, newView, index) {
         // This is a new view, we need to add it to the children.
         setViewNext(views[index - 1], newView);
     }
-    if (index < views.length && views[index].data.id !== newView.data.id) {
-        // View ID change replace the view.
+    if (index < views.length) {
         setViewNext(newView, views[index]);
         views.splice(index, 0, newView);
     }
-    else if (index >= views.length) {
+    else {
         views.push(newView);
-    }
-    if (state.nextIndex <= index) {
-        state.nextIndex++;
     }
     // If the container's renderParent is null, we know that it is a root node of its own parent view
     // and we should wait until that parent processes its nodes (otherwise, we will insert this view's
@@ -59525,6 +59563,30 @@ function insertView(container, newView, index) {
     return newView;
 }
 /**
+ * Removes a view from a container.
+ *
+ * This method splices the view from the container's array of active views. It also
+ * removes the view's elements from the DOM and conducts cleanup (e.g. removing
+ * listeners, calling onDestroys).
+ *
+ * @param {?} container The container from which to remove a view
+ * @param {?} removeIndex The index of the view to remove
+ * @return {?} The removed view
+ */
+function removeView(container, removeIndex) {
+    var /** @type {?} */ views = container.data.views;
+    var /** @type {?} */ viewNode = views[removeIndex];
+    if (removeIndex > 0) {
+        setViewNext(views[removeIndex - 1], viewNode.next);
+    }
+    views.splice(removeIndex, 1);
+    destroyViewTree(viewNode.data);
+    addRemoveViewFromContainer(container, viewNode, false);
+    // Notify query that view has been removed
+    container.data.queries && container.data.queries.removeView(removeIndex);
+    return viewNode;
+}
+/**
  * Sets a next on the view node, so views in for loops can easily jump from
  * one view to the next to add/remove elements. Also adds the LView (view.data)
  * to the view tree for easy traversal when cleaning up the view.
@@ -59536,6 +59598,72 @@ function insertView(container, newView, index) {
 function setViewNext(view, next) {
     view.next = next;
     view.data.next = next ? next.data : null;
+}
+/**
+ * Determines which LViewOrLContainer to jump to when traversing back up the
+ * tree in destroyViewTree.
+ *
+ * Normally, the view's parent LView should be checked, but in the case of
+ * embedded views, the container (which is the view node's parent, but not the
+ * LView's parent) needs to be checked for a possible next property.
+ *
+ * @param {?} state The LViewOrLContainer for which we need a parent state
+ * @param {?} rootView The rootView, so we don't propagate too far up the view tree
+ * @return {?} The correct parent LViewOrLContainer
+ */
+function getParentState(state, rootView) {
+    var /** @type {?} */ node;
+    if ((node = /** @type {?} */ (((/** @type {?} */ (state)))).node) && (node.flags & 3 /* TYPE_MASK */) === 2 /* View */) {
+        // if it's an embedded view, the state needs to go up to the container, in case the
+        // container has a next
+        return /** @type {?} */ (((node.parent)).data);
+    }
+    else {
+        // otherwise, use parent view for containers or component views
+        return state.parent === rootView ? null : state.parent;
+    }
+}
+/**
+ * Removes all listeners and call all onDestroys in a given view.
+ *
+ * @param {?} view The LView to clean up
+ * @return {?}
+ */
+function cleanUpView(view) {
+    removeListeners(view);
+    executeOnDestroys(view);
+}
+/**
+ * Removes listeners and unsubscribes from output subscriptions
+ * @param {?} view
+ * @return {?}
+ */
+function removeListeners(view) {
+    var /** @type {?} */ cleanup = /** @type {?} */ ((view.cleanup));
+    if (cleanup != null) {
+        for (var /** @type {?} */ i = 0; i < cleanup.length - 1; i += 2) {
+            if (typeof cleanup[i] === 'string') {
+                /** @type {?} */ ((cleanup))[i + 1].removeEventListener(cleanup[i], cleanup[i + 2], cleanup[i + 3]);
+                i += 2;
+            }
+            else {
+                cleanup[i].call(cleanup[i + 1]);
+            }
+        }
+        view.cleanup = null;
+    }
+}
+/**
+ * Calls onDestroy hooks for this view
+ * @param {?} view
+ * @return {?}
+ */
+function executeOnDestroys(view) {
+    var /** @type {?} */ tView = view.tView;
+    var /** @type {?} */ destroyHooks;
+    if (tView != null && (destroyHooks = tView.destroyHooks) != null) {
+        callHooks(view.data, destroyHooks);
+    }
 }
 /**
  * Returns whether a native element should be inserted in the given parent.
@@ -60256,26 +60384,6 @@ function refreshDynamicChildren() {
             }
         }
     }
-}
-/**
- * Initialize the TView (e.g. static data) for the active embedded view.
- *
- * Each embedded view needs to set the global tData variable to the static data for
- * that view. Otherwise, the view's static data for a particular node would overwrite
- * the static data for a node in the view above it with the same index (since it's in the
- * same template).
- *
- * @param {?} viewIndex The index of the TView in TContainer
- * @param {?} parent The parent container in which to look for the view's static data
- * @return {?} TView
- */
-function getOrCreateEmbeddedTView(viewIndex, parent) {
-    ngDevMode && assertNodeType(parent, 0 /* Container */);
-    var /** @type {?} */ tContainer = (/** @type {?} */ (((parent)).tNode)).data;
-    if (viewIndex >= tContainer.length || tContainer[viewIndex] == null) {
-        tContainer[viewIndex] = createTView();
-    }
-    return tContainer[viewIndex];
 }
 /**
  * Refreshes the directive.
@@ -61448,6 +61556,14 @@ var ViewContainerRef$1 = /** @class */ (function () {
         }
         var /** @type {?} */ lView = (/** @type {?} */ (viewRef))._lViewNode;
         insertView(this._node, lView, index);
+        // TODO(pk): this is a temporary index adjustment so imperativelly inserted (through
+        // ViewContainerRef) views
+        // are not removed in the containerRefreshEnd instruction.
+        // The final fix will consist of creating a dedicated container node for views inserted through
+        // ViewContainerRef.
+        // Such container should not be trimmed as it is the case in the containerRefreshEnd
+        // instruction.
+        this._node.data.nextIndex = this._node.data.views.length;
         // If the view is dynamic (has a template), it needs to be counted both at the container
         // level and at the node above the container.
         if (lView.data.template !== null) {
@@ -61755,7 +61871,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-beta.7-9df13ad
+ * @license Angular v6.0.0-beta.7-c09bd67
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -64416,7 +64532,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('6.0.0-beta.7-9df13ad');
+var VERSION = new Version$1('6.0.0-beta.7-c09bd67');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
