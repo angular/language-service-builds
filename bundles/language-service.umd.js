@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-beta.7-4e6ac18
+ * @license Angular v6.0.0-beta.7-0ebd577
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59,7 +59,7 @@ var __assign = Object.assign || function __assign(t) {
 };
 
 /**
- * @license Angular v6.0.0-beta.7-4e6ac18
+ * @license Angular v6.0.0-beta.7-0ebd577
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -718,7 +718,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('6.0.0-beta.7-4e6ac18');
+var VERSION$1 = new Version('6.0.0-beta.7-0ebd577');
 
 /**
  * @fileoverview added by tsickle
@@ -1429,12 +1429,11 @@ function templateVisitAll(visitor, asts, context) {
  */
 var CompilerConfig = /** @class */ (function () {
     function CompilerConfig(_a) {
-        var _b = _a === void 0 ? {} : _a, _c = _b.defaultEncapsulation, defaultEncapsulation = _c === void 0 ? ViewEncapsulation.Emulated : _c, _d = _b.useJit, useJit = _d === void 0 ? true : _d, _e = _b.jitDevMode, jitDevMode = _e === void 0 ? false : _e, _f = _b.missingTranslation, missingTranslation = _f === void 0 ? null : _f, enableLegacyTemplate = _b.enableLegacyTemplate, preserveWhitespaces = _b.preserveWhitespaces, strictInjectionParameters = _b.strictInjectionParameters;
+        var _b = _a === void 0 ? {} : _a, _c = _b.defaultEncapsulation, defaultEncapsulation = _c === void 0 ? ViewEncapsulation.Emulated : _c, _d = _b.useJit, useJit = _d === void 0 ? true : _d, _e = _b.jitDevMode, jitDevMode = _e === void 0 ? false : _e, _f = _b.missingTranslation, missingTranslation = _f === void 0 ? null : _f, preserveWhitespaces = _b.preserveWhitespaces, strictInjectionParameters = _b.strictInjectionParameters;
         this.defaultEncapsulation = defaultEncapsulation;
         this.useJit = !!useJit;
         this.jitDevMode = !!jitDevMode;
         this.missingTranslation = missingTranslation;
-        this.enableLegacyTemplate = enableLegacyTemplate === true;
         this.preserveWhitespaces = preserveWhitespacesDefault(noUndefined(preserveWhitespaces));
         this.strictInjectionParameters = strictInjectionParameters === true;
     }
@@ -25550,29 +25549,9 @@ var IDENT_BANANA_BOX_IDX = 8;
 var IDENT_PROPERTY_IDX = 9;
 // Group 10 = identifier inside ()
 var IDENT_EVENT_IDX = 10;
-// deprecated in 4.x
-var TEMPLATE_ELEMENT = 'template';
-// deprecated in 4.x
-var TEMPLATE_ATTR = 'template';
 var TEMPLATE_ATTR_PREFIX$1 = '*';
 var CLASS_ATTR = 'class';
 var TEXT_CSS_SELECTOR = CssSelector.parse('*')[0];
-var TEMPLATE_ELEMENT_DEPRECATION_WARNING = 'The <template> element is deprecated. Use <ng-template> instead';
-var TEMPLATE_ATTR_DEPRECATION_WARNING = 'The template attribute is deprecated. Use an ng-template element instead.';
-var warningCounts = {};
-/**
- * @param {?} warnings
- * @return {?}
- */
-function warnOnlyOnce(warnings) {
-    return function (error$$1) {
-        if (warnings.indexOf(error$$1.msg) !== -1) {
-            warningCounts[error$$1.msg] = (warningCounts[error$$1.msg] || 0) + 1;
-            return warningCounts[error$$1.msg] <= 1;
-        }
-        return true;
-    };
-}
 var TemplateParseError = /** @class */ (function (_super) {
     __extends(TemplateParseError, _super);
     function TemplateParseError(message, span, level) {
@@ -25628,7 +25607,7 @@ var TemplateParser = /** @class */ (function () {
      */
     function (component, template, directives, pipes, schemas, templateUrl, preserveWhitespaces) {
         var /** @type {?} */ result = this.tryParse(component, template, directives, pipes, schemas, templateUrl, preserveWhitespaces);
-        var /** @type {?} */ warnings = /** @type {?} */ ((result.errors)).filter(function (error$$1) { return error$$1.level === ParseErrorLevel.WARNING; }).filter(warnOnlyOnce([TEMPLATE_ATTR_DEPRECATION_WARNING, TEMPLATE_ELEMENT_DEPRECATION_WARNING]));
+        var /** @type {?} */ warnings = /** @type {?} */ ((result.errors)).filter(function (error$$1) { return error$$1.level === ParseErrorLevel.WARNING; });
         var /** @type {?} */ errors = /** @type {?} */ ((result.errors)).filter(function (error$$1) { return error$$1.level === ParseErrorLevel.ERROR; });
         if (warnings.length > 0) {
             this._console.warn("Template parse warnings:\n" + warnings.join('\n'));
@@ -25904,24 +25883,20 @@ var TemplateParseVisitor = /** @class */ (function () {
         var /** @type {?} */ templateElementVars = [];
         var /** @type {?} */ hasInlineTemplates = false;
         var /** @type {?} */ attrs = [];
-        var /** @type {?} */ isTemplateElement = isTemplate(element, this.config.enableLegacyTemplate, function (m, span) { return _this._reportError(m, span, ParseErrorLevel.WARNING); });
+        var /** @type {?} */ isTemplateElement = isNgTemplate(element.name);
         element.attrs.forEach(function (attr) {
             var /** @type {?} */ hasBinding = _this._parseAttr(isTemplateElement, attr, matchableAttrs, elementOrDirectiveProps, events, elementOrDirectiveRefs, elementVars);
             var /** @type {?} */ templateBindingsSource;
             var /** @type {?} */ prefixToken;
             var /** @type {?} */ normalizedName = _this._normalizeAttributeName(attr.name);
-            if (_this.config.enableLegacyTemplate && normalizedName == TEMPLATE_ATTR) {
-                _this._reportError(TEMPLATE_ATTR_DEPRECATION_WARNING, attr.sourceSpan, ParseErrorLevel.WARNING);
-                templateBindingsSource = attr.value;
-            }
-            else if (normalizedName.startsWith(TEMPLATE_ATTR_PREFIX$1)) {
+            if (normalizedName.startsWith(TEMPLATE_ATTR_PREFIX$1)) {
                 templateBindingsSource = attr.value;
                 prefixToken = normalizedName.substring(TEMPLATE_ATTR_PREFIX$1.length) + ':';
             }
             var /** @type {?} */ hasTemplateBinding = templateBindingsSource != null;
             if (hasTemplateBinding) {
                 if (hasInlineTemplates) {
-                    _this._reportError("Can't have multiple template bindings on one element. Use only one attribute named 'template' or prefixed with *", attr.sourceSpan);
+                    _this._reportError("Can't have multiple template bindings on one element. Use only one attribute prefixed with *", attr.sourceSpan);
                 }
                 hasInlineTemplates = true;
                 _this._bindingParser.parseInlineTemplateBinding(/** @type {?} */ ((prefixToken)), /** @type {?} */ ((templateBindingsSource)), attr.sourceSpan, templateMatchableAttrs, templateElementOrDirectiveProps, templateElementVars);
@@ -25967,7 +25942,7 @@ var TemplateParseVisitor = /** @class */ (function () {
         }
         if (hasInlineTemplates) {
             var /** @type {?} */ templateQueryStartIndex = this.contentQueryStartId;
-            var /** @type {?} */ templateSelector = createElementCssSelector$1(TEMPLATE_ELEMENT, templateMatchableAttrs);
+            var /** @type {?} */ templateSelector = createElementCssSelector$1('ng-template', templateMatchableAttrs);
             var templateDirectiveMetas = this._parseDirectives(this.selectorMatcher, templateSelector).directives;
             var /** @type {?} */ templateBoundDirectivePropNames = new Set();
             var /** @type {?} */ templateDirectiveAsts = this._createDirectiveAsts(true, element.name, templateDirectiveMetas, templateElementOrDirectiveProps, [], /** @type {?} */ ((element.sourceSpan)), [], templateBoundDirectivePropNames);
@@ -26696,25 +26671,6 @@ function isEmptyExpression(ast) {
         ast = ast.ast;
     }
     return ast instanceof EmptyExpr;
-}
-/**
- * @param {?} el
- * @param {?} enableLegacyTemplate
- * @param {?} reportDeprecation
- * @return {?}
- */
-function isTemplate(el, enableLegacyTemplate, reportDeprecation) {
-    if (isNgTemplate(el.name))
-        return true;
-    var /** @type {?} */ tagNoNs = splitNsName(el.name)[1];
-    // `<template>` is HTML and case insensitive
-    if (tagNoNs.toLowerCase() === TEMPLATE_ELEMENT) {
-        if (enableLegacyTemplate && tagNoNs.toLowerCase() === TEMPLATE_ELEMENT) {
-            reportDeprecation(TEMPLATE_ELEMENT_DEPRECATION_WARNING, /** @type {?} */ ((el.sourceSpan)));
-            return true;
-        }
-    }
-    return false;
 }
 
 /**
@@ -35778,7 +35734,6 @@ function createAotCompiler(compilerHost, options, errorCollector) {
     var /** @type {?} */ config = new CompilerConfig({
         defaultEncapsulation: ViewEncapsulation.Emulated,
         useJit: false,
-        enableLegacyTemplate: options.enableLegacyTemplate === true,
         missingTranslation: options.missingTranslation,
         preserveWhitespaces: options.preserveWhitespaces,
         strictInjectionParameters: options.strictInjectionParameters,
@@ -44674,7 +44629,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v6.0.0-beta.7-4e6ac18
+ * @license Angular v6.0.0-beta.7-0ebd577
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -46434,7 +46389,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('6.0.0-beta.7-4e6ac18');
+var VERSION$2 = new Version$1('6.0.0-beta.7-0ebd577');
 
 /**
  * @fileoverview added by tsickle
@@ -62075,7 +62030,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-beta.7-4e6ac18
+ * @license Angular v6.0.0-beta.7-0ebd577
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -64736,7 +64691,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('6.0.0-beta.7-4e6ac18');
+var VERSION = new Version$1('6.0.0-beta.7-0ebd577');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
