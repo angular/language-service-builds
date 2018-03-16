@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-beta.7-688096b
+ * @license Angular v6.0.0-beta.7-6ef9f22
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -227,7 +227,7 @@ var tslib_es6 = Object.freeze({
 });
 
 /**
- * @license Angular v6.0.0-beta.7-688096b
+ * @license Angular v6.0.0-beta.7-6ef9f22
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -886,7 +886,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('6.0.0-beta.7-688096b');
+var VERSION$1 = new Version('6.0.0-beta.7-6ef9f22');
 
 /**
  * @fileoverview added by tsickle
@@ -2071,6 +2071,11 @@ var CompilePipeMetadata = /** @class */ (function () {
  * @record
  */
 
+var CompileShallowModuleMetadata = /** @class */ (function () {
+    function CompileShallowModuleMetadata() {
+    }
+    return CompileShallowModuleMetadata;
+}());
 /**
  * Metadata regarding compilation of a module.
  */
@@ -14403,6 +14408,7 @@ var Identifiers = /** @class */ (function () {
         moduleName: CORE,
     };
     Identifiers.inject = { name: 'inject', moduleName: CORE };
+    Identifiers.INJECTOR = { name: 'INJECTOR', moduleName: CORE };
     Identifiers.Injector = { name: 'Injector', moduleName: CORE };
     Identifiers.defineInjectable = { name: 'defineInjectable', moduleName: CORE };
     Identifiers.ViewEncapsulation = {
@@ -17920,8 +17926,10 @@ function mapEntry(key, value) {
     return { key: key, value: value, quoted: false };
 }
 var InjectableCompiler = /** @class */ (function () {
-    function InjectableCompiler(reflector) {
+    function InjectableCompiler(reflector, alwaysGenerateDef) {
         this.reflector = reflector;
+        this.alwaysGenerateDef = alwaysGenerateDef;
+        this.tokenInjector = reflector.resolveExternalReference(Identifiers.Injector);
     }
     /**
      * @param {?} deps
@@ -17934,6 +17942,7 @@ var InjectableCompiler = /** @class */ (function () {
      * @return {?}
      */
     function (deps, ctx) {
+        var _this = this;
         return deps.map(function (dep) {
             var /** @type {?} */ token = dep;
             var /** @type {?} */ defaultValue = undefined;
@@ -17961,7 +17970,16 @@ var InjectableCompiler = /** @class */ (function () {
                     }
                 }
             }
-            var /** @type {?} */ tokenExpr = typeof token === 'string' ? literal(token) : ctx.importExpr(token);
+            var /** @type {?} */ tokenExpr;
+            if (typeof token === 'string') {
+                tokenExpr = literal(token);
+            }
+            else if (token === _this.tokenInjector && _this.alwaysGenerateDef) {
+                tokenExpr = importExpr(Identifiers.INJECTOR);
+            }
+            else {
+                tokenExpr = ctx.importExpr(token);
+            }
             if (flags !== 0 /* Default */ || defaultValue !== undefined) {
                 args = [tokenExpr, literal(defaultValue), literal(flags)];
             }
@@ -18017,8 +18035,11 @@ var InjectableCompiler = /** @class */ (function () {
      */
     function (injectable, ctx) {
         var /** @type {?} */ providedIn = NULL_EXPR;
-        if (injectable.providedIn) {
-            if (typeof injectable.providedIn === 'string') {
+        if (injectable.providedIn !== undefined) {
+            if (injectable.providedIn === null) {
+                providedIn = NULL_EXPR;
+            }
+            else if (typeof injectable.providedIn === 'string') {
                 providedIn = literal(injectable.providedIn);
             }
             else {
@@ -18043,7 +18064,7 @@ var InjectableCompiler = /** @class */ (function () {
      * @return {?}
      */
     function (injectable, ctx) {
-        if (injectable.providedIn) {
+        if (this.alwaysGenerateDef || injectable.providedIn !== undefined) {
             var /** @type {?} */ className = /** @type {?} */ ((identifierName(injectable.type)));
             var /** @type {?} */ clazz = new ClassStmt(className, null, [
                 new ClassField('ngInjectableDef', INFERRED_TYPE, [StmtModifier.Static], this.injectableDef(injectable, ctx)),
@@ -18799,6 +18820,7 @@ var CompileMetadataResolver = /** @class */ (function () {
         this._pipeCache = new Map();
         this._ngModuleCache = new Map();
         this._ngModuleOfTypes = new Map();
+        this._shallowModuleCache = new Map();
     }
     /**
      * @return {?}
@@ -19379,6 +19401,29 @@ var CompileMetadataResolver = /** @class */ (function () {
             ngModule.declaredPipes.forEach(function (id) { return _this._loadPipeMetadata(id.reference); });
         }
         return Promise.all(loading);
+    };
+    /**
+     * @param {?} moduleType
+     * @return {?}
+     */
+    CompileMetadataResolver.prototype.getShallowModuleMetadata = /**
+     * @param {?} moduleType
+     * @return {?}
+     */
+    function (moduleType) {
+        var /** @type {?} */ compileMeta = this._shallowModuleCache.get(moduleType);
+        if (compileMeta) {
+            return compileMeta;
+        }
+        var /** @type {?} */ ngModuleMeta = findLast(this._reflector.shallowAnnotations(moduleType), createNgModule.isTypeOf);
+        compileMeta = {
+            type: this._getTypeMetadata(moduleType),
+            rawExports: ngModuleMeta.exports,
+            rawImports: ngModuleMeta.imports,
+            rawProviders: ngModuleMeta.providers,
+        };
+        this._shallowModuleCache.set(moduleType, compileMeta);
+        return compileMeta;
     };
     /**
      * @param {?} moduleType
@@ -30401,6 +30446,37 @@ var MapPlaceholderNames = /** @class */ (function (_super) {
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
+/**
+ * @param {?} key
+ * @param {?} value
+ * @return {?}
+ */
+
+/**
+ * @param {?} obj
+ * @return {?}
+ */
+function mapLiteral(obj) {
+    return literalMap(Object.keys(obj).map(function (key) {
+        return ({
+            key: key,
+            quoted: false,
+            value: obj[key],
+        });
+    }));
+}
+
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
 var CORE$1 = '@angular/core';
 var Identifiers$1 = /** @class */ (function () {
     function Identifiers() {
@@ -30465,6 +30541,10 @@ var Identifiers$1 = /** @class */ (function () {
         name: 'ɵdefineDirective',
         moduleName: CORE$1,
     };
+    Identifiers.defineInjector = {
+        name: 'defineInjector',
+        moduleName: CORE$1,
+    };
     Identifiers.definePipe = { name: 'ɵdefinePipe', moduleName: CORE$1 };
     Identifiers.query = { name: 'ɵQ', moduleName: CORE$1 };
     Identifiers.queryRefresh = { name: 'ɵqR', moduleName: CORE$1 };
@@ -30472,6 +30552,56 @@ var Identifiers$1 = /** @class */ (function () {
     Identifiers.listener = { name: 'ɵL', moduleName: CORE$1 };
     return Identifiers;
 }());
+
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+var EMPTY_ARRAY = literalArr([]);
+/**
+ * @param {?} meta
+ * @param {?} ctx
+ * @return {?}
+ */
+function convertMetaToOutput(meta, ctx) {
+    if (Array.isArray(meta)) {
+        return literalArr(meta.map(function (entry) { return convertMetaToOutput(entry, ctx); }));
+    }
+    else if (meta instanceof StaticSymbol) {
+        return ctx.importExpr(meta);
+    }
+    else if (meta == null) {
+        return literal(meta);
+    }
+    else {
+        throw new Error("Internal error: Unsupported or unknown metadata: " + meta);
+    }
+}
+/**
+ * @param {?} ctx
+ * @param {?} ngModule
+ * @param {?} injectableCompiler
+ * @return {?}
+ */
+function compileNgModule(ctx, ngModule, injectableCompiler) {
+    var /** @type {?} */ className = /** @type {?} */ ((identifierName(ngModule.type)));
+    var /** @type {?} */ rawImports = ngModule.rawImports ? [ngModule.rawImports] : [];
+    var /** @type {?} */ rawExports = ngModule.rawExports ? [ngModule.rawExports] : [];
+    var /** @type {?} */ injectorDefArg = mapLiteral({
+        'factory': injectableCompiler.factoryFor({ type: ngModule.type, symbol: ngModule.type.reference }, ctx),
+        'providers': convertMetaToOutput(ngModule.rawProviders, ctx),
+        'imports': convertMetaToOutput(rawImports.concat(rawExports), ctx),
+    });
+    var /** @type {?} */ injectorDef = importExpr(Identifiers$1.defineInjector).callFn([injectorDefArg]);
+    ctx.statements.push(new ClassStmt(className, null, /* fields */ [new ClassField('ngInjectorDef', /* type */ INFERRED_TYPE, /* modifiers */ [StmtModifier.Static], injectorDef)], /* getters */ [], /* constructorMethod */ new ClassMethod(null, [], []), /* methods */ []));
+}
 
 /**
  * @fileoverview added by tsickle
@@ -33192,11 +33322,11 @@ StubEmitFlags[StubEmitFlags.Basic] = "Basic";
 StubEmitFlags[StubEmitFlags.TypeCheck] = "TypeCheck";
 StubEmitFlags[StubEmitFlags.All] = "All";
 var AotCompiler = /** @class */ (function () {
-    function AotCompiler(_config, _options, _host, _reflector, _metadataResolver, _templateParser, _styleCompiler, _viewCompiler, _typeCheckCompiler, _ngModuleCompiler, _injectableCompiler, _outputEmitter, _summaryResolver, _symbolResolver) {
+    function AotCompiler(_config, _options, _host, reflector, _metadataResolver, _templateParser, _styleCompiler, _viewCompiler, _typeCheckCompiler, _ngModuleCompiler, _injectableCompiler, _outputEmitter, _summaryResolver, _symbolResolver) {
         this._config = _config;
         this._options = _options;
         this._host = _host;
-        this._reflector = _reflector;
+        this.reflector = reflector;
         this._metadataResolver = _metadataResolver;
         this._templateParser = _templateParser;
         this._styleCompiler = _styleCompiler;
@@ -33509,7 +33639,7 @@ var AotCompiler = /** @class */ (function () {
         var /** @type {?} */ result = [];
         for (var _i = 0, references_1 = references; _i < references_1.length; _i++) {
             var reference = references_1[_i];
-            var /** @type {?} */ token = createTokenForExternalReference(this._reflector, reference);
+            var /** @type {?} */ token = createTokenForExternalReference(this.reflector, reference);
             if (token.identifier) {
                 result.push(token.identifier.reference);
             }
@@ -33576,20 +33706,53 @@ var AotCompiler = /** @class */ (function () {
     };
     /**
      * @param {?} __0
+     * @param {?} r3Files
      * @return {?}
      */
     AotCompiler.prototype.emitAllPartialModules = /**
      * @param {?} __0
+     * @param {?} r3Files
      * @return {?}
      */
-    function (_a) {
+    function (_a, r3Files) {
         var _this = this;
         var ngModuleByPipeOrDirective = _a.ngModuleByPipeOrDirective, files = _a.files;
-        // Using reduce like this is a select many pattern (where map is a select pattern)
-        return files.reduce(function (r, file) {
-            r.push.apply(r, _this._emitPartialModule(file.fileName, ngModuleByPipeOrDirective, file.directives, file.pipes, file.ngModules, file.injectables));
-            return r;
-        }, []);
+        var /** @type {?} */ contextMap = new Map();
+        var /** @type {?} */ getContext = function (fileName) {
+            if (!contextMap.has(fileName)) {
+                contextMap.set(fileName, _this._createOutputContext(fileName));
+            }
+            return /** @type {?} */ ((contextMap.get(fileName)));
+        };
+        files.forEach(function (file) {
+            return _this._compilePartialModule(file.fileName, ngModuleByPipeOrDirective, file.directives, file.pipes, file.ngModules, file.injectables, getContext(file.fileName));
+        });
+        r3Files.forEach(function (file) {
+            return _this._compileShallowModules(file.fileName, file.shallowModules, getContext(file.fileName));
+        });
+        return Array.from(contextMap.values())
+            .map(function (context) {
+            return ({
+                fileName: context.genFilePath,
+                statements: context.constantPool.statements.concat(context.statements),
+            });
+        });
+    };
+    /**
+     * @param {?} fileName
+     * @param {?} shallowModules
+     * @param {?} context
+     * @return {?}
+     */
+    AotCompiler.prototype._compileShallowModules = /**
+     * @param {?} fileName
+     * @param {?} shallowModules
+     * @param {?} context
+     * @return {?}
+     */
+    function (fileName, shallowModules, context) {
+        var _this = this;
+        shallowModules.forEach(function (module) { return compileNgModule(context, module, _this._injectableCompiler); });
     };
     /**
      * @param {?} fileName
@@ -33598,22 +33761,23 @@ var AotCompiler = /** @class */ (function () {
      * @param {?} pipes
      * @param {?} ngModules
      * @param {?} injectables
+     * @param {?} context
      * @return {?}
      */
-    AotCompiler.prototype._emitPartialModule = /**
+    AotCompiler.prototype._compilePartialModule = /**
      * @param {?} fileName
      * @param {?} ngModuleByPipeOrDirective
      * @param {?} directives
      * @param {?} pipes
      * @param {?} ngModules
      * @param {?} injectables
+     * @param {?} context
      * @return {?}
      */
-    function (fileName, ngModuleByPipeOrDirective, directives, pipes, ngModules, injectables) {
+    function (fileName, ngModuleByPipeOrDirective, directives, pipes, ngModules, injectables, context) {
         var _this = this;
         var /** @type {?} */ classes = [];
         var /** @type {?} */ errors = [];
-        var /** @type {?} */ context = this._createOutputContext(fileName);
         var /** @type {?} */ hostBindingParser = new BindingParser(this._templateParser.expressionParser, DEFAULT_INTERPOLATION_CONFIG, /** @type {?} */ ((null)), [], errors);
         // Process all components and directives
         directives.forEach(function (directiveType) {
@@ -33623,23 +33787,19 @@ var AotCompiler = /** @class */ (function () {
                 module ||
                     error("Cannot determine the module for component '" + identifierName(directiveMetadata.type) + "'");
                 var _a = _this._parseTemplate(directiveMetadata, module, module.transitiveModule.directives), parsedTemplate = _a.template, parsedPipes = _a.pipes;
-                compileComponent(context, directiveMetadata, parsedPipes, parsedTemplate, _this._reflector, hostBindingParser, 0 /* PartialClass */);
+                compileComponent(context, directiveMetadata, parsedPipes, parsedTemplate, _this.reflector, hostBindingParser, 0 /* PartialClass */);
             }
             else {
-                compileDirective(context, directiveMetadata, _this._reflector, hostBindingParser, 0 /* PartialClass */);
+                compileDirective(context, directiveMetadata, _this.reflector, hostBindingParser, 0 /* PartialClass */);
             }
         });
         pipes.forEach(function (pipeType) {
             var /** @type {?} */ pipeMetadata = _this._metadataResolver.getPipeMetadata(pipeType);
             if (pipeMetadata) {
-                compilePipe(context, pipeMetadata, _this._reflector, 0 /* PartialClass */);
+                compilePipe(context, pipeMetadata, _this.reflector, 0 /* PartialClass */);
             }
         });
         injectables.forEach(function (injectable) { return _this._injectableCompiler.compile(injectable, context); });
-        if (context.statements && context.statements.length > 0) {
-            return [{ fileName: fileName, statements: context.constantPool.statements.concat(context.statements) }];
-        }
-        return [];
     };
     /**
      * @param {?} files
@@ -33825,13 +33985,13 @@ var AotCompiler = /** @class */ (function () {
         if (this._options.locale) {
             var /** @type {?} */ normalizedLocale = this._options.locale.replace(/_/g, '-');
             providers.push({
-                token: createTokenForExternalReference(this._reflector, Identifiers.LOCALE_ID),
+                token: createTokenForExternalReference(this.reflector, Identifiers.LOCALE_ID),
                 useValue: normalizedLocale,
             });
         }
         if (this._options.i18nFormat) {
             providers.push({
-                token: createTokenForExternalReference(this._reflector, Identifiers.TRANSLATIONS_FORMAT),
+                token: createTokenForExternalReference(this.reflector, Identifiers.TRANSLATIONS_FORMAT),
                 useValue: this._options.i18nFormat
             });
         }
@@ -34028,14 +34188,14 @@ var AotCompiler = /** @class */ (function () {
     function (entryRoute, analyzedModules) {
         var /** @type {?} */ self = this;
         if (entryRoute) {
-            var /** @type {?} */ symbol = parseLazyRoute(entryRoute, this._reflector).referencedModule;
+            var /** @type {?} */ symbol = parseLazyRoute(entryRoute, this.reflector).referencedModule;
             return visitLazyRoute(symbol);
         }
         else if (analyzedModules) {
             var /** @type {?} */ allLazyRoutes = [];
             for (var _i = 0, _a = analyzedModules.ngModules; _i < _a.length; _i++) {
                 var ngModule = _a[_i];
-                var /** @type {?} */ lazyRoutes = listLazyRoutes(ngModule, this._reflector);
+                var /** @type {?} */ lazyRoutes = listLazyRoutes(ngModule, this.reflector);
                 for (var _b = 0, lazyRoutes_1 = lazyRoutes; _b < lazyRoutes_1.length; _b++) {
                     var lazyRoute = lazyRoutes_1[_b];
                     allLazyRoutes.push(lazyRoute);
@@ -34061,7 +34221,7 @@ var AotCompiler = /** @class */ (function () {
                 return allLazyRoutes;
             }
             seenRoutes.add(symbol);
-            var /** @type {?} */ lazyRoutes = listLazyRoutes(/** @type {?} */ ((self._metadataResolver.getNgModuleMetadata(symbol, true))), self._reflector);
+            var /** @type {?} */ lazyRoutes = listLazyRoutes(/** @type {?} */ ((self._metadataResolver.getNgModuleMetadata(symbol, true))), self.reflector);
             for (var _i = 0, lazyRoutes_2 = lazyRoutes; _i < lazyRoutes_2.length; _i++) {
                 var lazyRoute = lazyRoutes_2[_i];
                 allLazyRoutes.push(lazyRoute);
@@ -34247,6 +34407,7 @@ function analyzeFile(host, staticSymbolResolver, metadataResolver, fileName) {
  */
 function analyzeFileForInjectables(host, staticSymbolResolver, metadataResolver, fileName) {
     var /** @type {?} */ injectables = [];
+    var /** @type {?} */ shallowModules = [];
     if (staticSymbolResolver.hasDecorators(fileName)) {
         staticSymbolResolver.getSymbolsOf(fileName).forEach(function (symbol) {
             var /** @type {?} */ resolvedSymbol = staticSymbolResolver.resolveSymbol(symbol);
@@ -34263,10 +34424,17 @@ function analyzeFileForInjectables(host, staticSymbolResolver, metadataResolver,
                         injectables.push(injectable);
                     }
                 }
+                else if (metadataResolver.isNgModule(symbol)) {
+                    isNgSymbol = true;
+                    var /** @type {?} */ module = metadataResolver.getShallowModuleMetadata(symbol);
+                    if (module) {
+                        shallowModules.push(module);
+                    }
+                }
             }
         });
     }
-    return { fileName: fileName, injectables: injectables };
+    return { fileName: fileName, injectables: injectables, shallowModules: shallowModules };
 }
 /**
  * @param {?} host
@@ -34486,6 +34654,7 @@ var StaticReflector = /** @class */ (function () {
         this.symbolResolver = symbolResolver;
         this.errorRecorder = errorRecorder;
         this.annotationCache = new Map();
+        this.shallowAnnotationCache = new Map();
         this.propertyCache = new Map();
         this.parameterCache = new Map();
         this.methodCache = new Map();
@@ -34562,16 +34731,18 @@ var StaticReflector = /** @class */ (function () {
     /**
      * @param {?} moduleUrl
      * @param {?} name
+     * @param {?=} containingFile
      * @return {?}
      */
     StaticReflector.prototype.tryFindDeclaration = /**
      * @param {?} moduleUrl
      * @param {?} name
+     * @param {?=} containingFile
      * @return {?}
      */
-    function (moduleUrl, name) {
+    function (moduleUrl, name, containingFile) {
         var _this = this;
-        return this.symbolResolver.ignoreErrorsFor(function () { return _this.findDeclaration(moduleUrl, name); });
+        return this.symbolResolver.ignoreErrorsFor(function () { return _this.findDeclaration(moduleUrl, name, containingFile); });
     };
     /**
      * @param {?} symbol
@@ -34621,7 +34792,35 @@ var StaticReflector = /** @class */ (function () {
      * @return {?}
      */
     function (type) {
-        var /** @type {?} */ annotations = this.annotationCache.get(type);
+        var _this = this;
+        return this._annotations(type, function (type, decorators) { return _this.simplify(type, decorators); }, this.annotationCache);
+    };
+    /**
+     * @param {?} type
+     * @return {?}
+     */
+    StaticReflector.prototype.shallowAnnotations = /**
+     * @param {?} type
+     * @return {?}
+     */
+    function (type) {
+        var _this = this;
+        return this._annotations(type, function (type, decorators) { return _this.simplify(type, decorators, true); }, this.shallowAnnotationCache);
+    };
+    /**
+     * @param {?} type
+     * @param {?} simplify
+     * @param {?} annotationCache
+     * @return {?}
+     */
+    StaticReflector.prototype._annotations = /**
+     * @param {?} type
+     * @param {?} simplify
+     * @param {?} annotationCache
+     * @return {?}
+     */
+    function (type, simplify, annotationCache) {
+        var /** @type {?} */ annotations = annotationCache.get(type);
         if (!annotations) {
             annotations = [];
             var /** @type {?} */ classMetadata = this.getTypeMetadata(type);
@@ -34632,7 +34831,7 @@ var StaticReflector = /** @class */ (function () {
             }
             var /** @type {?} */ ownAnnotations_1 = [];
             if (classMetadata['decorators']) {
-                ownAnnotations_1 = this.simplify(type, classMetadata['decorators']);
+                ownAnnotations_1 = simplify(type, classMetadata['decorators']);
                 annotations.push.apply(annotations, ownAnnotations_1);
             }
             if (parentType && !this.summaryResolver.isLibraryFile(type.filePath) &&
@@ -34646,7 +34845,7 @@ var StaticReflector = /** @class */ (function () {
                     }
                 }
             }
-            this.annotationCache.set(type, annotations.filter(function (ann) { return !!ann; }));
+            annotationCache.set(type, annotations.filter(function (ann) { return !!ann; }));
         }
         return annotations;
     };
@@ -34974,15 +35173,18 @@ var StaticReflector = /** @class */ (function () {
      * \@internal
      * @param {?} context
      * @param {?} value
+     * @param {?=} lazy
      * @return {?}
      */
     StaticReflector.prototype.simplify = /**
      * \@internal
      * @param {?} context
      * @param {?} value
+     * @param {?=} lazy
      * @return {?}
      */
-    function (context, value) {
+    function (context, value, lazy) {
+        if (lazy === void 0) { lazy = false; }
         var /** @type {?} */ self = this;
         var /** @type {?} */ scope = BindingScope$1.empty;
         var /** @type {?} */ calling = new Map();
@@ -35372,7 +35574,7 @@ var StaticReflector = /** @class */ (function () {
         }
         var /** @type {?} */ result;
         try {
-            result = simplifyInContext(context, value, 0, 0);
+            result = simplifyInContext(context, value, 0, lazy ? 1 : 0);
         }
         catch (/** @type {?} */ e) {
             if (this.errorRecorder) {
@@ -35914,7 +36116,7 @@ function createAotCompiler(compilerHost, options, errorCollector) {
     // TODO(vicb): do not pass options.i18nFormat here
     var /** @type {?} */ viewCompiler = new ViewCompiler(staticReflector);
     var /** @type {?} */ typeCheckCompiler = new TypeCheckCompiler(options, staticReflector);
-    var /** @type {?} */ compiler = new AotCompiler(config, options, compilerHost, staticReflector, resolver, tmplParser, new StyleCompiler(urlResolver), viewCompiler, typeCheckCompiler, new NgModuleCompiler(staticReflector), new InjectableCompiler(staticReflector), new TypeScriptEmitter(), summaryResolver, symbolResolver);
+    var /** @type {?} */ compiler = new AotCompiler(config, options, compilerHost, staticReflector, resolver, tmplParser, new StyleCompiler(urlResolver), viewCompiler, typeCheckCompiler, new NgModuleCompiler(staticReflector), new InjectableCompiler(staticReflector, !!options.enableIvy), new TypeScriptEmitter(), summaryResolver, symbolResolver);
     return { compiler: compiler, reflector: staticReflector };
 }
 
@@ -38288,6 +38490,7 @@ var compiler = Object.freeze({
 	CompileTemplateMetadata: CompileTemplateMetadata,
 	CompileDirectiveMetadata: CompileDirectiveMetadata,
 	CompilePipeMetadata: CompilePipeMetadata,
+	CompileShallowModuleMetadata: CompileShallowModuleMetadata,
 	CompileNgModuleMetadata: CompileNgModuleMetadata,
 	TransitiveCompileNgModuleMetadata: TransitiveCompileNgModuleMetadata,
 	ProviderMeta: ProviderMeta,
@@ -44797,7 +45000,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v6.0.0-beta.7-688096b
+ * @license Angular v6.0.0-beta.7-6ef9f22
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -44813,22 +45016,120 @@ var share_3 = share;
  * found in the LICENSE file at https://angular.io/license
  */
 /**
- * \@whatItDoes Represents a type that a Component or other object is instances of.
+ * Information about how a type or `InjectionToken` interfaces with the DI system.
  *
- * \@description
+ * At a minimum, this includes a `factory` which defines how to create the given type `T`, possibly
+ * requesting injection of other types if necessary.
  *
- * An example of a `Type` is `MyCustomComponent` class, which in JavaScript is be represented by
- * the `MyCustomComponent` constructor function.
+ * Optionally, a `providedIn` parameter specifies that the given type belongs to a particular
+ * `InjectorDef`, `NgModule`, or a special scope (e.g. `'root'`). A value of `null` indicates
+ * that the injectable does not belong to any scope.
  *
- * \@stable
+ * This type is typically generated by the Angular compiler, but can be hand-written if needed.
+ *
+ * \@experimental
+ * @record
+ * @template T
  */
-var Type$1$1 = Function;
+
 /**
- * @param {?} v
+ * Information about the providers to be included in an `Injector` as well as how the given type
+ * which carries the information should be created by the DI system.
+ *
+ * An `InjectorDef` can import other types which have `InjectorDefs`, forming a deep nested
+ * structure of providers with a defined priority (identically to how `NgModule`s also have
+ * an import/dependency structure).
+ *
+ * \@experimental
+ * @record
+ * @template T
+ */
+
+/**
+ * A `Type` which has an `InjectableDef` static field.
+ *
+ * `InjectableDefType`s contain their own Dependency Injection metadata and are usable in an
+ * `InjectorDef`-based `StaticInjector.
+ *
+ * \@experimental
+ * @record
+ * @template T
+ */
+
+/**
+ * A type which has an `InjectorDef` static field.
+ *
+ * `InjectorDefTypes` can be used to configure a `StaticInjector`.
+ *
+ * \@experimental
+ * @record
+ * @template T
+ */
+
+/**
+ * Describes the `InjectorDef` equivalent of a `ModuleWithProviders`, an `InjectorDefType` with an
+ * associated array of providers.
+ *
+ * Objects of this type can be listed in the imports section of an `InjectorDef`.
+ *
+ * \@experimental
+ * @record
+ * @template T
+ */
+
+/**
+ * Construct an `InjectableDef` which defines how a token will be constructed by the DI system, and
+ * in which injectors (if any) it will be available.
+ *
+ * This should be assigned to a static `ngInjectableDef` field on a type, which will then be an
+ * `InjectableType`.
+ *
+ * Options:
+ * * `providedIn` determines which injectors will include the injectable, by either associating it
+ *   with an `\@NgModule` or other `InjectorType`, or by specifying that this injectable should be
+ *   provided in the `'root'` injector, which will be the application-level injector in most apps.
+ * * `factory` gives the zero argument function which will create an instance of the injectable.
+ *   The factory can call `inject` to access the `Injector` and request injection of dependencies.
+ *
+ * \@experimental
+ * @template T
+ * @param {?} opts
  * @return {?}
  */
-function isType(v) {
-    return typeof v === 'function';
+function defineInjectable(opts) {
+    return {
+        providedIn: (/** @type {?} */ (opts.providedIn)) || null,
+        factory: opts.factory,
+    };
+}
+/**
+ * Construct an `InjectorDef` which configures an injector.
+ *
+ * This should be assigned to a static `ngInjectorDef` field on a type, which will then be an
+ * `InjectorType`.
+ *
+ * Options:
+ *
+ * * `factory`: an `InjectorType` is an instantiable type, so a zero argument `factory` function to
+ *   create the type must be provided. If that factory function needs to inject arguments, it can
+ *   use the `inject` function.
+ * * `providers`: an optional array of providers to add to the injector. Each provider must
+ *   either have a factory or point to a type which has an `ngInjectableDef` static property (the
+ *   type must be an `InjectableType`).
+ * * `imports`: an optional array of imports of other `InjectorType`s or `InjectorTypeWithModule`s
+ *   whose providers will also be added to the injector. Locally provided types will override
+ *   providers from imports.
+ *
+ * \@experimental
+ * @param {?} options
+ * @return {?}
+ */
+function defineInjector(options) {
+    return {
+        factory: options.factory,
+        providers: options.providers || [],
+        imports: options.imports || [],
+    };
 }
 
 /**
@@ -44842,84 +45143,75 @@ function isType(v) {
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-var __window = typeof window !== 'undefined' && window;
-var __self = typeof self !== 'undefined' && typeof WorkerGlobalScope !== 'undefined' &&
-    self instanceof WorkerGlobalScope && self;
-var __global = typeof global !== 'undefined' && global;
-var _global = __window || __global || __self;
-var promise = Promise.resolve(0);
-var _symbolIterator = null;
 /**
- * @return {?}
+ * Creates a token that can be used in a DI Provider.
+ *
+ * Use an `InjectionToken` whenever the type you are injecting is not reified (does not have a
+ * runtime representation) such as when injecting an interface, callable type, array or
+ * parametrized type.
+ *
+ * `InjectionToken` is parameterized on `T` which is the type of object which will be returned by
+ * the `Injector`. This provides additional level of type safety.
+ *
+ * ```
+ * interface MyInterface {...}
+ * var myInterface = injector.get(new InjectionToken<MyInterface>('SomeToken'));
+ * // myInterface is inferred to be MyInterface.
+ * ```
+ *
+ * When creating an `InjectionToken`, you can optionally specify a factory function which returns
+ * (possibly by creating) a default value of the parameterized type `T`. This sets up the
+ * `InjectionToken` using this factory as a provider as if it was defined explicitly in the
+ * application's root injector. If the factory function, which takes zero arguments, needs to inject
+ * dependencies, it can do so using the `inject` function. See below for an example.
+ *
+ * Additionally, if a `factory` is specified you can also specify the `providedIn` option, which
+ * overrides the above behavior and marks the token as belonging to a particular `\@NgModule`. As
+ * mentioned above, `'root'` is the default value for `providedIn`.
+ *
+ * ### Example
+ *
+ * #### Tree-shakeable InjectionToken
+ *
+ * {\@example core/di/ts/injector_spec.ts region='ShakeableInjectionToken'}
+ *
+ * #### Plain InjectionToken
+ *
+ * {\@example core/di/ts/injector_spec.ts region='InjectionToken'}
+ *
+ * \@stable
+ * @template T
  */
-function getSymbolIterator() {
-    if (!_symbolIterator) {
-        var /** @type {?} */ Symbol_1 = _global['Symbol'];
-        if (Symbol_1 && Symbol_1.iterator) {
-            _symbolIterator = Symbol_1.iterator;
+var InjectionToken = /** @class */ (function () {
+    function InjectionToken(_desc, options) {
+        this._desc = _desc;
+        /**
+         * \@internal
+         */
+        this.ngMetadataName = 'InjectionToken';
+        if (options !== undefined) {
+            /** @nocollapse */ this.ngInjectableDef = defineInjectable({
+                providedIn: options.providedIn || 'root',
+                factory: options.factory,
+            });
         }
         else {
-            // es6-shim specific logic
-            var /** @type {?} */ keys = Object.getOwnPropertyNames(Map.prototype);
-            for (var /** @type {?} */ i = 0; i < keys.length; ++i) {
-                var /** @type {?} */ key = keys[i];
-                if (key !== 'entries' && key !== 'size' &&
-                    (/** @type {?} */ (Map)).prototype[key] === Map.prototype['entries']) {
-                    _symbolIterator = key;
-                }
-            }
+            /** @nocollapse */ this.ngInjectableDef = undefined;
         }
     }
-    return _symbolIterator;
-}
+    /**
+     * @return {?}
+     */
+    InjectionToken.prototype.toString = /**
+     * @return {?}
+     */
+    function () { return "InjectionToken " + this._desc; };
+    return InjectionToken;
+}());
 /**
- * @param {?} fn
- * @return {?}
+ * @record
+ * @template T
  */
-function scheduleMicroTask(fn) {
-    if (typeof Zone === 'undefined') {
-        // use promise to schedule microTask instead of use Zone
-        promise.then(function () { fn && fn.apply(null, null); });
-    }
-    else {
-        Zone.current.scheduleMicroTask('scheduleMicrotask', fn);
-    }
-}
-/**
- * @param {?} a
- * @param {?} b
- * @return {?}
- */
-function looseIdentical(a, b) {
-    return a === b || typeof a === 'number' && typeof b === 'number' && isNaN(a) && isNaN(b);
-}
-/**
- * @param {?} token
- * @return {?}
- */
-function stringify$1(token) {
-    if (typeof token === 'string') {
-        return token;
-    }
-    if (token instanceof Array) {
-        return '[' + token.map(stringify$1).join(', ') + ']';
-    }
-    if (token == null) {
-        return '' + token;
-    }
-    if (token.overriddenName) {
-        return "" + token.overriddenName;
-    }
-    if (token.name) {
-        return "" + token.name;
-    }
-    var /** @type {?} */ res = token.toString();
-    if (res == null) {
-        return '' + res;
-    }
-    var /** @type {?} */ newLineIndex = res.indexOf('\n');
-    return newLineIndex === -1 ? res : res.substring(0, newLineIndex);
-}
 
 /**
  * @fileoverview added by tsickle
@@ -45068,6 +45360,275 @@ function makeParamDecorator(name, props, parentClass) {
     (/** @type {?} */ (ParamDecoratorFactory)).annotationCls = ParamDecoratorFactory;
     return ParamDecoratorFactory;
 }
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+/**
+ * This token can be used to create a virtual provider that will populate the
+ * `entryComponents` fields of components and ng modules based on its `useValue`.
+ * All components that are referenced in the `useValue` value (either directly
+ * or in a nested array or map) will be added to the `entryComponents` property.
+ *
+ * ### Example
+ * The following example shows how the router can populate the `entryComponents`
+ * field of an NgModule based on the router configuration which refers
+ * to components.
+ *
+ * ```typescript
+ * // helper function inside the router
+ * function provideRoutes(routes) {
+ *   return [
+ *     {provide: ROUTES, useValue: routes},
+ *     {provide: ANALYZE_FOR_ENTRY_COMPONENTS, useValue: routes, multi: true}
+ *   ];
+ * }
+ *
+ * // user code
+ * let routes = [
+ *   {path: '/root', component: RootComp},
+ *   {path: '/teams', component: TeamsComp}
+ * ];
+ *
+ * \@NgModule({
+ *   providers: [provideRoutes(routes)]
+ * })
+ * class ModuleWithRoutes {}
+ * ```
+ *
+ * \@experimental
+ */
+var ANALYZE_FOR_ENTRY_COMPONENTS = new InjectionToken('AnalyzeForEntryComponents');
+/**
+ * Type of the Attribute decorator / constructor function.
+ *
+ * \@stable
+ * @record
+ */
+
+/**
+ * Attribute decorator and metadata.
+ *
+ * \@stable
+ * \@Annotation
+ */
+var Attribute$1$1 = makeParamDecorator('Attribute', function (attributeName) { return ({ attributeName: attributeName }); });
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+/** @enum {number} */
+var ChangeDetectionStrategy$1 = {
+    /**
+       * `OnPush` means that the change detector's mode will be initially set to `CheckOnce`.
+       */
+    OnPush: 0,
+    /**
+       * `Default` means that the change detector's mode will be initially set to `CheckAlways`.
+       */
+    Default: 1,
+};
+ChangeDetectionStrategy$1[ChangeDetectionStrategy$1.OnPush] = "OnPush";
+ChangeDetectionStrategy$1[ChangeDetectionStrategy$1.Default] = "Default";
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+/**
+ * Type of the Directive decorator / constructor function.
+ *
+ * \@stable
+ * @record
+ */
+
+/**
+ * Directive decorator and metadata.
+ *
+ * \@stable
+ * \@Annotation
+ */
+var Directive$1 = makeDecorator('Directive', function (dir) {
+    if (dir === void 0) { dir = {}; }
+    return dir;
+});
+/**
+ * Type of the Component decorator / constructor function.
+ *
+ * \@stable
+ * @record
+ */
+
+/**
+ * Component decorator and metadata.
+ *
+ * \@stable
+ * \@Annotation
+ */
+var Component$1 = makeDecorator('Component', function (c) {
+    if (c === void 0) { c = {}; }
+    return (__assign({ changeDetection: ChangeDetectionStrategy$1.Default }, c));
+}, Directive$1);
+/**
+ * Type of the Pipe decorator / constructor function.
+ *
+ * \@stable
+ * @record
+ */
+
+/**
+ * Pipe decorator and metadata.
+ *
+ * Use the `\@Pipe` annotation to declare that a given class is a pipe. A pipe
+ * class must also implement {\@link PipeTransform} interface.
+ *
+ * To use the pipe include a reference to the pipe class in
+ * {\@link NgModule#declarations}.
+ *
+ * \@stable
+ * \@Annotation
+ */
+var Pipe$1 = makeDecorator('Pipe', function (p) { return (__assign({ pure: true }, p)); });
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+/**
+ * \@whatItDoes Represents a type that a Component or other object is instances of.
+ *
+ * \@description
+ *
+ * An example of a `Type` is `MyCustomComponent` class, which in JavaScript is be represented by
+ * the `MyCustomComponent` constructor function.
+ *
+ * \@stable
+ */
+var Type$1$1 = Function;
+/**
+ * @param {?} v
+ * @return {?}
+ */
+function isType(v) {
+    return typeof v === 'function';
+}
+
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+var __window = typeof window !== 'undefined' && window;
+var __self = typeof self !== 'undefined' && typeof WorkerGlobalScope !== 'undefined' &&
+    self instanceof WorkerGlobalScope && self;
+var __global = typeof global !== 'undefined' && global;
+var _global = __window || __global || __self;
+var promise = Promise.resolve(0);
+var _symbolIterator = null;
+/**
+ * @return {?}
+ */
+function getSymbolIterator() {
+    if (!_symbolIterator) {
+        var /** @type {?} */ Symbol_1 = _global['Symbol'];
+        if (Symbol_1 && Symbol_1.iterator) {
+            _symbolIterator = Symbol_1.iterator;
+        }
+        else {
+            // es6-shim specific logic
+            var /** @type {?} */ keys = Object.getOwnPropertyNames(Map.prototype);
+            for (var /** @type {?} */ i = 0; i < keys.length; ++i) {
+                var /** @type {?} */ key = keys[i];
+                if (key !== 'entries' && key !== 'size' &&
+                    (/** @type {?} */ (Map)).prototype[key] === Map.prototype['entries']) {
+                    _symbolIterator = key;
+                }
+            }
+        }
+    }
+    return _symbolIterator;
+}
+/**
+ * @param {?} fn
+ * @return {?}
+ */
+function scheduleMicroTask(fn) {
+    if (typeof Zone === 'undefined') {
+        // use promise to schedule microTask instead of use Zone
+        promise.then(function () { fn && fn.apply(null, null); });
+    }
+    else {
+        Zone.current.scheduleMicroTask('scheduleMicrotask', fn);
+    }
+}
+/**
+ * @param {?} a
+ * @param {?} b
+ * @return {?}
+ */
+function looseIdentical(a, b) {
+    return a === b || typeof a === 'number' && typeof b === 'number' && isNaN(a) && isNaN(b);
+}
+/**
+ * @param {?} token
+ * @return {?}
+ */
+function stringify$1(token) {
+    if (typeof token === 'string') {
+        return token;
+    }
+    if (token instanceof Array) {
+        return '[' + token.map(stringify$1).join(', ') + ']';
+    }
+    if (token == null) {
+        return '' + token;
+    }
+    if (token.overriddenName) {
+        return "" + token.overriddenName;
+    }
+    if (token.name) {
+        return "" + token.name;
+    }
+    var /** @type {?} */ res = token.toString();
+    if (res == null) {
+        return '' + res;
+    }
+    var /** @type {?} */ newLineIndex = res.indexOf('\n');
+    return newLineIndex === -1 ? res : res.substring(0, newLineIndex);
+}
+
 /**
  * @fileoverview added by tsickle
  * @suppress {checkTypes} checked by tsc
@@ -45664,15 +46225,24 @@ var Host = makeParamDecorator('Host');
 var SOURCE = '__source';
 var _THROW_IF_NOT_FOUND = new Object();
 var THROW_IF_NOT_FOUND = _THROW_IF_NOT_FOUND;
-var _NullInjector = /** @class */ (function () {
-    function _NullInjector() {
+/**
+ * An InjectionToken that gets the current `Injector` for `createInjector()`-style injectors.
+ *
+ * Requesting this token instead of `Injector` allows `StaticInjector` to be tree-shaken from a
+ * project.
+ *
+ * \@experimental
+ */
+var INJECTOR = new InjectionToken('INJECTOR');
+var NullInjector = /** @class */ (function () {
+    function NullInjector() {
     }
     /**
      * @param {?} token
      * @param {?=} notFoundValue
      * @return {?}
      */
-    _NullInjector.prototype.get = /**
+    NullInjector.prototype.get = /**
      * @param {?} token
      * @param {?=} notFoundValue
      * @return {?}
@@ -45684,7 +46254,7 @@ var _NullInjector = /** @class */ (function () {
         }
         return notFoundValue;
     };
-    return _NullInjector;
+    return NullInjector;
 }());
 /**
  * \@whatItDoes Injector interface
@@ -45746,7 +46316,11 @@ var Injector = /** @class */ (function () {
         }
     };
     Injector.THROW_IF_NOT_FOUND = _THROW_IF_NOT_FOUND;
-    Injector.NULL = new _NullInjector();
+    Injector.NULL = new NullInjector();
+    /** @nocollapse */ Injector.ngInjectableDef = defineInjectable({
+        providedIn: /** @type {?} */ ('any'),
+        factory: function () { return inject(INJECTOR); },
+    });
     return Injector;
 }());
 var IDENT = function (value) {
@@ -45758,8 +46332,7 @@ var MULTI_PROVIDER_FN = function () {
     return Array.prototype.slice.call(arguments);
 };
 var GET_PROPERTY_NAME$1 = /** @type {?} */ ({});
-var ɵ2 = GET_PROPERTY_NAME$1;
-var USE_VALUE$1 = getClosureSafeProperty$1({ provide: String, useValue: ɵ2 });
+var USE_VALUE$1 = getClosureSafeProperty$1({ provide: String, useValue: GET_PROPERTY_NAME$1 });
 var NG_TOKEN_PATH = 'ngTokenPath';
 var NG_TEMP_TOKEN_PATH = 'ngTempTokenPath';
 var NULL_INJECTOR = Injector.NULL;
@@ -45773,6 +46346,7 @@ var StaticInjector = /** @class */ (function () {
         this.source = source;
         var /** @type {?} */ records = this._records = new Map();
         records.set(Injector, /** @type {?} */ ({ token: Injector, fn: IDENT, deps: EMPTY, value: this, useNew: false }));
+        records.set(INJECTOR, /** @type {?} */ ({ token: Injector, fn: IDENT, deps: EMPTY, value: this, useNew: false }));
         recursivelyProcessProviders(records, providers);
     }
     /**
@@ -46166,7 +46740,7 @@ var USE_VALUE$1$1 = getClosureSafeProperty({ provide: String, useValue: ɵ0 }, G
  * @record
  */
 
-var EMPTY_ARRAY = [];
+var EMPTY_ARRAY$1 = [];
 /**
  * @param {?} type
  * @param {?=} provider
@@ -46189,7 +46763,7 @@ function convertInjectableProviderToFactory(type, provider) {
     }
     else if ((/** @type {?} */ (provider)).useFactory) {
         var /** @type {?} */ factoryProvider_1 = (/** @type {?} */ (provider));
-        return function () { return factoryProvider_1.useFactory.apply(factoryProvider_1, injectArgs(factoryProvider_1.deps || EMPTY_ARRAY)); };
+        return function () { return factoryProvider_1.useFactory.apply(factoryProvider_1, injectArgs(factoryProvider_1.deps || EMPTY_ARRAY$1)); };
     }
     else if ((/** @type {?} */ (provider)).useClass) {
         var /** @type {?} */ classProvider_1 = (/** @type {?} */ (provider));
@@ -46213,257 +46787,19 @@ function convertInjectableProviderToFactory(type, provider) {
     }
 }
 /**
- * Construct an `InjectableDef` which defines how a token will be constructed by the DI system, and
- * in which injectors (if any) it will be available.
- *
- * \@experimental
- * @template T
- * @param {?} opts
- * @return {?}
- */
-function defineInjectable(opts) {
-    return {
-        providedIn: opts.providedIn || null,
-        factory: opts.factory,
-    };
-}
-/**
  * Injectable decorator and metadata.
  *
  * \@stable
  * \@Annotation
  */
 var Injectable$1 = makeDecorator('Injectable', undefined, undefined, undefined, function (injectableType, options) {
-    if (options && options.providedIn) {
-        (/** @type {?} */ (injectableType)).ngInjectableDef = defineInjectable({
+    if (options && options.providedIn !== undefined) {
+        /** @nocollapse */ injectableType.ngInjectableDef = defineInjectable({
             providedIn: options.providedIn,
             factory: convertInjectableProviderToFactory(injectableType, options)
         });
     }
 });
-/**
- * @record
- * @template T
- */
-
-/**
- * Type representing injectable service.
- *
- * \@experimental
- * @record
- * @template T
- */
-
-/**
- * @fileoverview added by tsickle
- * @suppress {checkTypes} checked by tsc
- */
-/**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
- */
-/**
- * Creates a token that can be used in a DI Provider.
- *
- * Use an `InjectionToken` whenever the type you are injecting is not reified (does not have a
- * runtime representation) such as when injecting an interface, callable type, array or
- * parametrized type.
- *
- * `InjectionToken` is parameterized on `T` which is the type of object which will be returned by
- * the `Injector`. This provides additional level of type safety.
- *
- * ```
- * interface MyInterface {...}
- * var myInterface = injector.get(new InjectionToken<MyInterface>('SomeToken'));
- * // myInterface is inferred to be MyInterface.
- * ```
- *
- * ### Example
- *
- * {\@example core/di/ts/injector_spec.ts region='InjectionToken'}
- *
- * \@stable
- * @template T
- */
-var InjectionToken = /** @class */ (function () {
-    function InjectionToken(_desc, options) {
-        this._desc = _desc;
-        /**
-         * \@internal
-         */
-        this.ngMetadataName = 'InjectionToken';
-        if (options !== undefined) {
-            /** @nocollapse */ this.ngInjectableDef = defineInjectable({
-                providedIn: options.providedIn || 'root',
-                factory: options.factory,
-            });
-        }
-        else {
-            /** @nocollapse */ this.ngInjectableDef = undefined;
-        }
-    }
-    /**
-     * @return {?}
-     */
-    InjectionToken.prototype.toString = /**
-     * @return {?}
-     */
-    function () { return "InjectionToken " + this._desc; };
-    return InjectionToken;
-}());
-
-/**
- * @fileoverview added by tsickle
- * @suppress {checkTypes} checked by tsc
- */
-/**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
- */
-/**
- * This token can be used to create a virtual provider that will populate the
- * `entryComponents` fields of components and ng modules based on its `useValue`.
- * All components that are referenced in the `useValue` value (either directly
- * or in a nested array or map) will be added to the `entryComponents` property.
- *
- * ### Example
- * The following example shows how the router can populate the `entryComponents`
- * field of an NgModule based on the router configuration which refers
- * to components.
- *
- * ```typescript
- * // helper function inside the router
- * function provideRoutes(routes) {
- *   return [
- *     {provide: ROUTES, useValue: routes},
- *     {provide: ANALYZE_FOR_ENTRY_COMPONENTS, useValue: routes, multi: true}
- *   ];
- * }
- *
- * // user code
- * let routes = [
- *   {path: '/root', component: RootComp},
- *   {path: '/teams', component: TeamsComp}
- * ];
- *
- * \@NgModule({
- *   providers: [provideRoutes(routes)]
- * })
- * class ModuleWithRoutes {}
- * ```
- *
- * \@experimental
- */
-var ANALYZE_FOR_ENTRY_COMPONENTS = new InjectionToken('AnalyzeForEntryComponents');
-/**
- * Type of the Attribute decorator / constructor function.
- *
- * \@stable
- * @record
- */
-
-/**
- * Attribute decorator and metadata.
- *
- * \@stable
- * \@Annotation
- */
-var Attribute$1$1 = makeParamDecorator('Attribute', function (attributeName) { return ({ attributeName: attributeName }); });
-/**
- * @fileoverview added by tsickle
- * @suppress {checkTypes} checked by tsc
- */
-/**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
- */
-/** @enum {number} */
-var ChangeDetectionStrategy$1 = {
-    /**
-       * `OnPush` means that the change detector's mode will be initially set to `CheckOnce`.
-       */
-    OnPush: 0,
-    /**
-       * `Default` means that the change detector's mode will be initially set to `CheckAlways`.
-       */
-    Default: 1,
-};
-ChangeDetectionStrategy$1[ChangeDetectionStrategy$1.OnPush] = "OnPush";
-ChangeDetectionStrategy$1[ChangeDetectionStrategy$1.Default] = "Default";
-/**
- * @fileoverview added by tsickle
- * @suppress {checkTypes} checked by tsc
- */
-/**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
- */
-/**
- * Type of the Directive decorator / constructor function.
- *
- * \@stable
- * @record
- */
-
-/**
- * Directive decorator and metadata.
- *
- * \@stable
- * \@Annotation
- */
-var Directive$1 = makeDecorator('Directive', function (dir) {
-    if (dir === void 0) { dir = {}; }
-    return dir;
-});
-/**
- * Type of the Component decorator / constructor function.
- *
- * \@stable
- * @record
- */
-
-/**
- * Component decorator and metadata.
- *
- * \@stable
- * \@Annotation
- */
-var Component$1 = makeDecorator('Component', function (c) {
-    if (c === void 0) { c = {}; }
-    return (__assign({ changeDetection: ChangeDetectionStrategy$1.Default }, c));
-}, Directive$1);
-/**
- * Type of the Pipe decorator / constructor function.
- *
- * \@stable
- * @record
- */
-
-/**
- * Pipe decorator and metadata.
- *
- * Use the `\@Pipe` annotation to declare that a given class is a pipe. A pipe
- * class must also implement {\@link PipeTransform} interface.
- *
- * To use the pipe include a reference to the pipe class in
- * {\@link NgModule#declarations}.
- *
- * \@stable
- * \@Annotation
- */
-var Pipe$1 = makeDecorator('Pipe', function (p) { return (__assign({ pure: true }, p)); });
 /**
  * Type of the NgModule decorator / constructor function.
  *
@@ -46477,7 +46813,17 @@ var Pipe$1 = makeDecorator('Pipe', function (p) { return (__assign({ pure: true 
  * \@stable
  * \@Annotation
  */
-var NgModule$1 = makeDecorator('NgModule', function (ngModule) { return ngModule; });
+var NgModule$1 = makeDecorator('NgModule', function (ngModule) { return ngModule; }, undefined, undefined, function (moduleType, metadata) {
+    var /** @type {?} */ imports = (metadata && metadata.imports) || [];
+    if (metadata && metadata.exports) {
+        imports = imports.concat([metadata.exports]);
+    }
+    moduleType.ngInjectorDef = defineInjector({
+        factory: convertInjectableProviderToFactory(moduleType, { useClass: moduleType }),
+        providers: metadata && metadata.providers,
+        imports: imports,
+    });
+});
 
 /**
  * @fileoverview added by tsickle
@@ -46557,7 +46903,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('6.0.0-beta.7-688096b');
+var VERSION$2 = new Version$1('6.0.0-beta.7-6ef9f22');
 
 /**
  * @fileoverview added by tsickle
@@ -48193,6 +48539,24 @@ function _mapProviders(injector, fn) {
     }
     return res;
 }
+
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+/**
+ * An internal token whose presence in an injector indicates that the injector should treat itself
+ * as a root scoped injector when processing requests for unknown tokens which may indicate
+ * they are provided in the root scope.
+ */
+var APP_ROOT = new InjectionToken('The presence of this token marks an injector as being the root injector.');
 
 /**
  * @fileoverview added by tsickle
@@ -53855,24 +54219,6 @@ var ApplicationModule = /** @class */ (function () {
  * found in the LICENSE file at https://angular.io/license
  */
 /**
- * An internal token whose presence in an injector indicates that the injector should treat itself
- * as a root scoped injector when processing requests for unknown tokens which may indicate
- * they are provided in the root scope.
- */
-var APP_ROOT = new InjectionToken('The presence of this token marks an injector as being the root injector.');
-
-/**
- * @fileoverview added by tsickle
- * @suppress {checkTypes} checked by tsc
- */
-/**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
- */
-/**
  * @param {?} tags
  * @return {?}
  */
@@ -55895,7 +56241,7 @@ var TemplateRef_ = /** @class */ (function (_super) {
  * @param {?} elDef
  * @return {?}
  */
-function createInjector(view, elDef) {
+function createInjector$1(view, elDef) {
     return new Injector_(view, elDef);
 }
 var Injector_ = /** @class */ (function () {
@@ -56622,7 +56968,7 @@ function resolveDep(view, elDef, allowPrivateServices, depDef, notFoundValue) {
                     return createChangeDetectorRef(cdView);
                 }
                 case InjectorRefTokenKey:
-                    return createInjector(searchView, elDef);
+                    return createInjector$1(searchView, elDef);
                 default:
                     var /** @type {?} */ providerDef_1 = /** @type {?} */ (((allowPrivateServices ? /** @type {?} */ ((elDef.element)).allProviders : /** @type {?} */ ((elDef.element)).publicProviders)))[tokenKey$$1];
                     if (providerDef_1) {
@@ -58560,7 +58906,7 @@ var DebugContext_ = /** @class */ (function () {
         get: /**
          * @return {?}
          */
-        function () { return createInjector(this.elView, this.elDef); },
+        function () { return createInjector$1(this.elView, this.elDef); },
         enumerable: true,
         configurable: true
     });
@@ -62204,7 +62550,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-beta.7-688096b
+ * @license Angular v6.0.0-beta.7-6ef9f22
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -64865,7 +65211,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('6.0.0-beta.7-688096b');
+var VERSION = new Version$1('6.0.0-beta.7-6ef9f22');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
