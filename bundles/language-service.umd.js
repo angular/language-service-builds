@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-beta.7-4f21d37
+ * @license Angular v6.0.0-beta.7-e27cfd6
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -227,7 +227,7 @@ var tslib_es6 = Object.freeze({
 });
 
 /**
- * @license Angular v6.0.0-beta.7-4f21d37
+ * @license Angular v6.0.0-beta.7-e27cfd6
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -886,7 +886,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('6.0.0-beta.7-4f21d37');
+var VERSION$1 = new Version('6.0.0-beta.7-e27cfd6');
 
 /**
  * @fileoverview added by tsickle
@@ -45000,7 +45000,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v6.0.0-beta.7-4f21d37
+ * @license Angular v6.0.0-beta.7-e27cfd6
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -46903,7 +46903,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('6.0.0-beta.7-4f21d37');
+var VERSION$2 = new Version$1('6.0.0-beta.7-e27cfd6');
 
 /**
  * @fileoverview added by tsickle
@@ -60978,6 +60978,32 @@ function createTNode(tagName, attrs, data, localNames) {
  * @return {?}
  */
 function directiveCreate(index, directive, directiveDef, localNames) {
+    var /** @type {?} */ instance = baseDirectiveCreate(index, directive, directiveDef);
+    ngDevMode && assertNotNull$1(previousOrParentNode.tNode, 'previousOrParentNode.tNode');
+    var /** @type {?} */ tNode = /** @type {?} */ ((previousOrParentNode.tNode));
+    if (currentView.tView.firstTemplatePass && localNames) {
+        tNode.localNames = tNode.localNames ? tNode.localNames.concat(localNames) : localNames;
+    }
+    if (tNode && tNode.attrs) {
+        setInputsFromAttrs(instance, /** @type {?} */ ((directiveDef)).inputs, tNode);
+    }
+    // Init hooks are queued now so ngOnInit is called in host components before
+    // any projected components.
+    queueInitHooks(index, directiveDef.onInit, directiveDef.doCheck, currentView.tView);
+    return instance;
+}
+/**
+ * A lighter version of directiveCreate() that is used for the root component
+ *
+ * This version does not contain features that we don't already support at root in
+ * current Angular. Example: local refs and inputs on root component.
+ * @template T
+ * @param {?} index
+ * @param {?} directive
+ * @param {?} directiveDef
+ * @return {?}
+ */
+function baseDirectiveCreate(index, directive, directiveDef) {
     var /** @type {?} */ instance;
     ngDevMode &&
         assertNull(currentView.bindingStartIndex, 'directives should be created before any bindings');
@@ -60996,11 +61022,6 @@ function directiveCreate(index, directive, directiveDef, localNames) {
     data[index] = instance = directive;
     if (index >= tData.length) {
         tData[index] = /** @type {?} */ ((directiveDef));
-        if (localNames) {
-            ngDevMode && assertNotNull$1(previousOrParentNode.tNode, 'previousOrParentNode.tNode');
-            var /** @type {?} */ tNode_1 = /** @type {?} */ ((/** @type {?} */ ((previousOrParentNode)).tNode));
-            tNode_1.localNames = tNode_1.localNames ? tNode_1.localNames.concat(localNames) : localNames;
-        }
     }
     var /** @type {?} */ diPublic = /** @type {?} */ ((directiveDef)).diPublic;
     if (diPublic) {
@@ -61009,13 +61030,6 @@ function directiveCreate(index, directive, directiveDef, localNames) {
     if (/** @type {?} */ ((directiveDef)).attributes != null && (previousOrParentNode.flags & 3 /* TYPE_MASK */) == 3 /* Element */) {
         setUpAttributes((/** @type {?} */ (previousOrParentNode)).native, /** @type {?} */ (((directiveDef)).attributes));
     }
-    var /** @type {?} */ tNode = /** @type {?} */ ((previousOrParentNode.tNode));
-    if (tNode && tNode.attrs) {
-        setInputsFromAttrs(instance, /** @type {?} */ ((directiveDef)).inputs, tNode);
-    }
-    // Init hooks are queued now so ngOnInit is called in host components before
-    // any projected components.
-    queueInitHooks(index, directiveDef.onInit, directiveDef.doCheck, currentView.tView);
     return instance;
 }
 /**
@@ -62590,7 +62604,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-beta.7-4f21d37
+ * @license Angular v6.0.0-beta.7-e27cfd6
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -65251,7 +65265,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('6.0.0-beta.7-4f21d37');
+var VERSION = new Version$1('6.0.0-beta.7-e27cfd6');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
