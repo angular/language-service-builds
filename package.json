@@ -1,9 +1,9 @@
 {
   "name": "@angular/language-service",
-  "version": "6.0.0-beta.7-f258ec6",
+  "version": "6.0.0-beta.7-ce63dc6",
   "description": "Angular - language services",
   "main": "./bundles/language-service.umd.js",
-  "module": "./esm5/language-service.js",
+  "module": "./fesm5/language-service.js",
   "typings": "./language-service.d.ts",
   "author": "angular",
   "license": "MIT",
@@ -13,6 +13,5 @@
   },
   "ng-update": {
     "packageGroup": ["@angular/core", "@angular/compiler", "@angular/common", "@angular/animations", "@angular/platform-browser", "@angular/platform-browser-dynamic", "@angular/forms", "@angular/http", "@angular/platform-server", "@angular/platform-webworker", "@angular/platform-webworker-dynamic", "@angular/upgrade", "@angular/router", "@angular/compiler-cli", "@angular/language-service", "@angular/benchpress", "@angular/service-worker", "@angular/elements"]
-  },
-  "sideEffects": false
+  }
 }
