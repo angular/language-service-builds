@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-beta.7-fc50c77
+ * @license Angular v6.0.0-beta.7-5c387a7
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -227,7 +227,7 @@ var tslib_es6 = Object.freeze({
 });
 
 /**
- * @license Angular v6.0.0-beta.7-fc50c77
+ * @license Angular v6.0.0-beta.7-5c387a7
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -886,7 +886,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('6.0.0-beta.7-fc50c77');
+var VERSION$1 = new Version('6.0.0-beta.7-5c387a7');
 
 /**
  * @fileoverview added by tsickle
@@ -32940,6 +32940,43 @@ var ToJsonSerializer = /** @class */ (function (_super) {
         }
     };
     /**
+     * Strip line and character numbers from ngsummaries.
+     * Emitting them causes white spaces changes to retrigger upstream
+     * recompilations in bazel.
+     * TODO: find out a way to have line and character numbers in errors without
+     * excessive recompilation in bazel.
+     */
+    /**
+     * Strip line and character numbers from ngsummaries.
+     * Emitting them causes white spaces changes to retrigger upstream
+     * recompilations in bazel.
+     * TODO: find out a way to have line and character numbers in errors without
+     * excessive recompilation in bazel.
+     * @param {?} map
+     * @param {?} context
+     * @return {?}
+     */
+    ToJsonSerializer.prototype.visitStringMap = /**
+     * Strip line and character numbers from ngsummaries.
+     * Emitting them causes white spaces changes to retrigger upstream
+     * recompilations in bazel.
+     * TODO: find out a way to have line and character numbers in errors without
+     * excessive recompilation in bazel.
+     * @param {?} map
+     * @param {?} context
+     * @return {?}
+     */
+    function (map, context) {
+        if (map['__symbolic'] === 'resolved') {
+            return visitValue(map["symbol"], this, context);
+        }
+        if (map['__symbolic'] === 'error') {
+            delete map['line'];
+            delete map['character'];
+        }
+        return _super.prototype.visitStringMap.call(this, map, context);
+    };
+    /**
      * Returns null if the options.resolveValue is true, and the summary for the symbol
      * resolved to a type or could not be resolved.
      * @param {?} baseSymbol
@@ -45000,7 +45037,7 @@ function share() {
 var share_3 = share;
 
 /**
- * @license Angular v6.0.0-beta.7-fc50c77
+ * @license Angular v6.0.0-beta.7-5c387a7
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -46903,7 +46940,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('6.0.0-beta.7-fc50c77');
+var VERSION$2 = new Version$1('6.0.0-beta.7-5c387a7');
 
 /**
  * @fileoverview added by tsickle
@@ -62604,7 +62641,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-beta.7-fc50c77
+ * @license Angular v6.0.0-beta.7-5c387a7
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -65265,7 +65302,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('6.0.0-beta.7-fc50c77');
+var VERSION = new Version$1('6.0.0-beta.7-5c387a7');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
