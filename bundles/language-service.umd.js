@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-beta.7-e6c731f
+ * @license Angular v6.0.0-beta.7-3cc5c2e
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -227,7 +227,7 @@ var tslib_es6 = Object.freeze({
 });
 
 /**
- * @license Angular v6.0.0-beta.7-e6c731f
+ * @license Angular v6.0.0-beta.7-3cc5c2e
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -886,7 +886,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('6.0.0-beta.7-e6c731f');
+var VERSION$1 = new Version('6.0.0-beta.7-3cc5c2e');
 
 /**
  * @fileoverview added by tsickle
@@ -42633,13 +42633,76 @@ exports.isFunction = isFunction;
 
 });
 
+var config = createCommonjsModule(function (module, exports) {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+var _enable_super_gross_mode_that_will_cause_bad_things = false;
+/**
+ * The global configuration object for RxJS, used to configure things
+ * like what Promise contructor should used to create Promises
+ */
+exports.config = {
+    /**
+     * The promise constructor used by default for methods such as
+     * {@link toPromise} and {@link forEach}
+     */
+    Promise: undefined,
+    /**
+     * If true, turns on synchronous error rethrowing, which is a deprecated behavior
+     * in v6 and higher. This behavior enables bad patterns like wrapping a subscribe
+     * call in a try/catch block. It also enables producer interference, a nasty bug
+     * where a multicast can be broken for all observers by a downstream consumer with
+     * an unhandled error. DO NOT USE THIS FLAG UNLESS IT'S NEEDED TO BY TIME
+     * FOR MIGRATION REASONS.
+     */
+    set useDeprecatedSynchronousErrorHandling(value) {
+        if (value) {
+            var error = new Error();
+            console.warn('DEPRECATED! RxJS was set to use deprecated synchronous error handling behavior by code at: \n' + error.stack);
+        }
+        else if (_enable_super_gross_mode_that_will_cause_bad_things) {
+            console.log('RxJS: Back to a better error behavior. Thank you. <3');
+        }
+        _enable_super_gross_mode_that_will_cause_bad_things = value;
+    },
+    get useDeprecatedSynchronousErrorHandling() {
+        return _enable_super_gross_mode_that_will_cause_bad_things;
+    },
+};
+
+});
+
+var hostReportError_1 = createCommonjsModule(function (module, exports) {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+/**
+ * Throws an error on another job so that it's picked up by the runtime's
+ * uncaught error handling mechanism.
+ * @param err the error to throw
+ */
+function hostReportError(err) {
+    setTimeout(function () { throw err; });
+}
+exports.hostReportError = hostReportError;
+
+});
+
 var Observer = createCommonjsModule(function (module, exports) {
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+
+
 exports.empty = {
     closed: true,
     next: function (value) { },
-    error: function (err) { throw err; },
+    error: function (err) {
+        if (config.config.useDeprecatedSynchronousErrorHandling) {
+            throw err;
+        }
+        else {
+            hostReportError_1.hostReportError(err);
+        }
+    },
     complete: function () { }
 };
 
@@ -42956,6 +43019,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 
 
 
+
+
 /**
  * Implements the {@link Observer} interface and extends the
  * {@link Subscription} class. While the {@link Observer} is the public API for
@@ -42978,6 +43043,9 @@ var Subscriber = /** @class */ (function (_super) {
      */
     function Subscriber(destinationOrNext, error, complete) {
         var _this = _super.call(this) || this;
+        /** @internal */ _this.syncErrorValue = null;
+        /** @internal */ _this.syncErrorThrown = false;
+        /** @internal */ _this.syncErrorThrowable = false;
         _this.isStopped = false;
         switch (arguments.length) {
             case 0:
@@ -42994,12 +43062,14 @@ var Subscriber = /** @class */ (function (_super) {
                         _this.destination.add(_this);
                     }
                     else {
-                        _this.destination = new SafeSubscriber(destinationOrNext);
+                        _this.syncErrorThrowable = true;
+                        _this.destination = new SafeSubscriber(_this, destinationOrNext);
                     }
                     break;
                 }
             default:
-                _this.destination = new SafeSubscriber(destinationOrNext, error, complete);
+                _this.syncErrorThrowable = true;
+                _this.destination = new SafeSubscriber(_this, destinationOrNext, error, complete);
                 break;
         }
         return _this;
@@ -43018,6 +43088,7 @@ var Subscriber = /** @class */ (function (_super) {
      */
     Subscriber.create = function (next, error, complete) {
         var subscriber = new Subscriber(next, error, complete);
+        subscriber.syncErrorThrowable = false;
         return subscriber;
     };
     /**
@@ -43096,8 +43167,9 @@ exports.Subscriber = Subscriber;
  */
 var SafeSubscriber = /** @class */ (function (_super) {
     __extends(SafeSubscriber, _super);
-    function SafeSubscriber(observerOrNext, error, complete) {
+    function SafeSubscriber(_parentSubscriber, observerOrNext, error, complete) {
         var _this = _super.call(this) || this;
+        _this._parentSubscriber = _parentSubscriber;
         var next;
         var context = _this;
         if (isFunction_1.isFunction(observerOrNext)) {
@@ -43123,49 +43195,107 @@ var SafeSubscriber = /** @class */ (function (_super) {
     }
     SafeSubscriber.prototype.next = function (value) {
         if (!this.isStopped && this._next) {
-            try {
-                this._next.call(this._context, value);
+            var _parentSubscriber = this._parentSubscriber;
+            if (!config.config.useDeprecatedSynchronousErrorHandling || !_parentSubscriber.syncErrorThrowable) {
+                this.__tryOrUnsub(this._next, value);
             }
-            catch (err) {
-                this._hostReportError(err);
+            else if (this.__tryOrSetError(_parentSubscriber, this._next, value)) {
                 this.unsubscribe();
             }
         }
     };
     SafeSubscriber.prototype.error = function (err) {
         if (!this.isStopped) {
+            var _parentSubscriber = this._parentSubscriber;
+            var useDeprecatedSynchronousErrorHandling = config.config.useDeprecatedSynchronousErrorHandling;
             if (this._error) {
-                try {
-                    this._error.call(this._context, err);
+                if (!useDeprecatedSynchronousErrorHandling || !_parentSubscriber.syncErrorThrowable) {
+                    this.__tryOrUnsub(this._error, err);
+                    this.unsubscribe();
                 }
-                catch (err) {
-                    this._hostReportError(err);
+                else {
+                    this.__tryOrSetError(_parentSubscriber, this._error, err);
+                    this.unsubscribe();
                 }
+            }
+            else if (!_parentSubscriber.syncErrorThrowable) {
+                this.unsubscribe();
+                if (useDeprecatedSynchronousErrorHandling) {
+                    throw err;
+                }
+                hostReportError_1.hostReportError(err);
             }
             else {
-                this._hostReportError(err);
+                if (useDeprecatedSynchronousErrorHandling) {
+                    _parentSubscriber.syncErrorValue = err;
+                    _parentSubscriber.syncErrorThrown = true;
+                }
+                else {
+                    hostReportError_1.hostReportError(err);
+                }
+                this.unsubscribe();
             }
-            this.unsubscribe();
         }
     };
     SafeSubscriber.prototype.complete = function () {
+        var _this = this;
         if (!this.isStopped) {
+            var _parentSubscriber = this._parentSubscriber;
             if (this._complete) {
-                try {
-                    this._complete.call(this._context);
+                var wrappedComplete = function () { return _this._complete.call(_this._context); };
+                if (!config.config.useDeprecatedSynchronousErrorHandling || !_parentSubscriber.syncErrorThrowable) {
+                    this.__tryOrUnsub(wrappedComplete);
+                    this.unsubscribe();
                 }
-                catch (err) {
-                    this._hostReportError(err);
+                else {
+                    this.__tryOrSetError(_parentSubscriber, wrappedComplete);
+                    this.unsubscribe();
                 }
             }
-            this.unsubscribe();
+            else {
+                this.unsubscribe();
+            }
         }
     };
-    SafeSubscriber.prototype._unsubscribe = function () {
-        this._context = null;
+    SafeSubscriber.prototype.__tryOrUnsub = function (fn, value) {
+        try {
+            fn.call(this._context, value);
+        }
+        catch (err) {
+            this.unsubscribe();
+            if (config.config.useDeprecatedSynchronousErrorHandling) {
+                throw err;
+            }
+            else {
+                hostReportError_1.hostReportError(err);
+            }
+        }
     };
-    SafeSubscriber.prototype._hostReportError = function (err) {
-        setTimeout(function () { throw err; });
+    SafeSubscriber.prototype.__tryOrSetError = function (parent, fn, value) {
+        if (!config.config.useDeprecatedSynchronousErrorHandling) {
+            throw new Error('bad call');
+        }
+        try {
+            fn.call(this._context, value);
+        }
+        catch (err) {
+            if (config.config.useDeprecatedSynchronousErrorHandling) {
+                parent.syncErrorValue = err;
+                parent.syncErrorThrown = true;
+                return true;
+            }
+            else {
+                hostReportError_1.hostReportError(err);
+                return true;
+            }
+        }
+        return false;
+    };
+    SafeSubscriber.prototype._unsubscribe = function () {
+        var _parentSubscriber = this._parentSubscriber;
+        this._context = null;
+        this._parentSubscriber = null;
+        _parentSubscriber.unsubscribe();
     };
     return SafeSubscriber;
 }(Subscriber));
@@ -43239,23 +43369,6 @@ function pipeFromArray(fns) {
     };
 }
 exports.pipeFromArray = pipeFromArray;
-
-});
-
-var config = createCommonjsModule(function (module, exports) {
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-/**
- * The global configuration object for RxJS, used to configure things
- * like what Promise contructor should used to create Promises
- */
-exports.config = {
-    /**
-     * The promise constructor used by default for methods such as
-     * {@link toPromise} and {@link forEach}
-     */
-    Promise: Promise
-};
 
 });
 
@@ -43423,6 +43536,14 @@ var Observable = /** @class */ (function () {
         else {
             sink.add(this.source ? this._subscribe(sink) : this._trySubscribe(sink));
         }
+        if (config.config.useDeprecatedSynchronousErrorHandling) {
+            if (sink.syncErrorThrowable) {
+                sink.syncErrorThrowable = false;
+                if (sink.syncErrorThrown) {
+                    throw sink.syncErrorValue;
+                }
+            }
+        }
         return sink;
     };
     Observable.prototype._trySubscribe = function (sink) {
@@ -43430,6 +43551,10 @@ var Observable = /** @class */ (function () {
             return this._subscribe(sink);
         }
         catch (err) {
+            if (config.config.useDeprecatedSynchronousErrorHandling) {
+                sink.syncErrorThrown = true;
+                sink.syncErrorValue = err;
+            }
             sink.error(err);
         }
     };
@@ -46357,7 +46482,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 
 /**
  * We need this JSDoc comment for affecting ESDoc.
- * @internal
  * @ignore
  * @extends {Ignored}
  */
@@ -46391,6 +46515,7 @@ exports.InnerSubscriber = InnerSubscriber;
 var subscribeToPromise = createCommonjsModule(function (module, exports) {
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+
 exports.subscribeToPromise = function (promise) { return function (subscriber) {
     promise.then(function (value) {
         if (!subscriber.closed) {
@@ -46398,10 +46523,7 @@ exports.subscribeToPromise = function (promise) { return function (subscriber) {
             subscriber.complete();
         }
     }, function (err) { return subscriber.error(err); })
-        .then(null, function (err) {
-        // Escaping the Promise trap: globally throw unhandled errors
-        setTimeout(function () { throw err; });
-    });
+        .then(null, hostReportError_1.hostReportError);
     return subscriber;
 }; };
 
@@ -49167,6 +49289,9 @@ var empty_2 = empty_1;
 exports.EMPTY = empty_2.EMPTY;
 
 exports.NEVER = never.NEVER;
+/* Config */
+
+exports.config = config.config;
 
 });
 
@@ -53583,7 +53708,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
  *
  * @example <caption>Take the last 3 values of an Observable with many values</caption>
  * var many = Rx.Observable.range(1, 100);
- * var lastThree = many.takeLast(3);
+ * var lastThree = many.pipe(takeLast(3));
  * lastThree.subscribe(x => console.log(x));
  *
  * @see {@link take}
@@ -54079,6 +54204,153 @@ exports.MulticastOperator = MulticastOperator;
 
 });
 
+var onErrorResumeNext_1$2 = createCommonjsModule(function (module, exports) {
+"use strict";
+var __extends = (commonjsGlobal && commonjsGlobal.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+
+
+
+
+/* tslint:enable:max-line-length */
+/**
+ * When any of the provided Observable emits an complete or error notification, it immediately subscribes to the next one
+ * that was passed.
+ *
+ * <span class="informal">Execute series of Observables no matter what, even if it means swallowing errors.</span>
+ *
+ * <img src="./img/onErrorResumeNext.png" width="100%">
+ *
+ * `onErrorResumeNext` is an operator that accepts a series of Observables, provided either directly as
+ * arguments or as an array. If no single Observable is provided, returned Observable will simply behave the same
+ * as the source.
+ *
+ * `onErrorResumeNext` returns an Observable that starts by subscribing and re-emitting values from the source Observable.
+ * When its stream of values ends - no matter if Observable completed or emitted an error - `onErrorResumeNext`
+ * will subscribe to the first Observable that was passed as an argument to the method. It will start re-emitting
+ * its values as well and - again - when that stream ends, `onErrorResumeNext` will proceed to subscribing yet another
+ * Observable in provided series, no matter if previous Observable completed or ended with an error. This will
+ * be happening until there is no more Observables left in the series, at which point returned Observable will
+ * complete - even if the last subscribed stream ended with an error.
+ *
+ * `onErrorResumeNext` can be therefore thought of as version of {@link concat} operator, which is more permissive
+ * when it comes to the errors emitted by its input Observables. While `concat` subscribes to the next Observable
+ * in series only if previous one successfully completed, `onErrorResumeNext` subscribes even if it ended with
+ * an error.
+ *
+ * Note that you do not get any access to errors emitted by the Observables. In particular do not
+ * expect these errors to appear in error callback passed to {@link subscribe}. If you want to take
+ * specific actions based on what error was emitted by an Observable, you should try out {@link catch} instead.
+ *
+ *
+ * @example <caption>Subscribe to the next Observable after map fails</caption>
+ * Rx.Observable.of(1, 2, 3, 0)
+ *   .map(x => {
+ *       if (x === 0) { throw Error(); }
+         return 10 / x;
+ *   })
+ *   .onErrorResumeNext(Rx.Observable.of(1, 2, 3))
+ *   .subscribe(
+ *     val => console.log(val),
+ *     err => console.log(err),          // Will never be called.
+ *     () => console.log('that\'s it!')
+ *   );
+ *
+ * // Logs:
+ * // 10
+ * // 5
+ * // 3.3333333333333335
+ * // 1
+ * // 2
+ * // 3
+ * // "that's it!"
+ *
+ * @see {@link concat}
+ * @see {@link catch}
+ *
+ * @param {...ObservableInput} observables Observables passed either directly or as an array.
+ * @return {Observable} An Observable that emits values from source Observable, but - if it errors - subscribes
+ * to the next passed Observable and so on, until it completes or runs out of Observables.
+ * @method onErrorResumeNext
+ * @owner Observable
+ */
+function onErrorResumeNext() {
+    var nextSources = [];
+    for (var _i = 0; _i < arguments.length; _i++) {
+        nextSources[_i] = arguments[_i];
+    }
+    if (nextSources.length === 1 && isArray.isArray(nextSources[0])) {
+        nextSources = nextSources[0];
+    }
+    return function (source) { return source.lift(new OnErrorResumeNextOperator(nextSources)); };
+}
+exports.onErrorResumeNext = onErrorResumeNext;
+/* tslint:enable:max-line-length */
+function onErrorResumeNextStatic() {
+    var nextSources = [];
+    for (var _i = 0; _i < arguments.length; _i++) {
+        nextSources[_i] = arguments[_i];
+    }
+    var source = null;
+    if (nextSources.length === 1 && isArray.isArray(nextSources[0])) {
+        nextSources = nextSources[0];
+    }
+    source = nextSources.shift();
+    return from_1.from(source, null).lift(new OnErrorResumeNextOperator(nextSources));
+}
+exports.onErrorResumeNextStatic = onErrorResumeNextStatic;
+var OnErrorResumeNextOperator = /** @class */ (function () {
+    function OnErrorResumeNextOperator(nextSources) {
+        this.nextSources = nextSources;
+    }
+    OnErrorResumeNextOperator.prototype.call = function (subscriber, source) {
+        return source.subscribe(new OnErrorResumeNextSubscriber(subscriber, this.nextSources));
+    };
+    return OnErrorResumeNextOperator;
+}());
+var OnErrorResumeNextSubscriber = /** @class */ (function (_super) {
+    __extends(OnErrorResumeNextSubscriber, _super);
+    function OnErrorResumeNextSubscriber(destination, nextSources) {
+        var _this = _super.call(this, destination) || this;
+        _this.destination = destination;
+        _this.nextSources = nextSources;
+        return _this;
+    }
+    OnErrorResumeNextSubscriber.prototype.notifyError = function (error, innerSub) {
+        this.subscribeToNextSource();
+    };
+    OnErrorResumeNextSubscriber.prototype.notifyComplete = function (innerSub) {
+        this.subscribeToNextSource();
+    };
+    OnErrorResumeNextSubscriber.prototype._error = function (err) {
+        this.subscribeToNextSource();
+    };
+    OnErrorResumeNextSubscriber.prototype._complete = function () {
+        this.subscribeToNextSource();
+    };
+    OnErrorResumeNextSubscriber.prototype.subscribeToNextSource = function () {
+        var next = this.nextSources.shift();
+        if (next) {
+            this.add(subscribeToResult_1.subscribeToResult(this, next));
+        }
+        else {
+            this.destination.complete();
+        }
+    };
+    return OnErrorResumeNextSubscriber;
+}(OuterSubscriber_1.OuterSubscriber));
+
+});
+
 var pairwise_1 = createCommonjsModule(function (module, exports) {
 "use strict";
 var __extends = (commonjsGlobal && commonjsGlobal.__extends) || (function () {
@@ -54371,6 +54643,38 @@ function publishReplay(bufferSize, windowTime, selectorOrScheduler, scheduler) {
     return function (source) { return multicast_1.multicast(function () { return subject; }, selector)(source); };
 }
 exports.publishReplay = publishReplay;
+
+});
+
+var race_2$1 = createCommonjsModule(function (module, exports) {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+
+
+/* tslint:enable:max-line-length */
+/**
+ * Returns an Observable that mirrors the first source Observable to emit an item
+ * from the combination of this Observable and supplied Observables.
+ * @param {...Observables} ...observables Sources used to race for which Observable emits first.
+ * @return {Observable} An Observable that mirrors the output of the first Observable to emit an item.
+ * @method race
+ * @owner Observable
+ */
+function race() {
+    var observables = [];
+    for (var _i = 0; _i < arguments.length; _i++) {
+        observables[_i] = arguments[_i];
+    }
+    return function raceOperatorFunction(source) {
+        // if the only argument is an array, it was most likely called with
+        // `pair([obs1, obs2, ...])`
+        if (observables.length === 1 && isArray.isArray(observables[0])) {
+            observables = observables[0];
+        }
+        return source.lift.call(race_1.race.apply(void 0, [source].concat(observables)));
+    };
+}
+exports.race = race;
 
 });
 
@@ -55228,7 +55532,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 /**
  * Returns an Observable that emits the single item emitted by the source Observable that matches a specified
  * predicate, if that Observable emits one such item. If the source Observable emits more than one such item or no
- * such items, notify of an IllegalArgumentException or NoSuchElementException respectively.
+ * items, notify of an IllegalArgumentException or NoSuchElementException respectively. If the source Observable
+ * emits items but none match the specified predicate then `undefined` is emiited.
  *
  * <img src="./img/single.png" width="100%">
  *
@@ -55236,8 +55541,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * callback if the Observable completes before any `next` notification was sent.
  * @param {Function} predicate - A predicate function to evaluate items emitted by the source Observable.
  * @return {Observable<T>} An Observable that emits the single item emitted by the source Observable that matches
- * the predicate.
- .
+ * the predicate or `undefined` when no items match.
+ *
  * @method single
  * @owner Observable
  */
@@ -55683,6 +55988,102 @@ function startWith() {
     };
 }
 exports.startWith = startWith;
+
+});
+
+var SubscribeOnObservable_1 = createCommonjsModule(function (module, exports) {
+"use strict";
+var __extends = (commonjsGlobal && commonjsGlobal.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+
+
+
+/**
+ * We need this JSDoc comment for affecting ESDoc.
+ * @extends {Ignored}
+ * @hide true
+ */
+var SubscribeOnObservable = /** @class */ (function (_super) {
+    __extends(SubscribeOnObservable, _super);
+    function SubscribeOnObservable(source, delayTime, scheduler) {
+        if (delayTime === void 0) { delayTime = 0; }
+        if (scheduler === void 0) { scheduler = asap.asap; }
+        var _this = _super.call(this) || this;
+        _this.source = source;
+        _this.delayTime = delayTime;
+        _this.scheduler = scheduler;
+        if (!isNumeric_1.isNumeric(delayTime) || delayTime < 0) {
+            _this.delayTime = 0;
+        }
+        if (!scheduler || typeof scheduler.schedule !== 'function') {
+            _this.scheduler = asap.asap;
+        }
+        return _this;
+    }
+    SubscribeOnObservable.create = function (source, delay, scheduler) {
+        if (delay === void 0) { delay = 0; }
+        if (scheduler === void 0) { scheduler = asap.asap; }
+        return new SubscribeOnObservable(source, delay, scheduler);
+    };
+    SubscribeOnObservable.dispatch = function (arg) {
+        var source = arg.source, subscriber = arg.subscriber;
+        return this.add(source.subscribe(subscriber));
+    };
+    SubscribeOnObservable.prototype._subscribe = function (subscriber) {
+        var delay = this.delayTime;
+        var source = this.source;
+        var scheduler = this.scheduler;
+        return scheduler.schedule(SubscribeOnObservable.dispatch, delay, {
+            source: source, subscriber: subscriber
+        });
+    };
+    return SubscribeOnObservable;
+}(Observable_1.Observable));
+exports.SubscribeOnObservable = SubscribeOnObservable;
+
+});
+
+var subscribeOn_1 = createCommonjsModule(function (module, exports) {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+
+/**
+ * Asynchronously subscribes Observers to this Observable on the specified IScheduler.
+ *
+ * <img src="./img/subscribeOn.png" width="100%">
+ *
+ * @param {Scheduler} scheduler - The IScheduler to perform subscription actions on.
+ * @return {Observable<T>} The source Observable modified so that its subscriptions happen on the specified IScheduler.
+ .
+ * @method subscribeOn
+ * @owner Observable
+ */
+function subscribeOn(scheduler, delay) {
+    if (delay === void 0) { delay = 0; }
+    return function subscribeOnOperatorFunction(source) {
+        return source.lift(new SubscribeOnOperator(scheduler, delay));
+    };
+}
+exports.subscribeOn = subscribeOn;
+var SubscribeOnOperator = /** @class */ (function () {
+    function SubscribeOnOperator(scheduler, delay) {
+        this.scheduler = scheduler;
+        this.delay = delay;
+    }
+    SubscribeOnOperator.prototype.call = function (subscriber, source) {
+        return new SubscribeOnObservable_1.SubscribeOnObservable(source, this.delay, this.scheduler).subscribe(subscriber);
+    };
+    return SubscribeOnOperator;
+}());
 
 });
 
@@ -58097,6 +58498,8 @@ exports.multicast = multicast_1.multicast;
 
 exports.observeOn = observeOn_1.observeOn;
 
+exports.onErrorResumeNext = onErrorResumeNext_1$2.onErrorResumeNext;
+
 exports.pairwise = pairwise_1.pairwise;
 
 exports.partition = partition_1.partition;
@@ -58110,6 +58513,8 @@ exports.publishBehavior = publishBehavior_1.publishBehavior;
 exports.publishLast = publishLast_1.publishLast;
 
 exports.publishReplay = publishReplay_1.publishReplay;
+
+exports.race = race_2$1.race;
 
 exports.reduce = reduce_1.reduce;
 
@@ -58146,13 +58551,8 @@ exports.skipUntil = skipUntil_1.skipUntil;
 exports.skipWhile = skipWhile_1.skipWhile;
 
 exports.startWith = startWith_1.startWith;
-/**
- * TODO(https://github.com/ReactiveX/rxjs/issues/2900): Add back subscribeOn once it can be
- * treeshaken. Currently if this export is added back, it
- * forces apps to bring in asap scheduler along with
- * Immediate, root, and other supporting code.
- */
-// export { subscribeOn } from '../internal/operators/subscribeOn';
+
+exports.subscribeOn = subscribeOn_1.subscribeOn;
 
 exports.switchAll = switchAll_1.switchAll;
 
@@ -58202,10 +58602,10 @@ exports.zipAll = zipAll_1.zipAll;
 
 });
 
-var index_66 = index$4.share;
+var index_68 = index$4.share;
 
 /**
- * @license Angular v6.0.0-beta.7-e6c731f
+ * @license Angular v6.0.0-beta.7-3cc5c2e
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -60108,7 +60508,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('6.0.0-beta.7-e6c731f');
+var VERSION$2 = new Version$1('6.0.0-beta.7-3cc5c2e');
 
 /**
  * @fileoverview added by tsickle
@@ -64017,7 +64417,7 @@ var ApplicationRef = /** @class */ (function () {
             };
         });
         (/** @type {?} */ (this)).isStable =
-            index_38(isCurrentlyStable, isStable.pipe(index_66()));
+            index_38(isCurrentlyStable, isStable.pipe(index_68()));
     }
     /**
      * Bootstrap a new component at the root level of the application.
@@ -75809,7 +76209,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-beta.7-e6c731f
+ * @license Angular v6.0.0-beta.7-3cc5c2e
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -78470,7 +78870,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('6.0.0-beta.7-e6c731f');
+var VERSION = new Version$1('6.0.0-beta.7-3cc5c2e');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
