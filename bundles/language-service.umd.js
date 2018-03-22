@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-rc.0-e5e1b0d
+ * @license Angular v6.0.0-rc.0-e44f69c
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -227,7 +227,7 @@ var tslib_es6 = Object.freeze({
 });
 
 /**
- * @license Angular v6.0.0-rc.0-e5e1b0d
+ * @license Angular v6.0.0-rc.0-e44f69c
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -886,7 +886,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('6.0.0-rc.0-e5e1b0d');
+var VERSION$1 = new Version('6.0.0-rc.0-e44f69c');
 
 /**
  * @fileoverview added by tsickle
@@ -15045,7 +15045,7 @@ var ReadVarExpr = /** @class */ (function (_super) {
         }
         else {
             _this.name = null;
-            _this.builtin = /** @type {?} */ (name);
+            _this.builtin = name;
         }
         return _this;
     }
@@ -30184,7 +30184,6 @@ var ConstantPool = /** @class */ (function () {
 }());
 var KeyVisitor = /** @class */ (function () {
     function KeyVisitor() {
-        this.visitReadVarExpr = invalid;
         this.visitWriteVarExpr = invalid;
         this.visitWriteKeyExpr = invalid;
         this.visitWritePropExpr = invalid;
@@ -30255,6 +30254,20 @@ var KeyVisitor = /** @class */ (function () {
         return ast.value.moduleName ? "EX:" + ast.value.moduleName + ":" + ast.value.name :
             "EX:" + ast.value.runtime.name;
     };
+    /**
+     * @param {?} ast
+     * @return {?}
+     */
+    KeyVisitor.prototype.visitReadVarExpr = /**
+     * @param {?} ast
+     * @return {?}
+     */
+    function (ast) {
+        if (!ast.name) {
+            invalid(ast);
+        }
+        return /** @type {?} */ (ast.name);
+    };
     return KeyVisitor;
 }());
 /**
@@ -30263,7 +30276,7 @@ var KeyVisitor = /** @class */ (function () {
  * @return {?}
  */
 function invalid(arg) {
-    throw new Error("Invalid state: Visitor " + this.constructor.name + " doesn't handle " + undefined);
+    throw new Error("Invalid state: Visitor " + this.constructor.name + " doesn't handle " + arg.constructor.name);
 }
 /**
  * @param {?} e
@@ -30655,6 +30668,20 @@ var REFERENCE_PREFIX = '_r';
  */
 var IMPLICIT_REFERENCE = '$implicit';
 /**
+ * Name of the i18n attributes *
+ */
+var I18N_ATTR = 'i18n';
+var I18N_ATTR_PREFIX = 'i18n-';
+/**
+ * I18n separators for metadata *
+ */
+var MEANING_SEPARATOR$1 = '|';
+var ID_SEPARATOR$1 = '@@';
+/**
+ * Closure functions *
+ */
+var GOOG_GET_MSG = 'goog.getMsg';
+/**
  * @param {?} outputCtx
  * @param {?} directive
  * @param {?} reflector
@@ -30905,7 +30932,19 @@ var BindingScope = /** @class */ (function () {
         // Find the top scope as it maintains the global reference count
         while (current.parent)
             current = current.parent;
-        return "" + REFERENCE_PREFIX + current.referenceNameIndex++;
+        var /** @type {?} */ ref = "" + REFERENCE_PREFIX + current.referenceNameIndex++;
+        return ref;
+    };
+    // closure variables holding i18n messages are name `MSG_[A-Z0-9]+`
+    /**
+     * @return {?}
+     */
+    BindingScope.prototype.freshI18nName = /**
+     * @return {?}
+     */
+    function () {
+        var /** @type {?} */ name = this.freshReferenceName();
+        return ("MSG_" + name).toUpperCase();
     };
     return BindingScope;
 }());
@@ -30938,6 +30977,9 @@ var TemplateDefinitionBuilder = /** @class */ (function () {
         this._projectionDefinitionIndex = 0;
         this.unsupported = unsupported;
         this.invalid = invalid$1;
+        this._inI18nSection = false;
+        this._i18nSectionIndex = -1;
+        this._phToNodeIdxes = [{}];
         // These should be handled in the template or element directly.
         this.visitReference = invalid$1;
         this.visitVariable = invalid$1;
@@ -31032,6 +31074,18 @@ var TemplateDefinitionBuilder = /** @class */ (function () {
         var /** @type {?} */ creationMode = this._creationMode.length > 0 ?
             [ifStmt(variable(CREATION_MODE_FLAG), this._creationMode)] :
             [];
+        // Generate maps of placeholder name to node indexes
+        // TODO(vicb): This is a WIP, not fully supported yet
+        for (var _c = 0, _d = this._phToNodeIdxes; _c < _d.length; _c++) {
+            var phToNodeIdx = _d[_c];
+            if (Object.keys(phToNodeIdx).length > 0) {
+                var /** @type {?} */ scopedName = this.bindingScope.freshReferenceName();
+                var /** @type {?} */ phMap = variable(scopedName)
+                    .set(mapToExpression(phToNodeIdx, true))
+                    .toDeclStmt(INFERRED_TYPE, [StmtModifier.Final]);
+                this._prefix.push(phMap);
+            }
+        }
         return fn([
             new FnParam(this.contextParameter, null), new FnParam(CREATION_MODE_FLAG, BOOL_TYPE)
         ], this._prefix.concat(creationMode, this._bindingMode, this._hostMode, this._refreshMode, this._postfix), INFERRED_TYPE, null, this.templateName);
@@ -31089,21 +31143,54 @@ var TemplateDefinitionBuilder = /** @class */ (function () {
     };
     // TemplateAstVisitor
     /**
-     * @param {?} ast
+     * @param {?} element
      * @return {?}
      */
     TemplateDefinitionBuilder.prototype.visitElement = /**
-     * @param {?} ast
+     * @param {?} element
      * @return {?}
      */
-    function (ast) {
+    function (element) {
         var _this = this;
-        var /** @type {?} */ bindingCount = 0;
         var /** @type {?} */ elementIndex = this.allocateDataSlot();
         var /** @type {?} */ componentIndex = undefined;
         var /** @type {?} */ referenceDataSlots = new Map();
+        var /** @type {?} */ wasInI18nSection = this._inI18nSection;
+        var /** @type {?} */ outputAttrs = {};
+        var /** @type {?} */ attrI18nMetas = {};
+        var /** @type {?} */ i18nMeta = '';
+        // Elements inside i18n sections are replaced with placeholders
+        // TODO(vicb): nested elements are a WIP in this phase
+        if (this._inI18nSection) {
+            var /** @type {?} */ phName = element.name.toLowerCase();
+            if (!this._phToNodeIdxes[this._i18nSectionIndex][phName]) {
+                this._phToNodeIdxes[this._i18nSectionIndex][phName] = [];
+            }
+            this._phToNodeIdxes[this._i18nSectionIndex][phName].push(elementIndex);
+        }
+        // Handle i18n attributes
+        for (var _i = 0, _a = element.attrs; _i < _a.length; _i++) {
+            var attr = _a[_i];
+            var /** @type {?} */ name_1 = attr.name;
+            var /** @type {?} */ value = attr.value;
+            if (name_1 === I18N_ATTR) {
+                if (this._inI18nSection) {
+                    throw new Error("Could not mark an element as translatable inside of a translatable section");
+                }
+                this._inI18nSection = true;
+                this._i18nSectionIndex++;
+                this._phToNodeIdxes[this._i18nSectionIndex] = {};
+                i18nMeta = value;
+            }
+            else if (name_1.startsWith(I18N_ATTR_PREFIX)) {
+                attrI18nMetas[name_1.slice(I18N_ATTR_PREFIX.length)] = value;
+            }
+            else {
+                outputAttrs[name_1] = value;
+            }
+        }
         // Element creation mode
-        var /** @type {?} */ component = findComponent(ast.directives);
+        var /** @type {?} */ component = findComponent(element.directives);
         var /** @type {?} */ nullNode = literal(null, INFERRED_TYPE);
         var /** @type {?} */ parameters = [literal(elementIndex)];
         // Add component type or element tag
@@ -31112,27 +31199,40 @@ var TemplateDefinitionBuilder = /** @class */ (function () {
             componentIndex = this.allocateDataSlot();
         }
         else {
-            parameters.push(literal(ast.name));
+            parameters.push(literal(element.name));
         }
-        // Add attributes array
+        // Add the attributes
+        var /** @type {?} */ i18nMessages = [];
         var /** @type {?} */ attributes = [];
-        for (var _i = 0, _a = ast.attrs; _i < _a.length; _i++) {
-            var attr = _a[_i];
-            attributes.push(literal(attr.name), literal(attr.value));
+        var /** @type {?} */ hasI18nAttr = false;
+        Object.getOwnPropertyNames(outputAttrs).forEach(function (name) {
+            var /** @type {?} */ value = outputAttrs[name];
+            attributes.push(literal(name));
+            if (attrI18nMetas.hasOwnProperty(name)) {
+                hasI18nAttr = true;
+                var _a = _this.genI18nMessageStmts(value, attrI18nMetas[name]), statements = _a.statements, variable$$1 = _a.variable;
+                i18nMessages.push.apply(i18nMessages, statements);
+                attributes.push(variable$$1);
+            }
+            else {
+                attributes.push(literal(value));
+            }
+        });
+        var /** @type {?} */ attrArg = nullNode;
+        if (attributes.length > 0) {
+            attrArg = hasI18nAttr ? getLiteralFactory(this.outputCtx, literalArr(attributes)) :
+                this.constantPool.getConstLiteral(literalArr(attributes), true);
         }
-        parameters.push(attributes.length > 0 ?
-            this.constantPool.getConstLiteral(literalArr(attributes), /* forceShared */ /* forceShared */ true) :
-            nullNode);
+        parameters.push(attrArg);
         // Add directives array
-        var _b = this._computeDirectivesArray(ast.directives), directivesArray = _b.directivesArray, directiveIndexMap = _b.directiveIndexMap;
+        var _b = this._computeDirectivesArray(element.directives), directivesArray = _b.directivesArray, directiveIndexMap = _b.directiveIndexMap;
         parameters.push(directiveIndexMap.size > 0 ? directivesArray : nullNode);
         if (component && componentIndex != null) {
             // Record the data slot for the component
             directiveIndexMap.set(component.directive.type.reference, componentIndex);
         }
-        // Add references array
-        if (ast.references && ast.references.length > 0) {
-            var /** @type {?} */ references = flatten$1(ast.references.map(function (reference) {
+        if (element.references && element.references.length > 0) {
+            var /** @type {?} */ references = flatten$1(element.references.map(function (reference) {
                 var /** @type {?} */ slot = _this.allocateDataSlot();
                 referenceDataSlots.set(reference.name, slot);
                 // Generate the update temporary.
@@ -31153,16 +31253,18 @@ var TemplateDefinitionBuilder = /** @class */ (function () {
             parameters.pop();
         }
         // Generate the instruction create element instruction
-        this.instruction.apply(this, [this._creationMode, ast.sourceSpan, Identifiers$1.createElement].concat(parameters));
+        if (i18nMessages.length > 0) {
+            (_c = this._creationMode).push.apply(_c, i18nMessages);
+        }
+        this.instruction.apply(this, [this._creationMode, element.sourceSpan, Identifiers$1.createElement].concat(parameters));
         var /** @type {?} */ implicit = variable(this.contextParameter);
         // Generate element input bindings
-        for (var _c = 0, _d = ast.inputs; _c < _d.length; _c++) {
-            var input = _d[_c];
+        for (var _d = 0, _e = element.inputs; _d < _e.length; _d++) {
+            var input = _e[_d];
             if (input.isAnimation) {
                 this.unsupported('animations');
             }
             var /** @type {?} */ convertedBinding = this.convertPropertyBinding(implicit, input.value);
-            var /** @type {?} */ parameters_1 = [literal(elementIndex), literal(input.name), convertedBinding];
             var /** @type {?} */ instruction = BINDING_INSTRUCTION_MAP[input.type];
             if (instruction) {
                 // TODO(chuckj): runtime: security context?
@@ -31173,11 +31275,21 @@ var TemplateDefinitionBuilder = /** @class */ (function () {
             }
         }
         // Generate directives input bindings
-        this._visitDirectives(ast.directives, implicit, elementIndex, directiveIndexMap);
+        this._visitDirectives(element.directives, implicit, elementIndex, directiveIndexMap);
         // Traverse element child nodes
-        templateVisitAll(this, ast.children);
+        if (this._inI18nSection && element.children.length == 1 &&
+            element.children[0] instanceof TextAst) {
+            var /** @type {?} */ text = /** @type {?} */ (element.children[0]);
+            this.visitSingleI18nTextChild(text, i18nMeta);
+        }
+        else {
+            templateVisitAll(this, element.children);
+        }
         // Finish element construction mode.
-        this.instruction(this._creationMode, ast.endSourceSpan || ast.sourceSpan, Identifiers$1.elementEnd);
+        this.instruction(this._creationMode, element.endSourceSpan || element.sourceSpan, Identifiers$1.elementEnd);
+        // Restore the state before exiting this node
+        this._inI18nSection = wasInI18nSection;
+        var _c;
     };
     /**
      * @param {?} directives
@@ -31283,6 +31395,34 @@ var TemplateDefinitionBuilder = /** @class */ (function () {
         // Text is defined in creation mode only.
         this.instruction(this._creationMode, ast.sourceSpan, Identifiers$1.text, literal(this.allocateDataSlot()), literal(ast.value));
     };
+    // When the content of the element is a single text node the translation can be inlined:
+    //
+    // `<p i18n="desc|mean">some content</p>`
+    // compiles to
+    // ```
+    // /**
+    // * @desc desc
+    // * @meaning mean
+    // */
+    // const MSG_XYZ = goog.getMsg('some content');
+    // i0.ɵT(1, MSG_XYZ);
+    // ```
+    /**
+     * @param {?} text
+     * @param {?} i18nMeta
+     * @return {?}
+     */
+    TemplateDefinitionBuilder.prototype.visitSingleI18nTextChild = /**
+     * @param {?} text
+     * @param {?} i18nMeta
+     * @return {?}
+     */
+    function (text, i18nMeta) {
+        var _a = this.genI18nMessageStmts(text.value, i18nMeta), statements = _a.statements, variable$$1 = _a.variable;
+        (_b = this._creationMode).push.apply(_b, statements);
+        this.instruction(this._creationMode, text.sourceSpan, Identifiers$1.text, literal(this.allocateDataSlot()), variable$$1);
+        var _b;
+    };
     /**
      * @return {?}
      */
@@ -31384,6 +31524,30 @@ var TemplateDefinitionBuilder = /** @class */ (function () {
      */
     function (implicit, value, sourceSpan) {
         return this.convertPropertyBinding(implicit, value);
+    };
+    /**
+     * @param {?} msg
+     * @param {?} meta
+     * @return {?}
+     */
+    TemplateDefinitionBuilder.prototype.genI18nMessageStmts = /**
+     * @param {?} msg
+     * @param {?} meta
+     * @return {?}
+     */
+    function (msg, meta) {
+        var /** @type {?} */ statements = [];
+        var /** @type {?} */ m = parseI18nMeta(meta);
+        var /** @type {?} */ docStmt = i18nMetaToDocStmt(m);
+        if (docStmt) {
+            statements.push(docStmt);
+        }
+        // Call closure to get the translation
+        var /** @type {?} */ variable$$1 = variable(this.bindingScope.freshI18nName());
+        var /** @type {?} */ fnCall = variable(GOOG_GET_MSG).callFn([literal(msg)]);
+        var /** @type {?} */ msgStmt = variable$$1.set(fnCall).toDeclStmt(INFERRED_TYPE, [StmtModifier.Final]);
+        statements.push(msgStmt);
+        return { statements: statements, variable: variable$$1 };
     };
     return TemplateDefinitionBuilder;
 }());
@@ -31624,7 +31788,7 @@ var ValueConverter = /** @class */ (function (_super) {
     function (ast, context) {
         var _this = this;
         return new BuiltinFunctionCall(ast.span, this.visitAll(ast.expressions), function (values) {
-            // If the literal has calculated (non-literal) elements  transform it into
+            // If the literal has calculated (non-literal) elements transform it into
             // calls to literal factories that compose the literal and will cache intermediate
             // values. Otherwise, just return an literal array that contains the values.
             var /** @type {?} */ literal$$1 = literalArr(values);
@@ -31750,10 +31914,47 @@ function asLiteral(value) {
 }
 /**
  * @param {?} map
+ * @param {?=} quoted
  * @return {?}
  */
-function mapToExpression(map) {
-    return literalMap(Object.getOwnPropertyNames(map).map(function (key) { return ({ key: key, quoted: false, value: literal(map[key]) }); }));
+function mapToExpression(map, quoted) {
+    if (quoted === void 0) { quoted = false; }
+    return literalMap(Object.getOwnPropertyNames(map).map(function (key) { return ({ key: key, quoted: quoted, value: asLiteral(map[key]) }); }));
+}
+/**
+ * @param {?=} i18n
+ * @return {?}
+ */
+function parseI18nMeta(i18n) {
+    var /** @type {?} */ meaning;
+    var /** @type {?} */ description;
+    var /** @type {?} */ id;
+    if (i18n) {
+        // TODO(vicb): figure out how to force a message ID with closure ?
+        var /** @type {?} */ idIndex = i18n.indexOf(ID_SEPARATOR$1);
+        var /** @type {?} */ descIndex = i18n.indexOf(MEANING_SEPARATOR$1);
+        var /** @type {?} */ meaningAndDesc = void 0;
+        _a = (idIndex > -1) ? [i18n.slice(0, idIndex), i18n.slice(idIndex + 2)] : [i18n, ''], meaningAndDesc = _a[0], id = _a[1];
+        _b = (descIndex > -1) ?
+            [meaningAndDesc.slice(0, descIndex), meaningAndDesc.slice(descIndex + 1)] :
+            ['', meaningAndDesc], meaning = _b[0], description = _b[1];
+    }
+    return { description: description, id: id, meaning: meaning };
+    var _a, _b;
+}
+/**
+ * @param {?} meta
+ * @return {?}
+ */
+function i18nMetaToDocStmt(meta) {
+    var /** @type {?} */ tags = [];
+    if (meta.description) {
+        tags.push({ tagName: "desc" /* Desc */, text: meta.description });
+    }
+    if (meta.meaning) {
+        tags.push({ tagName: "meaning" /* Meaning */, text: meta.meaning });
+    }
+    return tags.length == 0 ? null : new JSDocCommentStmt(tags);
 }
 var _a;
 
@@ -36137,7 +36338,14 @@ function createAotCompiler(compilerHost, options, errorCollector) {
     var /** @type {?} */ summaryResolver = new AotSummaryResolver(compilerHost, symbolCache);
     var /** @type {?} */ symbolResolver = new StaticSymbolResolver(compilerHost, symbolCache, summaryResolver);
     var /** @type {?} */ staticReflector = new StaticReflector(summaryResolver, symbolResolver, [], [], errorCollector);
-    var /** @type {?} */ htmlParser = new I18NHtmlParser(new HtmlParser(), translations, options.i18nFormat, options.missingTranslation, console);
+    var /** @type {?} */ htmlParser;
+    if (!!options.enableIvy) {
+        // Ivy handles i18n at the compiler level so we must use a regular parser
+        htmlParser = /** @type {?} */ (new HtmlParser());
+    }
+    else {
+        htmlParser = new I18NHtmlParser(new HtmlParser(), translations, options.i18nFormat, options.missingTranslation, console);
+    }
     var /** @type {?} */ config = new CompilerConfig({
         defaultEncapsulation: ViewEncapsulation.Emulated,
         useJit: false,
@@ -58605,7 +58813,7 @@ exports.zipAll = zipAll_1.zipAll;
 var index_68 = index$4.share;
 
 /**
- * @license Angular v6.0.0-rc.0-e5e1b0d
+ * @license Angular v6.0.0-rc.0-e44f69c
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -60508,7 +60716,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('6.0.0-rc.0-e5e1b0d');
+var VERSION$2 = new Version$1('6.0.0-rc.0-e44f69c');
 
 /**
  * @fileoverview added by tsickle
@@ -73423,7 +73631,7 @@ var NG_PROJECT_AS_ATTR_NAME = 'ngProjectAs';
  */
 function assertNodeType(node, type) {
     assertNotNull$1(node, 'should be called with a node');
-    assertEqual(node.flags & 3 /* TYPE_MASK */, type, "should be a " + typeName(type));
+    assertEqual(node.type, type, "should be a " + typeName(type));
 }
 /**
  * @param {?} node
@@ -73436,8 +73644,7 @@ function assertNodeOfPossibleTypes(node) {
         types[_i - 1] = arguments[_i];
     }
     assertNotNull$1(node, 'should be called with a node');
-    var /** @type {?} */ nodeType = node.flags & 3;
-    var /** @type {?} */ found = types.some(function (type) { return nodeType === type; });
+    var /** @type {?} */ found = types.some(function (type) { return node.type === type; });
     assertEqual(found, true, "Should be one of " + types.map(typeName).join(', '));
 }
 /**
@@ -73573,8 +73780,7 @@ function findNextRNodeSibling(node, stopNode) {
     while (currentNode && currentNode !== stopNode) {
         var /** @type {?} */ pNextOrParent = currentNode.pNextOrParent;
         if (pNextOrParent) {
-            var /** @type {?} */ pNextOrParentType = pNextOrParent.flags & 3;
-            while (pNextOrParentType !== 1 /* Projection */) {
+            while (pNextOrParent.type !== 1 /* Projection */) {
                 var /** @type {?} */ nativeNode = findFirstRNode(pNextOrParent);
                 if (nativeNode) {
                     return nativeNode;
@@ -73595,7 +73801,7 @@ function findNextRNodeSibling(node, stopNode) {
             var /** @type {?} */ parentNode = currentNode.parent;
             currentNode = null;
             if (parentNode) {
-                var /** @type {?} */ parentType = parentNode.flags & 3;
+                var /** @type {?} */ parentType = parentNode.type;
                 if (parentType === 0 /* Container */ || parentType === 2 /* View */) {
                     currentNode = parentNode;
                 }
@@ -73615,7 +73821,7 @@ function getNextLNodeWithProjection(node) {
     var /** @type {?} */ pNextOrParent = node.pNextOrParent;
     if (pNextOrParent) {
         // The node is projected
-        var /** @type {?} */ isLastProjectedNode = (pNextOrParent.flags & 3 /* TYPE_MASK */) === 1;
+        var /** @type {?} */ isLastProjectedNode = pNextOrParent.type === 1;
         // returns pNextOrParent if we are not at the end of the list, null otherwise
         return isLastProjectedNode ? null : pNextOrParent;
     }
@@ -73656,18 +73862,17 @@ function getNextOrParentSiblingNode(initialNode, rootNode) {
 function findFirstRNode(rootNode) {
     var /** @type {?} */ node = rootNode;
     while (node) {
-        var /** @type {?} */ type = node.flags & 3;
         var /** @type {?} */ nextNode = null;
-        if (type === 3 /* Element */) {
+        if (node.type === 3 /* Element */) {
             // A LElementNode has a matching RNode in LElementNode.native
             return (/** @type {?} */ (node)).native;
         }
-        else if (type === 0 /* Container */) {
+        else if (node.type === 0 /* Container */) {
             // For container look at the first node of the view next
             var /** @type {?} */ childContainerData = (/** @type {?} */ (node)).data;
             nextNode = childContainerData.views.length ? childContainerData.views[0].child : null;
         }
-        else if (type === 1 /* Projection */) {
+        else if (node.type === 1 /* Projection */) {
             // For Projection look at the first projected node
             nextNode = (/** @type {?} */ (node)).data.head;
         }
@@ -73694,10 +73899,9 @@ function addRemoveViewFromContainer(container, rootNode, insertMode, beforeNode)
     var /** @type {?} */ node = rootNode.child;
     if (parent) {
         while (node) {
-            var /** @type {?} */ type = node.flags & 3;
             var /** @type {?} */ nextNode = null;
             var /** @type {?} */ renderer = container.view.renderer;
-            if (type === 3 /* Element */) {
+            if (node.type === 3 /* Element */) {
                 if (insertMode) {
                     isProceduralRenderer(renderer) ?
                         renderer.insertBefore(parent, /** @type {?} */ ((node.native)), /** @type {?} */ (beforeNode)) :
@@ -73709,14 +73913,14 @@ function addRemoveViewFromContainer(container, rootNode, insertMode, beforeNode)
                 }
                 nextNode = node.next;
             }
-            else if (type === 0 /* Container */) {
+            else if (node.type === 0 /* Container */) {
                 // if we get to a container, it must be a root node of a view because we are only
                 // propagating down into child views / containers and not child elements
                 var /** @type {?} */ childContainerData = (/** @type {?} */ (node)).data;
                 childContainerData.renderParent = parentNode;
                 nextNode = childContainerData.views.length ? childContainerData.views[0].child : null;
             }
-            else if (type === 1 /* Projection */) {
+            else if (node.type === 1 /* Projection */) {
                 nextNode = (/** @type {?} */ (node)).data.head;
             }
             else {
@@ -73867,7 +74071,7 @@ function setViewNext(view, next) {
  */
 function getParentState(state, rootView) {
     var /** @type {?} */ node;
-    if ((node = /** @type {?} */ (((/** @type {?} */ (state)))).node) && (node.flags & 3 /* TYPE_MASK */) === 2 /* View */) {
+    if ((node = /** @type {?} */ (((/** @type {?} */ (state)))).node) && node.type === 2 /* View */) {
         // if it's an embedded view, the state needs to go up to the container, in case the
         // container has a next
         return /** @type {?} */ (((node.parent)).data);
@@ -73937,7 +74141,7 @@ function executeOnDestroys(view) {
  * @return {?} boolean Whether the child element should be inserted.
  */
 function canInsertNativeNode(parent, currentView) {
-    var /** @type {?} */ parentIsElement = (parent.flags & 3 /* TYPE_MASK */) === 3;
+    var /** @type {?} */ parentIsElement = parent.type === 3;
     return parentIsElement &&
         (parent.view !== currentView || parent.data === null /* Regular Element. */);
 }
@@ -74296,7 +74500,7 @@ function createLNode(index, type, native, state) {
         parent && parent.queries && parent.queries.child();
     var /** @type {?} */ isState = state != null;
     var /** @type {?} */ node = {
-        flags: type,
+        type: type,
         native: /** @type {?} */ (native),
         view: currentView,
         parent: /** @type {?} */ (parent),
@@ -74329,7 +74533,7 @@ function createLNode(index, type, native, state) {
         if (isParent) {
             currentQueries = null;
             if (previousOrParentNode.view === currentView ||
-                (previousOrParentNode.flags & 3 /* TYPE_MASK */) === 2 /* View */) {
+                previousOrParentNode.type === 2 /* View */) {
                 // We are in the same view, which means we are adding content node to the parent View.
                 ngDevMode && assertNull(previousOrParentNode.child, "previousOrParentNode's child should not have been set.");
                 previousOrParentNode.child = node;
@@ -74559,6 +74763,7 @@ function setUpAttributes(native, attrs) {
  */
 function createTNode(tagName, attrs, data, localNames) {
     return {
+        flags: 0,
         tagName: tagName,
         attrs: attrs,
         localNames: localNames,
@@ -74586,7 +74791,7 @@ function directiveCreate(index, directive, directiveDef, localNames) {
     var /** @type {?} */ instance = baseDirectiveCreate(index, directive, directiveDef);
     ngDevMode && assertNotNull$1(previousOrParentNode.tNode, 'previousOrParentNode.tNode');
     var /** @type {?} */ tNode = /** @type {?} */ ((previousOrParentNode.tNode));
-    if (currentView.tView.firstTemplatePass && localNames) {
+    if (firstTemplatePass && localNames) {
         tNode.localNames = tNode.localNames ? tNode.localNames.concat(localNames) : localNames;
     }
     if (tNode && tNode.attrs) {
@@ -74613,15 +74818,10 @@ function baseDirectiveCreate(index, directive, directiveDef) {
     ngDevMode &&
         assertNull(currentView.bindingStartIndex, 'directives should be created before any bindings');
     ngDevMode && assertPreviousIsParent();
-    var /** @type {?} */ flags = /** @type {?} */ ((previousOrParentNode)).flags;
-    var /** @type {?} */ size = flags & 4092;
-    if (size === 0) {
-        flags = (index << 12 /* INDX_SHIFT */) | 4 /* SIZE_SKIP */ | flags & 3 /* TYPE_MASK */;
+    if (firstTemplatePass) {
+        var /** @type {?} */ flags = /** @type {?} */ ((previousOrParentNode.tNode)).flags; /** @type {?} */
+        ((previousOrParentNode.tNode)).flags = (flags & 4095 /* SIZE_MASK */) === 0 ? (index << 12 /* INDX_SHIFT */) | 1 : flags + 1;
     }
-    else {
-        flags += 4 /* SIZE_SKIP */;
-    } /** @type {?} */
-    ((previousOrParentNode)).flags = flags;
     ngDevMode && assertDataInRange(index - 1);
     Object.defineProperty(directive, NG_HOST_SYMBOL, { enumerable: false, value: previousOrParentNode });
     data[index] = instance = directive;
@@ -74632,7 +74832,7 @@ function baseDirectiveCreate(index, directive, directiveDef) {
     if (diPublic) {
         diPublic(/** @type {?} */ ((directiveDef)));
     }
-    if (/** @type {?} */ ((directiveDef)).attributes != null && (previousOrParentNode.flags & 3 /* TYPE_MASK */) == 3 /* Element */) {
+    if (/** @type {?} */ ((directiveDef)).attributes != null && previousOrParentNode.type == 3 /* Element */) {
         setUpAttributes((/** @type {?} */ (previousOrParentNode)).native, /** @type {?} */ (((directiveDef)).attributes));
     }
     return instance;
@@ -74647,7 +74847,7 @@ function baseDirectiveCreate(index, directive, directiveDef) {
  * @return {?}
  */
 function setInputsFromAttrs(instance, inputs, tNode) {
-    var /** @type {?} */ directiveIndex = ((previousOrParentNode.flags & 4092 /* SIZE_MASK */) >> 2 /* SIZE_SHIFT */) - 1;
+    var /** @type {?} */ directiveIndex = (/** @type {?} */ ((previousOrParentNode.tNode)).flags & 4095 /* SIZE_MASK */) - 1;
     var /** @type {?} */ initialInputData = /** @type {?} */ (tNode.initialInputs);
     if (initialInputData === undefined || directiveIndex >= initialInputData.length) {
         initialInputData = generateInitialInputs(directiveIndex, inputs, tNode);
@@ -74720,7 +74920,8 @@ function componentRefresh(directiveIndex, elementIndex) {
     // Only attached CheckAlways components or attached, dirty OnPush components should be checked
     if (viewAttached(hostView) && hostView.flags & (2 /* CheckAlways */ | 4 /* Dirty */)) {
         ngDevMode && assertDataInRange(directiveIndex);
-        detectChangesInternal(hostView, element, getDirectiveInstance(data[directiveIndex]));
+        var /** @type {?} */ template = (/** @type {?} */ (tData[directiveIndex])).template;
+        detectChangesInternal(hostView, element, template, getDirectiveInstance(data[directiveIndex]));
     }
 }
 /**
@@ -74842,7 +75043,9 @@ function getRootView(component) {
 function detectChanges(component) {
     var /** @type {?} */ hostNode = _getComponentHostLElementNode(component);
     ngDevMode && assertNotNull$1(hostNode.data, 'Component host node should be attached to an LView');
-    detectChangesInternal(/** @type {?} */ (hostNode.data), hostNode, component);
+    var /** @type {?} */ componentIndex = /** @type {?} */ ((hostNode.tNode)).flags >> 12;
+    var /** @type {?} */ template = (/** @type {?} */ (hostNode.view.tView.data[componentIndex])).template;
+    detectChangesInternal(/** @type {?} */ (hostNode.data), hostNode, template, component);
 }
 /**
  * Checks the change detector and its children, and throws if any changes are detected.
@@ -74885,12 +75088,11 @@ function throwErrorIfNoChangesMode(oldValue, currValue) {
  * @template T
  * @param {?} hostView
  * @param {?} hostNode
+ * @param {?} template
  * @param {?} component
  * @return {?}
  */
-function detectChangesInternal(hostView, hostNode, component) {
-    var /** @type {?} */ componentIndex = hostNode.flags >> 12;
-    var /** @type {?} */ template = (/** @type {?} */ (hostNode.view.tView.data[componentIndex])).template;
+function detectChangesInternal(hostView, hostNode, template, component) {
     var /** @type {?} */ oldView = enterView(hostView, hostNode);
     try {
         template(component, creationMode);
@@ -75764,9 +75966,7 @@ var ReadFromInjectorFn = /** @class */ (function () {
  * @return {?} The ElementRef instance to use
  */
 function getOrCreateElementRef(di) {
-    return di.elementRef ||
-        (di.elementRef = new ElementRef$1(((di.node.flags & 3 /* TYPE_MASK */) === 0 /* Container */) ? null :
-            di.node.native));
+    return di.elementRef || (di.elementRef = new ElementRef$1(di.node.type === 0 /* Container */ ? null : di.node.native));
 }
 var QUERY_READ_TEMPLATE_REF = /** @type {?} */ ((/** @type {?} */ (new ReadFromInjectorFn(function (injector) { return getOrCreateTemplateRef(injector); }))));
 var QUERY_READ_CONTAINER_REF = /** @type {?} */ ((/** @type {?} */ (new ReadFromInjectorFn(function (injector) { return getOrCreateContainerRef(injector); }))));
@@ -75776,10 +75976,10 @@ var QUERY_READ_FROM_NODE = (/** @type {?} */ ((new ReadFromInjectorFn(function (
     if (directiveIdx > -1) {
         return node.view.data[directiveIdx];
     }
-    else if ((node.flags & 3 /* TYPE_MASK */) === 3 /* Element */) {
+    else if (node.type === 3 /* Element */) {
         return getOrCreateElementRef(injector);
     }
-    else if ((node.flags & 3 /* TYPE_MASK */) === 0 /* Container */) {
+    else if (node.type === 0 /* Container */) {
         return getOrCreateTemplateRef(injector);
     }
     throw new Error('fail');
@@ -76209,7 +76409,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-rc.0-e5e1b0d
+ * @license Angular v6.0.0-rc.0-e44f69c
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -78870,7 +79070,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('6.0.0-rc.0-e5e1b0d');
+var VERSION = new Version$1('6.0.0-rc.0-e44f69c');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
