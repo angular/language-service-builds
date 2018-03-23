@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-rc.0-7966744
+ * @license Angular v6.0.0-rc.0-60d9983
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -227,7 +227,7 @@ var tslib_es6 = Object.freeze({
 });
 
 /**
- * @license Angular v6.0.0-rc.0-7966744
+ * @license Angular v6.0.0-rc.0-60d9983
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -886,7 +886,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('6.0.0-rc.0-7966744');
+var VERSION$1 = new Version('6.0.0-rc.0-60d9983');
 
 /**
  * @fileoverview added by tsickle
@@ -58824,7 +58824,7 @@ exports.zipAll = zipAll_1.zipAll;
 var index_68 = index$4.share;
 
 /**
- * @license Angular v6.0.0-rc.0-7966744
+ * @license Angular v6.0.0-rc.0-60d9983
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -60727,7 +60727,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('6.0.0-rc.0-7966744');
+var VERSION$2 = new Version$1('6.0.0-rc.0-60d9983');
 
 /**
  * @fileoverview added by tsickle
@@ -76460,7 +76460,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-rc.0-7966744
+ * @license Angular v6.0.0-rc.0-60d9983
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -79121,7 +79121,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('6.0.0-rc.0-7966744');
+var VERSION = new Version$1('6.0.0-rc.0-60d9983');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
