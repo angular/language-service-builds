@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-rc.0-2aabbc5
+ * @license Angular v6.0.0-rc.0-910a16a
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -227,7 +227,7 @@ var tslib_es6 = Object.freeze({
 });
 
 /**
- * @license Angular v6.0.0-rc.0-2aabbc5
+ * @license Angular v6.0.0-rc.0-910a16a
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -886,7 +886,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('6.0.0-rc.0-2aabbc5');
+var VERSION$1 = new Version('6.0.0-rc.0-910a16a');
 
 /**
  * @fileoverview added by tsickle
@@ -30759,6 +30759,8 @@ function compileDirective(outputCtx, directive, reflector, bindingParser, mode) 
     };
     // e.g. 'type: MyDirective`
     field('type', outputCtx.importExpr(directive.type.reference));
+    // e.g. `selector: [[[null, 'someDir', ''], null]]`
+    field('selector', createDirectiveSelector(/** @type {?} */ ((directive.selector))));
     // e.g. `factory: () => new MyApp(injectElementRef())`
     field('factory', createFactory(directive.type, outputCtx, reflector, directive.queries));
     // e.g. `hostBindings: (dirIndex, elIndex) => { ... }
@@ -30802,13 +30804,10 @@ function compileComponent(outputCtx, component, pipes, template, reflector, bind
     };
     // e.g. `type: MyApp`
     field('type', outputCtx.importExpr(component.type.reference));
-    // e.g. `tag: 'my-app'`
-    // This is optional and only included if the first selector of a component has element.
+    // e.g. `selector: [[['my-app'], null]]`
+    field('selector', createDirectiveSelector(/** @type {?} */ ((component.selector))));
     var /** @type {?} */ selector = component.selector && CssSelector.parse(component.selector);
     var /** @type {?} */ firstSelector = selector && selector[0];
-    if (firstSelector && firstSelector.hasElementSelector()) {
-        field('tag', literal(firstSelector.element));
-    }
     // e.g. `attr: ["class", ".my.app"]
     // This is optional an only included if the first selector of a component specifies attributes.
     if (firstSelector) {
@@ -31664,6 +31663,13 @@ function createFactory(type, outputCtx, reflector, queries) {
     var /** @type {?} */ result = queryDefinitions.length > 0 ? literalArr([createInstance].concat(queryDefinitions)) :
         createInstance;
     return fn([], [new ReturnStatement(result)], INFERRED_TYPE, null, type.reference.name ? type.reference.name + "_Factory" : null);
+}
+/**
+ * @param {?} selector
+ * @return {?}
+ */
+function createDirectiveSelector(selector) {
+    return asLiteral(parseSelectorsToR3Selector(CssSelector.parse(selector)));
 }
 /**
  * @param {?} directiveMetadata
@@ -58824,7 +58830,7 @@ exports.zipAll = zipAll_1.zipAll;
 var index_68 = index$4.share;
 
 /**
- * @license Angular v6.0.0-rc.0-2aabbc5
+ * @license Angular v6.0.0-rc.0-910a16a
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -60728,7 +60734,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('6.0.0-rc.0-2aabbc5');
+var VERSION$2 = new Version$1('6.0.0-rc.0-910a16a');
 
 /**
  * @fileoverview added by tsickle
@@ -74148,47 +74154,6 @@ function executePipeOnDestroys(view) {
     }
 }
 /**
- * Returns whether a native element should be inserted in the given parent.
- *
- * The native node can be inserted when its parent is:
- * - A regular element => Yes
- * - A component host element =>
- *    - if the `currentView` === the parent `view`: The element is in the content (vs the
- *      template)
- *      => don't add as the parent component will project if needed.
- *    - `currentView` !== the parent `view` => The element is in the template (vs the content),
- *      add it
- * - View element => delay insertion, will be done on `viewEnd()`
- *
- * @param {?} parent The parent in which to insert the child
- * @param {?} currentView The LView being processed
- * @return {?} boolean Whether the child element should be inserted.
- */
-function canInsertNativeNode(parent, currentView) {
-    var /** @type {?} */ parentIsElement = parent.type === 3;
-    return parentIsElement &&
-        (parent.view !== currentView || parent.data === null /* Regular Element. */);
-}
-/**
- * Appends the `child` element to the `parent`.
- *
- * The element insertion might be delayed {\@link canInsertNativeNode}
- *
- * @param {?} parent The parent to which to append the child
- * @param {?} child The child that should be appended
- * @param {?} currentView The current LView
- * @return {?} Whether or not the child was appended
- */
-function appendChild(parent, child, currentView) {
-    if (child !== null && canInsertNativeNode(parent, currentView)) {
-        // We only add element if not in View or not projected.
-        var /** @type {?} */ renderer = currentView.renderer;
-        isProceduralRenderer(renderer) ? renderer.appendChild(/** @type {?} */ (((parent.native))), child) : /** @type {?} */ ((parent.native)).appendChild(child);
-        return true;
-    }
-    return false;
-}
-/**
  * @fileoverview added by tsickle
  * @suppress {checkTypes} checked by tsc
  */
@@ -74286,7 +74251,7 @@ var _CLEAN_PROMISE = Promise.resolve(null);
  *
  * Saved here to avoid re-instantiating an array on every change detection run.
  */
-var rootDirectiveIndices = [0, 0];
+var _ROOT_DIRECTIVE_INDICES = [0, 0];
 /**
  * This property gets set before entering a template.
  *
@@ -74585,11 +74550,12 @@ function createLNode(index, type, native, state) {
 /**
  *
  * @template T
- * @param {?} hostNode
+ * @param {?} hostNode Existing node to render into.
  * @param {?} template Template function with the instructions.
  * @param {?} context to pass into the template.
- * @param {?} providedRendererFactory
- * @param {?} host Existing node to render into.
+ * @param {?} providedRendererFactory renderer factory to use
+ * @param {?} host The host element node to use
+ * @param {?=} directiveRegistry Any directive defs that should be used to match nodes to directives
  * @return {?}
  */
 
@@ -74609,7 +74575,7 @@ function renderEmbeddedTemplate(viewNode, template, context, renderer) {
         previousOrParentNode = /** @type {?} */ ((null));
         var /** @type {?} */ cm = false;
         if (viewNode == null) {
-            var /** @type {?} */ view = createLView(-1, renderer, createTView(), template, context, 2 /* CheckAlways */);
+            var /** @type {?} */ view = createLView(-1, renderer, createTView(currentView.tView.directiveRegistry), template, context, 2 /* CheckAlways */);
             viewNode = createLNode(null, 2 /* View */, null, view);
             cm = true;
         }
@@ -74647,7 +74613,7 @@ function renderComponentOrTemplate(node, hostView, componentOrContext, template)
             executeInitAndContentHooks();
             // Element was stored at 0 in data and directive was stored at 0 in directives
             // in renderComponent()
-            setHostBindings(rootDirectiveIndices);
+            setHostBindings(_ROOT_DIRECTIVE_INDICES);
             componentRefresh(0, 0);
         }
     }
@@ -74684,33 +74650,12 @@ function queueHostBindingForCheck(dirIndex, elIndex) {
  * Sets the context for a ChangeDetectorRef to the given instance.
  * @param {?} injector
  * @param {?} instance
+ * @param {?} view
  * @return {?}
  */
-function initChangeDetectorIfExisting(injector, instance) {
+function initChangeDetectorIfExisting(injector, instance, view) {
     if (injector && injector.changeDetectorRef != null) {
-        (/** @type {?} */ (injector.changeDetectorRef))._setComponentContext(instance);
-    }
-}
-/**
- * This function instantiates the given directives. It is a hack since it assumes the directives
- * come in the correct order for DI.
- * @param {?} index
- * @param {?} elementIndex
- * @param {?} directiveTypes
- * @param {?} localRefs
- * @return {?}
- */
-function hack_declareDirectives(index, elementIndex, directiveTypes, localRefs) {
-    if (directiveTypes) {
-        var /** @type {?} */ defs = /** @type {?} */ ((currentView.tView.directives));
-        // TODO(mhevery): This assumes that the directives come in correct order, which
-        // is not guaranteed. Must be refactored to take it into account.
-        for (var /** @type {?} */ i = 0; i < directiveTypes.length; i++) {
-            var /** @type {?} */ directiveType = directiveTypes[i];
-            var /** @type {?} */ directiveDef = firstTemplatePass ? directiveType.ngDirectiveDef : /** @type {?} */ (defs[index]);
-            directiveCreate(index, elementIndex, directiveDef.factory(), directiveDef, localRefs);
-            index++;
-        }
+        (/** @type {?} */ (injector.changeDetectorRef))._setComponentContext(view, instance);
     }
 }
 /**
@@ -74742,16 +74687,18 @@ function findMatchingLocalNames(directiveDef, localRefs, index, defaultExport) {
  * if it doesn't already exist.
  *
  * @param {?} template The template from which to get static data
+ * @param {?} defs
  * @return {?} TView
  */
-function getOrCreateTView(template) {
-    return template.ngPrivateData || (template.ngPrivateData = /** @type {?} */ (createTView()));
+function getOrCreateTView(template, defs) {
+    return template.ngPrivateData || (template.ngPrivateData = /** @type {?} */ (createTView(defs)));
 }
 /**
  * Creates a TView instance
+ * @param {?} defs
  * @return {?}
  */
-function createTView() {
+function createTView(defs) {
     return {
         data: [],
         directives: null,
@@ -74765,7 +74712,8 @@ function createTView() {
         destroyHooks: null,
         pipeDestroyHooks: null,
         hostBindings: null,
-        components: null
+        components: null,
+        directiveRegistry: typeof defs === 'function' ? defs() : defs
     };
 }
 /**
@@ -74786,44 +74734,27 @@ function setUpAttributes(native, attrs) {
     }
 }
 /**
- * Constructs a TNode object from the arguments.
- *
- * @param {?} tagName
- * @param {?} attrs
- * @param {?} data
- * @param {?} localNames A list of local names and their matching indices
- * @return {?} the TNode object
- */
-function createTNode(tagName, attrs, data, localNames) {
-    return {
-        flags: 0,
-        tagName: tagName,
-        attrs: attrs,
-        localNames: localNames,
-        initialInputs: undefined,
-        inputs: undefined,
-        outputs: undefined,
-        data: data
-    };
-}
-/**
  * Create a directive.
  *
  * NOTE: directives can be created in order other than the index order. They can also
  *       be retrieved before they are created in which case the value will be null.
  *
  * @template T
- * @param {?} index Index to save the directive in the directives array
  * @param {?} elementIndex Index of the host element in the data array
  * @param {?} directive The directive instance.
  * @param {?} directiveDef DirectiveDef object which contains information about the template.
  * @param {?=} localRefs Names under which a query can retrieve the directive instance
  * @return {?}
  */
-function directiveCreate(index, elementIndex, directive, directiveDef, localRefs) {
+function directiveCreate(elementIndex, directive, directiveDef, localRefs) {
+    var /** @type {?} */ index = directives ? directives.length : 0;
     var /** @type {?} */ instance = baseDirectiveCreate(index, directive, directiveDef);
     ngDevMode && assertNotNull$1(previousOrParentNode.tNode, 'previousOrParentNode.tNode');
     var /** @type {?} */ tNode = /** @type {?} */ ((previousOrParentNode.tNode));
+    var /** @type {?} */ isComponent = (/** @type {?} */ (directiveDef)).template;
+    if (isComponent) {
+        addComponentLogic(index, elementIndex, directive, /** @type {?} */ (directiveDef));
+    }
     if (firstTemplatePass) {
         // Init hooks are queued now so ngOnInit is called in host components before
         // any projected components.
@@ -74831,7 +74762,7 @@ function directiveCreate(index, elementIndex, directive, directiveDef, localRefs
         if (directiveDef.hostBindings)
             queueHostBindingForCheck(index, elementIndex);
         if (localRefs) {
-            var /** @type {?} */ localNames = findMatchingLocalNames(directiveDef, localRefs, index);
+            var /** @type {?} */ localNames = findMatchingLocalNames(directiveDef, localRefs, index, isComponent ? '' : undefined);
             tNode.localNames =
                 localNames && tNode.localNames ? tNode.localNames.concat(localNames) : localNames;
         }
@@ -74840,6 +74771,26 @@ function directiveCreate(index, elementIndex, directive, directiveDef, localRefs
         setInputsFromAttrs(index, instance, directiveDef.inputs, tNode);
     }
     return instance;
+}
+/**
+ * @template T
+ * @param {?} index
+ * @param {?} elementIndex
+ * @param {?} instance
+ * @param {?} def
+ * @return {?}
+ */
+function addComponentLogic(index, elementIndex, instance, def) {
+    var /** @type {?} */ tView = getOrCreateTView(def.template, def.directiveDefs);
+    // Only component views should be added to the view tree directly. Embedded views are
+    // accessed through their containers because they may be removed / re-added later.
+    var /** @type {?} */ hostView = addToViewTree(createLView(-1, rendererFactory.createRenderer(/** @type {?} */ (previousOrParentNode.native), def.rendererType), tView, null, null, def.onPush ? 4 /* Dirty */ : 2 /* CheckAlways */));
+    (/** @type {?} */ (previousOrParentNode.data)) = hostView;
+    (/** @type {?} */ (hostView.node)) = previousOrParentNode;
+    initChangeDetectorIfExisting(previousOrParentNode.nodeInjector, instance, hostView);
+    if (firstTemplatePass) {
+        queueComponentIndexForCheck(index, elementIndex);
+    }
 }
 /**
  * A lighter version of directiveCreate() that is used for the root component
@@ -74861,13 +74812,6 @@ function baseDirectiveCreate(index, directive, directiveDef) {
         currentView.directives = directives = [];
     ngDevMode && assertDataNext(index, directives);
     directives[index] = directive;
-    if (firstTemplatePass) {
-        var /** @type {?} */ defs = currentView.tView.directives || (currentView.tView.directives = []);
-        ngDevMode && assertDataNext(index, defs);
-        defs[index] = (directiveDef);
-        var /** @type {?} */ flags = /** @type {?} */ ((previousOrParentNode.tNode)).flags; /** @type {?} */
-        ((previousOrParentNode.tNode)).flags = (flags & 4095 /* SIZE_MASK */) === 0 ? (index << 12 /* INDX_SHIFT */) | 1 : flags + 1;
-    }
     var /** @type {?} */ diPublic = /** @type {?} */ ((directiveDef)).diPublic;
     if (diPublic) {
         diPublic(/** @type {?} */ ((directiveDef)));
@@ -74930,15 +74874,6 @@ function generateInitialInputs(directiveIndex, inputs, tNode) {
     return initialInputData;
 }
 /**
- * Retrieves the next directive index to write
- * @param {?} index
- * @return {?}
- */
-function getNextDirectiveIndex(index) {
-    return firstTemplatePass ? (directives ? directives.length : 0) :
-        (/** @type {?} */ (tData[index])).flags >> 12 /* INDX_SHIFT */;
-}
-/**
  * @return {?}
  */
 function refreshDynamicChildren() {
@@ -74969,8 +74904,8 @@ function componentRefresh(directiveIndex, elementIndex) {
     // Only attached CheckAlways components or attached, dirty OnPush components should be checked
     if (viewAttached(hostView) && hostView.flags & (2 /* CheckAlways */ | 4 /* Dirty */)) {
         ngDevMode && assertDataInRange(directiveIndex, /** @type {?} */ ((directives)));
-        var /** @type {?} */ template = (/** @type {?} */ (((currentView.tView.directives))[directiveIndex])).template;
-        detectChangesInternal(hostView, element, template, getDirectiveInstance(/** @type {?} */ ((directives))[directiveIndex]));
+        var /** @type {?} */ def = /** @type {?} */ (((currentView.tView.directives))[directiveIndex]);
+        detectChangesInternal(hostView, element, def, getDirectiveInstance(/** @type {?} */ ((directives))[directiveIndex]));
     }
 }
 /**
@@ -75092,9 +75027,9 @@ function getRootView(component) {
 function detectChanges(component) {
     var /** @type {?} */ hostNode = _getComponentHostLElementNode(component);
     ngDevMode && assertNotNull$1(hostNode.data, 'Component host node should be attached to an LView');
-    var /** @type {?} */ componentIndex = /** @type {?} */ ((hostNode.tNode)).flags >> 12;
-    var /** @type {?} */ template = (/** @type {?} */ (((hostNode.view.tView.directives))[componentIndex])).template;
-    detectChangesInternal(/** @type {?} */ (hostNode.data), hostNode, template, component);
+    var /** @type {?} */ componentIndex = /** @type {?} */ ((hostNode.tNode)).flags >> 13;
+    var /** @type {?} */ def = /** @type {?} */ (((hostNode.view.tView.directives))[componentIndex]);
+    detectChangesInternal(/** @type {?} */ (hostNode.data), hostNode, def, component);
 }
 /**
  * Checks the change detector and its children, and throws if any changes are detected.
@@ -75137,12 +75072,13 @@ function throwErrorIfNoChangesMode(oldValue, currValue) {
  * @template T
  * @param {?} hostView
  * @param {?} hostNode
- * @param {?} template
+ * @param {?} def
  * @param {?} component
  * @return {?}
  */
-function detectChangesInternal(hostView, hostNode, template, component) {
+function detectChangesInternal(hostView, hostNode, def, component) {
     var /** @type {?} */ oldView = enterView(hostView, hostNode);
+    var /** @type {?} */ template = def.template;
     try {
         template(component, creationMode);
         refreshDynamicChildren();
@@ -75257,15 +75193,20 @@ var ViewRef$1 = /** @class */ (function () {
     /** @internal */
     /**
      * \@internal
+     * @param {?} view
      * @param {?} context
      * @return {?}
      */
     ViewRef.prototype._setComponentContext = /**
      * \@internal
+     * @param {?} view
      * @param {?} context
      * @return {?}
      */
-    function (context) { this.context = context; };
+    function (view, context) {
+        this._view = view;
+        this.context = context;
+    };
     /**
      * @return {?}
      */
@@ -76095,6 +76036,8 @@ var ViewContainerRef$1 = /** @class */ (function () {
      * @return {?}
      */
     function (templateRef, context, index) {
+        // set current view to container node's view
+        enterView(this._node.view, null);
         var /** @type {?} */ viewRef = templateRef.createEmbeddedView(/** @type {?} */ ((context)));
         this.insert(viewRef, index);
         return viewRef;
@@ -76461,7 +76404,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-rc.0-2aabbc5
+ * @license Angular v6.0.0-rc.0-910a16a
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -79122,7 +79065,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('6.0.0-rc.0-2aabbc5');
+var VERSION = new Version$1('6.0.0-rc.0-910a16a');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
