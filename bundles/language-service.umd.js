@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-rc.0-910a16a
+ * @license Angular v6.0.0-rc.0-0ebdb3d
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -227,7 +227,7 @@ var tslib_es6 = Object.freeze({
 });
 
 /**
- * @license Angular v6.0.0-rc.0-910a16a
+ * @license Angular v6.0.0-rc.0-0ebdb3d
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -886,7 +886,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('6.0.0-rc.0-910a16a');
+var VERSION$1 = new Version('6.0.0-rc.0-0ebdb3d');
 
 /**
  * @fileoverview added by tsickle
@@ -2336,7 +2336,7 @@ function templateJitUrl(ngModuleType, compMeta) {
  * particular offset in a source file. The head of the list is the top
  * most node. The tail is the node that contains the offset directly.
  *
- * For example, the expresion `a + b + c` might have an ast that looks
+ * For example, the expression `a + b + c` might have an ast that looks
  * like:
  *     +
  *    / \
@@ -3531,11 +3531,11 @@ var DirectiveNormalizer = /** @class */ (function () {
         var _this = this;
         // Algorithm:
         // - produce exactly 1 entry per original styleUrl in
-        // CompileTemplateMetadata.externalStylesheets whith all styles inlined
+        // CompileTemplateMetadata.externalStylesheets with all styles inlined
         // - inline all styles that are referenced by the template into CompileTemplateMetadata.styles.
         // Reason: be able to determine how many stylesheets there are even without loading
         // the template nor the stylesheets, so we can create a stub for TypeScript always synchronously
-        // (as resouce loading may be async)
+        // (as resource loading may be async)
         var /** @type {?} */ styles = preparsedTemplate.styles.slice();
         this._inlineStyles(preparsedTemplate.inlineStyleUrls, stylesheets, styles);
         var /** @type {?} */ styleUrls = preparsedTemplate.styleUrls;
@@ -7606,14 +7606,14 @@ var _ParseAST = /** @class */ (function () {
         return /** @type {?} */ (positionals);
     };
     /**
-     * An identifier, a keyword, a string with an optional `-` inbetween.
+     * An identifier, a keyword, a string with an optional `-` in between.
      */
     /**
-     * An identifier, a keyword, a string with an optional `-` inbetween.
+     * An identifier, a keyword, a string with an optional `-` in between.
      * @return {?}
      */
     _ParseAST.prototype.expectTemplateBindingKey = /**
-     * An identifier, a keyword, a string with an optional `-` inbetween.
+     * An identifier, a keyword, a string with an optional `-` in between.
      * @return {?}
      */
     function () {
@@ -32504,21 +32504,21 @@ var StaticSymbolResolver = /** @class */ (function () {
         return this.staticSymbolCache.get(declarationFile, name, members);
     };
     /**
-     * hasDecorators checks a file's metadata for the presense of decorators without evalutating the
+     * hasDecorators checks a file's metadata for the presence of decorators without evaluating the
      * metadata.
      *
      * @param filePath the absolute path to examine for decorators.
      * @returns true if any class in the file has a decorator.
      */
     /**
-     * hasDecorators checks a file's metadata for the presense of decorators without evalutating the
+     * hasDecorators checks a file's metadata for the presence of decorators without evaluating the
      * metadata.
      *
      * @param {?} filePath the absolute path to examine for decorators.
      * @return {?} true if any class in the file has a decorator.
      */
     StaticSymbolResolver.prototype.hasDecorators = /**
-     * hasDecorators checks a file's metadata for the presense of decorators without evalutating the
+     * hasDecorators checks a file's metadata for the presence of decorators without evaluating the
      * metadata.
      *
      * @param {?} filePath the absolute path to examine for decorators.
@@ -39555,7 +39555,7 @@ class ExpressionDiagnosticsVisitor extends compiler_1.RecursiveTemplateAstVisito
     visitEmbeddedTemplate(ast, context) {
         const previousDirectiveSummary = this.directiveSummary;
         this.push(ast);
-        // Find directive that refernces this template
+        // Find directive that references this template
         this.directiveSummary =
             ast.directives.map(d => d.directive).find(d => hasTemplateReference(d.type));
         // Process children
@@ -40854,7 +40854,7 @@ class Evaluator {
                 if (!schema.isMetadataModuleReferenceExpression(typeReference) &&
                     typeReferenceNode.typeArguments && typeReferenceNode.typeArguments.length) {
                     const args = typeReferenceNode.typeArguments.map(element => this.evaluateNode(element));
-                    // TODO: Remove typecast when upgraded to 2.0 as it will be corretly inferred.
+                    // TODO: Remove typecast when upgraded to 2.0 as it will be correctly inferred.
                     // Some versions of 1.9 do not infer this correctly.
                     typeReference.arguments = args;
                 }
@@ -41152,7 +41152,7 @@ class Symbols {
                     }
                     const from = stripQuotes(importDecl.moduleSpecifier.getText());
                     if (importDecl.importClause.name) {
-                        // An `import <identifier> form <module-specifier>` clause. Record the defualt symbol.
+                        // An `import <identifier> form <module-specifier>` clause. Record the default symbol.
                         symbols.set(importDecl.importClause.name.text, { __symbolic: 'reference', module: from, default: true });
                     }
                     const bindings = importDecl.importClause.namedBindings;
@@ -42120,7 +42120,7 @@ class MetadataBundler {
         const exportAlls = new Set();
         for (const symbol of exportedSymbols) {
             if (symbol.reexport) {
-                // symbol.declaration is guarenteed to be defined during the phase this method is called.
+                // symbol.declaration is guaranteed to be defined during the phase this method is called.
                 const declaration = symbol.declaration;
                 const module = declaration.module;
                 if (declaration.name == '*') {
@@ -58830,7 +58830,7 @@ exports.zipAll = zipAll_1.zipAll;
 var index_68 = index$4.share;
 
 /**
- * @license Angular v6.0.0-rc.0-910a16a
+ * @license Angular v6.0.0-rc.0-0ebdb3d
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59070,7 +59070,7 @@ var InjectionToken = /** @class */ (function () {
  */
 
 var ANNOTATIONS = '__annotations__';
-var PARAMETERS = '__paramaters__';
+var PARAMETERS = '__parameters__';
 var PROP_METADATA = '__prop__metadata__';
 /**
  * @suppress {globalThis}
@@ -60734,7 +60734,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('6.0.0-rc.0-910a16a');
+var VERSION$2 = new Version$1('6.0.0-rc.0-0ebdb3d');
 
 /**
  * @fileoverview added by tsickle
@@ -69363,7 +69363,7 @@ function attachProjectedView(vcElementData, view) {
     // - add a view to template._projectedViews only 1x throughout its lifetime,
     //   and remove it not until the view is destroyed.
     //   (hard, as when a parent view is attached/detached we would need to attach/detach all
-    //    nested projected views as well, even accross component boundaries).
+    //    nested projected views as well, even across component boundaries).
     // - don't track the insertion order of views in the projected views array
     //   (hard, as when the views of the same template are inserted different view containers)
     view.state |= 16 /* IsProjectedView */;
@@ -73692,7 +73692,7 @@ function typeName(type) {
  */
 
 /**
- * Returns wether the `renderer` is a `ProceduralRenderer3`
+ * Returns whether the `renderer` is a `ProceduralRenderer3`
  * @param {?} renderer
  * @return {?}
  */
@@ -74575,7 +74575,8 @@ function renderEmbeddedTemplate(viewNode, template, context, renderer) {
         previousOrParentNode = /** @type {?} */ ((null));
         var /** @type {?} */ cm = false;
         if (viewNode == null) {
-            var /** @type {?} */ view = createLView(-1, renderer, createTView(currentView.tView.directiveRegistry), template, context, 2 /* CheckAlways */);
+            // TODO: revisit setting currentView when re-writing view containers
+            var /** @type {?} */ view = createLView(-1, renderer, createTView(currentView && currentView.tView.directiveRegistry), template, context, 2 /* CheckAlways */);
             viewNode = createLNode(null, 2 /* View */, null, view);
             cm = true;
         }
@@ -74585,7 +74586,7 @@ function renderEmbeddedTemplate(viewNode, template, context, renderer) {
         refreshDirectives();
     }
     finally {
-        leaveView(/** @type {?} */ ((/** @type {?} */ ((currentView)).parent)));
+        leaveView(currentView && /** @type {?} */ ((/** @type {?} */ ((currentView)).parent)));
         isParent = _isParent;
         previousOrParentNode = _previousOrParentNode;
     }
@@ -76036,8 +76037,6 @@ var ViewContainerRef$1 = /** @class */ (function () {
      * @return {?}
      */
     function (templateRef, context, index) {
-        // set current view to container node's view
-        enterView(this._node.view, null);
         var /** @type {?} */ viewRef = templateRef.createEmbeddedView(/** @type {?} */ ((context)));
         this.insert(viewRef, index);
         return viewRef;
@@ -76404,7 +76403,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-rc.0-910a16a
+ * @license Angular v6.0.0-rc.0-0ebdb3d
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -78201,7 +78200,7 @@ var DummyResourceLoader = /** @class */ (function (_super) {
     return DummyResourceLoader;
 }(ResourceLoader));
 /**
- * An implemntation of a `LanguageServiceHost` for a TypeScript project.
+ * An implementation of a `LanguageServiceHost` for a TypeScript project.
  *
  * The `TypeScriptServiceHost` implements the Angular `LanguageServiceHost` using
  * the TypeScript language services.
@@ -79065,7 +79064,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('6.0.0-rc.0-910a16a');
+var VERSION = new Version$1('6.0.0-rc.0-0ebdb3d');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
