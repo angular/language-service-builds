@@ -15,65 +15,10 @@ export function getExternalFiles(project) {
         return host.getTemplateReferences();
     }
 }
-const angularOnlyResults = process.argv.indexOf('--angularOnlyResults') >= 0;
-function angularOnlyFilter(ls) {
-    return {
-        cleanupSemanticCache: () => ls.cleanupSemanticCache(),
-        getSyntacticDiagnostics: fileName => [],
-        getSemanticDiagnostics: fileName => [],
-        getCompilerOptionsDiagnostics: () => [],
-        getSyntacticClassifications: (fileName, span) => [],
-        getSemanticClassifications: (fileName, span) => [],
-        getEncodedSyntacticClassifications: (fileName, span) => ({ undefined }),
-        getEncodedSemanticClassifications: (fileName, span) => undefined,
-        getCompletionsAtPosition: (fileName, position) => undefined,
-        getCompletionEntryDetails: (fileName, position, entryName) => undefined,
-        getCompletionEntrySymbol: (fileName, position, entryName) => undefined,
-        getQuickInfoAtPosition: (fileName, position) => undefined,
-        getNameOrDottedNameSpan: (fileName, startPos, endPos) => undefined,
-        getBreakpointStatementAtPosition: (fileName, position) => undefined,
-        getSignatureHelpItems: (fileName, position) => undefined,
-        getRenameInfo: (fileName, position) => undefined,
-        findRenameLocations: (fileName, position, findInStrings, findInComments) => [],
-        getDefinitionAtPosition: (fileName, position) => [],
-        getTypeDefinitionAtPosition: (fileName, position) => [],
-        getImplementationAtPosition: (fileName, position) => [],
-        getReferencesAtPosition: (fileName, position) => [],
-        findReferences: (fileName, position) => [],
-        getDocumentHighlights: (fileName, position, filesToSearch) => [],
-        /** @deprecated */
-        getOccurrencesAtPosition: (fileName, position) => [],
-        getNavigateToItems: searchValue => [],
-        getNavigationBarItems: fileName => [],
-        getNavigationTree: fileName => undefined,
-        getOutliningSpans: fileName => [],
-        getTodoComments: (fileName, descriptors) => [],
-        getBraceMatchingAtPosition: (fileName, position) => [],
-        getIndentationAtPosition: (fileName, position, options) => undefined,
-        getFormattingEditsForRange: (fileName, start, end, options) => [],
-        getFormattingEditsForDocument: (fileName, options) => [],
-        getFormattingEditsAfterKeystroke: (fileName, position, key, options) => [],
-        getDocCommentTemplateAtPosition: (fileName, position) => undefined,
-        isValidBraceCompletionAtPosition: (fileName, position, openingBrace) => undefined,
-        getSpanOfEnclosingComment: (fileName, position, onlyMultiLine) => undefined,
-        getCodeFixesAtPosition: (fileName, start, end, errorCodes) => [],
-        applyCodeActionCommand: (action) => Promise.resolve(undefined),
-        getEmitOutput: fileName => undefined,
-        getProgram: () => ls.getProgram(),
-        dispose: () => ls.dispose(),
-        getApplicableRefactors: (fileName, positionOrRaneg) => [],
-        getEditsForRefactor: (fileName, formatOptions, positionOrRange, refactorName, actionName) => undefined,
-        getDefinitionAndBoundSpan: (fileName, position) => ({ definitions: [], textSpan: { start: 0, length: 0 } }),
-        getCombinedCodeFix: (scope, fixId, formatOptions) => ({ changes: [], commands: undefined })
-    };
-}
 export function create(info /* ts.server.PluginCreateInfo */) {
     // Create the proxy
     const proxy = Object.create(null);
     let oldLS = info.languageService;
-    if (angularOnlyResults) {
-        oldLS = angularOnlyFilter(oldLS);
-    }
     function tryCall(fileName, callback) {
         if (fileName && !oldLS.getProgram().getSourceFile(fileName)) {
             return undefined;

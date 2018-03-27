@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-rc.0-d28ce50
+ * @license Angular v6.0.0-rc.0-ed53c5c
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -227,7 +227,7 @@ var tslib_es6 = Object.freeze({
 });
 
 /**
- * @license Angular v6.0.0-rc.0-d28ce50
+ * @license Angular v6.0.0-rc.0-ed53c5c
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -886,7 +886,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('6.0.0-rc.0-d28ce50');
+var VERSION$1 = new Version('6.0.0-rc.0-ed53c5c');
 
 /**
  * @fileoverview added by tsickle
@@ -58830,7 +58830,7 @@ exports.zipAll = zipAll_1.zipAll;
 var index_68 = index$4.share;
 
 /**
- * @license Angular v6.0.0-rc.0-d28ce50
+ * @license Angular v6.0.0-rc.0-ed53c5c
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -60734,7 +60734,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('6.0.0-rc.0-d28ce50');
+var VERSION$2 = new Version$1('6.0.0-rc.0-ed53c5c');
 
 /**
  * @fileoverview added by tsickle
@@ -76403,7 +76403,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-rc.0-d28ce50
+ * @license Angular v6.0.0-rc.0-ed53c5c
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -78750,73 +78750,10 @@ function getExternalFiles(project) {
         return host.getTemplateReferences();
     }
 }
-var angularOnlyResults = process.argv.indexOf('--angularOnlyResults') >= 0;
-function angularOnlyFilter(ls) {
-    return {
-        cleanupSemanticCache: function () { return ls.cleanupSemanticCache(); },
-        getSyntacticDiagnostics: function (fileName) { return []; },
-        getSemanticDiagnostics: function (fileName) { return []; },
-        getCompilerOptionsDiagnostics: function () { return []; },
-        getSyntacticClassifications: function (fileName, span) { return []; },
-        getSemanticClassifications: function (fileName, span) { return []; },
-        getEncodedSyntacticClassifications: function (fileName, span) { return ({ undefined: undefined }); },
-        getEncodedSemanticClassifications: function (fileName, span) { return undefined; },
-        getCompletionsAtPosition: function (fileName, position) { return undefined; },
-        getCompletionEntryDetails: function (fileName, position, entryName) {
-            return undefined;
-        },
-        getCompletionEntrySymbol: function (fileName, position, entryName) { return undefined; },
-        getQuickInfoAtPosition: function (fileName, position) { return undefined; },
-        getNameOrDottedNameSpan: function (fileName, startPos, endPos) { return undefined; },
-        getBreakpointStatementAtPosition: function (fileName, position) { return undefined; },
-        getSignatureHelpItems: function (fileName, position) { return undefined; },
-        getRenameInfo: function (fileName, position) { return undefined; },
-        findRenameLocations: function (fileName, position, findInStrings, findInComments) {
-            return [];
-        },
-        getDefinitionAtPosition: function (fileName, position) { return []; },
-        getTypeDefinitionAtPosition: function (fileName, position) { return []; },
-        getImplementationAtPosition: function (fileName, position) { return []; },
-        getReferencesAtPosition: function (fileName, position) { return []; },
-        findReferences: function (fileName, position) { return []; },
-        getDocumentHighlights: function (fileName, position, filesToSearch) { return []; },
-        /** @deprecated */
-        getOccurrencesAtPosition: function (fileName, position) { return []; },
-        getNavigateToItems: function (searchValue) { return []; },
-        getNavigationBarItems: function (fileName) { return []; },
-        getNavigationTree: function (fileName) { return undefined; },
-        getOutliningSpans: function (fileName) { return []; },
-        getTodoComments: function (fileName, descriptors) { return []; },
-        getBraceMatchingAtPosition: function (fileName, position) { return []; },
-        getIndentationAtPosition: function (fileName, position, options) { return undefined; },
-        getFormattingEditsForRange: function (fileName, start, end, options) { return []; },
-        getFormattingEditsForDocument: function (fileName, options) { return []; },
-        getFormattingEditsAfterKeystroke: function (fileName, position, key, options) { return []; },
-        getDocCommentTemplateAtPosition: function (fileName, position) { return undefined; },
-        isValidBraceCompletionAtPosition: function (fileName, position, openingBrace) { return undefined; },
-        getSpanOfEnclosingComment: function (fileName, position, onlyMultiLine) { return undefined; },
-        getCodeFixesAtPosition: function (fileName, start, end, errorCodes) { return []; },
-        applyCodeActionCommand: function (action) { return Promise.resolve(undefined); },
-        getEmitOutput: function (fileName) { return undefined; },
-        getProgram: function () { return ls.getProgram(); },
-        dispose: function () { return ls.dispose(); },
-        getApplicableRefactors: function (fileName, positionOrRaneg) { return []; },
-        getEditsForRefactor: function (fileName, formatOptions, positionOrRange, refactorName, actionName) {
-            return undefined;
-        },
-        getDefinitionAndBoundSpan: function (fileName, position) {
-            return ({ definitions: [], textSpan: { start: 0, length: 0 } });
-        },
-        getCombinedCodeFix: function (scope, fixId, formatOptions) { return ({ changes: [], commands: undefined }); }
-    };
-}
 function create(info /* ts.server.PluginCreateInfo */) {
     // Create the proxy
     var proxy = Object.create(null);
     var oldLS = info.languageService;
-    if (angularOnlyResults) {
-        oldLS = angularOnlyFilter(oldLS);
-    }
     function tryCall(fileName, callback) {
         if (fileName && !oldLS.getProgram().getSourceFile(fileName)) {
             return undefined;
@@ -79064,7 +79001,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('6.0.0-rc.0-d28ce50');
+var VERSION = new Version$1('6.0.0-rc.0-ed53c5c');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
