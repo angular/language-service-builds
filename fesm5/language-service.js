@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-rc.0-f739f75
+ * @license Angular v6.0.0-rc.0-ab348ee
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1804,7 +1804,7 @@ var DummyResourceLoader = /** @class */ (function (_super) {
     return DummyResourceLoader;
 }(ResourceLoader));
 /**
- * An implemntation of a `LanguageServiceHost` for a TypeScript project.
+ * An implementation of a `LanguageServiceHost` for a TypeScript project.
  *
  * The `TypeScriptServiceHost` implements the Angular `LanguageServiceHost` using
  * the TypeScript language services.
@@ -2668,7 +2668,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version('6.0.0-rc.0-f739f75');
+var VERSION = new Version('6.0.0-rc.0-ab348ee');
 
 /**
  * @license

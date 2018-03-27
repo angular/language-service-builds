@@ -40,7 +40,7 @@ export class DummyResourceLoader extends ResourceLoader {
     get(url) { return Promise.resolve(''); }
 }
 /**
- * An implemntation of a `LanguageServiceHost` for a TypeScript project.
+ * An implementation of a `LanguageServiceHost` for a TypeScript project.
  *
  * The `TypeScriptServiceHost` implements the Angular `LanguageServiceHost` using
  * the TypeScript language services.
