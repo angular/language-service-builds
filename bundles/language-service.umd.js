@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-rc.0-7a406a3
+ * @license Angular v6.0.0-rc.0-2388f24
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -227,7 +227,7 @@ var tslib_es6 = Object.freeze({
 });
 
 /**
- * @license Angular v6.0.0-rc.0-7a406a3
+ * @license Angular v6.0.0-rc.0-2388f24
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -886,7 +886,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('6.0.0-rc.0-7a406a3');
+var VERSION$1 = new Version('6.0.0-rc.0-2388f24');
 
 /**
  * @fileoverview added by tsickle
@@ -41905,7 +41905,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 // The character set used to produce private names.
 const PRIVATE_NAME_CHARS = 'abcdefghijklmnopqrstuvwxyz';
 class MetadataBundler {
-    constructor(root, importAs, host) {
+    constructor(root, importAs, host, privateSymbolPrefix) {
         this.root = root;
         this.importAs = importAs;
         this.host = host;
@@ -41913,6 +41913,7 @@ class MetadataBundler {
         this.metadataCache = new Map();
         this.exports = new Map();
         this.rootModule = `./${path__default.basename(root)}`;
+        this.privateSymbolPrefix = (privateSymbolPrefix || '').replace(/\W/g, '_');
     }
     getMetadataBundle() {
         // Export the root module. This also collects the transitive closure of all values referenced by
@@ -42055,7 +42056,7 @@ class MetadataBundler {
         const result = {};
         const exportedNames = new Set(exportedSymbols.map(s => s.name));
         let privateName = 0;
-        function newPrivateName() {
+        function newPrivateName(prefix) {
             while (true) {
                 let digits = [];
                 let index = privateName++;
@@ -42064,8 +42065,7 @@ class MetadataBundler {
                     digits.unshift(base[index % base.length]);
                     index = Math.floor(index / base.length);
                 }
-                digits.unshift('\u0275');
-                const result = digits.join('');
+                const result = `\u0275${prefix}${digits.join('')}`;
                 if (!exportedNames.has(result))
                     return result;
             }
@@ -42077,7 +42077,7 @@ class MetadataBundler {
                 let name = symbol.name;
                 const identifier = `${symbol.declaration.module}:${symbol.declaration.name}`;
                 if (symbol.isPrivate && !symbol.privateName) {
-                    name = newPrivateName();
+                    name = newPrivateName(this.privateSymbolPrefix);
                     symbol.privateName = name;
                 }
                 if (symbolsMap.has(identifier)) {
@@ -42522,7 +42522,7 @@ function createBundleIndexHost(ngOptions, rootFiles, host) {
     }
     const file = files[0];
     const indexModule = file.replace(/\.ts$/, '');
-    const bundler$$1 = new bundler.MetadataBundler(indexModule, ngOptions.flatModuleId, new bundler.CompilerHostAdapter(host));
+    const bundler$$1 = new bundler.MetadataBundler(indexModule, ngOptions.flatModuleId, new bundler.CompilerHostAdapter(host), ngOptions.flatModulePrivateSymbolPrefix);
     const metadataBundle = bundler$$1.getMetadataBundle();
     const metadata = JSON.stringify(metadataBundle.metadata);
     const name = path__default.join(path__default.dirname(indexModule), ngOptions.flatModuleOutFile.replace(JS_EXT, '.ts'));
@@ -58824,7 +58824,7 @@ exports.zipAll = zipAll_1.zipAll;
 var index_68 = index$4.share;
 
 /**
- * @license Angular v6.0.0-rc.0-7a406a3
+ * @license Angular v6.0.0-rc.0-2388f24
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -60728,7 +60728,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('6.0.0-rc.0-7a406a3');
+var VERSION$2 = new Version$1('6.0.0-rc.0-2388f24');
 
 /**
  * @fileoverview added by tsickle
@@ -76461,7 +76461,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-rc.0-7a406a3
+ * @license Angular v6.0.0-rc.0-2388f24
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -79122,7 +79122,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('6.0.0-rc.0-7a406a3');
+var VERSION = new Version$1('6.0.0-rc.0-2388f24');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
