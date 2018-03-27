@@ -133,7 +133,7 @@ export declare type Declarations = Declaration[];
  * Adding a required member or changing a method's parameters, is considered a breaking change and
  * will only be done when breaking changes are allowed. When possible, a new optional member will
  * be added and the old member will be deprecated. The new member will then be made required in
- * and the old member will be removed only when breaking changes are allowed.
+ * and the old member will be removed only when breaking chnages are allowed.
  *
  * While an interface is marked as experimental breaking-changes will be allowed between minor
  * releases. After an interface is marked as stable breaking-changes will only be allowed between
@@ -219,7 +219,7 @@ export declare enum DiagnosticKind {
  * DiagnosticMessageChain. The messages are intended to be formatted as separate
  * sentence fragments and indented.
  *
- * For compatibility previous implementation, the values are expected to override
+ * For compatiblity previous implementation, the values are expected to override
  * toString() to return a formatted message.
  *
  * @experimental
@@ -260,7 +260,7 @@ export interface Diagnostic {
  */
 export declare type Diagnostics = Diagnostic[];
 /**
- * A section of hover text. If the text is code then language should be provided.
+ * A section of hover text. If the text is code then langauge should be provided.
  * Otherwise the text is assumed to be Markdown text that will be sanitized.
  */
 export interface HoverTextSection {
@@ -269,7 +269,7 @@ export interface HoverTextSection {
      */
     readonly text: string;
     /**
-     * The language of the source if `text` is a source code fragment.
+     * The langauge of the source if `text` is a souce code fragment.
      */
     readonly language?: string;
 }
@@ -279,7 +279,7 @@ export interface HoverTextSection {
 export interface Hover {
     /**
      * The hover text to display for the symbol at the hover location. If the text includes
-     * source code, the section will specify which language it should be interpreted as.
+     * source code, the section will specify which langauge it should be interpreted as.
      */
     readonly text: HoverTextSection[];
     /**

@@ -55,7 +55,7 @@ var DummyResourceLoader = /** @class */ (function (_super) {
 }(ResourceLoader));
 export { DummyResourceLoader };
 /**
- * An implementation of a `LanguageServiceHost` for a TypeScript project.
+ * An implemntation of a `LanguageServiceHost` for a TypeScript project.
  *
  * The `TypeScriptServiceHost` implements the Angular `LanguageServiceHost` using
  * the TypeScript language services.
