@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-rc.0-bd024c0
+ * @license Angular v6.0.0-rc.0-5a86f71
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -227,7 +227,7 @@ var tslib_es6 = Object.freeze({
 });
 
 /**
- * @license Angular v6.0.0-rc.0-bd024c0
+ * @license Angular v6.0.0-rc.0-5a86f71
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -886,7 +886,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('6.0.0-rc.0-bd024c0');
+var VERSION$1 = new Version('6.0.0-rc.0-5a86f71');
 
 /**
  * @fileoverview added by tsickle
@@ -58832,7 +58832,7 @@ exports.zipAll = zipAll_1.zipAll;
 var index_68 = index$4.share;
 
 /**
- * @license Angular v6.0.0-rc.0-bd024c0
+ * @license Angular v6.0.0-rc.0-5a86f71
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -60736,7 +60736,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('6.0.0-rc.0-bd024c0');
+var VERSION$2 = new Version$1('6.0.0-rc.0-5a86f71');
 
 /**
  * @fileoverview added by tsickle
@@ -74666,28 +74666,56 @@ function initChangeDetectorIfExisting(injector, instance, view) {
     }
 }
 /**
- * Finds any local names that match the given directive's exportAs and returns them with directive
- * index. If the directiveDef is null, it matches against the default '' value instead of
- * exportAs.
- * @param {?} directiveDef
+ * Caches local names and their matching directive indices for query and template lookups.
+ * @param {?} tNode
  * @param {?} localRefs
- * @param {?} index
- * @param {?=} defaultExport
+ * @param {?} exportsMap
  * @return {?}
  */
-function findMatchingLocalNames(directiveDef, localRefs, index, defaultExport) {
-    var /** @type {?} */ exportAs = directiveDef && directiveDef.exportAs || defaultExport;
-    var /** @type {?} */ matches = null;
-    if (exportAs != null && localRefs) {
-        for (var /** @type {?} */ i = 0; i < localRefs.length; i = i + 2) {
-            var /** @type {?} */ local = localRefs[i];
-            var /** @type {?} */ toExportAs = localRefs[i | 1];
-            if (toExportAs === exportAs || toExportAs === defaultExport) {
-                (matches || (matches = [])).push(local, index);
-            }
+function cacheMatchingLocalNames(tNode, localRefs, exportsMap) {
+    if (localRefs) {
+        var /** @type {?} */ localNames = tNode.localNames = [];
+        // Local names must be stored in tNode in the same order that localRefs are defined
+        // in the template to ensure the data is loaded in the same slots as their refs
+        // in the template (for template queries).
+        for (var /** @type {?} */ i = 0; i < localRefs.length; i += 2) {
+            var /** @type {?} */ index = exportsMap[localRefs[i | 1]];
+            if (index == null)
+                throw new Error("Export of name '" + localRefs[i | 1] + "' not found!");
+            localNames.push(localRefs[i], index);
         }
     }
-    return matches;
+}
+/**
+ * Builds up an export map as directives are created, so local refs can be quickly mapped
+ * to their directive instances.
+ * @param {?} index
+ * @param {?} def
+ * @param {?} exportsMap
+ * @return {?}
+ */
+function saveNameToExportMap(index, def, exportsMap) {
+    if (exportsMap) {
+        if (def.exportAs)
+            exportsMap[def.exportAs] = index;
+        if ((/** @type {?} */ (def)).template)
+            exportsMap[''] = index;
+    }
+}
+/**
+ * Takes a list of local names and indices and pushes the resolved local variable values
+ * to data[] in the same order as they are loaded in the template with load().
+ * @return {?}
+ */
+function saveResolvedLocalsInData() {
+    var /** @type {?} */ localNames = /** @type {?} */ ((previousOrParentNode.tNode)).localNames;
+    if (localNames) {
+        for (var /** @type {?} */ i = 0; i < localNames.length; i += 2) {
+            var /** @type {?} */ index = /** @type {?} */ (localNames[i | 1]);
+            var /** @type {?} */ value = index === -1 ? previousOrParentNode.native : /** @type {?} */ ((directives))[index];
+            data.push(value);
+        }
+    }
 }
 /**
  * Gets TView from a template function or creates a new TView
@@ -74750,10 +74778,9 @@ function setUpAttributes(native, attrs) {
  * @param {?} elementIndex Index of the host element in the data array
  * @param {?} directive The directive instance.
  * @param {?} directiveDef DirectiveDef object which contains information about the template.
- * @param {?=} localRefs Names under which a query can retrieve the directive instance
  * @return {?}
  */
-function directiveCreate(elementIndex, directive, directiveDef, localRefs) {
+function directiveCreate(elementIndex, directive, directiveDef) {
     var /** @type {?} */ index = directives ? directives.length : 0;
     var /** @type {?} */ instance = baseDirectiveCreate(index, directive, directiveDef);
     ngDevMode && assertNotNull$1(previousOrParentNode.tNode, 'previousOrParentNode.tNode');
@@ -74768,11 +74795,6 @@ function directiveCreate(elementIndex, directive, directiveDef, localRefs) {
         queueInitHooks(index, directiveDef.onInit, directiveDef.doCheck, currentView.tView);
         if (directiveDef.hostBindings)
             queueHostBindingForCheck(index, elementIndex);
-        if (localRefs) {
-            var /** @type {?} */ localNames = findMatchingLocalNames(directiveDef, localRefs, index, isComponent ? '' : undefined);
-            tNode.localNames =
-                localNames && tNode.localNames ? tNode.localNames.concat(localNames) : localNames;
-        }
     }
     if (tNode && tNode.attrs) {
         setInputsFromAttrs(index, instance, directiveDef.inputs, tNode);
@@ -74795,9 +74817,8 @@ function addComponentLogic(index, elementIndex, instance, def) {
     (/** @type {?} */ (previousOrParentNode.data)) = hostView;
     (/** @type {?} */ (hostView.node)) = previousOrParentNode;
     initChangeDetectorIfExisting(previousOrParentNode.nodeInjector, instance, hostView);
-    if (firstTemplatePass) {
+    if (firstTemplatePass)
         queueComponentIndexForCheck(index, elementIndex);
-    }
 }
 /**
  * A lighter version of directiveCreate() that is used for the root component
@@ -75165,7 +75186,7 @@ function assertDataInRange(index, arr) {
 function assertDataNext(index, arr) {
     if (arr == null)
         arr = data;
-    assertEqual(arr.length, index, 'index expected to be at the end of arr');
+    assertEqual(arr.length, index, "index " + index + " expected to be at the end of arr (length " + arr.length + ")");
 }
 /**
  * @template T
@@ -76409,7 +76430,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-rc.0-bd024c0
+ * @license Angular v6.0.0-rc.0-5a86f71
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -79007,7 +79028,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('6.0.0-rc.0-bd024c0');
+var VERSION = new Version$1('6.0.0-rc.0-5a86f71');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
