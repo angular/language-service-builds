@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-rc.0-0b348c8
+ * @license Angular v6.0.0-rc.0-bd024c0
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -227,7 +227,7 @@ var tslib_es6 = Object.freeze({
 });
 
 /**
- * @license Angular v6.0.0-rc.0-0b348c8
+ * @license Angular v6.0.0-rc.0-bd024c0
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -886,7 +886,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('6.0.0-rc.0-0b348c8');
+var VERSION$1 = new Version('6.0.0-rc.0-bd024c0');
 
 /**
  * @fileoverview added by tsickle
@@ -17974,7 +17974,7 @@ var InjectableCompiler = /** @class */ (function () {
             if (typeof token === 'string') {
                 tokenExpr = literal(token);
             }
-            else if (token === _this.tokenInjector && _this.alwaysGenerateDef) {
+            else if (token === _this.tokenInjector) {
                 tokenExpr = importExpr(Identifiers.INJECTOR);
             }
             else {
@@ -21273,8 +21273,10 @@ var NgModuleCompiler = /** @class */ (function () {
             ngModuleDefFactory
         ]));
         if (ngModuleMeta.id) {
+            var /** @type {?} */ id = typeof ngModuleMeta.id === 'string' ? literal(ngModuleMeta.id) :
+                ctx.importExpr(ngModuleMeta.id);
             var /** @type {?} */ registerFactoryStmt = importExpr(Identifiers.RegisterModuleFactoryFn)
-                .callFn([literal(ngModuleMeta.id), variable(ngModuleFactoryVar)])
+                .callFn([id, variable(ngModuleFactoryVar)])
                 .toStmt();
             ctx.statements.push(registerFactoryStmt);
         }
@@ -34886,7 +34888,7 @@ var IGNORE = {
 };
 var USE_VALUE = 'useValue';
 var PROVIDE = 'provide';
-var REFERENCE_SET = new Set([USE_VALUE, 'useFactory', 'data']);
+var REFERENCE_SET = new Set([USE_VALUE, 'useFactory', 'data', 'id']);
 var TYPEGUARD_POSTFIX = 'TypeGuard';
 var USE_IF = 'UseIf';
 /**
@@ -58830,7 +58832,7 @@ exports.zipAll = zipAll_1.zipAll;
 var index_68 = index$4.share;
 
 /**
- * @license Angular v6.0.0-rc.0-0b348c8
+ * @license Angular v6.0.0-rc.0-bd024c0
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -60176,7 +60178,7 @@ var StaticInjector = /** @class */ (function () {
         this.source = source;
         var /** @type {?} */ records = this._records = new Map();
         records.set(Injector, /** @type {?} */ ({ token: Injector, fn: IDENT, deps: EMPTY, value: this, useNew: false }));
-        records.set(INJECTOR, /** @type {?} */ ({ token: Injector, fn: IDENT, deps: EMPTY, value: this, useNew: false }));
+        records.set(INJECTOR, /** @type {?} */ ({ token: INJECTOR, fn: IDENT, deps: EMPTY, value: this, useNew: false }));
         recursivelyProcessProviders(records, providers);
     }
     /**
@@ -60734,7 +60736,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('6.0.0-rc.0-0b348c8');
+var VERSION$2 = new Version$1('6.0.0-rc.0-bd024c0');
 
 /**
  * @fileoverview added by tsickle
@@ -69141,6 +69143,7 @@ function setElementProperty(view, binding, renderNode$$1, name, value) {
  */
 var UNDEFINED_VALUE = new Object();
 var InjectorRefTokenKey$1 = tokenKey(Injector);
+var INJECTORRefTokenKey$1 = tokenKey(INJECTOR);
 var NgModuleRefTokenKey = tokenKey(NgModuleRef);
 /**
  * @param {?} data
@@ -69176,6 +69179,7 @@ function resolveNgModuleDep(data, depDef, notFoundValue) {
     var /** @type {?} */ tokenKey$$1 = depDef.tokenKey;
     switch (tokenKey$$1) {
         case InjectorRefTokenKey$1:
+        case INJECTORRefTokenKey$1:
         case NgModuleRefTokenKey:
             return data;
     }
@@ -70499,6 +70503,7 @@ var ViewContainerRefTokenKey = tokenKey(ViewContainerRef);
 var TemplateRefTokenKey = tokenKey(TemplateRef);
 var ChangeDetectorRefTokenKey = tokenKey(ChangeDetectorRef);
 var InjectorRefTokenKey = tokenKey(Injector);
+var INJECTORRefTokenKey = tokenKey(INJECTOR);
 /**
  * @param {?} view
  * @param {?} def
@@ -70799,6 +70804,7 @@ function resolveDep(view, elDef, allowPrivateServices, depDef, notFoundValue) {
                     return createChangeDetectorRef(cdView);
                 }
                 case InjectorRefTokenKey:
+                case INJECTORRefTokenKey:
                     return createInjector$1(searchView, elDef);
                 default:
                     var /** @type {?} */ providerDef_1 = /** @type {?} */ (((allowPrivateServices ? /** @type {?} */ ((elDef.element)).allProviders : /** @type {?} */ ((elDef.element)).publicProviders)))[tokenKey$$1];
@@ -76403,7 +76409,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-rc.0-0b348c8
+ * @license Angular v6.0.0-rc.0-bd024c0
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -79001,7 +79007,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('6.0.0-rc.0-0b348c8');
+var VERSION = new Version$1('6.0.0-rc.0-bd024c0');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
