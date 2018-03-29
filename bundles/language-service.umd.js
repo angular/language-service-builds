@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-rc.0-9fb08e2
+ * @license Angular v6.0.0-rc.0-0d9140c
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -227,7 +227,7 @@ var tslib_es6 = Object.freeze({
 });
 
 /**
- * @license Angular v6.0.0-rc.0-9fb08e2
+ * @license Angular v6.0.0-rc.0-0d9140c
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -886,7 +886,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('6.0.0-rc.0-9fb08e2');
+var VERSION$1 = new Version('6.0.0-rc.0-0d9140c');
 
 /**
  * @fileoverview added by tsickle
@@ -42496,7 +42496,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 
 
 
-
 const DTS = /\.d\.ts$/;
 const JS_EXT = /(\.js|)$/;
 function createSyntheticIndexHost(delegate, syntheticIndex) {
@@ -42514,7 +42513,11 @@ function createSyntheticIndexHost(delegate, syntheticIndex) {
     newHost.getSourceFile =
         (fileName, languageVersion, onError) => {
             if (path__default.normalize(fileName) == normalSyntheticIndexName) {
-                return ts__default.createSourceFile(fileName, indexContent, languageVersion, true);
+                const sf = ts__default.createSourceFile(fileName, indexContent, languageVersion, true);
+                if (delegate.fileNameToModuleName) {
+                    sf.moduleName = delegate.fileNameToModuleName(fileName);
+                }
+                return sf;
             }
             return delegate.getSourceFile(fileName, languageVersion, onError);
         };
@@ -42522,17 +42525,31 @@ function createSyntheticIndexHost(delegate, syntheticIndex) {
         (fileName, data, writeByteOrderMark, onError, sourceFiles) => {
             delegate.writeFile(fileName, data, writeByteOrderMark, onError, sourceFiles);
             if (fileName.match(DTS) && sourceFiles && sourceFiles.length == 1 &&
-                path__default.normalize(sourceFiles[0].fileName) == normalSyntheticIndexName) {
+                path__default.normalize(sourceFiles[0].fileName) === normalSyntheticIndexName) {
                 // If we are writing the synthetic index, write the metadata along side.
                 const metadataName = fileName.replace(DTS, '.metadata.json');
-                fs__default.writeFileSync(metadataName, indexMetadata, { encoding: 'utf8' });
+                delegate.writeFile(metadataName, indexMetadata, writeByteOrderMark, onError, []);
             }
         };
     return newHost;
 }
 function createBundleIndexHost(ngOptions, rootFiles, host) {
     const files = rootFiles.filter(f => !DTS.test(f));
-    if (files.length != 1) {
+    let indexFile;
+    if (files.length === 1) {
+        indexFile = files[0];
+    }
+    else {
+        for (const f of files) {
+            // Assume the shortest file path called index.ts is the entry point
+            if (f.endsWith(path__default.sep + 'index.ts')) {
+                if (!indexFile || indexFile.length > f.length) {
+                    indexFile = f;
+                }
+            }
+        }
+    }
+    if (!indexFile) {
         return {
             host,
             errors: [{
@@ -42545,8 +42562,7 @@ function createBundleIndexHost(ngOptions, rootFiles, host) {
                 }]
         };
     }
-    const file = files[0];
-    const indexModule = file.replace(/\.ts$/, '');
+    const indexModule = indexFile.replace(/\.ts$/, '');
     const bundler$$1 = new bundler.MetadataBundler(indexModule, ngOptions.flatModuleId, new bundler.CompilerHostAdapter(host), ngOptions.flatModulePrivateSymbolPrefix);
     const metadataBundle = bundler$$1.getMetadataBundle();
     const metadata = JSON.stringify(metadataBundle.metadata);
@@ -58849,7 +58865,7 @@ exports.zipAll = zipAll_1.zipAll;
 var index_68 = index$4.share;
 
 /**
- * @license Angular v6.0.0-rc.0-9fb08e2
+ * @license Angular v6.0.0-rc.0-0d9140c
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -60753,7 +60769,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('6.0.0-rc.0-9fb08e2');
+var VERSION$2 = new Version$1('6.0.0-rc.0-0d9140c');
 
 /**
  * @fileoverview added by tsickle
@@ -76454,7 +76470,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-rc.0-9fb08e2
+ * @license Angular v6.0.0-rc.0-0d9140c
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -79052,7 +79068,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('6.0.0-rc.0-9fb08e2');
+var VERSION = new Version$1('6.0.0-rc.0-0d9140c');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
