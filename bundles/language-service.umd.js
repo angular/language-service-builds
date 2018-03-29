@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-rc.0-de0b13d
+ * @license Angular v6.0.0-rc.0-9fb08e2
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -227,7 +227,7 @@ var tslib_es6 = Object.freeze({
 });
 
 /**
- * @license Angular v6.0.0-rc.0-de0b13d
+ * @license Angular v6.0.0-rc.0-9fb08e2
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -886,7 +886,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('6.0.0-rc.0-de0b13d');
+var VERSION$1 = new Version('6.0.0-rc.0-9fb08e2');
 
 /**
  * @fileoverview added by tsickle
@@ -40031,6 +40031,8 @@ class PipesTable {
     has(key) { return this.pipes.find(pipe => pipe.name == key) != null; }
     values() { return this.pipes.map(pipe => new PipeSymbol(pipe, this.context)); }
 }
+// This matches .d.ts files that look like ".../<package-name>/<package-name>.d.ts",
+const INDEX_PATTERN = /[\\/]([^\\/]+)[\\/]\1\.d\.ts$/;
 class PipeSymbol {
     constructor(pipe, context) {
         this.pipe = pipe;
@@ -40108,7 +40110,18 @@ class PipeSymbol {
     }
 }
 function findClassSymbolInContext(type, context) {
-    const sourceFile = context.program.getSourceFile(type.filePath);
+    let sourceFile = context.program.getSourceFile(type.filePath);
+    if (!sourceFile) {
+        // This handles a case where an <packageName>/index.d.ts and a <packageName>/<packageName>.d.ts
+        // are in the same directory. If we are looking for <packageName>/<packageName> and didn't
+        // find it, look for <packageName>/index.d.ts as the program might have found that instead.
+        const p = type.filePath;
+        const m = p.match(INDEX_PATTERN);
+        if (m) {
+            const indexVersion = path__default.join(path__default.dirname(p), 'index.d.ts');
+            sourceFile = context.program.getSourceFile(indexVersion);
+        }
+    }
     if (sourceFile) {
         const moduleSymbol = sourceFile.module || sourceFile.symbol;
         const exports = context.checker.getExportsOfModule(moduleSymbol);
@@ -58836,7 +58849,7 @@ exports.zipAll = zipAll_1.zipAll;
 var index_68 = index$4.share;
 
 /**
- * @license Angular v6.0.0-rc.0-de0b13d
+ * @license Angular v6.0.0-rc.0-9fb08e2
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -60740,7 +60753,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('6.0.0-rc.0-de0b13d');
+var VERSION$2 = new Version$1('6.0.0-rc.0-9fb08e2');
 
 /**
  * @fileoverview added by tsickle
@@ -76441,7 +76454,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-rc.0-de0b13d
+ * @license Angular v6.0.0-rc.0-9fb08e2
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -79039,7 +79052,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('6.0.0-rc.0-de0b13d');
+var VERSION = new Version$1('6.0.0-rc.0-9fb08e2');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
