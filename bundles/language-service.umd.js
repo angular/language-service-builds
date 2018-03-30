@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-rc.0-a5f0939
+ * @license Angular v6.0.0-rc.0-22cb2c9
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -227,7 +227,7 @@ var tslib_es6 = Object.freeze({
 });
 
 /**
- * @license Angular v6.0.0-rc.0-a5f0939
+ * @license Angular v6.0.0-rc.0-22cb2c9
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -886,7 +886,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('6.0.0-rc.0-a5f0939');
+var VERSION$1 = new Version('6.0.0-rc.0-22cb2c9');
 
 /**
  * @fileoverview added by tsickle
@@ -43319,6 +43319,7 @@ var Subscription = /** @class */ (function () {
             _parents.push(parent);
         }
     };
+    /** @nocollapse */
     Subscription.EMPTY = (function (empty) {
         empty.closed = true;
         return empty;
@@ -43400,9 +43401,13 @@ var Subscriber = /** @class */ (function (_super) {
                     break;
                 }
                 if (typeof destinationOrNext === 'object') {
-                    if (destinationOrNext instanceof Subscriber) {
-                        _this.destination = destinationOrNext;
-                        _this.destination.add(_this);
+                    // HACK(benlesh): For situations where Node has multiple copies of rxjs in
+                    // node_modules, we cannot rely on `instanceof` checks
+                    if (isTrustedSubscriber(destinationOrNext)) {
+                        var trustedSubscriber = destinationOrNext[rxSubscriber.rxSubscriber]();
+                        _this.syncErrorThrowable = trustedSubscriber.syncErrorThrowable;
+                        _this.destination = trustedSubscriber;
+                        trustedSubscriber.add(_this);
                     }
                     else {
                         _this.syncErrorThrowable = true;
@@ -43428,6 +43433,7 @@ var Subscriber = /** @class */ (function (_super) {
      * Observer.
      * @return {Subscriber<T>} A Subscriber wrapping the (partially defined)
      * Observer represented by the given arguments.
+     * @nocollapse
      */
     Subscriber.create = function (next, error, complete) {
         var subscriber = new Subscriber(next, error, complete);
@@ -43642,6 +43648,9 @@ var SafeSubscriber = /** @class */ (function (_super) {
     };
     return SafeSubscriber;
 }(Subscriber));
+function isTrustedSubscriber(obj) {
+    return obj instanceof Subscriber || ('syncErrorThrowable' in obj && obj[rxSubscriber.rxSubscriber]);
+}
 
 });
 
@@ -43877,7 +43886,7 @@ var Observable = /** @class */ (function () {
             operator.call(sink, this.source);
         }
         else {
-            sink.add(this.source ? this._subscribe(sink) : this._trySubscribe(sink));
+            sink.add(this.source || !sink.syncErrorThrowable ? this._subscribe(sink) : this._trySubscribe(sink));
         }
         if (config.config.useDeprecatedSynchronousErrorHandling) {
             if (sink.syncErrorThrowable) {
@@ -43930,7 +43939,8 @@ var Observable = /** @class */ (function () {
     };
     /** @internal */
     Observable.prototype._subscribe = function (subscriber) {
-        return this.source.subscribe(subscriber);
+        var source = this.source;
+        return source && source.subscribe(subscriber);
     };
     /**
      * An interop point defined by the es7-observable spec https://github.com/zenparsing/es-observable
@@ -43949,7 +43959,7 @@ var Observable = /** @class */ (function () {
      *
      * @example
      *
-     * import { map, filter, scan } from 'rxjs/internal/operators';
+     * import { map, filter, scan } from 'rxjs/operators';
      *
      * Rx.Observable.interval(1000)
      *   .pipe(
@@ -43987,6 +43997,7 @@ var Observable = /** @class */ (function () {
      * @method create
      * @param {Function} subscribe? the subscriber function to be passed to the Observable constructor
      * @return {Observable} a new cold observable
+     * @nocollapse
      */
     Observable.create = function (subscribe) {
         return new Observable(subscribe);
@@ -44229,6 +44240,7 @@ var Subject = /** @class */ (function (_super) {
         observable.source = this;
         return observable;
     };
+    /**@nocollapse */
     Subject.create = function (destination, source) {
         return new AnonymousSubject(destination, source);
     };
@@ -44925,6 +44937,7 @@ var Scheduler = /** @class */ (function () {
         if (delay === void 0) { delay = 0; }
         return new this.SchedulerAction(this, work).schedule(state, delay);
     };
+    /** @nocollapse */
     Scheduler.now = Date.now ? Date.now : function () { return +new Date(); };
     return Scheduler;
 }());
@@ -45139,6 +45152,7 @@ exports.EMPTY = new Observable_1.Observable(function (subscriber) { return subsc
  * @static true
  * @name empty
  * @owner Observable
+ * @deprecated Deprecated in favor of using EMPTY constant.
  */
 function empty(scheduler) {
     return scheduler ? emptyScheduled(scheduler) : exports.EMPTY;
@@ -45426,6 +45440,7 @@ var Notification = /** @class */ (function () {
      * @param {T} value The `next` value.
      * @return {Notification<T>} The "next" Notification representing the
      * argument.
+     * @nocollapse
      */
     Notification.createNext = function (value) {
         if (typeof value !== 'undefined') {
@@ -45439,6 +45454,7 @@ var Notification = /** @class */ (function () {
      * @param {any} [err] The `error` error.
      * @return {Notification<T>} The "error" Notification representing the
      * argument.
+     * @nocollapse
      */
     Notification.createError = function (err) {
         return new Notification('E', undefined, err);
@@ -45446,6 +45462,7 @@ var Notification = /** @class */ (function () {
     /**
      * A shortcut to create a Notification instance of the type `complete`.
      * @return {Notification<any>} The valueless "complete" Notification.
+     * @nocollapse
      */
     Notification.createComplete = function () {
         return Notification.completeNotification;
@@ -48720,6 +48737,45 @@ exports.merge = merge;
 
 });
 
+var never_1 = createCommonjsModule(function (module, exports) {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+
+
+/**
+ * An Observable that emits no items to the Observer and never completes.
+ *
+ * <img src="./img/never.png" width="100%">
+ *
+ * A simple Observable that emits neither values nor errors nor the completion
+ * notification. It can be used for testing purposes or for composing with other
+ * Observables. Please note that by never emitting a complete notification, this
+ * Observable keeps the subscription from being disposed automatically.
+ * Subscriptions need to be manually disposed.
+ *
+ * @example <caption>Emit the number 7, then never emit anything else (not even complete).</caption>
+ * function info() {
+ *   console.log('Will not be called');
+ * }
+ * var result = NEVER.startWith(7);
+ * result.subscribe(x => console.log(x), info, info);
+ *
+ * @see {@link create}
+ * @see {@link EMPTY}
+ * @see {@link of}
+ * @see {@link throwError}
+ */
+exports.NEVER = new Observable_1.Observable(noop_1.noop);
+/**
+ * @deprecated Deprecated in favor of using NEVER constant.
+ */
+function never() {
+    return exports.NEVER;
+}
+exports.never = never;
+
+});
+
 var onErrorResumeNext_1 = createCommonjsModule(function (module, exports) {
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
@@ -49491,38 +49547,6 @@ var ZipBufferIterator = /** @class */ (function (_super) {
 
 });
 
-var never = createCommonjsModule(function (module, exports) {
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-
-
-/**
- * An Observable that emits no items to the Observer and never completes.
- *
- * <img src="./img/never.png" width="100%">
- *
- * A simple Observable that emits neither values nor errors nor the completion
- * notification. It can be used for testing purposes or for composing with other
- * Observables. Please note that by never emitting a complete notification, this
- * Observable keeps the subscription from being disposed automatically.
- * Subscriptions need to be manually disposed.
- *
- * @example <caption>Emit the number 7, then never emit anything else (not even complete).</caption>
- * function info() {
- *   console.log('Will not be called');
- * }
- * var result = NEVER.startWith(7);
- * result.subscribe(x => console.log(x), info, info);
- *
- * @see {@link create}
- * @see {@link EMPTY}
- * @see {@link of}
- * @see {@link throwError}
- */
-exports.NEVER = new Observable_1.Observable(noop_1.noop);
-
-});
-
 var index$2 = createCommonjsModule(function (module, exports) {
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
@@ -49610,6 +49634,8 @@ exports.interval = interval_1.interval;
 
 exports.merge = merge_1.merge;
 
+exports.never = never_1.never;
+
 exports.of = of_1.of;
 
 exports.onErrorResumeNext = onErrorResumeNext_1.onErrorResumeNext;
@@ -49630,8 +49656,8 @@ exports.zip = zip_1.zip;
 /* Constants */
 var empty_2 = empty_1;
 exports.EMPTY = empty_2.EMPTY;
-
-exports.NEVER = never.NEVER;
+var never_2 = never_1;
+exports.NEVER = never_2.NEVER;
 /* Config */
 
 exports.config = config.config;
@@ -50711,6 +50737,56 @@ function combineAll(project) {
     return function (source) { return source.lift(new combineLatest_1.CombineLatestOperator(project)); };
 }
 exports.combineAll = combineAll;
+
+});
+
+var combineLatest_2$1 = createCommonjsModule(function (module, exports) {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+
+
+
+var none = {};
+/* tslint:enable:max-line-length */
+/**
+ * @deprecated Deprecated in favor of static combineLatest.
+ */
+function combineLatest() {
+    var observables = [];
+    for (var _i = 0; _i < arguments.length; _i++) {
+        observables[_i] = arguments[_i];
+    }
+    var project = null;
+    if (typeof observables[observables.length - 1] === 'function') {
+        project = observables.pop();
+    }
+    // if the first and only other argument besides the resultSelector is an array
+    // assume it's been called with `combineLatest([obs1, obs2, obs3], project)`
+    if (observables.length === 1 && isArray.isArray(observables[0])) {
+        observables = observables[0].slice();
+    }
+    return function (source) { return source.lift.call(from_1.from([source].concat(observables)), new combineLatest_1.CombineLatestOperator(project)); };
+}
+exports.combineLatest = combineLatest;
+
+});
+
+var concat_2$1 = createCommonjsModule(function (module, exports) {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+
+/* tslint:enable:max-line-length */
+/**
+ * @deprecated Deprecated in favor of static concat.
+ */
+function concat() {
+    var observables = [];
+    for (var _i = 0; _i < arguments.length; _i++) {
+        observables[_i] = arguments[_i];
+    }
+    return function (source) { return source.lift.call(concat_1.concat.apply(void 0, [source].concat(observables))); };
+}
+exports.concat = concat;
 
 });
 
@@ -54254,6 +54330,25 @@ exports.max = max;
 
 });
 
+var merge_2$1 = createCommonjsModule(function (module, exports) {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+
+/* tslint:enable:max-line-length */
+/**
+ * @deprecated Deprecated in favor of static merge.
+ */
+function merge() {
+    var observables = [];
+    for (var _i = 0; _i < arguments.length; _i++) {
+        observables[_i] = arguments[_i];
+    }
+    return function (source) { return source.lift.call(merge_1.merge.apply(void 0, [source].concat(observables))); };
+}
+exports.merge = merge;
+
+});
+
 var mergeMapTo_1 = createCommonjsModule(function (module, exports) {
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
@@ -55177,7 +55272,7 @@ var RepeatWhenSubscriber = /** @class */ (function (_super) {
             if (!this.retries) {
                 this.subscribeToRetries();
             }
-            else if (this.retriesSubscription.closed) {
+            if (!this.retriesSubscription || this.retriesSubscription.closed) {
                 return _super.prototype.complete.call(this);
             }
             this._unsubscribeAndRecycle();
@@ -58729,6 +58824,27 @@ var WithLatestFromSubscriber = /** @class */ (function (_super) {
 
 });
 
+var zip_2$1 = createCommonjsModule(function (module, exports) {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+
+/* tslint:enable:max-line-length */
+/**
+ * @deprecated Deprecated in favor of static zip.
+ */
+function zip() {
+    var observables = [];
+    for (var _i = 0; _i < arguments.length; _i++) {
+        observables[_i] = arguments[_i];
+    }
+    return function zipOperatorFunction(source) {
+        return source.lift.call(zip_1.zip.apply(void 0, [source].concat(observables)));
+    };
+}
+exports.zip = zip;
+
+});
+
 var zipAll_1 = createCommonjsModule(function (module, exports) {
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
@@ -58762,6 +58878,10 @@ exports.bufferWhen = bufferWhen_1.bufferWhen;
 exports.catchError = catchError_1.catchError;
 
 exports.combineAll = combineAll_1.combineAll;
+
+exports.combineLatest = combineLatest_2$1.combineLatest;
+
+exports.concat = concat_2$1.concat;
 
 exports.concatAll = concatAll_1.concatAll;
 
@@ -58824,6 +58944,8 @@ exports.mapTo = mapTo_1.mapTo;
 exports.materialize = materialize_1.materialize;
 
 exports.max = max_1.max;
+
+exports.merge = merge_2$1.merge;
 
 exports.mergeAll = mergeAll_1.mergeAll;
 
@@ -58941,14 +59063,16 @@ exports.windowWhen = windowWhen_1.windowWhen;
 
 exports.withLatestFrom = withLatestFrom_1.withLatestFrom;
 
+exports.zip = zip_2$1.zip;
+
 exports.zipAll = zipAll_1.zipAll;
 
 });
 
-var index_68 = index$4.share;
+var index_71 = index$4.share;
 
 /**
- * @license Angular v6.0.0-rc.0-a5f0939
+ * @license Angular v6.0.0-rc.0-22cb2c9
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -60852,7 +60976,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('6.0.0-rc.0-a5f0939');
+var VERSION$2 = new Version$1('6.0.0-rc.0-22cb2c9');
 
 /**
  * @fileoverview added by tsickle
@@ -64761,7 +64885,7 @@ var ApplicationRef = /** @class */ (function () {
             };
         });
         (/** @type {?} */ (this)).isStable =
-            index_38(isCurrentlyStable, isStable.pipe(index_68()));
+            index_38(isCurrentlyStable, isStable.pipe(index_71()));
     }
     /**
      * Bootstrap a new component at the root level of the application.
@@ -76553,7 +76677,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-rc.0-a5f0939
+ * @license Angular v6.0.0-rc.0-22cb2c9
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -79151,7 +79275,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('6.0.0-rc.0-a5f0939');
+var VERSION = new Version$1('6.0.0-rc.0-22cb2c9');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
