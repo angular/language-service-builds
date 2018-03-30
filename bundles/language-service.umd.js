@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-rc.0-be10bf5
+ * @license Angular v6.0.0-rc.0-a5f0939
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -227,7 +227,7 @@ var tslib_es6 = Object.freeze({
 });
 
 /**
- * @license Angular v6.0.0-rc.0-be10bf5
+ * @license Angular v6.0.0-rc.0-a5f0939
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -886,7 +886,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('6.0.0-rc.0-be10bf5');
+var VERSION$1 = new Version('6.0.0-rc.0-a5f0939');
 
 /**
  * @fileoverview added by tsickle
@@ -39618,6 +39618,94 @@ function spanOf(sourceSpan) {
 
 });
 
+var typescript_version = createCommonjsModule(function (module, exports) {
+"use strict";
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+/**
+ * Converts a `string` version into an array of numbers
+ * @example
+ * toNumbers('2.0.1'); // returns [2, 0, 1]
+ */
+function toNumbers(value) {
+    return value.split('.').map(Number);
+}
+exports.toNumbers = toNumbers;
+/**
+ * Compares two arrays of positive numbers with lexicographical order in mind.
+ *
+ * However - unlike lexicographical order - for arrays of different length we consider:
+ * [1, 2, 3] = [1, 2, 3, 0] instead of [1, 2, 3] < [1, 2, 3, 0]
+ *
+ * @param a The 'left hand' array in the comparison test
+ * @param b The 'right hand' in the comparison test
+ * @returns {-1|0|1} The comparison result: 1 if a is greater, -1 if b is greater, 0 is the two
+ * arrays are equals
+ */
+function compareNumbers(a, b) {
+    const max = Math.max(a.length, b.length);
+    const min = Math.min(a.length, b.length);
+    for (let i = 0; i < min; i++) {
+        if (a[i] > b[i])
+            return 1;
+        if (a[i] < b[i])
+            return -1;
+    }
+    if (min !== max) {
+        const longestArray = a.length === max ? a : b;
+        // The result to return in case the to arrays are considered different (1 if a is greater,
+        // -1 if b is greater)
+        const comparisonResult = a.length === max ? 1 : -1;
+        // Check that at least one of the remaining elements is greater than 0 to consider that the two
+        // arrays are different (e.g. [1, 0] and [1] are considered the same but not [1, 0, 1] and [1])
+        for (let i = min; i < max; i++) {
+            if (longestArray[i] > 0) {
+                return comparisonResult;
+            }
+        }
+    }
+    return 0;
+}
+exports.compareNumbers = compareNumbers;
+/**
+ * Checks if a TypeScript version is:
+ * - greater or equal than the provided `low` version,
+ * - lower or equal than an optional `high` version.
+ *
+ * @param version The TypeScript version
+ * @param low The minimum version
+ * @param high The maximum version
+ */
+function isVersionBetween(version, low, high) {
+    const tsNumbers = toNumbers(version);
+    if (high !== undefined) {
+        return compareNumbers(toNumbers(low), tsNumbers) <= 0 &&
+            compareNumbers(toNumbers(high), tsNumbers) >= 0;
+    }
+    return compareNumbers(toNumbers(low), tsNumbers) <= 0;
+}
+exports.isVersionBetween = isVersionBetween;
+/**
+ * Compares two versions
+ *
+ * @param v1 The 'left hand' version in the comparison test
+ * @param v2 The 'right hand' version in the comparison test
+ * @returns {-1|0|1} The comparison result: 1 if v1 is greater, -1 if v2 is greater, 0 is the two
+ * versions are equals
+ */
+function compareVersions(v1, v2) {
+    return compareNumbers(toNumbers(v1), toNumbers(v2));
+}
+exports.compareVersions = compareVersions;
+
+});
+
 var typescript_symbols = createCommonjsModule(function (module, exports) {
 "use strict";
 /**
@@ -39628,6 +39716,7 @@ var typescript_symbols = createCommonjsModule(function (module, exports) {
  * found in the LICENSE file at https://angular.io/license
  */
 Object.defineProperty(exports, "__esModule", { value: true });
+
 
 
 
@@ -39933,21 +40022,31 @@ class SignatureResultOverride {
     get arguments() { return this.signature.arguments; }
     get result() { return this.resultType; }
 }
-const toSymbolTable = isTypescriptVersion('2.2') ?
-    (symbols$$2 => {
+/**
+ * Indicates the lower bound TypeScript version supporting `SymbolTable` as an ES6 `Map`.
+ * For lower versions, `SymbolTable` is implemented as a dictionary
+ */
+const MIN_TS_VERSION_SUPPORTING_MAP = '2.2';
+exports.toSymbolTableFactory = (tsVersion) => (symbols$$2) => {
+    if (typescript_version.isVersionBetween(tsVersion, MIN_TS_VERSION_SUPPORTING_MAP)) {
+        // ∀ Typescript version >= 2.2, `SymbolTable` is implemented as an ES6 `Map`
         const result = new Map();
         for (const symbol of symbols$$2) {
             result.set(symbol.name, symbol);
         }
+        // First, tell the compiler that `result` is of type `any`. Then, use a second type assertion
+        // to `ts.SymbolTable`.
+        // Otherwise, `Map<string, ts.Symbol>` and `ts.SymbolTable` will be considered as incompatible
+        // types by the compiler
         return result;
-    }) :
-    (symbols$$2 => {
-        const result = {};
-        for (const symbol of symbols$$2) {
-            result[symbol.name] = symbol;
-        }
-        return result;
-    });
+    }
+    // ∀ Typescript version < 2.2, `SymbolTable` is implemented as a dictionary
+    const result = {};
+    for (const symbol of symbols$$2) {
+        result[symbol.name] = symbol;
+    }
+    return result;
+};
 function toSymbols(symbolTable) {
     if (!symbolTable)
         return [];
@@ -39972,6 +40071,7 @@ class SymbolTableWrapper {
         symbols$$2 = symbols$$2 || [];
         if (Array.isArray(symbols$$2)) {
             this.symbols = symbols$$2;
+            const toSymbolTable = exports.toSymbolTableFactory(ts__default.version);
             this.symbolTable = toSymbolTable(symbols$$2);
         }
         else {
@@ -40295,23 +40395,6 @@ function getFromSymbolTable(symbolTable, key) {
         symbol = table[key];
     }
     return symbol;
-}
-function toNumbers(value) {
-    return value ? value.split('.').map(v => +v) : [];
-}
-function compareNumbers(a, b) {
-    for (let i = 0; i < a.length && i < b.length; i++) {
-        if (a[i] > b[i])
-            return 1;
-        if (a[i] < b[i])
-            return -1;
-    }
-    return 0;
-}
-function isTypescriptVersion(low, high) {
-    const tsNumbers = toNumbers(ts__default.version);
-    return compareNumbers(toNumbers(low), tsNumbers) <= 0 &&
-        compareNumbers(toNumbers(high), tsNumbers) >= 0;
 }
 
 });
@@ -58865,7 +58948,7 @@ exports.zipAll = zipAll_1.zipAll;
 var index_68 = index$4.share;
 
 /**
- * @license Angular v6.0.0-rc.0-be10bf5
+ * @license Angular v6.0.0-rc.0-a5f0939
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -60769,7 +60852,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('6.0.0-rc.0-be10bf5');
+var VERSION$2 = new Version$1('6.0.0-rc.0-a5f0939');
 
 /**
  * @fileoverview added by tsickle
@@ -76470,7 +76553,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-rc.0-be10bf5
+ * @license Angular v6.0.0-rc.0-a5f0939
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -79068,7 +79151,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('6.0.0-rc.0-be10bf5');
+var VERSION = new Version$1('6.0.0-rc.0-a5f0939');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
