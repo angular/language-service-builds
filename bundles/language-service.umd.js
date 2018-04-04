@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-rc.1-5c8340a
+ * @license Angular v6.0.0-rc.1-f99cb5c
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -227,7 +227,7 @@ var tslib_es6 = Object.freeze({
 });
 
 /**
- * @license Angular v6.0.0-rc.1-5c8340a
+ * @license Angular v6.0.0-rc.1-f99cb5c
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -886,7 +886,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('6.0.0-rc.1-5c8340a');
+var VERSION$1 = new Version('6.0.0-rc.1-f99cb5c');
 
 /**
  * @fileoverview added by tsickle
@@ -42539,15 +42539,26 @@ class MetadataBundler {
 }
 exports.MetadataBundler = MetadataBundler;
 class CompilerHostAdapter {
-    constructor(host) {
+    constructor(host, cache) {
         this.host = host;
+        this.cache = cache;
         this.collector = new collector.MetadataCollector();
     }
     getMetadataFor(fileName) {
         if (!this.host.fileExists(fileName + '.ts'))
             return undefined;
         const sourceFile = this.host.getSourceFile(fileName + '.ts', ts__default.ScriptTarget.Latest);
-        return sourceFile && this.collector.getMetadata(sourceFile);
+        // If there is a metadata cache, use it to get the metadata for this source file. Otherwise,
+        // fall back on the locally created MetadataCollector.
+        if (!sourceFile) {
+            return undefined;
+        }
+        else if (this.cache) {
+            return this.cache.getMetadata(sourceFile);
+        }
+        else {
+            return this.collector.getMetadata(sourceFile);
+        }
     }
 }
 exports.CompilerHostAdapter = CompilerHostAdapter;
@@ -42644,20 +42655,18 @@ const DTS = /\.d\.ts$/;
 const JS_EXT = /(\.js|)$/;
 function createSyntheticIndexHost(delegate, syntheticIndex) {
     const normalSyntheticIndexName = path__default.normalize(syntheticIndex.name);
-    const indexContent = syntheticIndex.content;
-    const indexMetadata = syntheticIndex.metadata;
     const newHost = Object.create(delegate);
     newHost.fileExists = (fileName) => {
         return path__default.normalize(fileName) == normalSyntheticIndexName || delegate.fileExists(fileName);
     };
     newHost.readFile = (fileName) => {
-        return path__default.normalize(fileName) == normalSyntheticIndexName ? indexContent :
+        return path__default.normalize(fileName) == normalSyntheticIndexName ? syntheticIndex.content :
             delegate.readFile(fileName);
     };
     newHost.getSourceFile =
         (fileName, languageVersion, onError) => {
             if (path__default.normalize(fileName) == normalSyntheticIndexName) {
-                const sf = ts__default.createSourceFile(fileName, indexContent, languageVersion, true);
+                const sf = ts__default.createSourceFile(fileName, syntheticIndex.content, languageVersion, true);
                 if (delegate.fileNameToModuleName) {
                     sf.moduleName = delegate.fileNameToModuleName(fileName);
                 }
@@ -42672,12 +42681,13 @@ function createSyntheticIndexHost(delegate, syntheticIndex) {
                 path__default.normalize(sourceFiles[0].fileName) === normalSyntheticIndexName) {
                 // If we are writing the synthetic index, write the metadata along side.
                 const metadataName = fileName.replace(DTS, '.metadata.json');
+                const indexMetadata = syntheticIndex.getMetadata();
                 delegate.writeFile(metadataName, indexMetadata, writeByteOrderMark, onError, []);
             }
         };
     return newHost;
 }
-function createBundleIndexHost(ngOptions, rootFiles, host) {
+function createBundleIndexHost(ngOptions, rootFiles, host, getMetadataCache) {
     const files = rootFiles.filter(f => !DTS.test(f));
     let indexFile;
     if (files.length === 1) {
@@ -42707,13 +42717,31 @@ function createBundleIndexHost(ngOptions, rootFiles, host) {
         };
     }
     const indexModule = indexFile.replace(/\.ts$/, '');
-    const bundler$$1 = new bundler.MetadataBundler(indexModule, ngOptions.flatModuleId, new bundler.CompilerHostAdapter(host), ngOptions.flatModulePrivateSymbolPrefix);
-    const metadataBundle = bundler$$1.getMetadataBundle();
-    const metadata = JSON.stringify(metadataBundle.metadata);
+    // The operation of producing a metadata bundle happens twice - once during setup and once during
+    // the emit phase. The first time, the bundle is produced without a metadata cache, to compute the
+    // contents of the flat module index. The bundle produced during emit does use the metadata cache
+    // with associated transforms, so the metadata will have lowered expressions, resource inlining,
+    // etc.
+    const getMetadataBundle = (cache) => {
+        const bundler$$1 = new bundler.MetadataBundler(indexModule, ngOptions.flatModuleId, new bundler.CompilerHostAdapter(host, cache), ngOptions.flatModulePrivateSymbolPrefix);
+        return bundler$$1.getMetadataBundle();
+    };
+    // First, produce the bundle with no MetadataCache.
+    const metadataBundle = getMetadataBundle(/* MetadataCache */ null);
     const name = path__default.join(path__default.dirname(indexModule), ngOptions.flatModuleOutFile.replace(JS_EXT, '.ts'));
     const libraryIndex = `./${path__default.basename(indexModule)}`;
     const content = index_writer.privateEntriesToIndex(libraryIndex, metadataBundle.privates);
-    host = createSyntheticIndexHost(host, { name, content, metadata });
+    host = createSyntheticIndexHost(host, {
+        name,
+        content,
+        getMetadata: () => {
+            // The second metadata bundle production happens on-demand, and uses the getMetadataCache
+            // closure to retrieve an up-to-date MetadataCache which is configured with whatever metadata
+            // transforms were used to produce the JS output.
+            const metadataBundle = getMetadataBundle(getMetadataCache());
+            return JSON.stringify(metadataBundle.metadata);
+        }
+    });
     return { host, indexName: name };
 }
 exports.createBundleIndexHost = createBundleIndexHost;
@@ -58883,7 +58911,7 @@ exports.zipAll = zipAll_1.zipAll;
 var index_71 = index$4.share;
 
 /**
- * @license Angular v6.0.0-rc.1-5c8340a
+ * @license Angular v6.0.0-rc.1-f99cb5c
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -60787,7 +60815,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('6.0.0-rc.1-5c8340a');
+var VERSION$2 = new Version$1('6.0.0-rc.1-f99cb5c');
 
 /**
  * @fileoverview added by tsickle
@@ -76569,7 +76597,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-rc.1-5c8340a
+ * @license Angular v6.0.0-rc.1-f99cb5c
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -79167,7 +79195,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('6.0.0-rc.1-5c8340a');
+var VERSION = new Version$1('6.0.0-rc.1-f99cb5c');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
