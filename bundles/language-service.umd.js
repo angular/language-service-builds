@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-rc.1-46eadb5
+ * @license Angular v6.0.0-rc.1-5c8340a
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -227,7 +227,7 @@ var tslib_es6 = Object.freeze({
 });
 
 /**
- * @license Angular v6.0.0-rc.1-46eadb5
+ * @license Angular v6.0.0-rc.1-5c8340a
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -886,7 +886,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('6.0.0-rc.1-46eadb5');
+var VERSION$1 = new Version('6.0.0-rc.1-5c8340a');
 
 /**
  * @fileoverview added by tsickle
@@ -58883,7 +58883,7 @@ exports.zipAll = zipAll_1.zipAll;
 var index_71 = index$4.share;
 
 /**
- * @license Angular v6.0.0-rc.1-46eadb5
+ * @license Angular v6.0.0-rc.1-5c8340a
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -60787,7 +60787,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('6.0.0-rc.1-46eadb5');
+var VERSION$2 = new Version$1('6.0.0-rc.1-5c8340a');
 
 /**
  * @fileoverview added by tsickle
@@ -73645,7 +73645,7 @@ function executeHooks(data, allHooks, checkHooks, creationMode) {
  */
 function callHooks(data, arr) {
     for (var /** @type {?} */ i = 0; i < arr.length; i += 2) {
-        (/** @type {?} */ (arr[i | 1])).call(data[/** @type {?} */ (arr[i])]);
+        (/** @type {?} */ (arr[i + 1])).call(data[/** @type {?} */ (arr[i])]);
     }
 }
 
@@ -74465,7 +74465,7 @@ function enterView(newView, host) {
     }
     currentView = newView;
     currentQueries = newView && newView.queries;
-    return /** @type {?} */ ((oldView));
+    return oldView;
 }
 /**
  * Used in lieu of enterView to make it clear when we are exiting a child view. This makes
@@ -74505,7 +74505,7 @@ function setHostBindings(bindings) {
         for (var /** @type {?} */ i = 0; i < bindings.length; i += 2) {
             var /** @type {?} */ dirIndex = bindings[i];
             var /** @type {?} */ def = /** @type {?} */ (defs[dirIndex]);
-            def.hostBindings && def.hostBindings(dirIndex, bindings[i | 1]);
+            def.hostBindings && def.hostBindings(dirIndex, bindings[i + 1]);
         }
     }
 }
@@ -74517,7 +74517,7 @@ function setHostBindings(bindings) {
 function refreshChildComponents(components) {
     if (components != null) {
         for (var /** @type {?} */ i = 0; i < components.length; i += 2) {
-            componentRefresh(components[i], components[i | 1]);
+            componentRefresh(components[i], components[i + 1]);
         }
     }
 }
@@ -74774,9 +74774,9 @@ function cacheMatchingLocalNames(tNode, localRefs, exportsMap) {
         // in the template to ensure the data is loaded in the same slots as their refs
         // in the template (for template queries).
         for (var /** @type {?} */ i = 0; i < localRefs.length; i += 2) {
-            var /** @type {?} */ index = exportsMap[localRefs[i | 1]];
+            var /** @type {?} */ index = exportsMap[localRefs[i + 1]];
             if (index == null)
-                throw new Error("Export of name '" + localRefs[i | 1] + "' not found!");
+                throw new Error("Export of name '" + localRefs[i + 1] + "' not found!");
             localNames.push(localRefs[i], index);
         }
     }
@@ -74806,7 +74806,7 @@ function saveResolvedLocalsInData() {
     var /** @type {?} */ localNames = /** @type {?} */ ((previousOrParentNode.tNode)).localNames;
     if (localNames) {
         for (var /** @type {?} */ i = 0; i < localNames.length; i += 2) {
-            var /** @type {?} */ index = /** @type {?} */ (localNames[i | 1]);
+            var /** @type {?} */ index = /** @type {?} */ (localNames[i + 1]);
             var /** @type {?} */ value = index === -1 ? previousOrParentNode.native : /** @type {?} */ ((directives))[index];
             data.push(value);
         }
@@ -74966,7 +74966,7 @@ function setInputsFromAttrs(directiveIndex, instance, inputs, tNode) {
     var /** @type {?} */ initialInputs = initialInputData[directiveIndex];
     if (initialInputs) {
         for (var /** @type {?} */ i = 0; i < initialInputs.length; i += 2) {
-            (/** @type {?} */ (instance))[initialInputs[i]] = initialInputs[i | 1];
+            (/** @type {?} */ (instance))[initialInputs[i]] = initialInputs[i + 1];
         }
     }
 }
@@ -74995,7 +74995,7 @@ function generateInitialInputs(directiveIndex, inputs, tNode) {
         var /** @type {?} */ minifiedInputName = inputs[attrName];
         if (minifiedInputName !== undefined) {
             var /** @type {?} */ inputsToStore = initialInputData[directiveIndex] || (initialInputData[directiveIndex] = []);
-            inputsToStore.push(minifiedInputName, attrs[i | 1]);
+            inputsToStore.push(minifiedInputName, attrs[i + 1]);
         }
     }
     return initialInputData;
@@ -76569,7 +76569,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-rc.1-46eadb5
+ * @license Angular v6.0.0-rc.1-5c8340a
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -79167,7 +79167,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('6.0.0-rc.1-46eadb5');
+var VERSION = new Version$1('6.0.0-rc.1-5c8340a');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
