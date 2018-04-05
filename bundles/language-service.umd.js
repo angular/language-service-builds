@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-rc.2-5cd36c7
+ * @license Angular v6.0.0-rc.2-d80e930
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -227,7 +227,7 @@ var tslib_es6 = Object.freeze({
 });
 
 /**
- * @license Angular v6.0.0-rc.2-5cd36c7
+ * @license Angular v6.0.0-rc.2-d80e930
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -886,7 +886,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('6.0.0-rc.2-5cd36c7');
+var VERSION$1 = new Version('6.0.0-rc.2-d80e930');
 
 /**
  * @fileoverview added by tsickle
@@ -58911,7 +58911,7 @@ exports.zipAll = zipAll_1.zipAll;
 var index_71 = index$4.share;
 
 /**
- * @license Angular v6.0.0-rc.2-5cd36c7
+ * @license Angular v6.0.0-rc.2-d80e930
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -60817,7 +60817,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('6.0.0-rc.2-5cd36c7');
+var VERSION$2 = new Version$1('6.0.0-rc.2-d80e930');
 
 /**
  * @fileoverview added by tsickle
@@ -73974,8 +73974,10 @@ function findFirstRNode(rootNode) {
             return (/** @type {?} */ (node)).native;
         }
         else if (node.type === 0 /* Container */) {
-            // For container look at the first node of the view next
-            var /** @type {?} */ childContainerData = (/** @type {?} */ (node)).data;
+            var /** @type {?} */ lContainerNode = (/** @type {?} */ (node));
+            var /** @type {?} */ childContainerData = lContainerNode.dynamicLContainerNode ?
+                lContainerNode.dynamicLContainerNode.data :
+                lContainerNode.data;
             nextNode = childContainerData.views.length ? childContainerData.views[0].child : null;
         }
         else if (node.type === 1 /* Projection */) {
@@ -74118,10 +74120,7 @@ function insertView(container, newView, index) {
         if (!beforeNode) {
             var /** @type {?} */ containerNextNativeNode = container.native;
             if (containerNextNativeNode === undefined) {
-                // TODO(pk): this is probably too simplistic, add more tests for various host placements
-                // (dynamic view, projection, ...)
-                containerNextNativeNode = container.native =
-                    findNextRNodeSibling(container.data.host ? container.data.host : container, null);
+                containerNextNativeNode = container.native = findNextRNodeSibling(container, null);
             }
             beforeNode = containerNextNativeNode;
         }
@@ -74620,7 +74619,8 @@ function createLNodeObject(type, currentView, parent, native, state, queries) {
         data: state,
         queries: queries,
         tNode: null,
-        pNextOrParent: null
+        pNextOrParent: null,
+        dynamicLContainerNode: null
     };
 }
 /**
@@ -74670,6 +74670,9 @@ function createLNode(index, type, native, state) {
         else if (previousOrParentNode) {
             ngDevMode && assertNull(previousOrParentNode.next, "previousOrParentNode's next property should not have been set " + index + ".");
             previousOrParentNode.next = node;
+            if (previousOrParentNode.dynamicLContainerNode) {
+                previousOrParentNode.dynamicLContainerNode.next = node;
+            }
         }
     }
     previousOrParentNode = node;
@@ -74709,8 +74712,9 @@ function renderEmbeddedTemplate(viewNode, template, context, renderer) {
             // TODO: revisit setting currentView when re-writing view containers
             var /** @type {?} */ directives_1 = currentView && currentView.tView.directiveRegistry;
             var /** @type {?} */ pipes = currentView && currentView.tView.pipeRegistry;
-            var /** @type {?} */ view = createLView(-1, renderer, createTView(directives_1, pipes), template, context, 2 /* CheckAlways */);
-            viewNode = createLNode(null, 2 /* View */, null, view);
+            var /** @type {?} */ tView = getOrCreateTView(template, directives_1, pipes);
+            var /** @type {?} */ lView = createLView(-1, renderer, tView, template, context, 2 /* CheckAlways */);
+            viewNode = createLNode(null, 2 /* View */, null, lView);
             cm = true;
         }
         oldView = enterView(viewNode.data, viewNode);
@@ -75036,10 +75040,9 @@ function generateInitialInputs(directiveIndex, inputs, tNode) {
  * @param {?} parentLNode
  * @param {?} currentView
  * @param {?=} template
- * @param {?=} host
  * @return {?}
  */
-function createLContainer(parentLNode, currentView, template, host) {
+function createLContainer(parentLNode, currentView, template) {
     ngDevMode && assertNotNull$1(parentLNode, 'containers should have a parent');
     return /** @type {?} */ ({
         views: [],
@@ -75051,8 +75054,7 @@ function createLContainer(parentLNode, currentView, template, host) {
         next: null,
         parent: currentView,
         dynamicViewCount: 0,
-        queries: null,
-        host: host == null ? null : host
+        queries: null
     });
 }
 /**
@@ -76163,8 +76165,9 @@ function getOrCreateContainerRef(di) {
     if (!di.viewContainerRef) {
         var /** @type {?} */ vcRefHost = di.node;
         ngDevMode && assertNodeOfPossibleTypes(vcRefHost, 0 /* Container */, 3 /* Element */);
-        var /** @type {?} */ lContainer = createLContainer(/** @type {?} */ ((vcRefHost.parent)), vcRefHost.view, undefined, vcRefHost);
+        var /** @type {?} */ lContainer = createLContainer(/** @type {?} */ ((vcRefHost.parent)), vcRefHost.view);
         var /** @type {?} */ lContainerNode = createLNodeObject(0 /* Container */, vcRefHost.view, /** @type {?} */ ((vcRefHost.parent)), undefined, lContainer, null);
+        vcRefHost.dynamicLContainerNode = lContainerNode;
         addToViewTree(vcRefHost.view, lContainer);
         di.viewContainerRef = new ViewContainerRef$1(lContainerNode);
     }
@@ -76265,6 +76268,9 @@ var ViewContainerRef$1 = /** @class */ (function () {
         var /** @type {?} */ lViewNode = (/** @type {?} */ (viewRef))._lViewNode;
         var /** @type {?} */ adjustedIdx = this._adjustAndAssertIndex(index);
         insertView(this._lContainerNode, lViewNode, adjustedIdx);
+        // invalidate cache of next sibling RNode (we do similar operation in the containerRefreshEnd
+        // instruction)
+        this._lContainerNode.native = undefined;
         this._viewRefs.splice(adjustedIdx, 0, viewRef);
         (/** @type {?} */ (lViewNode)).parent = this._lContainerNode;
         // If the view is dynamic (has a template), it needs to be counted both at the container
@@ -76601,7 +76607,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-rc.2-5cd36c7
+ * @license Angular v6.0.0-rc.2-d80e930
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -79199,7 +79205,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('6.0.0-rc.2-5cd36c7');
+var VERSION = new Version$1('6.0.0-rc.2-d80e930');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
