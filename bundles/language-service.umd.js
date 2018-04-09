@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-rc.3-5a298b1
+ * @license Angular v6.0.0-rc.3-f4c56f4
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -227,7 +227,7 @@ var tslib_es6 = Object.freeze({
 });
 
 /**
- * @license Angular v6.0.0-rc.3-5a298b1
+ * @license Angular v6.0.0-rc.3-f4c56f4
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -886,7 +886,7 @@ var Version = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$1 = new Version('6.0.0-rc.3-5a298b1');
+var VERSION$1 = new Version('6.0.0-rc.3-f4c56f4');
 
 /**
  * @fileoverview added by tsickle
@@ -58911,7 +58911,7 @@ exports.zipAll = zipAll_1.zipAll;
 var index_71 = index$4.share;
 
 /**
- * @license Angular v6.0.0-rc.3-5a298b1
+ * @license Angular v6.0.0-rc.3-f4c56f4
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -60817,7 +60817,7 @@ var Version$1 = /** @class */ (function () {
 /**
  * \@stable
  */
-var VERSION$2 = new Version$1('6.0.0-rc.3-5a298b1');
+var VERSION$2 = new Version$1('6.0.0-rc.3-f4c56f4');
 
 /**
  * @fileoverview added by tsickle
@@ -73528,6 +73528,18 @@ function assertLessThan(actual, expected, msg) {
 /**
  * @template T
  * @param {?} actual
+ * @param {?} expected
+ * @param {?} msg
+ * @return {?}
+ */
+function assertGreaterThan(actual, expected, msg) {
+    if (actual <= expected) {
+        throwError(msg);
+    }
+}
+/**
+ * @template T
+ * @param {?} actual
  * @param {?} msg
  * @return {?}
  */
@@ -74146,6 +74158,7 @@ function removeView(container, removeIndex) {
         setViewNext(views[removeIndex - 1], viewNode.next);
     }
     views.splice(removeIndex, 1);
+    viewNode.next = null;
     destroyViewTree(viewNode.data);
     addRemoveViewFromContainer(container, viewNode, false);
     // Notify query that view has been removed
@@ -76278,7 +76291,7 @@ var ViewContainerRef$1 = /** @class */ (function () {
      */
     function (viewRef, index) {
         var /** @type {?} */ lViewNode = (/** @type {?} */ (viewRef))._lViewNode;
-        var /** @type {?} */ adjustedIdx = this._adjustAndAssertIndex(index);
+        var /** @type {?} */ adjustedIdx = this._adjustIndex(index);
         insertView(this._lContainerNode, lViewNode, adjustedIdx);
         // invalidate cache of next sibling RNode (we do similar operation in the containerRefreshEnd
         // instruction)
@@ -76300,16 +76313,19 @@ var ViewContainerRef$1 = /** @class */ (function () {
     };
     /**
      * @param {?} viewRef
-     * @param {?} currentIndex
+     * @param {?} newIndex
      * @return {?}
      */
     ViewContainerRef.prototype.move = /**
      * @param {?} viewRef
-     * @param {?} currentIndex
+     * @param {?} newIndex
      * @return {?}
      */
-    function (viewRef, currentIndex) {
-        throw notImplemented();
+    function (viewRef, newIndex) {
+        var /** @type {?} */ index = this.indexOf(viewRef);
+        this.detach(index);
+        this.insert(viewRef, this._adjustIndex(newIndex));
+        return viewRef;
     };
     /**
      * @param {?} viewRef
@@ -76319,7 +76335,7 @@ var ViewContainerRef$1 = /** @class */ (function () {
      * @param {?} viewRef
      * @return {?}
      */
-    function (viewRef) { throw notImplemented(); };
+    function (viewRef) { return this._viewRefs.indexOf(viewRef); };
     /**
      * @param {?=} index
      * @return {?}
@@ -76329,9 +76345,10 @@ var ViewContainerRef$1 = /** @class */ (function () {
      * @return {?}
      */
     function (index) {
-        var /** @type {?} */ adjustedIdx = this._adjustAndAssertIndex(index);
-        removeView(this._lContainerNode, adjustedIdx);
-        this._viewRefs.splice(adjustedIdx, 1);
+        this.detach(index);
+        // TODO(ml): proper destroy of the ViewRef, i.e. recursively destroy the LviewNode and its
+        // children, delete DOM nodes and QueryList, trigger hooks (onDestroy), destroy the renderer,
+        // detach projected nodes
     };
     /**
      * @param {?=} index
@@ -76341,22 +76358,30 @@ var ViewContainerRef$1 = /** @class */ (function () {
      * @param {?=} index
      * @return {?}
      */
-    function (index) { throw notImplemented(); };
+    function (index) {
+        var /** @type {?} */ adjustedIdx = this._adjustIndex(index, -1);
+        removeView(this._lContainerNode, adjustedIdx);
+        return this._viewRefs.splice(adjustedIdx, 1)[0] || null;
+    };
     /**
      * @param {?=} index
+     * @param {?=} shift
      * @return {?}
      */
-    ViewContainerRef.prototype._adjustAndAssertIndex = /**
+    ViewContainerRef.prototype._adjustIndex = /**
      * @param {?=} index
+     * @param {?=} shift
      * @return {?}
      */
-    function (index) {
+    function (index, shift) {
+        if (shift === void 0) { shift = 0; }
         if (index == null) {
-            index = this._lContainerNode.data.views.length;
+            return this._lContainerNode.data.views.length + shift;
         }
-        else {
+        if (ngDevMode) {
+            assertGreaterThan(index, -1, 'index must be positive');
             // +1 because it's legal to insert at the end.
-            ngDevMode && assertLessThan(index, this._lContainerNode.data.views.length + 1, 'index');
+            assertLessThan(index, this._lContainerNode.data.views.length + 1 + shift, 'index');
         }
         return index;
     };
@@ -76619,7 +76644,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-rc.3-5a298b1
+ * @license Angular v6.0.0-rc.3-f4c56f4
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -79217,7 +79242,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  * @stable
  */
-var VERSION = new Version$1('6.0.0-rc.3-5a298b1');
+var VERSION = new Version$1('6.0.0-rc.3-f4c56f4');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
