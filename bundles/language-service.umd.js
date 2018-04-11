@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-rc.3-764760b
+ * @license Angular v6.0.0-rc.3-0d516f1
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -227,7 +227,7 @@ var tslib_es6 = Object.freeze({
 });
 
 /**
- * @license Angular v6.0.0-rc.3-764760b
+ * @license Angular v6.0.0-rc.3-0d516f1
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -899,7 +899,7 @@ var Version = /** @class */ (function () {
 /**
  *
  */
-var VERSION$1 = new Version('6.0.0-rc.3-764760b');
+var VERSION$1 = new Version('6.0.0-rc.3-0d516f1');
 
 /**
  * @fileoverview added by tsickle
@@ -14666,10 +14666,11 @@ var BinaryOperator = {
     Modulo: 8,
     And: 9,
     Or: 10,
-    Lower: 11,
-    LowerEquals: 12,
-    Bigger: 13,
-    BiggerEquals: 14,
+    BitwiseAnd: 11,
+    Lower: 12,
+    LowerEquals: 13,
+    Bigger: 14,
+    BiggerEquals: 15,
 };
 BinaryOperator[BinaryOperator.Equals] = "Equals";
 BinaryOperator[BinaryOperator.NotEquals] = "NotEquals";
@@ -14682,6 +14683,7 @@ BinaryOperator[BinaryOperator.Multiply] = "Multiply";
 BinaryOperator[BinaryOperator.Modulo] = "Modulo";
 BinaryOperator[BinaryOperator.And] = "And";
 BinaryOperator[BinaryOperator.Or] = "Or";
+BinaryOperator[BinaryOperator.BitwiseAnd] = "BitwiseAnd";
 BinaryOperator[BinaryOperator.Lower] = "Lower";
 BinaryOperator[BinaryOperator.LowerEquals] = "LowerEquals";
 BinaryOperator[BinaryOperator.Bigger] = "Bigger";
@@ -14940,6 +14942,22 @@ var Expression = /** @class */ (function () {
      */
     function (rhs, sourceSpan) {
         return new BinaryOperatorExpr(BinaryOperator.And, this, rhs, null, sourceSpan);
+    };
+    /**
+     * @param {?} rhs
+     * @param {?=} sourceSpan
+     * @param {?=} parens
+     * @return {?}
+     */
+    Expression.prototype.bitwiseAnd = /**
+     * @param {?} rhs
+     * @param {?=} sourceSpan
+     * @param {?=} parens
+     * @return {?}
+     */
+    function (rhs, sourceSpan, parens) {
+        if (parens === void 0) { parens = true; }
+        return new BinaryOperatorExpr(BinaryOperator.BitwiseAnd, this, rhs, null, sourceSpan, parens);
     };
     /**
      * @param {?} rhs
@@ -15727,10 +15745,12 @@ var FunctionExpr = /** @class */ (function (_super) {
 }(Expression));
 var BinaryOperatorExpr = /** @class */ (function (_super) {
     __extends(BinaryOperatorExpr, _super);
-    function BinaryOperatorExpr(operator, lhs, rhs, type, sourceSpan) {
+    function BinaryOperatorExpr(operator, lhs, rhs, type, sourceSpan, parens) {
+        if (parens === void 0) { parens = true; }
         var _this = _super.call(this, type || lhs.type, sourceSpan) || this;
         _this.operator = operator;
         _this.rhs = rhs;
+        _this.parens = parens;
         _this.lhs = lhs;
         return _this;
     }
@@ -22286,6 +22306,9 @@ var AbstractEmitterVisitor = /** @class */ (function () {
             case BinaryOperator.And:
                 opStr = '&&';
                 break;
+            case BinaryOperator.BitwiseAnd:
+                opStr = '&';
+                break;
             case BinaryOperator.Or:
                 opStr = '||';
                 break;
@@ -22319,11 +22342,13 @@ var AbstractEmitterVisitor = /** @class */ (function () {
             default:
                 throw new Error("Unknown operator " + ast.operator);
         }
-        ctx.print(ast, "(");
+        if (ast.parens)
+            ctx.print(ast, "(");
         ast.lhs.visitExpression(this, ctx);
         ctx.print(ast, " " + opStr + " ");
         ast.rhs.visitExpression(this, ctx);
-        ctx.print(ast, ")");
+        if (ast.parens)
+            ctx.print(ast, ")");
         return null;
     };
     /**
@@ -30777,9 +30802,9 @@ var BUILD_OPTIMIZER_COLOCATE = '@__BUILD_OPTIMIZER_COLOCATE__';
  */
 var CONTEXT_NAME = 'ctx';
 /**
- * Name of the creation mode flag passed into a template function
+ * Name of the RenderFlag passed into a template function
  */
-var CREATION_MODE_FLAG = 'cm';
+var RENDER_FLAGS = 'rf';
 /**
  * Name of the temporary to use during data binding
  */
@@ -31189,12 +31214,11 @@ var TemplateDefinitionBuilder = /** @class */ (function () {
         this.addPipeDependency = addPipeDependency;
         this._dataIndex = 0;
         this._bindingContext = 0;
-        this._referenceIndex = 0;
         this._temporaryAllocated = false;
         this._prefix = [];
         this._creationMode = [];
+        this._variableMode = [];
         this._bindingMode = [];
-        this._refreshMode = [];
         this._postfix = [];
         this._projectionDefinitionIndex = 0;
         this.unsupported = unsupported;
@@ -31289,7 +31313,10 @@ var TemplateDefinitionBuilder = /** @class */ (function () {
         }
         templateVisitAll(this, asts);
         var /** @type {?} */ creationMode = this._creationMode.length > 0 ?
-            [ifStmt(variable(CREATION_MODE_FLAG), this._creationMode)] :
+            [ifStmt(variable(RENDER_FLAGS).bitwiseAnd(literal(1 /* Create */), null, false), this._creationMode)] :
+            [];
+        var /** @type {?} */ updateMode = this._bindingMode.length > 0 ?
+            [ifStmt(variable(RENDER_FLAGS).bitwiseAnd(literal(2 /* Update */), null, false), this._bindingMode)] :
             [];
         // Generate maps of placeholder name to node indexes
         // TODO(vicb): This is a WIP, not fully supported yet
@@ -31303,9 +31330,7 @@ var TemplateDefinitionBuilder = /** @class */ (function () {
                 this._prefix.push(phMap);
             }
         }
-        return fn([
-            new FnParam(this.contextParameter, null), new FnParam(CREATION_MODE_FLAG, BOOL_TYPE)
-        ], this._prefix.concat(creationMode, this._bindingMode, this._refreshMode, this._postfix), INFERRED_TYPE, null, this.templateName);
+        return fn([new FnParam(RENDER_FLAGS, NUMBER_TYPE), new FnParam(this.contextParameter, null)], this._prefix.concat(creationMode, this._variableMode, updateMode, this._postfix), INFERRED_TYPE, null, this.templateName);
     };
     // LocalResolver
     /**
@@ -31421,7 +31446,7 @@ var TemplateDefinitionBuilder = /** @class */ (function () {
                 referenceDataSlots.set(reference.name, slot);
                 // Generate the update temporary.
                 var /** @type {?} */ variableName = _this.bindingScope.freshReferenceName();
-                _this._bindingMode.push(variable(variableName, INFERRED_TYPE)
+                _this._variableMode.push(variable(variableName, INFERRED_TYPE)
                     .set(importExpr(Identifiers$1.load).callFn([literal(slot)]))
                     .toDeclStmt(INFERRED_TYPE, [StmtModifier.Final]));
                 _this.bindingScope.set(reference.name, variable(variableName));
@@ -31576,8 +31601,7 @@ var TemplateDefinitionBuilder = /** @class */ (function () {
         var /** @type {?} */ nodeIndex = this.allocateDataSlot();
         // Creation mode
         this.instruction(this._creationMode, ast.sourceSpan, Identifiers$1.text, literal(nodeIndex));
-        // Refresh mode
-        this.instruction(this._refreshMode, ast.sourceSpan, Identifiers$1.textCreateBound, literal(nodeIndex), this.convertPropertyBinding(variable(CONTEXT_NAME), ast.value));
+        this.instruction(this._bindingMode, ast.sourceSpan, Identifiers$1.textCreateBound, literal(nodeIndex), this.convertPropertyBinding(variable(CONTEXT_NAME), ast.value));
     };
     // TemplateAstVisitor
     /**
@@ -31693,7 +31717,7 @@ var TemplateDefinitionBuilder = /** @class */ (function () {
     function (implicit, value) {
         var /** @type {?} */ pipesConvertedValue = value.visit(this._valueConverter);
         var /** @type {?} */ convertedPropertyBinding = convertPropertyBinding(this, implicit, pipesConvertedValue, this.bindingContext(), BindingForm.TrySimple, interpolate);
-        (_a = this._refreshMode).push.apply(_a, convertedPropertyBinding.stmts);
+        (_a = this._bindingMode).push.apply(_a, convertedPropertyBinding.stmts);
         return convertedPropertyBinding.currValExpr;
         var _a;
     };
@@ -59000,7 +59024,7 @@ exports.zipAll = zipAll_1.zipAll;
 var index_71 = index$4.share;
 
 /**
- * @license Angular v6.0.0-rc.3-764760b
+ * @license Angular v6.0.0-rc.3-0d516f1
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -60906,7 +60930,7 @@ var Version$1 = /** @class */ (function () {
 /**
  *
  */
-var VERSION$2 = new Version$1('6.0.0-rc.3-764760b');
+var VERSION$2 = new Version$1('6.0.0-rc.3-0d516f1');
 
 /**
  * @fileoverview added by tsickle
@@ -73971,6 +73995,77 @@ function isProceduralRenderer(renderer) {
  * found in the LICENSE file at https://angular.io/license
  */
 /**
+ * Must use this method for CD (instead of === ) since NaN !== NaN
+ * @param {?} a
+ * @param {?} b
+ * @return {?}
+ */
+function isDifferent(a, b) {
+    // NaN is the only value that is not equal to itself so the first
+    // test checks if both a and b are not NaN
+    return !(a !== a && b !== b) && a !== b;
+}
+/**
+ * @param {?} value
+ * @return {?}
+ */
+function stringify$1$1(value) {
+    if (typeof value == 'function')
+        return value.name || value;
+    if (typeof value == 'string')
+        return value;
+    if (value == null)
+        return '';
+    return '' + value;
+}
+/**
+ *  Function that throws a "not implemented" error so it's clear certain
+ *  behaviors/methods aren't yet ready.
+ *
+ * @return {?} Not implemented error
+ */
+function notImplemented() {
+    return new Error('NotImplemented');
+}
+/**
+ * Flattens an array in non-recursive way. Input arrays are not modified.
+ * @param {?} list
+ * @return {?}
+ */
+function flatten$1$1(list) {
+    var /** @type {?} */ result = [];
+    var /** @type {?} */ i = 0;
+    while (i < list.length) {
+        var /** @type {?} */ item = list[i];
+        if (Array.isArray(item)) {
+            if (item.length > 0) {
+                list = item.concat(list.slice(i + 1));
+                i = 0;
+            }
+            else {
+                i++;
+            }
+        }
+        else {
+            result.push(item);
+            i++;
+        }
+    }
+    return result;
+}
+
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+/**
  * Returns the first RNode following the given LNode in the same parent DOM element.
  *
  * This is needed in order to insert the given node with insertBefore.
@@ -74094,6 +74189,15 @@ function findFirstRNode(rootNode) {
     return null;
 }
 /**
+ * @param {?} value
+ * @param {?} renderer
+ * @return {?}
+ */
+function createTextNode(value, renderer) {
+    return isProceduralRenderer(renderer) ? renderer.createText(stringify$1$1(value)) :
+        renderer.createTextNode(stringify$1$1(value));
+}
+/**
  * @param {?} container
  * @param {?} rootNode
  * @param {?} insertMode
@@ -74112,6 +74216,12 @@ function addRemoveViewFromContainer(container, rootNode, insertMode, beforeNode)
             var /** @type {?} */ renderer = container.view.renderer;
             if (node.type === 3 /* Element */) {
                 if (insertMode) {
+                    if (!node.native) {
+                        // If the native element doesn't exist, this is a bound text node that hasn't yet been
+                        // created because update mode has not run (occurs when a bound text node is a root
+                        // node of a dynamically created view). See textBinding() in instructions for ctx.
+                        (/** @type {?} */ (node)).native = createTextNode('', renderer);
+                    }
                     isProceduralRenderer(renderer) ?
                         renderer.insertBefore(parent, /** @type {?} */ ((node.native)), /** @type {?} */ (beforeNode)) :
                         parent.insertBefore(/** @type {?} */ ((node.native)), /** @type {?} */ (beforeNode), true);
@@ -74372,77 +74482,6 @@ function canInsertNativeNode(parent, currentView) {
  * @suppress {checkTypes} checked by tsc
  */
 /**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
- */
-/**
- * Must use this method for CD (instead of === ) since NaN !== NaN
- * @param {?} a
- * @param {?} b
- * @return {?}
- */
-function isDifferent(a, b) {
-    // NaN is the only value that is not equal to itself so the first
-    // test checks if both a and b are not NaN
-    return !(a !== a && b !== b) && a !== b;
-}
-/**
- * @param {?} value
- * @return {?}
- */
-function stringify$1$1(value) {
-    if (typeof value == 'function')
-        return value.name || value;
-    if (typeof value == 'string')
-        return value;
-    if (value == null)
-        return '';
-    return '' + value;
-}
-/**
- *  Function that throws a "not implemented" error so it's clear certain
- *  behaviors/methods aren't yet ready.
- *
- * @return {?} Not implemented error
- */
-function notImplemented() {
-    return new Error('NotImplemented');
-}
-/**
- * Flattens an array in non-recursive way. Input arrays are not modified.
- * @param {?} list
- * @return {?}
- */
-function flatten$1$1(list) {
-    var /** @type {?} */ result = [];
-    var /** @type {?} */ i = 0;
-    while (i < list.length) {
-        var /** @type {?} */ item = list[i];
-        if (Array.isArray(item)) {
-            if (item.length > 0) {
-                list = item.concat(list.slice(i + 1));
-                i = 0;
-            }
-            else {
-                i++;
-            }
-        }
-        else {
-            result.push(item);
-            i++;
-        }
-    }
-    return result;
-}
-
-/**
- * @fileoverview added by tsickle
- * @suppress {checkTypes} checked by tsc
- */
-/**
  * Called when directives inject each other (creating a circular dependency)
  * @param {?} token
  * @return {?}
@@ -74577,10 +74616,6 @@ var data;
  */
 var directives;
 /**
- * Points to the next binding index to read or write to.
- */
-var bindingIndex;
-/**
  * When a view is destroyed, listeners need to be released and outputs need to be
  * unsubscribed. This cleanup array stores both listener data (in chunks of 4)
  * and output data (in chunks of 2) for a particular view. Combining the arrays
@@ -74624,12 +74659,14 @@ function enterView(newView, host) {
     var /** @type {?} */ oldView = currentView;
     data = newView && newView.data;
     directives = newView && newView.directives;
-    bindingIndex = newView && newView.bindingStartIndex || 0;
     tData = newView && newView.tView.data;
     creationMode = newView && (newView.flags & 1 /* CreationMode */) === 1 /* CreationMode */;
     firstTemplatePass = newView && newView.tView.firstTemplatePass;
     cleanup = newView && newView.cleanup;
     renderer = newView && newView.renderer;
+    if (newView && newView.bindingIndex < 0) {
+        newView.bindingIndex = newView.bindingStartIndex;
+    }
     if (host != null) {
         previousOrParentNode = host;
         isParent = true;
@@ -74651,6 +74688,7 @@ function leaveView(newView) {
     // Views should be clean and in update mode after being checked, so these bits are cleared
     currentView.flags &= ~(1 /* CreationMode */ | 4 /* Dirty */);
     currentView.lifecycleStage = 1 /* INIT */;
+    currentView.bindingIndex = -1;
     enterView(newView, null);
 }
 /**
@@ -74728,7 +74766,8 @@ function createLView(viewId, renderer, tView, template, context, flags) {
         child: null,
         tail: null,
         next: null,
-        bindingStartIndex: null,
+        bindingStartIndex: -1,
+        bindingIndex: -1,
         template: template,
         context: context,
         dynamicViewCount: 0,
@@ -74849,7 +74888,7 @@ function renderEmbeddedTemplate(viewNode, template, context, renderer) {
     try {
         isParent = true;
         previousOrParentNode = /** @type {?} */ ((null));
-        var /** @type {?} */ cm = false;
+        var /** @type {?} */ rf = 2;
         if (viewNode == null) {
             // TODO: revisit setting currentView when re-writing view containers
             var /** @type {?} */ directives_1 = currentView && currentView.tView.directiveRegistry;
@@ -74857,10 +74896,10 @@ function renderEmbeddedTemplate(viewNode, template, context, renderer) {
             var /** @type {?} */ tView = getOrCreateTView(template, directives_1, pipes);
             var /** @type {?} */ lView = createLView(-1, renderer, tView, template, context, 2 /* CheckAlways */);
             viewNode = createLNode(null, 2 /* View */, null, lView);
-            cm = true;
+            rf = 1 /* Create */;
         }
         oldView = enterView(viewNode.data, viewNode);
-        template(context, cm);
+        template(rf, context);
         refreshDirectives();
         refreshDynamicChildren();
     }
@@ -74886,7 +74925,8 @@ function renderComponentOrTemplate(node, hostView, componentOrContext, template)
             rendererFactory.begin();
         }
         if (template) {
-            template(/** @type {?} */ ((componentOrContext)), creationMode);
+            template(getRenderFlags(hostView), /** @type {?} */ ((componentOrContext)));
+            refreshDynamicChildren();
             refreshDirectives();
         }
         else {
@@ -74903,6 +74943,21 @@ function renderComponentOrTemplate(node, hostView, componentOrContext, template)
         }
         leaveView(oldView);
     }
+}
+/**
+ * This function returns the default configuration of rendering flags depending on when the
+ * template is in creation mode or update mode. By default, the update block is run with the
+ * creation block when the view is in creation mode. Otherwise, the update block is run
+ * alone.
+ *
+ * Dynamically created views do NOT use this configuration (update block and create block are
+ * always run separately).
+ * @param {?} view
+ * @return {?}
+ */
+function getRenderFlags(view) {
+    return view.flags & 1 /* CreationMode */ ? 1 /* Create */ | 2 /* Update */ :
+        2 /* Update */;
 }
 /**
  * @param {?} def
@@ -75075,7 +75130,7 @@ function addComponentLogic(index, instance, def) {
  */
 function baseDirectiveCreate(index, directive, directiveDef) {
     ngDevMode &&
-        assertNull(currentView.bindingStartIndex, 'directives should be created before any bindings');
+        assertEqual(currentView.bindingStartIndex, -1, 'directives should be created before any bindings');
     ngDevMode && assertPreviousIsParent();
     Object.defineProperty(directive, NG_HOST_SYMBOL, { enumerable: false, value: previousOrParentNode });
     if (directives == null)
@@ -75361,7 +75416,7 @@ function detectChangesInternal(hostView, hostNode, def, component) {
     var /** @type {?} */ oldView = enterView(hostView, hostNode);
     var /** @type {?} */ template = def.template;
     try {
-        template(component, creationMode);
+        template(getRenderFlags(hostView), component);
         refreshDirectives();
         refreshDynamicChildren();
     }
@@ -75381,12 +75436,9 @@ var NO_CHANGE = /** @type {?} */ ({});
  * @return {?}
  */
 function initBindings() {
-    // `bindingIndex` is initialized when the view is first entered when not in creation mode
-    ngDevMode &&
-        assertEqual(creationMode, true, 'should only be called in creationMode for performance reasons');
-    if (currentView.bindingStartIndex == null) {
-        bindingIndex = currentView.bindingStartIndex = data.length;
-    }
+    ngDevMode && assertEqual(currentView.bindingStartIndex, -1, 'Binding start index should only be set once, when null');
+    ngDevMode && assertEqual(currentView.bindingIndex, -1, 'Binding index should not yet be set ' + currentView.bindingIndex);
+    currentView.bindingIndex = currentView.bindingStartIndex = data.length;
 }
 /**
  * @template T
@@ -76676,7 +76728,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-rc.3-764760b
+ * @license Angular v6.0.0-rc.3-0d516f1
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -79274,7 +79326,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  *
  */
-var VERSION = new Version$1('6.0.0-rc.3-764760b');
+var VERSION = new Version$1('6.0.0-rc.3-0d516f1');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
