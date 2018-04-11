@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-rc.3-ee14579
+ * @license Angular v6.0.0-rc.3-0cb4f12
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -227,7 +227,7 @@ var tslib_es6 = Object.freeze({
 });
 
 /**
- * @license Angular v6.0.0-rc.3-ee14579
+ * @license Angular v6.0.0-rc.3-0cb4f12
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -897,9 +897,9 @@ var Version = /** @class */ (function () {
  * found in the LICENSE file at https://angular.io/license
  */
 /**
- * \@stable
+ *
  */
-var VERSION$1 = new Version('6.0.0-rc.3-ee14579');
+var VERSION$1 = new Version('6.0.0-rc.3-0cb4f12');
 
 /**
  * @fileoverview added by tsickle
@@ -59000,7 +59000,7 @@ exports.zipAll = zipAll_1.zipAll;
 var index_71 = index$4.share;
 
 /**
- * @license Angular v6.0.0-rc.3-ee14579
+ * @license Angular v6.0.0-rc.3-0cb4f12
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59179,7 +59179,7 @@ function defineInjector(options) {
  *
  * {\@example core/di/ts/injector_spec.ts region='InjectionToken'}
  *
- * \@stable
+ *
  * @template T
  */
 var InjectionToken = /** @class */ (function () {
@@ -59235,7 +59235,7 @@ var InjectionToken = /** @class */ (function () {
  * \@ng.Component({...})
  * class MyClass {...}
  * ```
- * \@stable
+ *
  * @record
  */
 
@@ -59409,14 +59409,14 @@ var ANALYZE_FOR_ENTRY_COMPONENTS = new InjectionToken('AnalyzeForEntryComponents
 /**
  * Type of the Attribute decorator / constructor function.
  *
- * \@stable
+ *
  * @record
  */
 
 /**
  * Attribute decorator and metadata.
  *
- * \@stable
+ *
  * \@Annotation
  */
 var Attribute$1$1 = makeParamDecorator('Attribute', function (attributeName) { return ({ attributeName: attributeName }); });
@@ -59458,14 +59458,14 @@ ChangeDetectionStrategy$1[ChangeDetectionStrategy$1.Default] = "Default";
 /**
  * Type of the Directive decorator / constructor function.
  *
- * \@stable
+ *
  * @record
  */
 
 /**
  * Directive decorator and metadata.
  *
- * \@stable
+ *
  * \@Annotation
  */
 var Directive$1 = makeDecorator('Directive', function (dir) {
@@ -59475,14 +59475,14 @@ var Directive$1 = makeDecorator('Directive', function (dir) {
 /**
  * Type of the Component decorator / constructor function.
  *
- * \@stable
+ *
  * @record
  */
 
 /**
  * Component decorator and metadata.
  *
- * \@stable
+ *
  * \@Annotation
  */
 var Component$1 = makeDecorator('Component', function (c) {
@@ -59492,7 +59492,7 @@ var Component$1 = makeDecorator('Component', function (c) {
 /**
  * Type of the Pipe decorator / constructor function.
  *
- * \@stable
+ *
  * @record
  */
 
@@ -59505,7 +59505,7 @@ var Component$1 = makeDecorator('Component', function (c) {
  * To use the pipe include a reference to the pipe class in
  * {\@link NgModule#declarations}.
  *
- * \@stable
+ *
  * \@Annotation
  */
 var Pipe$1 = makeDecorator('Pipe', function (p) { return (__assign({ pure: true }, p)); });
@@ -59528,7 +59528,7 @@ var Pipe$1 = makeDecorator('Pipe', function (p) { return (__assign({ pure: true 
  * An example of a `Type` is `MyCustomComponent` class, which in JavaScript is be represented by
  * the `MyCustomComponent` constructor function.
  *
- * \@stable
+ *
  */
 var Type$1$1 = Function;
 /**
@@ -60143,70 +60143,70 @@ function resolveForwardRef$1(type) {
 /**
  * Type of the Inject decorator / constructor function.
  *
- * \@stable
+ *
  * @record
  */
 
 /**
  * Inject decorator and metadata.
  *
- * \@stable
+ *
  * \@Annotation
  */
 var Inject$1 = makeParamDecorator('Inject', function (token) { return ({ token: token }); });
 /**
  * Type of the Optional decorator / constructor function.
  *
- * \@stable
+ *
  * @record
  */
 
 /**
  * Optional decorator and metadata.
  *
- * \@stable
+ *
  * \@Annotation
  */
 var Optional = makeParamDecorator('Optional');
 /**
  * Type of the Self decorator / constructor function.
  *
- * \@stable
+ *
  * @record
  */
 
 /**
  * Self decorator and metadata.
  *
- * \@stable
+ *
  * \@Annotation
  */
 var Self = makeParamDecorator('Self');
 /**
  * Type of the SkipSelf decorator / constructor function.
  *
- * \@stable
+ *
  * @record
  */
 
 /**
  * SkipSelf decorator and metadata.
  *
- * \@stable
+ *
  * \@Annotation
  */
 var SkipSelf = makeParamDecorator('SkipSelf');
 /**
  * Type of the Host decorator / constructor function.
  *
- * \@stable
+ *
  * @record
  */
 
 /**
  * Host decorator and metadata.
  *
- * \@stable
+ *
  * \@Annotation
  */
 var Host = makeParamDecorator('Host');
@@ -60276,7 +60276,7 @@ var NullInjector = /** @class */ (function () {
  * `Injector` returns itself when given `Injector` as a token:
  * {\@example core/di/ts/injector_spec.ts region='injectInjector'}
  *
- * \@stable
+ *
  * @abstract
  */
 var Injector = /** @class */ (function () {
@@ -60738,7 +60738,7 @@ var USE_VALUE$1$1 = getClosureSafeProperty({ provide: String, useValue: ɵ0 }, G
 /**
  * Type of the Injectable decorator / constructor function.
  *
- * \@stable
+ *
  * @record
  */
 
@@ -60791,7 +60791,7 @@ function convertInjectableProviderToFactory(type, provider) {
 /**
  * Injectable decorator and metadata.
  *
- * \@stable
+ *
  * \@Annotation
  */
 var Injectable$1 = makeDecorator('Injectable', undefined, undefined, undefined, function (injectableType, options) {
@@ -60806,14 +60806,14 @@ var Injectable$1 = makeDecorator('Injectable', undefined, undefined, undefined, 
 /**
  * Type of the NgModule decorator / constructor function.
  *
- * \@stable
+ *
  * @record
  */
 
 /**
  * NgModule decorator and metadata.
  *
- * \@stable
+ *
  * \@Annotation
  */
 var NgModule$1 = makeDecorator('NgModule', function (ngModule) { return ngModule; }, undefined, undefined, function (moduleType, metadata) {
@@ -60892,7 +60892,7 @@ ViewEncapsulation$1[ViewEncapsulation$1.None] = "None";
 /**
  * \@description Represents the version of Angular
  *
- * \@stable
+ *
  */
 var Version$1 = /** @class */ (function () {
     function Version(full) {
@@ -60904,9 +60904,9 @@ var Version$1 = /** @class */ (function () {
     return Version;
 }());
 /**
- * \@stable
+ *
  */
-var VERSION$2 = new Version$1('6.0.0-rc.3-ee14579');
+var VERSION$2 = new Version$1('6.0.0-rc.3-0cb4f12');
 
 /**
  * @fileoverview added by tsickle
@@ -60997,7 +60997,7 @@ function defaultErrorLogger(console) {
  * class MyModule {}
  * ```
  *
- * \@stable
+ *
  */
 var ErrorHandler = /** @class */ (function () {
     function ErrorHandler() {
@@ -61275,7 +61275,7 @@ function invalidProviderError(provider) {
  *
  * expect(() => Injector.resolveAndCreate([A,B])).toThrowError();
  * ```
- * \@stable
+ *
  * @param {?} typeOrFunc
  * @param {?} params
  * @return {?}
@@ -61308,7 +61308,7 @@ function noAnnotationError(typeOrFunc, params) {
  *
  * expect(() => injector.getAt(100)).toThrowError();
  * ```
- * \@stable
+ *
  * @param {?} index
  * @return {?}
  */
@@ -62803,7 +62803,7 @@ function _throwError() {
  * Each `\@NgModule` provides an own `Compiler` to its injector,
  * that will use the directives/pipes of the ng module for compilation
  * of components.
- * \@stable
+ *
  */
 var Compiler = /** @class */ (function () {
     function Compiler() {
@@ -62947,7 +62947,7 @@ var CompilerFactory = /** @class */ (function () {
  * `ComponentRef` provides access to the Component Instance as well other objects related to this
  * Component Instance and allows you to destroy the Component Instance via the {\@link #destroy}
  * method.
- * \@stable
+ *
  * @abstract
  * @template C
  */
@@ -62957,7 +62957,7 @@ var ComponentRef = /** @class */ (function () {
     return ComponentRef;
 }());
 /**
- * \@stable
+ *
  * @abstract
  * @template C
  */
@@ -63012,7 +63012,7 @@ var _NullComponentFactoryResolver = /** @class */ (function () {
     return _NullComponentFactoryResolver;
 }());
 /**
- * \@stable
+ *
  * @abstract
  */
 var ComponentFactoryResolver = /** @class */ (function () {
@@ -63074,7 +63074,7 @@ var ComponentFactoryBoundToModule = /** @class */ (function (_super) {
  * `NgModuleRef` provides access to the NgModule Instance as well other objects related to this
  * NgModule Instance.
  *
- * \@stable
+ *
  * @abstract
  * @template T
  */
@@ -63280,7 +63280,7 @@ var wtfLeave = wtfEnabled ? leave : function (s, r) { return r; };
  * https://github.com/jhusain/observable-spec
  *
  * Once a reference implementation of the spec is available, switch to it.
- * \@stable
+ *
  * @template T
  */
 var EventEmitter = /** @class */ (function (_super) {
@@ -64414,7 +64414,7 @@ function getPlatform() {
 /**
  * Provides additional options to the bootstraping process.
  *
- * \@stable
+ *
  * @record
  */
 
@@ -64426,7 +64426,7 @@ function getPlatform() {
  * A page's platform is initialized implicitly when a platform is created via a platform factory
  * (e.g. {\@link platformBrowser}), or explicitly by calling the {\@link createPlatform} function.
  *
- * \@stable
+ *
  */
 var PlatformRef = /** @class */ (function () {
     /** @internal */
@@ -64556,7 +64556,7 @@ var PlatformRef = /** @class */ (function () {
      *
      * let moduleRef = platformBrowser().bootstrapModule(MyModule);
      * ```
-     * @stable
+     *
      */
     /**
      * Creates an instance of an `\@NgModule` for a given platform using the given runtime compiler.
@@ -64571,7 +64571,7 @@ var PlatformRef = /** @class */ (function () {
      *
      * let moduleRef = platformBrowser().bootstrapModule(MyModule);
      * ```
-     * \@stable
+     *
      * @template M
      * @param {?} moduleType
      * @param {?=} compilerOptions
@@ -64590,7 +64590,7 @@ var PlatformRef = /** @class */ (function () {
      *
      * let moduleRef = platformBrowser().bootstrapModule(MyModule);
      * ```
-     * \@stable
+     *
      * @template M
      * @param {?} moduleType
      * @param {?=} compilerOptions
@@ -64748,7 +64748,7 @@ function optionsReducer(dst, objs) {
 /**
  * A reference to an Angular application running on a page.
  *
- * \@stable
+ *
  */
 var ApplicationRef = /** @class */ (function () {
     /** @internal */
@@ -65154,7 +65154,7 @@ var Renderer2 = /** @class */ (function () {
  * XSS attacks. Carefully review any use of `ElementRef` in your code. For more detail, see the
  * [Security Guide](http://g.co/ng/security).
  *
- * \@stable
+ *
  * @template T
  */
 var ElementRef = /** @class */ (function () {
@@ -65197,7 +65197,7 @@ var ElementRef = /** @class */ (function () {
  *   \@ViewChildren(Item) items:QueryList<Item>;
  * }
  * ```
- * \@stable
+ *
  * @template T
  */
 var QueryList = /** @class */ (function () {
@@ -65424,7 +65424,7 @@ function flatten$2(list) {
  *
  * To instantiate Embedded Views based on a Template, use {\@link ViewContainerRef#
  * createEmbeddedView}, which will create the View and attach it to the View Container.
- * \@stable
+ *
  * @abstract
  * @template C
  */
@@ -65461,7 +65461,7 @@ var TemplateRef = /** @class */ (function () {
  *
  * To access a `ViewContainerRef` of an Element, you can either place a {\@link Directive} injected
  * with `ViewContainerRef` on the Element, or you obtain it via a {\@link ViewChild} query.
- * \@stable
+ *
  * @abstract
  */
 var ViewContainerRef = /** @class */ (function () {
@@ -65482,7 +65482,7 @@ var ViewContainerRef = /** @class */ (function () {
  * found in the LICENSE file at https://angular.io/license
  */
 /**
- * \@stable
+ *
  * @abstract
  */
 var ChangeDetectorRef = /** @class */ (function () {
@@ -65503,7 +65503,7 @@ var ChangeDetectorRef = /** @class */ (function () {
  * found in the LICENSE file at https://angular.io/license
  */
 /**
- * \@stable
+ *
  * @abstract
  */
 var ViewRef = /** @class */ (function (_super) {
@@ -65946,7 +65946,7 @@ function devModeEqual(a, b) {
  *    return WrappedValue.wrap(this._latestValue); // this will force update
  *  }
  * ```
- * \@stable
+ *
  */
 var WrappedValue = /** @class */ (function () {
     function WrappedValue(value) {
@@ -65999,7 +65999,7 @@ var WrappedValue = /** @class */ (function () {
 }());
 /**
  * Represents a basic change from a previous to a new value.
- * \@stable
+ *
  */
 var SimpleChange = /** @class */ (function () {
     function SimpleChange(previousValue, currentValue, firstChange) {
@@ -66931,7 +66931,7 @@ var DefaultIterableDiffer = /** @class */ (function () {
     return DefaultIterableDiffer;
 }());
 /**
- * \@stable
+ *
  * @template V
  */
 var IterableChangeRecord_ = /** @class */ (function () {
@@ -67619,7 +67619,7 @@ var DefaultKeyValueDiffer = /** @class */ (function () {
     return DefaultKeyValueDiffer;
 }());
 /**
- * \@stable
+ *
  * @template K, V
  */
 var KeyValueChangeRecord_ = /** @class */ (function () {
@@ -67670,7 +67670,7 @@ var KeyValueChangeRecord_ = /** @class */ (function () {
  * A strategy for tracking changes over time to an iterable. Used by {\@link NgForOf} to
  * respond to changes in an iterable by effecting equivalent changes in the DOM.
  *
- * \@stable
+ *
  * @record
  * @template V
  */
@@ -67679,7 +67679,7 @@ var KeyValueChangeRecord_ = /** @class */ (function () {
  * An object describing the changes in the `Iterable` collection since last time
  * `IterableDiffer#diff()` was invoked.
  *
- * \@stable
+ *
  * @record
  * @template V
  */
@@ -67687,7 +67687,7 @@ var KeyValueChangeRecord_ = /** @class */ (function () {
 /**
  * Record representing the item change information.
  *
- * \@stable
+ *
  * @record
  * @template V
  */
@@ -67702,7 +67702,7 @@ var KeyValueChangeRecord_ = /** @class */ (function () {
  * An optional function passed into {\@link NgForOf} that defines how to track
  * items in an iterable (e.g. fby index or id)
  *
- * \@stable
+ *
  * @record
  * @template T
  */
@@ -67710,13 +67710,13 @@ var KeyValueChangeRecord_ = /** @class */ (function () {
 /**
  * Provides a factory for {\@link IterableDiffer}.
  *
- * \@stable
+ *
  * @record
  */
 
 /**
  * A repository of different iterable diffing strategies used by NgFor, NgClass, and others.
- * \@stable
+ *
  */
 var IterableDiffers = /** @class */ (function () {
     function IterableDiffers(factories) {
@@ -67857,7 +67857,7 @@ function getTypeNameForDebugging(type) {
 /**
  * A differ that tracks changes made to an object over time.
  *
- * \@stable
+ *
  * @record
  * @template K, V
  */
@@ -67866,7 +67866,7 @@ function getTypeNameForDebugging(type) {
  * An object describing the changes in the `Map` or `{[k:string]: string}` since last time
  * `KeyValueDiffer#diff()` was invoked.
  *
- * \@stable
+ *
  * @record
  * @template K, V
  */
@@ -67874,7 +67874,7 @@ function getTypeNameForDebugging(type) {
 /**
  * Record representing the item change information.
  *
- * \@stable
+ *
  * @record
  * @template K, V
  */
@@ -67882,13 +67882,13 @@ function getTypeNameForDebugging(type) {
 /**
  * Provides a factory for {\@link KeyValueDiffer}.
  *
- * \@stable
+ *
  * @record
  */
 
 /**
  * A repository of different Map diffing strategies used by NgClass, NgStyle, and others.
- * \@stable
+ *
  */
 var KeyValueDiffers = /** @class */ (function () {
     function KeyValueDiffers(factories) {
@@ -68317,7 +68317,7 @@ SecurityContext$1[SecurityContext$1.RESOURCE_URL] = "RESOURCE_URL";
 /**
  * Sanitizer is used by the views to sanitize potentially dangerous values.
  *
- * \@stable
+ *
  * @abstract
  */
 var Sanitizer = /** @class */ (function () {
@@ -76676,7 +76676,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-rc.3-ee14579
+ * @license Angular v6.0.0-rc.3-0cb4f12
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -79272,9 +79272,9 @@ function create(info /* ts.server.PluginCreateInfo */) {
  * Entry point for all public APIs of the common package.
  */
 /**
- * @stable
+ *
  */
-var VERSION = new Version$1('6.0.0-rc.3-ee14579');
+var VERSION = new Version$1('6.0.0-rc.3-0cb4f12');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
