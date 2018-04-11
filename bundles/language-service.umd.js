@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-rc.3-5992fe6
+ * @license Angular v6.0.0-rc.3-fb4513c
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -227,7 +227,7 @@ var tslib_es6 = Object.freeze({
 });
 
 /**
- * @license Angular v6.0.0-rc.3-5992fe6
+ * @license Angular v6.0.0-rc.3-fb4513c
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -808,6 +808,7 @@ function utf8Encode(str) {
  * @record
  */
 
+var MAX_LENGTH_STRINGIFY = 100;
 /**
  * @param {?} token
  * @return {?}
@@ -828,12 +829,24 @@ function stringify(token) {
     if (token.name) {
         return "" + token.name;
     }
-    var /** @type {?} */ res = token.toString();
+    var /** @type {?} */ res;
+    try {
+        res = JSON.stringify(token);
+    }
+    catch (_a) {
+        res = token.toString();
+    }
     if (res == null) {
         return '' + res;
     }
     var /** @type {?} */ newLineIndex = res.indexOf('\n');
-    return newLineIndex === -1 ? res : res.substring(0, newLineIndex);
+    if (0 < newLineIndex) {
+        res = res.substring(0, newLineIndex);
+    }
+    if (MAX_LENGTH_STRINGIFY < res.length) {
+        res = res.substring(0, MAX_LENGTH_STRINGIFY) + '...';
+    }
+    return res;
 }
 /**
  * Lazily retrieves the reference value from a forwardRef.
@@ -884,9 +897,9 @@ var Version = /** @class */ (function () {
  * found in the LICENSE file at https://angular.io/license
  */
 /**
- * \@stable
+ *
  */
-var VERSION$1 = new Version('6.0.0-rc.3-5992fe6');
+var VERSION$1 = new Version('6.0.0-rc.3-fb4513c');
 
 /**
  * @fileoverview added by tsickle
@@ -26935,6 +26948,32 @@ var ConvertActionBindingResult = /** @class */ (function () {
     function ConvertActionBindingResult(stmts, allowDefault) {
         this.stmts = stmts;
         this.allowDefault = allowDefault;
+        /**
+             * This is bit of a hack. It converts statements which render2 expects to statements which are
+             * expected by render3.
+             *
+             * Example: `<div click="doSomething($event)">` will generate:
+             *
+             * Render3:
+             * ```
+             * const pd_b:any = ((<any>ctx.doSomething($event)) !== false);
+             * return pd_b;
+             * ```
+             *
+             * but render2 expects:
+             * ```
+             * return ctx.doSomething($event);
+             * ```
+             */
+        // TODO(misko): remove this hack once we no longer support ViewEngine.
+        this.render3Stmts = stmts.map(function (statement) {
+            if (statement instanceof DeclareVarStmt && statement.name == allowDefault.name &&
+                statement.value instanceof BinaryOperatorExpr) {
+                var /** @type {?} */ lhs = /** @type {?} */ (statement.value.lhs);
+                return new ReturnStatement(lhs.value);
+            }
+            return statement;
+        });
     }
     return ConvertActionBindingResult;
 }());
@@ -30789,7 +30828,9 @@ function compileDirective(outputCtx, directive, reflector, bindingParser, mode) 
     // e.g. `attributes: ['role', 'listbox']`
     field('attributes', createHostAttributesArray(directive, outputCtx));
     // e.g 'inputs: {a: 'a'}`
-    field('inputs', createInputsObject(directive, outputCtx));
+    field('inputs', conditionallyCreateMapObjectLiteral(directive.inputs, outputCtx));
+    // e.g 'outputs: {a: 'a'}`
+    field('outputs', conditionallyCreateMapObjectLiteral(directive.outputs, outputCtx));
     var /** @type {?} */ className = /** @type {?} */ ((identifierName(directive.type)));
     className || error("Cannot resolver the name of " + directive.type);
     var /** @type {?} */ definitionField = outputCtx.constantPool.propertyNameOf(1 /* Directive */);
@@ -30873,7 +30914,7 @@ function compileComponent(outputCtx, component, pipes, template, reflector, bind
     var /** @type {?} */ templateTypeName = component.type.reference.name;
     var /** @type {?} */ templateName = templateTypeName ? templateTypeName + "_Template" : null;
     var /** @type {?} */ pipeMap = new Map(pipes.map(function (pipe) { return [pipe.name, pipe]; }));
-    var /** @type {?} */ templateFunctionExpression = new TemplateDefinitionBuilder(outputCtx, outputCtx.constantPool, reflector, CONTEXT_NAME, ROOT_SCOPE.nestedScope(), 0, /** @type {?} */ ((component.template)).ngContentSelectors, templateTypeName, templateName, pipeMap, component.viewQueries, addDirectiveDependency, addPipeDependency)
+    var /** @type {?} */ templateFunctionExpression = new TemplateDefinitionBuilder(outputCtx, outputCtx.constantPool, reflector, CONTEXT_NAME, BindingScope.ROOT_SCOPE, 0, /** @type {?} */ ((component.template)).ngContentSelectors, templateTypeName, templateName, pipeMap, component.viewQueries, addDirectiveDependency, addPipeDependency)
         .buildTemplateFunction(template, []);
     field('template', templateFunctionExpression);
     if (directiveExps.length) {
@@ -30884,7 +30925,9 @@ function compileComponent(outputCtx, component, pipes, template, reflector, bind
         field('pipes', literalArr(pipeExps));
     }
     // e.g `inputs: {a: 'a'}`
-    field('inputs', createInputsObject(component, outputCtx));
+    field('inputs', conditionallyCreateMapObjectLiteral(component.inputs, outputCtx));
+    // e.g 'outputs: {a: 'a'}`
+    field('outputs', conditionallyCreateMapObjectLiteral(component.outputs, outputCtx));
     // e.g. `features: [NgOnChangesFeature(MyComponent)]`
     var /** @type {?} */ features = [];
     if (component.type.lifecycleHooks.some(function (lifecycle) { return lifecycle == LifecycleHooks.OnChanges; })) {
@@ -31002,9 +31045,26 @@ function getLiteralFactory(outputContext, literal$$1) {
     // change.
     return importExpr(pureFunctionIdent).callFn([literalFactory].concat(literalFactoryArguments));
 }
+/**
+ * @return {?}
+ */
+function noop() { }
 var BindingScope = /** @class */ (function () {
-    function BindingScope(parent) {
+    function BindingScope(parent, declareLocalVarCallback) {
+        if (parent === void 0) { parent = null; }
+        if (declareLocalVarCallback === void 0) { declareLocalVarCallback = noop; }
         this.parent = parent;
+        this.declareLocalVarCallback = declareLocalVarCallback;
+        /**
+         * Keeps a map from local variables to their expressions.
+         *
+         * This is used when one refers to variable such as: 'let abc = a.b.c`.
+         * - key to the map is the string literal `"abc"`.
+         * - value `lhs` is the left hand side which is an AST representing `abc`.
+         * - value `rhs` is the right hand side which is an AST representing `a.b.c`.
+         * - value `declared` is true if the `declareLocalVarCallback` has been called for this scope
+         * already.
+         */
         this.map = new Map();
         this.referenceNameIndex = 0;
     }
@@ -31021,37 +31081,79 @@ var BindingScope = /** @class */ (function () {
         while (current) {
             var /** @type {?} */ value = current.map.get(name);
             if (value != null) {
-                // Cache the value locally.
-                this.map.set(name, value);
-                return value;
+                if (current !== this) {
+                    // make a local copy and reset the `declared` state.
+                    value = { lhs: value.lhs, rhs: value.rhs, declared: false };
+                    // Cache the value locally.
+                    this.map.set(name, value);
+                }
+                if (value.rhs && !value.declared) {
+                    // if it is first time we are referencing the variable in the scope
+                    // than invoke the callback to insert variable declaration.
+                    this.declareLocalVarCallback(value.lhs, value.rhs);
+                    value.declared = true;
+                }
+                return value.lhs;
             }
             current = current.parent;
         }
         return null;
     };
     /**
-     * @param {?} name
-     * @param {?} value
+     * Create a local variable for later reference.
+     *
+     * @param name Name of the variable.
+     * @param lhs AST representing the left hand side of the `let lhs = rhs;`.
+     * @param rhs AST representing the right hand side of the `let lhs = rhs;`. The `rhs` can be
+     * `undefined` for variable that are ambient such as `$event` and which don't have `rhs`
+     * declaration.
+     */
+    /**
+     * Create a local variable for later reference.
+     *
+     * @param {?} name Name of the variable.
+     * @param {?} lhs AST representing the left hand side of the `let lhs = rhs;`.
+     * @param {?=} rhs AST representing the right hand side of the `let lhs = rhs;`. The `rhs` can be
+     * `undefined` for variable that are ambient such as `$event` and which don't have `rhs`
+     * declaration.
      * @return {?}
      */
     BindingScope.prototype.set = /**
-     * @param {?} name
-     * @param {?} value
+     * Create a local variable for later reference.
+     *
+     * @param {?} name Name of the variable.
+     * @param {?} lhs AST representing the left hand side of the `let lhs = rhs;`.
+     * @param {?=} rhs AST representing the right hand side of the `let lhs = rhs;`. The `rhs` can be
+     * `undefined` for variable that are ambient such as `$event` and which don't have `rhs`
+     * declaration.
      * @return {?}
      */
-    function (name, value) {
+    function (name, lhs, rhs) {
         !this.map.has(name) ||
             error("The name " + name + " is already defined in scope to be " + this.map.get(name));
-        this.map.set(name, value);
+        this.map.set(name, { lhs: lhs, rhs: rhs, declared: false });
         return this;
     };
     /**
+     * @param {?} name
+     * @return {?}
+     */
+    BindingScope.prototype.getLocal = /**
+     * @param {?} name
+     * @return {?}
+     */
+    function (name) { return this.get(name); };
+    /**
+     * @param {?} declareCallback
      * @return {?}
      */
     BindingScope.prototype.nestedScope = /**
+     * @param {?} declareCallback
      * @return {?}
      */
-    function () { return new BindingScope(this); };
+    function (declareCallback) {
+        return new BindingScope(this, declareCallback);
+    };
     /**
      * @return {?}
      */
@@ -31066,18 +31168,17 @@ var BindingScope = /** @class */ (function () {
         var /** @type {?} */ ref = "" + REFERENCE_PREFIX + current.referenceNameIndex++;
         return ref;
     };
+    BindingScope.ROOT_SCOPE = new BindingScope().set('$event', variable('$event'));
     return BindingScope;
 }());
-var ROOT_SCOPE = new BindingScope(null).set('$event', variable('$event'));
 var TemplateDefinitionBuilder = /** @class */ (function () {
-    function TemplateDefinitionBuilder(outputCtx, constantPool, reflector, contextParameter, bindingScope, level, ngContentSelectors, contextName, templateName, pipes, viewQueries, addDirectiveDependency, addPipeDependency) {
+    function TemplateDefinitionBuilder(outputCtx, constantPool, reflector, contextParameter, parentBindingScope, level, ngContentSelectors, contextName, templateName, pipes, viewQueries, addDirectiveDependency, addPipeDependency) {
         if (level === void 0) { level = 0; }
         var _this = this;
         this.outputCtx = outputCtx;
         this.constantPool = constantPool;
         this.reflector = reflector;
         this.contextParameter = contextParameter;
-        this.bindingScope = bindingScope;
         this.level = level;
         this.ngContentSelectors = ngContentSelectors;
         this.contextName = contextName;
@@ -31110,8 +31211,12 @@ var TemplateDefinitionBuilder = /** @class */ (function () {
         // These should be handled in the template or element directly
         this.visitDirective = invalid$1;
         this.visitDirectiveProperty = invalid$1;
+        this.bindingScope =
+            parentBindingScope.nestedScope(function (lhsVar, expression) {
+                _this._bindingMode.push(lhsVar.set(expression).toDeclStmt(INFERRED_TYPE, [StmtModifier.Final]));
+            });
         this._valueConverter = new ValueConverter(outputCtx, function () { return _this.allocateDataSlot(); }, function (name, localName, slot, value) {
-            bindingScope.set(localName, value);
+            _this.bindingScope.set(localName, value);
             var /** @type {?} */ pipe = /** @type {?} */ ((pipes.get(name)));
             pipe || error("Could not find pipe " + name);
             _this.addPipeDependency(pipe);
@@ -31135,13 +31240,8 @@ var TemplateDefinitionBuilder = /** @class */ (function () {
             var /** @type {?} */ variableName = variable$$1.name;
             var /** @type {?} */ expression = variable(this.contextParameter).prop(variable$$1.value || IMPLICIT_REFERENCE);
             var /** @type {?} */ scopedName = this.bindingScope.freshReferenceName();
-            var /** @type {?} */ declaration = variable(scopedName).set(expression).toDeclStmt(INFERRED_TYPE, [
-                StmtModifier.Final
-            ]);
             // Add the reference to the local scope.
-            this.bindingScope.set(variableName, variable(scopedName));
-            // Declare the local variable in binding mode
-            this._bindingMode.push(declaration);
+            this.bindingScope.set(variableName, variable(variableName + scopedName), expression);
         }
         // Collect content projections
         if (this.ngContentSelectors && this.ngContentSelectors.length > 0) {
@@ -31337,12 +31437,16 @@ var TemplateDefinitionBuilder = /** @class */ (function () {
             (_b = this._creationMode).push.apply(_b, i18nMessages);
         }
         this.instruction.apply(this, [this._creationMode, element.sourceSpan, Identifiers$1.createElement].concat(trimTrailingNulls(parameters)));
-        var /** @type {?} */ implicit = variable(this.contextParameter);
+        var /** @type {?} */ implicit = variable(CONTEXT_NAME);
         // Generate Listeners (outputs)
         element.outputs.forEach(function (outputAst) {
             var /** @type {?} */ functionName = _this.templateName + "_" + element.name + "_" + outputAst.name + "_listener";
-            var /** @type {?} */ bindingExpr = convertActionBinding(_this, implicit, outputAst.handler, 'b', function () { return error('Unexpected interpolation'); });
-            var /** @type {?} */ handler = fn([new FnParam('$event', DYNAMIC_TYPE)], bindingExpr.stmts.concat([new ReturnStatement(bindingExpr.allowDefault)]), INFERRED_TYPE, null, functionName);
+            var /** @type {?} */ localVars = [];
+            var /** @type {?} */ bindingScope = _this.bindingScope.nestedScope(function (lhsVar, rhsExpression) {
+                localVars.push(lhsVar.set(rhsExpression).toDeclStmt(INFERRED_TYPE, [StmtModifier.Final]));
+            });
+            var /** @type {?} */ bindingExpr = convertActionBinding(bindingScope, variable(CONTEXT_NAME), outputAst.handler, 'b', function () { return error('Unexpected interpolation'); });
+            var /** @type {?} */ handler = fn([new FnParam('$event', DYNAMIC_TYPE)], localVars.concat(bindingExpr.render3Stmts), INFERRED_TYPE, null, functionName);
             _this.instruction(_this._creationMode, outputAst.sourceSpan, Identifiers$1.listener, literal(outputAst.name), handler);
         });
         // Generate element input bindings
@@ -31453,9 +31557,9 @@ var TemplateDefinitionBuilder = /** @class */ (function () {
         // e.g. C(1, C1Template)
         this.instruction.apply(this, [this._creationMode, ast.sourceSpan, Identifiers$1.containerCreate, literal(templateIndex)].concat(trimTrailingNulls(parameters)));
         // Generate directives
-        this._visitDirectives(ast.directives, variable(this.contextParameter), templateIndex);
+        this._visitDirectives(ast.directives, variable(CONTEXT_NAME), templateIndex);
         // Create the template function
-        var /** @type {?} */ templateVisitor = new TemplateDefinitionBuilder(this.outputCtx, this.constantPool, this.reflector, templateContext, this.bindingScope.nestedScope(), this.level + 1, this.ngContentSelectors, contextName, templateName, this.pipes, [], this.addDirectiveDependency, this.addPipeDependency);
+        var /** @type {?} */ templateVisitor = new TemplateDefinitionBuilder(this.outputCtx, this.constantPool, this.reflector, templateContext, this.bindingScope, this.level + 1, this.ngContentSelectors, contextName, templateName, this.pipes, [], this.addDirectiveDependency, this.addPipeDependency);
         var /** @type {?} */ templateFunctionExpr = templateVisitor.buildTemplateFunction(ast.children, ast.variables);
         this._postfix.push(templateFunctionExpr.toDeclStmt(templateName, null));
     };
@@ -31473,7 +31577,7 @@ var TemplateDefinitionBuilder = /** @class */ (function () {
         // Creation mode
         this.instruction(this._creationMode, ast.sourceSpan, Identifiers$1.text, literal(nodeIndex));
         // Refresh mode
-        this.instruction(this._refreshMode, ast.sourceSpan, Identifiers$1.textCreateBound, literal(nodeIndex), this.bind(variable(CONTEXT_NAME), ast.value, ast.sourceSpan));
+        this.instruction(this._refreshMode, ast.sourceSpan, Identifiers$1.textCreateBound, literal(nodeIndex), this.convertPropertyBinding(variable(CONTEXT_NAME), ast.value));
     };
     // TemplateAstVisitor
     /**
@@ -31592,21 +31696,6 @@ var TemplateDefinitionBuilder = /** @class */ (function () {
         (_a = this._refreshMode).push.apply(_a, convertedPropertyBinding.stmts);
         return convertedPropertyBinding.currValExpr;
         var _a;
-    };
-    /**
-     * @param {?} implicit
-     * @param {?} value
-     * @param {?} sourceSpan
-     * @return {?}
-     */
-    TemplateDefinitionBuilder.prototype.bind = /**
-     * @param {?} implicit
-     * @param {?} value
-     * @param {?} sourceSpan
-     * @return {?}
-     */
-    function (implicit, value, sourceSpan) {
-        return this.convertPropertyBinding(implicit, value);
     };
     return TemplateDefinitionBuilder;
 }());
@@ -31806,13 +31895,13 @@ function createHostBindingsFunction(directiveMetadata, outputCtx, bindingParser)
     return null;
 }
 /**
- * @param {?} directive
+ * @param {?} keys
  * @param {?} outputCtx
  * @return {?}
  */
-function createInputsObject(directive, outputCtx) {
-    if (Object.getOwnPropertyNames(directive.inputs).length > 0) {
-        return outputCtx.constantPool.getConstLiteral(mapToExpression(directive.inputs));
+function conditionallyCreateMapObjectLiteral(keys, outputCtx) {
+    if (Object.getOwnPropertyNames(keys).length > 0) {
+        return mapToExpression(keys);
     }
     return null;
 }
@@ -58911,7 +59000,7 @@ exports.zipAll = zipAll_1.zipAll;
 var index_71 = index$4.share;
 
 /**
- * @license Angular v6.0.0-rc.3-5992fe6
+ * @license Angular v6.0.0-rc.3-fb4513c
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59090,7 +59179,7 @@ function defineInjector(options) {
  *
  * {\@example core/di/ts/injector_spec.ts region='InjectionToken'}
  *
- * \@stable
+ *
  * @template T
  */
 var InjectionToken = /** @class */ (function () {
@@ -59146,7 +59235,7 @@ var InjectionToken = /** @class */ (function () {
  * \@ng.Component({...})
  * class MyClass {...}
  * ```
- * \@stable
+ *
  * @record
  */
 
@@ -59320,14 +59409,14 @@ var ANALYZE_FOR_ENTRY_COMPONENTS = new InjectionToken('AnalyzeForEntryComponents
 /**
  * Type of the Attribute decorator / constructor function.
  *
- * \@stable
+ *
  * @record
  */
 
 /**
  * Attribute decorator and metadata.
  *
- * \@stable
+ *
  * \@Annotation
  */
 var Attribute$1$1 = makeParamDecorator('Attribute', function (attributeName) { return ({ attributeName: attributeName }); });
@@ -59369,14 +59458,14 @@ ChangeDetectionStrategy$1[ChangeDetectionStrategy$1.Default] = "Default";
 /**
  * Type of the Directive decorator / constructor function.
  *
- * \@stable
+ *
  * @record
  */
 
 /**
  * Directive decorator and metadata.
  *
- * \@stable
+ *
  * \@Annotation
  */
 var Directive$1 = makeDecorator('Directive', function (dir) {
@@ -59386,14 +59475,14 @@ var Directive$1 = makeDecorator('Directive', function (dir) {
 /**
  * Type of the Component decorator / constructor function.
  *
- * \@stable
+ *
  * @record
  */
 
 /**
  * Component decorator and metadata.
  *
- * \@stable
+ *
  * \@Annotation
  */
 var Component$1 = makeDecorator('Component', function (c) {
@@ -59403,7 +59492,7 @@ var Component$1 = makeDecorator('Component', function (c) {
 /**
  * Type of the Pipe decorator / constructor function.
  *
- * \@stable
+ *
  * @record
  */
 
@@ -59416,7 +59505,7 @@ var Component$1 = makeDecorator('Component', function (c) {
  * To use the pipe include a reference to the pipe class in
  * {\@link NgModule#declarations}.
  *
- * \@stable
+ *
  * \@Annotation
  */
 var Pipe$1 = makeDecorator('Pipe', function (p) { return (__assign({ pure: true }, p)); });
@@ -59439,7 +59528,7 @@ var Pipe$1 = makeDecorator('Pipe', function (p) { return (__assign({ pure: true 
  * An example of a `Type` is `MyCustomComponent` class, which in JavaScript is be represented by
  * the `MyCustomComponent` constructor function.
  *
- * \@stable
+ *
  */
 var Type$1$1 = Function;
 /**
@@ -60054,70 +60143,70 @@ function resolveForwardRef$1(type) {
 /**
  * Type of the Inject decorator / constructor function.
  *
- * \@stable
+ *
  * @record
  */
 
 /**
  * Inject decorator and metadata.
  *
- * \@stable
+ *
  * \@Annotation
  */
 var Inject$1 = makeParamDecorator('Inject', function (token) { return ({ token: token }); });
 /**
  * Type of the Optional decorator / constructor function.
  *
- * \@stable
+ *
  * @record
  */
 
 /**
  * Optional decorator and metadata.
  *
- * \@stable
+ *
  * \@Annotation
  */
 var Optional = makeParamDecorator('Optional');
 /**
  * Type of the Self decorator / constructor function.
  *
- * \@stable
+ *
  * @record
  */
 
 /**
  * Self decorator and metadata.
  *
- * \@stable
+ *
  * \@Annotation
  */
 var Self = makeParamDecorator('Self');
 /**
  * Type of the SkipSelf decorator / constructor function.
  *
- * \@stable
+ *
  * @record
  */
 
 /**
  * SkipSelf decorator and metadata.
  *
- * \@stable
+ *
  * \@Annotation
  */
 var SkipSelf = makeParamDecorator('SkipSelf');
 /**
  * Type of the Host decorator / constructor function.
  *
- * \@stable
+ *
  * @record
  */
 
 /**
  * Host decorator and metadata.
  *
- * \@stable
+ *
  * \@Annotation
  */
 var Host = makeParamDecorator('Host');
@@ -60187,7 +60276,7 @@ var NullInjector = /** @class */ (function () {
  * `Injector` returns itself when given `Injector` as a token:
  * {\@example core/di/ts/injector_spec.ts region='injectInjector'}
  *
- * \@stable
+ *
  * @abstract
  */
 var Injector = /** @class */ (function () {
@@ -60649,7 +60738,7 @@ var USE_VALUE$1$1 = getClosureSafeProperty({ provide: String, useValue: ɵ0 }, G
 /**
  * Type of the Injectable decorator / constructor function.
  *
- * \@stable
+ *
  * @record
  */
 
@@ -60702,7 +60791,7 @@ function convertInjectableProviderToFactory(type, provider) {
 /**
  * Injectable decorator and metadata.
  *
- * \@stable
+ *
  * \@Annotation
  */
 var Injectable$1 = makeDecorator('Injectable', undefined, undefined, undefined, function (injectableType, options) {
@@ -60717,14 +60806,14 @@ var Injectable$1 = makeDecorator('Injectable', undefined, undefined, undefined, 
 /**
  * Type of the NgModule decorator / constructor function.
  *
- * \@stable
+ *
  * @record
  */
 
 /**
  * NgModule decorator and metadata.
  *
- * \@stable
+ *
  * \@Annotation
  */
 var NgModule$1 = makeDecorator('NgModule', function (ngModule) { return ngModule; }, undefined, undefined, function (moduleType, metadata) {
@@ -60803,7 +60892,7 @@ ViewEncapsulation$1[ViewEncapsulation$1.None] = "None";
 /**
  * \@description Represents the version of Angular
  *
- * \@stable
+ *
  */
 var Version$1 = /** @class */ (function () {
     function Version(full) {
@@ -60815,9 +60904,9 @@ var Version$1 = /** @class */ (function () {
     return Version;
 }());
 /**
- * \@stable
+ *
  */
-var VERSION$2 = new Version$1('6.0.0-rc.3-5992fe6');
+var VERSION$2 = new Version$1('6.0.0-rc.3-fb4513c');
 
 /**
  * @fileoverview added by tsickle
@@ -60908,7 +60997,7 @@ function defaultErrorLogger(console) {
  * class MyModule {}
  * ```
  *
- * \@stable
+ *
  */
 var ErrorHandler = /** @class */ (function () {
     function ErrorHandler() {
@@ -61186,7 +61275,7 @@ function invalidProviderError(provider) {
  *
  * expect(() => Injector.resolveAndCreate([A,B])).toThrowError();
  * ```
- * \@stable
+ *
  * @param {?} typeOrFunc
  * @param {?} params
  * @return {?}
@@ -61219,7 +61308,7 @@ function noAnnotationError(typeOrFunc, params) {
  *
  * expect(() => injector.getAt(100)).toThrowError();
  * ```
- * \@stable
+ *
  * @param {?} index
  * @return {?}
  */
@@ -62714,7 +62803,7 @@ function _throwError() {
  * Each `\@NgModule` provides an own `Compiler` to its injector,
  * that will use the directives/pipes of the ng module for compilation
  * of components.
- * \@stable
+ *
  */
 var Compiler = /** @class */ (function () {
     function Compiler() {
@@ -62858,7 +62947,7 @@ var CompilerFactory = /** @class */ (function () {
  * `ComponentRef` provides access to the Component Instance as well other objects related to this
  * Component Instance and allows you to destroy the Component Instance via the {\@link #destroy}
  * method.
- * \@stable
+ *
  * @abstract
  * @template C
  */
@@ -62868,7 +62957,7 @@ var ComponentRef = /** @class */ (function () {
     return ComponentRef;
 }());
 /**
- * \@stable
+ *
  * @abstract
  * @template C
  */
@@ -62923,7 +63012,7 @@ var _NullComponentFactoryResolver = /** @class */ (function () {
     return _NullComponentFactoryResolver;
 }());
 /**
- * \@stable
+ *
  * @abstract
  */
 var ComponentFactoryResolver = /** @class */ (function () {
@@ -62985,7 +63074,7 @@ var ComponentFactoryBoundToModule = /** @class */ (function (_super) {
  * `NgModuleRef` provides access to the NgModule Instance as well other objects related to this
  * NgModule Instance.
  *
- * \@stable
+ *
  * @abstract
  * @template T
  */
@@ -63191,7 +63280,7 @@ var wtfLeave = wtfEnabled ? leave : function (s, r) { return r; };
  * https://github.com/jhusain/observable-spec
  *
  * Once a reference implementation of the spec is available, switch to it.
- * \@stable
+ *
  * @template T
  */
 var EventEmitter = /** @class */ (function (_super) {
@@ -63527,7 +63616,7 @@ var NgZone = /** @class */ (function () {
      */
     function (fn, applyThis, applyArgs, name) {
         var /** @type {?} */ zone = (/** @type {?} */ ((this)))._inner;
-        var /** @type {?} */ task = zone.scheduleEventTask('NgZoneEvent: ' + name, fn, EMPTY_PAYLOAD, noop, noop);
+        var /** @type {?} */ task = zone.scheduleEventTask('NgZoneEvent: ' + name, fn, EMPTY_PAYLOAD, noop$1, noop$1);
         try {
             return /** @type {?} */ (zone.runTask(task, applyThis, applyArgs));
         }
@@ -63613,7 +63702,7 @@ var NgZone = /** @class */ (function () {
 /**
  * @return {?}
  */
-function noop() { }
+function noop$1() { }
 var EMPTY_PAYLOAD = {};
 /**
  * @param {?} zone
@@ -64325,7 +64414,7 @@ function getPlatform() {
 /**
  * Provides additional options to the bootstraping process.
  *
- * \@stable
+ *
  * @record
  */
 
@@ -64337,7 +64426,7 @@ function getPlatform() {
  * A page's platform is initialized implicitly when a platform is created via a platform factory
  * (e.g. {\@link platformBrowser}), or explicitly by calling the {\@link createPlatform} function.
  *
- * \@stable
+ *
  */
 var PlatformRef = /** @class */ (function () {
     /** @internal */
@@ -64467,7 +64556,7 @@ var PlatformRef = /** @class */ (function () {
      *
      * let moduleRef = platformBrowser().bootstrapModule(MyModule);
      * ```
-     * @stable
+     *
      */
     /**
      * Creates an instance of an `\@NgModule` for a given platform using the given runtime compiler.
@@ -64482,7 +64571,7 @@ var PlatformRef = /** @class */ (function () {
      *
      * let moduleRef = platformBrowser().bootstrapModule(MyModule);
      * ```
-     * \@stable
+     *
      * @template M
      * @param {?} moduleType
      * @param {?=} compilerOptions
@@ -64501,7 +64590,7 @@ var PlatformRef = /** @class */ (function () {
      *
      * let moduleRef = platformBrowser().bootstrapModule(MyModule);
      * ```
-     * \@stable
+     *
      * @template M
      * @param {?} moduleType
      * @param {?=} compilerOptions
@@ -64659,7 +64748,7 @@ function optionsReducer(dst, objs) {
 /**
  * A reference to an Angular application running on a page.
  *
- * \@stable
+ *
  */
 var ApplicationRef = /** @class */ (function () {
     /** @internal */
@@ -65065,7 +65154,7 @@ var Renderer2 = /** @class */ (function () {
  * XSS attacks. Carefully review any use of `ElementRef` in your code. For more detail, see the
  * [Security Guide](http://g.co/ng/security).
  *
- * \@stable
+ *
  * @template T
  */
 var ElementRef = /** @class */ (function () {
@@ -65108,7 +65197,7 @@ var ElementRef = /** @class */ (function () {
  *   \@ViewChildren(Item) items:QueryList<Item>;
  * }
  * ```
- * \@stable
+ *
  * @template T
  */
 var QueryList = /** @class */ (function () {
@@ -65335,7 +65424,7 @@ function flatten$2(list) {
  *
  * To instantiate Embedded Views based on a Template, use {\@link ViewContainerRef#
  * createEmbeddedView}, which will create the View and attach it to the View Container.
- * \@stable
+ *
  * @abstract
  * @template C
  */
@@ -65372,7 +65461,7 @@ var TemplateRef = /** @class */ (function () {
  *
  * To access a `ViewContainerRef` of an Element, you can either place a {\@link Directive} injected
  * with `ViewContainerRef` on the Element, or you obtain it via a {\@link ViewChild} query.
- * \@stable
+ *
  * @abstract
  */
 var ViewContainerRef = /** @class */ (function () {
@@ -65393,7 +65482,7 @@ var ViewContainerRef = /** @class */ (function () {
  * found in the LICENSE file at https://angular.io/license
  */
 /**
- * \@stable
+ *
  * @abstract
  */
 var ChangeDetectorRef = /** @class */ (function () {
@@ -65414,7 +65503,7 @@ var ChangeDetectorRef = /** @class */ (function () {
  * found in the LICENSE file at https://angular.io/license
  */
 /**
- * \@stable
+ *
  * @abstract
  */
 var ViewRef = /** @class */ (function (_super) {
@@ -65857,7 +65946,7 @@ function devModeEqual(a, b) {
  *    return WrappedValue.wrap(this._latestValue); // this will force update
  *  }
  * ```
- * \@stable
+ *
  */
 var WrappedValue = /** @class */ (function () {
     function WrappedValue(value) {
@@ -65910,7 +65999,7 @@ var WrappedValue = /** @class */ (function () {
 }());
 /**
  * Represents a basic change from a previous to a new value.
- * \@stable
+ *
  */
 var SimpleChange = /** @class */ (function () {
     function SimpleChange(previousValue, currentValue, firstChange) {
@@ -66842,7 +66931,7 @@ var DefaultIterableDiffer = /** @class */ (function () {
     return DefaultIterableDiffer;
 }());
 /**
- * \@stable
+ *
  * @template V
  */
 var IterableChangeRecord_ = /** @class */ (function () {
@@ -67530,7 +67619,7 @@ var DefaultKeyValueDiffer = /** @class */ (function () {
     return DefaultKeyValueDiffer;
 }());
 /**
- * \@stable
+ *
  * @template K, V
  */
 var KeyValueChangeRecord_ = /** @class */ (function () {
@@ -67581,7 +67670,7 @@ var KeyValueChangeRecord_ = /** @class */ (function () {
  * A strategy for tracking changes over time to an iterable. Used by {\@link NgForOf} to
  * respond to changes in an iterable by effecting equivalent changes in the DOM.
  *
- * \@stable
+ *
  * @record
  * @template V
  */
@@ -67590,7 +67679,7 @@ var KeyValueChangeRecord_ = /** @class */ (function () {
  * An object describing the changes in the `Iterable` collection since last time
  * `IterableDiffer#diff()` was invoked.
  *
- * \@stable
+ *
  * @record
  * @template V
  */
@@ -67598,7 +67687,7 @@ var KeyValueChangeRecord_ = /** @class */ (function () {
 /**
  * Record representing the item change information.
  *
- * \@stable
+ *
  * @record
  * @template V
  */
@@ -67613,7 +67702,7 @@ var KeyValueChangeRecord_ = /** @class */ (function () {
  * An optional function passed into {\@link NgForOf} that defines how to track
  * items in an iterable (e.g. fby index or id)
  *
- * \@stable
+ *
  * @record
  * @template T
  */
@@ -67621,13 +67710,13 @@ var KeyValueChangeRecord_ = /** @class */ (function () {
 /**
  * Provides a factory for {\@link IterableDiffer}.
  *
- * \@stable
+ *
  * @record
  */
 
 /**
  * A repository of different iterable diffing strategies used by NgFor, NgClass, and others.
- * \@stable
+ *
  */
 var IterableDiffers = /** @class */ (function () {
     function IterableDiffers(factories) {
@@ -67768,7 +67857,7 @@ function getTypeNameForDebugging(type) {
 /**
  * A differ that tracks changes made to an object over time.
  *
- * \@stable
+ *
  * @record
  * @template K, V
  */
@@ -67777,7 +67866,7 @@ function getTypeNameForDebugging(type) {
  * An object describing the changes in the `Map` or `{[k:string]: string}` since last time
  * `KeyValueDiffer#diff()` was invoked.
  *
- * \@stable
+ *
  * @record
  * @template K, V
  */
@@ -67785,7 +67874,7 @@ function getTypeNameForDebugging(type) {
 /**
  * Record representing the item change information.
  *
- * \@stable
+ *
  * @record
  * @template K, V
  */
@@ -67793,13 +67882,13 @@ function getTypeNameForDebugging(type) {
 /**
  * Provides a factory for {\@link KeyValueDiffer}.
  *
- * \@stable
+ *
  * @record
  */
 
 /**
  * A repository of different Map diffing strategies used by NgClass, NgStyle, and others.
- * \@stable
+ *
  */
 var KeyValueDiffers = /** @class */ (function () {
     function KeyValueDiffers(factories) {
@@ -68228,7 +68317,7 @@ SecurityContext$1[SecurityContext$1.RESOURCE_URL] = "RESOURCE_URL";
 /**
  * Sanitizer is used by the views to sanitize potentially dangerous values.
  *
- * \@stable
+ *
  * @abstract
  */
 var Sanitizer = /** @class */ (function () {
@@ -75951,63 +76040,6 @@ function addDestroyable(obj) {
 }
 
 /**
- * Used to enable lifecycle hooks on the root component.
- *
- * Include this feature when calling `renderComponent` if the root component
- * you are rendering has lifecycle hooks defined. Otherwise, the hooks won't
- * be called properly.
- *
- * Example:
- *
- * ```
- * renderComponent(AppComponent, {features: [RootLifecycleHooks]});
- * ```
- * @param {?} component
- * @param {?} def
- * @return {?}
- */
-
-/**
- * Retrieve the host element of the component.
- *
- * Use this function to retrieve the host element of the component. The host
- * element is the element which the component is associated with.
- *
- * @template T
- * @param {?} component Component for which the host element should be retrieved.
- * @return {?}
- */
-
-/**
- * Retrieves the rendered text for a given component.
- *
- * This function retrieves the host element of a component and
- * and then returns the `textContent` for that element. This implies
- * that the text returned will include re-projected content of
- * the component as well.
- *
- * @param {?} component The component to return the content text for.
- * @return {?}
- */
-
-/**
- * Wait on component until it is rendered.
- *
- * This function returns a `Promise` which is resolved when the component's
- * change detection is executed. This is determined by finding the scheduler
- * associated with the `component`'s render tree and waiting until the scheduler
- * flushes. If nothing is scheduled, the function returns a resolved promise.
- *
- * Example:
- * ```
- * await whenRendered(myComponent);
- * ```
- *
- * @param {?} component Component to wait upon
- * @return {?} Promise which resolves when the component is rendered.
- */
-
-/**
  * @fileoverview added by tsickle
  * @suppress {checkTypes} checked by tsc
  */
@@ -76644,7 +76676,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-rc.3-5992fe6
+ * @license Angular v6.0.0-rc.3-fb4513c
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -79240,9 +79272,9 @@ function create(info /* ts.server.PluginCreateInfo */) {
  * Entry point for all public APIs of the common package.
  */
 /**
- * @stable
+ *
  */
-var VERSION = new Version$1('6.0.0-rc.3-5992fe6');
+var VERSION = new Version$1('6.0.0-rc.3-fb4513c');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
