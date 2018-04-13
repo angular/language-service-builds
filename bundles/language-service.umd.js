@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-rc.4-6199ea5
+ * @license Angular v6.0.0-rc.4-2bb7838
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -227,7 +227,7 @@ var tslib_es6 = Object.freeze({
 });
 
 /**
- * @license Angular v6.0.0-rc.4-6199ea5
+ * @license Angular v6.0.0-rc.4-2bb7838
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -899,7 +899,7 @@ var Version = /** @class */ (function () {
 /**
  *
  */
-var VERSION$1 = new Version('6.0.0-rc.4-6199ea5');
+var VERSION$1 = new Version('6.0.0-rc.4-2bb7838');
 
 /**
  * @fileoverview added by tsickle
@@ -59035,7 +59035,7 @@ exports.zipAll = zipAll_1.zipAll;
 var index_71 = index$4.share;
 
 /**
- * @license Angular v6.0.0-rc.4-6199ea5
+ * @license Angular v6.0.0-rc.4-2bb7838
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -60941,7 +60941,7 @@ var Version$1 = /** @class */ (function () {
 /**
  *
  */
-var VERSION$2 = new Version$1('6.0.0-rc.4-6199ea5');
+var VERSION$2 = new Version$1('6.0.0-rc.4-2bb7838');
 
 /**
  * @fileoverview added by tsickle
@@ -75252,6 +75252,31 @@ function refreshDynamicChildren() {
     }
 }
 /**
+ * For nodes which are projected inside an embedded view, this function sets the renderParent
+ * of their dynamic LContainerNode.
+ * @param {?} renderParent the renderParent of the LContainer which contains the embedded view.
+ * @param {?} viewNode the embedded view.
+ * @return {?}
+ */
+function setRenderParentInProjectedNodes(renderParent, viewNode) {
+    if (renderParent != null) {
+        var /** @type {?} */ node = viewNode.child;
+        while (node) {
+            if (node.type === 1 /* Projection */) {
+                var /** @type {?} */ nodeToProject = (/** @type {?} */ (node)).data.head;
+                var /** @type {?} */ lastNodeToProject = (/** @type {?} */ (node)).data.tail;
+                while (nodeToProject) {
+                    if (nodeToProject.dynamicLContainerNode) {
+                        nodeToProject.dynamicLContainerNode.data.renderParent = renderParent;
+                    }
+                    nodeToProject = nodeToProject === lastNodeToProject ? null : nodeToProject.pNextOrParent;
+                }
+            }
+            node = node.next;
+        }
+    }
+}
+/**
  * Refreshes components by entering the component view and processing its bindings, queries, etc.
  *
  * @template T
@@ -76739,7 +76764,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-rc.4-6199ea5
+ * @license Angular v6.0.0-rc.4-2bb7838
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -79337,7 +79362,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  *
  */
-var VERSION = new Version$1('6.0.0-rc.4-6199ea5');
+var VERSION = new Version$1('6.0.0-rc.4-2bb7838');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
