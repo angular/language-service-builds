@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-rc.4-6e73300
+ * @license Angular v6.0.0-rc.4-d5e7f60
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -227,7 +227,7 @@ var tslib_es6 = Object.freeze({
 });
 
 /**
- * @license Angular v6.0.0-rc.4-6e73300
+ * @license Angular v6.0.0-rc.4-d5e7f60
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -899,7 +899,7 @@ var Version = /** @class */ (function () {
 /**
  *
  */
-var VERSION$1 = new Version('6.0.0-rc.4-6e73300');
+var VERSION$1 = new Version('6.0.0-rc.4-d5e7f60');
 
 /**
  * @fileoverview added by tsickle
@@ -58998,7 +58998,7 @@ exports.zipAll = zipAll_1.zipAll;
 var index_71 = index$4.share;
 
 /**
- * @license Angular v6.0.0-rc.4-6e73300
+ * @license Angular v6.0.0-rc.4-d5e7f60
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -60904,7 +60904,7 @@ var Version$1 = /** @class */ (function () {
 /**
  *
  */
-var VERSION$2 = new Version$1('6.0.0-rc.4-6e73300');
+var VERSION$2 = new Version$1('6.0.0-rc.4-d5e7f60');
 
 /**
  * @fileoverview added by tsickle
@@ -73744,9 +73744,9 @@ function queueDestroyHooks(def, tView, i) {
  * @return {?}
  */
 function executeInitHooks(currentView, tView, creationMode) {
-    if (currentView.lifecycleStage === 1 /* INIT */) {
+    if (currentView.lifecycleStage === 1 /* Init */) {
         executeHooks(/** @type {?} */ ((currentView.directives)), tView.initHooks, tView.checkHooks, creationMode);
-        currentView.lifecycleStage = 2 /* AFTER_INIT */;
+        currentView.lifecycleStage = 2 /* AfterInit */;
     }
 }
 /**
@@ -74661,7 +74661,7 @@ function leaveView(newView) {
     }
     // Views should be clean and in update mode after being checked, so these bits are cleared
     currentView.flags &= ~(1 /* CreationMode */ | 4 /* Dirty */);
-    currentView.lifecycleStage = 1 /* INIT */;
+    currentView.lifecycleStage = 1 /* Init */;
     currentView.bindingIndex = -1;
     enterView(newView, null);
 }
@@ -74745,7 +74745,7 @@ function createLView(viewId, renderer, tView, template, context, flags) {
         template: template,
         context: context,
         dynamicViewCount: 0,
-        lifecycleStage: 1 /* INIT */,
+        lifecycleStage: 1 /* Init */,
         queries: null,
     };
     return newView;
@@ -75056,7 +75056,7 @@ function setUpAttributes(native, attrs) {
 function directiveCreate(index, directive, directiveDef) {
     var /** @type {?} */ instance = baseDirectiveCreate(index, directive, directiveDef);
     ngDevMode && assertNotNull$1(previousOrParentNode.tNode, 'previousOrParentNode.tNode');
-    var /** @type {?} */ tNode = /** @type {?} */ ((previousOrParentNode.tNode));
+    var /** @type {?} */ tNode = previousOrParentNode.tNode;
     var /** @type {?} */ isComponent = (/** @type {?} */ (directiveDef)).template;
     if (isComponent) {
         addComponentLogic(index, directive, /** @type {?} */ (directiveDef));
@@ -75112,10 +75112,19 @@ function baseDirectiveCreate(index, directive, directiveDef) {
     ngDevMode && assertDataNext(index, directives);
     directives[index] = directive;
     if (firstTemplatePass) {
-        var /** @type {?} */ flags = /** @type {?} */ ((previousOrParentNode.tNode)).flags; /** @type {?} */
-        ((previousOrParentNode.tNode)).flags = (flags & 8190 /* SIZE_MASK */) === 0 ?
-            (index << 13 /* INDX_SHIFT */) | 2 /* SIZE_SKIP */ | flags & 1 /* Component */ :
-            flags + 2 /* SIZE_SKIP */;
+        var /** @type {?} */ flags = /** @type {?} */ ((previousOrParentNode.tNode)).flags;
+        if ((flags & 4095 /* DirectiveCountMask */) === 0) {
+            /** @type {?} */ ((
+            // When the first directive is created:
+            // - save the index,
+            // - set the number of directives to 1
+            previousOrParentNode.tNode)).flags = index << 13 /* DirectiveStartingIndexShift */ | flags & 4096 /* isComponent */ | 1;
+        }
+        else {
+            // Only need to bump the size when subsequent directives are created
+            ngDevMode && assertNotEqual(flags & 4095 /* DirectiveCountMask */, 4095 /* DirectiveCountMask */, 'Reached the max number of directives'); /** @type {?} */
+            ((previousOrParentNode.tNode)).flags++;
+        }
     }
     else {
         var /** @type {?} */ diPublic = /** @type {?} */ ((directiveDef)).diPublic;
@@ -76727,7 +76736,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-rc.4-6e73300
+ * @license Angular v6.0.0-rc.4-d5e7f60
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -79325,7 +79334,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  *
  */
-var VERSION = new Version$1('6.0.0-rc.4-6e73300');
+var VERSION = new Version$1('6.0.0-rc.4-d5e7f60');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
