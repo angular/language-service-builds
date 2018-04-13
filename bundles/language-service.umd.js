@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-rc.4-d5e7f60
+ * @license Angular v6.0.0-rc.4-e7ef027
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -227,7 +227,7 @@ var tslib_es6 = Object.freeze({
 });
 
 /**
- * @license Angular v6.0.0-rc.4-d5e7f60
+ * @license Angular v6.0.0-rc.4-e7ef027
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -899,7 +899,7 @@ var Version = /** @class */ (function () {
 /**
  *
  */
-var VERSION$1 = new Version('6.0.0-rc.4-d5e7f60');
+var VERSION$1 = new Version('6.0.0-rc.4-e7ef027');
 
 /**
  * @fileoverview added by tsickle
@@ -58998,7 +58998,7 @@ exports.zipAll = zipAll_1.zipAll;
 var index_71 = index$4.share;
 
 /**
- * @license Angular v6.0.0-rc.4-d5e7f60
+ * @license Angular v6.0.0-rc.4-e7ef027
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -60904,7 +60904,7 @@ var Version$1 = /** @class */ (function () {
 /**
  *
  */
-var VERSION$2 = new Version$1('6.0.0-rc.4-d5e7f60');
+var VERSION$2 = new Version$1('6.0.0-rc.4-e7ef027');
 
 /**
  * @fileoverview added by tsickle
@@ -74853,9 +74853,11 @@ function createLNode(index, type, native, state) {
  * @param {?} template
  * @param {?} context
  * @param {?} renderer
+ * @param {?=} directives
+ * @param {?=} pipes
  * @return {?}
  */
-function renderEmbeddedTemplate(viewNode, template, context, renderer) {
+function renderEmbeddedTemplate(viewNode, template, context, renderer, directives, pipes) {
     var /** @type {?} */ _isParent = isParent;
     var /** @type {?} */ _previousOrParentNode = previousOrParentNode;
     var /** @type {?} */ oldView;
@@ -74864,10 +74866,7 @@ function renderEmbeddedTemplate(viewNode, template, context, renderer) {
         previousOrParentNode = /** @type {?} */ ((null));
         var /** @type {?} */ rf = 2;
         if (viewNode == null) {
-            // TODO: revisit setting currentView when re-writing view containers
-            var /** @type {?} */ directives_1 = currentView && currentView.tView.directiveRegistry;
-            var /** @type {?} */ pipes = currentView && currentView.tView.pipeRegistry;
-            var /** @type {?} */ tView = getOrCreateTView(template, directives_1, pipes);
+            var /** @type {?} */ tView = getOrCreateTView(template, directives || null, pipes || null);
             var /** @type {?} */ lView = createLView(-1, renderer, tView, template, context, 2 /* CheckAlways */);
             viewNode = createLNode(null, 2 /* View */, null, lView);
             rf = 1 /* Create */;
@@ -75218,6 +75217,7 @@ function refreshDynamicChildren() {
             var /** @type {?} */ container_1 = /** @type {?} */ (current);
             for (var /** @type {?} */ i = 0; i < container_1.views.length; i++) {
                 var /** @type {?} */ view = container_1.views[i];
+                // The directives and pipes are not needed here as an existing view is only being refreshed.
                 renderEmbeddedTemplate(view, /** @type {?} */ ((view.data.template)), /** @type {?} */ ((view.data.context)), renderer);
             }
         }
@@ -76490,14 +76490,17 @@ var ViewContainerRef$1 = /** @class */ (function () {
 function getOrCreateTemplateRef(di) {
     ngDevMode && assertNodeType(di.node, 0 /* Container */);
     var /** @type {?} */ data = (/** @type {?} */ (di.node)).data;
-    return di.templateRef || (di.templateRef = new TemplateRef$1(getOrCreateElementRef(di), /** @type {?} */ ((data.template)), getRenderer()));
+    var /** @type {?} */ tView = di.node.view.tView;
+    return di.templateRef || (di.templateRef = new TemplateRef$1(getOrCreateElementRef(di), /** @type {?} */ ((data.template)), getRenderer(), tView.directiveRegistry, tView.pipeRegistry));
 }
 /**
  * @template T
  */
 var TemplateRef$1 = /** @class */ (function () {
-    function TemplateRef(elementRef, template, _renderer) {
+    function TemplateRef(elementRef, template, _renderer, _directives, _pipes) {
         this._renderer = _renderer;
+        this._directives = _directives;
+        this._pipes = _pipes;
         this.elementRef = elementRef;
         this._template = template;
     }
@@ -76510,7 +76513,7 @@ var TemplateRef$1 = /** @class */ (function () {
      * @return {?}
      */
     function (context) {
-        var /** @type {?} */ viewNode = renderEmbeddedTemplate(null, this._template, context, this._renderer);
+        var /** @type {?} */ viewNode = renderEmbeddedTemplate(null, this._template, context, this._renderer, this._directives, this._pipes);
         return addDestroyable(new EmbeddedViewRef$1(viewNode, this._template, context));
     };
     return TemplateRef;
@@ -76736,7 +76739,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-rc.4-d5e7f60
+ * @license Angular v6.0.0-rc.4-e7ef027
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -79334,7 +79337,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  *
  */
-var VERSION = new Version$1('6.0.0-rc.4-d5e7f60');
+var VERSION = new Version$1('6.0.0-rc.4-e7ef027');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
