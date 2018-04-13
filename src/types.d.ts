@@ -23,7 +23,7 @@ export interface TemplateSource {
     readonly source: string;
     /**
      * The version of the source. As files are modified the version should change. That is, if the
-     * `LanguageService` requesting template infomration for a source file and that file has changed
+     * `LanguageService` requesting template information for a source file and that file has changed
      * since the last time the host was asked for the file then this version string should be
      * different. No assumptions are made about the format of this string.
      *
@@ -274,7 +274,7 @@ export interface HoverTextSection {
     readonly language?: string;
 }
 /**
- * Hover infomration for a symbol at the hover location.
+ * Hover information for a symbol at the hover location.
  */
 export interface Hover {
     /**
