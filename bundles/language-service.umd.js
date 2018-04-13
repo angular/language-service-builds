@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-rc.4-490772e
+ * @license Angular v6.0.0-rc.4-f4017ce
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -227,7 +227,7 @@ var tslib_es6 = Object.freeze({
 });
 
 /**
- * @license Angular v6.0.0-rc.4-490772e
+ * @license Angular v6.0.0-rc.4-f4017ce
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -434,10 +434,17 @@ var DepFlags = {
 /** @enum {number} */
 var InjectFlags = {
     Default: 0,
-    /** Skip the node that is requesting injection. */
-    SkipSelf: 1,
+    /**
+       * Specifies that an injector should retrieve a dependency from any injector until reaching the
+       * host element of the current component. (Only used with Element Injector)
+       */
+    Host: 1,
     /** Don't descend into ancestors of the node requesting injection. */
     Self: 2,
+    /** Skip the node that is requesting injection. */
+    SkipSelf: 4,
+    /** Inject `defaultValue` instead if token not found. */
+    Optional: 8,
 };
 /** @enum {number} */
 var ArgumentType = { Inline: 0, Dynamic: 1, };
@@ -899,7 +906,7 @@ var Version = /** @class */ (function () {
 /**
  *
  */
-var VERSION$1 = new Version('6.0.0-rc.4-490772e');
+var VERSION$1 = new Version('6.0.0-rc.4-f4017ce');
 
 /**
  * @fileoverview added by tsickle
@@ -17989,7 +17996,6 @@ var InjectableCompiler = /** @class */ (function () {
         var _this = this;
         return deps.map(function (dep) {
             var /** @type {?} */ token = dep;
-            var /** @type {?} */ defaultValue = undefined;
             var /** @type {?} */ args = [token];
             var /** @type {?} */ flags = 0;
             if (Array.isArray(dep)) {
@@ -17997,10 +18003,10 @@ var InjectableCompiler = /** @class */ (function () {
                     var /** @type {?} */ v = dep[i];
                     if (v) {
                         if (v.ngMetadataName === 'Optional') {
-                            defaultValue = null;
+                            flags |= 8 /* Optional */;
                         }
                         else if (v.ngMetadataName === 'SkipSelf') {
-                            flags |= 1 /* SkipSelf */;
+                            flags |= 4 /* SkipSelf */;
                         }
                         else if (v.ngMetadataName === 'Self') {
                             flags |= 2 /* Self */;
@@ -18024,8 +18030,8 @@ var InjectableCompiler = /** @class */ (function () {
             else {
                 tokenExpr = ctx.importExpr(token);
             }
-            if (flags !== 0 /* Default */ || defaultValue !== undefined) {
-                args = [tokenExpr, literal(defaultValue), literal(flags)];
+            if (flags !== 0 /* Default */) {
+                args = [tokenExpr, literal(flags)];
             }
             else {
                 args = [tokenExpr];
@@ -30695,10 +30701,11 @@ var Identifiers$1 = /** @class */ (function () {
     Identifiers.projectionDef = { name: 'ɵpD', moduleName: CORE$1 };
     Identifiers.refreshComponent = { name: 'ɵr', moduleName: CORE$1 };
     Identifiers.directiveLifeCycle = { name: 'ɵl', moduleName: CORE$1 };
+    Identifiers.injectAttribute = { name: 'ɵinjectAttribute', moduleName: CORE$1 };
     Identifiers.injectElementRef = { name: 'ɵinjectElementRef', moduleName: CORE$1 };
     Identifiers.injectTemplateRef = { name: 'ɵinjectTemplateRef', moduleName: CORE$1 };
     Identifiers.injectViewContainerRef = { name: 'ɵinjectViewContainerRef', moduleName: CORE$1 };
-    Identifiers.inject = { name: 'ɵinject', moduleName: CORE$1 };
+    Identifiers.directiveInject = { name: 'ɵdirectiveInject', moduleName: CORE$1 };
     Identifiers.defineComponent = { name: 'ɵdefineComponent', moduleName: CORE$1 };
     Identifiers.defineDirective = {
         name: 'ɵdefineDirective',
@@ -31728,12 +31735,6 @@ function createFactory(type, outputCtx, reflector, queries) {
     var /** @type {?} */ viewContainerRef = reflector.resolveExternalReference(Identifiers.ViewContainerRef);
     for (var _i = 0, _a = type.diDeps; _i < _a.length; _i++) {
         var dependency = _a[_i];
-        if (dependency.isValue) {
-            unsupported('value dependencies');
-        }
-        if (dependency.isHost) {
-            unsupported('host dependencies');
-        }
         var /** @type {?} */ token = dependency.token;
         if (token) {
             var /** @type {?} */ tokenRef = tokenReference(token);
@@ -31746,9 +31747,18 @@ function createFactory(type, outputCtx, reflector, queries) {
             else if (tokenRef === viewContainerRef) {
                 args.push(importExpr(Identifiers$1.injectViewContainerRef).callFn([]));
             }
+            else if (dependency.isAttribute) {
+                args.push(importExpr(Identifiers$1.injectAttribute).callFn([literal(/** @type {?} */ ((dependency.token)).value)]));
+            }
             else {
-                var /** @type {?} */ value = token.identifier != null ? outputCtx.importExpr(tokenRef) : literal(tokenRef);
-                args.push(importExpr(Identifiers$1.inject).callFn([value]));
+                var /** @type {?} */ tokenValue = token.identifier != null ? outputCtx.importExpr(tokenRef) : literal(tokenRef);
+                var /** @type {?} */ directiveInjectArgs = [tokenValue];
+                var /** @type {?} */ flags = extractFlags(dependency);
+                if (flags != 0 /* Default */) {
+                    // Append flag information if other than default.
+                    directiveInjectArgs.push(literal(flags));
+                }
+                args.push(importExpr(Identifiers$1.directiveInject).callFn(directiveInjectArgs));
             }
         }
         else {
@@ -31774,6 +31784,29 @@ function createFactory(type, outputCtx, reflector, queries) {
     var /** @type {?} */ result = queryDefinitions.length > 0 ? literalArr([createInstance].concat(queryDefinitions)) :
         createInstance;
     return fn([], [new ReturnStatement(result)], INFERRED_TYPE, null, type.reference.name ? type.reference.name + "_Factory" : null);
+}
+/**
+ * @param {?} dependency
+ * @return {?}
+ */
+function extractFlags(dependency) {
+    var /** @type {?} */ flags = 0;
+    if (dependency.isHost) {
+        flags |= 1 /* Host */;
+    }
+    if (dependency.isOptional) {
+        flags |= 8 /* Optional */;
+    }
+    if (dependency.isSelf) {
+        flags |= 2 /* Self */;
+    }
+    if (dependency.isSkipSelf) {
+        flags |= 4 /* SkipSelf */;
+    }
+    if (dependency.isValue) {
+        unsupported('value dependencies');
+    }
+    return flags;
 }
 /**
  *  Remove trailing null nodes as they are implied.
@@ -58998,7 +59031,7 @@ exports.zipAll = zipAll_1.zipAll;
 var index_71 = index$4.share;
 
 /**
- * @license Angular v6.0.0-rc.4-490772e
+ * @license Angular v6.0.0-rc.4-f4017ce
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59096,8 +59129,9 @@ var index_71 = index$4.share;
  */
 function defineInjectable(opts) {
     return {
-        providedIn: (/** @type {?} */ (opts.providedIn)) || null,
+        providedIn: /** @type {?} */ (opts.providedIn) || null,
         factory: opts.factory,
+        value: undefined,
     };
 }
 /**
@@ -60525,7 +60559,7 @@ function tryResolveToken(token, record, records, parent, notFoundValue, flags) {
  */
 function resolveToken(token, record, records, parent, notFoundValue, flags) {
     var /** @type {?} */ value;
-    if (record && !(flags & 1 /* SkipSelf */)) {
+    if (record && !(flags & 4 /* SkipSelf */)) {
         // If we don't have a record, this implies that we don't own the provider hence don't know how
         // to resolve it.
         value = record.value;
@@ -60653,7 +60687,13 @@ function getClosureSafeProperty$1(objWithPropertyToExtract) {
     }
     throw Error('!prop');
 }
-var _currentInjector = null;
+/**
+ * Current injector value used by `inject`.
+ * - `undefined`: it is an error to call `inject`
+ * - `null`: `inject` can be called but there is no injector (limp-mode).
+ * - Injector instance: Use the injector for resolution.
+ */
+var _currentInjector = undefined;
 /**
  * @param {?} injector
  * @return {?}
@@ -60666,16 +60706,25 @@ function setCurrentInjector(injector) {
 /**
  * @template T
  * @param {?} token
- * @param {?=} notFoundValue
  * @param {?=} flags
  * @return {?}
  */
-function inject(token, notFoundValue, flags) {
+function inject(token, flags) {
     if (flags === void 0) { flags = 0 /* Default */; }
-    if (_currentInjector === null) {
+    if (_currentInjector === undefined) {
         throw new Error("inject() must be called from an injection context");
     }
-    return _currentInjector.get(token, notFoundValue, flags);
+    else if (_currentInjector === null) {
+        var /** @type {?} */ injectableDef = (/** @type {?} */ (token)).ngInjectableDef;
+        if (injectableDef && injectableDef.providedIn == 'root') {
+            return injectableDef.value === undefined ? injectableDef.value = injectableDef.factory() :
+                injectableDef.value;
+        }
+        throw new Error("Injector: NOT_FOUND [" + stringify$1(token) + "]");
+    }
+    else {
+        return _currentInjector.get(token, flags & 8 /* Optional */ ? null : undefined, flags);
+    }
 }
 /**
  * @param {?} types
@@ -60690,15 +60739,14 @@ function injectArgs(types) {
                 throw new Error('Arguments array must have arguments.');
             }
             var /** @type {?} */ type = undefined;
-            var /** @type {?} */ defaultValue = undefined;
             var /** @type {?} */ flags = 0;
             for (var /** @type {?} */ j = 0; j < arg.length; j++) {
                 var /** @type {?} */ meta = arg[j];
                 if (meta instanceof Optional || meta.__proto__.ngMetadataName === 'Optional') {
-                    defaultValue = null;
+                    flags |= 8 /* Optional */;
                 }
                 else if (meta instanceof SkipSelf || meta.__proto__.ngMetadataName === 'SkipSelf') {
-                    flags |= 1 /* SkipSelf */;
+                    flags |= 4 /* SkipSelf */;
                 }
                 else if (meta instanceof Self || meta.__proto__.ngMetadataName === 'Self') {
                     flags |= 2 /* Self */;
@@ -60710,7 +60758,7 @@ function injectArgs(types) {
                     type = meta;
                 }
             }
-            args.push(inject(/** @type {?} */ ((type)), defaultValue, 0 /* Default */));
+            args.push(inject(/** @type {?} */ ((type)), flags));
         }
         else {
             args.push(inject(arg));
@@ -60904,7 +60952,7 @@ var Version$1 = /** @class */ (function () {
 /**
  *
  */
-var VERSION$2 = new Version$1('6.0.0-rc.4-490772e');
+var VERSION$2 = new Version$1('6.0.0-rc.4-f4017ce');
 
 /**
  * @fileoverview added by tsickle
@@ -67831,6 +67879,10 @@ var IterableDiffers = /** @class */ (function () {
             throw new Error("Cannot find a differ supporting object '" + iterable + "' of type '" + getTypeNameForDebugging(iterable) + "'");
         }
     };
+    /** @nocollapse */ IterableDiffers.ngInjectableDef = defineInjectable({
+        providedIn: 'root',
+        factory: function () { return new IterableDiffers([new DefaultIterableDifferFactory()]); }
+    });
     return IterableDiffers;
 }());
 /**
@@ -70603,7 +70655,7 @@ var NgModuleRef_ = /** @class */ (function () {
         if (notFoundValue === void 0) { notFoundValue = Injector.THROW_IF_NOT_FOUND; }
         if (injectFlags === void 0) { injectFlags = 0 /* Default */; }
         var /** @type {?} */ flags = 0;
-        if (injectFlags & 1 /* SkipSelf */) {
+        if (injectFlags & 4 /* SkipSelf */) {
             flags |= 1 /* SkipSelf */;
         }
         else if (injectFlags & 2 /* Self */) {
@@ -74550,6 +74602,13 @@ function getRenderer() {
  */
 var previousOrParentNode;
 /**
+ * @return {?}
+ */
+function getPreviousOrParentNode() {
+    // top level variables should not be exported for performance reason (PERF_NOTES.md)
+    return previousOrParentNode;
+}
+/**
  * If `isParent` is:
  *  - `true`: then `previousOrParentNode` points to a parent node.
  *  - `false`: then `previousOrParentNode` points to previous node (sibling).
@@ -74747,6 +74806,7 @@ function createLView(viewId, renderer, tView, template, context, flags) {
         dynamicViewCount: 0,
         lifecycleStage: 1 /* Init */,
         queries: null,
+        injector: currentView && currentView.injector,
     };
     return newView;
 }
@@ -76123,16 +76183,6 @@ var NG_ELEMENT_ID = '__NG_ELEMENT_ID__';
  */
 var BLOOM_SIZE = 256;
 /**
- * Constructs an injection error with the given text and token.
- *
- * @param {?} text The text of the error
- * @param {?} token The token associated with the error
- * @return {?} The error that was created
- */
-function createInjectionError(text$$1, token) {
-    return new Error("ElementInjector: " + text$$1 + " [" + stringify$1$1(token) + "]");
-}
-/**
  * @template T
  * @param {?} node
  * @param {?} token
@@ -76739,7 +76789,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-rc.4-490772e
+ * @license Angular v6.0.0-rc.4-f4017ce
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -79337,7 +79387,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  *
  */
-var VERSION = new Version$1('6.0.0-rc.4-490772e');
+var VERSION = new Version$1('6.0.0-rc.4-f4017ce');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
