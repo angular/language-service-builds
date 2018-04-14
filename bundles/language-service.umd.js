@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-rc.4-33630dd
+ * @license Angular v6.0.0-rc.4-674c3de
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -227,7 +227,7 @@ var tslib_es6 = Object.freeze({
 });
 
 /**
- * @license Angular v6.0.0-rc.4-33630dd
+ * @license Angular v6.0.0-rc.4-674c3de
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -906,7 +906,7 @@ var Version = /** @class */ (function () {
 /**
  *
  */
-var VERSION$1 = new Version('6.0.0-rc.4-33630dd');
+var VERSION$1 = new Version('6.0.0-rc.4-674c3de');
 
 /**
  * @fileoverview added by tsickle
@@ -31218,16 +31218,16 @@ var TemplateDefinitionBuilder = /** @class */ (function () {
         });
     }
     /**
-     * @param {?} asts
+     * @param {?} nodes
      * @param {?} variables
      * @return {?}
      */
     TemplateDefinitionBuilder.prototype.buildTemplateFunction = /**
-     * @param {?} asts
+     * @param {?} nodes
      * @param {?} variables
      * @return {?}
      */
-    function (asts, variables) {
+    function (nodes, variables) {
         // Create variable bindings
         for (var _i = 0, variables_1 = variables; _i < variables_1.length; _i++) {
             var variable$$1 = variables_1[_i];
@@ -31239,20 +31239,26 @@ var TemplateDefinitionBuilder = /** @class */ (function () {
         }
         // Collect content projections
         if (this.ngContentSelectors && this.ngContentSelectors.length > 0) {
-            var /** @type {?} */ contentProjections = getContentProjection(asts, this.ngContentSelectors);
+            var /** @type {?} */ contentProjections = getContentProjection(nodes, this.ngContentSelectors);
             this._contentProjections = contentProjections;
             if (contentProjections.size > 0) {
-                var /** @type {?} */ infos_1 = [];
+                var /** @type {?} */ selectors_1 = [];
                 Array.from(contentProjections.values()).forEach(function (info) {
                     if (info.selector) {
-                        infos_1[info.index - 1] = info.selector;
+                        selectors_1[info.index - 1] = info.selector;
                     }
                 });
                 var /** @type {?} */ projectionIndex = this._projectionDefinitionIndex = this.allocateDataSlot();
                 var /** @type {?} */ parameters = [literal(projectionIndex)];
-                !infos_1.some(function (value) { return !value; }) || error("content project information skipped an index");
-                if (infos_1.length > 1) {
-                    parameters.push(this.outputCtx.constantPool.getConstLiteral(asLiteral(infos_1), /* forceShared */ /* forceShared */ true));
+                if (selectors_1.some(function (value) { return !value; })) {
+                    error("content project information skipped an index");
+                }
+                if (selectors_1.length > 1) {
+                    var /** @type {?} */ r3Selectors = selectors_1.map(function (s) { return parseSelectorToR3Selector(s); });
+                    // `projectionDef` needs both the parsed and raw value of the selectors
+                    var /** @type {?} */ parsed = this.outputCtx.constantPool.getConstLiteral(asLiteral(r3Selectors), true);
+                    var /** @type {?} */ unParsed = this.outputCtx.constantPool.getConstLiteral(asLiteral(selectors_1), true);
+                    parameters.push(parsed, unParsed);
                 }
                 this.instruction.apply(this, [this._creationMode, null, Identifiers$1.projectionDef].concat(parameters));
             }
@@ -31260,7 +31266,7 @@ var TemplateDefinitionBuilder = /** @class */ (function () {
         // Define and update any view queries
         for (var _a = 0, _b = this.viewQueries; _a < _b.length; _a++) {
             var query = _b[_a];
-            // e.g. r3.Q(0, SomeDirective, true);
+            // e.g. r3.Q(0, somePredicate, true);
             var /** @type {?} */ querySlot = this.allocateDataSlot();
             var /** @type {?} */ predicate = getQueryPredicate(query, this.outputCtx);
             var /** @type {?} */ args = [
@@ -31281,7 +31287,7 @@ var TemplateDefinitionBuilder = /** @class */ (function () {
                 .set(query.first ? temporary.prop('first') : temporary);
             this._bindingMode.push(refresh.and(updateDirective).toStmt());
         }
-        templateVisitAll(this, asts);
+        templateVisitAll(this, nodes);
         var /** @type {?} */ creationMode = this._creationMode.length > 0 ?
             [ifStmt(variable(RENDER_FLAGS).bitwiseAnd(literal(1 /* Create */), null, false), this._creationMode)] :
             [];
@@ -31314,22 +31320,23 @@ var TemplateDefinitionBuilder = /** @class */ (function () {
     function (name) { return this.bindingScope.get(name); };
     // TemplateAstVisitor
     /**
-     * @param {?} ast
+     * @param {?} ngContent
      * @return {?}
      */
     TemplateDefinitionBuilder.prototype.visitNgContent = /**
-     * @param {?} ast
+     * @param {?} ngContent
      * @return {?}
      */
-    function (ast) {
-        var /** @type {?} */ info = /** @type {?} */ ((this._contentProjections.get(ast)));
-        info || error("Expected " + ast.sourceSpan + " to be included in content projection collection");
+    function (ngContent) {
+        var /** @type {?} */ info = /** @type {?} */ ((this._contentProjections.get(ngContent)));
+        info ||
+            error("Expected " + ngContent.sourceSpan + " to be included in content projection collection");
         var /** @type {?} */ slot = this.allocateDataSlot();
         var /** @type {?} */ parameters = [literal(slot), literal(this._projectionDefinitionIndex)];
         if (info.index !== 0) {
             parameters.push(literal(info.index));
         }
-        this.instruction.apply(this, [this._creationMode, ast.sourceSpan, Identifiers$1.projection].concat(parameters));
+        this.instruction.apply(this, [this._creationMode, ngContent.sourceSpan, Identifiers$1.projection].concat(parameters));
     };
     // TemplateAstVisitor
     /**
@@ -31379,14 +31386,11 @@ var TemplateDefinitionBuilder = /** @class */ (function () {
             }
         }
         // Element creation mode
-        var /** @type {?} */ component = findComponent(element.directives);
-        var /** @type {?} */ nullNode = literal(null, INFERRED_TYPE);
-        var /** @type {?} */ parameters = [literal(elementIndex)];
-        if (component) {
-            this.directives.add(component.directive.type.reference);
-        }
+        var /** @type {?} */ parameters = [
+            literal(elementIndex),
+            literal(element.name),
+        ];
         element.directives.forEach(function (directive) { return _this.directives.add(directive.directive.type.reference); });
-        parameters.push(literal(element.name));
         // Add the attributes
         var /** @type {?} */ i18nMessages = [];
         var /** @type {?} */ attributes = [];
@@ -31404,7 +31408,7 @@ var TemplateDefinitionBuilder = /** @class */ (function () {
                 attributes.push(literal(value));
             }
         });
-        var /** @type {?} */ attrArg = nullNode;
+        var /** @type {?} */ attrArg = TYPED_NULL_EXPR;
         if (attributes.length > 0) {
             attrArg = hasI18nAttr ? getLiteralFactory(this.outputCtx, literalArr(attributes)) :
                 this.constantPool.getConstLiteral(literalArr(attributes), true);
@@ -31425,7 +31429,7 @@ var TemplateDefinitionBuilder = /** @class */ (function () {
             parameters.push(this.constantPool.getConstLiteral(literalArr(references), /* forceShared */ /* forceShared */ true));
         }
         else {
-            parameters.push(nullNode);
+            parameters.push(TYPED_NULL_EXPR);
         }
         // Generate the instruction create element instruction
         if (i18nMessages.length > 0) {
@@ -31509,18 +31513,18 @@ var TemplateDefinitionBuilder = /** @class */ (function () {
     };
     // TemplateAstVisitor
     /**
-     * @param {?} ast
+     * @param {?} template
      * @return {?}
      */
     TemplateDefinitionBuilder.prototype.visitEmbeddedTemplate = /**
-     * @param {?} ast
+     * @param {?} template
      * @return {?}
      */
-    function (ast) {
+    function (template) {
         var _this = this;
         var /** @type {?} */ templateIndex = this.allocateDataSlot();
         var /** @type {?} */ templateRef = this.reflector.resolveExternalReference(Identifiers.TemplateRef);
-        var /** @type {?} */ templateDirective = ast.directives.find(function (directive) {
+        var /** @type {?} */ templateDirective = template.directives.find(function (directive) {
             return directive.directive.type.diDeps.some(function (dependency) {
                 return dependency.token != null && (tokenReference(dependency.token) == templateRef);
             });
@@ -31532,7 +31536,7 @@ var TemplateDefinitionBuilder = /** @class */ (function () {
         var /** @type {?} */ templateContext = "ctx" + this.level;
         var /** @type {?} */ parameters = [variable(templateName), literal(null, INFERRED_TYPE)];
         var /** @type {?} */ attributeNames = [];
-        ast.directives.forEach(function (directiveAst) {
+        template.directives.forEach(function (directiveAst) {
             _this.directives.add(directiveAst.directive.type.reference);
             CssSelector.parse(/** @type {?} */ ((directiveAst.directive.selector))).forEach(function (selector) {
                 selector.attrs.forEach(function (value) {
@@ -31550,41 +31554,41 @@ var TemplateDefinitionBuilder = /** @class */ (function () {
             parameters.push(this.constantPool.getConstLiteral(literalArr(attributeNames), /* forcedShared */ /* forcedShared */ true));
         }
         // e.g. C(1, C1Template)
-        this.instruction.apply(this, [this._creationMode, ast.sourceSpan, Identifiers$1.containerCreate, literal(templateIndex)].concat(trimTrailingNulls(parameters)));
+        this.instruction.apply(this, [this._creationMode, template.sourceSpan, Identifiers$1.containerCreate, literal(templateIndex)].concat(trimTrailingNulls(parameters)));
         // Generate directives
-        this._visitDirectives(ast.directives, variable(CONTEXT_NAME), templateIndex);
+        this._visitDirectives(template.directives, variable(CONTEXT_NAME), templateIndex);
         // Create the template function
         var /** @type {?} */ templateVisitor = new TemplateDefinitionBuilder(this.outputCtx, this.constantPool, this.reflector, templateContext, this.bindingScope, this.level + 1, this.ngContentSelectors, contextName, templateName, this.pipeMap, [], this.directives, this.pipes);
-        var /** @type {?} */ templateFunctionExpr = templateVisitor.buildTemplateFunction(ast.children, ast.variables);
+        var /** @type {?} */ templateFunctionExpr = templateVisitor.buildTemplateFunction(template.children, template.variables);
         this._postfix.push(templateFunctionExpr.toDeclStmt(templateName, null));
     };
     // TemplateAstVisitor
     /**
-     * @param {?} ast
+     * @param {?} text
      * @return {?}
      */
     TemplateDefinitionBuilder.prototype.visitBoundText = /**
-     * @param {?} ast
+     * @param {?} text
      * @return {?}
      */
-    function (ast) {
+    function (text) {
         var /** @type {?} */ nodeIndex = this.allocateDataSlot();
         // Creation mode
-        this.instruction(this._creationMode, ast.sourceSpan, Identifiers$1.text, literal(nodeIndex));
-        this.instruction(this._bindingMode, ast.sourceSpan, Identifiers$1.textCreateBound, literal(nodeIndex), this.convertPropertyBinding(variable(CONTEXT_NAME), ast.value));
+        this.instruction(this._creationMode, text.sourceSpan, Identifiers$1.text, literal(nodeIndex));
+        this.instruction(this._bindingMode, text.sourceSpan, Identifiers$1.textCreateBound, literal(nodeIndex), this.convertPropertyBinding(variable(CONTEXT_NAME), text.value));
     };
     // TemplateAstVisitor
     /**
-     * @param {?} ast
+     * @param {?} text
      * @return {?}
      */
     TemplateDefinitionBuilder.prototype.visitText = /**
-     * @param {?} ast
+     * @param {?} text
      * @return {?}
      */
-    function (ast) {
+    function (text) {
         // Text is defined in creation mode only.
-        this.instruction(this._creationMode, ast.sourceSpan, Identifiers$1.text, literal(this.allocateDataSlot()), literal(ast.value));
+        this.instruction(this._creationMode, text.sourceSpan, Identifiers$1.text, literal(this.allocateDataSlot()), literal(text.value));
     };
     // When the content of the element is a single text node the translation can be inlined:
     //
@@ -31699,27 +31703,19 @@ var TemplateDefinitionBuilder = /** @class */ (function () {
  * @return {?}
  */
 function getQueryPredicate(query, outputCtx) {
-    var /** @type {?} */ predicate;
     if (query.selectors.length > 1 || (query.selectors.length == 1 && query.selectors[0].value)) {
         var /** @type {?} */ selectors = query.selectors.map(function (value) { return (value.value); });
         selectors.some(function (value) { return !value; }) && error('Found a type among the string selectors expected');
-        predicate = outputCtx.constantPool.getConstLiteral(literalArr(selectors.map(function (value) { return literal(value); })));
+        return outputCtx.constantPool.getConstLiteral(literalArr(selectors.map(function (value) { return literal(value); })));
     }
-    else if (query.selectors.length == 1) {
+    if (query.selectors.length == 1) {
         var /** @type {?} */ first = query.selectors[0];
         if (first.identifier) {
-            predicate = outputCtx.importExpr(first.identifier.reference);
-        }
-        else {
-            error('Unexpected query form');
-            predicate = literal(null);
+            return outputCtx.importExpr(first.identifier.reference);
         }
     }
-    else {
-        error('Unexpected query form');
-        predicate = literal(null);
-    }
-    return predicate;
+    error('Unexpected query form');
+    return NULL_EXPR;
 }
 /**
  * @param {?} type
@@ -31769,7 +31765,7 @@ function createFactory(type, outputCtx, reflector, queries) {
     for (var _b = 0, queries_1 = queries; _b < queries_1.length; _b++) {
         var query = queries_1[_b];
         var /** @type {?} */ predicate = getQueryPredicate(query, outputCtx);
-        // e.g. r3.Q(null, SomeDirective, false) or r3.Q(null, ['div'], false)
+        // e.g. r3.Q(null, somePredicate, false) or r3.Q(null, ['div'], false)
         var /** @type {?} */ parameters = [
             /* memoryIndex */ literal(null, INFERRED_TYPE),
             predicate,
@@ -31824,7 +31820,7 @@ function trimTrailingNulls(parameters) {
  * @return {?}
  */
 function createDirectiveSelector(selector) {
-    return asLiteral(parseSelectorsToR3Selector(CssSelector.parse(selector)));
+    return asLiteral(parseSelectorToR3Selector(selector));
 }
 /**
  * @param {?} directiveMetadata
@@ -31937,39 +31933,39 @@ var ValueConverter = /** @class */ (function (_super) {
     }
     // AstMemoryEfficientTransformer
     /**
-     * @param {?} ast
+     * @param {?} pipe
      * @param {?} context
      * @return {?}
      */
     ValueConverter.prototype.visitPipe = /**
-     * @param {?} ast
+     * @param {?} pipe
      * @param {?} context
      * @return {?}
      */
-    function (ast, context) {
+    function (pipe, context) {
         // Allocate a slot to create the pipe
         var /** @type {?} */ slot = this.allocateSlot();
         var /** @type {?} */ slotPseudoLocal = "PIPE:" + slot;
-        var /** @type {?} */ target = new PropertyRead(ast.span, new ImplicitReceiver(ast.span), slotPseudoLocal);
-        var /** @type {?} */ bindingId = pipeBinding(ast.args);
-        this.definePipe(ast.name, slotPseudoLocal, slot, importExpr(bindingId));
-        var /** @type {?} */ value = ast.exp.visit(this);
-        var /** @type {?} */ args = this.visitAll(ast.args);
-        return new FunctionCall(ast.span, target, [new LiteralPrimitive(ast.span, slot), value].concat(args));
+        var /** @type {?} */ target = new PropertyRead(pipe.span, new ImplicitReceiver(pipe.span), slotPseudoLocal);
+        var /** @type {?} */ bindingId = pipeBinding(pipe.args);
+        this.definePipe(pipe.name, slotPseudoLocal, slot, importExpr(bindingId));
+        var /** @type {?} */ value = pipe.exp.visit(this);
+        var /** @type {?} */ args = this.visitAll(pipe.args);
+        return new FunctionCall(pipe.span, target, [new LiteralPrimitive(pipe.span, slot), value].concat(args));
     };
     /**
-     * @param {?} ast
+     * @param {?} array
      * @param {?} context
      * @return {?}
      */
     ValueConverter.prototype.visitLiteralArray = /**
-     * @param {?} ast
+     * @param {?} array
      * @param {?} context
      * @return {?}
      */
-    function (ast, context) {
+    function (array, context) {
         var _this = this;
-        return new BuiltinFunctionCall(ast.span, this.visitAll(ast.expressions), function (values) {
+        return new BuiltinFunctionCall(array.span, this.visitAll(array.expressions), function (values) {
             // If the literal has calculated (non-literal) elements transform it into
             // calls to literal factories that compose the literal and will cache intermediate
             // values. Otherwise, just return an literal array that contains the values.
@@ -31980,22 +31976,22 @@ var ValueConverter = /** @class */ (function (_super) {
         });
     };
     /**
-     * @param {?} ast
+     * @param {?} map
      * @param {?} context
      * @return {?}
      */
     ValueConverter.prototype.visitLiteralMap = /**
-     * @param {?} ast
+     * @param {?} map
      * @param {?} context
      * @return {?}
      */
-    function (ast, context) {
+    function (map, context) {
         var _this = this;
-        return new BuiltinFunctionCall(ast.span, this.visitAll(ast.values), function (values) {
+        return new BuiltinFunctionCall(map.span, this.visitAll(map.values), function (values) {
             // If the literal has calculated (non-literal) elements  transform it into
             // calls to literal factories that compose the literal and will cache intermediate
             // values. Otherwise, just return an literal array that contains the values.
-            var /** @type {?} */ literal$$1 = literalMap(values.map(function (value, index) { return ({ key: ast.keys[index].key, value: value, quoted: ast.keys[index].quoted }); }));
+            var /** @type {?} */ literal$$1 = literalMap(values.map(function (value, index) { return ({ key: map.keys[index].key, value: value, quoted: map.keys[index].quoted }); }));
             return values.every(function (a) { return a.isConstant(); }) ?
                 _this.outputCtx.constantPool.getConstLiteral(literal$$1, true) :
                 getLiteralFactory(_this.outputCtx, literal$$1);
@@ -32011,13 +32007,6 @@ var ValueConverter = /** @class */ (function (_super) {
 function invalid$1(arg) {
     throw new Error("Invalid state: Visitor " + this.constructor.name + " doesn't handle " + undefined);
 }
-/**
- * @param {?} directives
- * @return {?}
- */
-function findComponent(directives) {
-    return directives.filter(function (directive) { return directive.directive.isComponent; })[0];
-}
 var ContentProjectionVisitor = /** @class */ (function (_super) {
     __extends(ContentProjectionVisitor, _super);
     function ContentProjectionVisitor(projectionMap, ngContentSelectors) {
@@ -32028,35 +32017,36 @@ var ContentProjectionVisitor = /** @class */ (function (_super) {
         return _this;
     }
     /**
-     * @param {?} ast
+     * @param {?} ngContent
      * @return {?}
      */
     ContentProjectionVisitor.prototype.visitNgContent = /**
-     * @param {?} ast
+     * @param {?} ngContent
      * @return {?}
      */
-    function (ast) {
-        var /** @type {?} */ selectorText = this.ngContentSelectors[ast.index];
-        selectorText != null || error("could not find selector for index " + ast.index + " in " + ast);
-        if (!selectorText || selectorText === '*') {
-            this.projectionMap.set(ast, { index: 0 });
+    function (ngContent) {
+        var /** @type {?} */ selector = this.ngContentSelectors[ngContent.index];
+        if (selector == null) {
+            error("could not find selector for index " + ngContent.index + " in " + ngContent);
+        }
+        if (!selector || selector === '*') {
+            this.projectionMap.set(ngContent, { index: 0 });
         }
         else {
-            var /** @type {?} */ cssSelectors = CssSelector.parse(selectorText);
-            this.projectionMap.set(ast, { index: this.index++, selector: parseSelectorsToR3Selector(cssSelectors) });
+            this.projectionMap.set(ngContent, { index: this.index++, selector: selector });
         }
     };
     return ContentProjectionVisitor;
 }(RecursiveTemplateAstVisitor));
 /**
- * @param {?} asts
+ * @param {?} nodes
  * @param {?} ngContentSelectors
  * @return {?}
  */
-function getContentProjection(asts, ngContentSelectors) {
+function getContentProjection(nodes, ngContentSelectors) {
     var /** @type {?} */ projectIndexMap = new Map();
     var /** @type {?} */ visitor = new ContentProjectionVisitor(projectIndexMap, ngContentSelectors);
-    templateVisitAll(visitor, asts);
+    templateVisitAll(visitor, nodes);
     return projectIndexMap;
 }
 /**
@@ -32101,10 +32091,11 @@ function parserSelectorToR3Selector(selector) {
     return positive.concat.apply(positive, negative);
 }
 /**
- * @param {?} selectors
+ * @param {?} selector
  * @return {?}
  */
-function parseSelectorsToR3Selector(selectors) {
+function parseSelectorToR3Selector(selector) {
+    var /** @type {?} */ selectors = CssSelector.parse(selector);
     return selectors.map(parserSelectorToR3Selector);
 }
 /**
@@ -59031,7 +59022,7 @@ exports.zipAll = zipAll_1.zipAll;
 var index_71 = index$4.share;
 
 /**
- * @license Angular v6.0.0-rc.4-33630dd
+ * @license Angular v6.0.0-rc.4-674c3de
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -59053,11 +59044,10 @@ var index_71 = index$4.share;
  * requesting injection of other types if necessary.
  *
  * Optionally, a `providedIn` parameter specifies that the given type belongs to a particular
- * `ɵInjectorDef`, `NgModule`, or a special scope (e.g. `'root'`). A value of `null` indicates
+ * `InjectorDef`, `NgModule`, or a special scope (e.g. `'root'`). A value of `null` indicates
  * that the injectable does not belong to any scope.
  *
- * NOTE: This is a semi public API, and there are no guaranties that the shape of this API will
- * remain consistent between version. Use with caution.
+ * This type is typically generated by the Angular compiler, but can be hand-written if needed.
  *
  * \@experimental
  * @record
@@ -59068,7 +59058,7 @@ var index_71 = index$4.share;
  * Information about the providers to be included in an `Injector` as well as how the given type
  * which carries the information should be created by the DI system.
  *
- * An `ɵInjectorDef` can import other types which have `InjectorDefs`, forming a deep nested
+ * An `InjectorDef` can import other types which have `InjectorDefs`, forming a deep nested
  * structure of providers with a defined priority (identically to how `NgModule`s also have
  * an import/dependency structure).
  *
@@ -59078,10 +59068,10 @@ var index_71 = index$4.share;
  */
 
 /**
- * A `Type` which has an `ɵInjectableDef` static field.
+ * A `Type` which has an `InjectableDef` static field.
  *
  * `InjectableDefType`s contain their own Dependency Injection metadata and are usable in an
- * `ɵInjectorDef`-based `StaticInjector.
+ * `InjectorDef`-based `StaticInjector.
  *
  * \@experimental
  * @record
@@ -59089,7 +59079,7 @@ var index_71 = index$4.share;
  */
 
 /**
- * A type which has an `ɵInjectorDef` static field.
+ * A type which has an `InjectorDef` static field.
  *
  * `InjectorDefTypes` can be used to configure a `StaticInjector`.
  *
@@ -59099,10 +59089,10 @@ var index_71 = index$4.share;
  */
 
 /**
- * Describes the `ɵInjectorDef` equivalent of a `ModuleWithProviders`, an `InjectorDefType` with an
+ * Describes the `InjectorDef` equivalent of a `ModuleWithProviders`, an `InjectorDefType` with an
  * associated array of providers.
  *
- * Objects of this type can be listed in the imports section of an `ɵInjectorDef`.
+ * Objects of this type can be listed in the imports section of an `InjectorDef`.
  *
  * \@experimental
  * @record
@@ -59110,7 +59100,7 @@ var index_71 = index$4.share;
  */
 
 /**
- * Construct an `ɵInjectableDef` which defines how a token will be constructed by the DI system, and
+ * Construct an `InjectableDef` which defines how a token will be constructed by the DI system, and
  * in which injectors (if any) it will be available.
  *
  * This should be assigned to a static `ngInjectableDef` field on a type, which will then be an
@@ -59136,7 +59126,7 @@ function defineInjectable(opts) {
     };
 }
 /**
- * Construct an `ɵInjectorDef` which configures an injector.
+ * Construct an `InjectorDef` which configures an injector.
  *
  * This should be assigned to a static `ngInjectorDef` field on a type, which will then be an
  * `InjectorType`.
@@ -60953,7 +60943,7 @@ var Version$1 = /** @class */ (function () {
 /**
  *
  */
-var VERSION$2 = new Version$1('6.0.0-rc.4-33630dd');
+var VERSION$2 = new Version$1('6.0.0-rc.4-674c3de');
 
 /**
  * @fileoverview added by tsickle
@@ -75110,7 +75100,7 @@ function setUpAttributes(native, attrs) {
  * @template T
  * @param {?} index
  * @param {?} directive The directive instance.
- * @param {?} directiveDef ɵDirectiveDef object which contains information about the template.
+ * @param {?} directiveDef DirectiveDef object which contains information about the template.
  * @return {?}
  */
 function directiveCreate(index, directive, directiveDef) {
@@ -76790,7 +76780,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-rc.4-33630dd
+ * @license Angular v6.0.0-rc.4-674c3de
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -79388,7 +79378,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  *
  */
-var VERSION = new Version$1('6.0.0-rc.4-33630dd');
+var VERSION = new Version$1('6.0.0-rc.4-674c3de');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
