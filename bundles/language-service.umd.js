@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-rc.5-7f612fc
+ * @license Angular v6.0.0-rc.5-5a1ddee
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -227,7 +227,7 @@ var tslib_es6 = Object.freeze({
 });
 
 /**
- * @license Angular v6.0.0-rc.5-7f612fc
+ * @license Angular v6.0.0-rc.5-5a1ddee
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -906,7 +906,7 @@ var Version = /** @class */ (function () {
 /**
  *
  */
-var VERSION$1 = new Version('6.0.0-rc.5-7f612fc');
+var VERSION$1 = new Version('6.0.0-rc.5-5a1ddee');
 
 /**
  * @fileoverview added by tsickle
@@ -59022,7 +59022,7 @@ exports.zipAll = zipAll_1.zipAll;
 var index_71 = index$4.share;
 
 /**
- * @license Angular v6.0.0-rc.5-7f612fc
+ * @license Angular v6.0.0-rc.5-5a1ddee
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -60937,7 +60937,7 @@ var Version$1 = /** @class */ (function () {
 /**
  *
  */
-var VERSION$2 = new Version$1('6.0.0-rc.5-7f612fc');
+var VERSION$2 = new Version$1('6.0.0-rc.5-5a1ddee');
 
 /**
  * @fileoverview added by tsickle
@@ -74017,19 +74017,6 @@ function isDifferent(a, b) {
     return !(a !== a && b !== b) && a !== b;
 }
 /**
- * @param {?} value
- * @return {?}
- */
-function stringify$1$1(value) {
-    if (typeof value == 'function')
-        return value.name || value;
-    if (typeof value == 'string')
-        return value;
-    if (value == null)
-        return '';
-    return '' + value;
-}
-/**
  *  Function that throws a "not implemented" error so it's clear certain
  *  behaviors/methods aren't yet ready.
  *
@@ -74200,15 +74187,6 @@ function findFirstRNode(rootNode) {
     return null;
 }
 /**
- * @param {?} value
- * @param {?} renderer
- * @return {?}
- */
-function createTextNode(value, renderer) {
-    return isProceduralRenderer(renderer) ? renderer.createText(stringify$1$1(value)) :
-        renderer.createTextNode(stringify$1$1(value));
-}
-/**
  * @param {?} container
  * @param {?} rootNode
  * @param {?} insertMode
@@ -74227,12 +74205,6 @@ function addRemoveViewFromContainer(container, rootNode, insertMode, beforeNode)
             var /** @type {?} */ renderer = container.view.renderer;
             if (node.type === 3 /* Element */) {
                 if (insertMode) {
-                    if (!node.native) {
-                        // If the native element doesn't exist, this is a bound text node that hasn't yet been
-                        // created because update mode has not run (occurs when a bound text node is a root
-                        // node of a dynamically created view). See textBinding() in instructions for ctx.
-                        (/** @type {?} */ (node)).native = createTextNode('', renderer);
-                    }
                     isProceduralRenderer(renderer) ?
                         renderer.insertBefore(parent, /** @type {?} */ ((node.native)), /** @type {?} */ (beforeNode)) :
                         parent.insertBefore(/** @type {?} */ ((node.native)), /** @type {?} */ (beforeNode), true);
@@ -76774,7 +76746,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-rc.5-7f612fc
+ * @license Angular v6.0.0-rc.5-5a1ddee
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -79372,7 +79344,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  *
  */
-var VERSION = new Version$1('6.0.0-rc.5-7f612fc');
+var VERSION = new Version$1('6.0.0-rc.5-5a1ddee');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
