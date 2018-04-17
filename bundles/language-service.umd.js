@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-rc.5-7de69ba
+ * @license Angular v6.0.0-rc.5-06f8656
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -227,7 +227,7 @@ var tslib_es6 = Object.freeze({
 });
 
 /**
- * @license Angular v6.0.0-rc.5-7de69ba
+ * @license Angular v6.0.0-rc.5-06f8656
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -906,7 +906,7 @@ var Version = /** @class */ (function () {
 /**
  *
  */
-var VERSION$1 = new Version('6.0.0-rc.5-7de69ba');
+var VERSION$1 = new Version('6.0.0-rc.5-06f8656');
 
 /**
  * @fileoverview added by tsickle
@@ -44765,6 +44765,296 @@ var RefCountSubscriber = /** @class */ (function (_super) {
 
 });
 
+var groupBy_1 = createCommonjsModule(function (module, exports) {
+"use strict";
+var __extends = (commonjsGlobal && commonjsGlobal.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+
+
+
+
+/* tslint:enable:max-line-length */
+/**
+ * Groups the items emitted by an Observable according to a specified criterion,
+ * and emits these grouped items as `GroupedObservables`, one
+ * {@link GroupedObservable} per group.
+ *
+ * <img src="./img/groupBy.png" width="100%">
+ *
+ * @example <caption>Group objects by id and return as array</caption>
+ * Observable.of<Obj>({id: 1, name: 'aze1'},
+ *                    {id: 2, name: 'sf2'},
+ *                    {id: 2, name: 'dg2'},
+ *                    {id: 1, name: 'erg1'},
+ *                    {id: 1, name: 'df1'},
+ *                    {id: 2, name: 'sfqfb2'},
+ *                    {id: 3, name: 'qfs3'},
+ *                    {id: 2, name: 'qsgqsfg2'}
+ *     )
+ *     .groupBy(p => p.id)
+ *     .flatMap( (group$) => group$.reduce((acc, cur) => [...acc, cur], []))
+ *     .subscribe(p => console.log(p));
+ *
+ * // displays:
+ * // [ { id: 1, name: 'aze1' },
+ * //   { id: 1, name: 'erg1' },
+ * //   { id: 1, name: 'df1' } ]
+ * //
+ * // [ { id: 2, name: 'sf2' },
+ * //   { id: 2, name: 'dg2' },
+ * //   { id: 2, name: 'sfqfb2' },
+ * //   { id: 2, name: 'qsgqsfg2' } ]
+ * //
+ * // [ { id: 3, name: 'qfs3' } ]
+ *
+ * @example <caption>Pivot data on the id field</caption>
+ * Observable.of<Obj>({id: 1, name: 'aze1'},
+ *                    {id: 2, name: 'sf2'},
+ *                    {id: 2, name: 'dg2'},
+ *                    {id: 1, name: 'erg1'},
+ *                    {id: 1, name: 'df1'},
+ *                    {id: 2, name: 'sfqfb2'},
+ *                    {id: 3, name: 'qfs1'},
+ *                    {id: 2, name: 'qsgqsfg2'}
+ *                   )
+ *     .groupBy(p => p.id, p => p.name)
+ *     .flatMap( (group$) => group$.reduce((acc, cur) => [...acc, cur], ["" + group$.key]))
+ *     .map(arr => ({'id': parseInt(arr[0]), 'values': arr.slice(1)}))
+ *     .subscribe(p => console.log(p));
+ *
+ * // displays:
+ * // { id: 1, values: [ 'aze1', 'erg1', 'df1' ] }
+ * // { id: 2, values: [ 'sf2', 'dg2', 'sfqfb2', 'qsgqsfg2' ] }
+ * // { id: 3, values: [ 'qfs1' ] }
+ *
+ * @param {function(value: T): K} keySelector A function that extracts the key
+ * for each item.
+ * @param {function(value: T): R} [elementSelector] A function that extracts the
+ * return element for each item.
+ * @param {function(grouped: GroupedObservable<K,R>): Observable<any>} [durationSelector]
+ * A function that returns an Observable to determine how long each group should
+ * exist.
+ * @return {Observable<GroupedObservable<K,R>>} An Observable that emits
+ * GroupedObservables, each of which corresponds to a unique key value and each
+ * of which emits those items from the source Observable that share that key
+ * value.
+ * @method groupBy
+ * @owner Observable
+ */
+function groupBy(keySelector, elementSelector, durationSelector, subjectSelector) {
+    return function (source) {
+        return source.lift(new GroupByOperator(keySelector, elementSelector, durationSelector, subjectSelector));
+    };
+}
+exports.groupBy = groupBy;
+var GroupByOperator = /** @class */ (function () {
+    function GroupByOperator(keySelector, elementSelector, durationSelector, subjectSelector) {
+        this.keySelector = keySelector;
+        this.elementSelector = elementSelector;
+        this.durationSelector = durationSelector;
+        this.subjectSelector = subjectSelector;
+    }
+    GroupByOperator.prototype.call = function (subscriber, source) {
+        return source.subscribe(new GroupBySubscriber(subscriber, this.keySelector, this.elementSelector, this.durationSelector, this.subjectSelector));
+    };
+    return GroupByOperator;
+}());
+/**
+ * We need this JSDoc comment for affecting ESDoc.
+ * @ignore
+ * @extends {Ignored}
+ */
+var GroupBySubscriber = /** @class */ (function (_super) {
+    __extends(GroupBySubscriber, _super);
+    function GroupBySubscriber(destination, keySelector, elementSelector, durationSelector, subjectSelector) {
+        var _this = _super.call(this, destination) || this;
+        _this.keySelector = keySelector;
+        _this.elementSelector = elementSelector;
+        _this.durationSelector = durationSelector;
+        _this.subjectSelector = subjectSelector;
+        _this.groups = null;
+        _this.attemptedToUnsubscribe = false;
+        _this.count = 0;
+        return _this;
+    }
+    GroupBySubscriber.prototype._next = function (value) {
+        var key;
+        try {
+            key = this.keySelector(value);
+        }
+        catch (err) {
+            this.error(err);
+            return;
+        }
+        this._group(value, key);
+    };
+    GroupBySubscriber.prototype._group = function (value, key) {
+        var groups = this.groups;
+        if (!groups) {
+            groups = this.groups = new Map();
+        }
+        var group = groups.get(key);
+        var element;
+        if (this.elementSelector) {
+            try {
+                element = this.elementSelector(value);
+            }
+            catch (err) {
+                this.error(err);
+            }
+        }
+        else {
+            element = value;
+        }
+        if (!group) {
+            group = (this.subjectSelector ? this.subjectSelector() : new Subject_1.Subject());
+            groups.set(key, group);
+            var groupedObservable = new GroupedObservable(key, group, this);
+            this.destination.next(groupedObservable);
+            if (this.durationSelector) {
+                var duration = void 0;
+                try {
+                    duration = this.durationSelector(new GroupedObservable(key, group));
+                }
+                catch (err) {
+                    this.error(err);
+                    return;
+                }
+                this.add(duration.subscribe(new GroupDurationSubscriber(key, group, this)));
+            }
+        }
+        if (!group.closed) {
+            group.next(element);
+        }
+    };
+    GroupBySubscriber.prototype._error = function (err) {
+        var groups = this.groups;
+        if (groups) {
+            groups.forEach(function (group, key) {
+                group.error(err);
+            });
+            groups.clear();
+        }
+        this.destination.error(err);
+    };
+    GroupBySubscriber.prototype._complete = function () {
+        var groups = this.groups;
+        if (groups) {
+            groups.forEach(function (group, key) {
+                group.complete();
+            });
+            groups.clear();
+        }
+        this.destination.complete();
+    };
+    GroupBySubscriber.prototype.removeGroup = function (key) {
+        this.groups.delete(key);
+    };
+    GroupBySubscriber.prototype.unsubscribe = function () {
+        if (!this.closed) {
+            this.attemptedToUnsubscribe = true;
+            if (this.count === 0) {
+                _super.prototype.unsubscribe.call(this);
+            }
+        }
+    };
+    return GroupBySubscriber;
+}(Subscriber_1.Subscriber));
+/**
+ * We need this JSDoc comment for affecting ESDoc.
+ * @ignore
+ * @extends {Ignored}
+ */
+var GroupDurationSubscriber = /** @class */ (function (_super) {
+    __extends(GroupDurationSubscriber, _super);
+    function GroupDurationSubscriber(key, group, parent) {
+        var _this = _super.call(this, group) || this;
+        _this.key = key;
+        _this.group = group;
+        _this.parent = parent;
+        return _this;
+    }
+    GroupDurationSubscriber.prototype._next = function (value) {
+        this.complete();
+    };
+    /** @deprecated This is an internal implementation detail, do not use. */
+    GroupDurationSubscriber.prototype._unsubscribe = function () {
+        var _a = this, parent = _a.parent, key = _a.key;
+        this.key = this.parent = null;
+        if (parent) {
+            parent.removeGroup(key);
+        }
+    };
+    return GroupDurationSubscriber;
+}(Subscriber_1.Subscriber));
+/**
+ * An Observable representing values belonging to the same group represented by
+ * a common key. The values emitted by a GroupedObservable come from the source
+ * Observable. The common key is available as the field `key` on a
+ * GroupedObservable instance.
+ *
+ * @class GroupedObservable<K, T>
+ */
+var GroupedObservable = /** @class */ (function (_super) {
+    __extends(GroupedObservable, _super);
+    /** @deprecated Do not construct this type. Internal use only */
+    function GroupedObservable(key, groupSubject, refCountSubscription) {
+        var _this = _super.call(this) || this;
+        _this.key = key;
+        _this.groupSubject = groupSubject;
+        _this.refCountSubscription = refCountSubscription;
+        return _this;
+    }
+    /** @deprecated This is an internal implementation detail, do not use. */
+    GroupedObservable.prototype._subscribe = function (subscriber) {
+        var subscription = new Subscription_1.Subscription();
+        var _a = this, refCountSubscription = _a.refCountSubscription, groupSubject = _a.groupSubject;
+        if (refCountSubscription && !refCountSubscription.closed) {
+            subscription.add(new InnerRefCountSubscription(refCountSubscription));
+        }
+        subscription.add(groupSubject.subscribe(subscriber));
+        return subscription;
+    };
+    return GroupedObservable;
+}(Observable_1.Observable));
+exports.GroupedObservable = GroupedObservable;
+/**
+ * We need this JSDoc comment for affecting ESDoc.
+ * @ignore
+ * @extends {Ignored}
+ */
+var InnerRefCountSubscription = /** @class */ (function (_super) {
+    __extends(InnerRefCountSubscription, _super);
+    function InnerRefCountSubscription(parent) {
+        var _this = _super.call(this) || this;
+        _this.parent = parent;
+        parent.count++;
+        return _this;
+    }
+    InnerRefCountSubscription.prototype.unsubscribe = function () {
+        var parent = this.parent;
+        if (!parent.closed && !this.closed) {
+            _super.prototype.unsubscribe.call(this);
+            parent.count -= 1;
+            if (parent.count === 0 && parent.attemptedToUnsubscribe) {
+                parent.unsubscribe();
+            }
+        }
+    };
+    return InnerRefCountSubscription;
+}(Subscription_1.Subscription));
+
+});
+
 var BehaviorSubject_1 = createCommonjsModule(function (module, exports) {
 "use strict";
 var __extends = (commonjsGlobal && commonjsGlobal.__extends) || (function () {
@@ -47322,7 +47612,7 @@ exports.subscribeToObservable = function (obj) { return function (subscriber) {
 var isArrayLike = createCommonjsModule(function (module, exports) {
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.isArrayLike = (function (x) { return x && typeof x.length === 'number'; });
+exports.isArrayLike = (function (x) { return x && typeof x.length === 'number' && typeof x !== 'function'; });
 
 });
 
@@ -48579,7 +48869,7 @@ var toString = Object.prototype.toString;
  * @see {@link bindNodeCallback}
  * @see {@link fromEventPattern}
  *
- * @param {EventTargetLike} target The DOM EventTarget, Node.js
+ * @param {FromEventTarget<T>} target The DOM EventTarget, Node.js
  * EventEmitter, JQuery-like event target, NodeList or HTMLCollection to attach the event handler to.
  * @param {string} eventName The event name of interest, being emitted by the
  * `target`.
@@ -48612,7 +48902,7 @@ function fromEvent(target, eventName, options, resultSelector) {
 exports.fromEvent = fromEvent;
 function setupSubscription(sourceObj, eventName, handler, subscriber, options) {
     var unsubscribe;
-    if (isNodeList(sourceObj) || isHTMLCollection(sourceObj)) {
+    if (sourceObj && sourceObj.length) {
         for (var i = 0, len = sourceObj.length; i < len; i++) {
             setupSubscription(sourceObj[i], eventName, handler, subscriber, options);
         }
@@ -48638,19 +48928,13 @@ function setupSubscription(sourceObj, eventName, handler, subscriber, options) {
     subscriber.add(unsubscribe);
 }
 function isNodeStyleEventEmitter(sourceObj) {
-    return !!sourceObj && typeof sourceObj.addListener === 'function' && typeof sourceObj.removeListener === 'function';
+    return sourceObj && typeof sourceObj.addListener === 'function' && typeof sourceObj.removeListener === 'function';
 }
 function isJQueryStyleEventEmitter(sourceObj) {
-    return !!sourceObj && typeof sourceObj.on === 'function' && typeof sourceObj.off === 'function';
-}
-function isNodeList(sourceObj) {
-    return !!sourceObj && toString.call(sourceObj) === '[object NodeList]';
-}
-function isHTMLCollection(sourceObj) {
-    return !!sourceObj && toString.call(sourceObj) === '[object HTMLCollection]';
+    return sourceObj && typeof sourceObj.on === 'function' && typeof sourceObj.off === 'function';
 }
 function isEventTarget(sourceObj) {
-    return !!sourceObj && typeof sourceObj.addEventListener === 'function' && typeof sourceObj.removeEventListener === 'function';
+    return sourceObj && typeof sourceObj.addEventListener === 'function' && typeof sourceObj.removeEventListener === 'function';
 }
 
 });
@@ -49951,6 +50235,8 @@ exports.Observable = Observable_1.Observable;
 
 exports.ConnectableObservable = ConnectableObservable_1.ConnectableObservable;
 
+exports.GroupedObservable = groupBy_1.GroupedObservable;
+
 exports.observable = observable.observable;
 /* Subjects */
 
@@ -50062,9 +50348,9 @@ exports.config = config.config;
 });
 
 var index_1 = index$2.Observable;
-var index_4 = index$2.Subject;
-var index_15 = index$2.Subscription;
-var index_39 = index$2.merge;
+var index_5 = index$2.Subject;
+var index_16 = index$2.Subscription;
+var index_40 = index$2.merge;
 
 var audit_1 = createCommonjsModule(function (module, exports) {
 "use strict";
@@ -53750,295 +54036,6 @@ exports.first = first;
 
 });
 
-var groupBy_1 = createCommonjsModule(function (module, exports) {
-"use strict";
-var __extends = (commonjsGlobal && commonjsGlobal.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-Object.defineProperty(exports, "__esModule", { value: true });
-
-
-
-
-/* tslint:enable:max-line-length */
-/**
- * Groups the items emitted by an Observable according to a specified criterion,
- * and emits these grouped items as `GroupedObservables`, one
- * {@link GroupedObservable} per group.
- *
- * <img src="./img/groupBy.png" width="100%">
- *
- * @example <caption>Group objects by id and return as array</caption>
- * Observable.of<Obj>({id: 1, name: 'aze1'},
- *                    {id: 2, name: 'sf2'},
- *                    {id: 2, name: 'dg2'},
- *                    {id: 1, name: 'erg1'},
- *                    {id: 1, name: 'df1'},
- *                    {id: 2, name: 'sfqfb2'},
- *                    {id: 3, name: 'qfs3'},
- *                    {id: 2, name: 'qsgqsfg2'}
- *     )
- *     .groupBy(p => p.id)
- *     .flatMap( (group$) => group$.reduce((acc, cur) => [...acc, cur], []))
- *     .subscribe(p => console.log(p));
- *
- * // displays:
- * // [ { id: 1, name: 'aze1' },
- * //   { id: 1, name: 'erg1' },
- * //   { id: 1, name: 'df1' } ]
- * //
- * // [ { id: 2, name: 'sf2' },
- * //   { id: 2, name: 'dg2' },
- * //   { id: 2, name: 'sfqfb2' },
- * //   { id: 2, name: 'qsgqsfg2' } ]
- * //
- * // [ { id: 3, name: 'qfs3' } ]
- *
- * @example <caption>Pivot data on the id field</caption>
- * Observable.of<Obj>({id: 1, name: 'aze1'},
- *                    {id: 2, name: 'sf2'},
- *                    {id: 2, name: 'dg2'},
- *                    {id: 1, name: 'erg1'},
- *                    {id: 1, name: 'df1'},
- *                    {id: 2, name: 'sfqfb2'},
- *                    {id: 3, name: 'qfs1'},
- *                    {id: 2, name: 'qsgqsfg2'}
- *                   )
- *     .groupBy(p => p.id, p => p.name)
- *     .flatMap( (group$) => group$.reduce((acc, cur) => [...acc, cur], ["" + group$.key]))
- *     .map(arr => ({'id': parseInt(arr[0]), 'values': arr.slice(1)}))
- *     .subscribe(p => console.log(p));
- *
- * // displays:
- * // { id: 1, values: [ 'aze1', 'erg1', 'df1' ] }
- * // { id: 2, values: [ 'sf2', 'dg2', 'sfqfb2', 'qsgqsfg2' ] }
- * // { id: 3, values: [ 'qfs1' ] }
- *
- * @param {function(value: T): K} keySelector A function that extracts the key
- * for each item.
- * @param {function(value: T): R} [elementSelector] A function that extracts the
- * return element for each item.
- * @param {function(grouped: GroupedObservable<K,R>): Observable<any>} [durationSelector]
- * A function that returns an Observable to determine how long each group should
- * exist.
- * @return {Observable<GroupedObservable<K,R>>} An Observable that emits
- * GroupedObservables, each of which corresponds to a unique key value and each
- * of which emits those items from the source Observable that share that key
- * value.
- * @method groupBy
- * @owner Observable
- */
-function groupBy(keySelector, elementSelector, durationSelector, subjectSelector) {
-    return function (source) {
-        return source.lift(new GroupByOperator(keySelector, elementSelector, durationSelector, subjectSelector));
-    };
-}
-exports.groupBy = groupBy;
-var GroupByOperator = /** @class */ (function () {
-    function GroupByOperator(keySelector, elementSelector, durationSelector, subjectSelector) {
-        this.keySelector = keySelector;
-        this.elementSelector = elementSelector;
-        this.durationSelector = durationSelector;
-        this.subjectSelector = subjectSelector;
-    }
-    GroupByOperator.prototype.call = function (subscriber, source) {
-        return source.subscribe(new GroupBySubscriber(subscriber, this.keySelector, this.elementSelector, this.durationSelector, this.subjectSelector));
-    };
-    return GroupByOperator;
-}());
-/**
- * We need this JSDoc comment for affecting ESDoc.
- * @ignore
- * @extends {Ignored}
- */
-var GroupBySubscriber = /** @class */ (function (_super) {
-    __extends(GroupBySubscriber, _super);
-    function GroupBySubscriber(destination, keySelector, elementSelector, durationSelector, subjectSelector) {
-        var _this = _super.call(this, destination) || this;
-        _this.keySelector = keySelector;
-        _this.elementSelector = elementSelector;
-        _this.durationSelector = durationSelector;
-        _this.subjectSelector = subjectSelector;
-        _this.groups = null;
-        _this.attemptedToUnsubscribe = false;
-        _this.count = 0;
-        return _this;
-    }
-    GroupBySubscriber.prototype._next = function (value) {
-        var key;
-        try {
-            key = this.keySelector(value);
-        }
-        catch (err) {
-            this.error(err);
-            return;
-        }
-        this._group(value, key);
-    };
-    GroupBySubscriber.prototype._group = function (value, key) {
-        var groups = this.groups;
-        if (!groups) {
-            groups = this.groups = new Map();
-        }
-        var group = groups.get(key);
-        var element;
-        if (this.elementSelector) {
-            try {
-                element = this.elementSelector(value);
-            }
-            catch (err) {
-                this.error(err);
-            }
-        }
-        else {
-            element = value;
-        }
-        if (!group) {
-            group = (this.subjectSelector ? this.subjectSelector() : new Subject_1.Subject());
-            groups.set(key, group);
-            var groupedObservable = new GroupedObservable(key, group, this);
-            this.destination.next(groupedObservable);
-            if (this.durationSelector) {
-                var duration = void 0;
-                try {
-                    duration = this.durationSelector(new GroupedObservable(key, group));
-                }
-                catch (err) {
-                    this.error(err);
-                    return;
-                }
-                this.add(duration.subscribe(new GroupDurationSubscriber(key, group, this)));
-            }
-        }
-        if (!group.closed) {
-            group.next(element);
-        }
-    };
-    GroupBySubscriber.prototype._error = function (err) {
-        var groups = this.groups;
-        if (groups) {
-            groups.forEach(function (group, key) {
-                group.error(err);
-            });
-            groups.clear();
-        }
-        this.destination.error(err);
-    };
-    GroupBySubscriber.prototype._complete = function () {
-        var groups = this.groups;
-        if (groups) {
-            groups.forEach(function (group, key) {
-                group.complete();
-            });
-            groups.clear();
-        }
-        this.destination.complete();
-    };
-    GroupBySubscriber.prototype.removeGroup = function (key) {
-        this.groups.delete(key);
-    };
-    GroupBySubscriber.prototype.unsubscribe = function () {
-        if (!this.closed) {
-            this.attemptedToUnsubscribe = true;
-            if (this.count === 0) {
-                _super.prototype.unsubscribe.call(this);
-            }
-        }
-    };
-    return GroupBySubscriber;
-}(Subscriber_1.Subscriber));
-/**
- * We need this JSDoc comment for affecting ESDoc.
- * @ignore
- * @extends {Ignored}
- */
-var GroupDurationSubscriber = /** @class */ (function (_super) {
-    __extends(GroupDurationSubscriber, _super);
-    function GroupDurationSubscriber(key, group, parent) {
-        var _this = _super.call(this, group) || this;
-        _this.key = key;
-        _this.group = group;
-        _this.parent = parent;
-        return _this;
-    }
-    GroupDurationSubscriber.prototype._next = function (value) {
-        this.complete();
-    };
-    /** @deprecated This is an internal implementation detail, do not use. */
-    GroupDurationSubscriber.prototype._unsubscribe = function () {
-        var _a = this, parent = _a.parent, key = _a.key;
-        this.key = this.parent = null;
-        if (parent) {
-            parent.removeGroup(key);
-        }
-    };
-    return GroupDurationSubscriber;
-}(Subscriber_1.Subscriber));
-/**
- * An Observable representing values belonging to the same group represented by
- * a common key. The values emitted by a GroupedObservable come from the source
- * Observable. The common key is available as the field `key` on a
- * GroupedObservable instance.
- *
- * @class GroupedObservable<K, T>
- */
-var GroupedObservable = /** @class */ (function (_super) {
-    __extends(GroupedObservable, _super);
-    function GroupedObservable(key, groupSubject, refCountSubscription) {
-        var _this = _super.call(this) || this;
-        _this.key = key;
-        _this.groupSubject = groupSubject;
-        _this.refCountSubscription = refCountSubscription;
-        return _this;
-    }
-    /** @deprecated This is an internal implementation detail, do not use. */
-    GroupedObservable.prototype._subscribe = function (subscriber) {
-        var subscription = new Subscription_1.Subscription();
-        var _a = this, refCountSubscription = _a.refCountSubscription, groupSubject = _a.groupSubject;
-        if (refCountSubscription && !refCountSubscription.closed) {
-            subscription.add(new InnerRefCountSubscription(refCountSubscription));
-        }
-        subscription.add(groupSubject.subscribe(subscriber));
-        return subscription;
-    };
-    return GroupedObservable;
-}(Observable_1.Observable));
-exports.GroupedObservable = GroupedObservable;
-/**
- * We need this JSDoc comment for affecting ESDoc.
- * @ignore
- * @extends {Ignored}
- */
-var InnerRefCountSubscription = /** @class */ (function (_super) {
-    __extends(InnerRefCountSubscription, _super);
-    function InnerRefCountSubscription(parent) {
-        var _this = _super.call(this) || this;
-        _this.parent = parent;
-        parent.count++;
-        return _this;
-    }
-    InnerRefCountSubscription.prototype.unsubscribe = function () {
-        var parent = this.parent;
-        if (!parent.closed && !this.closed) {
-            _super.prototype.unsubscribe.call(this);
-            parent.count -= 1;
-            if (parent.count === 0 && parent.attemptedToUnsubscribe) {
-                parent.unsubscribe();
-            }
-        }
-    };
-    return InnerRefCountSubscription;
-}(Subscription_1.Subscription));
-
-});
-
 var ignoreElements_1 = createCommonjsModule(function (module, exports) {
 "use strict";
 var __extends = (commonjsGlobal && commonjsGlobal.__extends) || (function () {
@@ -57542,6 +57539,15 @@ var ThrottleTimeSubscriber = /** @class */ (function (_super) {
             }
         }
     };
+    ThrottleTimeSubscriber.prototype._complete = function () {
+        if (this._hasTrailingValue) {
+            this.destination.next(this._trailingValue);
+            this.destination.complete();
+        }
+        else {
+            this.destination.complete();
+        }
+    };
     ThrottleTimeSubscriber.prototype.clearThrottle = function () {
         var throttled = this.throttled;
         if (throttled) {
@@ -59022,7 +59028,7 @@ exports.zipAll = zipAll_1.zipAll;
 var index_71 = index$4.share;
 
 /**
- * @license Angular v6.0.0-rc.5-7de69ba
+ * @license Angular v6.0.0-rc.5-06f8656
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -60937,7 +60943,7 @@ var Version$1 = /** @class */ (function () {
 /**
  *
  */
-var VERSION$2 = new Version$1('6.0.0-rc.5-7de69ba');
+var VERSION$2 = new Version$1('6.0.0-rc.5-06f8656');
 
 /**
  * @fileoverview added by tsickle
@@ -63380,13 +63386,13 @@ var EventEmitter = /** @class */ (function (_super) {
             }
         }
         var /** @type {?} */ sink = _super.prototype.subscribe.call(this, schedulerFn, errorFn, completeFn);
-        if (generatorOrNext instanceof index_15) {
+        if (generatorOrNext instanceof index_16) {
             generatorOrNext.add(sink);
         }
         return sink;
     };
     return EventEmitter;
-}(index_4));
+}(index_5));
 
 /**
  * @fileoverview added by tsickle
@@ -64846,7 +64852,7 @@ var ApplicationRef = /** @class */ (function () {
             };
         });
         (/** @type {?} */ (this)).isStable =
-            index_39(isCurrentlyStable, isStable.pipe(index_71()));
+            index_40(isCurrentlyStable, isStable.pipe(index_71()));
     }
     /**
      * Bootstrap a new component at the root level of the application.
@@ -76774,7 +76780,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-rc.5-7de69ba
+ * @license Angular v6.0.0-rc.5-06f8656
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -79372,7 +79378,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  *
  */
-var VERSION = new Version$1('6.0.0-rc.5-7de69ba');
+var VERSION = new Version$1('6.0.0-rc.5-06f8656');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
