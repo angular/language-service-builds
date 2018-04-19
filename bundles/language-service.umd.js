@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-rc.5-acf6781
+ * @license Angular v6.0.0-rc.5-1d1e75e
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -227,7 +227,7 @@ var tslib_es6 = Object.freeze({
 });
 
 /**
- * @license Angular v6.0.0-rc.5-acf6781
+ * @license Angular v6.0.0-rc.5-1d1e75e
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -815,7 +815,6 @@ function utf8Encode(str) {
  * @record
  */
 
-var MAX_LENGTH_STRINGIFY = 100;
 /**
  * @param {?} token
  * @return {?}
@@ -836,24 +835,14 @@ function stringify(token) {
     if (token.name) {
         return "" + token.name;
     }
-    var /** @type {?} */ res;
-    try {
-        res = JSON.stringify(token);
-    }
-    catch (_a) {
-        res = token.toString();
-    }
+    // WARNING: do not try to `JSON.stringify(token)` here
+    // see https://github.com/angular/angular/issues/23440
+    var /** @type {?} */ res = token.toString();
     if (res == null) {
         return '' + res;
     }
     var /** @type {?} */ newLineIndex = res.indexOf('\n');
-    if (0 < newLineIndex) {
-        res = res.substring(0, newLineIndex);
-    }
-    if (MAX_LENGTH_STRINGIFY < res.length) {
-        res = res.substring(0, MAX_LENGTH_STRINGIFY) + '...';
-    }
-    return res;
+    return newLineIndex === -1 ? res : res.substring(0, newLineIndex);
 }
 /**
  * Lazily retrieves the reference value from a forwardRef.
@@ -906,7 +895,7 @@ var Version = /** @class */ (function () {
 /**
  *
  */
-var VERSION$1 = new Version('6.0.0-rc.5-acf6781');
+var VERSION$1 = new Version('6.0.0-rc.5-1d1e75e');
 
 /**
  * @fileoverview added by tsickle
@@ -59028,7 +59017,7 @@ exports.zipAll = zipAll_1.zipAll;
 var index_71 = index$4.share;
 
 /**
- * @license Angular v6.0.0-rc.5-acf6781
+ * @license Angular v6.0.0-rc.5-1d1e75e
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -60943,7 +60932,7 @@ var Version$1 = /** @class */ (function () {
 /**
  *
  */
-var VERSION$2 = new Version$1('6.0.0-rc.5-acf6781');
+var VERSION$2 = new Version$1('6.0.0-rc.5-1d1e75e');
 
 /**
  * @fileoverview added by tsickle
@@ -76752,7 +76741,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-rc.5-acf6781
+ * @license Angular v6.0.0-rc.5-1d1e75e
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -79350,7 +79339,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  *
  */
-var VERSION = new Version$1('6.0.0-rc.5-acf6781');
+var VERSION = new Version$1('6.0.0-rc.5-1d1e75e');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
