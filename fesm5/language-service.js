@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-rc.5-02424ff
+ * @license Angular v6.0.0-rc.5-151fb66
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -2605,7 +2605,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  *
  */
-var VERSION = new Version('6.0.0-rc.5-02424ff');
+var VERSION = new Version('6.0.0-rc.5-151fb66');
 
 /**
  * @license
