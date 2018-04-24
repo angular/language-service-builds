@@ -1,3 +1,4 @@
+/// <amd-module name="@angular/language-service/language-service" />
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -11,7 +12,7 @@
  * Entry point for all public APIs of the language service package.
  */
 export { createLanguageService } from './src/language_service';
-export { create } from './src/ts_plugin';
+export * from './src/ts_plugin';
 export { Completion, Completions, Declaration, Declarations, Definition, Diagnostic, Diagnostics, Hover, HoverTextSection, LanguageService, LanguageServiceHost, Location, Span, TemplateSource, TemplateSources } from './src/types';
 export { TypeScriptServiceHost, createLanguageServiceFromTypescript } from './src/typescript_host';
 export { VERSION } from './src/version';

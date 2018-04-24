@@ -1,3 +1,4 @@
+/// <amd-module name="@angular/language-service/src/hover" />
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -7,4 +8,4 @@
  */
 import { TemplateInfo } from './common';
 import { Hover } from './types';
-export declare function getHover(info: TemplateInfo): Hover;
+export declare function getHover(info: TemplateInfo): Hover | undefined;
