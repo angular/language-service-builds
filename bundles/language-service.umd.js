@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-rc.5+83.sha-f567e18
+ * @license Angular v6.0.0-rc.5+85.sha-db77d8d
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1165,7 +1165,7 @@ var Version = /** @class */ (function () {
 /**
  *
  */
-var VERSION = new Version('6.0.0-rc.5+83.sha-f567e18');
+var VERSION = new Version('6.0.0-rc.5+85.sha-db77d8d');
 
 /**
  * @license
@@ -8690,6 +8690,22 @@ var ReadVarExpr = /** @class */ (function (_super) {
     };
     return ReadVarExpr;
 }(Expression));
+var WrappedNodeExpr = /** @class */ (function (_super) {
+    __extends(WrappedNodeExpr, _super);
+    function WrappedNodeExpr(node, type, sourceSpan) {
+        var _this = _super.call(this, type, sourceSpan) || this;
+        _this.node = node;
+        return _this;
+    }
+    WrappedNodeExpr.prototype.isEquivalent = function (e) {
+        return e instanceof WrappedNodeExpr && this.node === e.node;
+    };
+    WrappedNodeExpr.prototype.isConstant = function () { return false; };
+    WrappedNodeExpr.prototype.visitExpression = function (visitor, context) {
+        return visitor.visitWrappedNodeExpr(this, context);
+    };
+    return WrappedNodeExpr;
+}(Expression));
 var WriteVarExpr = /** @class */ (function (_super) {
     __extends(WriteVarExpr, _super);
     function WriteVarExpr(name, value, type, sourceSpan) {
@@ -9327,6 +9343,9 @@ var AstTransformer$1 = /** @class */ (function () {
     AstTransformer.prototype.transformExpr = function (expr, context) { return expr; };
     AstTransformer.prototype.transformStmt = function (stmt, context) { return stmt; };
     AstTransformer.prototype.visitReadVarExpr = function (ast, context) { return this.transformExpr(ast, context); };
+    AstTransformer.prototype.visitWrappedNodeExpr = function (ast, context) {
+        return this.transformExpr(ast, context);
+    };
     AstTransformer.prototype.visitWriteVarExpr = function (expr, context) {
         return this.transformExpr(new WriteVarExpr(expr.name, expr.value.visitExpression(this, context), expr.type, expr.sourceSpan), context);
     };
@@ -9450,6 +9469,7 @@ var RecursiveAstVisitor$1 = /** @class */ (function () {
     };
     RecursiveAstVisitor.prototype.visitArrayType = function (type, context) { return this.visitType(type, context); };
     RecursiveAstVisitor.prototype.visitMapType = function (type, context) { return this.visitType(type, context); };
+    RecursiveAstVisitor.prototype.visitWrappedNodeExpr = function (ast, context) { return ast; };
     RecursiveAstVisitor.prototype.visitReadVarExpr = function (ast, context) {
         return this.visitExpression(ast, context);
     };
@@ -11777,6 +11797,9 @@ var AbstractEmitterVisitor = /** @class */ (function () {
         ctx.print(expr, ")");
         return null;
     };
+    AbstractEmitterVisitor.prototype.visitWrappedNodeExpr = function (ast, ctx) {
+        throw new Error('Abstract emitter cannot visit WrappedNodeExpr.');
+    };
     AbstractEmitterVisitor.prototype.visitReadVarExpr = function (ast, ctx) {
         var varName = ast.name;
         if (ast.builtin != null) {
@@ -12097,6 +12120,9 @@ var _TsEmitterVisitor = /** @class */ (function (_super) {
         }
         ctx.println(stmt, ";");
         return null;
+    };
+    _TsEmitterVisitor.prototype.visitWrappedNodeExpr = function (ast, ctx) {
+        throw new Error('Cannot visit a WrappedNodeExpr when outputting Typescript.');
     };
     _TsEmitterVisitor.prototype.visitCastExpr = function (ast, ctx) {
         ctx.print(ast, "(<");
@@ -14368,6 +14394,9 @@ var Identifiers$1 = /** @class */ (function () {
     Identifiers.pipe = { name: 'ɵPp', moduleName: CORE$1 };
     Identifiers.projection = { name: 'ɵP', moduleName: CORE$1 };
     Identifiers.projectionDef = { name: 'ɵpD', moduleName: CORE$1 };
+    Identifiers.refreshComponent = { name: 'ɵr', moduleName: CORE$1 };
+    Identifiers.directiveLifeCycle = { name: 'ɵl', moduleName: CORE$1 };
+    Identifiers.inject = { name: 'inject', moduleName: CORE$1 };
     Identifiers.injectAttribute = { name: 'ɵinjectAttribute', moduleName: CORE$1 };
     Identifiers.injectElementRef = { name: 'ɵinjectElementRef', moduleName: CORE$1 };
     Identifiers.injectTemplateRef = { name: 'ɵinjectTemplateRef', moduleName: CORE$1 };
@@ -16709,6 +16738,9 @@ var AbstractJsEmitterVisitor = /** @class */ (function (_super) {
         ctx.decIndent();
         ctx.println(stmt, "};");
     };
+    AbstractJsEmitterVisitor.prototype.visitWrappedNodeExpr = function (ast, ctx) {
+        throw new Error('Cannot emit a WrappedNodeExpr in Javascript.');
+    };
     AbstractJsEmitterVisitor.prototype.visitReadVarExpr = function (ast, ctx) {
         if (ast.builtin === BuiltinVar.This) {
             ctx.print(ast, 'self');
@@ -17203,6 +17235,14 @@ var ResourceLoader = /** @class */ (function () {
  */
 /**
  * Extract i18n messages from source code
+ */
+
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
  */
 
 /**
@@ -23926,6 +23966,8 @@ function inject(token, flags) {
             return injectableDef.value === undefined ? injectableDef.value = injectableDef.factory() :
                 injectableDef.value;
         }
+        if (flags & 8 /* Optional */)
+            return null;
         throw new Error("Injector: NOT_FOUND [" + stringify$1(token) + "]");
     }
     else {
@@ -24164,7 +24206,7 @@ var Version$1 = /** @class */ (function () {
 /**
  *
  */
-var VERSION$2 = new Version$1('6.0.0-rc.5+83.sha-f567e18');
+var VERSION$2 = new Version$1('6.0.0-rc.5+85.sha-db77d8d');
 
 /**
  * @license
@@ -47909,6 +47951,7 @@ var EmbeddedViewRef$1 = /** @class */ (function (_super) {
  *
  * @param injector The starting node injector to check
  * @param  bloomBit The bit to check in each injector's bloom filter
+ * @param  flags The injection flags for this injection site (e.g. Optional or SkipSelf)
  * @returns An injector that might have the directive
  */
 
@@ -49639,7 +49682,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  *
  */
-var VERSION$3 = new Version$1('6.0.0-rc.5+83.sha-f567e18');
+var VERSION$3 = new Version$1('6.0.0-rc.5+85.sha-db77d8d');
 
 /**
  * @license
