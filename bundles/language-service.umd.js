@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-rc.5+88.sha-b1f040f
+ * @license Angular v6.0.0-rc.5+89.sha-1a44a0b
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1165,7 +1165,7 @@ var Version = /** @class */ (function () {
 /**
  *
  */
-var VERSION = new Version('6.0.0-rc.5+88.sha-b1f040f');
+var VERSION = new Version('6.0.0-rc.5+89.sha-1a44a0b');
 
 /**
  * @license
@@ -24206,7 +24206,7 @@ var Version$1 = /** @class */ (function () {
 /**
  *
  */
-var VERSION$2 = new Version$1('6.0.0-rc.5+88.sha-b1f040f');
+var VERSION$2 = new Version$1('6.0.0-rc.5+89.sha-1a44a0b');
 
 /**
  * @license
@@ -46467,21 +46467,38 @@ function enterView(newView, host) {
 /**
  * Used in lieu of enterView to make it clear when we are exiting a child view. This makes
  * the direction of traversal (up or down the view tree) a bit clearer.
+ *
+ * @param newView New state to become active
+ * @param creationOnly An optional boolean to indicate that the view was processed in creation mode
+ * only, i.e. the first update will be done later. Only possible for dynamically created views.
  */
-function leaveView(newView) {
-    if (!checkNoChangesMode) {
-        executeHooks((directives), currentView.tView.viewHooks, currentView.tView.viewCheckHooks, creationMode);
+function leaveView(newView, creationOnly) {
+    if (!creationOnly) {
+        if (!checkNoChangesMode) {
+            executeHooks((directives), currentView.tView.viewHooks, currentView.tView.viewCheckHooks, creationMode);
+        }
+        // Views are clean and in update mode after being checked, so these bits are cleared
+        currentView.flags &= ~(1 /* CreationMode */ | 4 /* Dirty */);
     }
-    // Views should be clean and in update mode after being checked, so these bits are cleared
-    currentView.flags &= ~(1 /* CreationMode */ | 4 /* Dirty */);
     currentView.lifecycleStage = 1 /* Init */;
     currentView.bindingIndex = -1;
     enterView(newView, null);
 }
-/**  Refreshes directives in this view and triggers any init/content hooks.  */
-function refreshDirectives() {
-    executeInitAndContentHooks();
+/**
+ * Refreshes the view, executing the following steps in that order:
+ * triggers init hooks, refreshes dynamic children, triggers content hooks, sets host bindings,
+ * refreshes child components.
+ * Note: view hooks are triggered later when leaving the view.
+ * */
+function refreshView() {
     var tView = currentView.tView;
+    if (!checkNoChangesMode) {
+        executeInitHooks(currentView, tView, creationMode);
+    }
+    refreshDynamicChildren();
+    if (!checkNoChangesMode) {
+        executeHooks((directives), tView.contentHooks, tView.contentCheckHooks, creationMode);
+    }
     // This needs to be set before children are processed to support recursive components
     tView.firstTemplatePass = firstTemplatePass = false;
     setHostBindings(tView.hostBindings);
@@ -46625,10 +46642,10 @@ function renderEmbeddedTemplate(viewNode, template, context, renderer, directive
     var _isParent = isParent;
     var _previousOrParentNode = previousOrParentNode;
     var oldView;
+    var rf = 2;
     try {
         isParent = true;
         previousOrParentNode = (null);
-        var rf = 2;
         if (viewNode == null) {
             var tView = getOrCreateTView(template, directives || null, pipes || null);
             var lView = createLView(-1, renderer, tView, template, context, 2 /* CheckAlways */);
@@ -46637,11 +46654,18 @@ function renderEmbeddedTemplate(viewNode, template, context, renderer, directive
         }
         oldView = enterView(viewNode.data, viewNode);
         template(rf, context);
-        refreshDirectives();
-        refreshDynamicChildren();
+        if (rf & 2 /* Update */) {
+            refreshView();
+        }
+        else {
+            viewNode.data.tView.firstTemplatePass = firstTemplatePass = false;
+        }
     }
     finally {
-        leaveView((oldView));
+        // renderEmbeddedTemplate() is called twice in fact, once for creation only and then once for
+        // update. When for creation only, leaveView() must not trigger view hooks, nor clean flags.
+        var isCreationOnly = (rf & 1 /* Create */) === 1;
+        leaveView((oldView), isCreationOnly);
         isParent = _isParent;
         previousOrParentNode = _previousOrParentNode;
     }
@@ -46655,8 +46679,7 @@ function renderComponentOrTemplate(node, hostView, componentOrContext, template)
         }
         if (template) {
             template(getRenderFlags(hostView), (componentOrContext));
-            refreshDynamicChildren();
-            refreshDirectives();
+            refreshView();
         }
         else {
             executeInitAndContentHooks();
@@ -47094,8 +47117,7 @@ function detectChangesInternal(hostView, hostNode, def, component) {
     var template = def.template;
     try {
         template(getRenderFlags(hostView), component);
-        refreshDirectives();
-        refreshDynamicChildren();
+        refreshView();
     }
     finally {
         leaveView(oldView);
@@ -49695,7 +49717,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  *
  */
-var VERSION$3 = new Version$1('6.0.0-rc.5+88.sha-b1f040f');
+var VERSION$3 = new Version$1('6.0.0-rc.5+89.sha-1a44a0b');
 
 /**
  * @license
