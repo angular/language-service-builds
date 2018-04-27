@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-rc.5-64bf6ed
+ * @license Angular v6.0.0-rc.5-5021bdd
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -227,7 +227,7 @@ var tslib_es6 = Object.freeze({
 });
 
 /**
- * @license Angular v6.0.0-rc.5-64bf6ed
+ * @license Angular v6.0.0-rc.5-5021bdd
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -895,7 +895,7 @@ var Version = /** @class */ (function () {
 /**
  *
  */
-var VERSION$1 = new Version('6.0.0-rc.5-64bf6ed');
+var VERSION$1 = new Version('6.0.0-rc.5-5021bdd');
 
 /**
  * @fileoverview added by tsickle
@@ -59019,7 +59019,7 @@ exports.zipAll = zipAll_1.zipAll;
 var index_71 = index$4.share;
 
 /**
- * @license Angular v6.0.0-rc.5-64bf6ed
+ * @license Angular v6.0.0-rc.5-5021bdd
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -60934,7 +60934,7 @@ var Version$1 = /** @class */ (function () {
 /**
  *
  */
-var VERSION$2 = new Version$1('6.0.0-rc.5-64bf6ed');
+var VERSION$2 = new Version$1('6.0.0-rc.5-5021bdd');
 
 /**
  * @fileoverview added by tsickle
@@ -69357,7 +69357,10 @@ function initNgModule(data) {
     for (var /** @type {?} */ i = 0; i < def.providers.length; i++) {
         var /** @type {?} */ provDef = def.providers[i];
         if (!(provDef.flags & 4096 /* LazyProvider */)) {
-            providers[i] = _createProviderInstance$1(data, provDef);
+            // Make sure the provider has not been already initialized outside this loop.
+            if (providers[i] === undefined) {
+                providers[i] = _createProviderInstance$1(data, provDef);
+            }
         }
     }
 }
@@ -76771,7 +76774,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-rc.5-64bf6ed
+ * @license Angular v6.0.0-rc.5-5021bdd
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -79369,7 +79372,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  *
  */
-var VERSION = new Version$1('6.0.0-rc.5-64bf6ed');
+var VERSION = new Version$1('6.0.0-rc.5-5021bdd');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
