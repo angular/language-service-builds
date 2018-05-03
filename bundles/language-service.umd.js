@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-rc.6-983e5f2
+ * @license Angular v6.0.0-rc.6-ecde152
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -227,7 +227,7 @@ var tslib_es6 = Object.freeze({
 });
 
 /**
- * @license Angular v6.0.0-rc.6-983e5f2
+ * @license Angular v6.0.0-rc.6-ecde152
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -895,7 +895,7 @@ var Version = /** @class */ (function () {
 /**
  *
  */
-var VERSION$1 = new Version('6.0.0-rc.6-983e5f2');
+var VERSION$1 = new Version('6.0.0-rc.6-ecde152');
 
 /**
  * @fileoverview added by tsickle
@@ -45443,8 +45443,16 @@ Object.defineProperty(exports, "__esModule", { value: true });
 
 var AsyncScheduler = /** @class */ (function (_super) {
     __extends(AsyncScheduler, _super);
-    function AsyncScheduler() {
-        var _this = _super !== null && _super.apply(this, arguments) || this;
+    function AsyncScheduler(SchedulerAction, now) {
+        if (now === void 0) { now = Scheduler_1.Scheduler.now; }
+        var _this = _super.call(this, SchedulerAction, function () {
+            if (AsyncScheduler.delegate && AsyncScheduler.delegate !== _this) {
+                return AsyncScheduler.delegate.now();
+            }
+            else {
+                return now();
+            }
+        }) || this;
         _this.actions = [];
         /**
          * A flag to indicate whether the Scheduler is currently executing a batch of
@@ -45461,6 +45469,15 @@ var AsyncScheduler = /** @class */ (function (_super) {
         _this.scheduled = undefined;
         return _this;
     }
+    AsyncScheduler.prototype.schedule = function (work, delay, state) {
+        if (delay === void 0) { delay = 0; }
+        if (AsyncScheduler.delegate && AsyncScheduler.delegate !== this) {
+            return AsyncScheduler.delegate.schedule(work, delay, state);
+        }
+        else {
+            return _super.prototype.schedule.call(this, work, delay, state);
+        }
+    };
     AsyncScheduler.prototype.flush = function (action) {
         var actions = this.actions;
         if (this.active) {
@@ -48893,12 +48910,7 @@ function fromEvent(target, eventName, options, resultSelector) {
 exports.fromEvent = fromEvent;
 function setupSubscription(sourceObj, eventName, handler, subscriber, options) {
     var unsubscribe;
-    if (sourceObj && sourceObj.length) {
-        for (var i = 0, len = sourceObj.length; i < len; i++) {
-            setupSubscription(sourceObj[i], eventName, handler, subscriber, options);
-        }
-    }
-    else if (isEventTarget(sourceObj)) {
+    if (isEventTarget(sourceObj)) {
         var source_1 = sourceObj;
         sourceObj.addEventListener(eventName, handler, options);
         unsubscribe = function () { return source_1.removeEventListener(eventName, handler, options); };
@@ -48912,6 +48924,11 @@ function setupSubscription(sourceObj, eventName, handler, subscriber, options) {
         var source_3 = sourceObj;
         sourceObj.addListener(eventName, handler);
         unsubscribe = function () { return source_3.removeListener(eventName, handler); };
+    }
+    else if (sourceObj && sourceObj.length) {
+        for (var i = 0, len = sourceObj.length; i < len; i++) {
+            setupSubscription(sourceObj[i], eventName, handler, subscriber, options);
+        }
     }
     else {
         throw new TypeError('Invalid event target');
@@ -57476,6 +57493,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * internally by the optional `scheduler`.
  * @param {Scheduler} [scheduler=async] The {@link IScheduler} to use for
  * managing the timers that handle the throttling.
+ * @param {Object} config a configuration object to define `leading` and
+ * `trailing` behavior. Defaults to `{ leading: true, trailing: false }`.
  * @return {Observable<T>} An Observable that performs the throttle operation to
  * limit the rate of emissions from the source.
  * @method throttleTime
@@ -59019,7 +59038,7 @@ exports.zipAll = zipAll_1.zipAll;
 var index_71 = index$4.share;
 
 /**
- * @license Angular v6.0.0-rc.6-983e5f2
+ * @license Angular v6.0.0-rc.6-ecde152
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -60934,7 +60953,7 @@ var Version$1 = /** @class */ (function () {
 /**
  *
  */
-var VERSION$2 = new Version$1('6.0.0-rc.6-983e5f2');
+var VERSION$2 = new Version$1('6.0.0-rc.6-ecde152');
 
 /**
  * @fileoverview added by tsickle
@@ -76774,7 +76793,7 @@ var QueryList_ = /** @class */ (function () {
 }());
 
 /**
- * @license Angular v6.0.0-rc.6-983e5f2
+ * @license Angular v6.0.0-rc.6-ecde152
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -79372,7 +79391,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  *
  */
-var VERSION = new Version$1('6.0.0-rc.6-983e5f2');
+var VERSION = new Version$1('6.0.0-rc.6-ecde152');
 
 exports.createLanguageService = createLanguageService;
 exports.TypeScriptServiceHost = TypeScriptServiceHost;
