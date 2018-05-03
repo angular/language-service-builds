@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-rc.5+120.sha-cccc328
+ * @license Angular v6.0.0-rc.5+121.sha-6601d0f
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1165,7 +1165,7 @@ var Version = /** @class */ (function () {
 /**
  *
  */
-var VERSION = new Version('6.0.0-rc.5+120.sha-cccc328');
+var VERSION = new Version('6.0.0-rc.5+121.sha-6601d0f');
 
 /**
  * @license
@@ -24206,7 +24206,7 @@ var Version$1 = /** @class */ (function () {
 /**
  *
  */
-var VERSION$2 = new Version$1('6.0.0-rc.5+120.sha-cccc328');
+var VERSION$2 = new Version$1('6.0.0-rc.5+121.sha-6601d0f');
 
 /**
  * @license
@@ -27434,8 +27434,16 @@ var __extends$15 = (undefined && undefined.__extends) || (function () {
 })();
 var AsyncScheduler = /** @class */ (function (_super) {
     __extends$15(AsyncScheduler, _super);
-    function AsyncScheduler() {
-        var _this = _super !== null && _super.apply(this, arguments) || this;
+    function AsyncScheduler(SchedulerAction, now) {
+        if (now === void 0) { now = Scheduler.now; }
+        var _this = _super.call(this, SchedulerAction, function () {
+            if (AsyncScheduler.delegate && AsyncScheduler.delegate !== _this) {
+                return AsyncScheduler.delegate.now();
+            }
+            else {
+                return now();
+            }
+        }) || this;
         _this.actions = [];
         /**
          * A flag to indicate whether the Scheduler is currently executing a batch of
@@ -27452,6 +27460,15 @@ var AsyncScheduler = /** @class */ (function (_super) {
         _this.scheduled = undefined;
         return _this;
     }
+    AsyncScheduler.prototype.schedule = function (work, delay, state) {
+        if (delay === void 0) { delay = 0; }
+        if (AsyncScheduler.delegate && AsyncScheduler.delegate !== this) {
+            return AsyncScheduler.delegate.schedule(work, delay, state);
+        }
+        else {
+            return _super.prototype.schedule.call(this, work, delay, state);
+        }
+    };
     AsyncScheduler.prototype.flush = function (action) {
         var actions = this.actions;
         if (this.active) {
@@ -36545,6 +36562,8 @@ var __extends$85 = (undefined && undefined.__extends) || (function () {
  * internally by the optional `scheduler`.
  * @param {Scheduler} [scheduler=async] The {@link IScheduler} to use for
  * managing the timers that handle the throttling.
+ * @param {Object} config a configuration object to define `leading` and
+ * `trailing` behavior. Defaults to `{ leading: true, trailing: false }`.
  * @return {Observable<T>} An Observable that performs the throttle operation to
  * limit the rate of emissions from the source.
  * @method throttleTime
@@ -49702,7 +49721,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  *
  */
-var VERSION$3 = new Version$1('6.0.0-rc.5+120.sha-cccc328');
+var VERSION$3 = new Version$1('6.0.0-rc.5+121.sha-6601d0f');
 
 /**
  * @license
