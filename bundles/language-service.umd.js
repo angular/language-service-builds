@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-rc.5+89.sha-1a44a0b
+ * @license Angular v6.0.0-rc.5+116.sha-b45fa5e
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1165,7 +1165,7 @@ var Version = /** @class */ (function () {
 /**
  *
  */
-var VERSION = new Version('6.0.0-rc.5+89.sha-1a44a0b');
+var VERSION = new Version('6.0.0-rc.5+116.sha-b45fa5e');
 
 /**
  * @license
@@ -24206,7 +24206,7 @@ var Version$1 = /** @class */ (function () {
 /**
  *
  */
-var VERSION$2 = new Version$1('6.0.0-rc.5+89.sha-1a44a0b');
+var VERSION$2 = new Version$1('6.0.0-rc.5+116.sha-b45fa5e');
 
 /**
  * @license
@@ -37653,20 +37653,9 @@ var ApplicationInitStatus = /** @class */ (function () {
         }
         this.initialized = true;
     };
-    // `ngInjectableDef` is required in core-level code because it sits behind
-    // the injector and any code the loads it inside may run into a dependency
-    // loop (because Injectable is also in core. Do not use the code below
-    // (use @Injectable({ providedIn, factory }))  instead...
-    /**
-       * @internal
-       * @nocollapse
-       */
-    ApplicationInitStatus.ngInjectableDef = defineInjectable({
-        providedIn: 'root',
-        factory: function ApplicationInitStatus_Factory() {
-            return new ApplicationInitStatus(inject(APP_INITIALIZER));
-        }
-    });
+    ApplicationInitStatus.decorators = [
+        { type: Injectable }
+    ];
     /** @nocollapse */
     ApplicationInitStatus.ctorParameters = function () { return [
         { type: Array, decorators: [{ type: Inject, args: [APP_INITIALIZER,] }, { type: Optional },] },
@@ -37852,15 +37841,11 @@ var Compiler = /** @class */ (function () {
        * Clears the cache for the given component/ngModule.
        */
     function (type) { };
-    // `ngInjectableDef` is required in core-level code because it sits behind
-    // the injector and any code the loads it inside may run into a dependency
-    // loop (because Injectable is also in core. Do not use the code below
-    // (use @Injectable({ providedIn, factory }))  instead...
-    /**
-       * @internal
-       * @nocollapse
-       */
-    Compiler.ngInjectableDef = defineInjectable({ providedIn: 'root', factory: function () { return new Compiler(); } });
+    Compiler.decorators = [
+        { type: Injectable }
+    ];
+    /** @nocollapse */
+    Compiler.ctorParameters = function () { return []; };
     return Compiler;
 }());
 /**
@@ -39597,24 +39582,20 @@ var ApplicationRef = /** @class */ (function () {
         enumerable: true,
         configurable: true
     });
-    // `ngInjectableDef` is required in core-level code because it sits behind
-    // the injector and any code the loads it inside may run into a dependency
-    // loop (because Injectable is also in core. Do not use the code below
-    // (use @Injectable({ providedIn, factory }))  instead...
-    /**
-       * @internal
-       * @nocollapse
-       */
-    ApplicationRef.ngInjectableDef = defineInjectable({
-        providedIn: 'root',
-        factory: function ApplicationRef_Factory() {
-            // Type as any is used here due to a type-related bug in injector with abstract classes
-            // (#23528)
-            return new ApplicationRef(inject(NgZone), inject(Console), inject(Injector), inject(ErrorHandler), inject(ComponentFactoryResolver), inject(ApplicationInitStatus));
-        }
-    });
     /** @internal */
     ApplicationRef._tickScope = wtfCreateScope('ApplicationRef#tick()');
+    ApplicationRef.decorators = [
+        { type: Injectable }
+    ];
+    /** @nocollapse */
+    ApplicationRef.ctorParameters = function () { return [
+        { type: NgZone, },
+        { type: Console, },
+        { type: Injector, },
+        { type: ErrorHandler, },
+        { type: ComponentFactoryResolver, },
+        { type: ApplicationInitStatus, },
+    ]; };
     return ApplicationRef;
 }());
 function remove(list, el) {
@@ -41947,18 +41928,22 @@ function _localeFactory(locale) {
     return locale || 'en-US';
 }
 /**
+ * This module includes the providers of @angular/core that are needed
+ * to bootstrap components via `ApplicationRef`.
+ *
  * @experimental
  */
 var ApplicationModule = /** @class */ (function () {
-    function ApplicationModule() {
+    // Inject ApplicationRef to make it eager...
+    function ApplicationModule(appRef) {
     }
     ApplicationModule.decorators = [
         { type: NgModule, args: [{
                     providers: [
+                        ApplicationRef,
+                        ApplicationInitStatus,
+                        Compiler,
                         APP_ID_RANDOM_PROVIDER,
-                        // wen-workers need this value to be here since WorkerApp is defined
-                        // ontop of this application
-                        { provide: APP_ROOT, useValue: true },
                         { provide: IterableDiffers, useFactory: _iterableDiffersFactory },
                         { provide: KeyValueDiffers, useFactory: _keyValueDiffersFactory },
                         {
@@ -41970,7 +41955,9 @@ var ApplicationModule = /** @class */ (function () {
                 },] }
     ];
     /** @nocollapse */
-    ApplicationModule.ctorParameters = function () { return []; };
+    ApplicationModule.ctorParameters = function () { return [
+        { type: ApplicationRef, },
+    ]; };
     return ApplicationModule;
 }());
 
@@ -42742,7 +42729,10 @@ function initNgModule(data) {
     for (var i = 0; i < def.providers.length; i++) {
         var provDef = def.providers[i];
         if (!(provDef.flags & 4096 /* LazyProvider */)) {
-            providers[i] = _createProviderInstance$1(data, provDef);
+            // Make sure the provider has not been already initialized outside this loop.
+            if (providers[i] === undefined) {
+                providers[i] = _createProviderInstance$1(data, provDef);
+            }
         }
     }
 }
@@ -45714,14 +45704,30 @@ function callHooks(data, arr) {
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-if (typeof ngDevMode == 'undefined') {
-    if (typeof window != 'undefined')
-        window.ngDevMode = true;
-    if (typeof self != 'undefined')
-        self.ngDevMode = true;
-    if (typeof global != 'undefined')
-        global.ngDevMode = true;
-}
+var ngDevModeResetPerfCounters = (typeof ngDevMode == 'undefined' && (function (global) {
+    function ngDevModeResetPerfCounters() {
+        global['ngDevMode'] = {
+            firstTemplatePass: 0,
+            tNode: 0,
+            tView: 0,
+            rendererCreateTextNode: 0,
+            rendererSetText: 0,
+            rendererCreateElement: 0,
+            rendererAddEventListener: 0,
+            rendererSetAttribute: 0,
+            rendererRemoveAttribute: 0,
+            rendererSetProperty: 0,
+            rendererSetClassName: 0,
+            rendererAddClass: 0,
+            rendererRemoveClass: 0,
+            rendererSetStyle: 0,
+            rendererRemoveStyle: 0,
+        };
+    }
+    ngDevModeResetPerfCounters();
+    return ngDevModeResetPerfCounters;
+})(typeof window != 'undefined' && window || typeof self != 'undefined' && self ||
+    typeof global != 'undefined' && global));
 
 /**
  * @license
@@ -46638,7 +46644,17 @@ function createLNode(index, type, native, state) {
  * @param pipes Pipe defs that should be used for matching
  */
 
-function renderEmbeddedTemplate(viewNode, template, context, renderer, directives, pipes) {
+/**
+ * Used for rendering embedded views (e.g. dynamically created views)
+ *
+ * Dynamically created views must store/retrieve their TViews differently from component views
+ * because their template functions are nested in the template functions of their hosts, creating
+ * closures. If their host template happens to be an embedded template in a loop (e.g. ngFor inside
+ * an ngFor), the nesting would mean we'd have multiple instances of the template function, so we
+ * can't store TViews in the template function itself (as we do for comps). Instead, we store the
+ * TView for dynamically created views on their host TNode, which only has one instance.
+ */
+function renderEmbeddedTemplate(viewNode, tView, template, context, renderer, directives, pipes) {
     var _isParent = isParent;
     var _previousOrParentNode = previousOrParentNode;
     var oldView;
@@ -46647,7 +46663,6 @@ function renderEmbeddedTemplate(viewNode, template, context, renderer, directive
         isParent = true;
         previousOrParentNode = (null);
         if (viewNode == null) {
-            var tView = getOrCreateTView(template, directives || null, pipes || null);
             var lView = createLView(-1, renderer, tView, template, context, 2 /* CheckAlways */);
             viewNode = createLNode(null, 2 /* View */, null, lView);
             rf = 1 /* Create */;
@@ -46726,40 +46741,8 @@ function getRenderFlags(view) {
 /** Sets the context for a ChangeDetectorRef to the given instance. */
 
 
-/**
- * Gets TView from a template function or creates a new TView
- * if it doesn't already exist.
- *
- * @param template The template from which to get static data
- * @param directives Directive defs that should be saved on TView
- * @param pipes Pipe defs that should be saved on TView
- * @returns TView
- */
-function getOrCreateTView(template, directives, pipes) {
-    return template.ngPrivateData ||
-        (template.ngPrivateData = createTView(directives, pipes));
-}
 /** Creates a TView instance */
-function createTView(defs, pipes) {
-    return {
-        data: [],
-        directives: null,
-        firstTemplatePass: true,
-        initHooks: null,
-        checkHooks: null,
-        contentHooks: null,
-        contentCheckHooks: null,
-        viewHooks: null,
-        viewCheckHooks: null,
-        destroyHooks: null,
-        pipeDestroyHooks: null,
-        hostBindings: null,
-        components: null,
-        directiveRegistry: typeof defs === 'function' ? defs() : defs,
-        pipeRegistry: typeof pipes === 'function' ? pipes() : pipes,
-        currentMatches: null
-    };
-}
+
 
 /**
  * Locates the host native element, used for bootstrapping existing nodes into rendering pipeline.
@@ -46914,9 +46897,11 @@ function refreshDynamicChildren() {
         if (current.dynamicViewCount !== 0 && current.views) {
             var container_1 = current;
             for (var i = 0; i < container_1.views.length; i++) {
-                var view = container_1.views[i];
+                var lViewNode = container_1.views[i];
                 // The directives and pipes are not needed here as an existing view is only being refreshed.
-                renderEmbeddedTemplate(view, (view.data.template), (view.data.context), renderer);
+                var dynamicView = lViewNode.data;
+                ngDevMode && assertNotNull$1(dynamicView.tView, 'TView must be allocated');
+                renderEmbeddedTemplate(lViewNode, dynamicView.tView, (dynamicView.template), (dynamicView.context), renderer);
             }
         }
     }
@@ -49717,7 +49702,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  *
  */
-var VERSION$3 = new Version$1('6.0.0-rc.5+89.sha-1a44a0b');
+var VERSION$3 = new Version$1('6.0.0-rc.5+116.sha-b45fa5e');
 
 /**
  * @license
