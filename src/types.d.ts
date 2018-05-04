@@ -1,3 +1,4 @@
+/// <amd-module name="@angular/language-service/src/types" />
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.

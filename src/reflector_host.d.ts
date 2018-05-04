@@ -1,3 +1,4 @@
+/// <amd-module name="@angular/language-service/src/reflector_host" />
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.

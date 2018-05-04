@@ -1,3 +1,4 @@
+/// <amd-module name="@angular/language-service/src/typescript_host" />
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
