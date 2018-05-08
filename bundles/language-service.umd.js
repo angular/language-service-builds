@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-rc.5+141.sha-fc03427
+ * @license Angular v6.0.0-rc.5+144.sha-b0eca85
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1165,7 +1165,7 @@ var Version = /** @class */ (function () {
 /**
  *
  */
-var VERSION = new Version('6.0.0-rc.5+141.sha-fc03427');
+var VERSION = new Version('6.0.0-rc.5+144.sha-b0eca85');
 
 /**
  * @license
@@ -14403,8 +14403,16 @@ var Identifiers$1 = /** @class */ (function () {
     Identifiers.injectViewContainerRef = { name: 'ɵinjectViewContainerRef', moduleName: CORE$1 };
     Identifiers.directiveInject = { name: 'ɵdirectiveInject', moduleName: CORE$1 };
     Identifiers.defineComponent = { name: 'ɵdefineComponent', moduleName: CORE$1 };
+    Identifiers.ComponentDef = {
+        name: 'ComponentDef',
+        moduleName: CORE$1,
+    };
     Identifiers.defineDirective = {
         name: 'ɵdefineDirective',
+        moduleName: CORE$1,
+    };
+    Identifiers.DirectiveDef = {
+        name: 'DirectiveDef',
         moduleName: CORE$1,
     };
     Identifiers.defineInjector = {
@@ -14434,6 +14442,39 @@ var Identifiers$1 = /** @class */ (function () {
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
+/** Name of the temporary to use during data binding */
+
+/** Name of the context parameter passed into a template function */
+
+/** Name of the RenderFlag passed into a template function */
+
+/** The prefix reference variables */
+var REFERENCE_PREFIX = '_r';
+/** The name of the implicit context reference */
+
+/** Name of the i18n attributes **/
+
+
+/** I18n separators for metadata **/
+
+
+/**
+ * Creates an allocator for a temporary variable.
+ *
+ * A variable declaration is added to the statements the first time the allocator is invoked.
+ */
+
+
+
+
+
+
+/**
+ *  Remove trailing null nodes as they are implied.
+ */
+
+
+function noop() { }
 
 /**
  * @license
@@ -14442,11 +14483,132 @@ var Identifiers$1 = /** @class */ (function () {
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-/** The prefix reference variables */
-var REFERENCE_PREFIX = '_r';
+/**
+ * Resolved type of a dependency.
+ *
+ * Occasionally, dependencies will have special significance which is known statically. In that
+ * case the `R3ResolvedDependencyType` informs the factory generator that a particular dependency
+ * should be generated specially (usually by calling a special injection function instead of the
+ * standard one).
+ */
+var R3ResolvedDependencyType;
+(function (R3ResolvedDependencyType) {
+    /**
+     * A normal token dependency.
+     */
+    R3ResolvedDependencyType[R3ResolvedDependencyType["Token"] = 0] = "Token";
+    /**
+     * The dependency is for an attribute.
+     *
+     * The token expression is a string representing the attribute name.
+     */
+    R3ResolvedDependencyType[R3ResolvedDependencyType["Attribute"] = 1] = "Attribute";
+    /**
+     * The dependency is for the `Injector` type itself.
+     */
+    R3ResolvedDependencyType[R3ResolvedDependencyType["Injector"] = 2] = "Injector";
+    /**
+     * The dependency is for `ElementRef`.
+     */
+    R3ResolvedDependencyType[R3ResolvedDependencyType["ElementRef"] = 3] = "ElementRef";
+    /**
+     * The dependency is for `TemplateRef`.
+     */
+    R3ResolvedDependencyType[R3ResolvedDependencyType["TemplateRef"] = 4] = "TemplateRef";
+    /**
+     * The dependency is for `ViewContainerRef`.
+     */
+    R3ResolvedDependencyType[R3ResolvedDependencyType["ViewContainerRef"] = 5] = "ViewContainerRef";
+})(R3ResolvedDependencyType || (R3ResolvedDependencyType = {}));
+/**
+ * Construct a factory function expression for the given `R3FactoryMetadata`.
+ */
 
+/**
+ * A helper function useful for extracting `R3DependencyMetadata` from a Render2
+ * `CompileTypeMetadata` instance.
+ */
 
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+/**
+ * Write a pipe definition to the output context.
+ */
+
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
 var BINDING_INSTRUCTION_MAP = (_a$1 = {}, _a$1[0 /* Property */] = Identifiers$1.elementProperty, _a$1[1 /* Attribute */] = Identifiers$1.elementAttribute, _a$1[2 /* Class */] = Identifiers$1.elementClassNamed, _a$1[3 /* Style */] = Identifiers$1.elementStyleNamed, _a$1);
+var ValueConverter = /** @class */ (function (_super) {
+    __extends(ValueConverter, _super);
+    function ValueConverter(constantPool, allocateSlot, definePipe) {
+        var _this = _super.call(this) || this;
+        _this.constantPool = constantPool;
+        _this.allocateSlot = allocateSlot;
+        _this.definePipe = definePipe;
+        return _this;
+    }
+    // AstMemoryEfficientTransformer
+    ValueConverter.prototype.visitPipe = function (pipe, context) {
+        // Allocate a slot to create the pipe
+        var slot = this.allocateSlot();
+        var slotPseudoLocal = "PIPE:" + slot;
+        var target = new PropertyRead(pipe.span, new ImplicitReceiver(pipe.span), slotPseudoLocal);
+        var bindingId = pipeBinding(pipe.args);
+        this.definePipe(pipe.name, slotPseudoLocal, slot, importExpr(bindingId));
+        var value = pipe.exp.visit(this);
+        var args = this.visitAll(pipe.args);
+        return new FunctionCall(pipe.span, target, __spread([new LiteralPrimitive(pipe.span, slot), value], args));
+    };
+    ValueConverter.prototype.visitLiteralArray = function (array, context) {
+        var _this = this;
+        return new BuiltinFunctionCall(array.span, this.visitAll(array.expressions), function (values) {
+            // If the literal has calculated (non-literal) elements transform it into
+            // calls to literal factories that compose the literal and will cache intermediate
+            // values. Otherwise, just return an literal array that contains the values.
+            var literal$$1 = literalArr(values);
+            return values.every(function (a) { return a.isConstant(); }) ? _this.constantPool.getConstLiteral(literal$$1, true) :
+                getLiteralFactory(_this.constantPool, literal$$1);
+        });
+    };
+    ValueConverter.prototype.visitLiteralMap = function (map, context) {
+        var _this = this;
+        return new BuiltinFunctionCall(map.span, this.visitAll(map.values), function (values) {
+            // If the literal has calculated (non-literal) elements  transform it into
+            // calls to literal factories that compose the literal and will cache intermediate
+            // values. Otherwise, just return an literal array that contains the values.
+            var literal$$1 = literalMap(values.map(function (value, index) { return ({ key: map.keys[index].key, value: value, quoted: map.keys[index].quoted }); }));
+            return values.every(function (a) { return a.isConstant(); }) ? _this.constantPool.getConstLiteral(literal$$1, true) :
+                getLiteralFactory(_this.constantPool, literal$$1);
+        });
+    };
+    return ValueConverter;
+}(AstMemoryEfficientTransformer));
 // Pipes always have at least one parameter, the value they operate on
 var pipeBindingIdentifiers = [Identifiers$1.pipeBind1, Identifiers$1.pipeBind2, Identifiers$1.pipeBind3, Identifiers$1.pipeBind4];
 function pipeBinding(args) {
@@ -14456,15 +14618,14 @@ var pureFunctionIdentifiers = [
     Identifiers$1.pureFunction0, Identifiers$1.pureFunction1, Identifiers$1.pureFunction2, Identifiers$1.pureFunction3, Identifiers$1.pureFunction4,
     Identifiers$1.pureFunction5, Identifiers$1.pureFunction6, Identifiers$1.pureFunction7, Identifiers$1.pureFunction8
 ];
-function getLiteralFactory(outputContext, literal$$1) {
-    var _a = outputContext.constantPool.getLiteralFactory(literal$$1), literalFactory = _a.literalFactory, literalFactoryArguments = _a.literalFactoryArguments;
+function getLiteralFactory(constantPool, literal$$1) {
+    var _a = constantPool.getLiteralFactory(literal$$1), literalFactory = _a.literalFactory, literalFactoryArguments = _a.literalFactoryArguments;
     literalFactoryArguments.length > 0 || error("Expected arguments to a literal factory function");
     var pureFunctionIdent = pureFunctionIdentifiers[literalFactoryArguments.length] || Identifiers$1.pureFunctionV;
     // Literal factories are pure functions that only need to be re-invoked when the parameters
     // change.
     return importExpr(pureFunctionIdent).callFn(__spread([literalFactory], literalFactoryArguments));
 }
-function noop() { }
 var BindingScope = /** @class */ (function () {
     function BindingScope(parent, declareLocalVarCallback) {
         if (parent === void 0) { parent = null; }
@@ -14537,54 +14698,6 @@ var BindingScope = /** @class */ (function () {
     BindingScope.ROOT_SCOPE = new BindingScope().set('$event', variable('$event'));
     return BindingScope;
 }());
-
-var ValueConverter = /** @class */ (function (_super) {
-    __extends(ValueConverter, _super);
-    function ValueConverter(outputCtx, allocateSlot, definePipe) {
-        var _this = _super.call(this) || this;
-        _this.outputCtx = outputCtx;
-        _this.allocateSlot = allocateSlot;
-        _this.definePipe = definePipe;
-        return _this;
-    }
-    // AstMemoryEfficientTransformer
-    ValueConverter.prototype.visitPipe = function (pipe, context) {
-        // Allocate a slot to create the pipe
-        var slot = this.allocateSlot();
-        var slotPseudoLocal = "PIPE:" + slot;
-        var target = new PropertyRead(pipe.span, new ImplicitReceiver(pipe.span), slotPseudoLocal);
-        var bindingId = pipeBinding(pipe.args);
-        this.definePipe(pipe.name, slotPseudoLocal, slot, importExpr(bindingId));
-        var value = pipe.exp.visit(this);
-        var args = this.visitAll(pipe.args);
-        return new FunctionCall(pipe.span, target, __spread([new LiteralPrimitive(pipe.span, slot), value], args));
-    };
-    ValueConverter.prototype.visitLiteralArray = function (array, context) {
-        var _this = this;
-        return new BuiltinFunctionCall(array.span, this.visitAll(array.expressions), function (values) {
-            // If the literal has calculated (non-literal) elements transform it into
-            // calls to literal factories that compose the literal and will cache intermediate
-            // values. Otherwise, just return an literal array that contains the values.
-            var literal$$1 = literalArr(values);
-            return values.every(function (a) { return a.isConstant(); }) ?
-                _this.outputCtx.constantPool.getConstLiteral(literal$$1, true) :
-                getLiteralFactory(_this.outputCtx, literal$$1);
-        });
-    };
-    ValueConverter.prototype.visitLiteralMap = function (map, context) {
-        var _this = this;
-        return new BuiltinFunctionCall(map.span, this.visitAll(map.values), function (values) {
-            // If the literal has calculated (non-literal) elements  transform it into
-            // calls to literal factories that compose the literal and will cache intermediate
-            // values. Otherwise, just return an literal array that contains the values.
-            var literal$$1 = literalMap(values.map(function (value, index) { return ({ key: map.keys[index].key, value: value, quoted: map.keys[index].quoted }); }));
-            return values.every(function (a) { return a.isConstant(); }) ?
-                _this.outputCtx.constantPool.getConstLiteral(literal$$1, true) :
-                getLiteralFactory(_this.outputCtx, literal$$1);
-        });
-    };
-    return ValueConverter;
-}(AstMemoryEfficientTransformer));
 var _a$1;
 
 /**
@@ -14595,15 +14708,27 @@ var _a$1;
  * found in the LICENSE file at https://angular.io/license
  */
 /**
- * Write a pipe definition to the output context.
+ * Compile a directive for the render3 runtime as defined by the `R3DirectiveMetadata`.
  */
 
 /**
- * @license
- * Copyright Google Inc. All Rights Reserved.
+ * Compile a component for the render3 runtime as defined by the `R3ComponentMetadata`.
+ */
+
+/**
+ * A wrapper around `compileDirective` which depends on render2 global analysis data as its input
+ * instead of the `R3DirectiveMetadata`.
  *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
+ * `R3DirectiveMetadata` is computed from `CompileDirectiveMetadata` and other statically reflected
+ * information.
+ */
+
+/**
+ * A wrapper around `compileComponent` which depends on render2 global analysis data as its input
+ * instead of the `R3DirectiveMetadata`.
+ *
+ * `R3ComponentMetadata` is computed from `CompileDirectiveMetadata` and other statically reflected
+ * information.
  */
 
 /**
@@ -24206,7 +24331,7 @@ var Version$1 = /** @class */ (function () {
 /**
  *
  */
-var VERSION$2 = new Version$1('6.0.0-rc.5+141.sha-fc03427');
+var VERSION$2 = new Version$1('6.0.0-rc.5+144.sha-b0eca85');
 
 /**
  * @license
@@ -49734,7 +49859,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  *
  */
-var VERSION$3 = new Version$1('6.0.0-rc.5+141.sha-fc03427');
+var VERSION$3 = new Version$1('6.0.0-rc.5+144.sha-b0eca85');
 
 /**
  * @license
