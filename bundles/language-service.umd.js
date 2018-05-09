@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-rc.5+148.sha-c5ca5c0
+ * @license Angular v6.0.0-rc.5+153.sha-e0ed59e
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1165,7 +1165,7 @@ var Version = /** @class */ (function () {
 /**
  *
  */
-var VERSION = new Version('6.0.0-rc.5+148.sha-c5ca5c0');
+var VERSION = new Version('6.0.0-rc.5+153.sha-e0ed59e');
 
 /**
  * @license
@@ -13112,11 +13112,11 @@ var ANIMATE_PROP_PREFIX = 'animate-';
  * Parses bindings in templates and in the directive host area.
  */
 var BindingParser = /** @class */ (function () {
-    function BindingParser(_exprParser, _interpolationConfig, _schemaRegistry, pipes, _targetErrors) {
+    function BindingParser(_exprParser, _interpolationConfig, _schemaRegistry, pipes, errors) {
         this._exprParser = _exprParser;
         this._interpolationConfig = _interpolationConfig;
         this._schemaRegistry = _schemaRegistry;
-        this._targetErrors = _targetErrors;
+        this.errors = errors;
         this.pipesByName = null;
         this._usedPipes = new Map();
         // When the `pipes` parameter is `null`, do not check for used pipes
@@ -13387,7 +13387,7 @@ var BindingParser = /** @class */ (function () {
     };
     BindingParser.prototype._reportError = function (message, sourceSpan, level) {
         if (level === void 0) { level = ParseErrorLevel.ERROR; }
-        this._targetErrors.push(new ParseError(sourceSpan, message, level));
+        this.errors.push(new ParseError(sourceSpan, message, level));
     };
     BindingParser.prototype._reportExpressionParserErrors = function (errors, sourceSpan) {
         try {
@@ -24331,7 +24331,7 @@ var Version$1 = /** @class */ (function () {
 /**
  *
  */
-var VERSION$2 = new Version$1('6.0.0-rc.5+148.sha-c5ca5c0');
+var VERSION$2 = new Version$1('6.0.0-rc.5+153.sha-e0ed59e');
 
 /**
  * @license
@@ -49859,7 +49859,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
 /**
  *
  */
-var VERSION$3 = new Version$1('6.0.0-rc.5+148.sha-c5ca5c0');
+var VERSION$3 = new Version$1('6.0.0-rc.5+153.sha-e0ed59e');
 
 /**
  * @license
