@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-rc.5+161.sha-72eab4d
+ * @license Angular v6.0.0-rc.5+163.sha-c4221da
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1162,10 +1162,7 @@ var Version = /** @class */ (function () {
  * @description
  * Entry point for all public APIs of the common package.
  */
-/**
- *
- */
-var VERSION = new Version('6.0.0-rc.5+161.sha-72eab4d');
+var VERSION = new Version('6.0.0-rc.5+163.sha-c4221da');
 
 /**
  * @license
@@ -24328,10 +24325,7 @@ var Version$1 = /** @class */ (function () {
     }
     return Version;
 }());
-/**
- *
- */
-var VERSION$2 = new Version$1('6.0.0-rc.5+161.sha-72eab4d');
+var VERSION$2 = new Version$1('6.0.0-rc.5+163.sha-c4221da');
 
 /**
  * @license
@@ -38029,9 +38023,6 @@ var ComponentRef = /** @class */ (function () {
     }
     return ComponentRef;
 }());
-/**
- *
- */
 var ComponentFactory = /** @class */ (function () {
     function ComponentFactory() {
     }
@@ -38060,9 +38051,6 @@ var _NullComponentFactoryResolver = /** @class */ (function () {
     };
     return _NullComponentFactoryResolver;
 }());
-/**
- *
- */
 var ComponentFactoryResolver = /** @class */ (function () {
     function ComponentFactoryResolver() {
     }
@@ -40091,9 +40079,6 @@ var ViewContainerRef = /** @class */ (function () {
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-/**
- *
- */
 var ChangeDetectorRef = /** @class */ (function () {
     function ChangeDetectorRef() {
     }
@@ -40106,9 +40091,6 @@ var ChangeDetectorRef = /** @class */ (function () {
  *
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
- */
-/**
- *
  */
 var ViewRef = /** @class */ (function (_super) {
     __extends(ViewRef, _super);
@@ -41138,9 +41120,6 @@ var DefaultIterableDiffer = /** @class */ (function () {
     };
     return DefaultIterableDiffer;
 }());
-/**
- *
- */
 var IterableChangeRecord_ = /** @class */ (function () {
     function IterableChangeRecord_(item, trackById) {
         this.item = item;
@@ -41619,9 +41598,6 @@ var DefaultKeyValueDiffer = /** @class */ (function () {
     };
     return DefaultKeyValueDiffer;
 }());
-/**
- *
- */
 var KeyValueChangeRecord_ = /** @class */ (function () {
     function KeyValueChangeRecord_(key) {
         this.key = key;
@@ -49856,10 +49832,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
  * @description
  * Entry point for all public APIs of the common package.
  */
-/**
- *
- */
-var VERSION$3 = new Version$1('6.0.0-rc.5+161.sha-72eab4d');
+var VERSION$3 = new Version$1('6.0.0-rc.5+163.sha-c4221da');
 
 /**
  * @license
