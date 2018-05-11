@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-rc.5+171.sha-d2a8687
+ * @license Angular v6.0.0-rc.5+172.sha-816bc8a
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1162,7 +1162,7 @@ var Version = /** @class */ (function () {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION = new Version('6.0.0-rc.5+171.sha-d2a8687');
+var VERSION = new Version('6.0.0-rc.5+172.sha-816bc8a');
 
 /**
  * @license
@@ -24325,7 +24325,7 @@ var Version$1 = /** @class */ (function () {
     }
     return Version;
 }());
-var VERSION$2 = new Version$1('6.0.0-rc.5+171.sha-d2a8687');
+var VERSION$2 = new Version$1('6.0.0-rc.5+172.sha-816bc8a');
 
 /**
  * @license
@@ -46500,6 +46500,9 @@ var _ROOT_DIRECTIVE_INDICES = [0, 0];
 var renderer;
 var rendererFactory;
 
+function getCurrentSanitizer() {
+    return currentView && currentView.sanitizer;
+}
 /** Used to set the parent property when nodes are created. */
 var previousOrParentNode;
 
@@ -46669,7 +46672,7 @@ function executeInitAndContentHooks() {
         executeHooks((directives), tView.contentHooks, tView.contentCheckHooks, creationMode);
     }
 }
-function createLView(viewId, renderer, tView, template, context, flags) {
+function createLView(viewId, renderer, tView, template, context, flags, sanitizer) {
     var newView = {
         parent: currentView,
         id: viewId,
@@ -46693,6 +46696,7 @@ function createLView(viewId, renderer, tView, template, context, flags) {
         lifecycleStage: 1 /* Init */,
         queries: null,
         injector: currentView && currentView.injector,
+        sanitizer: sanitizer || null
     };
     return newView;
 }
@@ -46796,7 +46800,7 @@ function renderEmbeddedTemplate(viewNode, tView, template, context, renderer, di
         isParent = true;
         previousOrParentNode = (null);
         if (viewNode == null) {
-            var lView = createLView(-1, renderer, tView, template, context, 2 /* CheckAlways */);
+            var lView = createLView(-1, renderer, tView, template, context, 2 /* CheckAlways */, getCurrentSanitizer());
             viewNode = createLNode(null, 2 /* View */, null, lView);
             rf = 1 /* Create */;
         }
@@ -49832,7 +49836,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION$3 = new Version$1('6.0.0-rc.5+171.sha-d2a8687');
+var VERSION$3 = new Version$1('6.0.0-rc.5+172.sha-816bc8a');
 
 /**
  * @license
