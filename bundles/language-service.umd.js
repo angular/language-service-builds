@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-rc.5+184.sha-e5e5c24
+ * @license Angular v6.0.0-rc.5+185.sha-5cf82f8
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1162,7 +1162,7 @@ var Version = /** @class */ (function () {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION = new Version('6.0.0-rc.5+184.sha-e5e5c24');
+var VERSION = new Version('6.0.0-rc.5+185.sha-5cf82f8');
 
 /**
  * @license
@@ -24325,7 +24325,7 @@ var Version$1 = /** @class */ (function () {
     }
     return Version;
 }());
-var VERSION$2 = new Version$1('6.0.0-rc.5+184.sha-e5e5c24');
+var VERSION$2 = new Version$1('6.0.0-rc.5+185.sha-5cf82f8');
 
 /**
  * @license
@@ -37884,8 +37884,6 @@ var Console = /** @class */ (function () {
     Console.decorators = [
         { type: Injectable }
     ];
-    /** @nocollapse */
-    Console.ctorParameters = function () { return []; };
     return Console;
 }());
 
@@ -37982,8 +37980,6 @@ var Compiler = /** @class */ (function () {
     Compiler.decorators = [
         { type: Injectable }
     ];
-    /** @nocollapse */
-    Compiler.ctorParameters = function () { return []; };
     return Compiler;
 }());
 /**
@@ -49601,7 +49597,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
         };
     }
     function typescriptOnly(ls) {
-        return {
+        var languageService = {
             cleanupSemanticCache: function () { return ls.cleanupSemanticCache(); },
             getSyntacticDiagnostics: tryFilenameCall(ls.getSyntacticDiagnostics),
             getSemanticDiagnostics: tryFilenameCall(ls.getSemanticDiagnostics),
@@ -49650,8 +49646,13 @@ function create(info /* ts.server.PluginCreateInfo */) {
             getDefinitionAndBoundSpan: tryFilenameOneCall(ls.getDefinitionAndBoundSpan),
             getCombinedCodeFix: function (scope, fixId, formatOptions) {
                 return tryCall(undefined, function () { return ls.getCombinedCodeFix(scope, fixId, formatOptions); });
-            }
+            },
+            // TODO(kyliau): dummy implementation to compile with ts 2.8, create real one
+            getSuggestionDiagnostics: function (fileName) { return []; },
+            // TODO(kyliau): dummy implementation to compile with ts 2.8, create real one
+            organizeImports: function (scope, formatOptions) { return []; },
         };
+        return languageService;
     }
     oldLS = typescriptOnly(oldLS);
     var _loop_1 = function (k) {
@@ -49846,7 +49847,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION$3 = new Version$1('6.0.0-rc.5+184.sha-e5e5c24');
+var VERSION$3 = new Version$1('6.0.0-rc.5+185.sha-5cf82f8');
 
 /**
  * @license
