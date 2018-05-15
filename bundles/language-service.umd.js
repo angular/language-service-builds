@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-rc.5+180.sha-d4b6c41
+ * @license Angular v6.0.0-rc.5+181.sha-83631b2
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1162,7 +1162,7 @@ var Version = /** @class */ (function () {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION = new Version('6.0.0-rc.5+180.sha-d4b6c41');
+var VERSION = new Version('6.0.0-rc.5+181.sha-83631b2');
 
 /**
  * @license
@@ -24325,7 +24325,7 @@ var Version$1 = /** @class */ (function () {
     }
     return Version;
 }());
-var VERSION$2 = new Version$1('6.0.0-rc.5+180.sha-d4b6c41');
+var VERSION$2 = new Version$1('6.0.0-rc.5+181.sha-83631b2');
 
 /**
  * @license
@@ -48317,6 +48317,7 @@ var ViewContainerRef$1 = /** @class */ (function () {
  * value. If it has been saved, returns the saved value.
  *
  * @param pureFn Function that returns a value
+ * @param thisArg Optional calling context of pureFn
  * @returns value
  */
 
@@ -48326,6 +48327,7 @@ var ViewContainerRef$1 = /** @class */ (function () {
  *
  * @param pureFn Function that returns an updated value
  * @param exp Updated expression value
+ * @param thisArg Optional calling context of pureFn
  * @returns Updated value
  */
 
@@ -48336,6 +48338,7 @@ var ViewContainerRef$1 = /** @class */ (function () {
  * @param pureFn
  * @param exp1
  * @param exp2
+ * @param thisArg Optional calling context of pureFn
  * @returns Updated value
  */
 
@@ -48347,6 +48350,7 @@ var ViewContainerRef$1 = /** @class */ (function () {
  * @param exp1
  * @param exp2
  * @param exp3
+ * @param thisArg Optional calling context of pureFn
  * @returns Updated value
  */
 
@@ -48359,6 +48363,7 @@ var ViewContainerRef$1 = /** @class */ (function () {
  * @param exp2
  * @param exp3
  * @param exp4
+ * @param thisArg Optional calling context of pureFn
  * @returns Updated value
  */
 
@@ -48372,6 +48377,7 @@ var ViewContainerRef$1 = /** @class */ (function () {
  * @param exp3
  * @param exp4
  * @param exp5
+ * @param thisArg Optional calling context of pureFn
  * @returns Updated value
  */
 
@@ -48386,6 +48392,7 @@ var ViewContainerRef$1 = /** @class */ (function () {
  * @param exp4
  * @param exp5
  * @param exp6
+ * @param thisArg Optional calling context of pureFn
  * @returns Updated value
  */
 
@@ -48401,6 +48408,7 @@ var ViewContainerRef$1 = /** @class */ (function () {
  * @param exp5
  * @param exp6
  * @param exp7
+ * @param thisArg Optional calling context of pureFn
  * @returns Updated value
  */
 
@@ -48417,6 +48425,7 @@ var ViewContainerRef$1 = /** @class */ (function () {
  * @param exp6
  * @param exp7
  * @param exp8
+ * @param thisArg Optional calling context of pureFn
  * @returns Updated value
  */
 
@@ -48428,7 +48437,8 @@ var ViewContainerRef$1 = /** @class */ (function () {
  *
  * @param pureFn A pure function that takes binding values and builds an object or array
  * containing those values.
- * @param exp An array of binding values
+ * @param exps An array of binding values
+ * @param thisArg Optional calling context of pureFn
  * @returns Updated value
  */
 
@@ -49836,7 +49846,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION$3 = new Version$1('6.0.0-rc.5+180.sha-d4b6c41');
+var VERSION$3 = new Version$1('6.0.0-rc.5+181.sha-83631b2');
 
 /**
  * @license
