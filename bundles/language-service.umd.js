@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-rc.5+199.sha-99d330a
+ * @license Angular v6.0.0-rc.5+203.sha-f8c6947
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1162,7 +1162,7 @@ var Version = /** @class */ (function () {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION = new Version('6.0.0-rc.5+199.sha-99d330a');
+var VERSION = new Version('6.0.0-rc.5+203.sha-f8c6947');
 
 /**
  * @license
@@ -24325,7 +24325,7 @@ var Version$1 = /** @class */ (function () {
     }
     return Version;
 }());
-var VERSION$2 = new Version$1('6.0.0-rc.5+199.sha-99d330a');
+var VERSION$2 = new Version$1('6.0.0-rc.5+203.sha-f8c6947');
 
 /**
  * @license
@@ -46034,13 +46034,13 @@ function findNextRNodeSibling(node, stopNode) {
             currentNode = pNextOrParent;
         }
         else {
-            var currentSibling = currentNode.next;
+            var currentSibling = getNextLNode(currentNode);
             while (currentSibling) {
                 var nativeNode = findFirstRNode(currentSibling);
                 if (nativeNode) {
                     return nativeNode;
                 }
-                currentSibling = currentSibling.next;
+                currentSibling = getNextLNode(currentSibling);
             }
             var parentNode = currentNode.parent;
             currentNode = null;
@@ -46053,6 +46053,15 @@ function findNextRNodeSibling(node, stopNode) {
         }
     }
     return null;
+}
+/** Retrieves the sibling node for the given node. */
+function getNextLNode(node) {
+    // View nodes don't have TNodes, so their next must be retrieved through their LView.
+    if (node.type === 2 /* View */) {
+        var lView = node.data;
+        return lView.next ? lView.next.node : null;
+    }
+    return node.tNode.next ? node.view.data[node.tNode.next.index] : null;
 }
 /**
  * Get the next node in the LNode tree, taking into account the place where a node is
@@ -46070,7 +46079,7 @@ function getNextLNodeWithProjection(node) {
         return isLastProjectedNode ? null : pNextOrParent;
     }
     // returns node.next because the the node is not projected
-    return node.next;
+    return getNextLNode(node);
 }
 /**
  * Find the next node in the LNode tree, taking into account the place where a node is
@@ -46151,7 +46160,7 @@ function addRemoveViewFromContainer(container, rootNode, insertMode, beforeNode)
                     isProceduralRenderer(renderer) ? renderer.removeChild(parent, (node.native)) :
                         parent.removeChild((node.native));
                 }
-                nextNode = node.next;
+                nextNode = getNextLNode(node);
             }
             else if (node.type === 0 /* Container */) {
                 // if we get to a container, it must be a root node of a view because we are only
@@ -46231,29 +46240,30 @@ function destroyViewTree(rootView) {
  * the container's parent view is added later).
  *
  * @param container The container into which the view should be inserted
- * @param newView The view to insert
+ * @param viewNode The view to insert
  * @param index The index at which to insert the view
  * @returns The inserted view
  */
-function insertView(container, newView, index) {
+function insertView(container, viewNode, index) {
     var state = container.data;
     var views = state.views;
     if (index > 0) {
         // This is a new view, we need to add it to the children.
-        setViewNext(views[index - 1], newView);
+        views[index - 1].data.next = viewNode.data;
     }
     if (index < views.length) {
-        setViewNext(newView, views[index]);
-        views.splice(index, 0, newView);
+        viewNode.data.next = views[index].data;
+        views.splice(index, 0, viewNode);
     }
     else {
-        views.push(newView);
+        views.push(viewNode);
+        viewNode.data.next = null;
     }
     // If the container's renderParent is null, we know that it is a root node of its own parent view
     // and we should wait until that parent processes its nodes (otherwise, we will insert this view's
     // nodes twice - once now and once when its parent inserts its views).
     if (container.data.renderParent !== null) {
-        var beforeNode = findNextRNodeSibling(newView, container);
+        var beforeNode = findNextRNodeSibling(viewNode, container);
         if (!beforeNode) {
             var containerNextNativeNode = container.native;
             if (containerNextNativeNode === undefined) {
@@ -46261,9 +46271,9 @@ function insertView(container, newView, index) {
             }
             beforeNode = containerNextNativeNode;
         }
-        addRemoveViewFromContainer(container, newView, true, beforeNode);
+        addRemoveViewFromContainer(container, viewNode, true, beforeNode);
     }
-    return newView;
+    return viewNode;
 }
 /**
  * Removes a view from a container.
@@ -46280,27 +46290,14 @@ function removeView(container, removeIndex) {
     var views = container.data.views;
     var viewNode = views[removeIndex];
     if (removeIndex > 0) {
-        setViewNext(views[removeIndex - 1], viewNode.next);
+        views[removeIndex - 1].data.next = viewNode.data.next;
     }
     views.splice(removeIndex, 1);
-    viewNode.next = null;
     destroyViewTree(viewNode.data);
     addRemoveViewFromContainer(container, viewNode, false);
     // Notify query that view has been removed
     container.data.queries && container.data.queries.removeView(removeIndex);
     return viewNode;
-}
-/**
- * Sets a next on the view node, so views in for loops can easily jump from
- * one view to the next to add/remove elements. Also adds the LView (view.data)
- * to the view tree for easy traversal when cleaning up the view.
- *
- * @param view The view to set up
- * @param next The view's new next
- */
-function setViewNext(view, next) {
-    view.next = next;
-    view.data.next = next ? next.data : null;
 }
 /**
  * Determines which LViewOrLContainer to jump to when traversing back up the
@@ -46708,7 +46705,6 @@ function createLNodeObject(type, currentView, parent, native, state, queries) {
         view: currentView,
         parent: parent,
         child: null,
-        next: null,
         nodeInjector: parent ? parent.nodeInjector : null,
         data: state,
         queries: queries,
@@ -46717,7 +46713,7 @@ function createLNodeObject(type, currentView, parent, native, state, queries) {
         dynamicLContainerNode: null
     };
 }
-function createLNode(index, type, native, state) {
+function createLNode(index, type, native, name, attrs, state) {
     var parent = isParent ? previousOrParentNode :
         previousOrParentNode && previousOrParentNode.parent;
     var queries = (isParent ? currentQueries : previousOrParentNode && previousOrParentNode.queries) ||
@@ -46736,11 +46732,12 @@ function createLNode(index, type, native, state) {
         data[index] = node;
         // Every node adds a value to the static data array to avoid a sparse array
         if (index >= tData.length) {
-            tData[index] = null;
+            var tNode = tData[index] = createTNode(index, name, attrs, null);
+            if (!isParent && previousOrParentNode) {
+                previousOrParentNode.tNode.next = tNode;
+            }
         }
-        else {
-            node.tNode = tData[index];
-        }
+        node.tNode = tData[index];
         // Now link ourselves into the tree.
         if (isParent) {
             currentQueries = null;
@@ -46752,13 +46749,6 @@ function createLNode(index, type, native, state) {
             }
             else {
                 // We are adding component view, so we don't link parent node child to this node.
-            }
-        }
-        else if (previousOrParentNode) {
-            ngDevMode && assertNull(previousOrParentNode.next, "previousOrParentNode's next property should not have been set " + index + ".");
-            previousOrParentNode.next = node;
-            if (previousOrParentNode.dynamicLContainerNode) {
-                previousOrParentNode.dynamicLContainerNode.next = node;
             }
         }
     }
@@ -46797,7 +46787,7 @@ function renderEmbeddedTemplate(viewNode, tView, template, context, renderer, di
         previousOrParentNode = (null);
         if (viewNode == null) {
             var lView = createLView(-1, renderer, tView, template, context, 2 /* CheckAlways */, getCurrentSanitizer());
-            viewNode = createLNode(null, 2 /* View */, null, lView);
+            viewNode = createLNode(null, 2 /* View */, null, null, null, lView);
             rf = 1 /* Create */;
         }
         oldView = enterView(viewNode.data, viewNode);
@@ -46929,6 +46919,30 @@ function getRenderFlags(view) {
  * @param sanitizer An optional function used to sanitize the value.
  */
 
+/**
+ * Constructs a TNode object from the arguments.
+ *
+ * @param index The index of the TNode in TView.data
+ * @param tagName The tag name of the node
+ * @param attrs The attributes defined on this node
+ * @param tViews Any TViews attached to this node
+ * @returns the TNode object
+ */
+function createTNode(index, tagName, attrs, tViews) {
+    ngDevMode && ngDevMode.tNode++;
+    return {
+        index: index,
+        flags: 0,
+        tagName: tagName,
+        attrs: attrs,
+        localNames: null,
+        initialInputs: undefined,
+        inputs: undefined,
+        outputs: undefined,
+        tViews: tViews,
+        next: null
+    };
+}
 /**
  * Add or remove a class in a `classList` on a DOM element.
  *
@@ -49847,7 +49861,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION$3 = new Version$1('6.0.0-rc.5+199.sha-99d330a');
+var VERSION$3 = new Version$1('6.0.0-rc.5+203.sha-f8c6947');
 
 /**
  * @license
