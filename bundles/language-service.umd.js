@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-rc.5+213.sha-fb906a8
+ * @license Angular v6.0.0-rc.5+214.sha-bd149e5
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1162,7 +1162,7 @@ var Version = /** @class */ (function () {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION = new Version('6.0.0-rc.5+213.sha-fb906a8');
+var VERSION = new Version('6.0.0-rc.5+214.sha-bd149e5');
 
 /**
  * @license
@@ -14362,7 +14362,7 @@ var Identifiers$1 = /** @class */ (function () {
     Identifiers.elementStyleNamed = { name: 'ɵsn', moduleName: CORE$1 };
     Identifiers.containerCreate = { name: 'ɵC', moduleName: CORE$1 };
     Identifiers.text = { name: 'ɵT', moduleName: CORE$1 };
-    Identifiers.textCreateBound = { name: 'ɵt', moduleName: CORE$1 };
+    Identifiers.textBinding = { name: 'ɵt', moduleName: CORE$1 };
     Identifiers.bind = { name: 'ɵb', moduleName: CORE$1 };
     Identifiers.interpolation1 = { name: 'ɵi1', moduleName: CORE$1 };
     Identifiers.interpolation2 = { name: 'ɵi2', moduleName: CORE$1 };
@@ -24404,7 +24404,7 @@ var Version$1 = /** @class */ (function () {
     }
     return Version;
 }());
-var VERSION$2 = new Version$1('6.0.0-rc.5+213.sha-fb906a8');
+var VERSION$2 = new Version$1('6.0.0-rc.5+214.sha-bd149e5');
 
 /**
  * @license
@@ -49940,7 +49940,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION$3 = new Version$1('6.0.0-rc.5+213.sha-fb906a8');
+var VERSION$3 = new Version$1('6.0.0-rc.5+214.sha-bd149e5');
 
 /**
  * @license
