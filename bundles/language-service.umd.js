@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-rc.5+205.sha-db2329e
+ * @license Angular v6.0.0-rc.5+211.sha-373fa78
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1162,7 +1162,7 @@ var Version = /** @class */ (function () {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION = new Version('6.0.0-rc.5+205.sha-db2329e');
+var VERSION = new Version('6.0.0-rc.5+211.sha-373fa78');
 
 /**
  * @license
@@ -8379,6 +8379,7 @@ var Identifiers = /** @class */ (function () {
     Identifiers.INJECTOR = { name: 'INJECTOR', moduleName: CORE };
     Identifiers.Injector = { name: 'Injector', moduleName: CORE };
     Identifiers.defineInjectable = { name: 'defineInjectable', moduleName: CORE };
+    Identifiers.InjectableDef = { name: 'InjectableDef', moduleName: CORE };
     Identifiers.ViewEncapsulation = {
         name: 'ViewEncapsulation',
         moduleName: CORE,
@@ -14416,6 +14417,7 @@ var Identifiers$1 = /** @class */ (function () {
         name: 'defineInjector',
         moduleName: CORE$1,
     };
+    Identifiers.defineNgModule = { name: 'ɵdefineNgModule', moduleName: CORE$1 };
     Identifiers.definePipe = { name: 'ɵdefinePipe', moduleName: CORE$1 };
     Identifiers.query = { name: 'ɵQ', moduleName: CORE$1 };
     Identifiers.queryRefresh = { name: 'ɵqR', moduleName: CORE$1 };
@@ -14431,6 +14433,28 @@ var Identifiers$1 = /** @class */ (function () {
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
+/**
+ * Convert an object map with `Expression` values into a `LiteralMapExpr`.
+ */
+
+/**
+ * Convert metadata into an `Expression` in the given `OutputContext`.
+ *
+ * This operation will handle arrays, references to symbols, or literal `null` or `undefined`.
+ */
+
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+/**
+ * Construct an `R3NgModuleDef` for the given `R3NgModuleMetadata`.
+ */
+
+// TODO(alxhub): integrate this with `compileNgModule`. Currently the two are separate operations.
 
 /**
  * @license
@@ -14695,6 +14719,17 @@ var BindingScope = /** @class */ (function () {
     BindingScope.ROOT_SCOPE = new BindingScope().set('$event', variable('$event'));
     return BindingScope;
 }());
+/**
+ * Parse a template into render3 `Node`s and additional metadata, with no other dependencies.
+ *
+ * @param template text of the template to parse
+ * @param templateUrl URL to use for source mapping of the parsed template
+ */
+
+/**
+ * Construct a `BindingParser` with a default configuration.
+ */
+
 var _a$1;
 
 /**
@@ -16992,15 +17027,11 @@ var JitEmitterVisitor = /** @class */ (function (_super) {
         return result;
     };
     JitEmitterVisitor.prototype.visitExternalExpr = function (ast, ctx) {
-        var value = this.reflector.resolveExternalReference(ast.value);
-        var id = this._evalArgValues.indexOf(value);
-        if (id === -1) {
-            id = this._evalArgValues.length;
-            this._evalArgValues.push(value);
-            var name_1 = identifierName({ reference: value }) || 'val';
-            this._evalArgNames.push("jit_" + name_1 + "_" + id);
-        }
-        ctx.print(ast, this._evalArgNames[id]);
+        this._emitReferenceToExternal(ast, this.reflector.resolveExternalReference(ast.value), ctx);
+        return null;
+    };
+    JitEmitterVisitor.prototype.visitWrappedNodeExpr = function (ast, ctx) {
+        this._emitReferenceToExternal(ast, ast.node, ctx);
         return null;
     };
     JitEmitterVisitor.prototype.visitDeclareVarStmt = function (stmt, ctx) {
@@ -17020,6 +17051,16 @@ var JitEmitterVisitor = /** @class */ (function (_super) {
             this._evalExportedVars.push(stmt.name);
         }
         return _super.prototype.visitDeclareClassStmt.call(this, stmt, ctx);
+    };
+    JitEmitterVisitor.prototype._emitReferenceToExternal = function (ast, value, ctx) {
+        var id = this._evalArgValues.indexOf(value);
+        if (id === -1) {
+            id = this._evalArgValues.length;
+            this._evalArgValues.push(value);
+            var name_1 = identifierName({ reference: value }) || 'val';
+            this._evalArgNames.push("jit_" + name_1 + "_" + id);
+        }
+        ctx.print(ast, this._evalArgNames[id]);
     };
     return JitEmitterVisitor;
 }(AbstractJsEmitterVisitor));
@@ -17373,6 +17414,25 @@ var ResourceLoader = /** @class */ (function () {
  *
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
+ */
+
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+/**
+ * JIT compiles an expression and monkey-patches the result of executing the expression onto a given
+ * type.
+ *
+ * @param type the type which will receive the monkey-patched result
+ * @param field name of the field on the type to monkey-patch
+ * @param def the definition which will be compiled and executed to get the value to patch
+ * @param context an object map of @angular/core symbol names to symbols which will be available in
+ * the context of the compiled expression
+ * @param constantPool an optional `ConstantPool` which contains constants used in the expression
  */
 
 /**
@@ -23212,6 +23272,18 @@ var ChangeDetectorStatus;
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
+
+var R3_COMPILE_COMPONENT = null;
+var R3_COMPILE_INJECTABLE = null;
+var R3_COMPILE_NGMODULE = null;
+
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
 /**
  * Directive decorator and metadata.
  *
@@ -23231,7 +23303,7 @@ var Directive = makeDecorator('Directive', function (dir) {
 var Component = makeDecorator('Component', function (c) {
     if (c === void 0) { c = {}; }
     return (__assign({ changeDetection: ChangeDetectionStrategy$1.Default }, c));
-}, Directive);
+}, Directive, undefined, function (type, meta) { return (R3_COMPILE_COMPONENT || (function () { }))(type, meta); });
 /**
  * Pipe decorator and metadata.
  *
@@ -24185,19 +24257,24 @@ function convertInjectableProviderToFactory(type, provider) {
     }
 }
 /**
+ * Supports @Injectable() in JIT mode for Render2.
+ */
+function preR3InjectableCompile(injectableType, options) {
+    if (options && options.providedIn !== undefined && injectableType.ngInjectableDef === undefined) {
+        injectableType.ngInjectableDef = defineInjectable({
+            providedIn: options.providedIn,
+            factory: convertInjectableProviderToFactory(injectableType, options),
+        });
+    }
+}
+/**
 * Injectable decorator and metadata.
 *
 *
 * @Annotation
 */
-var Injectable = makeDecorator('Injectable', undefined, undefined, undefined, function (injectableType, options) {
-    if (options && options.providedIn !== undefined &&
-        injectableType.ngInjectableDef === undefined) {
-        injectableType.ngInjectableDef = defineInjectable({
-            providedIn: options.providedIn,
-            factory: convertInjectableProviderToFactory(injectableType, options)
-        });
-    }
+var Injectable = makeDecorator('Injectable', undefined, undefined, undefined, function (type, meta) {
+    return (R3_COMPILE_INJECTABLE || preR3InjectableCompile)(type, meta);
 });
 
 /**
@@ -24207,6 +24284,7 @@ var Injectable = makeDecorator('Injectable', undefined, undefined, undefined, fu
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
+
 /**
  * Defines a schema that will allow:
  * - any non-Angular elements with a `-` in their name,
@@ -24222,13 +24300,7 @@ var Injectable = makeDecorator('Injectable', undefined, undefined, undefined, fu
  * @experimental
  */
 
-/**
- * NgModule decorator and metadata.
- *
- *
- * @Annotation
- */
-var NgModule = makeDecorator('NgModule', function (ngModule) { return ngModule; }, undefined, undefined, function (moduleType, metadata) {
+function preR3NgModuleCompile(moduleType, metadata) {
     var imports = (metadata && metadata.imports) || [];
     if (metadata && metadata.exports) {
         imports = __spread(imports, [metadata.exports]);
@@ -24238,7 +24310,14 @@ var NgModule = makeDecorator('NgModule', function (ngModule) { return ngModule; 
         providers: metadata && metadata.providers,
         imports: imports,
     });
-});
+}
+/**
+ * NgModule decorator and metadata.
+ *
+ *
+ * @Annotation
+ */
+var NgModule = makeDecorator('NgModule', function (ngModule) { return ngModule; }, undefined, undefined, function (type, meta) { return (R3_COMPILE_NGMODULE || preR3NgModuleCompile)(type, meta); });
 
 /**
  * @license
@@ -24325,7 +24404,7 @@ var Version$1 = /** @class */ (function () {
     }
     return Version;
 }());
-var VERSION$2 = new Version$1('6.0.0-rc.5+205.sha-db2329e');
+var VERSION$2 = new Version$1('6.0.0-rc.5+211.sha-373fa78');
 
 /**
  * @license
@@ -42067,7 +42146,7 @@ var ApplicationModule = /** @class */ (function () {
                             useFactory: _localeFactory,
                             deps: [[new Inject(LOCALE_ID), new Optional(), new SkipSelf()]]
                         },
-                    ]
+                    ],
                 },] }
     ];
     /** @nocollapse */
@@ -49861,7 +49940,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION$3 = new Version$1('6.0.0-rc.5+205.sha-db2329e');
+var VERSION$3 = new Version$1('6.0.0-rc.5+211.sha-373fa78');
 
 /**
  * @license
