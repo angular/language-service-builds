@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-rc.5+223.sha-3e39fef
+ * @license Angular v6.0.0-rc.5+228.sha-729c797
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1162,7 +1162,7 @@ var Version = /** @class */ (function () {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION = new Version('6.0.0-rc.5+223.sha-3e39fef');
+var VERSION = new Version('6.0.0-rc.5+228.sha-729c797');
 
 /**
  * @license
@@ -9711,7 +9711,9 @@ function literalMap(values, type) {
 
 
 
-
+function literal(value, type, sourceSpan) {
+    return new LiteralExpr(value, type, sourceSpan);
+}
 
 /*
  * Serializes a `Tag` into a string.
@@ -14424,6 +14426,8 @@ var Identifiers$1 = /** @class */ (function () {
     Identifiers.queryRefresh = { name: 'ɵqR', moduleName: CORE$1 };
     Identifiers.NgOnChangesFeature = { name: 'ɵNgOnChangesFeature', moduleName: CORE$1 };
     Identifiers.listener = { name: 'ɵL', moduleName: CORE$1 };
+    // Reserve slots for pure functions
+    Identifiers.reserveSlots = { name: 'ɵrS', moduleName: CORE$1 };
     return Identifiers;
 }());
 
@@ -14588,10 +14592,11 @@ var R3ResolvedDependencyType;
 var BINDING_INSTRUCTION_MAP = (_a$1 = {}, _a$1[0 /* Property */] = Identifiers$1.elementProperty, _a$1[1 /* Attribute */] = Identifiers$1.elementAttribute, _a$1[2 /* Class */] = Identifiers$1.elementClassNamed, _a$1[3 /* Style */] = Identifiers$1.elementStyleNamed, _a$1);
 var ValueConverter = /** @class */ (function (_super) {
     __extends(ValueConverter, _super);
-    function ValueConverter(constantPool, allocateSlot, definePipe) {
+    function ValueConverter(constantPool, allocateSlot, allocatePureFunctionSlots, definePipe) {
         var _this = _super.call(this) || this;
         _this.constantPool = constantPool;
         _this.allocateSlot = allocateSlot;
+        _this.allocatePureFunctionSlots = allocatePureFunctionSlots;
         _this.definePipe = definePipe;
         return _this;
     }
@@ -14600,12 +14605,17 @@ var ValueConverter = /** @class */ (function (_super) {
         // Allocate a slot to create the pipe
         var slot = this.allocateSlot();
         var slotPseudoLocal = "PIPE:" + slot;
+        // Allocate one slot for the result plus one slot per pipe argument
+        var pureFunctionSlot = this.allocatePureFunctionSlots(2 + pipe.args.length);
         var target = new PropertyRead(pipe.span, new ImplicitReceiver(pipe.span), slotPseudoLocal);
-        var bindingId = pipeBinding(pipe.args);
-        this.definePipe(pipe.name, slotPseudoLocal, slot, importExpr(bindingId));
-        var value = pipe.exp.visit(this);
-        var args = this.visitAll(pipe.args);
-        return new FunctionCall(pipe.span, target, __spread([new LiteralPrimitive(pipe.span, slot), value], args));
+        var _a = pipeBindingCallInfo(pipe.args), identifier = _a.identifier, isVarLength = _a.isVarLength;
+        this.definePipe(pipe.name, slotPseudoLocal, slot, importExpr(identifier));
+        var args = __spread([pipe.exp], pipe.args);
+        var convertedArgs = isVarLength ? this.visitAll([new LiteralArray(pipe.span, args)]) : this.visitAll(args);
+        return new FunctionCall(pipe.span, target, __spread([
+            new LiteralPrimitive(pipe.span, slot),
+            new LiteralPrimitive(pipe.span, pureFunctionSlot)
+        ], convertedArgs));
     };
     ValueConverter.prototype.visitLiteralArray = function (array, context) {
         var _this = this;
@@ -14614,8 +14624,9 @@ var ValueConverter = /** @class */ (function (_super) {
             // calls to literal factories that compose the literal and will cache intermediate
             // values. Otherwise, just return an literal array that contains the values.
             var literal$$1 = literalArr(values);
-            return values.every(function (a) { return a.isConstant(); }) ? _this.constantPool.getConstLiteral(literal$$1, true) :
-                getLiteralFactory(_this.constantPool, literal$$1);
+            return values.every(function (a) { return a.isConstant(); }) ?
+                _this.constantPool.getConstLiteral(literal$$1, true) :
+                getLiteralFactory(_this.constantPool, literal$$1, _this.allocatePureFunctionSlots);
         });
     };
     ValueConverter.prototype.visitLiteralMap = function (map, context) {
@@ -14625,28 +14636,52 @@ var ValueConverter = /** @class */ (function (_super) {
             // calls to literal factories that compose the literal and will cache intermediate
             // values. Otherwise, just return an literal array that contains the values.
             var literal$$1 = literalMap(values.map(function (value, index) { return ({ key: map.keys[index].key, value: value, quoted: map.keys[index].quoted }); }));
-            return values.every(function (a) { return a.isConstant(); }) ? _this.constantPool.getConstLiteral(literal$$1, true) :
-                getLiteralFactory(_this.constantPool, literal$$1);
+            return values.every(function (a) { return a.isConstant(); }) ?
+                _this.constantPool.getConstLiteral(literal$$1, true) :
+                getLiteralFactory(_this.constantPool, literal$$1, _this.allocatePureFunctionSlots);
         });
     };
     return ValueConverter;
 }(AstMemoryEfficientTransformer));
 // Pipes always have at least one parameter, the value they operate on
 var pipeBindingIdentifiers = [Identifiers$1.pipeBind1, Identifiers$1.pipeBind2, Identifiers$1.pipeBind3, Identifiers$1.pipeBind4];
-function pipeBinding(args) {
-    return pipeBindingIdentifiers[args.length] || Identifiers$1.pipeBindV;
+function pipeBindingCallInfo(args) {
+    var identifier = pipeBindingIdentifiers[args.length];
+    return {
+        identifier: identifier || Identifiers$1.pipeBindV,
+        isVarLength: !identifier,
+    };
 }
 var pureFunctionIdentifiers = [
     Identifiers$1.pureFunction0, Identifiers$1.pureFunction1, Identifiers$1.pureFunction2, Identifiers$1.pureFunction3, Identifiers$1.pureFunction4,
     Identifiers$1.pureFunction5, Identifiers$1.pureFunction6, Identifiers$1.pureFunction7, Identifiers$1.pureFunction8
 ];
-function getLiteralFactory(constantPool, literal$$1) {
+function pureFunctionCallInfo(args) {
+    var identifier = pureFunctionIdentifiers[args.length];
+    return {
+        identifier: identifier || Identifiers$1.pureFunctionV,
+        isVarLength: !identifier,
+    };
+}
+function getLiteralFactory(constantPool, literal$$1, allocateSlots) {
     var _a = constantPool.getLiteralFactory(literal$$1), literalFactory = _a.literalFactory, literalFactoryArguments = _a.literalFactoryArguments;
+    // Allocate 1 slot for the result plus 1 per argument
+    var startSlot = allocateSlots(1 + literalFactoryArguments.length);
     literalFactoryArguments.length > 0 || error("Expected arguments to a literal factory function");
-    var pureFunctionIdent = pureFunctionIdentifiers[literalFactoryArguments.length] || Identifiers$1.pureFunctionV;
+    var _b = pureFunctionCallInfo(literalFactoryArguments), identifier = _b.identifier, isVarLength = _b.isVarLength;
     // Literal factories are pure functions that only need to be re-invoked when the parameters
     // change.
-    return importExpr(pureFunctionIdent).callFn(__spread([literalFactory], literalFactoryArguments));
+    var args = [
+        literal(startSlot),
+        literalFactory,
+    ];
+    if (isVarLength) {
+        args.push(literalArr(literalFactoryArguments));
+    }
+    else {
+        args.push.apply(args, __spread(literalFactoryArguments));
+    }
+    return importExpr(identifier).callFn(args);
 }
 var BindingScope = /** @class */ (function () {
     function BindingScope(parent, declareLocalVarCallback) {
@@ -24405,7 +24440,7 @@ var Version$1 = /** @class */ (function () {
     }
     return Version;
 }());
-var VERSION$2 = new Version$1('6.0.0-rc.5+223.sha-3e39fef');
+var VERSION$2 = new Version$1('6.0.0-rc.5+228.sha-729c797');
 
 /**
  * @license
@@ -47378,6 +47413,39 @@ function detectChangesInternal(hostView, hostNode, def, component) {
  */
 
 /**
+ * Reserves slots for pure functions (`pureFunctionX` instructions)
+ *
+ * Binding for pure functions are store after the LNodes in the data array but before the binding.
+ *
+ *  ----------------------------------------------------------------------------
+ *  |  LNodes ... | pure function bindings | regular bindings / interpolations |
+ *  ----------------------------------------------------------------------------
+ *                                         ^
+ *                                         LView.bindingStartIndex
+ *
+ * Pure function instructions are given an offset from LView.bindingStartIndex.
+ * Subtracting the offset from LView.bindingStartIndex gives the first index where the bindings
+ * are stored.
+ *
+ * NOTE: reserveSlots instructions are only ever allowed at the very end of the creation block
+ */
+
+/**
+ * Sets up the binding index before execute any `pureFunctionX` instructions.
+ *
+ * The index must be restored after the pure function is executed
+ *
+ * {@link reserveSlots}
+ */
+
+/**
+ * Restores the binding index to the given value.
+ *
+ * This function is typically used to restore the index after a `pureFunctionX` has
+ * been executed.
+ */
+
+/**
  * Create interpolation bindings with a variable number of expressions.
  *
  * If there are 1 to 8 expressions `interpolation1()` to `interpolation8()` should be used instead.
@@ -47445,6 +47513,12 @@ function assertDataNext(index, arr) {
         arr = data;
     assertEqual(arr.length, index, "index " + index + " expected to be at the end of arr (length " + arr.length + ")");
 }
+/**
+ * On the first template pass the reserved slots should be set `NO_CHANGE`.
+ *
+ * If not they might not have been actually reserved.
+ */
+
 function _getComponentHostLElementNode(component) {
     ngDevMode && assertNotNull$1(component, 'expecting component got null');
     var lElementNode = component[NG_HOST_SYMBOL];
@@ -48426,6 +48500,7 @@ var ViewContainerRef$1 = /** @class */ (function () {
  * value. If it has been saved, returns the saved value.
  *
  * @param pureFn Function that returns a value
+ * @param slotOffset the offset in the reserved slot space {@link reserveSlots}
  * @param thisArg Optional calling context of pureFn
  * @returns value
  */
@@ -48434,52 +48509,57 @@ var ViewContainerRef$1 = /** @class */ (function () {
  * If the value of the provided exp has changed, calls the pure function to return
  * an updated value. Or if the value has not changed, returns cached value.
  *
+ * @param slotOffset the offset in the reserved slot space {@link reserveSlots}
  * @param pureFn Function that returns an updated value
  * @param exp Updated expression value
  * @param thisArg Optional calling context of pureFn
- * @returns Updated value
+ * @returns Updated or cached value
  */
 
 /**
  * If the value of any provided exp has changed, calls the pure function to return
  * an updated value. Or if no values have changed, returns cached value.
  *
+ * @param slotOffset the offset in the reserved slot space {@link reserveSlots}
  * @param pureFn
  * @param exp1
  * @param exp2
  * @param thisArg Optional calling context of pureFn
- * @returns Updated value
+ * @returns Updated or cached value
  */
 
 /**
  * If the value of any provided exp has changed, calls the pure function to return
  * an updated value. Or if no values have changed, returns cached value.
  *
+ * @param slotOffset the offset in the reserved slot space {@link reserveSlots}
  * @param pureFn
  * @param exp1
  * @param exp2
  * @param exp3
  * @param thisArg Optional calling context of pureFn
- * @returns Updated value
+ * @returns Updated or cached value
  */
 
 /**
  * If the value of any provided exp has changed, calls the pure function to return
  * an updated value. Or if no values have changed, returns cached value.
  *
+ * @param slotOffset the offset in the reserved slot space {@link reserveSlots}
  * @param pureFn
  * @param exp1
  * @param exp2
  * @param exp3
  * @param exp4
  * @param thisArg Optional calling context of pureFn
- * @returns Updated value
+ * @returns Updated or cached value
  */
 
 /**
  * If the value of any provided exp has changed, calls the pure function to return
  * an updated value. Or if no values have changed, returns cached value.
  *
+ * @param slotOffset the offset in the reserved slot space {@link reserveSlots}
  * @param pureFn
  * @param exp1
  * @param exp2
@@ -48487,13 +48567,14 @@ var ViewContainerRef$1 = /** @class */ (function () {
  * @param exp4
  * @param exp5
  * @param thisArg Optional calling context of pureFn
- * @returns Updated value
+ * @returns Updated or cached value
  */
 
 /**
  * If the value of any provided exp has changed, calls the pure function to return
  * an updated value. Or if no values have changed, returns cached value.
  *
+ * @param slotOffset the offset in the reserved slot space {@link reserveSlots}
  * @param pureFn
  * @param exp1
  * @param exp2
@@ -48502,13 +48583,14 @@ var ViewContainerRef$1 = /** @class */ (function () {
  * @param exp5
  * @param exp6
  * @param thisArg Optional calling context of pureFn
- * @returns Updated value
+ * @returns Updated or cached value
  */
 
 /**
  * If the value of any provided exp has changed, calls the pure function to return
  * an updated value. Or if no values have changed, returns cached value.
  *
+ * @param slotOffset the offset in the reserved slot space {@link reserveSlots}
  * @param pureFn
  * @param exp1
  * @param exp2
@@ -48518,13 +48600,14 @@ var ViewContainerRef$1 = /** @class */ (function () {
  * @param exp6
  * @param exp7
  * @param thisArg Optional calling context of pureFn
- * @returns Updated value
+ * @returns Updated or cached value
  */
 
 /**
  * If the value of any provided exp has changed, calls the pure function to return
  * an updated value. Or if no values have changed, returns cached value.
  *
+ * @param slotOffset the offset in the reserved slot space {@link reserveSlots}
  * @param pureFn
  * @param exp1
  * @param exp2
@@ -48535,7 +48618,7 @@ var ViewContainerRef$1 = /** @class */ (function () {
  * @param exp7
  * @param exp8
  * @param thisArg Optional calling context of pureFn
- * @returns Updated value
+ * @returns Updated or cached value
  */
 
 /**
@@ -48544,11 +48627,12 @@ var ViewContainerRef$1 = /** @class */ (function () {
  * If the value of any provided exp has changed, calls the pure function to return
  * an updated value. Or if no values have changed, returns cached value.
  *
+ * @param slotOffset the offset in the reserved slot space {@link reserveSlots}
  * @param pureFn A pure function that takes binding values and builds an object or array
  * containing those values.
  * @param exps An array of binding values
  * @param thisArg Optional calling context of pureFn
- * @returns Updated value
+ * @returns Updated or cached value
  */
 
 /**
@@ -48573,6 +48657,7 @@ var ViewContainerRef$1 = /** @class */ (function () {
  * the pipe only when an input to the pipe changes.
  *
  * @param index Pipe index where the pipe was stored on creation.
+ * @param slotOffset the offset in the reserved slot space {@link reserveSlots}
  * @param v1 1st argument to {@link PipeTransform#transform}.
  */
 
@@ -48583,6 +48668,7 @@ var ViewContainerRef$1 = /** @class */ (function () {
  * the pipe only when an input to the pipe changes.
  *
  * @param index Pipe index where the pipe was stored on creation.
+ * @param slotOffset the offset in the reserved slot space {@link reserveSlots}
  * @param v1 1st argument to {@link PipeTransform#transform}.
  * @param v2 2nd argument to {@link PipeTransform#transform}.
  */
@@ -48594,6 +48680,7 @@ var ViewContainerRef$1 = /** @class */ (function () {
  * the pipe only when an input to the pipe changes.
  *
  * @param index Pipe index where the pipe was stored on creation.
+ * @param slotOffset the offset in the reserved slot space {@link reserveSlots}
  * @param v1 1st argument to {@link PipeTransform#transform}.
  * @param v2 2nd argument to {@link PipeTransform#transform}.
  * @param v3 4rd argument to {@link PipeTransform#transform}.
@@ -48606,6 +48693,7 @@ var ViewContainerRef$1 = /** @class */ (function () {
  * the pipe only when an input to the pipe changes.
  *
  * @param index Pipe index where the pipe was stored on creation.
+ * @param slotOffset the offset in the reserved slot space {@link reserveSlots}
  * @param v1 1st argument to {@link PipeTransform#transform}.
  * @param v2 2nd argument to {@link PipeTransform#transform}.
  * @param v3 3rd argument to {@link PipeTransform#transform}.
@@ -48619,6 +48707,7 @@ var ViewContainerRef$1 = /** @class */ (function () {
  * the pipe only when an input to the pipe changes.
  *
  * @param index Pipe index where the pipe was stored on creation.
+ * @param slotOffset the offset in the reserved slot space {@link reserveSlots}
  * @param values Array of arguments to pass to {@link PipeTransform#transform} method.
  */
 
@@ -49960,7 +50049,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION$3 = new Version$1('6.0.0-rc.5+223.sha-3e39fef');
+var VERSION$3 = new Version$1('6.0.0-rc.5+228.sha-729c797');
 
 /**
  * @license
