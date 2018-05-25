@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-rc.5+220.sha-186118e
+ * @license Angular v6.0.0-rc.5+222.sha-36cc72e
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1162,7 +1162,7 @@ var Version = /** @class */ (function () {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION = new Version('6.0.0-rc.5+220.sha-186118e');
+var VERSION = new Version('6.0.0-rc.5+222.sha-36cc72e');
 
 /**
  * @license
@@ -14389,6 +14389,7 @@ var Identifiers$1 = /** @class */ (function () {
     Identifiers.pipeBind4 = { name: 'ɵpb4', moduleName: CORE$1 };
     Identifiers.pipeBindV = { name: 'ɵpbV', moduleName: CORE$1 };
     Identifiers.load = { name: 'ɵld', moduleName: CORE$1 };
+    Identifiers.loadDirective = { name: 'ɵd', moduleName: CORE$1 };
     Identifiers.pipe = { name: 'ɵPp', moduleName: CORE$1 };
     Identifiers.projection = { name: 'ɵP', moduleName: CORE$1 };
     Identifiers.projectionDef = { name: 'ɵpD', moduleName: CORE$1 };
@@ -24404,7 +24405,7 @@ var Version$1 = /** @class */ (function () {
     }
     return Version;
 }());
-var VERSION$2 = new Version$1('6.0.0-rc.5+220.sha-186118e');
+var VERSION$2 = new Version$1('6.0.0-rc.5+222.sha-36cc72e');
 
 /**
  * @license
@@ -49959,7 +49960,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION$3 = new Version$1('6.0.0-rc.5+220.sha-186118e');
+var VERSION$3 = new Version$1('6.0.0-rc.5+222.sha-36cc72e');
 
 /**
  * @license
