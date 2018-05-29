@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-rc.5+245.sha-41cd8f3
+ * @license Angular v6.0.0-rc.5+246.sha-31795b6
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1162,7 +1162,7 @@ var Version = /** @class */ (function () {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION = new Version('6.0.0-rc.5+245.sha-41cd8f3');
+var VERSION = new Version('6.0.0-rc.5+246.sha-31795b6');
 
 /**
  * @license
@@ -15125,7 +15125,7 @@ var StaticSymbolResolver = /** @class */ (function () {
             }
         }
         // handle the actual metadata. Has to be after the exports
-        // as there migth be collisions in the names, and we want the symbols
+        // as there might be collisions in the names, and we want the symbols
         // of the current module to win ofter reexports.
         if (metadata['metadata']) {
             // handle direct declarations of the symbol
@@ -15171,7 +15171,7 @@ var StaticSymbolResolver = /** @class */ (function () {
         var _originalFileMemo;
         var getOriginalName = function () {
             if (!_originalFileMemo) {
-                // Guess what hte original file name is from the reference. If it has a `.d.ts` extension
+                // Guess what the original file name is from the reference. If it has a `.d.ts` extension
                 // replace it with `.ts`. If it already has `.ts` just leave it in place. If it doesn't have
                 // .ts or .d.ts, append `.ts'. Also, if it is in `node_modules`, trim the `node_module`
                 // location as it is not important to finding the file.
@@ -20931,7 +20931,7 @@ var EmitFlags;
  * found in the LICENSE file at https://angular.io/license
  */
 
-var DTS$2 = /\.d\.ts$/;
+var DTS$1 = /\.d\.ts$/;
 
 // Note: This is an internal property in TypeScript. Use it only for assertions and tests.
 
@@ -20967,7 +20967,7 @@ function readMetadata(filePath, host, cache) {
         // If the file doesn't exists then we cannot return metadata for the file.
         // This will occur if the user referenced a declared module for which no file
         // exists for the module (i.e. jQuery or angularjs).
-        if (DTS$2.test(filePath)) {
+        if (DTS$1.test(filePath)) {
             metadatas = readMetadataFile(host, filePath);
             if (!metadatas) {
                 // If there is a .d.ts file but no metadata file we need to produce a
@@ -20987,7 +20987,7 @@ function readMetadata(filePath, host, cache) {
     return metadatas;
 }
 function readMetadataFile(host, dtsFilePath) {
-    var metadataPath = dtsFilePath.replace(DTS$2, '.metadata.json');
+    var metadataPath = dtsFilePath.replace(DTS$1, '.metadata.json');
     if (!host.fileExists(metadataPath)) {
         return undefined;
     }
@@ -24440,7 +24440,7 @@ var Version$1 = /** @class */ (function () {
     }
     return Version;
 }());
-var VERSION$2 = new Version$1('6.0.0-rc.5+245.sha-41cd8f3');
+var VERSION$2 = new Version$1('6.0.0-rc.5+246.sha-31795b6');
 
 /**
  * @license
@@ -50049,7 +50049,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION$3 = new Version$1('6.0.0-rc.5+245.sha-41cd8f3');
+var VERSION$3 = new Version$1('6.0.0-rc.5+246.sha-31795b6');
 
 /**
  * @license
