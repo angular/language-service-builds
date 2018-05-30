@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-rc.5+246.sha-31795b6
+ * @license Angular v6.0.0-rc.5+247.sha-e53179e
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1162,7 +1162,7 @@ var Version = /** @class */ (function () {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION = new Version('6.0.0-rc.5+246.sha-31795b6');
+var VERSION = new Version('6.0.0-rc.5+247.sha-e53179e');
 
 /**
  * @license
@@ -24440,7 +24440,7 @@ var Version$1 = /** @class */ (function () {
     }
     return Version;
 }());
-var VERSION$2 = new Version$1('6.0.0-rc.5+246.sha-31795b6');
+var VERSION$2 = new Version$1('6.0.0-rc.5+247.sha-e53179e');
 
 /**
  * @license
@@ -46157,7 +46157,7 @@ function findNextRNodeSibling(node, stopNode) {
                 }
                 currentSibling = getNextLNode(currentSibling);
             }
-            var parentNode = currentNode.parent;
+            var parentNode = getParentLNode(currentNode);
             currentNode = null;
             if (parentNode) {
                 var parentType = parentNode.tNode.type;
@@ -46185,6 +46185,12 @@ function getChildLNode(node) {
         return view.data[node.tNode.child.index];
     }
     return null;
+}
+function getParentLNode(node) {
+    if (node.tNode.index === null)
+        return null;
+    var parent = node.tNode.parent;
+    return parent ? node.view.data[parent.index] : node.view.node;
 }
 /**
  * Get the next node in the LNode tree, taking into account the place where a node is
@@ -46221,7 +46227,7 @@ function getNextOrParentSiblingNode(initialNode, rootNode) {
     while (node && !nextNode) {
         // if node.pNextOrParent is not null here, it is not the next node
         // (because, at this point, nextNode is null, so it is the parent)
-        node = node.pNextOrParent || node.parent;
+        node = node.pNextOrParent || getParentLNode(node);
         if (node === rootNode) {
             return null;
         }
@@ -46441,7 +46447,7 @@ function getParentState(state, rootView) {
     if ((node = state.node) && node.tNode.type === 2 /* View */) {
         // if it's an embedded view, the state needs to go up to the container, in case the
         // container has a next
-        return node.parent.data;
+        return getParentLNode(node).data;
     }
     else {
         // otherwise, use parent view for containers or component views
@@ -46827,7 +46833,6 @@ function createLNodeObject(type, currentView, parent, native, state, queries) {
     return {
         native: native,
         view: currentView,
-        parent: parent,
         nodeInjector: parent ? parent.nodeInjector : null,
         data: state,
         queries: queries,
@@ -46838,7 +46843,10 @@ function createLNodeObject(type, currentView, parent, native, state, queries) {
 }
 function createLNode(index, type, native, name, attrs, state) {
     var parent = isParent ? previousOrParentNode :
-        previousOrParentNode && previousOrParentNode.parent;
+        previousOrParentNode && getParentLNode(previousOrParentNode);
+    // Parents cannot cross component boundaries because components will be used in multiple places,
+    // so it's only set if the view is the same.
+    var tParent = parent && parent.view === currentView ? parent.tNode : null;
     var queries = (isParent ? currentQueries : previousOrParentNode && previousOrParentNode.queries) ||
         parent && parent.queries && parent.queries.child();
     var isState = state != null;
@@ -46846,7 +46854,7 @@ function createLNode(index, type, native, name, attrs, state) {
     if (index === null || type === 2 /* View */) {
         // View nodes are not stored in data because they can be added / removed at runtime (which
         // would cause indices to change). Their TNodes are instead stored in TView.node.
-        node.tNode = state.tView.node || createTNode(type, index, null, null, null);
+        node.tNode = state.tView.node || createTNode(type, index, null, null, tParent, null);
     }
     else {
         // This is an element or container or projection node
@@ -46854,7 +46862,7 @@ function createLNode(index, type, native, name, attrs, state) {
         data[index] = node;
         // Every node adds a value to the static data array to avoid a sparse array
         if (index >= tData.length) {
-            var tNode = tData[index] = createTNode(type, index, name, attrs, null);
+            var tNode = tData[index] = createTNode(type, index, name, attrs, tParent, null);
             if (!isParent && previousOrParentNode) {
                 var previousTNode = previousOrParentNode.tNode;
                 previousTNode.next = tNode;
@@ -47056,10 +47064,11 @@ function getRenderFlags(view) {
  * @param index The index of the TNode in TView.data
  * @param tagName The tag name of the node
  * @param attrs The attributes defined on this node
+ * @param parent The parent of this node
  * @param tViews Any TViews attached to this node
  * @returns the TNode object
  */
-function createTNode(type, index, tagName, attrs, tViews) {
+function createTNode(type, index, tagName, attrs, parent, tViews) {
     ngDevMode && ngDevMode.tNode++;
     return {
         type: type,
@@ -47074,6 +47083,7 @@ function createTNode(type, index, tagName, attrs, tViews) {
         tViews: tViews,
         next: null,
         child: null,
+        parent: parent,
         dynamicContainerNode: null
     };
 }
@@ -48354,16 +48364,16 @@ var ViewContainerRef$1 = /** @class */ (function () {
         // instruction)
         this._lContainerNode.native = undefined;
         this._viewRefs.splice(adjustedIdx, 0, viewRef);
-        lViewNode.parent = this._lContainerNode;
         // If the view is dynamic (has a template), it needs to be counted both at the container
         // level and at the node above the container.
         if (lViewNode.data.template !== null) {
             // Increment the container view count.
             this._lContainerNode.data.dynamicViewCount++;
             // Look for the parent node and increment its dynamic view count.
-            if (this._lContainerNode.parent !== null && this._lContainerNode.parent.data !== null) {
-                ngDevMode && assertNodeOfPossibleTypes(this._lContainerNode.parent, 2 /* View */, 3 /* Element */);
-                this._lContainerNode.parent.data.dynamicViewCount++;
+            var containerParent = getParentLNode(this._lContainerNode);
+            if (containerParent !== null && containerParent.data !== null) {
+                ngDevMode && assertNodeOfPossibleTypes(containerParent, 2 /* View */, 3 /* Element */);
+                containerParent.data.dynamicViewCount++;
             }
         }
         return viewRef;
@@ -50049,7 +50059,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION$3 = new Version$1('6.0.0-rc.5+246.sha-31795b6');
+var VERSION$3 = new Version$1('6.0.0-rc.5+247.sha-e53179e');
 
 /**
  * @license
