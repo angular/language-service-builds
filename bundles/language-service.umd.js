@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.3+23.sha-29dfc8f
+ * @license Angular v6.0.3+26.sha-4d25705
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -390,7 +390,7 @@ var Version = /** @class */ (function () {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION = new Version('6.0.3+23.sha-29dfc8f');
+var VERSION = new Version('6.0.3+26.sha-4d25705');
 
 /**
  * @license
@@ -10666,7 +10666,7 @@ var CompileMetadataResolver = /** @class */ (function () {
                     providerMeta = new ProviderMeta(provider, { useClass: provider });
                 }
                 else if (provider === void 0) {
-                    _this._reportError(syntaxError("Encountered undefined provider! Usually this means you have a circular dependencies (might be caused by using 'barrel' index.ts files."));
+                    _this._reportError(syntaxError("Encountered undefined provider! Usually this means you have a circular dependencies. This might be caused by using 'barrel' index.ts files."));
                     return;
                 }
                 else {
@@ -24158,7 +24158,7 @@ var Version$1 = /** @class */ (function () {
     }
     return Version;
 }());
-var VERSION$2 = new Version$1('6.0.3+23.sha-29dfc8f');
+var VERSION$2 = new Version$1('6.0.3+26.sha-4d25705');
 
 /**
  * @license
@@ -49660,7 +49660,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION$3 = new Version$1('6.0.3+23.sha-29dfc8f');
+var VERSION$3 = new Version$1('6.0.3+26.sha-4d25705');
 
 /**
  * @license
