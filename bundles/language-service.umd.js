@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-rc.5+249.sha-90bf5d8
+ * @license Angular v6.0.0-rc.5+252.sha-7c1bd71
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1162,7 +1162,7 @@ var Version = /** @class */ (function () {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION = new Version('6.0.0-rc.5+249.sha-90bf5d8');
+var VERSION = new Version('6.0.0-rc.5+252.sha-7c1bd71');
 
 /**
  * @license
@@ -24440,7 +24440,7 @@ var Version$1 = /** @class */ (function () {
     }
     return Version;
 }());
-var VERSION$2 = new Version$1('6.0.0-rc.5+249.sha-90bf5d8');
+var VERSION$2 = new Version$1('6.0.0-rc.5+252.sha-7c1bd71');
 
 /**
  * @license
@@ -45966,6 +45966,8 @@ var ngDevModeResetPerfCounters = (typeof ngDevMode == 'undefined' && (function (
             rendererRemoveClass: 0,
             rendererSetStyle: 0,
             rendererRemoveStyle: 0,
+            rendererDestroy: 0,
+            rendererDestroyNode: 0,
         };
     }
     ngDevModeResetPerfCounters();
@@ -46287,8 +46289,16 @@ function addRemoveViewFromContainer(container, rootNode, insertMode, beforeNode)
                         parent.insertBefore((node.native), beforeNode, true);
                 }
                 else {
-                    isProceduralRenderer(renderer) ? renderer.removeChild(parent, (node.native)) :
+                    if (isProceduralRenderer(renderer)) {
+                        renderer.removeChild(parent, (node.native));
+                        if (renderer.destroyNode) {
+                            ngDevMode && ngDevMode.rendererDestroyNode++;
+                            renderer.destroyNode((node.native));
+                        }
+                    }
+                    else {
                         parent.removeChild((node.native));
+                    }
                 }
                 nextNode = getNextLNode(node);
             }
@@ -46463,6 +46473,11 @@ function cleanUpView(view) {
     removeListeners(view);
     executeOnDestroys(view);
     executePipeOnDestroys(view);
+    // For component views only, the local renderer is destroyed as clean up time.
+    if (view.id === -1 && isProceduralRenderer(view.renderer)) {
+        ngDevMode && ngDevMode.rendererDestroy++;
+        view.renderer.destroy();
+    }
 }
 /** Removes listeners and unsubscribes from output subscriptions */
 function removeListeners(view) {
@@ -50059,7 +50074,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION$3 = new Version$1('6.0.0-rc.5+249.sha-90bf5d8');
+var VERSION$3 = new Version$1('6.0.0-rc.5+252.sha-7c1bd71');
 
 /**
  * @license
