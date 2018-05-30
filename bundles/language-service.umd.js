@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-rc.5+273.sha-27d811a
+ * @license Angular v6.0.0-rc.5+274.sha-b99ef2b
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1162,7 +1162,7 @@ var Version = /** @class */ (function () {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION = new Version('6.0.0-rc.5+273.sha-27d811a');
+var VERSION = new Version('6.0.0-rc.5+274.sha-b99ef2b');
 
 /**
  * @license
@@ -24441,7 +24441,7 @@ var Version$1 = /** @class */ (function () {
     }
     return Version;
 }());
-var VERSION$2 = new Version$1('6.0.0-rc.5+273.sha-27d811a');
+var VERSION$2 = new Version$1('6.0.0-rc.5+274.sha-b99ef2b');
 
 /**
  * @license
@@ -47153,7 +47153,7 @@ function createTNode(type, index, tagName, attrs, parent, tViews) {
 
 /**
  * Create text node with binding
- * Bindings should be handled externally with the proper bind(1-8) method
+ * Bindings should be handled externally with the proper interpolation(1-8) method
  *
  * @param index Index of the node in the data array.
  * @param value Stringified value to write.
@@ -50079,7 +50079,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION$3 = new Version$1('6.0.0-rc.5+273.sha-27d811a');
+var VERSION$3 = new Version$1('6.0.0-rc.5+274.sha-b99ef2b');
 
 /**
  * @license
