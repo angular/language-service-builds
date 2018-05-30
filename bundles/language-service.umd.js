@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-rc.5+255.sha-d6595eb
+ * @license Angular v6.0.0-rc.5+272.sha-accda00
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1162,7 +1162,7 @@ var Version = /** @class */ (function () {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION = new Version('6.0.0-rc.5+255.sha-d6595eb');
+var VERSION = new Version('6.0.0-rc.5+272.sha-accda00');
 
 /**
  * @license
@@ -10734,7 +10734,7 @@ var CompileMetadataResolver = /** @class */ (function () {
                     providerMeta = new ProviderMeta(provider, { useClass: provider });
                 }
                 else if (provider === void 0) {
-                    _this._reportError(syntaxError("Encountered undefined provider! Usually this means you have a circular dependencies (might be caused by using 'barrel' index.ts files."));
+                    _this._reportError(syntaxError("Encountered undefined provider! Usually this means you have a circular dependencies. This might be caused by using 'barrel' index.ts files."));
                     return;
                 }
                 else {
@@ -17460,14 +17460,12 @@ var ResourceLoader = /** @class */ (function () {
  * found in the LICENSE file at https://angular.io/license
  */
 /**
- * JIT compiles an expression and monkey-patches the result of executing the expression onto a given
- * type.
+ * JIT compiles an expression and returns the result of executing that expression.
  *
- * @param type the type which will receive the monkey-patched result
- * @param field name of the field on the type to monkey-patch
  * @param def the definition which will be compiled and executed to get the value to patch
  * @param context an object map of @angular/core symbol names to symbols which will be available in
  * the context of the compiled expression
+ * @param sourceUrl a URL to use for the source map of the compiled expression
  * @param constantPool an optional `ConstantPool` which contains constants used in the expression
  */
 
@@ -23310,6 +23308,7 @@ var ChangeDetectorStatus;
  */
 
 var R3_COMPILE_COMPONENT = null;
+var R3_COMPILE_DIRECTIVE = null;
 var R3_COMPILE_INJECTABLE = null;
 var R3_COMPILE_NGMODULE = null;
 
@@ -23329,7 +23328,7 @@ var R3_COMPILE_NGMODULE = null;
 var Directive = makeDecorator('Directive', function (dir) {
     if (dir === void 0) { dir = {}; }
     return dir;
-});
+}, undefined, undefined, function (type, meta) { return (R3_COMPILE_DIRECTIVE || (function () { }))(type, meta); });
 /**
  * Component decorator and metadata.
  *
@@ -23415,7 +23414,9 @@ var __window = typeof window !== 'undefined' && window;
 var __self = typeof self !== 'undefined' && typeof WorkerGlobalScope !== 'undefined' &&
     self instanceof WorkerGlobalScope && self;
 var __global = typeof global !== 'undefined' && global;
-var _global = __window || __global || __self;
+// Check __global first, because in Node tests both __global and __window may be defined and _global
+// should be __global in that case.
+var _global = __global || __window || __self;
 var promise = Promise.resolve(0);
 var _symbolIterator = null;
 function getSymbolIterator() {
@@ -24440,7 +24441,7 @@ var Version$1 = /** @class */ (function () {
     }
     return Version;
 }());
-var VERSION$2 = new Version$1('6.0.0-rc.5+255.sha-d6595eb');
+var VERSION$2 = new Version$1('6.0.0-rc.5+272.sha-accda00');
 
 /**
  * @license
@@ -45997,15 +45998,7 @@ function assertNodeType(node, type) {
     assertNotNull$1(node, 'should be called with a node');
     assertEqual(node.tNode.type, type, "should be a " + typeName(type));
 }
-function assertNodeOfPossibleTypes(node) {
-    var types = [];
-    for (var _i = 1; _i < arguments.length; _i++) {
-        types[_i - 1] = arguments[_i];
-    }
-    assertNotNull$1(node, 'should be called with a node');
-    var found = types.some(function (type) { return node.tNode.type === type; });
-    assertEqual(found, true, "Should be one of " + types.map(typeName).join(', '));
-}
+
 function typeName(type) {
     if (type == 1 /* Projection */)
         return 'Projection';
@@ -46400,6 +46393,11 @@ function insertView(container, viewNode, index) {
         views.push(viewNode);
         viewNode.data.next = null;
     }
+    // Notify query that a new view has been added
+    var lView = viewNode.data;
+    if (lView.queries) {
+        lView.queries.insertView(index);
+    }
     // If the container's renderParent is null, we know that it is a root node of its own parent view
     // and we should wait until that parent processes its nodes (otherwise, we will insert this view's
     // nodes twice - once now and once when its parent inserts its views).
@@ -46437,7 +46435,10 @@ function removeView(container, removeIndex) {
     destroyViewTree(viewNode.data);
     addRemoveViewFromContainer(container, viewNode, false);
     // Notify query that view has been removed
-    container.data.queries && container.data.queries.removeView(removeIndex);
+    var removedLview = viewNode.data;
+    if (removedLview.queries) {
+        removedLview.queries.removeView(removeIndex);
+    }
     return viewNode;
 }
 /**
@@ -46831,7 +46832,6 @@ function createLView(viewId, renderer, tView, template, context, flags, sanitize
         bindingIndex: -1,
         template: template,
         context: context,
-        dynamicViewCount: 0,
         lifecycleStage: 1 /* Init */,
         queries: null,
         injector: currentView && currentView.injector,
@@ -46930,7 +46930,7 @@ function createLNode(index, type, native, name, attrs, state) {
  * can't store TViews in the template function itself (as we do for comps). Instead, we store the
  * TView for dynamically created views on their host TNode, which only has one instance.
  */
-function renderEmbeddedTemplate(viewNode, tView, template, context, renderer, directives, pipes) {
+function renderEmbeddedTemplate(viewNode, tView, template, context, renderer, queries) {
     var _isParent = isParent;
     var _previousOrParentNode = previousOrParentNode;
     var oldView;
@@ -46940,6 +46940,9 @@ function renderEmbeddedTemplate(viewNode, tView, template, context, renderer, di
         previousOrParentNode = (null);
         if (viewNode == null) {
             var lView = createLView(-1, renderer, tView, template, context, 2 /* CheckAlways */, getCurrentSanitizer());
+            if (queries) {
+                lView.queries = queries.createView();
+            }
             viewNode = createLNode(null, 2 /* View */, null, null, null, lView);
             rf = 1 /* Create */;
         }
@@ -47173,6 +47176,15 @@ function createTNode(type, index, tagName, attrs, parent, tViews) {
  * current Angular. Example: local refs and inputs on root component.
  */
 
+/**
+ * Creates a LContainer, either from a container instruction, or for a ViewContainerRef.
+ *
+ * @param parentLNode the LNode in which the container's content will be rendered
+ * @param currentView The parent view of the LContainer
+ * @param template Optional the inline template (ng-template instruction case)
+ * @param isForViewContainerRef Optional a flag indicating the ViewContainerRef case
+ * @returns LContainer
+ */
 
 /**
  * Creates an LContainerNode.
@@ -47200,7 +47212,9 @@ function createTNode(type, index, tagName, attrs, parent, tViews) {
 
 function refreshDynamicChildren() {
     for (var current = currentView.child; current !== null; current = current.next) {
-        if (current.dynamicViewCount !== 0 && current.views) {
+        // Note: current can be a LView or a LContainer, but here we are only interested in LContainer.
+        // The distinction is made because nextIndex and views do not exist on LView.
+        if (isLContainer(current)) {
             var container_1 = current;
             for (var i = 0; i < container_1.views.length; i++) {
                 var lViewNode = container_1.views[i];
@@ -47211,6 +47225,9 @@ function refreshDynamicChildren() {
             }
         }
     }
+}
+function isLContainer(node) {
+    return node.nextIndex == null && node.views != null;
 }
 /**
  * Marks the start of an embedded view.
@@ -48379,18 +48396,6 @@ var ViewContainerRef$1 = /** @class */ (function () {
         // instruction)
         this._lContainerNode.native = undefined;
         this._viewRefs.splice(adjustedIdx, 0, viewRef);
-        // If the view is dynamic (has a template), it needs to be counted both at the container
-        // level and at the node above the container.
-        if (lViewNode.data.template !== null) {
-            // Increment the container view count.
-            this._lContainerNode.data.dynamicViewCount++;
-            // Look for the parent node and increment its dynamic view count.
-            var containerParent = getParentLNode(this._lContainerNode);
-            if (containerParent !== null && containerParent.data !== null) {
-                ngDevMode && assertNodeOfPossibleTypes(containerParent, 2 /* View */, 3 /* Element */);
-                containerParent.data.dynamicViewCount++;
-            }
-        }
         return viewRef;
     };
     ViewContainerRef.prototype.move = function (viewRef, newIndex) {
@@ -50074,7 +50079,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION$3 = new Version$1('6.0.0-rc.5+255.sha-d6595eb');
+var VERSION$3 = new Version$1('6.0.0-rc.5+272.sha-accda00');
 
 /**
  * @license
