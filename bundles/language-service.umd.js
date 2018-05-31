@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-rc.5+243.sha-1eafd04
+ * @license Angular v6.0.0-rc.5+281.sha-b86d4de
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1162,7 +1162,7 @@ var Version = /** @class */ (function () {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION = new Version('6.0.0-rc.5+243.sha-1eafd04');
+var VERSION = new Version('6.0.0-rc.5+281.sha-b86d4de');
 
 /**
  * @license
@@ -10734,7 +10734,7 @@ var CompileMetadataResolver = /** @class */ (function () {
                     providerMeta = new ProviderMeta(provider, { useClass: provider });
                 }
                 else if (provider === void 0) {
-                    _this._reportError(syntaxError("Encountered undefined provider! Usually this means you have a circular dependencies (might be caused by using 'barrel' index.ts files."));
+                    _this._reportError(syntaxError("Encountered undefined provider! Usually this means you have a circular dependencies. This might be caused by using 'barrel' index.ts files."));
                     return;
                 }
                 else {
@@ -15125,7 +15125,7 @@ var StaticSymbolResolver = /** @class */ (function () {
             }
         }
         // handle the actual metadata. Has to be after the exports
-        // as there migth be collisions in the names, and we want the symbols
+        // as there might be collisions in the names, and we want the symbols
         // of the current module to win ofter reexports.
         if (metadata['metadata']) {
             // handle direct declarations of the symbol
@@ -15171,7 +15171,7 @@ var StaticSymbolResolver = /** @class */ (function () {
         var _originalFileMemo;
         var getOriginalName = function () {
             if (!_originalFileMemo) {
-                // Guess what hte original file name is from the reference. If it has a `.d.ts` extension
+                // Guess what the original file name is from the reference. If it has a `.d.ts` extension
                 // replace it with `.ts`. If it already has `.ts` just leave it in place. If it doesn't have
                 // .ts or .d.ts, append `.ts'. Also, if it is in `node_modules`, trim the `node_module`
                 // location as it is not important to finding the file.
@@ -17460,14 +17460,12 @@ var ResourceLoader = /** @class */ (function () {
  * found in the LICENSE file at https://angular.io/license
  */
 /**
- * JIT compiles an expression and monkey-patches the result of executing the expression onto a given
- * type.
+ * JIT compiles an expression and returns the result of executing that expression.
  *
- * @param type the type which will receive the monkey-patched result
- * @param field name of the field on the type to monkey-patch
  * @param def the definition which will be compiled and executed to get the value to patch
  * @param context an object map of @angular/core symbol names to symbols which will be available in
  * the context of the compiled expression
+ * @param sourceUrl a URL to use for the source map of the compiled expression
  * @param constantPool an optional `ConstantPool` which contains constants used in the expression
  */
 
@@ -20931,7 +20929,7 @@ var EmitFlags;
  * found in the LICENSE file at https://angular.io/license
  */
 
-var DTS$2 = /\.d\.ts$/;
+var DTS$1 = /\.d\.ts$/;
 
 // Note: This is an internal property in TypeScript. Use it only for assertions and tests.
 
@@ -20967,7 +20965,7 @@ function readMetadata(filePath, host, cache) {
         // If the file doesn't exists then we cannot return metadata for the file.
         // This will occur if the user referenced a declared module for which no file
         // exists for the module (i.e. jQuery or angularjs).
-        if (DTS$2.test(filePath)) {
+        if (DTS$1.test(filePath)) {
             metadatas = readMetadataFile(host, filePath);
             if (!metadatas) {
                 // If there is a .d.ts file but no metadata file we need to produce a
@@ -20987,7 +20985,7 @@ function readMetadata(filePath, host, cache) {
     return metadatas;
 }
 function readMetadataFile(host, dtsFilePath) {
-    var metadataPath = dtsFilePath.replace(DTS$2, '.metadata.json');
+    var metadataPath = dtsFilePath.replace(DTS$1, '.metadata.json');
     if (!host.fileExists(metadataPath)) {
         return undefined;
     }
@@ -23310,6 +23308,7 @@ var ChangeDetectorStatus;
  */
 
 var R3_COMPILE_COMPONENT = null;
+var R3_COMPILE_DIRECTIVE = null;
 var R3_COMPILE_INJECTABLE = null;
 var R3_COMPILE_NGMODULE = null;
 
@@ -23329,7 +23328,7 @@ var R3_COMPILE_NGMODULE = null;
 var Directive = makeDecorator('Directive', function (dir) {
     if (dir === void 0) { dir = {}; }
     return dir;
-});
+}, undefined, undefined, function (type, meta) { return (R3_COMPILE_DIRECTIVE || (function () { }))(type, meta); });
 /**
  * Component decorator and metadata.
  *
@@ -23415,7 +23414,9 @@ var __window = typeof window !== 'undefined' && window;
 var __self = typeof self !== 'undefined' && typeof WorkerGlobalScope !== 'undefined' &&
     self instanceof WorkerGlobalScope && self;
 var __global = typeof global !== 'undefined' && global;
-var _global = __window || __global || __self;
+// Check __global first, because in Node tests both __global and __window may be defined and _global
+// should be __global in that case.
+var _global = __global || __window || __self;
 var promise = Promise.resolve(0);
 var _symbolIterator = null;
 function getSymbolIterator() {
@@ -24440,7 +24441,7 @@ var Version$1 = /** @class */ (function () {
     }
     return Version;
 }());
-var VERSION$2 = new Version$1('6.0.0-rc.5+243.sha-1eafd04');
+var VERSION$2 = new Version$1('6.0.0-rc.5+281.sha-b86d4de');
 
 /**
  * @license
@@ -45966,6 +45967,8 @@ var ngDevModeResetPerfCounters = (typeof ngDevMode == 'undefined' && (function (
             rendererRemoveClass: 0,
             rendererSetStyle: 0,
             rendererRemoveStyle: 0,
+            rendererDestroy: 0,
+            rendererDestroyNode: 0,
         };
     }
     ngDevModeResetPerfCounters();
@@ -45995,15 +45998,7 @@ function assertNodeType(node, type) {
     assertNotNull$1(node, 'should be called with a node');
     assertEqual(node.tNode.type, type, "should be a " + typeName(type));
 }
-function assertNodeOfPossibleTypes(node) {
-    var types = [];
-    for (var _i = 1; _i < arguments.length; _i++) {
-        types[_i - 1] = arguments[_i];
-    }
-    assertNotNull$1(node, 'should be called with a node');
-    var found = types.some(function (type) { return node.tNode.type === type; });
-    assertEqual(found, true, "Should be one of " + types.map(typeName).join(', '));
-}
+
 function typeName(type) {
     if (type == 1 /* Projection */)
         return 'Projection';
@@ -46157,7 +46152,7 @@ function findNextRNodeSibling(node, stopNode) {
                 }
                 currentSibling = getNextLNode(currentSibling);
             }
-            var parentNode = currentNode.parent;
+            var parentNode = getParentLNode(currentNode);
             currentNode = null;
             if (parentNode) {
                 var parentType = parentNode.tNode.type;
@@ -46185,6 +46180,12 @@ function getChildLNode(node) {
         return view.data[node.tNode.child.index];
     }
     return null;
+}
+function getParentLNode(node) {
+    if (node.tNode.index === null)
+        return null;
+    var parent = node.tNode.parent;
+    return parent ? node.view.data[parent.index] : node.view.node;
 }
 /**
  * Get the next node in the LNode tree, taking into account the place where a node is
@@ -46221,7 +46222,7 @@ function getNextOrParentSiblingNode(initialNode, rootNode) {
     while (node && !nextNode) {
         // if node.pNextOrParent is not null here, it is not the next node
         // (because, at this point, nextNode is null, so it is the parent)
-        node = node.pNextOrParent || node.parent;
+        node = node.pNextOrParent || getParentLNode(node);
         if (node === rootNode) {
             return null;
         }
@@ -46281,8 +46282,16 @@ function addRemoveViewFromContainer(container, rootNode, insertMode, beforeNode)
                         parent.insertBefore((node.native), beforeNode, true);
                 }
                 else {
-                    isProceduralRenderer(renderer) ? renderer.removeChild(parent, (node.native)) :
+                    if (isProceduralRenderer(renderer)) {
+                        renderer.removeChild(parent, (node.native));
+                        if (renderer.destroyNode) {
+                            ngDevMode && ngDevMode.rendererDestroyNode++;
+                            renderer.destroyNode((node.native));
+                        }
+                    }
+                    else {
                         parent.removeChild((node.native));
+                    }
                 }
                 nextNode = getNextLNode(node);
             }
@@ -46384,6 +46393,11 @@ function insertView(container, viewNode, index) {
         views.push(viewNode);
         viewNode.data.next = null;
     }
+    // Notify query that a new view has been added
+    var lView = viewNode.data;
+    if (lView.queries) {
+        lView.queries.insertView(index);
+    }
     // If the container's renderParent is null, we know that it is a root node of its own parent view
     // and we should wait until that parent processes its nodes (otherwise, we will insert this view's
     // nodes twice - once now and once when its parent inserts its views).
@@ -46421,7 +46435,10 @@ function removeView(container, removeIndex) {
     destroyViewTree(viewNode.data);
     addRemoveViewFromContainer(container, viewNode, false);
     // Notify query that view has been removed
-    container.data.queries && container.data.queries.removeView(removeIndex);
+    var removedLview = viewNode.data;
+    if (removedLview.queries) {
+        removedLview.queries.removeView(removeIndex);
+    }
     return viewNode;
 }
 /**
@@ -46441,7 +46458,7 @@ function getParentState(state, rootView) {
     if ((node = state.node) && node.tNode.type === 2 /* View */) {
         // if it's an embedded view, the state needs to go up to the container, in case the
         // container has a next
-        return node.parent.data;
+        return getParentLNode(node).data;
     }
     else {
         // otherwise, use parent view for containers or component views
@@ -46457,6 +46474,11 @@ function cleanUpView(view) {
     removeListeners(view);
     executeOnDestroys(view);
     executePipeOnDestroys(view);
+    // For component views only, the local renderer is destroyed as clean up time.
+    if (view.id === -1 && isProceduralRenderer(view.renderer)) {
+        ngDevMode && ngDevMode.rendererDestroy++;
+        view.renderer.destroy();
+    }
 }
 /** Removes listeners and unsubscribes from output subscriptions */
 function removeListeners(view) {
@@ -46810,7 +46832,6 @@ function createLView(viewId, renderer, tView, template, context, flags, sanitize
         bindingIndex: -1,
         template: template,
         context: context,
-        dynamicViewCount: 0,
         lifecycleStage: 1 /* Init */,
         queries: null,
         injector: currentView && currentView.injector,
@@ -46827,7 +46848,6 @@ function createLNodeObject(type, currentView, parent, native, state, queries) {
     return {
         native: native,
         view: currentView,
-        parent: parent,
         nodeInjector: parent ? parent.nodeInjector : null,
         data: state,
         queries: queries,
@@ -46838,7 +46858,10 @@ function createLNodeObject(type, currentView, parent, native, state, queries) {
 }
 function createLNode(index, type, native, name, attrs, state) {
     var parent = isParent ? previousOrParentNode :
-        previousOrParentNode && previousOrParentNode.parent;
+        previousOrParentNode && getParentLNode(previousOrParentNode);
+    // Parents cannot cross component boundaries because components will be used in multiple places,
+    // so it's only set if the view is the same.
+    var tParent = parent && parent.view === currentView ? parent.tNode : null;
     var queries = (isParent ? currentQueries : previousOrParentNode && previousOrParentNode.queries) ||
         parent && parent.queries && parent.queries.child();
     var isState = state != null;
@@ -46846,7 +46869,7 @@ function createLNode(index, type, native, name, attrs, state) {
     if (index === null || type === 2 /* View */) {
         // View nodes are not stored in data because they can be added / removed at runtime (which
         // would cause indices to change). Their TNodes are instead stored in TView.node.
-        node.tNode = state.tView.node || createTNode(type, index, null, null, null);
+        node.tNode = state.tView.node || createTNode(type, index, null, null, tParent, null);
     }
     else {
         // This is an element or container or projection node
@@ -46854,7 +46877,7 @@ function createLNode(index, type, native, name, attrs, state) {
         data[index] = node;
         // Every node adds a value to the static data array to avoid a sparse array
         if (index >= tData.length) {
-            var tNode = tData[index] = createTNode(type, index, name, attrs, null);
+            var tNode = tData[index] = createTNode(type, index, name, attrs, tParent, null);
             if (!isParent && previousOrParentNode) {
                 var previousTNode = previousOrParentNode.tNode;
                 previousTNode.next = tNode;
@@ -46907,7 +46930,7 @@ function createLNode(index, type, native, name, attrs, state) {
  * can't store TViews in the template function itself (as we do for comps). Instead, we store the
  * TView for dynamically created views on their host TNode, which only has one instance.
  */
-function renderEmbeddedTemplate(viewNode, tView, template, context, renderer, directives, pipes) {
+function renderEmbeddedTemplate(viewNode, tView, template, context, renderer, queries) {
     var _isParent = isParent;
     var _previousOrParentNode = previousOrParentNode;
     var oldView;
@@ -46917,6 +46940,9 @@ function renderEmbeddedTemplate(viewNode, tView, template, context, renderer, di
         previousOrParentNode = (null);
         if (viewNode == null) {
             var lView = createLView(-1, renderer, tView, template, context, 2 /* CheckAlways */, getCurrentSanitizer());
+            if (queries) {
+                lView.queries = queries.createView();
+            }
             viewNode = createLNode(null, 2 /* View */, null, null, null, lView);
             rf = 1 /* Create */;
         }
@@ -47056,10 +47082,11 @@ function getRenderFlags(view) {
  * @param index The index of the TNode in TView.data
  * @param tagName The tag name of the node
  * @param attrs The attributes defined on this node
+ * @param parent The parent of this node
  * @param tViews Any TViews attached to this node
  * @returns the TNode object
  */
-function createTNode(type, index, tagName, attrs, tViews) {
+function createTNode(type, index, tagName, attrs, parent, tViews) {
     ngDevMode && ngDevMode.tNode++;
     return {
         type: type,
@@ -47074,6 +47101,7 @@ function createTNode(type, index, tagName, attrs, tViews) {
         tViews: tViews,
         next: null,
         child: null,
+        parent: parent,
         dynamicContainerNode: null
     };
 }
@@ -47125,7 +47153,7 @@ function createTNode(type, index, tagName, attrs, tViews) {
 
 /**
  * Create text node with binding
- * Bindings should be handled externally with the proper bind(1-8) method
+ * Bindings should be handled externally with the proper interpolation(1-8) method
  *
  * @param index Index of the node in the data array.
  * @param value Stringified value to write.
@@ -47148,6 +47176,15 @@ function createTNode(type, index, tagName, attrs, tViews) {
  * current Angular. Example: local refs and inputs on root component.
  */
 
+/**
+ * Creates a LContainer, either from a container instruction, or for a ViewContainerRef.
+ *
+ * @param parentLNode the LNode in which the container's content will be rendered
+ * @param currentView The parent view of the LContainer
+ * @param template Optional the inline template (ng-template instruction case)
+ * @param isForViewContainerRef Optional a flag indicating the ViewContainerRef case
+ * @returns LContainer
+ */
 
 /**
  * Creates an LContainerNode.
@@ -47175,7 +47212,9 @@ function createTNode(type, index, tagName, attrs, tViews) {
 
 function refreshDynamicChildren() {
     for (var current = currentView.child; current !== null; current = current.next) {
-        if (current.dynamicViewCount !== 0 && current.views) {
+        // Note: current can be a LView or a LContainer, but here we are only interested in LContainer.
+        // The distinction is made because nextIndex and views do not exist on LView.
+        if (isLContainer(current)) {
             var container_1 = current;
             for (var i = 0; i < container_1.views.length; i++) {
                 var lViewNode = container_1.views[i];
@@ -47186,6 +47225,9 @@ function refreshDynamicChildren() {
             }
         }
     }
+}
+function isLContainer(node) {
+    return node.nextIndex == null && node.views != null;
 }
 /**
  * Marks the start of an embedded view.
@@ -48354,18 +48396,6 @@ var ViewContainerRef$1 = /** @class */ (function () {
         // instruction)
         this._lContainerNode.native = undefined;
         this._viewRefs.splice(adjustedIdx, 0, viewRef);
-        lViewNode.parent = this._lContainerNode;
-        // If the view is dynamic (has a template), it needs to be counted both at the container
-        // level and at the node above the container.
-        if (lViewNode.data.template !== null) {
-            // Increment the container view count.
-            this._lContainerNode.data.dynamicViewCount++;
-            // Look for the parent node and increment its dynamic view count.
-            if (this._lContainerNode.parent !== null && this._lContainerNode.parent.data !== null) {
-                ngDevMode && assertNodeOfPossibleTypes(this._lContainerNode.parent, 2 /* View */, 3 /* Element */);
-                this._lContainerNode.parent.data.dynamicViewCount++;
-            }
-        }
         return viewRef;
     };
     ViewContainerRef.prototype.move = function (viewRef, newIndex) {
@@ -50049,7 +50079,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION$3 = new Version$1('6.0.0-rc.5+243.sha-1eafd04');
+var VERSION$3 = new Version$1('6.0.0-rc.5+281.sha-b86d4de');
 
 /**
  * @license
