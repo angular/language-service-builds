@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-rc.5+281.sha-b86d4de
+ * @license Angular v6.0.0-rc.5+288.sha-7e3f8f7
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1162,7 +1162,7 @@ var Version = /** @class */ (function () {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION = new Version('6.0.0-rc.5+281.sha-b86d4de');
+var VERSION = new Version('6.0.0-rc.5+288.sha-7e3f8f7');
 
 /**
  * @license
@@ -24441,7 +24441,7 @@ var Version$1 = /** @class */ (function () {
     }
     return Version;
 }());
-var VERSION$2 = new Version$1('6.0.0-rc.5+281.sha-b86d4de');
+var VERSION$2 = new Version$1('6.0.0-rc.5+288.sha-7e3f8f7');
 
 /**
  * @license
@@ -46332,18 +46332,18 @@ function addRemoveViewFromContainer(container, rootNode, insertMode, beforeNode)
  *  @param rootView The view to destroy
  */
 function destroyViewTree(rootView) {
-    // A view to cleanup doesn't have children so we should not try to descend down the view tree.
-    if (!rootView.child) {
+    // If the view has no children, we can clean it up and return early.
+    if (rootView.tView.childIndex === -1) {
         return cleanUpView(rootView);
     }
-    var viewOrContainer = rootView.child;
+    var viewOrContainer = getLViewChild(rootView);
     while (viewOrContainer) {
         var next = null;
         if (viewOrContainer.views && viewOrContainer.views.length) {
             next = viewOrContainer.views[0].data;
         }
-        else if (viewOrContainer.child) {
-            next = viewOrContainer.child;
+        else if (viewOrContainer.tView && viewOrContainer.tView.childIndex > -1) {
+            next = getLViewChild(viewOrContainer);
         }
         else if (viewOrContainer.next) {
             // Only move to the side and clean if operating below rootView -
@@ -46440,6 +46440,13 @@ function removeView(container, removeIndex) {
         removedLview.queries.removeView(removeIndex);
     }
     return viewNode;
+}
+/** Gets the child of the given LView */
+function getLViewChild(view) {
+    if (view.tView.childIndex === -1)
+        return null;
+    var hostNode = view.data[view.tView.childIndex];
+    return hostNode.data ? hostNode.data : hostNode.dynamicLContainerNode.data;
 }
 /**
  * Determines which LViewOrLContainer to jump to when traversing back up the
@@ -46825,7 +46832,6 @@ function createLView(viewId, renderer, tView, template, context, flags, sanitize
         tView: tView,
         cleanup: null,
         renderer: renderer,
-        child: null,
         tail: null,
         next: null,
         bindingStartIndex: -1,
@@ -47211,7 +47217,7 @@ function createTNode(type, index, tagName, attrs, parent, tViews) {
  */
 
 function refreshDynamicChildren() {
-    for (var current = currentView.child; current !== null; current = current.next) {
+    for (var current = getLViewChild(currentView); current !== null; current = current.next) {
         // Note: current can be a LView or a LContainer, but here we are only interested in LContainer.
         // The distinction is made because nextIndex and views do not exist on LView.
         if (isLContainer(current)) {
@@ -47301,6 +47307,7 @@ function viewAttached(view) {
  * and call onDestroy callbacks.
  *
  * @param currentView The view where LView or LContainer should be added
+ * @param hostIndex Index of the view's host node in data[]
  * @param state The LView or LContainer to add to the view tree
  * @returns The state passed in
  */
@@ -50079,7 +50086,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION$3 = new Version$1('6.0.0-rc.5+281.sha-b86d4de');
+var VERSION$3 = new Version$1('6.0.0-rc.5+288.sha-7e3f8f7');
 
 /**
  * @license
