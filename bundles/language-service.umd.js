@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-rc.5+302.sha-cb65724
+ * @license Angular v6.0.0-rc.5+300.sha-5db4f1a
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1162,7 +1162,7 @@ var Version = /** @class */ (function () {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION = new Version('6.0.0-rc.5+302.sha-cb65724');
+var VERSION = new Version('6.0.0-rc.5+300.sha-5db4f1a');
 
 /**
  * @license
@@ -24385,7 +24385,7 @@ var Version$1 = /** @class */ (function () {
     }
     return Version;
 }());
-var VERSION$2 = new Version$1('6.0.0-rc.5+302.sha-cb65724');
+var VERSION$2 = new Version$1('6.0.0-rc.5+300.sha-5db4f1a');
 
 /**
  * @license
@@ -44835,9 +44835,9 @@ function throwError$1(msg) {
  * @param currentView The current view
  */
 function executeInitHooks(currentView, tView, creationMode) {
-    if (currentView.flags & 16 /* RunInit */) {
+    if (currentView.lifecycleStage === 1 /* Init */) {
         executeHooks(currentView.directives, tView.initHooks, tView.checkHooks, creationMode);
-        currentView.flags &= ~16 /* RunInit */;
+        currentView.lifecycleStage = 2 /* AfterInit */;
     }
 }
 /**
@@ -45653,6 +45653,9 @@ function enterView(newView, host) {
     firstTemplatePass = newView && newView.tView.firstTemplatePass;
     cleanup = newView && newView.cleanup;
     renderer = newView && newView.renderer;
+    if (newView && newView.bindingIndex < 0) {
+        newView.bindingIndex = newView.bindingStartIndex;
+    }
     if (host != null) {
         previousOrParentNode = host;
         isParent = true;
@@ -45677,7 +45680,7 @@ function leaveView(newView, creationOnly) {
         // Views are clean and in update mode after being checked, so these bits are cleared
         currentView.flags &= ~(1 /* CreationMode */ | 4 /* Dirty */);
     }
-    currentView.flags |= 16 /* RunInit */;
+    currentView.lifecycleStage = 1 /* Init */;
     currentView.bindingIndex = -1;
     enterView(newView, null);
 }
@@ -45731,7 +45734,7 @@ function createLView(viewId, renderer, tView, template, context, flags, sanitize
     var newView = {
         parent: currentView,
         id: viewId,
-        flags: flags | 1 /* CreationMode */ | 8 /* Attached */ | 16 /* RunInit */,
+        flags: flags | 1 /* CreationMode */ | 8 /* Attached */,
         node: null,
         data: [],
         directives: null,
@@ -45740,9 +45743,11 @@ function createLView(viewId, renderer, tView, template, context, flags, sanitize
         renderer: renderer,
         tail: null,
         next: null,
+        bindingStartIndex: -1,
         bindingIndex: -1,
         template: template,
         context: context,
+        lifecycleStage: 1 /* Init */,
         queries: null,
         injector: currentView && currentView.injector,
         sanitizer: sanitizer || null
@@ -46390,10 +46395,10 @@ function detectChangesInternal(hostView, hostNode, def, component) {
  *  |  LNodes ... | pure function bindings | regular bindings / interpolations |
  *  ----------------------------------------------------------------------------
  *                                         ^
- *                                         TView.bindingStartIndex
+ *                                         LView.bindingStartIndex
  *
- * Pure function instructions are given an offset from TView.bindingStartIndex.
- * Subtracting the offset from TView.bindingStartIndex gives the first index where the bindings
+ * Pure function instructions are given an offset from LView.bindingStartIndex.
+ * Subtracting the offset from LView.bindingStartIndex gives the first index where the bindings
  * are stored.
  *
  * NOTE: reserveSlots instructions are only ever allowed at the very end of the creation block
@@ -48639,7 +48644,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION$3 = new Version$1('6.0.0-rc.5+302.sha-cb65724');
+var VERSION$3 = new Version$1('6.0.0-rc.5+300.sha-5db4f1a');
 
 /**
  * @license
