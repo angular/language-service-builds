@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-rc.5+299.sha-0561b66
+ * @license Angular v6.0.0-rc.5+302.sha-cb65724
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1162,7 +1162,7 @@ var Version = /** @class */ (function () {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION = new Version('6.0.0-rc.5+299.sha-0561b66');
+var VERSION = new Version('6.0.0-rc.5+302.sha-cb65724');
 
 /**
  * @license
@@ -24385,7 +24385,7 @@ var Version$1 = /** @class */ (function () {
     }
     return Version;
 }());
-var VERSION$2 = new Version$1('6.0.0-rc.5+299.sha-0561b66');
+var VERSION$2 = new Version$1('6.0.0-rc.5+302.sha-cb65724');
 
 /**
  * @license
@@ -44835,9 +44835,9 @@ function throwError$1(msg) {
  * @param currentView The current view
  */
 function executeInitHooks(currentView, tView, creationMode) {
-    if (currentView.lifecycleStage === 1 /* Init */) {
+    if (currentView.flags & 16 /* RunInit */) {
         executeHooks(currentView.directives, tView.initHooks, tView.checkHooks, creationMode);
-        currentView.lifecycleStage = 2 /* AfterInit */;
+        currentView.flags &= ~16 /* RunInit */;
     }
 }
 /**
@@ -45102,7 +45102,7 @@ function getChildLNode(node) {
     return null;
 }
 function getParentLNode(node) {
-    if (node.tNode.index === null)
+    if (node.tNode.index === -1)
         return null;
     var parent = node.tNode.parent;
     return parent ? node.view.data[parent.index] : node.view.node;
@@ -45468,15 +45468,6 @@ function executePipeOnDestroys(view) {
  */
 
 /**
- * Inserts the provided node before the correct element in the DOM.
- *
- * The element insertion might be delayed {@link canInsertNativeNode}
- *
- * @param node Node to insert
- * @param currentView Current LView
- */
-
-/**
  * Appends a projected node to the DOM, or in the case of a projected container,
  * appends the nodes from all of the container's active views to the DOM.
  *
@@ -45662,9 +45653,6 @@ function enterView(newView, host) {
     firstTemplatePass = newView && newView.tView.firstTemplatePass;
     cleanup = newView && newView.cleanup;
     renderer = newView && newView.renderer;
-    if (newView && newView.bindingIndex < 0) {
-        newView.bindingIndex = newView.bindingStartIndex;
-    }
     if (host != null) {
         previousOrParentNode = host;
         isParent = true;
@@ -45689,7 +45677,7 @@ function leaveView(newView, creationOnly) {
         // Views are clean and in update mode after being checked, so these bits are cleared
         currentView.flags &= ~(1 /* CreationMode */ | 4 /* Dirty */);
     }
-    currentView.lifecycleStage = 1 /* Init */;
+    currentView.flags |= 16 /* RunInit */;
     currentView.bindingIndex = -1;
     enterView(newView, null);
 }
@@ -45743,7 +45731,7 @@ function createLView(viewId, renderer, tView, template, context, flags, sanitize
     var newView = {
         parent: currentView,
         id: viewId,
-        flags: flags | 1 /* CreationMode */ | 8 /* Attached */,
+        flags: flags | 1 /* CreationMode */ | 8 /* Attached */ | 16 /* RunInit */,
         node: null,
         data: [],
         directives: null,
@@ -45752,11 +45740,9 @@ function createLView(viewId, renderer, tView, template, context, flags, sanitize
         renderer: renderer,
         tail: null,
         next: null,
-        bindingStartIndex: -1,
         bindingIndex: -1,
         template: template,
         context: context,
-        lifecycleStage: 1 /* Init */,
         queries: null,
         injector: currentView && currentView.injector,
         sanitizer: sanitizer || null
@@ -45790,7 +45776,7 @@ function createLNode(index, type, native, name, attrs, state) {
         parent && parent.queries && parent.queries.child();
     var isState = state != null;
     var node = createLNodeObject(type, currentView, parent, native, isState ? state : null, queries);
-    if (index === null || type === 2 /* View */) {
+    if (index === -1 || type === 2 /* View */) {
         // View nodes are not stored in data because they can be added / removed at runtime (which
         // would cause indices to change). Their TNodes are instead stored in TView.node.
         node.tNode = state.tView.node || createTNode(type, index, null, null, tParent, null);
@@ -45867,7 +45853,7 @@ function renderEmbeddedTemplate(viewNode, tView, template, context, renderer, qu
             if (queries) {
                 lView.queries = queries.createView();
             }
-            viewNode = createLNode(null, 2 /* View */, null, null, null, lView);
+            viewNode = createLNode(-1, 2 /* View */, null, null, null, lView);
             rf = 1 /* Create */;
         }
         oldView = enterView(viewNode.data, viewNode);
@@ -46066,7 +46052,7 @@ function createTNode(type, index, tagName, attrs, parent, tViews) {
  * @param index The index of the element to update in the data array
  * @param value A value indicating if a given style should be added or removed.
  *   The expected shape of `value` is an object where keys are style names and the values
- *   are their corresponding values to set. If value is falsy than the style is remove. An absence
+ *   are their corresponding values to set. If value is falsy, then the style is removed. An absence
  *   of style does not cause that style to be removed. `NO_CHANGE` implies that no update should be
  *   performed.
  */
@@ -46398,23 +46384,23 @@ function detectChangesInternal(hostView, hostNode, def, component) {
 /**
  * Reserves slots for pure functions (`pureFunctionX` instructions)
  *
- * Binding for pure functions are store after the LNodes in the data array but before the binding.
+ * Bindings for pure functions are stored after the LNodes in the data array but before the binding.
  *
  *  ----------------------------------------------------------------------------
  *  |  LNodes ... | pure function bindings | regular bindings / interpolations |
  *  ----------------------------------------------------------------------------
  *                                         ^
- *                                         LView.bindingStartIndex
+ *                                         TView.bindingStartIndex
  *
- * Pure function instructions are given an offset from LView.bindingStartIndex.
- * Subtracting the offset from LView.bindingStartIndex gives the first index where the bindings
+ * Pure function instructions are given an offset from TView.bindingStartIndex.
+ * Subtracting the offset from TView.bindingStartIndex gives the first index where the bindings
  * are stored.
  *
  * NOTE: reserveSlots instructions are only ever allowed at the very end of the creation block
  */
 
 /**
- * Sets up the binding index before execute any `pureFunctionX` instructions.
+ * Sets up the binding index before executing any `pureFunctionX` instructions.
  *
  * The index must be restored after the pure function is executed
  *
@@ -46497,9 +46483,9 @@ function assertDataNext(index, arr) {
     assertEqual(arr.length, index, "index " + index + " expected to be at the end of arr (length " + arr.length + ")");
 }
 /**
- * On the first template pass the reserved slots should be set `NO_CHANGE`.
+ * On the first template pass, the reserved slots should be set `NO_CHANGE`.
  *
- * If not they might not have been actually reserved.
+ * If not, they might not have been actually reserved.
  */
 
 function _getComponentHostLElementNode(component) {
@@ -48653,7 +48639,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION$3 = new Version$1('6.0.0-rc.5+299.sha-0561b66');
+var VERSION$3 = new Version$1('6.0.0-rc.5+302.sha-cb65724');
 
 /**
  * @license
