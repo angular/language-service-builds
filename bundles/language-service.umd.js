@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-rc.5+300.sha-5db4f1a
+ * @license Angular v6.0.0-rc.5+303.sha-5794506
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1162,7 +1162,7 @@ var Version = /** @class */ (function () {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION = new Version('6.0.0-rc.5+300.sha-5db4f1a');
+var VERSION = new Version('6.0.0-rc.5+303.sha-5794506');
 
 /**
  * @license
@@ -24385,7 +24385,7 @@ var Version$1 = /** @class */ (function () {
     }
     return Version;
 }());
-var VERSION$2 = new Version$1('6.0.0-rc.5+300.sha-5db4f1a');
+var VERSION$2 = new Version$1('6.0.0-rc.5+303.sha-5794506');
 
 /**
  * @license
@@ -44835,9 +44835,9 @@ function throwError$1(msg) {
  * @param currentView The current view
  */
 function executeInitHooks(currentView, tView, creationMode) {
-    if (currentView.lifecycleStage === 1 /* Init */) {
+    if (currentView.flags & 16 /* RunInit */) {
         executeHooks(currentView.directives, tView.initHooks, tView.checkHooks, creationMode);
-        currentView.lifecycleStage = 2 /* AfterInit */;
+        currentView.flags &= ~16 /* RunInit */;
     }
 }
 /**
@@ -45402,7 +45402,7 @@ function cleanUpView(view) {
     executeOnDestroys(view);
     executePipeOnDestroys(view);
     // For component views only, the local renderer is destroyed as clean up time.
-    if (view.id === -1 && isProceduralRenderer(view.renderer)) {
+    if (view.tView && view.tView.id === -1 && isProceduralRenderer(view.renderer)) {
         ngDevMode && ngDevMode.rendererDestroy++;
         view.renderer.destroy();
     }
@@ -45653,9 +45653,6 @@ function enterView(newView, host) {
     firstTemplatePass = newView && newView.tView.firstTemplatePass;
     cleanup = newView && newView.cleanup;
     renderer = newView && newView.renderer;
-    if (newView && newView.bindingIndex < 0) {
-        newView.bindingIndex = newView.bindingStartIndex;
-    }
     if (host != null) {
         previousOrParentNode = host;
         isParent = true;
@@ -45680,7 +45677,7 @@ function leaveView(newView, creationOnly) {
         // Views are clean and in update mode after being checked, so these bits are cleared
         currentView.flags &= ~(1 /* CreationMode */ | 4 /* Dirty */);
     }
-    currentView.lifecycleStage = 1 /* Init */;
+    currentView.flags |= 16 /* RunInit */;
     currentView.bindingIndex = -1;
     enterView(newView, null);
 }
@@ -45730,11 +45727,10 @@ function executeInitAndContentHooks() {
         executeHooks(directives, tView.contentHooks, tView.contentCheckHooks, creationMode);
     }
 }
-function createLView(viewId, renderer, tView, template, context, flags, sanitizer) {
+function createLView(renderer, tView, template, context, flags, sanitizer) {
     var newView = {
         parent: currentView,
-        id: viewId,
-        flags: flags | 1 /* CreationMode */ | 8 /* Attached */,
+        flags: flags | 1 /* CreationMode */ | 8 /* Attached */ | 16 /* RunInit */,
         node: null,
         data: [],
         directives: null,
@@ -45743,11 +45739,9 @@ function createLView(viewId, renderer, tView, template, context, flags, sanitize
         renderer: renderer,
         tail: null,
         next: null,
-        bindingStartIndex: -1,
         bindingIndex: -1,
         template: template,
         context: context,
-        lifecycleStage: 1 /* Init */,
         queries: null,
         injector: currentView && currentView.injector,
         sanitizer: sanitizer || null
@@ -45854,7 +45848,7 @@ function renderEmbeddedTemplate(viewNode, tView, template, context, renderer, qu
         isParent = true;
         previousOrParentNode = null;
         if (viewNode == null) {
-            var lView = createLView(-1, renderer, tView, template, context, 2 /* CheckAlways */, getCurrentSanitizer());
+            var lView = createLView(renderer, tView, template, context, 2 /* CheckAlways */, getCurrentSanitizer());
             if (queries) {
                 lView.queries = queries.createView();
             }
@@ -45938,7 +45932,13 @@ function getRenderFlags(view) {
 /** Sets the context for a ChangeDetectorRef to the given instance. */
 
 
-/** Creates a TView instance */
+/**
+ * Creates a TView instance
+ *
+ * @param viewIndex The viewBlockId for inline views, or -1 if it's a component/dynamic
+ * @param directives Registry of directives for this view
+ * @param pipes Registry of pipes for this view
+ */
 
 
 /**
@@ -46395,10 +46395,10 @@ function detectChangesInternal(hostView, hostNode, def, component) {
  *  |  LNodes ... | pure function bindings | regular bindings / interpolations |
  *  ----------------------------------------------------------------------------
  *                                         ^
- *                                         LView.bindingStartIndex
+ *                                         TView.bindingStartIndex
  *
- * Pure function instructions are given an offset from LView.bindingStartIndex.
- * Subtracting the offset from LView.bindingStartIndex gives the first index where the bindings
+ * Pure function instructions are given an offset from TView.bindingStartIndex.
+ * Subtracting the offset from TView.bindingStartIndex gives the first index where the bindings
  * are stored.
  *
  * NOTE: reserveSlots instructions are only ever allowed at the very end of the creation block
@@ -48644,7 +48644,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION$3 = new Version$1('6.0.0-rc.5+300.sha-5db4f1a');
+var VERSION$3 = new Version$1('6.0.0-rc.5+303.sha-5794506');
 
 /**
  * @license
