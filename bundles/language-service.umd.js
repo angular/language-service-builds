@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-rc.5+316.sha-d814eaa
+ * @license Angular v6.0.0-rc.5+317.sha-57eacf4
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1162,7 +1162,7 @@ var Version = /** @class */ (function () {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION = new Version('6.0.0-rc.5+316.sha-d814eaa');
+var VERSION = new Version('6.0.0-rc.5+317.sha-57eacf4');
 
 /**
  * @license
@@ -24385,7 +24385,7 @@ var Version$1 = /** @class */ (function () {
     }
     return Version;
 }());
-var VERSION$2 = new Version$1('6.0.0-rc.5+316.sha-d814eaa');
+var VERSION$2 = new Version$1('6.0.0-rc.5+317.sha-57eacf4');
 
 /**
  * @license
@@ -45756,7 +45756,7 @@ function executeInitAndContentHooks() {
         executeHooks(directives, tView.contentHooks, tView.contentCheckHooks, creationMode);
     }
 }
-function createLView(renderer, tView, template, context, flags, sanitizer) {
+function createLView(renderer, tView, context, flags, sanitizer) {
     var newView = {
         parent: currentView,
         flags: flags | 1 /* CreationMode */ | 8 /* Attached */ | 16 /* RunInit */,
@@ -45769,7 +45769,6 @@ function createLView(renderer, tView, template, context, flags, sanitizer) {
         tail: null,
         next: null,
         bindingIndex: -1,
-        template: template,
         context: context,
         queries: null,
         injector: currentView && currentView.injector,
@@ -45868,7 +45867,7 @@ function createLNode(index, type, native, name, attrs, state) {
  * can't store TViews in the template function itself (as we do for comps). Instead, we store the
  * TView for dynamically created views on their host TNode, which only has one instance.
  */
-function renderEmbeddedTemplate(viewNode, tView, template, context, renderer, queries) {
+function renderEmbeddedTemplate(viewNode, tView, context, renderer, queries) {
     var _isParent = isParent;
     var _previousOrParentNode = previousOrParentNode;
     var oldView;
@@ -45877,7 +45876,7 @@ function renderEmbeddedTemplate(viewNode, tView, template, context, renderer, qu
         isParent = true;
         previousOrParentNode = null;
         if (viewNode == null) {
-            var lView = createLView(renderer, tView, template, context, 2 /* CheckAlways */, getCurrentSanitizer());
+            var lView = createLView(renderer, tView, context, 2 /* CheckAlways */, getCurrentSanitizer());
             if (queries) {
                 lView.queries = queries.createView();
             }
@@ -45885,7 +45884,7 @@ function renderEmbeddedTemplate(viewNode, tView, template, context, renderer, qu
             rf = 1 /* Create */;
         }
         oldView = enterView(viewNode.data, viewNode);
-        template(rf, context);
+        tView.template(rf, context);
         if (rf & 2 /* Update */) {
             refreshView();
         }
@@ -46177,7 +46176,7 @@ function refreshDynamicChildren() {
                 // The directives and pipes are not needed here as an existing view is only being refreshed.
                 var dynamicView = lViewNode.data;
                 ngDevMode && assertNotNull$1(dynamicView.tView, 'TView must be allocated');
-                renderEmbeddedTemplate(lViewNode, dynamicView.tView, dynamicView.template, dynamicView.context, renderer);
+                renderEmbeddedTemplate(lViewNode, dynamicView.tView, dynamicView.context, renderer);
             }
         }
     }
@@ -46210,8 +46209,7 @@ function componentRefresh(directiveIndex, elementIndex) {
     // Only attached CheckAlways components or attached, dirty OnPush components should be checked
     if (viewAttached(hostView) && hostView.flags & (2 /* CheckAlways */ | 4 /* Dirty */)) {
         ngDevMode && assertDataInRange(directiveIndex, directives);
-        var def = currentView.tView.directives[directiveIndex];
-        detectChangesInternal(hostView, element, def, getDirectiveInstance(directives[directiveIndex]));
+        detectChangesInternal(hostView, element, getDirectiveInstance(directives[directiveIndex]));
     }
 }
 /** Returns a boolean for whether the view is attached */
@@ -46361,9 +46359,7 @@ function getRootView(component) {
 function detectChanges(component) {
     var hostNode = _getComponentHostLElementNode(component);
     ngDevMode && assertNotNull$1(hostNode.data, 'Component host node should be attached to an LView');
-    var componentIndex = hostNode.tNode.flags >> 13;
-    var def = hostNode.view.tView.directives[componentIndex];
-    detectChangesInternal(hostNode.data, hostNode, def, component);
+    detectChangesInternal(hostNode.data, hostNode, component);
 }
 /**
  * Checks the change detector and its children, and throws if any changes are detected.
@@ -46381,9 +46377,9 @@ function checkNoChanges(component) {
     }
 }
 /** Checks the view of the component provided. Does not gate on dirty checks or execute doCheck. */
-function detectChangesInternal(hostView, hostNode, def, component) {
+function detectChangesInternal(hostView, hostNode, component) {
     var oldView = enterView(hostView, hostNode);
-    var template = def.template;
+    var template = hostView.tView.template;
     try {
         template(getRenderFlags(hostView), component);
         refreshView();
@@ -48681,7 +48677,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION$3 = new Version$1('6.0.0-rc.5+316.sha-d814eaa');
+var VERSION$3 = new Version$1('6.0.0-rc.5+317.sha-57eacf4');
 
 /**
  * @license
