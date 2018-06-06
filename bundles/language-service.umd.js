@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.0-rc.5+324.sha-c494d3c
+ * @license Angular v6.0.0-rc.5+337.sha-700e55c
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1162,7 +1162,7 @@ var Version = /** @class */ (function () {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION = new Version('6.0.0-rc.5+324.sha-c494d3c');
+var VERSION = new Version('6.0.0-rc.5+337.sha-700e55c');
 
 /**
  * @license
@@ -14356,8 +14356,9 @@ var Identifiers$1 = /** @class */ (function () {
     Identifiers.TRANSFORM_METHOD = 'transform';
     Identifiers.PATCH_DEPS = 'patchedDeps';
     /* Instructions */
-    Identifiers.createElement = { name: 'ɵE', moduleName: CORE$1 };
+    Identifiers.elementStart = { name: 'ɵE', moduleName: CORE$1 };
     Identifiers.elementEnd = { name: 'ɵe', moduleName: CORE$1 };
+    Identifiers.element = { name: 'ɵEe', moduleName: CORE$1 };
     Identifiers.elementProperty = { name: 'ɵp', moduleName: CORE$1 };
     Identifiers.elementAttribute = { name: 'ɵa', moduleName: CORE$1 };
     Identifiers.elementClassNamed = { name: 'ɵkn', moduleName: CORE$1 };
@@ -14366,6 +14367,10 @@ var Identifiers$1 = /** @class */ (function () {
     Identifiers.text = { name: 'ɵT', moduleName: CORE$1 };
     Identifiers.textBinding = { name: 'ɵt', moduleName: CORE$1 };
     Identifiers.bind = { name: 'ɵb', moduleName: CORE$1 };
+    Identifiers.namespace = { name: 'ɵN', moduleName: CORE$1 };
+    Identifiers.namespaceHTML = { name: 'ɵNH', moduleName: CORE$1 };
+    Identifiers.namespaceMathML = { name: 'ɵNM', moduleName: CORE$1 };
+    Identifiers.namespaceSVG = { name: 'ɵNS', moduleName: CORE$1 };
     Identifiers.interpolation1 = { name: 'ɵi1', moduleName: CORE$1 };
     Identifiers.interpolation2 = { name: 'ɵi2', moduleName: CORE$1 };
     Identifiers.interpolation3 = { name: 'ɵi3', moduleName: CORE$1 };
@@ -24385,7 +24390,7 @@ var Version$1 = /** @class */ (function () {
     }
     return Version;
 }());
-var VERSION$2 = new Version$1('6.0.0-rc.5+324.sha-c494d3c');
+var VERSION$2 = new Version$1('6.0.0-rc.5+337.sha-700e55c');
 
 /**
  * @license
@@ -44898,6 +44903,12 @@ var ngDevModeResetPerfCounters = (typeof ngDevMode == 'undefined' && (function (
 })(typeof window != 'undefined' && window || typeof self != 'undefined' && self ||
     typeof global != 'undefined' && global));
 
+/** Called when directives inject each other (creating a circular dependency) */
+
+/** Called when there are multiple component selectors that match a given node */
+
+/** Throws an ExpressionChangedAfterChecked error if checkNoChanges mode is on. */
+
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -44905,6 +44916,27 @@ var ngDevModeResetPerfCounters = (typeof ngDevMode == 'undefined' && (function (
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
+
+// Note: This hack is necessary so we don't erroneously get a circular dependency
+// failure based on types.
+
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+// TODO: cleanup once the code is merged in angular/angular
+var RendererStyleFlags3;
+(function (RendererStyleFlags3) {
+    RendererStyleFlags3[RendererStyleFlags3["Important"] = 1] = "Important";
+    RendererStyleFlags3[RendererStyleFlags3["DashCase"] = 2] = "DashCase";
+})(RendererStyleFlags3 || (RendererStyleFlags3 = {}));
+/** Returns whether the `renderer` is a `ProceduralRenderer3` */
+function isProceduralRenderer(renderer) {
+    return !!(renderer.listen);
+}
 
 // Note: This hack is necessary so we don't erroneously get a circular dependency
 // failure based on types.
@@ -44942,34 +44974,6 @@ function typeName(type) {
  */
 // Note: This hack is necessary so we don't erroneously get a circular dependency
 // failure based on types.
-
-/**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
- */
-// Note: This hack is necessary so we don't erroneously get a circular dependency
-// failure based on types.
-
-/**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
- */
-// TODO: cleanup once the code is merged in angular/angular
-var RendererStyleFlags3;
-(function (RendererStyleFlags3) {
-    RendererStyleFlags3[RendererStyleFlags3["Important"] = 1] = "Important";
-    RendererStyleFlags3[RendererStyleFlags3["DashCase"] = 2] = "DashCase";
-})(RendererStyleFlags3 || (RendererStyleFlags3 = {}));
-/** Returns whether the `renderer` is a `ProceduralRenderer3` */
-function isProceduralRenderer(renderer) {
-    return !!(renderer.listen);
-}
 
 // Note: This hack is necessary so we don't erroneously get a circular dependency
 // failure based on types.
@@ -45542,12 +45546,6 @@ function executePipeOnDestroys(view) {
  * to the raw (un-parsed) CSS selector instead of using standard selector matching logic.
  */
 
-/** Called when directives inject each other (creating a circular dependency) */
-
-/** Called when there are multiple component selectors that match a given node */
-
-/** Throws an ExpressionChangedAfterChecked error if checkNoChanges mode is on. */
-
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -45940,6 +45938,21 @@ function getRenderFlags(view) {
     return view.flags & 1 /* CreationMode */ ? 1 /* Create */ | 2 /* Update */ :
         2 /* Update */;
 }
+/**
+ * Sets the current namespace URI to null, meaning createElement (not createElementNS)
+ * will be used to create elements in {@link element} and {@link elementStart}
+ */
+
+/**
+ * Sets the current namespace URI to http://www.w3.org/2000/svg, which will be
+ * used in conjunction with createElementNS in {@link element} and {@link elementStart}
+ */
+
+/**
+ * Sets the current namespace URI to http://www.w3.org/1998/Math/MathML, which will be
+ * used in conjunction with createElementNS in {@link element} and {@link elementStart}
+ */
+
 //////////////////////////
 //// Element
 //////////////////////////
@@ -46018,6 +46031,8 @@ function storeCleanupFn(view, cleanupFn) {
     }
 }
 /** Mark the end of the element. */
+
+/** Marks the beginning and end of an element in one call. */
 
 /**
  * Updates the value of removes an attribute on an Element.
@@ -48697,7 +48712,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION$3 = new Version$1('6.0.0-rc.5+324.sha-c494d3c');
+var VERSION$3 = new Version$1('6.0.0-rc.5+337.sha-700e55c');
 
 /**
  * @license
