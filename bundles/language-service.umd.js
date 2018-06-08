@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.1.0-beta.0+24.sha-5ef7a07
+ * @license Angular v6.1.0-beta.0+25.sha-8c1ac28
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1204,7 +1204,7 @@ var Version = /** @class */ (function () {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION = new Version('6.1.0-beta.0+24.sha-5ef7a07');
+var VERSION = new Version('6.1.0-beta.0+25.sha-8c1ac28');
 
 /**
  * @license
@@ -15207,6 +15207,9 @@ var Identifiers$1 = /** @class */ (function () {
     Identifiers.TRANSFORM_METHOD = 'transform';
     Identifiers.PATCH_DEPS = 'patchedDeps';
     /* Instructions */
+    Identifiers.namespaceHTML = { name: 'ɵNH', moduleName: CORE$1 };
+    Identifiers.namespaceMathML = { name: 'ɵNM', moduleName: CORE$1 };
+    Identifiers.namespaceSVG = { name: 'ɵNS', moduleName: CORE$1 };
     Identifiers.createElement = { name: 'ɵE', moduleName: CORE$1 };
     Identifiers.elementEnd = { name: 'ɵe', moduleName: CORE$1 };
     Identifiers.elementProperty = { name: 'ɵp', moduleName: CORE$1 };
@@ -16006,7 +16009,7 @@ function isEmptyTextNode(node) {
  */
 var BINDING_INSTRUCTION_MAP = (_a$1 = {}, _a$1[0 /* Property */] = Identifiers$1.elementProperty, _a$1[1 /* Attribute */] = Identifiers$1.elementAttribute, _a$1[2 /* Class */] = Identifiers$1.elementClassNamed, _a$1[3 /* Style */] = Identifiers$1.elementStyleNamed, _a$1);
 var TemplateDefinitionBuilder = /** @class */ (function () {
-    function TemplateDefinitionBuilder(constantPool, contextParameter, parentBindingScope, level, contextName, templateName, viewQueries, directiveMatcher, directives, pipeTypeByName, pipes) {
+    function TemplateDefinitionBuilder(constantPool, contextParameter, parentBindingScope, level, contextName, templateName, viewQueries, directiveMatcher, directives, pipeTypeByName, pipes, _namespace) {
         if (level === void 0) { level = 0; }
         var _this = this;
         this.constantPool = constantPool;
@@ -16019,6 +16022,7 @@ var TemplateDefinitionBuilder = /** @class */ (function () {
         this.directives = directives;
         this.pipeTypeByName = pipeTypeByName;
         this.pipes = pipes;
+        this._namespace = _namespace;
         this._dataIndex = 0;
         this._bindingContext = 0;
         this._prefixCode = [];
@@ -16058,6 +16062,9 @@ var TemplateDefinitionBuilder = /** @class */ (function () {
     TemplateDefinitionBuilder.prototype.buildTemplateFunction = function (nodes, variables, hasNgContent, ngContentSelectors) {
         if (hasNgContent === void 0) { hasNgContent = false; }
         if (ngContentSelectors === void 0) { ngContentSelectors = []; }
+        if (this._namespace !== Identifiers$1.namespaceHTML) {
+            this.instruction(this._creationCode, null, this._namespace);
+        }
         try {
             // Create variable bindings
             for (var variables_1 = __values(variables), variables_1_1 = variables_1.next(); !variables_1_1.done; variables_1_1 = variables_1.next()) {
@@ -16181,6 +16188,20 @@ var TemplateDefinitionBuilder = /** @class */ (function () {
         }
         this.instruction.apply(this, __spread([this._creationCode, ngContent.sourceSpan, Identifiers$1.projection], parameters));
     };
+    TemplateDefinitionBuilder.prototype.getNamespaceInstruction = function (namespaceKey) {
+        switch (namespaceKey) {
+            case 'math':
+                return Identifiers$1.namespaceMathML;
+            case 'svg':
+                return Identifiers$1.namespaceSVG;
+            default:
+                return Identifiers$1.namespaceHTML;
+        }
+    };
+    TemplateDefinitionBuilder.prototype.addNamespaceInstruction = function (nsInstruction, element) {
+        this._namespace = nsInstruction;
+        this.instruction(this._creationCode, element.sourceSpan, nsInstruction);
+    };
     TemplateDefinitionBuilder.prototype.visitElement = function (element) {
         var _this = this;
         var elementIndex = this.allocateDataSlot();
@@ -16189,6 +16210,7 @@ var TemplateDefinitionBuilder = /** @class */ (function () {
         var outputAttrs = {};
         var attrI18nMetas = {};
         var i18nMeta = '';
+        var _a = __read(splitNsName(element.name), 2), namespaceKey = _a[0], elementName = _a[1];
         // Elements inside i18n sections are replaced with placeholders
         // TODO(vicb): nested elements are a WIP in this phase
         if (this._inI18nSection) {
@@ -16200,8 +16222,8 @@ var TemplateDefinitionBuilder = /** @class */ (function () {
         }
         try {
             // Handle i18n attributes
-            for (var _a = __values(element.attributes), _b = _a.next(); !_b.done; _b = _a.next()) {
-                var attr = _b.value;
+            for (var _b = __values(element.attributes), _c = _b.next(); !_c.done; _c = _b.next()) {
+                var attr = _c.value;
                 var name_1 = attr.name;
                 var value = attr.value;
                 if (name_1 === I18N_ATTR) {
@@ -16224,7 +16246,7 @@ var TemplateDefinitionBuilder = /** @class */ (function () {
         catch (e_4_1) { e_4 = { error: e_4_1 }; }
         finally {
             try {
-                if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                if (_c && !_c.done && (_d = _b.return)) _d.call(_b);
             }
             finally { if (e_4) throw e_4.error; }
         }
@@ -16236,7 +16258,7 @@ var TemplateDefinitionBuilder = /** @class */ (function () {
         // Element creation mode
         var parameters = [
             literal(elementIndex),
-            literal(element.name),
+            literal(elementName),
         ];
         // Add the attributes
         var i18nMessages = [];
@@ -16276,7 +16298,14 @@ var TemplateDefinitionBuilder = /** @class */ (function () {
         }
         // Generate the instruction create element instruction
         if (i18nMessages.length > 0) {
-            (_d = this._creationCode).push.apply(_d, __spread(i18nMessages));
+            (_e = this._creationCode).push.apply(_e, __spread(i18nMessages));
+        }
+        var wasInNamespace = this._namespace;
+        var currentNamespace = this.getNamespaceInstruction(namespaceKey);
+        // If the namespace is changing now, include an instruction to change it
+        // during element creation.
+        if (currentNamespace !== wasInNamespace) {
+            this.addNamespaceInstruction(currentNamespace, element);
         }
         this.instruction.apply(this, __spread([this._creationCode, element.sourceSpan, Identifiers$1.createElement], trimTrailingNulls(parameters)));
         var implicit = variable(CONTEXT_NAME);
@@ -16321,7 +16350,7 @@ var TemplateDefinitionBuilder = /** @class */ (function () {
         this.instruction(this._creationCode, element.endSourceSpan || element.sourceSpan, Identifiers$1.elementEnd);
         // Restore the state before exiting this node
         this._inI18nSection = wasInI18nSection;
-        var e_4, _c, _d;
+        var e_4, _d, _e;
     };
     TemplateDefinitionBuilder.prototype.visitTemplate = function (template) {
         var _this = this;
@@ -16362,7 +16391,7 @@ var TemplateDefinitionBuilder = /** @class */ (function () {
             _this.instruction(_this._bindingCode, template.sourceSpan, Identifiers$1.elementProperty, literal(templateIndex), literal(input.name), convertedBinding);
         });
         // Create the template function
-        var templateVisitor = new TemplateDefinitionBuilder(this.constantPool, templateContext, this._bindingScope, this.level + 1, contextName, templateName, [], this.directiveMatcher, this.directives, this.pipeTypeByName, this.pipes);
+        var templateVisitor = new TemplateDefinitionBuilder(this.constantPool, templateContext, this._bindingScope, this.level + 1, contextName, templateName, [], this.directiveMatcher, this.directives, this.pipeTypeByName, this.pipes, this._namespace);
         var templateFunctionExpr = templateVisitor.buildTemplateFunction(template.children, template.variables);
         this._postfixCode.push(templateFunctionExpr.toDeclStmt(templateName, null));
     };
@@ -16756,7 +16785,7 @@ function compileComponentFromMetadata(meta, constantPool, bindingParser) {
     var directivesUsed = new Set();
     var pipesUsed = new Set();
     var template = meta.template;
-    var templateFunctionExpression = new TemplateDefinitionBuilder(constantPool, CONTEXT_NAME, BindingScope.ROOT_SCOPE, 0, templateTypeName, templateName, meta.viewQueries, directiveMatcher, directivesUsed, meta.pipes, pipesUsed)
+    var templateFunctionExpression = new TemplateDefinitionBuilder(constantPool, CONTEXT_NAME, BindingScope.ROOT_SCOPE, 0, templateTypeName, templateName, meta.viewQueries, directiveMatcher, directivesUsed, meta.pipes, pipesUsed, Identifiers$1.namespaceHTML)
         .buildTemplateFunction(template.nodes, [], template.hasNgContent, template.ngContentSelectors);
     definitionMap.set('template', templateFunctionExpression);
     // e.g. `directives: [MyDirective]`
@@ -27880,6 +27909,7 @@ function renderEmbeddedTemplate(viewNode, tView, context, renderer, queries) {
             rf = 1 /* Create */;
         }
         oldView = enterView(viewNode.data, viewNode);
+        namespaceHTML();
         tView.template(rf, context);
         if (rf & 2 /* Update */) {
             refreshView();
@@ -27905,6 +27935,7 @@ function renderComponentOrTemplate(node, hostView, componentOrContext, template)
             rendererFactory.begin();
         }
         if (template) {
+            namespaceHTML();
             template(getRenderFlags(hostView), componentOrContext);
             refreshView();
         }
@@ -27937,6 +27968,19 @@ function getRenderFlags(view) {
         2 /* Update */;
 }
 //////////////////////////
+//// Namespace
+//////////////////////////
+var _currentNamespace = null;
+function namespaceSVG() {
+    _currentNamespace = 'http://www.w3.org/2000/svg/';
+}
+function namespaceMathML() {
+    _currentNamespace = 'http://www.w3.org/1998/MathML/';
+}
+function namespaceHTML() {
+    _currentNamespace = null;
+}
+//////////////////////////
 //// Element
 //////////////////////////
 /**
@@ -27955,7 +27999,18 @@ function elementStart(index, name, attrs, localRefs) {
     ngDevMode &&
         assertEqual(currentView.bindingIndex, -1, 'elements should be created before any bindings');
     ngDevMode && ngDevMode.rendererCreateElement++;
-    var native = renderer.createElement(name);
+    var native;
+    if (isProceduralRenderer(renderer)) {
+        native = renderer.createElement(name, _currentNamespace);
+    }
+    else {
+        if (_currentNamespace === null) {
+            native = renderer.createElement(name);
+        }
+        else {
+            native = renderer.createElementNS(_currentNamespace, name);
+        }
+    }
     ngDevMode && assertDataInRange(index - 1);
     var node = createLNode(index, 3 /* Element */, native, name, attrs || null, null);
     if (attrs)
@@ -29215,6 +29270,7 @@ function detectChangesInternal(hostView, hostNode, component) {
     var oldView = enterView(hostView, hostNode);
     var template = hostView.tView.template;
     try {
+        namespaceHTML();
         template(getRenderFlags(hostView), component);
         refreshView();
     }
@@ -40434,6 +40490,9 @@ var angularCoreEnv = {
     'ɵcR': containerRefreshStart,
     'ɵcr': containerRefreshEnd,
     'ɵd': loadDirective,
+    'ɵNH': namespaceHTML,
+    'ɵNM': namespaceMathML,
+    'ɵNS': namespaceSVG,
     'ɵE': elementStart,
     'ɵe': elementEnd,
     'ɵf0': pureFunction0,
@@ -41150,7 +41209,7 @@ var Version$1 = /** @class */ (function () {
     }
     return Version;
 }());
-var VERSION$2 = new Version$1('6.1.0-beta.0+24.sha-5ef7a07');
+var VERSION$2 = new Version$1('6.1.0-beta.0+25.sha-8c1ac28');
 
 var __extends$34 = (undefined && undefined.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
@@ -54108,7 +54167,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION$3 = new Version$1('6.1.0-beta.0+24.sha-5ef7a07');
+var VERSION$3 = new Version$1('6.1.0-beta.0+25.sha-8c1ac28');
 
 /**
  * @license
