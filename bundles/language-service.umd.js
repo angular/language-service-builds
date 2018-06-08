@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.1.0-beta.0+24.sha-5ef7a07
+ * @license Angular v6.1.0-beta.0+25.sha-8c1ac28
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1162,7 +1162,7 @@ var Version = /** @class */ (function () {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION = new Version('6.1.0-beta.0+24.sha-5ef7a07');
+var VERSION = new Version('6.1.0-beta.0+25.sha-8c1ac28');
 
 /**
  * @license
@@ -14356,6 +14356,9 @@ var Identifiers$1 = /** @class */ (function () {
     Identifiers.TRANSFORM_METHOD = 'transform';
     Identifiers.PATCH_DEPS = 'patchedDeps';
     /* Instructions */
+    Identifiers.namespaceHTML = { name: 'ɵNH', moduleName: CORE$1 };
+    Identifiers.namespaceMathML = { name: 'ɵNM', moduleName: CORE$1 };
+    Identifiers.namespaceSVG = { name: 'ɵNS', moduleName: CORE$1 };
     Identifiers.createElement = { name: 'ɵE', moduleName: CORE$1 };
     Identifiers.elementEnd = { name: 'ɵe', moduleName: CORE$1 };
     Identifiers.elementProperty = { name: 'ɵp', moduleName: CORE$1 };
@@ -24388,7 +24391,7 @@ var Version$1 = /** @class */ (function () {
     }
     return Version;
 }());
-var VERSION$2 = new Version$1('6.1.0-beta.0+24.sha-5ef7a07');
+var VERSION$2 = new Version$1('6.1.0-beta.0+25.sha-8c1ac28');
 
 /**
  * @license
@@ -46283,6 +46286,9 @@ function getRenderFlags(view) {
     return view.flags & 1 /* CreationMode */ ? 1 /* Create */ | 2 /* Update */ :
         2 /* Update */;
 }
+
+
+
 //////////////////////////
 //// Element
 //////////////////////////
@@ -49371,7 +49377,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION$3 = new Version$1('6.1.0-beta.0+24.sha-5ef7a07');
+var VERSION$3 = new Version$1('6.1.0-beta.0+25.sha-8c1ac28');
 
 /**
  * @license
