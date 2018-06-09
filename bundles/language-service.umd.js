@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.1.0-beta.0+23.sha-1135563
+ * @license Angular v6.1.0-beta.0+27.sha-49c5234
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1162,7 +1162,7 @@ var Version = /** @class */ (function () {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION = new Version('6.1.0-beta.0+23.sha-1135563');
+var VERSION = new Version('6.1.0-beta.0+27.sha-49c5234');
 
 /**
  * @license
@@ -14356,11 +14356,16 @@ var Identifiers$1 = /** @class */ (function () {
     Identifiers.TRANSFORM_METHOD = 'transform';
     Identifiers.PATCH_DEPS = 'patchedDeps';
     /* Instructions */
+    Identifiers.namespaceHTML = { name: 'ɵNH', moduleName: CORE$1 };
+    Identifiers.namespaceMathML = { name: 'ɵNM', moduleName: CORE$1 };
+    Identifiers.namespaceSVG = { name: 'ɵNS', moduleName: CORE$1 };
     Identifiers.createElement = { name: 'ɵE', moduleName: CORE$1 };
     Identifiers.elementEnd = { name: 'ɵe', moduleName: CORE$1 };
     Identifiers.elementProperty = { name: 'ɵp', moduleName: CORE$1 };
     Identifiers.elementAttribute = { name: 'ɵa', moduleName: CORE$1 };
+    Identifiers.elementClass = { name: 'ɵk', moduleName: CORE$1 };
     Identifiers.elementClassNamed = { name: 'ɵkn', moduleName: CORE$1 };
+    Identifiers.elementStyle = { name: 'ɵs', moduleName: CORE$1 };
     Identifiers.elementStyleNamed = { name: 'ɵsn', moduleName: CORE$1 };
     Identifiers.containerCreate = { name: 'ɵC', moduleName: CORE$1 };
     Identifiers.text = { name: 'ɵT', moduleName: CORE$1 };
@@ -24388,7 +24393,7 @@ var Version$1 = /** @class */ (function () {
     }
     return Version;
 }());
-var VERSION$2 = new Version$1('6.1.0-beta.0+23.sha-1135563');
+var VERSION$2 = new Version$1('6.1.0-beta.0+27.sha-49c5234');
 
 /**
  * @license
@@ -46283,6 +46288,9 @@ function getRenderFlags(view) {
     return view.flags & 1 /* CreationMode */ ? 1 /* Create */ | 2 /* Update */ :
         2 /* Update */;
 }
+
+
+
 //////////////////////////
 //// Element
 //////////////////////////
@@ -49371,7 +49379,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION$3 = new Version$1('6.1.0-beta.0+23.sha-1135563');
+var VERSION$3 = new Version$1('6.1.0-beta.0+27.sha-49c5234');
 
 /**
  * @license
