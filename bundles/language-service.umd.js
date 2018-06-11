@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.1.0-beta.0+32.sha-5e8bf2f
+ * @license Angular v6.1.0-beta.0+34.sha-8dd99ac
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1162,7 +1162,7 @@ var Version = /** @class */ (function () {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION = new Version('6.1.0-beta.0+32.sha-5e8bf2f');
+var VERSION = new Version('6.1.0-beta.0+34.sha-8dd99ac');
 
 /**
  * @license
@@ -14359,7 +14359,8 @@ var Identifiers$1 = /** @class */ (function () {
     Identifiers.namespaceHTML = { name: 'ɵNH', moduleName: CORE$1 };
     Identifiers.namespaceMathML = { name: 'ɵNM', moduleName: CORE$1 };
     Identifiers.namespaceSVG = { name: 'ɵNS', moduleName: CORE$1 };
-    Identifiers.createElement = { name: 'ɵE', moduleName: CORE$1 };
+    Identifiers.element = { name: 'ɵEe', moduleName: CORE$1 };
+    Identifiers.elementStart = { name: 'ɵE', moduleName: CORE$1 };
     Identifiers.elementEnd = { name: 'ɵe', moduleName: CORE$1 };
     Identifiers.elementProperty = { name: 'ɵp', moduleName: CORE$1 };
     Identifiers.elementAttribute = { name: 'ɵa', moduleName: CORE$1 };
@@ -24393,7 +24394,7 @@ var Version$1 = /** @class */ (function () {
     }
     return Version;
 }());
-var VERSION$2 = new Version$1('6.1.0-beta.0+32.sha-5e8bf2f');
+var VERSION$2 = new Version$1('6.1.0-beta.0+34.sha-8dd99ac');
 
 /**
  * @license
@@ -45726,7 +45727,7 @@ function detachView(container, removeIndex) {
     // Notify query that view has been removed
     var removedLview = viewNode.data;
     if (removedLview[QUERIES]) {
-        removedLview[QUERIES].removeView(removeIndex);
+        removedLview[QUERIES].removeView();
     }
     // Unsets the attached flag
     viewNode.data[FLAGS] &= ~8 /* Attached */;
@@ -46317,6 +46318,15 @@ function getRenderFlags(view) {
 //////////////////////////
 //// Element
 //////////////////////////
+/**
+ * Creates an empty element using {@link elementStart} and {@link elementEnd}
+ *
+ * @param index Index of the element in the data array
+ * @param name Name of the DOM Node
+ * @param attrs Statically bound set of attributes to be written into the DOM element on creation.
+ * @param localRefs A set of local reference bindings on the element.
+ */
+
 /**
  * Create DOM element. The instruction must later be followed by `elementEnd()` call.
  *
@@ -49402,7 +49412,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION$3 = new Version$1('6.1.0-beta.0+32.sha-5e8bf2f');
+var VERSION$3 = new Version$1('6.1.0-beta.0+34.sha-8dd99ac');
 
 /**
  * @license
