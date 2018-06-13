@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.1.0-beta.0+42.sha-c2b5ebf
+ * @license Angular v6.1.0-beta.0+43.sha-70ef061
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1162,7 +1162,7 @@ var Version = /** @class */ (function () {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION = new Version('6.1.0-beta.0+42.sha-c2b5ebf');
+var VERSION = new Version('6.1.0-beta.0+43.sha-70ef061');
 
 /**
  * @license
@@ -23825,7 +23825,8 @@ var NullInjector = /** @class */ (function () {
         if (notFoundValue === _THROW_IF_NOT_FOUND) {
             // Intentionally left behind: With dev tools open the debugger will stop here. There is no
             // reason why correctly written application should cause this exception.
-            debugger;
+            // TODO(misko): uncomment the next line once `ngDevMode` works with closure.
+            // if(ngDevMode) debugger;
             throw new Error("NullInjectorError: No provider for " + stringify$1(token) + "!");
         }
         return notFoundValue;
@@ -24394,7 +24395,7 @@ var Version$1 = /** @class */ (function () {
     }
     return Version;
 }());
-var VERSION$2 = new Version$1('6.1.0-beta.0+42.sha-c2b5ebf');
+var VERSION$2 = new Version$1('6.1.0-beta.0+43.sha-70ef061');
 
 /**
  * @license
@@ -49412,7 +49413,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION$3 = new Version$1('6.1.0-beta.0+42.sha-c2b5ebf');
+var VERSION$3 = new Version$1('6.1.0-beta.0+43.sha-70ef061');
 
 /**
  * @license
