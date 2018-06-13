@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.1.0-beta.0+43.sha-70ef061
+ * @license Angular v6.1.0-beta.0+55.sha-a577c9e
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1162,7 +1162,7 @@ var Version = /** @class */ (function () {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION = new Version('6.1.0-beta.0+43.sha-70ef061');
+var VERSION = new Version('6.1.0-beta.0+55.sha-a577c9e');
 
 /**
  * @license
@@ -23738,7 +23738,7 @@ function forwardRef(forwardRefFn) {
  *
  * Acts as the identity function when given a non-forward-ref value.
  *
- * ### Example ([live demo](http://plnkr.co/edit/GU72mJrk1fiodChcmiDR?p=preview))
+ * ### Example
  *
  * {@example core/di/ts/forward_ref/forward_ref_spec.ts region='resolve_forward_ref'}
  *
@@ -24395,7 +24395,7 @@ var Version$1 = /** @class */ (function () {
     }
     return Version;
 }());
-var VERSION$2 = new Version$1('6.1.0-beta.0+43.sha-70ef061');
+var VERSION$2 = new Version$1('6.1.0-beta.0+55.sha-a577c9e');
 
 /**
  * @license
@@ -24552,7 +24552,7 @@ function addKey(injector, key) {
  * Thrown when trying to retrieve a dependency by key from {@link Injector}, but the
  * {@link Injector} does not have a {@link Provider} for the given key.
  *
- * ### Example ([live demo](http://plnkr.co/edit/vq8D3FRB9aGbnWJqtEPE?p=preview))
+ * ### Example
  *
  * ```typescript
  * class A {
@@ -24571,7 +24571,7 @@ function noProviderError(injector, key) {
 /**
  * Thrown when dependencies form a cycle.
  *
- * ### Example ([live demo](http://plnkr.co/edit/wYQdNos0Tzql3ei1EV9j?p=info))
+ * ### Example
  *
  * ```typescript
  * var injector = Injector.resolveAndCreate([
@@ -24595,7 +24595,7 @@ function cyclicDependencyError(injector, key) {
  * The `InstantiationError` class contains the original error plus the dependency graph which caused
  * this object to be instantiated.
  *
- * ### Example ([live demo](http://plnkr.co/edit/7aWYdcqTQsP0eNqEdUAf?p=preview))
+ * ### Example
  *
  * ```typescript
  * class A {
@@ -24625,7 +24625,7 @@ function instantiationError(injector, originalException, originalStack, key) {
  * Thrown when an object other then {@link Provider} (or `Type`) is passed to {@link Injector}
  * creation.
  *
- * ### Example ([live demo](http://plnkr.co/edit/YatCFbPAMCL0JSSQ4mvH?p=preview))
+ * ### Example
  *
  * ```typescript
  * expect(() => Injector.resolveAndCreate(["not a type"])).toThrowError();
@@ -24640,7 +24640,7 @@ function invalidProviderError(provider) {
  * Lack of annotation information prevents the {@link Injector} from determining which dependencies
  * need to be injected into the constructor.
  *
- * ### Example ([live demo](http://plnkr.co/edit/rHnZtlNS7vJOPQ6pcVkm?p=preview))
+ * ### Example
  *
  * ```typescript
  * class A {
@@ -24682,7 +24682,7 @@ function noAnnotationError(typeOrFunc, params) {
 /**
  * Thrown when getting an object by index.
  *
- * ### Example ([live demo](http://plnkr.co/edit/bRs0SX2OTQiJzqvjgl8P?p=preview))
+ * ### Example
  *
  * ```typescript
  * class A {}
@@ -25069,7 +25069,7 @@ var UNDEFINED = new Object();
  * In typical use, application code asks for the dependencies in the constructor and they are
  * resolved by the `Injector`.
  *
- * ### Example ([live demo](http://plnkr.co/edit/jzjec0?p=preview))
+ * ### Example
  *
  * The following example creates an `Injector` configured to create `Engine` and `Car`.
  *
@@ -25103,7 +25103,7 @@ var ReflectiveInjector = /** @class */ (function () {
      * A resolution is a process of flattening multiple nested arrays and converting individual
      * providers into an array of {@link ResolvedReflectiveProvider}s.
      *
-     * ### Example ([live demo](http://plnkr.co/edit/AiXTHi?p=preview))
+     * ### Example
      *
      * ```typescript
      * @Injectable()
@@ -25139,7 +25139,7 @@ var ReflectiveInjector = /** @class */ (function () {
      * The passed-in providers can be an array of `Type`, {@link Provider},
      * or a recursive array of more providers.
      *
-     * ### Example ([live demo](http://plnkr.co/edit/ePOccA?p=preview))
+     * ### Example
      *
      * ```typescript
      * @Injectable()
@@ -25169,7 +25169,7 @@ var ReflectiveInjector = /** @class */ (function () {
      *
      * This API is the recommended way to construct injectors in performance-sensitive parts.
      *
-     * ### Example ([live demo](http://plnkr.co/edit/KrSMci?p=preview))
+     * ### Example
      *
      * ```typescript
      * @Injectable()
@@ -39669,7 +39669,7 @@ var ElementRef = /** @class */ (function () {
  *
  * NOTE: In the future this class will implement an `Observable` interface.
  *
- * ### Example ([live demo](http://plnkr.co/edit/RX8sJnQYl9FWuSCWme5z?p=preview))
+ * ### Example
  * ```typescript
  * @Component({...})
  * class Container {
@@ -45411,53 +45411,6 @@ function flatten$3(list) {
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-/**
- * Returns the first RNode following the given LNode in the same parent DOM element.
- *
- * This is needed in order to insert the given node with insertBefore.
- *
- * @param node The node whose following DOM node must be found.
- * @param stopNode A parent node at which the lookup in the tree should be stopped, or null if the
- * lookup should not be stopped until the result is found.
- * @returns RNode before which the provided node should be inserted or null if the lookup was
- * stopped
- * or if there is no native node after the given logical node in the same native parent.
- */
-function findNextRNodeSibling(node, stopNode) {
-    var currentNode = node;
-    while (currentNode && currentNode !== stopNode) {
-        var pNextOrParent = currentNode.pNextOrParent;
-        if (pNextOrParent) {
-            while (pNextOrParent.tNode.type !== 1 /* Projection */) {
-                var nativeNode = findFirstRNode(pNextOrParent);
-                if (nativeNode) {
-                    return nativeNode;
-                }
-                pNextOrParent = pNextOrParent.pNextOrParent;
-            }
-            currentNode = pNextOrParent;
-        }
-        else {
-            var currentSibling = getNextLNode(currentNode);
-            while (currentSibling) {
-                var nativeNode = findFirstRNode(currentSibling);
-                if (nativeNode) {
-                    return nativeNode;
-                }
-                currentSibling = getNextLNode(currentSibling);
-            }
-            var parentNode = getParentLNode(currentNode);
-            currentNode = null;
-            if (parentNode) {
-                var parentType = parentNode.tNode.type;
-                if (parentType === 0 /* Container */ || parentType === 2 /* View */) {
-                    currentNode = parentNode;
-                }
-            }
-        }
-    }
-    return null;
-}
 /** Retrieves the sibling node for the given node. */
 function getNextLNode(node) {
     // View nodes don't have TNodes, so their next must be retrieved through their LView.
@@ -45500,83 +45453,33 @@ function getNextLNodeWithProjection(node) {
     return getNextLNode(node);
 }
 /**
- * Find the next node in the LNode tree, taking into account the place where a node is
- * projected (in the shadow DOM) rather than where it comes from (in the light DOM).
- *
- * If there is no sibling node, this function goes to the next sibling of the parent node...
- * until it reaches rootNode (at which point null is returned).
- *
- * @param initialNode The node whose following node in the LNode tree must be found.
- * @param rootNode The root node at which the lookup should stop.
- * @return LNode|null The following node in the LNode tree.
- */
-function getNextOrParentSiblingNode(initialNode, rootNode) {
-    var node = initialNode;
-    var nextNode = getNextLNodeWithProjection(node);
-    while (node && !nextNode) {
-        // if node.pNextOrParent is not null here, it is not the next node
-        // (because, at this point, nextNode is null, so it is the parent)
-        node = node.pNextOrParent || getParentLNode(node);
-        if (node === rootNode) {
-            return null;
-        }
-        nextNode = node && getNextLNodeWithProjection(node);
-    }
-    return nextNode;
-}
-/**
- * Returns the first RNode inside the given LNode.
- *
- * @param node The node whose first DOM node must be found
- * @returns RNode The first RNode of the given LNode or null if there is none.
- */
-function findFirstRNode(rootNode) {
-    return walkLNodeTree(rootNode, rootNode, 0 /* Find */) || null;
-}
-/**
  * Walks a tree of LNodes, applying a transformation on the LElement nodes, either only on the first
  * one found, or on all of them.
- * NOTE: for performance reasons, the possible actions are inlined within the function instead of
- * being passed as an argument.
  *
  * @param startingNode the node from which the walk is started.
  * @param rootNode the root node considered.
- * @param action Identifies the action to be performed on the LElement nodes.
- * @param renderer Optional the current renderer, required for action modes 1, 2 and 3.
- * @param renderParentNode Optionnal the render parent node to be set in all LContainerNodes found,
- * required for action modes 1 and 2.
- * @param beforeNode Optionnal the node before which elements should be added, required for action
- * modes 1.
+ * @param action identifies the action to be performed on the LElement nodes.
+ * @param renderer the current renderer.
+ * @param renderParentNode Optional the render parent node to be set in all LContainerNodes found,
+ * required for action modes Insert and Destroy.
+ * @param beforeNode Optional the node before which elements should be added, required for action
+ * Insert.
  */
 function walkLNodeTree(startingNode, rootNode, action, renderer, renderParentNode, beforeNode) {
     var node = startingNode;
     while (node) {
         var nextNode = null;
+        var parent_1 = renderParentNode ? renderParentNode.native : null;
         if (node.tNode.type === 3 /* Element */) {
             // Execute the action
-            if (action === 0 /* Find */) {
-                return node.native;
-            }
-            else if (action === 1 /* Insert */) {
-                var parent_1 = renderParentNode.native;
-                isProceduralRenderer(renderer) ?
-                    renderer
-                        .insertBefore(parent_1, node.native, beforeNode) :
-                    parent_1.insertBefore(node.native, beforeNode, true);
-            }
-            else if (action === 2 /* Detach */) {
-                var parent_2 = renderParentNode.native;
-                isProceduralRenderer(renderer) ?
-                    renderer.removeChild(parent_2, node.native) :
-                    parent_2.removeChild(node.native);
-            }
-            else if (action === 3 /* Destroy */) {
-                ngDevMode && ngDevMode.rendererDestroyNode++;
-                renderer.destroyNode(node.native);
+            executeNodeAction(action, renderer, parent_1, node.native, beforeNode);
+            if (node.dynamicLContainerNode) {
+                executeNodeAction(action, renderer, parent_1, node.dynamicLContainerNode.native, beforeNode);
             }
             nextNode = getNextLNode(node);
         }
         else if (node.tNode.type === 0 /* Container */) {
+            executeNodeAction(action, renderer, parent_1, node.native, beforeNode);
             var lContainerNode = node;
             var childContainerData = lContainerNode.dynamicLContainerNode ?
                 lContainerNode.dynamicLContainerNode.data :
@@ -45586,6 +45489,13 @@ function walkLNodeTree(startingNode, rootNode, action, renderer, renderParentNod
             }
             nextNode =
                 childContainerData[VIEWS].length ? getChildLNode(childContainerData[VIEWS][0]) : null;
+            if (nextNode) {
+                // When the walker enters a container, then the beforeNode has to become the local native
+                // comment node.
+                beforeNode = lContainerNode.dynamicLContainerNode ?
+                    lContainerNode.dynamicLContainerNode.native :
+                    lContainerNode.native;
+            }
         }
         else if (node.tNode.type === 1 /* Projection */) {
             // For Projection look at the first projected node
@@ -45595,7 +45505,55 @@ function walkLNodeTree(startingNode, rootNode, action, renderer, renderParentNod
             // Otherwise look at the first child
             nextNode = getChildLNode(node);
         }
-        node = nextNode === null ? getNextOrParentSiblingNode(node, rootNode) : nextNode;
+        if (nextNode == null) {
+            /**
+             * Find the next node in the LNode tree, taking into account the place where a node is
+             * projected (in the shadow DOM) rather than where it comes from (in the light DOM).
+             *
+             * If there is no sibling node, then it goes to the next sibling of the parent node...
+             * until it reaches rootNode (at which point null is returned).
+             */
+            var currentNode = node;
+            node = getNextLNodeWithProjection(currentNode);
+            while (currentNode && !node) {
+                // if node.pNextOrParent is not null here, it is not the next node
+                // (because, at this point, nextNode is null, so it is the parent)
+                currentNode = currentNode.pNextOrParent || getParentLNode(currentNode);
+                if (currentNode === rootNode) {
+                    return null;
+                }
+                // When the walker exits a container, the beforeNode has to be restored to the previous
+                // value.
+                if (currentNode && !currentNode.pNextOrParent &&
+                    currentNode.tNode.type === 0 /* Container */) {
+                    beforeNode = currentNode.native;
+                }
+                node = currentNode && getNextLNodeWithProjection(currentNode);
+            }
+        }
+        else {
+            node = nextNode;
+        }
+    }
+}
+/**
+ * NOTE: for performance reasons, the possible actions are inlined within the function instead of
+ * being passed as an argument.
+ */
+function executeNodeAction(action, renderer, parent, node, beforeNode) {
+    if (action === 0 /* Insert */) {
+        isProceduralRenderer(renderer) ?
+            renderer.insertBefore(parent, node, beforeNode) :
+            parent.insertBefore(node, beforeNode, true);
+    }
+    else if (action === 1 /* Detach */) {
+        isProceduralRenderer(renderer) ?
+            renderer.removeChild(parent, node) :
+            parent.removeChild(node);
+    }
+    else if (action === 2 /* Destroy */) {
+        ngDevMode && ngDevMode.rendererDestroyNode++;
+        renderer.destroyNode(node);
     }
 }
 
@@ -45607,7 +45565,7 @@ function addRemoveViewFromContainer(container, rootNode, insertMode, beforeNode)
     if (parent) {
         var node = getChildLNode(rootNode);
         var renderer = container.view[RENDERER];
-        walkLNodeTree(node, rootNode, insertMode ? 1 /* Insert */ : 2 /* Detach */, renderer, parentNode, beforeNode);
+        walkLNodeTree(node, rootNode, insertMode ? 0 /* Insert */ : 1 /* Detach */, renderer, parentNode, beforeNode);
     }
 }
 /**
@@ -45693,14 +45651,8 @@ function insertView(container, viewNode, index) {
     // and we should wait until that parent processes its nodes (otherwise, we will insert this view's
     // nodes twice - once now and once when its parent inserts its views).
     if (container.data[RENDER_PARENT] !== null) {
-        var beforeNode = findNextRNodeSibling(viewNode, container);
-        if (!beforeNode) {
-            var containerNextNativeNode = container.native;
-            if (containerNextNativeNode === undefined) {
-                containerNextNativeNode = container.native = findNextRNodeSibling(container, null);
-            }
-            beforeNode = containerNextNativeNode;
-        }
+        // Find the node to insert in front of
+        var beforeNode = index + 1 < views.length ? (getChildLNode(views[index + 1])).native : container.native;
         addRemoveViewFromContainer(container, viewNode, true, beforeNode);
     }
     // Sets the attached flag
@@ -45763,7 +45715,7 @@ function getLViewChild(viewData) {
 function destroyLView(view) {
     var renderer = view[RENDERER];
     if (isProceduralRenderer(renderer) && renderer.destroyNode) {
-        walkLNodeTree(view[HOST_NODE], view[HOST_NODE], 3 /* Destroy */, renderer);
+        walkLNodeTree(view[HOST_NODE], view[HOST_NODE], 2 /* Destroy */, renderer);
     }
     destroyViewTree(view);
     // Sets the destroyed flag
@@ -46404,17 +46356,36 @@ function createTView(viewIndex, template, directives, pipes) {
 }
 function setUpAttributes(native, attrs) {
     var isProc = isProceduralRenderer(renderer);
-    for (var i = 0; i < attrs.length; i += 2) {
+    var i = 0;
+    while (i < attrs.length) {
         var attrName = attrs[i];
-        if (attrName === 1 /* SELECT_ONLY */)
+        if (attrName === 1 /* SelectOnly */)
             break;
-        if (attrName !== NG_PROJECT_AS_ATTR_NAME) {
-            var attrVal = attrs[i + 1];
+        if (attrName === NG_PROJECT_AS_ATTR_NAME) {
+            i += 2;
+        }
+        else {
             ngDevMode && ngDevMode.rendererSetAttribute++;
-            isProc ?
-                renderer
-                    .setAttribute(native, attrName, attrVal) :
-                native.setAttribute(attrName, attrVal);
+            if (attrName === 0 /* NamespaceURI */) {
+                // Namespaced attributes
+                var namespaceURI = attrs[i + 1];
+                var attrName_1 = attrs[i + 2];
+                var attrVal = attrs[i + 3];
+                isProc ?
+                    renderer
+                        .setAttribute(native, attrName_1, attrVal, namespaceURI) :
+                    native.setAttributeNS(namespaceURI, attrName_1, attrVal);
+                i += 4;
+            }
+            else {
+                // Standard attributes
+                var attrVal = attrs[i + 1];
+                isProc ?
+                    renderer
+                        .setAttribute(native, attrName, attrVal) :
+                    native.setAttribute(attrName, attrVal);
+                i += 2;
+            }
         }
     }
 }
@@ -47185,7 +47156,7 @@ var ViewRef$1 = /** @class */ (function () {
      *
      * <!-- TODO: Add a link to a chapter on OnPush components -->
      *
-     * ### Example ([live demo](https://stackblitz.com/edit/angular-kx7rrw))
+     * ### Example
      *
      * ```typescript
      * @Component({
@@ -47268,7 +47239,7 @@ var ViewRef$1 = /** @class */ (function () {
      *
      * <!-- TODO: Add a link to a chapter on detach/reattach/local digest -->
      *
-     * ### Example ([live demo](https://stackblitz.com/edit/angular-ymgsxw))
+     * ### Example
      *
      * The following example creates a component displaying `live` data. The component will detach
      * its change detector from the main change detector tree when the component's live property
@@ -47564,9 +47535,6 @@ var ViewContainerRef$1 = /** @class */ (function () {
         var adjustedIdx = this._adjustIndex(index);
         viewRef.attachToViewContainerRef(this);
         insertView(this._lContainerNode, lViewNode, adjustedIdx);
-        // invalidate cache of next sibling RNode (we do similar operation in the containerRefreshEnd
-        // instruction)
-        this._lContainerNode.native = undefined;
         this._viewRefs.splice(adjustedIdx, 0, viewRef);
         return viewRef;
     };
@@ -49413,7 +49381,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION$3 = new Version$1('6.1.0-beta.0+43.sha-70ef061');
+var VERSION$3 = new Version$1('6.1.0-beta.0+55.sha-a577c9e');
 
 /**
  * @license
