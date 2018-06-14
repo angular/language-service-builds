@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.1.0-beta.1+15.sha-e6516b0
+ * @license Angular v6.1.0-beta.1+28.sha-a45fad3
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1204,7 +1204,7 @@ var Version = /** @class */ (function () {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION = new Version('6.1.0-beta.1+15.sha-e6516b0');
+var VERSION = new Version('6.1.0-beta.1+28.sha-a45fad3');
 
 /**
  * @license
@@ -13330,7 +13330,7 @@ var BindingParser = /** @class */ (function () {
         targetProps.push(new ParsedProperty(name, ast, ParsedPropertyType.ANIMATION, sourceSpan));
     };
     BindingParser.prototype._parseBinding = function (value, isHostBinding, sourceSpan) {
-        var sourceInfo = sourceSpan.start.toString();
+        var sourceInfo = (sourceSpan && sourceSpan.start || '(unknown)').toString();
         try {
             var ast = isHostBinding ?
                 this._exprParser.parseSimpleBinding(value, sourceInfo, this._interpolationConfig) :
@@ -13428,7 +13428,7 @@ var BindingParser = /** @class */ (function () {
         // so don't add the event name to the matchableAttrs
     };
     BindingParser.prototype._parseAction = function (value, sourceSpan) {
-        var sourceInfo = sourceSpan.start.toString();
+        var sourceInfo = (sourceSpan && sourceSpan.start || '(unknown').toString();
         try {
             var ast = this._exprParser.parseAction(value, sourceInfo, this._interpolationConfig);
             if (ast) {
@@ -15252,8 +15252,6 @@ var Identifiers$1 = /** @class */ (function () {
     Identifiers.pipe = { name: 'ɵPp', moduleName: CORE$1 };
     Identifiers.projection = { name: 'ɵP', moduleName: CORE$1 };
     Identifiers.projectionDef = { name: 'ɵpD', moduleName: CORE$1 };
-    Identifiers.refreshComponent = { name: 'ɵr', moduleName: CORE$1 };
-    Identifiers.directiveLifeCycle = { name: 'ɵl', moduleName: CORE$1 };
     Identifiers.inject = { name: 'inject', moduleName: CORE$1 };
     Identifiers.injectAttribute = { name: 'ɵinjectAttribute', moduleName: CORE$1 };
     Identifiers.injectElementRef = { name: 'ɵinjectElementRef', moduleName: CORE$1 };
@@ -16984,6 +16982,30 @@ function metadataAsSummary(meta) {
         hostProperties: meta.host.properties,
     };
     // clang-format on
+}
+var HOST_REG_EXP$1 = /^(?:(?:\[([^\]]+)\])|(?:\(([^\)]+)\)))|(\@[-\w]+)$/;
+function parseHostBindings(host) {
+    var attributes = {};
+    var listeners = {};
+    var properties = {};
+    var animations = {};
+    Object.keys(host).forEach(function (key) {
+        var value = host[key];
+        var matches = key.match(HOST_REG_EXP$1);
+        if (matches === null) {
+            attributes[key] = value;
+        }
+        else if (matches[1 /* Property */] != null) {
+            properties[matches[1 /* Property */]] = value;
+        }
+        else if (matches[2 /* Event */] != null) {
+            listeners[matches[2 /* Event */]] = value;
+        }
+        else if (matches[3 /* Animation */] != null) {
+            animations[matches[3 /* Animation */]] = value;
+        }
+    });
+    return { attributes: attributes, listeners: listeners, properties: properties, animations: animations };
 }
 
 /**
@@ -27422,6 +27444,26 @@ function appendChild(parent, child, currentView) {
  * @param currentParent The last parent element to be processed
  * @param currentView Current LView
  */
+function appendProjectedNode(node, currentParent, currentView) {
+    appendChild(currentParent, node.native, currentView);
+    if (node.tNode.type === 0 /* Container */) {
+        // The node we are adding is a Container and we are adding it to Element which
+        // is not a component (no more re-projection).
+        // Alternatively a container is projected at the root of a component's template
+        // and can't be re-projected (as not content of any component).
+        // Assignee the final projection location in those cases.
+        var lContainer = node.data;
+        lContainer[RENDER_PARENT] = currentParent;
+        var views = lContainer[VIEWS];
+        for (var i = 0; i < views.length; i++) {
+            addRemoveViewFromContainer(node, views[i], true, null);
+        }
+    }
+    if (node.dynamicLContainerNode) {
+        node.dynamicLContainerNode.data[RENDER_PARENT] = currentParent;
+        appendChild(currentParent, node.dynamicLContainerNode.native, currentView);
+    }
+}
 
 /**
  * @license
@@ -27558,7 +27600,18 @@ function isNodeMatchingSelectorList(tNode, selector) {
     }
     return false;
 }
-
+function getProjectAsAttrValue(tNode) {
+    var nodeAttrs = tNode.attrs;
+    if (nodeAttrs != null) {
+        var ngProjectAsAttrIdx = nodeAttrs.indexOf(NG_PROJECT_AS_ATTR_NAME);
+        // only check for ngProjectAs in attribute names, don't accidentally match attribute's value
+        // (attribute names are stored at even indexes)
+        if ((ngProjectAsAttrIdx & 1) === 0) {
+            return nodeAttrs[ngProjectAsAttrIdx + 1];
+        }
+    }
+    return null;
+}
 /**
  * Checks a given node against matching selectors and returns
  * selector index (or 0 if none matched).
@@ -27566,6 +27619,18 @@ function isNodeMatchingSelectorList(tNode, selector) {
  * This function takes into account the ngProjectAs attribute: if present its value will be compared
  * to the raw (un-parsed) CSS selector instead of using standard selector matching logic.
  */
+function matchingSelectorIndex(tNode, selectors, textSelectors) {
+    var ngProjectAsAttrVal = getProjectAsAttrValue(tNode);
+    for (var i = 0; i < selectors.length; i++) {
+        // if a node has the ngProjectAs attribute match it against unparsed selector
+        // match a node against a parsed selector only if ngProjectAs attribute is not present
+        if (ngProjectAsAttrVal === textSelectors[i] ||
+            ngProjectAsAttrVal === null && isNodeMatchingSelectorList(tNode, selectors[i])) {
+            return i + 1; // first matching selector "captures" a given node
+        }
+    }
+    return 0;
+}
 
 /**
  * @license
@@ -27652,7 +27717,7 @@ var tView;
 var currentQueries;
 function getCurrentQueries(QueryType) {
     // top level variables should not be exported for performance reasons (PERF_NOTES.md)
-    return currentQueries || (currentQueries = new QueryType());
+    return currentQueries || (currentQueries = (previousOrParentNode.queries || new QueryType()));
 }
 /**
  * This property gets set before entering a template.
@@ -29139,7 +29204,53 @@ function viewAttached(view) {
  * @param selectors A collection of parsed CSS selectors
  * @param rawSelectors A collection of CSS selectors in the raw, un-parsed form
  */
-
+function projectionDef(index, selectors, textSelectors) {
+    var noOfNodeBuckets = selectors ? selectors.length + 1 : 1;
+    var distributedNodes = new Array(noOfNodeBuckets);
+    for (var i = 0; i < noOfNodeBuckets; i++) {
+        distributedNodes[i] = [];
+    }
+    var componentNode = findComponentHost(viewData);
+    var componentChild = getChildLNode(componentNode);
+    while (componentChild !== null) {
+        // execute selector matching logic if and only if:
+        // - there are selectors defined
+        // - a node has a tag name / attributes that can be matched
+        if (selectors && componentChild.tNode) {
+            var matchedIdx = matchingSelectorIndex(componentChild.tNode, selectors, textSelectors);
+            distributedNodes[matchedIdx].push(componentChild);
+        }
+        else {
+            distributedNodes[0].push(componentChild);
+        }
+        componentChild = getNextLNode(componentChild);
+    }
+    ngDevMode && assertDataNext(index + HEADER_OFFSET);
+    store(index, distributedNodes);
+}
+/**
+ * Updates the linked list of a projection node, by appending another linked list.
+ *
+ * @param projectionNode Projection node whose projected nodes linked list has to be updated
+ * @param appendedFirst First node of the linked list to append.
+ * @param appendedLast Last node of the linked list to append.
+ */
+function appendToProjectionNode(projectionNode, appendedFirst, appendedLast) {
+    ngDevMode && assertEqual(!!appendedFirst, !!appendedLast, 'appendedFirst can be null if and only if appendedLast is also null');
+    if (!appendedLast) {
+        // nothing to append
+        return;
+    }
+    var projectionNodeData = projectionNode.data;
+    if (projectionNodeData.tail) {
+        projectionNodeData.tail.pNextOrParent = appendedFirst;
+    }
+    else {
+        projectionNodeData.head = appendedFirst;
+    }
+    projectionNodeData.tail = appendedLast;
+    appendedLast.pNextOrParent = projectionNode;
+}
 /**
  * Inserts previously re-distributed projected nodes. This instruction must be preceded by a call
  * to the projectionDef instruction.
@@ -29150,7 +29261,58 @@ function viewAttached(view) {
  *        - 0 when the selector is `*` (or unspecified as this is the default value),
  *        - 1 based index of the selector from the {@link projectionDef}
  */
-
+function projection(nodeIndex, localIndex, selectorIndex, attrs) {
+    if (selectorIndex === void 0) { selectorIndex = 0; }
+    var node = createLNode(nodeIndex, 1 /* Projection */, null, null, attrs || null, { head: null, tail: null });
+    // `<ng-content>` has no content
+    isParent = false;
+    // re-distribution of projectable nodes is memorized on a component's view level
+    var componentNode = findComponentHost(viewData);
+    var componentLView = componentNode.data;
+    var distributedNodes = loadInternal(localIndex, componentLView);
+    var nodesForSelector = distributedNodes[selectorIndex];
+    // build the linked list of projected nodes:
+    for (var i = 0; i < nodesForSelector.length; i++) {
+        var nodeToProject = nodesForSelector[i];
+        if (nodeToProject.tNode.type === 1 /* Projection */) {
+            // Reprojecting a projection -> append the list of previously projected nodes
+            var previouslyProjected = nodeToProject.data;
+            appendToProjectionNode(node, previouslyProjected.head, previouslyProjected.tail);
+        }
+        else {
+            // Projecting a single node
+            appendToProjectionNode(node, nodeToProject, nodeToProject);
+        }
+    }
+    var currentParent = getParentLNode(node);
+    if (canInsertNativeNode(currentParent, viewData)) {
+        ngDevMode && assertNodeType(currentParent, 3 /* Element */);
+        // process each node in the list of projected nodes:
+        var nodeToProject = node.data.head;
+        var lastNodeToProject = node.data.tail;
+        while (nodeToProject) {
+            appendProjectedNode(nodeToProject, currentParent, viewData);
+            nodeToProject = nodeToProject === lastNodeToProject ? null : nodeToProject.pNextOrParent;
+        }
+    }
+}
+/**
+ * Given a current view, finds the nearest component's host (LElement).
+ *
+ * @param lViewData LViewData for which we want a host element node
+ * @returns The host node
+ */
+function findComponentHost(lViewData) {
+    var viewRootLNode = lViewData[HOST_NODE];
+    while (viewRootLNode.tNode.type === 2 /* View */) {
+        ngDevMode && assertDefined(lViewData[PARENT], 'lViewData.parent');
+        lViewData = lViewData[PARENT];
+        viewRootLNode = lViewData[HOST_NODE];
+    }
+    ngDevMode && assertNodeType(viewRootLNode, 3 /* Element */);
+    ngDevMode && assertDefined(viewRootLNode.data, 'node.data');
+    return viewRootLNode;
+}
 /**
  * Adds LViewData or LContainer to the end of the current view tree.
  *
@@ -29377,7 +29539,16 @@ function bind(value) {
  *
  * NOTE: reserveSlots instructions are only ever allowed at the very end of the creation block
  */
-
+function reserveSlots(numSlots) {
+    // Init the slots with a unique `NO_CHANGE` value so that the first change is always detected
+    // whether it happens or not during the first change detection pass - pure functions checks
+    // might be skipped when short-circuited.
+    viewData.length += numSlots;
+    viewData.fill(NO_CHANGE, -numSlots);
+    // We need to initialize the binding in case a `pureFunctionX` kind of binding instruction is
+    // called first in the update section.
+    initBindings();
+}
 /**
  * Sets up the binding index before executing any `pureFunctionX` instructions.
  *
@@ -29411,7 +29582,24 @@ function restoreBindingIndex(index) {
  *
  * Returns the concatenated string when any of the arguments changes, `NO_CHANGE` otherwise.
  */
-
+function interpolationV(values) {
+    ngDevMode && assertLessThan(2, values.length, 'should have at least 3 values');
+    ngDevMode && assertEqual(values.length % 2, 1, 'should have an odd number of values');
+    var different = false;
+    for (var i = 1; i < values.length; i += 2) {
+        // Check if bindings (odd indexes) have changed
+        bindingUpdated(values[i]) && (different = true);
+    }
+    if (!different) {
+        return NO_CHANGE;
+    }
+    // Build the updated content
+    var content = values[0];
+    for (var i = 1; i < values.length; i += 2) {
+        content += stringify$2(values[i]) + values[i + 1];
+    }
+    return content;
+}
 /**
  * Creates an interpolation binding with 1 expression.
  *
@@ -33642,6 +33830,14 @@ var defineDirective = defineComponent;
  * ```
  * @param pipeDef Pipe definition generated by the compiler
  */
+function definePipe(pipeDef) {
+    return {
+        name: pipeDef.name,
+        factory: pipeDef.factory,
+        pure: pipeDef.pure !== false,
+        onDestroy: pipeDef.type.prototype.ngOnDestroy || null
+    };
+}
 
 /**
  * @license
@@ -34265,7 +34461,43 @@ function pureFunctionV(slotOffset, pureFn, exps, thisArg) {
  * @param pipeName The name of the pipe
  * @returns T the instance of the pipe.
  */
-
+function pipe(index, pipeName) {
+    var tView = getTView();
+    var pipeDef;
+    var adjustedIndex = index + HEADER_OFFSET;
+    if (tView.firstTemplatePass) {
+        pipeDef = getPipeDef(pipeName, tView.pipeRegistry);
+        tView.data[adjustedIndex] = pipeDef;
+        if (pipeDef.onDestroy) {
+            (tView.pipeDestroyHooks || (tView.pipeDestroyHooks = [])).push(adjustedIndex, pipeDef.onDestroy);
+        }
+    }
+    else {
+        pipeDef = tView.data[adjustedIndex];
+    }
+    var pipeInstance = pipeDef.factory();
+    store(index, pipeInstance);
+    return pipeInstance;
+}
+/**
+ * Searches the pipe registry for a pipe with the given name. If one is found,
+ * returns the pipe. Otherwise, an error is thrown because the pipe cannot be resolved.
+ *
+ * @param name Name of pipe to resolve
+ * @param registry Full list of available pipes
+ * @returns Matching PipeDef
+ */
+function getPipeDef(name, registry) {
+    if (registry) {
+        for (var i = 0; i < registry.length; i++) {
+            var pipeDef = registry[i];
+            if (name === pipeDef.name) {
+                return pipeDef;
+            }
+        }
+    }
+    throw new Error("Pipe with name '" + name + "' not found!");
+}
 /**
  * Invokes a pipe with 1 arguments.
  *
@@ -40534,7 +40766,9 @@ var angularCoreEnv = {
     'ɵdefineComponent': defineComponent,
     'ɵdefineDirective': defineDirective,
     'defineInjectable': defineInjectable,
+    'defineInjector': defineInjector,
     'ɵdefineNgModule': defineNgModule,
+    'ɵdefinePipe': definePipe,
     'ɵdirectiveInject': directiveInject,
     'inject': inject,
     'ɵinjectAttribute': injectAttribute,
@@ -40573,18 +40807,23 @@ var angularCoreEnv = {
     'ɵi6': interpolation6,
     'ɵi7': interpolation7,
     'ɵi8': interpolation8,
+    'ɵiV': interpolationV,
     'ɵk': elementClass,
     'ɵkn': elementClassNamed,
     'ɵL': listener,
     'ɵld': load,
+    'ɵP': projection,
     'ɵp': elementProperty,
     'ɵpb1': pipeBind1,
     'ɵpb2': pipeBind2,
     'ɵpb3': pipeBind3,
     'ɵpb4': pipeBind4,
     'ɵpbV': pipeBindV,
+    'ɵpD': projectionDef,
+    'ɵPp': pipe,
     'ɵQ': query,
     'ɵqR': queryRefresh,
+    'ɵrS': reserveSlots,
     'ɵs': elementStyle,
     'ɵsn': elementStyleNamed,
     'ɵst': store,
@@ -41003,11 +41242,12 @@ function compileComponentDecorator(type, metadata) {
  */
 function directiveMetadata(type, metadata) {
     // Reflect inputs and outputs.
-    var props = getReflect().propMetadata(type);
+    var propMetadata = getReflect().propMetadata(type);
     var inputs = {};
     var outputs = {};
+    var host = extractHostBindings(metadata, propMetadata);
     var _loop_1 = function (field) {
-        props[field].forEach(function (ann) {
+        propMetadata[field].forEach(function (ann) {
             if (isInput(ann)) {
                 inputs[field] = ann.bindingPropertyName || field;
             }
@@ -41016,21 +41256,14 @@ function directiveMetadata(type, metadata) {
             }
         });
     };
-    for (var field in props) {
+    for (var field in propMetadata) {
         _loop_1(field);
     }
     return {
         name: type.name,
         type: new WrappedNodeExpr(type),
         selector: metadata.selector,
-        deps: reflectDependencies(type),
-        host: {
-            attributes: {},
-            listeners: {},
-            properties: {},
-        },
-        inputs: inputs,
-        outputs: outputs,
+        deps: reflectDependencies(type), host: host, inputs: inputs, outputs: outputs,
         queries: [],
         lifecycle: {
             usesOnChanges: type.prototype.ngOnChanges !== undefined,
@@ -41038,11 +41271,39 @@ function directiveMetadata(type, metadata) {
         typeSourceSpan: null,
     };
 }
+function extractHostBindings(metadata, propMetadata) {
+    // First parse the declarations from the metadata.
+    var _a = parseHostBindings(metadata.host || {}), attributes = _a.attributes, listeners = _a.listeners, properties = _a.properties, animations = _a.animations;
+    if (Object.keys(animations).length > 0) {
+        throw new Error("Animation bindings are as-of-yet unsupported in Ivy");
+    }
+    var _loop_2 = function (field) {
+        propMetadata[field].forEach(function (ann) {
+            if (isHostBinding(ann)) {
+                properties[ann.hostPropertyName || field] = field;
+            }
+            else if (isHostListener(ann)) {
+                listeners[ann.eventName || field] = field + "(" + (ann.args || []).join(',') + ")";
+            }
+        });
+    };
+    // Next, loop over the properties of the object, looking for @HostBinding and @HostListener.
+    for (var field in propMetadata) {
+        _loop_2(field);
+    }
+    return { attributes: attributes, listeners: listeners, properties: properties };
+}
 function isInput(value) {
     return value.ngMetadataName === 'Input';
 }
 function isOutput(value) {
     return value.ngMetadataName === 'Output';
+}
+function isHostBinding(value) {
+    return value.ngMetadataName === 'HostBinding';
+}
+function isHostListener(value) {
+    return value.ngMetadataName === 'HostListener';
 }
 
 /**
@@ -41262,7 +41523,7 @@ var Version$1 = /** @class */ (function () {
     }
     return Version;
 }());
-var VERSION$2 = new Version$1('6.1.0-beta.1+15.sha-e6516b0');
+var VERSION$2 = new Version$1('6.1.0-beta.1+28.sha-a45fad3');
 
 var __extends$34 = (undefined && undefined.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
@@ -54227,7 +54488,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION$3 = new Version$1('6.1.0-beta.1+15.sha-e6516b0');
+var VERSION$3 = new Version$1('6.1.0-beta.1+28.sha-a45fad3');
 
 /**
  * @license
