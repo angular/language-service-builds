@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.1.0-beta.1+29.sha-0f7e4fa
+ * @license Angular v6.1.0-beta.1+30.sha-27bc7dc
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1162,7 +1162,7 @@ var Version = /** @class */ (function () {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION = new Version('6.1.0-beta.1+29.sha-0f7e4fa');
+var VERSION = new Version('6.1.0-beta.1+30.sha-27bc7dc');
 
 /**
  * @license
@@ -14424,6 +14424,10 @@ var Identifiers$1 = /** @class */ (function () {
         name: 'defineInjector',
         moduleName: CORE$1,
     };
+    Identifiers.NgModuleDef = {
+        name: 'NgModuleDef',
+        moduleName: CORE$1,
+    };
     Identifiers.defineNgModule = { name: 'ɵdefineNgModule', moduleName: CORE$1 };
     Identifiers.definePipe = { name: 'ɵdefinePipe', moduleName: CORE$1 };
     Identifiers.query = { name: 'ɵQ', moduleName: CORE$1 };
@@ -24271,7 +24275,6 @@ var Injectable = makeDecorator('Injectable', undefined, undefined, undefined, fu
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-
 /**
  * Defines a schema that will allow:
  * - any non-Angular elements with a `-` in their name,
@@ -24372,7 +24375,7 @@ var Version$1 = /** @class */ (function () {
     }
     return Version;
 }());
-var VERSION$2 = new Version$1('6.1.0-beta.1+29.sha-0f7e4fa');
+var VERSION$2 = new Version$1('6.1.0-beta.1+30.sha-27bc7dc');
 
 /**
  * @license
@@ -47595,6 +47598,7 @@ var ViewContainerRef$1 = /** @class */ (function () {
 
 
 
+
 /**
  * Creates an NgOnChangesFeature function for a component's features list.
  *
@@ -49374,7 +49378,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION$3 = new Version$1('6.1.0-beta.1+29.sha-0f7e4fa');
+var VERSION$3 = new Version$1('6.1.0-beta.1+30.sha-27bc7dc');
 
 /**
  * @license
