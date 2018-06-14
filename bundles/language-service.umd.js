@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.1.0-beta.1+1.sha-03f93b3
+ * @license Angular v6.1.0-beta.1+22.sha-39af314
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1204,7 +1204,7 @@ var Version = /** @class */ (function () {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION = new Version('6.1.0-beta.1+1.sha-03f93b3');
+var VERSION = new Version('6.1.0-beta.1+22.sha-39af314');
 
 /**
  * @license
@@ -25285,16 +25285,14 @@ function defineInjector(options) {
  * overrides the above behavior and marks the token as belonging to a particular `@NgModule`. As
  * mentioned above, `'root'` is the default value for `providedIn`.
  *
- * ### Example
- *
- * #### Tree-shakeable InjectionToken
- *
- * {@example core/di/ts/injector_spec.ts region='ShakeableInjectionToken'}
- *
- * #### Plain InjectionToken
+ * @usageNotes
+ * ### Basic Example
  *
  * {@example core/di/ts/injector_spec.ts region='InjectionToken'}
  *
+ * ### Tree-shakeable Example
+ *
+ * {@example core/di/ts/injector_spec.ts region='ShakeableInjectionToken'}
  *
  */
 var InjectionToken = /** @class */ (function () {
@@ -25459,6 +25457,7 @@ function makePropDecorator(name, props, parentClass) {
  * All components that are referenced in the `useValue` value (either directly
  * or in a nested array or map) will be added to the `entryComponents` property.
  *
+ * @usageNotes
  * ### Example
  * The following example shows how the router can populate the `entryComponents`
  * field of an NgModule based on the router configuration which refers
@@ -25491,17 +25490,16 @@ var ANALYZE_FOR_ENTRY_COMPONENTS = new InjectionToken('AnalyzeForEntryComponents
 /**
  * Attribute decorator and metadata.
  *
- *
  * @Annotation
  */
 var Attribute$1 = makeParamDecorator('Attribute', function (attributeName) { return ({ attributeName: attributeName }); });
 /**
  * Base class for query metadata.
  *
- * See {@link ContentChildren}, {@link ContentChild}, {@link ViewChildren}, {@link ViewChild} for
- * more information.
- *
- *
+ * @see `ContentChildren`.
+ * @see `ContentChild`.
+ * @see `ViewChildren`.
+ * @see `ViewChild`.
  */
 var Query = /** @class */ (function () {
     function Query() {
@@ -25531,7 +25529,6 @@ var ContentChild = makePropDecorator('ContentChild', function (selector, data) {
 /**
  * ViewChildren decorator and metadata.
  *
- *
  * @Annotation
  */
 var ViewChildren = makePropDecorator('ViewChildren', function (selector, data) {
@@ -25540,7 +25537,6 @@ var ViewChildren = makePropDecorator('ViewChildren', function (selector, data) {
 }, Query);
 /**
  * ViewChild decorator and metadata.
- *
  *
  * @Annotation
  */
@@ -25692,10 +25688,10 @@ function stringify$1(token) {
  * Allows to refer to references which are not yet defined.
  *
  * For instance, `forwardRef` is used when the `token` which we need to refer to for the purposes of
- * DI is declared,
- * but not yet defined. It is also used when the `token` which we use when creating a query is not
- * yet defined.
+ * DI is declared, but not yet defined. It is also used when the `token` which we use when creating
+ * a query is not yet defined.
  *
+ * @usageNotes
  * ### Example
  * {@example core/di/ts/forward_ref/forward_ref_spec.ts region='forward_ref'}
  * @experimental
@@ -25710,11 +25706,12 @@ function forwardRef(forwardRefFn) {
  *
  * Acts as the identity function when given a non-forward-ref value.
  *
+ * @usageNotes
  * ### Example
  *
  * {@example core/di/ts/forward_ref/forward_ref_spec.ts region='resolve_forward_ref'}
  *
- * See: {@link forwardRef}
+ * @see `forwardRef`
  * @experimental
  */
 function resolveForwardRef$1(type) {
@@ -25737,13 +25734,11 @@ function resolveForwardRef$1(type) {
 /**
  * Inject decorator and metadata.
  *
- *
  * @Annotation
  */
 var Inject = makeParamDecorator('Inject', function (token) { return ({ token: token }); });
 /**
  * Optional decorator and metadata.
- *
  *
  * @Annotation
  */
@@ -25751,20 +25746,17 @@ var Optional = makeParamDecorator('Optional');
 /**
  * Self decorator and metadata.
  *
- *
  * @Annotation
  */
 var Self = makeParamDecorator('Self');
 /**
  * SkipSelf decorator and metadata.
  *
- *
  * @Annotation
  */
 var SkipSelf = makeParamDecorator('SkipSelf');
 /**
  * Host decorator and metadata.
- *
  *
  * @Annotation
  */
@@ -25806,23 +25798,17 @@ var NullInjector = /** @class */ (function () {
     return NullInjector;
 }());
 /**
- * @usageNotes
- * ```
- * const injector: Injector = ...;
- * injector.get(...);
- * ```
- *
- * @description
- *
  * Concrete injectors implement this interface.
  *
- * For more details, see the {@linkDocs guide/dependency-injection "Dependency Injection Guide"}.
+ * For more details, see the ["Dependency Injection Guide"](guide/dependency-injection).
  *
+ * @usageNotes
  * ### Example
  *
  * {@example core/di/ts/injector_spec.ts region='Injector'}
  *
  * `Injector` returns itself when given `Injector` as a token:
+ *
  * {@example core/di/ts/injector_spec.ts region='injectInjector'}
  *
  *
@@ -25833,6 +25819,7 @@ var Injector = /** @class */ (function () {
     /**
      * Create a new Injector which is configure using `StaticProvider`s.
      *
+     * @usageNotes
      * ### Example
      *
      * {@example core/di/ts/provider_spec.ts region='ConstructorProvider'}
@@ -26522,7 +26509,6 @@ function preR3InjectableCompile(injectableType, options) {
 }
 /**
 * Injectable decorator and metadata.
-*
 *
 * @Annotation
 */
@@ -30755,11 +30741,12 @@ var IterableDiffers = /** @class */ (function () {
      * inherited {@link IterableDiffers} instance with the provided factories and return a new
      * {@link IterableDiffers} instance.
      *
+     * @usageNotes
+     * ### Example
+     *
      * The following example shows how to extend an existing list of factories,
      * which will only be applied to the injector for this component and its children.
      * This step is all that's required to make a new {@link IterableDiffer} available.
-     *
-     * ### Example
      *
      * ```
      * @Component({
@@ -30841,14 +30828,13 @@ function defaultErrorLogger(console) {
  * found in the LICENSE file at https://angular.io/license
  */
 /**
- *
- * @description
  * Provides a hook for centralized exception handling.
  *
  * The default implementation of `ErrorHandler` prints error messages to the `console`. To
  * intercept error handling, write a custom exception handler that replaces this default as
  * appropriate for your app.
  *
+ * @usageNotes
  * ### Example
  *
  * ```
@@ -30863,8 +30849,6 @@ function defaultErrorLogger(console) {
  * })
  * class MyModule {}
  * ```
- *
- *
  */
 var ErrorHandler = /** @class */ (function () {
     function ErrorHandler() {
@@ -30959,6 +30943,7 @@ function addKey(injector, key) {
  * Thrown when trying to retrieve a dependency by key from {@link Injector}, but the
  * {@link Injector} does not have a {@link Provider} for the given key.
  *
+ * @usageNotes
  * ### Example
  *
  * ```typescript
@@ -30978,6 +30963,7 @@ function noProviderError(injector, key) {
 /**
  * Thrown when dependencies form a cycle.
  *
+ * @usageNotes
  * ### Example
  *
  * ```typescript
@@ -31002,6 +30988,7 @@ function cyclicDependencyError(injector, key) {
  * The `InstantiationError` class contains the original error plus the dependency graph which caused
  * this object to be instantiated.
  *
+ * @usageNotes
  * ### Example
  *
  * ```typescript
@@ -31032,6 +31019,7 @@ function instantiationError(injector, originalException, originalStack, key) {
  * Thrown when an object other then {@link Provider} (or `Type`) is passed to {@link Injector}
  * creation.
  *
+ * @usageNotes
  * ### Example
  *
  * ```typescript
@@ -31047,6 +31035,7 @@ function invalidProviderError(provider) {
  * Lack of annotation information prevents the {@link Injector} from determining which dependencies
  * need to be injected into the constructor.
  *
+ * @usageNotes
  * ### Example
  *
  * ```typescript
@@ -31089,6 +31078,7 @@ function noAnnotationError(typeOrFunc, params) {
 /**
  * Thrown when getting an object by index.
  *
+ * @usageNotes
  * ### Example
  *
  * ```typescript
@@ -31107,6 +31097,7 @@ function outOfBoundsError(index) {
 /**
  * Thrown when a multi provider and a regular provider are bound to the same token.
  *
+ * @usageNotes
  * ### Example
  *
  * ```typescript
@@ -31283,8 +31274,7 @@ var ResolvedReflectiveProvider_ = /** @class */ (function () {
     return ResolvedReflectiveProvider_;
 }());
 /**
- * An internal resolved representation of a factory function created by resolving {@link
- * Provider}.
+ * An internal resolved representation of a factory function created by resolving `Provider`.
  * @experimental
  */
 var ResolvedReflectiveFactory = /** @class */ (function () {
@@ -31328,10 +31318,10 @@ function resolveReflectiveFactory(provider) {
     return new ResolvedReflectiveFactory(factoryFn, resolvedDeps);
 }
 /**
- * Converts the {@link Provider} into {@link ResolvedProvider}.
+ * Converts the `Provider` into `ResolvedProvider`.
  *
- * {@link Injector} internally only uses {@link ResolvedProvider}, {@link Provider} contains
- * convenience provider syntax.
+ * `Injector` internally only uses `ResolvedProvider`, `Provider` contains convenience provider
+ * syntax.
  */
 function resolveReflectiveProvider(provider) {
     return new ResolvedReflectiveProvider_(ReflectiveKey.get(provider.provide), [resolveReflectiveFactory(provider)], provider.multi || false);
@@ -31346,9 +31336,8 @@ function resolveReflectiveProviders(providers) {
     return Array.from(resolvedProviderMap.values());
 }
 /**
- * Merges a list of ResolvedProviders into a list where
- * each key is contained exactly once and multi providers
- * have been merged.
+ * Merges a list of ResolvedProviders into a list where each key is contained exactly once and
+ * multi providers have been merged.
  */
 function mergeResolvedReflectiveProviders(providers, normalizedProvidersMap) {
     for (var i = 0; i < providers.length; i++) {
@@ -31476,6 +31465,7 @@ var UNDEFINED = new Object();
  * In typical use, application code asks for the dependencies in the constructor and they are
  * resolved by the `Injector`.
  *
+ * @usageNotes
  * ### Example
  *
  * The following example creates an `Injector` configured to create `Engine` and `Car`.
@@ -31508,8 +31498,9 @@ var ReflectiveInjector = /** @class */ (function () {
      * Turns an array of provider definitions into an array of resolved providers.
      *
      * A resolution is a process of flattening multiple nested arrays and converting individual
-     * providers into an array of {@link ResolvedReflectiveProvider}s.
+     * providers into an array of `ResolvedReflectiveProvider`s.
      *
+     * @usageNotes
      * ### Example
      *
      * ```typescript
@@ -31535,7 +31526,6 @@ var ReflectiveInjector = /** @class */ (function () {
      * });
      * ```
      *
-     * See {@link ReflectiveInjector#fromResolvedProviders fromResolvedProviders} for more info.
      */
     ReflectiveInjector.resolve = function (providers) {
         return resolveReflectiveProviders(providers);
@@ -31543,9 +31533,10 @@ var ReflectiveInjector = /** @class */ (function () {
     /**
      * Resolves an array of providers and creates an injector from those providers.
      *
-     * The passed-in providers can be an array of `Type`, {@link Provider},
+     * The passed-in providers can be an array of `Type`, `Provider`,
      * or a recursive array of more providers.
      *
+     * @usageNotes
      * ### Example
      *
      * ```typescript
@@ -31561,11 +31552,6 @@ var ReflectiveInjector = /** @class */ (function () {
      * var injector = ReflectiveInjector.resolveAndCreate([Car, Engine]);
      * expect(injector.get(Car) instanceof Car).toBe(true);
      * ```
-     *
-     * This function is slower than the corresponding `fromResolvedProviders`
-     * because it needs to resolve the passed-in providers first.
-     * See {@link ReflectiveInjector#resolve resolve} and
-     * {@link ReflectiveInjector#fromResolvedProviders fromResolvedProviders}.
      */
     ReflectiveInjector.resolveAndCreate = function (providers, parent) {
         var ResolvedReflectiveProviders = ReflectiveInjector.resolve(providers);
@@ -31576,6 +31562,7 @@ var ReflectiveInjector = /** @class */ (function () {
      *
      * This API is the recommended way to construct injectors in performance-sensitive parts.
      *
+     * @usageNotes
      * ### Example
      *
      * ```typescript
@@ -32154,11 +32141,12 @@ var KeyValueDiffers = /** @class */ (function () {
      * inherited {@link KeyValueDiffers} instance with the provided factories and return a new
      * {@link KeyValueDiffers} instance.
      *
+     * @usageNotes
+     * ### Example
+     *
      * The following example shows how to extend an existing list of factories,
      * which will only be applied to the injector for this component and its children.
      * This step is all that's required to make a new {@link KeyValueDiffer} available.
-     *
-     * ### Example
      *
      * ```
      * @Component({
@@ -32717,6 +32705,7 @@ var ViewRef = /** @class */ (function () {
      *
      * <!-- TODO: Add a link to a chapter on OnPush components -->
      *
+     * @usageNotes
      * ### Example
      *
      * ```typescript
@@ -32750,6 +32739,7 @@ var ViewRef = /** @class */ (function () {
      * <!-- TODO: Add a link to a chapter on detach/reattach/local digest -->
      * <!-- TODO: Add a live demo once ref.detectChanges is merged into master -->
      *
+     * @usageNotes
      * ### Example
      *
      * The following example defines a component with a large list of readonly data.
@@ -32800,6 +32790,7 @@ var ViewRef = /** @class */ (function () {
      *
      * <!-- TODO: Add a link to a chapter on detach/reattach/local digest -->
      *
+     * @usageNotes
      * ### Example
      *
      * The following example creates a component displaying `live` data. The component will detach
@@ -32857,6 +32848,7 @@ var ViewRef = /** @class */ (function () {
      * <!-- TODO: Add a link to a chapter on detach/reattach/local digest -->
      * <!-- TODO: Add a live demo once ref.detectChanges is merged into master -->
      *
+     * @usageNotes
      * ### Example
      *
      * The following example defines a component with a large list of readonly data.
@@ -40056,6 +40048,7 @@ var ZipBufferIterator = /** @class */ (function (_super) {
 /**
  * Use by directives and components to emit custom Events.
  *
+ * @usageNotes
  * ### Examples
  *
  * In the following example, `Zippy` alternatively emits `open` and `close` events when its
@@ -40093,6 +40086,8 @@ var ZipBufferIterator = /** @class */ (function (_super) {
  * ```
  * <zippy (open)="onOpen($event)" (close)="onClose($event)"></zippy>
  * ```
+ *
+ * ### Notes
  *
  * Uses Rx.Observable but provides an adapter to make it work as specified here:
  * https://github.com/jhusain/observable-spec
@@ -41186,7 +41181,6 @@ var R3_COMPILE_NGMODULE = compileNgModule$1;
 /**
  * Directive decorator and metadata.
  *
- *
  * @Annotation
  */
 var Directive = makeDecorator('Directive', function (dir) {
@@ -41195,7 +41189,6 @@ var Directive = makeDecorator('Directive', function (dir) {
 }, undefined, undefined, function (type, meta) { return (R3_COMPILE_DIRECTIVE || (function () { }))(type, meta); });
 /**
  * Component decorator and metadata.
- *
  *
  * @Annotation
  */
@@ -41207,11 +41200,10 @@ var Component = makeDecorator('Component', function (c) {
  * Pipe decorator and metadata.
  *
  * Use the `@Pipe` annotation to declare that a given class is a pipe. A pipe
- * class must also implement {@link PipeTransform} interface.
+ * class must also implement `PipeTransform` interface.
  *
  * To use the pipe include a reference to the pipe class in
- * {@link NgModule#declarations}.
- *
+ * `NgModule.declarations`.
  *
  * @Annotation
  */
@@ -41219,13 +41211,11 @@ var Pipe = makeDecorator('Pipe', function (p) { return (__assign({ pure: true },
 /**
  * Input decorator and metadata.
  *
- *
  * @Annotation
  */
 var Input = makePropDecorator('Input', function (bindingPropertyName) { return ({ bindingPropertyName: bindingPropertyName }); });
 /**
  * Output decorator and metadata.
- *
  *
  * @Annotation
  */
@@ -41233,13 +41223,11 @@ var Output = makePropDecorator('Output', function (bindingPropertyName) { return
 /**
  * HostBinding decorator and metadata.
  *
- *
  * @Annotation
  */
 var HostBinding = makePropDecorator('HostBinding', function (hostPropertyName) { return ({ hostPropertyName: hostPropertyName }); });
 /**
  * HostListener decorator and metadata.
- *
  *
  * @Annotation
  */
@@ -41274,7 +41262,7 @@ var Version$1 = /** @class */ (function () {
     }
     return Version;
 }());
-var VERSION$2 = new Version$1('6.1.0-beta.1+1.sha-03f93b3');
+var VERSION$2 = new Version$1('6.1.0-beta.1+22.sha-39af314');
 
 var __extends$34 = (undefined && undefined.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
@@ -48164,6 +48152,7 @@ var wtfLeave = wtfEnabled ? leave : function (s, r) { return r; };
  *   - link to runOutsideAngular/run (throughout this file!)
  *   -->
  *
+ * @usageNotes
  * ### Example
  *
  * ```
@@ -48795,8 +48784,6 @@ function getPlatform() {
  *
  * A page's platform is initialized implicitly when a platform is created via a platform factory
  * (e.g. {@link platformBrowser}), or explicitly by calling the {@link createPlatform} function.
- *
- *
  */
 var PlatformRef = /** @class */ (function () {
     /** @internal */
@@ -48810,7 +48797,8 @@ var PlatformRef = /** @class */ (function () {
      * Creates an instance of an `@NgModule` for the given platform
      * for offline compilation.
      *
-     * ## Simple Example
+     * @usageNotes
+     * ### Simple Example
      *
      * ```typescript
      * my_module.ts:
@@ -48862,7 +48850,8 @@ var PlatformRef = /** @class */ (function () {
     /**
      * Creates an instance of an `@NgModule` for a given platform using the given runtime compiler.
      *
-     * ## Simple Example
+     * @usageNotes
+     * ### Simple Example
      *
      * ```typescript
      * @NgModule({
@@ -48972,8 +48961,6 @@ function optionsReducer(dst, objs) {
 }
 /**
  * A reference to an Angular application running on a page.
- *
- *
  */
 var ApplicationRef = /** @class */ (function () {
     /** @internal */
@@ -49046,14 +49033,15 @@ var ApplicationRef = /** @class */ (function () {
     /**
      * Bootstrap a new component at the root level of the application.
      *
+     * @usageNotes
      * ### Bootstrap process
      *
      * When bootstrapping a new root component into an application, Angular mounts the
-     * specified application component onto DOM elements identified by the [componentType]'s
+     * specified application component onto DOM elements identified by the componentType's
      * selector and kicks off automatic change detection to finish initializing the component.
      *
      * Optionally, a component can be mounted onto a DOM element that does not match the
-     * [componentType]'s selector.
+     * componentType's selector.
      *
      * ### Example
      * {@example core/ts/platform/platform.ts region='longform'}
@@ -49248,6 +49236,7 @@ function remove(list, el) {
  *
  * NOTE: In the future this class will implement an `Observable` interface.
  *
+ * @usageNotes
  * ### Example
  * ```typescript
  * @Component({...})
@@ -49255,7 +49244,6 @@ function remove(list, el) {
  *   @ViewChildren(Item) items:QueryList<Item>;
  * }
  * ```
- *
  */
 var QueryList$1 = /** @class */ (function () {
     function QueryList() {
@@ -49425,9 +49413,10 @@ var ViewRef$1 = /** @class */ (function (_super) {
  *
  * Properties of elements in a View can change, but the structure (number and order) of elements in
  * a View cannot. Changing the structure of Elements can only be done by inserting, moving or
- * removing nested Views via a {@link ViewContainerRef}. Each View can contain many View Containers.
+ * removing nested Views via a `ViewContainerRef`. Each View can contain many View Containers.
  * <!-- /TODO -->
  *
+ * @usageNotes
  * ### Example
  *
  * Given this template...
@@ -49439,9 +49428,10 @@ var ViewRef$1 = /** @class */ (function (_super) {
  * </ul>
  * ```
  *
- * We have two {@link TemplateRef}s:
+ * We have two `TemplateRef`s:
  *
- * Outer {@link TemplateRef}:
+ * Outer `TemplateRef`:
+ *
  * ```
  * Count: {{items.length}}
  * <ul>
@@ -49449,14 +49439,15 @@ var ViewRef$1 = /** @class */ (function (_super) {
  * </ul>
  * ```
  *
- * Inner {@link TemplateRef}:
+ * Inner `TemplateRef`:
+ *
  * ```
  *   <li>{{item}}</li>
  * ```
  *
- * Notice that the original template is broken down into two separate {@link TemplateRef}s.
+ * Notice that the original template is broken down into two separate `TemplateRef`s.
  *
- * The outer/inner {@link TemplateRef}s are then assembled into views like so:
+ * The outer/inner `TemplateRef`s are then assembled into views like so:
  *
  * ```
  * <!-- ViewRef: outer-0 -->
@@ -49716,8 +49707,9 @@ var platformCore = createPlatformFactory(null, 'core', _CORE_PLATFORM_PROVIDERS)
  * It is used for i18n extraction, by i18n pipes (DatePipe, I18nPluralPipe, CurrencyPipe,
  * DecimalPipe and PercentPipe) and by ICU expressions.
  *
- * See the {@linkDocs guide/i18n#setting-up-locale i18n guide} for more information.
+ * See the [i18n guide](guide/i18n#setting-up-locale) for more information.
  *
+ * @usageNotes
  * ### Example
  *
  * ```typescript
@@ -49737,8 +49729,9 @@ var LOCALE_ID = new InjectionToken('LocaleId');
  * Use this token at bootstrap to provide the content of your translation file (`xtb`,
  * `xlf` or `xlf2`) when you want to translate your application in another language.
  *
- * See the {@linkDocs guide/i18n#merge i18n guide} for more information.
+ * See the [i18n guide](guide/i18n#merge) for more information.
  *
+ * @usageNotes
  * ### Example
  *
  * ```typescript
@@ -49761,8 +49754,9 @@ var TRANSLATIONS = new InjectionToken('Translations');
  * Provide this token at bootstrap to set the format of your {@link TRANSLATIONS}: `xtb`,
  * `xlf` or `xlf2`.
  *
- * See the {@linkDocs guide/i18n#merge i18n guide} for more information.
+ * See the [i18n guide](guide/i18n#merge) for more information.
  *
+ * @usageNotes
  * ### Example
  *
  * ```typescript
@@ -49785,8 +49779,9 @@ var TRANSLATIONS_FORMAT = new InjectionToken('TranslationsFormat');
  * - Warning (default): show a warning in the console and/or shell.
  * - Ignore: do nothing.
  *
- * See the {@linkDocs guide/i18n#missing-translation i18n guide} for more information.
+ * See the [i18n guide](guide/i18n#missing-translation) for more information.
  *
+ * @usageNotes
  * ### Example
  * ```typescript
  * import { MissingTranslationStrategy } from '@angular/core';
@@ -54232,7 +54227,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION$3 = new Version$1('6.1.0-beta.1+1.sha-03f93b3');
+var VERSION$3 = new Version$1('6.1.0-beta.1+22.sha-39af314');
 
 /**
  * @license
