@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.1.0-beta.1+25.sha-7c8159b
+ * @license Angular v6.1.0-beta.1+26.sha-6d246d6
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1204,7 +1204,7 @@ var Version = /** @class */ (function () {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION = new Version('6.1.0-beta.1+25.sha-7c8159b');
+var VERSION = new Version('6.1.0-beta.1+26.sha-6d246d6');
 
 /**
  * @license
@@ -27652,7 +27652,7 @@ var tView;
 var currentQueries;
 function getCurrentQueries(QueryType) {
     // top level variables should not be exported for performance reasons (PERF_NOTES.md)
-    return currentQueries || (currentQueries = new QueryType());
+    return currentQueries || (currentQueries = (previousOrParentNode.queries || new QueryType()));
 }
 /**
  * This property gets set before entering a template.
@@ -41262,7 +41262,7 @@ var Version$1 = /** @class */ (function () {
     }
     return Version;
 }());
-var VERSION$2 = new Version$1('6.1.0-beta.1+25.sha-7c8159b');
+var VERSION$2 = new Version$1('6.1.0-beta.1+26.sha-6d246d6');
 
 var __extends$34 = (undefined && undefined.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
@@ -54227,7 +54227,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION$3 = new Version$1('6.1.0-beta.1+25.sha-7c8159b');
+var VERSION$3 = new Version$1('6.1.0-beta.1+26.sha-6d246d6');
 
 /**
  * @license
