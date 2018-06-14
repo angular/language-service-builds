@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.1.0-beta.1+15.sha-e6516b0
+ * @license Angular v6.1.0-beta.1+28.sha-a45fad3
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1162,7 +1162,7 @@ var Version = /** @class */ (function () {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION = new Version('6.1.0-beta.1+15.sha-e6516b0');
+var VERSION = new Version('6.1.0-beta.1+28.sha-a45fad3');
 
 /**
  * @license
@@ -13269,7 +13269,7 @@ var BindingParser = /** @class */ (function () {
         targetProps.push(new ParsedProperty(name, ast, ParsedPropertyType.ANIMATION, sourceSpan));
     };
     BindingParser.prototype._parseBinding = function (value, isHostBinding, sourceSpan) {
-        var sourceInfo = sourceSpan.start.toString();
+        var sourceInfo = (sourceSpan && sourceSpan.start || '(unknown)').toString();
         try {
             var ast = isHostBinding ?
                 this._exprParser.parseSimpleBinding(value, sourceInfo, this._interpolationConfig) :
@@ -13367,7 +13367,7 @@ var BindingParser = /** @class */ (function () {
         // so don't add the event name to the matchableAttrs
     };
     BindingParser.prototype._parseAction = function (value, sourceSpan) {
-        var sourceInfo = sourceSpan.start.toString();
+        var sourceInfo = (sourceSpan && sourceSpan.start || '(unknown').toString();
         try {
             var ast = this._exprParser.parseAction(value, sourceInfo, this._interpolationConfig);
             if (ast) {
@@ -14401,8 +14401,6 @@ var Identifiers$1 = /** @class */ (function () {
     Identifiers.pipe = { name: 'ɵPp', moduleName: CORE$1 };
     Identifiers.projection = { name: 'ɵP', moduleName: CORE$1 };
     Identifiers.projectionDef = { name: 'ɵpD', moduleName: CORE$1 };
-    Identifiers.refreshComponent = { name: 'ɵr', moduleName: CORE$1 };
-    Identifiers.directiveLifeCycle = { name: 'ɵl', moduleName: CORE$1 };
     Identifiers.inject = { name: 'inject', moduleName: CORE$1 };
     Identifiers.injectAttribute = { name: 'ɵinjectAttribute', moduleName: CORE$1 };
     Identifiers.injectElementRef = { name: 'ɵinjectElementRef', moduleName: CORE$1 };
@@ -24374,7 +24372,7 @@ var Version$1 = /** @class */ (function () {
     }
     return Version;
 }());
-var VERSION$2 = new Version$1('6.1.0-beta.1+15.sha-e6516b0');
+var VERSION$2 = new Version$1('6.1.0-beta.1+28.sha-a45fad3');
 
 /**
  * @license
@@ -49376,7 +49374,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION$3 = new Version$1('6.1.0-beta.1+15.sha-e6516b0');
+var VERSION$3 = new Version$1('6.1.0-beta.1+28.sha-a45fad3');
 
 /**
  * @license
