@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.1.0-beta.1+28.sha-a45fad3
+ * @license Angular v6.1.0-beta.1+31.sha-ccbda9d
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1204,7 +1204,7 @@ var Version = /** @class */ (function () {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION = new Version('6.1.0-beta.1+28.sha-a45fad3');
+var VERSION = new Version('6.1.0-beta.1+31.sha-ccbda9d');
 
 /**
  * @license
@@ -15275,6 +15275,10 @@ var Identifiers$1 = /** @class */ (function () {
         name: 'defineInjector',
         moduleName: CORE$1,
     };
+    Identifiers.NgModuleDef = {
+        name: 'NgModuleDef',
+        moduleName: CORE$1,
+    };
     Identifiers.defineNgModule = { name: 'ɵdefineNgModule', moduleName: CORE$1 };
     Identifiers.definePipe = { name: 'ɵdefinePipe', moduleName: CORE$1 };
     Identifiers.query = { name: 'ɵQ', moduleName: CORE$1 };
@@ -15325,8 +15329,10 @@ function compileNgModule(meta) {
             imports: literalArr(imports),
             exports: literalArr(exports),
         })]);
-    // TODO(alxhub): write a proper type reference when AOT compilation of @NgModule is implemented.
-    var type = new ExpressionType(NULL_EXPR);
+    var type = new ExpressionType(importExpr(Identifiers$1.NgModuleDef, [
+        new ExpressionType(moduleType), new ExpressionType(literalArr(declarations)),
+        new ExpressionType(literalArr(imports)), new ExpressionType(literalArr(exports))
+    ]));
     var additionalStatements = [];
     return { expression: expression, type: type, additionalStatements: additionalStatements };
 }
@@ -16715,7 +16721,7 @@ function parseTemplate(template, templateUrl, options) {
         return { errors: parseResult.errors, nodes: [], hasNgContent: false, ngContentSelectors: [] };
     }
     var rootNodes = parseResult.rootNodes;
-    if (!options.preserveWhitespace) {
+    if (!options.preserveWhitespaces) {
         rootNodes = visitAll(new WhitespaceVisitor(), rootNodes);
     }
     var _a = htmlAstToRender3Ast(rootNodes, bindingParser), nodes = _a.nodes, hasNgContent = _a.hasNgContent, ngContentSelectors = _a.ngContentSelectors, errors = _a.errors;
@@ -16780,7 +16786,7 @@ function baseDirectiveFields(meta, constantPool, bindingParser) {
 function compileDirectiveFromMetadata(meta, constantPool, bindingParser) {
     var definitionMap = baseDirectiveFields(meta, constantPool, bindingParser);
     var expression = importExpr(Identifiers$1.defineDirective).callFn([definitionMap.toLiteralMap()]);
-    var type = new ExpressionType(importExpr(Identifiers$1.DirectiveDef, [new ExpressionType(meta.type)]));
+    var type = new ExpressionType(importExpr(Identifiers$1.DirectiveDef, [new ExpressionType(meta.type), new ExpressionType(literal(meta.selector || ''))]));
     return { expression: expression, type: type };
 }
 /**
@@ -16826,7 +16832,7 @@ function compileComponentFromMetadata(meta, constantPool, bindingParser) {
         definitionMap.set('pipes', literalArr(Array.from(pipesUsed)));
     }
     var expression = importExpr(Identifiers$1.defineComponent).callFn([definitionMap.toLiteralMap()]);
-    var type = new ExpressionType(importExpr(Identifiers$1.ComponentDef, [new ExpressionType(meta.type)]));
+    var type = new ExpressionType(importExpr(Identifiers$1.ComponentDef, [new ExpressionType(meta.type), new ExpressionType(literal(meta.selector || ''))]));
     return { expression: expression, type: type };
 }
 /**
@@ -26203,400 +26209,6 @@ function injectArgs(types) {
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-/**
- * @description
- *
- * Represents a type that a Component or other object is instances of.
- *
- * An example of a `Type` is `MyCustomComponent` class, which in JavaScript is be represented by
- * the `MyCustomComponent` constructor function.
- *
- *
- */
-var Type$2 = Function;
-function isType(v) {
-    return typeof v === 'function';
-}
-
-/**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
- */
-/**
- * Attention: These regex has to hold even if the code is minified!
- */
-var DELEGATE_CTOR = /^function\s+\S+\(\)\s*{[\s\S]+\.apply\(this,\s*arguments\)/;
-var INHERITED_CLASS = /^class\s+[A-Za-z\d$_]*\s*extends\s+[A-Za-z\d$_]+\s*{/;
-var INHERITED_CLASS_WITH_CTOR = /^class\s+[A-Za-z\d$_]*\s*extends\s+[A-Za-z\d$_]+\s*{[\s\S]*constructor\s*\(/;
-var ReflectionCapabilities = /** @class */ (function () {
-    function ReflectionCapabilities(reflect) {
-        this._reflect = reflect || _global['Reflect'];
-    }
-    ReflectionCapabilities.prototype.isReflectionEnabled = function () { return true; };
-    ReflectionCapabilities.prototype.factory = function (t) { return function () {
-        var args = [];
-        for (var _i = 0; _i < arguments.length; _i++) {
-            args[_i] = arguments[_i];
-        }
-        return new (t.bind.apply(t, __spread([void 0], args)))();
-    }; };
-    /** @internal */
-    ReflectionCapabilities.prototype._zipTypesAndAnnotations = function (paramTypes, paramAnnotations) {
-        var result;
-        if (typeof paramTypes === 'undefined') {
-            result = new Array(paramAnnotations.length);
-        }
-        else {
-            result = new Array(paramTypes.length);
-        }
-        for (var i = 0; i < result.length; i++) {
-            // TS outputs Object for parameters without types, while Traceur omits
-            // the annotations. For now we preserve the Traceur behavior to aid
-            // migration, but this can be revisited.
-            if (typeof paramTypes === 'undefined') {
-                result[i] = [];
-            }
-            else if (paramTypes[i] != Object) {
-                result[i] = [paramTypes[i]];
-            }
-            else {
-                result[i] = [];
-            }
-            if (paramAnnotations && paramAnnotations[i] != null) {
-                result[i] = result[i].concat(paramAnnotations[i]);
-            }
-        }
-        return result;
-    };
-    ReflectionCapabilities.prototype._ownParameters = function (type, parentCtor) {
-        var typeStr = type.toString();
-        // If we have no decorators, we only have function.length as metadata.
-        // In that case, to detect whether a child class declared an own constructor or not,
-        // we need to look inside of that constructor to check whether it is
-        // just calling the parent.
-        // This also helps to work around for https://github.com/Microsoft/TypeScript/issues/12439
-        // that sets 'design:paramtypes' to []
-        // if a class inherits from another class but has no ctor declared itself.
-        if (DELEGATE_CTOR.exec(typeStr) ||
-            (INHERITED_CLASS.exec(typeStr) && !INHERITED_CLASS_WITH_CTOR.exec(typeStr))) {
-            return null;
-        }
-        // Prefer the direct API.
-        if (type.parameters && type.parameters !== parentCtor.parameters) {
-            return type.parameters;
-        }
-        // API of tsickle for lowering decorators to properties on the class.
-        var tsickleCtorParams = type.ctorParameters;
-        if (tsickleCtorParams && tsickleCtorParams !== parentCtor.ctorParameters) {
-            // Newer tsickle uses a function closure
-            // Retain the non-function case for compatibility with older tsickle
-            var ctorParameters = typeof tsickleCtorParams === 'function' ? tsickleCtorParams() : tsickleCtorParams;
-            var paramTypes_1 = ctorParameters.map(function (ctorParam) { return ctorParam && ctorParam.type; });
-            var paramAnnotations_1 = ctorParameters.map(function (ctorParam) {
-                return ctorParam && convertTsickleDecoratorIntoMetadata(ctorParam.decorators);
-            });
-            return this._zipTypesAndAnnotations(paramTypes_1, paramAnnotations_1);
-        }
-        // API for metadata created by invoking the decorators.
-        var paramAnnotations = type.hasOwnProperty(PARAMETERS) && type[PARAMETERS];
-        var paramTypes = this._reflect && this._reflect.getOwnMetadata &&
-            this._reflect.getOwnMetadata('design:paramtypes', type);
-        if (paramTypes || paramAnnotations) {
-            return this._zipTypesAndAnnotations(paramTypes, paramAnnotations);
-        }
-        // If a class has no decorators, at least create metadata
-        // based on function.length.
-        // Note: We know that this is a real constructor as we checked
-        // the content of the constructor above.
-        return new Array(type.length).fill(undefined);
-    };
-    ReflectionCapabilities.prototype.parameters = function (type) {
-        // Note: only report metadata if we have at least one class decorator
-        // to stay in sync with the static reflector.
-        if (!isType(type)) {
-            return [];
-        }
-        var parentCtor = getParentCtor(type);
-        var parameters = this._ownParameters(type, parentCtor);
-        if (!parameters && parentCtor !== Object) {
-            parameters = this.parameters(parentCtor);
-        }
-        return parameters || [];
-    };
-    ReflectionCapabilities.prototype._ownAnnotations = function (typeOrFunc, parentCtor) {
-        // Prefer the direct API.
-        if (typeOrFunc.annotations && typeOrFunc.annotations !== parentCtor.annotations) {
-            var annotations = typeOrFunc.annotations;
-            if (typeof annotations === 'function' && annotations.annotations) {
-                annotations = annotations.annotations;
-            }
-            return annotations;
-        }
-        // API of tsickle for lowering decorators to properties on the class.
-        if (typeOrFunc.decorators && typeOrFunc.decorators !== parentCtor.decorators) {
-            return convertTsickleDecoratorIntoMetadata(typeOrFunc.decorators);
-        }
-        // API for metadata created by invoking the decorators.
-        if (typeOrFunc.hasOwnProperty(ANNOTATIONS)) {
-            return typeOrFunc[ANNOTATIONS];
-        }
-        return null;
-    };
-    ReflectionCapabilities.prototype.annotations = function (typeOrFunc) {
-        if (!isType(typeOrFunc)) {
-            return [];
-        }
-        var parentCtor = getParentCtor(typeOrFunc);
-        var ownAnnotations = this._ownAnnotations(typeOrFunc, parentCtor) || [];
-        var parentAnnotations = parentCtor !== Object ? this.annotations(parentCtor) : [];
-        return parentAnnotations.concat(ownAnnotations);
-    };
-    ReflectionCapabilities.prototype._ownPropMetadata = function (typeOrFunc, parentCtor) {
-        // Prefer the direct API.
-        if (typeOrFunc.propMetadata &&
-            typeOrFunc.propMetadata !== parentCtor.propMetadata) {
-            var propMetadata = typeOrFunc.propMetadata;
-            if (typeof propMetadata === 'function' && propMetadata.propMetadata) {
-                propMetadata = propMetadata.propMetadata;
-            }
-            return propMetadata;
-        }
-        // API of tsickle for lowering decorators to properties on the class.
-        if (typeOrFunc.propDecorators &&
-            typeOrFunc.propDecorators !== parentCtor.propDecorators) {
-            var propDecorators_1 = typeOrFunc.propDecorators;
-            var propMetadata_1 = {};
-            Object.keys(propDecorators_1).forEach(function (prop) {
-                propMetadata_1[prop] = convertTsickleDecoratorIntoMetadata(propDecorators_1[prop]);
-            });
-            return propMetadata_1;
-        }
-        // API for metadata created by invoking the decorators.
-        if (typeOrFunc.hasOwnProperty(PROP_METADATA)) {
-            return typeOrFunc[PROP_METADATA];
-        }
-        return null;
-    };
-    ReflectionCapabilities.prototype.propMetadata = function (typeOrFunc) {
-        if (!isType(typeOrFunc)) {
-            return {};
-        }
-        var parentCtor = getParentCtor(typeOrFunc);
-        var propMetadata = {};
-        if (parentCtor !== Object) {
-            var parentPropMetadata_1 = this.propMetadata(parentCtor);
-            Object.keys(parentPropMetadata_1).forEach(function (propName) {
-                propMetadata[propName] = parentPropMetadata_1[propName];
-            });
-        }
-        var ownPropMetadata = this._ownPropMetadata(typeOrFunc, parentCtor);
-        if (ownPropMetadata) {
-            Object.keys(ownPropMetadata).forEach(function (propName) {
-                var decorators = [];
-                if (propMetadata.hasOwnProperty(propName)) {
-                    decorators.push.apply(decorators, __spread(propMetadata[propName]));
-                }
-                decorators.push.apply(decorators, __spread(ownPropMetadata[propName]));
-                propMetadata[propName] = decorators;
-            });
-        }
-        return propMetadata;
-    };
-    ReflectionCapabilities.prototype.hasLifecycleHook = function (type, lcProperty) {
-        return type instanceof Type$2 && lcProperty in type.prototype;
-    };
-    ReflectionCapabilities.prototype.guards = function (type) { return {}; };
-    ReflectionCapabilities.prototype.getter = function (name) { return new Function('o', 'return o.' + name + ';'); };
-    ReflectionCapabilities.prototype.setter = function (name) {
-        return new Function('o', 'v', 'return o.' + name + ' = v;');
-    };
-    ReflectionCapabilities.prototype.method = function (name) {
-        var functionBody = "if (!o." + name + ") throw new Error('\"" + name + "\" is undefined');\n        return o." + name + ".apply(o, args);";
-        return new Function('o', 'args', functionBody);
-    };
-    // There is not a concept of import uri in Js, but this is useful in developing Dart applications.
-    ReflectionCapabilities.prototype.importUri = function (type) {
-        // StaticSymbol
-        if (typeof type === 'object' && type['filePath']) {
-            return type['filePath'];
-        }
-        // Runtime type
-        return "./" + stringify$1(type);
-    };
-    ReflectionCapabilities.prototype.resourceUri = function (type) { return "./" + stringify$1(type); };
-    ReflectionCapabilities.prototype.resolveIdentifier = function (name, moduleUrl, members, runtime) {
-        return runtime;
-    };
-    ReflectionCapabilities.prototype.resolveEnum = function (enumIdentifier, name) { return enumIdentifier[name]; };
-    return ReflectionCapabilities;
-}());
-function convertTsickleDecoratorIntoMetadata(decoratorInvocations) {
-    if (!decoratorInvocations) {
-        return [];
-    }
-    return decoratorInvocations.map(function (decoratorInvocation) {
-        var decoratorType = decoratorInvocation.type;
-        var annotationCls = decoratorType.annotationCls;
-        var annotationArgs = decoratorInvocation.args ? decoratorInvocation.args : [];
-        return new (annotationCls.bind.apply(annotationCls, __spread([void 0], annotationArgs)))();
-    });
-}
-function getParentCtor(ctor) {
-    var parentProto = ctor.prototype ? Object.getPrototypeOf(ctor.prototype) : null;
-    var parentCtor = parentProto ? parentProto.constructor : null;
-    // Note: We always use `Object` as the null value
-    // to simplify checking later on.
-    return parentCtor || Object;
-}
-
-/**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
- */
-function getClosureSafeProperty$1(objWithPropertyToExtract, target) {
-    for (var key in objWithPropertyToExtract) {
-        if (objWithPropertyToExtract[key] === target) {
-            return key;
-        }
-    }
-    throw Error('Could not find renamed property on target object.');
-}
-
-/**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
- */
-var GET_PROPERTY_NAME$1 = {};
-var USE_VALUE$2 = getClosureSafeProperty$1({ provide: String, useValue: GET_PROPERTY_NAME$1 }, GET_PROPERTY_NAME$1);
-var EMPTY_ARRAY = [];
-function convertInjectableProviderToFactory(type, provider) {
-    if (!provider) {
-        var reflectionCapabilities = new ReflectionCapabilities();
-        var deps_1 = reflectionCapabilities.parameters(type);
-        // TODO - convert to flags.
-        return function () { return new (type.bind.apply(type, __spread([void 0], injectArgs(deps_1))))(); };
-    }
-    if (USE_VALUE$2 in provider) {
-        var valueProvider_1 = provider;
-        return function () { return valueProvider_1.useValue; };
-    }
-    else if (provider.useExisting) {
-        var existingProvider_1 = provider;
-        return function () { return inject(existingProvider_1.useExisting); };
-    }
-    else if (provider.useFactory) {
-        var factoryProvider_1 = provider;
-        return function () { return factoryProvider_1.useFactory.apply(factoryProvider_1, __spread(injectArgs(factoryProvider_1.deps || EMPTY_ARRAY))); };
-    }
-    else if (provider.useClass) {
-        var classProvider_1 = provider;
-        var deps_2 = provider.deps;
-        if (!deps_2) {
-            var reflectionCapabilities = new ReflectionCapabilities();
-            deps_2 = reflectionCapabilities.parameters(type);
-        }
-        return function () {
-            return new ((_a = classProvider_1.useClass).bind.apply(_a, __spread([void 0], injectArgs(deps_2))))();
-            var _a;
-        };
-    }
-    else {
-        var deps_3 = provider.deps;
-        if (!deps_3) {
-            var reflectionCapabilities = new ReflectionCapabilities();
-            deps_3 = reflectionCapabilities.parameters(type);
-        }
-        return function () { return new (type.bind.apply(type, __spread([void 0], injectArgs(deps_3))))(); };
-    }
-}
-/**
- * Supports @Injectable() in JIT mode for Render2.
- */
-function preR3InjectableCompile(injectableType, options) {
-    if (options && options.providedIn !== undefined && injectableType.ngInjectableDef === undefined) {
-        injectableType.ngInjectableDef = defineInjectable({
-            providedIn: options.providedIn,
-            factory: convertInjectableProviderToFactory(injectableType, options),
-        });
-    }
-}
-/**
-* Injectable decorator and metadata.
-*
-* @Annotation
-*/
-var Injectable = makeDecorator('Injectable', undefined, undefined, undefined, function (type, meta) {
-    return (R3_COMPILE_INJECTABLE || preR3InjectableCompile)(type, meta);
-});
-
-/**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
- */
-function defineNgModule(def) {
-    var res = {
-        type: def.type,
-        bootstrap: def.bootstrap || [],
-        declarations: def.declarations || [],
-        imports: def.imports || [],
-        exports: def.exports || [],
-        transitiveCompileScopes: null,
-    };
-    return res;
-}
-/**
- * Defines a schema that will allow:
- * - any non-Angular elements with a `-` in their name,
- * - any properties on elements with a `-` in their name which is the common rule for custom
- * elements.
- *
- *
- */
-
-/**
- * Defines a schema that will allow any property on any element.
- *
- * @experimental
- */
-
-function preR3NgModuleCompile(moduleType, metadata) {
-    var imports = (metadata && metadata.imports) || [];
-    if (metadata && metadata.exports) {
-        imports = __spread(imports, [metadata.exports]);
-    }
-    moduleType.ngInjectorDef = defineInjector({
-        factory: convertInjectableProviderToFactory(moduleType, { useClass: moduleType }),
-        providers: metadata && metadata.providers,
-        imports: imports,
-    });
-}
-/**
- * NgModule decorator and metadata.
- *
- *
- * @Annotation
- */
-var NgModule = makeDecorator('NgModule', function (ngModule) { return ngModule; }, undefined, undefined, function (type, meta) { return (R3_COMPILE_NGMODULE || preR3NgModuleCompile)(type, meta); });
-
-/**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
- */
 // The functions in this file verify that the assumptions we are making
 // about state in an instruction are correct before implementing any logic.
 // They are meant only to be called in dev mode as sanity checks.
@@ -30986,6 +30598,348 @@ function getTypeNameForDebugging(type) {
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
+/**
+ * @description
+ *
+ * Represents a type that a Component or other object is instances of.
+ *
+ * An example of a `Type` is `MyCustomComponent` class, which in JavaScript is be represented by
+ * the `MyCustomComponent` constructor function.
+ *
+ *
+ */
+var Type$2 = Function;
+function isType(v) {
+    return typeof v === 'function';
+}
+
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+/**
+ * Attention: These regex has to hold even if the code is minified!
+ */
+var DELEGATE_CTOR = /^function\s+\S+\(\)\s*{[\s\S]+\.apply\(this,\s*arguments\)/;
+var INHERITED_CLASS = /^class\s+[A-Za-z\d$_]*\s*extends\s+[A-Za-z\d$_]+\s*{/;
+var INHERITED_CLASS_WITH_CTOR = /^class\s+[A-Za-z\d$_]*\s*extends\s+[A-Za-z\d$_]+\s*{[\s\S]*constructor\s*\(/;
+var ReflectionCapabilities = /** @class */ (function () {
+    function ReflectionCapabilities(reflect) {
+        this._reflect = reflect || _global['Reflect'];
+    }
+    ReflectionCapabilities.prototype.isReflectionEnabled = function () { return true; };
+    ReflectionCapabilities.prototype.factory = function (t) { return function () {
+        var args = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            args[_i] = arguments[_i];
+        }
+        return new (t.bind.apply(t, __spread([void 0], args)))();
+    }; };
+    /** @internal */
+    ReflectionCapabilities.prototype._zipTypesAndAnnotations = function (paramTypes, paramAnnotations) {
+        var result;
+        if (typeof paramTypes === 'undefined') {
+            result = new Array(paramAnnotations.length);
+        }
+        else {
+            result = new Array(paramTypes.length);
+        }
+        for (var i = 0; i < result.length; i++) {
+            // TS outputs Object for parameters without types, while Traceur omits
+            // the annotations. For now we preserve the Traceur behavior to aid
+            // migration, but this can be revisited.
+            if (typeof paramTypes === 'undefined') {
+                result[i] = [];
+            }
+            else if (paramTypes[i] != Object) {
+                result[i] = [paramTypes[i]];
+            }
+            else {
+                result[i] = [];
+            }
+            if (paramAnnotations && paramAnnotations[i] != null) {
+                result[i] = result[i].concat(paramAnnotations[i]);
+            }
+        }
+        return result;
+    };
+    ReflectionCapabilities.prototype._ownParameters = function (type, parentCtor) {
+        var typeStr = type.toString();
+        // If we have no decorators, we only have function.length as metadata.
+        // In that case, to detect whether a child class declared an own constructor or not,
+        // we need to look inside of that constructor to check whether it is
+        // just calling the parent.
+        // This also helps to work around for https://github.com/Microsoft/TypeScript/issues/12439
+        // that sets 'design:paramtypes' to []
+        // if a class inherits from another class but has no ctor declared itself.
+        if (DELEGATE_CTOR.exec(typeStr) ||
+            (INHERITED_CLASS.exec(typeStr) && !INHERITED_CLASS_WITH_CTOR.exec(typeStr))) {
+            return null;
+        }
+        // Prefer the direct API.
+        if (type.parameters && type.parameters !== parentCtor.parameters) {
+            return type.parameters;
+        }
+        // API of tsickle for lowering decorators to properties on the class.
+        var tsickleCtorParams = type.ctorParameters;
+        if (tsickleCtorParams && tsickleCtorParams !== parentCtor.ctorParameters) {
+            // Newer tsickle uses a function closure
+            // Retain the non-function case for compatibility with older tsickle
+            var ctorParameters = typeof tsickleCtorParams === 'function' ? tsickleCtorParams() : tsickleCtorParams;
+            var paramTypes_1 = ctorParameters.map(function (ctorParam) { return ctorParam && ctorParam.type; });
+            var paramAnnotations_1 = ctorParameters.map(function (ctorParam) {
+                return ctorParam && convertTsickleDecoratorIntoMetadata(ctorParam.decorators);
+            });
+            return this._zipTypesAndAnnotations(paramTypes_1, paramAnnotations_1);
+        }
+        // API for metadata created by invoking the decorators.
+        var paramAnnotations = type.hasOwnProperty(PARAMETERS) && type[PARAMETERS];
+        var paramTypes = this._reflect && this._reflect.getOwnMetadata &&
+            this._reflect.getOwnMetadata('design:paramtypes', type);
+        if (paramTypes || paramAnnotations) {
+            return this._zipTypesAndAnnotations(paramTypes, paramAnnotations);
+        }
+        // If a class has no decorators, at least create metadata
+        // based on function.length.
+        // Note: We know that this is a real constructor as we checked
+        // the content of the constructor above.
+        return new Array(type.length).fill(undefined);
+    };
+    ReflectionCapabilities.prototype.parameters = function (type) {
+        // Note: only report metadata if we have at least one class decorator
+        // to stay in sync with the static reflector.
+        if (!isType(type)) {
+            return [];
+        }
+        var parentCtor = getParentCtor(type);
+        var parameters = this._ownParameters(type, parentCtor);
+        if (!parameters && parentCtor !== Object) {
+            parameters = this.parameters(parentCtor);
+        }
+        return parameters || [];
+    };
+    ReflectionCapabilities.prototype._ownAnnotations = function (typeOrFunc, parentCtor) {
+        // Prefer the direct API.
+        if (typeOrFunc.annotations && typeOrFunc.annotations !== parentCtor.annotations) {
+            var annotations = typeOrFunc.annotations;
+            if (typeof annotations === 'function' && annotations.annotations) {
+                annotations = annotations.annotations;
+            }
+            return annotations;
+        }
+        // API of tsickle for lowering decorators to properties on the class.
+        if (typeOrFunc.decorators && typeOrFunc.decorators !== parentCtor.decorators) {
+            return convertTsickleDecoratorIntoMetadata(typeOrFunc.decorators);
+        }
+        // API for metadata created by invoking the decorators.
+        if (typeOrFunc.hasOwnProperty(ANNOTATIONS)) {
+            return typeOrFunc[ANNOTATIONS];
+        }
+        return null;
+    };
+    ReflectionCapabilities.prototype.annotations = function (typeOrFunc) {
+        if (!isType(typeOrFunc)) {
+            return [];
+        }
+        var parentCtor = getParentCtor(typeOrFunc);
+        var ownAnnotations = this._ownAnnotations(typeOrFunc, parentCtor) || [];
+        var parentAnnotations = parentCtor !== Object ? this.annotations(parentCtor) : [];
+        return parentAnnotations.concat(ownAnnotations);
+    };
+    ReflectionCapabilities.prototype._ownPropMetadata = function (typeOrFunc, parentCtor) {
+        // Prefer the direct API.
+        if (typeOrFunc.propMetadata &&
+            typeOrFunc.propMetadata !== parentCtor.propMetadata) {
+            var propMetadata = typeOrFunc.propMetadata;
+            if (typeof propMetadata === 'function' && propMetadata.propMetadata) {
+                propMetadata = propMetadata.propMetadata;
+            }
+            return propMetadata;
+        }
+        // API of tsickle for lowering decorators to properties on the class.
+        if (typeOrFunc.propDecorators &&
+            typeOrFunc.propDecorators !== parentCtor.propDecorators) {
+            var propDecorators_1 = typeOrFunc.propDecorators;
+            var propMetadata_1 = {};
+            Object.keys(propDecorators_1).forEach(function (prop) {
+                propMetadata_1[prop] = convertTsickleDecoratorIntoMetadata(propDecorators_1[prop]);
+            });
+            return propMetadata_1;
+        }
+        // API for metadata created by invoking the decorators.
+        if (typeOrFunc.hasOwnProperty(PROP_METADATA)) {
+            return typeOrFunc[PROP_METADATA];
+        }
+        return null;
+    };
+    ReflectionCapabilities.prototype.propMetadata = function (typeOrFunc) {
+        if (!isType(typeOrFunc)) {
+            return {};
+        }
+        var parentCtor = getParentCtor(typeOrFunc);
+        var propMetadata = {};
+        if (parentCtor !== Object) {
+            var parentPropMetadata_1 = this.propMetadata(parentCtor);
+            Object.keys(parentPropMetadata_1).forEach(function (propName) {
+                propMetadata[propName] = parentPropMetadata_1[propName];
+            });
+        }
+        var ownPropMetadata = this._ownPropMetadata(typeOrFunc, parentCtor);
+        if (ownPropMetadata) {
+            Object.keys(ownPropMetadata).forEach(function (propName) {
+                var decorators = [];
+                if (propMetadata.hasOwnProperty(propName)) {
+                    decorators.push.apply(decorators, __spread(propMetadata[propName]));
+                }
+                decorators.push.apply(decorators, __spread(ownPropMetadata[propName]));
+                propMetadata[propName] = decorators;
+            });
+        }
+        return propMetadata;
+    };
+    ReflectionCapabilities.prototype.hasLifecycleHook = function (type, lcProperty) {
+        return type instanceof Type$2 && lcProperty in type.prototype;
+    };
+    ReflectionCapabilities.prototype.guards = function (type) { return {}; };
+    ReflectionCapabilities.prototype.getter = function (name) { return new Function('o', 'return o.' + name + ';'); };
+    ReflectionCapabilities.prototype.setter = function (name) {
+        return new Function('o', 'v', 'return o.' + name + ' = v;');
+    };
+    ReflectionCapabilities.prototype.method = function (name) {
+        var functionBody = "if (!o." + name + ") throw new Error('\"" + name + "\" is undefined');\n        return o." + name + ".apply(o, args);";
+        return new Function('o', 'args', functionBody);
+    };
+    // There is not a concept of import uri in Js, but this is useful in developing Dart applications.
+    ReflectionCapabilities.prototype.importUri = function (type) {
+        // StaticSymbol
+        if (typeof type === 'object' && type['filePath']) {
+            return type['filePath'];
+        }
+        // Runtime type
+        return "./" + stringify$1(type);
+    };
+    ReflectionCapabilities.prototype.resourceUri = function (type) { return "./" + stringify$1(type); };
+    ReflectionCapabilities.prototype.resolveIdentifier = function (name, moduleUrl, members, runtime) {
+        return runtime;
+    };
+    ReflectionCapabilities.prototype.resolveEnum = function (enumIdentifier, name) { return enumIdentifier[name]; };
+    return ReflectionCapabilities;
+}());
+function convertTsickleDecoratorIntoMetadata(decoratorInvocations) {
+    if (!decoratorInvocations) {
+        return [];
+    }
+    return decoratorInvocations.map(function (decoratorInvocation) {
+        var decoratorType = decoratorInvocation.type;
+        var annotationCls = decoratorType.annotationCls;
+        var annotationArgs = decoratorInvocation.args ? decoratorInvocation.args : [];
+        return new (annotationCls.bind.apply(annotationCls, __spread([void 0], annotationArgs)))();
+    });
+}
+function getParentCtor(ctor) {
+    var parentProto = ctor.prototype ? Object.getPrototypeOf(ctor.prototype) : null;
+    var parentCtor = parentProto ? parentProto.constructor : null;
+    // Note: We always use `Object` as the null value
+    // to simplify checking later on.
+    return parentCtor || Object;
+}
+
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+function getClosureSafeProperty$1(objWithPropertyToExtract, target) {
+    for (var key in objWithPropertyToExtract) {
+        if (objWithPropertyToExtract[key] === target) {
+            return key;
+        }
+    }
+    throw Error('Could not find renamed property on target object.');
+}
+
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+var GET_PROPERTY_NAME$1 = {};
+var USE_VALUE$2 = getClosureSafeProperty$1({ provide: String, useValue: GET_PROPERTY_NAME$1 }, GET_PROPERTY_NAME$1);
+var EMPTY_ARRAY$1 = [];
+function convertInjectableProviderToFactory(type, provider) {
+    if (!provider) {
+        var reflectionCapabilities = new ReflectionCapabilities();
+        var deps_1 = reflectionCapabilities.parameters(type);
+        // TODO - convert to flags.
+        return function () { return new (type.bind.apply(type, __spread([void 0], injectArgs(deps_1))))(); };
+    }
+    if (USE_VALUE$2 in provider) {
+        var valueProvider_1 = provider;
+        return function () { return valueProvider_1.useValue; };
+    }
+    else if (provider.useExisting) {
+        var existingProvider_1 = provider;
+        return function () { return inject(existingProvider_1.useExisting); };
+    }
+    else if (provider.useFactory) {
+        var factoryProvider_1 = provider;
+        return function () { return factoryProvider_1.useFactory.apply(factoryProvider_1, __spread(injectArgs(factoryProvider_1.deps || EMPTY_ARRAY$1))); };
+    }
+    else if (provider.useClass) {
+        var classProvider_1 = provider;
+        var deps_2 = provider.deps;
+        if (!deps_2) {
+            var reflectionCapabilities = new ReflectionCapabilities();
+            deps_2 = reflectionCapabilities.parameters(type);
+        }
+        return function () {
+            return new ((_a = classProvider_1.useClass).bind.apply(_a, __spread([void 0], injectArgs(deps_2))))();
+            var _a;
+        };
+    }
+    else {
+        var deps_3 = provider.deps;
+        if (!deps_3) {
+            var reflectionCapabilities = new ReflectionCapabilities();
+            deps_3 = reflectionCapabilities.parameters(type);
+        }
+        return function () { return new (type.bind.apply(type, __spread([void 0], injectArgs(deps_3))))(); };
+    }
+}
+/**
+ * Supports @Injectable() in JIT mode for Render2.
+ */
+function preR3InjectableCompile(injectableType, options) {
+    if (options && options.providedIn !== undefined && injectableType.ngInjectableDef === undefined) {
+        injectableType.ngInjectableDef = defineInjectable({
+            providedIn: options.providedIn,
+            factory: convertInjectableProviderToFactory(injectableType, options),
+        });
+    }
+}
+/**
+* Injectable decorator and metadata.
+*
+* @Annotation
+*/
+var Injectable = makeDecorator('Injectable', undefined, undefined, undefined, function (type, meta) {
+    return (R3_COMPILE_INJECTABLE || preR3InjectableCompile)(type, meta);
+});
+
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
 
 var ERROR_DEBUG_CONTEXT = 'ngDebugContext';
 var ERROR_ORIGINAL_ERROR = 'ngOriginalError';
@@ -33666,7 +33620,7 @@ function defineComponent(componentDefinition) {
         inputs: invertObject(componentDefinition.inputs),
         outputs: invertObject(componentDefinition.outputs),
         rendererType: resolveRendererType2(componentDefinition.rendererType) || null,
-        exportAs: componentDefinition.exportAs,
+        exportAs: componentDefinition.exportAs || null,
         onInit: type.prototype.ngOnInit || null,
         doCheck: type.prototype.ngDoCheck || null,
         afterContentInit: type.prototype.ngAfterContentInit || null,
@@ -33701,6 +33655,17 @@ function extractPipeDef(type) {
         throw new Error("'" + type.name + "' is not a 'PipeType'.");
     }
     return def;
+}
+function defineNgModule(def) {
+    var res = {
+        type: def.type,
+        bootstrap: def.bootstrap || [],
+        declarations: def.declarations || [],
+        imports: def.imports || [],
+        exports: def.exports || [],
+        transitiveCompileScopes: null,
+    };
+    return res;
 }
 var PRIVATE_PREFIX = '__ngOnChanges_';
 /**
@@ -41172,7 +41137,9 @@ function compileComponent(type, metadata) {
                 // The ConstantPool is a requirement of the JIT'er.
                 var constantPool = new ConstantPool();
                 // Parse the template and check for errors.
-                var template = parseTemplate(templateStr, "ng://" + type.name + "/template.html");
+                var template = parseTemplate(templateStr, "ng://" + type.name + "/template.html", {
+                    preserveWhitespaces: metadata.preserveWhitespaces || false,
+                });
                 if (template.errors !== undefined) {
                     var errors = template.errors.map(function (err) { return err.toString(); }).join(', ');
                     throw new Error("Errors during JIT compilation of template for " + type.name + ": " + errors);
@@ -41501,6 +41468,47 @@ var HostListener = makePropDecorator('HostListener', function (eventName, args) 
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
+/**
+ * Defines a schema that will allow:
+ * - any non-Angular elements with a `-` in their name,
+ * - any properties on elements with a `-` in their name which is the common rule for custom
+ * elements.
+ *
+ *
+ */
+
+/**
+ * Defines a schema that will allow any property on any element.
+ *
+ * @experimental
+ */
+
+function preR3NgModuleCompile(moduleType, metadata) {
+    var imports = (metadata && metadata.imports) || [];
+    if (metadata && metadata.exports) {
+        imports = __spread(imports, [metadata.exports]);
+    }
+    moduleType.ngInjectorDef = defineInjector({
+        factory: convertInjectableProviderToFactory(moduleType, { useClass: moduleType }),
+        providers: metadata && metadata.providers,
+        imports: imports,
+    });
+}
+/**
+ * NgModule decorator and metadata.
+ *
+ *
+ * @Annotation
+ */
+var NgModule = makeDecorator('NgModule', function (ngModule) { return ngModule; }, undefined, undefined, function (type, meta) { return (R3_COMPILE_NGMODULE || preR3NgModuleCompile)(type, meta); });
+
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
 
 /**
  * @license
@@ -41523,7 +41531,7 @@ var Version$1 = /** @class */ (function () {
     }
     return Version;
 }());
-var VERSION$2 = new Version$1('6.1.0-beta.1+28.sha-a45fad3');
+var VERSION$2 = new Version$1('6.1.0-beta.1+31.sha-ccbda9d');
 
 var __extends$34 = (undefined && undefined.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
@@ -50510,6 +50518,9 @@ function resolveNgModuleDep(data, depDef, notFoundValue) {
             return (data._providers[index] =
                 _createProviderInstance$1(data, data._def.providersByKey[depDef.tokenKey]));
         }
+        else if (depDef.flags & 4 /* Self */) {
+            return notFoundValue;
+        }
         return data._parent.get(depDef.token, notFoundValue);
     }
     finally {
@@ -54488,7 +54499,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION$3 = new Version$1('6.1.0-beta.1+28.sha-a45fad3');
+var VERSION$3 = new Version$1('6.1.0-beta.1+31.sha-ccbda9d');
 
 /**
  * @license
