@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.1.0-beta.1+42.sha-e8354ed
+ * @license Angular v6.1.0-beta.2+5.sha-3e1a3b2
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1162,7 +1162,7 @@ var Version = /** @class */ (function () {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION = new Version('6.1.0-beta.1+42.sha-e8354ed');
+var VERSION = new Version('6.1.0-beta.2+5.sha-3e1a3b2');
 
 /**
  * @license
@@ -24375,7 +24375,7 @@ var Version$1 = /** @class */ (function () {
     }
     return Version;
 }());
-var VERSION$2 = new Version$1('6.1.0-beta.1+42.sha-e8354ed');
+var VERSION$2 = new Version$1('6.1.0-beta.2+5.sha-3e1a3b2');
 
 /**
  * @license
@@ -45424,8 +45424,10 @@ function getChildLNode(node) {
     return null;
 }
 function getParentLNode(node) {
-    if (node.tNode.index === -1)
-        return null;
+    if (node.tNode.index === -1) {
+        // This is a dynamic container or an embedded view inside a dynamic container.
+        return node.dynamicParent;
+    }
     var parent = node.tNode.parent;
     return parent ? node.view[parent.index] : node.view[HOST_NODE];
 }
@@ -46097,7 +46099,8 @@ function createLNodeObject(type, currentView, parent, native, state, queries) {
         queries: queries,
         tNode: null,
         pNextOrParent: null,
-        dynamicLContainerNode: null
+        dynamicLContainerNode: null,
+        dynamicParent: null
     };
 }
 function createLNode(index, type, native, name, attrs, state) {
@@ -46305,7 +46308,7 @@ function initChangeDetectorIfExisting(injector, instance, view) {
  * @param pipes Pipe defs that should be saved on TView
  * @returns TView
  */
-function getOrCreateTView(template, directives, pipes) {
+function getOrCreateTView(template, directives, pipes, viewQuery) {
     // TODO(misko): reading `ngPrivateData` here is problematic for two reasons
     // 1. It is a megamorphic call on each invocation.
     // 2. For nested embedded views (ngFor inside ngFor) the template instance is per
@@ -46313,7 +46316,7 @@ function getOrCreateTView(template, directives, pipes) {
     // Correct solution is to only put `ngPrivateData` on the Component template
     // and not on embedded templates.
     return template.ngPrivateData ||
-        (template.ngPrivateData = createTView(-1, template, directives, pipes));
+        (template.ngPrivateData = createTView(-1, template, directives, pipes, viewQuery));
 }
 /**
  * Creates a TView instance
@@ -46322,11 +46325,12 @@ function getOrCreateTView(template, directives, pipes) {
  * @param directives Registry of directives for this view
  * @param pipes Registry of pipes for this view
  */
-function createTView(viewIndex, template, directives, pipes) {
+function createTView(viewIndex, template, directives, pipes, viewQuery) {
     ngDevMode && ngDevMode.tView++;
     return {
         id: viewIndex,
         template: template,
+        viewQuery: viewQuery,
         node: null,
         data: HEADER_FILLER.slice(),
         childIndex: -1,
@@ -46421,7 +46425,7 @@ function locateHostElement(factory, elementOrSelector) {
  */
 function hostElement(tag, rNode, def, sanitizer) {
     resetApplicationState();
-    var node = createLNode(0, 3 /* Element */, rNode, null, null, createLViewData(renderer, getOrCreateTView(def.template, def.directiveDefs, def.pipeDefs), null, def.onPush ? 4 /* Dirty */ : 2 /* CheckAlways */, sanitizer));
+    var node = createLNode(0, 3 /* Element */, rNode, null, null, createLViewData(renderer, getOrCreateTView(def.template, def.directiveDefs, def.pipeDefs, def.viewQuery), null, def.onPush ? 4 /* Dirty */ : 2 /* CheckAlways */, sanitizer));
     if (firstTemplatePass) {
         node.tNode.flags = 4096 /* isComponent */;
         if (def.diPublic)
@@ -46881,13 +46885,27 @@ function checkNoChanges(component) {
 /** Checks the view of the component provided. Does not gate on dirty checks or execute doCheck. */
 function detectChangesInternal(hostView, hostNode, component) {
     var oldView = enterView(hostView, hostNode);
-    var template = hostView[TVIEW].template;
+    var hostTView = hostView[TVIEW];
+    var template = hostTView.template;
+    var viewQuery = hostTView.viewQuery;
     try {
+        createViewQuery(viewQuery, hostView[FLAGS], component);
         template(getRenderFlags(hostView), component);
         refreshView();
+        updateViewQuery(viewQuery, component);
     }
     finally {
         leaveView(oldView);
+    }
+}
+function createViewQuery(viewQuery, flags, component) {
+    if (viewQuery && (flags & 1 /* CreationMode */)) {
+        viewQuery(1 /* Create */, component);
+    }
+}
+function updateViewQuery(viewQuery, component) {
+    if (viewQuery) {
+        viewQuery(2 /* Update */, component);
     }
 }
 /**
@@ -47534,6 +47552,7 @@ var ViewContainerRef$1 = /** @class */ (function () {
         var adjustedIdx = this._adjustIndex(index);
         viewRef.attachToViewContainerRef(this);
         insertView(this._lContainerNode, lViewNode, adjustedIdx);
+        lViewNode.dynamicParent = this._lContainerNode;
         this._viewRefs.splice(adjustedIdx, 0, viewRef);
         return viewRef;
     };
@@ -47551,7 +47570,8 @@ var ViewContainerRef$1 = /** @class */ (function () {
     };
     ViewContainerRef.prototype.detach = function (index) {
         var adjustedIdx = this._adjustIndex(index, -1);
-        detachView(this._lContainerNode, adjustedIdx);
+        var lViewNode = detachView(this._lContainerNode, adjustedIdx);
+        lViewNode.dynamicParent = null;
         return this._viewRefs.splice(adjustedIdx, 1)[0] || null;
     };
     ViewContainerRef.prototype._adjustIndex = function (index, shift) {
@@ -47730,7 +47750,7 @@ var ComponentFactory$1 = /** @class */ (function (_super) {
         var componentTag = this.componentDef.selectors[0][0];
         var rootContext = ngModule.injector.get(ROOT_CONTEXT);
         // Create the root view. Uses empty TView and ContentTemplate.
-        var rootView = createLViewData(rendererFactory.createRenderer(hostNode, this.componentDef.rendererType), createTView(-1, null, null, null), null, this.componentDef.onPush ? 4 /* Dirty */ : 2 /* CheckAlways */);
+        var rootView = createLViewData(rendererFactory.createRenderer(hostNode, this.componentDef.rendererType), createTView(-1, null, null, null, null), null, this.componentDef.onPush ? 4 /* Dirty */ : 2 /* CheckAlways */);
         rootView[INJECTOR$1] = ngModule && ngModule.injector || null;
         // rootView is the parent when bootstrapping
         var oldView = enterView(rootView, null);
@@ -49381,7 +49401,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION$3 = new Version$1('6.1.0-beta.1+42.sha-e8354ed');
+var VERSION$3 = new Version$1('6.1.0-beta.2+5.sha-3e1a3b2');
 
 /**
  * @license
