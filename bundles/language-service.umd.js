@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.1.0-beta.2+8.sha-10da6a4
+ * @license Angular v6.1.0-beta.2+10.sha-7b2b1af
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1204,7 +1204,7 @@ var Version = /** @class */ (function () {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION = new Version('6.1.0-beta.2+8.sha-10da6a4');
+var VERSION = new Version('6.1.0-beta.2+10.sha-7b2b1af');
 
 /**
  * @license
@@ -15481,7 +15481,7 @@ var R3ResolvedDependencyType;
  */
 function compileFactoryFunction(meta) {
     // Each dependency becomes an invocation of an inject*() function.
-    var args = meta.deps.map(function (dep) { return compileInjectDependency(dep, meta.injectFn, meta.useOptionalParam); });
+    var args = meta.deps.map(function (dep) { return compileInjectDependency(dep, meta.injectFn); });
     // The overall result depends on whether this is construction or function invocation.
     var expr = meta.useNew ? new InstantiateExpr(meta.fnOrClass, args) :
         new InvokeFunctionExpr(meta.fnOrClass, args);
@@ -15490,7 +15490,7 @@ function compileFactoryFunction(meta) {
     var retExpr = meta.extraResults === undefined ? expr : literalArr(__spread([expr], meta.extraResults));
     return fn([], [new ReturnStatement(retExpr)], INFERRED_TYPE, undefined, meta.name + "_Factory");
 }
-function compileInjectDependency(dep, injectFn, useOptionalParam) {
+function compileInjectDependency(dep, injectFn) {
     // Interpret the dependency according to its resolved type.
     switch (dep.resolved) {
         case R3ResolvedDependencyType.Token:
@@ -15512,18 +15512,7 @@ function compileInjectDependency(dep, injectFn, useOptionalParam) {
             // parameters describing how to inject the dependency must be passed to the inject function
             // that's being used.
             if (flags !== 0 /* Default */ || dep.optional) {
-                // Either the dependency is optional, or non-default flags are in use. Either of these cases
-                // necessitates adding an argument for the default value if such an argument is required
-                // by the inject function (useOptionalParam === true).
-                if (useOptionalParam) {
-                    // The inject function requires a default value parameter.
-                    injectArgs.push(dep.optional ? NULL_EXPR : literal(undefined));
-                }
-                // The last parameter is always the InjectFlags, which only need to be specified if they're
-                // non-default.
-                if (flags !== 0 /* Default */) {
-                    injectArgs.push(literal(flags));
-                }
+                injectArgs.push(literal(flags));
             }
             return importExpr(injectFn).callFn(injectArgs);
         }
@@ -16759,7 +16748,6 @@ function baseDirectiveFields(meta, constantPool, bindingParser) {
         deps: meta.deps,
         useNew: true,
         injectFn: Identifiers$1.directiveInject,
-        useOptionalParam: false,
         extraResults: queryDefinitions,
     }));
     // e.g. `hostBindings: (dirIndex, elIndex) => { ... }
@@ -19712,7 +19700,6 @@ function compileInjectable(meta) {
                 fnOrClass: fnOrClass,
                 useNew: useNew,
                 injectFn: Identifiers.inject,
-                useOptionalParam: true,
                 deps: meta.deps,
             });
         }
@@ -19759,7 +19746,6 @@ function compileInjectable(meta) {
             fnOrClass: meta.type,
             useNew: true,
             injectFn: Identifiers.inject,
-            useOptionalParam: true,
             deps: meta.deps,
         });
     }
@@ -41327,16 +41313,18 @@ function compileComponentDecorator(type, metadata) {
 function directiveMetadata(type, metadata) {
     // Reflect inputs and outputs.
     var propMetadata = getReflect().propMetadata(type);
-    var inputs = {};
-    var outputs = {};
     var host = extractHostBindings(metadata, propMetadata);
+    var inputsFromMetadata = parseInputOutputs(metadata.inputs || []);
+    var outputsFromMetadata = parseInputOutputs(metadata.outputs || []);
+    var inputsFromType = {};
+    var outputsFromType = {};
     var _loop_1 = function (field) {
         propMetadata[field].forEach(function (ann) {
             if (isInput(ann)) {
-                inputs[field] = ann.bindingPropertyName || field;
+                inputsFromType[field] = ann.bindingPropertyName || field;
             }
             else if (isOutput(ann)) {
-                outputs[field] = ann.bindingPropertyName || field;
+                outputsFromType[field] = ann.bindingPropertyName || field;
             }
         });
     };
@@ -41347,7 +41335,9 @@ function directiveMetadata(type, metadata) {
         name: type.name,
         type: new WrappedNodeExpr(type),
         selector: metadata.selector,
-        deps: reflectDependencies(type), host: host, inputs: inputs, outputs: outputs,
+        deps: reflectDependencies(type), host: host,
+        inputs: __assign({}, inputsFromMetadata, inputsFromType),
+        outputs: __assign({}, outputsFromMetadata, outputsFromType),
         queries: [],
         lifecycle: {
             usesOnChanges: type.prototype.ngOnChanges !== undefined,
@@ -41388,6 +41378,13 @@ function isHostBinding(value) {
 }
 function isHostListener(value) {
     return value.ngMetadataName === 'HostListener';
+}
+function parseInputOutputs(values) {
+    return values.reduce(function (map, value) {
+        var _a = __read(value.split(',').map(function (piece) { return piece.trim(); }), 2), field = _a[0], property = _a[1];
+        map[field] = property || field;
+        return map;
+    }, {});
 }
 
 /**
@@ -41648,7 +41645,7 @@ var Version$1 = /** @class */ (function () {
     }
     return Version;
 }());
-var VERSION$2 = new Version$1('6.1.0-beta.2+8.sha-10da6a4');
+var VERSION$2 = new Version$1('6.1.0-beta.2+10.sha-7b2b1af');
 
 var __extends$34 = (undefined && undefined.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
@@ -54616,7 +54613,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION$3 = new Version$1('6.1.0-beta.2+8.sha-10da6a4');
+var VERSION$3 = new Version$1('6.1.0-beta.2+10.sha-7b2b1af');
 
 /**
  * @license
