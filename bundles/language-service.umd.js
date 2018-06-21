@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.1.0-beta.2+2.sha-8b81682
+ * @license Angular v6.1.0-beta.2+1.sha-a269658
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1204,7 +1204,7 @@ var Version = /** @class */ (function () {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION = new Version('6.1.0-beta.2+2.sha-8b81682');
+var VERSION = new Version('6.1.0-beta.2+1.sha-a269658');
 
 /**
  * @license
@@ -26628,10 +26628,8 @@ function getChildLNode(node) {
     return null;
 }
 function getParentLNode(node) {
-    if (node.tNode.index === -1) {
-        // This is a dynamic container or an embedded view inside a dynamic container.
-        return node.dynamicParent;
-    }
+    if (node.tNode.index === -1)
+        return null;
     var parent = node.tNode.parent;
     return parent ? node.view[parent.index] : node.view[HOST_NODE];
 }
@@ -27493,8 +27491,7 @@ function createLNodeObject(type, currentView, parent, native, state, queries) {
         queries: queries,
         tNode: null,
         pNextOrParent: null,
-        dynamicLContainerNode: null,
-        dynamicParent: null
+        dynamicLContainerNode: null
     };
 }
 function createLNode(index, type, native, name, attrs, state) {
@@ -33477,7 +33474,6 @@ function getOrCreateContainerRef(di) {
         }
         lContainerNode.tNode = hostTNode.dynamicContainerNode;
         vcRefHost.dynamicLContainerNode = lContainerNode;
-        lContainerNode.dynamicParent = vcRefHost;
         addToViewTree(vcRefHost.view, hostTNode.index, lContainer);
         di.viewContainerRef = new ViewContainerRef(lContainerNode);
     }
@@ -33523,7 +33519,6 @@ var ViewContainerRef = /** @class */ (function () {
         var adjustedIdx = this._adjustIndex(index);
         viewRef.attachToViewContainerRef(this);
         insertView(this._lContainerNode, lViewNode, adjustedIdx);
-        lViewNode.dynamicParent = this._lContainerNode;
         this._viewRefs.splice(adjustedIdx, 0, viewRef);
         return viewRef;
     };
@@ -33541,8 +33536,7 @@ var ViewContainerRef = /** @class */ (function () {
     };
     ViewContainerRef.prototype.detach = function (index) {
         var adjustedIdx = this._adjustIndex(index, -1);
-        var lViewNode = detachView(this._lContainerNode, adjustedIdx);
-        lViewNode.dynamicParent = null;
+        detachView(this._lContainerNode, adjustedIdx);
         return this._viewRefs.splice(adjustedIdx, 1)[0] || null;
     };
     ViewContainerRef.prototype._adjustIndex = function (index, shift) {
@@ -41537,7 +41531,7 @@ var Version$1 = /** @class */ (function () {
     }
     return Version;
 }());
-var VERSION$2 = new Version$1('6.1.0-beta.2+2.sha-8b81682');
+var VERSION$2 = new Version$1('6.1.0-beta.2+1.sha-a269658');
 
 var __extends$34 = (undefined && undefined.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
@@ -54505,7 +54499,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION$3 = new Version$1('6.1.0-beta.2+2.sha-8b81682');
+var VERSION$3 = new Version$1('6.1.0-beta.2+1.sha-a269658');
 
 /**
  * @license
