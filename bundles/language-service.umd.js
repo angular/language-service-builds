@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.1.0-beta.2+6.sha-cb31381
+ * @license Angular v6.1.0-beta.2+7.sha-84272e2
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1162,7 +1162,7 @@ var Version = /** @class */ (function () {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION = new Version('6.1.0-beta.2+6.sha-cb31381');
+var VERSION = new Version('6.1.0-beta.2+7.sha-84272e2');
 
 /**
  * @license
@@ -24375,7 +24375,7 @@ var Version$1 = /** @class */ (function () {
     }
     return Version;
 }());
-var VERSION$2 = new Version$1('6.1.0-beta.2+6.sha-cb31381');
+var VERSION$2 = new Version$1('6.1.0-beta.2+7.sha-84272e2');
 
 /**
  * @license
@@ -45219,40 +45219,6 @@ function callHooks(data, arr) {
     }
 }
 
-/**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
- */
-var ngDevModeResetPerfCounters = (typeof ngDevMode == 'undefined' && (function (global) {
-    function ngDevModeResetPerfCounters() {
-        global['ngDevMode'] = {
-            firstTemplatePass: 0,
-            tNode: 0,
-            tView: 0,
-            rendererCreateTextNode: 0,
-            rendererSetText: 0,
-            rendererCreateElement: 0,
-            rendererAddEventListener: 0,
-            rendererSetAttribute: 0,
-            rendererRemoveAttribute: 0,
-            rendererSetProperty: 0,
-            rendererSetClassName: 0,
-            rendererAddClass: 0,
-            rendererRemoveClass: 0,
-            rendererSetStyle: 0,
-            rendererRemoveStyle: 0,
-            rendererDestroy: 0,
-            rendererDestroyNode: 0,
-        };
-    }
-    ngDevModeResetPerfCounters();
-    return ngDevModeResetPerfCounters;
-})(typeof window != 'undefined' && window || typeof self != 'undefined' && self ||
-    typeof global != 'undefined' && global));
-
 /** Called when directives inject each other (creating a circular dependency) */
 
 /** Called when there are multiple component selectors that match a given node */
@@ -45289,6 +45255,42 @@ var RENDER_PARENT = 5;
 var NG_PROJECT_AS_ATTR_NAME = 'ngProjectAs';
 // Note: This hack is necessary so we don't erroneously get a circular dependency
 // failure based on types.
+
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+var ngDevModeResetPerfCounters = (typeof ngDevMode == 'undefined' && (function (global) {
+    function ngDevModeResetPerfCounters() {
+        global['ngDevMode'] = {
+            firstTemplatePass: 0,
+            tNode: 0,
+            tView: 0,
+            rendererCreateTextNode: 0,
+            rendererSetText: 0,
+            rendererCreateElement: 0,
+            rendererAddEventListener: 0,
+            rendererSetAttribute: 0,
+            rendererRemoveAttribute: 0,
+            rendererSetProperty: 0,
+            rendererSetClassName: 0,
+            rendererAddClass: 0,
+            rendererRemoveClass: 0,
+            rendererSetStyle: 0,
+            rendererRemoveStyle: 0,
+            rendererDestroy: 0,
+            rendererDestroyNode: 0,
+            rendererMoveNode: 0,
+            rendererRemoveNode: 0,
+        };
+    }
+    ngDevModeResetPerfCounters();
+    return ngDevModeResetPerfCounters;
+})(typeof window != 'undefined' && window || typeof self != 'undefined' && self ||
+    typeof global != 'undefined' && global));
 
 /**
  * @license
@@ -45417,6 +45419,9 @@ function getNextLNode(node) {
 }
 /** Retrieves the first child of a given node */
 function getChildLNode(node) {
+    if (node.pChild) {
+        return node.pChild;
+    }
     if (node.tNode.child) {
         var viewData = node.tNode.type === 2 /* View */ ? node.data : node.view;
         return viewData[node.tNode.child.index];
@@ -45647,7 +45652,7 @@ function insertView(container, viewNode, index) {
     // If the container's renderParent is null, we know that it is a root node of its own parent view
     // and we should wait until that parent processes its nodes (otherwise, we will insert this view's
     // nodes twice - once now and once when its parent inserts its views).
-    if (container.data[RENDER_PARENT] !== null) {
+    if (container.data[RENDER_PARENT] !== null && !container.tNode.detached) {
         // Find the node to insert in front of
         var beforeNode = index + 1 < views.length ? (getChildLNode(views[index + 1])).native : container.native;
         addRemoveViewFromContainer(container, viewNode, true, beforeNode);
@@ -45673,7 +45678,9 @@ function detachView(container, removeIndex) {
         views[removeIndex - 1].data[NEXT] = viewNode.data[NEXT];
     }
     views.splice(removeIndex, 1);
-    addRemoveViewFromContainer(container, viewNode, false);
+    if (!container.tNode.detached) {
+        addRemoveViewFromContainer(container, viewNode, false);
+    }
     // Notify query that view has been removed
     var removedLview = viewNode.data;
     if (removedLview[QUERIES]) {
@@ -45822,12 +45829,21 @@ function executePipeOnDestroys(viewData) {
 /**
  * Appends the `child` element to the `parent`.
  *
- * The element insertion might be delayed {@link canInsertNativeNode}
+ * The element insertion might be delayed {@link canInsertNativeNode}.
  *
  * @param parent The parent to which to append the child
  * @param child The child that should be appended
  * @param currentView The current LView
  * @returns Whether or not the child was appended
+ */
+
+/**
+ * Removes the `child` element of the `parent` from the DOM.
+ *
+ * @param parent The parent from which to remove the child
+ * @param child The child that should be removed
+ * @param currentView The current LView
+ * @returns Whether or not the child was removed
  */
 
 /**
@@ -45930,6 +45946,7 @@ var rendererFactory;
 function getCurrentSanitizer() {
     return viewData && viewData[SANITIZER];
 }
+
 /** Used to set the parent property when nodes are created. */
 var previousOrParentNode;
 
@@ -46100,7 +46117,8 @@ function createLNodeObject(type, currentView, parent, native, state, queries) {
         tNode: null,
         pNextOrParent: null,
         dynamicLContainerNode: null,
-        dynamicParent: null
+        dynamicParent: null,
+        pChild: null,
     };
 }
 function createLNode(index, type, native, name, attrs, state) {
@@ -46116,8 +46134,8 @@ function createLNode(index, type, native, name, attrs, state) {
     if (index === -1 || type === 2 /* View */) {
         // View nodes are not stored in data because they can be added / removed at runtime (which
         // would cause indices to change). Their TNodes are instead stored in TView.node.
-        node.tNode =
-            state[TVIEW].node || createTNode(type, index, null, null, tParent, null);
+        node.tNode = (state ? state[TVIEW].node : null) ||
+            createTNode(type, index, null, null, tParent, null);
     }
     else {
         var adjustedIndex = index + HEADER_OFFSET;
@@ -46520,7 +46538,8 @@ function createTNode(type, adjustedIndex, tagName, attrs, parent, tViews) {
         next: null,
         child: null,
         parent: parent,
-        dynamicContainerNode: null
+        dynamicContainerNode: null,
+        detached: null
     };
 }
 /**
@@ -47815,6 +47834,66 @@ var ComponentRef$1 = /** @class */ (function (_super) {
     };
     return ComponentRef$$1;
 }(ComponentRef));
+
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+/**
+ * Takes a translation string, the initial list of placeholders (elements and expressions) and the
+ * indexes of their corresponding expression nodes to return a list of instructions for each
+ * template function.
+ *
+ * Because embedded templates have different indexes for each placeholder, each parameter (except
+ * the translation) is an array, where each value corresponds to a different template, by order of
+ * appearance.
+ *
+ * @param translation A translation string where placeholders are represented by `{$name}`
+ * @param elements An array containing, for each template, the maps of element placeholders and
+ * their indexes.
+ * @param expressions An array containing, for each template, the maps of expression placeholders
+ * and their indexes.
+ * @param tmplContainers An array of template container placeholders whose content should be ignored
+ * when generating the instructions for their parent template.
+ * @param lastChildIndex The index of the last child of the i18n node. Used when the i18n block is
+ * an ng-container.
+ *
+ * @returns A list of instructions used to translate each template.
+ */
+
+/**
+ * Takes a list of instructions generated by `i18nMapping()` to transform the template accordingly.
+ *
+ * @param startIndex Index of the first element to translate (for instance the first child of the
+ * element with the i18n attribute).
+ * @param instructions The list of instructions to apply on the current view.
+ */
+
+/**
+ * Takes a translation string and the initial list of expressions and returns a list of instructions
+ * that will be used to translate an attribute.
+ * Even indexes contain static strings, while odd indexes contain the index of the expression whose
+ * value will be concatenated into the final translation.
+ */
+
+/**
+ * Checks if the value of up to 8 expressions have changed and replaces them by their values in a
+ * translation, or returns NO_CHANGE.
+ *
+ * @returns The concatenated string when any of the arguments changes, `NO_CHANGE` otherwise.
+ */
+
+/**
+ * Create a translated interpolation binding with a variable number of expressions.
+ *
+ * If there are 1 to 8 expressions then `i18nInterpolation()` should be used instead. It is faster
+ * because there is no need to create an array of expressions and iterate over it.
+ *
+ * @returns The concatenated string when any of the arguments changes, `NO_CHANGE` otherwise.
+ */
 
 /**
  * @license
@@ -49401,7 +49480,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION$3 = new Version$1('6.1.0-beta.2+6.sha-cb31381');
+var VERSION$3 = new Version$1('6.1.0-beta.2+7.sha-84272e2');
 
 /**
  * @license
