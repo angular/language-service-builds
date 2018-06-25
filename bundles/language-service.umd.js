@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.1.0-beta.2+11.sha-637805a
+ * @license Angular v6.1.0-beta.2+12.sha-fe8fe9b
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1204,7 +1204,7 @@ var Version = /** @class */ (function () {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION = new Version('6.1.0-beta.2+11.sha-637805a');
+var VERSION = new Version('6.1.0-beta.2+12.sha-fe8fe9b');
 
 /**
  * @license
@@ -41645,7 +41645,7 @@ var Version$1 = /** @class */ (function () {
     }
     return Version;
 }());
-var VERSION$2 = new Version$1('6.1.0-beta.2+11.sha-637805a');
+var VERSION$2 = new Version$1('6.1.0-beta.2+12.sha-fe8fe9b');
 
 var __extends$34 = (undefined && undefined.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
@@ -54613,7 +54613,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION$3 = new Version$1('6.1.0-beta.2+11.sha-637805a');
+var VERSION$3 = new Version$1('6.1.0-beta.2+12.sha-fe8fe9b');
 
 /**
  * @license
