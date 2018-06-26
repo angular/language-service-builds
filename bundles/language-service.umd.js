@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.1.0-beta.2+29.sha-166d90d
+ * @license Angular v6.1.0-beta.2+32.sha-855e8ad
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1162,7 +1162,7 @@ var Version = /** @class */ (function () {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION = new Version('6.1.0-beta.2+29.sha-166d90d');
+var VERSION = new Version('6.1.0-beta.2+32.sha-855e8ad');
 
 /**
  * @license
@@ -14420,6 +14420,10 @@ var Identifiers$1 = /** @class */ (function () {
         name: 'DirectiveDef',
         moduleName: CORE$1,
     };
+    Identifiers.InjectorDef = {
+        name: 'InjectorDef',
+        moduleName: CORE$1,
+    };
     Identifiers.defineInjector = {
         name: 'defineInjector',
         moduleName: CORE$1,
@@ -14438,36 +14442,6 @@ var Identifiers$1 = /** @class */ (function () {
     Identifiers.reserveSlots = { name: 'ɵrS', moduleName: CORE$1 };
     return Identifiers;
 }());
-
-/**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
- */
-/**
- * Convert an object map with `Expression` values into a `LiteralMapExpr`.
- */
-
-/**
- * Convert metadata into an `Expression` in the given `OutputContext`.
- *
- * This operation will handle arrays, references to symbols, or literal `null` or `undefined`.
- */
-
-/**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
- */
-/**
- * Construct an `R3NgModuleDef` for the given `R3NgModuleMetadata`.
- */
-
-// TODO(alxhub): integrate this with `compileNgModule`. Currently the two are separate operations.
 
 /**
  * @license
@@ -14562,6 +14536,37 @@ var R3ResolvedDependencyType;
  * A helper function useful for extracting `R3DependencyMetadata` from a Render2
  * `CompileTypeMetadata` instance.
  */
+
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+/**
+ * Convert an object map with `Expression` values into a `LiteralMapExpr`.
+ */
+
+/**
+ * Convert metadata into an `Expression` in the given `OutputContext`.
+ *
+ * This operation will handle arrays, references to symbols, or literal `null` or `undefined`.
+ */
+
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+/**
+ * Construct an `R3NgModuleDef` for the given `R3NgModuleMetadata`.
+ */
+
+
+// TODO(alxhub): integrate this with `compileNgModule`. Currently the two are separate operations.
 
 /**
  * @license
@@ -24475,7 +24480,7 @@ var Version$1 = /** @class */ (function () {
     }
     return Version;
 }());
-var VERSION$2 = new Version$1('6.1.0-beta.2+29.sha-166d90d');
+var VERSION$2 = new Version$1('6.1.0-beta.2+32.sha-855e8ad');
 
 /**
  * @license
@@ -49581,7 +49586,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION$3 = new Version$1('6.1.0-beta.2+29.sha-166d90d');
+var VERSION$3 = new Version$1('6.1.0-beta.2+32.sha-855e8ad');
 
 /**
  * @license
