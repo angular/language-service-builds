@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.1.0-beta.2+29.sha-166d90d
+ * @license Angular v6.1.0-beta.2+32.sha-855e8ad
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1204,7 +1204,7 @@ var Version = /** @class */ (function () {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION = new Version('6.1.0-beta.2+29.sha-166d90d');
+var VERSION = new Version('6.1.0-beta.2+32.sha-855e8ad');
 
 /**
  * @license
@@ -15271,6 +15271,10 @@ var Identifiers$1 = /** @class */ (function () {
         name: 'DirectiveDef',
         moduleName: CORE$1,
     };
+    Identifiers.InjectorDef = {
+        name: 'InjectorDef',
+        moduleName: CORE$1,
+    };
     Identifiers.defineInjector = {
         name: 'defineInjector',
         moduleName: CORE$1,
@@ -15289,54 +15293,6 @@ var Identifiers$1 = /** @class */ (function () {
     Identifiers.reserveSlots = { name: 'ɵrS', moduleName: CORE$1 };
     return Identifiers;
 }());
-
-/**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
- */
-/**
- * Convert an object map with `Expression` values into a `LiteralMapExpr`.
- */
-function mapToMapExpression(map) {
-    var result = Object.keys(map).map(function (key) { return ({ key: key, value: map[key], quoted: false }); });
-    return literalMap(result);
-}
-/**
- * Convert metadata into an `Expression` in the given `OutputContext`.
- *
- * This operation will handle arrays, references to symbols, or literal `null` or `undefined`.
- */
-
-/**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
- */
-/**
- * Construct an `R3NgModuleDef` for the given `R3NgModuleMetadata`.
- */
-function compileNgModule(meta) {
-    var moduleType = meta.type, bootstrap = meta.bootstrap, declarations = meta.declarations, imports = meta.imports, exports = meta.exports;
-    var expression = importExpr(Identifiers$1.defineNgModule).callFn([mapToMapExpression({
-            type: moduleType,
-            bootstrap: literalArr(bootstrap),
-            declarations: literalArr(declarations),
-            imports: literalArr(imports),
-            exports: literalArr(exports),
-        })]);
-    var type = new ExpressionType(importExpr(Identifiers$1.NgModuleDef, [
-        new ExpressionType(moduleType), new ExpressionType(literalArr(declarations)),
-        new ExpressionType(literalArr(imports)), new ExpressionType(literalArr(exports))
-    ]));
-    var additionalStatements = [];
-    return { expression: expression, type: type, additionalStatements: additionalStatements };
-}
-// TODO(alxhub): integrate this with `compileNgModule`. Currently the two are separate operations.
 
 /**
  * @license
@@ -15533,6 +15489,69 @@ function compileInjectDependency(dep, injectFn) {
  * A helper function useful for extracting `R3DependencyMetadata` from a Render2
  * `CompileTypeMetadata` instance.
  */
+
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+/**
+ * Convert an object map with `Expression` values into a `LiteralMapExpr`.
+ */
+function mapToMapExpression(map) {
+    var result = Object.keys(map).map(function (key) { return ({ key: key, value: map[key], quoted: false }); });
+    return literalMap(result);
+}
+/**
+ * Convert metadata into an `Expression` in the given `OutputContext`.
+ *
+ * This operation will handle arrays, references to symbols, or literal `null` or `undefined`.
+ */
+
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+/**
+ * Construct an `R3NgModuleDef` for the given `R3NgModuleMetadata`.
+ */
+function compileNgModule(meta) {
+    var moduleType = meta.type, bootstrap = meta.bootstrap, declarations = meta.declarations, imports = meta.imports, exports = meta.exports;
+    var expression = importExpr(Identifiers$1.defineNgModule).callFn([mapToMapExpression({
+            type: moduleType,
+            bootstrap: literalArr(bootstrap),
+            declarations: literalArr(declarations),
+            imports: literalArr(imports),
+            exports: literalArr(exports),
+        })]);
+    var type = new ExpressionType(importExpr(Identifiers$1.NgModuleDef, [
+        new ExpressionType(moduleType), new ExpressionType(literalArr(declarations)),
+        new ExpressionType(literalArr(imports)), new ExpressionType(literalArr(exports))
+    ]));
+    var additionalStatements = [];
+    return { expression: expression, type: type, additionalStatements: additionalStatements };
+}
+function compileInjector(meta) {
+    var expression = importExpr(Identifiers$1.defineInjector).callFn([mapToMapExpression({
+            factory: compileFactoryFunction({
+                name: meta.name,
+                fnOrClass: meta.type,
+                deps: meta.deps,
+                useNew: true,
+                injectFn: Identifiers$1.inject,
+            }),
+            providers: meta.providers,
+            imports: meta.imports,
+        })]);
+    var type = new ExpressionType(importExpr(Identifiers$1.InjectorDef));
+    return { expression: expression, type: type };
+}
+// TODO(alxhub): integrate this with `compileNgModule`. Currently the two are separate operations.
 
 /**
  * @license
@@ -40995,165 +41014,10 @@ var angularCoreEnv = {
 var TARGET = {};
 var NG_COMPONENT_DEF = getClosureSafeProperty$1({ ngComponentDef: TARGET }, TARGET);
 var NG_DIRECTIVE_DEF = getClosureSafeProperty$1({ ngDirectiveDef: TARGET }, TARGET);
+var NG_INJECTABLE_DEF = getClosureSafeProperty$1({ ngInjectableDef: TARGET }, TARGET);
+var NG_INJECTOR_DEF = getClosureSafeProperty$1({ ngInjectorDef: TARGET }, TARGET);
 var NG_PIPE_DEF = getClosureSafeProperty$1({ ngPipeDef: TARGET }, TARGET);
 var NG_MODULE_DEF = getClosureSafeProperty$1({ ngModuleDef: TARGET }, TARGET);
-
-/**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
- */
-var EMPTY_ARRAY$3 = [];
-function compileNgModule$1(type, ngModule) {
-    var declarations = flatten$3(ngModule.declarations || EMPTY_ARRAY$3);
-    var def = null;
-    Object.defineProperty(type, NG_MODULE_DEF, {
-        get: function () {
-            if (def === null) {
-                var meta = {
-                    type: wrap(type),
-                    bootstrap: flatten$3(ngModule.bootstrap || EMPTY_ARRAY$3).map(wrap),
-                    declarations: declarations.map(wrap),
-                    imports: flatten$3(ngModule.imports || EMPTY_ARRAY$3).map(expandModuleWithProviders).map(wrap),
-                    exports: flatten$3(ngModule.exports || EMPTY_ARRAY$3).map(expandModuleWithProviders).map(wrap),
-                    emitInline: true,
-                };
-                var res = compileNgModule(meta);
-                def = jitExpression(res.expression, angularCoreEnv, "ng://" + type.name + "/ngModuleDef.js");
-            }
-            return def;
-        },
-    });
-    declarations.forEach(function (declaration) {
-        // Some declared components may be compiled asynchronously, and thus may not have their
-        // ngComponentDef set yet. If this is the case, then a reference to the module is written into
-        // the `ngSelectorScope` property of the declared type.
-        if (declaration.hasOwnProperty(NG_COMPONENT_DEF)) {
-            // An `ngComponentDef` field exists - go ahead and patch the component directly.
-            patchComponentDefWithScope(declaration.ngComponentDef, type);
-        }
-        else if (!declaration.hasOwnProperty(NG_DIRECTIVE_DEF) && !declaration.hasOwnProperty(NG_PIPE_DEF)) {
-            // Set `ngSelectorScope` for future reference when the component compilation finishes.
-            declaration.ngSelectorScope = type;
-        }
-    });
-}
-/**
- * Patch the definition of a component with directives and pipes from the compilation scope of
- * a given module.
- */
-function patchComponentDefWithScope(componentDef, module) {
-    componentDef.directiveDefs = function () { return Array.from(transitiveScopesFor(module).compilation.directives)
-        .map(function (dir) { return dir.ngDirectiveDef || dir.ngComponentDef; })
-        .filter(function (def) { return !!def; }); };
-    componentDef.pipeDefs = function () {
-        return Array.from(transitiveScopesFor(module).compilation.pipes).map(function (pipe) { return pipe.ngPipeDef; });
-    };
-}
-/**
- * Compute the pair of transitive scopes (compilation scope and exported scope) for a given module.
- *
- * This operation is memoized and the result is cached on the module's definition. It can be called
- * on modules with components that have not fully compiled yet, but the result should not be used
- * until they have.
- */
-function transitiveScopesFor(moduleType) {
-    if (!isNgModule(moduleType)) {
-        throw new Error(moduleType.name + " does not have an ngModuleDef");
-    }
-    var def = moduleType.ngModuleDef;
-    if (def.transitiveCompileScopes !== null) {
-        return def.transitiveCompileScopes;
-    }
-    var scopes = {
-        compilation: {
-            directives: new Set(),
-            pipes: new Set(),
-        },
-        exported: {
-            directives: new Set(),
-            pipes: new Set(),
-        },
-    };
-    def.declarations.forEach(function (declared) {
-        var declaredWithDefs = declared;
-        if (declaredWithDefs.ngPipeDef !== undefined) {
-            scopes.compilation.pipes.add(declared);
-        }
-        else {
-            // Either declared has an ngComponentDef or ngDirectiveDef, or it's a component which hasn't
-            // had its template compiled yet. In either case, it gets added to the compilation's
-            // directives.
-            scopes.compilation.directives.add(declared);
-        }
-    });
-    def.imports.forEach(function (imported) {
-        var importedTyped = imported;
-        if (!isNgModule(importedTyped)) {
-            throw new Error("Importing " + importedTyped.name + " which does not have an ngModuleDef");
-        }
-        // When this module imports another, the imported module's exported directives and pipes are
-        // added to the compilation scope of this module.
-        var importedScope = transitiveScopesFor(importedTyped);
-        importedScope.exported.directives.forEach(function (entry) { return scopes.compilation.directives.add(entry); });
-        importedScope.exported.pipes.forEach(function (entry) { return scopes.compilation.pipes.add(entry); });
-    });
-    def.exports.forEach(function (exported) {
-        var exportedTyped = exported;
-        // Either the type is a module, a pipe, or a component/directive (which may not have an
-        // ngComponentDef as it might be compiled asynchronously).
-        if (isNgModule(exportedTyped)) {
-            // When this module exports another, the exported module's exported directives and pipes are
-            // added to both the compilation and exported scopes of this module.
-            var exportedScope = transitiveScopesFor(exportedTyped);
-            exportedScope.exported.directives.forEach(function (entry) {
-                scopes.compilation.directives.add(entry);
-                scopes.exported.directives.add(entry);
-            });
-            exportedScope.exported.pipes.forEach(function (entry) {
-                scopes.compilation.pipes.add(entry);
-                scopes.exported.pipes.add(entry);
-            });
-        }
-        else if (exportedTyped.ngPipeDef !== undefined) {
-            scopes.exported.pipes.add(exportedTyped);
-        }
-        else {
-            scopes.exported.directives.add(exportedTyped);
-        }
-    });
-    def.transitiveCompileScopes = scopes;
-    return scopes;
-}
-function flatten$3(values) {
-    var out = [];
-    values.forEach(function (value) {
-        if (Array.isArray(value)) {
-            out.push.apply(out, __spread(flatten$3(value)));
-        }
-        else {
-            out.push(value);
-        }
-    });
-    return out;
-}
-function expandModuleWithProviders(value) {
-    if (isModuleWithProviders(value)) {
-        return value.ngModule;
-    }
-    return value;
-}
-function wrap(value) {
-    return new WrappedNodeExpr(value);
-}
-function isModuleWithProviders(value) {
-    return value.ngModule !== undefined;
-}
-function isNgModule(value) {
-    return value.ngModuleDef !== undefined;
-}
 
 /**
  * @license
@@ -41292,6 +41156,185 @@ function reflectDependency(dep) {
         setTokenAndResolvedType(dep);
     }
     return meta;
+}
+
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+var EMPTY_ARRAY$3 = [];
+function compileNgModule$1(type, ngModule) {
+    var declarations = flatten$3(ngModule.declarations || EMPTY_ARRAY$3);
+    var ngModuleDef = null;
+    Object.defineProperty(type, NG_MODULE_DEF, {
+        get: function () {
+            if (ngModuleDef === null) {
+                var meta = {
+                    type: wrap(type),
+                    bootstrap: flatten$3(ngModule.bootstrap || EMPTY_ARRAY$3).map(wrap),
+                    declarations: declarations.map(wrap),
+                    imports: flatten$3(ngModule.imports || EMPTY_ARRAY$3).map(expandModuleWithProviders).map(wrap),
+                    exports: flatten$3(ngModule.exports || EMPTY_ARRAY$3).map(expandModuleWithProviders).map(wrap),
+                    emitInline: true,
+                };
+                var res = compileNgModule(meta);
+                ngModuleDef =
+                    jitExpression(res.expression, angularCoreEnv, "ng://" + type.name + "/ngModuleDef.js");
+            }
+            return ngModuleDef;
+        },
+    });
+    var ngInjectorDef = null;
+    Object.defineProperty(type, NG_INJECTOR_DEF, {
+        get: function () {
+            if (ngInjectorDef === null) {
+                var meta = {
+                    name: type.name,
+                    type: wrap(type),
+                    deps: reflectDependencies(type),
+                    providers: new WrappedNodeExpr(ngModule.providers || EMPTY_ARRAY$3),
+                    imports: new WrappedNodeExpr([
+                        ngModule.imports || EMPTY_ARRAY$3,
+                        ngModule.exports || EMPTY_ARRAY$3,
+                    ]),
+                };
+                var res = compileInjector(meta);
+                ngInjectorDef =
+                    jitExpression(res.expression, angularCoreEnv, "ng://" + type.name + "/ngInjectorDef.js");
+            }
+            return ngInjectorDef;
+        },
+    });
+    declarations.forEach(function (declaration) {
+        // Some declared components may be compiled asynchronously, and thus may not have their
+        // ngComponentDef set yet. If this is the case, then a reference to the module is written into
+        // the `ngSelectorScope` property of the declared type.
+        if (declaration.hasOwnProperty(NG_COMPONENT_DEF)) {
+            // An `ngComponentDef` field exists - go ahead and patch the component directly.
+            patchComponentDefWithScope(declaration.ngComponentDef, type);
+        }
+        else if (!declaration.hasOwnProperty(NG_DIRECTIVE_DEF) && !declaration.hasOwnProperty(NG_PIPE_DEF)) {
+            // Set `ngSelectorScope` for future reference when the component compilation finishes.
+            declaration.ngSelectorScope = type;
+        }
+    });
+}
+/**
+ * Patch the definition of a component with directives and pipes from the compilation scope of
+ * a given module.
+ */
+function patchComponentDefWithScope(componentDef, module) {
+    componentDef.directiveDefs = function () { return Array.from(transitiveScopesFor(module).compilation.directives)
+        .map(function (dir) { return dir.ngDirectiveDef || dir.ngComponentDef; })
+        .filter(function (def) { return !!def; }); };
+    componentDef.pipeDefs = function () {
+        return Array.from(transitiveScopesFor(module).compilation.pipes).map(function (pipe) { return pipe.ngPipeDef; });
+    };
+}
+/**
+ * Compute the pair of transitive scopes (compilation scope and exported scope) for a given module.
+ *
+ * This operation is memoized and the result is cached on the module's definition. It can be called
+ * on modules with components that have not fully compiled yet, but the result should not be used
+ * until they have.
+ */
+function transitiveScopesFor(moduleType) {
+    if (!isNgModule(moduleType)) {
+        throw new Error(moduleType.name + " does not have an ngModuleDef");
+    }
+    var def = moduleType.ngModuleDef;
+    if (def.transitiveCompileScopes !== null) {
+        return def.transitiveCompileScopes;
+    }
+    var scopes = {
+        compilation: {
+            directives: new Set(),
+            pipes: new Set(),
+        },
+        exported: {
+            directives: new Set(),
+            pipes: new Set(),
+        },
+    };
+    def.declarations.forEach(function (declared) {
+        var declaredWithDefs = declared;
+        if (declaredWithDefs.ngPipeDef !== undefined) {
+            scopes.compilation.pipes.add(declared);
+        }
+        else {
+            // Either declared has an ngComponentDef or ngDirectiveDef, or it's a component which hasn't
+            // had its template compiled yet. In either case, it gets added to the compilation's
+            // directives.
+            scopes.compilation.directives.add(declared);
+        }
+    });
+    def.imports.forEach(function (imported) {
+        var importedTyped = imported;
+        if (!isNgModule(importedTyped)) {
+            throw new Error("Importing " + importedTyped.name + " which does not have an ngModuleDef");
+        }
+        // When this module imports another, the imported module's exported directives and pipes are
+        // added to the compilation scope of this module.
+        var importedScope = transitiveScopesFor(importedTyped);
+        importedScope.exported.directives.forEach(function (entry) { return scopes.compilation.directives.add(entry); });
+        importedScope.exported.pipes.forEach(function (entry) { return scopes.compilation.pipes.add(entry); });
+    });
+    def.exports.forEach(function (exported) {
+        var exportedTyped = exported;
+        // Either the type is a module, a pipe, or a component/directive (which may not have an
+        // ngComponentDef as it might be compiled asynchronously).
+        if (isNgModule(exportedTyped)) {
+            // When this module exports another, the exported module's exported directives and pipes are
+            // added to both the compilation and exported scopes of this module.
+            var exportedScope = transitiveScopesFor(exportedTyped);
+            exportedScope.exported.directives.forEach(function (entry) {
+                scopes.compilation.directives.add(entry);
+                scopes.exported.directives.add(entry);
+            });
+            exportedScope.exported.pipes.forEach(function (entry) {
+                scopes.compilation.pipes.add(entry);
+                scopes.exported.pipes.add(entry);
+            });
+        }
+        else if (exportedTyped.ngPipeDef !== undefined) {
+            scopes.exported.pipes.add(exportedTyped);
+        }
+        else {
+            scopes.exported.directives.add(exportedTyped);
+        }
+    });
+    def.transitiveCompileScopes = scopes;
+    return scopes;
+}
+function flatten$3(values) {
+    var out = [];
+    values.forEach(function (value) {
+        if (Array.isArray(value)) {
+            out.push.apply(out, __spread(flatten$3(value)));
+        }
+        else {
+            out.push(value);
+        }
+    });
+    return out;
+}
+function expandModuleWithProviders(value) {
+    if (isModuleWithProviders(value)) {
+        return value.ngModule;
+    }
+    return value;
+}
+function wrap(value) {
+    return new WrappedNodeExpr(value);
+}
+function isModuleWithProviders(value) {
+    return value.ngModule !== undefined;
+}
+function isNgModule(value) {
+    return value.ngModuleDef !== undefined;
 }
 
 /**
@@ -41488,7 +41531,7 @@ function compileInjectable$1(type, meta) {
         return;
     }
     var def = null;
-    Object.defineProperty(type, 'ngInjectableDef', {
+    Object.defineProperty(type, NG_INJECTABLE_DEF, {
         get: function () {
             if (def === null) {
                 // Check whether the injectable metadata includes a provider specification.
@@ -41829,7 +41872,7 @@ var Version$1 = /** @class */ (function () {
     }
     return Version;
 }());
-var VERSION$2 = new Version$1('6.1.0-beta.2+29.sha-166d90d');
+var VERSION$2 = new Version$1('6.1.0-beta.2+32.sha-855e8ad');
 
 var __extends$34 = (undefined && undefined.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
@@ -54797,7 +54840,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION$3 = new Version$1('6.1.0-beta.2+29.sha-166d90d');
+var VERSION$3 = new Version$1('6.1.0-beta.2+32.sha-855e8ad');
 
 /**
  * @license
