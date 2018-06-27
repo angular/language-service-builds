@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.1.0-beta.2+39.sha-fe8fcc8
+ * @license Angular v6.1.0-beta.2+40.sha-50fb13f
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1162,7 +1162,7 @@ var Version = /** @class */ (function () {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION = new Version('6.1.0-beta.2+39.sha-fe8fcc8');
+var VERSION = new Version('6.1.0-beta.2+40.sha-50fb13f');
 
 /**
  * @license
@@ -24480,7 +24480,7 @@ var Version$1 = /** @class */ (function () {
     }
     return Version;
 }());
-var VERSION$2 = new Version$1('6.1.0-beta.2+39.sha-fe8fcc8');
+var VERSION$2 = new Version$1('6.1.0-beta.2+40.sha-50fb13f');
 
 /**
  * @license
@@ -46065,6 +46065,13 @@ var previousOrParentNode;
 var isParent;
 var tView;
 var currentQueries;
+/**
+ * Query instructions can ask for "current queries" in 2 different cases:
+ * - when creating view queries (at the root of a component view, before any node is created - in
+ * this case currentQueries points to view queries)
+ * - when creating content queries (inb this previousOrParentNode points to a node on which we
+ * create content queries).
+ */
 
 /**
  * This property gets set before entering a template.
@@ -49595,7 +49602,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION$3 = new Version$1('6.1.0-beta.2+39.sha-fe8fcc8');
+var VERSION$3 = new Version$1('6.1.0-beta.2+40.sha-50fb13f');
 
 /**
  * @license
