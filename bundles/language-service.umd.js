@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.1.0-beta.2+54.sha-39c8bae
+ * @license Angular v6.1.0-beta.3+16.sha-13d60ea
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1162,7 +1162,7 @@ var Version = /** @class */ (function () {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION = new Version('6.1.0-beta.2+54.sha-39c8bae');
+var VERSION = new Version('6.1.0-beta.3+16.sha-13d60ea');
 
 /**
  * @license
@@ -1209,20 +1209,7 @@ var AttrAst = /** @class */ (function () {
     AttrAst.prototype.visit = function (visitor, context) { return visitor.visitAttr(this, context); };
     return AttrAst;
 }());
-var PropertyBindingType;
-(function (PropertyBindingType) {
-    // A normal binding to a property (e.g. `[property]="expression"`).
-    PropertyBindingType[PropertyBindingType["Property"] = 0] = "Property";
-    // A binding to an element attribute (e.g. `[attr.name]="expression"`).
-    PropertyBindingType[PropertyBindingType["Attribute"] = 1] = "Attribute";
-    // A binding to a CSS class (e.g. `[class.name]="condition"`).
-    PropertyBindingType[PropertyBindingType["Class"] = 2] = "Class";
-    // A binding to a style rule (e.g. `[style.rule]="expression"`).
-    PropertyBindingType[PropertyBindingType["Style"] = 3] = "Style";
-    // A binding to an animation reference (e.g. `[animate.key]="expression"`).
-    PropertyBindingType[PropertyBindingType["Animation"] = 4] = "Animation";
-})(PropertyBindingType || (PropertyBindingType = {}));
-var BoundPropertyMapping = (_a = {}, _a[4 /* Animation */] = PropertyBindingType.Animation, _a[1 /* Attribute */] = PropertyBindingType.Attribute, _a[2 /* Class */] = PropertyBindingType.Class, _a[0 /* Property */] = PropertyBindingType.Property, _a[3 /* Style */] = PropertyBindingType.Style, _a);
+var BoundPropertyMapping = (_a = {}, _a[4 /* Animation */] = 4, _a[1 /* Attribute */] = 1, _a[2 /* Class */] = 2, _a[0 /* Property */] = 0, _a[3 /* Style */] = 3, _a);
 /**
  * A binding for an element property (e.g. `[property]="expression"`) or an animation trigger (e.g.
  * `[@trigger]="stateExp"`)
@@ -1235,7 +1222,7 @@ var BoundElementPropertyAst = /** @class */ (function () {
         this.value = value;
         this.unit = unit;
         this.sourceSpan = sourceSpan;
-        this.isAnimation = this.type === PropertyBindingType.Animation;
+        this.isAnimation = this.type === 4 /* Animation */;
     }
     BoundElementPropertyAst.fromBoundProperty = function (prop) {
         var type = BoundPropertyMapping[prop.type];
@@ -13997,7 +13984,7 @@ var TemplateParseVisitor = /** @class */ (function () {
         // Note: We can't filter out empty expressions before this method,
         // as we still want to validate them!
         return boundProps.filter(function (boundProp) {
-            if (boundProp.type === PropertyBindingType.Property &&
+            if (boundProp.type === 0 /* Property */ &&
                 !_this._schemaRegistry.hasProperty(elementName, boundProp.name, _this._schemas)) {
                 var errorMsg = "Can't bind to '" + boundProp.name + "' since it isn't a known property of '" + elementName + "'.";
                 if (elementName.startsWith('ng-')) {
@@ -14602,7 +14589,6 @@ var R3ResolvedDependencyType;
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-var BINDING_INSTRUCTION_MAP = (_a$1 = {}, _a$1[0 /* Property */] = Identifiers$1.elementProperty, _a$1[1 /* Attribute */] = Identifiers$1.elementAttribute, _a$1[2 /* Class */] = Identifiers$1.elementClassNamed, _a$1[3 /* Style */] = Identifiers$1.elementStyleNamed, _a$1);
 var ValueConverter = /** @class */ (function (_super) {
     __extends(ValueConverter, _super);
     function ValueConverter(constantPool, allocateSlot, allocatePureFunctionSlots, definePipe) {
@@ -14778,8 +14764,6 @@ var BindingScope = /** @class */ (function () {
 /**
  * Construct a `BindingParser` with a default configuration.
  */
-
-var _a$1;
 
 /**
  * @license
@@ -24480,7 +24464,7 @@ var Version$1 = /** @class */ (function () {
     }
     return Version;
 }());
-var VERSION$2 = new Version$1('6.1.0-beta.2+54.sha-39c8bae');
+var VERSION$2 = new Version$1('6.1.0-beta.3+16.sha-13d60ea');
 
 /**
  * @license
@@ -41577,6 +41561,46 @@ var APPLICATION_MODULE_PROVIDERS = [
  * found in the LICENSE file at https://angular.io/license
  */
 /**
+ * Used to resolve resource URLs on `@Component` when used with JIT compilation.
+ *
+ * Example:
+ * ```
+ * @Component({
+ *   selector: 'my-comp',
+ *   templateUrl: 'my-comp.html', // This requires asynchronous resolution
+ * })
+ * class MyComponnent{
+ * }
+ *
+ * // Calling `renderComponent` will fail because `MyComponent`'s `@Compenent.templateUrl`
+ * // needs to be resolved because `renderComponent` is synchronous process.
+ * // renderComponent(MyComponent);
+ *
+ * // Calling `resolveComponentResources` will resolve `@Compenent.templateUrl` into
+ * // `@Compenent.template`, which would allow `renderComponent` to proceed in synchronous manner.
+ * // Use browser's `fetch` function as the default resource resolution strategy.
+ * resolveComponentResources(fetch).then(() => {
+ *   // After resolution all URLs have been converted into strings.
+ *   renderComponent(MyComponent);
+ * });
+ *
+ * ```
+ *
+ * NOTE: In AOT the resolution happens during compilation, and so there should be no need
+ * to call this method outside JIT mode.
+ *
+ * @param resourceResolver a function which is responsible to returning a `Promise` of the resolved
+ * URL. Browser's `fetch` method is a good default implementation.
+ */
+
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
+/**
  * This helper class is used to get hold of an inert tree of DOM elements containing dirty HTML
  * that needs sanitizing.
  * Depending upon browser support we must use one of three strategies for doing this.
@@ -49602,7 +49626,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION$3 = new Version$1('6.1.0-beta.2+54.sha-39c8bae');
+var VERSION$3 = new Version$1('6.1.0-beta.3+16.sha-13d60ea');
 
 /**
  * @license
