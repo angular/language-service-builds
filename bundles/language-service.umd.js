@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.1.0-beta.3+19.sha-ff84c5c
+ * @license Angular v6.1.0-beta.3+20.sha-d243baf
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1204,7 +1204,7 @@ var Version = /** @class */ (function () {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION = new Version('6.1.0-beta.3+19.sha-ff84c5c');
+var VERSION = new Version('6.1.0-beta.3+20.sha-d243baf');
 
 /**
  * @license
@@ -26682,9 +26682,6 @@ function getNextLNode(node) {
 }
 /** Retrieves the first child of a given node */
 function getChildLNode(node) {
-    if (node.pChild) {
-        return node.pChild;
-    }
     if (node.tNode.child) {
         var viewData = node.tNode.type === 2 /* View */ ? node.data : node.view;
         return viewData[node.tNode.child.index];
@@ -27635,8 +27632,7 @@ function createLNodeObject(type, currentView, parent, native, state, queries) {
         queries: queries,
         tNode: null,
         pNextOrParent: null,
-        dynamicLContainerNode: null,
-        pChild: null,
+        dynamicLContainerNode: null
     };
 }
 function createLNode(index, type, native, name, attrs, state) {
@@ -28959,17 +28955,7 @@ function projectionDef(index, selectors, textSelectors) {
         distributedNodes[i] = [];
     }
     var componentNode = findComponentHost(viewData);
-    var isProjectingI18nNodes = false;
-    var componentChild;
-    // for i18n translations we use pChild to point to the next child
-    // TODO(kara): Remove when removing LNodes
-    if (componentNode.pChild) {
-        isProjectingI18nNodes = true;
-        componentChild = componentNode.pChild;
-    }
-    else {
-        componentChild = getChildLNode(componentNode);
-    }
+    var componentChild = getChildLNode(componentNode);
     while (componentChild !== null) {
         // execute selector matching logic if and only if:
         // - there are selectors defined
@@ -28981,12 +28967,7 @@ function projectionDef(index, selectors, textSelectors) {
         else {
             distributedNodes[0].push(componentChild);
         }
-        if (isProjectingI18nNodes) {
-            componentChild = componentChild.pNextOrParent;
-        }
-        else {
-            componentChild = getNextLNode(componentChild);
-        }
+        componentChild = getNextLNode(componentChild);
     }
     ngDevMode && assertDataNext(index + HEADER_OFFSET);
     store(index, distributedNodes);
@@ -42112,7 +42093,7 @@ var Version$1 = /** @class */ (function () {
     }
     return Version;
 }());
-var VERSION$2 = new Version$1('6.1.0-beta.3+19.sha-ff84c5c');
+var VERSION$2 = new Version$1('6.1.0-beta.3+20.sha-d243baf');
 
 var __extends$34 = (undefined && undefined.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
@@ -55080,7 +55061,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION$3 = new Version$1('6.1.0-beta.3+19.sha-ff84c5c');
+var VERSION$3 = new Version$1('6.1.0-beta.3+20.sha-d243baf');
 
 /**
  * @license
