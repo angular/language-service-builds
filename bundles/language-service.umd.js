@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.1.0-beta.3+25.sha-a294e0d
+ * @license Angular v6.1.0-beta.3+24.sha-3553977
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1205,7 +1205,7 @@ var Version = /** @class */ (function () {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION = new Version('6.1.0-beta.3+25.sha-a294e0d');
+var VERSION = new Version('6.1.0-beta.3+24.sha-3553977');
 
 /**
  * @license
@@ -27197,7 +27197,7 @@ function appendProjectedNode(node, currentParent, currentView, renderParent) {
         lContainer[RENDER_PARENT] = renderParent;
         var views = lContainer[VIEWS];
         for (var i = 0; i < views.length; i++) {
-            addRemoveViewFromContainer(node, views[i], true, node.native);
+            addRemoveViewFromContainer(node, views[i], true, null);
         }
     }
     if (node.dynamicLContainerNode) {
@@ -28980,7 +28980,7 @@ function projectionDef(index, selectors, textSelectors) {
  * @param appendedFirst First node of the linked list to append.
  * @param appendedLast Last node of the linked list to append.
  */
-function addToProjectionList(projectionNode, appendedFirst, appendedLast) {
+function appendToProjectionNode(projectionNode, appendedFirst, appendedLast) {
     ngDevMode && assertEqual(!!appendedFirst, !!appendedLast, 'appendedFirst can be null if and only if appendedLast is also null');
     if (!appendedLast) {
         // nothing to append
@@ -29016,27 +29016,31 @@ function projection(nodeIndex, localIndex, selectorIndex, attrs) {
     var componentLView = componentNode.data;
     var distributedNodes = loadInternal(localIndex, componentLView);
     var nodesForSelector = distributedNodes[selectorIndex];
-    var currentParent = getParentLNode(node);
-    var canInsert = canInsertNativeNode(currentParent, viewData);
-    var renderParent = currentParent.tNode.type === 2 /* View */ ?
-        getParentLNode(currentParent).data[RENDER_PARENT] :
-        currentParent;
+    // build the linked list of projected nodes:
     for (var i = 0; i < nodesForSelector.length; i++) {
         var nodeToProject = nodesForSelector[i];
-        var head = nodeToProject;
-        var tail = nodeToProject;
         if (nodeToProject.tNode.type === 1 /* Projection */) {
+            // Reprojecting a projection -> append the list of previously projected nodes
             var previouslyProjected = nodeToProject.data;
-            head = previouslyProjected.head;
-            tail = previouslyProjected.tail;
+            appendToProjectionNode(node, previouslyProjected.head, previouslyProjected.tail);
         }
-        addToProjectionList(node, head, tail);
-        if (canInsert) {
-            var currentNode = head;
-            while (currentNode) {
-                appendProjectedNode(currentNode, currentParent, viewData, renderParent);
-                currentNode = currentNode === tail ? null : currentNode.pNextOrParent;
-            }
+        else {
+            // Projecting a single node
+            appendToProjectionNode(node, nodeToProject, nodeToProject);
+        }
+    }
+    var currentParent = getParentLNode(node);
+    if (canInsertNativeNode(currentParent, viewData)) {
+        ngDevMode && assertNodeOfPossibleTypes(currentParent, 3 /* Element */, 2 /* View */);
+        // process each node in the list of projected nodes:
+        var nodeToProject = node.data.head;
+        var lastNodeToProject = node.data.tail;
+        var renderParent = currentParent.tNode.type === 2 /* View */ ?
+            getParentLNode(currentParent).data[RENDER_PARENT] :
+            currentParent;
+        while (nodeToProject) {
+            appendProjectedNode(nodeToProject, currentParent, viewData, renderParent);
+            nodeToProject = nodeToProject === lastNodeToProject ? null : nodeToProject.pNextOrParent;
         }
     }
 }
@@ -42103,7 +42107,7 @@ var Version$1 = /** @class */ (function () {
     }
     return Version;
 }());
-var VERSION$2 = new Version$1('6.1.0-beta.3+25.sha-a294e0d');
+var VERSION$2 = new Version$1('6.1.0-beta.3+24.sha-3553977');
 
 var __extends$34 = (undefined && undefined.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
@@ -55071,7 +55075,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION$3 = new Version$1('6.1.0-beta.3+25.sha-a294e0d');
+var VERSION$3 = new Version$1('6.1.0-beta.3+24.sha-3553977');
 
 /**
  * @license
