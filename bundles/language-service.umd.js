@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.1.0-beta.3+20.sha-d243baf
+ * @license Angular v6.1.0-beta.3+25.sha-a294e0d
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -908,6 +908,7 @@ var ViewEncapsulation;
     ViewEncapsulation[ViewEncapsulation["Emulated"] = 0] = "Emulated";
     ViewEncapsulation[ViewEncapsulation["Native"] = 1] = "Native";
     ViewEncapsulation[ViewEncapsulation["None"] = 2] = "None";
+    ViewEncapsulation[ViewEncapsulation["ShadowDom"] = 3] = "ShadowDom";
 })(ViewEncapsulation || (ViewEncapsulation = {}));
 var ChangeDetectionStrategy;
 (function (ChangeDetectionStrategy) {
@@ -1162,7 +1163,7 @@ var Version = /** @class */ (function () {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION = new Version('6.1.0-beta.3+20.sha-d243baf');
+var VERSION = new Version('6.1.0-beta.3+25.sha-a294e0d');
 
 /**
  * @license
@@ -24424,9 +24425,11 @@ var ViewEncapsulation$1;
      */
     ViewEncapsulation[ViewEncapsulation["Emulated"] = 0] = "Emulated";
     /**
+     * @deprecated v6.1.0 - use {ViewEncapsulation.ShadowDom} instead.
      * Use the native encapsulation mechanism of the renderer.
      *
-     * For the DOM this means using [Shadow DOM](https://w3c.github.io/webcomponents/spec/shadow/) and
+     * For the DOM this means using the deprecated [Shadow DOM
+     * v0](https://w3c.github.io/webcomponents/spec/shadow/) and
      * creating a ShadowRoot for Component's Host Element.
      */
     ViewEncapsulation[ViewEncapsulation["Native"] = 1] = "Native";
@@ -24434,6 +24437,17 @@ var ViewEncapsulation$1;
      * Don't provide any template or style encapsulation.
      */
     ViewEncapsulation[ViewEncapsulation["None"] = 2] = "None";
+    /**
+     * Use Shadow DOM to encapsulate styles.
+     *
+     * For the DOM this means using modern [Shadow
+     * DOM](https://w3c.github.io/webcomponents/spec/shadow/) and
+     * creating a ShadowRoot for Component's Host Element.
+     *
+     * ### Example
+     * {@example core/ts/metadata/encapsulation.ts region='longform'}
+     */
+    ViewEncapsulation[ViewEncapsulation["ShadowDom"] = 3] = "ShadowDom";
 })(ViewEncapsulation$1 || (ViewEncapsulation$1 = {}));
 
 /**
@@ -24465,7 +24479,7 @@ var Version$1 = /** @class */ (function () {
     }
     return Version;
 }());
-var VERSION$2 = new Version$1('6.1.0-beta.3+20.sha-d243baf');
+var VERSION$2 = new Version$1('6.1.0-beta.3+25.sha-a294e0d');
 
 /**
  * @license
@@ -49652,7 +49666,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION$3 = new Version$1('6.1.0-beta.3+20.sha-d243baf');
+var VERSION$3 = new Version$1('6.1.0-beta.3+25.sha-a294e0d');
 
 /**
  * @license
