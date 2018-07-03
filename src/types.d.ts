@@ -1,4 +1,3 @@
-/// <amd-module name="@angular/language-service/src/types" />
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -6,6 +5,7 @@
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
+/// <amd-module name="@angular/language-service/src/types" />
 import { CompileDirectiveMetadata, CompileMetadataResolver, CompilePipeSummary, NgAnalyzedModules, StaticSymbol } from '@angular/compiler';
 import { BuiltinType, DeclarationKind, Definition, PipeInfo, Pipes, Signature, Span, Symbol, SymbolDeclaration, SymbolQuery, SymbolTable } from '@angular/compiler-cli/src/language_services';
 export { BuiltinType, DeclarationKind, Definition, PipeInfo, Pipes, Signature, Span, Symbol, SymbolDeclaration, SymbolQuery, SymbolTable };
@@ -213,7 +213,7 @@ export interface Location {
  */
 export declare enum DiagnosticKind {
     Error = 0,
-    Warning = 1,
+    Warning = 1
 }
 /**
  * A template diagnostics message chain. This is similar to the TypeScript
