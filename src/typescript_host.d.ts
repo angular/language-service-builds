@@ -1,3 +1,4 @@
+/// <amd-module name="@angular/language-service/src/typescript_host" />
 /**
  * @license
  * Copyright Google Inc. All Rights Reserved.
@@ -5,7 +6,6 @@
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-/// <amd-module name="@angular/language-service/src/typescript_host" />
 import { CompileMetadataResolver, HtmlParser, InterpolationConfig, NgAnalyzedModules, ParseTreeResult, ResourceLoader } from '@angular/compiler';
 import * as ts from 'typescript';
 import { Declarations, LanguageService, LanguageServiceHost, TemplateSource, TemplateSources } from './types';
@@ -65,32 +65,32 @@ export declare class TypeScriptServiceHost implements LanguageServiceHost {
     getTemplateReferences(): string[];
     getTemplateAt(fileName: string, position: number): TemplateSource | undefined;
     getAnalyzedModules(): NgAnalyzedModules;
-    private ensureAnalyzedModules;
+    private ensureAnalyzedModules();
     getTemplates(fileName: string): TemplateSources;
     getDeclarations(fileName: string): Declarations;
     getSourceFile(fileName: string): ts.SourceFile | undefined;
     updateAnalyzedModules(): void;
     private readonly program;
     private readonly checker;
-    private validate;
-    private clearCaches;
-    private ensureTemplateMap;
-    private getSourceFromDeclaration;
-    private getSourceFromNode;
-    private getSourceFromType;
+    private validate();
+    private clearCaches();
+    private ensureTemplateMap();
+    private getSourceFromDeclaration(fileName, version, source, span, type, declaration, node, sourceFile);
+    private getSourceFromNode(fileName, version, node);
+    private getSourceFromType(fileName, version, type);
     private readonly reflectorHost;
-    private collectError;
+    private collectError(error, filePath);
     private readonly staticSymbolResolver;
     private readonly reflector;
-    private getTemplateClassFromStaticSymbol;
+    private getTemplateClassFromStaticSymbol(type);
     private static missingTemplate;
     /**
      * Given a template string node, see if it is an Angular template string, and if so return the
      * containing class.
      */
-    private getTemplateClassDeclFromNode;
-    private getCollectedErrors;
-    private getDeclarationFromNode;
-    private stringOf;
-    private findNode;
+    private getTemplateClassDeclFromNode(currentToken);
+    private getCollectedErrors(defaultSpan, sourceFile);
+    private getDeclarationFromNode(sourceFile, node);
+    private stringOf(node);
+    private findNode(sourceFile, position);
 }
