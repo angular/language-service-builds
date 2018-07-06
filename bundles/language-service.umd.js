@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.1.0-beta.3+60.sha-52d43a9
+ * @license Angular v6.1.0-beta.3+61.sha-3980640
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1185,7 +1185,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('6.1.0-beta.3+60.sha-52d43a9');
+    var VERSION = new Version('6.1.0-beta.3+61.sha-3980640');
 
     /**
      * @license
@@ -15174,8 +15174,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         Identifiers.elementAttribute = { name: 'ɵa', moduleName: CORE$1 };
         Identifiers.elementClass = { name: 'ɵk', moduleName: CORE$1 };
         Identifiers.elementClassNamed = { name: 'ɵkn', moduleName: CORE$1 };
-        Identifiers.elementStyle = { name: 'ɵs', moduleName: CORE$1 };
-        Identifiers.elementStyleNamed = { name: 'ɵsn', moduleName: CORE$1 };
+        Identifiers.elementStyling = { name: 'ɵs', moduleName: CORE$1 };
+        Identifiers.elementStyle = { name: 'ɵsm', moduleName: CORE$1 };
+        Identifiers.elementStyleProp = { name: 'ɵsp', moduleName: CORE$1 };
+        Identifiers.elementStylingApply = { name: 'ɵsa', moduleName: CORE$1 };
         Identifiers.containerCreate = { name: 'ɵC', moduleName: CORE$1 };
         Identifiers.text = { name: 'ɵT', moduleName: CORE$1 };
         Identifiers.textBinding = { name: 'ɵt', moduleName: CORE$1 };
@@ -15991,6 +15993,102 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * Parses string representation of a style and converts it into object literal.
+     *
+     * @param value string representation of style as used in the `style` attribute in HTML.
+     *   Example: `color: red; height: auto`.
+     * @returns an object literal. `{ color: 'red', height: 'auto'}`.
+     */
+    function parseStyle(value) {
+        var styles = {};
+        var i = 0;
+        var parenDepth = 0;
+        var quote = 0 /* QuoteNone */;
+        var valueStart = 0;
+        var propStart = 0;
+        var currentProp = null;
+        var valueHasQuotes = false;
+        while (i < value.length) {
+            var token = value.charCodeAt(i++);
+            switch (token) {
+                case 40 /* OpenParen */:
+                    parenDepth++;
+                    break;
+                case 41 /* CloseParen */:
+                    parenDepth--;
+                    break;
+                case 39 /* QuoteSingle */:
+                    // valueStart needs to be there since prop values don't
+                    // have quotes in CSS
+                    valueHasQuotes = valueHasQuotes || valueStart > 0;
+                    if (quote === 0 /* QuoteNone */) {
+                        quote = 39 /* QuoteSingle */;
+                    }
+                    else if (quote === 39 /* QuoteSingle */ && value.charCodeAt(i - 1) !== 92 /* BackSlash */) {
+                        quote = 0 /* QuoteNone */;
+                    }
+                    break;
+                case 34 /* QuoteDouble */:
+                    // same logic as above
+                    valueHasQuotes = valueHasQuotes || valueStart > 0;
+                    if (quote === 0 /* QuoteNone */) {
+                        quote = 34 /* QuoteDouble */;
+                    }
+                    else if (quote === 34 /* QuoteDouble */ && value.charCodeAt(i - 1) !== 92 /* BackSlash */) {
+                        quote = 0 /* QuoteNone */;
+                    }
+                    break;
+                case 58 /* Colon */:
+                    if (!currentProp && parenDepth === 0 && quote === 0 /* QuoteNone */) {
+                        currentProp = hyphenate(value.substring(propStart, i - 1).trim());
+                        valueStart = i;
+                    }
+                    break;
+                case 59 /* Semicolon */:
+                    if (currentProp && valueStart > 0 && parenDepth === 0 && quote === 0 /* QuoteNone */) {
+                        var styleVal = value.substring(valueStart, i - 1).trim();
+                        styles[currentProp] = valueHasQuotes ? stripUnnecessaryQuotes(styleVal) : styleVal;
+                        propStart = i;
+                        valueStart = 0;
+                        currentProp = null;
+                        valueHasQuotes = false;
+                    }
+                    break;
+            }
+        }
+        if (currentProp && valueStart) {
+            var styleVal = value.substr(valueStart).trim();
+            styles[currentProp] = valueHasQuotes ? stripUnnecessaryQuotes(styleVal) : styleVal;
+        }
+        return styles;
+    }
+    function stripUnnecessaryQuotes(value) {
+        var qS = value.charCodeAt(0);
+        var qE = value.charCodeAt(value.length - 1);
+        if (qS == qE && (qS == 39 /* QuoteSingle */ || qS == 34 /* QuoteDouble */)) {
+            var tempValue = value.substring(1, value.length - 1);
+            // special case to avoid using a multi-quoted string that was just chomped
+            // (e.g. `font-family: "Verdana", "sans-serif"`)
+            if (tempValue.indexOf('\'') == -1 && tempValue.indexOf('"') == -1) {
+                value = tempValue;
+            }
+        }
+        return value;
+    }
+    function hyphenate(value) {
+        return value.replace(/[a-z][A-Z]/g, function (v) {
+            return v.charAt(0) + '-' + v.charAt(1);
+        }).toLowerCase();
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     function mapBindingToInstruction(type) {
         switch (type) {
             case 0 /* Property */:
@@ -15999,8 +16097,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 return Identifiers$1.elementAttribute;
             case 2 /* Class */:
                 return Identifiers$1.elementClassNamed;
-            case 3 /* Style */:
-                return Identifiers$1.elementStyleNamed;
             default:
                 return undefined;
         }
@@ -16009,8 +16105,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     // code (where this map is used) deals with DOM element property values
     // (like elm.propName) and not component bindining properties (like [propName]).
     var SPECIAL_CASED_PROPERTIES_INSTRUCTION_MAP = {
-        'className': Identifiers$1.elementClass,
-        'style': Identifiers$1.elementStyle
+        'className': Identifiers$1.elementClass
     };
     var TemplateDefinitionBuilder = /** @class */ (function () {
         function TemplateDefinitionBuilder(constantPool, contextParameter, parentBindingScope, level, contextName, templateName, viewQueries, directiveMatcher, directives, pipeTypeByName, pipes, _namespace) {
@@ -16268,18 +16363,66 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             // Add the attributes
             var i18nMessages = [];
             var attributes = [];
-            Object.getOwnPropertyNames(outputAttrs).forEach(function (name) {
-                var value = outputAttrs[name];
-                attributes.push(literal(name));
-                if (attrI18nMetas.hasOwnProperty(name)) {
-                    var meta = parseI18nMeta(attrI18nMetas[name]);
-                    var variable$$1 = _this.constantPool.getTranslation(value, meta);
-                    attributes.push(variable$$1);
+            var initialStyleDeclarations = [];
+            var styleInputs = [];
+            var allOtherInputs = [];
+            element.inputs.forEach(function (input) {
+                // [attr.style] should not be treated as a styling-based
+                // binding since it is intended to write directly to the attr
+                // and therefore will skip all style resolution that is present
+                // with style="", [style]="" and [style.prop]="" assignments
+                if (input.name == 'style' && input.type == 0 /* Property */) {
+                    // this should always go first in the compilation (for [style])
+                    styleInputs.splice(0, 0, input);
+                }
+                else if (input.type == 3 /* Style */) {
+                    styleInputs.push(input);
                 }
                 else {
-                    attributes.push(literal(value));
+                    allOtherInputs.push(input);
                 }
             });
+            var currStyleIndex = 0;
+            var staticStylesMap = null;
+            var stylesIndexMap = {};
+            Object.getOwnPropertyNames(outputAttrs).forEach(function (name) {
+                var value = outputAttrs[name];
+                if (name == 'style') {
+                    staticStylesMap = parseStyle(value);
+                    Object.keys(staticStylesMap).forEach(function (prop) { stylesIndexMap[prop] = currStyleIndex++; });
+                }
+                else {
+                    attributes.push(literal(name));
+                    if (attrI18nMetas.hasOwnProperty(name)) {
+                        var meta = parseI18nMeta(attrI18nMetas[name]);
+                        var variable$$1 = _this.constantPool.getTranslation(value, meta);
+                        attributes.push(variable$$1);
+                    }
+                    else {
+                        attributes.push(literal(value));
+                    }
+                }
+            });
+            for (var i = 0; i < styleInputs.length; i++) {
+                var input = styleInputs[i];
+                var isMapBasedStyleBinding = i === 0 && input.name === 'style';
+                if (!isMapBasedStyleBinding && !stylesIndexMap.hasOwnProperty(input.name)) {
+                    stylesIndexMap[input.name] = currStyleIndex++;
+                }
+            }
+            // this will build the instructions so that they fall into the following syntax
+            // => [prop1, prop2, prop3, 0, prop1, value1, prop2, value2]
+            Object.keys(stylesIndexMap).forEach(function (prop) {
+                initialStyleDeclarations.push(literal(prop));
+            });
+            if (staticStylesMap) {
+                initialStyleDeclarations.push(literal(0 /* INITIAL_STYLES */));
+                Object.keys(staticStylesMap).forEach(function (prop) {
+                    initialStyleDeclarations.push(literal(prop));
+                    var value = staticStylesMap[prop];
+                    initialStyleDeclarations.push(literal(value));
+                });
+            }
             var attrArg = attributes.length > 0 ?
                 this.constantPool.getConstLiteral(literalArr(attributes), true) :
                 TYPED_NULL_EXPR;
@@ -16312,9 +16455,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             if (currentNamespace !== wasInNamespace) {
                 this.addNamespaceInstruction(currentNamespace, element);
             }
-            var isEmptyElement = element.children.length === 0 && element.outputs.length === 0;
             var implicit = variable(CONTEXT_NAME);
-            if (isEmptyElement) {
+            var elementStyleIndex = (initialStyleDeclarations.length || styleInputs.length) ? this.allocateDataSlot() : 0;
+            var createSelfClosingInstruction = elementStyleIndex === 0 && element.children.length === 0 && element.outputs.length === 0;
+            if (createSelfClosingInstruction) {
                 this.instruction.apply(this, __spread([this._creationCode, element.sourceSpan, Identifiers$1.element], trimTrailingNulls(parameters)));
             }
             else {
@@ -16323,6 +16467,18 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     (_c = this._creationCode).push.apply(_c, __spread(i18nMessages));
                 }
                 this.instruction.apply(this, __spread([this._creationCode, element.sourceSpan, Identifiers$1.elementStart], trimTrailingNulls(parameters)));
+                // initial styling for static style="..." attributes
+                if (elementStyleIndex > 0) {
+                    var paramsList = [literal(elementStyleIndex)];
+                    if (initialStyleDeclarations.length) {
+                        // the template compiler handles initial styling (e.g. style="foo") values
+                        // in a special command called `elementStyle` so that the initial styles
+                        // can be processed during runtime. These initial styles values are bound to
+                        // a constant because the inital style values do not change (since they're static).
+                        paramsList.push(this.constantPool.getConstLiteral(literalArr(initialStyleDeclarations), true));
+                    }
+                    this._creationCode.push(importExpr(Identifiers$1.elementStyling).callFn(paramsList).toStmt());
+                }
                 // Generate Listeners (outputs)
                 element.outputs.forEach(function (outputAst) {
                     var elName = sanitizeIdentifier(element.name);
@@ -16337,8 +16493,25 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     _this.instruction(_this._creationCode, outputAst.sourceSpan, Identifiers$1.listener, literal(outputAst.name), handler);
                 });
             }
+            if (styleInputs.length && elementStyleIndex > 0) {
+                var indexLiteral_1 = literal(elementStyleIndex);
+                styleInputs.forEach(function (input, i) {
+                    var isMapBasedStyleBinding = i == 0 && input.name == 'style';
+                    var convertedBinding = _this.convertPropertyBinding(implicit, input.value, true);
+                    if (isMapBasedStyleBinding) {
+                        _this.instruction(_this._bindingCode, input.sourceSpan, Identifiers$1.elementStyle, indexLiteral_1, convertedBinding);
+                    }
+                    else {
+                        var key = input.name;
+                        var styleIndex = stylesIndexMap[key];
+                        _this.instruction(_this._bindingCode, input.sourceSpan, Identifiers$1.elementStyleProp, indexLiteral_1, literal(styleIndex), convertedBinding);
+                    }
+                });
+                var spanEnd = styleInputs[styleInputs.length - 1].sourceSpan;
+                this.instruction(this._bindingCode, spanEnd, Identifiers$1.elementStylingApply, indexLiteral_1);
+            }
             // Generate element input bindings
-            element.inputs.forEach(function (input) {
+            allOtherInputs.forEach(function (input) {
                 if (input.type === 4 /* Animation */) {
                     _this._unsupported('animations');
                 }
@@ -16370,7 +16543,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             else {
                 visitAll$1(this, element.children);
             }
-            if (!isEmptyElement) {
+            if (!createSelfClosingInstruction) {
                 // Finish element construction mode.
                 this.instruction(this._creationCode, element.endSourceSpan || element.sourceSpan, Identifiers$1.elementEnd);
             }
@@ -16454,7 +16627,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
             statements.push(importExpr(reference, null, span).callFn(params, span).toStmt());
         };
-        TemplateDefinitionBuilder.prototype.convertPropertyBinding = function (implicit, value) {
+        TemplateDefinitionBuilder.prototype.convertPropertyBinding = function (implicit, value, skipBindFn) {
             var _a, _b;
             var pipesConvertedValue = value.visit(this._valueConverter);
             if (pipesConvertedValue instanceof Interpolation) {
@@ -16465,7 +16638,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             else {
                 var convertedPropertyBinding = convertPropertyBinding(this, implicit, pipesConvertedValue, this.bindingContext(), BindingForm.TrySimple, function () { return error('Unexpected interpolation'); });
                 (_b = this._bindingCode).push.apply(_b, __spread(convertedPropertyBinding.stmts));
-                return importExpr(Identifiers$1.bind).callFn([convertedPropertyBinding.currValExpr]);
+                var valExpr = convertedPropertyBinding.currValExpr;
+                return skipBindFn ? valExpr : importExpr(Identifiers$1.bind).callFn([valExpr]);
             }
         };
         return TemplateDefinitionBuilder;
@@ -27167,6 +27341,412 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * found in the LICENSE file at https://angular.io/license
      */
     /**
+     * Used clone a copy of a pre-computed template of a styling context.
+     *
+     * A pre-computed template is designed to be computed once for a given element
+     * (instructions.ts has logic for caching this).
+     */
+    function allocStylingContext(templateStyleContext) {
+        // each instance gets a copy
+        return templateStyleContext.slice();
+    }
+    /**
+     * Creates a styling context template where styling information is stored.
+     * Any styles that are later referenced using `updateStyleProp` must be
+     * passed in within this function. Initial values for those styles are to
+     * be declared after all initial style properties are declared (this change in
+     * mode between declarations and initial styles is made possible using a special
+     * enum value found in `definition.ts`).
+     *
+     * @param initialStyleDeclarations a list of style declarations and initial style values
+     *    that are used later within the styling context.
+     *
+     *    -> ['width', 'height', SPECIAL_ENUM_VAL, 'width', '100px']
+     *       This implies that `width` and `height` will be later styled and that the `width`
+     *       property has an initial value of `100px`.
+     */
+    function createStylingContextTemplate(initialStyleDeclarations) {
+        var initialStyles = [null];
+        var context = [initialStyles, 0];
+        var indexLookup = {};
+        if (initialStyleDeclarations) {
+            var hasPassedDeclarations = false;
+            for (var i = 0; i < initialStyleDeclarations.length; i++) {
+                var v = initialStyleDeclarations[i];
+                // this flag value marks where the declarations end the initial values begin
+                if (v === 0 /* INITIAL_STYLES */) {
+                    hasPassedDeclarations = true;
+                }
+                else {
+                    var prop = v;
+                    if (hasPassedDeclarations) {
+                        var value = initialStyleDeclarations[++i];
+                        initialStyles.push(value);
+                        indexLookup[prop] = initialStyles.length - 1;
+                    }
+                    else {
+                        // it's safe to use `0` since the default initial value for
+                        // each property will always be null (which is at position 0)
+                        indexLookup[prop] = 0;
+                    }
+                }
+            }
+        }
+        var allProps = Object.keys(indexLookup);
+        var totalProps = allProps.length;
+        // *2 because we are filling for both single and multi style spaces
+        var maxLength = totalProps * 3 /* Size */ * 2 + 2 /* SingleStylesStartPosition */;
+        // we need to fill the array from the start so that we can access
+        // both the multi and the single array positions in the same loop block
+        for (var i = 2 /* SingleStylesStartPosition */; i < maxLength; i++) {
+            context.push(null);
+        }
+        var singleStart = 2 /* SingleStylesStartPosition */;
+        var multiStart = totalProps * 3 /* Size */ + 2 /* SingleStylesStartPosition */;
+        // fill single and multi-level styles
+        for (var i = 0; i < allProps.length; i++) {
+            var prop = allProps[i];
+            var indexForInitial = indexLookup[prop];
+            var indexForMulti = i * 3 /* Size */ + multiStart;
+            var indexForSingle = i * 3 /* Size */ + singleStart;
+            setFlag(context, indexForSingle, pointers(0 /* None */, indexForInitial, indexForMulti));
+            setProp(context, indexForSingle, prop);
+            setValue(context, indexForSingle, null);
+            setFlag(context, indexForMulti, pointers(1 /* Dirty */, indexForInitial, indexForSingle));
+            setProp(context, indexForMulti, prop);
+            setValue(context, indexForMulti, null);
+        }
+        // there is no initial value flag for the master index since it doesn't reference an initial style
+        // value
+        setFlag(context, 1 /* MasterFlagPosition */, pointers(0, 0, multiStart));
+        setContextDirty(context, initialStyles.length > 1);
+        return context;
+    }
+    var EMPTY_ARR = [];
+    /**
+     * Sets and resolves all `multi` styles on an `StylingContext` so that they can be
+     * applied to the element once `renderStyles` is called.
+     *
+     * All missing styles (any values that are not provided in the new `styles` param)
+     * will resolve to `null` within their respective positions in the context.
+     *
+     * @param context The styling context that will be updated with the
+     *    newly provided style values.
+     * @param styles The key/value map of CSS styles that will be used for the update.
+     */
+    function updateStyleMap(context, styles) {
+        var propsToApply = styles ? Object.keys(styles) : EMPTY_ARR;
+        var multiStartIndex = getMultiStartIndex(context);
+        var dirty = false;
+        var ctxIndex = multiStartIndex;
+        var propIndex = 0;
+        // the main loop here will try and figure out how the shape of the provided
+        // styles differ with respect to the context. Later if the context/styles are
+        // off-balance then they will be dealt in another loop after this one
+        while (ctxIndex < context.length && propIndex < propsToApply.length) {
+            var flag = getPointers(context, ctxIndex);
+            var prop = getProp(context, ctxIndex);
+            var value = getValue(context, ctxIndex);
+            var newProp = propsToApply[propIndex];
+            var newValue = styles[newProp];
+            if (prop === newProp) {
+                if (value !== newValue) {
+                    setValue(context, ctxIndex, newValue);
+                    var initialValue = getInitialValue(context, flag);
+                    // there is no point in setting this to dirty if the previously
+                    // rendered value was being referenced by the initial style (or null)
+                    if (initialValue !== newValue) {
+                        setDirty(context, ctxIndex, true);
+                        dirty = true;
+                    }
+                }
+            }
+            else {
+                var indexOfEntry = findEntryPositionByProp(context, newProp, ctxIndex);
+                if (indexOfEntry > 0) {
+                    // it was found at a later point ... just swap the values
+                    swapMultiContextEntries(context, ctxIndex, indexOfEntry);
+                    if (value !== newValue) {
+                        setValue(context, ctxIndex, newValue);
+                        dirty = true;
+                    }
+                }
+                else {
+                    // we only care to do this if the insertion is in the middle
+                    var doShift = ctxIndex < context.length;
+                    insertNewMultiProperty(context, ctxIndex, newProp, newValue);
+                    dirty = true;
+                }
+            }
+            ctxIndex += 3 /* Size */;
+            propIndex++;
+        }
+        // this means that there are left-over values in the context that
+        // were not included in the provided styles and in this case the
+        // goal is to "remove" them from the context (by nullifying)
+        while (ctxIndex < context.length) {
+            var value = context[ctxIndex + 2 /* ValueOffset */];
+            if (value !== null) {
+                setDirty(context, ctxIndex, true);
+                setValue(context, ctxIndex, null);
+                dirty = true;
+            }
+            ctxIndex += 3 /* Size */;
+        }
+        // this means that there are left-over property in the context that
+        // were not detected in the context during the loop above. In that
+        // case we want to add the new entries into the list
+        while (propIndex < propsToApply.length) {
+            var prop = propsToApply[propIndex];
+            var value = styles[prop];
+            context.push(1 /* Dirty */, prop, value);
+            propIndex++;
+            dirty = true;
+        }
+        if (dirty) {
+            setContextDirty(context, true);
+        }
+    }
+    /**
+     * Sets and resolves a single CSS style on a property on an `StylingContext` so that they
+     * can be applied to the element once `renderElementStyles` is called.
+     *
+     * Note that prop-level styles are considered higher priority than styles that are applied
+     * using `updateStyleMap`, therefore, when styles are rendered then any styles that
+     * have been applied using this function will be considered first (then multi values second
+     * and then initial values as a backup).
+     *
+     * @param context The styling context that will be updated with the
+     *    newly provided style value.
+     * @param index The index of the property which is being updated.
+     * @param value The CSS style value that will be assigned
+     */
+    function updateStyleProp(context, index, value) {
+        var singleIndex = 2 /* SingleStylesStartPosition */ + index * 3 /* Size */;
+        var currValue = getValue(context, singleIndex);
+        var currFlag = getPointers(context, singleIndex);
+        // didn't change ... nothing to make a note of
+        if (currValue !== value) {
+            // the value will always get updated (even if the dirty flag is skipped)
+            setValue(context, singleIndex, value);
+            var indexForMulti = getMultiOrSingleIndex(currFlag);
+            // if the value is the same in the multi-area then there's no point in re-assembling
+            var valueForMulti = getValue(context, indexForMulti);
+            if (!valueForMulti || valueForMulti !== value) {
+                var multiDirty = false;
+                var singleDirty = true;
+                // only when the value is set to `null` should the multi-value get flagged
+                if (value == null && valueForMulti) {
+                    multiDirty = true;
+                    singleDirty = false;
+                }
+                setDirty(context, indexForMulti, multiDirty);
+                setDirty(context, singleIndex, singleDirty);
+                setContextDirty(context, true);
+            }
+        }
+    }
+    /**
+     * Renders all queued styles using a renderer onto the given element.
+     *
+     * This function works by rendering any styles (that have been applied
+     * using `updateStyleMap` and `updateStyleProp`) onto the
+     * provided element using the provided renderer. Just before the styles
+     * are rendered a final key/value style map will be assembled.
+     *
+     * @param lElement the element that the styles will be rendered on
+     * @param context The styling context that will be used to determine
+     *      what styles will be rendered
+     * @param renderer the renderer that will be used to apply the styling
+     * @param styleStore if provided, the updated style values will be applied
+     *    to this key/value map instead of being renderered via the renderer.
+     * @returns an object literal. `{ color: 'red', height: 'auto'}`.
+     */
+    function renderStyles(lElement, context, renderer, styleStore) {
+        if (isContextDirty(context)) {
+            var native = lElement.native;
+            var multiStartIndex = getMultiStartIndex(context);
+            for (var i = 2 /* SingleStylesStartPosition */; i < context.length; i += 3 /* Size */) {
+                // there is no point in rendering styles that have not changed on screen
+                if (isDirty(context, i)) {
+                    var prop = getProp(context, i);
+                    var value = getValue(context, i);
+                    var flag = getPointers(context, i);
+                    var isInSingleRegion = i < multiStartIndex;
+                    var styleToApply = value;
+                    // STYLE DEFER CASE 1: Use a multi value instead of a null single value
+                    // this check implies that a single value was removed and we
+                    // should now defer to a multi value and use that (if set).
+                    if (isInSingleRegion && styleToApply == null) {
+                        // single values ALWAYS have a reference to a multi index
+                        var multiIndex = getMultiOrSingleIndex(flag);
+                        styleToApply = getValue(context, multiIndex);
+                    }
+                    // STYLE DEFER CASE 2: Use the initial value if all else fails (is null)
+                    // the initial value will always be a string or null,
+                    // therefore we can safely adopt it incase there's nothing else
+                    if (styleToApply == null) {
+                        styleToApply = getInitialValue(context, flag);
+                    }
+                    setStyle(native, prop, styleToApply, renderer, styleStore);
+                    setDirty(context, i, false);
+                }
+            }
+            setContextDirty(context, false);
+        }
+    }
+    /**
+     * This function renders a given CSS prop/value entry using the
+     * provided renderer. If a `styleStore` value is provided then
+     * that will be used a render context instead of the provided
+     * renderer.
+     *
+     * @param native the DOM Element
+     * @param prop the CSS style property that will be rendered
+     * @param value the CSS style value that will be rendered
+     * @param renderer
+     * @param styleStore an optional key/value map that will be used as a context to render styles on
+     */
+    function setStyle(native, prop, value, renderer, styleStore) {
+        if (styleStore) {
+            styleStore[prop] = value;
+        }
+        else if (value == null) {
+            ngDevMode && ngDevMode.rendererRemoveStyle++;
+            isProceduralRenderer(renderer) ?
+                renderer.removeStyle(native, prop, RendererStyleFlags3.DashCase) :
+                native['style'].removeProperty(prop);
+        }
+        else {
+            ngDevMode && ngDevMode.rendererSetStyle++;
+            isProceduralRenderer(renderer) ?
+                renderer.setStyle(native, prop, value, RendererStyleFlags3.DashCase) :
+                native['style'].setProperty(prop, value);
+        }
+    }
+    function setDirty(context, index, isDirtyYes) {
+        var adjustedIndex = index >= 2 /* SingleStylesStartPosition */ ? (index + 0 /* FlagsOffset */) : index;
+        if (isDirtyYes) {
+            context[adjustedIndex] |= 1 /* Dirty */;
+        }
+        else {
+            context[adjustedIndex] &= ~1 /* Dirty */;
+        }
+    }
+    function isDirty(context, index) {
+        var adjustedIndex = index >= 2 /* SingleStylesStartPosition */ ? (index + 0 /* FlagsOffset */) : index;
+        return (context[adjustedIndex] & 1 /* Dirty */) == 1 /* Dirty */;
+    }
+    function pointers(configFlag, staticIndex, dynamicIndex) {
+        return (configFlag & 1 /* Dirty */) | (staticIndex << 1 /* BitCountSize */) |
+            (dynamicIndex << (15 /* BitCountSize */ + 1 /* BitCountSize */));
+    }
+    function getInitialValue(context, flag) {
+        var index = getInitialIndex(flag);
+        return context[0 /* InitialStylesPosition */][index];
+    }
+    function getInitialIndex(flag) {
+        return (flag >> 1 /* BitCountSize */) & 32767 /* BitMask */;
+    }
+    function getMultiOrSingleIndex(flag) {
+        var index = (flag >> (15 /* BitCountSize */ + 1 /* BitCountSize */)) & 32767 /* BitMask */;
+        return index >= 2 /* SingleStylesStartPosition */ ? index : -1;
+    }
+    function getMultiStartIndex(context) {
+        return getMultiOrSingleIndex(context[1 /* MasterFlagPosition */]);
+    }
+    function setProp(context, index, prop) {
+        context[index + 1 /* PropertyOffset */] = prop;
+    }
+    function setValue(context, index, value) {
+        context[index + 2 /* ValueOffset */] = value;
+    }
+    function setFlag(context, index, flag) {
+        var adjustedIndex = index === 1 /* MasterFlagPosition */ ? index : (index + 0 /* FlagsOffset */);
+        context[adjustedIndex] = flag;
+    }
+    function getPointers(context, index) {
+        var adjustedIndex = index === 1 /* MasterFlagPosition */ ? index : (index + 0 /* FlagsOffset */);
+        return context[adjustedIndex];
+    }
+    function getValue(context, index) {
+        return context[index + 2 /* ValueOffset */];
+    }
+    function getProp(context, index) {
+        return context[index + 1 /* PropertyOffset */];
+    }
+    function isContextDirty(context) {
+        return isDirty(context, 1 /* MasterFlagPosition */);
+    }
+    function setContextDirty(context, isDirtyYes) {
+        setDirty(context, 1 /* MasterFlagPosition */, isDirtyYes);
+    }
+    function findEntryPositionByProp(context, prop, startIndex) {
+        for (var i = (startIndex || 0) + 1 /* PropertyOffset */; i < context.length; i += 3 /* Size */) {
+            var thisProp = context[i];
+            if (thisProp == prop) {
+                return i - 1 /* PropertyOffset */;
+            }
+        }
+        return -1;
+    }
+    function swapMultiContextEntries(context, indexA, indexB) {
+        var tmpValue = getValue(context, indexA);
+        var tmpProp = getProp(context, indexA);
+        var tmpFlag = getPointers(context, indexA);
+        var flagA = tmpFlag;
+        var flagB = getPointers(context, indexB);
+        var singleIndexA = getMultiOrSingleIndex(flagA);
+        if (singleIndexA >= 0) {
+            var _flag = getPointers(context, singleIndexA);
+            var _initial = getInitialIndex(_flag);
+            setFlag(context, singleIndexA, pointers(_flag, _initial, indexB));
+        }
+        var singleIndexB = getMultiOrSingleIndex(flagB);
+        if (singleIndexB >= 0) {
+            var _flag = getPointers(context, singleIndexB);
+            var _initial = getInitialIndex(_flag);
+            setFlag(context, singleIndexB, pointers(_flag, _initial, indexA));
+        }
+        setValue(context, indexA, getValue(context, indexB));
+        setProp(context, indexA, getProp(context, indexB));
+        setFlag(context, indexA, getPointers(context, indexB));
+        setValue(context, indexB, tmpValue);
+        setProp(context, indexB, tmpProp);
+        setFlag(context, indexB, tmpFlag);
+    }
+    function updateSinglePointerValues(context, indexStartPosition) {
+        for (var i = indexStartPosition; i < context.length; i += 3 /* Size */) {
+            var multiFlag = getPointers(context, i);
+            var singleIndex = getMultiOrSingleIndex(multiFlag);
+            if (singleIndex > 0) {
+                var singleFlag = getPointers(context, singleIndex);
+                var initialIndexForSingle = getInitialIndex(singleFlag);
+                var updatedFlag = pointers(isDirty(context, singleIndex) ? 1 /* Dirty */ : 0 /* None */, initialIndexForSingle, i);
+                setFlag(context, singleIndex, updatedFlag);
+            }
+        }
+    }
+    function insertNewMultiProperty(context, index, name, value) {
+        var doShift = index < context.length;
+        // prop does not exist in the list, add it in
+        context.splice(index, 0, 1 /* Dirty */, name, value);
+        if (doShift) {
+            // because the value was inserted midway into the array then we
+            // need to update all the shifted multi values' single value
+            // pointers to point to the newly shifted location
+            updateSinglePointerValues(context, index + 3 /* Size */);
+        }
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
      * Directive (D) sets a property on all component instances using this constant as a key and the
      * component's host node (LElement) as the value. This is used in methods like detectChanges to
      * facilitate jumping from an instance to the host node.
@@ -27640,8 +28220,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         ngDevMode && assertDataInRange(index - 1);
         var node = createLNode(index, 3 /* Element */, native, name, attrs || null, null);
-        if (attrs)
+        if (attrs) {
             setUpAttributes(native, attrs);
+        }
         appendChild(getParentLNode(node), native, viewData);
         createDirectivesAndLocals(localRefs);
         return native;
@@ -28124,7 +28705,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             child: null,
             parent: parent,
             dynamicContainerNode: null,
-            detached: null
+            detached: null,
+            stylingTemplate: null
         };
     }
     /**
@@ -28216,64 +28798,108 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 lElement.native['className'] = stringify$2(value);
         }
     }
-    function elementStyleNamed(index, styleName, value, suffixOrSanitizer) {
-        if (value !== NO_CHANGE) {
-            var lElement = load(index);
-            if (value == null) {
-                ngDevMode && ngDevMode.rendererRemoveStyle++;
-                isProceduralRenderer(renderer) ?
-                    renderer.removeStyle(lElement.native, styleName, RendererStyleFlags3.DashCase) :
-                    lElement.native['style'].removeProperty(styleName);
-            }
-            else {
-                var strValue = typeof suffixOrSanitizer == 'function' ? suffixOrSanitizer(value) : stringify$2(value);
-                if (typeof suffixOrSanitizer == 'string')
-                    strValue = strValue + suffixOrSanitizer;
-                ngDevMode && ngDevMode.rendererSetStyle++;
-                isProceduralRenderer(renderer) ?
-                    renderer.setStyle(lElement.native, styleName, strValue, RendererStyleFlags3.DashCase) :
-                    lElement.native['style'].setProperty(styleName, strValue);
-            }
+    /**
+     * Assign any inline style values to the element during creation mode.
+     *
+     * This instruction is meant to be called during creation mode to apply all styling
+     * (e.g. `style="..."`) values to the element. This is also where the provided index
+     * value is allocated for the styling details for its corresponding element (the element
+     * index is the previous index value from this one).
+     *
+     * (Note this function calls `elementStylingApply` immediately when called.)
+     *
+     *
+     * @param index Index value which will be allocated to store styling data for the element.
+     *        (Note that this is not the element index, but rather an index value allocated
+     *        specifically for element styling--the index must be the next index after the element
+     *        index.)
+     * @param styles A key/value map of CSS styles that will be registered on the element.
+     *   Each individual style will be used on the element as long as it is not overridden
+     *   by any styles placed on the element by multiple (`[style]`) or singular (`[style.prop]`)
+     *   bindings. If a style binding changes its value to null then the initial styling
+     *   values that are passed in here will be applied to the element (if matched).
+     */
+    function elementStyling(index, styles) {
+        var tNode = load(index - 1).tNode;
+        if (!tNode.stylingTemplate) {
+            // initialize the styling template.
+            tNode.stylingTemplate = createStylingContextTemplate(styles);
+        }
+        // Allocate space but leave null for lazy creation.
+        viewData[index + HEADER_OFFSET] = null;
+        if (styles && styles.length) {
+            elementStylingApply(index);
         }
     }
     /**
-     * Set the `style` property on a DOM element.
+     * Retrieve the `StylingContext` at a given index.
      *
-     * This instruction is meant to handle the `[style]="exp"` usage.
+     * This method lazily creates the `StylingContext`. This is because in most cases
+     * we have styling without any bindings. Creating `StylingContext` eagerly would mean that
+     * every style declaration such as `<div style="color: 'red' ">` would result `StyleContext`
+     * which would create unnecessary memory pressure.
      *
-     *
-     * @param index The index of the element to update in the LViewData array
-     * @param value A value indicating if a given style should be added or removed.
-     *   The expected shape of `value` is an object where keys are style names and the values
-     *   are their corresponding values to set. If value is falsy, then the style is removed. An absence
-     *   of style does not cause that style to be removed. `NO_CHANGE` implies that no update should be
-     *   performed.
+     * @param index Index of the style allocation. See: `elementStyling`.
      */
-    function elementStyle(index, value) {
-        if (value !== NO_CHANGE) {
-            // TODO: This is a naive implementation which simply writes value to the `style`. In the future
-            // we will add logic here which would work with the animation code.
-            var lElement = load(index);
-            if (isProceduralRenderer(renderer)) {
-                ngDevMode && ngDevMode.rendererSetStyle++;
-                renderer.setProperty(lElement.native, 'style', value);
-            }
-            else {
-                var style = lElement.native['style'];
-                for (var i = 0, keys = Object.keys(value); i < keys.length; i++) {
-                    var styleName = keys[i];
-                    var styleValue = value[styleName];
-                    if (styleValue == null) {
-                        ngDevMode && ngDevMode.rendererRemoveStyle++;
-                        style.removeProperty(styleName);
-                    }
-                    else {
-                        ngDevMode && ngDevMode.rendererSetStyle++;
-                        style.setProperty(styleName, styleValue);
-                    }
-                }
+    function getStylingContext(index) {
+        var stylingContext = load(index);
+        if (!stylingContext) {
+            var lElement = load(index - 1);
+            var tNode = lElement.tNode;
+            ngDevMode &&
+                assertDefined(tNode.stylingTemplate, 'getStylingContext() called before elementStyling()');
+            stylingContext = viewData[index + HEADER_OFFSET] = allocStylingContext(tNode.stylingTemplate);
+        }
+        return stylingContext;
+    }
+    /**
+     * Apply all styling values to the element which have been queued by any styling instructions.
+     *
+     * This instruction is meant to be run once one or more `elementStyle` and/or `elementStyleProp`
+     * have been issued against the element. This function will also determine if any styles have
+     * changed and will then skip the operation if there is nothing new to render.
+     *
+     * Once called then all queued styles will be flushed.
+     *
+     * @param index Index of the element's styling storage that will be rendered.
+     *        (Note that this is not the element index, but rather an index value allocated
+     *        specifically for element styling--the index must be the next index after the element
+     *        index.)
+     */
+    function elementStylingApply(index) {
+        renderStyles(load(index - 1), getStylingContext(index), renderer);
+    }
+    function elementStyleProp(index, styleIndex, value, suffixOrSanitizer) {
+        var valueToAdd = null;
+        if (value) {
+            valueToAdd =
+                typeof suffixOrSanitizer == 'function' ? suffixOrSanitizer(value) : stringify$2(value);
+            if (typeof suffixOrSanitizer == 'string') {
+                valueToAdd = valueToAdd + suffixOrSanitizer;
             }
         }
+        updateStyleProp(getStylingContext(index), styleIndex, valueToAdd);
+    }
+    /**
+     * Queue a key/value map of styles to be rendered on an Element.
+     *
+     * This instruction is meant to handle the `[style]="exp"` usage. When styles are applied to
+     * the Element they will then be placed with respect to any styles set with `elementStyleProp`.
+     * If any styles are set to `null` then they will be removed from the element (unless the same
+     * style properties have been assigned to the element during creation using `elementStyling`).
+     *
+     * (Note that the styling instruction will not be applied until `elementStylingApply` is called.)
+     *
+     * @param index Index of the element's styling storage to change in the data array.
+     *        (Note that this is not the element index, but rather an index value allocated
+     *        specifically for element styling--the index must be the next index after the element
+     *        index.)
+     * @param value A value indicating if a given style should be added or removed.
+     *   The expected shape of `value` is an object where keys are style names and the values
+     *   are their corresponding values to set. If value is null, then the style is removed.
+     */
+    function elementStyle(index, value) {
+        updateStyleMap(getStylingContext(index), value);
     }
     //////////////////////////
     //// Text
@@ -39540,9 +40166,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         'ɵQ': query,
         'ɵqR': queryRefresh,
         'ɵrS': reserveSlots,
-        'ɵs': elementStyle,
-        'ɵsn': elementStyleNamed,
-        'ɵst': store,
+        'ɵs': elementStyling,
+        'ɵsm': elementStyle,
+        'ɵsp': elementStyleProp,
+        'ɵsa': elementStylingApply,
         'ɵT': text,
         'ɵt': textBinding,
         'ɵV': embeddedViewStart,
@@ -40426,7 +41053,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('6.1.0-beta.3+60.sha-52d43a9');
+    var VERSION$2 = new Version$1('6.1.0-beta.3+61.sha-3980640');
 
     var __extends$y = (undefined && undefined.__extends) || (function () {
         var extendStatics = Object.setPrototypeOf ||
@@ -50376,7 +51003,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('6.1.0-beta.3+60.sha-52d43a9');
+    var VERSION$3 = new Version$1('6.1.0-beta.3+61.sha-3980640');
 
     /**
      * @license
