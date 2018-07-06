@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.1.0-beta.3+35.sha-b6af870
+ * @license Angular v6.1.0-beta.3+46.sha-f62876b
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1163,7 +1163,7 @@ var Version = /** @class */ (function () {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION = new Version('6.1.0-beta.3+35.sha-b6af870');
+var VERSION = new Version('6.1.0-beta.3+46.sha-f62876b');
 
 /**
  * @license
@@ -24482,7 +24482,7 @@ var Version$1 = /** @class */ (function () {
     }
     return Version;
 }());
-var VERSION$2 = new Version$1('6.1.0-beta.3+35.sha-b6af870');
+var VERSION$2 = new Version$1('6.1.0-beta.3+46.sha-f62876b');
 
 /**
  * @license
@@ -49671,7 +49671,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION$3 = new Version$1('6.1.0-beta.3+35.sha-b6af870');
+var VERSION$3 = new Version$1('6.1.0-beta.3+46.sha-f62876b');
 
 /**
  * @license
