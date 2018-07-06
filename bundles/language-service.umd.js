@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.1.0-beta.3+31.sha-7f3242a
+ * @license Angular v6.1.0-beta.3+36.sha-8fe8b8f
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1205,7 +1205,7 @@ var Version = /** @class */ (function () {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION = new Version('6.1.0-beta.3+31.sha-7f3242a');
+var VERSION = new Version('6.1.0-beta.3+36.sha-8fe8b8f');
 
 /**
  * @license
@@ -15272,6 +15272,7 @@ var Identifiers$1 = /** @class */ (function () {
         moduleName: CORE$1,
     };
     Identifiers.defineNgModule = { name: 'ɵdefineNgModule', moduleName: CORE$1 };
+    Identifiers.PipeDef = { name: 'ɵPipeDef', moduleName: CORE$1 };
     Identifiers.definePipe = { name: 'ɵdefinePipe', moduleName: CORE$1 };
     Identifiers.query = { name: 'ɵQ', moduleName: CORE$1 };
     Identifiers.queryRefresh = { name: 'ɵqR', moduleName: CORE$1 };
@@ -15549,6 +15550,29 @@ function compileInjector(meta) {
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
+function compilePipeFromMetadata(metadata) {
+    var definitionMapValues = [];
+    // e.g. `name: 'myPipe'`
+    definitionMapValues.push({ key: 'name', value: literal(metadata.pipeName), quoted: false });
+    // e.g. `type: MyPipe`
+    definitionMapValues.push({ key: 'type', value: metadata.type, quoted: false });
+    var templateFactory = compileFactoryFunction({
+        name: metadata.name,
+        fnOrClass: metadata.type,
+        deps: metadata.deps,
+        useNew: true,
+        injectFn: Identifiers$1.directiveInject,
+    });
+    definitionMapValues.push({ key: 'factory', value: templateFactory, quoted: false });
+    // e.g. `pure: true`
+    definitionMapValues.push({ key: 'pure', value: literal(metadata.pure), quoted: false });
+    var expression = importExpr(Identifiers$1.definePipe).callFn([literalMap(definitionMapValues)]);
+    var type = new ExpressionType(importExpr(Identifiers$1.PipeDef, [
+        new ExpressionType(metadata.type),
+        new ExpressionType(new LiteralExpr(metadata.pipeName)),
+    ]));
+    return { expression: expression, type: type };
+}
 /**
  * Write a pipe definition to the output context.
  */
@@ -16744,7 +16768,7 @@ function parseTemplate(template, templateUrl, options) {
  * Construct a `BindingParser` with a default configuration.
  */
 function makeBindingParser() {
-    return new BindingParser(new Parser(new Lexer()), DEFAULT_INTERPOLATION_CONFIG, new DomElementSchemaRegistry(), [], []);
+    return new BindingParser(new Parser(new Lexer()), DEFAULT_INTERPOLATION_CONFIG, new DomElementSchemaRegistry(), null, []);
 }
 
 /**
@@ -41857,11 +41881,40 @@ function isUseExistingProvider(meta) {
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
+function compilePipe(type, meta) {
+    var def = null;
+    Object.defineProperty(type, NG_PIPE_DEF, {
+        get: function () {
+            if (def === null) {
+                var sourceMapUrl = "ng://" + stringify$2(type) + "/ngPipeDef.js";
+                var name_1 = type.name;
+                var res = compilePipeFromMetadata({
+                    name: name_1,
+                    type: new WrappedNodeExpr(type),
+                    deps: reflectDependencies(type),
+                    pipeName: meta.name,
+                    pure: meta.pure !== undefined ? meta.pure : true,
+                });
+                def = jitExpression(res.expression, angularCoreEnv, sourceMapUrl);
+            }
+            return def;
+        }
+    });
+}
+
+/**
+ * @license
+ * Copyright Google Inc. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.io/license
+ */
 
 var R3_COMPILE_COMPONENT = compileComponent;
 var R3_COMPILE_DIRECTIVE = compileDirective;
 var R3_COMPILE_INJECTABLE = compileInjectable$1;
 var R3_COMPILE_NGMODULE = compileNgModule$1;
+var R3_COMPILE_PIPE = compilePipe;
 
 /**
  * @license
@@ -41982,7 +42035,7 @@ var Component = makeDecorator('Component', function (c) {
  *
  * @Annotation
  */
-var Pipe = makeDecorator('Pipe', function (p) { return (__assign({ pure: true }, p)); });
+var Pipe = makeDecorator('Pipe', function (p) { return (__assign({ pure: true }, p)); }, undefined, undefined, function (type, meta) { return (R3_COMPILE_PIPE || (function () { }))(type, meta); });
 /**
  *
  * @Annotation
@@ -42103,7 +42156,7 @@ var Version$1 = /** @class */ (function () {
     }
     return Version;
 }());
-var VERSION$2 = new Version$1('6.1.0-beta.3+31.sha-7f3242a');
+var VERSION$2 = new Version$1('6.1.0-beta.3+36.sha-8fe8b8f');
 
 var __extends$34 = (undefined && undefined.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
@@ -55073,7 +55126,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION$3 = new Version$1('6.1.0-beta.3+31.sha-7f3242a');
+var VERSION$3 = new Version$1('6.1.0-beta.3+36.sha-8fe8b8f');
 
 /**
  * @license
