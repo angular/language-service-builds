@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.1.0-beta.3+31.sha-7f3242a
+ * @license Angular v6.1.0-beta.3+36.sha-8fe8b8f
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1163,7 +1163,7 @@ var Version = /** @class */ (function () {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION = new Version('6.1.0-beta.3+31.sha-7f3242a');
+var VERSION = new Version('6.1.0-beta.3+36.sha-8fe8b8f');
 
 /**
  * @license
@@ -14421,6 +14421,7 @@ var Identifiers$1 = /** @class */ (function () {
         moduleName: CORE$1,
     };
     Identifiers.defineNgModule = { name: 'ɵdefineNgModule', moduleName: CORE$1 };
+    Identifiers.PipeDef = { name: 'ɵPipeDef', moduleName: CORE$1 };
     Identifiers.definePipe = { name: 'ɵdefinePipe', moduleName: CORE$1 };
     Identifiers.query = { name: 'ɵQ', moduleName: CORE$1 };
     Identifiers.queryRefresh = { name: 'ɵqR', moduleName: CORE$1 };
@@ -14564,6 +14565,7 @@ var R3ResolvedDependencyType;
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
+
 /**
  * Write a pipe definition to the output context.
  */
@@ -23283,6 +23285,7 @@ var R3_COMPILE_COMPONENT = null;
 var R3_COMPILE_DIRECTIVE = null;
 var R3_COMPILE_INJECTABLE = null;
 var R3_COMPILE_NGMODULE = null;
+var R3_COMPILE_PIPE = null;
 
 /**
  * @license
@@ -23395,7 +23398,7 @@ var Component = makeDecorator('Component', function (c) {
  *
  * @Annotation
  */
-var Pipe = makeDecorator('Pipe', function (p) { return (__assign({ pure: true }, p)); });
+var Pipe = makeDecorator('Pipe', function (p) { return (__assign({ pure: true }, p)); }, undefined, undefined, function (type, meta) { return (R3_COMPILE_PIPE || (function () { }))(type, meta); });
 /**
  *
  * @Annotation
@@ -24479,7 +24482,7 @@ var Version$1 = /** @class */ (function () {
     }
     return Version;
 }());
-var VERSION$2 = new Version$1('6.1.0-beta.3+31.sha-7f3242a');
+var VERSION$2 = new Version$1('6.1.0-beta.3+36.sha-8fe8b8f');
 
 /**
  * @license
@@ -49668,7 +49671,7 @@ function create(info /* ts.server.PluginCreateInfo */) {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION$3 = new Version$1('6.1.0-beta.3+31.sha-7f3242a');
+var VERSION$3 = new Version$1('6.1.0-beta.3+36.sha-8fe8b8f');
 
 /**
  * @license
