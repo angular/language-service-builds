@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.1.0-beta.3+60.sha-52d43a9
+ * @license Angular v6.1.0-beta.3+61.sha-3980640
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1137,7 +1137,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('6.1.0-beta.3+60.sha-52d43a9');
+    var VERSION = new Version('6.1.0-beta.3+61.sha-3980640');
 
     /**
      * @license
@@ -14299,8 +14299,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         Identifiers.elementAttribute = { name: 'ɵa', moduleName: CORE$1 };
         Identifiers.elementClass = { name: 'ɵk', moduleName: CORE$1 };
         Identifiers.elementClassNamed = { name: 'ɵkn', moduleName: CORE$1 };
-        Identifiers.elementStyle = { name: 'ɵs', moduleName: CORE$1 };
-        Identifiers.elementStyleNamed = { name: 'ɵsn', moduleName: CORE$1 };
+        Identifiers.elementStyling = { name: 'ɵs', moduleName: CORE$1 };
+        Identifiers.elementStyle = { name: 'ɵsm', moduleName: CORE$1 };
+        Identifiers.elementStyleProp = { name: 'ɵsp', moduleName: CORE$1 };
+        Identifiers.elementStylingApply = { name: 'ɵsa', moduleName: CORE$1 };
         Identifiers.containerCreate = { name: 'ɵC', moduleName: CORE$1 };
         Identifiers.text = { name: 'ɵT', moduleName: CORE$1 };
         Identifiers.textBinding = { name: 'ɵt', moduleName: CORE$1 };
@@ -14433,6 +14435,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
          */
         R3ResolvedDependencyType[R3ResolvedDependencyType["ViewContainerRef"] = 5] = "ViewContainerRef";
     })(R3ResolvedDependencyType || (R3ResolvedDependencyType = {}));
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
 
     /**
      * @license
@@ -24186,7 +24196,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('6.1.0-beta.3+60.sha-52d43a9');
+    var VERSION$2 = new Version$1('6.1.0-beta.3+61.sha-3980640');
 
     /**
      * @license
@@ -41429,6 +41439,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     /**
      * Directive (D) sets a property on all component instances using this constant as a key and the
      * component's host node (LElement) as the value. This is used in methods like detectChanges to
@@ -41971,7 +41989,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             child: null,
             parent: parent,
             dynamicContainerNode: null,
-            detached: null
+            detached: null,
+            stylingTemplate: null
         };
     }
     /**
@@ -43932,7 +43951,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('6.1.0-beta.3+60.sha-52d43a9');
+    var VERSION$3 = new Version$1('6.1.0-beta.3+61.sha-3980640');
 
     /**
      * @license
