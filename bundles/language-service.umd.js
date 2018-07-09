@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.1.0-beta.3+64.sha-3d20c50
+ * @license Angular v6.1.0-beta.3+66.sha-ddb792d
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1186,7 +1186,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('6.1.0-beta.3+64.sha-3d20c50');
+    var VERSION = new Version('6.1.0-beta.3+66.sha-ddb792d');
 
     /**
      * @license
@@ -41054,7 +41054,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('6.1.0-beta.3+64.sha-3d20c50');
+    var VERSION$2 = new Version$1('6.1.0-beta.3+66.sha-ddb792d');
 
     var __extends$y = (undefined && undefined.__extends) || (function () {
         var extendStatics = Object.setPrototypeOf ||
@@ -51004,7 +51004,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('6.1.0-beta.3+64.sha-3d20c50');
+    var VERSION$3 = new Version$1('6.1.0-beta.3+66.sha-ddb792d');
 
     /**
      * @license
