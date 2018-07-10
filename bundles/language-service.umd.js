@@ -1,11 +1,12 @@
 /**
- * @license Angular v6.1.0-beta.3+61.sha-3980640
+ * @license Angular v6.1.0-beta.3+64.sha-3d20c50
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
 
-var $reflect = {defineMetadata: function() {}, getOwnMetadata: function(){}};
-((typeof global !== 'undefined' && global)||{})['Reflect'] = $reflect;
+var $reflect = {defineMetadata: function() {}, getOwnMetadata: function() {}};
+var Reflect = (typeof global !== 'undefined' ? global : {})['Reflect'] || {};
+Object.keys($reflect).forEach(function(key) { Reflect[key] = Reflect[key] || $reflect[key]; });
 var $deferred, $resolved, $provided;
 function $getModule(name) { return $provided[name] || require(name); }
 function define(modules, cb) { $deferred = { modules: modules, cb: cb }; }
@@ -1185,7 +1186,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('6.1.0-beta.3+61.sha-3980640');
+    var VERSION = new Version('6.1.0-beta.3+64.sha-3d20c50');
 
     /**
      * @license
@@ -41053,7 +41054,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('6.1.0-beta.3+61.sha-3980640');
+    var VERSION$2 = new Version$1('6.1.0-beta.3+64.sha-3d20c50');
 
     var __extends$y = (undefined && undefined.__extends) || (function () {
         var extendStatics = Object.setPrototypeOf ||
@@ -51003,7 +51004,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('6.1.0-beta.3+61.sha-3980640');
+    var VERSION$3 = new Version$1('6.1.0-beta.3+64.sha-3d20c50');
 
     /**
      * @license
