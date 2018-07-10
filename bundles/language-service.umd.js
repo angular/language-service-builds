@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.1.0-beta.3+73.sha-49df4ef
+ * @license Angular v6.1.0-beta.3+75.sha-3a19f70
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1138,7 +1138,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('6.1.0-beta.3+73.sha-49df4ef');
+    var VERSION = new Version('6.1.0-beta.3+75.sha-3a19f70');
 
     /**
      * @license
@@ -24197,7 +24197,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('6.1.0-beta.3+73.sha-49df4ef');
+    var VERSION$2 = new Version$1('6.1.0-beta.3+75.sha-3a19f70');
 
     /**
      * @license
@@ -40927,6 +40927,24 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    // TODO: cleanup once the code is merged in angular/angular
+    var RendererStyleFlags3;
+    (function (RendererStyleFlags3) {
+        RendererStyleFlags3[RendererStyleFlags3["Important"] = 1] = "Important";
+        RendererStyleFlags3[RendererStyleFlags3["DashCase"] = 2] = "DashCase";
+    })(RendererStyleFlags3 || (RendererStyleFlags3 = {}));
+    /** Returns whether the `renderer` is a `ProceduralRenderer3` */
+    function isProceduralRenderer(renderer) {
+        return !!(renderer.listen);
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     function assertNodeType(node, type) {
         assertDefined(node, 'should be called with a node');
         assertEqual(node.tNode.type, type, "should be a " + typeName(type));
@@ -40950,24 +40968,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    // TODO: cleanup once the code is merged in angular/angular
-    var RendererStyleFlags3;
-    (function (RendererStyleFlags3) {
-        RendererStyleFlags3[RendererStyleFlags3["Important"] = 1] = "Important";
-        RendererStyleFlags3[RendererStyleFlags3["DashCase"] = 2] = "DashCase";
-    })(RendererStyleFlags3 || (RendererStyleFlags3 = {}));
-    /** Returns whether the `renderer` is a `ProceduralRenderer3` */
-    function isProceduralRenderer(renderer) {
-        return !!(renderer.listen);
-    }
 
     /**
      * @license
@@ -41054,29 +41054,19 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return parent ? node.view[parent.index] : node.view[HOST_NODE];
     }
     /**
-     * Get the next node in the LNode tree, taking into account the place where a node is
-     * projected (in the shadow DOM) rather than where it comes from (in the light DOM).
+     * Stack used to keep track of projection nodes in walkLNodeTree.
      *
-     * @param node The node whose next node in the LNode tree must be found.
-     * @return LNode|null The next sibling in the LNode tree.
+     * This is deliberately created outside of walkLNodeTree to avoid allocating
+     * a new array each time the function is called. Instead the array will be
+     * re-used by each invocation. This works because the function is not reentrant.
      */
-    function getNextLNodeWithProjection(node) {
-        var pNextOrParent = node.pNextOrParent;
-        if (pNextOrParent) {
-            // The node is projected
-            var isLastProjectedNode = pNextOrParent.tNode.type === 1 /* Projection */;
-            // returns pNextOrParent if we are not at the end of the list, null otherwise
-            return isLastProjectedNode ? null : pNextOrParent;
-        }
-        // returns node.next because the the node is not projected
-        return getNextLNode(node);
-    }
+    var projectionNodeStack = [];
     /**
      * Walks a tree of LNodes, applying a transformation on the LElement nodes, either only on the first
      * one found, or on all of them.
      *
      * @param startingNode the node from which the walk is started.
-     * @param rootNode the root node considered.
+     * @param rootNode the root node considered. This prevents walking past that node.
      * @param action identifies the action to be performed on the LElement nodes.
      * @param renderer the current renderer.
      * @param renderParentNode Optional the render parent node to be set in all LContainerNodes found,
@@ -41086,18 +41076,19 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     function walkLNodeTree(startingNode, rootNode, action, renderer, renderParentNode, beforeNode) {
         var node = startingNode;
+        var projectionNodeIndex = -1;
         while (node) {
             var nextNode = null;
             var parent_1 = renderParentNode ? renderParentNode.native : null;
-            if (node.tNode.type === 3 /* Element */) {
+            var nodeType = node.tNode.type;
+            if (nodeType === 3 /* Element */) {
                 // Execute the action
                 executeNodeAction(action, renderer, parent_1, node.native, beforeNode);
                 if (node.dynamicLContainerNode) {
                     executeNodeAction(action, renderer, parent_1, node.dynamicLContainerNode.native, beforeNode);
                 }
-                nextNode = getNextLNode(node);
             }
-            else if (node.tNode.type === 0 /* Container */) {
+            else if (nodeType === 0 /* Container */) {
                 executeNodeAction(action, renderer, parent_1, node.native, beforeNode);
                 var lContainerNode = node;
                 var childContainerData = lContainerNode.dynamicLContainerNode ?
@@ -41116,15 +41107,22 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                         lContainerNode.native;
                 }
             }
-            else if (node.tNode.type === 1 /* Projection */) {
-                // For Projection look at the first projected node
-                nextNode = node.data.head;
+            else if (nodeType === 1 /* Projection */) {
+                var componentHost = findComponentHost(node.view);
+                var head = componentHost.tNode.projection[node.tNode.projection];
+                projectionNodeStack[++projectionNodeIndex] = node;
+                nextNode = head ? componentHost.data[PARENT][head.index] : null;
             }
             else {
                 // Otherwise look at the first child
                 nextNode = getChildLNode(node);
             }
-            if (nextNode == null) {
+            if (nextNode === null) {
+                nextNode = getNextLNode(node);
+                // this last node was projected, we need to get back down to its projection node
+                if (nextNode === null && (node.tNode.flags & 8192 /* isProjected */)) {
+                    nextNode = getNextLNode(projectionNodeStack[projectionNodeIndex--]);
+                }
                 /**
                  * Find the next node in the LNode tree, taking into account the place where a node is
                  * projected (in the shadow DOM) rather than where it comes from (in the light DOM).
@@ -41132,28 +41130,36 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                  * If there is no sibling node, then it goes to the next sibling of the parent node...
                  * until it reaches rootNode (at which point null is returned).
                  */
-                var currentNode = node;
-                node = getNextLNodeWithProjection(currentNode);
-                while (currentNode && !node) {
-                    // if node.pNextOrParent is not null here, it is not the next node
-                    // (because, at this point, nextNode is null, so it is the parent)
-                    currentNode = currentNode.pNextOrParent || getParentLNode(currentNode);
-                    if (currentNode === rootNode) {
+                while (node && !nextNode) {
+                    node = getParentLNode(node);
+                    if (node === null || node === rootNode)
                         return null;
+                    // When exiting a container, the beforeNode must be restored to the previous value
+                    if (!node.tNode.next && nodeType === 0 /* Container */) {
+                        beforeNode = node.native;
                     }
-                    // When the walker exits a container, the beforeNode has to be restored to the previous
-                    // value.
-                    if (currentNode && !currentNode.pNextOrParent &&
-                        currentNode.tNode.type === 0 /* Container */) {
-                        beforeNode = currentNode.native;
-                    }
-                    node = currentNode && getNextLNodeWithProjection(currentNode);
+                    nextNode = getNextLNode(node);
                 }
             }
-            else {
-                node = nextNode;
-            }
+            node = nextNode;
         }
+    }
+    /**
+     * Given a current view, finds the nearest component's host (LElement).
+     *
+     * @param lViewData LViewData for which we want a host element node
+     * @returns The host node
+     */
+    function findComponentHost(lViewData) {
+        var viewRootLNode = lViewData[HOST_NODE];
+        while (viewRootLNode.tNode.type === 2 /* View */) {
+            ngDevMode && assertDefined(lViewData[PARENT], 'lViewData.parent');
+            lViewData = lViewData[PARENT];
+            viewRootLNode = lViewData[HOST_NODE];
+        }
+        ngDevMode && assertNodeType(viewRootLNode, 3 /* Element */);
+        ngDevMode && assertDefined(viewRootLNode.data, 'node.data');
+        return viewRootLNode;
     }
     /**
      * NOTE: for performance reasons, the possible actions are inlined within the function instead of
@@ -41663,7 +41669,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             data: state,
             queries: queries,
             tNode: null,
-            pNextOrParent: null,
             dynamicLContainerNode: null
         };
     }
@@ -41991,7 +41996,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             parent: parent,
             dynamicContainerNode: null,
             detached: null,
-            stylingTemplate: null
+            stylingTemplate: null,
+            projection: null
         };
     }
     /**
@@ -42016,7 +42022,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 // - save the index,
                 // - set the number of directives to 1
                 previousOrParentNode.tNode.flags =
-                    index << 13 /* DirectiveStartingIndexShift */ | flags & 4096 /* isComponent */ | 1;
+                    index << 14 /* DirectiveStartingIndexShift */ | flags & 4096 /* isComponent */ | 1;
             }
             else {
                 // Only need to bump the size when subsequent directives are created
@@ -43952,7 +43958,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('6.1.0-beta.3+73.sha-49df4ef');
+    var VERSION$3 = new Version$1('6.1.0-beta.3+75.sha-3a19f70');
 
     /**
      * @license
