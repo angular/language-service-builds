@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.1.0-beta.3+98.sha-ee50ee4
+ * @license Angular v6.1.0-beta.3+108.sha-80a74b4
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1186,7 +1186,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('6.1.0-beta.3+98.sha-ee50ee4');
+    var VERSION = new Version('6.1.0-beta.3+108.sha-80a74b4');
 
     /**
      * @license
@@ -15220,7 +15220,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         Identifiers.directiveInject = { name: 'ɵdirectiveInject', moduleName: CORE$1 };
         Identifiers.defineComponent = { name: 'ɵdefineComponent', moduleName: CORE$1 };
         Identifiers.ComponentDef = {
-            name: 'ComponentDef',
+            name: 'ɵComponentDef',
             moduleName: CORE$1,
         };
         Identifiers.defineDirective = {
@@ -15228,11 +15228,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             moduleName: CORE$1,
         };
         Identifiers.DirectiveDef = {
-            name: 'DirectiveDef',
+            name: 'ɵDirectiveDef',
             moduleName: CORE$1,
         };
         Identifiers.InjectorDef = {
-            name: 'InjectorDef',
+            name: 'ɵInjectorDef',
             moduleName: CORE$1,
         };
         Identifiers.defineInjector = {
@@ -15240,7 +15240,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             moduleName: CORE$1,
         };
         Identifiers.NgModuleDef = {
-            name: 'NgModuleDef',
+            name: 'ɵNgModuleDef',
             moduleName: CORE$1,
         };
         Identifiers.defineNgModule = { name: 'ɵdefineNgModule', moduleName: CORE$1 };
@@ -15501,7 +15501,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 providers: meta.providers,
                 imports: meta.imports,
             })]);
-        var type = new ExpressionType(importExpr(Identifiers$1.InjectorDef));
+        var type = new ExpressionType(importExpr(Identifiers$1.InjectorDef, [new ExpressionType(meta.type)]));
         return { expression: expression, type: type };
     }
 
@@ -16509,7 +16509,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             // Generate element input bindings
             allOtherInputs.forEach(function (input) {
                 if (input.type === 4 /* Animation */) {
-                    _this._unsupported('animations');
+                    console.error('warning: animation bindings not yet supported');
+                    return;
                 }
                 var convertedBinding = _this.convertPropertyBinding(implicit, input.value);
                 var specialInstruction = SPECIAL_CASED_PROPERTIES_INSTRUCTION_MAP[input.name];
@@ -16947,7 +16948,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function compileDirectiveFromMetadata(meta, constantPool, bindingParser) {
         var definitionMap = baseDirectiveFields(meta, constantPool, bindingParser);
         var expression = importExpr(Identifiers$1.defineDirective).callFn([definitionMap.toLiteralMap()]);
-        var type = new ExpressionType(importExpr(Identifiers$1.DirectiveDef, [new ExpressionType(meta.type), new ExpressionType(literal(meta.selector || ''))]));
+        // On the type side, remove newlines from the selector as it will need to fit into a TypeScript
+        // string literal, which must be on one line.
+        var selectorForType = (meta.selector || '').replace(/\n/g, '');
+        var type = new ExpressionType(importExpr(Identifiers$1.DirectiveDef, [new ExpressionType(meta.type), new ExpressionType(literal(selectorForType))]));
         return { expression: expression, type: type };
     }
     /**
@@ -16992,8 +16996,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         if (pipesUsed.size) {
             definitionMap.set('pipes', literalArr(Array.from(pipesUsed)));
         }
+        // On the type side, remove newlines from the selector as it will need to fit into a TypeScript
+        // string literal, which must be on one line.
+        var selectorForType = (meta.selector || '').replace(/\n/g, '');
         var expression = importExpr(Identifiers$1.defineComponent).callFn([definitionMap.toLiteralMap()]);
-        var type = new ExpressionType(importExpr(Identifiers$1.ComponentDef, [new ExpressionType(meta.type), new ExpressionType(literal(meta.selector || ''))]));
+        var type = new ExpressionType(importExpr(Identifiers$1.ComponentDef, [new ExpressionType(meta.type), new ExpressionType(literal(selectorForType))]));
         return { expression: expression, type: type };
     }
     /**
@@ -41049,7 +41056,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('6.1.0-beta.3+98.sha-ee50ee4');
+    var VERSION$2 = new Version$1('6.1.0-beta.3+108.sha-80a74b4');
 
     var __extends$y = (undefined && undefined.__extends) || (function () {
         var extendStatics = Object.setPrototypeOf ||
@@ -50999,7 +51006,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('6.1.0-beta.3+98.sha-ee50ee4');
+    var VERSION$3 = new Version$1('6.1.0-beta.3+108.sha-80a74b4');
 
     /**
      * @license
