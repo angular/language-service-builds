@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.1.0-beta.3+94.sha-328971f
+ * @license Angular v6.1.0-beta.3+108.sha-80a74b4
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1138,7 +1138,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('6.1.0-beta.3+94.sha-328971f');
+    var VERSION = new Version('6.1.0-beta.3+108.sha-80a74b4');
 
     /**
      * @license
@@ -14345,7 +14345,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         Identifiers.directiveInject = { name: 'ɵdirectiveInject', moduleName: CORE$1 };
         Identifiers.defineComponent = { name: 'ɵdefineComponent', moduleName: CORE$1 };
         Identifiers.ComponentDef = {
-            name: 'ComponentDef',
+            name: 'ɵComponentDef',
             moduleName: CORE$1,
         };
         Identifiers.defineDirective = {
@@ -14353,11 +14353,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             moduleName: CORE$1,
         };
         Identifiers.DirectiveDef = {
-            name: 'DirectiveDef',
+            name: 'ɵDirectiveDef',
             moduleName: CORE$1,
         };
         Identifiers.InjectorDef = {
-            name: 'InjectorDef',
+            name: 'ɵInjectorDef',
             moduleName: CORE$1,
         };
         Identifiers.defineInjector = {
@@ -14365,7 +14365,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             moduleName: CORE$1,
         };
         Identifiers.NgModuleDef = {
-            name: 'NgModuleDef',
+            name: 'ɵNgModuleDef',
             moduleName: CORE$1,
         };
         Identifiers.defineNgModule = { name: 'ɵdefineNgModule', moduleName: CORE$1 };
@@ -24197,7 +24197,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('6.1.0-beta.3+94.sha-328971f');
+    var VERSION$2 = new Version$1('6.1.0-beta.3+108.sha-80a74b4');
 
     /**
      * @license
@@ -40795,7 +40795,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * found in the LICENSE file at https://angular.io/license
      */
     /** Size of LViewData's header. Necessary to adjust for it when setting slots.  */
-    var HEADER_OFFSET = 15;
+    var HEADER_OFFSET = 16;
     // Below are constants for LViewData indices to help us look up LViewData members
     // without having to remember the specific indices.
     // Uglify will inline these when minifying so there shouldn't be a cost.
@@ -41610,6 +41610,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         // This needs to be set before children are processed to support recursive components
         tView.firstTemplatePass = firstTemplatePass = false;
         setHostBindings(tView.hostBindings);
+        refreshContentQueries(tView);
         refreshChildComponents(tView.components);
     }
     /** Sets the host bindings for the current view. */
@@ -41620,6 +41621,16 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 var dirIndex = bindings[i];
                 var def = defs[dirIndex];
                 def.hostBindings && def.hostBindings(dirIndex, bindings[i + 1]);
+            }
+        }
+    }
+    /** Refreshes content queries for all directives in the given view. */
+    function refreshContentQueries(tView) {
+        if (tView.contentQueries != null) {
+            for (var i = 0; i < tView.contentQueries.length; i += 2) {
+                var directiveDefIdx = tView.contentQueries[i];
+                var directiveDef = tView.directives[directiveDefIdx];
+                directiveDef.contentQueriesRefresh(directiveDefIdx, tView.contentQueries[i + 1]);
             }
         }
     }
@@ -41653,7 +41664,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             renderer,
             sanitizer || null,
             null,
-            -1 // containerIndex
+            -1,
+            null,
         ];
     }
     /**
@@ -41866,6 +41878,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             pipeDestroyHooks: null,
             cleanup: null,
             hostBindings: null,
+            contentQueries: null,
             components: null,
             directiveRegistry: typeof directives === 'function' ? directives() : directives,
             pipeRegistry: typeof pipes === 'function' ? pipes() : pipes,
@@ -42078,7 +42091,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         // Only attached CheckAlways components or attached, dirty OnPush components should be checked
         if (viewAttached(hostView) && hostView[FLAGS] & (2 /* CheckAlways */ | 4 /* Dirty */)) {
             ngDevMode && assertDataInRange(directiveIndex, directives);
-            detectChangesInternal(hostView, element, getDirectiveInstance(directives[directiveIndex]));
+            detectChangesInternal(hostView, element, directives[directiveIndex]);
         }
     }
     /** Returns a boolean for whether the view is attached */
@@ -42200,11 +42213,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         if (viewQuery) {
             viewQuery(2 /* Update */, component);
         }
-    }
-    function getDirectiveInstance(instanceOrArray) {
-        // Directives with content queries store an array in directives[directiveIndex]
-        // with the instance as the first index
-        return Array.isArray(instanceOrArray) ? instanceOrArray[0] : instanceOrArray;
     }
     function assertPreviousIsParent() {
         assertEqual(isParent, true, 'previousOrParentNode should be a parent');
@@ -43958,7 +43966,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('6.1.0-beta.3+94.sha-328971f');
+    var VERSION$3 = new Version$1('6.1.0-beta.3+108.sha-80a74b4');
 
     /**
      * @license
