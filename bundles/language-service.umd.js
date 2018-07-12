@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.1.0-beta.3+98.sha-ee50ee4
+ * @license Angular v6.1.0-beta.3+108.sha-80a74b4
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1138,7 +1138,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('6.1.0-beta.3+98.sha-ee50ee4');
+    var VERSION = new Version('6.1.0-beta.3+108.sha-80a74b4');
 
     /**
      * @license
@@ -14345,7 +14345,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         Identifiers.directiveInject = { name: 'ɵdirectiveInject', moduleName: CORE$1 };
         Identifiers.defineComponent = { name: 'ɵdefineComponent', moduleName: CORE$1 };
         Identifiers.ComponentDef = {
-            name: 'ComponentDef',
+            name: 'ɵComponentDef',
             moduleName: CORE$1,
         };
         Identifiers.defineDirective = {
@@ -14353,11 +14353,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             moduleName: CORE$1,
         };
         Identifiers.DirectiveDef = {
-            name: 'DirectiveDef',
+            name: 'ɵDirectiveDef',
             moduleName: CORE$1,
         };
         Identifiers.InjectorDef = {
-            name: 'InjectorDef',
+            name: 'ɵInjectorDef',
             moduleName: CORE$1,
         };
         Identifiers.defineInjector = {
@@ -14365,7 +14365,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             moduleName: CORE$1,
         };
         Identifiers.NgModuleDef = {
-            name: 'NgModuleDef',
+            name: 'ɵNgModuleDef',
             moduleName: CORE$1,
         };
         Identifiers.defineNgModule = { name: 'ɵdefineNgModule', moduleName: CORE$1 };
@@ -24197,7 +24197,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('6.1.0-beta.3+98.sha-ee50ee4');
+    var VERSION$2 = new Version$1('6.1.0-beta.3+108.sha-80a74b4');
 
     /**
      * @license
@@ -43966,7 +43966,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('6.1.0-beta.3+98.sha-ee50ee4');
+    var VERSION$3 = new Version$1('6.1.0-beta.3+108.sha-80a74b4');
 
     /**
      * @license
