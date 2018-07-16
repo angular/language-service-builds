@@ -1,11 +1,12 @@
 /**
- * @license Angular v6.1.0-beta.3+86.sha-6b3f5dd
+ * @license Angular v6.1.0-beta.3+129.sha-acdb672
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
 
-var $reflect = {defineMetadata: function() {}, getOwnMetadata: function(){}};
-((typeof global !== 'undefined' && global)||{})['Reflect'] = $reflect;
+var $reflect = {defineMetadata: function() {}, getOwnMetadata: function() {}};
+var Reflect = (typeof global !== 'undefined' ? global : {})['Reflect'] || {};
+Object.keys($reflect).forEach(function(key) { Reflect[key] = Reflect[key] || $reflect[key]; });
 var $deferred, $resolved, $provided;
 function $getModule(name) { return $provided[name] || require(name); }
 function define(modules, cb) { $deferred = { modules: modules, cb: cb }; }
@@ -1185,7 +1186,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('6.1.0-beta.3+86.sha-6b3f5dd');
+    var VERSION = new Version('6.1.0-beta.3+129.sha-acdb672');
 
     /**
      * @license
@@ -15219,7 +15220,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         Identifiers.directiveInject = { name: 'ɵdirectiveInject', moduleName: CORE$1 };
         Identifiers.defineComponent = { name: 'ɵdefineComponent', moduleName: CORE$1 };
         Identifiers.ComponentDef = {
-            name: 'ComponentDef',
+            name: 'ɵComponentDef',
             moduleName: CORE$1,
         };
         Identifiers.defineDirective = {
@@ -15227,11 +15228,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             moduleName: CORE$1,
         };
         Identifiers.DirectiveDef = {
-            name: 'DirectiveDef',
+            name: 'ɵDirectiveDef',
             moduleName: CORE$1,
         };
         Identifiers.InjectorDef = {
-            name: 'InjectorDef',
+            name: 'ɵInjectorDef',
             moduleName: CORE$1,
         };
         Identifiers.defineInjector = {
@@ -15239,7 +15240,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             moduleName: CORE$1,
         };
         Identifiers.NgModuleDef = {
-            name: 'NgModuleDef',
+            name: 'ɵNgModuleDef',
             moduleName: CORE$1,
         };
         Identifiers.defineNgModule = { name: 'ɵdefineNgModule', moduleName: CORE$1 };
@@ -15500,7 +15501,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 providers: meta.providers,
                 imports: meta.imports,
             })]);
-        var type = new ExpressionType(importExpr(Identifiers$1.InjectorDef));
+        var type = new ExpressionType(importExpr(Identifiers$1.InjectorDef, [new ExpressionType(meta.type)]));
         return { expression: expression, type: type };
     }
 
@@ -16130,7 +16131,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             this._bindingCode = [];
             this._postfixCode = [];
             this._temporary = temporaryAllocator(this._prefixCode, TEMPORARY_NAME);
-            this._projectionDefinitionIndex = -1;
             this._unsupported = unsupported;
             // Whether we are inside a translatable element (`<p i18n>... somewhere here ... </p>)
             this._inI18nSection = false;
@@ -16185,8 +16185,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
             // Output a `ProjectionDef` instruction when some `<ng-content>` are present
             if (hasNgContent) {
-                this._projectionDefinitionIndex = this.allocateDataSlot();
-                var parameters = [literal(this._projectionDefinitionIndex)];
+                var parameters = [];
                 // Only selectors with a non-default value are generated
                 if (ngContentSelectors.length > 1) {
                     var r3Selectors = ngContentSelectors.map(function (s) { return parseSelectorToR3Selector(s); });
@@ -16268,10 +16267,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         TemplateDefinitionBuilder.prototype.visitContent = function (ngContent) {
             var slot = this.allocateDataSlot();
             var selectorIndex = ngContent.selectorIndex;
-            var parameters = [
-                literal(slot),
-                literal(this._projectionDefinitionIndex),
-            ];
+            var parameters = [literal(slot)];
             var attributeAsList = [];
             ngContent.attributes.forEach(function (attribute) {
                 var name = attribute.name;
@@ -16513,7 +16509,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             // Generate element input bindings
             allOtherInputs.forEach(function (input) {
                 if (input.type === 4 /* Animation */) {
-                    _this._unsupported('animations');
+                    console.error('warning: animation bindings not yet supported');
+                    return;
                 }
                 var convertedBinding = _this.convertPropertyBinding(implicit, input.value);
                 var specialInstruction = SPECIAL_CASED_PROPERTIES_INSTRUCTION_MAP[input.name];
@@ -16951,7 +16948,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function compileDirectiveFromMetadata(meta, constantPool, bindingParser) {
         var definitionMap = baseDirectiveFields(meta, constantPool, bindingParser);
         var expression = importExpr(Identifiers$1.defineDirective).callFn([definitionMap.toLiteralMap()]);
-        var type = new ExpressionType(importExpr(Identifiers$1.DirectiveDef, [new ExpressionType(meta.type), new ExpressionType(literal(meta.selector || ''))]));
+        // On the type side, remove newlines from the selector as it will need to fit into a TypeScript
+        // string literal, which must be on one line.
+        var selectorForType = (meta.selector || '').replace(/\n/g, '');
+        var type = new ExpressionType(importExpr(Identifiers$1.DirectiveDef, [new ExpressionType(meta.type), new ExpressionType(literal(selectorForType))]));
         return { expression: expression, type: type };
     }
     /**
@@ -16996,8 +16996,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         if (pipesUsed.size) {
             definitionMap.set('pipes', literalArr(Array.from(pipesUsed)));
         }
+        // On the type side, remove newlines from the selector as it will need to fit into a TypeScript
+        // string literal, which must be on one line.
+        var selectorForType = (meta.selector || '').replace(/\n/g, '');
         var expression = importExpr(Identifiers$1.defineComponent).callFn([definitionMap.toLiteralMap()]);
-        var type = new ExpressionType(importExpr(Identifiers$1.ComponentDef, [new ExpressionType(meta.type), new ExpressionType(literal(meta.selector || ''))]));
+        var type = new ExpressionType(importExpr(Identifiers$1.ComponentDef, [new ExpressionType(meta.type), new ExpressionType(literal(selectorForType))]));
         return { expression: expression, type: type };
     }
     /**
@@ -26302,7 +26305,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * found in the LICENSE file at https://angular.io/license
      */
     /** Size of LViewData's header. Necessary to adjust for it when setting slots.  */
-    var HEADER_OFFSET = 15;
+    var HEADER_OFFSET = 16;
     // Below are constants for LViewData indices to help us look up LViewData members
     // without having to remember the specific indices.
     // Uglify will inline these when minifying so there shouldn't be a cost.
@@ -26358,7 +26361,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     function queueLifecycleHooks(flags, tView) {
         if (tView.firstTemplatePass) {
-            var start = flags >> 13 /* DirectiveStartingIndexShift */;
+            var start = flags >> 14 /* DirectiveStartingIndexShift */;
             var count = flags & 4095 /* DirectiveCountMask */;
             var end = start + count;
             // It's necessary to loop through the directives at elementEnd() (rather than processing in
@@ -26525,6 +26528,24 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    // TODO: cleanup once the code is merged in angular/angular
+    var RendererStyleFlags3;
+    (function (RendererStyleFlags3) {
+        RendererStyleFlags3[RendererStyleFlags3["Important"] = 1] = "Important";
+        RendererStyleFlags3[RendererStyleFlags3["DashCase"] = 2] = "DashCase";
+    })(RendererStyleFlags3 || (RendererStyleFlags3 = {}));
+    /** Returns whether the `renderer` is a `ProceduralRenderer3` */
+    function isProceduralRenderer(renderer) {
+        return !!(renderer.listen);
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     function assertNodeType(node, type) {
         assertDefined(node, 'should be called with a node');
         assertEqual(node.tNode.type, type, "should be a " + typeName(type));
@@ -26557,24 +26578,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    // TODO: cleanup once the code is merged in angular/angular
-    var RendererStyleFlags3;
-    (function (RendererStyleFlags3) {
-        RendererStyleFlags3[RendererStyleFlags3["Important"] = 1] = "Important";
-        RendererStyleFlags3[RendererStyleFlags3["DashCase"] = 2] = "DashCase";
-    })(RendererStyleFlags3 || (RendererStyleFlags3 = {}));
-    /** Returns whether the `renderer` is a `ProceduralRenderer3` */
-    function isProceduralRenderer(renderer) {
-        return !!(renderer.listen);
-    }
 
     /**
      * @license
@@ -26669,29 +26672,19 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return parent ? node.view[parent.index] : node.view[HOST_NODE];
     }
     /**
-     * Get the next node in the LNode tree, taking into account the place where a node is
-     * projected (in the shadow DOM) rather than where it comes from (in the light DOM).
+     * Stack used to keep track of projection nodes in walkLNodeTree.
      *
-     * @param node The node whose next node in the LNode tree must be found.
-     * @return LNode|null The next sibling in the LNode tree.
+     * This is deliberately created outside of walkLNodeTree to avoid allocating
+     * a new array each time the function is called. Instead the array will be
+     * re-used by each invocation. This works because the function is not reentrant.
      */
-    function getNextLNodeWithProjection(node) {
-        var pNextOrParent = node.pNextOrParent;
-        if (pNextOrParent) {
-            // The node is projected
-            var isLastProjectedNode = pNextOrParent.tNode.type === 1 /* Projection */;
-            // returns pNextOrParent if we are not at the end of the list, null otherwise
-            return isLastProjectedNode ? null : pNextOrParent;
-        }
-        // returns node.next because the the node is not projected
-        return getNextLNode(node);
-    }
+    var projectionNodeStack = [];
     /**
      * Walks a tree of LNodes, applying a transformation on the LElement nodes, either only on the first
      * one found, or on all of them.
      *
      * @param startingNode the node from which the walk is started.
-     * @param rootNode the root node considered.
+     * @param rootNode the root node considered. This prevents walking past that node.
      * @param action identifies the action to be performed on the LElement nodes.
      * @param renderer the current renderer.
      * @param renderParentNode Optional the render parent node to be set in all LContainerNodes found,
@@ -26701,18 +26694,19 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     function walkLNodeTree(startingNode, rootNode, action, renderer, renderParentNode, beforeNode) {
         var node = startingNode;
+        var projectionNodeIndex = -1;
         while (node) {
             var nextNode = null;
             var parent_1 = renderParentNode ? renderParentNode.native : null;
-            if (node.tNode.type === 3 /* Element */) {
+            var nodeType = node.tNode.type;
+            if (nodeType === 3 /* Element */) {
                 // Execute the action
                 executeNodeAction(action, renderer, parent_1, node.native, beforeNode);
                 if (node.dynamicLContainerNode) {
                     executeNodeAction(action, renderer, parent_1, node.dynamicLContainerNode.native, beforeNode);
                 }
-                nextNode = getNextLNode(node);
             }
-            else if (node.tNode.type === 0 /* Container */) {
+            else if (nodeType === 0 /* Container */) {
                 executeNodeAction(action, renderer, parent_1, node.native, beforeNode);
                 var lContainerNode = node;
                 var childContainerData = lContainerNode.dynamicLContainerNode ?
@@ -26731,15 +26725,22 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                         lContainerNode.native;
                 }
             }
-            else if (node.tNode.type === 1 /* Projection */) {
-                // For Projection look at the first projected node
-                nextNode = node.data.head;
+            else if (nodeType === 1 /* Projection */) {
+                var componentHost = findComponentHost(node.view);
+                var head = componentHost.tNode.projection[node.tNode.projection];
+                projectionNodeStack[++projectionNodeIndex] = node;
+                nextNode = head ? componentHost.data[PARENT][head.index] : null;
             }
             else {
                 // Otherwise look at the first child
                 nextNode = getChildLNode(node);
             }
-            if (nextNode == null) {
+            if (nextNode === null) {
+                nextNode = getNextLNode(node);
+                // this last node was projected, we need to get back down to its projection node
+                if (nextNode === null && (node.tNode.flags & 8192 /* isProjected */)) {
+                    nextNode = getNextLNode(projectionNodeStack[projectionNodeIndex--]);
+                }
                 /**
                  * Find the next node in the LNode tree, taking into account the place where a node is
                  * projected (in the shadow DOM) rather than where it comes from (in the light DOM).
@@ -26747,28 +26748,36 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                  * If there is no sibling node, then it goes to the next sibling of the parent node...
                  * until it reaches rootNode (at which point null is returned).
                  */
-                var currentNode = node;
-                node = getNextLNodeWithProjection(currentNode);
-                while (currentNode && !node) {
-                    // if node.pNextOrParent is not null here, it is not the next node
-                    // (because, at this point, nextNode is null, so it is the parent)
-                    currentNode = currentNode.pNextOrParent || getParentLNode(currentNode);
-                    if (currentNode === rootNode) {
+                while (node && !nextNode) {
+                    node = getParentLNode(node);
+                    if (node === null || node === rootNode)
                         return null;
+                    // When exiting a container, the beforeNode must be restored to the previous value
+                    if (!node.tNode.next && nodeType === 0 /* Container */) {
+                        beforeNode = node.native;
                     }
-                    // When the walker exits a container, the beforeNode has to be restored to the previous
-                    // value.
-                    if (currentNode && !currentNode.pNextOrParent &&
-                        currentNode.tNode.type === 0 /* Container */) {
-                        beforeNode = currentNode.native;
-                    }
-                    node = currentNode && getNextLNodeWithProjection(currentNode);
+                    nextNode = getNextLNode(node);
                 }
             }
-            else {
-                node = nextNode;
-            }
+            node = nextNode;
         }
+    }
+    /**
+     * Given a current view, finds the nearest component's host (LElement).
+     *
+     * @param lViewData LViewData for which we want a host element node
+     * @returns The host node
+     */
+    function findComponentHost(lViewData) {
+        var viewRootLNode = lViewData[HOST_NODE];
+        while (viewRootLNode.tNode.type === 2 /* View */) {
+            ngDevMode && assertDefined(lViewData[PARENT], 'lViewData.parent');
+            lViewData = lViewData[PARENT];
+            viewRootLNode = lViewData[HOST_NODE];
+        }
+        ngDevMode && assertNodeType(viewRootLNode, 3 /* Element */);
+        ngDevMode && assertDefined(viewRootLNode.data, 'node.data');
+        return viewRootLNode;
     }
     /**
      * NOTE: for performance reasons, the possible actions are inlined within the function instead of
@@ -27938,6 +27947,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         // This needs to be set before children are processed to support recursive components
         tView.firstTemplatePass = firstTemplatePass = false;
         setHostBindings(tView.hostBindings);
+        refreshContentQueries(tView);
         refreshChildComponents(tView.components);
     }
     /** Sets the host bindings for the current view. */
@@ -27948,6 +27958,16 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 var dirIndex = bindings[i];
                 var def = defs[dirIndex];
                 def.hostBindings && def.hostBindings(dirIndex, bindings[i + 1]);
+            }
+        }
+    }
+    /** Refreshes content queries for all directives in the given view. */
+    function refreshContentQueries(tView) {
+        if (tView.contentQueries != null) {
+            for (var i = 0; i < tView.contentQueries.length; i += 2) {
+                var directiveDefIdx = tView.contentQueries[i];
+                var directiveDef = tView.directives[directiveDefIdx];
+                directiveDef.contentQueriesRefresh(directiveDefIdx, tView.contentQueries[i + 1]);
             }
         }
     }
@@ -27981,7 +28001,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             renderer,
             sanitizer || null,
             null,
-            -1 // containerIndex
+            -1,
+            null,
         ];
     }
     /**
@@ -27997,7 +28018,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             data: state,
             queries: queries,
             tNode: null,
-            pNextOrParent: null,
             dynamicLContainerNode: null
         };
     }
@@ -28328,7 +28348,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var tNode = previousOrParentNode.tNode;
         var count = tNode.flags & 4095 /* DirectiveCountMask */;
         if (count > 0) {
-            var start = tNode.flags >> 13 /* DirectiveStartingIndexShift */;
+            var start = tNode.flags >> 14 /* DirectiveStartingIndexShift */;
             var end = start + count;
             var tDirectives = tView.directives;
             for (var i = start; i < end; i++) {
@@ -28426,6 +28446,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             pipeDestroyHooks: null,
             cleanup: null,
             hostBindings: null,
+            contentQueries: null,
             components: null,
             directiveRegistry: typeof directives === 'function' ? directives() : directives,
             pipeRegistry: typeof pipes === 'function' ? pipes() : pipes,
@@ -28706,7 +28727,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             parent: parent,
             dynamicContainerNode: null,
             detached: null,
-            stylingTemplate: null
+            stylingTemplate: null,
+            projection: null
         };
     }
     /**
@@ -28730,7 +28752,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var count = tNodeFlags & 4095 /* DirectiveCountMask */;
         var propStore = null;
         if (count > 0) {
-            var start = tNodeFlags >> 13 /* DirectiveStartingIndexShift */;
+            var start = tNodeFlags >> 14 /* DirectiveStartingIndexShift */;
             var end = start + count;
             var isInput = direction === 0 /* Input */;
             var defs = tView.directives;
@@ -28942,7 +28964,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     //// Directive
     //////////////////////////
     /**
-     * Create a directive.
+     * Create a directive and their associated content queries.
      *
      * NOTE: directives can be created in order other than the index order. They can also
      *       be retrieved before they are created in which case the value will be null.
@@ -28950,23 +28972,26 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * @param directive The directive instance.
      * @param directiveDef DirectiveDef object which contains information about the template.
      */
-    function directiveCreate(index, directive, directiveDef) {
-        var instance = baseDirectiveCreate(index, directive, directiveDef);
+    function directiveCreate(directiveDefIdx, directive, directiveDef) {
+        var instance = baseDirectiveCreate(directiveDefIdx, directive, directiveDef);
         ngDevMode && assertDefined(previousOrParentNode.tNode, 'previousOrParentNode.tNode');
         var tNode = previousOrParentNode.tNode;
         var isComponent = directiveDef.template;
         if (isComponent) {
-            addComponentLogic(index, directive, directiveDef);
+            addComponentLogic(directiveDefIdx, directive, directiveDef);
         }
         if (firstTemplatePass) {
             // Init hooks are queued now so ngOnInit is called in host components before
             // any projected components.
-            queueInitHooks(index, directiveDef.onInit, directiveDef.doCheck, tView);
+            queueInitHooks(directiveDefIdx, directiveDef.onInit, directiveDef.doCheck, tView);
             if (directiveDef.hostBindings)
-                queueHostBindingForCheck(index);
+                queueHostBindingForCheck(directiveDefIdx);
         }
         if (tNode && tNode.attrs) {
-            setInputsFromAttrs(index, instance, directiveDef.inputs, tNode);
+            setInputsFromAttrs(directiveDefIdx, instance, directiveDef.inputs, tNode);
+        }
+        if (directiveDef.contentQueries) {
+            directiveDef.contentQueries();
         }
         return instance;
     }
@@ -29005,7 +29030,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 // - save the index,
                 // - set the number of directives to 1
                 previousOrParentNode.tNode.flags =
-                    index << 13 /* DirectiveStartingIndexShift */ | flags & 4096 /* isComponent */ | 1;
+                    index << 14 /* DirectiveStartingIndexShift */ | flags & 4096 /* isComponent */ | 1;
             }
             else {
                 // Only need to bump the size when subsequent directives are created
@@ -29321,7 +29346,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         // Only attached CheckAlways components or attached, dirty OnPush components should be checked
         if (viewAttached(hostView) && hostView[FLAGS] & (2 /* CheckAlways */ | 4 /* Dirty */)) {
             ngDevMode && assertDataInRange(directiveIndex, directives);
-            detectChangesInternal(hostView, element, getDirectiveInstance(directives[directiveIndex]));
+            detectChangesInternal(hostView, element, directives[directiveIndex]);
         }
     }
     /** Returns a boolean for whether the view is attached */
@@ -29349,113 +29374,94 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * @param selectors A collection of parsed CSS selectors
      * @param rawSelectors A collection of CSS selectors in the raw, un-parsed form
      */
-    function projectionDef(index, selectors, textSelectors) {
-        var noOfNodeBuckets = selectors ? selectors.length + 1 : 1;
-        var distributedNodes = new Array(noOfNodeBuckets);
-        for (var i = 0; i < noOfNodeBuckets; i++) {
-            distributedNodes[i] = [];
-        }
+    function projectionDef(selectors, textSelectors) {
         var componentNode = findComponentHost(viewData);
-        var componentChild = getChildLNode(componentNode);
-        while (componentChild !== null) {
-            // execute selector matching logic if and only if:
-            // - there are selectors defined
-            // - a node has a tag name / attributes that can be matched
-            if (selectors) {
-                var matchedIdx = matchingSelectorIndex(componentChild.tNode, selectors, textSelectors);
-                distributedNodes[matchedIdx].push(componentChild);
+        if (!componentNode.tNode.projection) {
+            var noOfNodeBuckets = selectors ? selectors.length + 1 : 1;
+            var pData = componentNode.tNode.projection =
+                new Array(noOfNodeBuckets).fill(null);
+            var tails = pData.slice();
+            var componentChild = componentNode.tNode.child;
+            while (componentChild !== null) {
+                var bucketIndex = selectors ? matchingSelectorIndex(componentChild, selectors, textSelectors) : 0;
+                var nextNode = componentChild.next;
+                if (tails[bucketIndex]) {
+                    tails[bucketIndex].next = componentChild;
+                }
+                else {
+                    pData[bucketIndex] = componentChild;
+                    componentChild.next = null;
+                }
+                tails[bucketIndex] = componentChild;
+                componentChild = nextNode;
             }
-            else {
-                distributedNodes[0].push(componentChild);
-            }
-            componentChild = getNextLNode(componentChild);
         }
-        ngDevMode && assertDataNext(index + HEADER_OFFSET);
-        store(index, distributedNodes);
     }
     /**
-     * Updates the linked list of a projection node, by appending another linked list.
+     * Stack used to keep track of projection nodes in projection() instruction.
      *
-     * @param projectionNode Projection node whose projected nodes linked list has to be updated
-     * @param appendedFirst First node of the linked list to append.
-     * @param appendedLast Last node of the linked list to append.
+     * This is deliberately created outside of projection() to avoid allocating
+     * a new array each time the function is called. Instead the array will be
+     * re-used by each invocation. This works because the function is not reentrant.
      */
-    function addToProjectionList(projectionNode, appendedFirst, appendedLast) {
-        ngDevMode && assertEqual(!!appendedFirst, !!appendedLast, 'appendedFirst can be null if and only if appendedLast is also null');
-        if (!appendedLast) {
-            // nothing to append
-            return;
-        }
-        var projectionNodeData = projectionNode.data;
-        if (projectionNodeData.tail) {
-            projectionNodeData.tail.pNextOrParent = appendedFirst;
-        }
-        else {
-            projectionNodeData.head = appendedFirst;
-        }
-        projectionNodeData.tail = appendedLast;
-        appendedLast.pNextOrParent = projectionNode;
-    }
+    var projectionNodeStack$1 = [];
     /**
      * Inserts previously re-distributed projected nodes. This instruction must be preceded by a call
      * to the projectionDef instruction.
      *
      * @param nodeIndex
-     * @param localIndex - index under which distribution of projected nodes was memorized
      * @param selectorIndex:
      *        - 0 when the selector is `*` (or unspecified as this is the default value),
      *        - 1 based index of the selector from the {@link projectionDef}
      */
-    function projection(nodeIndex, localIndex, selectorIndex, attrs) {
+    function projection(nodeIndex, selectorIndex, attrs) {
         if (selectorIndex === void 0) { selectorIndex = 0; }
-        var node = createLNode(nodeIndex, 1 /* Projection */, null, null, attrs || null, { head: null, tail: null });
+        var node = createLNode(nodeIndex, 1 /* Projection */, null, null, attrs || null, null);
+        // We can't use viewData[HOST_NODE] because projection nodes can be nested in embedded views.
+        if (node.tNode.projection === null)
+            node.tNode.projection = selectorIndex;
         // `<ng-content>` has no content
         isParent = false;
-        // re-distribution of projectable nodes is memorized on a component's view level
-        var componentNode = findComponentHost(viewData);
-        var componentLView = componentNode.data;
-        var distributedNodes = loadInternal(localIndex, componentLView);
-        var nodesForSelector = distributedNodes[selectorIndex];
-        var currentParent = getParentLNode(node);
-        var canInsert = canInsertNativeNode(currentParent, viewData);
-        var renderParent = currentParent.tNode.type === 2 /* View */ ?
-            getParentLNode(currentParent).data[RENDER_PARENT] :
-            currentParent;
-        for (var i = 0; i < nodesForSelector.length; i++) {
-            var nodeToProject = nodesForSelector[i];
-            var head = nodeToProject;
-            var tail = nodeToProject;
-            if (nodeToProject.tNode.type === 1 /* Projection */) {
-                var previouslyProjected = nodeToProject.data;
-                head = previouslyProjected.head;
-                tail = previouslyProjected.tail;
-            }
-            addToProjectionList(node, head, tail);
-            if (canInsert) {
-                var currentNode = head;
-                while (currentNode) {
-                    appendProjectedNode(currentNode, currentParent, viewData, renderParent);
-                    currentNode = currentNode === tail ? null : currentNode.pNextOrParent;
+        // re-distribution of projectable nodes is stored on a component's view level
+        var parent = getParentLNode(node);
+        if (canInsertNativeNode(parent, viewData)) {
+            var componentNode = findComponentHost(viewData);
+            var nodeToProject = componentNode.tNode.projection[selectorIndex];
+            var projectedView = componentNode.view;
+            var projectionNodeIndex = -1;
+            var grandparent = void 0;
+            var renderParent = parent.tNode.type === 2 /* View */ ?
+                (grandparent = getParentLNode(parent)) &&
+                    grandparent.data[RENDER_PARENT] :
+                parent;
+            while (nodeToProject) {
+                if (nodeToProject.type === 1 /* Projection */) {
+                    // This node is re-projected, so we must go up the tree to get its projected nodes.
+                    var currentComponentHost = findComponentHost(projectedView);
+                    var firstProjectedNode = currentComponentHost.tNode.projection[nodeToProject.projection];
+                    if (firstProjectedNode) {
+                        projectionNodeStack$1[++projectionNodeIndex] = projectedView[nodeToProject.index];
+                        nodeToProject = firstProjectedNode;
+                        projectedView = currentComponentHost.view;
+                        continue;
+                    }
                 }
+                else {
+                    var lNode = projectedView[nodeToProject.index];
+                    lNode.tNode.flags |= 8192 /* isProjected */;
+                    appendProjectedNode(lNode, parent, viewData, renderParent);
+                }
+                // If we are finished with a list of re-projected nodes, we need to get
+                // back to the root projection node that was re-projected.
+                if (nodeToProject.next === null && projectedView !== componentNode.view) {
+                    // move down into the view of the component we're projecting right now
+                    var lNode = projectionNodeStack$1[projectionNodeIndex--];
+                    nodeToProject = lNode.tNode;
+                    projectedView = lNode.view;
+                }
+                nodeToProject = nodeToProject.next;
             }
         }
-    }
-    /**
-     * Given a current view, finds the nearest component's host (LElement).
-     *
-     * @param lViewData LViewData for which we want a host element node
-     * @returns The host node
-     */
-    function findComponentHost(lViewData) {
-        var viewRootLNode = lViewData[HOST_NODE];
-        while (viewRootLNode.tNode.type === 2 /* View */) {
-            ngDevMode && assertDefined(lViewData[PARENT], 'lViewData.parent');
-            lViewData = lViewData[PARENT];
-            viewRootLNode = lViewData[HOST_NODE];
-        }
-        ngDevMode && assertNodeType(viewRootLNode, 3 /* Element */);
-        ngDevMode && assertDefined(viewRootLNode.data, 'node.data');
-        return viewRootLNode;
     }
     /**
      * Adds LViewData or LContainer to the end of the current view tree.
@@ -29866,11 +29872,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
     function getTView() {
         return tView;
-    }
-    function getDirectiveInstance(instanceOrArray) {
-        // Directives with content queries store an array in directives[directiveIndex]
-        // with the instance as the first index
-        return Array.isArray(instanceOrArray) ? instanceOrArray[0] : instanceOrArray;
     }
     function assertPreviousIsParent() {
         assertEqual(isParent, true, 'previousOrParentNode should be a parent');
@@ -33294,6 +33295,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             factory: componentDefinition.factory,
             template: componentDefinition.template || null,
             hostBindings: componentDefinition.hostBindings || null,
+            contentQueries: componentDefinition.contentQueries || null,
+            contentQueriesRefresh: componentDefinition.contentQueriesRefresh || null,
             attributes: componentDefinition.attributes || null,
             inputs: invertObject(componentDefinition.inputs, declaredInputs),
             declaredInputs: declaredInputs,
@@ -34072,7 +34075,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return existingRef ?
             existingRef :
             new ViewRef(hostNode.data, hostNode
-                .view[DIRECTIVES][hostNode.tNode.flags >> 13 /* DirectiveStartingIndexShift */]);
+                .view[DIRECTIVES][hostNode.tNode.flags >> 14 /* DirectiveStartingIndexShift */]);
     }
     /**
      * If the node is an embedded view, traverses up the view tree to return the closest
@@ -34134,7 +34137,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 var nodeFlags = node.tNode.flags;
                 var count = nodeFlags & 4095 /* DirectiveCountMask */;
                 if (count !== 0) {
-                    var start = nodeFlags >> 13 /* DirectiveStartingIndexShift */;
+                    var start = nodeFlags >> 14 /* DirectiveStartingIndexShift */;
                     var end = start + count;
                     var defs = node.view[TVIEW].directives;
                     for (var i = start; i < end; i++) {
@@ -34142,7 +34145,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                         // and matches the given token, return the directive instance.
                         var directiveDef = defs[i];
                         if (directiveDef.type === token && directiveDef.diPublic) {
-                            return getDirectiveInstance(node.view[DIRECTIVES][i]);
+                            return node.view[DIRECTIVES][i];
                         }
                     }
                 }
@@ -39887,7 +39890,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var defs = node.view[TVIEW].directives;
         var flags = node.tNode.flags;
         var count = flags & 4095 /* DirectiveCountMask */;
-        var start = flags >> 13 /* DirectiveStartingIndexShift */;
+        var start = flags >> 14 /* DirectiveStartingIndexShift */;
         var end = start + count;
         for (var i = start; i < end; i++) {
             var def = defs[i];
@@ -41053,7 +41056,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('6.1.0-beta.3+86.sha-6b3f5dd');
+    var VERSION$2 = new Version$1('6.1.0-beta.3+129.sha-acdb672');
 
     var __extends$y = (undefined && undefined.__extends) || (function () {
         var extendStatics = Object.setPrototypeOf ||
@@ -51003,7 +51006,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('6.1.0-beta.3+86.sha-6b3f5dd');
+    var VERSION$3 = new Version$1('6.1.0-beta.3+129.sha-acdb672');
 
     /**
      * @license
