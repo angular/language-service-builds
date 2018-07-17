@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.9+11.sha-e97d961
+ * @license Angular v6.0.9+12.sha-0cbef9a
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -371,7 +371,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('6.0.9+11.sha-e97d961');
+    var VERSION = new Version('6.0.9+12.sha-0cbef9a');
 
     /**
      * @license
@@ -22839,7 +22839,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * found in the LICENSE file at https://angular.io/license
      */
     /**
-     * Type of the Component metadata.
+     * Type of the Directive metadata.
      */
     var Directive = makeDecorator('Directive', function (dir) {
         if (dir === void 0) { dir = {}; }
@@ -23998,7 +23998,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('6.0.9+11.sha-e97d961');
+    var VERSION$2 = new Version$1('6.0.9+12.sha-0cbef9a');
 
     /**
      * @license
@@ -42853,7 +42853,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('6.0.9+11.sha-e97d961');
+    var VERSION$3 = new Version$1('6.0.9+12.sha-0cbef9a');
 
     /**
      * @license
