@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.1.0-beta.3+117.sha-c8ad965
+ * @license Angular v6.1.0-beta.3+122.sha-d76531d
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1138,7 +1138,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('6.1.0-beta.3+117.sha-c8ad965');
+    var VERSION = new Version('6.1.0-beta.3+122.sha-d76531d');
 
     /**
      * @license
@@ -14298,10 +14298,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         Identifiers.elementEnd = { name: 'ɵe', moduleName: CORE$1 };
         Identifiers.elementProperty = { name: 'ɵp', moduleName: CORE$1 };
         Identifiers.elementAttribute = { name: 'ɵa', moduleName: CORE$1 };
-        Identifiers.elementClass = { name: 'ɵk', moduleName: CORE$1 };
-        Identifiers.elementClassNamed = { name: 'ɵkn', moduleName: CORE$1 };
+        Identifiers.elementClassProp = { name: 'ɵcp', moduleName: CORE$1 };
         Identifiers.elementStyling = { name: 'ɵs', moduleName: CORE$1 };
-        Identifiers.elementStyle = { name: 'ɵsm', moduleName: CORE$1 };
+        Identifiers.elementStylingMap = { name: 'ɵsm', moduleName: CORE$1 };
         Identifiers.elementStyleProp = { name: 'ɵsp', moduleName: CORE$1 };
         Identifiers.elementStylingApply = { name: 'ɵsa', moduleName: CORE$1 };
         Identifiers.containerCreate = { name: 'ɵC', moduleName: CORE$1 };
@@ -23027,7 +23026,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * found in the LICENSE file at https://angular.io/license
      */
     /**
-     * Type of the Component metadata.
+     * Type of the Directive metadata.
      */
     var Directive = makeDecorator('Directive', function (dir) {
         if (dir === void 0) { dir = {}; }
@@ -24197,7 +24196,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('6.1.0-beta.3+117.sha-c8ad965');
+    var VERSION$2 = new Version$1('6.1.0-beta.3+122.sha-d76531d');
 
     /**
      * @license
@@ -40779,6 +40778,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function assertComponentType(actual, msg) {
         if (msg === void 0) { msg = 'Type passed in is not ComponentType, it does not have \'ngComponentDef\' property.'; }
         if (!actual.ngComponentDef) {
+            debugger;
             throwError$1(msg);
         }
     }
@@ -41018,6 +41018,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return result;
     }
+    function assertDataInRangeInternal(index, arr) {
+        assertLessThan(index, arr ? arr.length : 0, 'index expected to be a valid data index');
+    }
+    function readElementValue(value) {
+        return (Array.isArray(value) ? value[0] : value);
+    }
 
     /**
      * @license
@@ -41039,7 +41045,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function getChildLNode(node) {
         if (node.tNode.child) {
             var viewData = node.tNode.type === 2 /* View */ ? node.data : node.view;
-            return viewData[node.tNode.child.index];
+            return readElementValue(viewData[node.tNode.child.index]);
         }
         return null;
     }
@@ -41051,7 +41057,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             return containerHostIndex === -1 ? null : node.view[containerHostIndex].dynamicLContainerNode;
         }
         var parent = node.tNode.parent;
-        return parent ? node.view[parent.index] : node.view[HOST_NODE];
+        return readElementValue(parent ? node.view[parent.index] : node.view[HOST_NODE]);
     }
     /**
      * Stack used to keep track of projection nodes in walkLNodeTree.
@@ -41396,7 +41402,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             for (var i = 0; i < cleanup.length - 1; i += 2) {
                 if (typeof cleanup[i] === 'string') {
                     // This is a listener with the native renderer
-                    var native = viewData[cleanup[i + 1]].native;
+                    var native = readElementValue(viewData[cleanup[i + 1]]).native;
                     var listener = viewData[CLEANUP][cleanup[i + 2]];
                     native.removeEventListener(cleanup[i], listener, cleanup[i + 3]);
                     i += 2;
@@ -42220,7 +42226,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function assertDataInRange(index, arr) {
         if (arr == null)
             arr = viewData;
-        assertLessThan(index, arr ? arr.length : 0, 'index expected to be a valid data index');
+        assertDataInRangeInternal(index, arr || viewData);
     }
     function assertDataNext(index, arr) {
         if (arr == null)
@@ -43966,7 +43972,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('6.1.0-beta.3+117.sha-c8ad965');
+    var VERSION$3 = new Version$1('6.1.0-beta.3+122.sha-d76531d');
 
     /**
      * @license
