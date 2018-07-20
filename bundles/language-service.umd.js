@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.1.0-rc.3+17.sha-bb58138
+ * @license Angular v6.1.0-rc.3+41.sha-8620373
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1138,7 +1138,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('6.1.0-rc.3+17.sha-bb58138');
+    var VERSION = new Version('6.1.0-rc.3+41.sha-8620373');
 
     /**
      * @license
@@ -8338,7 +8338,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         Identifiers.INJECTOR = { name: 'INJECTOR', moduleName: CORE };
         Identifiers.Injector = { name: 'Injector', moduleName: CORE };
         Identifiers.defineInjectable = { name: 'defineInjectable', moduleName: CORE };
-        Identifiers.InjectableDef = { name: 'InjectableDef', moduleName: CORE };
+        Identifiers.InjectableDef = { name: 'ɵInjectableDef', moduleName: CORE };
         Identifiers.ViewEncapsulation = {
             name: 'ViewEncapsulation',
             moduleName: CORE,
@@ -8431,6 +8431,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         BuiltinTypeName[BuiltinTypeName["Number"] = 4] = "Number";
         BuiltinTypeName[BuiltinTypeName["Function"] = 5] = "Function";
         BuiltinTypeName[BuiltinTypeName["Inferred"] = 6] = "Inferred";
+        BuiltinTypeName[BuiltinTypeName["None"] = 7] = "None";
     })(BuiltinTypeName || (BuiltinTypeName = {}));
     var BuiltinType = /** @class */ (function (_super) {
         __extends(BuiltinType, _super);
@@ -8447,10 +8448,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(Type$1));
     var ExpressionType = /** @class */ (function (_super) {
         __extends(ExpressionType, _super);
-        function ExpressionType(value, modifiers) {
+        function ExpressionType(value, modifiers, typeParams) {
             if (modifiers === void 0) { modifiers = null; }
+            if (typeParams === void 0) { typeParams = null; }
             var _this = _super.call(this, modifiers) || this;
             _this.value = value;
+            _this.typeParams = typeParams;
             return _this;
         }
         ExpressionType.prototype.visitType = function (visitor, context) {
@@ -8489,6 +8492,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     var NUMBER_TYPE = new BuiltinType(BuiltinTypeName.Number);
     var STRING_TYPE = new BuiltinType(BuiltinTypeName.String);
     var FUNCTION_TYPE = new BuiltinType(BuiltinTypeName.Function);
+    var NONE_TYPE = new BuiltinType(BuiltinTypeName.None);
     ///// Expressions
     var BinaryOperator;
     (function (BinaryOperator) {
@@ -8646,6 +8650,22 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             return new WriteVarExpr(this.name, value, null, this.sourceSpan);
         };
         return ReadVarExpr;
+    }(Expression));
+    var TypeofExpr = /** @class */ (function (_super) {
+        __extends(TypeofExpr, _super);
+        function TypeofExpr(expr, type, sourceSpan) {
+            var _this = _super.call(this, type, sourceSpan) || this;
+            _this.expr = expr;
+            return _this;
+        }
+        TypeofExpr.prototype.visitExpression = function (visitor, context) {
+            return visitor.visitTypeofExpr(this, context);
+        };
+        TypeofExpr.prototype.isEquivalent = function (e) {
+            return e instanceof TypeofExpr && e.expr.isEquivalent(this.expr);
+        };
+        TypeofExpr.prototype.isConstant = function () { return this.expr.isConstant(); };
+        return TypeofExpr;
     }(Expression));
     var WrappedNodeExpr = /** @class */ (function (_super) {
         __extends(WrappedNodeExpr, _super);
@@ -9303,6 +9323,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         AstTransformer.prototype.visitWrappedNodeExpr = function (ast, context) {
             return this.transformExpr(ast, context);
         };
+        AstTransformer.prototype.visitTypeofExpr = function (expr, context) {
+            return this.transformExpr(new TypeofExpr(expr.expr.visitExpression(this, context), expr.type, expr.sourceSpan), context);
+        };
         AstTransformer.prototype.visitWriteVarExpr = function (expr, context) {
             return this.transformExpr(new WriteVarExpr(expr.name, expr.value.visitExpression(this, context), expr.type, expr.sourceSpan), context);
         };
@@ -9421,12 +9444,17 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         RecursiveAstVisitor.prototype.visitBuiltinType = function (type, context) { return this.visitType(type, context); };
         RecursiveAstVisitor.prototype.visitExpressionType = function (type, context) {
+            var _this = this;
             type.value.visitExpression(this, context);
+            if (type.typeParams !== null) {
+                type.typeParams.forEach(function (param) { return _this.visitType(param, context); });
+            }
             return this.visitType(type, context);
         };
         RecursiveAstVisitor.prototype.visitArrayType = function (type, context) { return this.visitType(type, context); };
         RecursiveAstVisitor.prototype.visitMapType = function (type, context) { return this.visitType(type, context); };
         RecursiveAstVisitor.prototype.visitWrappedNodeExpr = function (ast, context) { return ast; };
+        RecursiveAstVisitor.prototype.visitTypeofExpr = function (ast, context) { return this.visitExpression(ast, context); };
         RecursiveAstVisitor.prototype.visitReadVarExpr = function (ast, context) {
             return this.visitExpression(ast, context);
         };
@@ -11748,6 +11776,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         AbstractEmitterVisitor.prototype.visitWrappedNodeExpr = function (ast, ctx) {
             throw new Error('Abstract emitter cannot visit WrappedNodeExpr.');
         };
+        AbstractEmitterVisitor.prototype.visitTypeofExpr = function (expr, ctx) {
+            ctx.print(expr, 'typeof ');
+            expr.expr.visitExpression(this, ctx);
+        };
         AbstractEmitterVisitor.prototype.visitReadVarExpr = function (ast, ctx) {
             var varName = ast.name;
             if (ast.builtin != null) {
@@ -12236,6 +12268,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 case BuiltinTypeName.String:
                     typeStr = 'string';
                     break;
+                case BuiltinTypeName.None:
+                    typeStr = 'never';
+                    break;
                 default:
                     throw new Error("Unsupported builtin type " + type.name);
             }
@@ -12243,7 +12278,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             return null;
         };
         _TsEmitterVisitor.prototype.visitExpressionType = function (ast, ctx) {
+            var _this = this;
             ast.value.visitExpression(this, ctx);
+            if (ast.typeParams !== null) {
+                ctx.print(null, '<');
+                this.visitAllObjects(function (type) { return _this.visitType(type, ctx); }, ast.typeParams, ctx, ',');
+                ctx.print(null, '>');
+            }
             return null;
         };
         _TsEmitterVisitor.prototype.visitArrayType = function (type, ctx) {
@@ -14341,6 +14382,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         Identifiers.injectElementRef = { name: 'ɵinjectElementRef', moduleName: CORE$1 };
         Identifiers.injectTemplateRef = { name: 'ɵinjectTemplateRef', moduleName: CORE$1 };
         Identifiers.injectViewContainerRef = { name: 'ɵinjectViewContainerRef', moduleName: CORE$1 };
+        Identifiers.injectChangeDetectorRef = { name: 'ɵinjectChangeDetectorRef', moduleName: CORE$1 };
         Identifiers.directiveInject = { name: 'ɵdirectiveInject', moduleName: CORE$1 };
         Identifiers.defineComponent = { name: 'ɵdefineComponent', moduleName: CORE$1 };
         Identifiers.ComponentDef = {
@@ -14434,6 +14476,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
          * The dependency is for `ViewContainerRef`.
          */
         R3ResolvedDependencyType[R3ResolvedDependencyType["ViewContainerRef"] = 5] = "ViewContainerRef";
+        /**
+         * The dependency is for `ChangeDetectorRef`.
+         */
+        R3ResolvedDependencyType[R3ResolvedDependencyType["ChangeDetectorRef"] = 6] = "ChangeDetectorRef";
     })(R3ResolvedDependencyType || (R3ResolvedDependencyType = {}));
 
     /**
@@ -24196,7 +24242,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('6.1.0-rc.3+17.sha-bb58138');
+    var VERSION$2 = new Version$1('6.1.0-rc.3+41.sha-8620373');
 
     /**
      * @license
@@ -25339,9 +25385,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             if (ngModule !== undefined) {
                 def = ngModule.ngInjectorDef;
             }
-            // If no definition was found, throw.
+            // If no definition was found, it might be from exports. Remove it.
             if (def == null) {
-                throw new Error("Type " + stringify$1(defType) + " is missing an ngInjectorDef definition.");
+                return;
             }
             // Check for circular dependencies.
             if (parents.has(defType)) {
@@ -25436,7 +25482,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function injectableDefRecord(token) {
         var def = token.ngInjectableDef;
         if (def === undefined) {
-            throw new Error("Type " + stringify$1(token) + " is missing an ngInjectableDef definition.");
+            if (token instanceof InjectionToken) {
+                throw new Error("Token " + stringify$1(token) + " is missing an ngInjectableDef definition.");
+            }
+            // TODO(alxhub): there should probably be a strict mode which throws here instead of assuming a
+            // no-args constructor.
+            return makeRecord(function () { return new token(); });
         }
         return makeRecord(def.factory);
     }
@@ -43972,7 +44023,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('6.1.0-rc.3+17.sha-bb58138');
+    var VERSION$3 = new Version$1('6.1.0-rc.3+41.sha-8620373');
 
     /**
      * @license
