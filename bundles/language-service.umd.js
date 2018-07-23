@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.1.0-beta.3+142.sha-082c994
+ * @license Angular v6.1.0-rc.3+70.sha-8a7b0e9
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1138,7 +1138,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('6.1.0-beta.3+142.sha-082c994');
+    var VERSION = new Version('6.1.0-rc.3+70.sha-8a7b0e9');
 
     /**
      * @license
@@ -8338,7 +8338,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         Identifiers.INJECTOR = { name: 'INJECTOR', moduleName: CORE };
         Identifiers.Injector = { name: 'Injector', moduleName: CORE };
         Identifiers.defineInjectable = { name: 'defineInjectable', moduleName: CORE };
-        Identifiers.InjectableDef = { name: 'InjectableDef', moduleName: CORE };
+        Identifiers.InjectableDef = { name: 'ɵInjectableDef', moduleName: CORE };
         Identifiers.ViewEncapsulation = {
             name: 'ViewEncapsulation',
             moduleName: CORE,
@@ -8431,6 +8431,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         BuiltinTypeName[BuiltinTypeName["Number"] = 4] = "Number";
         BuiltinTypeName[BuiltinTypeName["Function"] = 5] = "Function";
         BuiltinTypeName[BuiltinTypeName["Inferred"] = 6] = "Inferred";
+        BuiltinTypeName[BuiltinTypeName["None"] = 7] = "None";
     })(BuiltinTypeName || (BuiltinTypeName = {}));
     var BuiltinType = /** @class */ (function (_super) {
         __extends(BuiltinType, _super);
@@ -8447,10 +8448,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(Type$1));
     var ExpressionType = /** @class */ (function (_super) {
         __extends(ExpressionType, _super);
-        function ExpressionType(value, modifiers) {
+        function ExpressionType(value, modifiers, typeParams) {
             if (modifiers === void 0) { modifiers = null; }
+            if (typeParams === void 0) { typeParams = null; }
             var _this = _super.call(this, modifiers) || this;
             _this.value = value;
+            _this.typeParams = typeParams;
             return _this;
         }
         ExpressionType.prototype.visitType = function (visitor, context) {
@@ -8489,6 +8492,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     var NUMBER_TYPE = new BuiltinType(BuiltinTypeName.Number);
     var STRING_TYPE = new BuiltinType(BuiltinTypeName.String);
     var FUNCTION_TYPE = new BuiltinType(BuiltinTypeName.Function);
+    var NONE_TYPE = new BuiltinType(BuiltinTypeName.None);
     ///// Expressions
     var BinaryOperator;
     (function (BinaryOperator) {
@@ -8646,6 +8650,22 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             return new WriteVarExpr(this.name, value, null, this.sourceSpan);
         };
         return ReadVarExpr;
+    }(Expression));
+    var TypeofExpr = /** @class */ (function (_super) {
+        __extends(TypeofExpr, _super);
+        function TypeofExpr(expr, type, sourceSpan) {
+            var _this = _super.call(this, type, sourceSpan) || this;
+            _this.expr = expr;
+            return _this;
+        }
+        TypeofExpr.prototype.visitExpression = function (visitor, context) {
+            return visitor.visitTypeofExpr(this, context);
+        };
+        TypeofExpr.prototype.isEquivalent = function (e) {
+            return e instanceof TypeofExpr && e.expr.isEquivalent(this.expr);
+        };
+        TypeofExpr.prototype.isConstant = function () { return this.expr.isConstant(); };
+        return TypeofExpr;
     }(Expression));
     var WrappedNodeExpr = /** @class */ (function (_super) {
         __extends(WrappedNodeExpr, _super);
@@ -9303,6 +9323,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         AstTransformer.prototype.visitWrappedNodeExpr = function (ast, context) {
             return this.transformExpr(ast, context);
         };
+        AstTransformer.prototype.visitTypeofExpr = function (expr, context) {
+            return this.transformExpr(new TypeofExpr(expr.expr.visitExpression(this, context), expr.type, expr.sourceSpan), context);
+        };
         AstTransformer.prototype.visitWriteVarExpr = function (expr, context) {
             return this.transformExpr(new WriteVarExpr(expr.name, expr.value.visitExpression(this, context), expr.type, expr.sourceSpan), context);
         };
@@ -9421,12 +9444,17 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         RecursiveAstVisitor.prototype.visitBuiltinType = function (type, context) { return this.visitType(type, context); };
         RecursiveAstVisitor.prototype.visitExpressionType = function (type, context) {
+            var _this = this;
             type.value.visitExpression(this, context);
+            if (type.typeParams !== null) {
+                type.typeParams.forEach(function (param) { return _this.visitType(param, context); });
+            }
             return this.visitType(type, context);
         };
         RecursiveAstVisitor.prototype.visitArrayType = function (type, context) { return this.visitType(type, context); };
         RecursiveAstVisitor.prototype.visitMapType = function (type, context) { return this.visitType(type, context); };
         RecursiveAstVisitor.prototype.visitWrappedNodeExpr = function (ast, context) { return ast; };
+        RecursiveAstVisitor.prototype.visitTypeofExpr = function (ast, context) { return this.visitExpression(ast, context); };
         RecursiveAstVisitor.prototype.visitReadVarExpr = function (ast, context) {
             return this.visitExpression(ast, context);
         };
@@ -11748,6 +11776,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         AbstractEmitterVisitor.prototype.visitWrappedNodeExpr = function (ast, ctx) {
             throw new Error('Abstract emitter cannot visit WrappedNodeExpr.');
         };
+        AbstractEmitterVisitor.prototype.visitTypeofExpr = function (expr, ctx) {
+            ctx.print(expr, 'typeof ');
+            expr.expr.visitExpression(this, ctx);
+        };
         AbstractEmitterVisitor.prototype.visitReadVarExpr = function (ast, ctx) {
             var varName = ast.name;
             if (ast.builtin != null) {
@@ -12236,6 +12268,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 case BuiltinTypeName.String:
                     typeStr = 'string';
                     break;
+                case BuiltinTypeName.None:
+                    typeStr = 'never';
+                    break;
                 default:
                     throw new Error("Unsupported builtin type " + type.name);
             }
@@ -12243,7 +12278,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             return null;
         };
         _TsEmitterVisitor.prototype.visitExpressionType = function (ast, ctx) {
+            var _this = this;
             ast.value.visitExpression(this, ctx);
+            if (ast.typeParams !== null) {
+                ctx.print(null, '<');
+                this.visitAllObjects(function (type) { return _this.visitType(type, ctx); }, ast.typeParams, ctx, ',');
+                ctx.print(null, '>');
+            }
             return null;
         };
         _TsEmitterVisitor.prototype.visitArrayType = function (type, ctx) {
@@ -14298,10 +14339,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         Identifiers.elementEnd = { name: 'ɵe', moduleName: CORE$1 };
         Identifiers.elementProperty = { name: 'ɵp', moduleName: CORE$1 };
         Identifiers.elementAttribute = { name: 'ɵa', moduleName: CORE$1 };
-        Identifiers.elementClass = { name: 'ɵk', moduleName: CORE$1 };
-        Identifiers.elementClassNamed = { name: 'ɵkn', moduleName: CORE$1 };
+        Identifiers.elementClassProp = { name: 'ɵcp', moduleName: CORE$1 };
         Identifiers.elementStyling = { name: 'ɵs', moduleName: CORE$1 };
-        Identifiers.elementStyle = { name: 'ɵsm', moduleName: CORE$1 };
+        Identifiers.elementStylingMap = { name: 'ɵsm', moduleName: CORE$1 };
         Identifiers.elementStyleProp = { name: 'ɵsp', moduleName: CORE$1 };
         Identifiers.elementStylingApply = { name: 'ɵsa', moduleName: CORE$1 };
         Identifiers.containerCreate = { name: 'ɵC', moduleName: CORE$1 };
@@ -14342,6 +14382,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         Identifiers.injectElementRef = { name: 'ɵinjectElementRef', moduleName: CORE$1 };
         Identifiers.injectTemplateRef = { name: 'ɵinjectTemplateRef', moduleName: CORE$1 };
         Identifiers.injectViewContainerRef = { name: 'ɵinjectViewContainerRef', moduleName: CORE$1 };
+        Identifiers.injectChangeDetectorRef = { name: 'ɵinjectChangeDetectorRef', moduleName: CORE$1 };
         Identifiers.directiveInject = { name: 'ɵdirectiveInject', moduleName: CORE$1 };
         Identifiers.defineComponent = { name: 'ɵdefineComponent', moduleName: CORE$1 };
         Identifiers.ComponentDef = {
@@ -14435,6 +14476,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
          * The dependency is for `ViewContainerRef`.
          */
         R3ResolvedDependencyType[R3ResolvedDependencyType["ViewContainerRef"] = 5] = "ViewContainerRef";
+        /**
+         * The dependency is for `ChangeDetectorRef`.
+         */
+        R3ResolvedDependencyType[R3ResolvedDependencyType["ChangeDetectorRef"] = 6] = "ChangeDetectorRef";
     })(R3ResolvedDependencyType || (R3ResolvedDependencyType = {}));
 
     /**
@@ -22959,54 +23004,58 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * found in the LICENSE file at https://angular.io/license
      */
     /**
-     * Describes within the change detector which strategy will be used the next time change
-     * detection is triggered.
+     * The strategy that the default change detector uses to detect changes.
+     * When set, takes effect the next time change detection is triggered.
      *
      */
     var ChangeDetectionStrategy$1;
     (function (ChangeDetectionStrategy) {
         /**
-         * `OnPush` means that the change detector's mode will be initially set to `CheckOnce`.
+         * Use the `CheckOnce` strategy, meaning that automatic change detection is deactivated
+         * until reactivated by setting the strategy to `Default` (`CheckAlways`).
+         * Change detection can still be explictly invoked.
          */
         ChangeDetectionStrategy[ChangeDetectionStrategy["OnPush"] = 0] = "OnPush";
         /**
-         * `Default` means that the change detector's mode will be initially set to `CheckAlways`.
+         * Use the default `CheckAlways` strategy, in which change detection is automatic until
+         * explicitly deactivated.
          */
         ChangeDetectionStrategy[ChangeDetectionStrategy["Default"] = 1] = "Default";
     })(ChangeDetectionStrategy$1 || (ChangeDetectionStrategy$1 = {}));
     /**
-     * Describes the status of the detector.
+     * Defines the possible states of the default change detector.
+     * @see `ChangeDetectorRef`
      */
     var ChangeDetectorStatus;
     (function (ChangeDetectorStatus) {
         /**
-         * `CheckOnce` means that after calling detectChanges the mode of the change detector
-         * will become `Checked`.
+         * A state in which, after calling `detectChanges()`, the change detector
+         * state becomes `Checked`, and must be explicitly invoked or reactivated.
          */
         ChangeDetectorStatus[ChangeDetectorStatus["CheckOnce"] = 0] = "CheckOnce";
         /**
-         * `Checked` means that the change detector should be skipped until its mode changes to
-         * `CheckOnce`.
+         * A state in which change detection is skipped until the change detector mode
+         * becomes `CheckOnce`.
          */
         ChangeDetectorStatus[ChangeDetectorStatus["Checked"] = 1] = "Checked";
         /**
-         * `CheckAlways` means that after calling detectChanges the mode of the change detector
-         * will remain `CheckAlways`.
+         * A state in which change detection continues automatically until explictly
+         * deactivated.
          */
         ChangeDetectorStatus[ChangeDetectorStatus["CheckAlways"] = 2] = "CheckAlways";
         /**
-         * `Detached` means that the change detector sub tree is not a part of the main tree and
+         * A state in which a change detector sub tree is not a part of the main tree and
          * should be skipped.
          */
         ChangeDetectorStatus[ChangeDetectorStatus["Detached"] = 3] = "Detached";
         /**
-         * `Errored` means that the change detector encountered an error checking a binding
+         * Indicates that the change detector encountered an error checking a binding
          * or calling a directive lifecycle method and is now in an inconsistent state. Change
-         * detectors in this state will no longer detect changes.
+         * detectors in this state do not detect changes.
          */
         ChangeDetectorStatus[ChangeDetectorStatus["Errored"] = 4] = "Errored";
         /**
-         * `Destroyed` means that the change detector is destroyed.
+         * Indicates that the change detector has been destroyed.
          */
         ChangeDetectorStatus[ChangeDetectorStatus["Destroyed"] = 5] = "Destroyed";
     })(ChangeDetectorStatus || (ChangeDetectorStatus = {}));
@@ -23027,7 +23076,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * found in the LICENSE file at https://angular.io/license
      */
     /**
-     * Type of the Component metadata.
+     * Type of the Directive metadata.
      */
     var Directive = makeDecorator('Directive', function (dir) {
         if (dir === void 0) { dir = {}; }
@@ -24115,6 +24164,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * Decorator that marks the following class as an NgModule, and supplies
      * configuration metadata for it.
+     *
+     * * The `declarations` and `entryComponents` options configure the compiler
+     * with information about what belongs to the NgModule.
+     * * The `providers` options configures the NgModule's injector to provide
+     * dependencies the NgModule members.
+     * * The `imports` and `exports` options bring in members from other modules, and make
+     * this module's members available to others.
      */
     function (type, meta) { return (preR3NgModuleCompile)(type, meta); });
 
@@ -24197,7 +24253,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('6.1.0-beta.3+142.sha-082c994');
+    var VERSION$2 = new Version$1('6.1.0-rc.3+70.sha-8a7b0e9');
 
     /**
      * @license
@@ -25340,9 +25396,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             if (ngModule !== undefined) {
                 def = ngModule.ngInjectorDef;
             }
-            // If no definition was found, throw.
+            // If no definition was found, it might be from exports. Remove it.
             if (def == null) {
-                throw new Error("Type " + stringify$1(defType) + " is missing an ngInjectorDef definition.");
+                return;
             }
             // Check for circular dependencies.
             if (parents.has(defType)) {
@@ -25437,7 +25493,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function injectableDefRecord(token) {
         var def = token.ngInjectableDef;
         if (def === undefined) {
-            throw new Error("Type " + stringify$1(token) + " is missing an ngInjectableDef definition.");
+            if (token instanceof InjectionToken) {
+                throw new Error("Token " + stringify$1(token) + " is missing an ngInjectableDef definition.");
+            }
+            // TODO(alxhub): there should probably be a strict mode which throws here instead of assuming a
+            // no-args constructor.
+            return makeRecord(function () { return new token(); });
         }
         return makeRecord(def.factory);
     }
@@ -34118,13 +34179,15 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * found in the LICENSE file at https://angular.io/license
      */
     /**
-     * Use by directives and components to emit custom Events.
+     * Use in directives and components to emit custom events synchronously
+     * or asynchronously, and register handlers for those events by subscribing
+     * to an instance.
      *
      * @usageNotes
-     * ### Examples
      *
-     * In the following example, `Zippy` alternatively emits `open` and `close` events when its
-     * title gets clicked:
+     * In the following example, a component defines two output properties
+     * that create event emitters. When the title is clicked, the emitter
+     * emits an open or close event to toggle the current visibility state.
      *
      * ```
      * @Component({
@@ -34152,7 +34215,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * }
      * ```
      *
-     * The events payload can be accessed by the parameter `$event` on the components output event
+     * Access the event object with the `$event` argument passed to the output event
      * handler:
      *
      * ```
@@ -34170,11 +34233,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     var EventEmitter = /** @class */ (function (_super) {
         __extends(EventEmitter, _super);
         /**
-         * Creates an instance of {@link EventEmitter}, which depending on `isAsync`,
-         * delivers events synchronously or asynchronously.
+         * Creates an instance of this class that can
+         * deliver events synchronously or asynchronously.
          *
-         * @param isAsync By default, events are delivered synchronously (default value: `false`).
-         * Set to `true` for asynchronous event delivery.
+         * @param isAsync When true, deliver events asynchronously.
+         *
          */
         function EventEmitter(isAsync) {
             if (isAsync === void 0) { isAsync = false; }
@@ -34182,7 +34245,19 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             _this.__isAsync = isAsync;
             return _this;
         }
+        /**
+         * Emits an event containing a given value.
+         * @param value The value to emit.
+         */
         EventEmitter.prototype.emit = function (value) { _super.prototype.next.call(this, value); };
+        /**
+         * Registers handlers for events emitted by this instance.
+         * @param generatorOrNext When supplied, a custom handler for emitted events.
+         * @param error When supplied, a custom handler for an error notification
+         * from this emitter.
+         * @param complete When supplied, a custom handler for a completion
+         * notification from this emitter.
+         */
         EventEmitter.prototype.subscribe = function (generatorOrNext, error, complete) {
             var schedulerFn;
             var errorFn = function (err) { return null; };
@@ -35274,6 +35349,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }());
     var Renderer2Interceptor = new InjectionToken('Renderer2Interceptor');
     /**
+     * Creates and initializes a custom renderer that implements the `Renderer2` base class.
+     *
      * @experimental
      */
     var RendererFactory2 = /** @class */ (function () {
@@ -35282,14 +35359,33 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return RendererFactory2;
     }());
     /**
+     * Flags for renderer-specific style modifiers.
      * @experimental
      */
     var RendererStyleFlags2;
     (function (RendererStyleFlags2) {
+        /**
+         * Marks a style as important.
+         */
         RendererStyleFlags2[RendererStyleFlags2["Important"] = 1] = "Important";
+        /**
+         * Marks a style as using dash case naming (this-is-dash-case).
+         */
         RendererStyleFlags2[RendererStyleFlags2["DashCase"] = 2] = "DashCase";
     })(RendererStyleFlags2 || (RendererStyleFlags2 = {}));
     /**
+     * Extend this base class to implement custom rendering. By default, Angular
+     * renders a template into DOM. You can use custom rendering to intercept
+     * rendering calls, or to render to something other than DOM.
+     *
+     * Create your custom renderer using `RendererFactory2`.
+     *
+     * Use a custom renderer to bypass Angular's templating and
+     * make custom UI changes that can't be expressed declaratively.
+     * For example if you need to set a property or an attribute whose name is
+     * not statically known, use the `setProperty()` or
+     * `setAttribute()` method.
+     *
      * @experimental
      */
     var Renderer2 = /** @class */ (function () {
@@ -35516,6 +35612,47 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      *
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * Base class for Angular Views, provides change detection functionality.
+     * A change-detection tree collects all views that are to be checked for changes.
+     * Use the methods to add and remove views from the tree, initiate change-detection,
+     * and explicitly mark views as _dirty_, meaning that they have changed and need to be rerendered.
+     *
+     * @usageNotes
+     *
+     * The following examples demonstrate how to modify default change-detection behavior
+     * to perform explicit detection when needed.
+     *
+     * ### Use `markForCheck()` with `CheckOnce` strategy
+     *
+     * The following example sets the `OnPush` change-detection strategy for a component
+     * (`CheckOnce`, rather than the default `CheckAlways`), then forces a second check
+     * after an interval. See [live demo](http://plnkr.co/edit/GC512b?p=preview).
+     *
+     * <code-example path="core/ts/change_detect/change-detection.ts"
+     * region="mark-for-check"></code-example>
+     *
+     * ### Detach change detector to limit how often check occurs
+     *
+     * The following example defines a component with a large list of read-only data
+     * that is expected to change constantly, many times per second.
+     * To improve performance, we want to check and update the list
+     * less often than the changes actually occur. To do that, we detach
+     * the component's change detector and perform an explicit local check every five seconds.
+     *
+     * <code-example path="core/ts/change_detect/change-detection.ts" region="detach"></code-example>
+     *
+     *
+     * ### Reattaching a detached component
+     *
+     * The following example creates a component displaying live data.
+     * The component detaches its change detector from the main change detector tree
+     * when the `live` property is set to false, and reattaches it when the property
+     * becomes true.
+     *
+     * <code-example path="core/ts/change_detect/change-detection.ts" region="detach"></code-example>
+     *
      */
     var ChangeDetectorRef = /** @class */ (function () {
         function ChangeDetectorRef() {
@@ -40779,6 +40916,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function assertComponentType(actual, msg) {
         if (msg === void 0) { msg = 'Type passed in is not ComponentType, it does not have \'ngComponentDef\' property.'; }
         if (!actual.ngComponentDef) {
+            debugger;
             throwError$1(msg);
         }
     }
@@ -41018,6 +41156,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return result;
     }
+    function assertDataInRangeInternal(index, arr) {
+        assertLessThan(index, arr ? arr.length : 0, 'index expected to be a valid data index');
+    }
+    function readElementValue(value) {
+        return (Array.isArray(value) ? value[0] : value);
+    }
 
     /**
      * @license
@@ -41039,7 +41183,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function getChildLNode(node) {
         if (node.tNode.child) {
             var viewData = node.tNode.type === 2 /* View */ ? node.data : node.view;
-            return viewData[node.tNode.child.index];
+            return readElementValue(viewData[node.tNode.child.index]);
         }
         return null;
     }
@@ -41051,7 +41195,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             return containerHostIndex === -1 ? null : node.view[containerHostIndex].dynamicLContainerNode;
         }
         var parent = node.tNode.parent;
-        return parent ? node.view[parent.index] : node.view[HOST_NODE];
+        return readElementValue(parent ? node.view[parent.index] : node.view[HOST_NODE]);
     }
     /**
      * Stack used to keep track of projection nodes in walkLNodeTree.
@@ -41396,7 +41540,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             for (var i = 0; i < cleanup.length - 1; i += 2) {
                 if (typeof cleanup[i] === 'string') {
                     // This is a listener with the native renderer
-                    var native = viewData[cleanup[i + 1]].native;
+                    var native = readElementValue(viewData[cleanup[i + 1]]).native;
                     var listener = viewData[CLEANUP][cleanup[i + 2]];
                     native.removeEventListener(cleanup[i], listener, cleanup[i + 3]);
                     i += 2;
@@ -42220,7 +42364,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function assertDataInRange(index, arr) {
         if (arr == null)
             arr = viewData;
-        assertLessThan(index, arr ? arr.length : 0, 'index expected to be a valid data index');
+        assertDataInRangeInternal(index, arr || viewData);
     }
     function assertDataNext(index, arr) {
         if (arr == null)
@@ -43966,7 +44110,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('6.1.0-beta.3+142.sha-082c994');
+    var VERSION$3 = new Version$1('6.1.0-rc.3+70.sha-8a7b0e9');
 
     /**
      * @license
