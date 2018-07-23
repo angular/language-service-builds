@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.1.0-rc.3+51.sha-edef58f
+ * @license Angular v6.1.0-rc.3+53.sha-169e9dd
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1138,7 +1138,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('6.1.0-rc.3+51.sha-edef58f');
+    var VERSION = new Version('6.1.0-rc.3+53.sha-169e9dd');
 
     /**
      * @license
@@ -14374,6 +14374,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         Identifiers.pipeBindV = { name: 'ɵpbV', moduleName: CORE$1 };
         Identifiers.load = { name: 'ɵld', moduleName: CORE$1 };
         Identifiers.loadDirective = { name: 'ɵd', moduleName: CORE$1 };
+        Identifiers.loadQueryList = { name: 'ɵql', moduleName: CORE$1 };
         Identifiers.pipe = { name: 'ɵPp', moduleName: CORE$1 };
         Identifiers.projection = { name: 'ɵP', moduleName: CORE$1 };
         Identifiers.projectionDef = { name: 'ɵpD', moduleName: CORE$1 };
@@ -14414,11 +14415,19 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         Identifiers.definePipe = { name: 'ɵdefinePipe', moduleName: CORE$1 };
         Identifiers.query = { name: 'ɵQ', moduleName: CORE$1 };
         Identifiers.queryRefresh = { name: 'ɵqR', moduleName: CORE$1 };
+        Identifiers.registerContentQuery = { name: 'ɵQr', moduleName: CORE$1 };
         Identifiers.NgOnChangesFeature = { name: 'ɵNgOnChangesFeature', moduleName: CORE$1 };
         Identifiers.InheritDefinitionFeature = { name: 'ɵInheritDefinitionFeature', moduleName: CORE$1 };
         Identifiers.listener = { name: 'ɵL', moduleName: CORE$1 };
         // Reserve slots for pure functions
         Identifiers.reserveSlots = { name: 'ɵrS', moduleName: CORE$1 };
+        // sanitization-related functions
+        Identifiers.sanitizeHtml = { name: 'ɵzh', moduleName: CORE$1 };
+        Identifiers.sanitizeStyle = { name: 'ɵzs', moduleName: CORE$1 };
+        Identifiers.defaultStyleSanitizer = { name: 'ɵzss', moduleName: CORE$1 };
+        Identifiers.sanitizeResourceUrl = { name: 'ɵzr', moduleName: CORE$1 };
+        Identifiers.sanitizeScript = { name: 'ɵzc', moduleName: CORE$1 };
+        Identifiers.sanitizeUrl = { name: 'ɵzu', moduleName: CORE$1 };
         return Identifiers;
     }());
 
@@ -24253,7 +24262,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('6.1.0-rc.3+51.sha-edef58f');
+    var VERSION$2 = new Version$1('6.1.0-rc.3+53.sha-169e9dd');
 
     /**
      * @license
@@ -43112,6 +43121,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     // clang-format on
 
     /**
@@ -44125,7 +44142,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('6.1.0-rc.3+51.sha-edef58f');
+    var VERSION$3 = new Version$1('6.1.0-rc.3+53.sha-169e9dd');
 
     /**
      * @license
