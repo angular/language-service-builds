@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.1.0-rc.3+43.sha-7960d18
+ * @license Angular v6.1.0-rc.3+60.sha-2cb0f68
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1138,7 +1138,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('6.1.0-rc.3+43.sha-7960d18');
+    var VERSION = new Version('6.1.0-rc.3+60.sha-2cb0f68');
 
     /**
      * @license
@@ -14374,6 +14374,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         Identifiers.pipeBindV = { name: 'ɵpbV', moduleName: CORE$1 };
         Identifiers.load = { name: 'ɵld', moduleName: CORE$1 };
         Identifiers.loadDirective = { name: 'ɵd', moduleName: CORE$1 };
+        Identifiers.loadQueryList = { name: 'ɵql', moduleName: CORE$1 };
         Identifiers.pipe = { name: 'ɵPp', moduleName: CORE$1 };
         Identifiers.projection = { name: 'ɵP', moduleName: CORE$1 };
         Identifiers.projectionDef = { name: 'ɵpD', moduleName: CORE$1 };
@@ -14414,11 +14415,19 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         Identifiers.definePipe = { name: 'ɵdefinePipe', moduleName: CORE$1 };
         Identifiers.query = { name: 'ɵQ', moduleName: CORE$1 };
         Identifiers.queryRefresh = { name: 'ɵqR', moduleName: CORE$1 };
+        Identifiers.registerContentQuery = { name: 'ɵQr', moduleName: CORE$1 };
         Identifiers.NgOnChangesFeature = { name: 'ɵNgOnChangesFeature', moduleName: CORE$1 };
         Identifiers.InheritDefinitionFeature = { name: 'ɵInheritDefinitionFeature', moduleName: CORE$1 };
         Identifiers.listener = { name: 'ɵL', moduleName: CORE$1 };
         // Reserve slots for pure functions
         Identifiers.reserveSlots = { name: 'ɵrS', moduleName: CORE$1 };
+        // sanitization-related functions
+        Identifiers.sanitizeHtml = { name: 'ɵzh', moduleName: CORE$1 };
+        Identifiers.sanitizeStyle = { name: 'ɵzs', moduleName: CORE$1 };
+        Identifiers.defaultStyleSanitizer = { name: 'ɵzss', moduleName: CORE$1 };
+        Identifiers.sanitizeResourceUrl = { name: 'ɵzr', moduleName: CORE$1 };
+        Identifiers.sanitizeScript = { name: 'ɵzc', moduleName: CORE$1 };
+        Identifiers.sanitizeUrl = { name: 'ɵzu', moduleName: CORE$1 };
         return Identifiers;
     }());
 
@@ -24253,7 +24262,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('6.1.0-rc.3+43.sha-7960d18');
+    var VERSION$2 = new Version$1('6.1.0-rc.3+60.sha-2cb0f68');
 
     /**
      * @license
@@ -40840,6 +40849,18 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    function cloneNgModuleDefinition(def) {
+        var providers = Array.from(def.providers);
+        var modules = Array.from(def.modules);
+        var providersByKey = {};
+        for (var key in def.providersByKey) {
+            providersByKey[key] = def.providersByKey[key];
+        }
+        return {
+            factory: def.factory,
+            isRoot: def.isRoot, providers: providers, modules: modules, providersByKey: providersByKey,
+        };
+    }
     var NgModuleFactory_ = /** @class */ (function (_super) {
         __extends(NgModuleFactory_, _super);
         function NgModuleFactory_(moduleType, _bootstrapComponents, _ngModuleDefFactory) {
@@ -40854,7 +40875,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         NgModuleFactory_.prototype.create = function (parentInjector) {
             initServicesIfNeeded();
-            var def = resolveDefinition(this._ngModuleDefFactory);
+            // Clone the NgModuleDefinition so that any tree shakeable provider definition
+            // added to this instance of the NgModuleRef doesn't affect the cached copy.
+            // See https://github.com/angular/angular/issues/25018.
+            var def = cloneNgModuleDefinition(resolveDefinition(this._ngModuleDefFactory));
             return Services.createNgModuleRef(this.moduleType, parentInjector || Injector.NULL, this._bootstrapComponents, def);
         };
         return NgModuleFactory_;
@@ -40958,6 +40982,75 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * If this is the first template pass, any ngOnInit or ngDoCheck hooks will be queued into
+     * TView.initHooks during directiveCreate.
+     *
+     * The directive index and hook type are encoded into one number (1st bit: type, remaining bits:
+     * directive index), then saved in the even indices of the initHooks array. The odd indices
+     * hold the hook functions themselves.
+     *
+     * @param index The index of the directive in LViewData[DIRECTIVES]
+     * @param hooks The static hooks map on the directive def
+     * @param tView The current TView
+     */
+    function queueInitHooks(index, onInit, doCheck, tView) {
+        ngDevMode &&
+            assertEqual(tView.firstTemplatePass, true, 'Should only be called on first template pass');
+        if (onInit) {
+            (tView.initHooks || (tView.initHooks = [])).push(index, onInit);
+        }
+        if (doCheck) {
+            (tView.initHooks || (tView.initHooks = [])).push(index, doCheck);
+            (tView.checkHooks || (tView.checkHooks = [])).push(index, doCheck);
+        }
+    }
+    /**
+     * Loops through the directives on a node and queues all their hooks except ngOnInit
+     * and ngDoCheck, which are queued separately in directiveCreate.
+     */
+    function queueLifecycleHooks(flags, tView) {
+        if (tView.firstTemplatePass) {
+            var start = flags >> 14 /* DirectiveStartingIndexShift */;
+            var count = flags & 4095 /* DirectiveCountMask */;
+            var end = start + count;
+            // It's necessary to loop through the directives at elementEnd() (rather than processing in
+            // directiveCreate) so we can preserve the current hook order. Content, view, and destroy
+            // hooks for projected components and directives must be called *before* their hosts.
+            for (var i = start; i < end; i++) {
+                var def = tView.directives[i];
+                queueContentHooks(def, tView, i);
+                queueViewHooks(def, tView, i);
+                queueDestroyHooks(def, tView, i);
+            }
+        }
+    }
+    /** Queues afterContentInit and afterContentChecked hooks on TView */
+    function queueContentHooks(def, tView, i) {
+        if (def.afterContentInit) {
+            (tView.contentHooks || (tView.contentHooks = [])).push(i, def.afterContentInit);
+        }
+        if (def.afterContentChecked) {
+            (tView.contentHooks || (tView.contentHooks = [])).push(i, def.afterContentChecked);
+            (tView.contentCheckHooks || (tView.contentCheckHooks = [])).push(i, def.afterContentChecked);
+        }
+    }
+    /** Queues afterViewInit and afterViewChecked hooks on TView */
+    function queueViewHooks(def, tView, i) {
+        if (def.afterViewInit) {
+            (tView.viewHooks || (tView.viewHooks = [])).push(i, def.afterViewInit);
+        }
+        if (def.afterViewChecked) {
+            (tView.viewHooks || (tView.viewHooks = [])).push(i, def.afterViewChecked);
+            (tView.viewCheckHooks || (tView.viewCheckHooks = [])).push(i, def.afterViewChecked);
+        }
+    }
+    /** Queues onDestroy hooks on TView */
+    function queueDestroyHooks(def, tView, i) {
+        if (def.onDestroy != null) {
+            (tView.destroyHooks || (tView.destroyHooks = [])).push(i, def.onDestroy);
+        }
+    }
     /**
      * Calls onInit and doCheck calls if they haven't already been called.
      *
@@ -41075,6 +41168,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function isProceduralRenderer(renderer) {
         return !!(renderer.listen);
     }
+    var domRendererFactory3 = {
+        createRenderer: function (hostElement, rendererType) { return document; }
+    };
 
     /**
      * @license
@@ -41122,15 +41218,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         if (value == null)
             return '';
         return '' + value;
-    }
-    /**
-     *  Function that throws a "not implemented" error so it's clear certain
-     *  behaviors/methods aren't yet ready.
-     *
-     * @returns Not implemented error
-     */
-    function notImplemented() {
-        return new Error('NotImplemented');
     }
     /**
      * Flattens an array in non-recursive way. Input arrays are not modified.
@@ -41908,25 +41995,32 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var _isParent = isParent;
         var _previousOrParentNode = previousOrParentNode;
         var oldView;
-        try {
-            isParent = true;
-            previousOrParentNode = null;
-            oldView = enterView(viewNode.data, viewNode);
-            tView.template(rf, context);
-            if (rf & 2 /* Update */) {
-                refreshView();
-            }
-            else {
-                viewNode.data[TVIEW].firstTemplatePass = firstTemplatePass = false;
-            }
+        if (viewNode.data[PARENT] == null && viewNode.data[CONTEXT] && !tView.template) {
+            // This is a root view inside the view tree
+            tickRootContext(viewNode.data[CONTEXT]);
         }
-        finally {
-            // renderEmbeddedTemplate() is called twice in fact, once for creation only and then once for
-            // update. When for creation only, leaveView() must not trigger view hooks, nor clean flags.
-            var isCreationOnly = (rf & 1 /* Create */) === 1 /* Create */;
-            leaveView(oldView, isCreationOnly);
-            isParent = _isParent;
-            previousOrParentNode = _previousOrParentNode;
+        else {
+            try {
+                isParent = true;
+                previousOrParentNode = null;
+                oldView = enterView(viewNode.data, viewNode);
+                namespaceHTML();
+                tView.template(rf, context);
+                if (rf & 2 /* Update */) {
+                    refreshView();
+                }
+                else {
+                    viewNode.data[TVIEW].firstTemplatePass = firstTemplatePass = false;
+                }
+            }
+            finally {
+                // renderEmbeddedTemplate() is called twice in fact, once for creation only and then once for
+                // update. When for creation only, leaveView() must not trigger view hooks, nor clean flags.
+                var isCreationOnly = (rf & 1 /* Create */) === 1 /* Create */;
+                leaveView(oldView, isCreationOnly);
+                isParent = _isParent;
+                previousOrParentNode = _previousOrParentNode;
+            }
         }
         return viewNode;
     }
@@ -41937,6 +42031,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 rendererFactory.begin();
             }
             if (template) {
+                namespaceHTML();
                 template(getRenderFlags(hostView), componentOrContext);
                 refreshView();
             }
@@ -41967,6 +42062,35 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function getRenderFlags(view) {
         return view[FLAGS] & 1 /* CreationMode */ ? 1 /* Create */ | 2 /* Update */ :
             2 /* Update */;
+    }
+    //////////////////////////
+    //// Namespace
+    //////////////////////////
+    var _currentNamespace = null;
+    function namespaceHTML() {
+        _currentNamespace = null;
+    }
+    /**
+     * Creates a native element from a tag name, using a renderer.
+     * @param name the tag name
+     * @param overriddenRenderer Optional A renderer to override the default one
+     * @returns the element created
+     */
+    function elementCreate(name, overriddenRenderer) {
+        var native;
+        var rendererToUse = overriddenRenderer || renderer;
+        if (isProceduralRenderer(rendererToUse)) {
+            native = rendererToUse.createElement(name, _currentNamespace);
+        }
+        else {
+            if (_currentNamespace === null) {
+                native = rendererToUse.createElement(name);
+            }
+            else {
+                native = rendererToUse.createElementNS(_currentNamespace, name);
+            }
+        }
+        return native;
     }
     /** Sets the context for a ChangeDetectorRef to the given instance. */
     function initChangeDetectorIfExisting(injector, instance, view) {
@@ -42339,6 +42463,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var template = hostTView.template;
         var viewQuery = hostTView.viewQuery;
         try {
+            namespaceHTML();
             createViewQuery(viewQuery, hostView[FLAGS], component);
             template(getRenderFlags(hostView), component);
             refreshView();
@@ -42393,6 +42518,26 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             clean: CLEAN_PROMISE,
         };
     }
+    /**
+     * Used to enable lifecycle hooks on the root component.
+     *
+     * Include this feature when calling `renderComponent` if the root component
+     * you are rendering has lifecycle hooks defined. Otherwise, the hooks won't
+     * be called properly.
+     *
+     * Example:
+     *
+     * ```
+     * renderComponent(AppComponent, {features: [RootLifecycleHooks]});
+     * ```
+     */
+    function LifecycleHooksFeature(component, def) {
+        var elementNode = _getComponentHostLElementNode(component);
+        // Root component is always created at dir index 0
+        var tView = elementNode.view[TVIEW];
+        queueInitHooks(0, def.onInit, def.doCheck, tView);
+        queueLifecycleHooks(elementNode.tNode.flags, tView);
+    }
 
     /**
      * @license
@@ -42428,6 +42573,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     var ViewRef$1 = /** @class */ (function () {
         function ViewRef(_view, context) {
             this._view = _view;
+            this._appRef = null;
+            this._viewContainerRef = null;
+            /**
+             * @internal
+             */
+            this._lViewNode = null;
             this.context = context;
         }
         /** @internal */
@@ -42442,7 +42593,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             enumerable: true,
             configurable: true
         });
-        ViewRef.prototype.destroy = function () { destroyLView(this._view); };
+        ViewRef.prototype.destroy = function () {
+            if (this._viewContainerRef && viewAttached(this._view)) {
+                this._viewContainerRef.detach(this._viewContainerRef.indexOf(this));
+                this._viewContainerRef = null;
+            }
+            destroyLView(this._view);
+        };
         ViewRef.prototype.onDestroy = function (callback) { storeCleanupFn(this._view, callback); };
         /**
          * Marks a view and all of its ancestors dirty.
@@ -42619,126 +42776,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
          * introduce other changes.
          */
         ViewRef.prototype.checkNoChanges = function () { checkNoChanges(this.context); };
+        ViewRef.prototype.attachToViewContainerRef = function (vcRef) { this._viewContainerRef = vcRef; };
         ViewRef.prototype.detachFromAppRef = function () { this._appRef = null; };
         ViewRef.prototype.attachToAppRef = function (appRef) { this._appRef = appRef; };
         return ViewRef;
     }());
-    var EmbeddedViewRef$1 = /** @class */ (function (_super) {
-        __extends(EmbeddedViewRef, _super);
-        function EmbeddedViewRef(viewNode, template, context) {
-            var _this = _super.call(this, viewNode.data, context) || this;
-            _this._viewContainerRef = null;
-            _this._lViewNode = viewNode;
-            return _this;
-        }
-        EmbeddedViewRef.prototype.destroy = function () {
-            if (this._viewContainerRef && viewAttached(this._view)) {
-                this._viewContainerRef.detach(this._viewContainerRef.indexOf(this));
-                this._viewContainerRef = null;
-            }
-            _super.prototype.destroy.call(this);
-        };
-        EmbeddedViewRef.prototype.attachToViewContainerRef = function (vcRef) { this._viewContainerRef = vcRef; };
-        return EmbeddedViewRef;
-    }(ViewRef$1));
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * A ref to a container that enables adding and removing views from that container
-     * imperatively.
-     */
-    var ViewContainerRef$1 = /** @class */ (function () {
-        function ViewContainerRef(_lContainerNode) {
-            this._lContainerNode = _lContainerNode;
-            this._viewRefs = [];
-        }
-        ViewContainerRef.prototype.clear = function () {
-            var lContainer = this._lContainerNode.data;
-            while (lContainer[VIEWS].length) {
-                this.remove(0);
-            }
-        };
-        ViewContainerRef.prototype.get = function (index) { return this._viewRefs[index] || null; };
-        Object.defineProperty(ViewContainerRef.prototype, "length", {
-            get: function () {
-                var lContainer = this._lContainerNode.data;
-                return lContainer[VIEWS].length;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        ViewContainerRef.prototype.createEmbeddedView = function (templateRef, context, index) {
-            var adjustedIdx = this._adjustIndex(index);
-            var viewRef = templateRef
-                .createEmbeddedView(context || {}, this._lContainerNode, adjustedIdx);
-            viewRef.attachToViewContainerRef(this);
-            this._viewRefs.splice(adjustedIdx, 0, viewRef);
-            return viewRef;
-        };
-        ViewContainerRef.prototype.createComponent = function (componentFactory, index, injector, projectableNodes, ngModule) {
-            throw notImplemented();
-        };
-        ViewContainerRef.prototype.insert = function (viewRef, index) {
-            if (viewRef.destroyed) {
-                throw new Error('Cannot insert a destroyed View in a ViewContainer!');
-            }
-            var lViewNode = viewRef._lViewNode;
-            var adjustedIdx = this._adjustIndex(index);
-            insertView(this._lContainerNode, lViewNode, adjustedIdx);
-            var views = this._lContainerNode.data[VIEWS];
-            var beforeNode = adjustedIdx + 1 < views.length ?
-                (getChildLNode(views[adjustedIdx + 1])).native :
-                this._lContainerNode.native;
-            addRemoveViewFromContainer(this._lContainerNode, lViewNode, true, beforeNode);
-            viewRef.attachToViewContainerRef(this);
-            this._viewRefs.splice(adjustedIdx, 0, viewRef);
-            return viewRef;
-        };
-        ViewContainerRef.prototype.move = function (viewRef, newIndex) {
-            var index = this.indexOf(viewRef);
-            this.detach(index);
-            this.insert(viewRef, this._adjustIndex(newIndex));
-            return viewRef;
-        };
-        ViewContainerRef.prototype.indexOf = function (viewRef) { return this._viewRefs.indexOf(viewRef); };
-        ViewContainerRef.prototype.remove = function (index) {
-            var adjustedIdx = this._adjustIndex(index, -1);
-            removeView(this._lContainerNode, adjustedIdx);
-            this._viewRefs.splice(adjustedIdx, 1);
-        };
-        ViewContainerRef.prototype.detach = function (index) {
-            var adjustedIdx = this._adjustIndex(index, -1);
-            var lViewNode = detachView(this._lContainerNode, adjustedIdx);
-            return this._viewRefs.splice(adjustedIdx, 1)[0] || null;
-        };
-        ViewContainerRef.prototype._adjustIndex = function (index, shift) {
-            if (shift === void 0) { shift = 0; }
-            if (index == null) {
-                return this._lContainerNode.data[VIEWS].length + shift;
-            }
-            if (ngDevMode) {
-                assertGreaterThan(index, -1, 'index must be positive');
-                // +1 because it's legal to insert at the end.
-                assertLessThan(index, this._lContainerNode.data[VIEWS].length + 1 + shift, 'index');
-            }
-            return index;
-        };
-        return ViewContainerRef;
-    }());
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
 
     /**
      * @license
@@ -42805,15 +42847,19 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             enumerable: true,
             configurable: true
         });
-        ComponentFactory$$1.prototype.create = function (parentComponentInjector, projectableNodes, rootSelectorOrNode, ngModule) {
-            ngDevMode && assertDefined(ngModule, 'ngModule should always be defined');
-            var rendererFactory = ngModule ? ngModule.injector.get(RendererFactory2) : document;
-            var hostNode = locateHostElement(rendererFactory, rootSelectorOrNode);
+        ComponentFactory$$1.prototype.create = function (injector, projectableNodes, rootSelectorOrNode, ngModule) {
+            var isInternalRootView = rootSelectorOrNode === undefined;
+            var rendererFactory = ngModule ? ngModule.injector.get(RendererFactory2) : domRendererFactory3;
+            var hostNode = isInternalRootView ?
+                elementCreate(this.selector, rendererFactory.createRenderer(null, this.componentDef.rendererType)) :
+                locateHostElement(rendererFactory, rootSelectorOrNode);
             // The first index of the first selector is the tag name.
             var componentTag = this.componentDef.selectors[0][0];
-            var rootContext = ngModule.injector.get(ROOT_CONTEXT);
+            var rootContext = ngModule && !isInternalRootView ?
+                ngModule.injector.get(ROOT_CONTEXT) :
+                createRootContext(requestAnimationFrame.bind(window));
             // Create the root view. Uses empty TView and ContentTemplate.
-            var rootView = createLViewData(rendererFactory.createRenderer(hostNode, this.componentDef.rendererType), createTView(-1, null, null, null, null), null, this.componentDef.onPush ? 4 /* Dirty */ : 2 /* CheckAlways */);
+            var rootView = createLViewData(rendererFactory.createRenderer(hostNode, this.componentDef.rendererType), createTView(-1, null, null, null, null), rootContext, this.componentDef.onPush ? 4 /* Dirty */ : 2 /* CheckAlways */);
             rootView[INJECTOR$1] = ngModule && ngModule.injector || null;
             // rootView is the parent when bootstrapping
             var oldView = enterView(rootView, null);
@@ -42827,14 +42873,47 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 // Create directive instance with factory() and store at index 0 in directives array
                 rootContext.components.push(component = baseDirectiveCreate(0, this.componentDef.factory(), this.componentDef));
                 initChangeDetectorIfExisting(elementNode.nodeInjector, component, elementNode.data);
+                // TODO: should LifecycleHooksFeature and other host features be generated by the compiler and
+                // executed here?
+                // Angular 5 reference: https://stackblitz.com/edit/lifecycle-hooks-vcref
+                LifecycleHooksFeature(component, this.componentDef);
+                // Transform the arrays of native nodes into a LNode structure that can be consumed by the
+                // projection instruction. This is needed to support the reprojection of these nodes.
+                if (projectableNodes) {
+                    var index = 0;
+                    var projection$$1 = elementNode.tNode.projection = [];
+                    for (var i = 0; i < projectableNodes.length; i++) {
+                        var nodeList = projectableNodes[i];
+                        var firstTNode = null;
+                        var previousTNode = null;
+                        for (var j = 0; j < nodeList.length; j++) {
+                            var lNode = createLNode(++index, 3 /* Element */, nodeList[j], null, null);
+                            if (previousTNode) {
+                                previousTNode.next = lNode.tNode;
+                            }
+                            else {
+                                firstTNode = lNode.tNode;
+                            }
+                            previousTNode = lNode.tNode;
+                        }
+                        projection$$1.push(firstTNode);
+                    }
+                }
+                // Execute the template in creation mode only, and then turn off the CreationMode flag
+                renderEmbeddedTemplate(elementNode, elementNode.data[TVIEW], component, 1 /* Create */);
+                elementNode.data[FLAGS] &= ~1 /* CreationMode */;
             }
             finally {
                 enterView(oldView, null);
                 if (rendererFactory.end)
                     rendererFactory.end();
             }
-            // TODO(misko): this is the wrong injector here.
-            return new ComponentRef$1(this.componentType, component, rootView, ngModule.injector, hostNode);
+            var componentRef = new ComponentRef$1(this.componentType, component, rootView, injector, hostNode);
+            if (isInternalRootView) {
+                // The host element of the internal root view is attached to the component's host view node
+                componentRef.hostView._lViewNode.tNode.child = elementNode.tNode;
+            }
+            return componentRef;
         };
         return ComponentFactory$$1;
     }(ComponentFactory));
@@ -42862,6 +42941,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
              * We might  want to think about creating a fake component for the top level? Or overwrite
              * detectChanges with a function that calls tickRootContext? */
             _this.hostView = _this.changeDetectorRef = new ViewRef$1(rootView, instance);
+            _this.hostView._lViewNode = createLNode(-1, 2 /* View */, null, null, null, rootView);
             _this.injector = injector;
             _this.location = new ElementRef(hostNode);
             _this.componentType = componentType;
@@ -42878,6 +42958,111 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         return ComponentRef$$1;
     }(ComponentRef));
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    var componentFactoryResolver = new ComponentFactoryResolver$1();
+    /**
+     * A ref to a container that enables adding and removing views from that container
+     * imperatively.
+     */
+    var ViewContainerRef$1 = /** @class */ (function () {
+        function ViewContainerRef(_lContainerNode) {
+            this._lContainerNode = _lContainerNode;
+            this._viewRefs = [];
+        }
+        ViewContainerRef.prototype.clear = function () {
+            var lContainer = this._lContainerNode.data;
+            while (lContainer[VIEWS].length) {
+                this.remove(0);
+            }
+        };
+        ViewContainerRef.prototype.get = function (index) { return this._viewRefs[index] || null; };
+        Object.defineProperty(ViewContainerRef.prototype, "length", {
+            get: function () {
+                var lContainer = this._lContainerNode.data;
+                return lContainer[VIEWS].length;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        ViewContainerRef.prototype.createEmbeddedView = function (templateRef, context, index) {
+            var adjustedIdx = this._adjustIndex(index);
+            var viewRef = templateRef
+                .createEmbeddedView(context || {}, this._lContainerNode, adjustedIdx);
+            viewRef.attachToViewContainerRef(this);
+            this._viewRefs.splice(adjustedIdx, 0, viewRef);
+            return viewRef;
+        };
+        ViewContainerRef.prototype.createComponent = function (componentFactory, index, injector, projectableNodes, ngModuleRef) {
+            var contextInjector = injector || this.parentInjector;
+            if (!ngModuleRef && contextInjector) {
+                ngModuleRef = contextInjector.get(NgModuleRef);
+            }
+            var componentRef = componentFactory.create(contextInjector, projectableNodes, undefined, ngModuleRef);
+            this.insert(componentRef.hostView, index);
+            return componentRef;
+        };
+        ViewContainerRef.prototype.insert = function (viewRef, index) {
+            if (viewRef.destroyed) {
+                throw new Error('Cannot insert a destroyed View in a ViewContainer!');
+            }
+            var lViewNode = viewRef._lViewNode;
+            var adjustedIdx = this._adjustIndex(index);
+            insertView(this._lContainerNode, lViewNode, adjustedIdx);
+            var views = this._lContainerNode.data[VIEWS];
+            var beforeNode = adjustedIdx + 1 < views.length ?
+                (getChildLNode(views[adjustedIdx + 1])).native :
+                this._lContainerNode.native;
+            addRemoveViewFromContainer(this._lContainerNode, lViewNode, true, beforeNode);
+            viewRef.attachToViewContainerRef(this);
+            this._viewRefs.splice(adjustedIdx, 0, viewRef);
+            return viewRef;
+        };
+        ViewContainerRef.prototype.move = function (viewRef, newIndex) {
+            var index = this.indexOf(viewRef);
+            this.detach(index);
+            this.insert(viewRef, this._adjustIndex(newIndex));
+            return viewRef;
+        };
+        ViewContainerRef.prototype.indexOf = function (viewRef) { return this._viewRefs.indexOf(viewRef); };
+        ViewContainerRef.prototype.remove = function (index) {
+            var adjustedIdx = this._adjustIndex(index, -1);
+            removeView(this._lContainerNode, adjustedIdx);
+            this._viewRefs.splice(adjustedIdx, 1);
+        };
+        ViewContainerRef.prototype.detach = function (index) {
+            var adjustedIdx = this._adjustIndex(index, -1);
+            var lViewNode = detachView(this._lContainerNode, adjustedIdx);
+            return this._viewRefs.splice(adjustedIdx, 1)[0] || null;
+        };
+        ViewContainerRef.prototype._adjustIndex = function (index, shift) {
+            if (shift === void 0) { shift = 0; }
+            if (index == null) {
+                return this._lContainerNode.data[VIEWS].length + shift;
+            }
+            if (ngDevMode) {
+                assertGreaterThan(index, -1, 'index must be positive');
+                // +1 because it's legal to insert at the end.
+                assertLessThan(index, this._lContainerNode.data[VIEWS].length + 1 + shift, 'index');
+            }
+            return index;
+        };
+        return ViewContainerRef;
+    }());
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
 
     /**
      * @license
@@ -43073,6 +43258,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         return QueryList_;
     }());
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
 
     /**
      * @license
@@ -44110,7 +44303,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('6.1.0-rc.3+43.sha-7960d18');
+    var VERSION$3 = new Version$1('6.1.0-rc.3+60.sha-2cb0f68');
 
     /**
      * @license
