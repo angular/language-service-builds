@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.0.9+32.sha-6a74ef0
+ * @license Angular v6.0.9+44.sha-c7d147e
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -371,7 +371,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('6.0.9+32.sha-6a74ef0');
+    var VERSION = new Version('6.0.9+44.sha-c7d147e');
 
     /**
      * @license
@@ -22779,54 +22779,58 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * found in the LICENSE file at https://angular.io/license
      */
     /**
-     * Describes within the change detector which strategy will be used the next time change
-     * detection is triggered.
+     * The strategy that the default change detector uses to detect changes.
+     * When set, takes effect the next time change detection is triggered.
      *
      */
     var ChangeDetectionStrategy$1;
     (function (ChangeDetectionStrategy) {
         /**
-         * `OnPush` means that the change detector's mode will be initially set to `CheckOnce`.
+         * Use the `CheckOnce` strategy, meaning that automatic change detection is deactivated
+         * until reactivated by setting the strategy to `Default` (`CheckAlways`).
+         * Change detection can still be explictly invoked.
          */
         ChangeDetectionStrategy[ChangeDetectionStrategy["OnPush"] = 0] = "OnPush";
         /**
-         * `Default` means that the change detector's mode will be initially set to `CheckAlways`.
+         * Use the default `CheckAlways` strategy, in which change detection is automatic until
+         * explicitly deactivated.
          */
         ChangeDetectionStrategy[ChangeDetectionStrategy["Default"] = 1] = "Default";
     })(ChangeDetectionStrategy$1 || (ChangeDetectionStrategy$1 = {}));
     /**
-     * Describes the status of the detector.
+     * Defines the possible states of the default change detector.
+     * @see `ChangeDetectorRef`
      */
     var ChangeDetectorStatus;
     (function (ChangeDetectorStatus) {
         /**
-         * `CheckOnce` means that after calling detectChanges the mode of the change detector
-         * will become `Checked`.
+         * A state in which, after calling `detectChanges()`, the change detector
+         * state becomes `Checked`, and must be explicitly invoked or reactivated.
          */
         ChangeDetectorStatus[ChangeDetectorStatus["CheckOnce"] = 0] = "CheckOnce";
         /**
-         * `Checked` means that the change detector should be skipped until its mode changes to
-         * `CheckOnce`.
+         * A state in which change detection is skipped until the change detector mode
+         * becomes `CheckOnce`.
          */
         ChangeDetectorStatus[ChangeDetectorStatus["Checked"] = 1] = "Checked";
         /**
-         * `CheckAlways` means that after calling detectChanges the mode of the change detector
-         * will remain `CheckAlways`.
+         * A state in which change detection continues automatically until explictly
+         * deactivated.
          */
         ChangeDetectorStatus[ChangeDetectorStatus["CheckAlways"] = 2] = "CheckAlways";
         /**
-         * `Detached` means that the change detector sub tree is not a part of the main tree and
+         * A state in which a change detector sub tree is not a part of the main tree and
          * should be skipped.
          */
         ChangeDetectorStatus[ChangeDetectorStatus["Detached"] = 3] = "Detached";
         /**
-         * `Errored` means that the change detector encountered an error checking a binding
+         * Indicates that the change detector encountered an error checking a binding
          * or calling a directive lifecycle method and is now in an inconsistent state. Change
-         * detectors in this state will no longer detect changes.
+         * detectors in this state do not detect changes.
          */
         ChangeDetectorStatus[ChangeDetectorStatus["Errored"] = 4] = "Errored";
         /**
-         * `Destroyed` means that the change detector is destroyed.
+         * Indicates that the change detector has been destroyed.
          */
         ChangeDetectorStatus[ChangeDetectorStatus["Destroyed"] = 5] = "Destroyed";
     })(ChangeDetectorStatus || (ChangeDetectorStatus = {}));
@@ -23906,6 +23910,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * Decorator that marks the following class as an NgModule, and supplies
      * configuration metadata for it.
+     *
+     * * The `declarations` and `entryComponents` options configure the compiler
+     * with information about what belongs to the NgModule.
+     * * The `providers` options configures the NgModule's injector to provide
+     * dependencies the NgModule members.
+     * * The `imports` and `exports` options bring in members from other modules, and make
+     * this module's members available to others.
      */
     function (moduleType, metadata) {
         var imports = (metadata && metadata.imports) || [];
@@ -23998,7 +24009,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('6.0.9+32.sha-6a74ef0');
+    var VERSION$2 = new Version$1('6.0.9+44.sha-c7d147e');
 
     /**
      * @license
@@ -33590,13 +33601,15 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * found in the LICENSE file at https://angular.io/license
      */
     /**
-     * Use by directives and components to emit custom Events.
+     * Use in directives and components to emit custom events synchronously
+     * or asynchronously, and register handlers for those events by subscribing
+     * to an instance.
      *
      * @usageNotes
-     * ### Examples
      *
-     * In the following example, `Zippy` alternatively emits `open` and `close` events when its
-     * title gets clicked:
+     * In the following example, a component defines two output properties
+     * that create event emitters. When the title is clicked, the emitter
+     * emits an open or close event to toggle the current visibility state.
      *
      * ```
      * @Component({
@@ -33624,7 +33637,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * }
      * ```
      *
-     * The events payload can be accessed by the parameter `$event` on the components output event
+     * Access the event object with the `$event` argument passed to the output event
      * handler:
      *
      * ```
@@ -33642,11 +33655,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     var EventEmitter = /** @class */ (function (_super) {
         __extends(EventEmitter, _super);
         /**
-         * Creates an instance of {@link EventEmitter}, which depending on `isAsync`,
-         * delivers events synchronously or asynchronously.
+         * Creates an instance of this class that can
+         * deliver events synchronously or asynchronously.
          *
-         * @param isAsync By default, events are delivered synchronously (default value: `false`).
-         * Set to `true` for asynchronous event delivery.
+         * @param isAsync When true, deliver events asynchronously.
+         *
          */
         function EventEmitter(isAsync) {
             if (isAsync === void 0) { isAsync = false; }
@@ -33654,7 +33667,19 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             _this.__isAsync = isAsync;
             return _this;
         }
+        /**
+         * Emits an event containing a given value.
+         * @param value The value to emit.
+         */
         EventEmitter.prototype.emit = function (value) { _super.prototype.next.call(this, value); };
+        /**
+         * Registers handlers for events emitted by this instance.
+         * @param generatorOrNext When supplied, a custom handler for emitted events.
+         * @param error When supplied, a custom handler for an error notification
+         * from this emitter.
+         * @param complete When supplied, a custom handler for a completion
+         * notification from this emitter.
+         */
         EventEmitter.prototype.subscribe = function (generatorOrNext, error, complete) {
             var schedulerFn;
             var errorFn = function (err) { return null; };
@@ -34746,6 +34771,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }());
     var Renderer2Interceptor = new InjectionToken('Renderer2Interceptor');
     /**
+     * Creates and initializes a custom renderer that implements the `Renderer2` base class.
+     *
      * @experimental
      */
     var RendererFactory2 = /** @class */ (function () {
@@ -34754,14 +34781,33 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return RendererFactory2;
     }());
     /**
+     * Flags for renderer-specific style modifiers.
      * @experimental
      */
     var RendererStyleFlags2;
     (function (RendererStyleFlags2) {
+        /**
+         * Marks a style as important.
+         */
         RendererStyleFlags2[RendererStyleFlags2["Important"] = 1] = "Important";
+        /**
+         * Marks a style as using dash case naming (this-is-dash-case).
+         */
         RendererStyleFlags2[RendererStyleFlags2["DashCase"] = 2] = "DashCase";
     })(RendererStyleFlags2 || (RendererStyleFlags2 = {}));
     /**
+     * Extend this base class to implement custom rendering. By default, Angular
+     * renders a template into DOM. You can use custom rendering to intercept
+     * rendering calls, or to render to something other than DOM.
+     *
+     * Create your custom renderer using `RendererFactory2`.
+     *
+     * Use a custom renderer to bypass Angular's templating and
+     * make custom UI changes that can't be expressed declaratively.
+     * For example if you need to set a property or an attribute whose name is
+     * not statically known, use the `setProperty()` or
+     * `setAttribute()` method.
+     *
      * @experimental
      */
     var Renderer2 = /** @class */ (function () {
@@ -34988,6 +35034,47 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      *
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * Base class for Angular Views, provides change detection functionality.
+     * A change-detection tree collects all views that are to be checked for changes.
+     * Use the methods to add and remove views from the tree, initiate change-detection,
+     * and explicitly mark views as _dirty_, meaning that they have changed and need to be rerendered.
+     *
+     * @usageNotes
+     *
+     * The following examples demonstrate how to modify default change-detection behavior
+     * to perform explicit detection when needed.
+     *
+     * ### Use `markForCheck()` with `CheckOnce` strategy
+     *
+     * The following example sets the `OnPush` change-detection strategy for a component
+     * (`CheckOnce`, rather than the default `CheckAlways`), then forces a second check
+     * after an interval. See [live demo](http://plnkr.co/edit/GC512b?p=preview).
+     *
+     * <code-example path="core/ts/change_detect/change-detection.ts"
+     * region="mark-for-check"></code-example>
+     *
+     * ### Detach change detector to limit how often check occurs
+     *
+     * The following example defines a component with a large list of read-only data
+     * that is expected to change constantly, many times per second.
+     * To improve performance, we want to check and update the list
+     * less often than the changes actually occur. To do that, we detach
+     * the component's change detector and perform an explicit local check every five seconds.
+     *
+     * <code-example path="core/ts/change_detect/change-detection.ts" region="detach"></code-example>
+     *
+     *
+     * ### Reattaching a detached component
+     *
+     * The following example creates a component displaying live data.
+     * The component detaches its change detector from the main change detector tree
+     * when the `live` property is set to false, and reattaches it when the property
+     * becomes true.
+     *
+     * <code-example path="core/ts/change_detect/change-detection.ts" region="detach"></code-example>
+     *
      */
     var ChangeDetectorRef = /** @class */ (function () {
         function ChangeDetectorRef() {
@@ -42853,7 +42940,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('6.0.9+32.sha-6a74ef0');
+    var VERSION$3 = new Version$1('6.0.9+44.sha-c7d147e');
 
     /**
      * @license
