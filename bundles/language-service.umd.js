@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.1.0-rc.3+60.sha-2cb0f68
+ * @license Angular v6.1.0-rc.3+64.sha-1ceddb6
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1186,7 +1186,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('6.1.0-rc.3+60.sha-2cb0f68');
+    var VERSION = new Version('6.1.0-rc.3+64.sha-1ceddb6');
 
     /**
      * @license
@@ -30235,7 +30235,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var different = bindingUpdated2(v0, v1);
         return different ? prefix + stringify$2(v0) + i0 + stringify$2(v1) + suffix : NO_CHANGE;
     }
-    /** Creates an interpolation bindings with 3 expressions. */
+    /** Creates an interpolation binding with 3 expressions. */
     function interpolation3(prefix, v0, i0, v1, i1, v2, suffix) {
         var different = bindingUpdated2(v0, v1);
         different = bindingUpdated(v2) || different;
@@ -47535,7 +47535,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('6.1.0-rc.3+60.sha-2cb0f68');
+    var VERSION$2 = new Version$1('6.1.0-rc.3+64.sha-1ceddb6');
 
     /**
      * @license
@@ -52253,7 +52253,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('6.1.0-rc.3+60.sha-2cb0f68');
+    var VERSION$3 = new Version$1('6.1.0-rc.3+64.sha-1ceddb6');
 
     /**
      * @license
