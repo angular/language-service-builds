@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.1.0+19.sha-ce98634
+ * @license Angular v6.1.0+25.sha-8e65891
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1144,7 +1144,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('6.1.0+19.sha-ce98634');
+    var VERSION = new Version('6.1.0+25.sha-8e65891');
 
     /**
      * @license
@@ -24268,7 +24268,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('6.1.0+19.sha-ce98634');
+    var VERSION$2 = new Version$1('6.1.0+25.sha-8e65891');
 
     /**
      * @license
@@ -41341,18 +41341,18 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * imperatively.
      */
     var ViewContainerRef$1 = /** @class */ (function () {
-        function ViewContainerRef(_lContainerNode) {
+        function ViewContainerRef$$1(_lContainerNode) {
             this._lContainerNode = _lContainerNode;
             this._viewRefs = [];
         }
-        ViewContainerRef.prototype.clear = function () {
+        ViewContainerRef$$1.prototype.clear = function () {
             var lContainer = this._lContainerNode.data;
             while (lContainer[VIEWS].length) {
                 this.remove(0);
             }
         };
-        ViewContainerRef.prototype.get = function (index) { return this._viewRefs[index] || null; };
-        Object.defineProperty(ViewContainerRef.prototype, "length", {
+        ViewContainerRef$$1.prototype.get = function (index) { return this._viewRefs[index] || null; };
+        Object.defineProperty(ViewContainerRef$$1.prototype, "length", {
             get: function () {
                 var lContainer = this._lContainerNode.data;
                 return lContainer[VIEWS].length;
@@ -41360,7 +41360,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             enumerable: true,
             configurable: true
         });
-        ViewContainerRef.prototype.createEmbeddedView = function (templateRef, context, index) {
+        ViewContainerRef$$1.prototype.createEmbeddedView = function (templateRef, context, index) {
             var adjustedIdx = this._adjustIndex(index);
             var viewRef = templateRef
                 .createEmbeddedView(context || {}, this._lContainerNode, adjustedIdx);
@@ -41368,7 +41368,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             this._viewRefs.splice(adjustedIdx, 0, viewRef);
             return viewRef;
         };
-        ViewContainerRef.prototype.createComponent = function (componentFactory, index, injector, projectableNodes, ngModuleRef) {
+        ViewContainerRef$$1.prototype.createComponent = function (componentFactory, index, injector, projectableNodes, ngModuleRef) {
             var contextInjector = injector || this.parentInjector;
             if (!ngModuleRef && contextInjector) {
                 ngModuleRef = contextInjector.get(NgModuleRef);
@@ -41377,7 +41377,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             this.insert(componentRef.hostView, index);
             return componentRef;
         };
-        ViewContainerRef.prototype.insert = function (viewRef, index) {
+        ViewContainerRef$$1.prototype.insert = function (viewRef, index) {
             if (viewRef.destroyed) {
                 throw new Error('Cannot insert a destroyed View in a ViewContainer!');
             }
@@ -41393,24 +41393,24 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             this._viewRefs.splice(adjustedIdx, 0, viewRef);
             return viewRef;
         };
-        ViewContainerRef.prototype.move = function (viewRef, newIndex) {
+        ViewContainerRef$$1.prototype.move = function (viewRef, newIndex) {
             var index = this.indexOf(viewRef);
             this.detach(index);
             this.insert(viewRef, this._adjustIndex(newIndex));
             return viewRef;
         };
-        ViewContainerRef.prototype.indexOf = function (viewRef) { return this._viewRefs.indexOf(viewRef); };
-        ViewContainerRef.prototype.remove = function (index) {
+        ViewContainerRef$$1.prototype.indexOf = function (viewRef) { return this._viewRefs.indexOf(viewRef); };
+        ViewContainerRef$$1.prototype.remove = function (index) {
             var adjustedIdx = this._adjustIndex(index, -1);
             removeView(this._lContainerNode, adjustedIdx);
             this._viewRefs.splice(adjustedIdx, 1);
         };
-        ViewContainerRef.prototype.detach = function (index) {
+        ViewContainerRef$$1.prototype.detach = function (index) {
             var adjustedIdx = this._adjustIndex(index, -1);
-            var lViewNode = detachView(this._lContainerNode, adjustedIdx);
+            detachView(this._lContainerNode, adjustedIdx);
             return this._viewRefs.splice(adjustedIdx, 1)[0] || null;
         };
-        ViewContainerRef.prototype._adjustIndex = function (index, shift) {
+        ViewContainerRef$$1.prototype._adjustIndex = function (index, shift) {
             if (shift === void 0) { shift = 0; }
             if (index == null) {
                 return this._lContainerNode.data[VIEWS].length + shift;
@@ -41422,7 +41422,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
             return index;
         };
-        return ViewContainerRef;
+        return ViewContainerRef$$1;
     }());
 
     /**
@@ -42672,7 +42672,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('6.1.0+19.sha-ce98634');
+    var VERSION$3 = new Version$1('6.1.0+25.sha-8e65891');
 
     /**
      * @license
