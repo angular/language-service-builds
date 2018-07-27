@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.1.0-rc.3+75.sha-e1c6fd5
+ * @license Angular v6.1.0+8.sha-3169edd
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1186,7 +1186,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('6.1.0-rc.3+75.sha-e1c6fd5');
+    var VERSION = new Version('6.1.0+8.sha-3169edd');
 
     /**
      * @license
@@ -15552,9 +15552,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var expression = importExpr(Identifiers$1.defineNgModule).callFn([mapToMapExpression({
                 type: moduleType,
                 bootstrap: literalArr(bootstrap),
-                declarations: literalArr(declarations),
-                imports: literalArr(imports),
-                exports: literalArr(exports),
+                declarations: literalArr(declarations.map(function (ref) { return ref.value; })),
+                imports: literalArr(imports.map(function (ref) { return ref.value; })),
+                exports: literalArr(exports.map(function (ref) { return ref.value; })),
             })]);
         var type = new ExpressionType(importExpr(Identifiers$1.NgModuleDef, [
             new ExpressionType(moduleType), tupleTypeOf(declarations), tupleTypeOf(imports),
@@ -15579,7 +15579,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return { expression: expression, type: type };
     }
     function tupleTypeOf(exp) {
-        var types = exp.map(function (type) { return typeofExpr(type); });
+        var types = exp.map(function (ref) { return typeofExpr(ref.type); });
         return exp.length > 0 ? expressionType(literalArr(types)) : NONE_TYPE;
     }
 
@@ -46812,9 +46812,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     var meta = {
                         type: wrap(type),
                         bootstrap: flatten$3(ngModule.bootstrap || EMPTY_ARRAY$3).map(wrap),
-                        declarations: declarations.map(wrap),
-                        imports: flatten$3(ngModule.imports || EMPTY_ARRAY$3).map(expandModuleWithProviders).map(wrap),
-                        exports: flatten$3(ngModule.exports || EMPTY_ARRAY$3).map(expandModuleWithProviders).map(wrap),
+                        declarations: declarations.map(wrapReference),
+                        imports: flatten$3(ngModule.imports || EMPTY_ARRAY$3)
+                            .map(expandModuleWithProviders)
+                            .map(wrapReference),
+                        exports: flatten$3(ngModule.exports || EMPTY_ARRAY$3)
+                            .map(expandModuleWithProviders)
+                            .map(wrapReference),
                         emitInline: true,
                     };
                     var res = compileNgModule(meta);
@@ -46966,6 +46970,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
     function wrap(value) {
         return new WrappedNodeExpr(value);
+    }
+    function wrapReference(value) {
+        var wrapped = wrap(value);
+        return { value: wrapped, type: wrapped };
     }
     function isModuleWithProviders(value) {
         return value.ngModule !== undefined;
@@ -47526,7 +47534,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('6.1.0-rc.3+75.sha-e1c6fd5');
+    var VERSION$2 = new Version$1('6.1.0+8.sha-3169edd');
 
     /**
      * @license
@@ -52244,7 +52252,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('6.1.0-rc.3+75.sha-e1c6fd5');
+    var VERSION$3 = new Version$1('6.1.0+8.sha-3169edd');
 
     /**
      * @license
