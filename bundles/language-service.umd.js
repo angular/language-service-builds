@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.1.0+44.sha-9a6d26e
+ * @license Angular v6.1.0+47.sha-2ef777b
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1144,7 +1144,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('6.1.0+44.sha-9a6d26e');
+    var VERSION = new Version('6.1.0+47.sha-2ef777b');
 
     /**
      * @license
@@ -8707,6 +8707,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         WriteVarExpr.prototype.toDeclStmt = function (type, modifiers) {
             return new DeclareVarStmt(this.name, this.value, type, modifiers, this.sourceSpan);
         };
+        WriteVarExpr.prototype.toConstDecl = function () { return this.toDeclStmt(INFERRED_TYPE, [StmtModifier.Final]); };
         return WriteVarExpr;
     }(Expression));
     var WriteKeyExpr = /** @class */ (function (_super) {
@@ -14351,6 +14352,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         Identifiers.elementStyleProp = { name: 'ɵsp', moduleName: CORE$1 };
         Identifiers.elementStylingApply = { name: 'ɵsa', moduleName: CORE$1 };
         Identifiers.containerCreate = { name: 'ɵC', moduleName: CORE$1 };
+        Identifiers.nextContext = { name: 'ɵx', moduleName: CORE$1 };
         Identifiers.text = { name: 'ɵT', moduleName: CORE$1 };
         Identifiers.textBinding = { name: 'ɵt', moduleName: CORE$1 };
         Identifiers.bind = { name: 'ɵb', moduleName: CORE$1 };
@@ -14384,6 +14386,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         Identifiers.pipe = { name: 'ɵPp', moduleName: CORE$1 };
         Identifiers.projection = { name: 'ɵP', moduleName: CORE$1 };
         Identifiers.projectionDef = { name: 'ɵpD', moduleName: CORE$1 };
+        Identifiers.reference = { name: 'ɵr', moduleName: CORE$1 };
         Identifiers.inject = { name: 'inject', moduleName: CORE$1 };
         Identifiers.injectAttribute = { name: 'ɵinjectAttribute', moduleName: CORE$1 };
         Identifiers.injectElementRef = { name: 'ɵinjectElementRef', moduleName: CORE$1 };
@@ -14444,9 +14447,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /** Name of the context parameter passed into a template function */
+    var CONTEXT_NAME = 'ctx';
     /** The prefix reference variables */
     var REFERENCE_PREFIX = '_r';
-    function noop() { }
 
     /**
      * @license
@@ -14625,6 +14629,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             isVarLength: !identifier,
         };
     }
+    // e.g. x(2);
+    function generateNextContextExpr(relativeLevelDiff) {
+        return importExpr(Identifiers$1.nextContext)
+            .callFn(relativeLevelDiff > 1 ? [literal(relativeLevelDiff)] : []);
+    }
     function getLiteralFactory(constantPool, literal$$1, allocateSlots) {
         var _a = constantPool.getLiteralFactory(literal$$1), literalFactory = _a.literalFactory, literalFactoryArguments = _a.literalFactoryArguments;
         // Allocate 1 slot for the result plus 1 per argument
@@ -14645,22 +14654,15 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return importExpr(identifier).callFn(args);
     }
+    /** The prefix used to get a shared context in BindingScope's map. */
+    var SHARED_CONTEXT_KEY = '$$shared_ctx$$';
     var BindingScope = /** @class */ (function () {
-        function BindingScope(parent, declareLocalVarCallback) {
+        function BindingScope(bindingLevel, parent) {
+            if (bindingLevel === void 0) { bindingLevel = 0; }
             if (parent === void 0) { parent = null; }
-            if (declareLocalVarCallback === void 0) { declareLocalVarCallback = noop; }
+            this.bindingLevel = bindingLevel;
             this.parent = parent;
-            this.declareLocalVarCallback = declareLocalVarCallback;
-            /**
-             * Keeps a map from local variables to their expressions.
-             *
-             * This is used when one refers to variable such as: 'let abc = a.b.c`.
-             * - key to the map is the string literal `"abc"`.
-             * - value `lhs` is the left hand side which is an AST representing `abc`.
-             * - value `rhs` is the right hand side which is an AST representing `a.b.c`.
-             * - value `declared` is true if the `declareLocalVarCallback` has been called for this scope
-             * already.
-             */
+            /** Keeps a map from local variables to their BindingData. */
             this.map = new Map();
             this.referenceNameIndex = 0;
         }
@@ -14670,41 +14672,106 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 var value = current.map.get(name);
                 if (value != null) {
                     if (current !== this) {
-                        // make a local copy and reset the `declared` state.
-                        value = { lhs: value.lhs, rhs: value.rhs, declared: false };
+                        // make a local copy and reset the `declare` state
+                        value = {
+                            retrievalLevel: value.retrievalLevel,
+                            lhs: value.lhs,
+                            declareLocalCallback: value.declareLocalCallback,
+                            declare: false,
+                            priority: value.priority
+                        };
                         // Cache the value locally.
                         this.map.set(name, value);
+                        // Possibly generate a shared context var
+                        this.maybeGenerateSharedContextVar(value);
                     }
-                    if (value.rhs && !value.declared) {
-                        // if it is first time we are referencing the variable in the scope
-                        // than invoke the callback to insert variable declaration.
-                        this.declareLocalVarCallback(value.lhs, value.rhs);
-                        value.declared = true;
+                    if (value.declareLocalCallback && !value.declare) {
+                        value.declare = true;
                     }
                     return value.lhs;
                 }
                 current = current.parent;
             }
-            return null;
+            // If we get to this point, we are looking for a property on the top level component
+            // - If level === 0, we are on the top and don't need to re-declare `ctx`.
+            // - If level > 0, we are in an embedded view. We need to retrieve the name of the
+            // local var we used to store the component context, e.g. const $comp$ = x();
+            return this.bindingLevel === 0 ? null : this.getComponentProperty(name);
         };
         /**
          * Create a local variable for later reference.
          *
+         * @param retrievalLevel The level from which this value can be retrieved
          * @param name Name of the variable.
          * @param lhs AST representing the left hand side of the `let lhs = rhs;`.
-         * @param rhs AST representing the right hand side of the `let lhs = rhs;`. The `rhs` can be
-         * `undefined` for variable that are ambient such as `$event` and which don't have `rhs`
-         * declaration.
+         * @param priority The sorting priority of this var
+         * @param declareLocalCallback The callback to invoke when declaring this local var
          */
-        BindingScope.prototype.set = function (name, lhs, rhs) {
+        BindingScope.prototype.set = function (retrievalLevel, name, lhs, priority, declareLocalCallback) {
+            if (priority === void 0) { priority = 0 /* DEFAULT */; }
             !this.map.has(name) ||
                 error("The name " + name + " is already defined in scope to be " + this.map.get(name));
-            this.map.set(name, { lhs: lhs, rhs: rhs, declared: false });
+            this.map.set(name, {
+                retrievalLevel: retrievalLevel,
+                lhs: lhs,
+                declare: false,
+                declareLocalCallback: declareLocalCallback,
+                priority: priority
+            });
             return this;
         };
         BindingScope.prototype.getLocal = function (name) { return this.get(name); };
-        BindingScope.prototype.nestedScope = function (declareCallback) {
-            return new BindingScope(this, declareCallback);
+        BindingScope.prototype.nestedScope = function (level) {
+            var newScope = new BindingScope(level, this);
+            if (level > 0)
+                newScope.generateSharedContextVar(0);
+            return newScope;
+        };
+        BindingScope.prototype.getSharedContextName = function (retrievalLevel) {
+            var sharedCtxObj = this.map.get(SHARED_CONTEXT_KEY + retrievalLevel);
+            return sharedCtxObj && sharedCtxObj.declare ? sharedCtxObj.lhs : null;
+        };
+        BindingScope.prototype.maybeGenerateSharedContextVar = function (value) {
+            if (value.priority === 1 /* CONTEXT */) {
+                var sharedCtxObj = this.map.get(SHARED_CONTEXT_KEY + value.retrievalLevel);
+                if (sharedCtxObj) {
+                    sharedCtxObj.declare = true;
+                }
+                else {
+                    this.generateSharedContextVar(value.retrievalLevel);
+                }
+            }
+        };
+        BindingScope.prototype.generateSharedContextVar = function (retrievalLevel) {
+            var lhs = variable(CONTEXT_NAME + this.freshReferenceName());
+            this.map.set(SHARED_CONTEXT_KEY + retrievalLevel, {
+                retrievalLevel: retrievalLevel,
+                lhs: lhs,
+                declareLocalCallback: function (scope, relativeLevel) {
+                    // const ctx_r0 = x(2);
+                    return [lhs.set(generateNextContextExpr(relativeLevel)).toConstDecl()];
+                },
+                declare: false,
+                priority: 2 /* SHARED_CONTEXT */
+            });
+        };
+        BindingScope.prototype.getComponentProperty = function (name) {
+            var componentValue = this.map.get(SHARED_CONTEXT_KEY + 0);
+            componentValue.declare = true;
+            return componentValue.lhs.prop(name);
+        };
+        BindingScope.prototype.variableDeclarations = function () {
+            var _this = this;
+            var currentContextLevel = 0;
+            return Array.from(this.map.values())
+                .filter(function (value) { return value.declare; })
+                .sort(function (a, b) { return b.retrievalLevel - a.retrievalLevel || b.priority - a.priority; })
+                .reduce(function (stmts, value) {
+                var levelDiff = _this.bindingLevel - value.retrievalLevel;
+                var currStmts = value.declareLocalCallback(_this, levelDiff - currentContextLevel);
+                currentContextLevel = levelDiff;
+                return stmts.concat(currStmts);
+            }, []);
         };
         BindingScope.prototype.freshReferenceName = function () {
             var current = this;
@@ -14714,7 +14781,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var ref = "" + REFERENCE_PREFIX + current.referenceNameIndex++;
             return ref;
         };
-        BindingScope.ROOT_SCOPE = new BindingScope().set('$event', variable('$event'));
+        BindingScope.ROOT_SCOPE = new BindingScope().set(-1, '$event', variable('$event'));
         return BindingScope;
     }());
 
@@ -24268,7 +24335,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('6.1.0+44.sha-9a6d26e');
+    var VERSION$2 = new Version$1('6.1.0+47.sha-2ef777b');
 
     /**
      * @license
@@ -39326,7 +39393,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * found in the LICENSE file at https://angular.io/license
      */
     /** Size of LViewData's header. Necessary to adjust for it when setting slots.  */
-    var HEADER_OFFSET = 16;
+    var HEADER_OFFSET = 17;
     // Below are constants for LViewData indices to help us look up LViewData members
     // without having to remember the specific indices.
     // Uglify will inline these when minifying so there shouldn't be a cost.
@@ -40124,6 +40191,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     var viewData;
     /**
+     * The last viewData retrieved by nextContext().
+     * Allows building nextContext() and reference() calls.
+     *
+     * e.g. const inner = x().$implicit; const outer = x().$implicit;
+     */
+    var contextViewData = null;
+    /**
      * An array of directive instances in the current view.
      *
      * These must be stored separately from LNodes because their presence is
@@ -40168,7 +40242,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             previousOrParentNode = host;
             isParent = true;
         }
-        viewData = newView;
+        viewData = contextViewData = newView;
         currentQueries = newView && newView[QUERIES];
         return oldView;
     }
@@ -40195,11 +40269,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * Refreshes the view, executing the following steps in that order:
      * triggers init hooks, refreshes dynamic embedded views, triggers content hooks, sets host
-     * bindings,
-     * refreshes child components.
+     * bindings, refreshes child components.
      * Note: view hooks are triggered later when leaving the view.
      */
-    function refreshView() {
+    function refreshDescendantViews() {
+        // This needs to be set before children are processed to support recursive components
+        tView.firstTemplatePass = firstTemplatePass = false;
         if (!checkNoChangesMode) {
             executeInitHooks(viewData, tView, creationMode);
         }
@@ -40207,8 +40282,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         if (!checkNoChangesMode) {
             executeHooks(directives, tView.contentHooks, tView.contentCheckHooks, creationMode);
         }
-        // This needs to be set before children are processed to support recursive components
-        tView.firstTemplatePass = firstTemplatePass = false;
         setHostBindings(tView.hostBindings);
         refreshContentQueries(tView);
         refreshChildComponents(tView.components);
@@ -40237,8 +40310,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /** Refreshes child components in the current view. */
     function refreshChildComponents(components) {
         if (components != null) {
-            for (var i = 0; i < components.length; i += 2) {
-                componentRefresh(components[i], components[i + 1]);
+            for (var i = 0; i < components.length; i++) {
+                componentRefresh(components[i]);
             }
         }
     }
@@ -40266,6 +40339,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             null,
             -1,
             null,
+            null // declarationView
         ];
     }
     /**
@@ -40376,7 +40450,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 namespaceHTML();
                 tView.template(rf, context);
                 if (rf & 2 /* Update */) {
-                    refreshView();
+                    refreshDescendantViews();
                 }
                 else {
                     viewNode.data[TVIEW].firstTemplatePass = firstTemplatePass = false;
@@ -40402,14 +40476,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             if (template) {
                 namespaceHTML();
                 template(getRenderFlags(hostView), componentOrContext);
-                refreshView();
+                refreshDescendantViews();
             }
             else {
                 executeInitAndContentHooks();
                 // Element was stored at 0 in data and directive was stored at 0 in directives
                 // in renderComponent()
                 setHostBindings(_ROOT_DIRECTIVE_INDICES);
-                componentRefresh(0, HEADER_OFFSET);
+                componentRefresh(HEADER_OFFSET);
             }
         }
         finally {
@@ -40715,10 +40789,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * Refreshes components by entering the component view and processing its bindings, queries, etc.
      *
-     * @param directiveIndex Directive index in LViewData[DIRECTIVES]
      * @param adjustedElementIndex  Element index in LViewData[] (adjusted for HEADER_OFFSET)
      */
-    function componentRefresh(directiveIndex, adjustedElementIndex) {
+    function componentRefresh(adjustedElementIndex) {
         ngDevMode && assertDataInRange(adjustedElementIndex);
         var element = viewData[adjustedElementIndex];
         ngDevMode && assertNodeType(element, 3 /* Element */);
@@ -40727,8 +40800,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var hostView = element.data;
         // Only attached CheckAlways components or attached, dirty OnPush components should be checked
         if (viewAttached(hostView) && hostView[FLAGS] & (2 /* CheckAlways */ | 4 /* Dirty */)) {
-            ngDevMode && assertDataInRange(directiveIndex, directives);
-            detectChangesInternal(hostView, element, directives[directiveIndex]);
+            detectChangesInternal(hostView, element, hostView[CONTEXT]);
         }
     }
     /** Returns a boolean for whether the view is attached */
@@ -40835,7 +40907,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             namespaceHTML();
             createViewQuery(viewQuery, hostView[FLAGS], component);
             template(getRenderFlags(hostView), component);
-            refreshView();
+            refreshDescendantViews();
             updateViewQuery(viewQuery, component);
         }
         finally {
@@ -41242,6 +41314,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 // Create directive instance with factory() and store at index 0 in directives array
                 rootContext.components.push(component = baseDirectiveCreate(0, this.componentDef.factory(), this.componentDef));
                 initChangeDetectorIfExisting(elementNode.nodeInjector, component, elementNode.data);
+                elementNode.data[CONTEXT] = component;
                 // TODO: should LifecycleHooksFeature and other host features be generated by the compiler and
                 // executed here?
                 // Angular 5 reference: https://stackblitz.com/edit/lifecycle-hooks-vcref
@@ -42672,7 +42745,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('6.1.0+44.sha-9a6d26e');
+    var VERSION$3 = new Version$1('6.1.0+47.sha-2ef777b');
 
     /**
      * @license
