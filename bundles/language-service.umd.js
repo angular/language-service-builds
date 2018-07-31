@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.1.0+55.sha-e3834b7
+ * @license Angular v6.1.0+59.sha-3f6fc00
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1144,7 +1144,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('6.1.0+55.sha-e3834b7');
+    var VERSION = new Version('6.1.0+59.sha-3f6fc00');
 
     /**
      * @license
@@ -1153,6 +1153,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    var _a;
     /**
      * A segment of text within the template.
      */
@@ -1494,7 +1495,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         });
         return result;
     }
-    var _a;
 
     /**
      * @license
@@ -5945,15 +5945,16 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      *          DO NOT USE IT IN A SECURITY SENSITIVE CONTEXT.
      */
     function sha1(str) {
+        var _a, _b;
         var utf8 = utf8Encode(str);
         var words32 = stringToWords32(utf8, Endian.Big);
         var len = utf8.length * 8;
         var w = new Array(80);
-        var _a = __read([0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476, 0xc3d2e1f0], 5), a = _a[0], b = _a[1], c = _a[2], d = _a[3], e = _a[4];
+        var _c = __read([0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476, 0xc3d2e1f0], 5), a = _c[0], b = _c[1], c = _c[2], d = _c[3], e = _c[4];
         words32[len >> 5] |= 0x80 << (24 - len % 32);
         words32[((len + 64 >> 9) << 4) + 15] = len;
         for (var i = 0; i < words32.length; i += 16) {
-            var _b = __read([a, b, c, d, e], 5), h0 = _b[0], h1 = _b[1], h2 = _b[2], h3 = _b[3], h4 = _b[4];
+            var _d = __read([a, b, c, d, e], 5), h0 = _d[0], h1 = _d[1], h2 = _d[2], h3 = _d[3], h4 = _d[4];
             for (var j = 0; j < 80; j++) {
                 if (j < 16) {
                     w[j] = words32[i + j];
@@ -5961,14 +5962,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 else {
                     w[j] = rol32(w[j - 3] ^ w[j - 8] ^ w[j - 14] ^ w[j - 16], 1);
                 }
-                var _c = __read(fk(j, b, c, d), 2), f = _c[0], k = _c[1];
+                var _e = __read(fk(j, b, c, d), 2), f = _e[0], k = _e[1];
                 var temp = [rol32(a, 5), f, e, k, w[j]].reduce(add32);
-                _d = __read([d, c, rol32(b, 30), a, temp], 5), e = _d[0], d = _d[1], c = _d[2], b = _d[3], a = _d[4];
+                _a = __read([d, c, rol32(b, 30), a, temp], 5), e = _a[0], d = _a[1], c = _a[2], b = _a[3], a = _a[4];
             }
-            _e = __read([add32(a, h0), add32(b, h1), add32(c, h2), add32(d, h3), add32(e, h4)], 5), a = _e[0], b = _e[1], c = _e[2], d = _e[3], e = _e[4];
+            _b = __read([add32(a, h0), add32(b, h1), add32(c, h2), add32(d, h3), add32(e, h4)], 5), a = _b[0], b = _b[1], c = _b[2], d = _b[3], e = _b[4];
         }
         return byteStringToHexString(words32ToByteString([a, b, c, d, e]));
-        var _d, _e;
     }
     function fk(index, b, c, d) {
         if (index < 20) {
@@ -6000,23 +6000,24 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return [hi, lo];
     }
     function computeMsgId(msg, meaning) {
-        var _a = __read(fingerprint(msg), 2), hi = _a[0], lo = _a[1];
+        var _a;
+        var _b = __read(fingerprint(msg), 2), hi = _b[0], lo = _b[1];
         if (meaning) {
-            var _b = __read(fingerprint(meaning), 2), him = _b[0], lom = _b[1];
-            _c = __read(add64(rol64([hi, lo], 1), [him, lom]), 2), hi = _c[0], lo = _c[1];
+            var _c = __read(fingerprint(meaning), 2), him = _c[0], lom = _c[1];
+            _a = __read(add64(rol64([hi, lo], 1), [him, lom]), 2), hi = _a[0], lo = _a[1];
         }
         return byteStringToDecString(words32ToByteString([hi & 0x7fffffff, lo]));
-        var _c;
     }
     function hash32(str, c) {
-        var _a = __read([0x9e3779b9, 0x9e3779b9], 2), a = _a[0], b = _a[1];
+        var _a;
+        var _b = __read([0x9e3779b9, 0x9e3779b9], 2), a = _b[0], b = _b[1];
         var i;
         var len = str.length;
         for (i = 0; i + 12 <= len; i += 12) {
             a = add32(a, wordAt(str, i, Endian.Little));
             b = add32(b, wordAt(str, i + 4, Endian.Little));
             c = add32(c, wordAt(str, i + 8, Endian.Little));
-            _b = __read(mix([a, b, c]), 3), a = _b[0], b = _b[1], c = _b[2];
+            _a = __read(mix([a, b, c]), 3), a = _a[0], b = _a[1], c = _a[2];
         }
         a = add32(a, wordAt(str, i, Endian.Little));
         b = add32(b, wordAt(str, i + 4, Endian.Little));
@@ -6024,7 +6025,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         c = add32(c, len);
         c = add32(c, wordAt(str, i + 8, Endian.Little) << 8);
         return mix([a, b, c])[2];
-        var _b;
     }
     // clang-format off
     function mix(_a) {
@@ -7212,6 +7212,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var visitor = new _WriteVisitor();
             var transUnits = [];
             messages.forEach(function (message) {
+                var _a;
                 var contextTags = [];
                 message.sources.forEach(function (source) {
                     var contextGroupTag = new Tag(_CONTEXT_GROUP_TAG, { purpose: 'location' });
@@ -7228,7 +7229,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 }
                 transUnit.children.push(new CR(6));
                 transUnits.push(new CR(6), transUnit);
-                var _a;
             });
             var body = new Tag('body', {}, __spread(transUnits, [new CR(4)]));
             var file = new Tag('file', {
@@ -9730,6 +9730,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return out;
     }
     function serializeTags(tags) {
+        var e_1, _a;
         if (tags.length === 0)
             return '';
         var out = '*\n';
@@ -9751,7 +9752,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         out += ' ';
         return out;
-        var e_1, _a;
     }
 
     /**
@@ -10003,10 +10003,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
         };
         CompileMetadataResolver.prototype.initComponentFactory = function (factory, ngContentSelectors) {
+            var _a;
             if (!(factory instanceof StaticSymbol)) {
                 (_a = factory.ngContentSelectors).push.apply(_a, __spread(ngContentSelectors));
             }
-            var _a;
         };
         CompileMetadataResolver.prototype._loadSummary = function (type, kind) {
             var typeSummary = this._summaryCache.get(type);
@@ -12444,6 +12444,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /** Map from tagName|propertyName SecurityContext. Properties applying to all tags use '*'. */
     var SECURITY_SCHEMA = {};
     function registerContext(ctx, specs) {
+        var e_1, _a;
         try {
             for (var specs_1 = __values(specs), specs_1_1 = specs_1.next(); !specs_1_1.done; specs_1_1 = specs_1.next()) {
                 var spec = specs_1_1.value;
@@ -12457,7 +12458,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
             finally { if (e_1) throw e_1.error; }
         }
-        var e_1, _a;
     }
     // Case is insignificant below, all element and attribute names are lower-cased for lookup.
     registerContext(SecurityContext.HTML, [
@@ -13399,6 +13399,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             this.errors.push(new ParseError(sourceSpan, message, level));
         };
         BindingParser.prototype._reportExpressionParserErrors = function (errors, sourceSpan) {
+            var e_1, _a;
             try {
                 for (var errors_1 = __values(errors), errors_1_1 = errors_1.next(); !errors_1_1.done; errors_1_1 = errors_1.next()) {
                     var error$$1 = errors_1_1.value;
@@ -13412,7 +13413,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 }
                 finally { if (e_1) throw e_1.error; }
             }
-            var e_1, _a;
         };
         // Make sure all the used pipes are known in `this.pipesByName`
         BindingParser.prototype._checkPipes = function (ast, sourceSpan) {
@@ -14960,6 +14960,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
          * @param fileName the file to invalidate
          */
         StaticSymbolResolver.prototype.invalidateFile = function (fileName) {
+            var e_1, _a;
             this.metadataCache.delete(fileName);
             this.resolvedFilePaths.delete(fileName);
             var symbols = this.symbolFromFile.get(fileName);
@@ -14981,7 +14982,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     finally { if (e_1) throw e_1.error; }
                 }
             }
-            var e_1, _a;
         };
         /* @internal */
         StaticSymbolResolver.prototype.ignoreErrorsFor = function (cb) {
@@ -15068,6 +15068,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         StaticSymbolResolver.prototype._createSymbolsOf = function (filePath) {
             var _this = this;
+            var e_2, _a;
             if (this.resolvedFilePaths.has(filePath)) {
                 return;
             }
@@ -15119,15 +15120,15 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 };
                 var this_1 = this;
                 try {
-                    for (var _a = __values(metadata['exports']), _b = _a.next(); !_b.done; _b = _a.next()) {
-                        var moduleExport = _b.value;
+                    for (var _b = __values(metadata['exports']), _c = _b.next(); !_c.done; _c = _b.next()) {
+                        var moduleExport = _c.value;
                         _loop_1(moduleExport);
                     }
                 }
                 catch (e_2_1) { e_2 = { error: e_2_1 }; }
                 finally {
                     try {
-                        if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                        if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                     }
                     finally { if (e_2) throw e_2.error; }
                 }
@@ -15161,7 +15162,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
             resolvedSymbols.forEach(function (resolvedSymbol) { return _this.resolvedSymbols.set(resolvedSymbol.symbol, resolvedSymbol); });
             this.symbolFromFile.set(filePath, resolvedSymbols.map(function (resolvedSymbol) { return resolvedSymbol.symbol; }));
-            var e_2, _c;
         };
         StaticSymbolResolver.prototype.createResolvedSymbol = function (sourceSymbol, topLevelPath, topLevelSymbolNames, metadata) {
             var _this = this;
@@ -16052,6 +16052,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
         };
         StaticReflector.prototype.guards = function (type) {
+            var e_1, _a;
             if (!(type instanceof StaticSymbol)) {
                 this.reportError(new Error("guards received " + JSON.stringify(type) + " which is not a StaticSymbol"), type);
                 return {};
@@ -16083,7 +16084,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 finally { if (e_1) throw e_1.error; }
             }
             return result;
-            var e_1, _a;
         };
         StaticReflector.prototype._registerDecoratorOrConstructor = function (type, ctor) {
             this.conversionMap.set(type, function (context, args) { return new (ctor.bind.apply(ctor, __spread([void 0], args)))(); });
@@ -16252,14 +16252,15 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     }, context);
                 }
                 function simplify(expression) {
+                    var e_2, _a, e_3, _b;
                     if (isPrimitive(expression)) {
                         return expression;
                     }
                     if (expression instanceof Array) {
                         var result_2 = [];
                         try {
-                            for (var _a = __values(expression), _b = _a.next(); !_b.done; _b = _a.next()) {
-                                var item = _b.value;
+                            for (var _c = __values(expression), _d = _c.next(); !_d.done; _d = _c.next()) {
+                                var item = _d.value;
                                 // Check for a spread expression
                                 if (item && item.__symbolic === 'spread') {
                                     // We call with references as 0 because we require the actual value and cannot
@@ -16272,12 +16273,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                                                 result_2.push(spreadItem);
                                             }
                                         }
-                                        catch (e_2_1) { e_2 = { error: e_2_1 }; }
+                                        catch (e_3_1) { e_3 = { error: e_3_1 }; }
                                         finally {
                                             try {
-                                                if (spreadArray_1_1 && !spreadArray_1_1.done && (_c = spreadArray_1.return)) _c.call(spreadArray_1);
+                                                if (spreadArray_1_1 && !spreadArray_1_1.done && (_b = spreadArray_1.return)) _b.call(spreadArray_1);
                                             }
-                                            finally { if (e_2) throw e_2.error; }
+                                            finally { if (e_3) throw e_3.error; }
                                         }
                                         continue;
                                     }
@@ -16289,12 +16290,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                                 result_2.push(value_2);
                             }
                         }
-                        catch (e_3_1) { e_3 = { error: e_3_1 }; }
+                        catch (e_2_1) { e_2 = { error: e_2_1 }; }
                         finally {
                             try {
-                                if (_b && !_b.done && (_d = _a.return)) _d.call(_a);
+                                if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
                             }
-                            finally { if (e_3) throw e_3.error; }
+                            finally { if (e_2) throw e_2.error; }
                         }
                         return result_2;
                     }
@@ -16511,7 +16512,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                         });
                     }
                     return IGNORE;
-                    var e_3, _d, e_2, _c;
                 }
                 return simplify(value);
             }
@@ -17555,7 +17555,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             return this.diagnostics;
         };
         AstType.prototype.visitBinary = function (ast) {
-            var _this = this;
+            var _this_1 = this;
             // Treat undefined and null as other.
             function normalize(kind, other) {
                 switch (kind) {
@@ -17566,7 +17566,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 return kind;
             }
             var getType = function (ast, operation) {
-                var type = _this.getType(ast);
+                var type = _this_1.getType(ast);
                 if (type.nullable) {
                     switch (operation) {
                         case '&&':
@@ -17578,10 +17578,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                             // Nullable allowed.
                             break;
                         default:
-                            _this.reportError("The expression might be null", ast);
+                            _this_1.reportError("The expression might be null", ast);
                             break;
                     }
-                    return _this.query.getNonNullableType(type);
+                    return _this_1.query.getNonNullableType(type);
                 }
                 return type;
             };
@@ -17702,12 +17702,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             return this.query.getTypeUnion(this.getType(ast.trueExp), this.getType(ast.falseExp));
         };
         AstType.prototype.visitFunctionCall = function (ast) {
-            var _this = this;
+            var _this_1 = this;
             // The type of a function call is the return type of the selected signature.
             // The signature is selected based on the types of the arguments. Angular doesn't
             // support contextual typing of arguments so this is simpler than TypeScript's
             // version.
-            var args = ast.args.map(function (arg) { return _this.getType(arg); });
+            var args = ast.args.map(function (arg) { return _this_1.getType(arg); });
             var target = this.getType(ast.target);
             if (!target || !target.callable)
                 return this.reportError('Call target is not callable', ast);
@@ -17756,10 +17756,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             return this.getType(ast.value);
         };
         AstType.prototype.visitLiteralArray = function (ast) {
-            var _this = this;
-            // A type literal is an array type of the union of the elements
-            return this.query.getArrayType((_a = this.query).getTypeUnion.apply(_a, __spread(ast.expressions.map(function (element) { return _this.getType(element); }))));
+            var _this_1 = this;
             var _a;
+            // A type literal is an array type of the union of the elements
+            return this.query.getArrayType((_a = this.query).getTypeUnion.apply(_a, __spread(ast.expressions.map(function (element) { return _this_1.getType(element); }))));
         };
         AstType.prototype.visitLiteralMap = function (ast) {
             // If we are producing diagnostics, visit the children
@@ -17794,14 +17794,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             return this.resolveMethodCall(this.getType(ast.receiver), ast);
         };
         AstType.prototype.visitPipe = function (ast) {
-            var _this = this;
+            var _this_1 = this;
             // The type of a pipe node is the return type of the pipe's transform method. The table returned
             // by getPipes() is expected to contain symbols with the corresponding transform method type.
             var pipe = this.query.getPipes().get(ast.name);
             if (!pipe)
                 return this.reportError("No pipe by the name " + ast.name + " found", ast);
             var expType = this.getType(ast.exp);
-            var signature = pipe.selectSignature([expType].concat(ast.args.map(function (arg) { return _this.getType(arg); })));
+            var signature = pipe.selectSignature([expType].concat(ast.args.map(function (arg) { return _this_1.getType(arg); })));
             if (!signature)
                 return this.reportError('Unable to resolve signature for pipe invocation', ast);
             return signature.result;
@@ -17854,7 +17854,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             configurable: true
         });
         AstType.prototype.resolveMethodCall = function (receiverType, ast) {
-            var _this = this;
+            var _this_1 = this;
             if (this.isAny(receiverType)) {
                 return this.anyType;
             }
@@ -17866,7 +17866,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 return this.reportError("Could not find a type for '" + ast.name + "'", ast);
             if (!method.type.callable)
                 return this.reportError("Member '" + ast.name + "' is not callable", ast);
-            var signature = method.type.selectSignature(ast.args.map(function (arg) { return _this.getType(arg); }));
+            var signature = method.type.selectSignature(ast.args.map(function (arg) { return _this_1.getType(arg); }));
             if (!signature)
                 return this.reportError("Unable to resolve signature for call of method " + ast.name, ast);
             return signature.result;
@@ -17945,6 +17945,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function getReferences(info) {
         var result = [];
         function processReferences(references) {
+            var e_1, _a;
             var _loop_1 = function (reference) {
                 var type = undefined;
                 if (reference.value) {
@@ -17970,7 +17971,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 }
                 finally { if (e_1) throw e_1.error; }
             }
-            var e_1, _a;
         }
         var visitor = new /** @class */ (function (_super) {
             __extends(class_1, _super);
@@ -18003,6 +18003,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
     }
     function getVarDeclarations(info, path$$1) {
+        var e_2, _a;
         var result = [];
         var current = path$$1.tail;
         while (current) {
@@ -18035,15 +18036,15 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     });
                 };
                 try {
-                    for (var _a = __values(current.variables), _b = _a.next(); !_b.done; _b = _a.next()) {
-                        var variable = _b.value;
+                    for (var _b = __values(current.variables), _c = _b.next(); !_c.done; _c = _b.next()) {
+                        var variable = _c.value;
                         _loop_2(variable);
                     }
                 }
                 catch (e_2_1) { e_2 = { error: e_2_1 }; }
                 finally {
                     try {
-                        if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                        if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                     }
                     finally { if (e_2) throw e_2.error; }
                 }
@@ -18051,7 +18052,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             current = path$$1.parentOf(current);
         }
         return result;
-        var e_2, _c;
     }
     function refinedVariableType(type, info, templateElement) {
         // Special case the ngFor directive
@@ -18173,6 +18173,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         ExpressionDiagnosticsVisitor.prototype.diagnoseExpression = function (ast, offset, includeEvent) {
             var _this = this;
+            var _a;
             var scope = this.getExpressionScope(this.path, includeEvent);
             (_a = this.diagnostics).push.apply(_a, __spread(getExpressionDiagnostics(scope, ast, this.info.query, {
                 event: includeEvent
@@ -18181,7 +18182,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 kind: d.kind,
                 message: d.message
             }); })));
-            var _a;
         };
         ExpressionDiagnosticsVisitor.prototype.push = function (ast) { this.path.push(ast); };
         ExpressionDiagnosticsVisitor.prototype.pop = function () { this.path.pop(); };
@@ -18196,10 +18196,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return ExpressionDiagnosticsVisitor;
     }(RecursiveTemplateAstVisitor));
     function hasTemplateReference(type) {
+        var e_3, _a;
         if (type.diDeps) {
             try {
-                for (var _a = __values(type.diDeps), _b = _a.next(); !_b.done; _b = _a.next()) {
-                    var diDep = _b.value;
+                for (var _b = __values(type.diDeps), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var diDep = _c.value;
                     if (diDep.token && diDep.token.identifier &&
                         identifierName(diDep.token.identifier) == 'TemplateRef')
                         return true;
@@ -18208,13 +18209,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             catch (e_3_1) { e_3 = { error: e_3_1 }; }
             finally {
                 try {
-                    if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
                 finally { if (e_3) throw e_3.error; }
             }
         }
         return false;
-        var e_3, _c;
     }
     function offsetSpan(span, amount) {
         return { start: span.start + amount, end: span.end + amount };
@@ -18407,6 +18407,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             return result;
         };
         TypeScriptSymbolQuery.prototype.mergeSymbolTable = function (symbolTables) {
+            var e_1, _a;
             var result = new MapSymbolTable();
             try {
                 for (var symbolTables_1 = __values(symbolTables), symbolTables_1_1 = symbolTables_1.next(); !symbolTables_1_1.done; symbolTables_1_1 = symbolTables_1.next()) {
@@ -18422,20 +18423,20 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 finally { if (e_1) throw e_1.error; }
             }
             return result;
-            var e_1, _a;
         };
         TypeScriptSymbolQuery.prototype.getSpanAt = function (line, column) {
             return spanAt(this.source, line, column);
         };
         TypeScriptSymbolQuery.prototype.getTemplateRefContextType = function (typeSymbol) {
+            var e_2, _a;
             var type = this.checker.getTypeOfSymbolAtLocation(typeSymbol, this.source);
             var constructor = type.symbol && type.symbol.members &&
                 getFromSymbolTable(type.symbol.members, '__constructor');
             if (constructor) {
                 var constructorDeclaration = constructor.declarations[0];
                 try {
-                    for (var _a = __values(constructorDeclaration.parameters), _b = _a.next(); !_b.done; _b = _a.next()) {
-                        var parameter = _b.value;
+                    for (var _b = __values(constructorDeclaration.parameters), _c = _b.next(); !_c.done; _c = _b.next()) {
+                        var parameter = _c.value;
                         var type_1 = this.checker.getTypeAtLocation(parameter.type);
                         if (type_1.symbol.name == 'TemplateRef' && isReferenceType(type_1)) {
                             var typeReference = type_1;
@@ -18448,12 +18449,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 catch (e_2_1) { e_2 = { error: e_2_1 }; }
                 finally {
                     try {
-                        if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                        if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                     }
                     finally { if (e_2) throw e_2.error; }
                 }
             }
-            var e_2, _c;
         };
         TypeScriptSymbolQuery.prototype.getTsTypeOf = function (symbol) {
             var type = this.getTypeWrapper(symbol);
@@ -18700,6 +18700,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     var MIN_TS_VERSION_SUPPORTING_MAP = '2.2';
     var toSymbolTableFactory = function (tsVersion) { return function (symbols) {
+        var e_3, _a, e_4, _b;
         if (isVersionBetween(tsVersion, MIN_TS_VERSION_SUPPORTING_MAP)) {
             // ∀ Typescript version >= 2.2, `SymbolTable` is implemented as an ES6 `Map`
             var result_1 = new Map();
@@ -18738,7 +18739,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             finally { if (e_4) throw e_4.error; }
         }
         return result;
-        var e_3, _a, e_4, _b;
     }; };
     function toSymbols(symbolTable) {
         if (!symbolTable)
@@ -18811,6 +18811,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             this._values.push(symbol);
         };
         MapSymbolTable.prototype.addAll = function (symbols) {
+            var e_5, _a;
             try {
                 for (var symbols_3 = __values(symbols), symbols_3_1 = symbols_3.next(); !symbols_3_1.done; symbols_3_1 = symbols_3.next()) {
                     var symbol = symbols_3_1.value;
@@ -18824,7 +18825,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 }
                 finally { if (e_5) throw e_5.error; }
             }
-            var e_5, _a;
         };
         MapSymbolTable.prototype.has = function (key) { return this.map.has(key); };
         MapSymbolTable.prototype.values = function () {
@@ -19067,10 +19067,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
     }
     function getContainerOf(symbol, context) {
+        var e_6, _a;
         if (symbol.getFlags() & ts.SymbolFlags.ClassMember && symbol.declarations) {
             try {
-                for (var _a = __values(symbol.declarations), _b = _a.next(); !_b.done; _b = _a.next()) {
-                    var declaration = _b.value;
+                for (var _b = __values(symbol.declarations), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var declaration = _c.value;
                     var parent = parentDeclarationOf(declaration);
                     if (parent) {
                         var type = context.checker.getTypeAtLocation(parent);
@@ -19083,12 +19084,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             catch (e_6_1) { e_6 = { error: e_6_1 }; }
             finally {
                 try {
-                    if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
                 finally { if (e_6) throw e_6.error; }
             }
         }
-        var e_6, _c;
     }
     function getTypeParameterOf(type, name) {
         if (type && type.symbol && type.symbol.name == name) {
@@ -19099,6 +19099,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
     }
     function typeKindOf(type) {
+        var e_7, _a;
         if (type) {
             if (type.flags & ts.TypeFlags.Any) {
                 return BuiltinType$1.Any;
@@ -19122,8 +19123,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 if (unionType.types.length > 0) {
                     candidate = typeKindOf(unionType.types[0]);
                     try {
-                        for (var _a = __values(unionType.types), _b = _a.next(); !_b.done; _b = _a.next()) {
-                            var subType = _b.value;
+                        for (var _b = __values(unionType.types), _c = _b.next(); !_c.done; _c = _b.next()) {
+                            var subType = _c.value;
                             if (candidate != typeKindOf(subType)) {
                                 return BuiltinType$1.Other;
                             }
@@ -19132,7 +19133,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     catch (e_7_1) { e_7 = { error: e_7_1 }; }
                     finally {
                         try {
-                            if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                            if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                         }
                         finally { if (e_7) throw e_7.error; }
                     }
@@ -19146,7 +19147,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
         }
         return BuiltinType$1.Other;
-        var e_7, _c;
     }
     function getFromSymbolTable(symbolTable, key) {
         var table = symbolTable;
@@ -19513,6 +19513,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 case ts.SyntaxKind.ArrayLiteralExpression:
                     var arr_1 = [];
                     ts.forEachChild(node, function (child) {
+                        var e_1, _a;
                         var value = _this.evaluateNode(child, /* preferReference */ true);
                         // Check for error
                         if (isFoldableError(value)) {
@@ -19523,15 +19524,15 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                         if (isMetadataSymbolicSpreadExpression(value)) {
                             if (Array.isArray(value.expression)) {
                                 try {
-                                    for (var _a = __values(value.expression), _b = _a.next(); !_b.done; _b = _a.next()) {
-                                        var spreadValue = _b.value;
+                                    for (var _b = __values(value.expression), _c = _b.next(); !_c.done; _c = _b.next()) {
+                                        var spreadValue = _c.value;
                                         arr_1.push(spreadValue);
                                     }
                                 }
                                 catch (e_1_1) { e_1 = { error: e_1_1 }; }
                                 finally {
                                     try {
-                                        if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                                        if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                                     }
                                     finally { if (e_1) throw e_1.error; }
                                 }
@@ -19539,7 +19540,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                             }
                         }
                         arr_1.push(value);
-                        var e_1, _c;
                     });
                     if (error)
                         return error;
@@ -19926,6 +19926,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             // Collect the imported symbols into this.symbols
             var stripQuotes = function (s) { return s.replace(/^['"]|['"]$/g, ''); };
             var visit = function (node) {
+                var e_1, _a;
                 switch (node.kind) {
                     case ts.SyntaxKind.ImportEqualsDeclaration:
                         var importEqualsDeclaration = node;
@@ -19972,8 +19973,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                                 case ts.SyntaxKind.NamedImports:
                                     try {
                                         // An `import { [<identifier> [, <identifier>] } from <module-specifier>` clause
-                                        for (var _a = __values(bindings.elements), _b = _a.next(); !_b.done; _b = _a.next()) {
-                                            var binding = _b.value;
+                                        for (var _b = __values(bindings.elements), _c = _b.next(); !_c.done; _c = _b.next()) {
+                                            var binding = _c.value;
                                             symbols.set(binding.name.text, {
                                                 __symbolic: 'reference',
                                                 module: from,
@@ -19984,7 +19985,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                                     catch (e_1_1) { e_1 = { error: e_1_1 }; }
                                     finally {
                                         try {
-                                            if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                                            if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                                         }
                                         finally { if (e_1) throw e_1.error; }
                                     }
@@ -19998,7 +19999,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                         break;
                 }
                 ts.forEachChild(node, visit);
-                var e_1, _c;
             };
             if (this.sourceFile) {
                 ts.forEachChild(this.sourceFile, visit);
@@ -20092,6 +20092,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 }
             }
             function classMetadataOf(classDeclaration) {
+                var e_1, _a, e_2, _b;
                 var result = { __symbolic: 'class' };
                 function getDecorators(decorators) {
                     if (decorators && decorators.length)
@@ -20142,8 +20143,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     statics[name] = value;
                 }
                 try {
-                    for (var _a = __values(classDeclaration.members), _b = _a.next(); !_b.done; _b = _a.next()) {
-                        var member = _b.value;
+                    for (var _c = __values(classDeclaration.members), _d = _c.next(); !_d.done; _d = _c.next()) {
+                        var member = _d.value;
                         var isConstructor = false;
                         switch (member.kind) {
                             case ts.SyntaxKind.Constructor:
@@ -20180,12 +20181,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                                         }
                                     }
                                 }
-                                catch (e_1_1) { e_1 = { error: e_1_1 }; }
+                                catch (e_2_1) { e_2 = { error: e_2_1 }; }
                                 finally {
                                     try {
-                                        if (parameters_1_1 && !parameters_1_1.done && (_c = parameters_1.return)) _c.call(parameters_1);
+                                        if (parameters_1_1 && !parameters_1_1.done && (_b = parameters_1.return)) _b.call(parameters_1);
                                     }
-                                    finally { if (e_1) throw e_1.error; }
+                                    finally { if (e_2) throw e_2.error; }
                                 }
                                 var data = { __symbolic: isConstructor ? 'constructor' : 'method' };
                                 var name = isConstructor ? '__ctor__' : evaluator.nameOf(member.name);
@@ -20229,12 +20230,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                         }
                     }
                 }
-                catch (e_2_1) { e_2 = { error: e_2_1 }; }
+                catch (e_1_1) { e_1 = { error: e_1_1 }; }
                 finally {
                     try {
-                        if (_b && !_b.done && (_d = _a.return)) _d.call(_a);
+                        if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
                     }
-                    finally { if (e_2) throw e_2.error; }
+                    finally { if (e_1) throw e_1.error; }
                 }
                 if (members) {
                     result.members = members;
@@ -20243,7 +20244,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     result.statics = statics;
                 }
                 return recordEntry(result, classDeclaration);
-                var e_2, _d, e_1, _c;
             }
             // Collect all exported symbols from an exports clause.
             var exportMap = new Map();
@@ -20311,6 +20311,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 }
             });
             ts.forEachChild(sourceFile, function (node) {
+                var e_3, _a, e_4, _b;
                 switch (node.kind) {
                     case ts.SyntaxKind.ExportDeclaration:
                         // Record export declarations
@@ -20406,8 +20407,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                             var nextDefaultValue = 0;
                             var writtenMembers = 0;
                             try {
-                                for (var _a = __values(enumDeclaration.members), _b = _a.next(); !_b.done; _b = _a.next()) {
-                                    var member = _b.value;
+                                for (var _c = __values(enumDeclaration.members), _d = _c.next(); !_d.done; _d = _c.next()) {
+                                    var member = _d.value;
                                     var enumValue = void 0;
                                     if (!member.initializer) {
                                         enumValue = nextDefaultValue;
@@ -20444,7 +20445,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                             catch (e_3_1) { e_3 = { error: e_3_1 }; }
                             finally {
                                 try {
-                                    if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                                    if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
                                 }
                                 finally { if (e_3) throw e_3.error; }
                             }
@@ -20529,21 +20530,20 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                             }
                         };
                         try {
-                            for (var _d = __values(variableStatement.declarationList.declarations), _e = _d.next(); !_e.done; _e = _d.next()) {
-                                var variableDeclaration = _e.value;
+                            for (var _e = __values(variableStatement.declarationList.declarations), _f = _e.next(); !_f.done; _f = _e.next()) {
+                                var variableDeclaration = _f.value;
                                 _loop_1(variableDeclaration);
                             }
                         }
                         catch (e_4_1) { e_4 = { error: e_4_1 }; }
                         finally {
                             try {
-                                if (_e && !_e.done && (_f = _d.return)) _f.call(_d);
+                                if (_f && !_f.done && (_b = _e.return)) _b.call(_e);
                             }
                             finally { if (e_4) throw e_4.error; }
                         }
                         break;
                 }
-                var e_3, _c, e_4, _f;
             });
             if (metadata || exports) {
                 if (!metadata)
@@ -20714,8 +20714,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
     // Collect parameter names from a function.
     function namesOf(parameters) {
+        var e_5, _a;
         var result = [];
         function addNamesOf(name) {
+            var e_6, _a;
             if (name.kind == ts.SyntaxKind.Identifier) {
                 var identifier = name;
                 result.push(identifier.text);
@@ -20723,23 +20725,22 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             else {
                 var bindingPattern = name;
                 try {
-                    for (var _a = __values(bindingPattern.elements), _b = _a.next(); !_b.done; _b = _a.next()) {
-                        var element = _b.value;
+                    for (var _b = __values(bindingPattern.elements), _c = _b.next(); !_c.done; _c = _b.next()) {
+                        var element = _c.value;
                         var name_3 = element.name;
                         if (name_3) {
                             addNamesOf(name_3);
                         }
                     }
                 }
-                catch (e_5_1) { e_5 = { error: e_5_1 }; }
+                catch (e_6_1) { e_6 = { error: e_6_1 }; }
                 finally {
                     try {
-                        if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                        if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                     }
-                    finally { if (e_5) throw e_5.error; }
+                    finally { if (e_6) throw e_6.error; }
                 }
             }
-            var e_5, _c;
         }
         try {
             for (var parameters_2 = __values(parameters), parameters_2_1 = parameters_2.next(); !parameters_2_1.done; parameters_2_1 = parameters_2.next()) {
@@ -20747,15 +20748,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 addNamesOf(parameter.name);
             }
         }
-        catch (e_6_1) { e_6 = { error: e_6_1 }; }
+        catch (e_5_1) { e_5 = { error: e_5_1 }; }
         finally {
             try {
                 if (parameters_2_1 && !parameters_2_1.done && (_a = parameters_2.return)) _a.call(parameters_2);
             }
-            finally { if (e_6) throw e_6.error; }
+            finally { if (e_5) throw e_5.error; }
         }
         return result;
-        var e_6, _a;
     }
     function expandedMessage$1(error) {
         switch (error.message) {
@@ -21004,10 +21004,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return spanA.start >= spanB.start && spanA.end <= spanB.end;
     }
     function hasTemplateReference$1(type) {
+        var e_1, _a;
         if (type.diDeps) {
             try {
-                for (var _a = __values(type.diDeps), _b = _a.next(); !_b.done; _b = _a.next()) {
-                    var diDep = _b.value;
+                for (var _b = __values(type.diDeps), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var diDep = _c.value;
                     if (diDep.token && diDep.token.identifier &&
                         identifierName(diDep.token.identifier) == 'TemplateRef')
                         return true;
@@ -21016,13 +21017,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             catch (e_1_1) { e_1 = { error: e_1_1 }; }
             finally {
                 try {
-                    if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
                 finally { if (e_1) throw e_1.error; }
             }
         }
         return false;
-        var e_1, _c;
     }
     function getSelectors(info) {
         var map = new Map();
@@ -21034,8 +21034,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return { selectors: selectors, map: map };
     }
     function flatten$1(a) {
-        return (_a = []).concat.apply(_a, __spread(a));
         var _a;
+        return (_a = []).concat.apply(_a, __spread(a));
     }
     function removeSuffix(value, suffix) {
         if (value.endsWith(suffix))
@@ -21043,6 +21043,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return value;
     }
     function uniqueByName(elements) {
+        var e_2, _a;
         if (elements) {
             var result = [];
             var set = new Set();
@@ -21064,7 +21065,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
             return result;
         }
-        var e_2, _a;
     }
     function diagnosticInfoFromTemplateInfo(info) {
         return {
@@ -21466,6 +21466,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return Object.keys(elements).sort().map(function (v) { return v.toLowerCase(); });
     }
     function compose(indexes) {
+        var e_1, _a;
         var result = {};
         if (indexes) {
             try {
@@ -21486,7 +21487,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
         }
         return result;
-        var e_1, _a;
     }
     function attributeNames(element) {
         return Object.keys(compose(elements[element.toUpperCase()] || defaultAttributes)).sort();
@@ -22104,14 +22104,15 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
     var templateAttr = /^(\w+:)?(template$|^\*)/;
     function createElementCssSelector$1(element) {
+        var e_1, _a;
         var cssSelector = new CssSelector();
         var elNameNoNs = splitNsName(element.name)[1];
         cssSelector.setElement(elNameNoNs);
         try {
-            for (var _a = __values(element.attrs), _b = _a.next(); !_b.done; _b = _a.next()) {
-                var attr = _b.value;
+            for (var _b = __values(element.attrs), _c = _b.next(); !_c.done; _c = _b.next()) {
+                var attr = _c.value;
                 if (!attr.name.match(templateAttr)) {
-                    var _c = __read(splitNsName(attr.name), 2), _ = _c[0], attrNameNoNs = _c[1];
+                    var _d = __read(splitNsName(attr.name), 2), _ = _d[0], attrNameNoNs = _d[1];
                     cssSelector.addAttribute(attrNameNoNs, attr.value);
                     if (attr.name.toLowerCase() == 'class') {
                         var classes = attr.value.split(/s+/g);
@@ -22123,12 +22124,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         catch (e_1_1) { e_1 = { error: e_1_1 }; }
         finally {
             try {
-                if (_b && !_b.done && (_d = _a.return)) _d.call(_a);
+                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
             finally { if (e_1) throw e_1.error; }
         }
         return cssSelector;
-        var e_1, _d;
     }
     function foldAttrs(attrs) {
         var inputOutput = new Map();
@@ -22283,11 +22283,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
     }
     function findInputBinding(info, path$$1, binding) {
+        var e_1, _a;
         var element = path$$1.first(ElementAst);
         if (element) {
             try {
-                for (var _a = __values(element.directives), _b = _a.next(); !_b.done; _b = _a.next()) {
-                    var directive = _b.value;
+                for (var _b = __values(element.directives), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var directive = _c.value;
                     var invertedInput = invertMap(directive.directive.inputs);
                     var fieldName = invertedInput[binding.templateName];
                     if (fieldName) {
@@ -22301,19 +22302,19 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             catch (e_1_1) { e_1 = { error: e_1_1 }; }
             finally {
                 try {
-                    if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
                 finally { if (e_1) throw e_1.error; }
             }
         }
-        var e_1, _c;
     }
     function findOutputBinding(info, path$$1, binding) {
+        var e_2, _a;
         var element = path$$1.first(ElementAst);
         if (element) {
             try {
-                for (var _a = __values(element.directives), _b = _a.next(); !_b.done; _b = _a.next()) {
-                    var directive = _b.value;
+                for (var _b = __values(element.directives), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var directive = _c.value;
                     var invertedOutputs = invertMap(directive.directive.outputs);
                     var fieldName = invertedOutputs[binding.name];
                     if (fieldName) {
@@ -22327,18 +22328,18 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             catch (e_2_1) { e_2 = { error: e_2_1 }; }
             finally {
                 try {
-                    if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
                 finally { if (e_2) throw e_2.error; }
             }
         }
-        var e_2, _c;
     }
     function invertMap(obj) {
+        var e_3, _a;
         var result = {};
         try {
-            for (var _a = __values(Object.keys(obj)), _b = _a.next(); !_b.done; _b = _a.next()) {
-                var name_1 = _b.value;
+            for (var _b = __values(Object.keys(obj)), _c = _b.next(); !_c.done; _c = _b.next()) {
+                var name_1 = _c.value;
                 var v = obj[name_1];
                 result[v] = name_1;
             }
@@ -22346,12 +22347,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         catch (e_3_1) { e_3 = { error: e_3_1 }; }
         finally {
             try {
-                if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
             finally { if (e_3) throw e_3.error; }
         }
         return result;
-        var e_3, _c;
     }
     /**
      * Wrap a symbol and change its kind to component.
@@ -22428,6 +22428,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * found in the LICENSE file at https://angular.io/license
      */
     function getTemplateDiagnostics(fileName, astProvider, templates) {
+        var e_1, _a;
         var results = [];
         var _loop_1 = function (template) {
             var ast = astProvider.getTemplateAst(template, fileName);
@@ -22469,12 +22470,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             finally { if (e_1) throw e_1.error; }
         }
         return results;
-        var e_1, _a;
     }
     function getDeclarationDiagnostics(declarations, modules) {
+        var e_2, _a;
         var results = [];
         var directives = undefined;
         var _loop_2 = function (declaration) {
+            var e_3, _a;
             var report = function (message, span) {
                 results.push({
                     kind: DiagnosticKind$1.Error,
@@ -22482,17 +22484,17 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 });
             };
             try {
-                for (var _a = __values(declaration.errors), _b = _a.next(); !_b.done; _b = _a.next()) {
-                    var error = _b.value;
+                for (var _b = __values(declaration.errors), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var error = _c.value;
                     report(error.message, error.span);
                 }
             }
-            catch (e_2_1) { e_2 = { error: e_2_1 }; }
+            catch (e_3_1) { e_3 = { error: e_3_1 }; }
             finally {
                 try {
-                    if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
-                finally { if (e_2) throw e_2.error; }
+                finally { if (e_3) throw e_3.error; }
             }
             if (declaration.metadata) {
                 if (declaration.metadata.isComponent) {
@@ -22519,7 +22521,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     }
                 }
             }
-            var e_2, _c;
         };
         try {
             for (var declarations_1 = __values(declarations), declarations_1_1 = declarations_1.next(); !declarations_1_1.done; declarations_1_1 = declarations_1.next()) {
@@ -22527,15 +22528,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 _loop_2(declaration);
             }
         }
-        catch (e_3_1) { e_3 = { error: e_3_1 }; }
+        catch (e_2_1) { e_2 = { error: e_2_1 }; }
         finally {
             try {
                 if (declarations_1_1 && !declarations_1_1.done && (_a = declarations_1.return)) _a.call(declarations_1);
             }
-            finally { if (e_3) throw e_3.error; }
+            finally { if (e_2) throw e_2.error; }
         }
         return results;
-        var e_3, _a;
     }
 
     /**
@@ -22693,6 +22693,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return values.filter(function (e) { return !!e; });
     }
     function uniqueBySpan(elements) {
+        var e_1, _a;
         if (elements) {
             var result = [];
             var map = new Map();
@@ -22720,14 +22721,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
             return result;
         }
-        var e_1, _a;
     }
     function findSuitableDefaultModule(modules) {
+        var e_2, _a;
         var result = undefined;
         var resultSize = 0;
         try {
-            for (var _a = __values(modules.ngModules), _b = _a.next(); !_b.done; _b = _a.next()) {
-                var module_1 = _b.value;
+            for (var _b = __values(modules.ngModules), _c = _b.next(); !_c.done; _c = _b.next()) {
+                var module_1 = _c.value;
                 var moduleSize = module_1.transitiveModule.directives.length;
                 if (moduleSize > resultSize) {
                     result = module_1;
@@ -22738,12 +22739,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         catch (e_2_1) { e_2 = { error: e_2_1 }; }
         finally {
             try {
-                if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
             finally { if (e_2) throw e_2.error; }
         }
         return result;
-        var e_2, _c;
     }
 
     /**
@@ -24349,7 +24349,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('6.1.0+55.sha-e3834b7');
+    var VERSION$2 = new Version$1('6.1.0+59.sha-3f6fc00');
 
     /**
      * @license
@@ -42824,6 +42824,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         });
         TypeScriptServiceHost.prototype.validate = function () {
             var _this = this;
+            var e_1, _a;
             var program = this.program;
             if (this.lastProgram !== program) {
                 // Invalidate file that have changed in the static symbol resolver
@@ -42833,8 +42834,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 this.clearCaches();
                 var seen_1 = new Set();
                 try {
-                    for (var _a = __values(this.program.getSourceFiles()), _b = _a.next(); !_b.done; _b = _a.next()) {
-                        var sourceFile = _b.value;
+                    for (var _b = __values(this.program.getSourceFiles()), _c = _b.next(); !_c.done; _c = _b.next()) {
+                        var sourceFile = _c.value;
                         var fileName = sourceFile.fileName;
                         seen_1.add(fileName);
                         var version = this.host.getScriptVersion(fileName);
@@ -42850,7 +42851,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 catch (e_1_1) { e_1 = { error: e_1_1 }; }
                 finally {
                     try {
-                        if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                        if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                     }
                     finally { if (e_1) throw e_1.error; }
                 }
@@ -42862,7 +42863,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 }
                 this.lastProgram = program;
             }
-            var e_1, _c;
         };
         TypeScriptServiceHost.prototype.clearCaches = function () {
             this._checker = null;
@@ -42872,17 +42872,18 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             this.modulesOutOfDate = true;
         };
         TypeScriptServiceHost.prototype.ensureTemplateMap = function () {
+            var e_2, _a, e_3, _b;
             if (!this.fileToComponent || !this.templateReferences) {
                 var fileToComponent = new Map();
                 var templateReference = [];
                 var ngModuleSummary = this.getAnalyzedModules();
                 var urlResolver = createOfflineCompileUrlResolver();
                 try {
-                    for (var _a = __values(ngModuleSummary.ngModules), _b = _a.next(); !_b.done; _b = _a.next()) {
-                        var module_1 = _b.value;
+                    for (var _c = __values(ngModuleSummary.ngModules), _d = _c.next(); !_d.done; _d = _c.next()) {
+                        var module_1 = _d.value;
                         try {
-                            for (var _c = __values(module_1.declaredDirectives), _d = _c.next(); !_d.done; _d = _c.next()) {
-                                var directive = _d.value;
+                            for (var _e = __values(module_1.declaredDirectives), _f = _e.next(); !_f.done; _f = _e.next()) {
+                                var directive = _f.value;
                                 var metadata = this.resolver.getNonNormalizedDirectiveMetadata(directive.reference).metadata;
                                 if (metadata.isComponent && metadata.template && metadata.template.templateUrl) {
                                     var templateName = urlResolver.resolve(this.reflector.componentModuleUrl(directive.reference), metadata.template.templateUrl);
@@ -42891,26 +42892,25 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                                 }
                             }
                         }
-                        catch (e_2_1) { e_2 = { error: e_2_1 }; }
+                        catch (e_3_1) { e_3 = { error: e_3_1 }; }
                         finally {
                             try {
-                                if (_d && !_d.done && (_e = _c.return)) _e.call(_c);
+                                if (_f && !_f.done && (_b = _e.return)) _b.call(_e);
                             }
-                            finally { if (e_2) throw e_2.error; }
+                            finally { if (e_3) throw e_3.error; }
                         }
                     }
                 }
-                catch (e_3_1) { e_3 = { error: e_3_1 }; }
+                catch (e_2_1) { e_2 = { error: e_2_1 }; }
                 finally {
                     try {
-                        if (_b && !_b.done && (_f = _a.return)) _f.call(_a);
+                        if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
                     }
-                    finally { if (e_3) throw e_3.error; }
+                    finally { if (e_2) throw e_2.error; }
                 }
                 this.fileToComponent = fileToComponent;
                 this.templateReferences = templateReference;
             }
-            var e_3, _f, e_2, _e;
         };
         TypeScriptServiceHost.prototype.getSourceFromDeclaration = function (fileName, version, source, span, type, declaration, node, sourceFile) {
             var queryCache = undefined;
@@ -43114,11 +43114,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 [];
         };
         TypeScriptServiceHost.prototype.getDeclarationFromNode = function (sourceFile, node) {
+            var e_4, _a;
             if (node.kind == ts.SyntaxKind.ClassDeclaration && node.decorators &&
                 node.name) {
                 try {
-                    for (var _a = __values(node.decorators), _b = _a.next(); !_b.done; _b = _a.next()) {
-                        var decorator = _b.value;
+                    for (var _b = __values(node.decorators), _c = _b.next(); !_c.done; _c = _b.next()) {
+                        var decorator = _c.value;
                         if (decorator.expression && decorator.expression.kind == ts.SyntaxKind.CallExpression) {
                             var classDeclaration = node;
                             if (classDeclaration.name) {
@@ -43158,12 +43159,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 catch (e_4_1) { e_4 = { error: e_4_1 }; }
                 finally {
                     try {
-                        if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                        if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                     }
                     finally { if (e_4) throw e_4.error; }
                 }
             }
-            var e_4, _c;
         };
         TypeScriptServiceHost.prototype.stringOf = function (node) {
             switch (node.kind) {
@@ -43396,6 +43396,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 entries: []
             };
             tryOperation('get completions', function () {
+                var e_1, _a;
                 var results = ls.getCompletionsAt(fileName, position);
                 if (results && results.length) {
                     if (base === undefined) {
@@ -43420,7 +43421,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                         finally { if (e_1) throw e_1.error; }
                     }
                 }
-                var e_1, _a;
             });
             return base;
         };
@@ -43428,19 +43428,20 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var base = oldLS.getQuickInfoAtPosition(fileName, position);
             // TODO(vicb): the tags property has been removed in TS 2.2
             tryOperation('get quick info', function () {
+                var e_2, _a;
                 var ours = ls.getHoverAt(fileName, position);
                 if (ours) {
                     var displayParts = [];
                     try {
-                        for (var _a = __values(ours.text), _b = _a.next(); !_b.done; _b = _a.next()) {
-                            var part = _b.value;
+                        for (var _b = __values(ours.text), _c = _b.next(); !_c.done; _c = _b.next()) {
+                            var part = _c.value;
                             displayParts.push({ kind: part.language || 'angular', text: part.text });
                         }
                     }
                     catch (e_2_1) { e_2 = { error: e_2_1 }; }
                     finally {
                         try {
-                            if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                            if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                         }
                         finally { if (e_2) throw e_2.error; }
                     }
@@ -43456,7 +43457,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                         base.tags = tags;
                     }
                 }
-                var e_2, _c;
             });
             return base;
         };
@@ -43481,6 +43481,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 return base;
             }
             return tryOperation('get definition', function () {
+                var e_3, _a;
                 var ours = ls.getDefinitionAt(fileName, position);
                 if (ours && ours.length) {
                     base = base || [];
@@ -43507,7 +43508,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     }
                 }
                 return base;
-                var e_3, _a;
             }) || [];
         };
         return proxy;
@@ -43520,7 +43520,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('6.1.0+55.sha-e3834b7');
+    var VERSION$3 = new Version$1('6.1.0+59.sha-3f6fc00');
 
     /**
      * @license
