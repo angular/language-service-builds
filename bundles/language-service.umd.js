@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.1.0+64.sha-64516da
+ * @license Angular v6.1.0+65.sha-c8a4fb1
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1144,7 +1144,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('6.1.0+64.sha-64516da');
+    var VERSION = new Version('6.1.0+65.sha-c8a4fb1');
 
     /**
      * @license
@@ -14370,6 +14370,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         Identifiers.text = { name: 'ɵT', moduleName: CORE$1 };
         Identifiers.textBinding = { name: 'ɵt', moduleName: CORE$1 };
         Identifiers.bind = { name: 'ɵb', moduleName: CORE$1 };
+        Identifiers.getCurrentView = { name: 'ɵgV', moduleName: CORE$1 };
+        Identifiers.restoreView = { name: 'ɵrV', moduleName: CORE$1 };
         Identifiers.interpolation1 = { name: 'ɵi1', moduleName: CORE$1 };
         Identifiers.interpolation2 = { name: 'ɵi2', moduleName: CORE$1 };
         Identifiers.interpolation3 = { name: 'ɵi3', moduleName: CORE$1 };
@@ -14643,6 +14645,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             isVarLength: !identifier,
         };
     }
+    function instruction(span, reference, params) {
+        return importExpr(reference, null, span).callFn(params, span);
+    }
     // e.g. x(2);
     function generateNextContextExpr(relativeLevelDiff) {
         return importExpr(Identifiers$1.nextContext)
@@ -14679,6 +14684,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             /** Keeps a map from local variables to their BindingData. */
             this.map = new Map();
             this.referenceNameIndex = 0;
+            this.restoreViewVariable = null;
         }
         BindingScope.prototype.get = function (name) {
             var current = this;
@@ -14698,6 +14704,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                         this.map.set(name, value);
                         // Possibly generate a shared context var
                         this.maybeGenerateSharedContextVar(value);
+                        this.maybeRestoreView(value.retrievalLevel);
                     }
                     if (value.declareLocalCallback && !value.declare) {
                         value.declare = true;
@@ -14772,8 +14779,32 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         BindingScope.prototype.getComponentProperty = function (name) {
             var componentValue = this.map.get(SHARED_CONTEXT_KEY + 0);
             componentValue.declare = true;
+            this.maybeRestoreView(0);
             return componentValue.lhs.prop(name);
         };
+        BindingScope.prototype.maybeRestoreView = function (retrievalLevel) {
+            if (this.isListenerScope() && retrievalLevel < this.bindingLevel) {
+                if (!this.parent.restoreViewVariable) {
+                    // parent saves variable to generate a shared `const $s$ = gV();` instruction
+                    this.parent.restoreViewVariable = variable(this.parent.freshReferenceName());
+                }
+                this.restoreViewVariable = this.parent.restoreViewVariable;
+            }
+        };
+        BindingScope.prototype.restoreViewStatement = function () {
+            // rV($state$);
+            return this.restoreViewVariable ?
+                [instruction(null, Identifiers$1.restoreView, [this.restoreViewVariable]).toStmt()] :
+                [];
+        };
+        BindingScope.prototype.viewSnapshotStatements = function () {
+            // const $state$ = gV();
+            var getCurrentViewInstruction = instruction(null, Identifiers$1.getCurrentView, []);
+            return this.restoreViewVariable ?
+                [this.restoreViewVariable.set(getCurrentViewInstruction).toConstDecl()] :
+                [];
+        };
+        BindingScope.prototype.isListenerScope = function () { return this.parent && this.parent.bindingLevel === this.bindingLevel; };
         BindingScope.prototype.variableDeclarations = function () {
             var _this = this;
             var currentContextLevel = 0;
@@ -14795,7 +14826,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var ref = "" + REFERENCE_PREFIX + current.referenceNameIndex++;
             return ref;
         };
-        BindingScope.ROOT_SCOPE = new BindingScope().set(-1, '$event', variable('$event'));
+        BindingScope.ROOT_SCOPE = new BindingScope().set(0, '$event', variable('$event'));
         return BindingScope;
     }());
 
@@ -24398,7 +24429,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('6.1.0+64.sha-64516da');
+    var VERSION$2 = new Version$1('6.1.0+65.sha-c8a4fb1');
 
     /**
      * @license
@@ -43577,7 +43608,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('6.1.0+64.sha-64516da');
+    var VERSION$3 = new Version$1('6.1.0+65.sha-c8a4fb1');
 
     /**
      * @license
