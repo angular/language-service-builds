@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.1.0+62.sha-aafd502
+ * @license Angular v6.1.0+64.sha-64516da
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1144,7 +1144,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('6.1.0+62.sha-aafd502');
+    var VERSION = new Version('6.1.0+64.sha-64516da');
 
     /**
      * @license
@@ -22875,7 +22875,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @suppress {globalThis}
      */
-    function makeDecorator(name, props, parentClass, chainFn, typeFn) {
+    function makeDecorator(name, props, parentClass, additionalProcessing, typeFn) {
         var metaCtor = makeMetadataCtor(props);
         function DecoratorFactory() {
             var args = [];
@@ -22888,19 +22888,19 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 return this;
             }
             var annotationInstance = new ((_a = DecoratorFactory).bind.apply(_a, __spread([void 0], args)))();
-            var TypeDecorator = function TypeDecorator(cls) {
-                typeFn && typeFn.apply(void 0, __spread([cls], args));
+            return function TypeDecorator(cls) {
+                if (typeFn)
+                    typeFn.apply(void 0, __spread([cls], args));
                 // Use of Object.defineProperty is important since it creates non-enumerable property which
                 // prevents the property is copied during subclassing.
                 var annotations = cls.hasOwnProperty(ANNOTATIONS) ?
                     cls[ANNOTATIONS] :
                     Object.defineProperty(cls, ANNOTATIONS, { value: [] })[ANNOTATIONS];
                 annotations.push(annotationInstance);
+                if (additionalProcessing)
+                    additionalProcessing(cls);
                 return cls;
             };
-            if (chainFn)
-                chainFn(TypeDecorator);
-            return TypeDecorator;
         }
         if (parentClass) {
             DecoratorFactory.prototype = Object.create(parentClass.prototype);
@@ -22960,7 +22960,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         ParamDecoratorFactory.annotationCls = ParamDecoratorFactory;
         return ParamDecoratorFactory;
     }
-    function makePropDecorator(name, props, parentClass) {
+    function makePropDecorator(name, props, parentClass, additionalProcessing) {
         var metaCtor = makeMetadataCtor(props);
         function PropDecoratorFactory() {
             var args = [];
@@ -22973,7 +22973,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 return this;
             }
             var decoratorInstance = new ((_a = PropDecoratorFactory).bind.apply(_a, __spread([void 0], args)))();
-            return function PropDecorator(target, name) {
+            function PropDecorator(target, name) {
                 var constructor = target.constructor;
                 // Use of Object.defineProperty is important since it creates non-enumerable property which
                 // prevents the property is copied during subclassing.
@@ -22982,7 +22982,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     Object.defineProperty(constructor, PROP_METADATA, { value: {} })[PROP_METADATA];
                 meta[name] = meta.hasOwnProperty(name) && meta[name] || [];
                 meta[name].unshift(decoratorInstance);
-            };
+                if (additionalProcessing)
+                    additionalProcessing.apply(void 0, __spread([target, name], args));
+            }
+            return PropDecorator;
         }
         if (parentClass) {
             PropDecoratorFactory.prototype = Object.create(parentClass.prototype);
@@ -23171,6 +23174,35 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    function getClosureSafeProperty(objWithPropertyToExtract, target) {
+        for (var key in objWithPropertyToExtract) {
+            if (objWithPropertyToExtract[key] === target) {
+                return key;
+            }
+        }
+        throw Error('Could not find renamed property on target object.');
+    }
+    /**
+     * Sets properties on a target object from a source object, but only if
+     * the property doesn't already exist on the target object.
+     * @param target The target to set properties on
+     * @param source The source of the property keys and values to set
+     */
+    function fillProperties(target, source) {
+        for (var key in source) {
+            if (source.hasOwnProperty(key) && !target.hasOwnProperty(key)) {
+                target[key] = source[key];
+            }
+        }
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     /**
      * Type of the Directive metadata.
      */
@@ -23276,16 +23308,49 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * @Annotation
      */
     var Pipe = makeDecorator('Pipe', function (p) { return (__assign({ pure: true }, p)); }, undefined, undefined, function (type, meta) { return (function () { })(type, meta); });
+    var initializeBaseDef = function (target) {
+        var constructor = target.constructor;
+        var inheritedBaseDef = constructor.ngBaseDef;
+        var baseDef = constructor.ngBaseDef = {
+            inputs: {},
+            outputs: {},
+            declaredInputs: {},
+        };
+        if (inheritedBaseDef) {
+            fillProperties(baseDef.inputs, inheritedBaseDef.inputs);
+            fillProperties(baseDef.outputs, inheritedBaseDef.outputs);
+            fillProperties(baseDef.declaredInputs, inheritedBaseDef.declaredInputs);
+        }
+    };
+    /**
+     * Does the work of creating the `ngBaseDef` property for the @Input and @Output decorators.
+     * @param key "inputs" or "outputs"
+     */
+    var updateBaseDefFromIOProp = function (getProp) {
+        return function (target, name) {
+            var args = [];
+            for (var _i = 2; _i < arguments.length; _i++) {
+                args[_i - 2] = arguments[_i];
+            }
+            var constructor = target.constructor;
+            if (!constructor.hasOwnProperty('ngBaseDef')) {
+                initializeBaseDef(target);
+            }
+            var baseDef = constructor.ngBaseDef;
+            var defProp = getProp(baseDef);
+            defProp[name] = args[0];
+        };
+    };
     /**
      *
      * @Annotation
      */
-    var Input = makePropDecorator('Input', function (bindingPropertyName) { return ({ bindingPropertyName: bindingPropertyName }); });
+    var Input = makePropDecorator('Input', function (bindingPropertyName) { return ({ bindingPropertyName: bindingPropertyName }); }, undefined, updateBaseDefFromIOProp(function (baseDef) { return baseDef.inputs || {}; }));
     /**
      *
      * @Annotation
      */
-    var Output = makePropDecorator('Output', function (bindingPropertyName) { return ({ bindingPropertyName: bindingPropertyName }); });
+    var Output = makePropDecorator('Output', function (bindingPropertyName) { return ({ bindingPropertyName: bindingPropertyName }); }, undefined, updateBaseDefFromIOProp(function (baseDef) { return baseDef.outputs || {}; }));
     /**
      *
      * @Annotation
@@ -23651,22 +23716,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         // Note: We always use `Object` as the null value
         // to simplify checking later on.
         return parentCtor || Object;
-    }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    function getClosureSafeProperty(objWithPropertyToExtract, target) {
-        for (var key in objWithPropertyToExtract) {
-            if (objWithPropertyToExtract[key] === target) {
-                return key;
-            }
-        }
-        throw Error('Could not find renamed property on target object.');
     }
 
     /**
@@ -24172,8 +24221,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * found in the LICENSE file at https://angular.io/license
      */
     var GET_PROPERTY_NAME$1 = {};
-    var ɵ0$1 = GET_PROPERTY_NAME$1;
-    var USE_VALUE$2 = getClosureSafeProperty({ provide: String, useValue: ɵ0$1 }, GET_PROPERTY_NAME$1);
+    var ɵ0$2 = GET_PROPERTY_NAME$1;
+    var USE_VALUE$2 = getClosureSafeProperty({ provide: String, useValue: ɵ0$2 }, GET_PROPERTY_NAME$1);
     var EMPTY_ARRAY = [];
     function convertInjectableProviderToFactory(type, provider) {
         if (!provider) {
@@ -24349,7 +24398,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('6.1.0+62.sha-aafd502');
+    var VERSION$2 = new Version$1('6.1.0+64.sha-64516da');
 
     /**
      * @license
@@ -43528,7 +43577,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('6.1.0+62.sha-aafd502');
+    var VERSION$3 = new Version$1('6.1.0+64.sha-64516da');
 
     /**
      * @license
