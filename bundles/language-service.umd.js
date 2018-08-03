@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.0-beta.0+9.sha-0822dc7
+ * @license Angular v7.0.0-beta.0+15.sha-4e26478
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1144,7 +1144,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.0-beta.0+9.sha-0822dc7');
+    var VERSION = new Version('7.0.0-beta.0+15.sha-4e26478');
 
     /**
      * @license
@@ -24429,7 +24429,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('7.0.0-beta.0+9.sha-0822dc7');
+    var VERSION$2 = new Version$1('7.0.0-beta.0+15.sha-4e26478');
 
     /**
      * @license
@@ -42066,10 +42066,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Renderer2.
      */
     var renderer;
-    var rendererFactory;
     function getRenderer() {
         // top level variables should not be exported for performance reasons (PERF_NOTES.md)
         return renderer;
+    }
+    var rendererFactory;
+    function getRendererFactory() {
+        // top level variables should not be exported for performance reasons (PERF_NOTES.md)
+        return rendererFactory;
     }
     function getCurrentSanitizer() {
         return viewData && viewData[SANITIZER];
@@ -43352,7 +43356,16 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
          *
          * See {@link ChangeDetectorRef#detach detach} for more information.
          */
-        ViewRef.prototype.detectChanges = function () { detectChanges(this.context); };
+        ViewRef.prototype.detectChanges = function () {
+            var rendererFactory = getRendererFactory();
+            if (rendererFactory.begin) {
+                rendererFactory.begin();
+            }
+            detectChanges(this.context);
+            if (rendererFactory.end) {
+                rendererFactory.end();
+            }
+        };
         /**
          * Checks the change detector and its children, and throws if any changes are detected.
          *
@@ -45288,7 +45301,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.0-beta.0+9.sha-0822dc7');
+    var VERSION$3 = new Version$1('7.0.0-beta.0+15.sha-4e26478');
 
     /**
      * @license
