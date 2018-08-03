@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.0-beta.0+1.sha-4f741e7
+ * @license Angular v7.0.0-beta.0+3.sha-c2c12e5
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1192,7 +1192,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.0-beta.0+1.sha-4f741e7');
+    var VERSION = new Version('7.0.0-beta.0+3.sha-c2c12e5');
 
     /**
      * @license
@@ -26893,6 +26893,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             rendererDestroyNode: 0,
             rendererMoveNode: 0,
             rendererRemoveNode: 0,
+            rendererCreateComment: 0,
         };
     }
     /**
@@ -27119,6 +27120,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         var parent = node.tNode.parent;
         return readElementValue(parent ? node.view[parent.index] : node.view[HOST_NODE]);
+    }
+    /**
+     * Retrieves render parent LElementNode for a given view.
+     * Might be null if a view is not yet attatched to any container.
+     */
+    function getRenderParent(viewNode) {
+        var container = getParentLNode(viewNode);
+        return container ? container.data[RENDER_PARENT] : null;
     }
     /**
      * Stack used to keep track of projection nodes in walkLNodeTree.
@@ -27521,8 +27530,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     function canInsertNativeNode(parent, currentView) {
         // We can only insert into a Component or View. Any other type should be an Error.
-        ngDevMode && assertNodeOfPossibleTypes(parent, 3 /* Element */, 2 /* View */);
-        if (parent.tNode.type === 3 /* Element */) {
+        ngDevMode && assertNodeOfPossibleTypes(parent, 3 /* Element */, 4 /* ElementContainer */, 2 /* View */);
+        if (parent.tNode.type === 3 /* Element */ || parent.tNode.type === 4 /* ElementContainer */) {
             // Parent is an element.
             if (parent.view !== currentView) {
                 // If the Parent view is not the same as current view than we are inserting across
@@ -27565,6 +27574,19 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
     }
     /**
+     * Inserts a native node before another native node for a given parent using {@link Renderer3}.
+     * This is a utility function that can be used when native nodes were determined - it abstracts an
+     * actual renderer being used.
+     */
+    function nativeInsertBefore(renderer, parent, child, beforeNode) {
+        if (isProceduralRenderer(renderer)) {
+            renderer.insertBefore(parent, child, beforeNode);
+        }
+        else {
+            parent.insertBefore(child, beforeNode, true);
+        }
+    }
+    /**
      * Appends the `child` element to the `parent`.
      *
      * The element insertion might be delayed {@link canInsertNativeNode}.
@@ -27583,9 +27605,18 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 var views = container.data[VIEWS];
                 var index = views.indexOf(parent);
                 var beforeNode = index + 1 < views.length ? (getChildLNode(views[index + 1])).native : container.native;
-                isProceduralRenderer(renderer) ?
-                    renderer.insertBefore(renderParent.native, child, beforeNode) :
-                    renderParent.native.insertBefore(child, beforeNode, true);
+                nativeInsertBefore(renderer, renderParent.native, child, beforeNode);
+            }
+            else if (parent.tNode.type === 4 /* ElementContainer */) {
+                var beforeNode = parent.native;
+                var grandParent = getParentLNode(parent);
+                if (grandParent.tNode.type === 2 /* View */) {
+                    var renderParent = getRenderParent(grandParent);
+                    nativeInsertBefore(renderer, renderParent.native, child, beforeNode);
+                }
+                else {
+                    nativeInsertBefore(renderer, grandParent.native, child, beforeNode);
+                }
             }
             else {
                 isProceduralRenderer(renderer) ? renderer.appendChild(parent.native, child) :
@@ -29249,6 +29280,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function listener(eventName, listenerFn, useCapture) {
         if (useCapture === void 0) { useCapture = false; }
         ngDevMode && assertPreviousIsParent();
+        ngDevMode && assertNodeOfPossibleTypes(previousOrParentNode, 3 /* Element */);
         var node = previousOrParentNode;
         var native = node.native;
         ngDevMode && ngDevMode.rendererAddEventListener++;
@@ -29860,6 +29892,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             assertEqual(viewData[BINDING_INDEX], -1, 'container nodes should be created before any bindings');
         var currentParent = isParent ? previousOrParentNode : getParentLNode(previousOrParentNode);
         var lContainer = createLContainer(currentParent, viewData);
+        ngDevMode && ngDevMode.rendererCreateComment++;
         var comment = renderer.createComment(ngDevMode ? 'container' : '');
         var node = createLNode(index, 0 /* Container */, comment, tagName || null, attrs || null, lContainer);
         appendChild(getParentLNode(node), comment, viewData);
@@ -48178,7 +48211,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('7.0.0-beta.0+1.sha-4f741e7');
+    var VERSION$2 = new Version$1('7.0.0-beta.0+3.sha-c2c12e5');
 
     /**
      * @license
@@ -52632,7 +52665,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.0-beta.0+1.sha-4f741e7');
+    var VERSION$3 = new Version$1('7.0.0-beta.0+3.sha-c2c12e5');
 
     /**
      * @license
