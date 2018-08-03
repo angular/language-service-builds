@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.0-beta.0+3.sha-c2c12e5
+ * @license Angular v7.0.0-beta.0+4.sha-1fb7111
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1144,7 +1144,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.0-beta.0+3.sha-c2c12e5');
+    var VERSION = new Version('7.0.0-beta.0+4.sha-1fb7111');
 
     /**
      * @license
@@ -24429,7 +24429,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('7.0.0-beta.0+3.sha-c2c12e5');
+    var VERSION$2 = new Version$1('7.0.0-beta.0+4.sha-1fb7111');
 
     /**
      * @license
@@ -42188,11 +42188,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             executeInitHooks(viewData, tView, creationMode);
         }
         refreshDynamicEmbeddedViews(viewData);
+        // Content query results must be refreshed before content hooks are called.
+        refreshContentQueries(tView);
         if (!checkNoChangesMode) {
             executeHooks(directives, tView.contentHooks, tView.contentCheckHooks, creationMode);
         }
         setHostBindings(tView.hostBindings);
-        refreshContentQueries(tView);
         refreshChildComponents(tView.components);
     }
     /** Sets the host bindings for the current view. */
@@ -45287,7 +45288,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.0-beta.0+3.sha-c2c12e5');
+    var VERSION$3 = new Version$1('7.0.0-beta.0+4.sha-1fb7111');
 
     /**
      * @license
