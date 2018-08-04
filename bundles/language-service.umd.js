@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.1.1+4.sha-0c9c2ac
+ * @license Angular v6.1.1+5.sha-2e16039
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1144,7 +1144,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('6.1.1+4.sha-0c9c2ac');
+    var VERSION = new Version('6.1.1+5.sha-2e16039');
 
     /**
      * @license
@@ -24268,7 +24268,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('6.1.1+4.sha-0c9c2ac');
+    var VERSION$2 = new Version$1('6.1.1+5.sha-2e16039');
 
     /**
      * @license
@@ -44306,7 +44306,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('6.1.1+4.sha-0c9c2ac');
+    var VERSION$3 = new Version$1('6.1.1+5.sha-2e16039');
 
     /**
      * @license
