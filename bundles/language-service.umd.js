@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.0-beta.0+18.sha-26a15cc
+ * @license Angular v7.0.0-beta.0+22.sha-97b5cb2
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1192,7 +1192,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.0-beta.0+18.sha-26a15cc');
+    var VERSION = new Version('7.0.0-beta.0+22.sha-97b5cb2');
 
     /**
      * @license
@@ -15329,6 +15329,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         Identifiers.registerContentQuery = { name: 'ɵQr', moduleName: CORE$1 };
         Identifiers.NgOnChangesFeature = { name: 'ɵNgOnChangesFeature', moduleName: CORE$1 };
         Identifiers.InheritDefinitionFeature = { name: 'ɵInheritDefinitionFeature', moduleName: CORE$1 };
+        Identifiers.PublicFeature = { name: 'ɵPublicFeature', moduleName: CORE$1 };
         Identifiers.listener = { name: 'ɵL', moduleName: CORE$1 };
         // Reserve slots for pure functions
         Identifiers.reserveSlots = { name: 'ɵrS', moduleName: CORE$1 };
@@ -17301,6 +17302,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         definitionMap.set('outputs', conditionallyCreateMapObjectLiteral(meta.outputs));
         // e.g. `features: [NgOnChangesFeature]`
         var features = [];
+        // TODO: add `PublicFeature` so that directives get registered to the DI - make this configurable
+        features.push(importExpr(Identifiers$1.PublicFeature));
         if (meta.usesInheritance) {
             features.push(importExpr(Identifiers$1.InheritDefinitionFeature));
         }
@@ -40139,6 +40142,43 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     var BLOOM_SIZE = 256;
     var BLOOM_MASK = BLOOM_SIZE - 1;
+    /** Counter used to generate unique IDs for directives. */
+    var nextNgElementId = 0;
+    /**
+     * Registers this directive as present in its node's injector by flipping the directive's
+     * corresponding bit in the injector's bloom filter.
+     *
+     * @param injector The node injector in which the directive should be registered
+     * @param type The directive to register
+     */
+    function bloomAdd(injector, type) {
+        var id = type[NG_ELEMENT_ID];
+        // Set a unique ID on the directive type, so if something tries to inject the directive,
+        // we can easily retrieve the ID and hash it into the bloom bit that should be checked.
+        if (id == null) {
+            id = type[NG_ELEMENT_ID] = nextNgElementId++;
+        }
+        // We only have BLOOM_SIZE (256) slots in our bloom filter (8 buckets * 32 bits each),
+        // so all unique IDs must be modulo-ed into a number from 0 - 255 to fit into the filter.
+        var bloomBit = id & BLOOM_MASK;
+        // Create a mask that targets the specific bit associated with the directive.
+        // JS bit operations are 32 bits, so this will be a number between 2^0 and 2^31, corresponding
+        // to bit positions 0 - 31 in a 32 bit integer.
+        var mask = 1 << bloomBit;
+        // Use the raw bloomBit number to determine which bloom filter bucket we should check
+        // e.g: bf0 = [0 - 31], bf1 = [32 - 63], bf2 = [64 - 95], bf3 = [96 - 127], etc
+        var b7 = bloomBit & 0x80;
+        var b6 = bloomBit & 0x40;
+        var b5 = bloomBit & 0x20;
+        if (b7) {
+            b6 ? (b5 ? (injector.bf7 |= mask) : (injector.bf6 |= mask)) :
+                (b5 ? (injector.bf5 |= mask) : (injector.bf4 |= mask));
+        }
+        else {
+            b6 ? (b5 ? (injector.bf3 |= mask) : (injector.bf2 |= mask)) :
+                (b5 ? (injector.bf1 |= mask) : (injector.bf0 |= mask));
+        }
+    }
     function getOrCreateNodeInjector() {
         ngDevMode && assertPreviousIsParent();
         return getOrCreateNodeInjectorForNode(getPreviousOrParentNode());
@@ -40180,6 +40220,23 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             elementRef: null,
             changeDetectorRef: null,
         };
+    }
+    /**
+     * Makes a directive public to the DI system by adding it to an injector's bloom filter.
+     *
+     * @param di The node injector in which a directive will be added
+     * @param def The definition of the directive to be made public
+     */
+    function diPublicInInjector(di, def) {
+        bloomAdd(di, def.type);
+    }
+    /**
+     * Makes a directive public to the DI system by adding it to an injector's bloom filter.
+     *
+     * @param def The definition of the directive to be made public
+     */
+    function diPublic(def) {
+        diPublicInInjector(getOrCreateNodeInjector(), def);
     }
     function directiveInject(token, flags) {
         if (flags === void 0) { flags = 0 /* Default */; }
@@ -40690,10 +40747,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     var TemplateRef$1 = /** @class */ (function () {
         function TemplateRef$$1(_declarationParentView, elementRef, _tView, _renderer, _queries) {
             this._declarationParentView = _declarationParentView;
+            this.elementRef = elementRef;
             this._tView = _tView;
             this._renderer = _renderer;
             this._queries = _queries;
-            this.elementRef = elementRef;
         }
         TemplateRef$$1.prototype.createEmbeddedView = function (context, containerNode, index) {
             var viewNode = createEmbeddedViewNode(this._tView, context, this._declarationParentView, this._renderer, this._queries);
@@ -40715,6 +40772,15 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * This feature publishes the directive (or component) into the DI system, making it visible to
+     * others for injection.
+     *
+     * @param definition
+     */
+    function PublicFeature(definition) {
+        definition.diPublic = diPublic;
+    }
 
     /**
      * @license
@@ -47295,6 +47361,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         'ɵinjectTemplateRef': injectTemplateRef,
         'ɵinjectViewContainerRef': injectViewContainerRef,
         'ɵNgOnChangesFeature': NgOnChangesFeature,
+        'ɵPublicFeature': PublicFeature,
         'ɵInheritDefinitionFeature': InheritDefinitionFeature,
         'ɵa': elementAttribute,
         'ɵb': bind,
@@ -47834,11 +47901,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Compile an Angular injectable according to its `Injectable` metadata, and patch the resulting
      * `ngInjectableDef` onto the injectable type.
      */
-    function compileInjectable$1(type, meta) {
-        // TODO(alxhub): handle JIT of bare @Injectable().
-        if (!meta) {
-            return;
-        }
+    function compileInjectable$1(type, srcMeta) {
+        // Allow the compilation of a class with a `@Injectable()` decorator without parameters
+        var meta = srcMeta || { providedIn: null };
         var def = null;
         Object.defineProperty(type, NG_INJECTABLE_DEF, {
             get: function () {
@@ -48234,7 +48299,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('7.0.0-beta.0+18.sha-26a15cc');
+    var VERSION$2 = new Version$1('7.0.0-beta.0+22.sha-97b5cb2');
 
     /**
      * @license
@@ -48271,15 +48336,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     var DebugNode = /** @class */ (function () {
         function DebugNode(nativeNode, parent, _debugContext) {
-            this._debugContext = _debugContext;
             this.nativeNode = nativeNode;
+            this._debugContext = _debugContext;
+            this.listeners = [];
+            this.parent = null;
             if (parent && parent instanceof DebugElement) {
                 parent.addChild(this);
             }
-            else {
-                this.parent = null;
-            }
-            this.listeners = [];
         }
         Object.defineProperty(DebugNode.prototype, "injector", {
             get: function () { return this._debugContext.injector; },
@@ -52688,7 +52751,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.0-beta.0+18.sha-26a15cc');
+    var VERSION$3 = new Version$1('7.0.0-beta.0+22.sha-97b5cb2');
 
     /**
      * @license
