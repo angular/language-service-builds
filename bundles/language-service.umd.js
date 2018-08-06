@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.0-beta.0+28.sha-c158702
+ * @license Angular v7.0.0-beta.0+32.sha-7d006c5
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1144,7 +1144,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.0-beta.0+28.sha-c158702');
+    var VERSION = new Version('7.0.0-beta.0+32.sha-7d006c5');
 
     /**
      * @license
@@ -22868,11 +22868,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * @usageNotes
      * ### Basic Example
      *
+     * #### Plain InjectionToken
+     *
      * {@example core/di/ts/injector_spec.ts region='InjectionToken'}
      *
-     * ### Tree-shakeable Example
+     * #### Tree-shakable InjectionToken
      *
-     * {@example core/di/ts/injector_spec.ts region='ShakeableInjectionToken'}
+     * {@example core/di/ts/injector_spec.ts region='ShakableInjectionToken'}
      *
      */
     var InjectionToken = /** @class */ (function () {
@@ -24430,7 +24432,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('7.0.0-beta.0+28.sha-c158702');
+    var VERSION$2 = new Version$1('7.0.0-beta.0+32.sha-7d006c5');
 
     /**
      * @license
@@ -45300,7 +45302,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.0-beta.0+28.sha-c158702');
+    var VERSION$3 = new Version$1('7.0.0-beta.0+32.sha-7d006c5');
 
     /**
      * @license
