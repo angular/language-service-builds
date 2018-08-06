@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.0-beta.0+38.sha-16c03c0
+ * @license Angular v7.0.0-beta.0+37.sha-3355502
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1144,7 +1144,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.0-beta.0+38.sha-16c03c0');
+    var VERSION = new Version('7.0.0-beta.0+37.sha-3355502');
 
     /**
      * @license
@@ -24432,7 +24432,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('7.0.0-beta.0+38.sha-16c03c0');
+    var VERSION$2 = new Version$1('7.0.0-beta.0+37.sha-3355502');
 
     /**
      * @license
@@ -34884,14 +34884,17 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             if (!this.taskTrackingZone) {
                 return [];
             }
-            // Copy the tasks data so that we don't leak tasks.
             return this.taskTrackingZone.macroTasks.map(function (t) {
                 return {
                     source: t.source,
+                    isPeriodic: t.data.isPeriodic,
+                    delay: t.data.delay,
                     // From TaskTrackingZone:
                     // https://github.com/angular/zone.js/blob/master/lib/zone-spec/task-tracking.ts#L40
                     creationLocation: t.creationLocation,
-                    data: t.data
+                    // Added by Zones for XHRs
+                    // https://github.com/angular/zone.js/blob/master/lib/browser/browser.ts#L133
+                    xhr: t.data.target
                 };
             });
         };
@@ -45318,7 +45321,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.0-beta.0+38.sha-16c03c0');
+    var VERSION$3 = new Version$1('7.0.0-beta.0+37.sha-3355502');
 
     /**
      * @license
