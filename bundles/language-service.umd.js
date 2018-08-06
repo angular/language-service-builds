@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.0-beta.0+18.sha-26a15cc
+ * @license Angular v7.0.0-beta.0+22.sha-97b5cb2
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1144,7 +1144,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.0-beta.0+18.sha-26a15cc');
+    var VERSION = new Version('7.0.0-beta.0+22.sha-97b5cb2');
 
     /**
      * @license
@@ -14443,6 +14443,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         Identifiers.registerContentQuery = { name: 'ɵQr', moduleName: CORE$1 };
         Identifiers.NgOnChangesFeature = { name: 'ɵNgOnChangesFeature', moduleName: CORE$1 };
         Identifiers.InheritDefinitionFeature = { name: 'ɵInheritDefinitionFeature', moduleName: CORE$1 };
+        Identifiers.PublicFeature = { name: 'ɵPublicFeature', moduleName: CORE$1 };
         Identifiers.listener = { name: 'ɵL', moduleName: CORE$1 };
         // Reserve slots for pure functions
         Identifiers.reserveSlots = { name: 'ɵrS', moduleName: CORE$1 };
@@ -24429,7 +24430,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('7.0.0-beta.0+18.sha-26a15cc');
+    var VERSION$2 = new Version$1('7.0.0-beta.0+22.sha-97b5cb2');
 
     /**
      * @license
@@ -35947,15 +35948,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     var DebugNode = /** @class */ (function () {
         function DebugNode(nativeNode, parent, _debugContext) {
-            this._debugContext = _debugContext;
             this.nativeNode = nativeNode;
+            this._debugContext = _debugContext;
+            this.listeners = [];
+            this.parent = null;
             if (parent && parent instanceof DebugElement) {
                 parent.addChild(this);
             }
-            else {
-                this.parent = null;
-            }
-            this.listeners = [];
         }
         Object.defineProperty(DebugNode.prototype, "injector", {
             get: function () { return this._debugContext.injector; },
@@ -44036,10 +44035,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     var TemplateRef$1 = /** @class */ (function () {
         function TemplateRef$$1(_declarationParentView, elementRef, _tView, _renderer, _queries) {
             this._declarationParentView = _declarationParentView;
+            this.elementRef = elementRef;
             this._tView = _tView;
             this._renderer = _renderer;
             this._queries = _queries;
-            this.elementRef = elementRef;
         }
         TemplateRef$$1.prototype.createEmbeddedView = function (context, containerNode, index) {
             var viewNode = createEmbeddedViewNode(this._tView, context, this._declarationParentView, this._renderer, this._queries);
@@ -45301,7 +45300,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.0-beta.0+18.sha-26a15cc');
+    var VERSION$3 = new Version$1('7.0.0-beta.0+22.sha-97b5cb2');
 
     /**
      * @license
