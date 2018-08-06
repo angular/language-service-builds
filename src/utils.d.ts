@@ -5,6 +5,7 @@
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
+/// <amd-module name="@angular/language-service/src/utils" />
 import { CompileTypeMetadata, ParseSourceSpan, TemplateAst, TemplateAstPath } from '@angular/compiler';
 import { DiagnosticTemplateInfo } from '@angular/compiler-cli/src/language_services';
 import { SelectorInfo, TemplateInfo } from './common';
