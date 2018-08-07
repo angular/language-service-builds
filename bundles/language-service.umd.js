@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.0-beta.0+38.sha-16c03c0
+ * @license Angular v7.0.0-beta.0+50.sha-732026c
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1144,7 +1144,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.0-beta.0+38.sha-16c03c0');
+    var VERSION = new Version('7.0.0-beta.0+50.sha-732026c');
 
     /**
      * @license
@@ -16849,6 +16849,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 summaries.forEach(function (summary) { return _this.summaryCache.set(summary.symbol, summary); });
                 if (moduleName) {
                     this.knownFileNameToModuleNames.set(filePath, moduleName);
+                    if (filePath.endsWith('.d.ts')) {
+                        // Also add entries to map the ngfactory & ngsummary files to their module names.
+                        // This is necessary to resolve ngfactory & ngsummary files to their AMD module
+                        // names when building angular with Bazel from source downstream.
+                        // See https://github.com/bazelbuild/rules_typescript/pull/223 for context.
+                        this.knownFileNameToModuleNames.set(filePath.replace(/\.d\.ts$/, '.ngfactory.d.ts'), moduleName + '.ngfactory');
+                        this.knownFileNameToModuleNames.set(filePath.replace(/\.d\.ts$/, '.ngsummary.d.ts'), moduleName + '.ngsummary');
+                    }
                 }
                 importAs.forEach(function (importAs) { _this.importAs.set(importAs.symbol, importAs.importAs); });
             }
@@ -24432,7 +24440,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('7.0.0-beta.0+38.sha-16c03c0');
+    var VERSION$2 = new Version$1('7.0.0-beta.0+50.sha-732026c');
 
     /**
      * @license
@@ -41888,6 +41896,16 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         // Since the projection would than move it to its final destination.
         return false;
     }
+    /**
+     * We might delay insertion of children for a given view if it is disconnected.
+     * This might happen for 2 main reason:
+     * - view is not inserted into any container (view was created but not iserted yet)
+     * - view is inserted into a container but the container itself is not inserted into the DOM
+     * (container might be part of projection or child of a view that is not inserted yet).
+     *
+     * In other words we can insert children of a given view this view was inserted into a container and
+     * the container itself has it render parent determined.
+     */
     function canInsertNativeChildOfView(parent) {
         ngDevMode && assertNodeType(parent, 2 /* View */);
         // Because we are inserting into a `View` the `View` may be disconnected.
@@ -41989,6 +42007,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             else if (parent.tNode.type === 4 /* ElementContainer */) {
                 var beforeNode = parent.native;
                 var grandParent = getParentLNode(parent);
+                while (grandParent.tNode.type === 4 /* ElementContainer */) {
+                    grandParent = getParentLNode(grandParent);
+                }
                 if (grandParent.tNode.type === 2 /* View */) {
                     var renderParent = getRenderParent(grandParent);
                     nativeInsertBefore(renderer, renderParent.native, child, beforeNode);
@@ -45318,7 +45339,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.0-beta.0+38.sha-16c03c0');
+    var VERSION$3 = new Version$1('7.0.0-beta.0+50.sha-732026c');
 
     /**
      * @license
