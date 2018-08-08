@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.0-beta.0+50.sha-732026c
+ * @license Angular v7.0.0-beta.1+10.sha-b64fed1
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1144,7 +1144,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.0-beta.0+50.sha-732026c');
+    var VERSION = new Version('7.0.0-beta.1+10.sha-b64fed1');
 
     /**
      * @license
@@ -24440,7 +24440,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('7.0.0-beta.0+50.sha-732026c');
+    var VERSION$2 = new Version$1('7.0.0-beta.1+10.sha-b64fed1');
 
     /**
      * @license
@@ -41284,7 +41284,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     var __global$1 = typeof window != 'undefined' && window || typeof self != 'undefined' && self ||
         typeof global != 'undefined' && global;
     function ngDevModeResetPerfCounters() {
-        __global$1.ngDevMode = {
+        return __global$1.ngDevMode = {
             firstTemplatePass: 0,
             tNode: 0,
             tView: 0,
@@ -41316,7 +41316,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * as much early warning and errors as possible.
      */
     if (typeof ngDevMode === 'undefined' || ngDevMode) {
-        ngDevModeResetPerfCounters();
+        __global$1.ngDevMode = ngDevModeResetPerfCounters();
     }
 
     /** Called when directives inject each other (creating a circular dependency) */
@@ -45339,7 +45339,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.0-beta.0+50.sha-732026c');
+    var VERSION$3 = new Version$1('7.0.0-beta.1+10.sha-b64fed1');
 
     /**
      * @license
