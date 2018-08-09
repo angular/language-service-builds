@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.1.0+66.sha-26adee9
+ * @license Angular v7.0.0-beta.1+40.sha-99b2e7e
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1144,7 +1144,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('6.1.0+66.sha-26adee9');
+    var VERSION = new Version('7.0.0-beta.1+40.sha-99b2e7e');
 
     /**
      * @license
@@ -1153,6 +1153,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    var _a;
     /**
      * A segment of text within the template.
      */
@@ -1494,7 +1495,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         });
         return result;
     }
-    var _a;
 
     /**
      * @license
@@ -5945,15 +5945,16 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      *          DO NOT USE IT IN A SECURITY SENSITIVE CONTEXT.
      */
     function sha1(str) {
+        var _a, _b;
         var utf8 = utf8Encode(str);
         var words32 = stringToWords32(utf8, Endian.Big);
         var len = utf8.length * 8;
         var w = new Array(80);
-        var _a = __read([0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476, 0xc3d2e1f0], 5), a = _a[0], b = _a[1], c = _a[2], d = _a[3], e = _a[4];
+        var _c = __read([0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476, 0xc3d2e1f0], 5), a = _c[0], b = _c[1], c = _c[2], d = _c[3], e = _c[4];
         words32[len >> 5] |= 0x80 << (24 - len % 32);
         words32[((len + 64 >> 9) << 4) + 15] = len;
         for (var i = 0; i < words32.length; i += 16) {
-            var _b = __read([a, b, c, d, e], 5), h0 = _b[0], h1 = _b[1], h2 = _b[2], h3 = _b[3], h4 = _b[4];
+            var _d = __read([a, b, c, d, e], 5), h0 = _d[0], h1 = _d[1], h2 = _d[2], h3 = _d[3], h4 = _d[4];
             for (var j = 0; j < 80; j++) {
                 if (j < 16) {
                     w[j] = words32[i + j];
@@ -5961,14 +5962,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 else {
                     w[j] = rol32(w[j - 3] ^ w[j - 8] ^ w[j - 14] ^ w[j - 16], 1);
                 }
-                var _c = __read(fk(j, b, c, d), 2), f = _c[0], k = _c[1];
+                var _e = __read(fk(j, b, c, d), 2), f = _e[0], k = _e[1];
                 var temp = [rol32(a, 5), f, e, k, w[j]].reduce(add32);
-                _d = __read([d, c, rol32(b, 30), a, temp], 5), e = _d[0], d = _d[1], c = _d[2], b = _d[3], a = _d[4];
+                _a = __read([d, c, rol32(b, 30), a, temp], 5), e = _a[0], d = _a[1], c = _a[2], b = _a[3], a = _a[4];
             }
-            _e = __read([add32(a, h0), add32(b, h1), add32(c, h2), add32(d, h3), add32(e, h4)], 5), a = _e[0], b = _e[1], c = _e[2], d = _e[3], e = _e[4];
+            _b = __read([add32(a, h0), add32(b, h1), add32(c, h2), add32(d, h3), add32(e, h4)], 5), a = _b[0], b = _b[1], c = _b[2], d = _b[3], e = _b[4];
         }
         return byteStringToHexString(words32ToByteString([a, b, c, d, e]));
-        var _d, _e;
     }
     function fk(index, b, c, d) {
         if (index < 20) {
@@ -6000,23 +6000,24 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return [hi, lo];
     }
     function computeMsgId(msg, meaning) {
-        var _a = __read(fingerprint(msg), 2), hi = _a[0], lo = _a[1];
+        var _a;
+        var _b = __read(fingerprint(msg), 2), hi = _b[0], lo = _b[1];
         if (meaning) {
-            var _b = __read(fingerprint(meaning), 2), him = _b[0], lom = _b[1];
-            _c = __read(add64(rol64([hi, lo], 1), [him, lom]), 2), hi = _c[0], lo = _c[1];
+            var _c = __read(fingerprint(meaning), 2), him = _c[0], lom = _c[1];
+            _a = __read(add64(rol64([hi, lo], 1), [him, lom]), 2), hi = _a[0], lo = _a[1];
         }
         return byteStringToDecString(words32ToByteString([hi & 0x7fffffff, lo]));
-        var _c;
     }
     function hash32(str, c) {
-        var _a = __read([0x9e3779b9, 0x9e3779b9], 2), a = _a[0], b = _a[1];
+        var _a;
+        var _b = __read([0x9e3779b9, 0x9e3779b9], 2), a = _b[0], b = _b[1];
         var i;
         var len = str.length;
         for (i = 0; i + 12 <= len; i += 12) {
             a = add32(a, wordAt(str, i, Endian.Little));
             b = add32(b, wordAt(str, i + 4, Endian.Little));
             c = add32(c, wordAt(str, i + 8, Endian.Little));
-            _b = __read(mix([a, b, c]), 3), a = _b[0], b = _b[1], c = _b[2];
+            _a = __read(mix([a, b, c]), 3), a = _a[0], b = _a[1], c = _a[2];
         }
         a = add32(a, wordAt(str, i, Endian.Little));
         b = add32(b, wordAt(str, i + 4, Endian.Little));
@@ -6024,7 +6025,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         c = add32(c, len);
         c = add32(c, wordAt(str, i + 8, Endian.Little) << 8);
         return mix([a, b, c])[2];
-        var _b;
     }
     // clang-format off
     function mix(_a) {
@@ -7212,6 +7212,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var visitor = new _WriteVisitor();
             var transUnits = [];
             messages.forEach(function (message) {
+                var _a;
                 var contextTags = [];
                 message.sources.forEach(function (source) {
                     var contextGroupTag = new Tag(_CONTEXT_GROUP_TAG, { purpose: 'location' });
@@ -7228,7 +7229,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 }
                 transUnit.children.push(new CR(6));
                 transUnits.push(new CR(6), transUnit);
-                var _a;
             });
             var body = new Tag('body', {}, __spread(transUnits, [new CR(4)]));
             var file = new Tag('file', {
@@ -7759,7 +7759,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     var _MESSAGES_TAG = 'messagebundle';
     var _MESSAGE_TAG = 'msg';
     var _PLACEHOLDER_TAG$2 = 'ph';
-    var _EXEMPLE_TAG = 'ex';
+    var _EXAMPLE_TAG = 'ex';
     var _SOURCE_TAG$2 = 'source';
     var _DOCTYPE = "<!ELEMENT messagebundle (msg)*>\n<!ATTLIST messagebundle class CDATA #IMPLIED>\n\n<!ELEMENT msg (#PCDATA|ph|source)*>\n<!ATTLIST msg id CDATA #IMPLIED>\n<!ATTLIST msg seq CDATA #IMPLIED>\n<!ATTLIST msg name CDATA #IMPLIED>\n<!ATTLIST msg desc CDATA #IMPLIED>\n<!ATTLIST msg meaning CDATA #IMPLIED>\n<!ATTLIST msg obsolete (obsolete) #IMPLIED>\n<!ATTLIST msg xml:space (default|preserve) \"default\">\n<!ATTLIST msg is_hidden CDATA #IMPLIED>\n\n<!ELEMENT source (#PCDATA)>\n\n<!ELEMENT ph (#PCDATA|ex)*>\n<!ATTLIST ph name CDATA #REQUIRED>\n\n<!ELEMENT ex (#PCDATA)>";
     var Xmb = /** @class */ (function (_super) {
@@ -7826,25 +7826,39 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             return nodes;
         };
         _Visitor.prototype.visitTagPlaceholder = function (ph, context) {
-            var startEx = new Tag(_EXEMPLE_TAG, {}, [new Text$2("<" + ph.tag + ">")]);
-            var startTagPh = new Tag(_PLACEHOLDER_TAG$2, { name: ph.startName }, [startEx]);
+            var startTagAsText = new Text$2("<" + ph.tag + ">");
+            var startEx = new Tag(_EXAMPLE_TAG, {}, [startTagAsText]);
+            // TC requires PH to have a non empty EX, and uses the text node to show the "original" value.
+            var startTagPh = new Tag(_PLACEHOLDER_TAG$2, { name: ph.startName }, [startEx, startTagAsText]);
             if (ph.isVoid) {
                 // void tags have no children nor closing tags
                 return [startTagPh];
             }
-            var closeEx = new Tag(_EXEMPLE_TAG, {}, [new Text$2("</" + ph.tag + ">")]);
-            var closeTagPh = new Tag(_PLACEHOLDER_TAG$2, { name: ph.closeName }, [closeEx]);
+            var closeTagAsText = new Text$2("</" + ph.tag + ">");
+            var closeEx = new Tag(_EXAMPLE_TAG, {}, [closeTagAsText]);
+            // TC requires PH to have a non empty EX, and uses the text node to show the "original" value.
+            var closeTagPh = new Tag(_PLACEHOLDER_TAG$2, { name: ph.closeName }, [closeEx, closeTagAsText]);
             return __spread([startTagPh], this.serialize(ph.children), [closeTagPh]);
         };
         _Visitor.prototype.visitPlaceholder = function (ph, context) {
-            var exTag = new Tag(_EXEMPLE_TAG, {}, [new Text$2("{{" + ph.value + "}}")]);
-            return [new Tag(_PLACEHOLDER_TAG$2, { name: ph.name }, [exTag])];
+            var interpolationAsText = new Text$2("{{" + ph.value + "}}");
+            // Example tag needs to be not-empty for TC.
+            var exTag = new Tag(_EXAMPLE_TAG, {}, [interpolationAsText]);
+            return [
+                // TC requires PH to have a non empty EX, and uses the text node to show the "original" value.
+                new Tag(_PLACEHOLDER_TAG$2, { name: ph.name }, [exTag, interpolationAsText])
+            ];
         };
         _Visitor.prototype.visitIcuPlaceholder = function (ph, context) {
-            var exTag = new Tag(_EXEMPLE_TAG, {}, [
-                new Text$2("{" + ph.value.expression + ", " + ph.value.type + ", " + Object.keys(ph.value.cases).map(function (value) { return value + ' {...}'; }).join(' ') + "}")
-            ]);
-            return [new Tag(_PLACEHOLDER_TAG$2, { name: ph.name }, [exTag])];
+            var icuExpression = ph.value.expression;
+            var icuType = ph.value.type;
+            var icuCases = Object.keys(ph.value.cases).map(function (value) { return value + ' {...}'; }).join(' ');
+            var icuAsText = new Text$2("{" + icuExpression + ", " + icuType + ", " + icuCases + "}");
+            var exTag = new Tag(_EXAMPLE_TAG, {}, [icuAsText]);
+            return [
+                // TC requires PH to have a non empty EX, and uses the text node to show the "original" value.
+                new Tag(_PLACEHOLDER_TAG$2, { name: ph.name }, [exTag, icuAsText])
+            ];
         };
         _Visitor.prototype.serialize = function (nodes) {
             var _this = this;
@@ -7868,7 +7882,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             if (tag.name === _PLACEHOLDER_TAG$2) {
                 if (!tag.children || tag.children.length == 0) {
                     var exText = new Text$2(tag.attrs['name'] || '...');
-                    tag.children = [new Tag(_EXEMPLE_TAG, {}, [exText])];
+                    tag.children = [new Tag(_EXAMPLE_TAG, {}, [exText])];
                 }
             }
             else if (tag.children) {
@@ -8707,6 +8721,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         WriteVarExpr.prototype.toDeclStmt = function (type, modifiers) {
             return new DeclareVarStmt(this.name, this.value, type, modifiers, this.sourceSpan);
         };
+        WriteVarExpr.prototype.toConstDecl = function () { return this.toDeclStmt(INFERRED_TYPE, [StmtModifier.Final]); };
         return WriteVarExpr;
     }(Expression));
     var WriteKeyExpr = /** @class */ (function (_super) {
@@ -9715,6 +9730,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return out;
     }
     function serializeTags(tags) {
+        var e_1, _a;
         if (tags.length === 0)
             return '';
         var out = '*\n';
@@ -9736,7 +9752,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         out += ' ';
         return out;
-        var e_1, _a;
     }
 
     /**
@@ -9988,10 +10003,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
         };
         CompileMetadataResolver.prototype.initComponentFactory = function (factory, ngContentSelectors) {
+            var _a;
             if (!(factory instanceof StaticSymbol)) {
                 (_a = factory.ngContentSelectors).push.apply(_a, __spread(ngContentSelectors));
             }
-            var _a;
         };
         CompileMetadataResolver.prototype._loadSummary = function (type, kind) {
             var typeSummary = this._summaryCache.get(type);
@@ -12429,6 +12444,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /** Map from tagName|propertyName SecurityContext. Properties applying to all tags use '*'. */
     var SECURITY_SCHEMA = {};
     function registerContext(ctx, specs) {
+        var e_1, _a;
         try {
             for (var specs_1 = __values(specs), specs_1_1 = specs_1.next(); !specs_1_1.done; specs_1_1 = specs_1.next()) {
                 var spec = specs_1_1.value;
@@ -12442,7 +12458,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
             finally { if (e_1) throw e_1.error; }
         }
-        var e_1, _a;
     }
     // Case is insignificant below, all element and attribute names are lower-cased for lookup.
     registerContext(SecurityContext.HTML, [
@@ -13384,6 +13399,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             this.errors.push(new ParseError(sourceSpan, message, level));
         };
         BindingParser.prototype._reportExpressionParserErrors = function (errors, sourceSpan) {
+            var e_1, _a;
             try {
                 for (var errors_1 = __values(errors), errors_1_1 = errors_1.next(); !errors_1_1.done; errors_1_1 = errors_1.next()) {
                     var error$$1 = errors_1_1.value;
@@ -13397,7 +13413,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 }
                 finally { if (e_1) throw e_1.error; }
             }
-            var e_1, _a;
         };
         // Make sure all the used pipes are known in `this.pipesByName`
         BindingParser.prototype._checkPipes = function (ast, sourceSpan) {
@@ -14351,9 +14366,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         Identifiers.elementStyleProp = { name: 'ɵsp', moduleName: CORE$1 };
         Identifiers.elementStylingApply = { name: 'ɵsa', moduleName: CORE$1 };
         Identifiers.containerCreate = { name: 'ɵC', moduleName: CORE$1 };
+        Identifiers.nextContext = { name: 'ɵx', moduleName: CORE$1 };
         Identifiers.text = { name: 'ɵT', moduleName: CORE$1 };
         Identifiers.textBinding = { name: 'ɵt', moduleName: CORE$1 };
         Identifiers.bind = { name: 'ɵb', moduleName: CORE$1 };
+        Identifiers.getCurrentView = { name: 'ɵgV', moduleName: CORE$1 };
+        Identifiers.restoreView = { name: 'ɵrV', moduleName: CORE$1 };
         Identifiers.interpolation1 = { name: 'ɵi1', moduleName: CORE$1 };
         Identifiers.interpolation2 = { name: 'ɵi2', moduleName: CORE$1 };
         Identifiers.interpolation3 = { name: 'ɵi3', moduleName: CORE$1 };
@@ -14384,6 +14402,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         Identifiers.pipe = { name: 'ɵPp', moduleName: CORE$1 };
         Identifiers.projection = { name: 'ɵP', moduleName: CORE$1 };
         Identifiers.projectionDef = { name: 'ɵpD', moduleName: CORE$1 };
+        Identifiers.reference = { name: 'ɵr', moduleName: CORE$1 };
         Identifiers.inject = { name: 'inject', moduleName: CORE$1 };
         Identifiers.injectAttribute = { name: 'ɵinjectAttribute', moduleName: CORE$1 };
         Identifiers.injectElementRef = { name: 'ɵinjectElementRef', moduleName: CORE$1 };
@@ -14424,7 +14443,16 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         Identifiers.registerContentQuery = { name: 'ɵQr', moduleName: CORE$1 };
         Identifiers.NgOnChangesFeature = { name: 'ɵNgOnChangesFeature', moduleName: CORE$1 };
         Identifiers.InheritDefinitionFeature = { name: 'ɵInheritDefinitionFeature', moduleName: CORE$1 };
+        Identifiers.PublicFeature = { name: 'ɵPublicFeature', moduleName: CORE$1 };
         Identifiers.listener = { name: 'ɵL', moduleName: CORE$1 };
+        Identifiers.getFactoryOf = {
+            name: 'ɵgetFactoryOf',
+            moduleName: CORE$1,
+        };
+        Identifiers.getInheritedFactory = {
+            name: 'ɵgetInheritedFactory',
+            moduleName: CORE$1,
+        };
         // Reserve slots for pure functions
         Identifiers.reserveSlots = { name: 'ɵrS', moduleName: CORE$1 };
         // sanitization-related functions
@@ -14444,9 +14472,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /** Name of the context parameter passed into a template function */
+    var CONTEXT_NAME = 'ctx';
     /** The prefix reference variables */
     var REFERENCE_PREFIX = '_r';
-    function noop() { }
 
     /**
      * @license
@@ -14455,6 +14484,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    var R3FactoryDelegateType;
+    (function (R3FactoryDelegateType) {
+        R3FactoryDelegateType[R3FactoryDelegateType["Class"] = 0] = "Class";
+        R3FactoryDelegateType[R3FactoryDelegateType["Function"] = 1] = "Function";
+        R3FactoryDelegateType[R3FactoryDelegateType["Factory"] = 2] = "Factory";
+    })(R3FactoryDelegateType || (R3FactoryDelegateType = {}));
     /**
      * Resolved type of a dependency.
      *
@@ -14625,6 +14660,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             isVarLength: !identifier,
         };
     }
+    function instruction(span, reference, params) {
+        return importExpr(reference, null, span).callFn(params, span);
+    }
+    // e.g. x(2);
+    function generateNextContextExpr(relativeLevelDiff) {
+        return importExpr(Identifiers$1.nextContext)
+            .callFn(relativeLevelDiff > 1 ? [literal(relativeLevelDiff)] : []);
+    }
     function getLiteralFactory(constantPool, literal$$1, allocateSlots) {
         var _a = constantPool.getLiteralFactory(literal$$1), literalFactory = _a.literalFactory, literalFactoryArguments = _a.literalFactoryArguments;
         // Allocate 1 slot for the result plus 1 per argument
@@ -14645,24 +14688,18 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return importExpr(identifier).callFn(args);
     }
+    /** The prefix used to get a shared context in BindingScope's map. */
+    var SHARED_CONTEXT_KEY = '$$shared_ctx$$';
     var BindingScope = /** @class */ (function () {
-        function BindingScope(parent, declareLocalVarCallback) {
+        function BindingScope(bindingLevel, parent) {
+            if (bindingLevel === void 0) { bindingLevel = 0; }
             if (parent === void 0) { parent = null; }
-            if (declareLocalVarCallback === void 0) { declareLocalVarCallback = noop; }
+            this.bindingLevel = bindingLevel;
             this.parent = parent;
-            this.declareLocalVarCallback = declareLocalVarCallback;
-            /**
-             * Keeps a map from local variables to their expressions.
-             *
-             * This is used when one refers to variable such as: 'let abc = a.b.c`.
-             * - key to the map is the string literal `"abc"`.
-             * - value `lhs` is the left hand side which is an AST representing `abc`.
-             * - value `rhs` is the right hand side which is an AST representing `a.b.c`.
-             * - value `declared` is true if the `declareLocalVarCallback` has been called for this scope
-             * already.
-             */
+            /** Keeps a map from local variables to their BindingData. */
             this.map = new Map();
             this.referenceNameIndex = 0;
+            this.restoreViewVariable = null;
         }
         BindingScope.prototype.get = function (name) {
             var current = this;
@@ -14670,41 +14707,131 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 var value = current.map.get(name);
                 if (value != null) {
                     if (current !== this) {
-                        // make a local copy and reset the `declared` state.
-                        value = { lhs: value.lhs, rhs: value.rhs, declared: false };
+                        // make a local copy and reset the `declare` state
+                        value = {
+                            retrievalLevel: value.retrievalLevel,
+                            lhs: value.lhs,
+                            declareLocalCallback: value.declareLocalCallback,
+                            declare: false,
+                            priority: value.priority
+                        };
                         // Cache the value locally.
                         this.map.set(name, value);
+                        // Possibly generate a shared context var
+                        this.maybeGenerateSharedContextVar(value);
+                        this.maybeRestoreView(value.retrievalLevel);
                     }
-                    if (value.rhs && !value.declared) {
-                        // if it is first time we are referencing the variable in the scope
-                        // than invoke the callback to insert variable declaration.
-                        this.declareLocalVarCallback(value.lhs, value.rhs);
-                        value.declared = true;
+                    if (value.declareLocalCallback && !value.declare) {
+                        value.declare = true;
                     }
                     return value.lhs;
                 }
                 current = current.parent;
             }
-            return null;
+            // If we get to this point, we are looking for a property on the top level component
+            // - If level === 0, we are on the top and don't need to re-declare `ctx`.
+            // - If level > 0, we are in an embedded view. We need to retrieve the name of the
+            // local var we used to store the component context, e.g. const $comp$ = x();
+            return this.bindingLevel === 0 ? null : this.getComponentProperty(name);
         };
         /**
          * Create a local variable for later reference.
          *
+         * @param retrievalLevel The level from which this value can be retrieved
          * @param name Name of the variable.
          * @param lhs AST representing the left hand side of the `let lhs = rhs;`.
-         * @param rhs AST representing the right hand side of the `let lhs = rhs;`. The `rhs` can be
-         * `undefined` for variable that are ambient such as `$event` and which don't have `rhs`
-         * declaration.
+         * @param priority The sorting priority of this var
+         * @param declareLocalCallback The callback to invoke when declaring this local var
          */
-        BindingScope.prototype.set = function (name, lhs, rhs) {
+        BindingScope.prototype.set = function (retrievalLevel, name, lhs, priority, declareLocalCallback) {
+            if (priority === void 0) { priority = 0 /* DEFAULT */; }
             !this.map.has(name) ||
                 error("The name " + name + " is already defined in scope to be " + this.map.get(name));
-            this.map.set(name, { lhs: lhs, rhs: rhs, declared: false });
+            this.map.set(name, {
+                retrievalLevel: retrievalLevel,
+                lhs: lhs,
+                declare: false,
+                declareLocalCallback: declareLocalCallback,
+                priority: priority
+            });
             return this;
         };
         BindingScope.prototype.getLocal = function (name) { return this.get(name); };
-        BindingScope.prototype.nestedScope = function (declareCallback) {
-            return new BindingScope(this, declareCallback);
+        BindingScope.prototype.nestedScope = function (level) {
+            var newScope = new BindingScope(level, this);
+            if (level > 0)
+                newScope.generateSharedContextVar(0);
+            return newScope;
+        };
+        BindingScope.prototype.getSharedContextName = function (retrievalLevel) {
+            var sharedCtxObj = this.map.get(SHARED_CONTEXT_KEY + retrievalLevel);
+            return sharedCtxObj && sharedCtxObj.declare ? sharedCtxObj.lhs : null;
+        };
+        BindingScope.prototype.maybeGenerateSharedContextVar = function (value) {
+            if (value.priority === 1 /* CONTEXT */) {
+                var sharedCtxObj = this.map.get(SHARED_CONTEXT_KEY + value.retrievalLevel);
+                if (sharedCtxObj) {
+                    sharedCtxObj.declare = true;
+                }
+                else {
+                    this.generateSharedContextVar(value.retrievalLevel);
+                }
+            }
+        };
+        BindingScope.prototype.generateSharedContextVar = function (retrievalLevel) {
+            var lhs = variable(CONTEXT_NAME + this.freshReferenceName());
+            this.map.set(SHARED_CONTEXT_KEY + retrievalLevel, {
+                retrievalLevel: retrievalLevel,
+                lhs: lhs,
+                declareLocalCallback: function (scope, relativeLevel) {
+                    // const ctx_r0 = x(2);
+                    return [lhs.set(generateNextContextExpr(relativeLevel)).toConstDecl()];
+                },
+                declare: false,
+                priority: 2 /* SHARED_CONTEXT */
+            });
+        };
+        BindingScope.prototype.getComponentProperty = function (name) {
+            var componentValue = this.map.get(SHARED_CONTEXT_KEY + 0);
+            componentValue.declare = true;
+            this.maybeRestoreView(0);
+            return componentValue.lhs.prop(name);
+        };
+        BindingScope.prototype.maybeRestoreView = function (retrievalLevel) {
+            if (this.isListenerScope() && retrievalLevel < this.bindingLevel) {
+                if (!this.parent.restoreViewVariable) {
+                    // parent saves variable to generate a shared `const $s$ = gV();` instruction
+                    this.parent.restoreViewVariable = variable(this.parent.freshReferenceName());
+                }
+                this.restoreViewVariable = this.parent.restoreViewVariable;
+            }
+        };
+        BindingScope.prototype.restoreViewStatement = function () {
+            // rV($state$);
+            return this.restoreViewVariable ?
+                [instruction(null, Identifiers$1.restoreView, [this.restoreViewVariable]).toStmt()] :
+                [];
+        };
+        BindingScope.prototype.viewSnapshotStatements = function () {
+            // const $state$ = gV();
+            var getCurrentViewInstruction = instruction(null, Identifiers$1.getCurrentView, []);
+            return this.restoreViewVariable ?
+                [this.restoreViewVariable.set(getCurrentViewInstruction).toConstDecl()] :
+                [];
+        };
+        BindingScope.prototype.isListenerScope = function () { return this.parent && this.parent.bindingLevel === this.bindingLevel; };
+        BindingScope.prototype.variableDeclarations = function () {
+            var _this = this;
+            var currentContextLevel = 0;
+            return Array.from(this.map.values())
+                .filter(function (value) { return value.declare; })
+                .sort(function (a, b) { return b.retrievalLevel - a.retrievalLevel || b.priority - a.priority; })
+                .reduce(function (stmts, value) {
+                var levelDiff = _this.bindingLevel - value.retrievalLevel;
+                var currStmts = value.declareLocalCallback(_this, levelDiff - currentContextLevel);
+                currentContextLevel = levelDiff;
+                return stmts.concat(currStmts);
+            }, []);
         };
         BindingScope.prototype.freshReferenceName = function () {
             var current = this;
@@ -14714,7 +14841,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var ref = "" + REFERENCE_PREFIX + current.referenceNameIndex++;
             return ref;
         };
-        BindingScope.ROOT_SCOPE = new BindingScope().set('$event', variable('$event'));
+        BindingScope.ROOT_SCOPE = new BindingScope().set(0, '$event', variable('$event'));
         return BindingScope;
     }());
 
@@ -14879,6 +15006,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
          * @param fileName the file to invalidate
          */
         StaticSymbolResolver.prototype.invalidateFile = function (fileName) {
+            var e_1, _a;
             this.metadataCache.delete(fileName);
             this.resolvedFilePaths.delete(fileName);
             var symbols = this.symbolFromFile.get(fileName);
@@ -14900,7 +15028,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     finally { if (e_1) throw e_1.error; }
                 }
             }
-            var e_1, _a;
         };
         /* @internal */
         StaticSymbolResolver.prototype.ignoreErrorsFor = function (cb) {
@@ -14987,6 +15114,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         StaticSymbolResolver.prototype._createSymbolsOf = function (filePath) {
             var _this = this;
+            var e_2, _a;
             if (this.resolvedFilePaths.has(filePath)) {
                 return;
             }
@@ -15038,15 +15166,15 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 };
                 var this_1 = this;
                 try {
-                    for (var _a = __values(metadata['exports']), _b = _a.next(); !_b.done; _b = _a.next()) {
-                        var moduleExport = _b.value;
+                    for (var _b = __values(metadata['exports']), _c = _b.next(); !_c.done; _c = _b.next()) {
+                        var moduleExport = _c.value;
                         _loop_1(moduleExport);
                     }
                 }
                 catch (e_2_1) { e_2 = { error: e_2_1 }; }
                 finally {
                     try {
-                        if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                        if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                     }
                     finally { if (e_2) throw e_2.error; }
                 }
@@ -15080,7 +15208,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
             resolvedSymbols.forEach(function (resolvedSymbol) { return _this.resolvedSymbols.set(resolvedSymbol.symbol, resolvedSymbol); });
             this.symbolFromFile.set(filePath, resolvedSymbols.map(function (resolvedSymbol) { return resolvedSymbol.symbol; }));
-            var e_2, _c;
         };
         StaticSymbolResolver.prototype.createResolvedSymbol = function (sourceSymbol, topLevelPath, topLevelSymbolNames, metadata) {
             var _this = this;
@@ -15971,6 +16098,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
         };
         StaticReflector.prototype.guards = function (type) {
+            var e_1, _a;
             if (!(type instanceof StaticSymbol)) {
                 this.reportError(new Error("guards received " + JSON.stringify(type) + " which is not a StaticSymbol"), type);
                 return {};
@@ -16002,7 +16130,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 finally { if (e_1) throw e_1.error; }
             }
             return result;
-            var e_1, _a;
         };
         StaticReflector.prototype._registerDecoratorOrConstructor = function (type, ctor) {
             this.conversionMap.set(type, function (context, args) { return new (ctor.bind.apply(ctor, __spread([void 0], args)))(); });
@@ -16171,14 +16298,15 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     }, context);
                 }
                 function simplify(expression) {
+                    var e_2, _a, e_3, _b;
                     if (isPrimitive(expression)) {
                         return expression;
                     }
                     if (expression instanceof Array) {
                         var result_2 = [];
                         try {
-                            for (var _a = __values(expression), _b = _a.next(); !_b.done; _b = _a.next()) {
-                                var item = _b.value;
+                            for (var _c = __values(expression), _d = _c.next(); !_d.done; _d = _c.next()) {
+                                var item = _d.value;
                                 // Check for a spread expression
                                 if (item && item.__symbolic === 'spread') {
                                     // We call with references as 0 because we require the actual value and cannot
@@ -16191,12 +16319,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                                                 result_2.push(spreadItem);
                                             }
                                         }
-                                        catch (e_2_1) { e_2 = { error: e_2_1 }; }
+                                        catch (e_3_1) { e_3 = { error: e_3_1 }; }
                                         finally {
                                             try {
-                                                if (spreadArray_1_1 && !spreadArray_1_1.done && (_c = spreadArray_1.return)) _c.call(spreadArray_1);
+                                                if (spreadArray_1_1 && !spreadArray_1_1.done && (_b = spreadArray_1.return)) _b.call(spreadArray_1);
                                             }
-                                            finally { if (e_2) throw e_2.error; }
+                                            finally { if (e_3) throw e_3.error; }
                                         }
                                         continue;
                                     }
@@ -16208,12 +16336,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                                 result_2.push(value_2);
                             }
                         }
-                        catch (e_3_1) { e_3 = { error: e_3_1 }; }
+                        catch (e_2_1) { e_2 = { error: e_2_1 }; }
                         finally {
                             try {
-                                if (_b && !_b.done && (_d = _a.return)) _d.call(_a);
+                                if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
                             }
-                            finally { if (e_3) throw e_3.error; }
+                            finally { if (e_2) throw e_2.error; }
                         }
                         return result_2;
                     }
@@ -16430,7 +16558,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                         });
                     }
                     return IGNORE;
-                    var e_3, _d, e_2, _c;
                 }
                 return simplify(value);
             }
@@ -16736,6 +16863,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 summaries.forEach(function (summary) { return _this.summaryCache.set(summary.symbol, summary); });
                 if (moduleName) {
                     this.knownFileNameToModuleNames.set(filePath, moduleName);
+                    if (filePath.endsWith('.d.ts')) {
+                        // Also add entries to map the ngfactory & ngsummary files to their module names.
+                        // This is necessary to resolve ngfactory & ngsummary files to their AMD module
+                        // names when building angular with Bazel from source downstream.
+                        // See https://github.com/bazelbuild/rules_typescript/pull/223 for context.
+                        this.knownFileNameToModuleNames.set(filePath.replace(/\.d\.ts$/, '.ngfactory.d.ts'), moduleName + '.ngfactory');
+                        this.knownFileNameToModuleNames.set(filePath.replace(/\.d\.ts$/, '.ngsummary.d.ts'), moduleName + '.ngsummary');
+                    }
                 }
                 importAs.forEach(function (importAs) { _this.importAs.set(importAs.symbol, importAs.importAs); });
             }
@@ -17474,7 +17609,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             return this.diagnostics;
         };
         AstType.prototype.visitBinary = function (ast) {
-            var _this = this;
+            var _this_1 = this;
             // Treat undefined and null as other.
             function normalize(kind, other) {
                 switch (kind) {
@@ -17485,7 +17620,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 return kind;
             }
             var getType = function (ast, operation) {
-                var type = _this.getType(ast);
+                var type = _this_1.getType(ast);
                 if (type.nullable) {
                     switch (operation) {
                         case '&&':
@@ -17497,10 +17632,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                             // Nullable allowed.
                             break;
                         default:
-                            _this.reportError("The expression might be null", ast);
+                            _this_1.reportError("The expression might be null", ast);
                             break;
                     }
-                    return _this.query.getNonNullableType(type);
+                    return _this_1.query.getNonNullableType(type);
                 }
                 return type;
             };
@@ -17621,12 +17756,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             return this.query.getTypeUnion(this.getType(ast.trueExp), this.getType(ast.falseExp));
         };
         AstType.prototype.visitFunctionCall = function (ast) {
-            var _this = this;
+            var _this_1 = this;
             // The type of a function call is the return type of the selected signature.
             // The signature is selected based on the types of the arguments. Angular doesn't
             // support contextual typing of arguments so this is simpler than TypeScript's
             // version.
-            var args = ast.args.map(function (arg) { return _this.getType(arg); });
+            var args = ast.args.map(function (arg) { return _this_1.getType(arg); });
             var target = this.getType(ast.target);
             if (!target || !target.callable)
                 return this.reportError('Call target is not callable', ast);
@@ -17675,10 +17810,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             return this.getType(ast.value);
         };
         AstType.prototype.visitLiteralArray = function (ast) {
-            var _this = this;
-            // A type literal is an array type of the union of the elements
-            return this.query.getArrayType((_a = this.query).getTypeUnion.apply(_a, __spread(ast.expressions.map(function (element) { return _this.getType(element); }))));
+            var _this_1 = this;
             var _a;
+            // A type literal is an array type of the union of the elements
+            return this.query.getArrayType((_a = this.query).getTypeUnion.apply(_a, __spread(ast.expressions.map(function (element) { return _this_1.getType(element); }))));
         };
         AstType.prototype.visitLiteralMap = function (ast) {
             // If we are producing diagnostics, visit the children
@@ -17713,14 +17848,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             return this.resolveMethodCall(this.getType(ast.receiver), ast);
         };
         AstType.prototype.visitPipe = function (ast) {
-            var _this = this;
+            var _this_1 = this;
             // The type of a pipe node is the return type of the pipe's transform method. The table returned
             // by getPipes() is expected to contain symbols with the corresponding transform method type.
             var pipe = this.query.getPipes().get(ast.name);
             if (!pipe)
                 return this.reportError("No pipe by the name " + ast.name + " found", ast);
             var expType = this.getType(ast.exp);
-            var signature = pipe.selectSignature([expType].concat(ast.args.map(function (arg) { return _this.getType(arg); })));
+            var signature = pipe.selectSignature([expType].concat(ast.args.map(function (arg) { return _this_1.getType(arg); })));
             if (!signature)
                 return this.reportError('Unable to resolve signature for pipe invocation', ast);
             return signature.result;
@@ -17773,7 +17908,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             configurable: true
         });
         AstType.prototype.resolveMethodCall = function (receiverType, ast) {
-            var _this = this;
+            var _this_1 = this;
             if (this.isAny(receiverType)) {
                 return this.anyType;
             }
@@ -17785,7 +17920,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 return this.reportError("Could not find a type for '" + ast.name + "'", ast);
             if (!method.type.callable)
                 return this.reportError("Member '" + ast.name + "' is not callable", ast);
-            var signature = method.type.selectSignature(ast.args.map(function (arg) { return _this.getType(arg); }));
+            var signature = method.type.selectSignature(ast.args.map(function (arg) { return _this_1.getType(arg); }));
             if (!signature)
                 return this.reportError("Unable to resolve signature for call of method " + ast.name, ast);
             return signature.result;
@@ -17864,6 +17999,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function getReferences(info) {
         var result = [];
         function processReferences(references) {
+            var e_1, _a;
             var _loop_1 = function (reference) {
                 var type = undefined;
                 if (reference.value) {
@@ -17889,7 +18025,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 }
                 finally { if (e_1) throw e_1.error; }
             }
-            var e_1, _a;
         }
         var visitor = new /** @class */ (function (_super) {
             __extends(class_1, _super);
@@ -17922,6 +18057,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
     }
     function getVarDeclarations(info, path$$1) {
+        var e_2, _a;
         var result = [];
         var current = path$$1.tail;
         while (current) {
@@ -17954,15 +18090,15 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     });
                 };
                 try {
-                    for (var _a = __values(current.variables), _b = _a.next(); !_b.done; _b = _a.next()) {
-                        var variable = _b.value;
+                    for (var _b = __values(current.variables), _c = _b.next(); !_c.done; _c = _b.next()) {
+                        var variable = _c.value;
                         _loop_2(variable);
                     }
                 }
                 catch (e_2_1) { e_2 = { error: e_2_1 }; }
                 finally {
                     try {
-                        if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                        if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                     }
                     finally { if (e_2) throw e_2.error; }
                 }
@@ -17970,7 +18106,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             current = path$$1.parentOf(current);
         }
         return result;
-        var e_2, _c;
     }
     function refinedVariableType(type, info, templateElement) {
         // Special case the ngFor directive
@@ -18092,6 +18227,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         ExpressionDiagnosticsVisitor.prototype.diagnoseExpression = function (ast, offset, includeEvent) {
             var _this = this;
+            var _a;
             var scope = this.getExpressionScope(this.path, includeEvent);
             (_a = this.diagnostics).push.apply(_a, __spread(getExpressionDiagnostics(scope, ast, this.info.query, {
                 event: includeEvent
@@ -18100,7 +18236,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 kind: d.kind,
                 message: d.message
             }); })));
-            var _a;
         };
         ExpressionDiagnosticsVisitor.prototype.push = function (ast) { this.path.push(ast); };
         ExpressionDiagnosticsVisitor.prototype.pop = function () { this.path.pop(); };
@@ -18115,10 +18250,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return ExpressionDiagnosticsVisitor;
     }(RecursiveTemplateAstVisitor));
     function hasTemplateReference(type) {
+        var e_3, _a;
         if (type.diDeps) {
             try {
-                for (var _a = __values(type.diDeps), _b = _a.next(); !_b.done; _b = _a.next()) {
-                    var diDep = _b.value;
+                for (var _b = __values(type.diDeps), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var diDep = _c.value;
                     if (diDep.token && diDep.token.identifier &&
                         identifierName(diDep.token.identifier) == 'TemplateRef')
                         return true;
@@ -18127,13 +18263,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             catch (e_3_1) { e_3 = { error: e_3_1 }; }
             finally {
                 try {
-                    if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
                 finally { if (e_3) throw e_3.error; }
             }
         }
         return false;
-        var e_3, _c;
     }
     function offsetSpan(span, amount) {
         return { start: span.start + amount, end: span.end + amount };
@@ -18326,6 +18461,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             return result;
         };
         TypeScriptSymbolQuery.prototype.mergeSymbolTable = function (symbolTables) {
+            var e_1, _a;
             var result = new MapSymbolTable();
             try {
                 for (var symbolTables_1 = __values(symbolTables), symbolTables_1_1 = symbolTables_1.next(); !symbolTables_1_1.done; symbolTables_1_1 = symbolTables_1.next()) {
@@ -18341,20 +18477,20 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 finally { if (e_1) throw e_1.error; }
             }
             return result;
-            var e_1, _a;
         };
         TypeScriptSymbolQuery.prototype.getSpanAt = function (line, column) {
             return spanAt(this.source, line, column);
         };
         TypeScriptSymbolQuery.prototype.getTemplateRefContextType = function (typeSymbol) {
+            var e_2, _a;
             var type = this.checker.getTypeOfSymbolAtLocation(typeSymbol, this.source);
             var constructor = type.symbol && type.symbol.members &&
                 getFromSymbolTable(type.symbol.members, '__constructor');
             if (constructor) {
                 var constructorDeclaration = constructor.declarations[0];
                 try {
-                    for (var _a = __values(constructorDeclaration.parameters), _b = _a.next(); !_b.done; _b = _a.next()) {
-                        var parameter = _b.value;
+                    for (var _b = __values(constructorDeclaration.parameters), _c = _b.next(); !_c.done; _c = _b.next()) {
+                        var parameter = _c.value;
                         var type_1 = this.checker.getTypeAtLocation(parameter.type);
                         if (type_1.symbol.name == 'TemplateRef' && isReferenceType(type_1)) {
                             var typeReference = type_1;
@@ -18367,12 +18503,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 catch (e_2_1) { e_2 = { error: e_2_1 }; }
                 finally {
                     try {
-                        if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                        if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                     }
                     finally { if (e_2) throw e_2.error; }
                 }
             }
-            var e_2, _c;
         };
         TypeScriptSymbolQuery.prototype.getTsTypeOf = function (symbol) {
             var type = this.getTypeWrapper(symbol);
@@ -18619,6 +18754,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     var MIN_TS_VERSION_SUPPORTING_MAP = '2.2';
     var toSymbolTableFactory = function (tsVersion) { return function (symbols) {
+        var e_3, _a, e_4, _b;
         if (isVersionBetween(tsVersion, MIN_TS_VERSION_SUPPORTING_MAP)) {
             // ∀ Typescript version >= 2.2, `SymbolTable` is implemented as an ES6 `Map`
             var result_1 = new Map();
@@ -18657,7 +18793,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             finally { if (e_4) throw e_4.error; }
         }
         return result;
-        var e_3, _a, e_4, _b;
     }; };
     function toSymbols(symbolTable) {
         if (!symbolTable)
@@ -18730,6 +18865,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             this._values.push(symbol);
         };
         MapSymbolTable.prototype.addAll = function (symbols) {
+            var e_5, _a;
             try {
                 for (var symbols_3 = __values(symbols), symbols_3_1 = symbols_3.next(); !symbols_3_1.done; symbols_3_1 = symbols_3.next()) {
                     var symbol = symbols_3_1.value;
@@ -18743,7 +18879,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 }
                 finally { if (e_5) throw e_5.error; }
             }
-            var e_5, _a;
         };
         MapSymbolTable.prototype.has = function (key) { return this.map.has(key); };
         MapSymbolTable.prototype.values = function () {
@@ -18986,10 +19121,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
     }
     function getContainerOf(symbol, context) {
+        var e_6, _a;
         if (symbol.getFlags() & ts.SymbolFlags.ClassMember && symbol.declarations) {
             try {
-                for (var _a = __values(symbol.declarations), _b = _a.next(); !_b.done; _b = _a.next()) {
-                    var declaration = _b.value;
+                for (var _b = __values(symbol.declarations), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var declaration = _c.value;
                     var parent = parentDeclarationOf(declaration);
                     if (parent) {
                         var type = context.checker.getTypeAtLocation(parent);
@@ -19002,12 +19138,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             catch (e_6_1) { e_6 = { error: e_6_1 }; }
             finally {
                 try {
-                    if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
                 finally { if (e_6) throw e_6.error; }
             }
         }
-        var e_6, _c;
     }
     function getTypeParameterOf(type, name) {
         if (type && type.symbol && type.symbol.name == name) {
@@ -19018,6 +19153,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
     }
     function typeKindOf(type) {
+        var e_7, _a;
         if (type) {
             if (type.flags & ts.TypeFlags.Any) {
                 return BuiltinType$1.Any;
@@ -19041,8 +19177,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 if (unionType.types.length > 0) {
                     candidate = typeKindOf(unionType.types[0]);
                     try {
-                        for (var _a = __values(unionType.types), _b = _a.next(); !_b.done; _b = _a.next()) {
-                            var subType = _b.value;
+                        for (var _b = __values(unionType.types), _c = _b.next(); !_c.done; _c = _b.next()) {
+                            var subType = _c.value;
                             if (candidate != typeKindOf(subType)) {
                                 return BuiltinType$1.Other;
                             }
@@ -19051,7 +19187,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     catch (e_7_1) { e_7 = { error: e_7_1 }; }
                     finally {
                         try {
-                            if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                            if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                         }
                         finally { if (e_7) throw e_7.error; }
                     }
@@ -19065,7 +19201,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
         }
         return BuiltinType$1.Other;
-        var e_7, _c;
     }
     function getFromSymbolTable(symbolTable, key) {
         var table = symbolTable;
@@ -19432,6 +19567,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 case ts.SyntaxKind.ArrayLiteralExpression:
                     var arr_1 = [];
                     ts.forEachChild(node, function (child) {
+                        var e_1, _a;
                         var value = _this.evaluateNode(child, /* preferReference */ true);
                         // Check for error
                         if (isFoldableError(value)) {
@@ -19442,15 +19578,15 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                         if (isMetadataSymbolicSpreadExpression(value)) {
                             if (Array.isArray(value.expression)) {
                                 try {
-                                    for (var _a = __values(value.expression), _b = _a.next(); !_b.done; _b = _a.next()) {
-                                        var spreadValue = _b.value;
+                                    for (var _b = __values(value.expression), _c = _b.next(); !_c.done; _c = _b.next()) {
+                                        var spreadValue = _c.value;
                                         arr_1.push(spreadValue);
                                     }
                                 }
                                 catch (e_1_1) { e_1 = { error: e_1_1 }; }
                                 finally {
                                     try {
-                                        if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                                        if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                                     }
                                     finally { if (e_1) throw e_1.error; }
                                 }
@@ -19458,7 +19594,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                             }
                         }
                         arr_1.push(value);
-                        var e_1, _c;
                     });
                     if (error)
                         return error;
@@ -19845,6 +19980,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             // Collect the imported symbols into this.symbols
             var stripQuotes = function (s) { return s.replace(/^['"]|['"]$/g, ''); };
             var visit = function (node) {
+                var e_1, _a;
                 switch (node.kind) {
                     case ts.SyntaxKind.ImportEqualsDeclaration:
                         var importEqualsDeclaration = node;
@@ -19891,8 +20027,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                                 case ts.SyntaxKind.NamedImports:
                                     try {
                                         // An `import { [<identifier> [, <identifier>] } from <module-specifier>` clause
-                                        for (var _a = __values(bindings.elements), _b = _a.next(); !_b.done; _b = _a.next()) {
-                                            var binding = _b.value;
+                                        for (var _b = __values(bindings.elements), _c = _b.next(); !_c.done; _c = _b.next()) {
+                                            var binding = _c.value;
                                             symbols.set(binding.name.text, {
                                                 __symbolic: 'reference',
                                                 module: from,
@@ -19903,7 +20039,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                                     catch (e_1_1) { e_1 = { error: e_1_1 }; }
                                     finally {
                                         try {
-                                            if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                                            if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                                         }
                                         finally { if (e_1) throw e_1.error; }
                                     }
@@ -19917,7 +20053,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                         break;
                 }
                 ts.forEachChild(node, visit);
-                var e_1, _c;
             };
             if (this.sourceFile) {
                 ts.forEachChild(this.sourceFile, visit);
@@ -20011,6 +20146,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 }
             }
             function classMetadataOf(classDeclaration) {
+                var e_1, _a, e_2, _b;
                 var result = { __symbolic: 'class' };
                 function getDecorators(decorators) {
                     if (decorators && decorators.length)
@@ -20061,8 +20197,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     statics[name] = value;
                 }
                 try {
-                    for (var _a = __values(classDeclaration.members), _b = _a.next(); !_b.done; _b = _a.next()) {
-                        var member = _b.value;
+                    for (var _c = __values(classDeclaration.members), _d = _c.next(); !_d.done; _d = _c.next()) {
+                        var member = _d.value;
                         var isConstructor = false;
                         switch (member.kind) {
                             case ts.SyntaxKind.Constructor:
@@ -20099,12 +20235,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                                         }
                                     }
                                 }
-                                catch (e_1_1) { e_1 = { error: e_1_1 }; }
+                                catch (e_2_1) { e_2 = { error: e_2_1 }; }
                                 finally {
                                     try {
-                                        if (parameters_1_1 && !parameters_1_1.done && (_c = parameters_1.return)) _c.call(parameters_1);
+                                        if (parameters_1_1 && !parameters_1_1.done && (_b = parameters_1.return)) _b.call(parameters_1);
                                     }
-                                    finally { if (e_1) throw e_1.error; }
+                                    finally { if (e_2) throw e_2.error; }
                                 }
                                 var data = { __symbolic: isConstructor ? 'constructor' : 'method' };
                                 var name = isConstructor ? '__ctor__' : evaluator.nameOf(member.name);
@@ -20148,12 +20284,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                         }
                     }
                 }
-                catch (e_2_1) { e_2 = { error: e_2_1 }; }
+                catch (e_1_1) { e_1 = { error: e_1_1 }; }
                 finally {
                     try {
-                        if (_b && !_b.done && (_d = _a.return)) _d.call(_a);
+                        if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
                     }
-                    finally { if (e_2) throw e_2.error; }
+                    finally { if (e_1) throw e_1.error; }
                 }
                 if (members) {
                     result.members = members;
@@ -20162,7 +20298,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     result.statics = statics;
                 }
                 return recordEntry(result, classDeclaration);
-                var e_2, _d, e_1, _c;
             }
             // Collect all exported symbols from an exports clause.
             var exportMap = new Map();
@@ -20230,6 +20365,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 }
             });
             ts.forEachChild(sourceFile, function (node) {
+                var e_3, _a, e_4, _b;
                 switch (node.kind) {
                     case ts.SyntaxKind.ExportDeclaration:
                         // Record export declarations
@@ -20325,8 +20461,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                             var nextDefaultValue = 0;
                             var writtenMembers = 0;
                             try {
-                                for (var _a = __values(enumDeclaration.members), _b = _a.next(); !_b.done; _b = _a.next()) {
-                                    var member = _b.value;
+                                for (var _c = __values(enumDeclaration.members), _d = _c.next(); !_d.done; _d = _c.next()) {
+                                    var member = _d.value;
                                     var enumValue = void 0;
                                     if (!member.initializer) {
                                         enumValue = nextDefaultValue;
@@ -20363,7 +20499,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                             catch (e_3_1) { e_3 = { error: e_3_1 }; }
                             finally {
                                 try {
-                                    if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                                    if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
                                 }
                                 finally { if (e_3) throw e_3.error; }
                             }
@@ -20448,21 +20584,20 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                             }
                         };
                         try {
-                            for (var _d = __values(variableStatement.declarationList.declarations), _e = _d.next(); !_e.done; _e = _d.next()) {
-                                var variableDeclaration = _e.value;
+                            for (var _e = __values(variableStatement.declarationList.declarations), _f = _e.next(); !_f.done; _f = _e.next()) {
+                                var variableDeclaration = _f.value;
                                 _loop_1(variableDeclaration);
                             }
                         }
                         catch (e_4_1) { e_4 = { error: e_4_1 }; }
                         finally {
                             try {
-                                if (_e && !_e.done && (_f = _d.return)) _f.call(_d);
+                                if (_f && !_f.done && (_b = _e.return)) _b.call(_e);
                             }
                             finally { if (e_4) throw e_4.error; }
                         }
                         break;
                 }
-                var e_3, _c, e_4, _f;
             });
             if (metadata || exports) {
                 if (!metadata)
@@ -20633,8 +20768,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
     // Collect parameter names from a function.
     function namesOf(parameters) {
+        var e_5, _a;
         var result = [];
         function addNamesOf(name) {
+            var e_6, _a;
             if (name.kind == ts.SyntaxKind.Identifier) {
                 var identifier = name;
                 result.push(identifier.text);
@@ -20642,23 +20779,22 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             else {
                 var bindingPattern = name;
                 try {
-                    for (var _a = __values(bindingPattern.elements), _b = _a.next(); !_b.done; _b = _a.next()) {
-                        var element = _b.value;
+                    for (var _b = __values(bindingPattern.elements), _c = _b.next(); !_c.done; _c = _b.next()) {
+                        var element = _c.value;
                         var name_3 = element.name;
                         if (name_3) {
                             addNamesOf(name_3);
                         }
                     }
                 }
-                catch (e_5_1) { e_5 = { error: e_5_1 }; }
+                catch (e_6_1) { e_6 = { error: e_6_1 }; }
                 finally {
                     try {
-                        if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                        if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                     }
-                    finally { if (e_5) throw e_5.error; }
+                    finally { if (e_6) throw e_6.error; }
                 }
             }
-            var e_5, _c;
         }
         try {
             for (var parameters_2 = __values(parameters), parameters_2_1 = parameters_2.next(); !parameters_2_1.done; parameters_2_1 = parameters_2.next()) {
@@ -20666,15 +20802,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 addNamesOf(parameter.name);
             }
         }
-        catch (e_6_1) { e_6 = { error: e_6_1 }; }
+        catch (e_5_1) { e_5 = { error: e_5_1 }; }
         finally {
             try {
                 if (parameters_2_1 && !parameters_2_1.done && (_a = parameters_2.return)) _a.call(parameters_2);
             }
-            finally { if (e_6) throw e_6.error; }
+            finally { if (e_5) throw e_5.error; }
         }
         return result;
-        var e_6, _a;
     }
     function expandedMessage$1(error) {
         switch (error.message) {
@@ -20923,10 +21058,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return spanA.start >= spanB.start && spanA.end <= spanB.end;
     }
     function hasTemplateReference$1(type) {
+        var e_1, _a;
         if (type.diDeps) {
             try {
-                for (var _a = __values(type.diDeps), _b = _a.next(); !_b.done; _b = _a.next()) {
-                    var diDep = _b.value;
+                for (var _b = __values(type.diDeps), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var diDep = _c.value;
                     if (diDep.token && diDep.token.identifier &&
                         identifierName(diDep.token.identifier) == 'TemplateRef')
                         return true;
@@ -20935,13 +21071,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             catch (e_1_1) { e_1 = { error: e_1_1 }; }
             finally {
                 try {
-                    if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
                 finally { if (e_1) throw e_1.error; }
             }
         }
         return false;
-        var e_1, _c;
     }
     function getSelectors(info) {
         var map = new Map();
@@ -20953,8 +21088,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return { selectors: selectors, map: map };
     }
     function flatten$1(a) {
-        return (_a = []).concat.apply(_a, __spread(a));
         var _a;
+        return (_a = []).concat.apply(_a, __spread(a));
     }
     function removeSuffix(value, suffix) {
         if (value.endsWith(suffix))
@@ -20962,6 +21097,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return value;
     }
     function uniqueByName(elements) {
+        var e_2, _a;
         if (elements) {
             var result = [];
             var set = new Set();
@@ -20983,7 +21119,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
             return result;
         }
-        var e_2, _a;
     }
     function diagnosticInfoFromTemplateInfo(info) {
         return {
@@ -21385,6 +21520,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return Object.keys(elements).sort().map(function (v) { return v.toLowerCase(); });
     }
     function compose(indexes) {
+        var e_1, _a;
         var result = {};
         if (indexes) {
             try {
@@ -21405,7 +21541,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
         }
         return result;
-        var e_1, _a;
     }
     function attributeNames(element) {
         return Object.keys(compose(elements[element.toUpperCase()] || defaultAttributes)).sort();
@@ -22023,14 +22158,15 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
     var templateAttr = /^(\w+:)?(template$|^\*)/;
     function createElementCssSelector$1(element) {
+        var e_1, _a;
         var cssSelector = new CssSelector();
         var elNameNoNs = splitNsName(element.name)[1];
         cssSelector.setElement(elNameNoNs);
         try {
-            for (var _a = __values(element.attrs), _b = _a.next(); !_b.done; _b = _a.next()) {
-                var attr = _b.value;
+            for (var _b = __values(element.attrs), _c = _b.next(); !_c.done; _c = _b.next()) {
+                var attr = _c.value;
                 if (!attr.name.match(templateAttr)) {
-                    var _c = __read(splitNsName(attr.name), 2), _ = _c[0], attrNameNoNs = _c[1];
+                    var _d = __read(splitNsName(attr.name), 2), _ = _d[0], attrNameNoNs = _d[1];
                     cssSelector.addAttribute(attrNameNoNs, attr.value);
                     if (attr.name.toLowerCase() == 'class') {
                         var classes = attr.value.split(/s+/g);
@@ -22042,12 +22178,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         catch (e_1_1) { e_1 = { error: e_1_1 }; }
         finally {
             try {
-                if (_b && !_b.done && (_d = _a.return)) _d.call(_a);
+                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
             finally { if (e_1) throw e_1.error; }
         }
         return cssSelector;
-        var e_1, _d;
     }
     function foldAttrs(attrs) {
         var inputOutput = new Map();
@@ -22202,11 +22337,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
     }
     function findInputBinding(info, path$$1, binding) {
+        var e_1, _a;
         var element = path$$1.first(ElementAst);
         if (element) {
             try {
-                for (var _a = __values(element.directives), _b = _a.next(); !_b.done; _b = _a.next()) {
-                    var directive = _b.value;
+                for (var _b = __values(element.directives), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var directive = _c.value;
                     var invertedInput = invertMap(directive.directive.inputs);
                     var fieldName = invertedInput[binding.templateName];
                     if (fieldName) {
@@ -22220,19 +22356,19 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             catch (e_1_1) { e_1 = { error: e_1_1 }; }
             finally {
                 try {
-                    if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
                 finally { if (e_1) throw e_1.error; }
             }
         }
-        var e_1, _c;
     }
     function findOutputBinding(info, path$$1, binding) {
+        var e_2, _a;
         var element = path$$1.first(ElementAst);
         if (element) {
             try {
-                for (var _a = __values(element.directives), _b = _a.next(); !_b.done; _b = _a.next()) {
-                    var directive = _b.value;
+                for (var _b = __values(element.directives), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var directive = _c.value;
                     var invertedOutputs = invertMap(directive.directive.outputs);
                     var fieldName = invertedOutputs[binding.name];
                     if (fieldName) {
@@ -22246,18 +22382,18 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             catch (e_2_1) { e_2 = { error: e_2_1 }; }
             finally {
                 try {
-                    if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
                 finally { if (e_2) throw e_2.error; }
             }
         }
-        var e_2, _c;
     }
     function invertMap(obj) {
+        var e_3, _a;
         var result = {};
         try {
-            for (var _a = __values(Object.keys(obj)), _b = _a.next(); !_b.done; _b = _a.next()) {
-                var name_1 = _b.value;
+            for (var _b = __values(Object.keys(obj)), _c = _b.next(); !_c.done; _c = _b.next()) {
+                var name_1 = _c.value;
                 var v = obj[name_1];
                 result[v] = name_1;
             }
@@ -22265,12 +22401,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         catch (e_3_1) { e_3 = { error: e_3_1 }; }
         finally {
             try {
-                if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
             finally { if (e_3) throw e_3.error; }
         }
         return result;
-        var e_3, _c;
     }
     /**
      * Wrap a symbol and change its kind to component.
@@ -22347,6 +22482,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * found in the LICENSE file at https://angular.io/license
      */
     function getTemplateDiagnostics(fileName, astProvider, templates) {
+        var e_1, _a;
         var results = [];
         var _loop_1 = function (template) {
             var ast = astProvider.getTemplateAst(template, fileName);
@@ -22388,12 +22524,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             finally { if (e_1) throw e_1.error; }
         }
         return results;
-        var e_1, _a;
     }
     function getDeclarationDiagnostics(declarations, modules) {
+        var e_2, _a;
         var results = [];
         var directives = undefined;
         var _loop_2 = function (declaration) {
+            var e_3, _a;
             var report = function (message, span) {
                 results.push({
                     kind: DiagnosticKind$1.Error,
@@ -22401,17 +22538,17 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 });
             };
             try {
-                for (var _a = __values(declaration.errors), _b = _a.next(); !_b.done; _b = _a.next()) {
-                    var error = _b.value;
+                for (var _b = __values(declaration.errors), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var error = _c.value;
                     report(error.message, error.span);
                 }
             }
-            catch (e_2_1) { e_2 = { error: e_2_1 }; }
+            catch (e_3_1) { e_3 = { error: e_3_1 }; }
             finally {
                 try {
-                    if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
-                finally { if (e_2) throw e_2.error; }
+                finally { if (e_3) throw e_3.error; }
             }
             if (declaration.metadata) {
                 if (declaration.metadata.isComponent) {
@@ -22438,7 +22575,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     }
                 }
             }
-            var e_2, _c;
         };
         try {
             for (var declarations_1 = __values(declarations), declarations_1_1 = declarations_1.next(); !declarations_1_1.done; declarations_1_1 = declarations_1.next()) {
@@ -22446,15 +22582,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 _loop_2(declaration);
             }
         }
-        catch (e_3_1) { e_3 = { error: e_3_1 }; }
+        catch (e_2_1) { e_2 = { error: e_2_1 }; }
         finally {
             try {
                 if (declarations_1_1 && !declarations_1_1.done && (_a = declarations_1.return)) _a.call(declarations_1);
             }
-            finally { if (e_3) throw e_3.error; }
+            finally { if (e_2) throw e_2.error; }
         }
         return results;
-        var e_3, _a;
     }
 
     /**
@@ -22612,6 +22747,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return values.filter(function (e) { return !!e; });
     }
     function uniqueBySpan(elements) {
+        var e_1, _a;
         if (elements) {
             var result = [];
             var map = new Map();
@@ -22639,14 +22775,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
             return result;
         }
-        var e_1, _a;
     }
     function findSuitableDefaultModule(modules) {
+        var e_2, _a;
         var result = undefined;
         var resultSize = 0;
         try {
-            for (var _a = __values(modules.ngModules), _b = _a.next(); !_b.done; _b = _a.next()) {
-                var module_1 = _b.value;
+            for (var _b = __values(modules.ngModules), _c = _b.next(); !_c.done; _c = _b.next()) {
+                var module_1 = _c.value;
                 var moduleSize = module_1.transitiveModule.directives.length;
                 if (moduleSize > resultSize) {
                     result = module_1;
@@ -22657,12 +22793,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         catch (e_2_1) { e_2 = { error: e_2_1 }; }
         finally {
             try {
-                if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
             finally { if (e_2) throw e_2.error; }
         }
         return result;
-        var e_2, _c;
     }
 
     /**
@@ -22755,11 +22890,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * @usageNotes
      * ### Basic Example
      *
+     * #### Plain InjectionToken
+     *
      * {@example core/di/ts/injector_spec.ts region='InjectionToken'}
      *
-     * ### Tree-shakeable Example
+     * #### Tree-shakable InjectionToken
      *
-     * {@example core/di/ts/injector_spec.ts region='ShakeableInjectionToken'}
+     * {@example core/di/ts/injector_spec.ts region='ShakableInjectionToken'}
      *
      */
     var InjectionToken = /** @class */ (function () {
@@ -22794,7 +22931,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @suppress {globalThis}
      */
-    function makeDecorator(name, props, parentClass, chainFn, typeFn) {
+    function makeDecorator(name, props, parentClass, additionalProcessing, typeFn) {
         var metaCtor = makeMetadataCtor(props);
         function DecoratorFactory() {
             var args = [];
@@ -22807,19 +22944,19 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 return this;
             }
             var annotationInstance = new ((_a = DecoratorFactory).bind.apply(_a, __spread([void 0], args)))();
-            var TypeDecorator = function TypeDecorator(cls) {
-                typeFn && typeFn.apply(void 0, __spread([cls], args));
+            return function TypeDecorator(cls) {
+                if (typeFn)
+                    typeFn.apply(void 0, __spread([cls], args));
                 // Use of Object.defineProperty is important since it creates non-enumerable property which
                 // prevents the property is copied during subclassing.
                 var annotations = cls.hasOwnProperty(ANNOTATIONS) ?
                     cls[ANNOTATIONS] :
                     Object.defineProperty(cls, ANNOTATIONS, { value: [] })[ANNOTATIONS];
                 annotations.push(annotationInstance);
+                if (additionalProcessing)
+                    additionalProcessing(cls);
                 return cls;
             };
-            if (chainFn)
-                chainFn(TypeDecorator);
-            return TypeDecorator;
         }
         if (parentClass) {
             DecoratorFactory.prototype = Object.create(parentClass.prototype);
@@ -22879,7 +23016,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         ParamDecoratorFactory.annotationCls = ParamDecoratorFactory;
         return ParamDecoratorFactory;
     }
-    function makePropDecorator(name, props, parentClass) {
+    function makePropDecorator(name, props, parentClass, additionalProcessing) {
         var metaCtor = makeMetadataCtor(props);
         function PropDecoratorFactory() {
             var args = [];
@@ -22892,7 +23029,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 return this;
             }
             var decoratorInstance = new ((_a = PropDecoratorFactory).bind.apply(_a, __spread([void 0], args)))();
-            return function PropDecorator(target, name) {
+            function PropDecorator(target, name) {
                 var constructor = target.constructor;
                 // Use of Object.defineProperty is important since it creates non-enumerable property which
                 // prevents the property is copied during subclassing.
@@ -22901,7 +23038,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     Object.defineProperty(constructor, PROP_METADATA, { value: {} })[PROP_METADATA];
                 meta[name] = meta.hasOwnProperty(name) && meta[name] || [];
                 meta[name].unshift(decoratorInstance);
-            };
+                if (additionalProcessing)
+                    additionalProcessing.apply(void 0, __spread([target, name], args));
+            }
+            return PropDecorator;
         }
         if (parentClass) {
             PropDecoratorFactory.prototype = Object.create(parentClass.prototype);
@@ -23090,6 +23230,35 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    function getClosureSafeProperty(objWithPropertyToExtract, target) {
+        for (var key in objWithPropertyToExtract) {
+            if (objWithPropertyToExtract[key] === target) {
+                return key;
+            }
+        }
+        throw Error('Could not find renamed property on target object.');
+    }
+    /**
+     * Sets properties on a target object from a source object, but only if
+     * the property doesn't already exist on the target object.
+     * @param target The target to set properties on
+     * @param source The source of the property keys and values to set
+     */
+    function fillProperties(target, source) {
+        for (var key in source) {
+            if (source.hasOwnProperty(key) && !target.hasOwnProperty(key)) {
+                target[key] = source[key];
+            }
+        }
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     /**
      * Type of the Directive metadata.
      */
@@ -23195,16 +23364,49 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * @Annotation
      */
     var Pipe = makeDecorator('Pipe', function (p) { return (__assign({ pure: true }, p)); }, undefined, undefined, function (type, meta) { return (function () { })(type, meta); });
+    var initializeBaseDef = function (target) {
+        var constructor = target.constructor;
+        var inheritedBaseDef = constructor.ngBaseDef;
+        var baseDef = constructor.ngBaseDef = {
+            inputs: {},
+            outputs: {},
+            declaredInputs: {},
+        };
+        if (inheritedBaseDef) {
+            fillProperties(baseDef.inputs, inheritedBaseDef.inputs);
+            fillProperties(baseDef.outputs, inheritedBaseDef.outputs);
+            fillProperties(baseDef.declaredInputs, inheritedBaseDef.declaredInputs);
+        }
+    };
+    /**
+     * Does the work of creating the `ngBaseDef` property for the @Input and @Output decorators.
+     * @param key "inputs" or "outputs"
+     */
+    var updateBaseDefFromIOProp = function (getProp) {
+        return function (target, name) {
+            var args = [];
+            for (var _i = 2; _i < arguments.length; _i++) {
+                args[_i - 2] = arguments[_i];
+            }
+            var constructor = target.constructor;
+            if (!constructor.hasOwnProperty('ngBaseDef')) {
+                initializeBaseDef(target);
+            }
+            var baseDef = constructor.ngBaseDef;
+            var defProp = getProp(baseDef);
+            defProp[name] = args[0];
+        };
+    };
     /**
      *
      * @Annotation
      */
-    var Input = makePropDecorator('Input', function (bindingPropertyName) { return ({ bindingPropertyName: bindingPropertyName }); });
+    var Input = makePropDecorator('Input', function (bindingPropertyName) { return ({ bindingPropertyName: bindingPropertyName }); }, undefined, updateBaseDefFromIOProp(function (baseDef) { return baseDef.inputs || {}; }));
     /**
      *
      * @Annotation
      */
-    var Output = makePropDecorator('Output', function (bindingPropertyName) { return ({ bindingPropertyName: bindingPropertyName }); });
+    var Output = makePropDecorator('Output', function (bindingPropertyName) { return ({ bindingPropertyName: bindingPropertyName }); }, undefined, updateBaseDefFromIOProp(function (baseDef) { return baseDef.outputs || {}; }));
     /**
      *
      * @Annotation
@@ -23570,22 +23772,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         // Note: We always use `Object` as the null value
         // to simplify checking later on.
         return parentCtor || Object;
-    }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    function getClosureSafeProperty(objWithPropertyToExtract, target) {
-        for (var key in objWithPropertyToExtract) {
-            if (objWithPropertyToExtract[key] === target) {
-                return key;
-            }
-        }
-        throw Error('Could not find renamed property on target object.');
     }
 
     /**
@@ -24091,8 +24277,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * found in the LICENSE file at https://angular.io/license
      */
     var GET_PROPERTY_NAME$1 = {};
-    var ɵ0$1 = GET_PROPERTY_NAME$1;
-    var USE_VALUE$2 = getClosureSafeProperty({ provide: String, useValue: ɵ0$1 }, GET_PROPERTY_NAME$1);
+    var ɵ0$2 = GET_PROPERTY_NAME$1;
+    var USE_VALUE$2 = getClosureSafeProperty({ provide: String, useValue: ɵ0$2 }, GET_PROPERTY_NAME$1);
     var EMPTY_ARRAY = [];
     function convertInjectableProviderToFactory(type, provider) {
         if (!provider) {
@@ -24268,7 +24454,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('6.1.0+66.sha-26adee9');
+    var VERSION$2 = new Version$1('7.0.0-beta.1+40.sha-99b2e7e');
 
     /**
      * @license
@@ -25596,8 +25782,24 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
 
     var _enable_super_gross_mode_that_will_cause_bad_things = false;
+    /**
+     * The global configuration object for RxJS, used to configure things
+     * like what Promise contructor should used to create Promises
+     */
     var config = {
+        /**
+         * The promise constructor used by default for methods such as
+         * {@link toPromise} and {@link forEach}
+         */
         Promise: undefined,
+        /**
+         * If true, turns on synchronous error rethrowing, which is a deprecated behavior
+         * in v6 and higher. This behavior enables bad patterns like wrapping a subscribe
+         * call in a try/catch block. It also enables producer interference, a nasty bug
+         * where a multicast can be broken for all observers by a downstream consumer with
+         * an unhandled error. DO NOT USE THIS FLAG UNLESS IT'S NEEDED TO BY TIME
+         * FOR MIGRATION REASONS.
+         */
         set useDeprecatedSynchronousErrorHandling(value) {
             if (value) {
                 var error = new Error();
@@ -25613,6 +25815,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         },
     };
 
+    /**
+     * Throws an error on another job so that it's picked up by the runtime's
+     * uncaught error handling mechanism.
+     * @param err the error to throw
+     */
     function hostReportError(err) {
         setTimeout(function () { throw err; });
     }
@@ -25637,6 +25844,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return x != null && typeof x === 'object';
     }
 
+    // typeof any so that it we don't have to cast when comparing a result to the error object
     var errorObject = { e: {} };
 
     var tryCatchTarget;
@@ -25664,7 +25872,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var UnsubscriptionError = (function (_super) {
+    /**
+     * An error thrown when one or more errors have occurred during the
+     * `unsubscribe` of a {@link Subscription}.
+     */
+    var UnsubscriptionError = /** @class */ (function (_super) {
         __extends$1(UnsubscriptionError, _super);
         function UnsubscriptionError(errors) {
             var _this = _super.call(this, errors ?
@@ -25677,16 +25889,45 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return UnsubscriptionError;
     }(Error));
 
-    var Subscription = (function () {
+    /**
+     * Represents a disposable resource, such as the execution of an Observable. A
+     * Subscription has one important method, `unsubscribe`, that takes no argument
+     * and just disposes the resource held by the subscription.
+     *
+     * Additionally, subscriptions may be grouped together through the `add()`
+     * method, which will attach a child Subscription to the current Subscription.
+     * When a Subscription is unsubscribed, all its children (and its grandchildren)
+     * will be unsubscribed as well.
+     *
+     * @class Subscription
+     */
+    var Subscription = /** @class */ (function () {
+        /**
+         * @param {function(): void} [unsubscribe] A function describing how to
+         * perform the disposal of resources when the `unsubscribe` method is called.
+         */
         function Subscription(unsubscribe) {
+            /**
+             * A flag to indicate whether this Subscription has already been unsubscribed.
+             * @type {boolean}
+             */
             this.closed = false;
+            /** @internal */
             this._parent = null;
+            /** @internal */
             this._parents = null;
+            /** @internal */
             this._subscriptions = null;
             if (unsubscribe) {
                 this._unsubscribe = unsubscribe;
             }
         }
+        /**
+         * Disposes the resources held by the subscription. May, for instance, cancel
+         * an ongoing Observable execution or cancel any other type of work that
+         * started when the Subscription was created.
+         * @return {void}
+         */
         Subscription.prototype.unsubscribe = function () {
             var hasErrors = false;
             var errors;
@@ -25697,11 +25938,17 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             this.closed = true;
             this._parent = null;
             this._parents = null;
+            // null out _subscriptions first so any child subscriptions that attempt
+            // to remove themselves from this subscription will noop
             this._subscriptions = null;
             var index = -1;
             var len = _parents ? _parents.length : 0;
+            // if this._parent is null, then so is this._parents, and we
+            // don't have to remove ourselves from any parent subscriptions.
             while (_parent) {
                 _parent.remove(this);
+                // if this._parents is null or index >= len,
+                // then _parent is set to null, and the loop exits
                 _parent = ++index < len && _parents[index] || null;
             }
             if (isFunction(_unsubscribe)) {
@@ -25737,6 +25984,24 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 throw new UnsubscriptionError(errors);
             }
         };
+        /**
+         * Adds a tear down to be called during the unsubscribe() of this
+         * Subscription.
+         *
+         * If the tear down being added is a subscription that is already
+         * unsubscribed, is the same reference `add` is being called on, or is
+         * `Subscription.EMPTY`, it will not be added.
+         *
+         * If this subscription is already in an `closed` state, the passed
+         * tear down logic will be executed immediately.
+         *
+         * @param {TeardownLogic} teardown The additional logic to execute on
+         * teardown.
+         * @return {Subscription} Returns the Subscription used or created to be
+         * added to the inner subscriptions list. This Subscription can be used with
+         * `remove()` to remove the passed teardown logic from the inner subscriptions
+         * list.
+         */
         Subscription.prototype.add = function (teardown) {
             if (!teardown || (teardown === Subscription.EMPTY)) {
                 return Subscription.EMPTY;
@@ -25756,7 +26021,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                         subscription.unsubscribe();
                         return subscription;
                     }
-                    else if (typeof subscription._addParent !== 'function') {
+                    else if (typeof subscription._addParent !== 'function' /* quack quack */) {
                         var tmp = subscription;
                         subscription = new Subscription();
                         subscription._subscriptions = [tmp];
@@ -25770,6 +26035,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             subscription._addParent(this);
             return subscription;
         };
+        /**
+         * Removes a Subscription from the internal list of subscriptions that will
+         * unsubscribe during the unsubscribe process of this Subscription.
+         * @param {Subscription} subscription The subscription to remove.
+         * @return {void}
+         */
         Subscription.prototype.remove = function (subscription) {
             var subscriptions = this._subscriptions;
             if (subscriptions) {
@@ -25779,18 +26050,25 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 }
             }
         };
+        /** @internal */
         Subscription.prototype._addParent = function (parent) {
             var _a = this, _parent = _a._parent, _parents = _a._parents;
             if (!_parent || _parent === parent) {
+                // If we don't have a parent, or the new parent is the same as the
+                // current parent, then set this._parent to the new parent.
                 this._parent = parent;
             }
             else if (!_parents) {
+                // If there's already one parent, but not multiple, allocate an Array to
+                // store the rest of the parent Subscriptions.
                 this._parents = [parent];
             }
             else if (_parents.indexOf(parent) === -1) {
+                // Only add the new parent to the _parents list if it's not already there.
                 _parents.push(parent);
             }
         };
+        /** @nocollapse */
         Subscription.EMPTY = (function (empty) {
             empty.closed = true;
             return empty;
@@ -25815,13 +26093,31 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var Subscriber = (function (_super) {
+    /**
+     * Implements the {@link Observer} interface and extends the
+     * {@link Subscription} class. While the {@link Observer} is the public API for
+     * consuming the values of an {@link Observable}, all Observers get converted to
+     * a Subscriber, in order to provide Subscription-like capabilities such as
+     * `unsubscribe`. Subscriber is a common type in RxJS, and crucial for
+     * implementing operators, but it is rarely used as a public API.
+     *
+     * @class Subscriber<T>
+     */
+    var Subscriber = /** @class */ (function (_super) {
         __extends$2(Subscriber, _super);
+        /**
+         * @param {Observer|function(value: T): void} [destinationOrNext] A partially
+         * defined Observer or a `next` callback function.
+         * @param {function(e: ?any): void} [error] The `error` callback of an
+         * Observer.
+         * @param {function(): void} [complete] The `complete` callback of an
+         * Observer.
+         */
         function Subscriber(destinationOrNext, error, complete) {
             var _this = _super.call(this) || this;
-            _this.syncErrorValue = null;
-            _this.syncErrorThrown = false;
-            _this.syncErrorThrowable = false;
+            /** @internal */ _this.syncErrorValue = null;
+            /** @internal */ _this.syncErrorThrown = false;
+            /** @internal */ _this.syncErrorThrowable = false;
             _this.isStopped = false;
             switch (arguments.length) {
                 case 0:
@@ -25833,6 +26129,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                         break;
                     }
                     if (typeof destinationOrNext === 'object') {
+                        // HACK(benlesh): For situations where Node has multiple copies of rxjs in
+                        // node_modules, we cannot rely on `instanceof` checks
                         if (isTrustedSubscriber(destinationOrNext)) {
                             var trustedSubscriber = destinationOrNext[rxSubscriber]();
                             _this.syncErrorThrowable = trustedSubscriber.syncErrorThrowable;
@@ -25853,22 +26151,54 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             return _this;
         }
         Subscriber.prototype[rxSubscriber] = function () { return this; };
+        /**
+         * A static factory for a Subscriber, given a (potentially partial) definition
+         * of an Observer.
+         * @param {function(x: ?T): void} [next] The `next` callback of an Observer.
+         * @param {function(e: ?any): void} [error] The `error` callback of an
+         * Observer.
+         * @param {function(): void} [complete] The `complete` callback of an
+         * Observer.
+         * @return {Subscriber<T>} A Subscriber wrapping the (partially defined)
+         * Observer represented by the given arguments.
+         * @nocollapse
+         */
         Subscriber.create = function (next, error, complete) {
             var subscriber = new Subscriber(next, error, complete);
             subscriber.syncErrorThrowable = false;
             return subscriber;
         };
+        /**
+         * The {@link Observer} callback to receive notifications of type `next` from
+         * the Observable, with a value. The Observable may call this method 0 or more
+         * times.
+         * @param {T} [value] The `next` value.
+         * @return {void}
+         */
         Subscriber.prototype.next = function (value) {
             if (!this.isStopped) {
                 this._next(value);
             }
         };
+        /**
+         * The {@link Observer} callback to receive notifications of type `error` from
+         * the Observable, with an attached {@link Error}. Notifies the Observer that
+         * the Observable has experienced an error condition.
+         * @param {any} [err] The `error` exception.
+         * @return {void}
+         */
         Subscriber.prototype.error = function (err) {
             if (!this.isStopped) {
                 this.isStopped = true;
                 this._error(err);
             }
         };
+        /**
+         * The {@link Observer} callback to receive a valueless notification of type
+         * `complete` from the Observable. Notifies the Observer that the Observable
+         * has finished sending push-based notifications.
+         * @return {void}
+         */
         Subscriber.prototype.complete = function () {
             if (!this.isStopped) {
                 this.isStopped = true;
@@ -25893,6 +26223,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             this.destination.complete();
             this.unsubscribe();
         };
+        /** @deprecated This is an internal implementation detail, do not use. */
         Subscriber.prototype._unsubscribeAndRecycle = function () {
             var _a = this, _parent = _a._parent, _parents = _a._parents;
             this._parent = null;
@@ -25906,7 +26237,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         return Subscriber;
     }(Subscription));
-    var SafeSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var SafeSubscriber = /** @class */ (function (_super) {
         __extends$2(SafeSubscriber, _super);
         function SafeSubscriber(_parentSubscriber, observerOrNext, error, complete) {
             var _this = _super.call(this) || this;
@@ -26032,6 +26368,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
             return false;
         };
+        /** @deprecated This is an internal implementation detail, do not use. */
         SafeSubscriber.prototype._unsubscribe = function () {
             var _parentSubscriber = this._parentSubscriber;
             this._context = null;
@@ -26059,10 +26396,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return new Subscriber(nextOrObserver, error, complete);
     }
 
+    /** Symbol.observable or a string "@@observable". Used for interop */
     var observable = typeof Symbol === 'function' && Symbol.observable || '@@observable';
 
+    /* tslint:disable:no-empty */
     function noop$1() { }
 
+    /* @internal */
     function pipeFromArray(fns) {
         if (!fns) {
             return noop$1;
@@ -26075,19 +26415,154 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
     }
 
-    var Observable = (function () {
+    /**
+     * A representation of any set of values over any amount of time. This is the most basic building block
+     * of RxJS.
+     *
+     * @class Observable<T>
+     */
+    var Observable = /** @class */ (function () {
+        /**
+         * @constructor
+         * @param {Function} subscribe the function that is called when the Observable is
+         * initially subscribed to. This function is given a Subscriber, to which new values
+         * can be `next`ed, or an `error` method can be called to raise an error, or
+         * `complete` can be called to notify of a successful completion.
+         */
         function Observable(subscribe) {
+            /** Internal implementation detail, do not use directly. */
             this._isScalar = false;
             if (subscribe) {
                 this._subscribe = subscribe;
             }
         }
+        /**
+         * Creates a new Observable, with this Observable as the source, and the passed
+         * operator defined as the new observable's operator.
+         * @method lift
+         * @param {Operator} operator the operator defining the operation to take on the observable
+         * @return {Observable} a new observable with the Operator applied
+         */
         Observable.prototype.lift = function (operator) {
             var observable$$1 = new Observable();
             observable$$1.source = this;
             observable$$1.operator = operator;
             return observable$$1;
         };
+        /**
+         * Invokes an execution of an Observable and registers Observer handlers for notifications it will emit.
+         *
+         * <span class="informal">Use it when you have all these Observables, but still nothing is happening.</span>
+         *
+         * `subscribe` is not a regular operator, but a method that calls Observable's internal `subscribe` function. It
+         * might be for example a function that you passed to a {@link create} static factory, but most of the time it is
+         * a library implementation, which defines what and when will be emitted by an Observable. This means that calling
+         * `subscribe` is actually the moment when Observable starts its work, not when it is created, as it is often
+         * thought.
+         *
+         * Apart from starting the execution of an Observable, this method allows you to listen for values
+         * that an Observable emits, as well as for when it completes or errors. You can achieve this in two
+         * following ways.
+         *
+         * The first way is creating an object that implements {@link Observer} interface. It should have methods
+         * defined by that interface, but note that it should be just a regular JavaScript object, which you can create
+         * yourself in any way you want (ES6 class, classic function constructor, object literal etc.). In particular do
+         * not attempt to use any RxJS implementation details to create Observers - you don't need them. Remember also
+         * that your object does not have to implement all methods. If you find yourself creating a method that doesn't
+         * do anything, you can simply omit it. Note however, that if `error` method is not provided, all errors will
+         * be left uncaught.
+         *
+         * The second way is to give up on Observer object altogether and simply provide callback functions in place of its methods.
+         * This means you can provide three functions as arguments to `subscribe`, where first function is equivalent
+         * of a `next` method, second of an `error` method and third of a `complete` method. Just as in case of Observer,
+         * if you do not need to listen for something, you can omit a function, preferably by passing `undefined` or `null`,
+         * since `subscribe` recognizes these functions by where they were placed in function call. When it comes
+         * to `error` function, just as before, if not provided, errors emitted by an Observable will be thrown.
+         *
+         * Whatever style of calling `subscribe` you use, in both cases it returns a Subscription object.
+         * This object allows you to call `unsubscribe` on it, which in turn will stop work that an Observable does and will clean
+         * up all resources that an Observable used. Note that cancelling a subscription will not call `complete` callback
+         * provided to `subscribe` function, which is reserved for a regular completion signal that comes from an Observable.
+         *
+         * Remember that callbacks provided to `subscribe` are not guaranteed to be called asynchronously.
+         * It is an Observable itself that decides when these functions will be called. For example {@link of}
+         * by default emits all its values synchronously. Always check documentation for how given Observable
+         * will behave when subscribed and if its default behavior can be modified with a {@link Scheduler}.
+         *
+         * @example <caption>Subscribe with an Observer</caption>
+         * const sumObserver = {
+         *   sum: 0,
+         *   next(value) {
+         *     console.log('Adding: ' + value);
+         *     this.sum = this.sum + value;
+         *   },
+         *   error() { // We actually could just remove this method,
+         *   },        // since we do not really care about errors right now.
+         *   complete() {
+         *     console.log('Sum equals: ' + this.sum);
+         *   }
+         * };
+         *
+         * Rx.Observable.of(1, 2, 3) // Synchronously emits 1, 2, 3 and then completes.
+         * .subscribe(sumObserver);
+         *
+         * // Logs:
+         * // "Adding: 1"
+         * // "Adding: 2"
+         * // "Adding: 3"
+         * // "Sum equals: 6"
+         *
+         *
+         * @example <caption>Subscribe with functions</caption>
+         * let sum = 0;
+         *
+         * Rx.Observable.of(1, 2, 3)
+         * .subscribe(
+         *   function(value) {
+         *     console.log('Adding: ' + value);
+         *     sum = sum + value;
+         *   },
+         *   undefined,
+         *   function() {
+         *     console.log('Sum equals: ' + sum);
+         *   }
+         * );
+         *
+         * // Logs:
+         * // "Adding: 1"
+         * // "Adding: 2"
+         * // "Adding: 3"
+         * // "Sum equals: 6"
+         *
+         *
+         * @example <caption>Cancel a subscription</caption>
+         * const subscription = Rx.Observable.interval(1000).subscribe(
+         *   num => console.log(num),
+         *   undefined,
+         *   () => console.log('completed!') // Will not be called, even
+         * );                                // when cancelling subscription
+         *
+         *
+         * setTimeout(() => {
+         *   subscription.unsubscribe();
+         *   console.log('unsubscribed!');
+         * }, 2500);
+         *
+         * // Logs:
+         * // 0 after 1s
+         * // 1 after 2s
+         * // "unsubscribed!" after 2.5s
+         *
+         *
+         * @param {Observer|Function} observerOrNext (optional) Either an observer with methods to be called,
+         *  or the first of three possible handlers, which is the handler for each value emitted from the subscribed
+         *  Observable.
+         * @param {Function} error (optional) A handler for a terminal event resulting from an error. If no error handler is provided,
+         *  the error will be thrown as unhandled.
+         * @param {Function} complete (optional) A handler for a terminal event resulting from successful completion.
+         * @return {ISubscription} a subscription reference to the registered handlers
+         * @method subscribe
+         */
         Observable.prototype.subscribe = function (observerOrNext, error, complete) {
             var operator = this.operator;
             var sink = toSubscriber(observerOrNext, error, complete);
@@ -26095,9 +26570,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 operator.call(sink, this.source);
             }
             else {
-                sink.add(this.source || (config.useDeprecatedSynchronousErrorHandling && !sink.syncErrorThrowable) ?
-                    this._subscribe(sink) :
-                    this._trySubscribe(sink));
+                sink.add(this.source || !sink.syncErrorThrowable ? this._subscribe(sink) : this._trySubscribe(sink));
             }
             if (config.useDeprecatedSynchronousErrorHandling) {
                 if (sink.syncErrorThrowable) {
@@ -26109,6 +26582,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
             return sink;
         };
+        /** @deprecated This is an internal implementation detail, do not use. */
         Observable.prototype._trySubscribe = function (sink) {
             try {
                 return this._subscribe(sink);
@@ -26121,10 +26595,19 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 sink.error(err);
             }
         };
+        /**
+         * @method forEach
+         * @param {Function} next a handler for each value emitted by the observable
+         * @param {PromiseConstructor} [promiseCtor] a constructor function used to instantiate the Promise
+         * @return {Promise} a promise that either resolves on observable completion or
+         *  rejects with the handled error
+         */
         Observable.prototype.forEach = function (next, promiseCtor) {
             var _this = this;
             promiseCtor = getPromiseCtor(promiseCtor);
             return new promiseCtor(function (resolve, reject) {
+                // Must be declared in a separate statement to avoid a RefernceError when
+                // accessing subscription below in the closure due to Temporal Dead Zone.
                 var subscription;
                 subscription = _this.subscribe(function (value) {
                     try {
@@ -26139,13 +26622,38 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 }, reject, resolve);
             });
         };
+        /** @deprecated This is an internal implementation detail, do not use. */
         Observable.prototype._subscribe = function (subscriber) {
             var source = this.source;
             return source && source.subscribe(subscriber);
         };
+        /**
+         * An interop point defined by the es7-observable spec https://github.com/zenparsing/es-observable
+         * @method Symbol.observable
+         * @return {Observable} this instance of the observable
+         */
         Observable.prototype[observable] = function () {
             return this;
         };
+        /* tslint:enable:max-line-length */
+        /**
+         * Used to stitch together functional operators into a chain.
+         * @method pipe
+         * @return {Observable} the Observable result of all of the operators having
+         * been called in the order they were passed in.
+         *
+         * @example
+         *
+         * import { map, filter, scan } from 'rxjs/operators';
+         *
+         * Rx.Observable.interval(1000)
+         *   .pipe(
+         *     filter(x => x % 2 === 0),
+         *     map(x => x + x),
+         *     scan((acc, x) => acc + x)
+         *   )
+         *   .subscribe(x => console.log(x))
+         */
         Observable.prototype.pipe = function () {
             var operations = [];
             for (var _i = 0; _i < arguments.length; _i++) {
@@ -26156,6 +26664,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
             return pipeFromArray(operations)(this);
         };
+        /* tslint:enable:max-line-length */
         Observable.prototype.toPromise = function (promiseCtor) {
             var _this = this;
             promiseCtor = getPromiseCtor(promiseCtor);
@@ -26164,11 +26673,29 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 _this.subscribe(function (x) { return value = x; }, function (err) { return reject(err); }, function () { return resolve(value); });
             });
         };
+        // HACK: Since TypeScript inherits static properties too, we have to
+        // fight against TypeScript here so Subject can have a different static create signature
+        /**
+         * Creates a new cold Observable by calling the Observable constructor
+         * @static true
+         * @owner Observable
+         * @method create
+         * @param {Function} subscribe? the subscriber function to be passed to the Observable constructor
+         * @return {Observable} a new cold observable
+         * @nocollapse
+         */
         Observable.create = function (subscribe) {
             return new Observable(subscribe);
         };
         return Observable;
     }());
+    /**
+     * Decides between a passed promise constructor from consuming code,
+     * A default configured promise constructor, and the native promise
+     * constructor and returns it. If nothing can be found, it will throw
+     * an error.
+     * @param promiseCtor The optional promise constructor to passed by consuming code
+     */
     function getPromiseCtor(promiseCtor) {
         if (!promiseCtor) {
             promiseCtor = config.Promise || Promise;
@@ -26189,7 +26716,16 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var ObjectUnsubscribedError = (function (_super) {
+    /**
+     * An error thrown when an action is invalid because the object has been
+     * unsubscribed.
+     *
+     * @see {@link Subject}
+     * @see {@link BehaviorSubject}
+     *
+     * @class ObjectUnsubscribedError
+     */
+    var ObjectUnsubscribedError = /** @class */ (function (_super) {
         __extends$3(ObjectUnsubscribedError, _super);
         function ObjectUnsubscribedError() {
             var _this = _super.call(this, 'object unsubscribed') || this;
@@ -26210,7 +26746,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var SubjectSubscription = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var SubjectSubscription = /** @class */ (function (_super) {
         __extends$4(SubjectSubscription, _super);
         function SubjectSubscription(subject, subscriber) {
             var _this = _super.call(this) || this;
@@ -26248,7 +26789,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var SubjectSubscriber = (function (_super) {
+    /**
+     * @class SubjectSubscriber<T>
+     */
+    var SubjectSubscriber = /** @class */ (function (_super) {
         __extends$5(SubjectSubscriber, _super);
         function SubjectSubscriber(destination) {
             var _this = _super.call(this, destination) || this;
@@ -26257,7 +26801,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return SubjectSubscriber;
     }(Subscriber));
-    var Subject = (function (_super) {
+    /**
+     * @class Subject<T>
+     */
+    var Subject = /** @class */ (function (_super) {
         __extends$5(Subject, _super);
         function Subject() {
             var _this = _super.call(this) || this;
@@ -26322,6 +26869,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             this.closed = true;
             this.observers = null;
         };
+        /** @deprecated This is an internal implementation detail, do not use. */
         Subject.prototype._trySubscribe = function (subscriber) {
             if (this.closed) {
                 throw new ObjectUnsubscribedError();
@@ -26330,6 +26878,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 return _super.prototype._trySubscribe.call(this, subscriber);
             }
         };
+        /** @deprecated This is an internal implementation detail, do not use. */
         Subject.prototype._subscribe = function (subscriber) {
             if (this.closed) {
                 throw new ObjectUnsubscribedError();
@@ -26352,12 +26901,16 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             observable.source = this;
             return observable;
         };
+        /**@nocollapse */
         Subject.create = function (destination, source) {
             return new AnonymousSubject(destination, source);
         };
         return Subject;
     }(Observable));
-    var AnonymousSubject = (function (_super) {
+    /**
+     * @class AnonymousSubject<T>
+     */
+    var AnonymousSubject = /** @class */ (function (_super) {
         __extends$5(AnonymousSubject, _super);
         function AnonymousSubject(destination, source) {
             var _this = _super.call(this) || this;
@@ -26383,6 +26936,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 this.destination.complete();
             }
         };
+        /** @deprecated This is an internal implementation detail, do not use. */
         AnonymousSubject.prototype._subscribe = function (subscriber) {
             var source = this.source;
             if (source) {
@@ -26410,7 +26964,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             return source.lift(new RefCountOperator(source));
         };
     }
-    var RefCountOperator = (function () {
+    var RefCountOperator = /** @class */ (function () {
         function RefCountOperator(connectable) {
             this.connectable = connectable;
         }
@@ -26426,7 +26980,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         return RefCountOperator;
     }());
-    var RefCountSubscriber = (function (_super) {
+    var RefCountSubscriber = /** @class */ (function (_super) {
         __extends$6(RefCountSubscriber, _super);
         function RefCountSubscriber(destination, connectable) {
             var _this = _super.call(this, destination) || this;
@@ -26450,6 +27004,29 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 this.connection = null;
                 return;
             }
+            ///
+            // Compare the local RefCountSubscriber's connection Subscription to the
+            // connection Subscription on the shared ConnectableObservable. In cases
+            // where the ConnectableObservable source synchronously emits values, and
+            // the RefCountSubscriber's downstream Observers synchronously unsubscribe,
+            // execution continues to here before the RefCountOperator has a chance to
+            // supply the RefCountSubscriber with the shared connection Subscription.
+            // For example:
+            // ```
+            // Observable.range(0, 10)
+            //   .publish()
+            //   .refCount()
+            //   .take(5)
+            //   .subscribe();
+            // ```
+            // In order to account for this case, RefCountSubscriber should only dispose
+            // the ConnectableObservable's shared connection Subscription if the
+            // connection Subscription exists, *and* either:
+            //   a. RefCountSubscriber doesn't have a reference to the shared connection
+            //      Subscription yet, or,
+            //   b. RefCountSubscriber's connection Subscription reference is identical
+            //      to the shared connection Subscription
+            ///
             var connection = this.connection;
             var sharedConnection = connectable._connection;
             this.connection = null;
@@ -26470,16 +27047,21 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var ConnectableObservable = (function (_super) {
+    /**
+     * @class ConnectableObservable<T>
+     */
+    var ConnectableObservable = /** @class */ (function (_super) {
         __extends$7(ConnectableObservable, _super);
         function ConnectableObservable(source, subjectFactory) {
             var _this = _super.call(this) || this;
             _this.source = source;
             _this.subjectFactory = subjectFactory;
             _this._refCount = 0;
+            /** @internal */
             _this._isComplete = false;
             return _this;
         }
+        /** @deprecated This is an internal implementation detail, do not use. */
         ConnectableObservable.prototype._subscribe = function (subscriber) {
             return this.getSubject().subscribe(subscriber);
         };
@@ -26524,7 +27106,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         connect: { value: connectableProto.connect },
         refCount: { value: connectableProto.refCount }
     };
-    var ConnectableSubscriber = (function (_super) {
+    var ConnectableSubscriber = /** @class */ (function (_super) {
         __extends$7(ConnectableSubscriber, _super);
         function ConnectableSubscriber(destination, connectable) {
             var _this = _super.call(this, destination) || this;
@@ -26555,7 +27137,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         return ConnectableSubscriber;
     }(SubjectSubscriber));
-    var RefCountSubscriber$1 = (function (_super) {
+    var RefCountSubscriber$1 = /** @class */ (function (_super) {
         __extends$7(RefCountSubscriber, _super);
         function RefCountSubscriber(destination, connectable) {
             var _this = _super.call(this, destination) || this;
@@ -26579,6 +27161,29 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 this.connection = null;
                 return;
             }
+            ///
+            // Compare the local RefCountSubscriber's connection Subscription to the
+            // connection Subscription on the shared ConnectableObservable. In cases
+            // where the ConnectableObservable source synchronously emits values, and
+            // the RefCountSubscriber's downstream Observers synchronously unsubscribe,
+            // execution continues to here before the RefCountOperator has a chance to
+            // supply the RefCountSubscriber with the shared connection Subscription.
+            // For example:
+            // ```
+            // Observable.range(0, 10)
+            //   .publish()
+            //   .refCount()
+            //   .take(5)
+            //   .subscribe();
+            // ```
+            // In order to account for this case, RefCountSubscriber should only dispose
+            // the ConnectableObservable's shared connection Subscription if the
+            // connection Subscription exists, *and* either:
+            //   a. RefCountSubscriber doesn't have a reference to the shared connection
+            //      Subscription yet, or,
+            //   b. RefCountSubscriber's connection Subscription reference is identical
+            //      to the shared connection Subscription
+            ///
             var connection = this.connection;
             var sharedConnection = connectable._connection;
             this.connection = null;
@@ -26599,7 +27204,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var GroupBySubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var GroupBySubscriber = /** @class */ (function (_super) {
         __extends$8(GroupBySubscriber, _super);
         function GroupBySubscriber(destination, keySelector, elementSelector, durationSelector, subjectSelector) {
             var _this = _super.call(this, destination) || this;
@@ -26695,7 +27305,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         return GroupBySubscriber;
     }(Subscriber));
-    var GroupDurationSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var GroupDurationSubscriber = /** @class */ (function (_super) {
         __extends$8(GroupDurationSubscriber, _super);
         function GroupDurationSubscriber(key, group, parent) {
             var _this = _super.call(this, group) || this;
@@ -26707,6 +27322,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         GroupDurationSubscriber.prototype._next = function (value) {
             this.complete();
         };
+        /** @deprecated This is an internal implementation detail, do not use. */
         GroupDurationSubscriber.prototype._unsubscribe = function () {
             var _a = this, parent = _a.parent, key = _a.key;
             this.key = this.parent = null;
@@ -26716,8 +27332,17 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         return GroupDurationSubscriber;
     }(Subscriber));
-    var GroupedObservable = (function (_super) {
+    /**
+     * An Observable representing values belonging to the same group represented by
+     * a common key. The values emitted by a GroupedObservable come from the source
+     * Observable. The common key is available as the field `key` on a
+     * GroupedObservable instance.
+     *
+     * @class GroupedObservable<K, T>
+     */
+    var GroupedObservable = /** @class */ (function (_super) {
         __extends$8(GroupedObservable, _super);
+        /** @deprecated Do not construct this type. Internal use only */
         function GroupedObservable(key, groupSubject, refCountSubscription) {
             var _this = _super.call(this) || this;
             _this.key = key;
@@ -26725,6 +27350,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             _this.refCountSubscription = refCountSubscription;
             return _this;
         }
+        /** @deprecated This is an internal implementation detail, do not use. */
         GroupedObservable.prototype._subscribe = function (subscriber) {
             var subscription = new Subscription();
             var _a = this, refCountSubscription = _a.refCountSubscription, groupSubject = _a.groupSubject;
@@ -26736,7 +27362,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         return GroupedObservable;
     }(Observable));
-    var InnerRefCountSubscription = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var InnerRefCountSubscription = /** @class */ (function (_super) {
         __extends$8(InnerRefCountSubscription, _super);
         function InnerRefCountSubscription(parent) {
             var _this = _super.call(this) || this;
@@ -26767,7 +27398,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var BehaviorSubject = (function (_super) {
+    /**
+     * @class BehaviorSubject<T>
+     */
+    var BehaviorSubject = /** @class */ (function (_super) {
         __extends$9(BehaviorSubject, _super);
         function BehaviorSubject(_value) {
             var _this = _super.call(this) || this;
@@ -26781,6 +27415,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             enumerable: true,
             configurable: true
         });
+        /** @deprecated This is an internal implementation detail, do not use. */
         BehaviorSubject.prototype._subscribe = function (subscriber) {
             var subscription = _super.prototype._subscribe.call(this, subscriber);
             if (subscription && !subscription.closed) {
@@ -26815,11 +27450,35 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var Action = (function (_super) {
+    /**
+     * A unit of work to be executed in a {@link Scheduler}. An action is typically
+     * created from within a Scheduler and an RxJS user does not need to concern
+     * themselves about creating and manipulating an Action.
+     *
+     * ```ts
+     * class Action<T> extends Subscription {
+     *   new (scheduler: Scheduler, work: (state?: T) => void);
+     *   schedule(state?: T, delay: number = 0): Subscription;
+     * }
+     * ```
+     *
+     * @class Action<T>
+     */
+    var Action = /** @class */ (function (_super) {
         __extends$a(Action, _super);
         function Action(scheduler, work) {
             return _super.call(this) || this;
         }
+        /**
+         * Schedules this action on its parent Scheduler for execution. May be passed
+         * some context object, `state`. May happen at some point in the future,
+         * according to the `delay` parameter, if specified.
+         * @param {T} [state] Some contextual data that the `work` function uses when
+         * called by the Scheduler.
+         * @param {number} [delay] Time to wait before executing the work, where the
+         * time unit is implicit and defined by the Scheduler.
+         * @return {void}
+         */
         Action.prototype.schedule = function (state, delay) {
             if (delay === void 0) { delay = 0; }
             return this;
@@ -26837,7 +27496,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var AsyncAction = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var AsyncAction = /** @class */ (function (_super) {
         __extends$b(AsyncAction, _super);
         function AsyncAction(scheduler, work) {
             var _this = _super.call(this, scheduler, work) || this;
@@ -26851,14 +27515,39 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             if (this.closed) {
                 return this;
             }
+            // Always replace the current state with the new state.
             this.state = state;
             var id = this.id;
             var scheduler = this.scheduler;
+            //
+            // Important implementation note:
+            //
+            // Actions only execute once by default, unless rescheduled from within the
+            // scheduled callback. This allows us to implement single and repeat
+            // actions via the same code path, without adding API surface area, as well
+            // as mimic traditional recursion but across asynchronous boundaries.
+            //
+            // However, JS runtimes and timers distinguish between intervals achieved by
+            // serial `setTimeout` calls vs. a single `setInterval` call. An interval of
+            // serial `setTimeout` calls can be individually delayed, which delays
+            // scheduling the next `setTimeout`, and so on. `setInterval` attempts to
+            // guarantee the interval callback will be invoked more precisely to the
+            // interval period, regardless of load.
+            //
+            // Therefore, we use `setInterval` to schedule single and repeat actions.
+            // If the action reschedules itself with the same delay, the interval is not
+            // canceled. If the action doesn't reschedule, or reschedules with a
+            // different delay, the interval will be canceled after scheduled callback
+            // execution.
+            //
             if (id != null) {
                 this.id = this.recycleAsyncId(scheduler, id, delay);
             }
+            // Set the pending flag indicating that this action has been scheduled, or
+            // has recursively rescheduled itself.
             this.pending = true;
             this.delay = delay;
+            // If this action has already an async Id, don't request a new one.
             this.id = this.id || this.requestAsyncId(scheduler, this.id, delay);
             return this;
         };
@@ -26868,11 +27557,18 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         AsyncAction.prototype.recycleAsyncId = function (scheduler, id, delay) {
             if (delay === void 0) { delay = 0; }
+            // If this action is rescheduled with the same delay time, don't clear the interval id.
             if (delay !== null && this.delay === delay && this.pending === false) {
                 return id;
             }
+            // Otherwise, if the action's delay time is different from the current delay,
+            // or the action has been rescheduled before it's executed, clear the interval id
             return clearInterval(id) && undefined || undefined;
         };
+        /**
+         * Immediately executes this action and the `work` it contains.
+         * @return {any}
+         */
         AsyncAction.prototype.execute = function (state, delay) {
             if (this.closed) {
                 return new Error('executing a cancelled action');
@@ -26883,6 +27579,19 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 return error;
             }
             else if (this.pending === false && this.id != null) {
+                // Dequeue if the action didn't reschedule itself. Don't call
+                // unsubscribe(), because the action could reschedule later.
+                // For example:
+                // ```
+                // scheduler.schedule(function doWork(counter) {
+                //   /* ... I'm a busy worker bee ... */
+                //   var originalAction = this;
+                //   /* wait 100ms before rescheduling the action */
+                //   setTimeout(function () {
+                //     originalAction.schedule(counter + 1);
+                //   }, 100);
+                // }, 1000);
+                // ```
                 this.id = this.recycleAsyncId(this.scheduler, this.id, null);
             }
         };
@@ -26901,6 +27610,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 return errorValue;
             }
         };
+        /** @deprecated This is an internal implementation detail, do not use. */
         AsyncAction.prototype._unsubscribe = function () {
             var id = this.id;
             var scheduler = this.scheduler;
@@ -26931,7 +27641,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var QueueAction = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var QueueAction = /** @class */ (function (_super) {
         __extends$c(QueueAction, _super);
         function QueueAction(scheduler, work) {
             var _this = _super.call(this, scheduler, work) || this;
@@ -26956,24 +27671,65 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         QueueAction.prototype.requestAsyncId = function (scheduler, id, delay) {
             if (delay === void 0) { delay = 0; }
+            // If delay exists and is greater than 0, or if the delay is null (the
+            // action wasn't rescheduled) but was originally scheduled as an async
+            // action, then recycle as an async action.
             if ((delay !== null && delay > 0) || (delay === null && this.delay > 0)) {
                 return _super.prototype.requestAsyncId.call(this, scheduler, id, delay);
             }
+            // Otherwise flush the scheduler starting with this action.
             return scheduler.flush(this);
         };
         return QueueAction;
     }(AsyncAction));
 
-    var Scheduler = (function () {
+    /**
+     * An execution context and a data structure to order tasks and schedule their
+     * execution. Provides a notion of (potentially virtual) time, through the
+     * `now()` getter method.
+     *
+     * Each unit of work in a Scheduler is called an {@link Action}.
+     *
+     * ```ts
+     * class Scheduler {
+     *   now(): number;
+     *   schedule(work, delay?, state?): Subscription;
+     * }
+     * ```
+     *
+     * @class Scheduler
+     * @deprecated Scheduler is an internal implementation detail of RxJS, and
+     * should not be used directly. Rather, create your own class and implement
+     * {@link SchedulerLike}
+     */
+    var Scheduler = /** @class */ (function () {
         function Scheduler(SchedulerAction, now) {
             if (now === void 0) { now = Scheduler.now; }
             this.SchedulerAction = SchedulerAction;
             this.now = now;
         }
+        /**
+         * Schedules a function, `work`, for execution. May happen at some point in
+         * the future, according to the `delay` parameter, if specified. May be passed
+         * some context object, `state`, which will be passed to the `work` function.
+         *
+         * The given arguments will be processed an stored as an Action object in a
+         * queue of actions.
+         *
+         * @param {function(state: ?T): ?Subscription} work A function representing a
+         * task, or some unit of work to be executed by the Scheduler.
+         * @param {number} [delay] Time to wait before executing the work, where the
+         * time unit is implicit and defined by the Scheduler itself.
+         * @param {T} [state] Some contextual data that the `work` function uses when
+         * called by the Scheduler.
+         * @return {Subscription} A subscription in order to be able to unsubscribe
+         * the scheduled work.
+         */
         Scheduler.prototype.schedule = function (work, delay, state) {
             if (delay === void 0) { delay = 0; }
             return new this.SchedulerAction(this, work).schedule(state, delay);
         };
+        /** @nocollapse */
         Scheduler.now = Date.now ? Date.now : function () { return +new Date(); };
         return Scheduler;
     }());
@@ -26988,7 +27744,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var AsyncScheduler = (function (_super) {
+    var AsyncScheduler = /** @class */ (function (_super) {
         __extends$d(AsyncScheduler, _super);
         function AsyncScheduler(SchedulerAction, now) {
             if (now === void 0) { now = Scheduler.now; }
@@ -27001,7 +27757,18 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 }
             }) || this;
             _this.actions = [];
+            /**
+             * A flag to indicate whether the Scheduler is currently executing a batch of
+             * queued actions.
+             * @type {boolean}
+             */
             _this.active = false;
+            /**
+             * An internal ID used to track the latest asynchronous task such as those
+             * coming from `setTimeout`, `setInterval`, `requestAnimationFrame`, and
+             * others.
+             * @type {any}
+             */
             _this.scheduled = undefined;
             return _this;
         }
@@ -27026,7 +27793,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 if (error = action.execute(action.state, action.delay)) {
                     break;
                 }
-            } while (action = actions.shift());
+            } while (action = actions.shift()); // exhaust the scheduler queue
             this.active = false;
             if (error) {
                 while (action = actions.shift()) {
@@ -27048,7 +27815,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var QueueScheduler = (function (_super) {
+    var QueueScheduler = /** @class */ (function (_super) {
         __extends$e(QueueScheduler, _super);
         function QueueScheduler() {
             return _super !== null && _super.apply(this, arguments) || this;
@@ -27056,9 +27823,118 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return QueueScheduler;
     }(AsyncScheduler));
 
+    /**
+     *
+     * Queue Scheduler
+     *
+     * <span class="informal">Put every next task on a queue, instead of executing it immediately</span>
+     *
+     * `queue` scheduler, when used with delay, behaves the same as {@link async} scheduler.
+     *
+     * When used without delay, it schedules given task synchronously - executes it right when
+     * it is scheduled. However when called recursively, that is when inside the scheduled task,
+     * another task is scheduled with queue scheduler, instead of executing immediately as well,
+     * that task will be put on a queue and wait for current one to finish.
+     *
+     * This means that when you execute task with `queue` scheduler, you are sure it will end
+     * before any other task scheduled with that scheduler will start.
+     *
+     * @examples <caption>Schedule recursively first, then do something</caption>
+     *
+     * Rx.Scheduler.queue.schedule(() => {
+     *   Rx.Scheduler.queue.schedule(() => console.log('second')); // will not happen now, but will be put on a queue
+     *
+     *   console.log('first');
+     * });
+     *
+     * // Logs:
+     * // "first"
+     * // "second"
+     *
+     *
+     * @example <caption>Reschedule itself recursively</caption>
+     *
+     * Rx.Scheduler.queue.schedule(function(state) {
+     *   if (state !== 0) {
+     *     console.log('before', state);
+     *     this.schedule(state - 1); // `this` references currently executing Action,
+     *                               // which we reschedule with new state
+     *     console.log('after', state);
+     *   }
+     * }, 0, 3);
+     *
+     * // In scheduler that runs recursively, you would expect:
+     * // "before", 3
+     * // "before", 2
+     * // "before", 1
+     * // "after", 1
+     * // "after", 2
+     * // "after", 3
+     *
+     * // But with queue it logs:
+     * // "before", 3
+     * // "after", 3
+     * // "before", 2
+     * // "after", 2
+     * // "before", 1
+     * // "after", 1
+     *
+     *
+     * @static true
+     * @name queue
+     * @owner Scheduler
+     */
     var queue = new QueueScheduler(QueueAction);
 
+    /**
+     * The same Observable instance returned by any call to {@link empty} without a
+     * {@link Scheduler}. It is preferrable to use this over `empty()`.
+     */
     var EMPTY$1 = new Observable(function (subscriber) { return subscriber.complete(); });
+    /**
+     * Creates an Observable that emits no items to the Observer and immediately
+     * emits a complete notification.
+     *
+     * <span class="informal">Just emits 'complete', and nothing else.
+     * </span>
+     *
+     * <img src="./img/empty.png" width="100%">
+     *
+     * This static operator is useful for creating a simple Observable that only
+     * emits the complete notification. It can be used for composing with other
+     * Observables, such as in a {@link mergeMap}.
+     *
+     * @example <caption>Emit the number 7, then complete.</caption>
+     * var result = Rx.Observable.empty().startWith(7);
+     * result.subscribe(x => console.log(x));
+     *
+     * @example <caption>Map and flatten only odd numbers to the sequence 'a', 'b', 'c'</caption>
+     * var interval = Rx.Observable.interval(1000);
+     * var result = interval.mergeMap(x =>
+     *   x % 2 === 1 ? Rx.Observable.of('a', 'b', 'c') : Rx.Observable.empty()
+     * );
+     * result.subscribe(x => console.log(x));
+     *
+     * // Results in the following to the console:
+     * // x is equal to the count on the interval eg(0,1,2,3,...)
+     * // x will occur every 1000ms
+     * // if x % 2 is equal to 1 print abc
+     * // if x % 2 is not equal to 1 nothing will be output
+     *
+     * @see {@link create}
+     * @see {@link never}
+     * @see {@link of}
+     * @see {@link throw}
+     *
+     * @param {Scheduler} [scheduler] A {@link IScheduler} to use for scheduling
+     * the emission of the complete notification.
+     * @return {Observable} An "empty" Observable: emits only the complete
+     * notification.
+     * @static true
+     * @name empty
+     * @owner Observable
+     * @deprecated Deprecated in favor of using EMPTY constant.
+     */
     function empty$2(scheduler) {
         return scheduler ? emptyScheduled(scheduler) : EMPTY$1;
     }
@@ -27070,6 +27946,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return value && typeof value.schedule === 'function';
     }
 
+    /**
+     * Subscribes to an ArrayLike with a subscriber
+     * @param array The array or array-like to subscribe to
+     */
     var subscribeToArray = function (array) { return function (subscriber) {
         for (var i = 0, len = array.length; i < len && !subscriber.closed; i++) {
             subscriber.next(array[i]);
@@ -27134,6 +28014,50 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
     }
 
+    /**
+     * Creates an Observable that emits no items to the Observer and immediately
+     * emits an error notification.
+     *
+     * <span class="informal">Just emits 'error', and nothing else.
+     * </span>
+     *
+     * <img src="./img/throw.png" width="100%">
+     *
+     * This static operator is useful for creating a simple Observable that only
+     * emits the error notification. It can be used for composing with other
+     * Observables, such as in a {@link mergeMap}.
+     *
+     * @example <caption>Emit the number 7, then emit an error.</caption>
+     * import { throwError, concat, of } from 'rxjs/create';
+     *
+     * const result = concat(of(7), throwError(new Error('oops!')));
+     * result.subscribe(x => console.log(x), e => console.error(e));
+     *
+     * @example <caption>Map and flatten numbers to the sequence 'a', 'b', 'c', but throw an error for 13</caption>
+     * import { throwError, interval, of } from 'rxjs/create';
+     * import { mergeMap } from 'rxjs/operators';
+     *
+     * interval(1000).pipe(
+     *   mergeMap(x => x === 13 ?
+     *     throwError('Thirteens are bad') :
+     *     of('a', 'b', 'c')
+     *   )
+     * ).subscribe(x => console.log(x), e => console.error(e));
+     *
+     * @see {@link create}
+     * @see {@link empty}
+     * @see {@link never}
+     * @see {@link of}
+     *
+     * @param {any} error The particular Error to pass to the error notification.
+     * @param {Scheduler} [scheduler] A {@link IScheduler} to use for scheduling
+     * the emission of the error notification.
+     * @return {Observable} An error Observable: emits only the error notification
+     * using the given error argument.
+     * @static true
+     * @name throw
+     * @owner Observable
+     */
     function throwError(error, scheduler) {
         if (!scheduler) {
             return new Observable(function (subscriber) { return subscriber.error(error); });
@@ -27147,13 +28071,32 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         subscriber.error(error);
     }
 
-    var Notification = (function () {
+    /**
+     * Represents a push-based event or value that an {@link Observable} can emit.
+     * This class is particularly useful for operators that manage notifications,
+     * like {@link materialize}, {@link dematerialize}, {@link observeOn}, and
+     * others. Besides wrapping the actual delivered value, it also annotates it
+     * with metadata of, for instance, what type of push message it is (`next`,
+     * `error`, or `complete`).
+     *
+     * @see {@link materialize}
+     * @see {@link dematerialize}
+     * @see {@link observeOn}
+     *
+     * @class Notification<T>
+     */
+    var Notification = /** @class */ (function () {
         function Notification(kind, value, error) {
             this.kind = kind;
             this.value = value;
             this.error = error;
             this.hasValue = kind === 'N';
         }
+        /**
+         * Delivers to the given `observer` the value wrapped by this Notification.
+         * @param {Observer} observer
+         * @return
+         */
         Notification.prototype.observe = function (observer) {
             switch (this.kind) {
                 case 'N':
@@ -27164,6 +28107,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     return observer.complete && observer.complete();
             }
         };
+        /**
+         * Given some {@link Observer} callbacks, deliver the value represented by the
+         * current Notification to the correctly corresponding callback.
+         * @param {function(value: T): void} next An Observer `next` callback.
+         * @param {function(err: any): void} [error] An Observer `error` callback.
+         * @param {function(): void} [complete] An Observer `complete` callback.
+         * @return {any}
+         */
         Notification.prototype.do = function (next, error, complete) {
             var kind = this.kind;
             switch (kind) {
@@ -27175,6 +28126,15 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     return complete && complete();
             }
         };
+        /**
+         * Takes an Observer or its individual callback functions, and calls `observe`
+         * or `do` methods accordingly.
+         * @param {Observer|function(value: T): void} nextOrObserver An Observer or
+         * the `next` callback.
+         * @param {function(err: any): void} [error] An Observer `error` callback.
+         * @param {function(): void} [complete] An Observer `complete` callback.
+         * @return {any}
+         */
         Notification.prototype.accept = function (nextOrObserver, error, complete) {
             if (nextOrObserver && typeof nextOrObserver.next === 'function') {
                 return this.observe(nextOrObserver);
@@ -27183,6 +28143,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 return this.do(nextOrObserver, error, complete);
             }
         };
+        /**
+         * Returns a simple Observable that just delivers the notification represented
+         * by this Notification instance.
+         * @return {any}
+         */
         Notification.prototype.toObservable = function () {
             var kind = this.kind;
             switch (kind) {
@@ -27195,15 +28160,36 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
             throw new Error('unexpected notification kind value');
         };
+        /**
+         * A shortcut to create a Notification instance of the type `next` from a
+         * given value.
+         * @param {T} value The `next` value.
+         * @return {Notification<T>} The "next" Notification representing the
+         * argument.
+         * @nocollapse
+         */
         Notification.createNext = function (value) {
             if (typeof value !== 'undefined') {
                 return new Notification('N', value);
             }
             return Notification.undefinedValueNotification;
         };
+        /**
+         * A shortcut to create a Notification instance of the type `error` from a
+         * given error.
+         * @param {any} [err] The `error` error.
+         * @return {Notification<T>} The "error" Notification representing the
+         * argument.
+         * @nocollapse
+         */
         Notification.createError = function (err) {
             return new Notification('E', undefined, err);
         };
+        /**
+         * A shortcut to create a Notification instance of the type `complete`.
+         * @return {Notification<any>} The valueless "complete" Notification.
+         * @nocollapse
+         */
         Notification.createComplete = function () {
             return Notification.completeNotification;
         };
@@ -27222,7 +28208,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var ObserveOnSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var ObserveOnSubscriber = /** @class */ (function (_super) {
         __extends$f(ObserveOnSubscriber, _super);
         function ObserveOnSubscriber(destination, scheduler, delay) {
             if (delay === void 0) { delay = 0; }
@@ -27231,6 +28222,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             _this.delay = delay;
             return _this;
         }
+        /** @nocollapse */
         ObserveOnSubscriber.dispatch = function (arg) {
             var notification = arg.notification, destination = arg.destination;
             notification.observe(destination);
@@ -27250,7 +28242,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         return ObserveOnSubscriber;
     }(Subscriber));
-    var ObserveOnMessage = (function () {
+    var ObserveOnMessage = /** @class */ (function () {
         function ObserveOnMessage(notification, destination) {
             this.notification = notification;
             this.destination = destination;
@@ -27268,7 +28260,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var ReplaySubject = (function (_super) {
+    /**
+     * @class ReplaySubject<T>
+     */
+    var ReplaySubject = /** @class */ (function (_super) {
         __extends$g(ReplaySubject, _super);
         function ReplaySubject(bufferSize, windowTime, scheduler) {
             if (bufferSize === void 0) { bufferSize = Number.POSITIVE_INFINITY; }
@@ -27291,6 +28286,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         ReplaySubject.prototype.nextInfiniteTimeWindow = function (value) {
             var _events = this._events;
             _events.push(value);
+            // Since this method is invoked in every next() call than the buffer
+            // can overgrow the max size only by one item
             if (_events.length > this._bufferSize) {
                 _events.shift();
             }
@@ -27301,7 +28298,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             this._trimBufferThenGetEvents();
             _super.prototype.next.call(this, value);
         };
+        /** @deprecated This is an internal implementation detail, do not use. */
         ReplaySubject.prototype._subscribe = function (subscriber) {
+            // When `_infiniteTimeWindow === true` then the buffer is already trimmed
             var _infiniteTimeWindow = this._infiniteTimeWindow;
             var _events = _infiniteTimeWindow ? this._events : this._trimBufferThenGetEvents();
             var scheduler = this.scheduler;
@@ -27348,6 +28347,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var _events = this._events;
             var eventsCount = _events.length;
             var spliceCount = 0;
+            // Trim events that fall out of the time window.
+            // Start at the front of the list. Break early once
+            // we encounter an event that falls within the window.
             while (spliceCount < eventsCount) {
                 if ((now - _events[spliceCount].time) < _windowTime) {
                     break;
@@ -27364,7 +28366,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         return ReplaySubject;
     }(Subject));
-    var ReplayEvent = (function () {
+    var ReplayEvent = /** @class */ (function () {
         function ReplayEvent(time, value) {
             this.time = time;
             this.value = value;
@@ -27382,7 +28384,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var AsyncSubject = (function (_super) {
+    /**
+     * @class AsyncSubject<T>
+     */
+    var AsyncSubject = /** @class */ (function (_super) {
         __extends$h(AsyncSubject, _super);
         function AsyncSubject() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
@@ -27391,6 +28396,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             _this.hasCompleted = false;
             return _this;
         }
+        /** @deprecated This is an internal implementation detail, do not use. */
         AsyncSubject.prototype._subscribe = function (subscriber) {
             if (this.hasError) {
                 subscriber.error(this.thrownError);
@@ -27424,7 +28430,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return AsyncSubject;
     }(Subject));
 
-    var nextHandle = 1;
+    var nextHandle = 0;
     var tasksByHandle = {};
     function runIfPresent(handle) {
         var cb = tasksByHandle[handle];
@@ -27454,7 +28460,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var AsapAction = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var AsapAction = /** @class */ (function (_super) {
         __extends$i(AsapAction, _super);
         function AsapAction(scheduler, work) {
             var _this = _super.call(this, scheduler, work) || this;
@@ -27464,21 +28475,33 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         AsapAction.prototype.requestAsyncId = function (scheduler, id, delay) {
             if (delay === void 0) { delay = 0; }
+            // If delay is greater than 0, request as an async action.
             if (delay !== null && delay > 0) {
                 return _super.prototype.requestAsyncId.call(this, scheduler, id, delay);
             }
+            // Push the action to the end of the scheduler queue.
             scheduler.actions.push(this);
+            // If a microtask has already been scheduled, don't schedule another
+            // one. If a microtask hasn't been scheduled yet, schedule one now. Return
+            // the current scheduled microtask id.
             return scheduler.scheduled || (scheduler.scheduled = Immediate.setImmediate(scheduler.flush.bind(scheduler, null)));
         };
         AsapAction.prototype.recycleAsyncId = function (scheduler, id, delay) {
             if (delay === void 0) { delay = 0; }
+            // If delay exists and is greater than 0, or if the delay is null (the
+            // action wasn't rescheduled) but was originally scheduled as an async
+            // action, then recycle as an async action.
             if ((delay !== null && delay > 0) || (delay === null && this.delay > 0)) {
                 return _super.prototype.recycleAsyncId.call(this, scheduler, id, delay);
             }
+            // If the scheduler queue is empty, cancel the requested microtask and
+            // set the scheduled flag to undefined so the next AsapAction will schedule
+            // its own.
             if (scheduler.actions.length === 0) {
                 Immediate.clearImmediate(id);
                 scheduler.scheduled = undefined;
             }
+            // Return undefined so the action knows to request a new async id if it's rescheduled.
             return undefined;
         };
         return AsapAction;
@@ -27494,7 +28517,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var AsapScheduler = (function (_super) {
+    var AsapScheduler = /** @class */ (function (_super) {
         __extends$j(AsapScheduler, _super);
         function AsapScheduler() {
             return _super !== null && _super.apply(this, arguments) || this;
@@ -27523,8 +28546,84 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return AsapScheduler;
     }(AsyncScheduler));
 
+    /**
+     *
+     * Asap Scheduler
+     *
+     * <span class="informal">Perform task as fast as it can be performed asynchronously</span>
+     *
+     * `asap` scheduler behaves the same as {@link async} scheduler when you use it to delay task
+     * in time. If however you set delay to `0`, `asap` will wait for current synchronously executing
+     * code to end and then it will try to execute given task as fast as possible.
+     *
+     * `asap` scheduler will do its best to minimize time between end of currently executing code
+     * and start of scheduled task. This makes it best candidate for performing so called "deferring".
+     * Traditionally this was achieved by calling `setTimeout(deferredTask, 0)`, but that technique involves
+     * some (although minimal) unwanted delay.
+     *
+     * Note that using `asap` scheduler does not necessarily mean that your task will be first to process
+     * after currently executing code. In particular, if some task was also scheduled with `asap` before,
+     * that task will execute first. That being said, if you need to schedule task asynchronously, but
+     * as soon as possible, `asap` scheduler is your best bet.
+     *
+     * @example <caption>Compare async and asap scheduler</caption>
+     *
+     * Rx.Scheduler.async.schedule(() => console.log('async')); // scheduling 'async' first...
+     * Rx.Scheduler.asap.schedule(() => console.log('asap'));
+     *
+     * // Logs:
+     * // "asap"
+     * // "async"
+     * // ... but 'asap' goes first!
+     *
+     * @static true
+     * @name asap
+     * @owner Scheduler
+     */
     var asap = new AsapScheduler(AsapAction);
 
+    /**
+     *
+     * Async Scheduler
+     *
+     * <span class="informal">Schedule task as if you used setTimeout(task, duration)</span>
+     *
+     * `async` scheduler schedules tasks asynchronously, by putting them on the JavaScript
+     * event loop queue. It is best used to delay tasks in time or to schedule tasks repeating
+     * in intervals.
+     *
+     * If you just want to "defer" task, that is to perform it right after currently
+     * executing synchronous code ends (commonly achieved by `setTimeout(deferredTask, 0)`),
+     * better choice will be the {@link asap} scheduler.
+     *
+     * @example <caption>Use async scheduler to delay task</caption>
+     * const task = () => console.log('it works!');
+     *
+     * Rx.Scheduler.async.schedule(task, 2000);
+     *
+     * // After 2 seconds logs:
+     * // "it works!"
+     *
+     *
+     * @example <caption>Use async scheduler to repeat task in intervals</caption>
+     * function task(state) {
+     *   console.log(state);
+     *   this.schedule(state + 1, 1000); // `this` references currently executing Action,
+     *                                   // which we reschedule with new state and delay
+     * }
+     *
+     * Rx.Scheduler.async.schedule(task, 3000, 0);
+     *
+     * // Logs:
+     * // 0 after 3s
+     * // 1 after 4s
+     * // 2 after 5s
+     * // 3 after 6s
+     *
+     * @static true
+     * @name async
+     * @owner Scheduler
+     */
     var async = new AsyncScheduler(AsyncAction);
 
     var __extends$k = (undefined && undefined.__extends) || (function () {
@@ -27537,7 +28636,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var AnimationFrameAction = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var AnimationFrameAction = /** @class */ (function (_super) {
         __extends$k(AnimationFrameAction, _super);
         function AnimationFrameAction(scheduler, work) {
             var _this = _super.call(this, scheduler, work) || this;
@@ -27547,21 +28651,33 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         AnimationFrameAction.prototype.requestAsyncId = function (scheduler, id, delay) {
             if (delay === void 0) { delay = 0; }
+            // If delay is greater than 0, request as an async action.
             if (delay !== null && delay > 0) {
                 return _super.prototype.requestAsyncId.call(this, scheduler, id, delay);
             }
+            // Push the action to the end of the scheduler queue.
             scheduler.actions.push(this);
+            // If an animation frame has already been requested, don't request another
+            // one. If an animation frame hasn't been requested yet, request one. Return
+            // the current animation frame request id.
             return scheduler.scheduled || (scheduler.scheduled = requestAnimationFrame(function () { return scheduler.flush(null); }));
         };
         AnimationFrameAction.prototype.recycleAsyncId = function (scheduler, id, delay) {
             if (delay === void 0) { delay = 0; }
+            // If delay exists and is greater than 0, or if the delay is null (the
+            // action wasn't rescheduled) but was originally scheduled as an async
+            // action, then recycle as an async action.
             if ((delay !== null && delay > 0) || (delay === null && this.delay > 0)) {
                 return _super.prototype.recycleAsyncId.call(this, scheduler, id, delay);
             }
+            // If the scheduler queue is empty, cancel the requested animation frame and
+            // set the scheduled flag to undefined so the next AnimationFrameAction will
+            // request its own.
             if (scheduler.actions.length === 0) {
                 cancelAnimationFrame(id);
                 scheduler.scheduled = undefined;
             }
+            // Return undefined so the action knows to request a new async id if it's rescheduled.
             return undefined;
         };
         return AnimationFrameAction;
@@ -27577,7 +28693,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var AnimationFrameScheduler = (function (_super) {
+    var AnimationFrameScheduler = /** @class */ (function (_super) {
         __extends$l(AnimationFrameScheduler, _super);
         function AnimationFrameScheduler() {
             return _super !== null && _super.apply(this, arguments) || this;
@@ -27606,6 +28722,36 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return AnimationFrameScheduler;
     }(AsyncScheduler));
 
+    /**
+     *
+     * Animation Frame Scheduler
+     *
+     * <span class="informal">Perform task when `window.requestAnimationFrame` would fire</span>
+     *
+     * When `animationFrame` scheduler is used with delay, it will fall back to {@link async} scheduler
+     * behaviour.
+     *
+     * Without delay, `animationFrame` scheduler can be used to create smooth browser animations.
+     * It makes sure scheduled task will happen just before next browser content repaint,
+     * thus performing animations as efficiently as possible.
+     *
+     * @example <caption>Schedule div height animation</caption>
+     * const div = document.querySelector('.some-div');
+     *
+     * Rx.Scheduler.animationFrame.schedule(function(height) {
+     *   div.style.height = height + "px";
+     *
+     *   this.schedule(height + 1);  // `this` references currently executing Action,
+     *                               // which we reschedule with new state
+     * }, 0, 0);
+     *
+     * // You will see .some-div element growing in height
+     *
+     *
+     * @static true
+     * @name animationFrame
+     * @owner Scheduler
+     */
     var animationFrame = new AnimationFrameScheduler(AnimationFrameAction);
 
     var __extends$m = (undefined && undefined.__extends) || (function () {
@@ -27618,7 +28764,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var VirtualTimeScheduler = (function (_super) {
+    var VirtualTimeScheduler = /** @class */ (function (_super) {
         __extends$m(VirtualTimeScheduler, _super);
         function VirtualTimeScheduler(SchedulerAction, maxFrames) {
             if (SchedulerAction === void 0) { SchedulerAction = VirtualAction; }
@@ -27629,6 +28775,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             _this.index = -1;
             return _this;
         }
+        /**
+         * Prompt the Scheduler to execute all of its queued actions, therefore
+         * clearing its queue.
+         * @return {void}
+         */
         VirtualTimeScheduler.prototype.flush = function () {
             var _a = this, actions = _a.actions, maxFrames = _a.maxFrames;
             var error, action;
@@ -27647,7 +28798,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         VirtualTimeScheduler.frameTimeFactor = 10;
         return VirtualTimeScheduler;
     }(AsyncScheduler));
-    var VirtualAction = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var VirtualAction = /** @class */ (function (_super) {
         __extends$m(VirtualAction, _super);
         function VirtualAction(scheduler, work, index) {
             if (index === void 0) { index = scheduler.index += 1; }
@@ -27665,6 +28821,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 return _super.prototype.schedule.call(this, state, delay);
             }
             this.active = false;
+            // If an action is rescheduled, we save allocations by mutating its state,
+            // pushing it to the end of the scheduler queue, and recycling the action.
+            // But since the VirtualTimeScheduler is used for testing, VirtualActions
+            // must be immutable so they can be inspected later.
             var action = new VirtualAction(this.scheduler, this.work);
             this.add(action);
             return action.schedule(state, delay);
@@ -27722,7 +28882,17 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var ArgumentOutOfRangeError = (function (_super) {
+    /**
+     * An error thrown when an element was queried at a certain index of an
+     * Observable, but no such index or position exists in that sequence.
+     *
+     * @see {@link elementAt}
+     * @see {@link take}
+     * @see {@link takeLast}
+     *
+     * @class ArgumentOutOfRangeError
+     */
+    var ArgumentOutOfRangeError = /** @class */ (function (_super) {
         __extends$n(ArgumentOutOfRangeError, _super);
         function ArgumentOutOfRangeError() {
             var _this = _super.call(this, 'argument out of range') || this;
@@ -27743,7 +28913,17 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var EmptyError = (function (_super) {
+    /**
+     * An error thrown when an Observable or a sequence was queried but has no
+     * elements.
+     *
+     * @see {@link first}
+     * @see {@link last}
+     * @see {@link single}
+     *
+     * @class EmptyError
+     */
+    var EmptyError = /** @class */ (function (_super) {
         __extends$o(EmptyError, _super);
         function EmptyError() {
             var _this = _super.call(this, 'no elements in sequence') || this;
@@ -27764,11 +28944,17 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var TimeoutError = (function (_super) {
+    /**
+     * An error thrown when duetime elapses.
+     *
+     * @see {@link timeout}
+     *
+     * @class TimeoutError
+     */
+    var TimeoutError = /** @class */ (function (_super) {
         __extends$p(TimeoutError, _super);
         function TimeoutError() {
             var _this = _super.call(this, 'Timeout has occurred') || this;
-            _this.name = 'TimeoutError';
             Object.setPrototypeOf(_this, TimeoutError.prototype);
             return _this;
         }
@@ -27785,6 +28971,39 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
+    /**
+     * Applies a given `project` function to each value emitted by the source
+     * Observable, and emits the resulting values as an Observable.
+     *
+     * <span class="informal">Like [Array.prototype.map()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map),
+     * it passes each source value through a transformation function to get
+     * corresponding output values.</span>
+     *
+     * <img src="./img/map.png" width="100%">
+     *
+     * Similar to the well known `Array.prototype.map` function, this operator
+     * applies a projection to each value and emits that projection in the output
+     * Observable.
+     *
+     * @example <caption>Map every click to the clientX position of that click</caption>
+     * var clicks = Rx.Observable.fromEvent(document, 'click');
+     * var positions = clicks.map(ev => ev.clientX);
+     * positions.subscribe(x => console.log(x));
+     *
+     * @see {@link mapTo}
+     * @see {@link pluck}
+     *
+     * @param {function(value: T, index: number): R} project The function to apply
+     * to each `value` emitted by the source Observable. The `index` parameter is
+     * the number `i` for the i-th emission that has happened since the
+     * subscription, starting from the number `0`.
+     * @param {any} [thisArg] An optional argument to define what `this` is in the
+     * `project` function.
+     * @return {Observable<R>} An Observable that emits the values from the source
+     * Observable transformed by the given `project` function.
+     * @method map
+     * @owner Observable
+     */
     function map(project, thisArg) {
         return function mapOperation(source) {
             if (typeof project !== 'function') {
@@ -27793,7 +29012,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             return source.lift(new MapOperator(project, thisArg));
         };
     }
-    var MapOperator = (function () {
+    var MapOperator = /** @class */ (function () {
         function MapOperator(project, thisArg) {
             this.project = project;
             this.thisArg = thisArg;
@@ -27803,7 +29022,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         return MapOperator;
     }());
-    var MapSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var MapSubscriber = /** @class */ (function (_super) {
         __extends$q(MapSubscriber, _super);
         function MapSubscriber(destination, project, thisArg) {
             var _this = _super.call(this, destination) || this;
@@ -27812,6 +29036,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             _this.thisArg = thisArg || _this;
             return _this;
         }
+        // NOTE: This looks unoptimized, but it's actually purposefully NOT
+        // using try/catch optimizations.
         MapSubscriber.prototype._next = function (value) {
             var result;
             try {
@@ -27878,7 +29104,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var OuterSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var OuterSubscriber = /** @class */ (function (_super) {
         __extends$r(OuterSubscriber, _super);
         function OuterSubscriber() {
             return _super !== null && _super.apply(this, arguments) || this;
@@ -27905,7 +29136,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var InnerSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var InnerSubscriber = /** @class */ (function (_super) {
         __extends$s(InnerSubscriber, _super);
         function InnerSubscriber(parent, outerValue, outerIndex) {
             var _this = _super.call(this) || this;
@@ -27961,6 +29197,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 break;
             }
         } while (true);
+        // Finalize the iterator if it happens to be a Generator
         if (typeof iterator$$1.return === 'function') {
             subscriber.add(function () {
                 if (iterator$$1.return) {
@@ -27971,9 +29208,15 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return subscriber;
     }; };
 
+    /**
+     * Subscribes to an object that implements Symbol.observable with the given
+     * Subscriber.
+     * @param obj An object that implements Symbol.observable
+     */
     var subscribeToObservable = function (obj) { return function (subscriber) {
         var obs = obj[observable]();
         if (typeof obs.subscribe !== 'function') {
+            // Should be caught by observable subscribe function error handling.
             throw new TypeError('Provided object does not correctly implement Symbol.observable');
         }
         else {
@@ -28000,9 +29243,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 }
             };
         }
-        else if (result && typeof result[observable] === 'function') {
-            return subscribeToObservable(result);
-        }
         else if (isArrayLike(result)) {
             return subscribeToArray(result);
         }
@@ -28011,6 +29251,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         else if (result && typeof result[iterator] === 'function') {
             return subscribeToIterable(result);
+        }
+        else if (result && typeof result[observable] === 'function') {
+            return subscribeToObservable(result);
         }
         else {
             var value = isObject(result) ? 'an invalid object' : "'" + result + "'";
@@ -28036,7 +29279,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
     })();
     var NONE = {};
-    var CombineLatestSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var CombineLatestSubscriber = /** @class */ (function (_super) {
         __extends$t(CombineLatestSubscriber, _super);
         function CombineLatestSubscriber(destination, resultSelector) {
             var _this = _super.call(this, destination) || this;
@@ -28100,10 +29348,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return CombineLatestSubscriber;
     }(OuterSubscriber));
 
-    function isInteropObservable(input) {
+    /** Identifies an input as being Observable (but not necessary an Rx Observable) */
+    function isObservable(input) {
         return input && typeof input[observable] === 'function';
     }
 
+    /** Identifies an input as being an Iterable */
     function isIterable(input) {
         return input && typeof input[iterator] === 'function';
     }
@@ -28140,6 +29390,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 var sub = new Subscription();
                 var iterator$$1;
                 sub.add(function () {
+                    // Finalize generators
                     if (iterator$$1 && typeof iterator$$1.return === 'function') {
                         iterator$$1.return();
                     }
@@ -28203,7 +29454,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             return new Observable(subscribeTo(input));
         }
         if (input != null) {
-            if (isInteropObservable(input)) {
+            if (isObservable(input)) {
                 return fromObservable(input, scheduler);
             }
             else if (isPromise$1(input)) {
@@ -28229,9 +29480,61 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
+    /* tslint:enable:max-line-length */
+    /**
+     * Projects each source value to an Observable which is merged in the output
+     * Observable.
+     *
+     * <span class="informal">Maps each value to an Observable, then flattens all of
+     * these inner Observables using {@link mergeAll}.</span>
+     *
+     * <img src="./img/mergeMap.png" width="100%">
+     *
+     * Returns an Observable that emits items based on applying a function that you
+     * supply to each item emitted by the source Observable, where that function
+     * returns an Observable, and then merging those resulting Observables and
+     * emitting the results of this merger.
+     *
+     * @example <caption>Map and flatten each letter to an Observable ticking every 1 second</caption>
+     * var letters = Rx.Observable.of('a', 'b', 'c');
+     * var result = letters.mergeMap(x =>
+     *   Rx.Observable.interval(1000).map(i => x+i)
+     * );
+     * result.subscribe(x => console.log(x));
+     *
+     * // Results in the following:
+     * // a0
+     * // b0
+     * // c0
+     * // a1
+     * // b1
+     * // c1
+     * // continues to list a,b,c with respective ascending integers
+     *
+     * @see {@link concatMap}
+     * @see {@link exhaustMap}
+     * @see {@link merge}
+     * @see {@link mergeAll}
+     * @see {@link mergeMapTo}
+     * @see {@link mergeScan}
+     * @see {@link switchMap}
+     *
+     * @param {function(value: T, ?index: number): ObservableInput} project A function
+     * that, when applied to an item emitted by the source Observable, returns an
+     * Observable.
+     * @param {number} [concurrent=Number.POSITIVE_INFINITY] Maximum number of input
+     * Observables being subscribed to concurrently.
+     * @return {Observable} An Observable that emits the result of applying the
+     * projection function (and the optional `resultSelector`) to each item emitted
+     * by the source Observable and merging the results of the Observables obtained
+     * from this transformation.
+     * @method mergeMap
+     * @owner Observable
+     */
     function mergeMap(project, resultSelector, concurrent) {
         if (concurrent === void 0) { concurrent = Number.POSITIVE_INFINITY; }
         if (typeof resultSelector === 'function') {
+            // DEPRECATED PATH
             return function (source) { return source.pipe(mergeMap(function (a, i) { return from(project(a, i)).pipe(map(function (b, ii) { return resultSelector(a, b, i, ii); })); }, concurrent)); };
         }
         else if (typeof resultSelector === 'number') {
@@ -28239,7 +29542,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return function (source) { return source.lift(new MergeMapOperator(project, concurrent)); };
     }
-    var MergeMapOperator = (function () {
+    var MergeMapOperator = /** @class */ (function () {
         function MergeMapOperator(project, concurrent) {
             if (concurrent === void 0) { concurrent = Number.POSITIVE_INFINITY; }
             this.project = project;
@@ -28250,7 +29553,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         return MergeMapOperator;
     }());
-    var MergeMapSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var MergeMapSubscriber = /** @class */ (function (_super) {
         __extends$u(MergeMapSubscriber, _super);
         function MergeMapSubscriber(destination, project, concurrent) {
             if (concurrent === void 0) { concurrent = Number.POSITIVE_INFINITY; }
@@ -28310,6 +29618,50 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return MergeMapSubscriber;
     }(OuterSubscriber));
 
+    /**
+     * Converts a higher-order Observable into a first-order Observable which
+     * concurrently delivers all values that are emitted on the inner Observables.
+     *
+     * <span class="informal">Flattens an Observable-of-Observables.</span>
+     *
+     * <img src="./img/mergeAll.png" width="100%">
+     *
+     * `mergeAll` subscribes to an Observable that emits Observables, also known as
+     * a higher-order Observable. Each time it observes one of these emitted inner
+     * Observables, it subscribes to that and delivers all the values from the
+     * inner Observable on the output Observable. The output Observable only
+     * completes once all inner Observables have completed. Any error delivered by
+     * a inner Observable will be immediately emitted on the output Observable.
+     *
+     * @example <caption>Spawn a new interval Observable for each click event, and blend their outputs as one Observable</caption>
+     * var clicks = Rx.Observable.fromEvent(document, 'click');
+     * var higherOrder = clicks.map((ev) => Rx.Observable.interval(1000));
+     * var firstOrder = higherOrder.mergeAll();
+     * firstOrder.subscribe(x => console.log(x));
+     *
+     * @example <caption>Count from 0 to 9 every second for each click, but only allow 2 concurrent timers</caption>
+     * var clicks = Rx.Observable.fromEvent(document, 'click');
+     * var higherOrder = clicks.map((ev) => Rx.Observable.interval(1000).take(10));
+     * var firstOrder = higherOrder.mergeAll(2);
+     * firstOrder.subscribe(x => console.log(x));
+     *
+     * @see {@link combineAll}
+     * @see {@link concatAll}
+     * @see {@link exhaust}
+     * @see {@link merge}
+     * @see {@link mergeMap}
+     * @see {@link mergeMapTo}
+     * @see {@link mergeScan}
+     * @see {@link switch}
+     * @see {@link zipAll}
+     *
+     * @param {number} [concurrent=Number.POSITIVE_INFINITY] Maximum number of inner
+     * Observables being subscribed to concurrently.
+     * @return {Observable} An Observable that emits values coming from all the
+     * inner Observables emitted by the source Observable.
+     * @method mergeAll
+     * @owner Observable
+     */
     function mergeAll(concurrent) {
         if (concurrent === void 0) { concurrent = Number.POSITIVE_INFINITY; }
         return mergeMap(identity, concurrent);
@@ -28366,7 +29718,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         for (var ar = [], i = 0; i < arguments.length; i++) ar = ar.concat(__read$4(arguments[i]));
         return ar;
     };
-    var ForkJoinSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var ForkJoinSubscriber = /** @class */ (function (_super) {
         __extends$v(ForkJoinSubscriber, _super);
         function ForkJoinSubscriber(destination, sources) {
             var _this = _super.call(this, destination) || this;
@@ -28453,9 +29810,74 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     };
 
     function isNumeric(val) {
+        // parseFloat NaNs numeric-cast false positives (null|true|false|"")
+        // ...but misinterprets leading-number strings, particularly hex literals ("0x...")
+        // subtraction forces infinities to NaN
+        // adding 1 corrects loss of precision from parseFloat (#15100)
         return !isArray(val) && (val - parseFloat(val) + 1) >= 0;
     }
 
+    /* tslint:enable:max-line-length */
+    /**
+     * Creates an output Observable which concurrently emits all values from every
+     * given input Observable.
+     *
+     * <span class="informal">Flattens multiple Observables together by blending
+     * their values into one Observable.</span>
+     *
+     * <img src="./img/merge.png" width="100%">
+     *
+     * `merge` subscribes to each given input Observable (as arguments), and simply
+     * forwards (without doing any transformation) all the values from all the input
+     * Observables to the output Observable. The output Observable only completes
+     * once all input Observables have completed. Any error delivered by an input
+     * Observable will be immediately emitted on the output Observable.
+     *
+     * @example <caption>Merge together two Observables: 1s interval and clicks</caption>
+     * var clicks = Rx.Observable.fromEvent(document, 'click');
+     * var timer = Rx.Observable.interval(1000);
+     * var clicksOrTimer = Rx.Observable.merge(clicks, timer);
+     * clicksOrTimer.subscribe(x => console.log(x));
+     *
+     * // Results in the following:
+     * // timer will emit ascending values, one every second(1000ms) to console
+     * // clicks logs MouseEvents to console everytime the "document" is clicked
+     * // Since the two streams are merged you see these happening
+     * // as they occur.
+     *
+     * @example <caption>Merge together 3 Observables, but only 2 run concurrently</caption>
+     * var timer1 = Rx.Observable.interval(1000).take(10);
+     * var timer2 = Rx.Observable.interval(2000).take(6);
+     * var timer3 = Rx.Observable.interval(500).take(10);
+     * var concurrent = 2; // the argument
+     * var merged = Rx.Observable.merge(timer1, timer2, timer3, concurrent);
+     * merged.subscribe(x => console.log(x));
+     *
+     * // Results in the following:
+     * // - First timer1 and timer2 will run concurrently
+     * // - timer1 will emit a value every 1000ms for 10 iterations
+     * // - timer2 will emit a value every 2000ms for 6 iterations
+     * // - after timer1 hits it's max iteration, timer2 will
+     * //   continue, and timer3 will start to run concurrently with timer2
+     * // - when timer2 hits it's max iteration it terminates, and
+     * //   timer3 will continue to emit a value every 500ms until it is complete
+     *
+     * @see {@link mergeAll}
+     * @see {@link mergeMap}
+     * @see {@link mergeMapTo}
+     * @see {@link mergeScan}
+     *
+     * @param {...ObservableInput} observables Input Observables to merge together.
+     * @param {number} [concurrent=Number.POSITIVE_INFINITY] Maximum number of input
+     * Observables being subscribed to concurrently.
+     * @param {Scheduler} [scheduler=null] The IScheduler to use for managing
+     * concurrency of input Observables.
+     * @return {Observable} an Observable that emits items that are the result of
+     * every input Observable.
+     * @static true
+     * @name merge
+     * @owner Observable
+     */
     function merge() {
         var observables = [];
         for (var _i = 0; _i < arguments.length; _i++) {
@@ -28510,7 +29932,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var RaceSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var RaceSubscriber = /** @class */ (function (_super) {
         __extends$w(RaceSubscriber, _super);
         function RaceSubscriber(destination) {
             var _this = _super.call(this, destination) || this;
@@ -28567,7 +29994,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var ZipSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var ZipSubscriber = /** @class */ (function (_super) {
         __extends$x(ZipSubscriber, _super);
         function ZipSubscriber(destination, resultSelector, values) {
             if (values === void 0) { values = Object.create(null); }
@@ -28604,7 +30036,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     this.add(iterator$$1.subscribe(iterator$$1, i));
                 }
                 else {
-                    this.active--;
+                    this.active--; // not an observable
                 }
             }
         };
@@ -28618,6 +30050,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var iterators = this.iterators;
             var len = iterators.length;
             var destination = this.destination;
+            // abort if not all of them have values
             for (var i = 0; i < len; i++) {
                 var iterator$$1 = iterators[i];
                 if (typeof iterator$$1.hasValue === 'function' && !iterator$$1.hasValue()) {
@@ -28629,6 +30062,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             for (var i = 0; i < len; i++) {
                 var iterator$$1 = iterators[i];
                 var result = iterator$$1.next();
+                // check to see if it's completed now that you've gotten
+                // the next value.
                 if (iterator$$1.hasCompleted()) {
                     shouldComplete = true;
                 }
@@ -28661,7 +30096,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         return ZipSubscriber;
     }(Subscriber));
-    var StaticIterator = (function () {
+    var StaticIterator = /** @class */ (function () {
         function StaticIterator(iterator$$1) {
             this.iterator = iterator$$1;
             this.nextResult = iterator$$1.next();
@@ -28680,7 +30115,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         return StaticIterator;
     }());
-    var StaticArrayIterator = (function () {
+    var StaticArrayIterator = /** @class */ (function () {
         function StaticArrayIterator(array) {
             this.array = array;
             this.index = 0;
@@ -28703,7 +30138,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         return StaticArrayIterator;
     }());
-    var ZipBufferIterator = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var ZipBufferIterator = /** @class */ (function (_super) {
         __extends$x(ZipBufferIterator, _super);
         function ZipBufferIterator(destination, parent, observable) {
             var _this = _super.call(this, destination) || this;
@@ -28717,6 +30157,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         ZipBufferIterator.prototype[iterator] = function () {
             return this;
         };
+        // NOTE: there is actually a name collision here with Subscriber.next and Iterator.next
+        //    this is legit because `next()` will never be called by a subscription in this case.
         ZipBufferIterator.prototype.next = function () {
             var buffer = this.buffer;
             if (buffer.length === 0 && this.isComplete) {
@@ -28751,6 +30193,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return ZipBufferIterator;
     }(OuterSubscriber));
 
+    /* Observable */
+
     var __extends$y = (undefined && undefined.__extends) || (function () {
         var extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -28761,7 +30205,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var AuditSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var AuditSubscriber = /** @class */ (function (_super) {
         __extends$y(AuditSubscriber, _super);
         function AuditSubscriber(destination, durationSelector) {
             var _this = _super.call(this, destination) || this;
@@ -28779,7 +30228,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 }
                 else {
                     var innerSubscription = subscribeToResult(this, duration);
-                    if (!innerSubscription || innerSubscription.closed) {
+                    if (innerSubscription.closed) {
                         this.clearThrottle();
                     }
                     else {
@@ -28820,7 +30269,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var BufferSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var BufferSubscriber = /** @class */ (function (_super) {
         __extends$z(BufferSubscriber, _super);
         function BufferSubscriber(destination, closingNotifier) {
             var _this = _super.call(this, destination) || this;
@@ -28849,7 +30303,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var BufferCountSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var BufferCountSubscriber = /** @class */ (function (_super) {
         __extends$A(BufferCountSubscriber, _super);
         function BufferCountSubscriber(destination, bufferSize) {
             var _this = _super.call(this, destination) || this;
@@ -28874,7 +30333,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         return BufferCountSubscriber;
     }(Subscriber));
-    var BufferSkipCountSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var BufferSkipCountSubscriber = /** @class */ (function (_super) {
         __extends$A(BufferSkipCountSubscriber, _super);
         function BufferSkipCountSubscriber(destination, bufferSize, startBufferEvery) {
             var _this = _super.call(this, destination) || this;
@@ -28922,13 +30386,18 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var Context = (function () {
+    var Context = /** @class */ (function () {
         function Context() {
             this.buffer = [];
         }
         return Context;
     }());
-    var BufferTimeSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var BufferTimeSubscriber = /** @class */ (function (_super) {
         __extends$B(BufferTimeSubscriber, _super);
         function BufferTimeSubscriber(destination, bufferTimeSpan, bufferCreationInterval, maxBufferSize, scheduler) {
             var _this = _super.call(this, destination) || this;
@@ -28979,6 +30448,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
             _super.prototype._complete.call(this);
         };
+        /** @deprecated This is an internal implementation detail, do not use. */
         BufferTimeSubscriber.prototype._unsubscribe = function () {
             this.contexts = null;
         };
@@ -29044,7 +30514,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var BufferToggleSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var BufferToggleSubscriber = /** @class */ (function (_super) {
         __extends$C(BufferToggleSubscriber, _super);
         function BufferToggleSubscriber(destination, openings, closingSelector) {
             var _this = _super.call(this, destination) || this;
@@ -29141,7 +30616,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var BufferWhenSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var BufferWhenSubscriber = /** @class */ (function (_super) {
         __extends$D(BufferWhenSubscriber, _super);
         function BufferWhenSubscriber(destination, closingSelector) {
             var _this = _super.call(this, destination) || this;
@@ -29160,6 +30640,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
             _super.prototype._complete.call(this);
         };
+        /** @deprecated This is an internal implementation detail, do not use. */
         BufferWhenSubscriber.prototype._unsubscribe = function () {
             this.buffer = null;
             this.subscribing = false;
@@ -29212,7 +30693,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var CatchSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var CatchSubscriber = /** @class */ (function (_super) {
         __extends$E(CatchSubscriber, _super);
         function CatchSubscriber(destination, selector, caught) {
             var _this = _super.call(this, destination) || this;
@@ -29220,6 +30706,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             _this.caught = caught;
             return _this;
         }
+        // NOTE: overriding `error` instead of `_error` because we don't want
+        // to have this flag this subscriber as `isStopped`. We can mimic the
+        // behavior of the RetrySubscriber (from the `retry` operator), where
+        // we unsubscribe from our source chain, reset our Subscriber flags,
+        // then subscribe to the selector result.
         CatchSubscriber.prototype.error = function (err) {
             if (!this.isStopped) {
                 var result = void 0;
@@ -29289,7 +30780,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var CountSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var CountSubscriber = /** @class */ (function (_super) {
         __extends$F(CountSubscriber, _super);
         function CountSubscriber(destination, predicate, source) {
             var _this = _super.call(this, destination) || this;
@@ -29337,7 +30833,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var DebounceSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var DebounceSubscriber = /** @class */ (function (_super) {
         __extends$G(DebounceSubscriber, _super);
         function DebounceSubscriber(destination, durationSelector) {
             var _this = _super.call(this, destination) || this;
@@ -29389,6 +30890,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     subscription.unsubscribe();
                     this.remove(subscription);
                 }
+                // This must be done *before* passing the value
+                // along to the destination because it's possible for
+                // the value to synchronously re-enter this operator
+                // recursively if the duration selector Observable
+                // emits synchronously
                 this.value = null;
                 this.hasValue = false;
                 _super.prototype._next.call(this, value);
@@ -29407,7 +30913,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var DebounceTimeSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var DebounceTimeSubscriber = /** @class */ (function (_super) {
         __extends$H(DebounceTimeSubscriber, _super);
         function DebounceTimeSubscriber(destination, dueTime, scheduler) {
             var _this = _super.call(this, destination) || this;
@@ -29432,6 +30943,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             this.clearDebounce();
             if (this.hasValue) {
                 var lastValue = this.lastValue;
+                // This must be done *before* passing the value
+                // along to the destination because it's possible for
+                // the value to synchronously re-enter this operator
+                // recursively when scheduled with things like
+                // VirtualScheduler/TestScheduler.
                 this.lastValue = null;
                 this.hasValue = false;
                 this.destination.next(lastValue);
@@ -29461,7 +30977,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var DefaultIfEmptySubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var DefaultIfEmptySubscriber = /** @class */ (function (_super) {
         __extends$I(DefaultIfEmptySubscriber, _super);
         function DefaultIfEmptySubscriber(destination, defaultValue) {
             var _this = _super.call(this, destination) || this;
@@ -29492,7 +31013,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var DelaySubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var DelaySubscriber = /** @class */ (function (_super) {
         __extends$J(DelaySubscriber, _super);
         function DelaySubscriber(destination, delay, scheduler) {
             var _this = _super.call(this, destination) || this;
@@ -29516,7 +31042,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 this.schedule(state, delay_1);
             }
             else {
-                this.unsubscribe();
                 source.active = false;
             }
         };
@@ -29550,7 +31075,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         return DelaySubscriber;
     }(Subscriber));
-    var DelayMessage = (function () {
+    var DelayMessage = /** @class */ (function () {
         function DelayMessage(time, notification) {
             this.time = time;
             this.notification = notification;
@@ -29568,13 +31093,19 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var DelayWhenSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var DelayWhenSubscriber = /** @class */ (function (_super) {
         __extends$K(DelayWhenSubscriber, _super);
         function DelayWhenSubscriber(destination, delayDurationSelector) {
             var _this = _super.call(this, destination) || this;
             _this.delayDurationSelector = delayDurationSelector;
             _this.completed = false;
             _this.delayNotifierSubscriptions = [];
+            _this.values = [];
             return _this;
         }
         DelayWhenSubscriber.prototype.notifyNext = function (outerValue, innerValue, outerIndex, innerIndex, innerSub) {
@@ -29610,10 +31141,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         DelayWhenSubscriber.prototype.removeSubscription = function (subscription) {
             subscription.unsubscribe();
             var subscriptionIdx = this.delayNotifierSubscriptions.indexOf(subscription);
+            var value = null;
             if (subscriptionIdx !== -1) {
+                value = this.values[subscriptionIdx];
                 this.delayNotifierSubscriptions.splice(subscriptionIdx, 1);
+                this.values.splice(subscriptionIdx, 1);
             }
-            return subscription.outerValue;
+            return value;
         };
         DelayWhenSubscriber.prototype.tryDelay = function (delayNotifier, value) {
             var notifierSubscription = subscribeToResult(this, delayNotifier, value);
@@ -29621,6 +31155,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 this.add(notifierSubscription);
                 this.delayNotifierSubscriptions.push(notifierSubscription);
             }
+            this.values.push(value);
         };
         DelayWhenSubscriber.prototype.tryComplete = function () {
             if (this.completed && this.delayNotifierSubscriptions.length === 0) {
@@ -29629,7 +31164,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         return DelayWhenSubscriber;
     }(OuterSubscriber));
-    var SubscriptionDelayObservable = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var SubscriptionDelayObservable = /** @class */ (function (_super) {
         __extends$K(SubscriptionDelayObservable, _super);
         function SubscriptionDelayObservable(source, subscriptionDelay) {
             var _this = _super.call(this) || this;
@@ -29637,12 +31177,18 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             _this.subscriptionDelay = subscriptionDelay;
             return _this;
         }
+        /** @deprecated This is an internal implementation detail, do not use. */
         SubscriptionDelayObservable.prototype._subscribe = function (subscriber) {
             this.subscriptionDelay.subscribe(new SubscriptionDelaySubscriber(subscriber, this.source));
         };
         return SubscriptionDelayObservable;
     }(Observable));
-    var SubscriptionDelaySubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var SubscriptionDelaySubscriber = /** @class */ (function (_super) {
         __extends$K(SubscriptionDelaySubscriber, _super);
         function SubscriptionDelaySubscriber(parent, source) {
             var _this = _super.call(this) || this;
@@ -29681,7 +31227,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var DeMaterializeSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var DeMaterializeSubscriber = /** @class */ (function (_super) {
         __extends$L(DeMaterializeSubscriber, _super);
         function DeMaterializeSubscriber(destination) {
             return _super.call(this, destination) || this;
@@ -29702,7 +31253,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var DistinctSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var DistinctSubscriber = /** @class */ (function (_super) {
         __extends$M(DistinctSubscriber, _super);
         function DistinctSubscriber(destination, keySelector, flushes) {
             var _this = _super.call(this, destination) || this;
@@ -29759,7 +31315,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var DistinctUntilChangedSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var DistinctUntilChangedSubscriber = /** @class */ (function (_super) {
         __extends$N(DistinctUntilChangedSubscriber, _super);
         function DistinctUntilChangedSubscriber(destination, compare, keySelector) {
             var _this = _super.call(this, destination) || this;
@@ -29810,7 +31371,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var FilterSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var FilterSubscriber = /** @class */ (function (_super) {
         __extends$O(FilterSubscriber, _super);
         function FilterSubscriber(destination, predicate, thisArg) {
             var _this = _super.call(this, destination) || this;
@@ -29819,6 +31385,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             _this.count = 0;
             return _this;
         }
+        // the try catch block below is left specifically for
+        // optimization and perf reasons. a tryCatcher is not necessary here.
         FilterSubscriber.prototype._next = function (value) {
             var result;
             try {
@@ -29845,7 +31413,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var TapSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var TapSubscriber = /** @class */ (function (_super) {
         __extends$P(TapSubscriber, _super);
         function TapSubscriber(destination, observerOrNext, error, complete) {
             var _this = _super.call(this, destination) || this;
@@ -29909,7 +31482,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var TakeSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var TakeSubscriber = /** @class */ (function (_super) {
         __extends$Q(TakeSubscriber, _super);
         function TakeSubscriber(destination, total) {
             var _this = _super.call(this, destination) || this;
@@ -29941,7 +31519,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var EverySubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var EverySubscriber = /** @class */ (function (_super) {
         __extends$R(EverySubscriber, _super);
         function EverySubscriber(destination, predicate, thisArg, source) {
             var _this = _super.call(this, destination) || this;
@@ -29985,7 +31568,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var SwitchFirstSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var SwitchFirstSubscriber = /** @class */ (function (_super) {
         __extends$S(SwitchFirstSubscriber, _super);
         function SwitchFirstSubscriber(destination) {
             var _this = _super.call(this, destination) || this;
@@ -30025,7 +31613,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var ExhaustMapSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var ExhaustMapSubscriber = /** @class */ (function (_super) {
         __extends$T(ExhaustMapSubscriber, _super);
         function ExhaustMapSubscriber(destination, project) {
             var _this = _super.call(this, destination) || this;
@@ -30084,7 +31677,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var ExpandSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var ExpandSubscriber = /** @class */ (function (_super) {
         __extends$U(ExpandSubscriber, _super);
         function ExpandSubscriber(destination, project, concurrent, scheduler) {
             var _this = _super.call(this, destination) || this;
@@ -30165,7 +31763,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var FinallySubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var FinallySubscriber = /** @class */ (function (_super) {
         __extends$V(FinallySubscriber, _super);
         function FinallySubscriber(destination, callback) {
             var _this = _super.call(this, destination) || this;
@@ -30185,7 +31788,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var FindValueSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var FindValueSubscriber = /** @class */ (function (_super) {
         __extends$W(FindValueSubscriber, _super);
         function FindValueSubscriber(destination, predicate, source, yieldIndex, thisArg) {
             var _this = _super.call(this, destination) || this;
@@ -30230,12 +31838,18 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var IgnoreElementsSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var IgnoreElementsSubscriber = /** @class */ (function (_super) {
         __extends$X(IgnoreElementsSubscriber, _super);
         function IgnoreElementsSubscriber() {
             return _super !== null && _super.apply(this, arguments) || this;
         }
         IgnoreElementsSubscriber.prototype._next = function (unused) {
+            // Do nothing
         };
         return IgnoreElementsSubscriber;
     }(Subscriber));
@@ -30250,7 +31864,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var IsEmptySubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var IsEmptySubscriber = /** @class */ (function (_super) {
         __extends$Y(IsEmptySubscriber, _super);
         function IsEmptySubscriber(destination) {
             return _super.call(this, destination) || this;
@@ -30279,7 +31898,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var TakeLastSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var TakeLastSubscriber = /** @class */ (function (_super) {
         __extends$Z(TakeLastSubscriber, _super);
         function TakeLastSubscriber(destination, total) {
             var _this = _super.call(this, destination) || this;
@@ -30326,7 +31950,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var MapToSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var MapToSubscriber = /** @class */ (function (_super) {
         __extends$_(MapToSubscriber, _super);
         function MapToSubscriber(destination, value) {
             var _this = _super.call(this, destination) || this;
@@ -30349,7 +31978,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var MaterializeSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var MaterializeSubscriber = /** @class */ (function (_super) {
         __extends$10(MaterializeSubscriber, _super);
         function MaterializeSubscriber(destination) {
             return _super.call(this, destination) || this;
@@ -30380,7 +32014,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var ScanSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var ScanSubscriber = /** @class */ (function (_super) {
         __extends$11(ScanSubscriber, _super);
         function ScanSubscriber(destination, accumulator, _seed, hasSeed) {
             var _this = _super.call(this, destination) || this;
@@ -30456,7 +32095,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var MergeScanSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var MergeScanSubscriber = /** @class */ (function (_super) {
         __extends$12(MergeScanSubscriber, _super);
         function MergeScanSubscriber(destination, accumulator, acc, concurrent) {
             var _this = _super.call(this, destination) || this;
@@ -30522,6 +32166,26 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return MergeScanSubscriber;
     }(OuterSubscriber));
 
+    /* tslint:enable:max-line-length */
+    /**
+     * Returns an Observable that emits the results of invoking a specified selector on items
+     * emitted by a ConnectableObservable that shares a single subscription to the underlying stream.
+     *
+     * <img src="./img/multicast.png" width="100%">
+     *
+     * @param {Function|Subject} subjectOrSubjectFactory - Factory function to create an intermediate subject through
+     * which the source sequence's elements will be multicast to the selector function
+     * or Subject to push source elements into.
+     * @param {Function} [selector] - Optional selector function that can use the multicasted source stream
+     * as many times as needed, without causing multiple subscriptions to the source stream.
+     * Subscribers to the given source will receive all notifications of the source from the
+     * time of the subscription forward.
+     * @return {Observable} An Observable that emits the results of invoking the selector
+     * on the items emitted by a `ConnectableObservable` that shares a single subscription to
+     * the underlying stream.
+     * @method multicast
+     * @owner Observable
+     */
     function multicast(subjectOrSubjectFactory, selector) {
         return function multicastOperatorFunction(source) {
             var subjectFactory;
@@ -30542,7 +32206,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             return connectable;
         };
     }
-    var MulticastOperator = (function () {
+    var MulticastOperator = /** @class */ (function () {
         function MulticastOperator(subjectFactory, selector) {
             this.subjectFactory = subjectFactory;
             this.selector = selector;
@@ -30567,7 +32231,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var OnErrorResumeNextSubscriber = (function (_super) {
+    var OnErrorResumeNextSubscriber = /** @class */ (function (_super) {
         __extends$13(OnErrorResumeNextSubscriber, _super);
         function OnErrorResumeNextSubscriber(destination, nextSources) {
             var _this = _super.call(this, destination) || this;
@@ -30609,7 +32273,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var PairwiseSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var PairwiseSubscriber = /** @class */ (function (_super) {
         __extends$14(PairwiseSubscriber, _super);
         function PairwiseSubscriber(destination) {
             var _this = _super.call(this, destination) || this;
@@ -30659,7 +32328,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var RepeatSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var RepeatSubscriber = /** @class */ (function (_super) {
         __extends$15(RepeatSubscriber, _super);
         function RepeatSubscriber(destination, count, source) {
             var _this = _super.call(this, destination) || this;
@@ -30692,7 +32366,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var RepeatWhenSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var RepeatWhenSubscriber = /** @class */ (function (_super) {
         __extends$16(RepeatWhenSubscriber, _super);
         function RepeatWhenSubscriber(destination, notifier, source) {
             var _this = _super.call(this, destination) || this;
@@ -30723,6 +32402,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 this.notifications.next();
             }
         };
+        /** @deprecated This is an internal implementation detail, do not use. */
         RepeatWhenSubscriber.prototype._unsubscribe = function () {
             var _a = this, notifications = _a.notifications, retriesSubscription = _a.retriesSubscription;
             if (notifications) {
@@ -30735,6 +32415,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
             this.retries = null;
         };
+        /** @deprecated This is an internal implementation detail, do not use. */
         RepeatWhenSubscriber.prototype._unsubscribeAndRecycle = function () {
             var _unsubscribe = this._unsubscribe;
             this._unsubscribe = null;
@@ -30764,7 +32445,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var RetrySubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var RetrySubscriber = /** @class */ (function (_super) {
         __extends$17(RetrySubscriber, _super);
         function RetrySubscriber(destination, count, source) {
             var _this = _super.call(this, destination) || this;
@@ -30797,7 +32483,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var RetryWhenSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var RetryWhenSubscriber = /** @class */ (function (_super) {
         __extends$18(RetryWhenSubscriber, _super);
         function RetryWhenSubscriber(destination, notifier, source) {
             var _this = _super.call(this, destination) || this;
@@ -30829,6 +32520,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 errors.next(err);
             }
         };
+        /** @deprecated This is an internal implementation detail, do not use. */
         RetryWhenSubscriber.prototype._unsubscribe = function () {
             var _a = this, errors = _a.errors, retriesSubscription = _a.retriesSubscription;
             if (errors) {
@@ -30861,7 +32553,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var SampleSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var SampleSubscriber = /** @class */ (function (_super) {
         __extends$19(SampleSubscriber, _super);
         function SampleSubscriber() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
@@ -30897,7 +32594,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var SampleTimeSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var SampleTimeSubscriber = /** @class */ (function (_super) {
         __extends$1a(SampleTimeSubscriber, _super);
         function SampleTimeSubscriber(destination, period, scheduler) {
             var _this = _super.call(this, destination) || this;
@@ -30935,7 +32637,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var SequenceEqualSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var SequenceEqualSubscriber = /** @class */ (function (_super) {
         __extends$1b(SequenceEqualSubscriber, _super);
         function SequenceEqualSubscriber(destination, compareTo, comparor) {
             var _this = _super.call(this, destination) || this;
@@ -31000,7 +32707,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         return SequenceEqualSubscriber;
     }(Subscriber));
-    var SequenceEqualCompareToSubscriber = (function (_super) {
+    var SequenceEqualCompareToSubscriber = /** @class */ (function (_super) {
         __extends$1b(SequenceEqualCompareToSubscriber, _super);
         function SequenceEqualCompareToSubscriber(destination, parent) {
             var _this = _super.call(this, destination) || this;
@@ -31022,6 +32729,18 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function shareSubjectFactory() {
         return new Subject();
     }
+    /**
+     * Returns a new Observable that multicasts (shares) the original Observable. As long as there is at least one
+     * Subscriber this Observable will be subscribed and emitting data. When all subscribers have unsubscribed it will
+     * unsubscribe from the source Observable. Because the Observable is multicasting it makes the stream `hot`.
+     * This is an alias for .multicast(() => new Subject()).refCount().
+     *
+     * <img src="./img/share.png" width="100%">
+     *
+     * @return {Observable<T>} An Observable that upon connection causes the source Observable to emit items to its Observers.
+     * @method share
+     * @owner Observable
+     */
     function share() {
         return function (source) { return refCount()(multicast(shareSubjectFactory)(source)); };
     }
@@ -31036,7 +32755,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var SingleSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var SingleSubscriber = /** @class */ (function (_super) {
         __extends$1c(SingleSubscriber, _super);
         function SingleSubscriber(destination, predicate, source) {
             var _this = _super.call(this, destination) || this;
@@ -31097,7 +32821,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var SkipSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var SkipSubscriber = /** @class */ (function (_super) {
         __extends$1d(SkipSubscriber, _super);
         function SkipSubscriber(destination, total) {
             var _this = _super.call(this, destination) || this;
@@ -31123,7 +32852,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var SkipLastSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var SkipLastSubscriber = /** @class */ (function (_super) {
         __extends$1e(SkipLastSubscriber, _super);
         function SkipLastSubscriber(destination, _skipCount) {
             var _this = _super.call(this, destination) || this;
@@ -31159,7 +32893,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var SkipUntilSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var SkipUntilSubscriber = /** @class */ (function (_super) {
         __extends$1f(SkipUntilSubscriber, _super);
         function SkipUntilSubscriber(destination, notifier) {
             var _this = _super.call(this, destination) || this;
@@ -31174,11 +32913,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         SkipUntilSubscriber.prototype.notifyNext = function (outerValue, innerValue, outerIndex, innerIndex, innerSub) {
             this.hasValue = true;
-            if (this.innerSubscription) {
-                this.innerSubscription.unsubscribe();
-            }
+            this.innerSubscription.unsubscribe();
         };
         SkipUntilSubscriber.prototype.notifyComplete = function () {
+            /* do nothing */
         };
         return SkipUntilSubscriber;
     }(OuterSubscriber));
@@ -31193,7 +32931,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var SkipWhileSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var SkipWhileSubscriber = /** @class */ (function (_super) {
         __extends$1g(SkipWhileSubscriber, _super);
         function SkipWhileSubscriber(destination, predicate) {
             var _this = _super.call(this, destination) || this;
@@ -31233,7 +32976,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var SubscribeOnObservable = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @extends {Ignored}
+     * @hide true
+     */
+    var SubscribeOnObservable = /** @class */ (function (_super) {
         __extends$1h(SubscribeOnObservable, _super);
         function SubscribeOnObservable(source, delayTime, scheduler) {
             if (delayTime === void 0) { delayTime = 0; }
@@ -31250,15 +32998,18 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
             return _this;
         }
+        /** @nocollapse */
         SubscribeOnObservable.create = function (source, delay, scheduler) {
             if (delay === void 0) { delay = 0; }
             if (scheduler === void 0) { scheduler = asap; }
             return new SubscribeOnObservable(source, delay, scheduler);
         };
+        /** @nocollapse */
         SubscribeOnObservable.dispatch = function (arg) {
             var source = arg.source, subscriber = arg.subscriber;
             return this.add(source.subscribe(subscriber));
         };
+        /** @deprecated This is an internal implementation detail, do not use. */
         SubscribeOnObservable.prototype._subscribe = function (subscriber) {
             var delay = this.delayTime;
             var source = this.source;
@@ -31280,7 +33031,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var SwitchMapSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var SwitchMapSubscriber = /** @class */ (function (_super) {
         __extends$1i(SwitchMapSubscriber, _super);
         function SwitchMapSubscriber(destination, project) {
             var _this = _super.call(this, destination) || this;
@@ -31339,7 +33095,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var TakeUntilSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var TakeUntilSubscriber = /** @class */ (function (_super) {
         __extends$1j(TakeUntilSubscriber, _super);
         function TakeUntilSubscriber(destination) {
             return _super.call(this, destination) || this;
@@ -31348,6 +33109,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             this.complete();
         };
         TakeUntilSubscriber.prototype.notifyComplete = function () {
+            // noop
         };
         return TakeUntilSubscriber;
     }(OuterSubscriber));
@@ -31362,7 +33124,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var TakeWhileSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var TakeWhileSubscriber = /** @class */ (function (_super) {
         __extends$1k(TakeWhileSubscriber, _super);
         function TakeWhileSubscriber(destination, predicate) {
             var _this = _super.call(this, destination) || this;
@@ -31404,7 +33171,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var ThrottleSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc
+     * @ignore
+     * @extends {Ignored}
+     */
+    var ThrottleSubscriber = /** @class */ (function (_super) {
         __extends$1l(ThrottleSubscriber, _super);
         function ThrottleSubscriber(destination, durationSelector, _leading, _trailing) {
             var _this = _super.call(this, destination) || this;
@@ -31480,7 +33252,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var ThrottleTimeSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var ThrottleTimeSubscriber = /** @class */ (function (_super) {
         __extends$1m(ThrottleTimeSubscriber, _super);
         function ThrottleTimeSubscriber(destination, duration, scheduler, leading, trailing) {
             var _this = _super.call(this, destination) || this;
@@ -31545,7 +33322,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var TimeoutWithSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var TimeoutWithSubscriber = /** @class */ (function (_super) {
         __extends$1n(TimeoutWithSubscriber, _super);
         function TimeoutWithSubscriber(destination, absoluteTimeout, waitFor, withObservable, scheduler) {
             var _this = _super.call(this, destination) || this;
@@ -31565,6 +33347,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         TimeoutWithSubscriber.prototype.scheduleTimeout = function () {
             var action = this.action;
             if (action) {
+                // Recycle the action if we've already scheduled one. All the production
+                // Scheduler Actions mutate their state/delay time and return themeselves.
+                // VirtualActions are immutable, so they create and return a clone. In this
+                // case, we need to set the action reference to the most recent VirtualAction,
+                // to ensure that's the one we clone from next time.
                 this.action = action.schedule(this, this.waitFor);
             }
             else {
@@ -31577,6 +33364,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
             _super.prototype._next.call(this, value);
         };
+        /** @deprecated This is an internal implementation detail, do not use. */
         TimeoutWithSubscriber.prototype._unsubscribe = function () {
             this.action = null;
             this.scheduler = null;
@@ -31595,7 +33383,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var WindowSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var WindowSubscriber = /** @class */ (function (_super) {
         __extends$1o(WindowSubscriber, _super);
         function WindowSubscriber(destination) {
             var _this = _super.call(this, destination) || this;
@@ -31623,6 +33416,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             this.window.complete();
             this.destination.complete();
         };
+        /** @deprecated This is an internal implementation detail, do not use. */
         WindowSubscriber.prototype._unsubscribe = function () {
             this.window = null;
         };
@@ -31648,7 +33442,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var WindowCountSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var WindowCountSubscriber = /** @class */ (function (_super) {
         __extends$1p(WindowCountSubscriber, _super);
         function WindowCountSubscriber(destination, windowSize, startWindowEvery) {
             var _this = _super.call(this, destination) || this;
@@ -31714,7 +33513,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var CountedSubject = (function (_super) {
+    var CountedSubject = /** @class */ (function (_super) {
         __extends$1q(CountedSubject, _super);
         function CountedSubject() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
@@ -31734,7 +33533,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         });
         return CountedSubject;
     }(Subject));
-    var WindowTimeSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var WindowTimeSubscriber = /** @class */ (function (_super) {
         __extends$1q(WindowTimeSubscriber, _super);
         function WindowTimeSubscriber(destination, windowTimeSpan, windowCreationInterval, maxWindowSize, scheduler) {
             var _this = _super.call(this, destination) || this;
@@ -31837,7 +33641,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var WindowToggleSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var WindowToggleSubscriber = /** @class */ (function (_super) {
         __extends$1r(WindowToggleSubscriber, _super);
         function WindowToggleSubscriber(destination, openings, closingSelector) {
             var _this = _super.call(this, destination) || this;
@@ -31884,6 +33693,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
             _super.prototype._complete.call(this);
         };
+        /** @deprecated This is an internal implementation detail, do not use. */
         WindowToggleSubscriber.prototype._unsubscribe = function () {
             var contexts = this.contexts;
             this.contexts = null;
@@ -31956,7 +33766,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var WindowSubscriber$1 = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var WindowSubscriber$1 = /** @class */ (function (_super) {
         __extends$1s(WindowSubscriber, _super);
         function WindowSubscriber(destination, closingSelector) {
             var _this = _super.call(this, destination) || this;
@@ -32047,7 +33862,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         for (var ar = [], i = 0; i < arguments.length; i++) ar = ar.concat(__read$c(arguments[i]));
         return ar;
     };
-    var WithLatestFromSubscriber = (function (_super) {
+    /**
+     * We need this JSDoc comment for affecting ESDoc.
+     * @ignore
+     * @extends {Ignored}
+     */
+    var WithLatestFromSubscriber = /** @class */ (function (_super) {
         __extends$1t(WithLatestFromSubscriber, _super);
         function WithLatestFromSubscriber(destination, observables, project) {
             var _this = _super.call(this, destination) || this;
@@ -32076,6 +33896,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
         };
         WithLatestFromSubscriber.prototype.notifyComplete = function () {
+            // noop
         };
         WithLatestFromSubscriber.prototype._next = function (value) {
             if (this.toRespond.length === 0) {
@@ -32123,6 +33944,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return ar;
     };
 
+    /* Operator exports */
+
     /**
      * @license
      * Copyright Google Inc. All Rights Reserved.
@@ -32138,6 +33961,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         // It's up to the caller to ensure that obj.then conforms to the spec
         return !!obj && typeof obj.then === 'function';
     }
+    /**
+     * Determine if the argument is an Observable
+     */
+    function isObservable$1(obj) {
+        // TODO: use isObservable once we update pass rxjs 6.1
+        // https://github.com/ReactiveX/rxjs/blob/master/CHANGELOG.md#610-2018-05-03
+        return !!obj && typeof obj.subscribe === 'function';
+    }
 
     /**
      * @license
@@ -32148,13 +33979,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     /**
      * A function that will be executed when an application is initialized.
-     * @experimental
      */
     var APP_INITIALIZER = new InjectionToken('Application Initializer');
     /**
      * A class that reflects the state of running {@link APP_INITIALIZER}s.
-     *
-     * @experimental
      */
     var ApplicationInitStatus = /** @class */ (function () {
         function ApplicationInitStatus(appInits) {
@@ -33078,17 +34906,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             if (!this.taskTrackingZone) {
                 return [];
             }
+            // Copy the tasks data so that we don't leak tasks.
             return this.taskTrackingZone.macroTasks.map(function (t) {
                 return {
                     source: t.source,
-                    isPeriodic: t.data.isPeriodic,
-                    delay: t.data.delay,
                     // From TaskTrackingZone:
                     // https://github.com/angular/zone.js/blob/master/lib/zone-spec/task-tracking.ts#L40
                     creationLocation: t.creationLocation,
-                    // Added by Zones for XHRs
-                    // https://github.com/angular/zone.js/blob/master/lib/browser/browser.ts#L133
-                    xhr: t.data.target
+                    data: t.data
                 };
             });
         };
@@ -34144,15 +35969,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     var DebugNode = /** @class */ (function () {
         function DebugNode(nativeNode, parent, _debugContext) {
-            this._debugContext = _debugContext;
             this.nativeNode = nativeNode;
+            this._debugContext = _debugContext;
+            this.listeners = [];
+            this.parent = null;
             if (parent && parent instanceof DebugElement) {
                 parent.addChild(this);
             }
-            else {
-                this.parent = null;
-            }
-            this.listeners = [];
         }
         Object.defineProperty(DebugNode.prototype, "injector", {
             get: function () { return this._debugContext.injector; },
@@ -36809,6 +38632,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             configurable: true
         });
         Object.defineProperty(ViewContainerRef_.prototype, "parentInjector", {
+            /** @deprecated No replacement */
             get: function () {
                 var view = this._view;
                 var elDef = this._elDef.parent;
@@ -37187,8 +39011,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         if (def.outputs.length) {
             for (var i = 0; i < def.outputs.length; i++) {
                 var output = def.outputs[i];
-                var subscription = instance[output.propName].subscribe(eventHandlerClosure(view, def.parent.nodeIndex, output.eventName));
-                view.disposables[def.outputIndex + i] = subscription.unsubscribe.bind(subscription);
+                var outputObservable = instance[output.propName];
+                if (isObservable$1(outputObservable)) {
+                    var subscription = outputObservable.subscribe(eventHandlerClosure(view, def.parent.nodeIndex, output.eventName));
+                    view.disposables[def.outputIndex + i] = subscription.unsubscribe.bind(subscription);
+                }
+                else {
+                    throw new Error("@Output " + output.propName + " not initialized in '" + instance.constructor.name + "'.");
+                }
             }
         }
         return instance;
@@ -39326,7 +41156,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * found in the LICENSE file at https://angular.io/license
      */
     /** Size of LViewData's header. Necessary to adjust for it when setting slots.  */
-    var HEADER_OFFSET = 16;
+    var HEADER_OFFSET = 17;
     // Below are constants for LViewData indices to help us look up LViewData members
     // without having to remember the specific indices.
     // Uglify will inline these when minifying so there shouldn't be a cost.
@@ -39342,7 +41172,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     var CONTEXT = 9;
     var INJECTOR$1 = 10;
     var RENDERER = 11;
+    var SANITIZER = 12;
+    var TAIL = 13;
     var CONTAINER_INDEX = 14;
+    var DECLARATION_VIEW = 16;
 
     /**
      * @license
@@ -39462,36 +41295,48 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var ngDevModeResetPerfCounters = (typeof ngDevMode == 'undefined' && (function (global) {
-        function ngDevModeResetPerfCounters() {
-            global['ngDevMode'] = {
-                firstTemplatePass: 0,
-                tNode: 0,
-                tView: 0,
-                rendererCreateTextNode: 0,
-                rendererSetText: 0,
-                rendererCreateElement: 0,
-                rendererAddEventListener: 0,
-                rendererSetAttribute: 0,
-                rendererRemoveAttribute: 0,
-                rendererSetProperty: 0,
-                rendererSetClassName: 0,
-                rendererAddClass: 0,
-                rendererRemoveClass: 0,
-                rendererSetStyle: 0,
-                rendererRemoveStyle: 0,
-                rendererDestroy: 0,
-                rendererDestroyNode: 0,
-                rendererMoveNode: 0,
-                rendererRemoveNode: 0,
-            };
-        }
-        ngDevModeResetPerfCounters();
-        return ngDevModeResetPerfCounters;
-    })(typeof window != 'undefined' && window || typeof self != 'undefined' && self ||
-        typeof global != 'undefined' && global));
+    var __global$1 = typeof window != 'undefined' && window || typeof self != 'undefined' && self ||
+        typeof global != 'undefined' && global;
+    function ngDevModeResetPerfCounters() {
+        return __global$1.ngDevMode = {
+            firstTemplatePass: 0,
+            tNode: 0,
+            tView: 0,
+            rendererCreateTextNode: 0,
+            rendererSetText: 0,
+            rendererCreateElement: 0,
+            rendererAddEventListener: 0,
+            rendererSetAttribute: 0,
+            rendererRemoveAttribute: 0,
+            rendererSetProperty: 0,
+            rendererSetClassName: 0,
+            rendererAddClass: 0,
+            rendererRemoveClass: 0,
+            rendererSetStyle: 0,
+            rendererRemoveStyle: 0,
+            rendererDestroy: 0,
+            rendererDestroyNode: 0,
+            rendererMoveNode: 0,
+            rendererRemoveNode: 0,
+            rendererCreateComment: 0,
+        };
+    }
+    /**
+     * This checks to see if the `ngDevMode` has been set. If yes,
+     * than we honor it, otherwise we default to dev mode with additional checks.
+     *
+     * The idea is that unless we are doing production build where we explicitly
+     * set `ngDevMode == false` we should be helping the developer by providing
+     * as much early warning and errors as possible.
+     */
+    if (typeof ngDevMode === 'undefined' || ngDevMode) {
+        __global$1.ngDevMode = ngDevModeResetPerfCounters();
+    }
 
     /** Called when directives inject each other (creating a circular dependency) */
+    function throwCyclicDependencyError(token) {
+        throw new Error("Cannot instantiate cyclic dependency! " + token);
+    }
 
     /**
      * @license
@@ -39551,6 +41396,15 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function assertNodeType(node, type) {
         assertDefined(node, 'should be called with a node');
         assertEqual(node.tNode.type, type, "should be a " + typeName(type));
+    }
+    function assertNodeOfPossibleTypes(node) {
+        var types = [];
+        for (var _i = 1; _i < arguments.length; _i++) {
+            types[_i - 1] = arguments[_i];
+        }
+        assertDefined(node, 'should be called with a node');
+        var found = types.some(function (type) { return node.tNode.type === type; });
+        assertEqual(found, true, "Should be one of " + types.map(typeName).join(', '));
     }
     function typeName(type) {
         if (type == 1 /* Projection */)
@@ -39652,6 +41506,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         var parent = node.tNode.parent;
         return readElementValue(parent ? node.view[parent.index] : node.view[HOST_NODE]);
+    }
+    /**
+     * Retrieves render parent LElementNode for a given view.
+     * Might be null if a view is not yet attatched to any container.
+     */
+    function getRenderParent(viewNode) {
+        var container = getParentLNode(viewNode);
+        return container ? container.data[RENDER_PARENT] : null;
     }
     /**
      * Stack used to keep track of projection nodes in walkLNodeTree.
@@ -40030,6 +41892,154 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             callHooks(viewData, pipeDestroyHooks);
         }
     }
+    function canInsertNativeChildOfElement(parent, currentView) {
+        if (parent.view !== currentView) {
+            // If the Parent view is not the same as current view than we are inserting across
+            // Views. This happens when we insert a root element of the component view into
+            // the component host element and it should always be eager.
+            return true;
+        }
+        // Parent elements can be a component which may have projection.
+        if (parent.data === null) {
+            // Parent is a regular non-component element. We should eagerly insert into it
+            // since we know that this relationship will never be broken.
+            return true;
+        }
+        // Parent is a Component. Component's content nodes are not inserted immediately
+        // because they will be projected, and so doing insert at this point would be wasteful.
+        // Since the projection would than move it to its final destination.
+        return false;
+    }
+    /**
+     * We might delay insertion of children for a given view if it is disconnected.
+     * This might happen for 2 main reason:
+     * - view is not inserted into any container (view was created but not iserted yet)
+     * - view is inserted into a container but the container itself is not inserted into the DOM
+     * (container might be part of projection or child of a view that is not inserted yet).
+     *
+     * In other words we can insert children of a given view this view was inserted into a container and
+     * the container itself has it render parent determined.
+     */
+    function canInsertNativeChildOfView(parent) {
+        ngDevMode && assertNodeType(parent, 2 /* View */);
+        // Because we are inserting into a `View` the `View` may be disconnected.
+        var grandParentContainer = getParentLNode(parent);
+        if (grandParentContainer == null) {
+            // The `View` is not inserted into a `Container` we have to delay insertion.
+            return false;
+        }
+        ngDevMode && assertNodeType(grandParentContainer, 0 /* Container */);
+        if (grandParentContainer.data[RENDER_PARENT] == null) {
+            // The parent `Container` itself is disconnected. So we have to delay.
+            return false;
+        }
+        // The parent `Container` is in inserted state, so we can eagerly insert into
+        // this location.
+        return true;
+    }
+    /**
+     * Returns whether a native element can be inserted into the given parent.
+     *
+     * There are two reasons why we may not be able to insert a element immediately.
+     * - Projection: When creating a child content element of a component, we have to skip the
+     *   insertion because the content of a component will be projected.
+     *   `<component><content>delayed due to projection</content></component>`
+     * - Parent container is disconnected: This can happen when we are inserting a view into
+     *   parent container, which itself is disconnected. For example the parent container is part
+     *   of a View which has not be inserted or is mare for projection but has not been inserted
+     *   into destination.
+     *
+
+     *
+     * @param parent The parent where the child will be inserted into.
+     * @param currentView Current LView being processed.
+     * @return boolean Whether the child should be inserted now (or delayed until later).
+     */
+    function canInsertNativeNode(parent, currentView) {
+        // We can only insert into a Component or View. Any other type should be an Error.
+        ngDevMode && assertNodeOfPossibleTypes(parent, 3 /* Element */, 4 /* ElementContainer */, 2 /* View */);
+        if (parent.tNode.type === 3 /* Element */) {
+            // Parent is a regular element or a component
+            return canInsertNativeChildOfElement(parent, currentView);
+        }
+        else if (parent.tNode.type === 4 /* ElementContainer */) {
+            // Parent is an element container (ng-container).
+            // Its grand-parent might be an element, view or a sequence of ng-container parents.
+            var grandParent = getParentLNode(parent);
+            while (grandParent !== null && grandParent.tNode.type === 4 /* ElementContainer */) {
+                grandParent = getParentLNode(grandParent);
+            }
+            if (grandParent === null) {
+                return false;
+            }
+            else if (grandParent.tNode.type === 3 /* Element */) {
+                return canInsertNativeChildOfElement(grandParent, currentView);
+            }
+            else {
+                return canInsertNativeChildOfView(grandParent);
+            }
+        }
+        else {
+            // Parent is a View.
+            return canInsertNativeChildOfView(parent);
+        }
+    }
+    /**
+     * Inserts a native node before another native node for a given parent using {@link Renderer3}.
+     * This is a utility function that can be used when native nodes were determined - it abstracts an
+     * actual renderer being used.
+     */
+    function nativeInsertBefore(renderer, parent, child, beforeNode) {
+        if (isProceduralRenderer(renderer)) {
+            renderer.insertBefore(parent, child, beforeNode);
+        }
+        else {
+            parent.insertBefore(child, beforeNode, true);
+        }
+    }
+    /**
+     * Appends the `child` element to the `parent`.
+     *
+     * The element insertion might be delayed {@link canInsertNativeNode}.
+     *
+     * @param parent The parent to which to append the child
+     * @param child The child that should be appended
+     * @param currentView The current LView
+     * @returns Whether or not the child was appended
+     */
+    function appendChild(parent, child, currentView) {
+        if (child !== null && canInsertNativeNode(parent, currentView)) {
+            var renderer = currentView[RENDERER];
+            if (parent.tNode.type === 2 /* View */) {
+                var container = getParentLNode(parent);
+                var renderParent = container.data[RENDER_PARENT];
+                var views = container.data[VIEWS];
+                var index = views.indexOf(parent);
+                var beforeNode = index + 1 < views.length ? (getChildLNode(views[index + 1])).native : container.native;
+                nativeInsertBefore(renderer, renderParent.native, child, beforeNode);
+            }
+            else if (parent.tNode.type === 4 /* ElementContainer */) {
+                var beforeNode = parent.native;
+                var grandParent = getParentLNode(parent);
+                while (grandParent.tNode.type === 4 /* ElementContainer */) {
+                    grandParent = getParentLNode(grandParent);
+                }
+                if (grandParent.tNode.type === 2 /* View */) {
+                    var renderParent = getRenderParent(grandParent);
+                    nativeInsertBefore(renderer, renderParent.native, child, beforeNode);
+                }
+                else {
+                    nativeInsertBefore(renderer, grandParent.native, child, beforeNode);
+                }
+            }
+            else {
+                isProceduralRenderer(renderer) ? renderer.appendChild(parent.native, child) :
+                    parent.native.appendChild(child);
+            }
+            return true;
+        }
+        return false;
+    }
 
     /**
      * @license
@@ -40084,6 +42094,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     var HEADER_FILLER = new Array(HEADER_OFFSET).fill(null);
     /**
+     * Token set in currentMatches while dependencies are being resolved.
+     *
+     * If we visit a directive that has a value set to CIRCULAR, we know we've
+     * already seen it, and thus have a circular dependency.
+     */
+    var CIRCULAR$2 = '__CIRCULAR__';
+    /**
      * This property gets set before entering a template.
      *
      * This renderer can be one of two varieties of Renderer3:
@@ -40101,9 +42118,24 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Renderer2.
      */
     var renderer;
+    function getRenderer() {
+        // top level variables should not be exported for performance reasons (PERF_NOTES.md)
+        return renderer;
+    }
     var rendererFactory;
+    function getRendererFactory() {
+        // top level variables should not be exported for performance reasons (PERF_NOTES.md)
+        return rendererFactory;
+    }
+    function getCurrentSanitizer() {
+        return viewData && viewData[SANITIZER];
+    }
     /** Used to set the parent property when nodes are created. */
     var previousOrParentNode;
+    function getPreviousOrParentNode() {
+        // top level variables should not be exported for performance reasons (PERF_NOTES.md)
+        return previousOrParentNode;
+    }
     /**
      * If `isParent` is:
      *  - `true`: then `previousOrParentNode` points to a parent node.
@@ -40123,6 +42155,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * any local variables that need to be stored between invocations.
      */
     var viewData;
+    /**
+     * The last viewData retrieved by nextContext().
+     * Allows building nextContext() and reference() calls.
+     *
+     * e.g. const inner = x().$implicit; const outer = x().$implicit;
+     */
+    var contextViewData = null;
     /**
      * An array of directive instances in the current view.
      *
@@ -40168,7 +42207,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             previousOrParentNode = host;
             isParent = true;
         }
-        viewData = newView;
+        viewData = contextViewData = newView;
         currentQueries = newView && newView[QUERIES];
         return oldView;
     }
@@ -40195,22 +42234,22 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * Refreshes the view, executing the following steps in that order:
      * triggers init hooks, refreshes dynamic embedded views, triggers content hooks, sets host
-     * bindings,
-     * refreshes child components.
+     * bindings, refreshes child components.
      * Note: view hooks are triggered later when leaving the view.
      */
-    function refreshView() {
+    function refreshDescendantViews() {
+        // This needs to be set before children are processed to support recursive components
+        tView.firstTemplatePass = firstTemplatePass = false;
         if (!checkNoChangesMode) {
             executeInitHooks(viewData, tView, creationMode);
         }
         refreshDynamicEmbeddedViews(viewData);
+        // Content query results must be refreshed before content hooks are called.
+        refreshContentQueries(tView);
         if (!checkNoChangesMode) {
             executeHooks(directives, tView.contentHooks, tView.contentCheckHooks, creationMode);
         }
-        // This needs to be set before children are processed to support recursive components
-        tView.firstTemplatePass = firstTemplatePass = false;
         setHostBindings(tView.hostBindings);
-        refreshContentQueries(tView);
         refreshChildComponents(tView.components);
     }
     /** Sets the host bindings for the current view. */
@@ -40237,8 +42276,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /** Refreshes child components in the current view. */
     function refreshChildComponents(components) {
         if (components != null) {
-            for (var i = 0; i < components.length; i += 2) {
-                componentRefresh(components[i], components[i + 1]);
+            for (var i = 0; i < components.length; i++) {
+                componentRefresh(components[i]);
             }
         }
     }
@@ -40260,12 +42299,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             null,
             null,
             context,
-            viewData && viewData[INJECTOR$1],
+            viewData ? viewData[INJECTOR$1] : null,
             renderer,
             sanitizer || null,
             null,
             -1,
             null,
+            null // declarationView
         ];
     }
     /**
@@ -40351,6 +42391,26 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         previousOrParentNode = null;
     }
     /**
+     * Used for creating the LViewNode of a dynamic embedded view,
+     * either through ViewContainerRef.createEmbeddedView() or TemplateRef.createEmbeddedView().
+     * Such lViewNode will then be renderer with renderEmbeddedTemplate() (see below).
+     */
+    function createEmbeddedViewNode(tView, context, declarationView, renderer, queries) {
+        var _isParent = isParent;
+        var _previousOrParentNode = previousOrParentNode;
+        isParent = true;
+        previousOrParentNode = null;
+        var lView = createLViewData(renderer, tView, context, 2 /* CheckAlways */, getCurrentSanitizer());
+        lView[DECLARATION_VIEW] = declarationView;
+        if (queries) {
+            lView[QUERIES] = queries.createView();
+        }
+        var viewNode = createLNode(-1, 2 /* View */, null, null, null, lView);
+        isParent = _isParent;
+        previousOrParentNode = _previousOrParentNode;
+        return viewNode;
+    }
+    /**
      * Used for rendering embedded views (e.g. dynamically created views)
      *
      * Dynamically created views must store/retrieve their TViews differently from component views
@@ -40376,7 +42436,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 namespaceHTML();
                 tView.template(rf, context);
                 if (rf & 2 /* Update */) {
-                    refreshView();
+                    refreshDescendantViews();
                 }
                 else {
                     viewNode.data[TVIEW].firstTemplatePass = firstTemplatePass = false;
@@ -40402,14 +42462,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             if (template) {
                 namespaceHTML();
                 template(getRenderFlags(hostView), componentOrContext);
-                refreshView();
+                refreshDescendantViews();
             }
             else {
                 executeInitAndContentHooks();
                 // Element was stored at 0 in data and directive was stored at 0 in directives
                 // in renderComponent()
                 setHostBindings(_ROOT_DIRECTIVE_INDICES);
-                componentRefresh(0, HEADER_OFFSET);
+                componentRefresh(HEADER_OFFSET);
             }
         }
         finally {
@@ -40461,11 +42521,42 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return native;
     }
+    function resolveDirective(def, valueIndex, matches, tView) {
+        if (matches[valueIndex] === null) {
+            matches[valueIndex] = CIRCULAR$2;
+            var instance = def.factory();
+            (tView.directives || (tView.directives = [])).push(def);
+            return directiveCreate(matches[valueIndex] = tView.directives.length - 1, instance, def);
+        }
+        else if (matches[valueIndex] === CIRCULAR$2) {
+            // If we revisit this directive before it's resolved, we know it's circular
+            throwCyclicDependencyError(def.type);
+        }
+        return null;
+    }
+    /** Stores index of component's host element so it will be queued for view refresh during CD. */
+    function queueComponentIndexForCheck() {
+        if (firstTemplatePass) {
+            (tView.components || (tView.components = [])).push(viewData.length - 1);
+        }
+    }
+    /** Stores index of directive and host element so it will be queued for binding refresh during CD.
+     */
+    function queueHostBindingForCheck(dirIndex) {
+        // Must subtract the header offset because hostBindings functions are generated with
+        // instructions that expect element indices that are NOT adjusted (e.g. elementProperty).
+        ngDevMode &&
+            assertEqual(firstTemplatePass, true, 'Should only be called in first template pass.');
+        (tView.hostBindings || (tView.hostBindings = [])).push(dirIndex, viewData.length - 1 - HEADER_OFFSET);
+    }
     /** Sets the context for a ChangeDetectorRef to the given instance. */
     function initChangeDetectorIfExisting(injector, instance, view) {
         if (injector && injector.changeDetectorRef != null) {
             injector.changeDetectorRef._setComponentContext(view, instance);
         }
+    }
+    function isComponent(tNode) {
+        return (tNode.flags & 4096 /* isComponent */) === 4096 /* isComponent */;
     }
     /**
      * Gets TView from a template function or creates a new TView
@@ -40650,6 +42741,54 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             projection: null
         };
     }
+    //////////////////////////
+    //// Directive
+    //////////////////////////
+    /**
+     * Create a directive and their associated content queries.
+     *
+     * NOTE: directives can be created in order other than the index order. They can also
+     *       be retrieved before they are created in which case the value will be null.
+     *
+     * @param directive The directive instance.
+     * @param directiveDef DirectiveDef object which contains information about the template.
+     */
+    function directiveCreate(directiveDefIdx, directive, directiveDef) {
+        var instance = baseDirectiveCreate(directiveDefIdx, directive, directiveDef);
+        ngDevMode && assertDefined(previousOrParentNode.tNode, 'previousOrParentNode.tNode');
+        var tNode = previousOrParentNode.tNode;
+        var isComponent = directiveDef.template;
+        if (isComponent) {
+            addComponentLogic(directiveDefIdx, directive, directiveDef);
+        }
+        if (firstTemplatePass) {
+            // Init hooks are queued now so ngOnInit is called in host components before
+            // any projected components.
+            queueInitHooks(directiveDefIdx, directiveDef.onInit, directiveDef.doCheck, tView);
+            if (directiveDef.hostBindings)
+                queueHostBindingForCheck(directiveDefIdx);
+        }
+        if (tNode && tNode.attrs) {
+            setInputsFromAttrs(directiveDefIdx, instance, directiveDef.inputs, tNode);
+        }
+        if (directiveDef.contentQueries) {
+            directiveDef.contentQueries();
+        }
+        return instance;
+    }
+    function addComponentLogic(directiveIndex, instance, def) {
+        var tView = getOrCreateTView(def.template, def.directiveDefs, def.pipeDefs, def.viewQuery);
+        // Only component views should be added to the view tree directly. Embedded views are
+        // accessed through their containers because they may be removed / re-added later.
+        var componentView = addToViewTree(viewData, previousOrParentNode.tNode.index, createLViewData(rendererFactory.createRenderer(previousOrParentNode.native, def.rendererType), tView, instance, def.onPush ? 4 /* Dirty */ : 2 /* CheckAlways */, getCurrentSanitizer()));
+        // We need to set the host node/data here because when the component LNode was created,
+        // we didn't yet know it was a component (just an element).
+        previousOrParentNode.data = componentView;
+        componentView[HOST_NODE] = previousOrParentNode;
+        initChangeDetectorIfExisting(previousOrParentNode.nodeInjector, instance, componentView);
+        if (firstTemplatePass)
+            queueComponentIndexForCheck();
+    }
     /**
      * A lighter version of directiveCreate() that is used for the root component
      *
@@ -40691,6 +42830,93 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return directive;
     }
     /**
+     * Sets initial input properties on directive instances from attribute data
+     *
+     * @param directiveIndex Index of the directive in directives array
+     * @param instance Instance of the directive on which to set the initial inputs
+     * @param inputs The list of inputs from the directive def
+     * @param tNode The static data for this node
+     */
+    function setInputsFromAttrs(directiveIndex, instance, inputs, tNode) {
+        var initialInputData = tNode.initialInputs;
+        if (initialInputData === undefined || directiveIndex >= initialInputData.length) {
+            initialInputData = generateInitialInputs(directiveIndex, inputs, tNode);
+        }
+        var initialInputs = initialInputData[directiveIndex];
+        if (initialInputs) {
+            for (var i = 0; i < initialInputs.length; i += 2) {
+                instance[initialInputs[i]] = initialInputs[i + 1];
+            }
+        }
+    }
+    /**
+     * Generates initialInputData for a node and stores it in the template's static storage
+     * so subsequent template invocations don't have to recalculate it.
+     *
+     * initialInputData is an array containing values that need to be set as input properties
+     * for directives on this node, but only once on creation. We need this array to support
+     * the case where you set an @Input property of a directive using attribute-like syntax.
+     * e.g. if you have a `name` @Input, you can set it once like this:
+     *
+     * <my-component name="Bess"></my-component>
+     *
+     * @param directiveIndex Index to store the initial input data
+     * @param inputs The list of inputs from the directive def
+     * @param tNode The static data on this node
+     */
+    function generateInitialInputs(directiveIndex, inputs, tNode) {
+        var initialInputData = tNode.initialInputs || (tNode.initialInputs = []);
+        initialInputData[directiveIndex] = null;
+        var attrs = tNode.attrs;
+        var i = 0;
+        while (i < attrs.length) {
+            var attrName = attrs[i];
+            if (attrName === 1 /* SelectOnly */)
+                break;
+            if (attrName === 0 /* NamespaceURI */) {
+                // We do not allow inputs on namespaced attributes.
+                i += 4;
+                continue;
+            }
+            var minifiedInputName = inputs[attrName];
+            var attrValue = attrs[i + 1];
+            if (minifiedInputName !== undefined) {
+                var inputsToStore = initialInputData[directiveIndex] || (initialInputData[directiveIndex] = []);
+                inputsToStore.push(minifiedInputName, attrValue);
+            }
+            i += 2;
+        }
+        return initialInputData;
+    }
+    //////////////////////////
+    //// ViewContainer & View
+    //////////////////////////
+    /**
+     * Creates a LContainer, either from a container instruction, or for a ViewContainerRef.
+     *
+     * @param parentLNode the LNode in which the container's content will be rendered
+     * @param currentView The parent view of the LContainer
+     * @param isForViewContainerRef Optional a flag indicating the ViewContainerRef case
+     * @returns LContainer
+     */
+    function createLContainer(parentLNode, currentView, isForViewContainerRef) {
+        ngDevMode && assertDefined(parentLNode, 'containers should have a parent');
+        var renderParent = canInsertNativeNode(parentLNode, currentView) ?
+            parentLNode :
+            null;
+        if (renderParent && renderParent.tNode.type === 2 /* View */) {
+            renderParent = getParentLNode(renderParent).data[RENDER_PARENT];
+        }
+        return [
+            isForViewContainerRef ? null : 0,
+            currentView,
+            null,
+            null,
+            [],
+            renderParent
+        ];
+    }
+    /**
      * Goes over dynamic embedded views (ones created through ViewContainerRef APIs) and refreshes them
      * by executing an associated template function.
      */
@@ -40715,10 +42941,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * Refreshes components by entering the component view and processing its bindings, queries, etc.
      *
-     * @param directiveIndex Directive index in LViewData[DIRECTIVES]
      * @param adjustedElementIndex  Element index in LViewData[] (adjusted for HEADER_OFFSET)
      */
-    function componentRefresh(directiveIndex, adjustedElementIndex) {
+    function componentRefresh(adjustedElementIndex) {
         ngDevMode && assertDataInRange(adjustedElementIndex);
         var element = viewData[adjustedElementIndex];
         ngDevMode && assertNodeType(element, 3 /* Element */);
@@ -40727,13 +42952,33 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var hostView = element.data;
         // Only attached CheckAlways components or attached, dirty OnPush components should be checked
         if (viewAttached(hostView) && hostView[FLAGS] & (2 /* CheckAlways */ | 4 /* Dirty */)) {
-            ngDevMode && assertDataInRange(directiveIndex, directives);
-            detectChangesInternal(hostView, element, directives[directiveIndex]);
+            detectChangesInternal(hostView, element, hostView[CONTEXT]);
         }
     }
     /** Returns a boolean for whether the view is attached */
     function viewAttached(view) {
         return (view[FLAGS] & 8 /* Attached */) === 8 /* Attached */;
+    }
+    /**
+     * Adds LViewData or LContainer to the end of the current view tree.
+     *
+     * This structure will be used to traverse through nested views to remove listeners
+     * and call onDestroy callbacks.
+     *
+     * @param currentView The view where LViewData or LContainer should be added
+     * @param adjustedHostIndex Index of the view's host node in LViewData[], adjusted for header
+     * @param state The LViewData or LContainer to add to the view tree
+     * @returns The state passed in
+     */
+    function addToViewTree(currentView, adjustedHostIndex, state) {
+        if (currentView[TAIL]) {
+            currentView[TAIL][NEXT] = state;
+        }
+        else if (firstTemplatePass) {
+            tView.childIndex = adjustedHostIndex;
+        }
+        currentView[TAIL] = state;
+        return state;
     }
     /** Marks current view and all ancestors dirty */
     function markViewDirty(view) {
@@ -40811,6 +43056,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         detectChangesInternal(hostNode.data, hostNode, component);
     }
     /**
+     * Synchronously perform change detection on a root view and its components.
+     *
+     * @param lViewData The view which the change detection should be performed on.
+     */
+    function detectChangesInRootView(lViewData) {
+        tickRootContext(lViewData[CONTEXT]);
+    }
+    /**
      * Checks the change detector and its children, and throws if any changes are detected.
      *
      * This is used in development mode to verify that running change detection doesn't
@@ -40820,6 +43073,24 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         checkNoChangesMode = true;
         try {
             detectChanges(component);
+        }
+        finally {
+            checkNoChangesMode = false;
+        }
+    }
+    /**
+     * Checks the change detector on a root view and its components, and throws if any changes are
+     * detected.
+     *
+     * This is used in development mode to verify that running change detection doesn't
+     * introduce other changes.
+     *
+     * @param lViewData The view which the change detection should be checked on.
+     */
+    function checkNoChangesInRootView(lViewData) {
+        checkNoChangesMode = true;
+        try {
+            detectChangesInRootView(lViewData);
         }
         finally {
             checkNoChangesMode = false;
@@ -40835,7 +43106,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             namespaceHTML();
             createViewQuery(viewQuery, hostView[FLAGS], component);
             template(getRenderFlags(hostView), component);
-            refreshView();
+            refreshDescendantViews();
             updateViewQuery(viewQuery, component);
         }
         finally {
@@ -41137,7 +43408,16 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
          *
          * See {@link ChangeDetectorRef#detach detach} for more information.
          */
-        ViewRef.prototype.detectChanges = function () { detectChanges(this.context); };
+        ViewRef.prototype.detectChanges = function () {
+            var rendererFactory = getRendererFactory();
+            if (rendererFactory.begin) {
+                rendererFactory.begin();
+            }
+            detectChanges(this.context);
+            if (rendererFactory.end) {
+                rendererFactory.end();
+            }
+        };
         /**
          * Checks the change detector and its children, and throws if any changes are detected.
          *
@@ -41150,6 +43430,18 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         ViewRef.prototype.attachToAppRef = function (appRef) { this._appRef = appRef; };
         return ViewRef;
     }());
+    /** @internal */
+    var RootViewRef = /** @class */ (function (_super) {
+        __extends(RootViewRef, _super);
+        function RootViewRef(_view) {
+            var _this = _super.call(this, _view, null) || this;
+            _this._view = _view;
+            return _this;
+        }
+        RootViewRef.prototype.detectChanges = function () { detectChangesInRootView(this._view); };
+        RootViewRef.prototype.checkNoChanges = function () { checkNoChangesInRootView(this._view); };
+        return RootViewRef;
+    }(ViewRef$1));
 
     /**
      * @license
@@ -41242,6 +43534,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 // Create directive instance with factory() and store at index 0 in directives array
                 rootContext.components.push(component = baseDirectiveCreate(0, this.componentDef.factory(), this.componentDef));
                 initChangeDetectorIfExisting(elementNode.nodeInjector, component, elementNode.data);
+                elementNode.data[CONTEXT] = component;
                 // TODO: should LifecycleHooksFeature and other host features be generated by the compiler and
                 // executed here?
                 // Angular 5 reference: https://stackblitz.com/edit/lifecycle-hooks-vcref
@@ -41300,16 +43593,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var _this = _super.call(this) || this;
             _this.destroyCbs = [];
             _this.instance = instance;
-            /* TODO(jasonaden): This is incomplete, to be adjusted in follow-up PR. Notes from Kara:When
-             * ViewRef.detectChanges is called from ApplicationRef.tick, it will call detectChanges at the
-             * component instance level. I suspect this means that lifecycle hooks and host bindings on the
-             * given component won't work (as these are always called at the level above a component).
-             *
-             * In render2, ViewRef.detectChanges uses the root view instance for view checks, not the
-             * component instance. So passing in the root view (1 level above the component) is sufficient.
-             * We might  want to think about creating a fake component for the top level? Or overwrite
-             * detectChanges with a function that calls tickRootContext? */
-            _this.hostView = _this.changeDetectorRef = new ViewRef$1(rootView, instance);
+            _this.hostView = _this.changeDetectorRef = new RootViewRef(rootView);
             _this.hostView._lViewNode = createLNode(-1, 2 /* View */, null, null, null, rootView);
             _this.injector = injector;
             _this.location = new ElementRef(hostNode);
@@ -41335,16 +43619,376 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * If a directive is diPublic, bloomAdd sets a property on the type with this constant as
+     * the key and the directive's unique ID as the value. This allows us to map directives to their
+     * bloom filter bit for DI.
+     */
+    var NG_ELEMENT_ID = '__NG_ELEMENT_ID__';
+    /**
+     * The number of slots in each bloom filter (used by DI). The larger this number, the fewer
+     * directives that will share slots, and thus, the fewer false positives when checking for
+     * the existence of a directive.
+     */
+    var BLOOM_SIZE = 256;
+    var BLOOM_MASK = BLOOM_SIZE - 1;
+    /**
+     * Creates (or gets an existing) injector for a given element or container.
+     *
+     * @param node for which an injector should be retrieved / created.
+     * @returns Node injector
+     */
+    function getOrCreateNodeInjectorForNode(node) {
+        var nodeInjector = node.nodeInjector;
+        var parent = getParentLNode(node);
+        var parentInjector = parent && parent.nodeInjector;
+        if (nodeInjector != parentInjector) {
+            return nodeInjector;
+        }
+        return node.nodeInjector = {
+            parent: parentInjector,
+            node: node,
+            bf0: 0,
+            bf1: 0,
+            bf2: 0,
+            bf3: 0,
+            bf4: 0,
+            bf5: 0,
+            bf6: 0,
+            bf7: 0,
+            cbf0: parentInjector == null ? 0 : parentInjector.cbf0 | parentInjector.bf0,
+            cbf1: parentInjector == null ? 0 : parentInjector.cbf1 | parentInjector.bf1,
+            cbf2: parentInjector == null ? 0 : parentInjector.cbf2 | parentInjector.bf2,
+            cbf3: parentInjector == null ? 0 : parentInjector.cbf3 | parentInjector.bf3,
+            cbf4: parentInjector == null ? 0 : parentInjector.cbf4 | parentInjector.bf4,
+            cbf5: parentInjector == null ? 0 : parentInjector.cbf5 | parentInjector.bf5,
+            cbf6: parentInjector == null ? 0 : parentInjector.cbf6 | parentInjector.bf6,
+            cbf7: parentInjector == null ? 0 : parentInjector.cbf7 | parentInjector.bf7,
+            templateRef: null,
+            viewContainerRef: null,
+            elementRef: null,
+            changeDetectorRef: null,
+        };
+    }
     var componentFactoryResolver = new ComponentFactoryResolver$1();
+    /**
+     * Creates a ViewRef and stores it on the injector as ChangeDetectorRef (public alias).
+     * Or, if it already exists, retrieves the existing instance.
+     *
+     * @returns The ChangeDetectorRef to use
+     */
+    function getOrCreateChangeDetectorRef(di, context) {
+        if (di.changeDetectorRef)
+            return di.changeDetectorRef;
+        var currentNode = di.node;
+        if (isComponent(currentNode.tNode)) {
+            return di.changeDetectorRef = new ViewRef$1(currentNode.data, context);
+        }
+        else if (currentNode.tNode.type === 3 /* Element */) {
+            return di.changeDetectorRef = getOrCreateHostChangeDetector(currentNode.view[HOST_NODE]);
+        }
+        return null;
+    }
+    /** Gets or creates ChangeDetectorRef for the closest host component */
+    function getOrCreateHostChangeDetector(currentNode) {
+        var hostNode = getClosestComponentAncestor(currentNode);
+        var hostInjector = hostNode.nodeInjector;
+        var existingRef = hostInjector && hostInjector.changeDetectorRef;
+        return existingRef ?
+            existingRef :
+            new ViewRef$1(hostNode.data, hostNode
+                .view[DIRECTIVES][hostNode.tNode.flags >> 14 /* DirectiveStartingIndexShift */]);
+    }
+    /**
+     * If the node is an embedded view, traverses up the view tree to return the closest
+     * ancestor view that is attached to a component. If it's already a component node,
+     * returns itself.
+     */
+    function getClosestComponentAncestor(node) {
+        while (node.tNode.type === 2 /* View */) {
+            node = node.view[HOST_NODE];
+        }
+        return node;
+    }
+    /**
+     * Returns the value associated to the given token from the injectors.
+     *
+     * Look for the injector providing the token by walking up the node injector tree and then
+     * the module injector tree.
+     *
+     * @param nodeInjector Node injector where the search should start
+     * @param token The token to look for
+     * @param flags Injection flags
+     * @returns the value from the injector or `null` when not found
+     */
+    function getOrCreateInjectable(nodeInjector, token, flags) {
+        if (flags === void 0) { flags = 0 /* Default */; }
+        var bloomHash = bloomHashBit(token);
+        // If the token has a bloom hash, then it is a directive that is public to the injection system
+        // (diPublic) otherwise fall back to the module injector.
+        if (bloomHash !== null) {
+            var injector = nodeInjector;
+            while (injector) {
+                // Get the closest potential matching injector (upwards in the injector tree) that
+                // *potentially* has the token.
+                injector = bloomFindPossibleInjector(injector, bloomHash, flags);
+                // If no injector is found, we *know* that there is no ancestor injector that contains the
+                // token, so we abort.
+                if (!injector) {
+                    break;
+                }
+                // At this point, we have an injector which *may* contain the token, so we step through the
+                // directives associated with the injector's corresponding node to get the directive instance.
+                var node = injector.node;
+                var nodeFlags = node.tNode.flags;
+                var count = nodeFlags & 4095 /* DirectiveCountMask */;
+                if (count !== 0) {
+                    var start = nodeFlags >> 14 /* DirectiveStartingIndexShift */;
+                    var end = start + count;
+                    var defs = node.view[TVIEW].directives;
+                    for (var i = start; i < end; i++) {
+                        // Get the definition for the directive at this index and, if it is injectable (diPublic),
+                        // and matches the given token, return the directive instance.
+                        var directiveDef = defs[i];
+                        if (directiveDef.type === token && directiveDef.diPublic) {
+                            return node.view[DIRECTIVES][i];
+                        }
+                    }
+                }
+                // If we *didn't* find the directive for the token and we are searching the current node's
+                // injector, it's possible the directive is on this node and hasn't been created yet.
+                var instance = void 0;
+                if (injector === nodeInjector &&
+                    (instance = searchMatchesQueuedForCreation(node, token))) {
+                    return instance;
+                }
+                // The def wasn't found anywhere on this node, so it was a false positive.
+                // If flags permit, traverse up the tree and continue searching.
+                if (flags & 2 /* Self */ || flags & 1 /* Host */ && !sameHostView(injector)) {
+                    injector = null;
+                }
+                else {
+                    injector = injector.parent;
+                }
+            }
+        }
+        var moduleInjector = getPreviousOrParentNode().view[INJECTOR$1];
+        var formerInjector = setCurrentInjector(moduleInjector);
+        try {
+            return inject(token, flags);
+        }
+        finally {
+            setCurrentInjector(formerInjector);
+        }
+    }
+    function searchMatchesQueuedForCreation(node, token) {
+        var matches = node.view[TVIEW].currentMatches;
+        if (matches) {
+            for (var i = 0; i < matches.length; i += 2) {
+                var def = matches[i];
+                if (def.type === token) {
+                    return resolveDirective(def, i + 1, matches, node.view[TVIEW]);
+                }
+            }
+        }
+        return null;
+    }
+    /**
+     * Returns the bit in an injector's bloom filter that should be used to determine whether or not
+     * the directive might be provided by the injector.
+     *
+     * When a directive is public, it is added to the bloom filter and given a unique ID that can be
+     * retrieved on the Type. When the directive isn't public or the token is not a directive `null`
+     * is returned as the node injector can not possibly provide that token.
+     *
+     * @param token the injection token
+     * @returns the matching bit to check in the bloom filter or `null` if the token is not known.
+     */
+    function bloomHashBit(token) {
+        var id = token[NG_ELEMENT_ID];
+        return typeof id === 'number' ? id & BLOOM_MASK : null;
+    }
+    /**
+     * Finds the closest injector that might have a certain directive.
+     *
+     * Each directive corresponds to a bit in an injector's bloom filter. Given the bloom bit to
+     * check and a starting injector, this function traverses up injectors until it finds an
+     * injector that contains a 1 for that bit in its bloom filter. A 1 indicates that the
+     * injector may have that directive. It only *may* have the directive because directives begin
+     * to share bloom filter bits after the BLOOM_SIZE is reached, and it could correspond to a
+     * different directive sharing the bit.
+     *
+     * Note: We can skip checking further injectors up the tree if an injector's cbf structure
+     * has a 0 for that bloom bit. Since cbf contains the merged value of all the parent
+     * injectors, a 0 in the bloom bit indicates that the parents definitely do not contain
+     * the directive and do not need to be checked.
+     *
+     * @param injector The starting node injector to check
+     * @param  bloomBit The bit to check in each injector's bloom filter
+     * @param  flags The injection flags for this injection site (e.g. Optional or SkipSelf)
+     * @returns An injector that might have the directive
+     */
+    function bloomFindPossibleInjector(startInjector, bloomBit, flags) {
+        // Create a mask that targets the specific bit associated with the directive we're looking for.
+        // JS bit operations are 32 bits, so this will be a number between 2^0 and 2^31, corresponding
+        // to bit positions 0 - 31 in a 32 bit integer.
+        var mask = 1 << bloomBit;
+        var b7 = bloomBit & 0x80;
+        var b6 = bloomBit & 0x40;
+        var b5 = bloomBit & 0x20;
+        // Traverse up the injector tree until we find a potential match or until we know there *isn't* a
+        // match.
+        var injector = flags & 4 /* SkipSelf */ ? startInjector.parent : startInjector;
+        while (injector) {
+            // Our bloom filter size is 256 bits, which is eight 32-bit bloom filter buckets:
+            // bf0 = [0 - 31], bf1 = [32 - 63], bf2 = [64 - 95], bf3 = [96 - 127], etc.
+            // Get the bloom filter value from the appropriate bucket based on the directive's bloomBit.
+            var value = void 0;
+            if (b7) {
+                value = b6 ? (b5 ? injector.bf7 : injector.bf6) : (b5 ? injector.bf5 : injector.bf4);
+            }
+            else {
+                value = b6 ? (b5 ? injector.bf3 : injector.bf2) : (b5 ? injector.bf1 : injector.bf0);
+            }
+            // If the bloom filter value has the bit corresponding to the directive's bloomBit flipped on,
+            // this injector is a potential match.
+            if (value & mask) {
+                return injector;
+            }
+            if (flags & 2 /* Self */ || flags & 1 /* Host */ && !sameHostView(injector)) {
+                return null;
+            }
+            // If the current injector does not have the directive, check the bloom filters for the ancestor
+            // injectors (cbf0 - cbf7). These filters capture *all* ancestor injectors.
+            if (b7) {
+                value = b6 ? (b5 ? injector.cbf7 : injector.cbf6) : (b5 ? injector.cbf5 : injector.cbf4);
+            }
+            else {
+                value = b6 ? (b5 ? injector.cbf3 : injector.cbf2) : (b5 ? injector.cbf1 : injector.cbf0);
+            }
+            // If the ancestor bloom filter value has the bit corresponding to the directive, traverse up to
+            // find the specific injector. If the ancestor bloom filter does not have the bit, we can abort.
+            if (value & mask) {
+                injector = injector.parent;
+            }
+            else {
+                return null;
+            }
+        }
+        return null;
+    }
+    /**
+     * Checks whether the current injector and its parent are in the same host view.
+     *
+     * This is necessary to support @Host() decorators. If @Host() is set, we should stop searching once
+     * the injector and its parent view don't match because it means we'd cross the view boundary.
+     */
+    function sameHostView(injector) {
+        return !!injector.parent && injector.parent.node.view === injector.node.view;
+    }
+    /**
+     * Creates an ElementRef for a given node injector and stores it on the injector.
+     * Or, if the ElementRef already exists, retrieves the existing ElementRef.
+     *
+     * @param di The node injector where we should store a created ElementRef
+     * @returns The ElementRef instance to use
+     */
+    function getOrCreateElementRef(di) {
+        return di.elementRef || (di.elementRef = new ElementRef$1(di.node.native));
+    }
+    /** A ref to a node's native element. */
+    var ElementRef$1 = /** @class */ (function () {
+        function ElementRef$$1(nativeElement) {
+            this.nativeElement = nativeElement;
+        }
+        return ElementRef$$1;
+    }());
+    /**
+     * Creates a ViewContainerRef and stores it on the injector. Or, if the ViewContainerRef
+     * already exists, retrieves the existing ViewContainerRef.
+     *
+     * @returns The ViewContainerRef instance to use
+     */
+    function getOrCreateContainerRef(di) {
+        if (!di.viewContainerRef) {
+            var vcRefHost = di.node;
+            ngDevMode && assertNodeOfPossibleTypes(vcRefHost, 0 /* Container */, 3 /* Element */);
+            var hostParent = getParentLNode(vcRefHost);
+            var lContainer = createLContainer(hostParent, vcRefHost.view, true);
+            var comment = vcRefHost.view[RENDERER].createComment(ngDevMode ? 'container' : '');
+            var lContainerNode = createLNodeObject(0 /* Container */, vcRefHost.view, hostParent, comment, lContainer, null);
+            appendChild(hostParent, comment, vcRefHost.view);
+            if (vcRefHost.queries) {
+                lContainerNode.queries = vcRefHost.queries.container();
+            }
+            var hostTNode = vcRefHost.tNode;
+            if (!hostTNode.dynamicContainerNode) {
+                hostTNode.dynamicContainerNode =
+                    createTNode(0 /* Container */, -1, null, null, hostTNode, null);
+            }
+            lContainerNode.tNode = hostTNode.dynamicContainerNode;
+            vcRefHost.dynamicLContainerNode = lContainerNode;
+            addToViewTree(vcRefHost.view, hostTNode.index, lContainer);
+            di.viewContainerRef = new ViewContainerRef$1(lContainerNode, vcRefHost);
+        }
+        return di.viewContainerRef;
+    }
+    var NodeInjector = /** @class */ (function () {
+        function NodeInjector(_lInjector) {
+            this._lInjector = _lInjector;
+        }
+        NodeInjector.prototype.get = function (token) {
+            if (token === TemplateRef) {
+                return getOrCreateTemplateRef(this._lInjector);
+            }
+            if (token === ViewContainerRef) {
+                return getOrCreateContainerRef(this._lInjector);
+            }
+            if (token === ElementRef) {
+                return getOrCreateElementRef(this._lInjector);
+            }
+            if (token === ChangeDetectorRef) {
+                return getOrCreateChangeDetectorRef(this._lInjector, null);
+            }
+            return getOrCreateInjectable(this._lInjector, token);
+        };
+        return NodeInjector;
+    }());
     /**
      * A ref to a container that enables adding and removing views from that container
      * imperatively.
      */
     var ViewContainerRef$1 = /** @class */ (function () {
-        function ViewContainerRef$$1(_lContainerNode) {
+        function ViewContainerRef$$1(_lContainerNode, _hostNode) {
             this._lContainerNode = _lContainerNode;
+            this._hostNode = _hostNode;
             this._viewRefs = [];
         }
+        Object.defineProperty(ViewContainerRef$$1.prototype, "element", {
+            get: function () {
+                var injector = getOrCreateNodeInjectorForNode(this._hostNode);
+                return getOrCreateElementRef(injector);
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(ViewContainerRef$$1.prototype, "injector", {
+            get: function () {
+                var injector = getOrCreateNodeInjectorForNode(this._hostNode);
+                return new NodeInjector(injector);
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(ViewContainerRef$$1.prototype, "parentInjector", {
+            /** @deprecated No replacement */
+            get: function () {
+                var parentLInjector = getParentLNode(this._hostNode).nodeInjector;
+                return parentLInjector ? new NodeInjector(parentLInjector) : new NullInjector();
+            },
+            enumerable: true,
+            configurable: true
+        });
         ViewContainerRef$$1.prototype.clear = function () {
             var lContainer = this._lContainerNode.data;
             while (lContainer[VIEWS].length) {
@@ -41371,7 +44015,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         ViewContainerRef$$1.prototype.createComponent = function (componentFactory, index, injector, projectableNodes, ngModuleRef) {
             var contextInjector = injector || this.parentInjector;
             if (!ngModuleRef && contextInjector) {
-                ngModuleRef = contextInjector.get(NgModuleRef);
+                ngModuleRef = contextInjector.get(NgModuleRef, null);
             }
             var componentRef = componentFactory.create(contextInjector, projectableNodes, undefined, ngModuleRef);
             this.insert(componentRef.hostView, index);
@@ -41423,6 +44067,43 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             return index;
         };
         return ViewContainerRef$$1;
+    }());
+    /**
+     * Creates a TemplateRef and stores it on the injector. Or, if the TemplateRef already
+     * exists, retrieves the existing TemplateRef.
+     *
+     * @param di The node injector where we should store a created TemplateRef
+     * @returns The TemplateRef instance to use
+     */
+    function getOrCreateTemplateRef(di) {
+        if (!di.templateRef) {
+            ngDevMode && assertNodeType(di.node, 0 /* Container */);
+            var hostNode = di.node;
+            var hostTNode = hostNode.tNode;
+            ngDevMode && assertDefined(hostTNode.tViews, 'TView must be allocated');
+            di.templateRef = new TemplateRef$1(hostNode.view, getOrCreateElementRef(di), hostTNode.tViews, getRenderer(), hostNode.data[QUERIES]);
+        }
+        return di.templateRef;
+    }
+    var TemplateRef$1 = /** @class */ (function () {
+        function TemplateRef$$1(_declarationParentView, elementRef, _tView, _renderer, _queries) {
+            this._declarationParentView = _declarationParentView;
+            this.elementRef = elementRef;
+            this._tView = _tView;
+            this._renderer = _renderer;
+            this._queries = _queries;
+        }
+        TemplateRef$$1.prototype.createEmbeddedView = function (context, containerNode, index) {
+            var viewNode = createEmbeddedViewNode(this._tView, context, this._declarationParentView, this._renderer, this._queries);
+            if (containerNode) {
+                insertView(containerNode, viewNode, index);
+            }
+            renderEmbeddedTemplate(viewNode, this._tView, context, 1 /* Create */);
+            var viewRef = new ViewRef$1(viewNode.data, context);
+            viewRef._lViewNode = viewNode;
+            return viewRef;
+        };
+        return TemplateRef$$1;
     }());
 
     /**
@@ -41976,6 +44657,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         });
         TypeScriptServiceHost.prototype.validate = function () {
             var _this = this;
+            var e_1, _a;
             var program = this.program;
             if (this.lastProgram !== program) {
                 // Invalidate file that have changed in the static symbol resolver
@@ -41985,8 +44667,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 this.clearCaches();
                 var seen_1 = new Set();
                 try {
-                    for (var _a = __values(this.program.getSourceFiles()), _b = _a.next(); !_b.done; _b = _a.next()) {
-                        var sourceFile = _b.value;
+                    for (var _b = __values(this.program.getSourceFiles()), _c = _b.next(); !_c.done; _c = _b.next()) {
+                        var sourceFile = _c.value;
                         var fileName = sourceFile.fileName;
                         seen_1.add(fileName);
                         var version = this.host.getScriptVersion(fileName);
@@ -42002,7 +44684,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 catch (e_1_1) { e_1 = { error: e_1_1 }; }
                 finally {
                     try {
-                        if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                        if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                     }
                     finally { if (e_1) throw e_1.error; }
                 }
@@ -42014,7 +44696,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 }
                 this.lastProgram = program;
             }
-            var e_1, _c;
         };
         TypeScriptServiceHost.prototype.clearCaches = function () {
             this._checker = null;
@@ -42024,17 +44705,18 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             this.modulesOutOfDate = true;
         };
         TypeScriptServiceHost.prototype.ensureTemplateMap = function () {
+            var e_2, _a, e_3, _b;
             if (!this.fileToComponent || !this.templateReferences) {
                 var fileToComponent = new Map();
                 var templateReference = [];
                 var ngModuleSummary = this.getAnalyzedModules();
                 var urlResolver = createOfflineCompileUrlResolver();
                 try {
-                    for (var _a = __values(ngModuleSummary.ngModules), _b = _a.next(); !_b.done; _b = _a.next()) {
-                        var module_1 = _b.value;
+                    for (var _c = __values(ngModuleSummary.ngModules), _d = _c.next(); !_d.done; _d = _c.next()) {
+                        var module_1 = _d.value;
                         try {
-                            for (var _c = __values(module_1.declaredDirectives), _d = _c.next(); !_d.done; _d = _c.next()) {
-                                var directive = _d.value;
+                            for (var _e = __values(module_1.declaredDirectives), _f = _e.next(); !_f.done; _f = _e.next()) {
+                                var directive = _f.value;
                                 var metadata = this.resolver.getNonNormalizedDirectiveMetadata(directive.reference).metadata;
                                 if (metadata.isComponent && metadata.template && metadata.template.templateUrl) {
                                     var templateName = urlResolver.resolve(this.reflector.componentModuleUrl(directive.reference), metadata.template.templateUrl);
@@ -42043,26 +44725,25 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                                 }
                             }
                         }
-                        catch (e_2_1) { e_2 = { error: e_2_1 }; }
+                        catch (e_3_1) { e_3 = { error: e_3_1 }; }
                         finally {
                             try {
-                                if (_d && !_d.done && (_e = _c.return)) _e.call(_c);
+                                if (_f && !_f.done && (_b = _e.return)) _b.call(_e);
                             }
-                            finally { if (e_2) throw e_2.error; }
+                            finally { if (e_3) throw e_3.error; }
                         }
                     }
                 }
-                catch (e_3_1) { e_3 = { error: e_3_1 }; }
+                catch (e_2_1) { e_2 = { error: e_2_1 }; }
                 finally {
                     try {
-                        if (_b && !_b.done && (_f = _a.return)) _f.call(_a);
+                        if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
                     }
-                    finally { if (e_3) throw e_3.error; }
+                    finally { if (e_2) throw e_2.error; }
                 }
                 this.fileToComponent = fileToComponent;
                 this.templateReferences = templateReference;
             }
-            var e_3, _f, e_2, _e;
         };
         TypeScriptServiceHost.prototype.getSourceFromDeclaration = function (fileName, version, source, span, type, declaration, node, sourceFile) {
             var queryCache = undefined;
@@ -42266,11 +44947,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 [];
         };
         TypeScriptServiceHost.prototype.getDeclarationFromNode = function (sourceFile, node) {
+            var e_4, _a;
             if (node.kind == ts.SyntaxKind.ClassDeclaration && node.decorators &&
                 node.name) {
                 try {
-                    for (var _a = __values(node.decorators), _b = _a.next(); !_b.done; _b = _a.next()) {
-                        var decorator = _b.value;
+                    for (var _b = __values(node.decorators), _c = _b.next(); !_c.done; _c = _b.next()) {
+                        var decorator = _c.value;
                         if (decorator.expression && decorator.expression.kind == ts.SyntaxKind.CallExpression) {
                             var classDeclaration = node;
                             if (classDeclaration.name) {
@@ -42310,12 +44992,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 catch (e_4_1) { e_4 = { error: e_4_1 }; }
                 finally {
                     try {
-                        if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                        if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                     }
                     finally { if (e_4) throw e_4.error; }
                 }
             }
-            var e_4, _c;
         };
         TypeScriptServiceHost.prototype.stringOf = function (node) {
             switch (node.kind) {
@@ -42548,6 +45229,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 entries: []
             };
             tryOperation('get completions', function () {
+                var e_1, _a;
                 var results = ls.getCompletionsAt(fileName, position);
                 if (results && results.length) {
                     if (base === undefined) {
@@ -42572,7 +45254,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                         finally { if (e_1) throw e_1.error; }
                     }
                 }
-                var e_1, _a;
             });
             return base;
         };
@@ -42580,19 +45261,20 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var base = oldLS.getQuickInfoAtPosition(fileName, position);
             // TODO(vicb): the tags property has been removed in TS 2.2
             tryOperation('get quick info', function () {
+                var e_2, _a;
                 var ours = ls.getHoverAt(fileName, position);
                 if (ours) {
                     var displayParts = [];
                     try {
-                        for (var _a = __values(ours.text), _b = _a.next(); !_b.done; _b = _a.next()) {
-                            var part = _b.value;
+                        for (var _b = __values(ours.text), _c = _b.next(); !_c.done; _c = _b.next()) {
+                            var part = _c.value;
                             displayParts.push({ kind: part.language || 'angular', text: part.text });
                         }
                     }
                     catch (e_2_1) { e_2 = { error: e_2_1 }; }
                     finally {
                         try {
-                            if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                            if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                         }
                         finally { if (e_2) throw e_2.error; }
                     }
@@ -42608,7 +45290,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                         base.tags = tags;
                     }
                 }
-                var e_2, _c;
             });
             return base;
         };
@@ -42633,6 +45314,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 return base;
             }
             return tryOperation('get definition', function () {
+                var e_3, _a;
                 var ours = ls.getDefinitionAt(fileName, position);
                 if (ours && ours.length) {
                     base = base || [];
@@ -42659,7 +45341,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     }
                 }
                 return base;
-                var e_3, _a;
             }) || [];
         };
         return proxy;
@@ -42672,7 +45353,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('6.1.0+66.sha-26adee9');
+    var VERSION$3 = new Version$1('7.0.0-beta.1+40.sha-99b2e7e');
 
     /**
      * @license
