@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.0-beta.1+18.sha-7058072
+ * @license Angular v7.0.0-beta.1+19.sha-2d75992
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1192,7 +1192,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.0-beta.1+18.sha-7058072');
+    var VERSION = new Version('7.0.0-beta.1+19.sha-2d75992');
 
     /**
      * @license
@@ -15262,6 +15262,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         Identifiers.elementProperty = { name: 'ɵp', moduleName: CORE$1 };
         Identifiers.elementAttribute = { name: 'ɵa', moduleName: CORE$1 };
         Identifiers.elementClassProp = { name: 'ɵcp', moduleName: CORE$1 };
+        Identifiers.elementContainerStart = { name: 'ɵEC', moduleName: CORE$1 };
+        Identifiers.elementContainerEnd = { name: 'ɵeC', moduleName: CORE$1 };
         Identifiers.elementStyling = { name: 'ɵs', moduleName: CORE$1 };
         Identifiers.elementStylingMap = { name: 'ɵsm', moduleName: CORE$1 };
         Identifiers.elementStyleProp = { name: 'ɵsp', moduleName: CORE$1 };
@@ -16500,6 +16502,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var attrI18nMetas = {};
             var i18nMeta = '';
             var _b = __read(splitNsName(element.name), 2), namespaceKey = _b[0], elementName = _b[1];
+            var isNgContainer$$1 = isNgContainer(element.name);
             // Elements inside i18n sections are replaced with placeholders
             // TODO(vicb): nested elements are a WIP in this phase
             if (this._inI18nSection) {
@@ -16544,11 +16547,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 var selector = createCssSelector(element.name, outputAttrs);
                 this.directiveMatcher.match(selector, function (sel, staticType) { _this.directives.add(staticType); });
             }
-            // Element creation mode
-            var parameters = [
-                literal(elementIndex),
-                literal(elementName),
-            ];
+            // Regular element or ng-container creation mode
+            var parameters = [literal(elementIndex)];
+            if (!isNgContainer$$1) {
+                parameters.push(literal(elementName));
+            }
             // Add the attributes
             var attributes = [];
             var initialStyleDeclarations = [];
@@ -16700,12 +16703,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 this.addNamespaceInstruction(currentNamespace, element);
             }
             var implicit = variable(CONTEXT_NAME);
-            var createSelfClosingInstruction = !hasStylingInstructions && element.children.length === 0 && element.outputs.length === 0;
+            var createSelfClosingInstruction = !hasStylingInstructions && !isNgContainer$$1 &&
+                element.children.length === 0 && element.outputs.length === 0;
             if (createSelfClosingInstruction) {
                 this.creationInstruction(element.sourceSpan, Identifiers$1.element, trimTrailingNulls(parameters));
             }
             else {
-                this.creationInstruction(element.sourceSpan, Identifiers$1.elementStart, trimTrailingNulls(parameters));
+                this.creationInstruction(element.sourceSpan, isNgContainer$$1 ? Identifiers$1.elementContainerStart : Identifiers$1.elementStart, trimTrailingNulls(parameters));
                 // initial styling for static style="..." attributes
                 if (hasStylingInstructions) {
                     var paramsList = [];
@@ -16861,7 +16865,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
             if (!createSelfClosingInstruction) {
                 // Finish element construction mode.
-                this.creationInstruction(element.endSourceSpan || element.sourceSpan, Identifiers$1.elementEnd);
+                this.creationInstruction(element.endSourceSpan || element.sourceSpan, isNgContainer$$1 ? Identifiers$1.elementContainerEnd : Identifiers$1.elementEnd);
             }
             // Restore the state before exiting this node
             this._inI18nSection = wasInI18nSection;
@@ -32005,6 +32009,42 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function element(index, name, attrs, localRefs) {
         elementStart(index, name, attrs, localRefs);
         elementEnd();
+    }
+    /**
+     * Creates a logical container for other nodes (<ng-container>) backed by a comment node in the DOM.
+     * The instruction must later be followed by `elementContainerEnd()` call.
+     *
+     * @param index Index of the element in the LViewData array
+     * @param attrs Set of attributes to be used when matching directives.
+     * @param localRefs A set of local reference bindings on the element.
+     *
+     * Even if this instruction accepts a set of attributes no actual attribute values are propagated to
+     * the DOM (as a comment node can't have attributes). Attributes are here only for directive
+     * matching purposes and setting initial inputs of directives.
+     */
+    function elementContainerStart(index, attrs, localRefs) {
+        ngDevMode &&
+            assertEqual(viewData[BINDING_INDEX], -1, 'elements should be created before any bindings');
+        ngDevMode && ngDevMode.rendererCreateComment++;
+        var native = renderer.createComment(ngDevMode ? 'ng-container' : '');
+        ngDevMode && assertDataInRange(index - 1);
+        var node = createLNode(index, 4 /* ElementContainer */, native, null, attrs || null, null);
+        appendChild(getParentLNode(node), native, viewData);
+        createDirectivesAndLocals(localRefs);
+    }
+    /** Mark the end of the <ng-container>. */
+    function elementContainerEnd() {
+        if (isParent) {
+            isParent = false;
+        }
+        else {
+            ngDevMode && assertHasParent();
+            previousOrParentNode = getParentLNode(previousOrParentNode);
+        }
+        ngDevMode && assertNodeType(previousOrParentNode, 4 /* ElementContainer */);
+        var queries = previousOrParentNode.queries;
+        queries && queries.addNode(previousOrParentNode);
+        queueLifecycleHooks(previousOrParentNode.tNode.flags, tView);
     }
     /**
      * Create DOM element. The instruction must later be followed by `elementEnd()` call.
@@ -47517,6 +47557,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         'ɵE': elementStart,
         'ɵe': elementEnd,
         'ɵEe': element,
+        'ɵEC': elementContainerStart,
+        'ɵeC': elementContainerEnd,
         'ɵf0': pureFunction0,
         'ɵf1': pureFunction1,
         'ɵf2': pureFunction2,
@@ -48437,7 +48479,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('7.0.0-beta.1+18.sha-7058072');
+    var VERSION$2 = new Version$1('7.0.0-beta.1+19.sha-2d75992');
 
     /**
      * @license
@@ -52889,7 +52931,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.0-beta.1+18.sha-7058072');
+    var VERSION$3 = new Version$1('7.0.0-beta.1+19.sha-2d75992');
 
     /**
      * @license
