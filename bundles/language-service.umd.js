@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.0-beta.1+12.sha-9c92a6f
+ * @license Angular v7.0.0-beta.1+18.sha-7058072
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1144,7 +1144,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.0-beta.1+12.sha-9c92a6f');
+    var VERSION = new Version('7.0.0-beta.1+18.sha-7058072');
 
     /**
      * @license
@@ -14445,6 +14445,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         Identifiers.InheritDefinitionFeature = { name: 'ɵInheritDefinitionFeature', moduleName: CORE$1 };
         Identifiers.PublicFeature = { name: 'ɵPublicFeature', moduleName: CORE$1 };
         Identifiers.listener = { name: 'ɵL', moduleName: CORE$1 };
+        Identifiers.getFactoryOf = {
+            name: 'ɵgetFactoryOf',
+            moduleName: CORE$1,
+        };
+        Identifiers.getInheritedFactory = {
+            name: 'ɵgetInheritedFactory',
+            moduleName: CORE$1,
+        };
         // Reserve slots for pure functions
         Identifiers.reserveSlots = { name: 'ɵrS', moduleName: CORE$1 };
         // sanitization-related functions
@@ -14476,6 +14484,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    var R3FactoryDelegateType;
+    (function (R3FactoryDelegateType) {
+        R3FactoryDelegateType[R3FactoryDelegateType["Class"] = 0] = "Class";
+        R3FactoryDelegateType[R3FactoryDelegateType["Function"] = 1] = "Function";
+        R3FactoryDelegateType[R3FactoryDelegateType["Factory"] = 2] = "Factory";
+    })(R3FactoryDelegateType || (R3FactoryDelegateType = {}));
     /**
      * Resolved type of a dependency.
      *
@@ -24440,7 +24454,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('7.0.0-beta.1+12.sha-9c92a6f');
+    var VERSION$2 = new Version$1('7.0.0-beta.1+18.sha-7058072');
 
     /**
      * @license
@@ -45339,7 +45353,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.0-beta.1+12.sha-9c92a6f');
+    var VERSION$3 = new Version$1('7.0.0-beta.1+18.sha-7058072');
 
     /**
      * @license
