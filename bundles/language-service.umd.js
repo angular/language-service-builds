@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.0-beta.1+19.sha-2d75992
+ * @license Angular v7.0.0-beta.1+23.sha-c8c1aa7
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1144,7 +1144,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.0-beta.1+19.sha-2d75992');
+    var VERSION = new Version('7.0.0-beta.1+23.sha-c8c1aa7');
 
     /**
      * @license
@@ -24456,7 +24456,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('7.0.0-beta.1+19.sha-2d75992');
+    var VERSION$2 = new Version$1('7.0.0-beta.1+23.sha-c8c1aa7');
 
     /**
      * @license
@@ -41215,7 +41215,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     function queueLifecycleHooks(flags, tView) {
         if (tView.firstTemplatePass) {
-            var start = flags >> 14 /* DirectiveStartingIndexShift */;
+            var start = flags >> 15 /* DirectiveStartingIndexShift */;
             var count = flags & 4095 /* DirectiveCountMask */;
             var end = start + count;
             // It's necessary to loop through the directives at elementEnd() (rather than processing in
@@ -42210,6 +42210,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             isParent = true;
         }
         viewData = contextViewData = newView;
+        oldView && (oldView[QUERIES] = currentQueries);
         currentQueries = newView && newView[QUERIES];
         return oldView;
     }
@@ -42315,13 +42316,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * with the same shape
      * (same properties assigned in the same order).
      */
-    function createLNodeObject(type, currentView, parent, native, state, queries) {
+    function createLNodeObject(type, currentView, parent, native, state) {
         return {
             native: native,
             view: currentView,
             nodeInjector: parent ? parent.nodeInjector : null,
             data: state,
-            queries: queries,
             tNode: null,
             dynamicLContainerNode: null
         };
@@ -42332,10 +42332,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         // Parents cannot cross component boundaries because components will be used in multiple places,
         // so it's only set if the view is the same.
         var tParent = parent && parent.view === viewData ? parent.tNode : null;
-        var queries = (isParent ? currentQueries : previousOrParentNode && previousOrParentNode.queries) ||
-            parent && parent.queries && parent.queries.child();
         var isState = state != null;
-        var node = createLNodeObject(type, viewData, parent, native, isState ? state : null, queries);
+        var node = createLNodeObject(type, viewData, parent, native, isState ? state : null);
         if (index === -1 || type === 2 /* View */) {
             // View nodes are not stored in data because they can be added / removed at runtime (which
             // would cause indices to change). Their TNodes are instead stored in TView.node.
@@ -42362,7 +42360,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             node.tNode = tData[adjustedIndex];
             // Now link ourselves into the tree.
             if (isParent) {
-                currentQueries = null;
                 if (previousOrParentNode.tNode.child == null && previousOrParentNode.view === viewData ||
                     previousOrParentNode.tNode.type === 2 /* View */) {
                     // We are in the same view, which means we are adding content node to the parent View.
@@ -42813,7 +42810,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 // - save the index,
                 // - set the number of directives to 1
                 previousOrParentNode.tNode.flags =
-                    index << 14 /* DirectiveStartingIndexShift */ | flags & 4096 /* isComponent */ | 1;
+                    index << 15 /* DirectiveStartingIndexShift */ | flags & 4096 /* isComponent */ | 1;
             }
             else {
                 // Only need to bump the size when subsequent directives are created
@@ -43699,7 +43696,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return existingRef ?
             existingRef :
             new ViewRef$1(hostNode.data, hostNode
-                .view[DIRECTIVES][hostNode.tNode.flags >> 14 /* DirectiveStartingIndexShift */]);
+                .view[DIRECTIVES][hostNode.tNode.flags >> 15 /* DirectiveStartingIndexShift */]);
     }
     /**
      * If the node is an embedded view, traverses up the view tree to return the closest
@@ -43745,7 +43742,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 var nodeFlags = node.tNode.flags;
                 var count = nodeFlags & 4095 /* DirectiveCountMask */;
                 if (count !== 0) {
-                    var start = nodeFlags >> 14 /* DirectiveStartingIndexShift */;
+                    var start = nodeFlags >> 15 /* DirectiveStartingIndexShift */;
                     var end = start + count;
                     var defs = node.view[TVIEW].directives;
                     for (var i = start; i < end; i++) {
@@ -43918,11 +43915,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var hostParent = getParentLNode(vcRefHost);
             var lContainer = createLContainer(hostParent, vcRefHost.view, true);
             var comment = vcRefHost.view[RENDERER].createComment(ngDevMode ? 'container' : '');
-            var lContainerNode = createLNodeObject(0 /* Container */, vcRefHost.view, hostParent, comment, lContainer, null);
+            var lContainerNode = createLNodeObject(0 /* Container */, vcRefHost.view, hostParent, comment, lContainer);
             appendChild(hostParent, comment, vcRefHost.view);
-            if (vcRefHost.queries) {
-                lContainerNode.queries = vcRefHost.queries.container();
-            }
             var hostTNode = vcRefHost.tNode;
             if (!hostTNode.dynamicContainerNode) {
                 hostTNode.dynamicContainerNode =
@@ -45355,7 +45349,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.0-beta.1+19.sha-2d75992');
+    var VERSION$3 = new Version$1('7.0.0-beta.1+23.sha-c8c1aa7');
 
     /**
      * @license
