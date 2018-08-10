@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.0-beta.1+40.sha-99b2e7e
+ * @license Angular v7.0.0-beta.1+43.sha-82c8052
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1192,7 +1192,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.0-beta.1+40.sha-99b2e7e');
+    var VERSION = new Version('7.0.0-beta.1+43.sha-82c8052');
 
     /**
      * @license
@@ -15533,7 +15533,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         else {
             var baseFactory = variable("\u0275" + meta.name + "_BaseFactory");
             var getInheritedFactory = importExpr(Identifiers$1.getInheritedFactory);
-            var baseFactoryStmt = baseFactory.set(getInheritedFactory.callFn([meta.type])).toDeclStmt();
+            var baseFactoryStmt = baseFactory.set(getInheritedFactory.callFn([meta.type])).toDeclStmt(INFERRED_TYPE, [
+                StmtModifier.Exported, StmtModifier.Final
+            ]);
             statements.push(baseFactoryStmt);
             // There is no constructor, use the base class' factory to construct typeForCtor.
             ctorExpr = baseFactory.callFn([typeForCtor]);
@@ -15553,7 +15555,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             if (meta.delegate.isEquivalent(meta.type)) {
                 throw new Error("Illegal state: compiling factory that delegates to itself");
             }
-            var delegateFactoryStmt = delegateFactory.set(getFactoryOf.callFn([meta.delegate])).toDeclStmt();
+            var delegateFactoryStmt = delegateFactory.set(getFactoryOf.callFn([meta.delegate])).toDeclStmt(INFERRED_TYPE, [
+                StmtModifier.Exported, StmtModifier.Final
+            ]);
             statements.push(delegateFactoryStmt);
             var r = makeConditionalFactory(delegateFactory.callFn([]));
             retExpr = r;
@@ -40877,13 +40881,18 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return def.factory;
     }
     function getInheritedFactory(type) {
-        debugger;
         var proto = Object.getPrototypeOf(type.prototype).constructor;
         var factory = getFactoryOf(proto);
-        if (factory === null) {
-            throw new Error("Type " + proto.name + " does not support inheritance");
+        if (factory !== null) {
+            return factory;
         }
-        return factory;
+        else {
+            // There is no factory defined. Either this was improper usage of inheritance
+            // (no Angular decorator on the superclass) or there is no constructor at all
+            // in the inheritance chain. Since the two cases cannot be distinguished, the
+            // latter has to be assumed.
+            return function (t) { return new t(); };
+        }
     }
     var TemplateRef$1 = /** @class */ (function () {
         function TemplateRef$$1(_declarationParentView, elementRef, _tView, _renderer, _queries) {
@@ -48437,7 +48446,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('7.0.0-beta.1+40.sha-99b2e7e');
+    var VERSION$2 = new Version$1('7.0.0-beta.1+43.sha-82c8052');
 
     /**
      * @license
@@ -52889,7 +52898,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.0-beta.1+40.sha-99b2e7e');
+    var VERSION$3 = new Version$1('7.0.0-beta.1+43.sha-82c8052');
 
     /**
      * @license
