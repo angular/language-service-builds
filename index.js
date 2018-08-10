@@ -11,7 +11,7 @@
         if (v !== undefined) module.exports = v;
     }
     else if (typeof define === "function" && define.amd) {
-        define("@angular/language-service/index", ["require", "exports", "tslib", "@angular/language-service/language-service"], factory);
+        define("@angular/language-service", ["require", "exports", "tslib", "@angular/language-service/language-service"], factory);
     }
 })(function (require, exports) {
     "use strict";
