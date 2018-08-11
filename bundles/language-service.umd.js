@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.0-beta.1+20.sha-209cc7e
+ * @license Angular v7.0.0-beta.1+25.sha-4a4d6fb
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1144,7 +1144,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.0-beta.1+20.sha-209cc7e');
+    var VERSION = new Version('7.0.0-beta.1+25.sha-4a4d6fb');
 
     /**
      * @license
@@ -24456,7 +24456,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('7.0.0-beta.1+20.sha-209cc7e');
+    var VERSION$2 = new Version$1('7.0.0-beta.1+25.sha-4a4d6fb');
 
     /**
      * @license
@@ -41215,7 +41215,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     function queueLifecycleHooks(flags, tView) {
         if (tView.firstTemplatePass) {
-            var start = flags >> 14 /* DirectiveStartingIndexShift */;
+            var start = flags >> 15 /* DirectiveStartingIndexShift */;
             var count = flags & 4095 /* DirectiveCountMask */;
             var end = start + count;
             // It's necessary to loop through the directives at elementEnd() (rather than processing in
@@ -41300,7 +41300,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     var __global$1 = typeof window != 'undefined' && window || typeof self != 'undefined' && self ||
         typeof global != 'undefined' && global;
     function ngDevModeResetPerfCounters() {
-        return __global$1.ngDevMode = {
+        // Make sure to refer to ngDevMode as ['ngDevMode'] for clousre.
+        return __global$1['ngDevMode'] = {
             firstTemplatePass: 0,
             tNode: 0,
             tView: 0,
@@ -41332,7 +41333,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * as much early warning and errors as possible.
      */
     if (typeof ngDevMode === 'undefined' || ngDevMode) {
-        __global$1.ngDevMode = ngDevModeResetPerfCounters();
+        // Make sure to refer to ngDevMode as ['ngDevMode'] for clousre.
+        __global$1['ngDevMode'] = ngDevModeResetPerfCounters();
     }
 
     /** Called when directives inject each other (creating a circular dependency) */
@@ -42210,6 +42212,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             isParent = true;
         }
         viewData = contextViewData = newView;
+        oldView && (oldView[QUERIES] = currentQueries);
         currentQueries = newView && newView[QUERIES];
         return oldView;
     }
@@ -42315,13 +42318,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * with the same shape
      * (same properties assigned in the same order).
      */
-    function createLNodeObject(type, currentView, parent, native, state, queries) {
+    function createLNodeObject(type, currentView, parent, native, state) {
         return {
             native: native,
             view: currentView,
             nodeInjector: parent ? parent.nodeInjector : null,
             data: state,
-            queries: queries,
             tNode: null,
             dynamicLContainerNode: null
         };
@@ -42332,10 +42334,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         // Parents cannot cross component boundaries because components will be used in multiple places,
         // so it's only set if the view is the same.
         var tParent = parent && parent.view === viewData ? parent.tNode : null;
-        var queries = (isParent ? currentQueries : previousOrParentNode && previousOrParentNode.queries) ||
-            parent && parent.queries && parent.queries.child();
         var isState = state != null;
-        var node = createLNodeObject(type, viewData, parent, native, isState ? state : null, queries);
+        var node = createLNodeObject(type, viewData, parent, native, isState ? state : null);
         if (index === -1 || type === 2 /* View */) {
             // View nodes are not stored in data because they can be added / removed at runtime (which
             // would cause indices to change). Their TNodes are instead stored in TView.node.
@@ -42362,7 +42362,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             node.tNode = tData[adjustedIndex];
             // Now link ourselves into the tree.
             if (isParent) {
-                currentQueries = null;
                 if (previousOrParentNode.tNode.child == null && previousOrParentNode.view === viewData ||
                     previousOrParentNode.tNode.type === 2 /* View */) {
                     // We are in the same view, which means we are adding content node to the parent View.
@@ -42782,7 +42781,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var tView = getOrCreateTView(def.template, def.directiveDefs, def.pipeDefs, def.viewQuery);
         // Only component views should be added to the view tree directly. Embedded views are
         // accessed through their containers because they may be removed / re-added later.
-        var componentView = addToViewTree(viewData, previousOrParentNode.tNode.index, createLViewData(rendererFactory.createRenderer(previousOrParentNode.native, def.rendererType), tView, instance, def.onPush ? 4 /* Dirty */ : 2 /* CheckAlways */, getCurrentSanitizer()));
+        var componentView = addToViewTree(viewData, previousOrParentNode.tNode.index, createLViewData(rendererFactory.createRenderer(previousOrParentNode.native, def), tView, instance, def.onPush ? 4 /* Dirty */ : 2 /* CheckAlways */, getCurrentSanitizer()));
         // We need to set the host node/data here because when the component LNode was created,
         // we didn't yet know it was a component (just an element).
         previousOrParentNode.data = componentView;
@@ -42813,7 +42812,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 // - save the index,
                 // - set the number of directives to 1
                 previousOrParentNode.tNode.flags =
-                    index << 14 /* DirectiveStartingIndexShift */ | flags & 4096 /* isComponent */ | 1;
+                    index << 15 /* DirectiveStartingIndexShift */ | flags & 4096 /* isComponent */ | 1;
             }
             else {
                 // Only need to bump the size when subsequent directives are created
@@ -43188,6 +43187,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    var EMPTY$2 = {};
+    var EMPTY_ARRAY$3 = [];
+    ngDevMode && Object.freeze(EMPTY$2);
+    ngDevMode && Object.freeze(EMPTY_ARRAY$3);
 
     /**
      * @license
@@ -43514,7 +43517,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var isInternalRootView = rootSelectorOrNode === undefined;
             var rendererFactory = ngModule ? ngModule.injector.get(RendererFactory2) : domRendererFactory3;
             var hostNode = isInternalRootView ?
-                elementCreate(this.selector, rendererFactory.createRenderer(null, this.componentDef.rendererType)) :
+                elementCreate(this.selector, rendererFactory.createRenderer(null, this.componentDef)) :
                 locateHostElement(rendererFactory, rootSelectorOrNode);
             // The first index of the first selector is the tag name.
             var componentTag = this.componentDef.selectors[0][0];
@@ -43522,7 +43525,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 ngModule.injector.get(ROOT_CONTEXT) :
                 createRootContext(requestAnimationFrame.bind(window));
             // Create the root view. Uses empty TView and ContentTemplate.
-            var rootView = createLViewData(rendererFactory.createRenderer(hostNode, this.componentDef.rendererType), createTView(-1, null, null, null, null), rootContext, this.componentDef.onPush ? 4 /* Dirty */ : 2 /* CheckAlways */);
+            var rootView = createLViewData(rendererFactory.createRenderer(hostNode, this.componentDef), createTView(-1, null, null, null, null), rootContext, this.componentDef.onPush ? 4 /* Dirty */ : 2 /* CheckAlways */);
             rootView[INJECTOR$1] = ngModule && ngModule.injector || null;
             // rootView is the parent when bootstrapping
             var oldView = enterView(rootView, null);
@@ -43699,7 +43702,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return existingRef ?
             existingRef :
             new ViewRef$1(hostNode.data, hostNode
-                .view[DIRECTIVES][hostNode.tNode.flags >> 14 /* DirectiveStartingIndexShift */]);
+                .view[DIRECTIVES][hostNode.tNode.flags >> 15 /* DirectiveStartingIndexShift */]);
     }
     /**
      * If the node is an embedded view, traverses up the view tree to return the closest
@@ -43745,7 +43748,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 var nodeFlags = node.tNode.flags;
                 var count = nodeFlags & 4095 /* DirectiveCountMask */;
                 if (count !== 0) {
-                    var start = nodeFlags >> 14 /* DirectiveStartingIndexShift */;
+                    var start = nodeFlags >> 15 /* DirectiveStartingIndexShift */;
                     var end = start + count;
                     var defs = node.view[TVIEW].directives;
                     for (var i = start; i < end; i++) {
@@ -43918,11 +43921,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var hostParent = getParentLNode(vcRefHost);
             var lContainer = createLContainer(hostParent, vcRefHost.view, true);
             var comment = vcRefHost.view[RENDERER].createComment(ngDevMode ? 'container' : '');
-            var lContainerNode = createLNodeObject(0 /* Container */, vcRefHost.view, hostParent, comment, lContainer, null);
+            var lContainerNode = createLNodeObject(0 /* Container */, vcRefHost.view, hostParent, comment, lContainer);
             appendChild(hostParent, comment, vcRefHost.view);
-            if (vcRefHost.queries) {
-                lContainerNode.queries = vcRefHost.queries.container();
-            }
             var hostTNode = vcRefHost.tNode;
             if (!hostTNode.dynamicContainerNode) {
                 hostTNode.dynamicContainerNode =
@@ -45355,7 +45355,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.0-beta.1+20.sha-209cc7e');
+    var VERSION$3 = new Version$1('7.0.0-beta.1+25.sha-4a4d6fb');
 
     /**
      * @license
