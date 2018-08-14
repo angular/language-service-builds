@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.0-beta.1+34.sha-ecb5dc0
+ * @license Angular v7.0.0-beta.1+37.sha-0c4209f
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1144,7 +1144,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.0-beta.1+34.sha-ecb5dc0');
+    var VERSION = new Version('7.0.0-beta.1+37.sha-0c4209f');
 
     /**
      * @license
@@ -9876,6 +9876,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 return 'ngAfterViewInit';
             case LifecycleHooks.AfterViewChecked:
                 return 'ngAfterViewChecked';
+            default:
+                // This default case is not needed by TypeScript compiler, as the switch is exhaustive.
+                // However Closure Compiler does not understand that and reports an error in typed mode.
+                // The `throw new Error` below works around the problem, and the unexpected: never variable
+                // makes sure tsc still checks this code is unreachable.
+                var unexpected = hook;
+                throw new Error("unexpected " + unexpected);
         }
     }
 
@@ -9974,11 +9981,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             if (dirType instanceof StaticSymbol) {
                 return this._staticSymbolCache.get(dirType.filePath, name);
             }
-            else {
-                var HostClass = function HostClass() { };
-                HostClass.overriddenName = name;
-                return HostClass;
-            }
+            return this._createProxyClass(dirType, name);
         };
         CompileMetadataResolver.prototype.getRendererType = function (dirType) {
             if (dirType instanceof StaticSymbol) {
@@ -24456,7 +24459,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('7.0.0-beta.1+34.sha-ecb5dc0');
+    var VERSION$2 = new Version$1('7.0.0-beta.1+37.sha-0c4209f');
 
     /**
      * @license
@@ -40909,8 +40912,22 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     var DebugRenderer2 = /** @class */ (function () {
         function DebugRenderer2(delegate) {
             this.delegate = delegate;
+            /**
+             * Factory function used to create a `DebugContext` when a node is created.
+             *
+             * The `DebugContext` allows to retrieve information about the nodes that are useful in tests.
+             *
+             * The factory is configurable so that the `DebugRenderer2` could instantiate either a View Engine
+             * or a Render context.
+             */
+            this.debugContextFactory = getCurrentDebugContext;
             this.data = this.delegate.data;
         }
+        Object.defineProperty(DebugRenderer2.prototype, "debugContext", {
+            get: function () { return this.debugContextFactory(); },
+            enumerable: true,
+            configurable: true
+        });
         DebugRenderer2.prototype.destroyNode = function (node) {
             removeDebugNodeFromIndex(getDebugNode(node));
             if (this.delegate.destroyNode) {
@@ -40920,7 +40937,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         DebugRenderer2.prototype.destroy = function () { this.delegate.destroy(); };
         DebugRenderer2.prototype.createElement = function (name, namespace) {
             var el = this.delegate.createElement(name, namespace);
-            var debugCtx = getCurrentDebugContext();
+            var debugCtx = this.debugContext;
             if (debugCtx) {
                 var debugEl = new DebugElement(el, null, debugCtx);
                 debugEl.name = name;
@@ -40930,7 +40947,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         DebugRenderer2.prototype.createComment = function (value) {
             var comment = this.delegate.createComment(value);
-            var debugCtx = getCurrentDebugContext();
+            var debugCtx = this.debugContext;
             if (debugCtx) {
                 indexDebugNode(new DebugNode(comment, null, debugCtx));
             }
@@ -40938,7 +40955,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         DebugRenderer2.prototype.createText = function (value) {
             var text = this.delegate.createText(value);
-            var debugCtx = getCurrentDebugContext();
+            var debugCtx = this.debugContext;
             if (debugCtx) {
                 indexDebugNode(new DebugNode(text, null, debugCtx));
             }
@@ -40971,7 +40988,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         DebugRenderer2.prototype.selectRootElement = function (selectorOrNode) {
             var el = this.delegate.selectRootElement(selectorOrNode);
-            var debugCtx = getCurrentDebugContext();
+            var debugCtx = this.debugContext;
             if (debugCtx) {
                 indexDebugNode(new DebugElement(el, null, debugCtx));
             }
@@ -42161,6 +42178,15 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * any local variables that need to be stored between invocations.
      */
     var viewData;
+    /**
+     * Internal function that returns the current LViewData instance.
+     *
+     * The getCurrentView() instruction should be used for anything public.
+     */
+    function _getViewData() {
+        // top level variables should not be exported for performance reasons (PERF_NOTES.md)
+        return viewData;
+    }
     /**
      * The last viewData retrieved by nextContext().
      * Allows building nextContext() and reference() calls.
@@ -43489,7 +43515,18 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * A change detection scheduler token for {@link RootContext}. This token is the default value used
      * for the default `RootContext` found in the {@link ROOT_CONTEXT} token.
      */
-    var SCHEDULER = new InjectionToken('SCHEDULER_TOKEN', { providedIn: 'root', factory: function () { return requestAnimationFrame.bind(window); } });
+    var SCHEDULER = new InjectionToken('SCHEDULER_TOKEN', {
+        providedIn: 'root',
+        factory: function () {
+            var useRaf = typeof requestAnimationFrame !== 'undefined' && typeof window !== 'undefined';
+            return useRaf ? requestAnimationFrame.bind(window) : setTimeout;
+        },
+    });
+    /**
+     * A function used to wrap the `RendererFactory2`.
+     * Used in tests to change the `RendererFactory2` into a `DebugRendererFactory2`.
+     */
+    var WRAP_RENDERER_FACTORY2 = new InjectionToken('WRAP_RENDERER_FACTORY2');
     /**
      * Render3 implementation of {@link viewEngine_ComponentFactory}.
      */
@@ -43519,7 +43556,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         });
         ComponentFactory$$1.prototype.create = function (injector, projectableNodes, rootSelectorOrNode, ngModule) {
             var isInternalRootView = rootSelectorOrNode === undefined;
-            var rendererFactory = ngModule ? ngModule.injector.get(RendererFactory2) : domRendererFactory3;
+            var rendererFactory;
+            if (ngModule) {
+                var wrapper = ngModule.injector.get(WRAP_RENDERER_FACTORY2, function (v) { return v; });
+                rendererFactory = wrapper(ngModule.injector.get(RendererFactory2));
+            }
+            else {
+                rendererFactory = domRendererFactory3;
+            }
             var hostNode = isInternalRootView ?
                 elementCreate(this.selector, rendererFactory.createRenderer(null, this.componentDef)) :
                 locateHostElement(rendererFactory, rootSelectorOrNode);
@@ -43541,7 +43585,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 // Create element node at index 0 in data array
                 elementNode = hostElement(componentTag, hostNode, this.componentDef);
                 // Create directive instance with factory() and store at index 0 in directives array
-                rootContext.components.push(component = baseDirectiveCreate(0, this.componentDef.factory(), this.componentDef));
+                component = baseDirectiveCreate(0, this.componentDef.factory(), this.componentDef);
+                rootContext.components.push(component);
                 initChangeDetectorIfExisting(elementNode.nodeInjector, component, elementNode.data);
                 elementNode.data[CONTEXT] = component;
                 // TODO: should LifecycleHooksFeature and other host features be generated by the compiler and
@@ -44127,6 +44172,138 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * Adapts the DebugRendererFactory2 to create a DebugRenderer2 specific for IVY.
+     *
+     * The created DebugRenderer know how to create a Debug Context specific to IVY.
+     */
+    var Render3DebugRendererFactory2 = /** @class */ (function (_super) {
+        __extends(Render3DebugRendererFactory2, _super);
+        function Render3DebugRendererFactory2() {
+            return _super !== null && _super.apply(this, arguments) || this;
+        }
+        Render3DebugRendererFactory2.prototype.createRenderer = function (element$$1, renderData) {
+            var renderer = _super.prototype.createRenderer.call(this, element$$1, renderData);
+            renderer.debugContextFactory = function () { return new Render3DebugContext(_getViewData()); };
+            return renderer;
+        };
+        return Render3DebugRendererFactory2;
+    }(DebugRendererFactory2));
+    /**
+     * Stores context information about view nodes.
+     *
+     * Used in tests to retrieve information those nodes.
+     */
+    var Render3DebugContext = /** @class */ (function () {
+        function Render3DebugContext(viewData) {
+            this.viewData = viewData;
+            // The LNode will be created next and appended to viewData
+            this.nodeIndex = viewData ? viewData.length : null;
+        }
+        Object.defineProperty(Render3DebugContext.prototype, "view", {
+            get: function () { return this.viewData; },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Render3DebugContext.prototype, "injector", {
+            get: function () {
+                if (this.nodeIndex !== null) {
+                    var lElementNode = this.view[this.nodeIndex];
+                    var nodeInjector = lElementNode.nodeInjector;
+                    if (nodeInjector) {
+                        return new NodeInjector(nodeInjector);
+                    }
+                }
+                return Injector.NULL;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Render3DebugContext.prototype, "component", {
+            get: function () {
+                // TODO(vicb): why/when
+                if (this.nodeIndex === null) {
+                    return null;
+                }
+                var tView = this.view[TVIEW];
+                var components = tView.components;
+                return (components && components.indexOf(this.nodeIndex) == -1) ?
+                    null :
+                    this.view[this.nodeIndex].data[CONTEXT];
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Render3DebugContext.prototype, "providerTokens", {
+            // TODO(vicb): add view providers when supported
+            get: function () {
+                var matchedDirectives = [];
+                // TODO(vicb): why/when
+                if (this.nodeIndex === null) {
+                    return matchedDirectives;
+                }
+                var directives = this.view[DIRECTIVES];
+                if (directives) {
+                    var currentNode = this.view[this.nodeIndex];
+                    for (var dirIndex = 0; dirIndex < directives.length; dirIndex++) {
+                        var directive = directives[dirIndex];
+                        if (directive[NG_HOST_SYMBOL] === currentNode) {
+                            matchedDirectives.push(directive.constructor);
+                        }
+                    }
+                }
+                return matchedDirectives;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Render3DebugContext.prototype, "references", {
+            get: function () {
+                // TODO(vicb): implement retrieving references
+                throw new Error('Not implemented yet in ivy');
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Render3DebugContext.prototype, "context", {
+            get: function () {
+                if (this.nodeIndex === null) {
+                    return null;
+                }
+                var lNode = this.view[this.nodeIndex];
+                return lNode.view[CONTEXT];
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Render3DebugContext.prototype, "componentRenderElement", {
+            get: function () { throw new Error('Not implemented in ivy'); },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Render3DebugContext.prototype, "renderNode", {
+            get: function () { throw new Error('Not implemented in ivy'); },
+            enumerable: true,
+            configurable: true
+        });
+        // TODO(vicb): check previous implementation
+        Render3DebugContext.prototype.logError = function (console) {
+            var values = [];
+            for (var _i = 1; _i < arguments.length; _i++) {
+                values[_i - 1] = arguments[_i];
+            }
+            console.error.apply(console, __spread(values));
+        };
+        return Render3DebugContext;
+    }());
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
 
     /**
      * @license
@@ -44314,6 +44491,61 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         return QueryList_;
     }());
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    var TARGET = {};
+    var NG_COMPONENT_DEF = getClosureSafeProperty({ ngComponentDef: TARGET }, TARGET);
+    var NG_DIRECTIVE_DEF = getClosureSafeProperty({ ngDirectiveDef: TARGET }, TARGET);
+    var NG_INJECTABLE_DEF = getClosureSafeProperty({ ngInjectableDef: TARGET }, TARGET);
+    var NG_INJECTOR_DEF = getClosureSafeProperty({ ngInjectorDef: TARGET }, TARGET);
+    var NG_PIPE_DEF = getClosureSafeProperty({ ngPipeDef: TARGET }, TARGET);
+    var NG_MODULE_DEF = getClosureSafeProperty({ ngModuleDef: TARGET }, TARGET);
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
 
     /**
      * @license
@@ -45359,7 +45591,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.0-beta.1+34.sha-ecb5dc0');
+    var VERSION$3 = new Version$1('7.0.0-beta.1+37.sha-0c4209f');
 
     /**
      * @license
