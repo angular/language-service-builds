@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.0-beta.1+25.sha-4a4d6fb
+ * @license Angular v7.0.0-beta.1+26.sha-97d8b5e
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1144,7 +1144,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.0-beta.1+25.sha-4a4d6fb');
+    var VERSION = new Version('7.0.0-beta.1+26.sha-97d8b5e');
 
     /**
      * @license
@@ -24456,7 +24456,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('7.0.0-beta.1+25.sha-4a4d6fb');
+    var VERSION$2 = new Version$1('7.0.0-beta.1+26.sha-97d8b5e');
 
     /**
      * @license
@@ -41297,8 +41297,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var __global$1 = typeof window != 'undefined' && window || typeof self != 'undefined' && self ||
-        typeof global != 'undefined' && global;
+    // NOTE: The order here matters: Checking window, then global, then self is important.
+    //   checking them in another order can result in errors in some Node environments.
+    var __global$1 = typeof window != 'undefined' && window || typeof global != 'undefined' && global ||
+        typeof self != 'undefined' && self;
     function ngDevModeResetPerfCounters() {
         // Make sure to refer to ngDevMode as ['ngDevMode'] for clousre.
         return __global$1['ngDevMode'] = {
@@ -45355,7 +45357,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.0-beta.1+25.sha-4a4d6fb');
+    var VERSION$3 = new Version$1('7.0.0-beta.1+26.sha-97d8b5e');
 
     /**
      * @license
