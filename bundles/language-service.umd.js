@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.0-beta.1+27.sha-fb2c524
+ * @license Angular v7.0.0-beta.1+28.sha-1bb3014
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1192,7 +1192,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.0-beta.1+27.sha-fb2c524');
+    var VERSION = new Version('7.0.0-beta.1+28.sha-1bb3014');
 
     /**
      * @license
@@ -33878,8 +33878,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     var EMPTY$1 = {};
     var EMPTY_ARRAY$2 = [];
-    ngDevMode && Object.freeze(EMPTY$1);
-    ngDevMode && Object.freeze(EMPTY_ARRAY$2);
+    if (typeof ngDevMode !== 'undefined' && ngDevMode) {
+        Object.freeze(EMPTY$1);
+        Object.freeze(EMPTY_ARRAY$2);
+    }
     var _renderCompCount = 0;
     /**
      * Create a component definition object.
@@ -48093,7 +48095,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('7.0.0-beta.1+27.sha-fb2c524');
+    var VERSION$2 = new Version$1('7.0.0-beta.1+28.sha-1bb3014');
 
     /**
      * @license
@@ -52937,7 +52939,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.0-beta.1+27.sha-fb2c524');
+    var VERSION$3 = new Version$1('7.0.0-beta.1+28.sha-1bb3014');
 
     /**
      * @license
