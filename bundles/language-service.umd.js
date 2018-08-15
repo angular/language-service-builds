@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.0-beta.1+46.sha-26066f2
+ * @license Angular v7.0.0-beta.1+48.sha-b5f354f
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1144,7 +1144,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.0-beta.1+46.sha-26066f2');
+    var VERSION = new Version('7.0.0-beta.1+48.sha-b5f354f');
 
     /**
      * @license
@@ -14415,6 +14415,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         Identifiers.injectViewContainerRef = { name: 'ɵinjectViewContainerRef', moduleName: CORE$1 };
         Identifiers.injectChangeDetectorRef = { name: 'ɵinjectChangeDetectorRef', moduleName: CORE$1 };
         Identifiers.directiveInject = { name: 'ɵdirectiveInject', moduleName: CORE$1 };
+        Identifiers.defineBase = { name: 'ɵdefineBase', moduleName: CORE$1 };
+        Identifiers.BaseDef = {
+            name: 'ɵBaseDef',
+            moduleName: CORE$1,
+        };
         Identifiers.defineComponent = { name: 'ɵdefineComponent', moduleName: CORE$1 };
         Identifiers.ComponentDef = {
             name: 'ɵComponentDef',
@@ -23384,6 +23389,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
     };
     /**
+     * Used to get the minified alias of ngBaseDef
+     */
+    var NG_BASE_DEF = Object.keys({ ngBaseDef: true })[0];
+    /**
      * Does the work of creating the `ngBaseDef` property for the @Input and @Output decorators.
      * @param key "inputs" or "outputs"
      */
@@ -23394,7 +23403,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 args[_i - 2] = arguments[_i];
             }
             var constructor = target.constructor;
-            if (!constructor.hasOwnProperty('ngBaseDef')) {
+            if (!constructor.hasOwnProperty(NG_BASE_DEF)) {
                 initializeBaseDef(target);
             }
             var baseDef = constructor.ngBaseDef;
@@ -24459,7 +24468,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('7.0.0-beta.1+46.sha-26066f2');
+    var VERSION$2 = new Version$1('7.0.0-beta.1+48.sha-b5f354f');
 
     /**
      * @license
@@ -45591,7 +45600,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.0-beta.1+46.sha-26066f2');
+    var VERSION$3 = new Version$1('7.0.0-beta.1+48.sha-b5f354f');
 
     /**
      * @license
