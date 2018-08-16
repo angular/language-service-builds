@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.0-beta.2+12.sha-9ee6702
+ * @license Angular v7.0.0-beta.2+16.sha-de03abb
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1144,7 +1144,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.0-beta.2+12.sha-9ee6702');
+    var VERSION = new Version('7.0.0-beta.2+16.sha-de03abb');
 
     /**
      * @license
@@ -14372,6 +14372,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         Identifiers.elementStylingApply = { name: 'ɵelementStylingApply', moduleName: CORE$1 };
         Identifiers.containerCreate = { name: 'ɵcontainer', moduleName: CORE$1 };
         Identifiers.nextContext = { name: 'ɵnextContext', moduleName: CORE$1 };
+        Identifiers.templateCreate = { name: 'ɵtemplate', moduleName: CORE$1 };
         Identifiers.text = { name: 'ɵtext', moduleName: CORE$1 };
         Identifiers.textBinding = { name: 'ɵtextBinding', moduleName: CORE$1 };
         Identifiers.bind = { name: 'ɵbind', moduleName: CORE$1 };
@@ -24468,7 +24469,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('7.0.0-beta.2+12.sha-9ee6702');
+    var VERSION$2 = new Version$1('7.0.0-beta.2+16.sha-de03abb');
 
     /**
      * @license
@@ -42491,15 +42492,15 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return viewNode;
     }
-    function renderComponentOrTemplate(node, hostView, componentOrContext, template) {
+    function renderComponentOrTemplate(node, hostView, componentOrContext, templateFn) {
         var oldView = enterView(hostView, node);
         try {
             if (rendererFactory.begin) {
                 rendererFactory.begin();
             }
-            if (template) {
+            if (templateFn) {
                 namespaceHTML();
-                template(getRenderFlags(hostView), componentOrContext);
+                templateFn(getRenderFlags(hostView), componentOrContext);
                 refreshDescendantViews();
             }
             else {
@@ -42600,20 +42601,19 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Gets TView from a template function or creates a new TView
      * if it doesn't already exist.
      *
-     * @param template The template from which to get static data
+     * @param templateFn The template from which to get static data
      * @param directives Directive defs that should be saved on TView
      * @param pipes Pipe defs that should be saved on TView
      * @returns TView
      */
-    function getOrCreateTView(template, directives, pipes, viewQuery) {
+    function getOrCreateTView(templateFn, directives, pipes, viewQuery) {
         // TODO(misko): reading `ngPrivateData` here is problematic for two reasons
         // 1. It is a megamorphic call on each invocation.
         // 2. For nested embedded views (ngFor inside ngFor) the template instance is per
         //    outer template invocation, which means that no such property will exist
         // Correct solution is to only put `ngPrivateData` on the Component template
         // and not on embedded templates.
-        return template.ngPrivateData ||
-            (template.ngPrivateData = createTView(-1, template, directives, pipes, viewQuery));
+        return templateFn.ngPrivateData || (templateFn.ngPrivateData = createTView(-1, templateFn, directives, pipes, viewQuery));
     }
     /**
      * Creates a TView instance
@@ -42622,11 +42622,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * @param directives Registry of directives for this view
      * @param pipes Registry of pipes for this view
      */
-    function createTView(viewIndex, template, directives, pipes, viewQuery) {
+    function createTView(viewIndex, templateFn, directives, pipes, viewQuery) {
         ngDevMode && ngDevMode.tView++;
         return {
             id: viewIndex,
-            template: template,
+            template: templateFn,
             viewQuery: viewQuery,
             node: null,
             data: HEADER_FILLER.slice(),
@@ -43138,12 +43138,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function detectChangesInternal(hostView, hostNode, component) {
         var oldView = enterView(hostView, hostNode);
         var hostTView = hostView[TVIEW];
-        var template = hostTView.template;
+        var templateFn = hostTView.template;
         var viewQuery = hostTView.viewQuery;
         try {
             namespaceHTML();
             createViewQuery(viewQuery, hostView[FLAGS], component);
-            template(getRenderFlags(hostView), component);
+            templateFn(getRenderFlags(hostView), component);
             refreshDescendantViews();
             updateViewQuery(viewQuery, component);
         }
@@ -45600,7 +45600,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.0-beta.2+12.sha-9ee6702');
+    var VERSION$3 = new Version$1('7.0.0-beta.2+16.sha-de03abb');
 
     /**
      * @license
