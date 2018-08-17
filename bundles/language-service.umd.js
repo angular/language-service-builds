@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.0-beta.2+24.sha-21d22ce
+ * @license Angular v7.0.0-beta.2+27.sha-d2be3d5
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1144,7 +1144,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.0-beta.2+24.sha-21d22ce');
+    var VERSION = new Version('7.0.0-beta.2+27.sha-d2be3d5');
 
     /**
      * @license
@@ -25118,6 +25118,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
     }
     function createLViewData(renderer, tView, context, flags, sanitizer) {
+        // TODO(kara): create from blueprint
         return [
             tView,
             viewData,
@@ -25260,6 +25261,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 previousOrParentNode = null;
                 oldView = enterView(viewNode.data, viewNode);
                 namespaceHTML();
+                viewData[BINDING_INDEX] = tView.bindingStartIndex;
                 tView.template(rf, context);
                 if (rf & 2 /* Update */) {
                     refreshDescendantViews();
@@ -25287,6 +25289,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
             if (templateFn) {
                 namespaceHTML();
+                viewData[BINDING_INDEX] = tView.bindingStartIndex;
                 templateFn(getRenderFlags(hostView), componentOrContext);
                 refreshDescendantViews();
             }
@@ -25393,23 +25396,27 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * @param pipes Pipe defs that should be saved on TView
      * @returns TView
      */
-    function getOrCreateTView(templateFn, directives, pipes, viewQuery) {
+    function getOrCreateTView(templateFn, consts, directives, pipes, viewQuery) {
         // TODO(misko): reading `ngPrivateData` here is problematic for two reasons
         // 1. It is a megamorphic call on each invocation.
         // 2. For nested embedded views (ngFor inside ngFor) the template instance is per
         //    outer template invocation, which means that no such property will exist
         // Correct solution is to only put `ngPrivateData` on the Component template
         // and not on embedded templates.
-        return templateFn.ngPrivateData || (templateFn.ngPrivateData = createTView(-1, templateFn, directives, pipes, viewQuery));
+        return templateFn.ngPrivateData ||
+            (templateFn.ngPrivateData =
+                createTView(-1, templateFn, consts, directives, pipes, viewQuery));
     }
     /**
      * Creates a TView instance
      *
      * @param viewIndex The viewBlockId for inline views, or -1 if it's a component/dynamic
+     * @param templateFn Template function
+     * @param consts The number of nodes, local refs, and pipes in this template
      * @param directives Registry of directives for this view
      * @param pipes Registry of pipes for this view
      */
-    function createTView(viewIndex, templateFn, directives, pipes, viewQuery) {
+    function createTView(viewIndex, templateFn, consts, directives, pipes, viewQuery) {
         ngDevMode && ngDevMode.tView++;
         return {
             id: viewIndex,
@@ -25418,7 +25425,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             node: null,
             data: HEADER_FILLER.slice(),
             childIndex: -1,
-            bindingStartIndex: -1,
+            bindingStartIndex: HEADER_OFFSET + consts,
             directives: null,
             firstTemplatePass: true,
             initHooks: null,
@@ -25510,7 +25517,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     function hostElement(tag, rNode, def, sanitizer) {
         resetApplicationState();
-        var node = createLNode(0, 3 /* Element */, rNode, null, null, createLViewData(renderer, getOrCreateTView(def.template, def.directiveDefs, def.pipeDefs, def.viewQuery), null, def.onPush ? 4 /* Dirty */ : 2 /* CheckAlways */, sanitizer));
+        var node = createLNode(0, 3 /* Element */, rNode, null, null, createLViewData(renderer, getOrCreateTView(def.template, def.consts, def.directiveDefs, def.pipeDefs, def.viewQuery), null, def.onPush ? 4 /* Dirty */ : 2 /* CheckAlways */, sanitizer));
         if (firstTemplatePass) {
             node.tNode.flags = 4096 /* isComponent */;
             if (def.diPublic)
@@ -25602,7 +25609,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return instance;
     }
     function addComponentLogic(directiveIndex, instance, def) {
-        var tView = getOrCreateTView(def.template, def.directiveDefs, def.pipeDefs, def.viewQuery);
+        var tView = getOrCreateTView(def.template, def.consts, def.directiveDefs, def.pipeDefs, def.viewQuery);
         // Only component views should be added to the view tree directly. Embedded views are
         // accessed through their containers because they may be removed / re-added later.
         var componentView = addToViewTree(viewData, previousOrParentNode.tNode.index, createLViewData(rendererFactory.createRenderer(previousOrParentNode.native, def), tView, instance, def.onPush ? 4 /* Dirty */ : 2 /* CheckAlways */, getCurrentSanitizer()));
@@ -25621,8 +25628,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * current Angular. Example: local refs and inputs on root component.
      */
     function baseDirectiveCreate(index, directive, directiveDef) {
-        ngDevMode &&
-            assertEqual(viewData[BINDING_INDEX], -1, 'directives should be created before any bindings');
+        ngDevMode && assertEqual(viewData[BINDING_INDEX], tView.bindingStartIndex, 'directives should be created before any bindings');
         ngDevMode && assertPreviousIsParent();
         Object.defineProperty(directive, NG_HOST_SYMBOL, { enumerable: false, value: previousOrParentNode });
         if (directives == null)
@@ -25927,6 +25933,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var hostTView = hostView[TVIEW];
         var templateFn = hostTView.template;
         var viewQuery = hostTView.viewQuery;
+        viewData[BINDING_INDEX] = tView.bindingStartIndex;
         try {
             namespaceHTML();
             createViewQuery(viewQuery, hostView[FLAGS], component);
@@ -26700,10 +26707,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 ngModule.injector.get(ROOT_CONTEXT) :
                 createRootContext(requestAnimationFrame.bind(window));
             // Create the root view. Uses empty TView and ContentTemplate.
-            var rootView = createLViewData(rendererFactory.createRenderer(hostNode, this.componentDef), createTView(-1, null, null, null, null), rootContext, this.componentDef.onPush ? 4 /* Dirty */ : 2 /* CheckAlways */);
+            var rootView = createLViewData(rendererFactory.createRenderer(hostNode, this.componentDef), createTView(-1, null, 1, null, null, null), rootContext, this.componentDef.onPush ? 4 /* Dirty */ : 2 /* CheckAlways */);
             rootView[INJECTOR$1] = ngModule && ngModule.injector || null;
             // rootView is the parent when bootstrapping
             var oldView = enterView(rootView, null);
+            rootView[BINDING_INDEX] = rootView[TVIEW].bindingStartIndex;
             var component;
             var elementNode;
             try {
@@ -33297,7 +33305,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('7.0.0-beta.2+24.sha-21d22ce');
+    var VERSION$2 = new Version$1('7.0.0-beta.2+27.sha-d2be3d5');
 
     /**
      * @license
@@ -41202,7 +41210,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return false;
     }
-    function checkAndUpdateBinding$1(view, def, bindingIdx, value) {
+    function checkAndUpdateBinding(view, def, bindingIdx, value) {
         if (checkBinding(view, def, bindingIdx, value)) {
             view.oldValues[def.bindingIndex + bindingIdx] = value;
             return true;
@@ -41521,7 +41529,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return changed;
     }
     function checkAndUpdateElementValue(view, def, bindingIdx, value) {
-        if (!checkAndUpdateBinding$1(view, def, bindingIdx, value)) {
+        if (!checkAndUpdateBinding(view, def, bindingIdx, value)) {
             return false;
         }
         var binding = def.bindings[bindingIdx];
@@ -42960,25 +42968,25 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var bindings = def.bindings;
         var changed = false;
         var bindLen = bindings.length;
-        if (bindLen > 0 && checkAndUpdateBinding$1(view, def, 0, v0))
+        if (bindLen > 0 && checkAndUpdateBinding(view, def, 0, v0))
             changed = true;
-        if (bindLen > 1 && checkAndUpdateBinding$1(view, def, 1, v1))
+        if (bindLen > 1 && checkAndUpdateBinding(view, def, 1, v1))
             changed = true;
-        if (bindLen > 2 && checkAndUpdateBinding$1(view, def, 2, v2))
+        if (bindLen > 2 && checkAndUpdateBinding(view, def, 2, v2))
             changed = true;
-        if (bindLen > 3 && checkAndUpdateBinding$1(view, def, 3, v3))
+        if (bindLen > 3 && checkAndUpdateBinding(view, def, 3, v3))
             changed = true;
-        if (bindLen > 4 && checkAndUpdateBinding$1(view, def, 4, v4))
+        if (bindLen > 4 && checkAndUpdateBinding(view, def, 4, v4))
             changed = true;
-        if (bindLen > 5 && checkAndUpdateBinding$1(view, def, 5, v5))
+        if (bindLen > 5 && checkAndUpdateBinding(view, def, 5, v5))
             changed = true;
-        if (bindLen > 6 && checkAndUpdateBinding$1(view, def, 6, v6))
+        if (bindLen > 6 && checkAndUpdateBinding(view, def, 6, v6))
             changed = true;
-        if (bindLen > 7 && checkAndUpdateBinding$1(view, def, 7, v7))
+        if (bindLen > 7 && checkAndUpdateBinding(view, def, 7, v7))
             changed = true;
-        if (bindLen > 8 && checkAndUpdateBinding$1(view, def, 8, v8))
+        if (bindLen > 8 && checkAndUpdateBinding(view, def, 8, v8))
             changed = true;
-        if (bindLen > 9 && checkAndUpdateBinding$1(view, def, 9, v9))
+        if (bindLen > 9 && checkAndUpdateBinding(view, def, 9, v9))
             changed = true;
         if (changed) {
             var data = asPureExpressionData(view, def.nodeIndex);
@@ -43076,7 +43084,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         for (var i = 0; i < values.length; i++) {
             // Note: We need to loop over all values, so that
             // the old values are updates as well!
-            if (checkAndUpdateBinding$1(view, def, i, values[i])) {
+            if (checkAndUpdateBinding(view, def, i, values[i])) {
                 changed = true;
             }
         }
@@ -43125,25 +43133,25 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var changed = false;
         var bindings = def.bindings;
         var bindLen = bindings.length;
-        if (bindLen > 0 && checkAndUpdateBinding$1(view, def, 0, v0))
+        if (bindLen > 0 && checkAndUpdateBinding(view, def, 0, v0))
             changed = true;
-        if (bindLen > 1 && checkAndUpdateBinding$1(view, def, 1, v1))
+        if (bindLen > 1 && checkAndUpdateBinding(view, def, 1, v1))
             changed = true;
-        if (bindLen > 2 && checkAndUpdateBinding$1(view, def, 2, v2))
+        if (bindLen > 2 && checkAndUpdateBinding(view, def, 2, v2))
             changed = true;
-        if (bindLen > 3 && checkAndUpdateBinding$1(view, def, 3, v3))
+        if (bindLen > 3 && checkAndUpdateBinding(view, def, 3, v3))
             changed = true;
-        if (bindLen > 4 && checkAndUpdateBinding$1(view, def, 4, v4))
+        if (bindLen > 4 && checkAndUpdateBinding(view, def, 4, v4))
             changed = true;
-        if (bindLen > 5 && checkAndUpdateBinding$1(view, def, 5, v5))
+        if (bindLen > 5 && checkAndUpdateBinding(view, def, 5, v5))
             changed = true;
-        if (bindLen > 6 && checkAndUpdateBinding$1(view, def, 6, v6))
+        if (bindLen > 6 && checkAndUpdateBinding(view, def, 6, v6))
             changed = true;
-        if (bindLen > 7 && checkAndUpdateBinding$1(view, def, 7, v7))
+        if (bindLen > 7 && checkAndUpdateBinding(view, def, 7, v7))
             changed = true;
-        if (bindLen > 8 && checkAndUpdateBinding$1(view, def, 8, v8))
+        if (bindLen > 8 && checkAndUpdateBinding(view, def, 8, v8))
             changed = true;
-        if (bindLen > 9 && checkAndUpdateBinding$1(view, def, 9, v9))
+        if (bindLen > 9 && checkAndUpdateBinding(view, def, 9, v9))
             changed = true;
         if (changed) {
             var value = def.text.prefix;
@@ -43178,7 +43186,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         for (var i = 0; i < values.length; i++) {
             // Note: We need to loop over all values, so that
             // the old values are updates as well!
-            if (checkAndUpdateBinding$1(view, def, i, values[i])) {
+            if (checkAndUpdateBinding(view, def, i, values[i])) {
                 changed = true;
             }
         }
@@ -45649,7 +45657,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.0-beta.2+24.sha-21d22ce');
+    var VERSION$3 = new Version$1('7.0.0-beta.2+27.sha-d2be3d5');
 
     /**
      * @license
