@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.0-beta.2+26.sha-f2aa9c6
+ * @license Angular v7.0.0-beta.2+28.sha-21a1440
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1144,7 +1144,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.0-beta.2+26.sha-f2aa9c6');
+    var VERSION = new Version('7.0.0-beta.2+28.sha-21a1440');
 
     /**
      * @license
@@ -25392,11 +25392,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * if it doesn't already exist.
      *
      * @param templateFn The template from which to get static data
+     * @param consts The number of nodes, local refs, and pipes in this view
+     * @param vars The number of bindings and pure function bindings in this view
      * @param directives Directive defs that should be saved on TView
      * @param pipes Pipe defs that should be saved on TView
      * @returns TView
      */
-    function getOrCreateTView(templateFn, consts, directives, pipes, viewQuery) {
+    function getOrCreateTView(templateFn, consts, vars, directives, pipes, viewQuery) {
         // TODO(misko): reading `ngPrivateData` here is problematic for two reasons
         // 1. It is a megamorphic call on each invocation.
         // 2. For nested embedded views (ngFor inside ngFor) the template instance is per
@@ -25405,7 +25407,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         // and not on embedded templates.
         return templateFn.ngPrivateData ||
             (templateFn.ngPrivateData =
-                createTView(-1, templateFn, consts, directives, pipes, viewQuery));
+                createTView(-1, templateFn, consts, vars, directives, pipes, viewQuery));
     }
     /**
      * Creates a TView instance
@@ -25416,7 +25418,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * @param directives Registry of directives for this view
      * @param pipes Registry of pipes for this view
      */
-    function createTView(viewIndex, templateFn, consts, directives, pipes, viewQuery) {
+    function createTView(viewIndex, templateFn, consts, vars, directives, pipes, viewQuery) {
         ngDevMode && ngDevMode.tView++;
         return {
             id: viewIndex,
@@ -25517,7 +25519,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     function hostElement(tag, rNode, def, sanitizer) {
         resetApplicationState();
-        var node = createLNode(0, 3 /* Element */, rNode, null, null, createLViewData(renderer, getOrCreateTView(def.template, def.consts, def.directiveDefs, def.pipeDefs, def.viewQuery), null, def.onPush ? 4 /* Dirty */ : 2 /* CheckAlways */, sanitizer));
+        var node = createLNode(0, 3 /* Element */, rNode, null, null, createLViewData(renderer, getOrCreateTView(def.template, def.consts, def.vars, def.directiveDefs, def.pipeDefs, def.viewQuery), null, def.onPush ? 4 /* Dirty */ : 2 /* CheckAlways */, sanitizer));
         if (firstTemplatePass) {
             node.tNode.flags = 4096 /* isComponent */;
             if (def.diPublic)
@@ -25609,7 +25611,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return instance;
     }
     function addComponentLogic(directiveIndex, instance, def) {
-        var tView = getOrCreateTView(def.template, def.consts, def.directiveDefs, def.pipeDefs, def.viewQuery);
+        var tView = getOrCreateTView(def.template, def.consts, def.vars, def.directiveDefs, def.pipeDefs, def.viewQuery);
         // Only component views should be added to the view tree directly. Embedded views are
         // accessed through their containers because they may be removed / re-added later.
         var componentView = addToViewTree(viewData, previousOrParentNode.tNode.index, createLViewData(rendererFactory.createRenderer(previousOrParentNode.native, def), tView, instance, def.onPush ? 4 /* Dirty */ : 2 /* CheckAlways */, getCurrentSanitizer()));
@@ -26707,7 +26709,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 ngModule.injector.get(ROOT_CONTEXT) :
                 createRootContext(requestAnimationFrame.bind(window));
             // Create the root view. Uses empty TView and ContentTemplate.
-            var rootView = createLViewData(rendererFactory.createRenderer(hostNode, this.componentDef), createTView(-1, null, 1, null, null, null), rootContext, this.componentDef.onPush ? 4 /* Dirty */ : 2 /* CheckAlways */);
+            var rootView = createLViewData(rendererFactory.createRenderer(hostNode, this.componentDef), createTView(-1, null, 1, 0, null, null, null), rootContext, this.componentDef.onPush ? 4 /* Dirty */ : 2 /* CheckAlways */);
             rootView[INJECTOR$1] = ngModule && ngModule.injector || null;
             // rootView is the parent when bootstrapping
             var oldView = enterView(rootView, null);
@@ -33305,7 +33307,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('7.0.0-beta.2+26.sha-f2aa9c6');
+    var VERSION$2 = new Version$1('7.0.0-beta.2+28.sha-21a1440');
 
     /**
      * @license
@@ -45657,7 +45659,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.0-beta.2+26.sha-f2aa9c6');
+    var VERSION$3 = new Version$1('7.0.0-beta.2+28.sha-21a1440');
 
     /**
      * @license
