@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.0-beta.2+26.sha-f2aa9c6
+ * @license Angular v7.0.0-beta.2+28.sha-21a1440
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1192,7 +1192,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.0-beta.2+26.sha-f2aa9c6');
+    var VERSION = new Version('7.0.0-beta.2+28.sha-21a1440');
 
     /**
      * @license
@@ -16361,6 +16361,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             this._phToNodeIdxes = [{}];
             // Number of slots to reserve for pureFunctions
             this._pureFunctionSlots = 0;
+            // Number of binding slots
+            this._bindingSlots = 0;
             // These should be handled in the template or element directly.
             this.visitReference = invalid$1;
             this.visitVariable = invalid$1;
@@ -16430,10 +16432,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             // Nested templates must be processed before creation instructions so template()
             // instructions can be generated with the correct internal const count.
             this._nestedTemplateFns.forEach(function (buildTemplateFn) { return buildTemplateFn(); });
-            // Generate all the creation mode instructions (e.g. resolve bindings in listeners)
-            var creationStatements = this._creationCodeFns.map(function (fn$$1) { return fn$$1(); });
             // Generate all the update mode instructions (e.g. resolve property or text bindings)
             var updateStatements = this._updateCodeFns.map(function (fn$$1) { return fn$$1(); });
+            // Generate all the creation mode instructions (e.g. resolve bindings in listeners)
+            var creationStatements = this._creationCodeFns.map(function (fn$$1) { return fn$$1(); });
             // To count slots for the reserveSlots() instruction, all bindings must have been visited.
             if (this._pureFunctionSlots > 0) {
                 creationStatements.push(instruction(null, Identifiers$1.reserveSlots, [literal(this._pureFunctionSlots)]).toStmt());
@@ -16939,7 +16941,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             });
             // e.g. template(1, MyComp_Template_1)
             this.creationInstruction(template.sourceSpan, Identifiers$1.templateCreate, function () {
-                parameters.splice(2, 0, literal(templateVisitor.getSlotCount()));
+                parameters.splice(2, 0, literal(templateVisitor.getConstCount()), literal(templateVisitor.getVarCount()));
                 return trimTrailingNulls(parameters);
             });
         };
@@ -16971,7 +16973,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             this.creationInstruction(text.sourceSpan, Identifiers$1.text, [literal(this.allocateDataSlot()), variable$$1]);
         };
         TemplateDefinitionBuilder.prototype.allocateDataSlot = function () { return this._dataIndex++; };
-        TemplateDefinitionBuilder.prototype.getSlotCount = function () { return this._dataIndex; };
+        TemplateDefinitionBuilder.prototype.getConstCount = function () { return this._dataIndex; };
+        TemplateDefinitionBuilder.prototype.getVarCount = function () { return this._bindingSlots + this._pureFunctionSlots; };
         TemplateDefinitionBuilder.prototype.bindingContext = function () { return "" + this._bindingContext++; };
         // Bindings must only be resolved after all local refs have been visited, so all
         // instructions are queued in callbacks that execute once the initial pass has completed.
@@ -16991,6 +16994,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         TemplateDefinitionBuilder.prototype.convertPropertyBinding = function (implicit, value, skipBindFn) {
             var _a;
+            if (!skipBindFn)
+                this._bindingSlots++;
             var interpolationFn = value instanceof Interpolation ? interpolate : function () { return error('Unexpected interpolation'); };
             var convertedPropertyBinding = convertPropertyBinding(this, implicit, value, this.bindingContext(), BindingForm.TrySimple, interpolationFn);
             (_a = this._tempVariables).push.apply(_a, __spread(convertedPropertyBinding.stmts));
@@ -17484,7 +17489,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var templateBuilder = new TemplateDefinitionBuilder(constantPool, BindingScope.ROOT_SCOPE, 0, templateTypeName, templateName, meta.viewQueries, directiveMatcher, directivesUsed, meta.pipes, pipesUsed, Identifiers$1.namespaceHTML);
         var templateFunctionExpression = templateBuilder.buildTemplateFunction(template.nodes, [], template.hasNgContent, template.ngContentSelectors);
         // e.g. `consts: 2`
-        definitionMap.set('consts', literal(templateBuilder.getSlotCount()));
+        definitionMap.set('consts', literal(templateBuilder.getConstCount()));
+        // e.g. `vars: 2`
+        definitionMap.set('vars', literal(templateBuilder.getVarCount()));
         definitionMap.set('template', templateFunctionExpression);
         // e.g. `directives: [MyDirective]`
         if (directivesUsed.size) {
@@ -29473,11 +29480,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * if it doesn't already exist.
      *
      * @param templateFn The template from which to get static data
+     * @param consts The number of nodes, local refs, and pipes in this view
+     * @param vars The number of bindings and pure function bindings in this view
      * @param directives Directive defs that should be saved on TView
      * @param pipes Pipe defs that should be saved on TView
      * @returns TView
      */
-    function getOrCreateTView(templateFn, consts, directives, pipes, viewQuery) {
+    function getOrCreateTView(templateFn, consts, vars, directives, pipes, viewQuery) {
         // TODO(misko): reading `ngPrivateData` here is problematic for two reasons
         // 1. It is a megamorphic call on each invocation.
         // 2. For nested embedded views (ngFor inside ngFor) the template instance is per
@@ -29486,7 +29495,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         // and not on embedded templates.
         return templateFn.ngPrivateData ||
             (templateFn.ngPrivateData =
-                createTView(-1, templateFn, consts, directives, pipes, viewQuery));
+                createTView(-1, templateFn, consts, vars, directives, pipes, viewQuery));
     }
     /**
      * Creates a TView instance
@@ -29497,7 +29506,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * @param directives Registry of directives for this view
      * @param pipes Registry of pipes for this view
      */
-    function createTView(viewIndex, templateFn, consts, directives, pipes, viewQuery) {
+    function createTView(viewIndex, templateFn, consts, vars, directives, pipes, viewQuery) {
         ngDevMode && ngDevMode.tView++;
         return {
             id: viewIndex,
@@ -29598,7 +29607,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     function hostElement(tag, rNode, def, sanitizer) {
         resetApplicationState();
-        var node = createLNode(0, 3 /* Element */, rNode, null, null, createLViewData(renderer, getOrCreateTView(def.template, def.consts, def.directiveDefs, def.pipeDefs, def.viewQuery), null, def.onPush ? 4 /* Dirty */ : 2 /* CheckAlways */, sanitizer));
+        var node = createLNode(0, 3 /* Element */, rNode, null, null, createLViewData(renderer, getOrCreateTView(def.template, def.consts, def.vars, def.directiveDefs, def.pipeDefs, def.viewQuery), null, def.onPush ? 4 /* Dirty */ : 2 /* CheckAlways */, sanitizer));
         if (firstTemplatePass) {
             node.tNode.flags = 4096 /* isComponent */;
             if (def.diPublic)
@@ -30075,7 +30084,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return instance;
     }
     function addComponentLogic(directiveIndex, instance, def) {
-        var tView = getOrCreateTView(def.template, def.consts, def.directiveDefs, def.pipeDefs, def.viewQuery);
+        var tView = getOrCreateTView(def.template, def.consts, def.vars, def.directiveDefs, def.pipeDefs, def.viewQuery);
         // Only component views should be added to the view tree directly. Embedded views are
         // accessed through their containers because they may be removed / re-added later.
         var componentView = addToViewTree(viewData, previousOrParentNode.tNode.index, createLViewData(rendererFactory.createRenderer(previousOrParentNode.native, def), tView, instance, def.onPush ? 4 /* Dirty */ : 2 /* CheckAlways */, getCurrentSanitizer()));
@@ -30223,18 +30232,18 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * @param index The index of the container in the data array
      * @param templateFn Inline template
      * @param consts The number of nodes, local refs, and pipes for this template
+     * @param vars The number of bindings for this template
      * @param tagName The name of the container element, if applicable
      * @param attrs The attrs attached to the container, if applicable
      * @param localRefs A set of local reference bindings on the element.
      * @param localRefExtractor A function which extracts local-refs values from the template.
      *        Defaults to the current element associated with the local-ref.
      */
-    function template(index, templateFn, consts, tagName, attrs, localRefs, localRefExtractor) {
+    function template(index, templateFn, consts, vars, tagName, attrs, localRefs, localRefExtractor) {
         // TODO: consider a separate node type for templates
         var node = containerInternal(index, tagName || null, attrs || null, localRefs || null);
         if (firstTemplatePass) {
-            node.tNode.tViews =
-                createTView(-1, templateFn, consts, tView.directiveRegistry, tView.pipeRegistry, null);
+            node.tNode.tViews = createTView(-1, templateFn, consts, vars, tView.directiveRegistry, tView.pipeRegistry, null);
         }
         createDirectivesAndLocals(node, localRefs, localRefExtractor);
         currentQueries && (currentQueries = currentQueries.addNode(node));
@@ -30368,7 +30377,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * @param viewBlockId The ID of this view
      * @return boolean Whether or not this view is in creation mode
      */
-    function embeddedViewStart(viewBlockId, consts) {
+    function embeddedViewStart(viewBlockId, consts, vars) {
         var container = (isParent ? previousOrParentNode : getParentLNode(previousOrParentNode));
         ngDevMode && assertNodeType(container, 0 /* Container */);
         var lContainer = container.data;
@@ -30381,7 +30390,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         else {
             // When we create a new LView, we always reset the state of the instructions.
-            var newView = createLViewData(renderer, getOrCreateEmbeddedTView(viewBlockId, consts, container), null, 2 /* CheckAlways */, getCurrentSanitizer());
+            var newView = createLViewData(renderer, getOrCreateEmbeddedTView(viewBlockId, consts, vars, container), null, 2 /* CheckAlways */, getCurrentSanitizer());
             if (lContainer[QUERIES]) {
                 newView[QUERIES] = lContainer[QUERIES].createView();
             }
@@ -30406,17 +30415,17 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      *
      * @param viewIndex The index of the TView in TNode.tViews
      * @param consts The number of nodes, local refs, and pipes in this template
+     * @param vars The number of bindings and pure function bindings in this template
      * @param parent The parent container in which to look for the view's static data
      * @returns TView
      */
-    function getOrCreateEmbeddedTView(viewIndex, consts, parent) {
+    function getOrCreateEmbeddedTView(viewIndex, consts, vars, parent) {
         ngDevMode && assertNodeType(parent, 0 /* Container */);
         var containerTViews = parent.tNode.tViews;
         ngDevMode && assertDefined(containerTViews, 'TView expected');
         ngDevMode && assertEqual(Array.isArray(containerTViews), true, 'TViews should be in an array');
         if (viewIndex >= containerTViews.length || containerTViews[viewIndex] == null) {
-            containerTViews[viewIndex] =
-                createTView(viewIndex, null, consts, tView.directiveRegistry, tView.pipeRegistry, null);
+            containerTViews[viewIndex] = createTView(viewIndex, null, consts, vars, tView.directiveRegistry, tView.pipeRegistry, null);
         }
         return containerTViews[viewIndex];
     }
@@ -31079,6 +31088,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             type: type,
             diPublic: null,
             consts: componentDefinition.consts,
+            vars: componentDefinition.vars,
             factory: componentDefinition.factory,
             template: componentDefinition.template || null,
             hostBindings: componentDefinition.hostBindings || null,
@@ -32155,7 +32165,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 ngModule.injector.get(ROOT_CONTEXT) :
                 createRootContext(requestAnimationFrame.bind(window));
             // Create the root view. Uses empty TView and ContentTemplate.
-            var rootView = createLViewData(rendererFactory.createRenderer(hostNode, this.componentDef), createTView(-1, null, 1, null, null, null), rootContext, this.componentDef.onPush ? 4 /* Dirty */ : 2 /* CheckAlways */);
+            var rootView = createLViewData(rendererFactory.createRenderer(hostNode, this.componentDef), createTView(-1, null, 1, 0, null, null, null), rootContext, this.componentDef.onPush ? 4 /* Dirty */ : 2 /* CheckAlways */);
             rootView[INJECTOR$1] = ngModule && ngModule.injector || null;
             // rootView is the parent when bootstrapping
             var oldView = enterView(rootView, null);
@@ -40669,7 +40679,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('7.0.0-beta.2+26.sha-f2aa9c6');
+    var VERSION$2 = new Version$1('7.0.0-beta.2+28.sha-21a1440');
 
     /**
      * @license
@@ -53090,7 +53100,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.0-beta.2+26.sha-f2aa9c6');
+    var VERSION$3 = new Version$1('7.0.0-beta.2+28.sha-21a1440');
 
     /**
      * @license
