@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.0-beta.2+30.sha-b05d4a5
+ * @license Angular v7.0.0-beta.2+38.sha-6176974
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1192,7 +1192,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.0-beta.2+30.sha-b05d4a5');
+    var VERSION = new Version('7.0.0-beta.2+38.sha-6176974');
 
     /**
      * @license
@@ -15317,6 +15317,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         Identifiers.injectViewContainerRef = { name: 'ɵinjectViewContainerRef', moduleName: CORE$1 };
         Identifiers.injectChangeDetectorRef = { name: 'ɵinjectChangeDetectorRef', moduleName: CORE$1 };
         Identifiers.directiveInject = { name: 'ɵdirectiveInject', moduleName: CORE$1 };
+        Identifiers.templateRefExtractor = { name: 'ɵtemplateRefExtractor', moduleName: CORE$1 };
         Identifiers.defineBase = { name: 'ɵdefineBase', moduleName: CORE$1 };
         Identifiers.BaseDef = {
             name: 'ɵBaseDef',
@@ -16689,27 +16690,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 this.constantPool.getConstLiteral(literalArr(attributes), true) :
                 TYPED_NULL_EXPR;
             parameters.push(attrArg);
-            if (element.references && element.references.length > 0) {
-                var references = flatten(element.references.map(function (reference) {
-                    var slot = _this.allocateDataSlot();
-                    // Generate the update temporary.
-                    var variableName = _this._bindingScope.freshReferenceName();
-                    var retrievalLevel = _this.level;
-                    var lhs = variable(variableName);
-                    _this._bindingScope.set(retrievalLevel, reference.name, lhs, 0 /* DEFAULT */, function (scope, relativeLevel) {
-                        // e.g. x(2);
-                        var nextContextStmt = relativeLevel > 0 ? [generateNextContextExpr(relativeLevel).toStmt()] : [];
-                        // e.g. const $foo$ = r(1);
-                        var refExpr = lhs.set(importExpr(Identifiers$1.reference).callFn([literal(slot)]));
-                        return nextContextStmt.concat(refExpr.toConstDecl());
-                    });
-                    return [reference.name, reference.value];
-                }));
-                parameters.push(this.constantPool.getConstLiteral(asLiteral(references), true));
-            }
-            else {
-                parameters.push(TYPED_NULL_EXPR);
-            }
+            // local refs (ex.: <div #foo #bar="baz">)
+            parameters.push(this.prepareRefsParameter(element.references));
             var wasInNamespace = this._namespace;
             var currentNamespace = this.getNamespaceInstruction(namespaceKey);
             // If the namespace is changing now, include an instruction to change it
@@ -16918,6 +16900,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             if (attributeNames.length) {
                 parameters.push(this.constantPool.getConstLiteral(literalArr(attributeNames), true));
             }
+            else {
+                parameters.push(TYPED_NULL_EXPR);
+            }
+            // local refs (ex.: <ng-template #foo>)
+            if (template.references && template.references.length) {
+                parameters.push(this.prepareRefsParameter(template.references));
+                parameters.push(importExpr(Identifiers$1.templateRefExtractor));
+            }
             // e.g. p(1, 'forOf', ɵbind(ctx.items));
             var context = variable(CONTEXT_NAME);
             template.inputs.forEach(function (input) {
@@ -17002,6 +16992,28 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var valExpr = convertedPropertyBinding.currValExpr;
             return value instanceof Interpolation || skipBindFn ? valExpr :
                 importExpr(Identifiers$1.bind).callFn([valExpr]);
+        };
+        TemplateDefinitionBuilder.prototype.prepareRefsParameter = function (references) {
+            var _this = this;
+            if (!references || references.length === 0) {
+                return TYPED_NULL_EXPR;
+            }
+            var refsParam = flatten(references.map(function (reference) {
+                var slot = _this.allocateDataSlot();
+                // Generate the update temporary.
+                var variableName = _this._bindingScope.freshReferenceName();
+                var retrievalLevel = _this.level;
+                var lhs = variable(variableName);
+                _this._bindingScope.set(retrievalLevel, reference.name, lhs, 0 /* DEFAULT */, function (scope, relativeLevel) {
+                    // e.g. x(2);
+                    var nextContextStmt = relativeLevel > 0 ? [generateNextContextExpr(relativeLevel).toStmt()] : [];
+                    // e.g. const $foo$ = r(1);
+                    var refExpr = lhs.set(importExpr(Identifiers$1.reference).callFn([literal(slot)]));
+                    return nextContextStmt.concat(refExpr.toConstDecl());
+                });
+                return [reference.name, reference.value];
+            }));
+            return this.constantPool.getConstLiteral(asLiteral(refsParam), true);
         };
         return TemplateDefinitionBuilder;
     }());
@@ -28881,6 +28893,16 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /** Whether or not this is the first time the current view has been processed. */
     var firstTemplatePass = true;
     /**
+     * The root index from which pure function instructions should calculate their binding
+     * indices. In component views, this is TView.bindingStartIndex. In a host binding
+     * context, this is the TView.hostBindingStartIndex + any hostVars before the given dir.
+     */
+    var bindingRootIndex = -1;
+    // top level variables should not be exported for performance reasons (PERF_NOTES.md)
+    function getBindingRoot() {
+        return bindingRootIndex;
+    }
+    /**
      * Swap the current state with a new state.
      *
      * For performance reasons we store the state in the top level of the module.
@@ -28898,6 +28920,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         tView = newView && newView[TVIEW];
         creationMode = newView && (newView[FLAGS] & 1 /* CreationMode */) === 1 /* CreationMode */;
         firstTemplatePass = newView && tView.firstTemplatePass;
+        bindingRootIndex = newView && tView.bindingStartIndex;
         renderer = newView && newView[RENDERER];
         if (host != null) {
             previousOrParentNode = host;
@@ -28925,7 +28948,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             viewData[FLAGS] &= ~(1 /* CreationMode */ | 4 /* Dirty */);
         }
         viewData[FLAGS] |= 16 /* RunInit */;
-        viewData[BINDING_INDEX] = -1;
+        viewData[BINDING_INDEX] = tView.bindingStartIndex;
         enterView(newView, null);
     }
     /**
@@ -28952,11 +28975,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /** Sets the host bindings for the current view. */
     function setHostBindings(bindings) {
         if (bindings != null) {
+            bindingRootIndex = viewData[BINDING_INDEX] = tView.hostBindingStartIndex;
             var defs = tView.directives;
             for (var i = 0; i < bindings.length; i += 2) {
                 var dirIndex = bindings[i];
                 var def = defs[dirIndex];
                 def.hostBindings && def.hostBindings(dirIndex, bindings[i + 1]);
+                bindingRootIndex = viewData[BINDING_INDEX] = bindingRootIndex + def.hostVars;
             }
         }
     }
@@ -28993,7 +29018,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             null,
             flags | 1 /* CreationMode */ | 8 /* Attached */ | 16 /* RunInit */,
             null,
-            -1,
+            tView.bindingStartIndex,
             null,
             null,
             context,
@@ -29128,7 +29153,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 previousOrParentNode = null;
                 oldView = enterView(viewNode.data, viewNode);
                 namespaceHTML();
-                viewData[BINDING_INDEX] = tView.bindingStartIndex;
                 tView.template(rf, context);
                 if (rf & 2 /* Update */) {
                     refreshDescendantViews();
@@ -29171,7 +29195,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
             if (templateFn) {
                 namespaceHTML();
-                viewData[BINDING_INDEX] = tView.bindingStartIndex;
                 templateFn(getRenderFlags(hostView), componentOrContext);
                 refreshDescendantViews();
             }
@@ -29508,6 +29531,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     function createTView(viewIndex, templateFn, consts, vars, directives, pipes, viewQuery) {
         ngDevMode && ngDevMode.tView++;
+        var bindingStartIndex = HEADER_OFFSET + consts;
         return {
             id: viewIndex,
             template: templateFn,
@@ -29515,7 +29539,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             node: null,
             data: HEADER_FILLER.slice(),
             childIndex: -1,
-            bindingStartIndex: HEADER_OFFSET + consts,
+            bindingStartIndex: bindingStartIndex,
+            hostBindingStartIndex: bindingStartIndex + vars,
             directives: null,
             firstTemplatePass: true,
             initHooks: null,
@@ -30403,7 +30428,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
             lContainer[ACTIVE_INDEX]++;
         }
-        viewData[BINDING_INDEX] = tView.bindingStartIndex;
         return getRenderFlags(viewNode.data);
     }
     /**
@@ -30747,7 +30771,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var hostTView = hostView[TVIEW];
         var templateFn = hostTView.template;
         var viewQuery = hostTView.viewQuery;
-        viewData[BINDING_INDEX] = tView.bindingStartIndex;
         try {
             namespaceHTML();
             createViewQuery(viewQuery, hostView[FLAGS], component);
@@ -31089,6 +31112,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             diPublic: null,
             consts: componentDefinition.consts,
             vars: componentDefinition.vars,
+            hostVars: componentDefinition.hostVars || 0,
             factory: componentDefinition.factory,
             template: componentDefinition.template || null,
             hostBindings: componentDefinition.hostBindings || null,
@@ -31362,6 +31386,50 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     }
                     else {
                         definition.hostBindings = superHostBindings_1;
+                    }
+                }
+                // Merge View Queries
+                if (isComponentDef(definition) && isComponentDef(superDef)) {
+                    var prevViewQuery_1 = definition.viewQuery;
+                    var superViewQuery_1 = superDef.viewQuery;
+                    if (superViewQuery_1) {
+                        if (prevViewQuery_1) {
+                            definition.viewQuery = function (rf, ctx) {
+                                superViewQuery_1(rf, ctx);
+                                prevViewQuery_1(rf, ctx);
+                            };
+                        }
+                        else {
+                            definition.viewQuery = superViewQuery_1;
+                        }
+                    }
+                }
+                // Merge Content Queries
+                var prevContentQueries_1 = definition.contentQueries;
+                var superContentQueries_1 = superDef.contentQueries;
+                if (superContentQueries_1) {
+                    if (prevContentQueries_1) {
+                        definition.contentQueries = function () {
+                            superContentQueries_1();
+                            prevContentQueries_1();
+                        };
+                    }
+                    else {
+                        definition.contentQueries = superContentQueries_1;
+                    }
+                }
+                // Merge Content Queries Refresh
+                var prevContentQueriesRefresh_1 = definition.contentQueriesRefresh;
+                var superContentQueriesRefresh_1 = superDef.contentQueriesRefresh;
+                if (superContentQueriesRefresh_1) {
+                    if (prevContentQueriesRefresh_1) {
+                        definition.contentQueriesRefresh = function (directiveIndex, queryIndex) {
+                            superContentQueriesRefresh_1(directiveIndex, queryIndex);
+                            prevContentQueriesRefresh_1(directiveIndex, queryIndex);
+                        };
+                    }
+                    else {
+                        definition.contentQueriesRefresh = superContentQueriesRefresh_1;
                     }
                 }
                 // Merge inputs and outputs
@@ -32169,7 +32237,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             rootView[INJECTOR$1] = ngModule && ngModule.injector || null;
             // rootView is the parent when bootstrapping
             var oldView = enterView(rootView, null);
-            rootView[BINDING_INDEX] = rootView[TVIEW].bindingStartIndex;
             var component;
             var elementNode;
             try {
@@ -32921,6 +32988,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         return TemplateRef$$1;
     }());
+    /**
+     * Retrieves `TemplateRef` instance from `Injector` when a local reference is placed on the
+     * `<ng-template>` element.
+     */
+    function templateRefExtractor(lNode) {
+        return getOrCreateTemplateRef(getOrCreateNodeInjectorForNode(lNode));
+    }
 
     /**
      * @license
@@ -33366,15 +33440,17 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * Bindings for pure functions are stored after regular bindings.
      *
-     *  ----------------------------------------------------------------------------
-     *  |  LNodes / local refs / pipes ... | regular bindings / interpolations | pure function bindings
-     *  ----------------------------------------------------------------------------
-     *                                     ^
-     *                          TView.bindingStartIndex
+     * |--------consts--------|----------------vars----------------|------ hostVars (dir1) ------|
+     * ---------------------------------------------------------------------------------------------
+     * | nodes / refs / pipes | bindings | pure function bindings  | host bindings  | host slots |
+     * ---------------------------------------------------------------------------------------------
+     *                        ^                                    ^
+     *             TView.bindingStartIndex            TView.hostBindingStartIndex
      *
-     * Pure function instructions are given an offset from TView.bindingStartIndex.
-     * Adding the offset to TView.bindingStartIndex gives the first index where the bindings
-     * are stored.
+     * Pure function instructions are given an offset from the binding root. Adding the offset to the
+     * binding root gives the first index where the bindings are stored. In component views, the binding
+     * root is the bindingStartIndex. In host bindings, the binding root is the hostBindingStartIndex +
+     * any hostVars in directives evaluated before it.
      */
     /**
      * If the value hasn't been saved, calls the pure function to store and return the
@@ -33387,7 +33463,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     function pureFunction0(slotOffset, pureFn, thisArg) {
         // TODO(kara): use bindingRoot instead of bindingStartIndex when implementing host bindings
-        var bindingIndex = getTView().bindingStartIndex + slotOffset;
+        var bindingIndex = getBindingRoot() + slotOffset;
         return getCreationMode() ?
             updateBinding(bindingIndex, thisArg ? pureFn.call(thisArg) : pureFn()) :
             getBinding(bindingIndex);
@@ -33404,7 +33480,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     function pureFunction1(slotOffset, pureFn, exp, thisArg) {
         // TODO(kara): use bindingRoot instead of bindingStartIndex when implementing host bindings
-        var bindingIndex = getTView().bindingStartIndex + slotOffset;
+        var bindingIndex = getBindingRoot() + slotOffset;
         return bindingUpdated(bindingIndex, exp) ?
             updateBinding(bindingIndex + 1, thisArg ? pureFn.call(thisArg, exp) : pureFn(exp)) :
             getBinding(bindingIndex + 1);
@@ -33422,7 +33498,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     function pureFunction2(slotOffset, pureFn, exp1, exp2, thisArg) {
         // TODO(kara): use bindingRoot instead of bindingStartIndex when implementing host bindings
-        var bindingIndex = getTView().bindingStartIndex + slotOffset;
+        var bindingIndex = getBindingRoot() + slotOffset;
         return bindingUpdated2(bindingIndex, exp1, exp2) ?
             updateBinding(bindingIndex + 2, thisArg ? pureFn.call(thisArg, exp1, exp2) : pureFn(exp1, exp2)) :
             getBinding(bindingIndex + 2);
@@ -33441,7 +33517,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     function pureFunction3(slotOffset, pureFn, exp1, exp2, exp3, thisArg) {
         // TODO(kara): use bindingRoot instead of bindingStartIndex when implementing host bindings
-        var bindingIndex = getTView().bindingStartIndex + slotOffset;
+        var bindingIndex = getBindingRoot() + slotOffset;
         return bindingUpdated3(bindingIndex, exp1, exp2, exp3) ?
             updateBinding(bindingIndex + 3, thisArg ? pureFn.call(thisArg, exp1, exp2, exp3) : pureFn(exp1, exp2, exp3)) :
             getBinding(bindingIndex + 3);
@@ -33461,7 +33537,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     function pureFunction4(slotOffset, pureFn, exp1, exp2, exp3, exp4, thisArg) {
         // TODO(kara): use bindingRoot instead of bindingStartIndex when implementing host bindings
-        var bindingIndex = getTView().bindingStartIndex + slotOffset;
+        var bindingIndex = getBindingRoot() + slotOffset;
         return bindingUpdated4(bindingIndex, exp1, exp2, exp3, exp4) ?
             updateBinding(bindingIndex + 4, thisArg ? pureFn.call(thisArg, exp1, exp2, exp3, exp4) : pureFn(exp1, exp2, exp3, exp4)) :
             getBinding(bindingIndex + 4);
@@ -33482,7 +33558,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     function pureFunction5(slotOffset, pureFn, exp1, exp2, exp3, exp4, exp5, thisArg) {
         // TODO(kara): use bindingRoot instead of bindingStartIndex when implementing host bindings
-        var bindingIndex = getTView().bindingStartIndex + slotOffset;
+        var bindingIndex = getBindingRoot() + slotOffset;
         var different = bindingUpdated4(bindingIndex, exp1, exp2, exp3, exp4);
         return bindingUpdated(bindingIndex + 4, exp5) || different ?
             updateBinding(bindingIndex + 5, thisArg ? pureFn.call(thisArg, exp1, exp2, exp3, exp4, exp5) :
@@ -33506,7 +33582,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     function pureFunction6(slotOffset, pureFn, exp1, exp2, exp3, exp4, exp5, exp6, thisArg) {
         // TODO(kara): use bindingRoot instead of bindingStartIndex when implementing host bindings
-        var bindingIndex = getTView().bindingStartIndex + slotOffset;
+        var bindingIndex = getBindingRoot() + slotOffset;
         var different = bindingUpdated4(bindingIndex, exp1, exp2, exp3, exp4);
         return bindingUpdated2(bindingIndex + 4, exp5, exp6) || different ?
             updateBinding(bindingIndex + 6, thisArg ? pureFn.call(thisArg, exp1, exp2, exp3, exp4, exp5, exp6) :
@@ -33531,7 +33607,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     function pureFunction7(slotOffset, pureFn, exp1, exp2, exp3, exp4, exp5, exp6, exp7, thisArg) {
         // TODO(kara): use bindingRoot instead of bindingStartIndex when implementing host bindings
-        var bindingIndex = getTView().bindingStartIndex + slotOffset;
+        var bindingIndex = getBindingRoot() + slotOffset;
         var different = bindingUpdated4(bindingIndex, exp1, exp2, exp3, exp4);
         return bindingUpdated3(bindingIndex + 4, exp5, exp6, exp7) || different ?
             updateBinding(bindingIndex + 7, thisArg ?
@@ -33558,7 +33634,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     function pureFunction8(slotOffset, pureFn, exp1, exp2, exp3, exp4, exp5, exp6, exp7, exp8, thisArg) {
         // TODO(kara): use bindingRoot instead of bindingStartIndex when implementing host bindings
-        var bindingIndex = getTView().bindingStartIndex + slotOffset;
+        var bindingIndex = getBindingRoot() + slotOffset;
         var different = bindingUpdated4(bindingIndex, exp1, exp2, exp3, exp4);
         return bindingUpdated4(bindingIndex + 4, exp5, exp6, exp7, exp8) || different ?
             updateBinding(bindingIndex + 8, thisArg ?
@@ -33581,7 +33657,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     function pureFunctionV(slotOffset, pureFn, exps, thisArg) {
         // TODO(kara): use bindingRoot instead of bindingStartIndex when implementing host bindings
-        var bindingIndex = getTView().bindingStartIndex + slotOffset;
+        var bindingIndex = getBindingRoot() + slotOffset;
         var different = false;
         for (var i = 0; i < exps.length; i++) {
             bindingUpdated(bindingIndex++, exps[i]) && (different = true);
@@ -39410,6 +39486,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         'ɵinjectElementRef': injectElementRef,
         'ɵinjectTemplateRef': injectTemplateRef,
         'ɵinjectViewContainerRef': injectViewContainerRef,
+        'ɵtemplateRefExtractor': templateRefExtractor,
         'ɵNgOnChangesFeature': NgOnChangesFeature,
         'ɵPublicFeature': PublicFeature,
         'ɵInheritDefinitionFeature': InheritDefinitionFeature,
@@ -40679,7 +40756,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('7.0.0-beta.2+30.sha-b05d4a5');
+    var VERSION$2 = new Version$1('7.0.0-beta.2+38.sha-6176974');
 
     /**
      * @license
@@ -53100,7 +53177,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.0-beta.2+30.sha-b05d4a5');
+    var VERSION$3 = new Version$1('7.0.0-beta.2+38.sha-6176974');
 
     /**
      * @license
