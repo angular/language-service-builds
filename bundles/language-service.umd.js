@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.0-beta.2+30.sha-b05d4a5
+ * @license Angular v7.0.0-beta.2+38.sha-6176974
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1144,7 +1144,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.0-beta.2+30.sha-b05d4a5');
+    var VERSION = new Version('7.0.0-beta.2+38.sha-6176974');
 
     /**
      * @license
@@ -14416,6 +14416,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         Identifiers.injectViewContainerRef = { name: 'ɵinjectViewContainerRef', moduleName: CORE$1 };
         Identifiers.injectChangeDetectorRef = { name: 'ɵinjectChangeDetectorRef', moduleName: CORE$1 };
         Identifiers.directiveInject = { name: 'ɵdirectiveInject', moduleName: CORE$1 };
+        Identifiers.templateRefExtractor = { name: 'ɵtemplateRefExtractor', moduleName: CORE$1 };
         Identifiers.defineBase = { name: 'ɵdefineBase', moduleName: CORE$1 };
         Identifiers.BaseDef = {
             name: 'ɵBaseDef',
@@ -25014,6 +25015,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /** Whether or not this is the first time the current view has been processed. */
     var firstTemplatePass = true;
     /**
+     * The root index from which pure function instructions should calculate their binding
+     * indices. In component views, this is TView.bindingStartIndex. In a host binding
+     * context, this is the TView.hostBindingStartIndex + any hostVars before the given dir.
+     */
+    var bindingRootIndex = -1;
+    /**
      * Swap the current state with a new state.
      *
      * For performance reasons we store the state in the top level of the module.
@@ -25031,6 +25038,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         tView = newView && newView[TVIEW];
         creationMode = newView && (newView[FLAGS] & 1 /* CreationMode */) === 1 /* CreationMode */;
         firstTemplatePass = newView && tView.firstTemplatePass;
+        bindingRootIndex = newView && tView.bindingStartIndex;
         renderer = newView && newView[RENDERER];
         if (host != null) {
             previousOrParentNode = host;
@@ -25058,7 +25066,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             viewData[FLAGS] &= ~(1 /* CreationMode */ | 4 /* Dirty */);
         }
         viewData[FLAGS] |= 16 /* RunInit */;
-        viewData[BINDING_INDEX] = -1;
+        viewData[BINDING_INDEX] = tView.bindingStartIndex;
         enterView(newView, null);
     }
     /**
@@ -25085,11 +25093,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /** Sets the host bindings for the current view. */
     function setHostBindings(bindings) {
         if (bindings != null) {
+            bindingRootIndex = viewData[BINDING_INDEX] = tView.hostBindingStartIndex;
             var defs = tView.directives;
             for (var i = 0; i < bindings.length; i += 2) {
                 var dirIndex = bindings[i];
                 var def = defs[dirIndex];
                 def.hostBindings && def.hostBindings(dirIndex, bindings[i + 1]);
+                bindingRootIndex = viewData[BINDING_INDEX] = bindingRootIndex + def.hostVars;
             }
         }
     }
@@ -25126,7 +25136,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             null,
             flags | 1 /* CreationMode */ | 8 /* Attached */ | 16 /* RunInit */,
             null,
-            -1,
+            tView.bindingStartIndex,
             null,
             null,
             context,
@@ -25261,7 +25271,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 previousOrParentNode = null;
                 oldView = enterView(viewNode.data, viewNode);
                 namespaceHTML();
-                viewData[BINDING_INDEX] = tView.bindingStartIndex;
                 tView.template(rf, context);
                 if (rf & 2 /* Update */) {
                     refreshDescendantViews();
@@ -25289,7 +25298,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
             if (templateFn) {
                 namespaceHTML();
-                viewData[BINDING_INDEX] = tView.bindingStartIndex;
                 templateFn(getRenderFlags(hostView), componentOrContext);
                 refreshDescendantViews();
             }
@@ -25420,6 +25428,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     function createTView(viewIndex, templateFn, consts, vars, directives, pipes, viewQuery) {
         ngDevMode && ngDevMode.tView++;
+        var bindingStartIndex = HEADER_OFFSET + consts;
         return {
             id: viewIndex,
             template: templateFn,
@@ -25427,7 +25436,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             node: null,
             data: HEADER_FILLER.slice(),
             childIndex: -1,
-            bindingStartIndex: HEADER_OFFSET + consts,
+            bindingStartIndex: bindingStartIndex,
+            hostBindingStartIndex: bindingStartIndex + vars,
             directives: null,
             firstTemplatePass: true,
             initHooks: null,
@@ -25935,7 +25945,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var hostTView = hostView[TVIEW];
         var templateFn = hostTView.template;
         var viewQuery = hostTView.viewQuery;
-        viewData[BINDING_INDEX] = tView.bindingStartIndex;
         try {
             namespaceHTML();
             createViewQuery(viewQuery, hostView[FLAGS], component);
@@ -26713,7 +26722,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             rootView[INJECTOR$1] = ngModule && ngModule.injector || null;
             // rootView is the parent when bootstrapping
             var oldView = enterView(rootView, null);
-            rootView[BINDING_INDEX] = rootView[TVIEW].bindingStartIndex;
             var component;
             var elementNode;
             try {
@@ -33307,7 +33315,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('7.0.0-beta.2+30.sha-b05d4a5');
+    var VERSION$2 = new Version$1('7.0.0-beta.2+38.sha-6176974');
 
     /**
      * @license
@@ -45659,7 +45667,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.0-beta.2+30.sha-b05d4a5');
+    var VERSION$3 = new Version$1('7.0.0-beta.2+38.sha-6176974');
 
     /**
      * @license
