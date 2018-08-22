@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.0-beta.2+39.sha-f33dbf4
+ * @license Angular v7.0.0-beta.2+42.sha-52605aa
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1144,7 +1144,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.0-beta.2+39.sha-f33dbf4');
+    var VERSION = new Version('7.0.0-beta.2+42.sha-52605aa');
 
     /**
      * @license
@@ -23830,11 +23830,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             throwError(msg);
         }
     }
-    function assertNotDefined(actual, msg) {
-        if (actual != null) {
-            throwError(msg);
-        }
-    }
     function assertDefined(actual, msg) {
         if (actual == null) {
             throwError(msg);
@@ -24897,16 +24892,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     var _CLEAN_PROMISE = Promise.resolve(null);
     /**
-     * Directive and element indices for top-level directive.
-     *
-     * Saved here to avoid re-instantiating an array on every change detection run.
-     *
-     * Note: Element is not actually stored at index 0 because of the LViewData
-     * header, but the host bindings function expects an index that is NOT adjusted
-     * because it will ultimately be fed to instructions like elementProperty.
-     */
-    var _ROOT_DIRECTIVE_INDICES = [0, 0];
-    /**
      * TView.data needs to fill the same number of slots as the LViewData header
      * so the indices of nodes are consistent between LViewData and TView.data.
      *
@@ -25098,7 +25083,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             for (var i = 0; i < bindings.length; i += 2) {
                 var dirIndex = bindings[i];
                 var def = defs[dirIndex];
-                def.hostBindings && def.hostBindings(dirIndex, bindings[i + 1]);
+                def.hostBindings(dirIndex, bindings[i + 1]);
                 bindingRootIndex = viewData[BINDING_INDEX] = bindingRootIndex + def.hostVars;
             }
         }
@@ -25128,26 +25113,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
     }
     function createLViewData(renderer, tView, context, flags, sanitizer) {
-        // TODO(kara): create from blueprint
-        return [
-            tView,
-            viewData,
-            null,
-            null,
-            flags | 1 /* CreationMode */ | 8 /* Attached */ | 16 /* RunInit */,
-            null,
-            tView.bindingStartIndex,
-            null,
-            null,
-            context,
-            viewData ? viewData[INJECTOR$1] : null,
-            renderer,
-            sanitizer || null,
-            null,
-            -1,
-            null,
-            null // declarationView
-        ];
+        var instance = tView.blueprint.slice();
+        instance[PARENT] = viewData;
+        instance[FLAGS] = flags | 1 /* CreationMode */ | 8 /* Attached */ | 16 /* RunInit */;
+        instance[CONTEXT] = context;
+        instance[INJECTOR$1] = viewData ? viewData[INJECTOR$1] : null;
+        instance[RENDERER] = renderer;
+        instance[SANITIZER] = sanitizer || null;
+        return instance;
     }
     /**
      * Creation of LNode object is extracted to a separate function so we always create LNode object
@@ -25181,11 +25154,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         else {
             var adjustedIndex = index + HEADER_OFFSET;
             // This is an element or container or projection node
-            ngDevMode && assertDataNext(adjustedIndex);
             var tData = tView.data;
+            ngDevMode && assertLessThan(adjustedIndex, viewData.length, "Slot should have been initialized with null");
             viewData[adjustedIndex] = node;
-            // Every node adds a value to the static data array to avoid a sparse array
-            if (adjustedIndex >= tData.length) {
+            if (tData[adjustedIndex] == null) {
                 var tNode = tData[adjustedIndex] =
                     createTNode(type, adjustedIndex, name, attrs, tParent, null);
                 if (!isParent && previousOrParentNode) {
@@ -25208,7 +25180,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         // View nodes and host elements need to set their host node (components set host nodes later)
         if ((type & 2 /* ViewOrElement */) === 2 /* ViewOrElement */ && isState) {
             var lViewData = state;
-            ngDevMode && assertNotDefined(lViewData[HOST_NODE], 'lViewData[HOST_NODE] should not have been initialized');
+            ngDevMode &&
+                assertEqual(lViewData[HOST_NODE], null, 'lViewData[HOST_NODE] should not have been initialized');
             lViewData[HOST_NODE] = node;
             if (firstTemplatePass)
                 lViewData[TVIEW].node = node.tNode;
@@ -25216,6 +25189,19 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         previousOrParentNode = node;
         isParent = true;
         return node;
+    }
+    /**
+     * When LNodes are created dynamically after a view blueprint is created (e.g. through
+     * i18nApply() or ComponentFactory.create), we need to adjust the blueprint for future
+     * template passes.
+     */
+    function adjustBlueprintForNewNode(view) {
+        var tView = view[TVIEW];
+        if (tView.firstTemplatePass) {
+            tView.hostBindingStartIndex++;
+            tView.blueprint.push(null);
+            view.push(null);
+        }
     }
     //////////////////////////
     //// Render
@@ -25305,7 +25291,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 executeInitAndContentHooks();
                 // Element was stored at 0 in data and directive was stored at 0 in directives
                 // in renderComponent()
-                setHostBindings(_ROOT_DIRECTIVE_INDICES);
+                setHostBindings(tView.hostBindings);
                 componentRefresh(HEADER_OFFSET);
             }
         }
@@ -25374,17 +25360,21 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /** Stores index of component's host element so it will be queued for view refresh during CD. */
     function queueComponentIndexForCheck() {
         if (firstTemplatePass) {
-            (tView.components || (tView.components = [])).push(viewData.length - 1);
+            (tView.components || (tView.components = [])).push(previousOrParentNode.tNode.index);
         }
     }
     /** Stores index of directive and host element so it will be queued for binding refresh during CD.
      */
-    function queueHostBindingForCheck(dirIndex) {
+    function queueHostBindingForCheck(dirIndex, hostVars) {
         // Must subtract the header offset because hostBindings functions are generated with
         // instructions that expect element indices that are NOT adjusted (e.g. elementProperty).
         ngDevMode &&
             assertEqual(firstTemplatePass, true, 'Should only be called in first template pass.');
-        (tView.hostBindings || (tView.hostBindings = [])).push(dirIndex, viewData.length - 1 - HEADER_OFFSET);
+        for (var i = 0; i < hostVars; i++) {
+            tView.blueprint.push(NO_CHANGE);
+            viewData.push(NO_CHANGE);
+        }
+        (tView.hostBindings || (tView.hostBindings = [])).push(dirIndex, previousOrParentNode.tNode.index - HEADER_OFFSET);
     }
     /** Sets the context for a ChangeDetectorRef to the given instance. */
     function initChangeDetectorIfExisting(injector, instance, view) {
@@ -25429,15 +25419,21 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function createTView(viewIndex, templateFn, consts, vars, directives, pipes, viewQuery) {
         ngDevMode && ngDevMode.tView++;
         var bindingStartIndex = HEADER_OFFSET + consts;
-        return {
+        // This length does not yet contain host bindings from child directives because at this point,
+        // we don't know which directives are active on this template. As soon as a directive is matched
+        // that has a host binding, we will update the blueprint with that def's hostVars count.
+        var initialViewLength = bindingStartIndex + vars;
+        var blueprint = createViewBlueprint(bindingStartIndex, initialViewLength);
+        return blueprint[TVIEW] = {
             id: viewIndex,
+            blueprint: blueprint,
             template: templateFn,
             viewQuery: viewQuery,
             node: null,
             data: HEADER_FILLER.slice(),
             childIndex: -1,
             bindingStartIndex: bindingStartIndex,
-            hostBindingStartIndex: bindingStartIndex + vars,
+            hostBindingStartIndex: initialViewLength,
             directives: null,
             firstTemplatePass: true,
             initHooks: null,
@@ -25456,6 +25452,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             pipeRegistry: typeof pipes === 'function' ? pipes() : pipes,
             currentMatches: null
         };
+    }
+    function createViewBlueprint(bindingStartIndex, initialViewLength) {
+        var blueprint = new Array(initialViewLength)
+            .fill(null, 0, bindingStartIndex)
+            .fill(NO_CHANGE, bindingStartIndex);
+        blueprint[CONTAINER_INDEX] = -1;
+        blueprint[BINDING_INDEX] = bindingStartIndex;
+        return blueprint;
     }
     function setUpAttributes(native, attrs) {
         var isProc = isProceduralRenderer(renderer);
@@ -25610,7 +25614,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             // any projected components.
             queueInitHooks(directiveDefIdx, directiveDef.onInit, directiveDef.doCheck, tView);
             if (directiveDef.hostBindings)
-                queueHostBindingForCheck(directiveDefIdx);
+                queueHostBindingForCheck(directiveDefIdx, directiveDef.hostVars);
         }
         if (tNode && tNode.attrs) {
             setInputsFromAttrs(directiveDefIdx, instance, directiveDef.inputs, tNode);
@@ -25966,6 +25970,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             viewQuery(2 /* Update */, component);
         }
     }
+    /** A special value which designates that a value has not changed. */
+    var NO_CHANGE = {};
     function assertPreviousIsParent() {
         assertEqual(isParent, true, 'previousOrParentNode should be a parent');
     }
@@ -26748,6 +26754,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                         var firstTNode = null;
                         var previousTNode = null;
                         for (var j = 0; j < nodeList.length; j++) {
+                            adjustBlueprintForNewNode(rootView);
                             var lNode = createLNode(++index, 3 /* Element */, nodeList[j], null, null);
                             if (previousTNode) {
                                 previousTNode.next = lNode.tNode;
@@ -33315,7 +33322,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('7.0.0-beta.2+39.sha-f33dbf4');
+    var VERSION$2 = new Version$1('7.0.0-beta.2+42.sha-52605aa');
 
     /**
      * @license
@@ -45667,7 +45674,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.0-beta.2+39.sha-f33dbf4');
+    var VERSION$3 = new Version$1('7.0.0-beta.2+42.sha-52605aa');
 
     /**
      * @license
