@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.0-beta.3+24.sha-61218f5
+ * @license Angular v7.0.0-beta.3+27.sha-22d58fc
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1144,7 +1144,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.0-beta.3+24.sha-61218f5');
+    var VERSION = new Version('7.0.0-beta.3+27.sha-22d58fc');
 
     /**
      * @license
@@ -14465,8 +14465,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             name: 'ɵgetInheritedFactory',
             moduleName: CORE$1,
         };
-        // Reserve slots for pure functions
-        Identifiers.reserveSlots = { name: 'ɵreserveSlots', moduleName: CORE$1 };
         // sanitization-related functions
         Identifiers.sanitizeHtml = { name: 'ɵzh', moduleName: CORE$1 };
         Identifiers.sanitizeStyle = { name: 'ɵzs', moduleName: CORE$1 };
@@ -14607,6 +14605,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             _this.allocateSlot = allocateSlot;
             _this.allocatePureFunctionSlots = allocatePureFunctionSlots;
             _this.definePipe = definePipe;
+            _this._pipeBindExprs = [];
             return _this;
         }
         // AstMemoryEfficientTransformer
@@ -14621,10 +14620,19 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             this.definePipe(pipe.name, slotPseudoLocal, slot, importExpr(identifier));
             var args = __spread([pipe.exp], pipe.args);
             var convertedArgs = isVarLength ? this.visitAll([new LiteralArray(pipe.span, args)]) : this.visitAll(args);
-            return new FunctionCall(pipe.span, target, __spread([
+            var pipeBindExpr = new FunctionCall(pipe.span, target, __spread([
                 new LiteralPrimitive(pipe.span, slot),
                 new LiteralPrimitive(pipe.span, pureFunctionSlot)
             ], convertedArgs));
+            this._pipeBindExprs.push(pipeBindExpr);
+            return pipeBindExpr;
+        };
+        ValueConverter.prototype.updatePipeSlotOffsets = function (bindingSlots) {
+            this._pipeBindExprs.forEach(function (pipe) {
+                // update the slot offset arg (index 1) to account for binding slots
+                var slotOffset = pipe.args[1];
+                slotOffset.value += bindingSlots;
+            });
         };
         ValueConverter.prototype.visitLiteralArray = function (array, context) {
             var _this = this;
@@ -16875,14 +16883,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 summaries.forEach(function (summary) { return _this.summaryCache.set(summary.symbol, summary); });
                 if (moduleName) {
                     this.knownFileNameToModuleNames.set(filePath, moduleName);
-                    if (filePath.endsWith('.d.ts')) {
-                        // Also add entries to map the ngfactory & ngsummary files to their module names.
-                        // This is necessary to resolve ngfactory & ngsummary files to their AMD module
-                        // names when building angular with Bazel from source downstream.
-                        // See https://github.com/bazelbuild/rules_typescript/pull/223 for context.
-                        this.knownFileNameToModuleNames.set(filePath.replace(/\.d\.ts$/, '.ngfactory.d.ts'), moduleName + '.ngfactory');
-                        this.knownFileNameToModuleNames.set(filePath.replace(/\.d\.ts$/, '.ngsummary.d.ts'), moduleName + '.ngsummary');
-                    }
                 }
                 importAs.forEach(function (importAs) { _this.importAs.set(importAs.symbol, importAs.importAs); });
             }
@@ -33322,7 +33322,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('7.0.0-beta.3+24.sha-61218f5');
+    var VERSION$2 = new Version$1('7.0.0-beta.3+27.sha-22d58fc');
 
     /**
      * @license
@@ -45674,7 +45674,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.0-beta.3+24.sha-61218f5');
+    var VERSION$3 = new Version$1('7.0.0-beta.3+27.sha-22d58fc');
 
     /**
      * @license
