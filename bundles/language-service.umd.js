@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.0-beta.3+26.sha-27e2039
+ * @license Angular v7.0.0-beta.3+28.sha-eb1fe19
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1192,7 +1192,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.0-beta.3+26.sha-27e2039');
+    var VERSION = new Version('7.0.0-beta.3+28.sha-eb1fe19');
 
     /**
      * @license
@@ -19764,14 +19764,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 summaries.forEach(function (summary) { return _this.summaryCache.set(summary.symbol, summary); });
                 if (moduleName) {
                     this.knownFileNameToModuleNames.set(filePath, moduleName);
-                    if (filePath.endsWith('.d.ts')) {
-                        // Also add entries to map the ngfactory & ngsummary files to their module names.
-                        // This is necessary to resolve ngfactory & ngsummary files to their AMD module
-                        // names when building angular with Bazel from source downstream.
-                        // See https://github.com/bazelbuild/rules_typescript/pull/223 for context.
-                        this.knownFileNameToModuleNames.set(filePath.replace(/\.d\.ts$/, '.ngfactory.d.ts'), moduleName + '.ngfactory');
-                        this.knownFileNameToModuleNames.set(filePath.replace(/\.d\.ts$/, '.ngsummary.d.ts'), moduleName + '.ngsummary');
-                    }
                 }
                 importAs.forEach(function (importAs) { _this.importAs.set(importAs.symbol, importAs.importAs); });
             }
@@ -40782,7 +40774,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('7.0.0-beta.3+26.sha-27e2039');
+    var VERSION$2 = new Version$1('7.0.0-beta.3+28.sha-eb1fe19');
 
     /**
      * @license
@@ -53203,7 +53195,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.0-beta.3+26.sha-27e2039');
+    var VERSION$3 = new Version$1('7.0.0-beta.3+28.sha-eb1fe19');
 
     /**
      * @license
