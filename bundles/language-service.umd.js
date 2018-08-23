@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.0-beta.3+28.sha-eb1fe19
+ * @license Angular v7.0.0-beta.3+29.sha-668bfce
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1192,7 +1192,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.0-beta.3+28.sha-eb1fe19');
+    var VERSION = new Version('7.0.0-beta.3+29.sha-668bfce');
 
     /**
      * @license
@@ -17930,7 +17930,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 }
             }
         };
-        /* @internal */
+        /** @internal */
         StaticSymbolResolver.prototype.ignoreErrorsFor = function (cb) {
             var recorder = this.errorRecorder;
             this.errorRecorder = function () { };
@@ -40774,7 +40774,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('7.0.0-beta.3+28.sha-eb1fe19');
+    var VERSION$2 = new Version$1('7.0.0-beta.3+29.sha-668bfce');
 
     /**
      * @license
@@ -53195,7 +53195,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.0-beta.3+28.sha-eb1fe19');
+    var VERSION$3 = new Version$1('7.0.0-beta.3+29.sha-668bfce');
 
     /**
      * @license
