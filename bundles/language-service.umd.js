@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.0-beta.3+30.sha-3d41739
+ * @license Angular v7.0.0-beta.3+39.sha-9bcd8c2
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1192,7 +1192,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.0-beta.3+30.sha-3d41739');
+    var VERSION = new Version('7.0.0-beta.3+39.sha-9bcd8c2');
 
     /**
      * @license
@@ -1721,6 +1721,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             return {
                 ngContentSelectors: this.ngContentSelectors,
                 encapsulation: this.encapsulation,
+                styles: this.styles
             };
         };
         return CompileTemplateMetadata;
@@ -13003,6 +13004,597 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * This file is a port of shadowCSS from webcomponents.js to TypeScript.
+     *
+     * Please make sure to keep to edits in sync with the source file.
+     *
+     * Source:
+     * https://github.com/webcomponents/webcomponentsjs/blob/4efecd7e0e/src/ShadowCSS/ShadowCSS.js
+     *
+     * The original file level comment is reproduced below
+     */
+    /*
+      This is a limited shim for ShadowDOM css styling.
+      https://dvcs.w3.org/hg/webcomponents/raw-file/tip/spec/shadow/index.html#styles
+
+      The intention here is to support only the styling features which can be
+      relatively simply implemented. The goal is to allow users to avoid the
+      most obvious pitfalls and do so without compromising performance significantly.
+      For ShadowDOM styling that's not covered here, a set of best practices
+      can be provided that should allow users to accomplish more complex styling.
+
+      The following is a list of specific ShadowDOM styling features and a brief
+      discussion of the approach used to shim.
+
+      Shimmed features:
+
+      * :host, :host-context: ShadowDOM allows styling of the shadowRoot's host
+      element using the :host rule. To shim this feature, the :host styles are
+      reformatted and prefixed with a given scope name and promoted to a
+      document level stylesheet.
+      For example, given a scope name of .foo, a rule like this:
+
+        :host {
+            background: red;
+          }
+        }
+
+      becomes:
+
+        .foo {
+          background: red;
+        }
+
+      * encapsulation: Styles defined within ShadowDOM, apply only to
+      dom inside the ShadowDOM. Polymer uses one of two techniques to implement
+      this feature.
+
+      By default, rules are prefixed with the host element tag name
+      as a descendant selector. This ensures styling does not leak out of the 'top'
+      of the element's ShadowDOM. For example,
+
+      div {
+          font-weight: bold;
+        }
+
+      becomes:
+
+      x-foo div {
+          font-weight: bold;
+        }
+
+      becomes:
+
+
+      Alternatively, if WebComponents.ShadowCSS.strictStyling is set to true then
+      selectors are scoped by adding an attribute selector suffix to each
+      simple selector that contains the host element tag name. Each element
+      in the element's ShadowDOM template is also given the scope attribute.
+      Thus, these rules match only elements that have the scope attribute.
+      For example, given a scope name of x-foo, a rule like this:
+
+        div {
+          font-weight: bold;
+        }
+
+      becomes:
+
+        div[x-foo] {
+          font-weight: bold;
+        }
+
+      Note that elements that are dynamically added to a scope must have the scope
+      selector added to them manually.
+
+      * upper/lower bound encapsulation: Styles which are defined outside a
+      shadowRoot should not cross the ShadowDOM boundary and should not apply
+      inside a shadowRoot.
+
+      This styling behavior is not emulated. Some possible ways to do this that
+      were rejected due to complexity and/or performance concerns include: (1) reset
+      every possible property for every possible selector for a given scope name;
+      (2) re-implement css in javascript.
+
+      As an alternative, users should make sure to use selectors
+      specific to the scope in which they are working.
+
+      * ::distributed: This behavior is not emulated. It's often not necessary
+      to style the contents of a specific insertion point and instead, descendants
+      of the host element can be styled selectively. Users can also create an
+      extra node around an insertion point and style that node's contents
+      via descendent selectors. For example, with a shadowRoot like this:
+
+        <style>
+          ::content(div) {
+            background: red;
+          }
+        </style>
+        <content></content>
+
+      could become:
+
+        <style>
+          / *@polyfill .content-container div * /
+          ::content(div) {
+            background: red;
+          }
+        </style>
+        <div class="content-container">
+          <content></content>
+        </div>
+
+      Note the use of @polyfill in the comment above a ShadowDOM specific style
+      declaration. This is a directive to the styling shim to use the selector
+      in comments in lieu of the next selector when running under polyfill.
+    */
+    var ShadowCss = /** @class */ (function () {
+        function ShadowCss() {
+            this.strictStyling = true;
+        }
+        /*
+        * Shim some cssText with the given selector. Returns cssText that can
+        * be included in the document via WebComponents.ShadowCSS.addCssToDocument(css).
+        *
+        * When strictStyling is true:
+        * - selector is the attribute added to all elements inside the host,
+        * - hostSelector is the attribute added to the host itself.
+        */
+        ShadowCss.prototype.shimCssText = function (cssText, selector, hostSelector) {
+            if (hostSelector === void 0) { hostSelector = ''; }
+            var commentsWithHash = extractCommentsWithHash(cssText);
+            cssText = stripComments(cssText);
+            cssText = this._insertDirectives(cssText);
+            var scopedCssText = this._scopeCssText(cssText, selector, hostSelector);
+            return __spread([scopedCssText], commentsWithHash).join('\n');
+        };
+        ShadowCss.prototype._insertDirectives = function (cssText) {
+            cssText = this._insertPolyfillDirectivesInCssText(cssText);
+            return this._insertPolyfillRulesInCssText(cssText);
+        };
+        /*
+         * Process styles to convert native ShadowDOM rules that will trip
+         * up the css parser; we rely on decorating the stylesheet with inert rules.
+         *
+         * For example, we convert this rule:
+         *
+         * polyfill-next-selector { content: ':host menu-item'; }
+         * ::content menu-item {
+         *
+         * to this:
+         *
+         * scopeName menu-item {
+         *
+        **/
+        ShadowCss.prototype._insertPolyfillDirectivesInCssText = function (cssText) {
+            // Difference with webcomponents.js: does not handle comments
+            return cssText.replace(_cssContentNextSelectorRe, function () {
+                var m = [];
+                for (var _i = 0; _i < arguments.length; _i++) {
+                    m[_i] = arguments[_i];
+                }
+                return m[2] + '{';
+            });
+        };
+        /*
+         * Process styles to add rules which will only apply under the polyfill
+         *
+         * For example, we convert this rule:
+         *
+         * polyfill-rule {
+         *   content: ':host menu-item';
+         * ...
+         * }
+         *
+         * to this:
+         *
+         * scopeName menu-item {...}
+         *
+        **/
+        ShadowCss.prototype._insertPolyfillRulesInCssText = function (cssText) {
+            // Difference with webcomponents.js: does not handle comments
+            return cssText.replace(_cssContentRuleRe, function () {
+                var m = [];
+                for (var _i = 0; _i < arguments.length; _i++) {
+                    m[_i] = arguments[_i];
+                }
+                var rule = m[0].replace(m[1], '').replace(m[2], '');
+                return m[4] + rule;
+            });
+        };
+        /* Ensure styles are scoped. Pseudo-scoping takes a rule like:
+         *
+         *  .foo {... }
+         *
+         *  and converts this to
+         *
+         *  scopeName .foo { ... }
+        */
+        ShadowCss.prototype._scopeCssText = function (cssText, scopeSelector, hostSelector) {
+            var unscopedRules = this._extractUnscopedRulesFromCssText(cssText);
+            // replace :host and :host-context -shadowcsshost and -shadowcsshost respectively
+            cssText = this._insertPolyfillHostInCssText(cssText);
+            cssText = this._convertColonHost(cssText);
+            cssText = this._convertColonHostContext(cssText);
+            cssText = this._convertShadowDOMSelectors(cssText);
+            if (scopeSelector) {
+                cssText = this._scopeSelectors(cssText, scopeSelector, hostSelector);
+            }
+            cssText = cssText + '\n' + unscopedRules;
+            return cssText.trim();
+        };
+        /*
+         * Process styles to add rules which will only apply under the polyfill
+         * and do not process via CSSOM. (CSSOM is destructive to rules on rare
+         * occasions, e.g. -webkit-calc on Safari.)
+         * For example, we convert this rule:
+         *
+         * @polyfill-unscoped-rule {
+         *   content: 'menu-item';
+         * ... }
+         *
+         * to this:
+         *
+         * menu-item {...}
+         *
+        **/
+        ShadowCss.prototype._extractUnscopedRulesFromCssText = function (cssText) {
+            // Difference with webcomponents.js: does not handle comments
+            var r = '';
+            var m;
+            _cssContentUnscopedRuleRe.lastIndex = 0;
+            while ((m = _cssContentUnscopedRuleRe.exec(cssText)) !== null) {
+                var rule = m[0].replace(m[2], '').replace(m[1], m[4]);
+                r += rule + '\n\n';
+            }
+            return r;
+        };
+        /*
+         * convert a rule like :host(.foo) > .bar { }
+         *
+         * to
+         *
+         * .foo<scopeName> > .bar
+        */
+        ShadowCss.prototype._convertColonHost = function (cssText) {
+            return this._convertColonRule(cssText, _cssColonHostRe, this._colonHostPartReplacer);
+        };
+        /*
+         * convert a rule like :host-context(.foo) > .bar { }
+         *
+         * to
+         *
+         * .foo<scopeName> > .bar, .foo scopeName > .bar { }
+         *
+         * and
+         *
+         * :host-context(.foo:host) .bar { ... }
+         *
+         * to
+         *
+         * .foo<scopeName> .bar { ... }
+        */
+        ShadowCss.prototype._convertColonHostContext = function (cssText) {
+            return this._convertColonRule(cssText, _cssColonHostContextRe, this._colonHostContextPartReplacer);
+        };
+        ShadowCss.prototype._convertColonRule = function (cssText, regExp, partReplacer) {
+            // m[1] = :host(-context), m[2] = contents of (), m[3] rest of rule
+            return cssText.replace(regExp, function () {
+                var m = [];
+                for (var _i = 0; _i < arguments.length; _i++) {
+                    m[_i] = arguments[_i];
+                }
+                if (m[2]) {
+                    var parts = m[2].split(',');
+                    var r = [];
+                    for (var i = 0; i < parts.length; i++) {
+                        var p = parts[i].trim();
+                        if (!p)
+                            break;
+                        r.push(partReplacer(_polyfillHostNoCombinator, p, m[3]));
+                    }
+                    return r.join(',');
+                }
+                else {
+                    return _polyfillHostNoCombinator + m[3];
+                }
+            });
+        };
+        ShadowCss.prototype._colonHostContextPartReplacer = function (host, part, suffix) {
+            if (part.indexOf(_polyfillHost) > -1) {
+                return this._colonHostPartReplacer(host, part, suffix);
+            }
+            else {
+                return host + part + suffix + ', ' + part + ' ' + host + suffix;
+            }
+        };
+        ShadowCss.prototype._colonHostPartReplacer = function (host, part, suffix) {
+            return host + part.replace(_polyfillHost, '') + suffix;
+        };
+        /*
+         * Convert combinators like ::shadow and pseudo-elements like ::content
+         * by replacing with space.
+        */
+        ShadowCss.prototype._convertShadowDOMSelectors = function (cssText) {
+            return _shadowDOMSelectorsRe.reduce(function (result, pattern) { return result.replace(pattern, ' '); }, cssText);
+        };
+        // change a selector like 'div' to 'name div'
+        ShadowCss.prototype._scopeSelectors = function (cssText, scopeSelector, hostSelector) {
+            var _this = this;
+            return processRules(cssText, function (rule) {
+                var selector = rule.selector;
+                var content = rule.content;
+                if (rule.selector[0] != '@') {
+                    selector =
+                        _this._scopeSelector(rule.selector, scopeSelector, hostSelector, _this.strictStyling);
+                }
+                else if (rule.selector.startsWith('@media') || rule.selector.startsWith('@supports') ||
+                    rule.selector.startsWith('@page') || rule.selector.startsWith('@document')) {
+                    content = _this._scopeSelectors(rule.content, scopeSelector, hostSelector);
+                }
+                return new CssRule(selector, content);
+            });
+        };
+        ShadowCss.prototype._scopeSelector = function (selector, scopeSelector, hostSelector, strict) {
+            var _this = this;
+            return selector.split(',')
+                .map(function (part) { return part.trim().split(_shadowDeepSelectors); })
+                .map(function (deepParts) {
+                var _a = __read(deepParts), shallowPart = _a[0], otherParts = _a.slice(1);
+                var applyScope = function (shallowPart) {
+                    if (_this._selectorNeedsScoping(shallowPart, scopeSelector)) {
+                        return strict ?
+                            _this._applyStrictSelectorScope(shallowPart, scopeSelector, hostSelector) :
+                            _this._applySelectorScope(shallowPart, scopeSelector, hostSelector);
+                    }
+                    else {
+                        return shallowPart;
+                    }
+                };
+                return __spread([applyScope(shallowPart)], otherParts).join(' ');
+            })
+                .join(', ');
+        };
+        ShadowCss.prototype._selectorNeedsScoping = function (selector, scopeSelector) {
+            var re = this._makeScopeMatcher(scopeSelector);
+            return !re.test(selector);
+        };
+        ShadowCss.prototype._makeScopeMatcher = function (scopeSelector) {
+            var lre = /\[/g;
+            var rre = /\]/g;
+            scopeSelector = scopeSelector.replace(lre, '\\[').replace(rre, '\\]');
+            return new RegExp('^(' + scopeSelector + ')' + _selectorReSuffix, 'm');
+        };
+        ShadowCss.prototype._applySelectorScope = function (selector, scopeSelector, hostSelector) {
+            // Difference from webcomponents.js: scopeSelector could not be an array
+            return this._applySimpleSelectorScope(selector, scopeSelector, hostSelector);
+        };
+        // scope via name and [is=name]
+        ShadowCss.prototype._applySimpleSelectorScope = function (selector, scopeSelector, hostSelector) {
+            // In Android browser, the lastIndex is not reset when the regex is used in String.replace()
+            _polyfillHostRe.lastIndex = 0;
+            if (_polyfillHostRe.test(selector)) {
+                var replaceBy_1 = this.strictStyling ? "[" + hostSelector + "]" : scopeSelector;
+                return selector
+                    .replace(_polyfillHostNoCombinatorRe, function (hnc, selector) {
+                    return selector.replace(/([^:]*)(:*)(.*)/, function (_, before, colon, after) {
+                        return before + replaceBy_1 + colon + after;
+                    });
+                })
+                    .replace(_polyfillHostRe, replaceBy_1 + ' ');
+            }
+            return scopeSelector + ' ' + selector;
+        };
+        // return a selector with [name] suffix on each simple selector
+        // e.g. .foo.bar > .zot becomes .foo[name].bar[name] > .zot[name]  /** @internal */
+        ShadowCss.prototype._applyStrictSelectorScope = function (selector, scopeSelector, hostSelector) {
+            var _this = this;
+            var isRe = /\[is=([^\]]*)\]/g;
+            scopeSelector = scopeSelector.replace(isRe, function (_) {
+                var parts = [];
+                for (var _i = 1; _i < arguments.length; _i++) {
+                    parts[_i - 1] = arguments[_i];
+                }
+                return parts[0];
+            });
+            var attrName = '[' + scopeSelector + ']';
+            var _scopeSelectorPart = function (p) {
+                var scopedP = p.trim();
+                if (!scopedP) {
+                    return '';
+                }
+                if (p.indexOf(_polyfillHostNoCombinator) > -1) {
+                    scopedP = _this._applySimpleSelectorScope(p, scopeSelector, hostSelector);
+                }
+                else {
+                    // remove :host since it should be unnecessary
+                    var t = p.replace(_polyfillHostRe, '');
+                    if (t.length > 0) {
+                        var matches = t.match(/([^:]*)(:*)(.*)/);
+                        if (matches) {
+                            scopedP = matches[1] + attrName + matches[2] + matches[3];
+                        }
+                    }
+                }
+                return scopedP;
+            };
+            var safeContent = new SafeSelector(selector);
+            selector = safeContent.content();
+            var scopedSelector = '';
+            var startIndex = 0;
+            var res;
+            var sep = /( |>|\+|~(?!=))\s*/g;
+            // If a selector appears before :host it should not be shimmed as it
+            // matches on ancestor elements and not on elements in the host's shadow
+            // `:host-context(div)` is transformed to
+            // `-shadowcsshost-no-combinatordiv, div -shadowcsshost-no-combinator`
+            // the `div` is not part of the component in the 2nd selectors and should not be scoped.
+            // Historically `component-tag:host` was matching the component so we also want to preserve
+            // this behavior to avoid breaking legacy apps (it should not match).
+            // The behavior should be:
+            // - `tag:host` -> `tag[h]` (this is to avoid breaking legacy apps, should not match anything)
+            // - `tag :host` -> `tag [h]` (`tag` is not scoped because it's considered part of a
+            //   `:host-context(tag)`)
+            var hasHost = selector.indexOf(_polyfillHostNoCombinator) > -1;
+            // Only scope parts after the first `-shadowcsshost-no-combinator` when it is present
+            var shouldScope = !hasHost;
+            while ((res = sep.exec(selector)) !== null) {
+                var separator = res[1];
+                var part_1 = selector.slice(startIndex, res.index).trim();
+                shouldScope = shouldScope || part_1.indexOf(_polyfillHostNoCombinator) > -1;
+                var scopedPart = shouldScope ? _scopeSelectorPart(part_1) : part_1;
+                scopedSelector += scopedPart + " " + separator + " ";
+                startIndex = sep.lastIndex;
+            }
+            var part = selector.substring(startIndex);
+            shouldScope = shouldScope || part.indexOf(_polyfillHostNoCombinator) > -1;
+            scopedSelector += shouldScope ? _scopeSelectorPart(part) : part;
+            // replace the placeholders with their original values
+            return safeContent.restore(scopedSelector);
+        };
+        ShadowCss.prototype._insertPolyfillHostInCssText = function (selector) {
+            return selector.replace(_colonHostContextRe, _polyfillHostContext)
+                .replace(_colonHostRe, _polyfillHost);
+        };
+        return ShadowCss;
+    }());
+    var SafeSelector = /** @class */ (function () {
+        function SafeSelector(selector) {
+            var _this = this;
+            this.placeholders = [];
+            this.index = 0;
+            // Replaces attribute selectors with placeholders.
+            // The WS in [attr="va lue"] would otherwise be interpreted as a selector separator.
+            selector = selector.replace(/(\[[^\]]*\])/g, function (_, keep) {
+                var replaceBy = "__ph-" + _this.index + "__";
+                _this.placeholders.push(keep);
+                _this.index++;
+                return replaceBy;
+            });
+            // Replaces the expression in `:nth-child(2n + 1)` with a placeholder.
+            // WS and "+" would otherwise be interpreted as selector separators.
+            this._content = selector.replace(/(:nth-[-\w]+)(\([^)]+\))/g, function (_, pseudo, exp) {
+                var replaceBy = "__ph-" + _this.index + "__";
+                _this.placeholders.push(exp);
+                _this.index++;
+                return pseudo + replaceBy;
+            });
+        }
+        SafeSelector.prototype.restore = function (content) {
+            var _this = this;
+            return content.replace(/__ph-(\d+)__/g, function (ph, index) { return _this.placeholders[+index]; });
+        };
+        SafeSelector.prototype.content = function () { return this._content; };
+        return SafeSelector;
+    }());
+    var _cssContentNextSelectorRe = /polyfill-next-selector[^}]*content:[\s]*?(['"])(.*?)\1[;\s]*}([^{]*?){/gim;
+    var _cssContentRuleRe = /(polyfill-rule)[^}]*(content:[\s]*(['"])(.*?)\3)[;\s]*[^}]*}/gim;
+    var _cssContentUnscopedRuleRe = /(polyfill-unscoped-rule)[^}]*(content:[\s]*(['"])(.*?)\3)[;\s]*[^}]*}/gim;
+    var _polyfillHost = '-shadowcsshost';
+    // note: :host-context pre-processed to -shadowcsshostcontext.
+    var _polyfillHostContext = '-shadowcsscontext';
+    var _parenSuffix = ')(?:\\((' +
+        '(?:\\([^)(]*\\)|[^)(]*)+?' +
+        ')\\))?([^,{]*)';
+    var _cssColonHostRe = new RegExp('(' + _polyfillHost + _parenSuffix, 'gim');
+    var _cssColonHostContextRe = new RegExp('(' + _polyfillHostContext + _parenSuffix, 'gim');
+    var _polyfillHostNoCombinator = _polyfillHost + '-no-combinator';
+    var _polyfillHostNoCombinatorRe = /-shadowcsshost-no-combinator([^\s]*)/;
+    var _shadowDOMSelectorsRe = [
+        /::shadow/g,
+        /::content/g,
+        // Deprecated selectors
+        /\/shadow-deep\//g,
+        /\/shadow\//g,
+    ];
+    // The deep combinator is deprecated in the CSS spec
+    // Support for `>>>`, `deep`, `::ng-deep` is then also deprecated and will be removed in the future.
+    // see https://github.com/angular/angular/pull/17677
+    var _shadowDeepSelectors = /(?:>>>)|(?:\/deep\/)|(?:::ng-deep)/g;
+    var _selectorReSuffix = '([>\\s~+\[.,{:][\\s\\S]*)?$';
+    var _polyfillHostRe = /-shadowcsshost/gim;
+    var _colonHostRe = /:host/gim;
+    var _colonHostContextRe = /:host-context/gim;
+    var _commentRe = /\/\*\s*[\s\S]*?\*\//g;
+    function stripComments(input) {
+        return input.replace(_commentRe, '');
+    }
+    var _commentWithHashRe = /\/\*\s*#\s*source(Mapping)?URL=[\s\S]+?\*\//g;
+    function extractCommentsWithHash(input) {
+        return input.match(_commentWithHashRe) || [];
+    }
+    var _ruleRe = /(\s*)([^;\{\}]+?)(\s*)((?:{%BLOCK%}?\s*;?)|(?:\s*;))/g;
+    var _curlyRe = /([{}])/g;
+    var OPEN_CURLY = '{';
+    var CLOSE_CURLY = '}';
+    var BLOCK_PLACEHOLDER = '%BLOCK%';
+    var CssRule = /** @class */ (function () {
+        function CssRule(selector, content) {
+            this.selector = selector;
+            this.content = content;
+        }
+        return CssRule;
+    }());
+    function processRules(input, ruleCallback) {
+        var inputWithEscapedBlocks = escapeBlocks(input);
+        var nextBlockIndex = 0;
+        return inputWithEscapedBlocks.escapedString.replace(_ruleRe, function () {
+            var m = [];
+            for (var _i = 0; _i < arguments.length; _i++) {
+                m[_i] = arguments[_i];
+            }
+            var selector = m[2];
+            var content = '';
+            var suffix = m[4];
+            var contentPrefix = '';
+            if (suffix && suffix.startsWith('{' + BLOCK_PLACEHOLDER)) {
+                content = inputWithEscapedBlocks.blocks[nextBlockIndex++];
+                suffix = suffix.substring(BLOCK_PLACEHOLDER.length + 1);
+                contentPrefix = '{';
+            }
+            var rule = ruleCallback(new CssRule(selector, content));
+            return "" + m[1] + rule.selector + m[3] + contentPrefix + rule.content + suffix;
+        });
+    }
+    var StringWithEscapedBlocks = /** @class */ (function () {
+        function StringWithEscapedBlocks(escapedString, blocks) {
+            this.escapedString = escapedString;
+            this.blocks = blocks;
+        }
+        return StringWithEscapedBlocks;
+    }());
+    function escapeBlocks(input) {
+        var inputParts = input.split(_curlyRe);
+        var resultParts = [];
+        var escapedBlocks = [];
+        var bracketCount = 0;
+        var currentBlockParts = [];
+        for (var partIndex = 0; partIndex < inputParts.length; partIndex++) {
+            var part = inputParts[partIndex];
+            if (part == CLOSE_CURLY) {
+                bracketCount--;
+            }
+            if (bracketCount > 0) {
+                currentBlockParts.push(part);
+            }
+            else {
+                if (currentBlockParts.length > 0) {
+                    escapedBlocks.push(currentBlockParts.join(''));
+                    resultParts.push(BLOCK_PLACEHOLDER);
+                    currentBlockParts = [];
+                }
+                resultParts.push(part);
+            }
+            if (part == OPEN_CURLY) {
+                bracketCount++;
+            }
+        }
+        if (currentBlockParts.length > 0) {
+            escapedBlocks.push(currentBlockParts.join(''));
+            resultParts.push(BLOCK_PLACEHOLDER);
+        }
+        return new StringWithEscapedBlocks(resultParts.join(''), escapedBlocks);
+    }
 
     /**
      * @license
@@ -13011,6 +13603,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    var COMPONENT_VARIABLE = '%COMP%';
+    var HOST_ATTR = "_nghost-" + COMPONENT_VARIABLE;
+    var CONTENT_ATTR = "_ngcontent-" + COMPONENT_VARIABLE;
 
     /**
      * @license
@@ -17539,6 +18134,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         if (pipesUsed.size) {
             definitionMap.set('pipes', literalArr(Array.from(pipesUsed)));
         }
+        // e.g. `styles: [str1, str2]`
+        if (meta.styles && meta.styles.length) {
+            var styleValues = meta.encapsulation == ViewEncapsulation.Emulated ?
+                compileStyles(meta.styles, CONTENT_ATTR, HOST_ATTR) :
+                meta.styles;
+            var strings = styleValues.map(function (str) { return literal(str); });
+            definitionMap.set('styles', literalArr(strings));
+        }
         // On the type side, remove newlines from the selector as it will need to fit into a TypeScript
         // string literal, which must be on one line.
         var selectorForType = (meta.selector || '').replace(/\n/g, '');
@@ -17752,6 +18355,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
         });
         return { attributes: attributes, listeners: listeners, properties: properties, animations: animations };
+    }
+    function compileStyles(styles, selector, hostSelector) {
+        var shadowCss = new ShadowCss();
+        return styles.map(function (style) { return shadowCss.shimCssText(style, selector, hostSelector); });
     }
 
     /**
@@ -26259,6 +26866,56 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * Defines template and style encapsulation options available for Component's {@link Component}.
+     *
+     * See {@link Component#encapsulation encapsulation}.
+     *
+     */
+    var ViewEncapsulation$1;
+    (function (ViewEncapsulation) {
+        /**
+         * Emulate `Native` scoping of styles by adding an attribute containing surrogate id to the Host
+         * Element and pre-processing the style rules provided via {@link Component#styles styles} or
+         * {@link Component#styleUrls styleUrls}, and adding the new Host Element attribute to all
+         * selectors.
+         *
+         * This is the default option.
+         */
+        ViewEncapsulation[ViewEncapsulation["Emulated"] = 0] = "Emulated";
+        /**
+         * @deprecated v6.1.0 - use {ViewEncapsulation.ShadowDom} instead.
+         * Use the native encapsulation mechanism of the renderer.
+         *
+         * For the DOM this means using the deprecated [Shadow DOM
+         * v0](https://w3c.github.io/webcomponents/spec/shadow/) and
+         * creating a ShadowRoot for Component's Host Element.
+         */
+        ViewEncapsulation[ViewEncapsulation["Native"] = 1] = "Native";
+        /**
+         * Don't provide any template or style encapsulation.
+         */
+        ViewEncapsulation[ViewEncapsulation["None"] = 2] = "None";
+        /**
+         * Use Shadow DOM to encapsulate styles.
+         *
+         * For the DOM this means using modern [Shadow
+         * DOM](https://w3c.github.io/webcomponents/spec/shadow/) and
+         * creating a ShadowRoot for Component's Host Element.
+         *
+         * ### Example
+         * {@example core/ts/metadata/encapsulation.ts region='longform'}
+         */
+        ViewEncapsulation[ViewEncapsulation["ShadowDom"] = 3] = "ShadowDom";
+    })(ViewEncapsulation$1 || (ViewEncapsulation$1 = {}));
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     var __window = typeof window !== 'undefined' && window;
     var __self = typeof self !== 'undefined' && typeof WorkerGlobalScope !== 'undefined' &&
         self instanceof WorkerGlobalScope && self;
@@ -27142,7 +27799,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         assertDefined(node, 'should be called with a node');
         var found = types.some(function (type) { return node.tNode.type === type; });
-        assertEqual(found, true, "Should be one of " + types.map(typeName).join(', '));
+        assertEqual(found, true, "Should be one of " + types.map(typeName).join(', ') + " but got " + typeName(node.tNode.type));
     }
     function typeName(type) {
         if (type == 1 /* Projection */)
@@ -27153,6 +27810,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             return 'View';
         if (type == 3 /* Element */)
             return 'Element';
+        if (type == 4 /* ElementContainer */)
+            return 'ElementContainer';
         return '<unknown>';
     }
 
@@ -29958,7 +30617,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      *
      * This method lazily creates the `StylingContext`. This is because in most cases
      * we have styling without any bindings. Creating `StylingContext` eagerly would mean that
-     * every style declaration such as `<div style="color: 'red' ">` would result `StyleContext`
+     * every style declaration such as `<div style="color: red">` would result `StyleContext`
      * which would create unnecessary memory pressure.
      *
      * @param index Index of the style allocation. See: `elementStyling`.
@@ -31098,10 +31757,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * found in the LICENSE file at https://angular.io/license
      */
     var EMPTY$1 = {};
-    var EMPTY_ARRAY = [];
+    var EMPTY_ARRAY$1 = [];
     if (typeof ngDevMode !== 'undefined' && ngDevMode) {
         Object.freeze(EMPTY$1);
-        Object.freeze(EMPTY_ARRAY);
+        Object.freeze(EMPTY_ARRAY$1);
     }
     var _renderCompCount = 0;
     /**
@@ -31124,7 +31783,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var pipeTypes = componentDefinition.pipes;
         var directiveTypes = componentDefinition.directives;
         var declaredInputs = {};
-        var encapsulation = componentDefinition.encapsulation;
+        var encapsulation = componentDefinition.encapsulation || ViewEncapsulation$1.Emulated;
+        var styles = componentDefinition.styles || EMPTY_ARRAY$1;
         var def = {
             type: type,
             diPublic: null,
@@ -31162,9 +31822,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             data: componentDefinition.data || EMPTY$1,
             // TODO(misko): convert ViewEncapsulation into const enum so that it can be used directly in the
             // next line. Also `None` should be 0 not 2.
-            encapsulation: encapsulation == null ? 2 /* ViewEncapsulation.None */ : encapsulation,
-            id: "c" + _renderCompCount++,
-            styles: EMPTY_ARRAY,
+            encapsulation: encapsulation,
+            providers: EMPTY_ARRAY$1,
+            viewProviders: EMPTY_ARRAY$1,
+            id: "c" + _renderCompCount++, styles: styles,
         };
         var feature = componentDefinition.features;
         feature && feature.forEach(function (fn) { return fn(def); });
@@ -31187,10 +31848,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function defineNgModule(def) {
         var res = {
             type: def.type,
-            bootstrap: def.bootstrap || EMPTY_ARRAY,
-            declarations: def.declarations || EMPTY_ARRAY,
-            imports: def.imports || EMPTY_ARRAY,
-            exports: def.exports || EMPTY_ARRAY,
+            bootstrap: def.bootstrap || EMPTY_ARRAY$1,
+            declarations: def.declarations || EMPTY_ARRAY$1,
+            imports: def.imports || EMPTY_ARRAY$1,
+            exports: def.exports || EMPTY_ARRAY$1,
             transitiveCompileScopes: null,
         };
         return res;
@@ -32794,7 +33455,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function getOrCreateContainerRef(di) {
         if (!di.viewContainerRef) {
             var vcRefHost = di.node;
-            ngDevMode && assertNodeOfPossibleTypes(vcRefHost, 0 /* Container */, 3 /* Element */);
+            ngDevMode && assertNodeOfPossibleTypes(vcRefHost, 0 /* Container */, 3 /* Element */, 4 /* ElementContainer */);
             var hostParent = getParentLNode(vcRefHost);
             var lContainer = createLContainer(hostParent, vcRefHost.view, true);
             var comment = vcRefHost.view[RENDERER].createComment(ngDevMode ? 'container' : '');
@@ -33073,7 +33734,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * a circular dependency among the providers.
      */
     var CIRCULAR$2 = {};
-    var EMPTY_ARRAY$1 = [];
+    var EMPTY_ARRAY$2 = [];
     /**
      * A lazily initialized NullInjector.
      */
@@ -33214,7 +33875,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             // If defOrWrappedType was an InjectorDefTypeWithProviders, then .providers may hold some
             // extra providers.
             var providers = (ngModule !== undefined) && defOrWrappedDef.providers ||
-                EMPTY_ARRAY$1;
+                EMPTY_ARRAY$2;
             // Finally, if defOrWrappedType was an `InjectorDefTypeWithProviders`, then the actual
             // `InjectorDef` is on its `ngModule`.
             if (ngModule !== undefined) {
@@ -39940,7 +40601,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var EMPTY_ARRAY$2 = [];
+    var EMPTY_ARRAY$3 = [];
     /**
      * Compiles a module in JIT mode.
      *
@@ -39954,19 +40615,19 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Compiles and adds the `ngModuleDef` and `ngInjectorDef` properties to the module class.
      */
     function compileNgModuleDefs(moduleType, ngModule) {
-        var declarations = flatten$3(ngModule.declarations || EMPTY_ARRAY$2);
+        var declarations = flatten$3(ngModule.declarations || EMPTY_ARRAY$3);
         var ngModuleDef = null;
         Object.defineProperty(moduleType, NG_MODULE_DEF, {
             get: function () {
                 if (ngModuleDef === null) {
                     var meta = {
                         type: wrap(moduleType),
-                        bootstrap: flatten$3(ngModule.bootstrap || EMPTY_ARRAY$2).map(wrap),
+                        bootstrap: flatten$3(ngModule.bootstrap || EMPTY_ARRAY$3).map(wrap),
                         declarations: declarations.map(wrapReference),
-                        imports: flatten$3(ngModule.imports || EMPTY_ARRAY$2)
+                        imports: flatten$3(ngModule.imports || EMPTY_ARRAY$3)
                             .map(expandModuleWithProviders)
                             .map(wrapReference),
-                        exports: flatten$3(ngModule.exports || EMPTY_ARRAY$2)
+                        exports: flatten$3(ngModule.exports || EMPTY_ARRAY$3)
                             .map(expandModuleWithProviders)
                             .map(wrapReference),
                         emitInline: true,
@@ -39987,10 +40648,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                         name: moduleType.name,
                         type: wrap(moduleType),
                         deps: reflectDependencies(moduleType),
-                        providers: new WrappedNodeExpr(ngModule.providers || EMPTY_ARRAY$2),
+                        providers: new WrappedNodeExpr(ngModule.providers || EMPTY_ARRAY$3),
                         imports: new WrappedNodeExpr([
-                            ngModule.imports || EMPTY_ARRAY$2,
-                            ngModule.exports || EMPTY_ARRAY$2,
+                            ngModule.imports || EMPTY_ARRAY$3,
+                            ngModule.exports || EMPTY_ARRAY$3,
                         ]),
                     };
                     var res = compileInjector(meta);
@@ -40008,7 +40669,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * the `ngSelectorScope` property of the declared type.
      */
     function setScopeOnDeclaredComponents(moduleType, ngModule) {
-        var declarations = flatten$3(ngModule.declarations || EMPTY_ARRAY$2);
+        var declarations = flatten$3(ngModule.declarations || EMPTY_ARRAY$3);
         var transitiveScopes = transitiveScopesFor(moduleType);
         declarations.forEach(function (declaration) {
             if (declaration.hasOwnProperty(NG_COMPONENT_DEF)) {
@@ -40188,7 +40849,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     }
                     // Compile the component metadata, including template, into an expression.
                     // TODO(alxhub): implement inputs, outputs, queries, etc.
-                    var res = compileComponentFromMetadata(__assign({}, directiveMetadata(type, metadata), { template: template, directives: new Map(), pipes: new Map(), viewQueries: [], wrapDirectivesInClosure: false }), constantPool, makeBindingParser());
+                    var res = compileComponentFromMetadata(__assign({}, directiveMetadata(type, metadata), { template: template, directives: new Map(), pipes: new Map(), viewQueries: [], wrapDirectivesInClosure: false, styles: metadata.styles || [], encapsulation: metadata.encapsulation || ViewEncapsulation$1.Emulated }), constantPool, makeBindingParser());
                     var preStatements = __spread(constantPool.statements, res.statements);
                     ngComponentDef = jitExpression(res.expression, angularCoreEnv, "ng://" + type.name + "/ngComponentDef.js", preStatements);
                     // If component compilation is async, then the @NgModule annotation which declares the
@@ -40702,56 +41363,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    /**
-     * Defines template and style encapsulation options available for Component's {@link Component}.
-     *
-     * See {@link Component#encapsulation encapsulation}.
-     *
-     */
-    var ViewEncapsulation$1;
-    (function (ViewEncapsulation) {
-        /**
-         * Emulate `Native` scoping of styles by adding an attribute containing surrogate id to the Host
-         * Element and pre-processing the style rules provided via {@link Component#styles styles} or
-         * {@link Component#styleUrls styleUrls}, and adding the new Host Element attribute to all
-         * selectors.
-         *
-         * This is the default option.
-         */
-        ViewEncapsulation[ViewEncapsulation["Emulated"] = 0] = "Emulated";
-        /**
-         * @deprecated v6.1.0 - use {ViewEncapsulation.ShadowDom} instead.
-         * Use the native encapsulation mechanism of the renderer.
-         *
-         * For the DOM this means using the deprecated [Shadow DOM
-         * v0](https://w3c.github.io/webcomponents/spec/shadow/) and
-         * creating a ShadowRoot for Component's Host Element.
-         */
-        ViewEncapsulation[ViewEncapsulation["Native"] = 1] = "Native";
-        /**
-         * Don't provide any template or style encapsulation.
-         */
-        ViewEncapsulation[ViewEncapsulation["None"] = 2] = "None";
-        /**
-         * Use Shadow DOM to encapsulate styles.
-         *
-         * For the DOM this means using modern [Shadow
-         * DOM](https://w3c.github.io/webcomponents/spec/shadow/) and
-         * creating a ShadowRoot for Component's Host Element.
-         *
-         * ### Example
-         * {@example core/ts/metadata/encapsulation.ts region='longform'}
-         */
-        ViewEncapsulation[ViewEncapsulation["ShadowDom"] = 3] = "ShadowDom";
-    })(ViewEncapsulation$1 || (ViewEncapsulation$1 = {}));
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
 
     /**
      * @license
@@ -40774,7 +41385,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('7.0.0-beta.3+30.sha-3d41739');
+    var VERSION$2 = new Version$1('7.0.0-beta.3+39.sha-9bcd8c2');
 
     /**
      * @license
@@ -53195,7 +53806,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.0-beta.3+30.sha-3d41739');
+    var VERSION$3 = new Version$1('7.0.0-beta.3+39.sha-9bcd8c2');
 
     /**
      * @license
