@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.0-beta.3+30.sha-3d41739
+ * @license Angular v7.0.0-beta.3+39.sha-9bcd8c2
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -60,6 +60,21 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         return __assign.apply(this, arguments);
     };
+
+    function __decorate(decorators, target, key, desc) {
+        var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+        if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+        else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+        return c > 3 && r && Object.defineProperty(target, key, r), r;
+    }
+
+    function __param(paramIndex, decorator) {
+        return function (target, key) { decorator(target, key, paramIndex); }
+    }
+
+    function __metadata(metadataKey, metadataValue) {
+        if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(metadataKey, metadataValue);
+    }
 
     function __values(o) {
         var m = typeof Symbol === "function" && o[Symbol.iterator], i = 0;
@@ -1144,7 +1159,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.0-beta.3+30.sha-3d41739');
+    var VERSION = new Version('7.0.0-beta.3+39.sha-9bcd8c2');
 
     /**
      * @license
@@ -1673,6 +1688,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             return {
                 ngContentSelectors: this.ngContentSelectors,
                 encapsulation: this.encapsulation,
+                styles: this.styles
             };
         };
         return CompileTemplateMetadata;
@@ -23810,6 +23826,56 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * Defines template and style encapsulation options available for Component's {@link Component}.
+     *
+     * See {@link Component#encapsulation encapsulation}.
+     *
+     */
+    var ViewEncapsulation$1;
+    (function (ViewEncapsulation) {
+        /**
+         * Emulate `Native` scoping of styles by adding an attribute containing surrogate id to the Host
+         * Element and pre-processing the style rules provided via {@link Component#styles styles} or
+         * {@link Component#styleUrls styleUrls}, and adding the new Host Element attribute to all
+         * selectors.
+         *
+         * This is the default option.
+         */
+        ViewEncapsulation[ViewEncapsulation["Emulated"] = 0] = "Emulated";
+        /**
+         * @deprecated v6.1.0 - use {ViewEncapsulation.ShadowDom} instead.
+         * Use the native encapsulation mechanism of the renderer.
+         *
+         * For the DOM this means using the deprecated [Shadow DOM
+         * v0](https://w3c.github.io/webcomponents/spec/shadow/) and
+         * creating a ShadowRoot for Component's Host Element.
+         */
+        ViewEncapsulation[ViewEncapsulation["Native"] = 1] = "Native";
+        /**
+         * Don't provide any template or style encapsulation.
+         */
+        ViewEncapsulation[ViewEncapsulation["None"] = 2] = "None";
+        /**
+         * Use Shadow DOM to encapsulate styles.
+         *
+         * For the DOM this means using modern [Shadow
+         * DOM](https://w3c.github.io/webcomponents/spec/shadow/) and
+         * creating a ShadowRoot for Component's Host Element.
+         *
+         * ### Example
+         * {@example core/ts/metadata/encapsulation.ts region='longform'}
+         */
+        ViewEncapsulation[ViewEncapsulation["ShadowDom"] = 3] = "ShadowDom";
+    })(ViewEncapsulation$1 || (ViewEncapsulation$1 = {}));
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     function assertEqual(actual, expected, msg) {
         if (actual != expected) {
             throwError(msg);
@@ -24107,7 +24173,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         assertDefined(node, 'should be called with a node');
         var found = types.some(function (type) { return node.tNode.type === type; });
-        assertEqual(found, true, "Should be one of " + types.map(typeName).join(', '));
+        assertEqual(found, true, "Should be one of " + types.map(typeName).join(', ') + " but got " + typeName(node.tNode.type));
     }
     function typeName(type) {
         if (type == 1 /* Projection */)
@@ -24118,6 +24184,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             return 'View';
         if (type == 3 /* Element */)
             return 'Element';
+        if (type == 4 /* ElementContainer */)
+            return 'ElementContainer';
         return '<unknown>';
     }
 
@@ -26036,10 +26104,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * found in the LICENSE file at https://angular.io/license
      */
     var EMPTY$1 = {};
-    var EMPTY_ARRAY = [];
+    var EMPTY_ARRAY$1 = [];
     if (typeof ngDevMode !== 'undefined' && ngDevMode) {
         Object.freeze(EMPTY$1);
-        Object.freeze(EMPTY_ARRAY);
+        Object.freeze(EMPTY_ARRAY$1);
     }
 
     /**
@@ -27118,7 +27186,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function getOrCreateContainerRef(di) {
         if (!di.viewContainerRef) {
             var vcRefHost = di.node;
-            ngDevMode && assertNodeOfPossibleTypes(vcRefHost, 0 /* Container */, 3 /* Element */);
+            ngDevMode && assertNodeOfPossibleTypes(vcRefHost, 0 /* Container */, 3 /* Element */, 4 /* ElementContainer */);
             var hostParent = getParentLNode(vcRefHost);
             var lContainer = createLContainer(hostParent, vcRefHost.view, true);
             var comment = vcRefHost.view[RENDERER].createComment(ngDevMode ? 'container' : '');
@@ -27358,7 +27426,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * a circular dependency among the providers.
      */
     var CIRCULAR$2 = {};
-    var EMPTY_ARRAY$1 = [];
+    var EMPTY_ARRAY$2 = [];
     /**
      * A lazily initialized NullInjector.
      */
@@ -27499,7 +27567,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             // If defOrWrappedType was an InjectorDefTypeWithProviders, then .providers may hold some
             // extra providers.
             var providers = (ngModule !== undefined) && defOrWrappedDef.providers ||
-                EMPTY_ARRAY$1;
+                EMPTY_ARRAY$2;
             // Finally, if defOrWrappedType was an `InjectorDefTypeWithProviders`, then the actual
             // `InjectorDef` is on its `ngModule`.
             if (ngModule !== undefined) {
@@ -32969,7 +33037,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     var GET_PROPERTY_NAME$2 = {};
     var ɵ0$2 = GET_PROPERTY_NAME$2;
     var USE_VALUE$3 = getClosureSafeProperty$1({ provide: String, useValue: ɵ0$2 }, GET_PROPERTY_NAME$2);
-    var EMPTY_ARRAY$3 = [];
+    var EMPTY_ARRAY$4 = [];
     function convertInjectableProviderToFactory(type, provider) {
         if (!provider) {
             var reflectionCapabilities = new ReflectionCapabilities();
@@ -32987,7 +33055,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         else if (provider.useFactory) {
             var factoryProvider_1 = provider;
-            return function () { return factoryProvider_1.useFactory.apply(factoryProvider_1, __spread(injectArgs(factoryProvider_1.deps || EMPTY_ARRAY$3))); };
+            return function () { return factoryProvider_1.useFactory.apply(factoryProvider_1, __spread(injectArgs(factoryProvider_1.deps || EMPTY_ARRAY$4))); };
         }
         else if (provider.useClass) {
             var classProvider_1 = provider;
@@ -33250,56 +33318,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    /**
-     * Defines template and style encapsulation options available for Component's {@link Component}.
-     *
-     * See {@link Component#encapsulation encapsulation}.
-     *
-     */
-    var ViewEncapsulation$1;
-    (function (ViewEncapsulation) {
-        /**
-         * Emulate `Native` scoping of styles by adding an attribute containing surrogate id to the Host
-         * Element and pre-processing the style rules provided via {@link Component#styles styles} or
-         * {@link Component#styleUrls styleUrls}, and adding the new Host Element attribute to all
-         * selectors.
-         *
-         * This is the default option.
-         */
-        ViewEncapsulation[ViewEncapsulation["Emulated"] = 0] = "Emulated";
-        /**
-         * @deprecated v6.1.0 - use {ViewEncapsulation.ShadowDom} instead.
-         * Use the native encapsulation mechanism of the renderer.
-         *
-         * For the DOM this means using the deprecated [Shadow DOM
-         * v0](https://w3c.github.io/webcomponents/spec/shadow/) and
-         * creating a ShadowRoot for Component's Host Element.
-         */
-        ViewEncapsulation[ViewEncapsulation["Native"] = 1] = "Native";
-        /**
-         * Don't provide any template or style encapsulation.
-         */
-        ViewEncapsulation[ViewEncapsulation["None"] = 2] = "None";
-        /**
-         * Use Shadow DOM to encapsulate styles.
-         *
-         * For the DOM this means using modern [Shadow
-         * DOM](https://w3c.github.io/webcomponents/spec/shadow/) and
-         * creating a ShadowRoot for Component's Host Element.
-         *
-         * ### Example
-         * {@example core/ts/metadata/encapsulation.ts region='longform'}
-         */
-        ViewEncapsulation[ViewEncapsulation["ShadowDom"] = 3] = "ShadowDom";
-    })(ViewEncapsulation$1 || (ViewEncapsulation$1 = {}));
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
 
     /**
      * @license
@@ -33322,7 +33340,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('7.0.0-beta.3+30.sha-3d41739');
+    var VERSION$2 = new Version$1('7.0.0-beta.3+39.sha-9bcd8c2');
 
     /**
      * @license
@@ -38132,13 +38150,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
             this.initialized = true;
         };
-        ApplicationInitStatus.decorators = [
-            { type: Injectable }
-        ];
-        /** @nocollapse */
-        ApplicationInitStatus.ctorParameters = function () { return [
-            { type: Array, decorators: [{ type: Inject, args: [APP_INITIALIZER,] }, { type: Optional }] }
-        ]; };
+        ApplicationInitStatus = __decorate([
+            Injectable(),
+            __param(0, Inject(APP_INITIALIZER)), __param(0, Optional()),
+            __metadata("design:paramtypes", [Array])
+        ], ApplicationInitStatus);
         return ApplicationInitStatus;
     }());
 
@@ -38219,9 +38235,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             // tslint:disable-next-line:no-console
             console.warn(message);
         };
-        Console.decorators = [
-            { type: Injectable }
-        ];
+        Console = __decorate([
+            Injectable()
+        ], Console);
         return Console;
     }());
 
@@ -38281,9 +38297,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
          * Returns the id for a given NgModule, if one is defined and known to the compiler.
          */
         Compiler.prototype.getModuleId = function (moduleType) { return undefined; };
-        Compiler.decorators = [
-            { type: Injectable }
-        ];
+        Compiler = __decorate([
+            Injectable()
+        ], Compiler);
         return Compiler;
     }());
     /**
@@ -38850,13 +38866,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             // TODO(juliemr): implement.
             return [];
         };
-        Testability.decorators = [
-            { type: Injectable }
-        ];
-        /** @nocollapse */
-        Testability.ctorParameters = function () { return [
-            { type: NgZone }
-        ]; };
+        Testability = __decorate([
+            Injectable(),
+            __metadata("design:paramtypes", [NgZone])
+        ], Testability);
         return Testability;
     }());
     /**
@@ -38909,11 +38922,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             if (findInAncestors === void 0) { findInAncestors = true; }
             return _testabilityGetter.findTestabilityInTree(this, elem, findInAncestors);
         };
-        TestabilityRegistry.decorators = [
-            { type: Injectable }
-        ];
-        /** @nocollapse */
-        TestabilityRegistry.ctorParameters = function () { return []; };
+        TestabilityRegistry = __decorate([
+            Injectable(),
+            __metadata("design:paramtypes", [])
+        ], TestabilityRegistry);
         return TestabilityRegistry;
     }());
     var _NoopGetTestability = /** @class */ (function () {
@@ -39142,13 +39154,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             enumerable: true,
             configurable: true
         });
-        PlatformRef.decorators = [
-            { type: Injectable }
-        ];
-        /** @nocollapse */
-        PlatformRef.ctorParameters = function () { return [
-            { type: Injector }
-        ]; };
+        PlatformRef = __decorate([
+            Injectable(),
+            __metadata("design:paramtypes", [Injector])
+        ], PlatformRef);
         return PlatformRef;
     }());
     function getNgZone(ngZoneOption) {
@@ -39259,6 +39268,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             this.isStable =
                 merge(isCurrentlyStable, isStable.pipe(share()));
         }
+        ApplicationRef_1 = ApplicationRef;
         /**
          * Bootstrap a new component at the root level of the application.
          *
@@ -39322,7 +39332,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             if (this._runningTick) {
                 throw new Error('ApplicationRef.tick is called recursively');
             }
-            var scope = ApplicationRef._tickScope();
+            var scope = ApplicationRef_1._tickScope();
             try {
                 this._runningTick = true;
                 this._views.forEach(function (view) { return view.detectChanges(); });
@@ -39382,20 +39392,16 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             enumerable: true,
             configurable: true
         });
+        var ApplicationRef_1;
         /** @internal */
         ApplicationRef._tickScope = wtfCreateScope('ApplicationRef#tick()');
-        ApplicationRef.decorators = [
-            { type: Injectable }
-        ];
-        /** @nocollapse */
-        ApplicationRef.ctorParameters = function () { return [
-            { type: NgZone },
-            { type: Console },
-            { type: Injector },
-            { type: ErrorHandler },
-            { type: ComponentFactoryResolver },
-            { type: ApplicationInitStatus }
-        ]; };
+        ApplicationRef = ApplicationRef_1 = __decorate([
+            Injectable(),
+            __metadata("design:paramtypes", [NgZone, Console, Injector,
+                ErrorHandler,
+                ComponentFactoryResolver,
+                ApplicationInitStatus])
+        ], ApplicationRef);
         return ApplicationRef;
     }());
     function remove(list, el) {
@@ -39539,6 +39545,71 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    var _SEPARATOR = '#';
+    var FACTORY_CLASS_SUFFIX = 'NgFactory';
+    /**
+     * Configuration for SystemJsNgModuleLoader.
+     * token.
+     *
+     * @experimental
+     */
+    var SystemJsNgModuleLoaderConfig = /** @class */ (function () {
+        function SystemJsNgModuleLoaderConfig() {
+        }
+        return SystemJsNgModuleLoaderConfig;
+    }());
+    var DEFAULT_CONFIG = {
+        factoryPathPrefix: '',
+        factoryPathSuffix: '.ngfactory',
+    };
+    /**
+     * NgModuleFactoryLoader that uses SystemJS to load NgModuleFactory
+     * @experimental
+     */
+    var SystemJsNgModuleLoader = /** @class */ (function () {
+        function SystemJsNgModuleLoader(_compiler, config) {
+            this._compiler = _compiler;
+            this._config = config || DEFAULT_CONFIG;
+        }
+        SystemJsNgModuleLoader.prototype.load = function (path$$1) {
+            var offlineMode = this._compiler instanceof Compiler;
+            return offlineMode ? this.loadFactory(path$$1) : this.loadAndCompile(path$$1);
+        };
+        SystemJsNgModuleLoader.prototype.loadAndCompile = function (path$$1) {
+            var _this = this;
+            var _a = __read(path$$1.split(_SEPARATOR), 2), module = _a[0], exportName = _a[1];
+            if (exportName === undefined) {
+                exportName = 'default';
+            }
+            return System.import(module)
+                .then(function (module) { return module[exportName]; })
+                .then(function (type) { return checkNotEmpty(type, module, exportName); })
+                .then(function (type) { return _this._compiler.compileModuleAsync(type); });
+        };
+        SystemJsNgModuleLoader.prototype.loadFactory = function (path$$1) {
+            var _a = __read(path$$1.split(_SEPARATOR), 2), module = _a[0], exportName = _a[1];
+            var factoryClassSuffix = FACTORY_CLASS_SUFFIX;
+            if (exportName === undefined) {
+                exportName = 'default';
+                factoryClassSuffix = '';
+            }
+            return System.import(this._config.factoryPathPrefix + module + this._config.factoryPathSuffix)
+                .then(function (module) { return module[exportName + factoryClassSuffix]; })
+                .then(function (factory) { return checkNotEmpty(factory, module, exportName); });
+        };
+        SystemJsNgModuleLoader = __decorate([
+            Injectable(),
+            __param(1, Optional()),
+            __metadata("design:paramtypes", [Compiler, SystemJsNgModuleLoaderConfig])
+        ], SystemJsNgModuleLoader);
+        return SystemJsNgModuleLoader;
+    }());
+    function checkNotEmpty(value, modulePath, exportName) {
+        if (!value) {
+            throw new Error("Cannot find '" + exportName + "' in '" + modulePath + "'");
+        }
+        return value;
+    }
 
     /**
      * @license
@@ -41067,6 +41138,22 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             deps: [[new Inject(LOCALE_ID), new Optional(), new SkipSelf()]]
         },
     ];
+    /**
+     * This module includes the providers of @angular/core that are needed
+     * to bootstrap components via `ApplicationRef`.
+     *
+     * @experimental
+     */
+    var ApplicationModule = /** @class */ (function () {
+        // Inject ApplicationRef to make it eager...
+        function ApplicationModule(appRef) {
+        }
+        ApplicationModule = __decorate([
+            NgModule({ providers: APPLICATION_MODULE_PROVIDERS }),
+            __metadata("design:paramtypes", [ApplicationRef])
+        ], ApplicationModule);
+        return ApplicationModule;
+    }());
 
     /**
      * @license
@@ -45674,7 +45761,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.0-beta.3+30.sha-3d41739');
+    var VERSION$3 = new Version$1('7.0.0-beta.3+39.sha-9bcd8c2');
 
     /**
      * @license
