@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.0-beta.4+32.sha-1e3460b
+ * @license Angular v7.0.0-beta.4+34.sha-6def18a
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1164,7 +1164,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.0-beta.4+32.sha-1e3460b');
+    var VERSION = new Version('7.0.0-beta.4+34.sha-6def18a');
 
     /**
      * @license
@@ -26846,6 +26846,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 elementNode = hostElement(componentTag, hostNode, this.componentDef);
                 // Create directive instance with factory() and store at index 0 in directives array
                 component = baseDirectiveCreate(0, this.componentDef.factory(), this.componentDef);
+                if (this.componentDef.hostBindings) {
+                    queueHostBindingForCheck(0, this.componentDef.hostVars);
+                }
                 rootContext.components.push(component);
                 initChangeDetectorIfExisting(elementNode.nodeInjector, component, elementNode.data);
                 elementNode.data[CONTEXT] = component;
@@ -26853,6 +26856,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 // executed here?
                 // Angular 5 reference: https://stackblitz.com/edit/lifecycle-hooks-vcref
                 LifecycleHooksFeature(component, this.componentDef);
+                setHostBindings(rootView[TVIEW].hostBindings);
                 // Transform the arrays of native nodes into a LNode structure that can be consumed by the
                 // projection instruction. This is needed to support the reprojection of these nodes.
                 if (projectableNodes) {
@@ -33492,7 +33496,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('7.0.0-beta.4+32.sha-1e3460b');
+    var VERSION$2 = new Version$1('7.0.0-beta.4+34.sha-6def18a');
 
     /**
      * @license
@@ -46086,7 +46090,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.0-beta.4+32.sha-1e3460b');
+    var VERSION$3 = new Version$1('7.0.0-beta.4+34.sha-6def18a');
 
     /**
      * @license
