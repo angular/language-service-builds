@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.0-beta.4+38.sha-cc29b9c
+ * @license Angular v7.0.0-beta.4+41.sha-51c0d9c
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1197,7 +1197,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.0-beta.4+38.sha-cc29b9c');
+    var VERSION = new Version('7.0.0-beta.4+41.sha-51c0d9c');
 
     /**
      * @license
@@ -41627,7 +41627,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('7.0.0-beta.4+38.sha-cc29b9c');
+    var VERSION$2 = new Version$1('7.0.0-beta.4+41.sha-51c0d9c');
 
     /**
      * @license
@@ -53207,6 +53207,16 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    var GET_PROPERTY_NAME$2 = {};
+    var USE_VALUE$3 = getClosureSafeProperty$1({ provide: String, useValue: GET_PROPERTY_NAME$2 }, GET_PROPERTY_NAME$2);
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     // clang-format on
 
     /**
@@ -54221,7 +54231,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.0-beta.4+38.sha-cc29b9c');
+    var VERSION$3 = new Version$1('7.0.0-beta.4+41.sha-51c0d9c');
 
     /**
      * @license
