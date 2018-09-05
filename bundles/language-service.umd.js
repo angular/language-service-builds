@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.0-beta.4+44.sha-25c1f33
+ * @license Angular v7.0.0-beta.4+46.sha-a417b2b
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1197,7 +1197,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.0-beta.4+44.sha-25c1f33');
+    var VERSION = new Version('7.0.0-beta.4+46.sha-a417b2b');
 
     /**
      * @license
@@ -32162,6 +32162,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 superDef = superType.ngDirectiveDef;
             }
             var baseDef = superType.ngBaseDef;
+            // Some fields in the definition may be empty, if there were no values to put in them that
+            // would've justified object creation. Unwrap them if necessary.
+            if (baseDef || superDef) {
+                var writeableDef = definition;
+                writeableDef.inputs = maybeUnwrapEmpty(definition.inputs);
+                writeableDef.declaredInputs = maybeUnwrapEmpty(definition.declaredInputs);
+                writeableDef.outputs = maybeUnwrapEmpty(definition.outputs);
+            }
             if (baseDef) {
                 // Merge inputs and outputs
                 fillProperties(definition.inputs, baseDef.inputs);
@@ -32284,6 +32292,17 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var state_1 = _loop_1();
             if (state_1 === "break")
                 break;
+        }
+    }
+    function maybeUnwrapEmpty(value) {
+        if (value === EMPTY$1) {
+            return {};
+        }
+        else if (Array.isArray(value) && value === EMPTY_ARRAY$1) {
+            return [];
+        }
+        else {
+            return value;
         }
     }
 
@@ -41627,7 +41646,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('7.0.0-beta.4+44.sha-25c1f33');
+    var VERSION$2 = new Version$1('7.0.0-beta.4+46.sha-a417b2b');
 
     /**
      * @license
@@ -54231,7 +54250,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.0-beta.4+44.sha-25c1f33');
+    var VERSION$3 = new Version$1('7.0.0-beta.4+46.sha-a417b2b');
 
     /**
      * @license
