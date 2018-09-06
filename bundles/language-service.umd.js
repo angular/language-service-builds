@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.1.6+28.sha-d1063c6
+ * @license Angular v6.1.7+8.sha-b9a5ce1
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -60,6 +60,21 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         return __assign.apply(this, arguments);
     };
+
+    function __decorate(decorators, target, key, desc) {
+        var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+        if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+        else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+        return c > 3 && r && Object.defineProperty(target, key, r), r;
+    }
+
+    function __param(paramIndex, decorator) {
+        return function (target, key) { decorator(target, key, paramIndex); }
+    }
+
+    function __metadata(metadataKey, metadataValue) {
+        if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(metadataKey, metadataValue);
+    }
 
     function __values(o) {
         var m = typeof Symbol === "function" && o[Symbol.iterator], i = 0;
@@ -1149,7 +1164,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('6.1.6+28.sha-d1063c6');
+    var VERSION = new Version('6.1.7+8.sha-b9a5ce1');
 
     /**
      * @license
@@ -24296,7 +24311,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('6.1.6+28.sha-d1063c6');
+    var VERSION$2 = new Version$1('6.1.7+8.sha-b9a5ce1');
 
     /**
      * @license
@@ -33854,13 +33869,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
             this.initialized = true;
         };
-        ApplicationInitStatus.decorators = [
-            { type: Injectable }
-        ];
-        /** @nocollapse */
-        ApplicationInitStatus.ctorParameters = function () { return [
-            { type: Array, decorators: [{ type: Inject, args: [APP_INITIALIZER,] }, { type: Optional }] }
-        ]; };
+        ApplicationInitStatus = __decorate([
+            Injectable(),
+            __param(0, Inject(APP_INITIALIZER)), __param(0, Optional()),
+            __metadata("design:paramtypes", [Array])
+        ], ApplicationInitStatus);
         return ApplicationInitStatus;
     }());
 
@@ -33941,9 +33954,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             // tslint:disable-next-line:no-console
             console.warn(message);
         };
-        Console.decorators = [
-            { type: Injectable }
-        ];
+        Console = __decorate([
+            Injectable()
+        ], Console);
         return Console;
     }());
 
@@ -34003,9 +34016,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
          * Returns the id for a given NgModule, if one is defined and known to the compiler.
          */
         Compiler.prototype.getModuleId = function (moduleType) { return undefined; };
-        Compiler.decorators = [
-            { type: Injectable }
-        ];
+        Compiler = __decorate([
+            Injectable()
+        ], Compiler);
         return Compiler;
     }());
     /**
@@ -34801,13 +34814,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             // TODO(juliemr): implement.
             return [];
         };
-        Testability.decorators = [
-            { type: Injectable }
-        ];
-        /** @nocollapse */
-        Testability.ctorParameters = function () { return [
-            { type: NgZone }
-        ]; };
+        Testability = __decorate([
+            Injectable(),
+            __metadata("design:paramtypes", [NgZone])
+        ], Testability);
         return Testability;
     }());
     /**
@@ -34860,11 +34870,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             if (findInAncestors === void 0) { findInAncestors = true; }
             return _testabilityGetter.findTestabilityInTree(this, elem, findInAncestors);
         };
-        TestabilityRegistry.decorators = [
-            { type: Injectable }
-        ];
-        /** @nocollapse */
-        TestabilityRegistry.ctorParameters = function () { return []; };
+        TestabilityRegistry = __decorate([
+            Injectable(),
+            __metadata("design:paramtypes", [])
+        ], TestabilityRegistry);
         return TestabilityRegistry;
     }());
     var _NoopGetTestability = /** @class */ (function () {
@@ -35101,13 +35110,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             enumerable: true,
             configurable: true
         });
-        PlatformRef.decorators = [
-            { type: Injectable }
-        ];
-        /** @nocollapse */
-        PlatformRef.ctorParameters = function () { return [
-            { type: Injector }
-        ]; };
+        PlatformRef = __decorate([
+            Injectable(),
+            __metadata("design:paramtypes", [Injector])
+        ], PlatformRef);
         return PlatformRef;
     }());
     function getNgZone(ngZoneOption) {
@@ -35218,6 +35224,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             this.isStable =
                 merge(isCurrentlyStable, isStable.pipe(share()));
         }
+        ApplicationRef_1 = ApplicationRef;
         /**
          * Bootstrap a new component at the root level of the application.
          *
@@ -35281,7 +35288,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             if (this._runningTick) {
                 throw new Error('ApplicationRef.tick is called recursively');
             }
-            var scope = ApplicationRef._tickScope();
+            var scope = ApplicationRef_1._tickScope();
             try {
                 this._runningTick = true;
                 this._views.forEach(function (view) { return view.detectChanges(); });
@@ -35341,20 +35348,16 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             enumerable: true,
             configurable: true
         });
+        var ApplicationRef_1;
         /** @internal */
         ApplicationRef._tickScope = wtfCreateScope('ApplicationRef#tick()');
-        ApplicationRef.decorators = [
-            { type: Injectable }
-        ];
-        /** @nocollapse */
-        ApplicationRef.ctorParameters = function () { return [
-            { type: NgZone },
-            { type: Console },
-            { type: Injector },
-            { type: ErrorHandler },
-            { type: ComponentFactoryResolver },
-            { type: ApplicationInitStatus }
-        ]; };
+        ApplicationRef = ApplicationRef_1 = __decorate([
+            Injectable(),
+            __metadata("design:paramtypes", [NgZone, Console, Injector,
+                ErrorHandler,
+                ComponentFactoryResolver,
+                ApplicationInitStatus])
+        ], ApplicationRef);
         return ApplicationRef;
     }());
     function remove(list, el) {
@@ -35589,6 +35592,71 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    var _SEPARATOR = '#';
+    var FACTORY_CLASS_SUFFIX = 'NgFactory';
+    /**
+     * Configuration for SystemJsNgModuleLoader.
+     * token.
+     *
+     * @experimental
+     */
+    var SystemJsNgModuleLoaderConfig = /** @class */ (function () {
+        function SystemJsNgModuleLoaderConfig() {
+        }
+        return SystemJsNgModuleLoaderConfig;
+    }());
+    var DEFAULT_CONFIG = {
+        factoryPathPrefix: '',
+        factoryPathSuffix: '.ngfactory',
+    };
+    /**
+     * NgModuleFactoryLoader that uses SystemJS to load NgModuleFactory
+     * @experimental
+     */
+    var SystemJsNgModuleLoader = /** @class */ (function () {
+        function SystemJsNgModuleLoader(_compiler, config) {
+            this._compiler = _compiler;
+            this._config = config || DEFAULT_CONFIG;
+        }
+        SystemJsNgModuleLoader.prototype.load = function (path$$1) {
+            var offlineMode = this._compiler instanceof Compiler;
+            return offlineMode ? this.loadFactory(path$$1) : this.loadAndCompile(path$$1);
+        };
+        SystemJsNgModuleLoader.prototype.loadAndCompile = function (path$$1) {
+            var _this = this;
+            var _a = __read(path$$1.split(_SEPARATOR), 2), module = _a[0], exportName = _a[1];
+            if (exportName === undefined) {
+                exportName = 'default';
+            }
+            return System.import(module)
+                .then(function (module) { return module[exportName]; })
+                .then(function (type) { return checkNotEmpty(type, module, exportName); })
+                .then(function (type) { return _this._compiler.compileModuleAsync(type); });
+        };
+        SystemJsNgModuleLoader.prototype.loadFactory = function (path$$1) {
+            var _a = __read(path$$1.split(_SEPARATOR), 2), module = _a[0], exportName = _a[1];
+            var factoryClassSuffix = FACTORY_CLASS_SUFFIX;
+            if (exportName === undefined) {
+                exportName = 'default';
+                factoryClassSuffix = '';
+            }
+            return System.import(this._config.factoryPathPrefix + module + this._config.factoryPathSuffix)
+                .then(function (module) { return module[exportName + factoryClassSuffix]; })
+                .then(function (factory) { return checkNotEmpty(factory, module, exportName); });
+        };
+        SystemJsNgModuleLoader = __decorate([
+            Injectable(),
+            __param(1, Optional()),
+            __metadata("design:paramtypes", [Compiler, SystemJsNgModuleLoaderConfig])
+        ], SystemJsNgModuleLoader);
+        return SystemJsNgModuleLoader;
+    }());
+    function checkNotEmpty(value, modulePath, exportName) {
+        if (!value) {
+            throw new Error("Cannot find '" + exportName + "' in '" + modulePath + "'");
+        }
+        return value;
+    }
 
     /**
      * @license
@@ -37342,6 +37410,22 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             deps: [[new Inject(LOCALE_ID), new Optional(), new SkipSelf()]]
         },
     ];
+    /**
+     * This module includes the providers of @angular/core that are needed
+     * to bootstrap components via `ApplicationRef`.
+     *
+     * @experimental
+     */
+    var ApplicationModule = /** @class */ (function () {
+        // Inject ApplicationRef to make it eager...
+        function ApplicationModule(appRef) {
+        }
+        ApplicationModule = __decorate([
+            NgModule({ providers: APPLICATION_MODULE_PROVIDERS }),
+            __metadata("design:paramtypes", [ApplicationRef])
+        ], ApplicationModule);
+        return ApplicationModule;
+    }());
 
     /**
      * @license
@@ -44334,7 +44418,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('6.1.6+28.sha-d1063c6');
+    var VERSION$3 = new Version$1('6.1.7+8.sha-b9a5ce1');
 
     /**
      * @license
