@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.0-beta.5+8.sha-2a21ca0
+ * @license Angular v7.0.0-beta.5+9.sha-83a1334
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1164,7 +1164,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.0-beta.5+8.sha-2a21ca0');
+    var VERSION = new Version('7.0.0-beta.5+9.sha-83a1334');
 
     /**
      * @license
@@ -24690,18 +24690,18 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    function assertNodeType(node, type) {
-        assertDefined(node, 'should be called with a node');
-        assertEqual(node.tNode.type, type, "should be a " + typeName(type));
+    function assertNodeType(tNode, type) {
+        assertDefined(tNode, 'should be called with a TNode');
+        assertEqual(tNode.type, type, "should be a " + typeName(type));
     }
-    function assertNodeOfPossibleTypes(node) {
+    function assertNodeOfPossibleTypes(tNode) {
         var types = [];
         for (var _i = 1; _i < arguments.length; _i++) {
             types[_i - 1] = arguments[_i];
         }
-        assertDefined(node, 'should be called with a node');
-        var found = types.some(function (type) { return node.tNode.type === type; });
-        assertEqual(found, true, "Should be one of " + types.map(typeName).join(', ') + " but got " + typeName(node.tNode.type));
+        assertDefined(tNode, 'should be called with a TNode');
+        var found = types.some(function (type) { return tNode.type === type; });
+        assertEqual(found, true, "Should be one of " + types.map(typeName).join(', ') + " but got " + typeName(tNode.type));
     }
     function typeName(type) {
         if (type == 1 /* Projection */)
@@ -24871,7 +24871,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             lViewData = lViewData[PARENT];
             viewRootLNode = lViewData[HOST_NODE];
         }
-        ngDevMode && assertNodeType(viewRootLNode, 3 /* Element */);
+        ngDevMode && assertNodeType(viewRootLNode.tNode, 3 /* Element */);
         ngDevMode && assertDefined(viewRootLNode.data, 'node.data');
         return viewRootLNode;
     }
@@ -24896,8 +24896,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
     }
     function addRemoveViewFromContainer(container, rootNode, insertMode, beforeNode) {
-        ngDevMode && assertNodeType(container, 0 /* Container */);
-        ngDevMode && assertNodeType(rootNode, 2 /* View */);
+        ngDevMode && assertNodeType(container.tNode, 0 /* Container */);
+        ngDevMode && assertNodeType(rootNode.tNode, 2 /* View */);
         var parentNode = container.data[RENDER_PARENT];
         var parent = parentNode ? parentNode.native : null;
         if (parent) {
@@ -25173,14 +25173,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * the container itself has it render parent determined.
      */
     function canInsertNativeChildOfView(parent) {
-        ngDevMode && assertNodeType(parent, 2 /* View */);
+        ngDevMode && assertNodeType(parent.tNode, 2 /* View */);
         // Because we are inserting into a `View` the `View` may be disconnected.
         var grandParentContainer = getParentLNode(parent);
         if (grandParentContainer == null) {
             // The `View` is not inserted into a `Container` we have to delay insertion.
             return false;
         }
-        ngDevMode && assertNodeType(grandParentContainer, 0 /* Container */);
+        ngDevMode && assertNodeType(grandParentContainer.tNode, 0 /* Container */);
         if (grandParentContainer.data[RENDER_PARENT] == null) {
             // The parent `Container` itself is disconnected. So we have to delay.
             return false;
@@ -25209,7 +25209,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     function canInsertNativeNode(parent, currentView) {
         // We can only insert into a Component or View. Any other type should be an Error.
-        ngDevMode && assertNodeOfPossibleTypes(parent, 3 /* Element */, 4 /* ElementContainer */, 2 /* View */);
+        ngDevMode && assertNodeOfPossibleTypes(parent.tNode, 3 /* Element */, 4 /* ElementContainer */, 2 /* View */);
         if (parent.tNode.type === 3 /* Element */) {
             // Parent is a regular element or a component
             return canInsertNativeChildOfElement(parent, currentView);
@@ -25366,16 +25366,17 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function getCurrentSanitizer() {
         return viewData && viewData[SANITIZER];
     }
-    /** Used to set the parent property when nodes are created. */
-    var previousOrParentNode;
+    /** Used to set the parent property when nodes are created and track query results. */
+    var previousOrParentTNode;
     function getPreviousOrParentNode() {
-        // top level variables should not be exported for performance reasons (PERF_NOTES.md)
-        return previousOrParentNode;
+        return previousOrParentTNode == null || previousOrParentTNode === tView.node ?
+            viewData[HOST_NODE] :
+            readElementValue(viewData[previousOrParentTNode.index]);
     }
     /**
      * If `isParent` is:
-     *  - `true`: then `previousOrParentNode` points to a parent node.
-     *  - `false`: then `previousOrParentNode` points to previous node (sibling).
+     *  - `true`: then `previousOrParentTNode` points to a parent node.
+     *  - `false`: then `previousOrParentTNode` points to previous node (sibling).
      */
     var isParent;
     var tView;
@@ -25447,7 +25448,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * @param host Element to which the View is a child of
      * @returns the previous state;
      */
-    function enterView(newView, host) {
+    function enterView(newView, hostTNode) {
         var oldView = viewData;
         directives = newView && newView[DIRECTIVES];
         tView = newView && newView[TVIEW];
@@ -25455,10 +25456,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         firstTemplatePass = newView && tView.firstTemplatePass;
         bindingRootIndex = newView && tView.bindingStartIndex;
         renderer = newView && newView[RENDERER];
-        if (host != null) {
-            previousOrParentNode = host;
-            isParent = true;
-        }
+        previousOrParentTNode = hostTNode;
+        isParent = true;
         viewData = contextViewData = newView;
         oldView && (oldView[QUERIES] = currentQueries);
         currentQueries = newView && newView[QUERIES];
@@ -25557,24 +25556,24 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * with the same shape
      * (same properties assigned in the same order).
      */
-    function createLNodeObject(type, currentView, parent, native, state) {
+    function createLNodeObject(type, currentView, nodeInjector, native, state) {
         return {
             native: native,
             view: currentView,
-            nodeInjector: parent ? parent.nodeInjector : null,
+            nodeInjector: nodeInjector,
             data: state,
             tNode: null,
             dynamicLContainerNode: null
         };
     }
     function createLNode(index, type, native, name, attrs, state) {
-        var parent = isParent ? previousOrParentNode :
-            previousOrParentNode && getParentLNode(previousOrParentNode);
+        var parent = isParent ? previousOrParentTNode : previousOrParentTNode && previousOrParentTNode.parent;
         // Parents cannot cross component boundaries because components will be used in multiple places,
         // so it's only set if the view is the same.
-        var tParent = parent && parent.view === viewData ? parent.tNode : null;
+        var parentInSameView = parent && tView && parent !== tView.node;
+        var tParent = parentInSameView ? parent : null;
         var isState = state != null;
-        var node = createLNodeObject(type, viewData, parent, native, isState ? state : null);
+        var node = createLNodeObject(type, viewData, null, native, isState ? state : null);
         if (index === -1 || type === 2 /* View */) {
             // View nodes are not stored in data because they can be added / removed at runtime (which
             // would cause indices to change). Their TNodes are instead stored in TView.node.
@@ -25590,11 +25589,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             if (tData[adjustedIndex] == null) {
                 var tNode = tData[adjustedIndex] =
                     createTNode(type, adjustedIndex, name, attrs, tParent, null);
-                if (!isParent && previousOrParentNode) {
-                    var previousTNode = previousOrParentNode.tNode;
-                    previousTNode.next = tNode;
-                    if (previousTNode.dynamicContainerNode)
-                        previousTNode.dynamicContainerNode.next = tNode;
+                if (!isParent && previousOrParentTNode) {
+                    previousOrParentTNode.next = tNode;
+                    if (previousOrParentTNode.dynamicContainerNode)
+                        previousOrParentTNode.dynamicContainerNode.next = tNode;
                 }
             }
             node.tNode = tData[adjustedIndex];
@@ -25602,24 +25600,29 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 tView.firstChild = node.tNode;
             }
             // Now link ourselves into the tree.
-            if (isParent) {
-                if (previousOrParentNode.tNode.child == null && previousOrParentNode.view === viewData ||
-                    previousOrParentNode.tNode.type === 2 /* View */) {
+            if (isParent && previousOrParentTNode) {
+                if (previousOrParentTNode.child == null && parentInSameView ||
+                    previousOrParentTNode.type === 2 /* View */) {
                     // We are in the same view, which means we are adding content node to the parent View.
-                    previousOrParentNode.tNode.child = node.tNode;
+                    previousOrParentTNode.child = node.tNode;
                 }
             }
         }
-        // View nodes and host elements need to set their host node (components set host nodes later)
+        // TODO: temporary, remove when removing LNode.nodeInjector
+        var parentLNode = index === -1 ? null : getParentLNode(node);
+        if (parentLNode)
+            node.nodeInjector = parentLNode.nodeInjector;
+        // View nodes and host elements need to set their host node (components do not save host TNodes)
         if ((type & 2 /* ViewOrElement */) === 2 /* ViewOrElement */ && isState) {
             var lViewData = state;
             ngDevMode &&
                 assertEqual(lViewData[HOST_NODE], null, 'lViewData[HOST_NODE] should not have been initialized');
             lViewData[HOST_NODE] = node;
-            if (firstTemplatePass)
+            if (lViewData[TVIEW].firstTemplatePass) {
                 lViewData[TVIEW].node = node.tNode;
+            }
         }
-        previousOrParentNode = node;
+        previousOrParentTNode = node.tNode;
         isParent = true;
         return node;
     }
@@ -25644,7 +25647,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     function resetComponentState() {
         isParent = false;
-        previousOrParentNode = null;
+        previousOrParentTNode = null;
     }
     /**
      * Used for creating the LViewNode of a dynamic embedded view,
@@ -25653,9 +25656,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     function createEmbeddedViewNode(tView, context, declarationView, renderer, queries) {
         var _isParent = isParent;
-        var _previousOrParentNode = previousOrParentNode;
+        var _previousOrParentTNode = previousOrParentTNode;
         isParent = true;
-        previousOrParentNode = null;
+        previousOrParentTNode = null;
         var lView = createLViewData(renderer, tView, context, 2 /* CheckAlways */, getCurrentSanitizer());
         lView[DECLARATION_VIEW] = declarationView;
         if (queries) {
@@ -25663,7 +25666,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         var viewNode = createLNode(-1, 2 /* View */, null, null, null, lView);
         isParent = _isParent;
-        previousOrParentNode = _previousOrParentNode;
+        previousOrParentTNode = _previousOrParentTNode;
         return viewNode;
     }
     /**
@@ -25678,7 +25681,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     function renderEmbeddedTemplate(viewNode, tView, context, rf) {
         var _isParent = isParent;
-        var _previousOrParentNode = previousOrParentNode;
+        var _previousOrParentTNode = previousOrParentTNode;
         var oldView;
         if (viewNode.data[PARENT] == null && viewNode.data[CONTEXT] && !tView.template) {
             // This is a root view inside the view tree
@@ -25687,8 +25690,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         else {
             try {
                 isParent = true;
-                previousOrParentNode = null;
-                oldView = enterView(viewNode.data, viewNode);
+                previousOrParentTNode = null;
+                oldView = enterView(viewNode.data, tView.node);
                 namespaceHTML();
                 tView.template(rf, context);
                 if (rf & 2 /* Update */) {
@@ -25704,13 +25707,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 var isCreationOnly = (rf & 1 /* Create */) === 1 /* Create */;
                 leaveView(oldView, isCreationOnly);
                 isParent = _isParent;
-                previousOrParentNode = _previousOrParentNode;
+                previousOrParentTNode = _previousOrParentTNode;
             }
         }
         return viewNode;
     }
-    function renderComponentOrTemplate(node, hostView, componentOrContext, templateFn) {
-        var oldView = enterView(hostView, node);
+    function renderComponentOrTemplate(hostView, componentOrContext, templateFn) {
+        var oldView = enterView(hostView, null);
         try {
             if (rendererFactory.begin) {
                 rendererFactory.begin();
@@ -25793,7 +25796,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /** Stores index of component's host element so it will be queued for view refresh during CD. */
     function queueComponentIndexForCheck() {
         if (firstTemplatePass) {
-            (tView.components || (tView.components = [])).push(previousOrParentNode.tNode.index);
+            (tView.components || (tView.components = [])).push(previousOrParentTNode.index);
         }
     }
     /** Stores index of directive and host element so it will be queued for binding refresh during CD.
@@ -25807,7 +25810,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             tView.blueprint.push(NO_CHANGE);
             viewData.push(NO_CHANGE);
         }
-        (tView.hostBindings || (tView.hostBindings = [])).push(dirIndex, previousOrParentNode.tNode.index - HEADER_OFFSET);
+        (tView.hostBindings || (tView.hostBindings = [])).push(dirIndex, previousOrParentTNode.index - HEADER_OFFSET);
     }
     /** Sets the context for a ChangeDetectorRef to the given instance. */
     function initChangeDetectorIfExisting(injector, instance, view) {
@@ -26036,12 +26039,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * @param directiveDef DirectiveDef object which contains information about the template.
      */
     function directiveCreate(directiveDefIdx, directive, directiveDef) {
-        var instance = baseDirectiveCreate(directiveDefIdx, directive, directiveDef);
-        ngDevMode && assertDefined(previousOrParentNode.tNode, 'previousOrParentNode.tNode');
-        var tNode = previousOrParentNode.tNode;
+        var hostNode = getPreviousOrParentNode();
+        var instance = baseDirectiveCreate(directiveDefIdx, directive, directiveDef, hostNode);
         var isComponent = directiveDef.template;
         if (isComponent) {
-            addComponentLogic(directiveDefIdx, directive, directiveDef);
+            addComponentLogic(directiveDefIdx, directive, directiveDef, hostNode);
         }
         if (firstTemplatePass) {
             // Init hooks are queued now so ngOnInit is called in host components before
@@ -26050,24 +26052,25 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             if (directiveDef.hostBindings)
                 queueHostBindingForCheck(directiveDefIdx, directiveDef.hostVars);
         }
-        if (tNode && tNode.attrs) {
-            setInputsFromAttrs(directiveDefIdx, instance, directiveDef.inputs, tNode);
+        ngDevMode && assertDefined(previousOrParentTNode, 'previousOrParentTNode');
+        if (previousOrParentTNode && previousOrParentTNode.attrs) {
+            setInputsFromAttrs(directiveDefIdx, instance, directiveDef.inputs, previousOrParentTNode);
         }
         if (directiveDef.contentQueries) {
             directiveDef.contentQueries();
         }
         return instance;
     }
-    function addComponentLogic(directiveIndex, instance, def) {
+    function addComponentLogic(directiveIndex, instance, def, hostNode) {
         var tView = getOrCreateTView(def.template, def.consts, def.vars, def.directiveDefs, def.pipeDefs, def.viewQuery);
         // Only component views should be added to the view tree directly. Embedded views are
         // accessed through their containers because they may be removed / re-added later.
-        var componentView = addToViewTree(viewData, previousOrParentNode.tNode.index, createLViewData(rendererFactory.createRenderer(previousOrParentNode.native, def), tView, instance, def.onPush ? 4 /* Dirty */ : 2 /* CheckAlways */, getCurrentSanitizer()));
+        var componentView = addToViewTree(viewData, previousOrParentTNode.index, createLViewData(rendererFactory.createRenderer(hostNode.native, def), tView, instance, def.onPush ? 4 /* Dirty */ : 2 /* CheckAlways */, getCurrentSanitizer()));
         // We need to set the host node/data here because when the component LNode was created,
         // we didn't yet know it was a component (just an element).
-        previousOrParentNode.data = componentView;
-        componentView[HOST_NODE] = previousOrParentNode;
-        initChangeDetectorIfExisting(previousOrParentNode.nodeInjector, instance, componentView);
+        hostNode.data = componentView;
+        componentView[HOST_NODE] = hostNode;
+        initChangeDetectorIfExisting(hostNode.nodeInjector, instance, componentView);
         if (firstTemplatePass)
             queueComponentIndexForCheck();
     }
@@ -26077,7 +26080,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * This version does not contain features that we don't already support at root in
      * current Angular. Example: local refs and inputs on root component.
      */
-    function baseDirectiveCreate(index, directive, directiveDef) {
+    function baseDirectiveCreate(index, directive, directiveDef, hostNode) {
         ngDevMode && assertEqual(viewData[BINDING_INDEX], tView.bindingStartIndex, 'directives should be created before any bindings');
         ngDevMode && assertPreviousIsParent();
         attachPatchData(directive, viewData);
@@ -26086,18 +26089,18 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         ngDevMode && assertDataNext(index, directives);
         directives[index] = directive;
         if (firstTemplatePass) {
-            var flags = previousOrParentNode.tNode.flags;
+            var flags = previousOrParentTNode.flags;
             if ((flags & 4095 /* DirectiveCountMask */) === 0) {
                 // When the first directive is created:
                 // - save the index,
                 // - set the number of directives to 1
-                previousOrParentNode.tNode.flags =
+                previousOrParentTNode.flags =
                     index << 15 /* DirectiveStartingIndexShift */ | flags & 4096 /* isComponent */ | 1;
             }
             else {
                 // Only need to bump the size when subsequent directives are created
                 ngDevMode && assertNotEqual(flags & 4095 /* DirectiveCountMask */, 4095 /* DirectiveCountMask */, 'Reached the max number of directives');
-                previousOrParentNode.tNode.flags++;
+                previousOrParentTNode.flags++;
             }
         }
         else {
@@ -26105,8 +26108,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             if (diPublic)
                 diPublic(directiveDef);
         }
-        if (directiveDef.attributes != null && previousOrParentNode.tNode.type == 3 /* Element */) {
-            setUpAttributes(previousOrParentNode.native, directiveDef.attributes);
+        if (directiveDef.attributes != null && previousOrParentTNode.type == 3 /* Element */) {
+            setUpAttributes(hostNode.native, directiveDef.attributes);
         }
         return directive;
     }
@@ -26226,8 +26229,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     function componentRefresh(adjustedElementIndex) {
         ngDevMode && assertDataInRange(adjustedElementIndex);
-        var element = viewData[adjustedElementIndex];
-        ngDevMode && assertNodeType(element, 3 /* Element */);
+        var element = readElementValue(viewData[adjustedElementIndex]);
+        ngDevMode && assertNodeType(tView.data[adjustedElementIndex], 3 /* Element */);
         ngDevMode &&
             assertDefined(element.data, "Component's host node should have an LViewData attached.");
         var hostView = element.data;
@@ -26297,9 +26300,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function tickRootContext(rootContext) {
         for (var i = 0; i < rootContext.components.length; i++) {
             var rootComponent = rootContext.components[i];
-            var hostNode = _getComponentHostLElementNode(rootComponent, true);
-            ngDevMode && assertDefined(hostNode.data, 'Component host node should be attached to an LView');
-            renderComponentOrTemplate(hostNode, getRootView(rootComponent), rootComponent);
+            renderComponentOrTemplate(getRootView(rootComponent), rootComponent);
         }
     }
     /**
@@ -26379,8 +26380,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
     /** Checks the view of the component provided. Does not gate on dirty checks or execute doCheck. */
     function detectChangesInternal(hostView, hostNode, component) {
-        var oldView = enterView(hostView, hostNode);
         var hostTView = hostView[TVIEW];
+        var oldView = enterView(hostView, null);
         var templateFn = hostTView.template;
         var viewQuery = hostTView.viewQuery;
         try {
@@ -26407,7 +26408,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /** A special value which designates that a value has not changed. */
     var NO_CHANGE = {};
     function assertPreviousIsParent() {
-        assertEqual(isParent, true, 'previousOrParentNode should be a parent');
+        assertEqual(isParent, true, 'previousOrParentTNode should be a parent');
     }
     function assertDataInRange(index, arr) {
         if (arr == null)
@@ -27179,7 +27180,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 // Create element node at index 0 in data array
                 elementNode = hostElement(componentTag, hostNode, this.componentDef);
                 // Create directive instance with factory() and store at index 0 in directives array
-                component = baseDirectiveCreate(0, this.componentDef.factory(), this.componentDef);
+                component =
+                    baseDirectiveCreate(0, this.componentDef.factory(), this.componentDef, elementNode);
                 if (this.componentDef.hostBindings) {
                     queueHostBindingForCheck(0, this.componentDef.hostVars);
                 }
@@ -27574,13 +27576,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function getOrCreateContainerRef(di) {
         if (!di.viewContainerRef) {
             var vcRefHost = di.node;
-            ngDevMode && assertNodeOfPossibleTypes(vcRefHost, 0 /* Container */, 3 /* Element */, 4 /* ElementContainer */);
+            var hostTNode = vcRefHost.tNode;
+            ngDevMode && assertNodeOfPossibleTypes(hostTNode, 0 /* Container */, 3 /* Element */, 4 /* ElementContainer */);
             var hostParent = getParentLNode(vcRefHost);
             var lContainer = createLContainer(hostParent, vcRefHost.view, true);
             var comment = vcRefHost.view[RENDERER].createComment(ngDevMode ? 'container' : '');
-            var lContainerNode = createLNodeObject(0 /* Container */, vcRefHost.view, hostParent, comment, lContainer);
+            var lContainerNode = createLNodeObject(0 /* Container */, vcRefHost.view, vcRefHost.nodeInjector, comment, lContainer);
             appendChild(hostParent, comment, vcRefHost.view);
-            var hostTNode = vcRefHost.tNode;
             if (!hostTNode.dynamicContainerNode) {
                 hostTNode.dynamicContainerNode =
                     createTNode(0 /* Container */, -1, null, null, hostTNode, null);
@@ -27739,9 +27741,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     function getOrCreateTemplateRef(di) {
         if (!di.templateRef) {
-            ngDevMode && assertNodeType(di.node, 0 /* Container */);
             var hostNode = di.node;
             var hostTNode = hostNode.tNode;
+            ngDevMode && assertNodeType(hostTNode, 0 /* Container */);
             ngDevMode && assertDefined(hostTNode.tViews, 'TView must be allocated');
             di.templateRef = new TemplateRef$1(hostNode.view, getOrCreateElementRef(di), hostTNode.tViews, getRenderer(), hostNode.data[QUERIES]);
         }
@@ -33830,7 +33832,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('7.0.0-beta.5+8.sha-2a21ca0');
+    var VERSION$2 = new Version$1('7.0.0-beta.5+9.sha-83a1334');
 
     /**
      * @license
@@ -46424,7 +46426,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.0-beta.5+8.sha-2a21ca0');
+    var VERSION$3 = new Version$1('7.0.0-beta.5+9.sha-83a1334');
 
     /**
      * @license
