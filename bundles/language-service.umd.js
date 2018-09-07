@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.0-beta.5+4.sha-d6cd041
+ * @license Angular v7.0.0-beta.5+6.sha-62be8c2
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1164,7 +1164,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.0-beta.5+4.sha-d6cd041');
+    var VERSION = new Version('7.0.0-beta.5+6.sha-62be8c2');
 
     /**
      * @license
@@ -1693,7 +1693,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             return {
                 ngContentSelectors: this.ngContentSelectors,
                 encapsulation: this.encapsulation,
-                styles: this.styles
+                styles: this.styles,
+                animations: this.animations
             };
         };
         return CompileTemplateMetadata;
@@ -24135,101 +24136,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         __global$1['ngDevMode'] = ngDevModeResetPerfCounters();
     }
 
-    /** Called when directives inject each other (creating a circular dependency) */
-    function throwCyclicDependencyError(token) {
-        throw new Error("Cannot instantiate cyclic dependency! " + token);
-    }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * Below are constants for LContainer indices to help us look up LContainer members
-     * without having to remember the specific indices.
-     * Uglify will inline these when minifying so there shouldn't be a cost.
-     */
-    var ACTIVE_INDEX = 0;
-    // PARENT, NEXT, and QUERIES are indices 1, 2, and 3.
-    // As we already have these constants in LViewData, we don't need to re-create them.
-    var VIEWS = 4;
-    var RENDER_PARENT = 5;
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    var NG_PROJECT_AS_ATTR_NAME = 'ngProjectAs';
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    // TODO: cleanup once the code is merged in angular/angular
-    var RendererStyleFlags3;
-    (function (RendererStyleFlags3) {
-        RendererStyleFlags3[RendererStyleFlags3["Important"] = 1] = "Important";
-        RendererStyleFlags3[RendererStyleFlags3["DashCase"] = 2] = "DashCase";
-    })(RendererStyleFlags3 || (RendererStyleFlags3 = {}));
-    /** Returns whether the `renderer` is a `ProceduralRenderer3` */
-    function isProceduralRenderer(renderer) {
-        return !!(renderer.listen);
-    }
-    var domRendererFactory3 = {
-        createRenderer: function (hostElement, rendererType) { return document; }
-    };
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    function assertNodeType(node, type) {
-        assertDefined(node, 'should be called with a node');
-        assertEqual(node.tNode.type, type, "should be a " + typeName(type));
-    }
-    function assertNodeOfPossibleTypes(node) {
-        var types = [];
-        for (var _i = 1; _i < arguments.length; _i++) {
-            types[_i - 1] = arguments[_i];
-        }
-        assertDefined(node, 'should be called with a node');
-        var found = types.some(function (type) { return node.tNode.type === type; });
-        assertEqual(found, true, "Should be one of " + types.map(typeName).join(', ') + " but got " + typeName(node.tNode.type));
-    }
-    function typeName(type) {
-        if (type == 1 /* Projection */)
-            return 'Projection';
-        if (type == 0 /* Container */)
-            return 'Container';
-        if (type == 2 /* View */)
-            return 'View';
-        if (type == 3 /* Element */)
-            return 'Element';
-        if (type == 4 /* ElementContainer */)
-            return 'ElementContainer';
-        return '<unknown>';
-    }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-
     /**
      * @license
      * Copyright Google Inc. All Rights Reserved.
@@ -24389,6 +24295,435 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function readElementValue(value) {
         return (Array.isArray(value) ? value[0] : value);
     }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * This property will be monkey-patched on elements, components and directives
+     */
+    var MONKEY_PATCH_KEY_NAME = '__ngContext__';
+    /** Returns the matching `LContext` data for a given DOM node, directive or component instance.
+     *
+     * This function will examine the provided DOM element, component, or directive instance\'s
+     * monkey-patched property to derive the `LContext` data. Once called then the monkey-patched
+     * value will be that of the newly created `LContext`.
+     *
+     * If the monkey-patched value is the `LViewData` instance then the context value for that
+     * target will be created and the monkey-patch reference will be updated. Therefore when this
+     * function is called it may mutate the provided element\'s, component\'s or any of the associated
+     * directive\'s monkey-patch values.
+     *
+     * If the monkey-patch value is not detected then the code will walk up the DOM until an element
+     * is found which contains a monkey-patch reference. When that occurs then the provided element
+     * will be updated with a new context (which is then returned). If the monkey-patch value is not
+     * detected for a component/directive instance then it will throw an error (all components and
+     * directives should be automatically monkey-patched by ivy).
+     */
+    function getContext(target) {
+        var mpValue = readPatchedData(target);
+        if (mpValue) {
+            // only when it's an array is it considered an LViewData instance
+            // ... otherwise it's an already constructed LContext instance
+            if (Array.isArray(mpValue)) {
+                var lViewData = mpValue;
+                var lNodeIndex = void 0;
+                var component = undefined;
+                var directiveIndices = undefined;
+                var directives = undefined;
+                if (isComponentInstance(target)) {
+                    lNodeIndex = findViaComponent(lViewData, target);
+                    if (lNodeIndex == -1) {
+                        throw new Error('The provided component was not found in the application');
+                    }
+                    component = target;
+                }
+                else if (isDirectiveInstance(target)) {
+                    lNodeIndex = findViaDirective(lViewData, target);
+                    if (lNodeIndex == -1) {
+                        throw new Error('The provided directive was not found in the application');
+                    }
+                    directiveIndices = discoverDirectiveIndices(lViewData, lNodeIndex);
+                    directives = directiveIndices ? discoverDirectives(lViewData, directiveIndices) : null;
+                }
+                else {
+                    lNodeIndex = findViaNativeElement(lViewData, target);
+                    if (lNodeIndex == -1) {
+                        return null;
+                    }
+                }
+                // the goal is not to fill the entire context full of data because the lookups
+                // are expensive. Instead, only the target data (the element, compontent or
+                // directive details) are filled into the context. If called multiple times
+                // with different target values then the missing target data will be filled in.
+                var lNode = getLNodeFromViewData(lViewData, lNodeIndex);
+                var existingCtx = readPatchedData(lNode.native);
+                var context = (existingCtx && !Array.isArray(existingCtx)) ?
+                    existingCtx :
+                    createLContext(lViewData, lNodeIndex, lNode.native);
+                // only when the component has been discovered then update the monkey-patch
+                if (component && context.component === undefined) {
+                    context.component = component;
+                    attachPatchData(context.component, context);
+                }
+                // only when the directives have been discovered then update the monkey-patch
+                if (directives && directiveIndices && context.directives === undefined) {
+                    context.directiveIndices = directiveIndices;
+                    context.directives = directives;
+                    for (var i = 0; i < directives.length; i++) {
+                        attachPatchData(directives[i], context);
+                    }
+                }
+                attachPatchData(context.native, context);
+                mpValue = context;
+            }
+        }
+        else {
+            var rElement = target;
+            ngDevMode && assertDomElement(rElement);
+            // if the context is not found then we need to traverse upwards up the DOM
+            // to find the nearest element that has already been monkey patched with data
+            var parent_1 = rElement;
+            while (parent_1 = parent_1.parentNode) {
+                var parentContext = readPatchedData(parent_1);
+                if (parentContext) {
+                    var lViewData = void 0;
+                    if (Array.isArray(parentContext)) {
+                        lViewData = parentContext;
+                    }
+                    else {
+                        lViewData = parentContext.lViewData;
+                    }
+                    // the edge of the app was also reached here through another means
+                    // (maybe because the DOM was changed manually).
+                    if (!lViewData) {
+                        return null;
+                    }
+                    var index = findViaNativeElement(lViewData, rElement);
+                    if (index >= 0) {
+                        var lNode = getLNodeFromViewData(lViewData, index);
+                        var context = createLContext(lViewData, index, lNode.native);
+                        attachPatchData(lNode.native, context);
+                        mpValue = context;
+                        break;
+                    }
+                }
+            }
+        }
+        return mpValue || null;
+    }
+    /**
+     * Creates an empty instance of a `LContext` context
+     */
+    function createLContext(lViewData, lNodeIndex, native) {
+        return {
+            lViewData: lViewData,
+            lNodeIndex: lNodeIndex,
+            native: native,
+            component: undefined,
+            directiveIndices: undefined,
+            directives: undefined,
+        };
+    }
+    /**
+     * A utility function for retrieving the matching lElementNode
+     * from a given DOM element, component or directive.
+     */
+    function getLElementNode(target) {
+        var context = getContext(target);
+        return context ? getLNodeFromViewData(context.lViewData, context.lNodeIndex) : null;
+    }
+    function getLElementFromRootComponent(componentInstance) {
+        // the host element for the root component is ALWAYS the first element
+        // in the lViewData array (which is where HEADER_OFFSET points to)
+        return getLElementFromComponent(componentInstance, HEADER_OFFSET);
+    }
+    /**
+     * A simplified lookup function for finding the LElementNode from a component instance.
+     *
+     * This function exists for tree-shaking purposes to avoid having to pull in everything
+     * that `getContext` has in the event that an Angular application doesn't need to have
+     * any programmatic access to an element's context (only change detection uses this function).
+     */
+    function getLElementFromComponent(componentInstance, expectedLNodeIndex) {
+        var lViewData = readPatchedData(componentInstance);
+        var lNode;
+        if (Array.isArray(lViewData)) {
+            expectedLNodeIndex = expectedLNodeIndex || findViaComponent(lViewData, componentInstance);
+            lNode = readElementValue(lViewData[expectedLNodeIndex]);
+            var context = createLContext(lViewData, expectedLNodeIndex, lNode.native);
+            context.component = componentInstance;
+            attachPatchData(componentInstance, context);
+            attachPatchData(context.native, context);
+        }
+        else {
+            var context = lViewData;
+            lNode = readElementValue(context.lViewData[context.lNodeIndex]);
+        }
+        return lNode;
+    }
+    /**
+     * Assigns the given data to the given target (which could be a component,
+     * directive or DOM node instance) using monkey-patching.
+     */
+    function attachPatchData(target, data) {
+        target[MONKEY_PATCH_KEY_NAME] = data;
+    }
+    /**
+     * Returns the monkey-patch value data present on the target (which could be
+     * a component, directive or a DOM node).
+     */
+    function readPatchedData(target) {
+        return target[MONKEY_PATCH_KEY_NAME];
+    }
+    function isComponentInstance(instance) {
+        return instance && instance.constructor && instance.constructor.ngComponentDef;
+    }
+    function isDirectiveInstance(instance) {
+        return instance && instance.constructor && instance.constructor.ngDirectiveDef;
+    }
+    /**
+     * Locates the element within the given LViewData and returns the matching index
+     */
+    function findViaNativeElement(lViewData, native) {
+        var tNode = lViewData[TVIEW].firstChild;
+        while (tNode) {
+            var lNode = getLNodeFromViewData(lViewData, tNode.index);
+            if (lNode.native === native) {
+                return tNode.index;
+            }
+            tNode = traverseNextElement(tNode);
+        }
+        return -1;
+    }
+    /**
+     * Locates the next tNode (child, sibling or parent).
+     */
+    function traverseNextElement(tNode) {
+        if (tNode.child) {
+            return tNode.child;
+        }
+        else if (tNode.next) {
+            return tNode.next;
+        }
+        else if (tNode.parent) {
+            return tNode.parent.next || null;
+        }
+        return null;
+    }
+    /**
+     * Locates the component within the given LViewData and returns the matching index
+     */
+    function findViaComponent(lViewData, componentInstance) {
+        var componentIndices = lViewData[TVIEW].components;
+        if (componentIndices) {
+            for (var i = 0; i < componentIndices.length; i++) {
+                var elementComponentIndex = componentIndices[i];
+                var lNodeData = readElementValue(lViewData[elementComponentIndex]).data;
+                if (lNodeData[CONTEXT] === componentInstance) {
+                    return elementComponentIndex;
+                }
+            }
+        }
+        else {
+            var rootNode = lViewData[HEADER_OFFSET];
+            var rootComponent = rootNode.data[CONTEXT];
+            if (rootComponent === componentInstance) {
+                // we are dealing with the root element here therefore we know that the
+                // element is the very first element after the HEADER data in the lView
+                return HEADER_OFFSET;
+            }
+        }
+        return -1;
+    }
+    /**
+     * Locates the directive within the given LViewData and returns the matching index
+     */
+    function findViaDirective(lViewData, directiveInstance) {
+        // if a directive is monkey patched then it will (by default)
+        // have a reference to the LViewData of the current view. The
+        // element bound to the directive being search lives somewhere
+        // in the view data. By first checking to see if the instance
+        // is actually present we can narrow down to which lElementNode
+        // contains the instance of the directive and then return the index
+        var directivesAcrossView = lViewData[DIRECTIVES];
+        var directiveIndex = directivesAcrossView ? directivesAcrossView.indexOf(directiveInstance) : -1;
+        if (directiveIndex >= 0) {
+            var tNode = lViewData[TVIEW].firstChild;
+            while (tNode) {
+                var lNode = getLNodeFromViewData(lViewData, tNode.index);
+                var directiveIndexStart = getDirectiveStartIndex(lNode);
+                var directiveIndexEnd = getDirectiveEndIndex(lNode, directiveIndexStart);
+                if (directiveIndex >= directiveIndexStart && directiveIndex < directiveIndexEnd) {
+                    return tNode.index;
+                }
+                tNode = traverseNextElement(tNode);
+            }
+        }
+        return -1;
+    }
+    function assertDomElement(element) {
+        assertEqual(element.nodeType, 1, 'The provided value must be an instance of an HTMLElement');
+    }
+    /**
+     * Retruns the instance of the LElementNode at the given index in the LViewData.
+     *
+     * This function will also unwrap the inner value incase it's stuffed into an
+     * array (which is what happens when [style] and [class] bindings are present
+     * in the view instructions for the element being returned).
+     */
+    function getLNodeFromViewData(lViewData, lElementIndex) {
+        var value = lViewData[lElementIndex];
+        return value ? readElementValue(value) : null;
+    }
+    /**
+     * Returns a collection of directive index values that are used on the element
+     * (which is referenced by the lNodeIndex)
+     */
+    function discoverDirectiveIndices(lViewData, lNodeIndex) {
+        var directivesAcrossView = lViewData[DIRECTIVES];
+        var lNode = getLNodeFromViewData(lViewData, lNodeIndex);
+        if (lNode && directivesAcrossView && directivesAcrossView.length) {
+            // this check for tNode is to determine if the calue is a LEmementNode instance
+            var directiveIndexStart = getDirectiveStartIndex(lNode);
+            var directiveIndexEnd = getDirectiveEndIndex(lNode, directiveIndexStart);
+            var directiveIndices = [];
+            for (var i = directiveIndexStart; i < directiveIndexEnd; i++) {
+                // special case since the instance of the component (if it exists)
+                // is stored in the directives array.
+                if (i > directiveIndexStart ||
+                    !isComponentInstance(directivesAcrossView[directiveIndexStart])) {
+                    directiveIndices.push(i);
+                }
+            }
+            return directiveIndices.length ? directiveIndices : null;
+        }
+        return null;
+    }
+    function discoverDirectives(lViewData, directiveIndices) {
+        var directives = [];
+        var directiveInstances = lViewData[DIRECTIVES];
+        if (directiveInstances) {
+            for (var i = 0; i < directiveIndices.length; i++) {
+                var directiveIndex = directiveIndices[i];
+                var directive = directiveInstances[directiveIndex];
+                directives.push(directive);
+            }
+        }
+        return directives;
+    }
+    function getDirectiveStartIndex(lNode) {
+        // the tNode instances store a flag value which then has a
+        // pointer which tells the starting index of where all the
+        // active directives are in the master directive array
+        return lNode.tNode.flags >> 15 /* DirectiveStartingIndexShift */;
+    }
+    function getDirectiveEndIndex(lNode, startIndex) {
+        // The end value is also apart of the same flag
+        // (see `TNodeFlags` to see how the flag bit shifting
+        // values are used).
+        var count = lNode.tNode.flags & 4095 /* DirectiveCountMask */;
+        return count ? (startIndex + count) : -1;
+    }
+
+    /** Called when directives inject each other (creating a circular dependency) */
+    function throwCyclicDependencyError(token) {
+        throw new Error("Cannot instantiate cyclic dependency! " + token);
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * Below are constants for LContainer indices to help us look up LContainer members
+     * without having to remember the specific indices.
+     * Uglify will inline these when minifying so there shouldn't be a cost.
+     */
+    var ACTIVE_INDEX = 0;
+    // PARENT, NEXT, and QUERIES are indices 1, 2, and 3.
+    // As we already have these constants in LViewData, we don't need to re-create them.
+    var VIEWS = 4;
+    var RENDER_PARENT = 5;
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    var NG_PROJECT_AS_ATTR_NAME = 'ngProjectAs';
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    // TODO: cleanup once the code is merged in angular/angular
+    var RendererStyleFlags3;
+    (function (RendererStyleFlags3) {
+        RendererStyleFlags3[RendererStyleFlags3["Important"] = 1] = "Important";
+        RendererStyleFlags3[RendererStyleFlags3["DashCase"] = 2] = "DashCase";
+    })(RendererStyleFlags3 || (RendererStyleFlags3 = {}));
+    /** Returns whether the `renderer` is a `ProceduralRenderer3` */
+    function isProceduralRenderer(renderer) {
+        return !!(renderer.listen);
+    }
+    var domRendererFactory3 = {
+        createRenderer: function (hostElement, rendererType) { return document; }
+    };
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    function assertNodeType(node, type) {
+        assertDefined(node, 'should be called with a node');
+        assertEqual(node.tNode.type, type, "should be a " + typeName(type));
+    }
+    function assertNodeOfPossibleTypes(node) {
+        var types = [];
+        for (var _i = 1; _i < arguments.length; _i++) {
+            types[_i - 1] = arguments[_i];
+        }
+        assertDefined(node, 'should be called with a node');
+        var found = types.some(function (type) { return node.tNode.type === type; });
+        assertEqual(found, true, "Should be one of " + types.map(typeName).join(', ') + " but got " + typeName(node.tNode.type));
+    }
+    function typeName(type) {
+        if (type == 1 /* Projection */)
+            return 'Projection';
+        if (type == 0 /* Container */)
+            return 'Container';
+        if (type == 2 /* View */)
+            return 'View';
+        if (type == 3 /* Element */)
+            return 'Element';
+        if (type == 4 /* ElementContainer */)
+            return 'ElementContainer';
+        return '<unknown>';
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
 
     /**
      * @license
@@ -24982,12 +25317,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * found in the LICENSE file at https://angular.io/license
      */
     /**
-     * Directive (D) sets a property on all component instances using this constant as a key and the
-     * component's host node (LElement) as the value. This is used in methods like detectChanges to
-     * facilitate jumping from an instance to the host node.
-     */
-    var NG_HOST_SYMBOL = '__ngHostLNode__';
-    /**
      * A permanent marker promise which signifies that the current CD tree is
      * clean.
      */
@@ -25269,6 +25598,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 }
             }
             node.tNode = tData[adjustedIndex];
+            if (!tView.firstChild && type === 3 /* Element */) {
+                tView.firstChild = node.tNode;
+            }
             // Now link ourselves into the tree.
             if (isParent) {
                 if (previousOrParentNode.tNode.child == null && previousOrParentNode.view === viewData ||
@@ -25551,7 +25883,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             components: null,
             directiveRegistry: typeof directives === 'function' ? directives() : directives,
             pipeRegistry: typeof pipes === 'function' ? pipes() : pipes,
-            currentMatches: null
+            currentMatches: null,
+            firstChild: null,
         };
     }
     function createViewBlueprint(bindingStartIndex, initialViewLength) {
@@ -25747,7 +26080,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function baseDirectiveCreate(index, directive, directiveDef) {
         ngDevMode && assertEqual(viewData[BINDING_INDEX], tView.bindingStartIndex, 'directives should be created before any bindings');
         ngDevMode && assertPreviousIsParent();
-        Object.defineProperty(directive, NG_HOST_SYMBOL, { enumerable: false, value: previousOrParentNode });
+        attachPatchData(directive, viewData);
         if (directives == null)
             viewData[DIRECTIVES] = directives = [];
         ngDevMode && assertDataNext(index, directives);
@@ -25964,7 +26297,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function tickRootContext(rootContext) {
         for (var i = 0; i < rootContext.components.length; i++) {
             var rootComponent = rootContext.components[i];
-            var hostNode = _getComponentHostLElementNode(rootComponent);
+            var hostNode = _getComponentHostLElementNode(rootComponent, true);
             ngDevMode && assertDefined(hostNode.data, 'Component host node should be attached to an LView');
             renderComponentOrTemplate(hostNode, getRootView(rootComponent), rootComponent);
         }
@@ -26086,9 +26419,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             arr = viewData;
         assertEqual(arr.length, index, "index " + index + " expected to be at the end of arr (length " + arr.length + ")");
     }
-    function _getComponentHostLElementNode(component) {
+    function _getComponentHostLElementNode(component, isRootComponent) {
         ngDevMode && assertDefined(component, 'expecting component got null');
-        var lElementNode = component[NG_HOST_SYMBOL];
+        var lElementNode = isRootComponent ? getLElementFromRootComponent(component) :
+            getLElementFromComponent(component);
         ngDevMode && assertDefined(component, 'object is not a component');
         return lElementNode;
     }
@@ -33496,7 +33830,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('7.0.0-beta.5+4.sha-d6cd041');
+    var VERSION$2 = new Version$1('7.0.0-beta.5+6.sha-62be8c2');
 
     /**
      * @license
@@ -45019,7 +45353,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     var currentNode = this.view[this.nodeIndex];
                     for (var dirIndex = 0; dirIndex < directives.length; dirIndex++) {
                         var directive = directives[dirIndex];
-                        if (directive[NG_HOST_SYMBOL] === currentNode) {
+                        if (getLElementNode(directive) === currentNode) {
                             matchedDirectives.push(directive.constructor);
                         }
                     }
@@ -46090,7 +46424,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.0-beta.5+4.sha-d6cd041');
+    var VERSION$3 = new Version$1('7.0.0-beta.5+6.sha-62be8c2');
 
     /**
      * @license
