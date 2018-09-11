@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.0-beta.5+20.sha-a9099e8
+ * @license Angular v7.0.0-beta.5+21.sha-d5bd86a
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1164,7 +1164,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.0-beta.5+20.sha-a9099e8');
+    var VERSION = new Version('7.0.0-beta.5+21.sha-d5bd86a');
 
     /**
      * @license
@@ -22869,6 +22869,50 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    function getClosureSafeProperty(objWithPropertyToExtract) {
+        for (var key in objWithPropertyToExtract) {
+            if (objWithPropertyToExtract[key] === getClosureSafeProperty) {
+                return key;
+            }
+        }
+        throw Error('Could not find renamed property on target object.');
+    }
+    /**
+     * Sets properties on a target object from a source object, but only if
+     * the property doesn't already exist on the target object.
+     * @param target The target to set properties on
+     * @param source The source of the property keys and values to set
+     */
+    function fillProperties(target, source) {
+        for (var key in source) {
+            if (source.hasOwnProperty(key) && !target.hasOwnProperty(key)) {
+                target[key] = source[key];
+            }
+        }
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    var NG_COMPONENT_DEF = getClosureSafeProperty({ ngComponentDef: getClosureSafeProperty });
+    var NG_DIRECTIVE_DEF = getClosureSafeProperty({ ngDirectiveDef: getClosureSafeProperty });
+    var NG_INJECTABLE_DEF = getClosureSafeProperty({ ngInjectableDef: getClosureSafeProperty });
+    var NG_INJECTOR_DEF = getClosureSafeProperty({ ngInjectorDef: getClosureSafeProperty });
+    var NG_PIPE_DEF = getClosureSafeProperty({ ngPipeDef: getClosureSafeProperty });
+    var NG_MODULE_DEF = getClosureSafeProperty({ ngModuleDef: getClosureSafeProperty });
+    var NG_BASE_DEF = getClosureSafeProperty({ ngBaseDef: getClosureSafeProperty });
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     /**
      * Construct an `InjectableDef` which defines how a token will be constructed by the DI system, and
      * in which injectors (if any) it will be available.
@@ -22914,6 +22958,22 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return {
             factory: options.factory, providers: options.providers || [], imports: options.imports || [],
         };
+    }
+    /**
+     * Read the `ngInjectableDef` type in a way which is immune to accidentally reading inherited value.
+     *
+     * @param type type which may have `ngInjectableDef`
+     */
+    function getInjectableDef(type) {
+        return type.hasOwnProperty(NG_INJECTABLE_DEF) ? type[NG_INJECTABLE_DEF] : null;
+    }
+    /**
+     * Read the `ngInjectorDef` type in a way which is immune to accidentally reading inherited value.
+     *
+     * @param type type which may have `ngInjectorDef`
+     */
+    function getInjectorDef(type) {
+        return type.hasOwnProperty(NG_INJECTOR_DEF) ? type[NG_INJECTOR_DEF] : null;
     }
 
     /**
@@ -23521,8 +23581,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     var MULTI_PROVIDER_FN = function () {
         return Array.prototype.slice.call(arguments);
     };
-    var GET_PROPERTY_NAME = {};
-    var USE_VALUE$1 = getClosureSafeProperty({ provide: String, useValue: GET_PROPERTY_NAME });
+    var USE_VALUE$1 = getClosureSafeProperty({ provide: String, useValue: getClosureSafeProperty });
     var NG_TOKEN_PATH = 'ngTokenPath';
     var NG_TEMP_TOKEN_PATH = 'ngTempTokenPath';
     var NULL_INJECTOR = Injector.NULL;
@@ -23769,14 +23828,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function staticError(text, obj) {
         return new Error(formatError(text, obj));
     }
-    function getClosureSafeProperty(objWithPropertyToExtract) {
-        for (var key in objWithPropertyToExtract) {
-            if (objWithPropertyToExtract[key] === GET_PROPERTY_NAME) {
-                return key;
-            }
-        }
-        throw Error('!prop');
-    }
     /**
      * Current injector value used by `inject`.
      * - `undefined`: it is an error to call `inject`
@@ -23795,7 +23846,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             throw new Error("inject() must be called from an injection context");
         }
         else if (_currentInjector === null) {
-            var injectableDef = token.ngInjectableDef;
+            var injectableDef = getInjectableDef(token);
             if (injectableDef && injectableDef.providedIn == 'root') {
                 return injectableDef.value === undefined ? injectableDef.value = injectableDef.factory() :
                     injectableDef.value;
@@ -23910,6 +23961,80 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    // NOTE: The order here matters: Checking window, then global, then self is important.
+    //   checking them in another order can result in errors in some Node environments.
+    var __global$1 = typeof window != 'undefined' && window || typeof global != 'undefined' && global ||
+        typeof self != 'undefined' && self;
+    function ngDevModeResetPerfCounters() {
+        // Make sure to refer to ngDevMode as ['ngDevMode'] for clousre.
+        return __global$1['ngDevMode'] = {
+            firstTemplatePass: 0,
+            tNode: 0,
+            tView: 0,
+            rendererCreateTextNode: 0,
+            rendererSetText: 0,
+            rendererCreateElement: 0,
+            rendererAddEventListener: 0,
+            rendererSetAttribute: 0,
+            rendererRemoveAttribute: 0,
+            rendererSetProperty: 0,
+            rendererSetClassName: 0,
+            rendererAddClass: 0,
+            rendererRemoveClass: 0,
+            rendererSetStyle: 0,
+            rendererRemoveStyle: 0,
+            rendererDestroy: 0,
+            rendererDestroyNode: 0,
+            rendererMoveNode: 0,
+            rendererRemoveNode: 0,
+            rendererCreateComment: 0,
+        };
+    }
+    /**
+     * This checks to see if the `ngDevMode` has been set. If yes,
+     * than we honor it, otherwise we default to dev mode with additional checks.
+     *
+     * The idea is that unless we are doing production build where we explicitly
+     * set `ngDevMode == false` we should be helping the developer by providing
+     * as much early warning and errors as possible.
+     */
+    if (typeof ngDevMode === 'undefined' || ngDevMode) {
+        // Make sure to refer to ngDevMode as ['ngDevMode'] for clousre.
+        __global$1['ngDevMode'] = ngDevModeResetPerfCounters();
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    var EMPTY$1 = {};
+    var EMPTY_ARRAY$1 = [];
+    if (typeof ngDevMode !== 'undefined' && ngDevMode) {
+        Object.freeze(EMPTY$1);
+        Object.freeze(EMPTY_ARRAY$1);
+    }
+    /**
+     * The following getter methods retrieve the definition form the type. Currently the retrieval
+     * honors inheritance, but in the future we may change the rule to require that definitions are
+     * explicit. This would require some sort of migration strategy.
+     */
+    function getComponentDef(type) {
+        return type[NG_COMPONENT_DEF] || null;
+    }
+    function getNgModuleDef(type) {
+        return type[NG_MODULE_DEF] || null;
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     function assertEqual(actual, expected, msg) {
         if (actual != expected) {
             throwError(msg);
@@ -23937,7 +24062,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
     function assertComponentType(actual, msg) {
         if (msg === void 0) { msg = 'Type passed in is not ComponentType, it does not have \'ngComponentDef\' property.'; }
-        if (!actual.ngComponentDef) {
+        if (!getComponentDef(actual)) {
             throwError(msg);
         }
     }
@@ -24085,55 +24210,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         for (var i = 0; i < arr.length; i += 2) {
             arr[i + 1].call(data[arr[i]]);
         }
-    }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    // NOTE: The order here matters: Checking window, then global, then self is important.
-    //   checking them in another order can result in errors in some Node environments.
-    var __global$1 = typeof window != 'undefined' && window || typeof global != 'undefined' && global ||
-        typeof self != 'undefined' && self;
-    function ngDevModeResetPerfCounters() {
-        // Make sure to refer to ngDevMode as ['ngDevMode'] for clousre.
-        return __global$1['ngDevMode'] = {
-            firstTemplatePass: 0,
-            tNode: 0,
-            tView: 0,
-            rendererCreateTextNode: 0,
-            rendererSetText: 0,
-            rendererCreateElement: 0,
-            rendererAddEventListener: 0,
-            rendererSetAttribute: 0,
-            rendererRemoveAttribute: 0,
-            rendererSetProperty: 0,
-            rendererSetClassName: 0,
-            rendererAddClass: 0,
-            rendererRemoveClass: 0,
-            rendererSetStyle: 0,
-            rendererRemoveStyle: 0,
-            rendererDestroy: 0,
-            rendererDestroyNode: 0,
-            rendererMoveNode: 0,
-            rendererRemoveNode: 0,
-            rendererCreateComment: 0,
-        };
-    }
-    /**
-     * This checks to see if the `ngDevMode` has been set. If yes,
-     * than we honor it, otherwise we default to dev mode with additional checks.
-     *
-     * The idea is that unless we are doing production build where we explicitly
-     * set `ngDevMode == false` we should be helping the developer by providing
-     * as much early warning and errors as possible.
-     */
-    if (typeof ngDevMode === 'undefined' || ngDevMode) {
-        // Make sure to refer to ngDevMode as ['ngDevMode'] for clousre.
-        __global$1['ngDevMode'] = ngDevModeResetPerfCounters();
     }
 
     /**
@@ -26475,49 +26551,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var EMPTY$1 = {};
-    var EMPTY_ARRAY$1 = [];
-    if (typeof ngDevMode !== 'undefined' && ngDevMode) {
-        Object.freeze(EMPTY$1);
-        Object.freeze(EMPTY_ARRAY$1);
-    }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    function getClosureSafeProperty$1(objWithPropertyToExtract, target) {
-        for (var key in objWithPropertyToExtract) {
-            if (objWithPropertyToExtract[key] === target) {
-                return key;
-            }
-        }
-        throw Error('Could not find renamed property on target object.');
-    }
-    /**
-     * Sets properties on a target object from a source object, but only if
-     * the property doesn't already exist on the target object.
-     * @param target The target to set properties on
-     * @param source The source of the property keys and values to set
-     */
-    function fillProperties(target, source) {
-        for (var key in source) {
-            if (source.hasOwnProperty(key) && !target.hasOwnProperty(key)) {
-                target[key] = source[key];
-            }
-        }
-    }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
 
     /**
      * @license
@@ -27091,7 +27124,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         ComponentFactoryResolver$$1.prototype.resolveComponentFactory = function (component) {
             ngDevMode && assertComponentType(component);
-            var componentDef = component.ngComponentDef;
+            var componentDef = getComponentDef(component);
             return new ComponentFactory$1(componentDef);
         };
         return ComponentFactoryResolver$$1;
@@ -27920,10 +27953,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     if (record === undefined) {
                         // No record, but maybe the token is scoped to this injector. Look for an ngInjectableDef
                         // with a scope matching this injector.
-                        var def = couldBeInjectableType(token) &&
-                            token.ngInjectableDef ||
-                            undefined;
-                        if (def !== undefined && this.injectableDefInScope(def)) {
+                        var def = couldBeInjectableType(token) && getInjectableDef(token);
+                        if (def && this.injectableDefInScope(def)) {
                             // Found an ngInjectableDef and it's scoped to this injector. Pretend as if it was here
                             // all along.
                             record = injectableDefRecord(token);
@@ -27961,7 +27992,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             // InjectorDefTypeWithProviders (aka ModuleWithProviders). Detecting either is a megamorphic
             // read, so care is taken to only do the read once.
             // First attempt to read the ngInjectorDef.
-            var def = defOrWrappedDef.ngInjectorDef;
+            var def = getInjectorDef(defOrWrappedDef);
             // If that's not present, then attempt to read ngModule from the InjectorDefTypeWithProviders.
             var ngModule = (def == null) && defOrWrappedDef.ngModule || undefined;
             // Determine the InjectorType. In the case where `defOrWrappedDef` is an `InjectorType`,
@@ -27975,7 +28006,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             // Finally, if defOrWrappedType was an `InjectorDefTypeWithProviders`, then the actual
             // `InjectorDef` is on its `ngModule`.
             if (ngModule !== undefined) {
-                def = ngModule.ngInjectorDef;
+                def = getInjectorDef(ngModule);
             }
             // If no definition was found, it might be from exports. Remove it.
             if (def == null) {
@@ -28072,8 +28103,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return R3Injector;
     }());
     function injectableDefRecord(token) {
-        var def = token.ngInjectableDef;
-        if (def === undefined) {
+        var injectableDef = getInjectableDef(token);
+        if (injectableDef === null) {
             if (token instanceof InjectionToken) {
                 throw new Error("Token " + stringify$1(token) + " is missing an ngInjectableDef definition.");
             }
@@ -28081,7 +28112,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             // no-args constructor.
             return makeRecord(function () { return new token(); });
         }
-        return makeRecord(def.factory);
+        return makeRecord(injectableDef.factory);
     }
     function providerToRecord(provider) {
         var token = resolveForwardRef$1(provider);
@@ -28168,7 +28199,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             // tslint:disable-next-line:require-internal-with-underscore
             _this._bootstrapComponents = [];
             _this.destroyCbs = [];
-            var ngModuleDef = ngModuleType.ngModuleDef;
+            var ngModuleDef = getNgModuleDef(ngModuleType);
             ngDevMode && assertDefined(ngModuleDef, "NgModule '" + stringify$1(ngModuleType) + "' is not a subtype of 'NgModuleType'.");
             _this._bootstrapComponents = ngModuleDef.bootstrap;
             var additionalProviders = [
@@ -33190,21 +33221,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var TARGET = {};
-    var NG_COMPONENT_DEF = getClosureSafeProperty$1({ ngComponentDef: TARGET }, TARGET);
-    var NG_DIRECTIVE_DEF = getClosureSafeProperty$1({ ngDirectiveDef: TARGET }, TARGET);
-    var NG_INJECTABLE_DEF = getClosureSafeProperty$1({ ngInjectableDef: TARGET }, TARGET);
-    var NG_INJECTOR_DEF = getClosureSafeProperty$1({ ngInjectorDef: TARGET }, TARGET);
-    var NG_PIPE_DEF = getClosureSafeProperty$1({ ngPipeDef: TARGET }, TARGET);
-    var NG_MODULE_DEF = getClosureSafeProperty$1({ ngModuleDef: TARGET }, TARGET);
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     /**
      * @description
      *
@@ -33485,9 +33501,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var GET_PROPERTY_NAME$1 = {};
-    var ɵ0$1 = GET_PROPERTY_NAME$1;
-    var USE_VALUE$2 = getClosureSafeProperty$1({ provide: String, useValue: ɵ0$1 }, GET_PROPERTY_NAME$1);
+    var ɵ0$1 = getClosureSafeProperty;
+    var USE_VALUE$2 = getClosureSafeProperty({ provide: String, useValue: ɵ0$1 });
 
     /**
      * @license
@@ -33537,9 +33552,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             imports: imports,
         });
     }
-    var GET_PROPERTY_NAME$2 = {};
-    var ɵ0$2 = GET_PROPERTY_NAME$2;
-    var USE_VALUE$3 = getClosureSafeProperty$1({ provide: String, useValue: ɵ0$2 }, GET_PROPERTY_NAME$2);
+    var ɵ0$2 = getClosureSafeProperty;
+    var USE_VALUE$3 = getClosureSafeProperty({ provide: String, useValue: ɵ0$2 });
     var EMPTY_ARRAY$4 = [];
     function convertInjectableProviderToFactory(type, provider) {
         if (!provider) {
@@ -33585,7 +33599,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Supports @Injectable() in JIT mode for Render2.
      */
     function preR3InjectableCompile(injectableType, options) {
-        if (options && options.providedIn !== undefined && injectableType.ngInjectableDef === undefined) {
+        if (options && options.providedIn !== undefined && !getInjectableDef(injectableType)) {
             injectableType.ngInjectableDef = defineInjectable({
                 providedIn: options.providedIn,
                 factory: convertInjectableProviderToFactory(injectableType, options),
@@ -33720,10 +33734,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
     };
     /**
-     * Used to get the minified alias of ngBaseDef
-     */
-    var NG_BASE_DEF = Object.keys({ ngBaseDef: true })[0];
-    /**
      * Does the work of creating the `ngBaseDef` property for the @Input and @Output decorators.
      * @param key "inputs" or "outputs"
      */
@@ -33843,7 +33853,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('7.0.0-beta.5+20.sha-a9099e8');
+    var VERSION$2 = new Version$1('7.0.0-beta.5+21.sha-d5bd86a');
 
     /**
      * @license
@@ -42427,6 +42437,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     return data;
             }
             var providerDef = data._def.providersByKey[tokenKey_1];
+            var injectableDef = void 0;
             if (providerDef) {
                 var providerInstance = data._providers[providerDef.index];
                 if (providerInstance === undefined) {
@@ -42435,8 +42446,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 }
                 return providerInstance === UNDEFINED_VALUE ? undefined : providerInstance;
             }
-            else if (depDef.token.ngInjectableDef && targetsModule(data, depDef.token.ngInjectableDef)) {
-                var injectableDef = depDef.token.ngInjectableDef;
+            else if ((injectableDef = getInjectableDef(depDef.token)) && targetsModule(data, injectableDef)) {
                 var index = data._providers.length;
                 data._def.providersByKey[depDef.tokenKey] = {
                     flags: 1024 /* TypeFactoryProvider */ | 4096 /* LazyProvider */,
@@ -44556,8 +44566,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     var viewDefOverrides = new Map();
     function debugOverrideProvider(override) {
         providerOverrides.set(override.token, override);
-        if (typeof override.token === 'function' && override.token.ngInjectableDef &&
-            typeof override.token.ngInjectableDef.providedIn === 'function') {
+        var injectableDef;
+        if (typeof override.token === 'function' && (injectableDef = getInjectableDef(override.token)) &&
+            typeof injectableDef.providedIn === 'function') {
             providerOverridesWithScope.set(override.token, override);
         }
     }
@@ -44655,7 +44666,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             });
             def.modules.forEach(function (module) {
                 providerOverridesWithScope.forEach(function (override, token) {
-                    if (token.ngInjectableDef.providedIn === module) {
+                    if (getInjectableDef(token).providedIn === module) {
                         hasOverrides = true;
                         hasDeprecatedOverrides = hasDeprecatedOverrides || override.deprecatedBehavior;
                     }
@@ -44682,7 +44693,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             if (providerOverridesWithScope.size > 0) {
                 var moduleSet_1 = new Set(def.modules);
                 providerOverridesWithScope.forEach(function (override, token) {
-                    if (moduleSet_1.has(token.ngInjectableDef.providedIn)) {
+                    if (moduleSet_1.has(getInjectableDef(token).providedIn)) {
                         var provider = {
                             token: token,
                             flags: override.flags | (hasDeprecatedOverrides ? 4096 /* LazyProvider */ : 0 /* None */),
@@ -46437,7 +46448,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.0-beta.5+20.sha-a9099e8');
+    var VERSION$3 = new Version$1('7.0.0-beta.5+21.sha-d5bd86a');
 
     /**
      * @license
