@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.0-beta.2+28.sha-21a1440
+ * @license Angular v7.0.0-beta.5+32.sha-47f4412
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -60,6 +60,21 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         return __assign.apply(this, arguments);
     };
+
+    function __decorate(decorators, target, key, desc) {
+        var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+        if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+        else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+        return c > 3 && r && Object.defineProperty(target, key, r), r;
+    }
+
+    function __param(paramIndex, decorator) {
+        return function (target, key) { decorator(target, key, paramIndex); }
+    }
+
+    function __metadata(metadataKey, metadataValue) {
+        if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(metadataKey, metadataValue);
+    }
 
     function __values(o) {
         var m = typeof Symbol === "function" && o[Symbol.iterator], i = 0;
@@ -445,61 +460,66 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         return HtmlTagDefinition;
     }());
+    var _DEFAULT_TAG_DEFINITION;
     // see http://www.w3.org/TR/html51/syntax.html#optional-tags
     // This implementation does not fully conform to the HTML5 spec.
-    var TAG_DEFINITIONS = {
-        'base': new HtmlTagDefinition({ isVoid: true }),
-        'meta': new HtmlTagDefinition({ isVoid: true }),
-        'area': new HtmlTagDefinition({ isVoid: true }),
-        'embed': new HtmlTagDefinition({ isVoid: true }),
-        'link': new HtmlTagDefinition({ isVoid: true }),
-        'img': new HtmlTagDefinition({ isVoid: true }),
-        'input': new HtmlTagDefinition({ isVoid: true }),
-        'param': new HtmlTagDefinition({ isVoid: true }),
-        'hr': new HtmlTagDefinition({ isVoid: true }),
-        'br': new HtmlTagDefinition({ isVoid: true }),
-        'source': new HtmlTagDefinition({ isVoid: true }),
-        'track': new HtmlTagDefinition({ isVoid: true }),
-        'wbr': new HtmlTagDefinition({ isVoid: true }),
-        'p': new HtmlTagDefinition({
-            closedByChildren: [
-                'address', 'article', 'aside', 'blockquote', 'div', 'dl', 'fieldset', 'footer', 'form',
-                'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'header', 'hgroup', 'hr',
-                'main', 'nav', 'ol', 'p', 'pre', 'section', 'table', 'ul'
-            ],
-            closedByParent: true
-        }),
-        'thead': new HtmlTagDefinition({ closedByChildren: ['tbody', 'tfoot'] }),
-        'tbody': new HtmlTagDefinition({ closedByChildren: ['tbody', 'tfoot'], closedByParent: true }),
-        'tfoot': new HtmlTagDefinition({ closedByChildren: ['tbody'], closedByParent: true }),
-        'tr': new HtmlTagDefinition({
-            closedByChildren: ['tr'],
-            requiredParents: ['tbody', 'tfoot', 'thead'],
-            closedByParent: true
-        }),
-        'td': new HtmlTagDefinition({ closedByChildren: ['td', 'th'], closedByParent: true }),
-        'th': new HtmlTagDefinition({ closedByChildren: ['td', 'th'], closedByParent: true }),
-        'col': new HtmlTagDefinition({ requiredParents: ['colgroup'], isVoid: true }),
-        'svg': new HtmlTagDefinition({ implicitNamespacePrefix: 'svg' }),
-        'math': new HtmlTagDefinition({ implicitNamespacePrefix: 'math' }),
-        'li': new HtmlTagDefinition({ closedByChildren: ['li'], closedByParent: true }),
-        'dt': new HtmlTagDefinition({ closedByChildren: ['dt', 'dd'] }),
-        'dd': new HtmlTagDefinition({ closedByChildren: ['dt', 'dd'], closedByParent: true }),
-        'rb': new HtmlTagDefinition({ closedByChildren: ['rb', 'rt', 'rtc', 'rp'], closedByParent: true }),
-        'rt': new HtmlTagDefinition({ closedByChildren: ['rb', 'rt', 'rtc', 'rp'], closedByParent: true }),
-        'rtc': new HtmlTagDefinition({ closedByChildren: ['rb', 'rtc', 'rp'], closedByParent: true }),
-        'rp': new HtmlTagDefinition({ closedByChildren: ['rb', 'rt', 'rtc', 'rp'], closedByParent: true }),
-        'optgroup': new HtmlTagDefinition({ closedByChildren: ['optgroup'], closedByParent: true }),
-        'option': new HtmlTagDefinition({ closedByChildren: ['option', 'optgroup'], closedByParent: true }),
-        'pre': new HtmlTagDefinition({ ignoreFirstLf: true }),
-        'listing': new HtmlTagDefinition({ ignoreFirstLf: true }),
-        'style': new HtmlTagDefinition({ contentType: TagContentType.RAW_TEXT }),
-        'script': new HtmlTagDefinition({ contentType: TagContentType.RAW_TEXT }),
-        'title': new HtmlTagDefinition({ contentType: TagContentType.ESCAPABLE_RAW_TEXT }),
-        'textarea': new HtmlTagDefinition({ contentType: TagContentType.ESCAPABLE_RAW_TEXT, ignoreFirstLf: true }),
-    };
-    var _DEFAULT_TAG_DEFINITION = new HtmlTagDefinition();
+    var TAG_DEFINITIONS;
     function getHtmlTagDefinition(tagName) {
+        if (!TAG_DEFINITIONS) {
+            _DEFAULT_TAG_DEFINITION = new HtmlTagDefinition();
+            TAG_DEFINITIONS = {
+                'base': new HtmlTagDefinition({ isVoid: true }),
+                'meta': new HtmlTagDefinition({ isVoid: true }),
+                'area': new HtmlTagDefinition({ isVoid: true }),
+                'embed': new HtmlTagDefinition({ isVoid: true }),
+                'link': new HtmlTagDefinition({ isVoid: true }),
+                'img': new HtmlTagDefinition({ isVoid: true }),
+                'input': new HtmlTagDefinition({ isVoid: true }),
+                'param': new HtmlTagDefinition({ isVoid: true }),
+                'hr': new HtmlTagDefinition({ isVoid: true }),
+                'br': new HtmlTagDefinition({ isVoid: true }),
+                'source': new HtmlTagDefinition({ isVoid: true }),
+                'track': new HtmlTagDefinition({ isVoid: true }),
+                'wbr': new HtmlTagDefinition({ isVoid: true }),
+                'p': new HtmlTagDefinition({
+                    closedByChildren: [
+                        'address', 'article', 'aside', 'blockquote', 'div', 'dl', 'fieldset',
+                        'footer', 'form', 'h1', 'h2', 'h3', 'h4', 'h5',
+                        'h6', 'header', 'hgroup', 'hr', 'main', 'nav', 'ol',
+                        'p', 'pre', 'section', 'table', 'ul'
+                    ],
+                    closedByParent: true
+                }),
+                'thead': new HtmlTagDefinition({ closedByChildren: ['tbody', 'tfoot'] }),
+                'tbody': new HtmlTagDefinition({ closedByChildren: ['tbody', 'tfoot'], closedByParent: true }),
+                'tfoot': new HtmlTagDefinition({ closedByChildren: ['tbody'], closedByParent: true }),
+                'tr': new HtmlTagDefinition({
+                    closedByChildren: ['tr'],
+                    requiredParents: ['tbody', 'tfoot', 'thead'],
+                    closedByParent: true
+                }),
+                'td': new HtmlTagDefinition({ closedByChildren: ['td', 'th'], closedByParent: true }),
+                'th': new HtmlTagDefinition({ closedByChildren: ['td', 'th'], closedByParent: true }),
+                'col': new HtmlTagDefinition({ requiredParents: ['colgroup'], isVoid: true }),
+                'svg': new HtmlTagDefinition({ implicitNamespacePrefix: 'svg' }),
+                'math': new HtmlTagDefinition({ implicitNamespacePrefix: 'math' }),
+                'li': new HtmlTagDefinition({ closedByChildren: ['li'], closedByParent: true }),
+                'dt': new HtmlTagDefinition({ closedByChildren: ['dt', 'dd'] }),
+                'dd': new HtmlTagDefinition({ closedByChildren: ['dt', 'dd'], closedByParent: true }),
+                'rb': new HtmlTagDefinition({ closedByChildren: ['rb', 'rt', 'rtc', 'rp'], closedByParent: true }),
+                'rt': new HtmlTagDefinition({ closedByChildren: ['rb', 'rt', 'rtc', 'rp'], closedByParent: true }),
+                'rtc': new HtmlTagDefinition({ closedByChildren: ['rb', 'rtc', 'rp'], closedByParent: true }),
+                'rp': new HtmlTagDefinition({ closedByChildren: ['rb', 'rt', 'rtc', 'rp'], closedByParent: true }),
+                'optgroup': new HtmlTagDefinition({ closedByChildren: ['optgroup'], closedByParent: true }),
+                'option': new HtmlTagDefinition({ closedByChildren: ['option', 'optgroup'], closedByParent: true }),
+                'pre': new HtmlTagDefinition({ ignoreFirstLf: true }),
+                'listing': new HtmlTagDefinition({ ignoreFirstLf: true }),
+                'style': new HtmlTagDefinition({ contentType: TagContentType.RAW_TEXT }),
+                'script': new HtmlTagDefinition({ contentType: TagContentType.RAW_TEXT }),
+                'title': new HtmlTagDefinition({ contentType: TagContentType.ESCAPABLE_RAW_TEXT }),
+                'textarea': new HtmlTagDefinition({ contentType: TagContentType.ESCAPABLE_RAW_TEXT, ignoreFirstLf: true }),
+            };
+        }
         return TAG_DEFINITIONS[tagName.toLowerCase()] || _DEFAULT_TAG_DEFINITION;
     }
 
@@ -1144,7 +1164,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.0-beta.2+28.sha-21a1440');
+    var VERSION = new Version('7.0.0-beta.5+32.sha-47f4412');
 
     /**
      * @license
@@ -1673,6 +1693,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             return {
                 ngContentSelectors: this.ngContentSelectors,
                 encapsulation: this.encapsulation,
+                styles: this.styles,
+                animations: this.animations
             };
         };
         return CompileTemplateMetadata;
@@ -8327,6 +8349,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         Identifiers.QueryList = { name: 'QueryList', moduleName: CORE };
         Identifiers.TemplateRef = { name: 'TemplateRef', moduleName: CORE };
+        Identifiers.Renderer2 = { name: 'Renderer2', moduleName: CORE };
         Identifiers.CodegenComponentFactoryResolver = {
             name: 'ɵCodegenComponentFactoryResolver',
             moduleName: CORE,
@@ -12445,13 +12468,48 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     //
     // =================================================================================================
     /** Map from tagName|propertyName SecurityContext. Properties applying to all tags use '*'. */
-    var SECURITY_SCHEMA = {};
+    var _SECURITY_SCHEMA;
+    function SECURITY_SCHEMA() {
+        if (!_SECURITY_SCHEMA) {
+            _SECURITY_SCHEMA = {};
+            // Case is insignificant below, all element and attribute names are lower-cased for lookup.
+            registerContext(SecurityContext.HTML, [
+                'iframe|srcdoc',
+                '*|innerHTML',
+                '*|outerHTML',
+            ]);
+            registerContext(SecurityContext.STYLE, ['*|style']);
+            // NB: no SCRIPT contexts here, they are never allowed due to the parser stripping them.
+            registerContext(SecurityContext.URL, [
+                '*|formAction', 'area|href', 'area|ping', 'audio|src', 'a|href',
+                'a|ping', 'blockquote|cite', 'body|background', 'del|cite', 'form|action',
+                'img|src', 'img|srcset', 'input|src', 'ins|cite', 'q|cite',
+                'source|src', 'source|srcset', 'track|src', 'video|poster', 'video|src',
+            ]);
+            registerContext(SecurityContext.RESOURCE_URL, [
+                'applet|code',
+                'applet|codebase',
+                'base|href',
+                'embed|src',
+                'frame|src',
+                'head|profile',
+                'html|manifest',
+                'iframe|src',
+                'link|href',
+                'media|src',
+                'object|codebase',
+                'object|data',
+                'script|src',
+            ]);
+        }
+        return _SECURITY_SCHEMA;
+    }
     function registerContext(ctx, specs) {
         var e_1, _a;
         try {
             for (var specs_1 = __values(specs), specs_1_1 = specs_1.next(); !specs_1_1.done; specs_1_1 = specs_1.next()) {
                 var spec = specs_1_1.value;
-                SECURITY_SCHEMA[spec.toLowerCase()] = ctx;
+                _SECURITY_SCHEMA[spec.toLowerCase()] = ctx;
             }
         }
         catch (e_1_1) { e_1 = { error: e_1_1 }; }
@@ -12462,35 +12520,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             finally { if (e_1) throw e_1.error; }
         }
     }
-    // Case is insignificant below, all element and attribute names are lower-cased for lookup.
-    registerContext(SecurityContext.HTML, [
-        'iframe|srcdoc',
-        '*|innerHTML',
-        '*|outerHTML',
-    ]);
-    registerContext(SecurityContext.STYLE, ['*|style']);
-    // NB: no SCRIPT contexts here, they are never allowed due to the parser stripping them.
-    registerContext(SecurityContext.URL, [
-        '*|formAction', 'area|href', 'area|ping', 'audio|src', 'a|href',
-        'a|ping', 'blockquote|cite', 'body|background', 'del|cite', 'form|action',
-        'img|src', 'img|srcset', 'input|src', 'ins|cite', 'q|cite',
-        'source|src', 'source|srcset', 'track|src', 'video|poster', 'video|src',
-    ]);
-    registerContext(SecurityContext.RESOURCE_URL, [
-        'applet|code',
-        'applet|codebase',
-        'base|href',
-        'embed|src',
-        'frame|src',
-        'head|profile',
-        'html|manifest',
-        'iframe|src',
-        'link|href',
-        'media|src',
-        'object|codebase',
-        'object|data',
-        'script|src',
-    ]);
 
     /**
      * @license
@@ -12826,11 +12855,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             // property names do not have a security impact.
             tagName = tagName.toLowerCase();
             propName = propName.toLowerCase();
-            var ctx = SECURITY_SCHEMA[tagName + '|' + propName];
+            var ctx = SECURITY_SCHEMA()[tagName + '|' + propName];
             if (ctx) {
                 return ctx;
             }
-            ctx = SECURITY_SCHEMA['*|' + propName];
+            ctx = SECURITY_SCHEMA()['*|' + propName];
             return ctx ? ctx : SecurityContext.NONE;
         };
         DomElementSchemaRegistry.prototype.getMappedPropName = function (propName) { return _ATTR_TO_PROP[propName] || propName; };
@@ -13508,7 +13537,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     var IDENT_EVENT_IDX = 10;
     var TEMPLATE_ATTR_PREFIX = '*';
     var CLASS_ATTR = 'class';
-    var TEXT_CSS_SELECTOR = CssSelector.parse('*')[0];
+    var _TEXT_CSS_SELECTOR;
+    function TEXT_CSS_SELECTOR() {
+        if (!_TEXT_CSS_SELECTOR) {
+            _TEXT_CSS_SELECTOR = CssSelector.parse('*')[0];
+        }
+        return _TEXT_CSS_SELECTOR;
+    }
     var TemplateParseError = /** @class */ (function (_super) {
         __extends(TemplateParseError, _super);
         function TemplateParseError(message, span, level) {
@@ -13652,7 +13687,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         TemplateParseVisitor.prototype.visitExpansion = function (expansion, context) { return null; };
         TemplateParseVisitor.prototype.visitExpansionCase = function (expansionCase, context) { return null; };
         TemplateParseVisitor.prototype.visitText = function (text, parent) {
-            var ngContentIndex = parent.findNgContentIndex(TEXT_CSS_SELECTOR);
+            var ngContentIndex = parent.findNgContentIndex(TEXT_CSS_SELECTOR());
             var valueNoNgsp = replaceNgsp(text.value);
             var expr = this._bindingParser.parseInterpolation(valueNoNgsp, text.sourceSpan);
             return expr ? new BoundTextAst(expr, ngContentIndex, text.sourceSpan) :
@@ -14058,7 +14093,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             return new AttrAst(attribute.name, attribute.value, attribute.sourceSpan);
         };
         NonBindableVisitor.prototype.visitText = function (text, parent) {
-            var ngContentIndex = parent.findNgContentIndex(TEXT_CSS_SELECTOR);
+            var ngContentIndex = parent.findNgContentIndex(TEXT_CSS_SELECTOR());
             return new TextAst(text.value, ngContentIndex, text.sourceSpan);
         };
         NonBindableVisitor.prototype.visitExpansion = function (expansion, context) { return expansion; };
@@ -14415,7 +14450,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         Identifiers.injectTemplateRef = { name: 'ɵinjectTemplateRef', moduleName: CORE$1 };
         Identifiers.injectViewContainerRef = { name: 'ɵinjectViewContainerRef', moduleName: CORE$1 };
         Identifiers.injectChangeDetectorRef = { name: 'ɵinjectChangeDetectorRef', moduleName: CORE$1 };
+        Identifiers.injectRenderer2 = { name: 'ɵinjectRenderer2', moduleName: CORE$1 };
         Identifiers.directiveInject = { name: 'ɵdirectiveInject', moduleName: CORE$1 };
+        Identifiers.templateRefExtractor = { name: 'ɵtemplateRefExtractor', moduleName: CORE$1 };
         Identifiers.defineBase = { name: 'ɵdefineBase', moduleName: CORE$1 };
         Identifiers.BaseDef = {
             name: 'ɵBaseDef',
@@ -14464,15 +14501,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             name: 'ɵgetInheritedFactory',
             moduleName: CORE$1,
         };
-        // Reserve slots for pure functions
-        Identifiers.reserveSlots = { name: 'ɵreserveSlots', moduleName: CORE$1 };
         // sanitization-related functions
-        Identifiers.sanitizeHtml = { name: 'ɵzh', moduleName: CORE$1 };
-        Identifiers.sanitizeStyle = { name: 'ɵzs', moduleName: CORE$1 };
-        Identifiers.defaultStyleSanitizer = { name: 'ɵzss', moduleName: CORE$1 };
-        Identifiers.sanitizeResourceUrl = { name: 'ɵzr', moduleName: CORE$1 };
-        Identifiers.sanitizeScript = { name: 'ɵzc', moduleName: CORE$1 };
-        Identifiers.sanitizeUrl = { name: 'ɵzu', moduleName: CORE$1 };
+        Identifiers.sanitizeHtml = { name: 'ɵsanitizeHtml', moduleName: CORE$1 };
+        Identifiers.sanitizeStyle = { name: 'ɵsanitizeStyle', moduleName: CORE$1 };
+        Identifiers.defaultStyleSanitizer = { name: 'ɵdefaultStyleSanitizer', moduleName: CORE$1 };
+        Identifiers.sanitizeResourceUrl = { name: 'ɵsanitizeResourceUrl', moduleName: CORE$1 };
+        Identifiers.sanitizeScript = { name: 'ɵsanitizeScript', moduleName: CORE$1 };
+        Identifiers.sanitizeUrl = { name: 'ɵsanitizeUrl', moduleName: CORE$1 };
         return Identifiers;
     }());
 
@@ -14541,6 +14576,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
          * The dependency is for `ChangeDetectorRef`.
          */
         R3ResolvedDependencyType[R3ResolvedDependencyType["ChangeDetectorRef"] = 6] = "ChangeDetectorRef";
+        /**
+         * The dependency is for `Renderer2`.
+         */
+        R3ResolvedDependencyType[R3ResolvedDependencyType["Renderer2"] = 7] = "Renderer2";
     })(R3ResolvedDependencyType || (R3ResolvedDependencyType = {}));
 
     /**
@@ -14606,6 +14645,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             _this.allocateSlot = allocateSlot;
             _this.allocatePureFunctionSlots = allocatePureFunctionSlots;
             _this.definePipe = definePipe;
+            _this._pipeBindExprs = [];
             return _this;
         }
         // AstMemoryEfficientTransformer
@@ -14620,10 +14660,19 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             this.definePipe(pipe.name, slotPseudoLocal, slot, importExpr(identifier));
             var args = __spread([pipe.exp], pipe.args);
             var convertedArgs = isVarLength ? this.visitAll([new LiteralArray(pipe.span, args)]) : this.visitAll(args);
-            return new FunctionCall(pipe.span, target, __spread([
+            var pipeBindExpr = new FunctionCall(pipe.span, target, __spread([
                 new LiteralPrimitive(pipe.span, slot),
                 new LiteralPrimitive(pipe.span, pureFunctionSlot)
             ], convertedArgs));
+            this._pipeBindExprs.push(pipeBindExpr);
+            return pipeBindExpr;
+        };
+        ValueConverter.prototype.updatePipeSlotOffsets = function (bindingSlots) {
+            this._pipeBindExprs.forEach(function (pipe) {
+                // update the slot offset arg (index 1) to account for binding slots
+                var slotOffset = pipe.args[1];
+                slotOffset.value += bindingSlots;
+            });
         };
         ValueConverter.prototype.visitLiteralArray = function (array, context) {
             var _this = this;
@@ -14712,6 +14761,16 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             this.referenceNameIndex = 0;
             this.restoreViewVariable = null;
         }
+        Object.defineProperty(BindingScope, "ROOT_SCOPE", {
+            get: function () {
+                if (!BindingScope._ROOT_SCOPE) {
+                    BindingScope._ROOT_SCOPE = new BindingScope().set(0, '$event', variable('$event'));
+                }
+                return BindingScope._ROOT_SCOPE;
+            },
+            enumerable: true,
+            configurable: true
+        });
         BindingScope.prototype.get = function (name) {
             var current = this;
             while (current) {
@@ -14852,7 +14911,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var ref = "" + REFERENCE_PREFIX + current.referenceNameIndex++;
             return ref;
         };
-        BindingScope.ROOT_SCOPE = new BindingScope().set(0, '$event', variable('$event'));
         return BindingScope;
     }());
 
@@ -15040,7 +15098,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 }
             }
         };
-        /* @internal */
+        /** @internal */
         StaticSymbolResolver.prototype.ignoreErrorsFor = function (cb) {
             var recorder = this.errorRecorder;
             this.errorRecorder = function () { };
@@ -16874,14 +16932,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 summaries.forEach(function (summary) { return _this.summaryCache.set(summary.symbol, summary); });
                 if (moduleName) {
                     this.knownFileNameToModuleNames.set(filePath, moduleName);
-                    if (filePath.endsWith('.d.ts')) {
-                        // Also add entries to map the ngfactory & ngsummary files to their module names.
-                        // This is necessary to resolve ngfactory & ngsummary files to their AMD module
-                        // names when building angular with Bazel from source downstream.
-                        // See https://github.com/bazelbuild/rules_typescript/pull/223 for context.
-                        this.knownFileNameToModuleNames.set(filePath.replace(/\.d\.ts$/, '.ngfactory.d.ts'), moduleName + '.ngfactory');
-                        this.knownFileNameToModuleNames.set(filePath.replace(/\.d\.ts$/, '.ngsummary.d.ts'), moduleName + '.ngsummary');
-                    }
                 }
                 importAs.forEach(function (importAs) { _this.importAs.set(importAs.symbol, importAs.importAs); });
             }
@@ -20088,7 +20138,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var isStatic = function (node) { return ts.getCombinedModifierFlags(node) & ts.ModifierFlags.Static; };
+    var isStatic = function (node) {
+        return ts.getCombinedModifierFlags(node) & ts.ModifierFlags.Static;
+    };
     /**
      * Collect decorator metadata from a TypeScript module.
      */
@@ -20327,9 +20379,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                         }
                 }
             });
-            var isExport = function (node) {
-                return sourceFile.isDeclarationFile || ts.getCombinedModifierFlags(node) & ts.ModifierFlags.Export;
-            };
+            var isExport = function (node) { return sourceFile.isDeclarationFile ||
+                ts.getCombinedModifierFlags(node) & ts.ModifierFlags.Export; };
             var isExportedIdentifier = function (identifier) {
                 return identifier && exportMap.has(identifier.text);
             };
@@ -22818,6 +22869,50 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    function getClosureSafeProperty(objWithPropertyToExtract) {
+        for (var key in objWithPropertyToExtract) {
+            if (objWithPropertyToExtract[key] === getClosureSafeProperty) {
+                return key;
+            }
+        }
+        throw Error('Could not find renamed property on target object.');
+    }
+    /**
+     * Sets properties on a target object from a source object, but only if
+     * the property doesn't already exist on the target object.
+     * @param target The target to set properties on
+     * @param source The source of the property keys and values to set
+     */
+    function fillProperties(target, source) {
+        for (var key in source) {
+            if (source.hasOwnProperty(key) && !target.hasOwnProperty(key)) {
+                target[key] = source[key];
+            }
+        }
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    var NG_COMPONENT_DEF = getClosureSafeProperty({ ngComponentDef: getClosureSafeProperty });
+    var NG_DIRECTIVE_DEF = getClosureSafeProperty({ ngDirectiveDef: getClosureSafeProperty });
+    var NG_INJECTABLE_DEF = getClosureSafeProperty({ ngInjectableDef: getClosureSafeProperty });
+    var NG_INJECTOR_DEF = getClosureSafeProperty({ ngInjectorDef: getClosureSafeProperty });
+    var NG_PIPE_DEF = getClosureSafeProperty({ ngPipeDef: getClosureSafeProperty });
+    var NG_MODULE_DEF = getClosureSafeProperty({ ngModuleDef: getClosureSafeProperty });
+    var NG_BASE_DEF = getClosureSafeProperty({ ngBaseDef: getClosureSafeProperty });
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     /**
      * Construct an `InjectableDef` which defines how a token will be constructed by the DI system, and
      * in which injectors (if any) it will be available.
@@ -22863,6 +22958,22 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return {
             factory: options.factory, providers: options.providers || [], imports: options.imports || [],
         };
+    }
+    /**
+     * Read the `ngInjectableDef` type in a way which is immune to accidentally reading inherited value.
+     *
+     * @param type type which may have `ngInjectableDef`
+     */
+    function getInjectableDef(type) {
+        return type.hasOwnProperty(NG_INJECTABLE_DEF) ? type[NG_INJECTABLE_DEF] : null;
+    }
+    /**
+     * Read the `ngInjectorDef` type in a way which is immune to accidentally reading inherited value.
+     *
+     * @param type type which may have `ngInjectorDef`
+     */
+    function getInjectorDef(type) {
+        return type.hasOwnProperty(NG_INJECTOR_DEF) ? type[NG_INJECTOR_DEF] : null;
     }
 
     /**
@@ -23470,8 +23581,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     var MULTI_PROVIDER_FN = function () {
         return Array.prototype.slice.call(arguments);
     };
-    var GET_PROPERTY_NAME = {};
-    var USE_VALUE$1 = getClosureSafeProperty({ provide: String, useValue: GET_PROPERTY_NAME });
+    var USE_VALUE$1 = getClosureSafeProperty({ provide: String, useValue: getClosureSafeProperty });
     var NG_TOKEN_PATH = 'ngTokenPath';
     var NG_TEMP_TOKEN_PATH = 'ngTempTokenPath';
     var NULL_INJECTOR = Injector.NULL;
@@ -23718,14 +23828,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function staticError(text, obj) {
         return new Error(formatError(text, obj));
     }
-    function getClosureSafeProperty(objWithPropertyToExtract) {
-        for (var key in objWithPropertyToExtract) {
-            if (objWithPropertyToExtract[key] === GET_PROPERTY_NAME) {
-                return key;
-            }
-        }
-        throw Error('!prop');
-    }
     /**
      * Current injector value used by `inject`.
      * - `undefined`: it is an error to call `inject`
@@ -23744,7 +23846,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             throw new Error("inject() must be called from an injection context");
         }
         else if (_currentInjector === null) {
-            var injectableDef = token.ngInjectableDef;
+            var injectableDef = getInjectableDef(token);
             if (injectableDef && injectableDef.providedIn == 'root') {
                 return injectableDef.value === undefined ? injectableDef.value = injectableDef.factory() :
                     injectableDef.value;
@@ -23809,6 +23911,130 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * Defines template and style encapsulation options available for Component's {@link Component}.
+     *
+     * See {@link Component#encapsulation encapsulation}.
+     *
+     */
+    var ViewEncapsulation$1;
+    (function (ViewEncapsulation) {
+        /**
+         * Emulate `Native` scoping of styles by adding an attribute containing surrogate id to the Host
+         * Element and pre-processing the style rules provided via {@link Component#styles styles} or
+         * {@link Component#styleUrls styleUrls}, and adding the new Host Element attribute to all
+         * selectors.
+         *
+         * This is the default option.
+         */
+        ViewEncapsulation[ViewEncapsulation["Emulated"] = 0] = "Emulated";
+        /**
+         * @deprecated v6.1.0 - use {ViewEncapsulation.ShadowDom} instead.
+         * Use the native encapsulation mechanism of the renderer.
+         *
+         * For the DOM this means using the deprecated [Shadow DOM
+         * v0](https://w3c.github.io/webcomponents/spec/shadow/) and
+         * creating a ShadowRoot for Component's Host Element.
+         */
+        ViewEncapsulation[ViewEncapsulation["Native"] = 1] = "Native";
+        /**
+         * Don't provide any template or style encapsulation.
+         */
+        ViewEncapsulation[ViewEncapsulation["None"] = 2] = "None";
+        /**
+         * Use Shadow DOM to encapsulate styles.
+         *
+         * For the DOM this means using modern [Shadow
+         * DOM](https://w3c.github.io/webcomponents/spec/shadow/) and
+         * creating a ShadowRoot for Component's Host Element.
+         *
+         * ### Example
+         * {@example core/ts/metadata/encapsulation.ts region='longform'}
+         */
+        ViewEncapsulation[ViewEncapsulation["ShadowDom"] = 3] = "ShadowDom";
+    })(ViewEncapsulation$1 || (ViewEncapsulation$1 = {}));
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    // NOTE: The order here matters: Checking window, then global, then self is important.
+    //   checking them in another order can result in errors in some Node environments.
+    var __global$1 = typeof window != 'undefined' && window || typeof global != 'undefined' && global ||
+        typeof self != 'undefined' && self;
+    function ngDevModeResetPerfCounters() {
+        // Make sure to refer to ngDevMode as ['ngDevMode'] for clousre.
+        return __global$1['ngDevMode'] = {
+            firstTemplatePass: 0,
+            tNode: 0,
+            tView: 0,
+            rendererCreateTextNode: 0,
+            rendererSetText: 0,
+            rendererCreateElement: 0,
+            rendererAddEventListener: 0,
+            rendererSetAttribute: 0,
+            rendererRemoveAttribute: 0,
+            rendererSetProperty: 0,
+            rendererSetClassName: 0,
+            rendererAddClass: 0,
+            rendererRemoveClass: 0,
+            rendererSetStyle: 0,
+            rendererRemoveStyle: 0,
+            rendererDestroy: 0,
+            rendererDestroyNode: 0,
+            rendererMoveNode: 0,
+            rendererRemoveNode: 0,
+            rendererCreateComment: 0,
+        };
+    }
+    /**
+     * This checks to see if the `ngDevMode` has been set. If yes,
+     * than we honor it, otherwise we default to dev mode with additional checks.
+     *
+     * The idea is that unless we are doing production build where we explicitly
+     * set `ngDevMode == false` we should be helping the developer by providing
+     * as much early warning and errors as possible.
+     */
+    if (typeof ngDevMode === 'undefined' || ngDevMode) {
+        // Make sure to refer to ngDevMode as ['ngDevMode'] for clousre.
+        __global$1['ngDevMode'] = ngDevModeResetPerfCounters();
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    var EMPTY$1 = {};
+    var EMPTY_ARRAY$1 = [];
+    if (typeof ngDevMode !== 'undefined' && ngDevMode) {
+        Object.freeze(EMPTY$1);
+        Object.freeze(EMPTY_ARRAY$1);
+    }
+    /**
+     * The following getter methods retrieve the definition form the type. Currently the retrieval
+     * honors inheritance, but in the future we may change the rule to require that definitions are
+     * explicit. This would require some sort of migration strategy.
+     */
+    function getComponentDef(type) {
+        return type[NG_COMPONENT_DEF] || null;
+    }
+    function getNgModuleDef(type) {
+        return type[NG_MODULE_DEF] || null;
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     function assertEqual(actual, expected, msg) {
         if (actual != expected) {
             throwError(msg);
@@ -23829,11 +24055,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             throwError(msg);
         }
     }
-    function assertNotDefined(actual, msg) {
-        if (actual != null) {
-            throwError(msg);
-        }
-    }
     function assertDefined(actual, msg) {
         if (actual == null) {
             throwError(msg);
@@ -23841,7 +24062,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
     function assertComponentType(actual, msg) {
         if (msg === void 0) { msg = 'Type passed in is not ComponentType, it does not have \'ngComponentDef\' property.'; }
-        if (!actual.ngComponentDef) {
+        if (!getComponentDef(actual)) {
             throwError(msg);
         }
     }
@@ -23990,148 +24211,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             arr[i + 1].call(data[arr[i]]);
         }
     }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    // NOTE: The order here matters: Checking window, then global, then self is important.
-    //   checking them in another order can result in errors in some Node environments.
-    var __global$1 = typeof window != 'undefined' && window || typeof global != 'undefined' && global ||
-        typeof self != 'undefined' && self;
-    function ngDevModeResetPerfCounters() {
-        // Make sure to refer to ngDevMode as ['ngDevMode'] for clousre.
-        return __global$1['ngDevMode'] = {
-            firstTemplatePass: 0,
-            tNode: 0,
-            tView: 0,
-            rendererCreateTextNode: 0,
-            rendererSetText: 0,
-            rendererCreateElement: 0,
-            rendererAddEventListener: 0,
-            rendererSetAttribute: 0,
-            rendererRemoveAttribute: 0,
-            rendererSetProperty: 0,
-            rendererSetClassName: 0,
-            rendererAddClass: 0,
-            rendererRemoveClass: 0,
-            rendererSetStyle: 0,
-            rendererRemoveStyle: 0,
-            rendererDestroy: 0,
-            rendererDestroyNode: 0,
-            rendererMoveNode: 0,
-            rendererRemoveNode: 0,
-            rendererCreateComment: 0,
-        };
-    }
-    /**
-     * This checks to see if the `ngDevMode` has been set. If yes,
-     * than we honor it, otherwise we default to dev mode with additional checks.
-     *
-     * The idea is that unless we are doing production build where we explicitly
-     * set `ngDevMode == false` we should be helping the developer by providing
-     * as much early warning and errors as possible.
-     */
-    if (typeof ngDevMode === 'undefined' || ngDevMode) {
-        // Make sure to refer to ngDevMode as ['ngDevMode'] for clousre.
-        __global$1['ngDevMode'] = ngDevModeResetPerfCounters();
-    }
-
-    /** Called when directives inject each other (creating a circular dependency) */
-    function throwCyclicDependencyError(token) {
-        throw new Error("Cannot instantiate cyclic dependency! " + token);
-    }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * Below are constants for LContainer indices to help us look up LContainer members
-     * without having to remember the specific indices.
-     * Uglify will inline these when minifying so there shouldn't be a cost.
-     */
-    var ACTIVE_INDEX = 0;
-    // PARENT, NEXT, and QUERIES are indices 1, 2, and 3.
-    // As we already have these constants in LViewData, we don't need to re-create them.
-    var VIEWS = 4;
-    var RENDER_PARENT = 5;
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    var NG_PROJECT_AS_ATTR_NAME = 'ngProjectAs';
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    // TODO: cleanup once the code is merged in angular/angular
-    var RendererStyleFlags3;
-    (function (RendererStyleFlags3) {
-        RendererStyleFlags3[RendererStyleFlags3["Important"] = 1] = "Important";
-        RendererStyleFlags3[RendererStyleFlags3["DashCase"] = 2] = "DashCase";
-    })(RendererStyleFlags3 || (RendererStyleFlags3 = {}));
-    /** Returns whether the `renderer` is a `ProceduralRenderer3` */
-    function isProceduralRenderer(renderer) {
-        return !!(renderer.listen);
-    }
-    var domRendererFactory3 = {
-        createRenderer: function (hostElement, rendererType) { return document; }
-    };
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    function assertNodeType(node, type) {
-        assertDefined(node, 'should be called with a node');
-        assertEqual(node.tNode.type, type, "should be a " + typeName(type));
-    }
-    function assertNodeOfPossibleTypes(node) {
-        var types = [];
-        for (var _i = 1; _i < arguments.length; _i++) {
-            types[_i - 1] = arguments[_i];
-        }
-        assertDefined(node, 'should be called with a node');
-        var found = types.some(function (type) { return node.tNode.type === type; });
-        assertEqual(found, true, "Should be one of " + types.map(typeName).join(', '));
-    }
-    function typeName(type) {
-        if (type == 1 /* Projection */)
-            return 'Projection';
-        if (type == 0 /* Container */)
-            return 'Container';
-        if (type == 2 /* View */)
-            return 'View';
-        if (type == 3 /* Element */)
-            return 'Element';
-        return '<unknown>';
-    }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
 
     /**
      * @license
@@ -24300,15 +24379,437 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    /** Retrieves the sibling node for the given node. */
-    function getNextLNode(node) {
-        // View nodes don't have TNodes, so their next must be retrieved through their LView.
-        if (node.tNode.type === 2 /* View */) {
-            var viewData = node.data;
-            return viewData[NEXT] ? viewData[NEXT][HOST_NODE] : null;
+    /**
+     * This property will be monkey-patched on elements, components and directives
+     */
+    var MONKEY_PATCH_KEY_NAME = '__ngContext__';
+    /** Returns the matching `LContext` data for a given DOM node, directive or component instance.
+     *
+     * This function will examine the provided DOM element, component, or directive instance\'s
+     * monkey-patched property to derive the `LContext` data. Once called then the monkey-patched
+     * value will be that of the newly created `LContext`.
+     *
+     * If the monkey-patched value is the `LViewData` instance then the context value for that
+     * target will be created and the monkey-patch reference will be updated. Therefore when this
+     * function is called it may mutate the provided element\'s, component\'s or any of the associated
+     * directive\'s monkey-patch values.
+     *
+     * If the monkey-patch value is not detected then the code will walk up the DOM until an element
+     * is found which contains a monkey-patch reference. When that occurs then the provided element
+     * will be updated with a new context (which is then returned). If the monkey-patch value is not
+     * detected for a component/directive instance then it will throw an error (all components and
+     * directives should be automatically monkey-patched by ivy).
+     */
+    function getContext(target) {
+        var mpValue = readPatchedData(target);
+        if (mpValue) {
+            // only when it's an array is it considered an LViewData instance
+            // ... otherwise it's an already constructed LContext instance
+            if (Array.isArray(mpValue)) {
+                var lViewData = mpValue;
+                var lNodeIndex = void 0;
+                var component = undefined;
+                var directiveIndices = undefined;
+                var directives = undefined;
+                if (isComponentInstance(target)) {
+                    lNodeIndex = findViaComponent(lViewData, target);
+                    if (lNodeIndex == -1) {
+                        throw new Error('The provided component was not found in the application');
+                    }
+                    component = target;
+                }
+                else if (isDirectiveInstance(target)) {
+                    lNodeIndex = findViaDirective(lViewData, target);
+                    if (lNodeIndex == -1) {
+                        throw new Error('The provided directive was not found in the application');
+                    }
+                    directiveIndices = discoverDirectiveIndices(lViewData, lNodeIndex);
+                    directives = directiveIndices ? discoverDirectives(lViewData, directiveIndices) : null;
+                }
+                else {
+                    lNodeIndex = findViaNativeElement(lViewData, target);
+                    if (lNodeIndex == -1) {
+                        return null;
+                    }
+                }
+                // the goal is not to fill the entire context full of data because the lookups
+                // are expensive. Instead, only the target data (the element, compontent or
+                // directive details) are filled into the context. If called multiple times
+                // with different target values then the missing target data will be filled in.
+                var lNode = getLNodeFromViewData(lViewData, lNodeIndex);
+                var existingCtx = readPatchedData(lNode.native);
+                var context = (existingCtx && !Array.isArray(existingCtx)) ?
+                    existingCtx :
+                    createLContext(lViewData, lNodeIndex, lNode.native);
+                // only when the component has been discovered then update the monkey-patch
+                if (component && context.component === undefined) {
+                    context.component = component;
+                    attachPatchData(context.component, context);
+                }
+                // only when the directives have been discovered then update the monkey-patch
+                if (directives && directiveIndices && context.directives === undefined) {
+                    context.directiveIndices = directiveIndices;
+                    context.directives = directives;
+                    for (var i = 0; i < directives.length; i++) {
+                        attachPatchData(directives[i], context);
+                    }
+                }
+                attachPatchData(context.native, context);
+                mpValue = context;
+            }
         }
-        return node.tNode.next ? node.view[node.tNode.next.index] : null;
+        else {
+            var rElement = target;
+            ngDevMode && assertDomElement(rElement);
+            // if the context is not found then we need to traverse upwards up the DOM
+            // to find the nearest element that has already been monkey patched with data
+            var parent_1 = rElement;
+            while (parent_1 = parent_1.parentNode) {
+                var parentContext = readPatchedData(parent_1);
+                if (parentContext) {
+                    var lViewData = void 0;
+                    if (Array.isArray(parentContext)) {
+                        lViewData = parentContext;
+                    }
+                    else {
+                        lViewData = parentContext.lViewData;
+                    }
+                    // the edge of the app was also reached here through another means
+                    // (maybe because the DOM was changed manually).
+                    if (!lViewData) {
+                        return null;
+                    }
+                    var index = findViaNativeElement(lViewData, rElement);
+                    if (index >= 0) {
+                        var lNode = getLNodeFromViewData(lViewData, index);
+                        var context = createLContext(lViewData, index, lNode.native);
+                        attachPatchData(lNode.native, context);
+                        mpValue = context;
+                        break;
+                    }
+                }
+            }
+        }
+        return mpValue || null;
     }
+    /**
+     * Creates an empty instance of a `LContext` context
+     */
+    function createLContext(lViewData, lNodeIndex, native) {
+        return {
+            lViewData: lViewData,
+            lNodeIndex: lNodeIndex,
+            native: native,
+            component: undefined,
+            directiveIndices: undefined,
+            directives: undefined,
+        };
+    }
+    /**
+     * A utility function for retrieving the matching lElementNode
+     * from a given DOM element, component or directive.
+     */
+    function getLElementNode(target) {
+        var context = getContext(target);
+        return context ? getLNodeFromViewData(context.lViewData, context.lNodeIndex) : null;
+    }
+    /**
+     * A simplified lookup function for finding the LElementNode from a component instance.
+     *
+     * This function exists for tree-shaking purposes to avoid having to pull in everything
+     * that `getContext` has in the event that an Angular application doesn't need to have
+     * any programmatic access to an element's context (only change detection uses this function).
+     */
+    function getLElementFromComponent(componentInstance) {
+        var lViewData = readPatchedData(componentInstance);
+        var lNode;
+        if (Array.isArray(lViewData)) {
+            var lNodeIndex = findViaComponent(lViewData, componentInstance);
+            lNode = readElementValue(lViewData[lNodeIndex]);
+            var context = createLContext(lViewData, lNodeIndex, lNode.native);
+            context.component = componentInstance;
+            attachPatchData(componentInstance, context);
+            attachPatchData(context.native, context);
+        }
+        else {
+            var context = lViewData;
+            lNode = readElementValue(context.lViewData[context.lNodeIndex]);
+        }
+        return lNode;
+    }
+    /**
+     * Assigns the given data to the given target (which could be a component,
+     * directive or DOM node instance) using monkey-patching.
+     */
+    function attachPatchData(target, data) {
+        target[MONKEY_PATCH_KEY_NAME] = data;
+    }
+    /**
+     * Returns the monkey-patch value data present on the target (which could be
+     * a component, directive or a DOM node).
+     */
+    function readPatchedData(target) {
+        return target[MONKEY_PATCH_KEY_NAME];
+    }
+    function readPatchedLViewData(target) {
+        var value = readPatchedData(target);
+        if (value) {
+            return Array.isArray(value) ? value : value.lViewData;
+        }
+        return null;
+    }
+    function isComponentInstance(instance) {
+        return instance && instance.constructor && instance.constructor.ngComponentDef;
+    }
+    function isDirectiveInstance(instance) {
+        return instance && instance.constructor && instance.constructor.ngDirectiveDef;
+    }
+    /**
+     * Locates the element within the given LViewData and returns the matching index
+     */
+    function findViaNativeElement(lViewData, native) {
+        var tNode = lViewData[TVIEW].firstChild;
+        while (tNode) {
+            var lNode = getLNodeFromViewData(lViewData, tNode.index);
+            if (lNode.native === native) {
+                return tNode.index;
+            }
+            tNode = traverseNextElement(tNode);
+        }
+        return -1;
+    }
+    /**
+     * Locates the next tNode (child, sibling or parent).
+     */
+    function traverseNextElement(tNode) {
+        if (tNode.child) {
+            return tNode.child;
+        }
+        else if (tNode.next) {
+            return tNode.next;
+        }
+        else if (tNode.parent) {
+            return tNode.parent.next || null;
+        }
+        return null;
+    }
+    /**
+     * Locates the component within the given LViewData and returns the matching index
+     */
+    function findViaComponent(lViewData, componentInstance) {
+        var componentIndices = lViewData[TVIEW].components;
+        if (componentIndices) {
+            for (var i = 0; i < componentIndices.length; i++) {
+                var elementComponentIndex = componentIndices[i];
+                var lNodeData = readElementValue(lViewData[elementComponentIndex]).data;
+                if (lNodeData[CONTEXT] === componentInstance) {
+                    return elementComponentIndex;
+                }
+            }
+        }
+        else {
+            var rootNode = lViewData[HEADER_OFFSET];
+            var rootComponent = rootNode.data[CONTEXT];
+            if (rootComponent === componentInstance) {
+                // we are dealing with the root element here therefore we know that the
+                // element is the very first element after the HEADER data in the lView
+                return HEADER_OFFSET;
+            }
+        }
+        return -1;
+    }
+    /**
+     * Locates the directive within the given LViewData and returns the matching index
+     */
+    function findViaDirective(lViewData, directiveInstance) {
+        // if a directive is monkey patched then it will (by default)
+        // have a reference to the LViewData of the current view. The
+        // element bound to the directive being search lives somewhere
+        // in the view data. By first checking to see if the instance
+        // is actually present we can narrow down to which lElementNode
+        // contains the instance of the directive and then return the index
+        var directivesAcrossView = lViewData[DIRECTIVES];
+        var directiveIndex = directivesAcrossView ? directivesAcrossView.indexOf(directiveInstance) : -1;
+        if (directiveIndex >= 0) {
+            var tNode = lViewData[TVIEW].firstChild;
+            while (tNode) {
+                var lNode = getLNodeFromViewData(lViewData, tNode.index);
+                var directiveIndexStart = getDirectiveStartIndex(lNode);
+                var directiveIndexEnd = getDirectiveEndIndex(lNode, directiveIndexStart);
+                if (directiveIndex >= directiveIndexStart && directiveIndex < directiveIndexEnd) {
+                    return tNode.index;
+                }
+                tNode = traverseNextElement(tNode);
+            }
+        }
+        return -1;
+    }
+    function assertDomElement(element) {
+        assertEqual(element.nodeType, 1, 'The provided value must be an instance of an HTMLElement');
+    }
+    /**
+     * Retruns the instance of the LElementNode at the given index in the LViewData.
+     *
+     * This function will also unwrap the inner value incase it's stuffed into an
+     * array (which is what happens when [style] and [class] bindings are present
+     * in the view instructions for the element being returned).
+     */
+    function getLNodeFromViewData(lViewData, lElementIndex) {
+        var value = lViewData[lElementIndex];
+        return value ? readElementValue(value) : null;
+    }
+    /**
+     * Returns a collection of directive index values that are used on the element
+     * (which is referenced by the lNodeIndex)
+     */
+    function discoverDirectiveIndices(lViewData, lNodeIndex) {
+        var directivesAcrossView = lViewData[DIRECTIVES];
+        var lNode = getLNodeFromViewData(lViewData, lNodeIndex);
+        if (lNode && directivesAcrossView && directivesAcrossView.length) {
+            // this check for tNode is to determine if the calue is a LEmementNode instance
+            var directiveIndexStart = getDirectiveStartIndex(lNode);
+            var directiveIndexEnd = getDirectiveEndIndex(lNode, directiveIndexStart);
+            var directiveIndices = [];
+            for (var i = directiveIndexStart; i < directiveIndexEnd; i++) {
+                // special case since the instance of the component (if it exists)
+                // is stored in the directives array.
+                if (i > directiveIndexStart ||
+                    !isComponentInstance(directivesAcrossView[directiveIndexStart])) {
+                    directiveIndices.push(i);
+                }
+            }
+            return directiveIndices.length ? directiveIndices : null;
+        }
+        return null;
+    }
+    function discoverDirectives(lViewData, directiveIndices) {
+        var directives = [];
+        var directiveInstances = lViewData[DIRECTIVES];
+        if (directiveInstances) {
+            for (var i = 0; i < directiveIndices.length; i++) {
+                var directiveIndex = directiveIndices[i];
+                var directive = directiveInstances[directiveIndex];
+                directives.push(directive);
+            }
+        }
+        return directives;
+    }
+    function getDirectiveStartIndex(lNode) {
+        // the tNode instances store a flag value which then has a
+        // pointer which tells the starting index of where all the
+        // active directives are in the master directive array
+        return lNode.tNode.flags >> 15 /* DirectiveStartingIndexShift */;
+    }
+    function getDirectiveEndIndex(lNode, startIndex) {
+        // The end value is also apart of the same flag
+        // (see `TNodeFlags` to see how the flag bit shifting
+        // values are used).
+        var count = lNode.tNode.flags & 4095 /* DirectiveCountMask */;
+        return count ? (startIndex + count) : -1;
+    }
+
+    /** Called when directives inject each other (creating a circular dependency) */
+    function throwCyclicDependencyError(token) {
+        throw new Error("Cannot instantiate cyclic dependency! " + token);
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * Below are constants for LContainer indices to help us look up LContainer members
+     * without having to remember the specific indices.
+     * Uglify will inline these when minifying so there shouldn't be a cost.
+     */
+    var ACTIVE_INDEX = 0;
+    // PARENT, NEXT, and QUERIES are indices 1, 2, and 3.
+    // As we already have these constants in LViewData, we don't need to re-create them.
+    var VIEWS = 4;
+    var RENDER_PARENT = 5;
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    var NG_PROJECT_AS_ATTR_NAME = 'ngProjectAs';
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    // TODO: cleanup once the code is merged in angular/angular
+    var RendererStyleFlags3;
+    (function (RendererStyleFlags3) {
+        RendererStyleFlags3[RendererStyleFlags3["Important"] = 1] = "Important";
+        RendererStyleFlags3[RendererStyleFlags3["DashCase"] = 2] = "DashCase";
+    })(RendererStyleFlags3 || (RendererStyleFlags3 = {}));
+    /** Returns whether the `renderer` is a `ProceduralRenderer3` */
+    function isProceduralRenderer(renderer) {
+        return !!(renderer.listen);
+    }
+    var domRendererFactory3 = {
+        createRenderer: function (hostElement, rendererType) { return document; }
+    };
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    function assertNodeType(tNode, type) {
+        assertDefined(tNode, 'should be called with a TNode');
+        assertEqual(tNode.type, type, "should be a " + typeName(type));
+    }
+    function assertNodeOfPossibleTypes(tNode) {
+        var types = [];
+        for (var _i = 1; _i < arguments.length; _i++) {
+            types[_i - 1] = arguments[_i];
+        }
+        assertDefined(tNode, 'should be called with a TNode');
+        var found = types.some(function (type) { return tNode.type === type; });
+        assertEqual(found, true, "Should be one of " + types.map(typeName).join(', ') + " but got " + typeName(tNode.type));
+    }
+    function typeName(type) {
+        if (type == 1 /* Projection */)
+            return 'Projection';
+        if (type == 0 /* Container */)
+            return 'Container';
+        if (type == 2 /* View */)
+            return 'View';
+        if (type == 3 /* Element */)
+            return 'Element';
+        if (type == 4 /* ElementContainer */)
+            return 'ElementContainer';
+        return '<unknown>';
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     /** Retrieves the first child of a given node */
     function getChildLNode(node) {
         if (node.tNode.child) {
@@ -24336,19 +24837,18 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return container ? container.data[RENDER_PARENT] : null;
     }
     /**
-     * Stack used to keep track of projection nodes in walkLNodeTree.
+     * Stack used to keep track of projection nodes in walkTNodeTree.
      *
-     * This is deliberately created outside of walkLNodeTree to avoid allocating
+     * This is deliberately created outside of walkTNodeTree to avoid allocating
      * a new array each time the function is called. Instead the array will be
      * re-used by each invocation. This works because the function is not reentrant.
      */
     var projectionNodeStack = [];
     /**
-     * Walks a tree of LNodes, applying a transformation on the LElement nodes, either only on the first
+     * Walks a tree of TNodes, applying a transformation on the element nodes, either only on the first
      * one found, or on all of them.
      *
-     * @param startingNode the node from which the walk is started.
-     * @param rootNode the root node considered. This prevents walking past that node.
+     * @param viewToWalk the view to walk
      * @param action identifies the action to be performed on the LElement nodes.
      * @param renderer the current renderer.
      * @param renderParentNode Optional the render parent node to be set in all LContainerNodes found,
@@ -24356,32 +24856,33 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * @param beforeNode Optional the node before which elements should be added, required for action
      * Insert.
      */
-    function walkLNodeTree(startingNode, rootNode, action, renderer, renderParentNode, beforeNode) {
-        var node = startingNode;
+    function walkTNodeTree(viewToWalk, action, renderer, renderParentNode, beforeNode) {
+        var rootTNode = viewToWalk[TVIEW].node;
         var projectionNodeIndex = -1;
-        while (node) {
-            var nextNode = null;
+        var currentView = viewToWalk;
+        var tNode = rootTNode.child;
+        while (tNode) {
+            var nextTNode = null;
             var parent_1 = renderParentNode ? renderParentNode.native : null;
-            var nodeType = node.tNode.type;
-            if (nodeType === 3 /* Element */) {
-                // Execute the action
-                executeNodeAction(action, renderer, parent_1, node.native, beforeNode);
-                if (node.dynamicLContainerNode) {
-                    executeNodeAction(action, renderer, parent_1, node.dynamicLContainerNode.native, beforeNode);
+            if (tNode.type === 3 /* Element */) {
+                var elementNode = readElementValue(currentView[tNode.index]);
+                executeNodeAction(action, renderer, parent_1, elementNode.native, beforeNode);
+                if (elementNode.dynamicLContainerNode) {
+                    executeNodeAction(action, renderer, parent_1, elementNode.dynamicLContainerNode.native, beforeNode);
                 }
             }
-            else if (nodeType === 0 /* Container */) {
-                executeNodeAction(action, renderer, parent_1, node.native, beforeNode);
-                var lContainerNode = node;
+            else if (tNode.type === 0 /* Container */) {
+                var lContainerNode = currentView[tNode.index];
+                executeNodeAction(action, renderer, parent_1, lContainerNode.native, beforeNode);
                 var childContainerData = lContainerNode.dynamicLContainerNode ?
                     lContainerNode.dynamicLContainerNode.data :
                     lContainerNode.data;
                 if (renderParentNode) {
                     childContainerData[RENDER_PARENT] = renderParentNode;
                 }
-                nextNode =
-                    childContainerData[VIEWS].length ? getChildLNode(childContainerData[VIEWS][0]) : null;
-                if (nextNode) {
+                if (childContainerData[VIEWS].length) {
+                    currentView = childContainerData[VIEWS][0];
+                    nextTNode = currentView[TVIEW].node;
                     // When the walker enters a container, then the beforeNode has to become the local native
                     // comment node.
                     beforeNode = lContainerNode.dynamicLContainerNode ?
@@ -24389,22 +24890,29 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                         lContainerNode.native;
                 }
             }
-            else if (nodeType === 1 /* Projection */) {
-                var componentHost = findComponentHost(node.view);
-                var head = componentHost.tNode.projection[node.tNode.projection];
-                projectionNodeStack[++projectionNodeIndex] = node;
-                nextNode = head ? componentHost.data[PARENT][head.index] : null;
+            else if (tNode.type === 1 /* Projection */) {
+                var componentHost = findComponentHost(currentView);
+                var head = componentHost.tNode.projection[tNode.projection];
+                // Must store both the TNode and the view because this projection node could be nested
+                // deeply inside embedded views, and we need to get back down to this particular nested view.
+                projectionNodeStack[++projectionNodeIndex] = tNode;
+                projectionNodeStack[++projectionNodeIndex] = currentView;
+                if (head) {
+                    currentView = componentHost.data[PARENT];
+                    nextTNode = currentView[TVIEW].data[head.index];
+                }
             }
             else {
-                // Otherwise look at the first child
-                nextNode = getChildLNode(node);
+                // Otherwise, this is a View or an ElementContainer
+                nextTNode = tNode.child;
             }
-            if (nextNode === null) {
-                nextNode = getNextLNode(node);
+            if (nextTNode === null) {
                 // this last node was projected, we need to get back down to its projection node
-                if (nextNode === null && (node.tNode.flags & 8192 /* isProjected */)) {
-                    nextNode = getNextLNode(projectionNodeStack[projectionNodeIndex--]);
+                if (tNode.next === null && (tNode.flags & 8192 /* isProjected */)) {
+                    currentView = projectionNodeStack[projectionNodeIndex--];
+                    tNode = projectionNodeStack[projectionNodeIndex--];
                 }
+                nextTNode = tNode.next;
                 /**
                  * Find the next node in the LNode tree, taking into account the place where a node is
                  * projected (in the shadow DOM) rather than where it comes from (in the light DOM).
@@ -24412,18 +24920,26 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                  * If there is no sibling node, then it goes to the next sibling of the parent node...
                  * until it reaches rootNode (at which point null is returned).
                  */
-                while (node && !nextNode) {
-                    node = getParentLNode(node);
-                    if (node === null || node === rootNode)
+                while (!nextTNode) {
+                    // If parent is null, we're crossing the view boundary, so we should get the host TNode.
+                    tNode = tNode.parent || currentView[TVIEW].node;
+                    if (tNode === null || tNode === rootTNode)
                         return null;
                     // When exiting a container, the beforeNode must be restored to the previous value
-                    if (!node.tNode.next && nodeType === 0 /* Container */) {
-                        beforeNode = node.native;
+                    if (tNode.type === 0 /* Container */) {
+                        currentView = currentView[PARENT];
+                        beforeNode = currentView[tNode.index].native;
                     }
-                    nextNode = getNextLNode(node);
+                    if (tNode.type === 2 /* View */ && currentView[NEXT]) {
+                        currentView = currentView[NEXT];
+                        nextTNode = currentView[TVIEW].node;
+                    }
+                    else {
+                        nextTNode = tNode.next;
+                    }
                 }
             }
-            node = nextNode;
+            tNode = nextTNode;
         }
     }
     /**
@@ -24439,7 +24955,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             lViewData = lViewData[PARENT];
             viewRootLNode = lViewData[HOST_NODE];
         }
-        ngDevMode && assertNodeType(viewRootLNode, 3 /* Element */);
+        ngDevMode && assertNodeType(viewRootLNode.tNode, 3 /* Element */);
         ngDevMode && assertDefined(viewRootLNode.data, 'node.data');
         return viewRootLNode;
     }
@@ -24463,15 +24979,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             renderer.destroyNode(node);
         }
     }
-    function addRemoveViewFromContainer(container, rootNode, insertMode, beforeNode) {
-        ngDevMode && assertNodeType(container, 0 /* Container */);
-        ngDevMode && assertNodeType(rootNode, 2 /* View */);
+    function addRemoveViewFromContainer(container, viewToWalk, insertMode, beforeNode) {
         var parentNode = container.data[RENDER_PARENT];
         var parent = parentNode ? parentNode.native : null;
+        ngDevMode && assertNodeType(viewToWalk[TVIEW].node, 2 /* View */);
         if (parent) {
-            var node = getChildLNode(rootNode);
             var renderer = container.view[RENDERER];
-            walkLNodeTree(node, rootNode, insertMode ? 0 /* Insert */ : 1 /* Detach */, renderer, parentNode, beforeNode);
+            walkTNodeTree(viewToWalk, insertMode ? 0 /* Insert */ : 1 /* Detach */, renderer, parentNode, beforeNode);
         }
     }
     /**
@@ -24505,7 +25019,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 // If container, traverse down to its first LViewData.
                 var container = viewOrContainer;
                 if (container[VIEWS].length)
-                    next = container[VIEWS][0].data;
+                    next = container[VIEWS][0];
             }
             if (next == null) {
                 // Only clean up view when moving to the side or up, as destroy hooks
@@ -24539,14 +25053,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var lView = viewNode.data;
         if (index > 0) {
             // This is a new view, we need to add it to the children.
-            views[index - 1].data[NEXT] = lView;
+            views[index - 1][NEXT] = lView;
         }
         if (index < views.length) {
-            lView[NEXT] = views[index].data;
-            views.splice(index, 0, viewNode);
+            lView[NEXT] = views[index];
+            views.splice(index, 0, lView);
         }
         else {
-            views.push(viewNode);
+            views.push(lView);
             lView[NEXT] = null;
         }
         // Dynamically inserted views need a reference to their parent container'S host so it's
@@ -24561,7 +25075,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         // Sets the attached flag
         lView[FLAGS] |= 8 /* Attached */;
-        return viewNode;
     }
     /**
      * Detaches a view from a container.
@@ -24575,24 +25088,22 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     function detachView(container, removeIndex) {
         var views = container.data[VIEWS];
-        var viewNode = views[removeIndex];
+        var viewToDetach = views[removeIndex];
+        var viewNode = viewToDetach[HOST_NODE];
         if (removeIndex > 0) {
-            views[removeIndex - 1].data[NEXT] = viewNode.data[NEXT];
+            views[removeIndex - 1][NEXT] = viewToDetach[NEXT];
         }
         views.splice(removeIndex, 1);
         if (!container.tNode.detached) {
-            addRemoveViewFromContainer(container, viewNode, false);
+            addRemoveViewFromContainer(container, viewToDetach, false);
         }
-        // Notify query that view has been removed
-        var removedLView = viewNode.data;
-        if (removedLView[QUERIES]) {
-            removedLView[QUERIES].removeView();
+        if (viewToDetach[QUERIES]) {
+            viewToDetach[QUERIES].removeView();
         }
-        removedLView[CONTAINER_INDEX] = -1;
+        viewToDetach[CONTAINER_INDEX] = -1;
         viewNode.view = null;
         // Unsets the attached flag
-        viewNode.data[FLAGS] &= ~8 /* Attached */;
-        return viewNode;
+        viewToDetach[FLAGS] &= ~8 /* Attached */;
     }
     /**
      * Removes a view from a container, i.e. detaches it and then destroys the underlying LView.
@@ -24602,10 +25113,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * @returns The removed view
      */
     function removeView(container, removeIndex) {
-        var viewNode = container.data[VIEWS][removeIndex];
+        var viewToRemove = container.data[VIEWS][removeIndex];
+        destroyLView(viewToRemove);
         detachView(container, removeIndex);
-        destroyLView(viewNode.data);
-        return viewNode;
     }
     /** Gets the child of the given LViewData */
     function getLViewChild(viewData) {
@@ -24623,7 +25133,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function destroyLView(view) {
         var renderer = view[RENDERER];
         if (isProceduralRenderer(renderer) && renderer.destroyNode) {
-            walkLNodeTree(view[HOST_NODE], view[HOST_NODE], 2 /* Destroy */, renderer);
+            walkTNodeTree(view, 2 /* Destroy */, renderer);
         }
         destroyViewTree(view);
         // Sets the destroyed flag
@@ -24741,14 +25251,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * the container itself has it render parent determined.
      */
     function canInsertNativeChildOfView(parent) {
-        ngDevMode && assertNodeType(parent, 2 /* View */);
+        ngDevMode && assertNodeType(parent.tNode, 2 /* View */);
         // Because we are inserting into a `View` the `View` may be disconnected.
         var grandParentContainer = getParentLNode(parent);
         if (grandParentContainer == null) {
             // The `View` is not inserted into a `Container` we have to delay insertion.
             return false;
         }
-        ngDevMode && assertNodeType(grandParentContainer, 0 /* Container */);
+        ngDevMode && assertNodeType(grandParentContainer.tNode, 0 /* Container */);
         if (grandParentContainer.data[RENDER_PARENT] == null) {
             // The parent `Container` itself is disconnected. So we have to delay.
             return false;
@@ -24777,7 +25287,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     function canInsertNativeNode(parent, currentView) {
         // We can only insert into a Component or View. Any other type should be an Error.
-        ngDevMode && assertNodeOfPossibleTypes(parent, 3 /* Element */, 4 /* ElementContainer */, 2 /* View */);
+        ngDevMode && assertNodeOfPossibleTypes(parent.tNode, 3 /* Element */, 4 /* ElementContainer */, 2 /* View */);
         if (parent.tNode.type === 3 /* Element */) {
             // Parent is a regular element or a component
             return canInsertNativeChildOfElement(parent, currentView);
@@ -24834,8 +25344,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 var container = getParentLNode(parent);
                 var renderParent = container.data[RENDER_PARENT];
                 var views = container.data[VIEWS];
-                var index = views.indexOf(parent);
-                var beforeNode = index + 1 < views.length ? (getChildLNode(views[index + 1])).native : container.native;
+                var index = views.indexOf(currentView);
+                var beforeNode = index + 1 < views.length ?
+                    (getChildLNode(views[index + 1][HOST_NODE])).native :
+                    container.native;
                 nativeInsertBefore(renderer, renderParent.native, child, beforeNode);
             }
             else if (parent.tNode.type === 4 /* ElementContainer */) {
@@ -24885,26 +25397,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * found in the LICENSE file at https://angular.io/license
      */
     /**
-     * Directive (D) sets a property on all component instances using this constant as a key and the
-     * component's host node (LElement) as the value. This is used in methods like detectChanges to
-     * facilitate jumping from an instance to the host node.
-     */
-    var NG_HOST_SYMBOL = '__ngHostLNode__';
-    /**
      * A permanent marker promise which signifies that the current CD tree is
      * clean.
      */
     var _CLEAN_PROMISE = Promise.resolve(null);
-    /**
-     * Directive and element indices for top-level directive.
-     *
-     * Saved here to avoid re-instantiating an array on every change detection run.
-     *
-     * Note: Element is not actually stored at index 0 because of the LViewData
-     * header, but the host bindings function expects an index that is NOT adjusted
-     * because it will ultimately be fed to instructions like elementProperty.
-     */
-    var _ROOT_DIRECTIVE_INDICES = [0, 0];
     /**
      * TView.data needs to fill the same number of slots as the LViewData header
      * so the indices of nodes are consistent between LViewData and TView.data.
@@ -24950,16 +25446,17 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function getCurrentSanitizer() {
         return viewData && viewData[SANITIZER];
     }
-    /** Used to set the parent property when nodes are created. */
-    var previousOrParentNode;
+    /** Used to set the parent property when nodes are created and track query results. */
+    var previousOrParentTNode;
     function getPreviousOrParentNode() {
-        // top level variables should not be exported for performance reasons (PERF_NOTES.md)
-        return previousOrParentNode;
+        return previousOrParentTNode == null || previousOrParentTNode === tView.node ?
+            viewData[HOST_NODE] :
+            readElementValue(viewData[previousOrParentTNode.index]);
     }
     /**
      * If `isParent` is:
-     *  - `true`: then `previousOrParentNode` points to a parent node.
-     *  - `false`: then `previousOrParentNode` points to previous node (sibling).
+     *  - `true`: then `previousOrParentTNode` points to a parent node.
+     *  - `false`: then `previousOrParentTNode` points to previous node (sibling).
      */
     var isParent;
     var tView;
@@ -25014,6 +25511,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /** Whether or not this is the first time the current view has been processed. */
     var firstTemplatePass = true;
     /**
+     * The root index from which pure function instructions should calculate their binding
+     * indices. In component views, this is TView.bindingStartIndex. In a host binding
+     * context, this is the TView.hostBindingStartIndex + any hostVars before the given dir.
+     */
+    var bindingRootIndex = -1;
+    /**
      * Swap the current state with a new state.
      *
      * For performance reasons we store the state in the top level of the module.
@@ -25025,17 +25528,16 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * @param host Element to which the View is a child of
      * @returns the previous state;
      */
-    function enterView(newView, host) {
+    function enterView(newView, hostTNode) {
         var oldView = viewData;
         directives = newView && newView[DIRECTIVES];
         tView = newView && newView[TVIEW];
         creationMode = newView && (newView[FLAGS] & 1 /* CreationMode */) === 1 /* CreationMode */;
         firstTemplatePass = newView && tView.firstTemplatePass;
+        bindingRootIndex = newView && tView.bindingStartIndex;
         renderer = newView && newView[RENDERER];
-        if (host != null) {
-            previousOrParentNode = host;
-            isParent = true;
-        }
+        previousOrParentTNode = hostTNode;
+        isParent = true;
         viewData = contextViewData = newView;
         oldView && (oldView[QUERIES] = currentQueries);
         currentQueries = newView && newView[QUERIES];
@@ -25058,7 +25560,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             viewData[FLAGS] &= ~(1 /* CreationMode */ | 4 /* Dirty */);
         }
         viewData[FLAGS] |= 16 /* RunInit */;
-        viewData[BINDING_INDEX] = -1;
+        viewData[BINDING_INDEX] = tView.bindingStartIndex;
         enterView(newView, null);
     }
     /**
@@ -25085,11 +25587,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /** Sets the host bindings for the current view. */
     function setHostBindings(bindings) {
         if (bindings != null) {
+            bindingRootIndex = viewData[BINDING_INDEX] = tView.hostBindingStartIndex;
             var defs = tView.directives;
             for (var i = 0; i < bindings.length; i += 2) {
                 var dirIndex = bindings[i];
                 var def = defs[dirIndex];
-                def.hostBindings && def.hostBindings(dirIndex, bindings[i + 1]);
+                def.hostBindings(dirIndex, bindings[i + 1]);
+                bindingRootIndex = viewData[BINDING_INDEX] = bindingRootIndex + def.hostVars;
             }
         }
     }
@@ -25118,50 +25622,38 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
     }
     function createLViewData(renderer, tView, context, flags, sanitizer) {
-        // TODO(kara): create from blueprint
-        return [
-            tView,
-            viewData,
-            null,
-            null,
-            flags | 1 /* CreationMode */ | 8 /* Attached */ | 16 /* RunInit */,
-            null,
-            -1,
-            null,
-            null,
-            context,
-            viewData ? viewData[INJECTOR$1] : null,
-            renderer,
-            sanitizer || null,
-            null,
-            -1,
-            null,
-            null // declarationView
-        ];
+        var instance = tView.blueprint.slice();
+        instance[PARENT] = viewData;
+        instance[FLAGS] = flags | 1 /* CreationMode */ | 8 /* Attached */ | 16 /* RunInit */;
+        instance[CONTEXT] = context;
+        instance[INJECTOR$1] = viewData ? viewData[INJECTOR$1] : null;
+        instance[RENDERER] = renderer;
+        instance[SANITIZER] = sanitizer || null;
+        return instance;
     }
     /**
      * Creation of LNode object is extracted to a separate function so we always create LNode object
      * with the same shape
      * (same properties assigned in the same order).
      */
-    function createLNodeObject(type, currentView, parent, native, state) {
+    function createLNodeObject(type, currentView, nodeInjector, native, state) {
         return {
             native: native,
             view: currentView,
-            nodeInjector: parent ? parent.nodeInjector : null,
+            nodeInjector: nodeInjector,
             data: state,
             tNode: null,
             dynamicLContainerNode: null
         };
     }
     function createLNode(index, type, native, name, attrs, state) {
-        var parent = isParent ? previousOrParentNode :
-            previousOrParentNode && getParentLNode(previousOrParentNode);
+        var parent = isParent ? previousOrParentTNode : previousOrParentTNode && previousOrParentTNode.parent;
         // Parents cannot cross component boundaries because components will be used in multiple places,
         // so it's only set if the view is the same.
-        var tParent = parent && parent.view === viewData ? parent.tNode : null;
+        var parentInSameView = parent && tView && parent !== tView.node;
+        var tParent = parentInSameView ? parent : null;
         var isState = state != null;
-        var node = createLNodeObject(type, viewData, parent, native, isState ? state : null);
+        var node = createLNodeObject(type, viewData, null, native, isState ? state : null);
         if (index === -1 || type === 2 /* View */) {
             // View nodes are not stored in data because they can be added / removed at runtime (which
             // would cause indices to change). Their TNodes are instead stored in TView.node.
@@ -25171,41 +25663,61 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         else {
             var adjustedIndex = index + HEADER_OFFSET;
             // This is an element or container or projection node
-            ngDevMode && assertDataNext(adjustedIndex);
             var tData = tView.data;
+            ngDevMode && assertLessThan(adjustedIndex, viewData.length, "Slot should have been initialized with null");
             viewData[adjustedIndex] = node;
-            // Every node adds a value to the static data array to avoid a sparse array
-            if (adjustedIndex >= tData.length) {
+            if (tData[adjustedIndex] == null) {
                 var tNode = tData[adjustedIndex] =
                     createTNode(type, adjustedIndex, name, attrs, tParent, null);
-                if (!isParent && previousOrParentNode) {
-                    var previousTNode = previousOrParentNode.tNode;
-                    previousTNode.next = tNode;
-                    if (previousTNode.dynamicContainerNode)
-                        previousTNode.dynamicContainerNode.next = tNode;
+                if (!isParent && previousOrParentTNode) {
+                    previousOrParentTNode.next = tNode;
+                    if (previousOrParentTNode.dynamicContainerNode)
+                        previousOrParentTNode.dynamicContainerNode.next = tNode;
                 }
             }
             node.tNode = tData[adjustedIndex];
+            if (!tView.firstChild && type === 3 /* Element */) {
+                tView.firstChild = node.tNode;
+            }
             // Now link ourselves into the tree.
-            if (isParent) {
-                if (previousOrParentNode.tNode.child == null && previousOrParentNode.view === viewData ||
-                    previousOrParentNode.tNode.type === 2 /* View */) {
+            if (isParent && previousOrParentTNode) {
+                if (previousOrParentTNode.child == null && parentInSameView ||
+                    previousOrParentTNode.type === 2 /* View */) {
                     // We are in the same view, which means we are adding content node to the parent View.
-                    previousOrParentNode.tNode.child = node.tNode;
+                    previousOrParentTNode.child = node.tNode;
                 }
             }
         }
-        // View nodes and host elements need to set their host node (components set host nodes later)
+        // TODO: temporary, remove when removing LNode.nodeInjector
+        var parentLNode = index === -1 ? null : getParentLNode(node);
+        if (parentLNode)
+            node.nodeInjector = parentLNode.nodeInjector;
+        // View nodes and host elements need to set their host node (components do not save host TNodes)
         if ((type & 2 /* ViewOrElement */) === 2 /* ViewOrElement */ && isState) {
             var lViewData = state;
-            ngDevMode && assertNotDefined(lViewData[HOST_NODE], 'lViewData[HOST_NODE] should not have been initialized');
+            ngDevMode &&
+                assertEqual(lViewData[HOST_NODE], null, 'lViewData[HOST_NODE] should not have been initialized');
             lViewData[HOST_NODE] = node;
-            if (firstTemplatePass)
+            if (lViewData[TVIEW].firstTemplatePass) {
                 lViewData[TVIEW].node = node.tNode;
+            }
         }
-        previousOrParentNode = node;
+        previousOrParentTNode = node.tNode;
         isParent = true;
         return node;
+    }
+    /**
+     * When LNodes are created dynamically after a view blueprint is created (e.g. through
+     * i18nApply() or ComponentFactory.create), we need to adjust the blueprint for future
+     * template passes.
+     */
+    function adjustBlueprintForNewNode(view) {
+        var tView = view[TVIEW];
+        if (tView.firstTemplatePass) {
+            tView.hostBindingStartIndex++;
+            tView.blueprint.push(null);
+            view.push(null);
+        }
     }
     //////////////////////////
     //// Render
@@ -25213,9 +25725,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * Resets the application state.
      */
-    function resetApplicationState() {
+    function resetComponentState() {
         isParent = false;
-        previousOrParentNode = null;
+        previousOrParentTNode = null;
     }
     /**
      * Used for creating the LViewNode of a dynamic embedded view,
@@ -25224,9 +25736,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     function createEmbeddedViewNode(tView, context, declarationView, renderer, queries) {
         var _isParent = isParent;
-        var _previousOrParentNode = previousOrParentNode;
+        var _previousOrParentTNode = previousOrParentTNode;
         isParent = true;
-        previousOrParentNode = null;
+        previousOrParentTNode = null;
         var lView = createLViewData(renderer, tView, context, 2 /* CheckAlways */, getCurrentSanitizer());
         lView[DECLARATION_VIEW] = declarationView;
         if (queries) {
@@ -25234,7 +25746,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         var viewNode = createLNode(-1, 2 /* View */, null, null, null, lView);
         isParent = _isParent;
-        previousOrParentNode = _previousOrParentNode;
+        previousOrParentTNode = _previousOrParentTNode;
         return viewNode;
     }
     /**
@@ -25247,27 +25759,26 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * can't store TViews in the template function itself (as we do for comps). Instead, we store the
      * TView for dynamically created views on their host TNode, which only has one instance.
      */
-    function renderEmbeddedTemplate(viewNode, tView, context, rf) {
+    function renderEmbeddedTemplate(viewToRender, tView, context, rf) {
         var _isParent = isParent;
-        var _previousOrParentNode = previousOrParentNode;
+        var _previousOrParentTNode = previousOrParentTNode;
         var oldView;
-        if (viewNode.data[PARENT] == null && viewNode.data[CONTEXT] && !tView.template) {
+        if (viewToRender[PARENT] == null && viewToRender[CONTEXT] && !tView.template) {
             // This is a root view inside the view tree
-            tickRootContext(viewNode.data[CONTEXT]);
+            tickRootContext(viewToRender[CONTEXT]);
         }
         else {
             try {
                 isParent = true;
-                previousOrParentNode = null;
-                oldView = enterView(viewNode.data, viewNode);
+                previousOrParentTNode = null;
+                oldView = enterView(viewToRender, tView.node);
                 namespaceHTML();
-                viewData[BINDING_INDEX] = tView.bindingStartIndex;
                 tView.template(rf, context);
                 if (rf & 2 /* Update */) {
                     refreshDescendantViews();
                 }
                 else {
-                    viewNode.data[TVIEW].firstTemplatePass = firstTemplatePass = false;
+                    viewToRender[TVIEW].firstTemplatePass = firstTemplatePass = false;
                 }
             }
             finally {
@@ -25276,20 +25787,18 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 var isCreationOnly = (rf & 1 /* Create */) === 1 /* Create */;
                 leaveView(oldView, isCreationOnly);
                 isParent = _isParent;
-                previousOrParentNode = _previousOrParentNode;
+                previousOrParentTNode = _previousOrParentTNode;
             }
         }
-        return viewNode;
     }
-    function renderComponentOrTemplate(node, hostView, componentOrContext, templateFn) {
-        var oldView = enterView(hostView, node);
+    function renderComponentOrTemplate(hostView, componentOrContext, templateFn) {
+        var oldView = enterView(hostView, null);
         try {
             if (rendererFactory.begin) {
                 rendererFactory.begin();
             }
             if (templateFn) {
                 namespaceHTML();
-                viewData[BINDING_INDEX] = tView.bindingStartIndex;
                 templateFn(getRenderFlags(hostView), componentOrContext);
                 refreshDescendantViews();
             }
@@ -25297,7 +25806,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 executeInitAndContentHooks();
                 // Element was stored at 0 in data and directive was stored at 0 in directives
                 // in renderComponent()
-                setHostBindings(_ROOT_DIRECTIVE_INDICES);
+                setHostBindings(tView.hostBindings);
                 componentRefresh(HEADER_OFFSET);
             }
         }
@@ -25366,17 +25875,21 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /** Stores index of component's host element so it will be queued for view refresh during CD. */
     function queueComponentIndexForCheck() {
         if (firstTemplatePass) {
-            (tView.components || (tView.components = [])).push(viewData.length - 1);
+            (tView.components || (tView.components = [])).push(previousOrParentTNode.index);
         }
     }
     /** Stores index of directive and host element so it will be queued for binding refresh during CD.
      */
-    function queueHostBindingForCheck(dirIndex) {
+    function queueHostBindingForCheck(dirIndex, hostVars) {
         // Must subtract the header offset because hostBindings functions are generated with
         // instructions that expect element indices that are NOT adjusted (e.g. elementProperty).
         ngDevMode &&
             assertEqual(firstTemplatePass, true, 'Should only be called in first template pass.');
-        (tView.hostBindings || (tView.hostBindings = [])).push(dirIndex, viewData.length - 1 - HEADER_OFFSET);
+        for (var i = 0; i < hostVars; i++) {
+            tView.blueprint.push(NO_CHANGE);
+            viewData.push(NO_CHANGE);
+        }
+        (tView.hostBindings || (tView.hostBindings = [])).push(dirIndex, previousOrParentTNode.index - HEADER_OFFSET);
     }
     /** Sets the context for a ChangeDetectorRef to the given instance. */
     function initChangeDetectorIfExisting(injector, instance, view) {
@@ -25420,14 +25933,22 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     function createTView(viewIndex, templateFn, consts, vars, directives, pipes, viewQuery) {
         ngDevMode && ngDevMode.tView++;
-        return {
+        var bindingStartIndex = HEADER_OFFSET + consts;
+        // This length does not yet contain host bindings from child directives because at this point,
+        // we don't know which directives are active on this template. As soon as a directive is matched
+        // that has a host binding, we will update the blueprint with that def's hostVars count.
+        var initialViewLength = bindingStartIndex + vars;
+        var blueprint = createViewBlueprint(bindingStartIndex, initialViewLength);
+        return blueprint[TVIEW] = {
             id: viewIndex,
+            blueprint: blueprint,
             template: templateFn,
             viewQuery: viewQuery,
             node: null,
             data: HEADER_FILLER.slice(),
             childIndex: -1,
-            bindingStartIndex: HEADER_OFFSET + consts,
+            bindingStartIndex: bindingStartIndex,
+            hostBindingStartIndex: initialViewLength,
             directives: null,
             firstTemplatePass: true,
             initHooks: null,
@@ -25444,8 +25965,17 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             components: null,
             directiveRegistry: typeof directives === 'function' ? directives() : directives,
             pipeRegistry: typeof pipes === 'function' ? pipes() : pipes,
-            currentMatches: null
+            currentMatches: null,
+            firstChild: null,
         };
+    }
+    function createViewBlueprint(bindingStartIndex, initialViewLength) {
+        var blueprint = new Array(initialViewLength)
+            .fill(null, 0, bindingStartIndex)
+            .fill(NO_CHANGE, bindingStartIndex);
+        blueprint[CONTAINER_INDEX] = -1;
+        blueprint[BINDING_INDEX] = bindingStartIndex;
+        return blueprint;
     }
     function setUpAttributes(native, attrs) {
         var isProc = isProceduralRenderer(renderer);
@@ -25518,7 +26048,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * @returns LElementNode created
      */
     function hostElement(tag, rNode, def, sanitizer) {
-        resetApplicationState();
+        resetComponentState();
         var node = createLNode(0, 3 /* Element */, rNode, null, null, createLViewData(renderer, getOrCreateTView(def.template, def.consts, def.vars, def.directiveDefs, def.pipeDefs, def.viewQuery), null, def.onPush ? 4 /* Dirty */ : 2 /* CheckAlways */, sanitizer));
         if (firstTemplatePass) {
             node.tNode.flags = 4096 /* isComponent */;
@@ -25588,38 +26118,38 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * @param directiveDef DirectiveDef object which contains information about the template.
      */
     function directiveCreate(directiveDefIdx, directive, directiveDef) {
-        var instance = baseDirectiveCreate(directiveDefIdx, directive, directiveDef);
-        ngDevMode && assertDefined(previousOrParentNode.tNode, 'previousOrParentNode.tNode');
-        var tNode = previousOrParentNode.tNode;
+        var hostNode = getPreviousOrParentNode();
+        var instance = baseDirectiveCreate(directiveDefIdx, directive, directiveDef, hostNode);
         var isComponent = directiveDef.template;
         if (isComponent) {
-            addComponentLogic(directiveDefIdx, directive, directiveDef);
+            addComponentLogic(directiveDefIdx, directive, directiveDef, hostNode);
         }
         if (firstTemplatePass) {
             // Init hooks are queued now so ngOnInit is called in host components before
             // any projected components.
             queueInitHooks(directiveDefIdx, directiveDef.onInit, directiveDef.doCheck, tView);
             if (directiveDef.hostBindings)
-                queueHostBindingForCheck(directiveDefIdx);
+                queueHostBindingForCheck(directiveDefIdx, directiveDef.hostVars);
         }
-        if (tNode && tNode.attrs) {
-            setInputsFromAttrs(directiveDefIdx, instance, directiveDef.inputs, tNode);
+        ngDevMode && assertDefined(previousOrParentTNode, 'previousOrParentTNode');
+        if (previousOrParentTNode && previousOrParentTNode.attrs) {
+            setInputsFromAttrs(directiveDefIdx, instance, directiveDef.inputs, previousOrParentTNode);
         }
         if (directiveDef.contentQueries) {
             directiveDef.contentQueries();
         }
         return instance;
     }
-    function addComponentLogic(directiveIndex, instance, def) {
+    function addComponentLogic(directiveIndex, instance, def, hostNode) {
         var tView = getOrCreateTView(def.template, def.consts, def.vars, def.directiveDefs, def.pipeDefs, def.viewQuery);
         // Only component views should be added to the view tree directly. Embedded views are
         // accessed through their containers because they may be removed / re-added later.
-        var componentView = addToViewTree(viewData, previousOrParentNode.tNode.index, createLViewData(rendererFactory.createRenderer(previousOrParentNode.native, def), tView, instance, def.onPush ? 4 /* Dirty */ : 2 /* CheckAlways */, getCurrentSanitizer()));
+        var componentView = addToViewTree(viewData, previousOrParentTNode.index, createLViewData(rendererFactory.createRenderer(hostNode.native, def), tView, instance, def.onPush ? 4 /* Dirty */ : 2 /* CheckAlways */, getCurrentSanitizer()));
         // We need to set the host node/data here because when the component LNode was created,
         // we didn't yet know it was a component (just an element).
-        previousOrParentNode.data = componentView;
-        componentView[HOST_NODE] = previousOrParentNode;
-        initChangeDetectorIfExisting(previousOrParentNode.nodeInjector, instance, componentView);
+        hostNode.data = componentView;
+        componentView[HOST_NODE] = hostNode;
+        initChangeDetectorIfExisting(hostNode.nodeInjector, instance, componentView);
         if (firstTemplatePass)
             queueComponentIndexForCheck();
     }
@@ -25629,27 +26159,30 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * This version does not contain features that we don't already support at root in
      * current Angular. Example: local refs and inputs on root component.
      */
-    function baseDirectiveCreate(index, directive, directiveDef) {
+    function baseDirectiveCreate(index, directive, directiveDef, hostNode) {
         ngDevMode && assertEqual(viewData[BINDING_INDEX], tView.bindingStartIndex, 'directives should be created before any bindings');
         ngDevMode && assertPreviousIsParent();
-        Object.defineProperty(directive, NG_HOST_SYMBOL, { enumerable: false, value: previousOrParentNode });
+        attachPatchData(directive, viewData);
+        if (hostNode) {
+            attachPatchData(hostNode.native, viewData);
+        }
         if (directives == null)
             viewData[DIRECTIVES] = directives = [];
         ngDevMode && assertDataNext(index, directives);
         directives[index] = directive;
         if (firstTemplatePass) {
-            var flags = previousOrParentNode.tNode.flags;
+            var flags = previousOrParentTNode.flags;
             if ((flags & 4095 /* DirectiveCountMask */) === 0) {
                 // When the first directive is created:
                 // - save the index,
                 // - set the number of directives to 1
-                previousOrParentNode.tNode.flags =
+                previousOrParentTNode.flags =
                     index << 15 /* DirectiveStartingIndexShift */ | flags & 4096 /* isComponent */ | 1;
             }
             else {
                 // Only need to bump the size when subsequent directives are created
                 ngDevMode && assertNotEqual(flags & 4095 /* DirectiveCountMask */, 4095 /* DirectiveCountMask */, 'Reached the max number of directives');
-                previousOrParentNode.tNode.flags++;
+                previousOrParentTNode.flags++;
             }
         }
         else {
@@ -25657,8 +26190,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             if (diPublic)
                 diPublic(directiveDef);
         }
-        if (directiveDef.attributes != null && previousOrParentNode.tNode.type == 3 /* Element */) {
-            setUpAttributes(previousOrParentNode.native, directiveDef.attributes);
+        if (directiveDef.attributes != null && previousOrParentTNode.type == 3 /* Element */) {
+            setUpAttributes(hostNode.native, directiveDef.attributes);
         }
         return directive;
     }
@@ -25761,11 +26294,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             if (current.length < HEADER_OFFSET && current[ACTIVE_INDEX] === null) {
                 var container_1 = current;
                 for (var i = 0; i < container_1[VIEWS].length; i++) {
-                    var lViewNode = container_1[VIEWS][i];
+                    var dynamicViewData = container_1[VIEWS][i];
                     // The directives and pipes are not needed here as an existing view is only being refreshed.
-                    var dynamicViewData = lViewNode.data;
                     ngDevMode && assertDefined(dynamicViewData[TVIEW], 'TView must be allocated');
-                    renderEmbeddedTemplate(lViewNode, dynamicViewData[TVIEW], dynamicViewData[CONTEXT], 2 /* Update */);
+                    renderEmbeddedTemplate(dynamicViewData, dynamicViewData[TVIEW], dynamicViewData[CONTEXT], 2 /* Update */);
                 }
             }
         }
@@ -25778,14 +26310,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     function componentRefresh(adjustedElementIndex) {
         ngDevMode && assertDataInRange(adjustedElementIndex);
-        var element = viewData[adjustedElementIndex];
-        ngDevMode && assertNodeType(element, 3 /* Element */);
+        var element = readElementValue(viewData[adjustedElementIndex]);
+        ngDevMode && assertNodeType(tView.data[adjustedElementIndex], 3 /* Element */);
         ngDevMode &&
             assertDefined(element.data, "Component's host node should have an LViewData attached.");
         var hostView = element.data;
         // Only attached CheckAlways components or attached, dirty OnPush components should be checked
         if (viewAttached(hostView) && hostView[FLAGS] & (2 /* CheckAlways */ | 4 /* Dirty */)) {
-            detectChangesInternal(hostView, element, hostView[CONTEXT]);
+            detectChangesInternal(hostView, hostView[CONTEXT]);
         }
     }
     /** Returns a boolean for whether the view is attached */
@@ -25849,25 +26381,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function tickRootContext(rootContext) {
         for (var i = 0; i < rootContext.components.length; i++) {
             var rootComponent = rootContext.components[i];
-            var hostNode = _getComponentHostLElementNode(rootComponent);
-            ngDevMode && assertDefined(hostNode.data, 'Component host node should be attached to an LView');
-            renderComponentOrTemplate(hostNode, getRootView(rootComponent), rootComponent);
+            renderComponentOrTemplate(readPatchedLViewData(rootComponent), rootComponent);
         }
-    }
-    /**
-     * Retrieve the root view from any component by walking the parent `LViewData` until
-     * reaching the root `LViewData`.
-     *
-     * @param component any component
-     */
-    function getRootView(component) {
-        ngDevMode && assertDefined(component, 'component');
-        var lElementNode = _getComponentHostLElementNode(component);
-        var lViewData = lElementNode.view;
-        while (lViewData[PARENT]) {
-            lViewData = lViewData[PARENT];
-        }
-        return lViewData;
     }
     /**
      * Synchronously perform change detection on a component (and possibly its sub-components).
@@ -25883,10 +26398,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * @param component The component which the change detection should be performed on.
      */
     function detectChanges(component) {
-        var hostNode = _getComponentHostLElementNode(component);
+        var hostNode = getLElementFromComponent(component);
         ngDevMode &&
-            assertDefined(hostNode.data, 'Component host node should be attached to an LViewData instance.');
-        detectChangesInternal(hostNode.data, hostNode, component);
+            assertDefined(hostNode, 'Component host node should be attached to an LViewData instance.');
+        detectChangesInternal(hostNode.data, component);
     }
     /**
      * Synchronously perform change detection on a root view and its components.
@@ -25930,12 +26445,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
     }
     /** Checks the view of the component provided. Does not gate on dirty checks or execute doCheck. */
-    function detectChangesInternal(hostView, hostNode, component) {
-        var oldView = enterView(hostView, hostNode);
+    function detectChangesInternal(hostView, component) {
         var hostTView = hostView[TVIEW];
+        var oldView = enterView(hostView, null);
         var templateFn = hostTView.template;
         var viewQuery = hostTView.viewQuery;
-        viewData[BINDING_INDEX] = tView.bindingStartIndex;
         try {
             namespaceHTML();
             createViewQuery(viewQuery, hostView[FLAGS], component);
@@ -25957,8 +26471,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             viewQuery(2 /* Update */, component);
         }
     }
+    /** A special value which designates that a value has not changed. */
+    var NO_CHANGE = {};
     function assertPreviousIsParent() {
-        assertEqual(isParent, true, 'previousOrParentNode should be a parent');
+        assertEqual(isParent, true, 'previousOrParentTNode should be a parent');
     }
     function assertDataInRange(index, arr) {
         if (arr == null)
@@ -25972,7 +26488,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
     function _getComponentHostLElementNode(component) {
         ngDevMode && assertDefined(component, 'expecting component got null');
-        var lElementNode = component[NG_HOST_SYMBOL];
+        var lElementNode = getLElementFromComponent(component);
         ngDevMode && assertDefined(component, 'object is not a component');
         return lElementNode;
     }
@@ -26011,49 +26527,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var tView = elementNode.view[TVIEW];
         queueInitHooks(0, def.onInit, def.doCheck, tView);
         queueLifecycleHooks(elementNode.tNode.flags, tView);
-    }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    var EMPTY$1 = {};
-    var EMPTY_ARRAY = [];
-    if (typeof ngDevMode !== 'undefined' && ngDevMode) {
-        Object.freeze(EMPTY$1);
-        Object.freeze(EMPTY_ARRAY);
-    }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    function getClosureSafeProperty$1(objWithPropertyToExtract, target) {
-        for (var key in objWithPropertyToExtract) {
-            if (objWithPropertyToExtract[key] === target) {
-                return key;
-            }
-        }
-        throw Error('Could not find renamed property on target object.');
-    }
-    /**
-     * Sets properties on a target object from a source object, but only if
-     * the property doesn't already exist on the target object.
-     * @param target The target to set properties on
-     * @param source The source of the property keys and values to set
-     */
-    function fillProperties(target, source) {
-        for (var key in source) {
-            if (source.hasOwnProperty(key) && !target.hasOwnProperty(key)) {
-                target[key] = source[key];
-            }
-        }
     }
 
     /**
@@ -26248,6 +26721,76 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * found in the LICENSE file at https://angular.io/license
      */
     /**
+     * @deprecated Use the `Renderer2` instead.
+     */
+    var Renderer = /** @class */ (function () {
+        function Renderer() {
+        }
+        return Renderer;
+    }());
+    var Renderer2Interceptor = new InjectionToken('Renderer2Interceptor');
+    /**
+     * Creates and initializes a custom renderer that implements the `Renderer2` base class.
+     *
+     * @experimental
+     */
+    var RendererFactory2 = /** @class */ (function () {
+        function RendererFactory2() {
+        }
+        return RendererFactory2;
+    }());
+    /**
+     * Flags for renderer-specific style modifiers.
+     * @experimental
+     */
+    var RendererStyleFlags2;
+    (function (RendererStyleFlags2) {
+        /**
+         * Marks a style as important.
+         */
+        RendererStyleFlags2[RendererStyleFlags2["Important"] = 1] = "Important";
+        /**
+         * Marks a style as using dash case naming (this-is-dash-case).
+         */
+        RendererStyleFlags2[RendererStyleFlags2["DashCase"] = 2] = "DashCase";
+    })(RendererStyleFlags2 || (RendererStyleFlags2 = {}));
+    /**
+     * Extend this base class to implement custom rendering. By default, Angular
+     * renders a template into DOM. You can use custom rendering to intercept
+     * rendering calls, or to render to something other than DOM.
+     *
+     * Create your custom renderer using `RendererFactory2`.
+     *
+     * Use a custom renderer to bypass Angular's templating and
+     * make custom UI changes that can't be expressed declaratively.
+     * For example if you need to set a property or an attribute whose name is
+     * not statically known, use the `setProperty()` or
+     * `setAttribute()` method.
+     *
+     * @experimental
+     */
+    var Renderer2 = /** @class */ (function () {
+        function Renderer2() {
+        }
+        return Renderer2;
+    }());
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
      * Represents an instance of a Component created via a {@link ComponentFactory}.
      *
      * `ComponentRef` provides access to the Component Instance as well other objects related to this
@@ -26311,68 +26854,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         return ComponentFactoryBoundToModule;
     }(ComponentFactory));
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * @deprecated Use the `Renderer2` instead.
-     */
-    var Renderer = /** @class */ (function () {
-        function Renderer() {
-        }
-        return Renderer;
-    }());
-    var Renderer2Interceptor = new InjectionToken('Renderer2Interceptor');
-    /**
-     * Creates and initializes a custom renderer that implements the `Renderer2` base class.
-     *
-     * @experimental
-     */
-    var RendererFactory2 = /** @class */ (function () {
-        function RendererFactory2() {
-        }
-        return RendererFactory2;
-    }());
-    /**
-     * Flags for renderer-specific style modifiers.
-     * @experimental
-     */
-    var RendererStyleFlags2;
-    (function (RendererStyleFlags2) {
-        /**
-         * Marks a style as important.
-         */
-        RendererStyleFlags2[RendererStyleFlags2["Important"] = 1] = "Important";
-        /**
-         * Marks a style as using dash case naming (this-is-dash-case).
-         */
-        RendererStyleFlags2[RendererStyleFlags2["DashCase"] = 2] = "DashCase";
-    })(RendererStyleFlags2 || (RendererStyleFlags2 = {}));
-    /**
-     * Extend this base class to implement custom rendering. By default, Angular
-     * renders a template into DOM. You can use custom rendering to intercept
-     * rendering calls, or to render to something other than DOM.
-     *
-     * Create your custom renderer using `RendererFactory2`.
-     *
-     * Use a custom renderer to bypass Angular's templating and
-     * make custom UI changes that can't be expressed declaratively.
-     * For example if you need to set a property or an attribute whose name is
-     * not statically known, use the `setProperty()` or
-     * `setAttribute()` method.
-     *
-     * @experimental
-     */
-    var Renderer2 = /** @class */ (function () {
-        function Renderer2() {
-        }
-        return Renderer2;
-    }());
 
     /**
      * @license
@@ -26628,7 +27109,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         ComponentFactoryResolver$$1.prototype.resolveComponentFactory = function (component) {
             ngDevMode && assertComponentType(component);
-            var componentDef = component.ngComponentDef;
+            var componentDef = getComponentDef(component);
             return new ComponentFactory$1(componentDef);
         };
         return ComponentFactoryResolver$$1;
@@ -26713,7 +27194,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             rootView[INJECTOR$1] = ngModule && ngModule.injector || null;
             // rootView is the parent when bootstrapping
             var oldView = enterView(rootView, null);
-            rootView[BINDING_INDEX] = rootView[TVIEW].bindingStartIndex;
             var component;
             var elementNode;
             try {
@@ -26721,15 +27201,21 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     rendererFactory.begin();
                 // Create element node at index 0 in data array
                 elementNode = hostElement(componentTag, hostNode, this.componentDef);
+                var componentView = elementNode.data;
                 // Create directive instance with factory() and store at index 0 in directives array
-                component = baseDirectiveCreate(0, this.componentDef.factory(), this.componentDef);
+                component =
+                    baseDirectiveCreate(0, this.componentDef.factory(), this.componentDef, elementNode);
+                if (this.componentDef.hostBindings) {
+                    queueHostBindingForCheck(0, this.componentDef.hostVars);
+                }
                 rootContext.components.push(component);
-                initChangeDetectorIfExisting(elementNode.nodeInjector, component, elementNode.data);
-                elementNode.data[CONTEXT] = component;
+                initChangeDetectorIfExisting(elementNode.nodeInjector, component, componentView);
+                componentView[CONTEXT] = component;
                 // TODO: should LifecycleHooksFeature and other host features be generated by the compiler and
                 // executed here?
                 // Angular 5 reference: https://stackblitz.com/edit/lifecycle-hooks-vcref
                 LifecycleHooksFeature(component, this.componentDef);
+                setHostBindings(rootView[TVIEW].hostBindings);
                 // Transform the arrays of native nodes into a LNode structure that can be consumed by the
                 // projection instruction. This is needed to support the reprojection of these nodes.
                 if (projectableNodes) {
@@ -26740,6 +27226,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                         var firstTNode = null;
                         var previousTNode = null;
                         for (var j = 0; j < nodeList.length; j++) {
+                            adjustBlueprintForNewNode(rootView);
                             var lNode = createLNode(++index, 3 /* Element */, nodeList[j], null, null);
                             if (previousTNode) {
                                 previousTNode.next = lNode.tNode;
@@ -26753,8 +27240,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     }
                 }
                 // Execute the template in creation mode only, and then turn off the CreationMode flag
-                renderEmbeddedTemplate(elementNode, elementNode.data[TVIEW], component, 1 /* Create */);
-                elementNode.data[FLAGS] &= ~1 /* CreationMode */;
+                renderEmbeddedTemplate(componentView, componentView[TVIEW], component, 1 /* Create */);
+                componentView[FLAGS] &= ~1 /* CreationMode */;
             }
             finally {
                 enterView(oldView, null);
@@ -26889,6 +27376,15 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             existingRef :
             new ViewRef(hostNode.data, hostNode
                 .view[DIRECTIVES][hostNode.tNode.flags >> 15 /* DirectiveStartingIndexShift */]);
+    }
+    function getOrCreateRenderer2(di) {
+        var renderer = di.node.view[RENDERER];
+        if (isProceduralRenderer(renderer)) {
+            return renderer;
+        }
+        else {
+            throw new Error('Cannot inject Renderer2 when the application uses Renderer3!');
+        }
     }
     /**
      * If the node is an embedded view, traverses up the view tree to return the closest
@@ -27088,12 +27584,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return di.elementRef || (di.elementRef = new ElementRef$1(di.node.native));
     }
     /** A ref to a node's native element. */
-    var ElementRef$1 = /** @class */ (function () {
-        function ElementRef$$1(nativeElement) {
-            this.nativeElement = nativeElement;
+    var ElementRef$1 = /** @class */ (function (_super) {
+        __extends(ElementRef$$1, _super);
+        function ElementRef$$1() {
+            return _super !== null && _super.apply(this, arguments) || this;
         }
         return ElementRef$$1;
-    }());
+    }(ElementRef));
     /**
      * Creates a ViewContainerRef and stores it on the injector. Or, if the ViewContainerRef
      * already exists, retrieves the existing ViewContainerRef.
@@ -27103,13 +27600,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function getOrCreateContainerRef(di) {
         if (!di.viewContainerRef) {
             var vcRefHost = di.node;
-            ngDevMode && assertNodeOfPossibleTypes(vcRefHost, 0 /* Container */, 3 /* Element */);
+            var hostTNode = vcRefHost.tNode;
+            ngDevMode && assertNodeOfPossibleTypes(hostTNode, 0 /* Container */, 3 /* Element */, 4 /* ElementContainer */);
             var hostParent = getParentLNode(vcRefHost);
             var lContainer = createLContainer(hostParent, vcRefHost.view, true);
             var comment = vcRefHost.view[RENDERER].createComment(ngDevMode ? 'container' : '');
-            var lContainerNode = createLNodeObject(0 /* Container */, vcRefHost.view, hostParent, comment, lContainer);
+            var lContainerNode = createLNodeObject(0 /* Container */, vcRefHost.view, vcRefHost.nodeInjector, comment, lContainer);
             appendChild(hostParent, comment, vcRefHost.view);
-            var hostTNode = vcRefHost.tNode;
             if (!hostTNode.dynamicContainerNode) {
                 hostTNode.dynamicContainerNode =
                     createTNode(0 /* Container */, -1, null, null, hostTNode, null);
@@ -27138,6 +27635,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             if (token === ChangeDetectorRef) {
                 return getOrCreateChangeDetectorRef(this._lInjector, null);
             }
+            if (token === Renderer2) {
+                return getOrCreateRenderer2(this._lInjector);
+            }
             return getOrCreateInjectable(this._lInjector, token);
         };
         return NodeInjector;
@@ -27146,11 +27646,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * A ref to a container that enables adding and removing views from that container
      * imperatively.
      */
-    var ViewContainerRef$1 = /** @class */ (function () {
+    var ViewContainerRef$1 = /** @class */ (function (_super) {
+        __extends(ViewContainerRef$$1, _super);
         function ViewContainerRef$$1(_lContainerNode, _hostNode) {
-            this._lContainerNode = _lContainerNode;
-            this._hostNode = _hostNode;
-            this._viewRefs = [];
+            var _this = _super.call(this) || this;
+            _this._lContainerNode = _lContainerNode;
+            _this._hostNode = _hostNode;
+            _this._viewRefs = [];
+            return _this;
         }
         Object.defineProperty(ViewContainerRef$$1.prototype, "element", {
             get: function () {
@@ -27218,9 +27721,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             insertView(this._lContainerNode, lViewNode, adjustedIdx);
             var views = this._lContainerNode.data[VIEWS];
             var beforeNode = adjustedIdx + 1 < views.length ?
-                (getChildLNode(views[adjustedIdx + 1])).native :
+                (getChildLNode(views[adjustedIdx + 1][HOST_NODE])).native :
                 this._lContainerNode.native;
-            addRemoveViewFromContainer(this._lContainerNode, lViewNode, true, beforeNode);
+            addRemoveViewFromContainer(this._lContainerNode, lViewNode.data, true, beforeNode);
             viewRef.attachToViewContainerRef(this);
             this._viewRefs.splice(adjustedIdx, 0, viewRef);
             return viewRef;
@@ -27255,7 +27758,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             return index;
         };
         return ViewContainerRef$$1;
-    }());
+    }(ViewContainerRef));
     /**
      * Creates a TemplateRef and stores it on the injector. Or, if the TemplateRef already
      * exists, retrieves the existing TemplateRef.
@@ -27265,34 +27768,37 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     function getOrCreateTemplateRef(di) {
         if (!di.templateRef) {
-            ngDevMode && assertNodeType(di.node, 0 /* Container */);
             var hostNode = di.node;
             var hostTNode = hostNode.tNode;
+            ngDevMode && assertNodeType(hostTNode, 0 /* Container */);
             ngDevMode && assertDefined(hostTNode.tViews, 'TView must be allocated');
             di.templateRef = new TemplateRef$1(hostNode.view, getOrCreateElementRef(di), hostTNode.tViews, getRenderer(), hostNode.data[QUERIES]);
         }
         return di.templateRef;
     }
-    var TemplateRef$1 = /** @class */ (function () {
+    var TemplateRef$1 = /** @class */ (function (_super) {
+        __extends(TemplateRef$$1, _super);
         function TemplateRef$$1(_declarationParentView, elementRef, _tView, _renderer, _queries) {
-            this._declarationParentView = _declarationParentView;
-            this.elementRef = elementRef;
-            this._tView = _tView;
-            this._renderer = _renderer;
-            this._queries = _queries;
+            var _this = _super.call(this) || this;
+            _this._declarationParentView = _declarationParentView;
+            _this.elementRef = elementRef;
+            _this._tView = _tView;
+            _this._renderer = _renderer;
+            _this._queries = _queries;
+            return _this;
         }
         TemplateRef$$1.prototype.createEmbeddedView = function (context, containerNode, index) {
             var viewNode = createEmbeddedViewNode(this._tView, context, this._declarationParentView, this._renderer, this._queries);
             if (containerNode) {
                 insertView(containerNode, viewNode, index);
             }
-            renderEmbeddedTemplate(viewNode, this._tView, context, 1 /* Create */);
+            renderEmbeddedTemplate(viewNode.data, this._tView, context, 1 /* Create */);
             var viewRef = new ViewRef(viewNode.data, context);
             viewRef._lViewNode = viewNode;
             return viewRef;
         };
         return TemplateRef$$1;
-    }());
+    }(TemplateRef));
 
     /**
      * @license
@@ -27343,7 +27849,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * a circular dependency among the providers.
      */
     var CIRCULAR$2 = {};
-    var EMPTY_ARRAY$1 = [];
+    var EMPTY_ARRAY$2 = [];
     /**
      * A lazily initialized NullInjector.
      */
@@ -27433,10 +27939,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     if (record === undefined) {
                         // No record, but maybe the token is scoped to this injector. Look for an ngInjectableDef
                         // with a scope matching this injector.
-                        var def = couldBeInjectableType(token) &&
-                            token.ngInjectableDef ||
-                            undefined;
-                        if (def !== undefined && this.injectableDefInScope(def)) {
+                        var def = couldBeInjectableType(token) && getInjectableDef(token);
+                        if (def && this.injectableDefInScope(def)) {
                             // Found an ngInjectableDef and it's scoped to this injector. Pretend as if it was here
                             // all along.
                             record = injectableDefRecord(token);
@@ -27474,7 +27978,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             // InjectorDefTypeWithProviders (aka ModuleWithProviders). Detecting either is a megamorphic
             // read, so care is taken to only do the read once.
             // First attempt to read the ngInjectorDef.
-            var def = defOrWrappedDef.ngInjectorDef;
+            var def = getInjectorDef(defOrWrappedDef);
             // If that's not present, then attempt to read ngModule from the InjectorDefTypeWithProviders.
             var ngModule = (def == null) && defOrWrappedDef.ngModule || undefined;
             // Determine the InjectorType. In the case where `defOrWrappedDef` is an `InjectorType`,
@@ -27484,11 +27988,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             // If defOrWrappedType was an InjectorDefTypeWithProviders, then .providers may hold some
             // extra providers.
             var providers = (ngModule !== undefined) && defOrWrappedDef.providers ||
-                EMPTY_ARRAY$1;
+                EMPTY_ARRAY$2;
             // Finally, if defOrWrappedType was an `InjectorDefTypeWithProviders`, then the actual
             // `InjectorDef` is on its `ngModule`.
             if (ngModule !== undefined) {
-                def = ngModule.ngInjectorDef;
+                def = getInjectorDef(ngModule);
             }
             // If no definition was found, it might be from exports. Remove it.
             if (def == null) {
@@ -27585,8 +28089,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return R3Injector;
     }());
     function injectableDefRecord(token) {
-        var def = token.ngInjectableDef;
-        if (def === undefined) {
+        var injectableDef = getInjectableDef(token);
+        if (injectableDef === null) {
             if (token instanceof InjectionToken) {
                 throw new Error("Token " + stringify$1(token) + " is missing an ngInjectableDef definition.");
             }
@@ -27594,7 +28098,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             // no-args constructor.
             return makeRecord(function () { return new token(); });
         }
-        return makeRecord(def.factory);
+        return makeRecord(injectableDef.factory);
     }
     function providerToRecord(provider) {
         var token = resolveForwardRef$1(provider);
@@ -27681,7 +28185,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             // tslint:disable-next-line:require-internal-with-underscore
             _this._bootstrapComponents = [];
             _this.destroyCbs = [];
-            var ngModuleDef = ngModuleType.ngModuleDef;
+            var ngModuleDef = getNgModuleDef(ngModuleType);
             ngDevMode && assertDefined(ngModuleDef, "NgModule '" + stringify$1(ngModuleType) + "' is not a subtype of 'NgModuleType'.");
             _this._bootstrapComponents = ngModuleDef.bootstrap;
             var additionalProviders = [
@@ -27821,9 +28325,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
 
     var __extends$1 = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -28042,9 +28549,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         : '@@rxSubscriber';
 
     var __extends$2 = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -28665,9 +29175,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
 
     var __extends$3 = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -28695,9 +29208,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(Error));
 
     var __extends$4 = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -28738,9 +29254,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(Subscription));
 
     var __extends$5 = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -28908,9 +29427,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(Subject));
 
     var __extends$6 = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -28996,9 +29518,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(Subscriber));
 
     var __extends$7 = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -29153,9 +29678,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(Subscriber));
 
     var __extends$8 = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -29347,9 +29875,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(Subscription));
 
     var __extends$9 = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -29399,9 +29930,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(Subject));
 
     var __extends$a = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -29445,9 +29979,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(Subscription));
 
     var __extends$b = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -29590,9 +30127,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(Action));
 
     var __extends$c = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -29693,9 +30233,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }());
 
     var __extends$d = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -29764,9 +30307,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(Scheduler));
 
     var __extends$e = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -30157,9 +30703,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }());
 
     var __extends$f = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -30209,9 +30758,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }());
 
     var __extends$g = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -30333,9 +30885,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }());
 
     var __extends$h = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -30409,9 +30964,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     };
 
     var __extends$i = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -30466,9 +31024,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(AsyncAction));
 
     var __extends$j = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -30585,9 +31146,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     var async = new AsyncScheduler(AsyncAction);
 
     var __extends$k = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -30642,9 +31206,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(AsyncAction));
 
     var __extends$l = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -30713,9 +31280,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     var animationFrame = new AnimationFrameScheduler(AnimationFrameAction);
 
     var __extends$m = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -30831,9 +31401,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
 
     var __extends$n = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -30862,9 +31435,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(Error));
 
     var __extends$o = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -30893,9 +31469,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(Error));
 
     var __extends$p = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -30920,9 +31499,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(Error));
 
     var __extends$q = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -31053,9 +31635,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     };
 
     var __extends$r = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -31085,9 +31670,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(Subscriber));
 
     var __extends$s = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -31227,9 +31815,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
 
     var __extends$t = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -31429,9 +32020,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
 
     var __extends$u = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -31647,9 +32241,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     };
 
     var __extends$v = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -31881,9 +32478,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     };
 
     var __extends$w = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -31943,9 +32543,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(OuterSubscriber));
 
     var __extends$x = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -32604,21 +33207,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var TARGET = {};
-    var NG_COMPONENT_DEF = getClosureSafeProperty$1({ ngComponentDef: TARGET }, TARGET);
-    var NG_DIRECTIVE_DEF = getClosureSafeProperty$1({ ngDirectiveDef: TARGET }, TARGET);
-    var NG_INJECTABLE_DEF = getClosureSafeProperty$1({ ngInjectableDef: TARGET }, TARGET);
-    var NG_INJECTOR_DEF = getClosureSafeProperty$1({ ngInjectorDef: TARGET }, TARGET);
-    var NG_PIPE_DEF = getClosureSafeProperty$1({ ngPipeDef: TARGET }, TARGET);
-    var NG_MODULE_DEF = getClosureSafeProperty$1({ ngModuleDef: TARGET }, TARGET);
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     /**
      * @description
      *
@@ -32899,9 +33487,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var GET_PROPERTY_NAME$1 = {};
-    var ɵ0$1 = GET_PROPERTY_NAME$1;
-    var USE_VALUE$2 = getClosureSafeProperty$1({ provide: String, useValue: ɵ0$1 }, GET_PROPERTY_NAME$1);
+    var ɵ0$1 = getClosureSafeProperty;
+    var USE_VALUE$2 = getClosureSafeProperty({ provide: String, useValue: ɵ0$1 });
 
     /**
      * @license
@@ -32951,10 +33538,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             imports: imports,
         });
     }
-    var GET_PROPERTY_NAME$2 = {};
-    var ɵ0$2 = GET_PROPERTY_NAME$2;
-    var USE_VALUE$3 = getClosureSafeProperty$1({ provide: String, useValue: ɵ0$2 }, GET_PROPERTY_NAME$2);
-    var EMPTY_ARRAY$3 = [];
+    var ɵ0$2 = getClosureSafeProperty;
+    var USE_VALUE$3 = getClosureSafeProperty({ provide: String, useValue: ɵ0$2 });
+    var EMPTY_ARRAY$4 = [];
     function convertInjectableProviderToFactory(type, provider) {
         if (!provider) {
             var reflectionCapabilities = new ReflectionCapabilities();
@@ -32972,7 +33558,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         else if (provider.useFactory) {
             var factoryProvider_1 = provider;
-            return function () { return factoryProvider_1.useFactory.apply(factoryProvider_1, __spread(injectArgs(factoryProvider_1.deps || EMPTY_ARRAY$3))); };
+            return function () { return factoryProvider_1.useFactory.apply(factoryProvider_1, __spread(injectArgs(factoryProvider_1.deps || EMPTY_ARRAY$4))); };
         }
         else if (provider.useClass) {
             var classProvider_1 = provider;
@@ -32999,7 +33585,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Supports @Injectable() in JIT mode for Render2.
      */
     function preR3InjectableCompile(injectableType, options) {
-        if (options && options.providedIn !== undefined && injectableType.ngInjectableDef === undefined) {
+        if (options && options.providedIn !== undefined && !getInjectableDef(injectableType)) {
             injectableType.ngInjectableDef = defineInjectable({
                 providedIn: options.providedIn,
                 factory: convertInjectableProviderToFactory(injectableType, options),
@@ -33134,10 +33720,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
     };
     /**
-     * Used to get the minified alias of ngBaseDef
-     */
-    var NG_BASE_DEF = Object.keys({ ngBaseDef: true })[0];
-    /**
      * Does the work of creating the `ngBaseDef` property for the @Input and @Output decorators.
      * @param key "inputs" or "outputs"
      */
@@ -33235,56 +33817,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    /**
-     * Defines template and style encapsulation options available for Component's {@link Component}.
-     *
-     * See {@link Component#encapsulation encapsulation}.
-     *
-     */
-    var ViewEncapsulation$1;
-    (function (ViewEncapsulation) {
-        /**
-         * Emulate `Native` scoping of styles by adding an attribute containing surrogate id to the Host
-         * Element and pre-processing the style rules provided via {@link Component#styles styles} or
-         * {@link Component#styleUrls styleUrls}, and adding the new Host Element attribute to all
-         * selectors.
-         *
-         * This is the default option.
-         */
-        ViewEncapsulation[ViewEncapsulation["Emulated"] = 0] = "Emulated";
-        /**
-         * @deprecated v6.1.0 - use {ViewEncapsulation.ShadowDom} instead.
-         * Use the native encapsulation mechanism of the renderer.
-         *
-         * For the DOM this means using the deprecated [Shadow DOM
-         * v0](https://w3c.github.io/webcomponents/spec/shadow/) and
-         * creating a ShadowRoot for Component's Host Element.
-         */
-        ViewEncapsulation[ViewEncapsulation["Native"] = 1] = "Native";
-        /**
-         * Don't provide any template or style encapsulation.
-         */
-        ViewEncapsulation[ViewEncapsulation["None"] = 2] = "None";
-        /**
-         * Use Shadow DOM to encapsulate styles.
-         *
-         * For the DOM this means using modern [Shadow
-         * DOM](https://w3c.github.io/webcomponents/spec/shadow/) and
-         * creating a ShadowRoot for Component's Host Element.
-         *
-         * ### Example
-         * {@example core/ts/metadata/encapsulation.ts region='longform'}
-         */
-        ViewEncapsulation[ViewEncapsulation["ShadowDom"] = 3] = "ShadowDom";
-    })(ViewEncapsulation$1 || (ViewEncapsulation$1 = {}));
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
 
     /**
      * @license
@@ -33307,7 +33839,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('7.0.0-beta.2+28.sha-21a1440');
+    var VERSION$2 = new Version$1('7.0.0-beta.5+32.sha-47f4412');
 
     /**
      * @license
@@ -34293,9 +34825,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
 
     var __extends$y = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -34357,9 +34892,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(OuterSubscriber));
 
     var __extends$z = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -34391,9 +34929,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(OuterSubscriber));
 
     var __extends$A = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -34474,9 +35015,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(Subscriber));
 
     var __extends$B = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -34602,9 +35146,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
 
     var __extends$C = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -34704,9 +35251,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(OuterSubscriber));
 
     var __extends$D = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -34781,9 +35331,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(OuterSubscriber));
 
     var __extends$E = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -34868,9 +35421,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     };
 
     var __extends$F = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -34921,9 +35477,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(Subscriber));
 
     var __extends$G = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -35001,9 +35560,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(OuterSubscriber));
 
     var __extends$H = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -35065,9 +35627,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
 
     var __extends$I = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -35101,9 +35666,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(Subscriber));
 
     var __extends$J = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -35181,9 +35749,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }());
 
     var __extends$K = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -35315,9 +35886,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(Subscriber));
 
     var __extends$L = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -35341,9 +35915,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(Subscriber));
 
     var __extends$M = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -35403,9 +35980,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(OuterSubscriber));
 
     var __extends$N = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -35459,9 +36039,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(Subscriber));
 
     var __extends$O = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -35501,9 +36084,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(Subscriber));
 
     var __extends$P = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -35570,9 +36156,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(Subscriber));
 
     var __extends$Q = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -35607,9 +36196,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(Subscriber));
 
     var __extends$R = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -35656,9 +36248,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(Subscriber));
 
     var __extends$S = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -35701,9 +36296,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(OuterSubscriber));
 
     var __extends$T = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -35765,9 +36363,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(OuterSubscriber));
 
     var __extends$U = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -35851,9 +36452,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(OuterSubscriber));
 
     var __extends$V = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -35876,9 +36480,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(Subscriber));
 
     var __extends$W = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -35926,9 +36533,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(Subscriber));
 
     var __extends$X = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -35952,9 +36562,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(Subscriber));
 
     var __extends$Y = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -35986,9 +36599,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(Subscriber));
 
     var __extends$Z = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -36038,9 +36654,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(Subscriber));
 
     var __extends$_ = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -36066,9 +36685,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(Subscriber));
 
     var __extends$10 = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -36102,9 +36724,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(Subscriber));
 
     var __extends$11 = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -36183,9 +36808,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     };
 
     var __extends$12 = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -36319,9 +36947,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }());
 
     var __extends$13 = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -36361,9 +36992,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(OuterSubscriber));
 
     var __extends$14 = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -36416,9 +37050,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     };
 
     var __extends$15 = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -36454,9 +37091,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(Subscriber));
 
     var __extends$16 = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -36533,9 +37173,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(OuterSubscriber));
 
     var __extends$17 = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -36571,9 +37214,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(Subscriber));
 
     var __extends$18 = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -36641,9 +37287,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(OuterSubscriber));
 
     var __extends$19 = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -36682,9 +37331,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(OuterSubscriber));
 
     var __extends$1a = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -36725,9 +37377,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
 
     var __extends$1b = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -36843,9 +37498,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
 
     var __extends$1c = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -36909,9 +37567,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(Subscriber));
 
     var __extends$1d = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -36940,9 +37601,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(Subscriber));
 
     var __extends$1e = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -36981,9 +37645,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(Subscriber));
 
     var __extends$1f = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -37019,9 +37686,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(OuterSubscriber));
 
     var __extends$1g = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -37064,9 +37734,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(Subscriber));
 
     var __extends$1h = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -37119,9 +37792,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(Observable));
 
     var __extends$1i = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -37183,9 +37859,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(OuterSubscriber));
 
     var __extends$1j = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -37212,9 +37891,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(OuterSubscriber));
 
     var __extends$1k = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -37259,9 +37941,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(Subscriber));
 
     var __extends$1l = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -37340,9 +38025,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(OuterSubscriber));
 
     var __extends$1m = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -37410,9 +38098,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
 
     var __extends$1n = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -37471,9 +38162,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(OuterSubscriber));
 
     var __extends$1o = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -37530,9 +38224,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(OuterSubscriber));
 
     var __extends$1p = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -37601,9 +38298,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(Subscriber));
 
     var __extends$1q = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -37729,9 +38429,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
 
     var __extends$1r = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -37854,9 +38557,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(OuterSubscriber));
 
     var __extends$1s = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -37930,9 +38636,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(OuterSubscriber));
 
     var __extends$1t = (undefined && undefined.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -38117,13 +38826,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
             this.initialized = true;
         };
-        ApplicationInitStatus.decorators = [
-            { type: Injectable }
-        ];
-        /** @nocollapse */
-        ApplicationInitStatus.ctorParameters = function () { return [
-            { type: Array, decorators: [{ type: Inject, args: [APP_INITIALIZER,] }, { type: Optional }] }
-        ]; };
+        ApplicationInitStatus = __decorate([
+            Injectable(),
+            __param(0, Inject(APP_INITIALIZER)), __param(0, Optional()),
+            __metadata("design:paramtypes", [Array])
+        ], ApplicationInitStatus);
         return ApplicationInitStatus;
     }());
 
@@ -38204,9 +38911,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             // tslint:disable-next-line:no-console
             console.warn(message);
         };
-        Console.decorators = [
-            { type: Injectable }
-        ];
+        Console = __decorate([
+            Injectable()
+        ], Console);
         return Console;
     }());
 
@@ -38266,9 +38973,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
          * Returns the id for a given NgModule, if one is defined and known to the compiler.
          */
         Compiler.prototype.getModuleId = function (moduleType) { return undefined; };
-        Compiler.decorators = [
-            { type: Injectable }
-        ];
+        Compiler = __decorate([
+            Injectable()
+        ], Compiler);
         return Compiler;
     }());
     /**
@@ -38835,13 +39542,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             // TODO(juliemr): implement.
             return [];
         };
-        Testability.decorators = [
-            { type: Injectable }
-        ];
-        /** @nocollapse */
-        Testability.ctorParameters = function () { return [
-            { type: NgZone }
-        ]; };
+        Testability = __decorate([
+            Injectable(),
+            __metadata("design:paramtypes", [NgZone])
+        ], Testability);
         return Testability;
     }());
     /**
@@ -38894,11 +39598,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             if (findInAncestors === void 0) { findInAncestors = true; }
             return _testabilityGetter.findTestabilityInTree(this, elem, findInAncestors);
         };
-        TestabilityRegistry.decorators = [
-            { type: Injectable }
-        ];
-        /** @nocollapse */
-        TestabilityRegistry.ctorParameters = function () { return []; };
+        TestabilityRegistry = __decorate([
+            Injectable(),
+            __metadata("design:paramtypes", [])
+        ], TestabilityRegistry);
         return TestabilityRegistry;
     }());
     var _NoopGetTestability = /** @class */ (function () {
@@ -39127,13 +39830,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             enumerable: true,
             configurable: true
         });
-        PlatformRef.decorators = [
-            { type: Injectable }
-        ];
-        /** @nocollapse */
-        PlatformRef.ctorParameters = function () { return [
-            { type: Injector }
-        ]; };
+        PlatformRef = __decorate([
+            Injectable(),
+            __metadata("design:paramtypes", [Injector])
+        ], PlatformRef);
         return PlatformRef;
     }());
     function getNgZone(ngZoneOption) {
@@ -39244,6 +39944,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             this.isStable =
                 merge(isCurrentlyStable, isStable.pipe(share()));
         }
+        ApplicationRef_1 = ApplicationRef;
         /**
          * Bootstrap a new component at the root level of the application.
          *
@@ -39307,7 +40008,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             if (this._runningTick) {
                 throw new Error('ApplicationRef.tick is called recursively');
             }
-            var scope = ApplicationRef._tickScope();
+            var scope = ApplicationRef_1._tickScope();
             try {
                 this._runningTick = true;
                 this._views.forEach(function (view) { return view.detectChanges(); });
@@ -39367,20 +40068,16 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             enumerable: true,
             configurable: true
         });
+        var ApplicationRef_1;
         /** @internal */
         ApplicationRef._tickScope = wtfCreateScope('ApplicationRef#tick()');
-        ApplicationRef.decorators = [
-            { type: Injectable }
-        ];
-        /** @nocollapse */
-        ApplicationRef.ctorParameters = function () { return [
-            { type: NgZone },
-            { type: Console },
-            { type: Injector },
-            { type: ErrorHandler },
-            { type: ComponentFactoryResolver },
-            { type: ApplicationInitStatus }
-        ]; };
+        ApplicationRef = ApplicationRef_1 = __decorate([
+            Injectable(),
+            __metadata("design:paramtypes", [NgZone, Console, Injector,
+                ErrorHandler,
+                ComponentFactoryResolver,
+                ApplicationInitStatus])
+        ], ApplicationRef);
         return ApplicationRef;
     }());
     function remove(list, el) {
@@ -39389,14 +40086,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             list.splice(index, 1);
         }
     }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
 
     /**
      * @license
@@ -39524,6 +40213,71 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    var _SEPARATOR = '#';
+    var FACTORY_CLASS_SUFFIX = 'NgFactory';
+    /**
+     * Configuration for SystemJsNgModuleLoader.
+     * token.
+     *
+     * @experimental
+     */
+    var SystemJsNgModuleLoaderConfig = /** @class */ (function () {
+        function SystemJsNgModuleLoaderConfig() {
+        }
+        return SystemJsNgModuleLoaderConfig;
+    }());
+    var DEFAULT_CONFIG = {
+        factoryPathPrefix: '',
+        factoryPathSuffix: '.ngfactory',
+    };
+    /**
+     * NgModuleFactoryLoader that uses SystemJS to load NgModuleFactory
+     * @experimental
+     */
+    var SystemJsNgModuleLoader = /** @class */ (function () {
+        function SystemJsNgModuleLoader(_compiler, config) {
+            this._compiler = _compiler;
+            this._config = config || DEFAULT_CONFIG;
+        }
+        SystemJsNgModuleLoader.prototype.load = function (path$$1) {
+            var offlineMode = this._compiler instanceof Compiler;
+            return offlineMode ? this.loadFactory(path$$1) : this.loadAndCompile(path$$1);
+        };
+        SystemJsNgModuleLoader.prototype.loadAndCompile = function (path$$1) {
+            var _this = this;
+            var _a = __read(path$$1.split(_SEPARATOR), 2), module = _a[0], exportName = _a[1];
+            if (exportName === undefined) {
+                exportName = 'default';
+            }
+            return System.import(module)
+                .then(function (module) { return module[exportName]; })
+                .then(function (type) { return checkNotEmpty(type, module, exportName); })
+                .then(function (type) { return _this._compiler.compileModuleAsync(type); });
+        };
+        SystemJsNgModuleLoader.prototype.loadFactory = function (path$$1) {
+            var _a = __read(path$$1.split(_SEPARATOR), 2), module = _a[0], exportName = _a[1];
+            var factoryClassSuffix = FACTORY_CLASS_SUFFIX;
+            if (exportName === undefined) {
+                exportName = 'default';
+                factoryClassSuffix = '';
+            }
+            return System.import(this._config.factoryPathPrefix + module + this._config.factoryPathSuffix)
+                .then(function (module) { return module[exportName + factoryClassSuffix]; })
+                .then(function (factory) { return checkNotEmpty(factory, module, exportName); });
+        };
+        SystemJsNgModuleLoader = __decorate([
+            Injectable(),
+            __param(1, Optional()),
+            __metadata("design:paramtypes", [Compiler, SystemJsNgModuleLoaderConfig])
+        ], SystemJsNgModuleLoader);
+        return SystemJsNgModuleLoader;
+    }());
+    function checkNotEmpty(value, modulePath, exportName) {
+        if (!value) {
+            throw new Error("Cannot find '" + exportName + "' in '" + modulePath + "'");
+        }
+        return value;
+    }
 
     /**
      * @license
@@ -41052,6 +41806,22 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             deps: [[new Inject(LOCALE_ID), new Optional(), new SkipSelf()]]
         },
     ];
+    /**
+     * This module includes the providers of @angular/core that are needed
+     * to bootstrap components via `ApplicationRef`.
+     *
+     * @experimental
+     */
+    var ApplicationModule = /** @class */ (function () {
+        // Inject ApplicationRef to make it eager...
+        function ApplicationModule(appRef) {
+        }
+        ApplicationModule = __decorate([
+            NgModule({ providers: APPLICATION_MODULE_PROVIDERS }),
+            __metadata("design:paramtypes", [ApplicationRef])
+        ], ApplicationModule);
+        return ApplicationModule;
+    }());
 
     /**
      * @license
@@ -41470,7 +42240,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
         }
         else {
-            el = renderer.selectRootElement(rootSelectorOrNode);
+            // when using native Shadow DOM, do not clear the root element contents to allow slot projection
+            var preserveContent = (!!elDef.componentRendererType &&
+                elDef.componentRendererType.encapsulation === ViewEncapsulation$1.ShadowDom);
+            el = renderer.selectRootElement(rootSelectorOrNode, preserveContent);
         }
         if (elDef.attrs) {
             for (var i = 0; i < elDef.attrs.length; i++) {
@@ -41650,6 +42423,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     return data;
             }
             var providerDef = data._def.providersByKey[tokenKey_1];
+            var injectableDef = void 0;
             if (providerDef) {
                 var providerInstance = data._providers[providerDef.index];
                 if (providerInstance === undefined) {
@@ -41658,8 +42432,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 }
                 return providerInstance === UNDEFINED_VALUE ? undefined : providerInstance;
             }
-            else if (depDef.token.ngInjectableDef && targetsModule(data, depDef.token.ngInjectableDef)) {
-                var injectableDef = depDef.token.ngInjectableDef;
+            else if ((injectableDef = getInjectableDef(depDef.token)) && targetsModule(data, injectableDef)) {
                 var index = data._providers.length;
                 data._def.providersByKey[depDef.tokenKey] = {
                     flags: 1024 /* TypeFactoryProvider */ | 4096 /* LazyProvider */,
@@ -43779,8 +44552,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     var viewDefOverrides = new Map();
     function debugOverrideProvider(override) {
         providerOverrides.set(override.token, override);
-        if (typeof override.token === 'function' && override.token.ngInjectableDef &&
-            typeof override.token.ngInjectableDef.providedIn === 'function') {
+        var injectableDef;
+        if (typeof override.token === 'function' && (injectableDef = getInjectableDef(override.token)) &&
+            typeof injectableDef.providedIn === 'function') {
             providerOverridesWithScope.set(override.token, override);
         }
     }
@@ -43878,7 +44652,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             });
             def.modules.forEach(function (module) {
                 providerOverridesWithScope.forEach(function (override, token) {
-                    if (token.ngInjectableDef.providedIn === module) {
+                    if (getInjectableDef(token).providedIn === module) {
                         hasOverrides = true;
                         hasDeprecatedOverrides = hasDeprecatedOverrides || override.deprecatedBehavior;
                     }
@@ -43905,7 +44679,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             if (providerOverridesWithScope.size > 0) {
                 var moduleSet_1 = new Set(def.modules);
                 providerOverridesWithScope.forEach(function (override, token) {
-                    if (moduleSet_1.has(token.ngInjectableDef.providedIn)) {
+                    if (moduleSet_1.has(getInjectableDef(token).providedIn)) {
                         var provider = {
                             token: token,
                             flags: override.flags | (hasDeprecatedOverrides ? 4096 /* LazyProvider */ : 0 /* None */),
@@ -44375,9 +45149,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
             this.delegate.removeChild(parent, oldChild);
         };
-        DebugRenderer2.prototype.selectRootElement = function (selectorOrNode) {
-            var el = this.delegate.selectRootElement(selectorOrNode);
-            var debugCtx = this.debugContext;
+        DebugRenderer2.prototype.selectRootElement = function (selectorOrNode, preserveContent) {
+            var el = this.delegate.selectRootElement(selectorOrNode, preserveContent);
+            var debugCtx = getCurrentDebugContext();
             if (debugCtx) {
                 indexDebugNode(new DebugElement(el, null, debugCtx));
             }
@@ -44589,7 +45363,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     var currentNode = this.view[this.nodeIndex];
                     for (var dirIndex = 0; dirIndex < directives.length; dirIndex++) {
                         var directive = directives[dirIndex];
-                        if (directive[NG_HOST_SYMBOL] === currentNode) {
+                        if (getLElementNode(directive) === currentNode) {
                             matchedDirectives.push(directive.constructor);
                         }
                     }
@@ -45424,10 +46198,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 getCompletionsAtPosition: tryFilenameTwoCall(ls.getCompletionsAtPosition),
                 getCompletionEntryDetails: tryFilenameFiveCall(ls.getCompletionEntryDetails),
                 getCompletionEntrySymbol: tryFilenameThreeCall(ls.getCompletionEntrySymbol),
+                getJsxClosingTagAtPosition: tryFilenameOneCall(ls.getJsxClosingTagAtPosition),
                 getQuickInfoAtPosition: tryFilenameOneCall(ls.getQuickInfoAtPosition),
                 getNameOrDottedNameSpan: tryFilenameTwoCall(ls.getNameOrDottedNameSpan),
                 getBreakpointStatementAtPosition: tryFilenameOneCall(ls.getBreakpointStatementAtPosition),
-                getSignatureHelpItems: tryFilenameOneCall(ls.getSignatureHelpItems),
+                getSignatureHelpItems: tryFilenameTwoCall(ls.getSignatureHelpItems),
                 getRenameInfo: tryFilenameOneCall(ls.getRenameInfo),
                 findRenameLocations: tryFilenameThreeCall(ls.findRenameLocations),
                 getDefinitionAtPosition: tryFilenameOneCall(ls.getDefinitionAtPosition),
@@ -45659,7 +46434,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.0-beta.2+28.sha-21a1440');
+    var VERSION$3 = new Version$1('7.0.0-beta.5+32.sha-47f4412');
 
     /**
      * @license
