@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.0-beta.5+34.sha-8f81dba
+ * @license Angular v7.0.0-beta.5+38.sha-5653874
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1197,7 +1197,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.0-beta.5+34.sha-8f81dba');
+    var VERSION = new Version('7.0.0-beta.5+38.sha-5653874');
 
     /**
      * @license
@@ -31155,12 +31155,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             // In order to match current behavior, native DOM event listeners must be added for all
             // events (including outputs).
             if (isProceduralRenderer(renderer)) {
-                var wrappedListener = wrapListenerWithDirtyLogic(viewData, listenerFn);
-                var cleanupFn = renderer.listen(node.native, eventName, wrappedListener);
+                var cleanupFn = renderer.listen(node.native, eventName, listenerFn);
                 storeCleanupFn(viewData, cleanupFn);
             }
             else {
-                var wrappedListener = wrapListenerWithDirtyAndDefault(viewData, listenerFn);
+                var wrappedListener = wrapListenerWithPreventDefault(listenerFn);
                 node.native.addEventListener(eventName, wrappedListener, useCapture);
                 var cleanupInstances = getCleanup(viewData);
                 cleanupInstances.push(wrappedListener);
@@ -32112,23 +32111,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             node.data[FLAGS] |= 4 /* Dirty */;
         }
     }
-    /**
-     * Wraps an event listener so its host view and its ancestor views will be marked dirty
-     * whenever the event fires. Necessary to support OnPush components.
-     */
-    function wrapListenerWithDirtyLogic(view, listenerFn) {
-        return function (e) {
-            markViewDirty(view);
-            return listenerFn(e);
-        };
-    }
-    /**
-     * Wraps an event listener so its host view and its ancestor views will be marked dirty
-     * whenever the event fires. Also wraps with preventDefault behavior.
-     */
-    function wrapListenerWithDirtyAndDefault(view, listenerFn) {
-        return function wrapListenerIn_markViewDirty(e) {
-            markViewDirty(view);
+    /** Wraps an event listener with preventDefault behavior. */
+    function wrapListenerWithPreventDefault(listenerFn) {
+        return function wrapListenerIn_preventDefault(e) {
             if (listenerFn(e) === false) {
                 e.preventDefault();
                 // Necessary for legacy browsers that don't support preventDefault (e.g. IE)
@@ -42054,7 +42039,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('7.0.0-beta.5+34.sha-8f81dba');
+    var VERSION$2 = new Version$1('7.0.0-beta.5+38.sha-5653874');
 
     /**
      * @license
@@ -54658,7 +54643,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.0-beta.5+34.sha-8f81dba');
+    var VERSION$3 = new Version$1('7.0.0-beta.5+38.sha-5653874');
 
     /**
      * @license
