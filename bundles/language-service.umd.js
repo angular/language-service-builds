@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.1.7+16.sha-d9bd860
+ * @license Angular v6.1.7+18.sha-6c8791e
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1164,7 +1164,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('6.1.7+16.sha-d9bd860');
+    var VERSION = new Version('6.1.7+18.sha-6c8791e');
 
     /**
      * @license
@@ -24311,7 +24311,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('6.1.7+16.sha-d9bd860');
+    var VERSION$2 = new Version$1('6.1.7+18.sha-6c8791e');
 
     /**
      * @license
@@ -26555,7 +26555,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     function getPromiseCtor(promiseCtor) {
         if (!promiseCtor) {
-            promiseCtor = config.Promise || Promise;
+            promiseCtor = Promise;
         }
         if (!promiseCtor) {
             throw new Error('no Promise impl found');
@@ -29757,6 +29757,31 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return mergeAll(concurrent)(fromArray(observables, scheduler));
     }
+
+    /**
+     * An Observable that emits no items to the Observer and never completes.
+     *
+     * <img src="./img/never.png" width="100%">
+     *
+     * A simple Observable that emits neither values nor errors nor the completion
+     * notification. It can be used for testing purposes or for composing with other
+     * Observables. Please note that by never emitting a complete notification, this
+     * Observable keeps the subscription from being disposed automatically.
+     * Subscriptions need to be manually disposed.
+     *
+     * @example <caption>Emit the number 7, then never emit anything else (not even complete).</caption>
+     * function info() {
+     *   console.log('Will not be called');
+     * }
+     * var result = NEVER.startWith(7);
+     * result.subscribe(x => console.log(x), info, info);
+     *
+     * @see {@link create}
+     * @see {@link EMPTY}
+     * @see {@link of}
+     * @see {@link throwError}
+     */
+    var NEVER = new Observable(noop$1);
 
     var __read$7 = (undefined && undefined.__read) || function (o, n) {
         var m = typeof Symbol === "function" && o[Symbol.iterator];
@@ -41208,34 +41233,55 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var ngDevModeResetPerfCounters = (typeof ngDevMode == 'undefined' && (function (global) {
-        function ngDevModeResetPerfCounters() {
-            global['ngDevMode'] = {
-                firstTemplatePass: 0,
-                tNode: 0,
-                tView: 0,
-                rendererCreateTextNode: 0,
-                rendererSetText: 0,
-                rendererCreateElement: 0,
-                rendererAddEventListener: 0,
-                rendererSetAttribute: 0,
-                rendererRemoveAttribute: 0,
-                rendererSetProperty: 0,
-                rendererSetClassName: 0,
-                rendererAddClass: 0,
-                rendererRemoveClass: 0,
-                rendererSetStyle: 0,
-                rendererRemoveStyle: 0,
-                rendererDestroy: 0,
-                rendererDestroyNode: 0,
-                rendererMoveNode: 0,
-                rendererRemoveNode: 0,
-            };
+    function ngDevModeResetPerfCounters() {
+        var newCounters = {
+            firstTemplatePass: 0,
+            tNode: 0,
+            tView: 0,
+            rendererCreateTextNode: 0,
+            rendererSetText: 0,
+            rendererCreateElement: 0,
+            rendererAddEventListener: 0,
+            rendererSetAttribute: 0,
+            rendererRemoveAttribute: 0,
+            rendererSetProperty: 0,
+            rendererSetClassName: 0,
+            rendererAddClass: 0,
+            rendererRemoveClass: 0,
+            rendererSetStyle: 0,
+            rendererRemoveStyle: 0,
+            rendererDestroy: 0,
+            rendererDestroyNode: 0,
+            rendererMoveNode: 0,
+            rendererRemoveNode: 0,
+        };
+        // NOTE: Under Ivy we may have both window & global defined in the Node
+        //    environment since ensureDocument() in render3.ts sets global.window.
+        if (typeof window != 'undefined') {
+            // Make sure to refer to ngDevMode as ['ngDevMode'] for closure.
+            window['ngDevMode'] = newCounters;
         }
+        if (typeof global != 'undefined') {
+            // Make sure to refer to ngDevMode as ['ngDevMode'] for closure.
+            global['ngDevMode'] = newCounters;
+        }
+        if (typeof self != 'undefined') {
+            // Make sure to refer to ngDevMode as ['ngDevMode'] for closure.
+            self['ngDevMode'] = newCounters;
+        }
+        return newCounters;
+    }
+    /**
+     * This checks to see if the `ngDevMode` has been set. If yes,
+     * than we honor it, otherwise we default to dev mode with additional checks.
+     *
+     * The idea is that unless we are doing production build where we explicitly
+     * set `ngDevMode == false` we should be helping the developer by providing
+     * as much early warning and errors as possible.
+     */
+    if (typeof ngDevMode === 'undefined' || ngDevMode) {
         ngDevModeResetPerfCounters();
-        return ngDevModeResetPerfCounters;
-    })(typeof window != 'undefined' && window || typeof self != 'undefined' && self ||
-        typeof global != 'undefined' && global));
+    }
 
     /** Called when directives inject each other (creating a circular dependency) */
 
@@ -43081,7 +43127,51 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * Creates (or gets an existing) injector for a given element or container.
+     *
+     * @param node for which an injector should be retrieved / created.
+     * @returns Node injector
+     */
+    function getOrCreateNodeInjectorForNode(node) {
+        var nodeInjector = node.nodeInjector;
+        var parent = getParentLNode(node);
+        var parentInjector = parent && parent.nodeInjector;
+        if (nodeInjector != parentInjector) {
+            return nodeInjector;
+        }
+        return node.nodeInjector = {
+            parent: parentInjector,
+            node: node,
+            bf0: 0,
+            bf1: 0,
+            bf2: 0,
+            bf3: 0,
+            bf4: 0,
+            bf5: 0,
+            bf6: 0,
+            bf7: 0,
+            cbf0: parentInjector == null ? 0 : parentInjector.cbf0 | parentInjector.bf0,
+            cbf1: parentInjector == null ? 0 : parentInjector.cbf1 | parentInjector.bf1,
+            cbf2: parentInjector == null ? 0 : parentInjector.cbf2 | parentInjector.bf2,
+            cbf3: parentInjector == null ? 0 : parentInjector.cbf3 | parentInjector.bf3,
+            cbf4: parentInjector == null ? 0 : parentInjector.cbf4 | parentInjector.bf4,
+            cbf5: parentInjector == null ? 0 : parentInjector.cbf5 | parentInjector.bf5,
+            cbf6: parentInjector == null ? 0 : parentInjector.cbf6 | parentInjector.bf6,
+            cbf7: parentInjector == null ? 0 : parentInjector.cbf7 | parentInjector.bf7,
+            templateRef: null,
+            viewContainerRef: null,
+            elementRef: null,
+            changeDetectorRef: null,
+        };
+    }
     var componentFactoryResolver = new ComponentFactoryResolver$1();
+    var ReadFromInjectorFn = /** @class */ (function () {
+        function ReadFromInjectorFn(read) {
+            this.read = read;
+        }
+        return ReadFromInjectorFn;
+    }());
     /**
      * A ref to a container that enables adding and removing views from that container
      * imperatively.
@@ -43291,6 +43381,210 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    var LQueries_ = /** @class */ (function () {
+        function LQueries_(deep) {
+            this.shallow = null;
+            this.deep = null;
+            this.deep = deep == null ? null : deep;
+        }
+        LQueries_.prototype.track = function (queryList, predicate, descend, read) {
+            if (descend) {
+                this.deep = createQuery$1(this.deep, queryList, predicate, read != null ? read : null);
+            }
+            else {
+                this.shallow = createQuery$1(this.shallow, queryList, predicate, read != null ? read : null);
+            }
+        };
+        LQueries_.prototype.clone = function () { return this.deep ? new LQueries_(this.deep) : null; };
+        LQueries_.prototype.child = function () {
+            if (this.deep === null) {
+                // if we don't have any deep queries then no need to track anything more.
+                return null;
+            }
+            if (this.shallow === null) {
+                // DeepQuery: We can reuse the current state if the child state would be same as current
+                // state.
+                return this;
+            }
+            else {
+                // We need to create new state
+                return new LQueries_(this.deep);
+            }
+        };
+        LQueries_.prototype.container = function () {
+            var result = null;
+            var query = this.deep;
+            while (query) {
+                var containerValues = []; // prepare room for views
+                query.values.push(containerValues);
+                var clonedQuery = {
+                    next: null,
+                    list: query.list,
+                    predicate: query.predicate,
+                    values: containerValues,
+                    containerValues: null
+                };
+                clonedQuery.next = result;
+                result = clonedQuery;
+                query = query.next;
+            }
+            return result ? new LQueries_(result) : null;
+        };
+        LQueries_.prototype.createView = function () {
+            var result = null;
+            var query = this.deep;
+            while (query) {
+                var clonedQuery = {
+                    next: null,
+                    list: query.list,
+                    predicate: query.predicate,
+                    values: [],
+                    containerValues: query.values
+                };
+                clonedQuery.next = result;
+                result = clonedQuery;
+                query = query.next;
+            }
+            return result ? new LQueries_(result) : null;
+        };
+        LQueries_.prototype.insertView = function (index) {
+            var query = this.deep;
+            while (query) {
+                ngDevMode &&
+                    assertDefined(query.containerValues, 'View queries need to have a pointer to container values.');
+                query.containerValues.splice(index, 0, query.values);
+                query = query.next;
+            }
+        };
+        LQueries_.prototype.addNode = function (node) {
+            add(this.shallow, node);
+            add(this.deep, node);
+        };
+        LQueries_.prototype.removeView = function () {
+            var query = this.deep;
+            while (query) {
+                ngDevMode &&
+                    assertDefined(query.containerValues, 'View queries need to have a pointer to container values.');
+                var containerValues = query.containerValues;
+                var viewValuesIdx = containerValues.indexOf(query.values);
+                var removed = containerValues.splice(viewValuesIdx, 1);
+                // mark a query as dirty only when removed view had matching modes
+                ngDevMode && assertEqual(removed.length, 1, 'removed.length');
+                if (removed[0].length) {
+                    query.list.setDirty();
+                }
+                query = query.next;
+            }
+        };
+        return LQueries_;
+    }());
+    /**
+     * Iterates over local names for a given node and returns directive index
+     * (or -1 if a local name points to an element).
+     *
+     * @param tNode static data of a node to check
+     * @param selector selector to match
+     * @returns directive index, -1 or null if a selector didn't match any of the local names
+     */
+    function getIdxOfMatchingSelector(tNode, selector) {
+        var localNames = tNode.localNames;
+        if (localNames) {
+            for (var i = 0; i < localNames.length; i += 2) {
+                if (localNames[i] === selector) {
+                    return localNames[i + 1];
+                }
+            }
+        }
+        return null;
+    }
+    /**
+     * Iterates over all the directives for a node and returns index of a directive for a given type.
+     *
+     * @param node Node on which directives are present.
+     * @param type Type of a directive to look for.
+     * @returns Index of a found directive or null when none found.
+     */
+    function getIdxOfMatchingDirective(node, type) {
+        var defs = node.view[TVIEW].directives;
+        var flags = node.tNode.flags;
+        var count = flags & 4095 /* DirectiveCountMask */;
+        var start = flags >> 14 /* DirectiveStartingIndexShift */;
+        var end = start + count;
+        for (var i = start; i < end; i++) {
+            var def = defs[i];
+            if (def.type === type && def.diPublic) {
+                return i;
+            }
+        }
+        return null;
+    }
+    function readFromNodeInjector(nodeInjector, node, read, directiveIdx) {
+        if (read instanceof ReadFromInjectorFn) {
+            return read.read(nodeInjector, node, directiveIdx);
+        }
+        else {
+            var matchingIdx = getIdxOfMatchingDirective(node, read);
+            if (matchingIdx !== null) {
+                return node.view[DIRECTIVES][matchingIdx];
+            }
+        }
+        return null;
+    }
+    function add(query, node) {
+        var nodeInjector = getOrCreateNodeInjectorForNode(node);
+        while (query) {
+            var predicate = query.predicate;
+            var type = predicate.type;
+            if (type) {
+                var directiveIdx = getIdxOfMatchingDirective(node, type);
+                if (directiveIdx !== null) {
+                    // a node is matching a predicate - determine what to read
+                    // if read token and / or strategy is not specified, use type as read token
+                    var result = readFromNodeInjector(nodeInjector, node, predicate.read || type, directiveIdx);
+                    if (result !== null) {
+                        addMatch(query, result);
+                    }
+                }
+            }
+            else {
+                var selector = predicate.selector;
+                for (var i = 0; i < selector.length; i++) {
+                    var directiveIdx = getIdxOfMatchingSelector(node.tNode, selector[i]);
+                    if (directiveIdx !== null) {
+                        // a node is matching a predicate - determine what to read
+                        // note that queries using name selector must specify read strategy
+                        ngDevMode && assertDefined(predicate.read, 'the node should have a predicate');
+                        var result = readFromNodeInjector(nodeInjector, node, predicate.read, directiveIdx);
+                        if (result !== null) {
+                            addMatch(query, result);
+                        }
+                    }
+                }
+            }
+            query = query.next;
+        }
+    }
+    function addMatch(query, matchingValue) {
+        query.values.push(matchingValue);
+        query.list.setDirty();
+    }
+    function createPredicate(predicate, read) {
+        var isArray = Array.isArray(predicate);
+        return {
+            type: isArray ? null : predicate,
+            selector: isArray ? predicate : null,
+            read: read
+        };
+    }
+    function createQuery$1(previous, queryList, predicate, read) {
+        return {
+            next: previous,
+            list: queryList,
+            predicate: createPredicate(predicate, read),
+            values: queryList._valuesTree,
+            containerValues: null
+        };
+    }
     var QueryList_ = /** @class */ (function () {
         function QueryList_() {
             this.dirty = true;
@@ -44418,7 +44712,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('6.1.7+16.sha-d9bd860');
+    var VERSION$3 = new Version$1('6.1.7+18.sha-6c8791e');
 
     /**
      * @license
