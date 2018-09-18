@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.1.7+16.sha-d9bd860
+ * @license Angular v6.1.7+18.sha-6c8791e
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1197,7 +1197,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('6.1.7+16.sha-d9bd860');
+    var VERSION = new Version('6.1.7+18.sha-6c8791e');
 
     /**
      * @license
@@ -26723,34 +26723,55 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var ngDevModeResetPerfCounters = (typeof ngDevMode == 'undefined' && (function (global) {
-        function ngDevModeResetPerfCounters() {
-            global['ngDevMode'] = {
-                firstTemplatePass: 0,
-                tNode: 0,
-                tView: 0,
-                rendererCreateTextNode: 0,
-                rendererSetText: 0,
-                rendererCreateElement: 0,
-                rendererAddEventListener: 0,
-                rendererSetAttribute: 0,
-                rendererRemoveAttribute: 0,
-                rendererSetProperty: 0,
-                rendererSetClassName: 0,
-                rendererAddClass: 0,
-                rendererRemoveClass: 0,
-                rendererSetStyle: 0,
-                rendererRemoveStyle: 0,
-                rendererDestroy: 0,
-                rendererDestroyNode: 0,
-                rendererMoveNode: 0,
-                rendererRemoveNode: 0,
-            };
+    function ngDevModeResetPerfCounters() {
+        var newCounters = {
+            firstTemplatePass: 0,
+            tNode: 0,
+            tView: 0,
+            rendererCreateTextNode: 0,
+            rendererSetText: 0,
+            rendererCreateElement: 0,
+            rendererAddEventListener: 0,
+            rendererSetAttribute: 0,
+            rendererRemoveAttribute: 0,
+            rendererSetProperty: 0,
+            rendererSetClassName: 0,
+            rendererAddClass: 0,
+            rendererRemoveClass: 0,
+            rendererSetStyle: 0,
+            rendererRemoveStyle: 0,
+            rendererDestroy: 0,
+            rendererDestroyNode: 0,
+            rendererMoveNode: 0,
+            rendererRemoveNode: 0,
+        };
+        // NOTE: Under Ivy we may have both window & global defined in the Node
+        //    environment since ensureDocument() in render3.ts sets global.window.
+        if (typeof window != 'undefined') {
+            // Make sure to refer to ngDevMode as ['ngDevMode'] for closure.
+            window['ngDevMode'] = newCounters;
         }
+        if (typeof global != 'undefined') {
+            // Make sure to refer to ngDevMode as ['ngDevMode'] for closure.
+            global['ngDevMode'] = newCounters;
+        }
+        if (typeof self != 'undefined') {
+            // Make sure to refer to ngDevMode as ['ngDevMode'] for closure.
+            self['ngDevMode'] = newCounters;
+        }
+        return newCounters;
+    }
+    /**
+     * This checks to see if the `ngDevMode` has been set. If yes,
+     * than we honor it, otherwise we default to dev mode with additional checks.
+     *
+     * The idea is that unless we are doing production build where we explicitly
+     * set `ngDevMode == false` we should be helping the developer by providing
+     * as much early warning and errors as possible.
+     */
+    if (typeof ngDevMode === 'undefined' || ngDevMode) {
         ngDevModeResetPerfCounters();
-        return ngDevModeResetPerfCounters;
-    })(typeof window != 'undefined' && window || typeof self != 'undefined' && self ||
-        typeof global != 'undefined' && global));
+    }
 
     /** Called when directives inject each other (creating a circular dependency) */
     function throwCyclicDependencyError(token) {
@@ -36779,7 +36800,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     function getPromiseCtor(promiseCtor) {
         if (!promiseCtor) {
-            promiseCtor = config.Promise || Promise;
+            promiseCtor = Promise;
         }
         if (!promiseCtor) {
             throw new Error('no Promise impl found');
@@ -39981,6 +40002,31 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return mergeAll(concurrent)(fromArray(observables, scheduler));
     }
+
+    /**
+     * An Observable that emits no items to the Observer and never completes.
+     *
+     * <img src="./img/never.png" width="100%">
+     *
+     * A simple Observable that emits neither values nor errors nor the completion
+     * notification. It can be used for testing purposes or for composing with other
+     * Observables. Please note that by never emitting a complete notification, this
+     * Observable keeps the subscription from being disposed automatically.
+     * Subscriptions need to be manually disposed.
+     *
+     * @example <caption>Emit the number 7, then never emit anything else (not even complete).</caption>
+     * function info() {
+     *   console.log('Will not be called');
+     * }
+     * var result = NEVER.startWith(7);
+     * result.subscribe(x => console.log(x), info, info);
+     *
+     * @see {@link create}
+     * @see {@link EMPTY}
+     * @see {@link of}
+     * @see {@link throwError}
+     */
+    var NEVER = new Observable(noop$1);
 
     var __read$7 = (undefined && undefined.__read) || function (o, n) {
         var m = typeof Symbol === "function" && o[Symbol.iterator];
@@ -47557,7 +47603,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('6.1.7+16.sha-d9bd860');
+    var VERSION$2 = new Version$1('6.1.7+18.sha-6c8791e');
 
     /**
      * @license
@@ -52275,7 +52321,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('6.1.7+16.sha-d9bd860');
+    var VERSION$3 = new Version$1('6.1.7+18.sha-6c8791e');
 
     /**
      * @license
