@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.0-beta.5+39.sha-f47f262
+ * @license Angular v7.0.0-beta.5+50.sha-96ee898
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1197,7 +1197,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.0-beta.5+39.sha-f47f262');
+    var VERSION = new Version('7.0.0-beta.5+50.sha-96ee898');
 
     /**
      * @license
@@ -27659,13 +27659,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    // NOTE: The order here matters: Checking window, then global, then self is important.
-    //   checking them in another order can result in errors in some Node environments.
-    var __global$1 = typeof window != 'undefined' && window || typeof global != 'undefined' && global ||
-        typeof self != 'undefined' && self;
     function ngDevModeResetPerfCounters() {
-        // Make sure to refer to ngDevMode as ['ngDevMode'] for clousre.
-        return __global$1['ngDevMode'] = {
+        var newCounters = {
             firstTemplatePass: 0,
             tNode: 0,
             tView: 0,
@@ -27687,6 +27682,21 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             rendererRemoveNode: 0,
             rendererCreateComment: 0,
         };
+        // NOTE: Under Ivy we may have both window & global defined in the Node
+        //    environment since ensureDocument() in render3.ts sets global.window.
+        if (typeof window != 'undefined') {
+            // Make sure to refer to ngDevMode as ['ngDevMode'] for closure.
+            window['ngDevMode'] = newCounters;
+        }
+        if (typeof global != 'undefined') {
+            // Make sure to refer to ngDevMode as ['ngDevMode'] for closure.
+            global['ngDevMode'] = newCounters;
+        }
+        if (typeof self != 'undefined') {
+            // Make sure to refer to ngDevMode as ['ngDevMode'] for closure.
+            self['ngDevMode'] = newCounters;
+        }
+        return newCounters;
     }
     /**
      * This checks to see if the `ngDevMode` has been set. If yes,
@@ -27697,8 +27707,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * as much early warning and errors as possible.
      */
     if (typeof ngDevMode === 'undefined' || ngDevMode) {
-        // Make sure to refer to ngDevMode as ['ngDevMode'] for clousre.
-        __global$1['ngDevMode'] = ngDevModeResetPerfCounters();
+        ngDevModeResetPerfCounters();
     }
 
     /**
@@ -35966,7 +35975,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     function getPromiseCtor(promiseCtor) {
         if (!promiseCtor) {
-            promiseCtor = config.Promise || Promise;
+            promiseCtor = Promise;
         }
         if (!promiseCtor) {
             throw new Error('no Promise impl found');
@@ -39256,6 +39265,31 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return mergeAll(concurrent)(fromArray(observables, scheduler));
     }
 
+    /**
+     * An Observable that emits no items to the Observer and never completes.
+     *
+     * <img src="./img/never.png" width="100%">
+     *
+     * A simple Observable that emits neither values nor errors nor the completion
+     * notification. It can be used for testing purposes or for composing with other
+     * Observables. Please note that by never emitting a complete notification, this
+     * Observable keeps the subscription from being disposed automatically.
+     * Subscriptions need to be manually disposed.
+     *
+     * @example <caption>Emit the number 7, then never emit anything else (not even complete).</caption>
+     * function info() {
+     *   console.log('Will not be called');
+     * }
+     * var result = NEVER.startWith(7);
+     * result.subscribe(x => console.log(x), info, info);
+     *
+     * @see {@link create}
+     * @see {@link EMPTY}
+     * @see {@link of}
+     * @see {@link throwError}
+     */
+    var NEVER = new Observable(noop$1);
+
     var __read$7 = (undefined && undefined.__read) || function (o, n) {
         var m = typeof Symbol === "function" && o[Symbol.iterator];
         if (!m) return o;
@@ -42041,7 +42075,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('7.0.0-beta.5+39.sha-f47f262');
+    var VERSION$2 = new Version$1('7.0.0-beta.5+50.sha-96ee898');
 
     /**
      * @license
@@ -54645,7 +54679,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.0-beta.5+39.sha-f47f262');
+    var VERSION$3 = new Version$1('7.0.0-beta.5+50.sha-96ee898');
 
     /**
      * @license
