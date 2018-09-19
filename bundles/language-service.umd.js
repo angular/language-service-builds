@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.1.7+38.sha-71628f1
+ * @license Angular v6.1.7+39.sha-a41f331
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1197,7 +1197,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('6.1.7+38.sha-71628f1');
+    var VERSION = new Version('6.1.7+39.sha-a41f331');
 
     /**
      * @license
@@ -47603,7 +47603,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('6.1.7+38.sha-71628f1');
+    var VERSION$2 = new Version$1('6.1.7+39.sha-a41f331');
 
     /**
      * @license
@@ -48222,6 +48222,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function _localeFactory(locale) {
         return locale || 'en-US';
     }
+    /**
+     * A built-in [dependency injection token](guide/glossary#di-token)
+     * that is used to configure the root injector for bootstrapping.
+     */
     var APPLICATION_MODULE_PROVIDERS = [
         {
             provide: ApplicationRef,
@@ -48244,8 +48248,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         },
     ];
     /**
-     * This module includes the providers of @angular/core that are needed
-     * to bootstrap components via `ApplicationRef`.
+     * Configures the root injector for an app with
+     * providers of `@angular/core` dependencies that `ApplicationRef` needs
+     * to bootstrap components.
+     *
+     * Re-exported by `BrowserModule`, which is included automatically in the root
+     * `AppModule` when you create a new app with the CLI `new` command.
      *
      * @experimental
      */
@@ -52321,7 +52329,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('6.1.7+38.sha-71628f1');
+    var VERSION$3 = new Version$1('6.1.7+39.sha-a41f331');
 
     /**
      * @license
