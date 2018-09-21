@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.0-beta.6+34.sha-a880686
+ * @license Angular v7.0.0-beta.6+35.sha-82a14dc
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1164,7 +1164,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.0-beta.6+34.sha-a880686');
+    var VERSION = new Version('7.0.0-beta.6+35.sha-82a14dc');
 
     /**
      * @license
@@ -24118,286 +24118,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * found in the LICENSE file at https://angular.io/license
      */
     /**
-     * If this is the first template pass, any ngOnInit or ngDoCheck hooks will be queued into
-     * TView.initHooks during directiveCreate.
-     *
-     * The directive index and hook type are encoded into one number (1st bit: type, remaining bits:
-     * directive index), then saved in the even indices of the initHooks array. The odd indices
-     * hold the hook functions themselves.
-     *
-     * @param index The index of the directive in LViewData[DIRECTIVES]
-     * @param hooks The static hooks map on the directive def
-     * @param tView The current TView
-     */
-    function queueInitHooks(index, onInit, doCheck, tView) {
-        ngDevMode &&
-            assertEqual(tView.firstTemplatePass, true, 'Should only be called on first template pass');
-        if (onInit) {
-            (tView.initHooks || (tView.initHooks = [])).push(index, onInit);
-        }
-        if (doCheck) {
-            (tView.initHooks || (tView.initHooks = [])).push(index, doCheck);
-            (tView.checkHooks || (tView.checkHooks = [])).push(index, doCheck);
-        }
-    }
-    /**
-     * Loops through the directives on a node and queues all their hooks except ngOnInit
-     * and ngDoCheck, which are queued separately in directiveCreate.
-     */
-    function queueLifecycleHooks(flags, tView) {
-        if (tView.firstTemplatePass) {
-            var start = flags >> 15 /* DirectiveStartingIndexShift */;
-            var count = flags & 4095 /* DirectiveCountMask */;
-            var end = start + count;
-            // It's necessary to loop through the directives at elementEnd() (rather than processing in
-            // directiveCreate) so we can preserve the current hook order. Content, view, and destroy
-            // hooks for projected components and directives must be called *before* their hosts.
-            for (var i = start; i < end; i++) {
-                var def = tView.directives[i];
-                queueContentHooks(def, tView, i);
-                queueViewHooks(def, tView, i);
-                queueDestroyHooks(def, tView, i);
-            }
-        }
-    }
-    /** Queues afterContentInit and afterContentChecked hooks on TView */
-    function queueContentHooks(def, tView, i) {
-        if (def.afterContentInit) {
-            (tView.contentHooks || (tView.contentHooks = [])).push(i, def.afterContentInit);
-        }
-        if (def.afterContentChecked) {
-            (tView.contentHooks || (tView.contentHooks = [])).push(i, def.afterContentChecked);
-            (tView.contentCheckHooks || (tView.contentCheckHooks = [])).push(i, def.afterContentChecked);
-        }
-    }
-    /** Queues afterViewInit and afterViewChecked hooks on TView */
-    function queueViewHooks(def, tView, i) {
-        if (def.afterViewInit) {
-            (tView.viewHooks || (tView.viewHooks = [])).push(i, def.afterViewInit);
-        }
-        if (def.afterViewChecked) {
-            (tView.viewHooks || (tView.viewHooks = [])).push(i, def.afterViewChecked);
-            (tView.viewCheckHooks || (tView.viewCheckHooks = [])).push(i, def.afterViewChecked);
-        }
-    }
-    /** Queues onDestroy hooks on TView */
-    function queueDestroyHooks(def, tView, i) {
-        if (def.onDestroy != null) {
-            (tView.destroyHooks || (tView.destroyHooks = [])).push(i, def.onDestroy);
-        }
-    }
-    /**
-     * Calls onInit and doCheck calls if they haven't already been called.
-     *
-     * @param currentView The current view
-     */
-    function executeInitHooks(currentView, tView, creationMode) {
-        if (currentView[FLAGS] & 16 /* RunInit */) {
-            executeHooks(currentView[DIRECTIVES], tView.initHooks, tView.checkHooks, creationMode);
-            currentView[FLAGS] &= ~16 /* RunInit */;
-        }
-    }
-    /**
-     * Iterates over afterViewInit and afterViewChecked functions and calls them.
-     *
-     * @param currentView The current view
-     */
-    function executeHooks(data, allHooks, checkHooks, creationMode) {
-        var hooksToCall = creationMode ? allHooks : checkHooks;
-        if (hooksToCall) {
-            callHooks(data, hooksToCall);
-        }
-    }
-    /**
-     * Calls lifecycle hooks with their contexts, skipping init hooks if it's not
-     * creation mode.
-     *
-     * @param currentView The current view
-     * @param arr The array in which the hooks are found
-     */
-    function callHooks(data, arr) {
-        for (var i = 0; i < arr.length; i += 2) {
-            arr[i + 1].call(data[arr[i]]);
-        }
-    }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    function devModeEqual(a, b) {
-        var isListLikeIterableA = isListLikeIterable(a);
-        var isListLikeIterableB = isListLikeIterable(b);
-        if (isListLikeIterableA && isListLikeIterableB) {
-            return areIterablesEqual(a, b, devModeEqual);
-        }
-        else {
-            var isAObject = a && (typeof a === 'object' || typeof a === 'function');
-            var isBObject = b && (typeof b === 'object' || typeof b === 'function');
-            if (!isListLikeIterableA && isAObject && !isListLikeIterableB && isBObject) {
-                return true;
-            }
-            else {
-                return looseIdentical(a, b);
-            }
-        }
-    }
-    /**
-     * Indicates that the result of a {@link Pipe} transformation has changed even though the
-     * reference has not changed.
-     *
-     * Wrapped values are unwrapped automatically during the change detection, and the unwrapped value
-     * is stored.
-     *
-     * Example:
-     *
-     * ```
-     * if (this._latestValue === this._latestReturnedValue) {
-     *    return this._latestReturnedValue;
-     *  } else {
-     *    this._latestReturnedValue = this._latestValue;
-     *    return WrappedValue.wrap(this._latestValue); // this will force update
-     *  }
-     * ```
-     *
-     */
-    var WrappedValue = /** @class */ (function () {
-        function WrappedValue(value) {
-            this.wrapped = value;
-        }
-        /** Creates a wrapped value. */
-        WrappedValue.wrap = function (value) { return new WrappedValue(value); };
-        /**
-         * Returns the underlying value of a wrapped value.
-         * Returns the given `value` when it is not wrapped.
-         **/
-        WrappedValue.unwrap = function (value) { return WrappedValue.isWrapped(value) ? value.wrapped : value; };
-        /** Returns true if `value` is a wrapped value. */
-        WrappedValue.isWrapped = function (value) { return value instanceof WrappedValue; };
-        return WrappedValue;
-    }());
-    /**
-     * Represents a basic change from a previous to a new value.
-     *
-     */
-    var SimpleChange = /** @class */ (function () {
-        function SimpleChange(previousValue, currentValue, firstChange) {
-            this.previousValue = previousValue;
-            this.currentValue = currentValue;
-            this.firstChange = firstChange;
-        }
-        /**
-         * Check whether the new value is the first value assigned.
-         */
-        SimpleChange.prototype.isFirstChange = function () { return this.firstChange; };
-        return SimpleChange;
-    }());
-    function isListLikeIterable(obj) {
-        if (!isJsObject(obj))
-            return false;
-        return Array.isArray(obj) ||
-            (!(obj instanceof Map) && // JS Map are iterables but return entries as [k, v]
-                getSymbolIterator() in obj); // JS Iterable have a Symbol.iterator prop
-    }
-    function areIterablesEqual(a, b, comparator) {
-        var iterator1 = a[getSymbolIterator()]();
-        var iterator2 = b[getSymbolIterator()]();
-        while (true) {
-            var item1 = iterator1.next();
-            var item2 = iterator2.next();
-            if (item1.done && item2.done)
-                return true;
-            if (item1.done || item2.done)
-                return false;
-            if (!comparator(item1.value, item2.value))
-                return false;
-        }
-    }
-    function iterateListLike(obj, fn) {
-        if (Array.isArray(obj)) {
-            for (var i = 0; i < obj.length; i++) {
-                fn(obj[i]);
-            }
-        }
-        else {
-            var iterator = obj[getSymbolIterator()]();
-            var item = void 0;
-            while (!((item = iterator.next()).done)) {
-                fn(item.value);
-            }
-        }
-    }
-    function isJsObject(o) {
-        return o !== null && (typeof o === 'function' || typeof o === 'object');
-    }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    function stringify$2(value) {
-        if (typeof value == 'function')
-            return value.name || value;
-        if (typeof value == 'string')
-            return value;
-        if (value == null)
-            return '';
-        return '' + value;
-    }
-    /**
-     * Flattens an array in non-recursive way. Input arrays are not modified.
-     */
-    function flatten$2(list) {
-        var result = [];
-        var i = 0;
-        while (i < list.length) {
-            var item = list[i];
-            if (Array.isArray(item)) {
-                if (item.length > 0) {
-                    list = item.concat(list.slice(i + 1));
-                    i = 0;
-                }
-                else {
-                    i++;
-                }
-            }
-            else {
-                result.push(item);
-                i++;
-            }
-        }
-        return result;
-    }
-    function assertDataInRangeInternal(index, arr) {
-        assertLessThan(index, arr ? arr.length : 0, 'index expected to be a valid data index');
-    }
-    function readElementValue(value) {
-        return (Array.isArray(value) ? value[0] : value);
-    }
-    function getLNode(tNode, hostView) {
-        return readElementValue(hostView[tNode.index]);
-    }
-    function isContentQueryHost(tNode) {
-        return (tNode.flags & 16384 /* hasContentQuery */) !== 0;
-    }
-    function isComponent(tNode) {
-        return (tNode.flags & 4096 /* isComponent */) === 4096 /* isComponent */;
-    }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
      * This property will be monkey-patched on elements, components and directives
      */
     var MONKEY_PATCH_KEY_NAME = '__ngContext__';
@@ -24724,6 +24444,120 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var count = tNode.flags & 4095 /* DirectiveCountMask */;
         return count ? (startIndex + count) : -1;
     }
+    function readElementValue(value) {
+        return (Array.isArray(value) ? value[0] : value);
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * If this is the first template pass, any ngOnInit or ngDoCheck hooks will be queued into
+     * TView.initHooks during directiveCreate.
+     *
+     * The directive index and hook type are encoded into one number (1st bit: type, remaining bits:
+     * directive index), then saved in the even indices of the initHooks array. The odd indices
+     * hold the hook functions themselves.
+     *
+     * @param index The index of the directive in LViewData[DIRECTIVES]
+     * @param hooks The static hooks map on the directive def
+     * @param tView The current TView
+     */
+    function queueInitHooks(index, onInit, doCheck, tView) {
+        ngDevMode &&
+            assertEqual(tView.firstTemplatePass, true, 'Should only be called on first template pass');
+        if (onInit) {
+            (tView.initHooks || (tView.initHooks = [])).push(index, onInit);
+        }
+        if (doCheck) {
+            (tView.initHooks || (tView.initHooks = [])).push(index, doCheck);
+            (tView.checkHooks || (tView.checkHooks = [])).push(index, doCheck);
+        }
+    }
+    /**
+     * Loops through the directives on a node and queues all their hooks except ngOnInit
+     * and ngDoCheck, which are queued separately in directiveCreate.
+     */
+    function queueLifecycleHooks(flags, tView) {
+        if (tView.firstTemplatePass) {
+            var start = flags >> 15 /* DirectiveStartingIndexShift */;
+            var count = flags & 4095 /* DirectiveCountMask */;
+            var end = start + count;
+            // It's necessary to loop through the directives at elementEnd() (rather than processing in
+            // directiveCreate) so we can preserve the current hook order. Content, view, and destroy
+            // hooks for projected components and directives must be called *before* their hosts.
+            for (var i = start; i < end; i++) {
+                var def = tView.directives[i];
+                queueContentHooks(def, tView, i);
+                queueViewHooks(def, tView, i);
+                queueDestroyHooks(def, tView, i);
+            }
+        }
+    }
+    /** Queues afterContentInit and afterContentChecked hooks on TView */
+    function queueContentHooks(def, tView, i) {
+        if (def.afterContentInit) {
+            (tView.contentHooks || (tView.contentHooks = [])).push(i, def.afterContentInit);
+        }
+        if (def.afterContentChecked) {
+            (tView.contentHooks || (tView.contentHooks = [])).push(i, def.afterContentChecked);
+            (tView.contentCheckHooks || (tView.contentCheckHooks = [])).push(i, def.afterContentChecked);
+        }
+    }
+    /** Queues afterViewInit and afterViewChecked hooks on TView */
+    function queueViewHooks(def, tView, i) {
+        if (def.afterViewInit) {
+            (tView.viewHooks || (tView.viewHooks = [])).push(i, def.afterViewInit);
+        }
+        if (def.afterViewChecked) {
+            (tView.viewHooks || (tView.viewHooks = [])).push(i, def.afterViewChecked);
+            (tView.viewCheckHooks || (tView.viewCheckHooks = [])).push(i, def.afterViewChecked);
+        }
+    }
+    /** Queues onDestroy hooks on TView */
+    function queueDestroyHooks(def, tView, i) {
+        if (def.onDestroy != null) {
+            (tView.destroyHooks || (tView.destroyHooks = [])).push(i, def.onDestroy);
+        }
+    }
+    /**
+     * Calls onInit and doCheck calls if they haven't already been called.
+     *
+     * @param currentView The current view
+     */
+    function executeInitHooks(currentView, tView, creationMode) {
+        if (currentView[FLAGS] & 16 /* RunInit */) {
+            executeHooks(currentView[DIRECTIVES], tView.initHooks, tView.checkHooks, creationMode);
+            currentView[FLAGS] &= ~16 /* RunInit */;
+        }
+    }
+    /**
+     * Iterates over afterViewInit and afterViewChecked functions and calls them.
+     *
+     * @param currentView The current view
+     */
+    function executeHooks(data, allHooks, checkHooks, creationMode) {
+        var hooksToCall = creationMode ? allHooks : checkHooks;
+        if (hooksToCall) {
+            callHooks(data, hooksToCall);
+        }
+    }
+    /**
+     * Calls lifecycle hooks with their contexts, skipping init hooks if it's not
+     * creation mode.
+     *
+     * @param currentView The current view
+     * @param arr The array in which the hooks are found
+     */
+    function callHooks(data, arr) {
+        for (var i = 0; i < arr.length; i += 2) {
+            arr[i + 1].call(data[arr[i]]);
+        }
+    }
 
     /** Called when directives inject each other (creating a circular dependency) */
     function throwCyclicDependencyError(token) {
@@ -24819,6 +24653,172 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    function devModeEqual(a, b) {
+        var isListLikeIterableA = isListLikeIterable(a);
+        var isListLikeIterableB = isListLikeIterable(b);
+        if (isListLikeIterableA && isListLikeIterableB) {
+            return areIterablesEqual(a, b, devModeEqual);
+        }
+        else {
+            var isAObject = a && (typeof a === 'object' || typeof a === 'function');
+            var isBObject = b && (typeof b === 'object' || typeof b === 'function');
+            if (!isListLikeIterableA && isAObject && !isListLikeIterableB && isBObject) {
+                return true;
+            }
+            else {
+                return looseIdentical(a, b);
+            }
+        }
+    }
+    /**
+     * Indicates that the result of a {@link Pipe} transformation has changed even though the
+     * reference has not changed.
+     *
+     * Wrapped values are unwrapped automatically during the change detection, and the unwrapped value
+     * is stored.
+     *
+     * Example:
+     *
+     * ```
+     * if (this._latestValue === this._latestReturnedValue) {
+     *    return this._latestReturnedValue;
+     *  } else {
+     *    this._latestReturnedValue = this._latestValue;
+     *    return WrappedValue.wrap(this._latestValue); // this will force update
+     *  }
+     * ```
+     *
+     */
+    var WrappedValue = /** @class */ (function () {
+        function WrappedValue(value) {
+            this.wrapped = value;
+        }
+        /** Creates a wrapped value. */
+        WrappedValue.wrap = function (value) { return new WrappedValue(value); };
+        /**
+         * Returns the underlying value of a wrapped value.
+         * Returns the given `value` when it is not wrapped.
+         **/
+        WrappedValue.unwrap = function (value) { return WrappedValue.isWrapped(value) ? value.wrapped : value; };
+        /** Returns true if `value` is a wrapped value. */
+        WrappedValue.isWrapped = function (value) { return value instanceof WrappedValue; };
+        return WrappedValue;
+    }());
+    /**
+     * Represents a basic change from a previous to a new value.
+     *
+     */
+    var SimpleChange = /** @class */ (function () {
+        function SimpleChange(previousValue, currentValue, firstChange) {
+            this.previousValue = previousValue;
+            this.currentValue = currentValue;
+            this.firstChange = firstChange;
+        }
+        /**
+         * Check whether the new value is the first value assigned.
+         */
+        SimpleChange.prototype.isFirstChange = function () { return this.firstChange; };
+        return SimpleChange;
+    }());
+    function isListLikeIterable(obj) {
+        if (!isJsObject(obj))
+            return false;
+        return Array.isArray(obj) ||
+            (!(obj instanceof Map) && // JS Map are iterables but return entries as [k, v]
+                getSymbolIterator() in obj); // JS Iterable have a Symbol.iterator prop
+    }
+    function areIterablesEqual(a, b, comparator) {
+        var iterator1 = a[getSymbolIterator()]();
+        var iterator2 = b[getSymbolIterator()]();
+        while (true) {
+            var item1 = iterator1.next();
+            var item2 = iterator2.next();
+            if (item1.done && item2.done)
+                return true;
+            if (item1.done || item2.done)
+                return false;
+            if (!comparator(item1.value, item2.value))
+                return false;
+        }
+    }
+    function iterateListLike(obj, fn) {
+        if (Array.isArray(obj)) {
+            for (var i = 0; i < obj.length; i++) {
+                fn(obj[i]);
+            }
+        }
+        else {
+            var iterator = obj[getSymbolIterator()]();
+            var item = void 0;
+            while (!((item = iterator.next()).done)) {
+                fn(item.value);
+            }
+        }
+    }
+    function isJsObject(o) {
+        return o !== null && (typeof o === 'function' || typeof o === 'object');
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    function stringify$2(value) {
+        if (typeof value == 'function')
+            return value.name || value;
+        if (typeof value == 'string')
+            return value;
+        if (value == null)
+            return '';
+        return '' + value;
+    }
+    /**
+     * Flattens an array in non-recursive way. Input arrays are not modified.
+     */
+    function flatten$2(list) {
+        var result = [];
+        var i = 0;
+        while (i < list.length) {
+            var item = list[i];
+            if (Array.isArray(item)) {
+                if (item.length > 0) {
+                    list = item.concat(list.slice(i + 1));
+                    i = 0;
+                }
+                else {
+                    i++;
+                }
+            }
+            else {
+                result.push(item);
+                i++;
+            }
+        }
+        return result;
+    }
+    function assertDataInRangeInternal(index, arr) {
+        assertLessThan(index, arr ? arr.length : 0, 'index expected to be a valid data index');
+    }
+    function getLNode(tNode, hostView) {
+        return readElementValue(hostView[tNode.index]);
+    }
+    function isContentQueryHost(tNode) {
+        return (tNode.flags & 16384 /* hasContentQuery */) !== 0;
+    }
+    function isComponent(tNode) {
+        return (tNode.flags & 4096 /* isComponent */) === 4096 /* isComponent */;
+    }
 
     /**
      * @license
@@ -26353,7 +26353,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         currentView[FLAGS] |= 4 /* Dirty */;
         ngDevMode && assertDefined(currentView[CONTEXT], 'rootContext should be defined');
-        scheduleTick(currentView[CONTEXT]);
+        var rootContext = currentView[CONTEXT];
+        var nothingScheduled = rootContext.flags === 0 /* Empty */;
+        rootContext.flags |= 1 /* DetectChanges */;
+        if (nothingScheduled) {
+            scheduleTick(rootContext);
+        }
     }
     /**
      * Used to schedule change detection on the whole application.
@@ -26371,9 +26376,19 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var res_1;
             rootContext.clean = new Promise(function (r) { return res_1 = r; });
             rootContext.scheduler(function () {
-                tickRootContext(rootContext);
-                res_1(null);
+                if (rootContext.flags & 1 /* DetectChanges */) {
+                    rootContext.flags &= ~1 /* DetectChanges */;
+                    tickRootContext(rootContext);
+                }
+                if (rootContext.flags & 2 /* FlushPlayers */) {
+                    rootContext.flags &= ~2 /* FlushPlayers */;
+                    var playerHandler = rootContext.playerHandler;
+                    if (playerHandler) {
+                        playerHandler.flushPlayers();
+                    }
+                }
                 rootContext.clean = _CLEAN_PROMISE;
+                res_1(null);
             });
         }
     }
@@ -26512,11 +26527,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         setHostBindings(rootView[TVIEW].hostBindings);
         return component;
     }
-    function createRootContext(scheduler) {
+    function createRootContext(scheduler, playerHandler) {
         return {
             components: [],
             scheduler: scheduler,
             clean: CLEAN_PROMISE,
+            playerHandler: playerHandler || null,
+            flags: 0 /* Empty */
         };
     }
     /**
@@ -34062,7 +34079,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('7.0.0-beta.6+34.sha-a880686');
+    var VERSION$2 = new Version$1('7.0.0-beta.6+35.sha-82a14dc');
 
     /**
      * @license
@@ -45655,6 +45672,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     // clang-format on
 
     /**
@@ -46669,7 +46694,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.0-beta.6+34.sha-a880686');
+    var VERSION$3 = new Version$1('7.0.0-beta.6+35.sha-82a14dc');
 
     /**
      * @license
