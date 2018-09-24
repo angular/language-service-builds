@@ -1,5 +1,5 @@
 /**
- * @license Angular v6.1.8+20.sha-37f3b92
+ * @license Angular v6.1.8+37.sha-cea7fbe
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1197,7 +1197,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('6.1.8+20.sha-37f3b92');
+    var VERSION = new Version('6.1.8+37.sha-cea7fbe');
 
     /**
      * @license
@@ -25620,11 +25620,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * @usageNotes
      * ### Basic Example
      *
-     * #### Plain InjectionToken
+     * ### Plain InjectionToken
      *
      * {@example core/di/ts/injector_spec.ts region='InjectionToken'}
      *
-     * #### Tree-shakable InjectionToken
+     * ### Tree-shakable InjectionToken
      *
      * {@example core/di/ts/injector_spec.ts region='ShakableInjectionToken'}
      *
@@ -33425,6 +33425,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      *
      * See {@link Component#encapsulation encapsulation}.
      *
+     * @usageNotes
+     * ### Example
+     * {@example core/ts/metadata/encapsulation.ts region='longform'}
      */
     var ViewEncapsulation$1;
     (function (ViewEncapsulation) {
@@ -33456,9 +33459,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
          * For the DOM this means using modern [Shadow
          * DOM](https://w3c.github.io/webcomponents/spec/shadow/) and
          * creating a ShadowRoot for Component's Host Element.
-         *
-         * ### Example
-         * {@example core/ts/metadata/encapsulation.ts region='longform'}
          */
         ViewEncapsulation[ViewEncapsulation["ShadowDom"] = 3] = "ShadowDom";
     })(ViewEncapsulation$1 || (ViewEncapsulation$1 = {}));
@@ -47602,7 +47602,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('6.1.8+20.sha-37f3b92');
+    var VERSION$2 = new Version$1('6.1.8+37.sha-cea7fbe');
 
     /**
      * @license
@@ -52332,7 +52332,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('6.1.8+20.sha-37f3b92');
+    var VERSION$3 = new Version$1('6.1.8+37.sha-cea7fbe');
 
     /**
      * @license
