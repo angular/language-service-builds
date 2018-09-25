@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.0-beta.6+35.sha-82a14dc
+ * @license Angular v7.0.0-beta.6+58.sha-0c34471
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1197,7 +1197,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.0-beta.6+35.sha-82a14dc');
+    var VERSION = new Version('7.0.0-beta.6+58.sha-0c34471');
 
     /**
      * @license
@@ -26701,11 +26701,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * @usageNotes
      * ### Basic Example
      *
-     * #### Plain InjectionToken
+     * ### Plain InjectionToken
      *
      * {@example core/di/ts/injector_spec.ts region='InjectionToken'}
      *
-     * #### Tree-shakable InjectionToken
+     * ### Tree-shakable InjectionToken
      *
      * {@example core/di/ts/injector_spec.ts region='ShakableInjectionToken'}
      *
@@ -27055,6 +27055,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      *
      * See {@link Component#encapsulation encapsulation}.
      *
+     * @usageNotes
+     * ### Example
+     * {@example core/ts/metadata/encapsulation.ts region='longform'}
      */
     var ViewEncapsulation$1;
     (function (ViewEncapsulation) {
@@ -27086,9 +27089,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
          * For the DOM this means using modern [Shadow
          * DOM](https://w3c.github.io/webcomponents/spec/shadow/) and
          * creating a ShadowRoot for Component's Host Element.
-         *
-         * ### Example
-         * {@example core/ts/metadata/encapsulation.ts region='longform'}
          */
         ViewEncapsulation[ViewEncapsulation["ShadowDom"] = 3] = "ShadowDom";
     })(ViewEncapsulation$1 || (ViewEncapsulation$1 = {}));
@@ -28326,7 +28326,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Returns a collection of directive index values that are used on the element
      * (which is referenced by the lNodeIndex)
      */
-    function discoverDirectiveIndices(lViewData, lNodeIndex) {
+    function discoverDirectiveIndices(lViewData, lNodeIndex, includeComponents) {
         var directivesAcrossView = lViewData[DIRECTIVES];
         var tNode = lViewData[TVIEW].data[lNodeIndex];
         if (directivesAcrossView && directivesAcrossView.length) {
@@ -28346,12 +28346,20 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return null;
     }
-    function discoverDirectives(lViewData, directiveIndices) {
+    /**
+     * Returns a list of directives extracted from the given view based on the
+     * provided list of directive index values.
+     *
+     * @param lViewData The target view data
+     * @param indices A collection of directive index values which will be used to
+     *    figure out the directive instances
+     */
+    function discoverDirectives(lViewData, indices) {
         var directives = [];
         var directiveInstances = lViewData[DIRECTIVES];
         if (directiveInstances) {
-            for (var i = 0; i < directiveIndices.length; i++) {
-                var directiveIndex = directiveIndices[i];
+            for (var i = 0; i < indices.length; i++) {
+                var directiveIndex = indices[i];
                 var directive = directiveInstances[directiveIndex];
                 directives.push(directive);
             }
@@ -42078,7 +42086,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('7.0.0-beta.6+35.sha-82a14dc');
+    var VERSION$2 = new Version$1('7.0.0-beta.6+58.sha-0c34471');
 
     /**
      * @license
@@ -54702,7 +54710,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.0-beta.6+35.sha-82a14dc');
+    var VERSION$3 = new Version$1('7.0.0-beta.6+58.sha-0c34471');
 
     /**
      * @license
