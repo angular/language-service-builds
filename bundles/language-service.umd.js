@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.0-beta.6+57.sha-cf095d9
+ * @license Angular v7.0.0-beta.6+58.sha-0c34471
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1197,7 +1197,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.0-beta.6+57.sha-cf095d9');
+    var VERSION = new Version('7.0.0-beta.6+58.sha-0c34471');
 
     /**
      * @license
@@ -28326,7 +28326,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Returns a collection of directive index values that are used on the element
      * (which is referenced by the lNodeIndex)
      */
-    function discoverDirectiveIndices(lViewData, lNodeIndex) {
+    function discoverDirectiveIndices(lViewData, lNodeIndex, includeComponents) {
         var directivesAcrossView = lViewData[DIRECTIVES];
         var tNode = lViewData[TVIEW].data[lNodeIndex];
         if (directivesAcrossView && directivesAcrossView.length) {
@@ -28346,12 +28346,20 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return null;
     }
-    function discoverDirectives(lViewData, directiveIndices) {
+    /**
+     * Returns a list of directives extracted from the given view based on the
+     * provided list of directive index values.
+     *
+     * @param lViewData The target view data
+     * @param indices A collection of directive index values which will be used to
+     *    figure out the directive instances
+     */
+    function discoverDirectives(lViewData, indices) {
         var directives = [];
         var directiveInstances = lViewData[DIRECTIVES];
         if (directiveInstances) {
-            for (var i = 0; i < directiveIndices.length; i++) {
-                var directiveIndex = directiveIndices[i];
+            for (var i = 0; i < indices.length; i++) {
+                var directiveIndex = indices[i];
                 var directive = directiveInstances[directiveIndex];
                 directives.push(directive);
             }
@@ -42078,7 +42086,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('7.0.0-beta.6+57.sha-cf095d9');
+    var VERSION$2 = new Version$1('7.0.0-beta.6+58.sha-0c34471');
 
     /**
      * @license
@@ -54702,7 +54710,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.0-beta.6+57.sha-cf095d9');
+    var VERSION$3 = new Version$1('7.0.0-beta.6+58.sha-0c34471');
 
     /**
      * @license
