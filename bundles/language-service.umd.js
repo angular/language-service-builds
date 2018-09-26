@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.0-beta.6+79.sha-d191085
+ * @license Angular v7.0.0-beta.6+80.sha-15a2b8f
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1164,7 +1164,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.0-beta.6+79.sha-d191085');
+    var VERSION = new Version('7.0.0-beta.6+80.sha-15a2b8f');
 
     /**
      * @license
@@ -32846,6 +32846,75 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * Represents an embedded template that can be used to instantiate embedded views.
+     * To instantiate embedded views based on a template, use the `ViewContainerRef`
+     * method `createEmbeddedView()`.
+     *
+     * Access a `TemplateRef` instance by placing a directive on an `<ng-template>`
+     * element (or directive prefixed with `*`). The `TemplateRef` for the embedded view
+     * is injected into the constructor of the directive,
+     * using the `TemplateRef` token.
+     *
+     * You can also use a `Query` to find a `TemplateRef` associated with
+     * a component or a directive.
+     *
+     * @see `ViewContainerRef`
+     * @see [Navigate the Component Tree with DI](guide/dependency-injection-navtree)
+     *
+     */
+    var TemplateRef = /** @class */ (function () {
+        function TemplateRef() {
+        }
+        /** @internal */
+        TemplateRef.__NG_ELEMENT_ID__ = function () { return R3_TEMPLATE_REF_FACTORY$1(TemplateRef, ElementRef); };
+        return TemplateRef;
+    }());
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * Represents a container where one or more views can be attached to a component.
+     *
+     * Can contain *host views* (created by instantiating a
+     * component with the `createComponent()` method), and *embedded views*
+     * (created by instantiating a `TemplateRef` with the `createEmbeddedView()` method).
+     *
+     * A view container instance can contain other view containers,
+     * creating a [view hierarchy](guide/glossary#view-tree).
+     *
+     * @see `ComponentRef`
+     * @see `EmbeddedViewRef`
+     *
+     */
+    var ViewContainerRef = /** @class */ (function () {
+        function ViewContainerRef() {
+        }
+        /** @internal */
+        ViewContainerRef.__NG_ELEMENT_ID__ = function () { return R3_VIEW_CONTAINER_REF_FACTORY$1(ViewContainerRef, ElementRef); };
+        return ViewContainerRef;
+    }());
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
 
     /**
      * @license
@@ -33427,7 +33496,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('7.0.0-beta.6+79.sha-d191085');
+    var VERSION$2 = new Version$1('7.0.0-beta.6+80.sha-15a2b8f');
 
     /**
      * @license
@@ -39875,67 +39944,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * found in the LICENSE file at https://angular.io/license
      */
     /**
-     * Represents an embedded template that can be used to instantiate embedded views.
-     * To instantiate embedded views based on a template, use the `ViewContainerRef`
-     * method `createEmbeddedView()`.
-     *
-     * Access a `TemplateRef` instance by placing a directive on an `<ng-template>`
-     * element (or directive prefixed with `*`). The `TemplateRef` for the embedded view
-     * is injected into the constructor of the directive,
-     * using the `TemplateRef` token.
-     *
-     * You can also use a `Query` to find a `TemplateRef` associated with
-     * a component or a directive.
-     *
-     * @see `ViewContainerRef`
-     * @see [Navigate the Component Tree with DI](guide/dependency-injection-navtree)
-     *
-     */
-    var TemplateRef = /** @class */ (function () {
-        function TemplateRef() {
-        }
-        /** @internal */
-        TemplateRef.__NG_ELEMENT_ID__ = function () { return R3_TEMPLATE_REF_FACTORY$1(TemplateRef, ElementRef); };
-        return TemplateRef;
-    }());
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * Represents a container where one or more views can be attached to a component.
-     *
-     * Can contain *host views* (created by instantiating a
-     * component with the `createComponent()` method), and *embedded views*
-     * (created by instantiating a `TemplateRef` with the `createEmbeddedView()` method).
-     *
-     * A view container instance can contain other view containers,
-     * creating a [view hierarchy](guide/glossary#view-tree).
-     *
-     * @see `ComponentRef`
-     * @see `EmbeddedViewRef`
-     *
-     */
-    var ViewContainerRef = /** @class */ (function () {
-        function ViewContainerRef() {
-        }
-        /** @internal */
-        ViewContainerRef.__NG_ELEMENT_ID__ = function () { return R3_VIEW_CONTAINER_REF_FACTORY$1(ViewContainerRef, ElementRef); };
-        return ViewContainerRef;
-    }());
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
      * Base class for Angular Views, provides change detection functionality.
      * A change-detection tree collects all views that are to be checked for changes.
      * Use the methods to add and remove views from the tree, initiate change-detection,
@@ -46159,7 +46167,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.0-beta.6+79.sha-d191085');
+    var VERSION$3 = new Version$1('7.0.0-beta.6+80.sha-15a2b8f');
 
     /**
      * @license
