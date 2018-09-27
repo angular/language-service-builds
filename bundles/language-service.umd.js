@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.0-beta.7+20.sha-eeebe28
+ * @license Angular v7.0.0-beta.7+28.sha-325e801
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1164,7 +1164,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.0-beta.7+20.sha-eeebe28');
+    var VERSION = new Version('7.0.0-beta.7+28.sha-325e801');
 
     /**
      * @license
@@ -14411,6 +14411,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         Identifiers.text = { name: 'ɵtext', moduleName: CORE$1 };
         Identifiers.textBinding = { name: 'ɵtextBinding', moduleName: CORE$1 };
         Identifiers.bind = { name: 'ɵbind', moduleName: CORE$1 };
+        Identifiers.enableBindings = { name: 'ɵenableBindings', moduleName: CORE$1 };
+        Identifiers.disableBindings = { name: 'ɵdisableBindings', moduleName: CORE$1 };
         Identifiers.getCurrentView = { name: 'ɵgetCurrentView', moduleName: CORE$1 };
         Identifiers.restoreView = { name: 'ɵrestoreView', moduleName: CORE$1 };
         Identifiers.interpolation1 = { name: 'ɵinterpolation1', moduleName: CORE$1 };
@@ -32153,7 +32155,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('7.0.0-beta.7+20.sha-eeebe28');
+    var VERSION$2 = new Version$1('7.0.0-beta.7+28.sha-325e801');
 
     /**
      * @license
@@ -44501,7 +44503,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.0-beta.7+20.sha-eeebe28');
+    var VERSION$3 = new Version$1('7.0.0-beta.7+28.sha-325e801');
 
     /**
      * @license
