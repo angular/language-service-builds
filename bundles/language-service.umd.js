@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.0-beta.7+20.sha-eeebe28
+ * @license Angular v7.0.0-beta.7+28.sha-325e801
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1197,7 +1197,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.0-beta.7+20.sha-eeebe28');
+    var VERSION = new Version('7.0.0-beta.7+28.sha-325e801');
 
     /**
      * @license
@@ -15891,6 +15891,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         Identifiers.text = { name: 'ɵtext', moduleName: CORE$1 };
         Identifiers.textBinding = { name: 'ɵtextBinding', moduleName: CORE$1 };
         Identifiers.bind = { name: 'ɵbind', moduleName: CORE$1 };
+        Identifiers.enableBindings = { name: 'ɵenableBindings', moduleName: CORE$1 };
+        Identifiers.disableBindings = { name: 'ɵdisableBindings', moduleName: CORE$1 };
         Identifiers.getCurrentView = { name: 'ɵgetCurrentView', moduleName: CORE$1 };
         Identifiers.restoreView = { name: 'ɵrestoreView', moduleName: CORE$1 };
         Identifiers.interpolation1 = { name: 'ɵinterpolation1', moduleName: CORE$1 };
@@ -16010,6 +16012,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /** I18n separators for metadata **/
     var MEANING_SEPARATOR$1 = '|';
     var ID_SEPARATOR$1 = '@@';
+    /** Non bindable attribute name **/
+    var NON_BINDABLE_ATTR = 'ngNonBindable';
     /**
      * Creates an allocator for a temporary variable.
      *
@@ -17134,13 +17138,17 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 }
                 this._phToNodeIdxes[this._i18nSectionIndex][phName].push(elementIndex);
             }
+            var isNonBindableMode = false;
             try {
                 // Handle i18n attributes
                 for (var _c = __values(element.attributes), _d = _c.next(); !_d.done; _d = _c.next()) {
                     var attr = _d.value;
                     var name_1 = attr.name;
                     var value = attr.value;
-                    if (name_1 === I18N_ATTR) {
+                    if (name_1 === NON_BINDABLE_ATTR) {
+                        isNonBindableMode = true;
+                    }
+                    else if (name_1 === I18N_ATTR) {
                         if (this._inI18nSection) {
                             throw new Error("Could not mark an element as translatable inside of a translatable section");
                         }
@@ -17309,6 +17317,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
             else {
                 this.creationInstruction(element.sourceSpan, isNgContainer$$1 ? Identifiers$1.elementContainerStart : Identifiers$1.elementStart, trimTrailingNulls(parameters));
+                if (isNonBindableMode) {
+                    this.creationInstruction(element.sourceSpan, Identifiers$1.disableBindings);
+                }
                 // initial styling for static style="..." attributes
                 if (hasStylingInstructions) {
                     var paramsList = [];
@@ -17464,6 +17475,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
             if (!createSelfClosingInstruction) {
                 // Finish element construction mode.
+                if (isNonBindableMode) {
+                    this.creationInstruction(element.endSourceSpan || element.sourceSpan, Identifiers$1.enableBindings);
+                }
                 this.creationInstruction(element.endSourceSpan || element.sourceSpan, isNgContainer$$1 ? Identifiers$1.elementContainerEnd : Identifiers$1.elementEnd);
             }
             // Restore the state before exiting this node
@@ -30245,6 +30259,25 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     var elementDepthCount;
     /**
+     * Stores whether directives should be matched to elements.
+     *
+     * When template contains `ngNonBindable` than we need to prevent the runtime form matching
+     * directives on children of that element.
+     *
+     * Example:
+     * ```
+     * <my-comp my-directive>
+     *   Should match component / directive.
+     * </my-comp>
+     * <div ngNonBindable>
+     *   <my-comp my-directive>
+     *     Should not match component / directive because we are in ngNonBindable.
+     *   </my-comp>
+     * </div>
+     * ```
+     */
+    var bindingsEnabled;
+    /**
      * Returns the current OpaqueViewState instance.
      *
      * Used in conjunction with the restoreView() instruction to save a snapshot
@@ -30584,6 +30617,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         isParent = false;
         previousOrParentTNode = null;
         elementDepthCount = 0;
+        bindingsEnabled = true;
     }
     /**
      * Used for creating the LViewNode of a dynamic embedded view,
@@ -30829,6 +30863,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     function createDirectivesAndLocals(localRefs, localRefExtractor) {
         if (localRefExtractor === void 0) { localRefExtractor = nativeNodeLocalRefExtractor; }
+        if (!bindingsEnabled)
+            return;
         if (firstTemplatePass) {
             ngDevMode && ngDevMode.firstTemplatePass++;
             cacheMatchingDirectivesForNode(previousOrParentTNode, tView, localRefs || null);
@@ -31308,6 +31344,46 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 (native.setProperty ? native.setProperty(propName, value) :
                     native[propName] = value);
         }
+    }
+    /**
+     * Enables directive matching on elements.
+     *
+     *  * Example:
+     * ```
+     * <my-comp my-directive>
+     *   Should match component / directive.
+     * </my-comp>
+     * <div ngNonBindable>
+     *   <!-- disabledBindings() -->
+     *   <my-comp my-directive>
+     *     Should not match component / directive because we are in ngNonBindable.
+     *   </my-comp>
+     *   <!-- enableBindings() -->
+     * </div>
+     * ```
+     */
+    function enableBindings() {
+        bindingsEnabled = true;
+    }
+    /**
+     * Disables directive matching on element.
+     *
+     *  * Example:
+     * ```
+     * <my-comp my-directive>
+     *   Should match component / directive.
+     * </my-comp>
+     * <div ngNonBindable>
+     *   <!-- disabledBindings() -->
+     *   <my-comp my-directive>
+     *     Should not match component / directive because we are in ngNonBindable.
+     *   </my-comp>
+     *   <!-- enableBindings() -->
+     * </div>
+     * ```
+     */
+    function disableBindings() {
+        bindingsEnabled = false;
     }
     /**
      * Constructs a TNode object from the arguments.
@@ -39521,6 +39597,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         'ɵnamespaceHTML': namespaceHTML,
         'ɵnamespaceMathML': namespaceMathML,
         'ɵnamespaceSVG': namespaceSVG,
+        'ɵenableBindings': enableBindings,
+        'ɵdisableBindings': disableBindings,
         'ɵelementStart': elementStart,
         'ɵelementEnd': elementEnd,
         'ɵelement': element,
@@ -40696,7 +40774,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('7.0.0-beta.7+20.sha-eeebe28');
+    var VERSION$2 = new Version$1('7.0.0-beta.7+28.sha-325e801');
 
     /**
      * @license
@@ -53061,7 +53139,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.0-beta.7+20.sha-eeebe28');
+    var VERSION$3 = new Version$1('7.0.0-beta.7+28.sha-325e801');
 
     /**
      * @license
