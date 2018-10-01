@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.0-beta.7+46.sha-9523991
+ * @license Angular v7.0.0-rc.0+5.sha-ab379ab
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1197,7 +1197,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.0-beta.7+46.sha-9523991');
+    var VERSION = new Version('7.0.0-rc.0+5.sha-ab379ab');
 
     /**
      * @license
@@ -15883,7 +15883,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         Identifiers.elementContainerEnd = { name: 'ɵeC', moduleName: CORE$1 };
         Identifiers.elementStyling = { name: 'ɵelementStyling', moduleName: CORE$1 };
         Identifiers.elementStylingMap = { name: 'ɵelementStylingMap', moduleName: CORE$1 };
-        Identifiers.elementStyleProp = { name: 'ɵelementStylingProp', moduleName: CORE$1 };
+        Identifiers.elementStyleProp = { name: 'ɵelementStyleProp', moduleName: CORE$1 };
         Identifiers.elementStylingApply = { name: 'ɵelementStylingApply', moduleName: CORE$1 };
         Identifiers.containerCreate = { name: 'ɵcontainer', moduleName: CORE$1 };
         Identifiers.nextContext = { name: 'ɵnextContext', moduleName: CORE$1 };
@@ -17358,30 +17358,30 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             if ((styleInputs.length || classInputs.length) && hasStylingInstructions) {
                 var indexLiteral_1 = literal(elementIndex);
                 var firstStyle = styleInputs[0];
-                var mapBasedStyleInput = firstStyle && firstStyle.name == 'style' ? firstStyle : null;
+                var mapBasedStyleInput_1 = firstStyle && firstStyle.name == 'style' ? firstStyle : null;
                 var firstClass = classInputs[0];
-                var mapBasedClassInput = firstClass && isClassBinding(firstClass) ? firstClass : null;
-                var stylingInput = mapBasedStyleInput || mapBasedClassInput;
+                var mapBasedClassInput_1 = firstClass && isClassBinding(firstClass) ? firstClass : null;
+                var stylingInput = mapBasedStyleInput_1 || mapBasedClassInput_1;
                 if (stylingInput) {
-                    var params_1 = [];
-                    var value_1;
-                    if (mapBasedClassInput) {
-                        value_1 = mapBasedClassInput.value.visit(this._valueConverter);
-                    }
-                    else if (mapBasedStyleInput) {
-                        params_1.push(NULL_EXPR);
-                    }
-                    if (mapBasedStyleInput) {
-                        value_1 = mapBasedStyleInput.value.visit(this._valueConverter);
-                    }
                     this.updateInstruction(stylingInput.sourceSpan, Identifiers$1.elementStylingMap, function () {
-                        params_1.push(_this.convertPropertyBinding(implicit, value_1, true));
-                        return __spread([indexLiteral_1], params_1);
+                        var params = [indexLiteral_1];
+                        if (mapBasedClassInput_1) {
+                            var mapBasedClassValue = mapBasedClassInput_1.value.visit(_this._valueConverter);
+                            params.push(_this.convertPropertyBinding(implicit, mapBasedClassValue, true));
+                        }
+                        else if (mapBasedStyleInput_1) {
+                            params.push(NULL_EXPR);
+                        }
+                        if (mapBasedStyleInput_1) {
+                            var mapBasedStyleValue = mapBasedStyleInput_1.value.visit(_this._valueConverter);
+                            params.push(_this.convertPropertyBinding(implicit, mapBasedStyleValue, true));
+                        }
+                        return params;
                     });
                 }
                 var lastInputCommand = null;
                 if (styleInputs.length) {
-                    var i = mapBasedStyleInput ? 1 : 0;
+                    var i = mapBasedStyleInput_1 ? 1 : 0;
                     var _loop_1 = function () {
                         var input = styleInputs[i];
                         var params = [];
@@ -17405,7 +17405,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     lastInputCommand = styleInputs[styleInputs.length - 1];
                 }
                 if (classInputs.length) {
-                    var i = mapBasedClassInput ? 1 : 0;
+                    var i = mapBasedClassInput_1 ? 1 : 0;
                     var _loop_2 = function () {
                         var input = classInputs[i];
                         var params = [];
@@ -17434,30 +17434,30 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             allOtherInputs.forEach(function (input) {
                 var instruction = mapBindingToInstruction(input.type);
                 if (input.type === 4 /* Animation */) {
-                    var value_2 = input.value.visit(_this._valueConverter);
+                    var value_1 = input.value.visit(_this._valueConverter);
                     // setAttribute without a value doesn't make any sense
-                    if (value_2.name || value_2.value) {
+                    if (value_1.name || value_1.value) {
                         var name_2 = prepareSyntheticAttributeName(input.name);
                         _this.updateInstruction(input.sourceSpan, Identifiers$1.elementAttribute, function () {
                             return [
-                                literal(elementIndex), literal(name_2), _this.convertPropertyBinding(implicit, value_2)
+                                literal(elementIndex), literal(name_2), _this.convertPropertyBinding(implicit, value_1)
                             ];
                         });
                     }
                 }
                 else if (instruction) {
-                    var params_2 = [];
+                    var params_1 = [];
                     var sanitizationRef = resolveSanitizationFn(input, input.securityContext);
                     if (sanitizationRef)
-                        params_2.push(sanitizationRef);
+                        params_1.push(sanitizationRef);
                     // TODO(chuckj): runtime: security context
-                    var value_3 = input.value.visit(_this._valueConverter);
-                    _this.allocateBindingSlots(value_3);
+                    var value_2 = input.value.visit(_this._valueConverter);
+                    _this.allocateBindingSlots(value_2);
                     _this.updateInstruction(input.sourceSpan, instruction, function () {
                         return __spread([
                             literal(elementIndex), literal(input.name),
-                            _this.convertPropertyBinding(implicit, value_3)
-                        ], params_2);
+                            _this.convertPropertyBinding(implicit, value_2)
+                        ], params_1);
                     });
                 }
                 else {
@@ -28814,16 +28814,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             getLNode(hostTNode, currentView[PARENT]) :
             null;
     }
-    /**
-     * Gets the parent LNode if it's not a view. If it's a view, it will instead return the view's
-     * parent container node.
-     */
-    function getParentOrContainerNode(tNode, currentView) {
-        var parentTNode = tNode.parent || currentView[HOST_NODE];
-        return parentTNode && parentTNode.type === 2 /* View */ ?
-            getContainerNode(parentTNode, currentView) :
-            getParentLNode(tNode, currentView);
-    }
     function getContainerNode(tNode, embeddedView) {
         if (tNode.index === -1) {
             // This is a dynamically created view inside a dynamic container.
@@ -29598,6 +29588,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return 0;
     }
 
+    var EMPTY_ARR = [];
+    var EMPTY_OBJ = {};
+    function createEmptyStylingContext(element, sanitizer, initialStylingValues) {
+        return [
+            element || null, null, sanitizer || null, initialStylingValues || [null], 0, 0, null, null
+        ];
+    }
+
     /**
      * @license
      * Copyright Google Inc. All Rights Reserved.
@@ -29616,9 +29614,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var context = templateStyleContext.slice();
         context[0 /* ElementPosition */] = lElement;
         return context;
-    }
-    function createEmptyStylingContext(element, sanitizer, initialStylingValues) {
-        return [element || null, null, sanitizer || null, initialStylingValues || [null], 0, 0, null];
     }
     /**
      * Creates a styling context template where styling information is stored.
@@ -29699,14 +29694,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var classNamesIndexStart = styleProps.length;
         var totalProps = styleProps.length + classNames.length;
         // *2 because we are filling for both single and multi style spaces
-        var maxLength = totalProps * 3 /* Size */ * 2 + 7 /* SingleStylesStartPosition */;
+        var maxLength = totalProps * 3 /* Size */ * 2 + 8 /* SingleStylesStartPosition */;
         // we need to fill the array from the start so that we can access
         // both the multi and the single array positions in the same loop block
-        for (var i = 7 /* SingleStylesStartPosition */; i < maxLength; i++) {
+        for (var i = 8 /* SingleStylesStartPosition */; i < maxLength; i++) {
             context.push(null);
         }
-        var singleStart = 7 /* SingleStylesStartPosition */;
-        var multiStart = totalProps * 3 /* Size */ + 7 /* SingleStylesStartPosition */;
+        var singleStart = 8 /* SingleStylesStartPosition */;
+        var multiStart = totalProps * 3 /* Size */ + 8 /* SingleStylesStartPosition */;
         // fill single and multi-level styles
         for (var i = 0; i < totalProps; i++) {
             var isClassBased_1 = i >= classNamesIndexStart;
@@ -29730,8 +29725,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         setContextDirty(context, initialStylingValues.length > 1);
         return context;
     }
-    var EMPTY_ARR = [];
-    var EMPTY_OBJ = {};
     /**
      * Sets and resolves all `multi` styling on an `StylingContext` so that they can be
      * applied to the element once `renderStyling` is called.
@@ -29746,29 +29739,32 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * @param styles The key/value map of CSS styles that will be used for the update.
      */
     function updateStylingMap(context, classes, styles) {
+        styles = styles || null;
+        // early exit (this is what's done to avoid using ctx.bind() to cache the value)
+        var ignoreAllClassUpdates = classes === context[6 /* PreviousMultiClassValue */];
+        var ignoreAllStyleUpdates = styles === context[7 /* PreviousMultiStyleValue */];
+        if (ignoreAllClassUpdates && ignoreAllStyleUpdates)
+            return;
         var classNames = EMPTY_ARR;
         var applyAllClasses = false;
-        var ignoreAllClassUpdates = false;
         // each time a string-based value pops up then it shouldn't require a deep
         // check of what's changed.
-        if (typeof classes == 'string') {
-            var cachedClassString = context[6 /* CachedCssClassString */];
-            if (cachedClassString && cachedClassString === classes) {
-                ignoreAllClassUpdates = true;
-            }
-            else {
-                context[6 /* CachedCssClassString */] = classes;
+        if (!ignoreAllClassUpdates) {
+            context[6 /* PreviousMultiClassValue */] = classes;
+            if (typeof classes == 'string') {
                 classNames = classes.split(/\s+/);
                 // this boolean is used to avoid having to create a key/value map of `true` values
                 // since a classname string implies that all those classes are added
                 applyAllClasses = true;
             }
-        }
-        else {
-            classNames = classes ? Object.keys(classes) : EMPTY_ARR;
-            context[6 /* CachedCssClassString */] = null;
+            else {
+                classNames = classes ? Object.keys(classes) : EMPTY_ARR;
+            }
         }
         classes = (classes || EMPTY_OBJ);
+        if (!ignoreAllStyleUpdates) {
+            context[7 /* PreviousMultiStyleValue */] = styles;
+        }
         var styleProps = styles ? Object.keys(styles) : EMPTY_ARR;
         styles = styles || EMPTY_OBJ;
         var classesStartIndex = styleProps.length;
@@ -29782,9 +29778,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         // are off-balance then they will be dealt in another loop after this one
         while (ctxIndex < context.length && propIndex < propLimit) {
             var isClassBased_2 = propIndex >= classesStartIndex;
+            var processValue = (!isClassBased_2 && !ignoreAllStyleUpdates) || (isClassBased_2 && !ignoreAllClassUpdates);
             // when there is a cache-hit for a string-based class then we should
             // avoid doing any work diffing any of the changes
-            if (!ignoreAllClassUpdates || !isClassBased_2) {
+            if (processValue) {
                 var adjustedPropIndex = isClassBased_2 ? propIndex - classesStartIndex : propIndex;
                 var newProp = isClassBased_2 ? classNames[adjustedPropIndex] : styleProps[adjustedPropIndex];
                 var newValue = isClassBased_2 ? (applyAllClasses ? true : classes[newProp]) : styles[newProp];
@@ -29797,7 +29794,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                         var initialValue = getInitialValue(context, flag);
                         // there is no point in setting this to dirty if the previously
                         // rendered value was being referenced by the initial style (or null)
-                        if (initialValue !== newValue) {
+                        if (hasValueChanged(flag, initialValue, newValue)) {
                             setDirty(context, ctxIndex, true);
                             dirty = true;
                         }
@@ -29810,10 +29807,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                         var valueToCompare = getValue(context, indexOfEntry);
                         var flagToCompare = getPointers(context, indexOfEntry);
                         swapMultiContextEntries(context, ctxIndex, indexOfEntry);
-                        if (valueToCompare !== newValue) {
+                        if (hasValueChanged(flagToCompare, valueToCompare, newValue)) {
                             var initialValue = getInitialValue(context, flagToCompare);
                             setValue(context, ctxIndex, newValue);
-                            if (initialValue !== newValue) {
+                            if (hasValueChanged(flagToCompare, initialValue, newValue)) {
                                 setDirty(context, ctxIndex, true);
                                 dirty = true;
                             }
@@ -29836,14 +29833,15 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         while (ctxIndex < context.length) {
             var flag = getPointers(context, ctxIndex);
             var isClassBased_3 = (flag & 2 /* Class */) === 2 /* Class */;
-            if (ignoreAllClassUpdates && isClassBased_3)
-                break;
-            var value = getValue(context, ctxIndex);
-            var doRemoveValue = valueExists(value, isClassBased_3);
-            if (doRemoveValue) {
-                setDirty(context, ctxIndex, true);
-                setValue(context, ctxIndex, null);
-                dirty = true;
+            var processValue = (!isClassBased_3 && !ignoreAllStyleUpdates) || (isClassBased_3 && !ignoreAllClassUpdates);
+            if (processValue) {
+                var value = getValue(context, ctxIndex);
+                var doRemoveValue = valueExists(value, isClassBased_3);
+                if (doRemoveValue) {
+                    setDirty(context, ctxIndex, true);
+                    setValue(context, ctxIndex, null);
+                    dirty = true;
+                }
             }
             ctxIndex += 3 /* Size */;
         }
@@ -29853,15 +29851,16 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var sanitizer = getStyleSanitizer(context);
         while (propIndex < propLimit) {
             var isClassBased_4 = propIndex >= classesStartIndex;
-            if (ignoreAllClassUpdates && isClassBased_4)
-                break;
-            var adjustedPropIndex = isClassBased_4 ? propIndex - classesStartIndex : propIndex;
-            var prop = isClassBased_4 ? classNames[adjustedPropIndex] : styleProps[adjustedPropIndex];
-            var value = isClassBased_4 ? (applyAllClasses ? true : classes[prop]) : styles[prop];
-            var flag = prepareInitialFlag(prop, isClassBased_4, sanitizer) | 1 /* Dirty */;
-            context.push(flag, prop, value);
+            var processValue = (!isClassBased_4 && !ignoreAllStyleUpdates) || (isClassBased_4 && !ignoreAllClassUpdates);
+            if (processValue) {
+                var adjustedPropIndex = isClassBased_4 ? propIndex - classesStartIndex : propIndex;
+                var prop = isClassBased_4 ? classNames[adjustedPropIndex] : styleProps[adjustedPropIndex];
+                var value = isClassBased_4 ? (applyAllClasses ? true : classes[prop]) : styles[prop];
+                var flag = prepareInitialFlag(prop, isClassBased_4, sanitizer) | 1 /* Dirty */;
+                context.push(flag, prop, value);
+                dirty = true;
+            }
             propIndex++;
-            dirty = true;
         }
         if (dirty) {
             setContextDirty(context, true);
@@ -29882,7 +29881,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * @param value The CSS style value that will be assigned
      */
     function updateStyleProp(context, index, value) {
-        var singleIndex = 7 /* SingleStylesStartPosition */ + index * 3 /* Size */;
+        var singleIndex = 8 /* SingleStylesStartPosition */ + index * 3 /* Size */;
         var currValue = getValue(context, singleIndex);
         var currFlag = getPointers(context, singleIndex);
         // didn't change ... nothing to make a note of
@@ -29892,7 +29891,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var indexForMulti = getMultiOrSingleIndex(currFlag);
             // if the value is the same in the multi-area then there's no point in re-assembling
             var valueForMulti = getValue(context, indexForMulti);
-            if (!valueForMulti || valueForMulti !== value) {
+            if (!valueForMulti || hasValueChanged(currFlag, valueForMulti, value)) {
                 var multiDirty = false;
                 var singleDirty = true;
                 var isClassBased_5 = (currFlag & 2 /* Class */) === 2 /* Class */;
@@ -29943,7 +29942,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var native = context[0 /* ElementPosition */].native;
             var multiStartIndex = getMultiStartIndex(context);
             var styleSanitizer = getStyleSanitizer(context);
-            for (var i = 7 /* SingleStylesStartPosition */; i < context.length; i += 3 /* Size */) {
+            for (var i = 8 /* SingleStylesStartPosition */; i < context.length; i += 3 /* Size */) {
                 // there is no point in rendering styles that have not changed on screen
                 if (isDirty(context, i)) {
                     var prop = getProp(context, i);
@@ -30040,7 +30039,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
     }
     function setDirty(context, index, isDirtyYes) {
-        var adjustedIndex = index >= 7 /* SingleStylesStartPosition */ ? (index + 0 /* FlagsOffset */) : index;
+        var adjustedIndex = index >= 8 /* SingleStylesStartPosition */ ? (index + 0 /* FlagsOffset */) : index;
         if (isDirtyYes) {
             context[adjustedIndex] |= 1 /* Dirty */;
         }
@@ -30049,15 +30048,15 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
     }
     function isDirty(context, index) {
-        var adjustedIndex = index >= 7 /* SingleStylesStartPosition */ ? (index + 0 /* FlagsOffset */) : index;
+        var adjustedIndex = index >= 8 /* SingleStylesStartPosition */ ? (index + 0 /* FlagsOffset */) : index;
         return (context[adjustedIndex] & 1 /* Dirty */) == 1 /* Dirty */;
     }
     function isClassBased(context, index) {
-        var adjustedIndex = index >= 7 /* SingleStylesStartPosition */ ? (index + 0 /* FlagsOffset */) : index;
+        var adjustedIndex = index >= 8 /* SingleStylesStartPosition */ ? (index + 0 /* FlagsOffset */) : index;
         return (context[adjustedIndex] & 2 /* Class */) == 2 /* Class */;
     }
     function isSanitizable(context, index) {
-        var adjustedIndex = index >= 7 /* SingleStylesStartPosition */ ? (index + 0 /* FlagsOffset */) : index;
+        var adjustedIndex = index >= 8 /* SingleStylesStartPosition */ ? (index + 0 /* FlagsOffset */) : index;
         return (context[adjustedIndex] & 4 /* Sanitize */) == 4 /* Sanitize */;
     }
     function pointers(configFlag, staticIndex, dynamicIndex) {
@@ -30073,7 +30072,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
     function getMultiOrSingleIndex(flag) {
         var index = (flag >> (14 /* BitCountSize */ + 3 /* BitCountSize */)) & 16383 /* BitMask */;
-        return index >= 7 /* SingleStylesStartPosition */ ? index : -1;
+        return index >= 8 /* SingleStylesStartPosition */ ? index : -1;
     }
     function getMultiStartIndex(context) {
         return getMultiOrSingleIndex(context[4 /* MasterFlagPosition */]);
@@ -30457,6 +30456,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Note: view hooks are triggered later when leaving the view.
      */
     function refreshDescendantViews() {
+        setHostBindings(tView.hostBindings);
         // This needs to be set before children are processed to support recursive components
         tView.firstTemplatePass = firstTemplatePass = false;
         if (!checkNoChangesMode) {
@@ -30468,7 +30468,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         if (!checkNoChangesMode) {
             executeHooks(directives, tView.contentHooks, tView.contentCheckHooks, creationMode);
         }
-        setHostBindings(tView.hostBindings);
         refreshChildComponents(tView.components);
     }
     /** Sets the host bindings for the current view. */
@@ -30479,6 +30478,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             for (var i = 0; i < bindings.length; i += 2) {
                 var dirIndex = bindings[i];
                 var def = defs[dirIndex];
+                if (firstTemplatePass) {
+                    for (var i_1 = 0; i_1 < def.hostVars; i_1++) {
+                        tView.blueprint.push(NO_CHANGE);
+                        viewData.push(NO_CHANGE);
+                    }
+                }
                 def.hostBindings(dirIndex, bindings[i + 1]);
                 bindingRootIndex = viewData[BINDING_INDEX] = bindingRootIndex + def.hostVars;
             }
@@ -30510,7 +30515,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
     function createLViewData(renderer, tView, context, flags, sanitizer) {
         var instance = tView.blueprint.slice();
-        instance[PARENT] = viewData;
+        instance[PARENT] = instance[DECLARATION_VIEW] = viewData;
         instance[FLAGS] = flags | 1 /* CreationMode */ | 8 /* Attached */ | 16 /* RunInit */;
         instance[CONTEXT] = context;
         instance[INJECTOR$1] = viewData ? viewData[INJECTOR$1] : null;
@@ -30523,13 +30528,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * with the same shape
      * (same properties assigned in the same order).
      */
-    function createLNodeObject(type, nodeInjector, native, state) {
-        return {
-            native: native,
-            nodeInjector: nodeInjector,
-            data: state,
-            dynamicLContainerNode: null
-        };
+    function createLNodeObject(type, native, state) {
+        return { native: native, data: state, dynamicLContainerNode: null };
     }
     function createNodeAtIndex(index, type, native, name, attrs, state) {
         var parent = isParent ? previousOrParentTNode : previousOrParentTNode && previousOrParentTNode.parent;
@@ -30538,7 +30538,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var parentInSameView = parent && viewData && parent !== viewData[HOST_NODE];
         var tParent = parentInSameView ? parent : null;
         var isState = state != null;
-        var node = createLNodeObject(type, null, native, isState ? state : null);
+        var node = createLNodeObject(type, native, isState ? state : null);
         var tNode;
         if (index === -1 || type === 2 /* View */) {
             // View nodes are not stored in data because they can be added / removed at runtime (which
@@ -30573,13 +30573,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     previousOrParentTNode.child = tNode;
                 }
             }
-        }
-        // TODO: temporary, remove this when removing nodeInjector (bringing in fns to hello world)
-        if (index !== -1 && !(viewData[FLAGS] & 64 /* IsRoot */)) {
-            var parentLNode = type === 2 /* View */ ?
-                getContainerNode(tNode, state) :
-                getParentOrContainerNode(tNode, viewData);
-            parentLNode && (node.nodeInjector = parentLNode.nodeInjector);
         }
         // View nodes and host elements need to set their host node (components do not save host TNodes)
         if ((type & 2 /* ViewOrElement */) === 2 /* ViewOrElement */ && isState) {
@@ -30625,7 +30618,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * either through ViewContainerRef.createEmbeddedView() or TemplateRef.createEmbeddedView().
      * Such lViewNode will then be renderer with renderEmbeddedTemplate() (see below).
      */
-    function createEmbeddedViewAndNode(tView, context, declarationView, renderer, queries) {
+    function createEmbeddedViewAndNode(tView, context, declarationView, renderer, queries, injectorIndex) {
         var _isParent = isParent;
         var _previousOrParentTNode = previousOrParentTNode;
         isParent = true;
@@ -30636,6 +30629,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             lView[QUERIES] = queries.createView();
         }
         createNodeAtIndex(-1, 2 /* View */, null, null, null, lView);
+        if (tView.firstTemplatePass) {
+            tView.node.injectorIndex = injectorIndex;
+        }
         isParent = _isParent;
         previousOrParentTNode = _previousOrParentTNode;
         return lView;
@@ -30948,10 +30944,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         // instructions that expect element indices that are NOT adjusted (e.g. elementProperty).
         ngDevMode &&
             assertEqual(firstTemplatePass, true, 'Should only be called in first template pass.');
-        for (var i = 0; i < hostVars; i++) {
-            tView.blueprint.push(NO_CHANGE);
-            viewData.push(NO_CHANGE);
-        }
         (tView.hostBindings || (tView.hostBindings = [])).push(dirIndex, previousOrParentTNode.index - HEADER_OFFSET);
     }
     /**
@@ -31402,6 +31394,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return {
             type: type,
             index: adjustedIndex,
+            injectorIndex: parent ? parent.injectorIndex : -1,
             flags: 0,
             tagName: tagName,
             attrs: attrs,
@@ -33053,25 +33046,28 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
     function getOrCreateNodeInjector() {
         ngDevMode && assertPreviousIsParent();
-        return getOrCreateNodeInjectorForNode(getPreviousOrParentNode(), getPreviousOrParentTNode(), _getViewData());
+        return getOrCreateNodeInjectorForNode(getPreviousOrParentTNode(), _getViewData());
     }
     /**
      * Creates (or gets an existing) injector for a given element or container.
      *
-     * @param node for which an injector should be retrieved / created.
      * @param tNode for which an injector should be retrieved / created.
      * @param hostView View where the node is stored
      * @returns Node injector
      */
-    function getOrCreateNodeInjectorForNode(node, tNode, hostView) {
-        // TODO: remove LNode arg when nodeInjector refactor is done
-        var nodeInjector = node.nodeInjector;
-        var parentLNode = getParentOrContainerNode(tNode, hostView);
-        var parentInjector = parentLNode && parentLNode.nodeInjector;
-        if (nodeInjector != parentInjector) {
-            return nodeInjector;
+    function getOrCreateNodeInjectorForNode(tNode, hostView) {
+        var injector = getInjector$1(tNode, hostView);
+        if (injector)
+            return injector;
+        var tView = hostView[TVIEW];
+        if (tView.firstTemplatePass) {
+            // TODO(kara): Store node injector with host bindings for that node (see VIEW_DATA.md)
+            tNode.injectorIndex = hostView.length;
+            tView.blueprint.push(null);
+            tView.hostBindingStartIndex++;
         }
-        return node.nodeInjector = {
+        var parentInjector = getParentInjector(tNode, hostView);
+        return hostView[tNode.injectorIndex] = {
             parent: parentInjector,
             tNode: tNode,
             view: hostView,
@@ -33092,6 +33088,31 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             cbf6: parentInjector == null ? 0 : parentInjector.cbf6 | parentInjector.bf6,
             cbf7: parentInjector == null ? 0 : parentInjector.cbf7 | parentInjector.bf7,
         };
+    }
+    function getInjector$1(tNode, view) {
+        // If the injector index is the same as its parent's injector index, then the index has been
+        // copied down from the parent node. No injector has been created yet on this node.
+        if (tNode.injectorIndex === -1 ||
+            tNode.parent && tNode.parent.injectorIndex === tNode.injectorIndex) {
+            return null;
+        }
+        else {
+            return view[tNode.injectorIndex];
+        }
+    }
+    function getParentInjector(tNode, view) {
+        if (tNode.parent && tNode.parent.injectorIndex !== -1) {
+            return view[tNode.parent.injectorIndex];
+        }
+        // For most cases, the parent injector index can be found on the host node (e.g. for component
+        // or container), so this loop will be skipped, but we must keep the loop here to support
+        // the rarer case of deeply nested <ng-template> tags.
+        var hostTNode = view[HOST_NODE];
+        while (hostTNode && hostTNode.injectorIndex === -1) {
+            view = view[DECLARATION_VIEW];
+            hostTNode = view[HOST_NODE];
+        }
+        return hostTNode ? view[DECLARATION_VIEW][hostTNode.injectorIndex] : null;
     }
     /**
      * Makes a directive public to the DI system by adding it to an injector's bloom filter.
@@ -33812,17 +33833,18 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             // TODO: Fix class name, should be TemplateRef, but there appears to be a rollup bug
             R3TemplateRef = /** @class */ (function (_super) {
                 __extends(TemplateRef_, _super);
-                function TemplateRef_(_declarationParentView, elementRef, _tView, _renderer, _queries) {
+                function TemplateRef_(_declarationParentView, elementRef, _tView, _renderer, _queries, _injectorIndex) {
                     var _this = _super.call(this) || this;
                     _this._declarationParentView = _declarationParentView;
                     _this.elementRef = elementRef;
                     _this._tView = _tView;
                     _this._renderer = _renderer;
                     _this._queries = _queries;
+                    _this._injectorIndex = _injectorIndex;
                     return _this;
                 }
                 TemplateRef_.prototype.createEmbeddedView = function (context, container$$1, tContainerNode, hostView, index) {
-                    var lView = createEmbeddedViewAndNode(this._tView, context, this._declarationParentView, this._renderer, this._queries);
+                    var lView = createEmbeddedViewAndNode(this._tView, context, this._declarationParentView, this._renderer, this._queries, this._injectorIndex);
                     if (container$$1) {
                         insertView(lView, container$$1, hostView, index, tContainerNode.parent.index);
                     }
@@ -33837,7 +33859,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var hostNode = getLNode(hostTNode, hostView);
         ngDevMode && assertNodeType(hostTNode, 0 /* Container */);
         ngDevMode && assertDefined(hostTNode.tViews, 'TView must be allocated');
-        return new R3TemplateRef(hostView, createElementRef(ElementRefToken, hostTNode, hostView), hostTNode.tViews, getRenderer(), hostNode.data[QUERIES]);
+        return new R3TemplateRef(hostView, createElementRef(ElementRefToken, hostTNode, hostView), hostTNode.tViews, getRenderer(), hostNode.data[QUERIES], hostTNode.injectorIndex);
     }
     var R3ViewContainerRef;
     /**
@@ -33882,9 +33904,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 });
                 Object.defineProperty(ViewContainerRef_.prototype, "injector", {
                     get: function () {
-                        // TODO: Remove LNode lookup when removing LNode.nodeInjector
-                        var injector = getOrCreateNodeInjectorForNode(this._getHostNode(), this._hostTNode, this._hostView);
-                        return new NodeInjector(injector);
+                        var nodeInjector = getOrCreateNodeInjectorForNode(this._hostTNode, this._hostView);
+                        return new NodeInjector(nodeInjector);
                     },
                     enumerable: true,
                     configurable: true
@@ -33892,7 +33913,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 Object.defineProperty(ViewContainerRef_.prototype, "parentInjector", {
                     /** @deprecated No replacement */
                     get: function () {
-                        var parentLInjector = getParentLNode(this._hostTNode, this._hostView).nodeInjector;
+                        var parentLInjector = getParentInjector(this._hostTNode, this._hostView);
                         return parentLInjector ? new NodeInjector(parentLInjector) : new NullInjector();
                     },
                     enumerable: true,
@@ -33977,7 +33998,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         ngDevMode && assertNodeOfPossibleTypes(hostTNode, 0 /* Container */, 3 /* Element */, 4 /* ElementContainer */);
         var lContainer = createLContainer(hostView, true);
         var comment = hostView[RENDERER].createComment(ngDevMode ? 'container' : '');
-        var lContainerNode = createLNodeObject(0 /* Container */, hostLNode.nodeInjector, comment, lContainer);
+        var lContainerNode = createLNodeObject(0 /* Container */, comment, lContainer);
         lContainer[RENDER_PARENT] = getRenderParent(hostTNode, hostView);
         appendChild(comment, hostTNode, hostView);
         if (!hostTNode.dynamicContainerNode) {
@@ -39644,7 +39665,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         'ɵreference': reference,
         'ɵelementStyling': elementStyling,
         'ɵelementStylingMap': elementStylingMap,
-        'ɵelementStylingProp': elementStyleProp,
+        'ɵelementStyleProp': elementStyleProp,
         'ɵelementStylingApply': elementStylingApply,
         'ɵtemplate': template,
         'ɵtext': text,
@@ -40775,7 +40796,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('7.0.0-beta.7+46.sha-9523991');
+    var VERSION$2 = new Version$1('7.0.0-rc.0+5.sha-ab379ab');
 
     /**
      * @license
@@ -52005,8 +52026,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         Object.defineProperty(Render3DebugContext.prototype, "injector", {
             get: function () {
                 if (this.nodeIndex !== null) {
-                    var lElementNode = this.view[this.nodeIndex];
-                    var nodeInjector = lElementNode.nodeInjector;
+                    var tNode = this.view[TVIEW].data[this.nodeIndex];
+                    var nodeInjector = getInjector$1(tNode, this.view);
                     if (nodeInjector) {
                         return new NodeInjector(nodeInjector);
                     }
@@ -53140,7 +53161,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.0-beta.7+46.sha-9523991');
+    var VERSION$3 = new Version$1('7.0.0-rc.0+5.sha-ab379ab');
 
     /**
      * @license
