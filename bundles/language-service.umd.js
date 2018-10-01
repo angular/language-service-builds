@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.0-beta.7+46.sha-9523991
+ * @license Angular v7.0.0-rc.0+5.sha-ab379ab
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1164,7 +1164,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.0-beta.7+46.sha-9523991');
+    var VERSION = new Version('7.0.0-rc.0+5.sha-ab379ab');
 
     /**
      * @license
@@ -14403,7 +14403,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         Identifiers.elementContainerEnd = { name: 'ɵeC', moduleName: CORE$1 };
         Identifiers.elementStyling = { name: 'ɵelementStyling', moduleName: CORE$1 };
         Identifiers.elementStylingMap = { name: 'ɵelementStylingMap', moduleName: CORE$1 };
-        Identifiers.elementStyleProp = { name: 'ɵelementStylingProp', moduleName: CORE$1 };
+        Identifiers.elementStyleProp = { name: 'ɵelementStyleProp', moduleName: CORE$1 };
         Identifiers.elementStylingApply = { name: 'ɵelementStylingApply', moduleName: CORE$1 };
         Identifiers.containerCreate = { name: 'ɵcontainer', moduleName: CORE$1 };
         Identifiers.nextContext = { name: 'ɵnextContext', moduleName: CORE$1 };
@@ -24346,6 +24346,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     var RENDERER = 11;
     var SANITIZER = 12;
     var CONTAINER_INDEX = 14;
+    var DECLARATION_VIEW = 16;
 
     /**
      * @license
@@ -25076,16 +25077,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             getLNode(hostTNode, currentView[PARENT]) :
             null;
     }
-    /**
-     * Gets the parent LNode if it's not a view. If it's a view, it will instead return the view's
-     * parent container node.
-     */
-    function getParentOrContainerNode(tNode, currentView) {
-        var parentTNode = tNode.parent || currentView[HOST_NODE];
-        return parentTNode && parentTNode.type === 2 /* View */ ?
-            getContainerNode(parentTNode, currentView) :
-            getParentLNode(tNode, currentView);
-    }
     function getContainerNode(tNode, embeddedView) {
         if (tNode.index === -1) {
             // This is a dynamically created view inside a dynamic container.
@@ -25584,6 +25575,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Note: view hooks are triggered later when leaving the view.
      */
     function refreshDescendantViews() {
+        setHostBindings(tView.hostBindings);
         // This needs to be set before children are processed to support recursive components
         tView.firstTemplatePass = firstTemplatePass = false;
         if (!checkNoChangesMode) {
@@ -25595,7 +25587,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         if (!checkNoChangesMode) {
             executeHooks(directives, tView.contentHooks, tView.contentCheckHooks, creationMode);
         }
-        setHostBindings(tView.hostBindings);
         refreshChildComponents(tView.components);
     }
     /** Sets the host bindings for the current view. */
@@ -25606,6 +25597,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             for (var i = 0; i < bindings.length; i += 2) {
                 var dirIndex = bindings[i];
                 var def = defs[dirIndex];
+                if (firstTemplatePass) {
+                    for (var i_1 = 0; i_1 < def.hostVars; i_1++) {
+                        tView.blueprint.push(NO_CHANGE);
+                        viewData.push(NO_CHANGE);
+                    }
+                }
                 def.hostBindings(dirIndex, bindings[i + 1]);
                 bindingRootIndex = viewData[BINDING_INDEX] = bindingRootIndex + def.hostVars;
             }
@@ -25637,7 +25634,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
     function createLViewData(renderer, tView, context, flags, sanitizer) {
         var instance = tView.blueprint.slice();
-        instance[PARENT] = viewData;
+        instance[PARENT] = instance[DECLARATION_VIEW] = viewData;
         instance[FLAGS] = flags | 1 /* CreationMode */ | 8 /* Attached */ | 16 /* RunInit */;
         instance[CONTEXT] = context;
         instance[INJECTOR$1] = viewData ? viewData[INJECTOR$1] : null;
@@ -25650,13 +25647,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * with the same shape
      * (same properties assigned in the same order).
      */
-    function createLNodeObject(type, nodeInjector, native, state) {
-        return {
-            native: native,
-            nodeInjector: nodeInjector,
-            data: state,
-            dynamicLContainerNode: null
-        };
+    function createLNodeObject(type, native, state) {
+        return { native: native, data: state, dynamicLContainerNode: null };
     }
     function createNodeAtIndex(index, type, native, name, attrs, state) {
         var parent = isParent ? previousOrParentTNode : previousOrParentTNode && previousOrParentTNode.parent;
@@ -25665,7 +25657,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var parentInSameView = parent && viewData && parent !== viewData[HOST_NODE];
         var tParent = parentInSameView ? parent : null;
         var isState = state != null;
-        var node = createLNodeObject(type, null, native, isState ? state : null);
+        var node = createLNodeObject(type, native, isState ? state : null);
         var tNode;
         if (index === -1 || type === 2 /* View */) {
             // View nodes are not stored in data because they can be added / removed at runtime (which
@@ -25700,13 +25692,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     previousOrParentTNode.child = tNode;
                 }
             }
-        }
-        // TODO: temporary, remove this when removing nodeInjector (bringing in fns to hello world)
-        if (index !== -1 && !(viewData[FLAGS] & 64 /* IsRoot */)) {
-            var parentLNode = type === 2 /* View */ ?
-                getContainerNode(tNode, state) :
-                getParentOrContainerNode(tNode, viewData);
-            parentLNode && (node.nodeInjector = parentLNode.nodeInjector);
         }
         // View nodes and host elements need to set their host node (components do not save host TNodes)
         if ((type & 2 /* ViewOrElement */) === 2 /* ViewOrElement */ && isState) {
@@ -25875,10 +25860,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         // instructions that expect element indices that are NOT adjusted (e.g. elementProperty).
         ngDevMode &&
             assertEqual(firstTemplatePass, true, 'Should only be called in first template pass.');
-        for (var i = 0; i < hostVars; i++) {
-            tView.blueprint.push(NO_CHANGE);
-            viewData.push(NO_CHANGE);
-        }
         (tView.hostBindings || (tView.hostBindings = [])).push(dirIndex, previousOrParentTNode.index - HEADER_OFFSET);
     }
     /**
@@ -26069,6 +26050,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return {
             type: type,
             index: adjustedIndex,
+            injectorIndex: parent ? parent.injectorIndex : -1,
             flags: 0,
             tagName: tagName,
             attrs: attrs,
@@ -26576,6 +26558,17 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     var BLOOM_SIZE = 256;
     var BLOOM_MASK = BLOOM_SIZE - 1;
+    function getInjector$1(tNode, view) {
+        // If the injector index is the same as its parent's injector index, then the index has been
+        // copied down from the parent node. No injector has been created yet on this node.
+        if (tNode.injectorIndex === -1 ||
+            tNode.parent && tNode.parent.injectorIndex === tNode.injectorIndex) {
+            return null;
+        }
+        else {
+            return view[tNode.injectorIndex];
+        }
+    }
     function getOrCreateRenderer2(di) {
         var renderer = di.view[RENDERER];
         if (isProceduralRenderer(renderer)) {
@@ -32156,7 +32149,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('7.0.0-beta.7+46.sha-9523991');
+    var VERSION$2 = new Version$1('7.0.0-rc.0+5.sha-ab379ab');
 
     /**
      * @license
@@ -43386,8 +43379,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         Object.defineProperty(Render3DebugContext.prototype, "injector", {
             get: function () {
                 if (this.nodeIndex !== null) {
-                    var lElementNode = this.view[this.nodeIndex];
-                    var nodeInjector = lElementNode.nodeInjector;
+                    var tNode = this.view[TVIEW].data[this.nodeIndex];
+                    var nodeInjector = getInjector$1(tNode, this.view);
                     if (nodeInjector) {
                         return new NodeInjector(nodeInjector);
                     }
@@ -44504,7 +44497,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.0-beta.7+46.sha-9523991');
+    var VERSION$3 = new Version$1('7.0.0-rc.0+5.sha-ab379ab');
 
     /**
      * @license
