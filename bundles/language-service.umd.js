@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.0-rc.0+31.sha-532e536
+ * @license Angular v7.0.0-rc.0+45.sha-35bf952
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1197,7 +1197,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.0-rc.0+31.sha-532e536');
+    var VERSION = new Version('7.0.0-rc.0+45.sha-35bf952');
 
     /**
      * @license
@@ -15937,16 +15937,16 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             moduleName: CORE$1,
         };
         Identifiers.defineComponent = { name: 'ɵdefineComponent', moduleName: CORE$1 };
-        Identifiers.ComponentDef = {
-            name: 'ɵComponentDef',
+        Identifiers.ComponentDefWithMeta = {
+            name: 'ɵComponentDefWithMeta',
             moduleName: CORE$1,
         };
         Identifiers.defineDirective = {
             name: 'ɵdefineDirective',
             moduleName: CORE$1,
         };
-        Identifiers.DirectiveDef = {
-            name: 'ɵDirectiveDef',
+        Identifiers.DirectiveDefWithMeta = {
+            name: 'ɵDirectiveDefWithMeta',
             moduleName: CORE$1,
         };
         Identifiers.InjectorDef = {
@@ -15957,12 +15957,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             name: 'defineInjector',
             moduleName: CORE$1,
         };
-        Identifiers.NgModuleDef = {
-            name: 'ɵNgModuleDef',
+        Identifiers.NgModuleDefWithMeta = {
+            name: 'ɵNgModuleDefWithMeta',
             moduleName: CORE$1,
         };
         Identifiers.defineNgModule = { name: 'ɵdefineNgModule', moduleName: CORE$1 };
-        Identifiers.PipeDef = { name: 'ɵPipeDef', moduleName: CORE$1 };
+        Identifiers.PipeDefWithMeta = { name: 'ɵPipeDefWithMeta', moduleName: CORE$1 };
         Identifiers.definePipe = { name: 'ɵdefinePipe', moduleName: CORE$1 };
         Identifiers.query = { name: 'ɵquery', moduleName: CORE$1 };
         Identifiers.queryRefresh = { name: 'ɵqueryRefresh', moduleName: CORE$1 };
@@ -16094,6 +16094,26 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         DefinitionMap.prototype.toLiteralMap = function () { return literalMap(this.values); };
         return DefinitionMap;
     }());
+    /**
+     * Extract a map of properties to values for a given element or template node, which can be used
+     * by the directive matching machinery.
+     *
+     * @param elOrTpl the element or template in question
+     * @return an object set up for directive matching. For attributes on the element/template, this
+     * object maps a property name to its (static) value. For any bindings, this map simply maps the
+     * property name to an empty string.
+     */
+    function getAttrsForDirectiveMatching(elOrTpl) {
+        var attributesMap = {};
+        elOrTpl.attributes.forEach(function (a) {
+            if (!isI18NAttribute(a.name)) {
+                attributesMap[a.name] = a.value;
+            }
+        });
+        elOrTpl.inputs.forEach(function (i) { attributesMap[i.name] = ''; });
+        elOrTpl.outputs.forEach(function (o) { attributesMap[o.name] = ''; });
+        return attributesMap;
+    }
 
     /**
      * @license
@@ -16297,7 +16317,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 imports: literalArr(imports.map(function (ref) { return ref.value; })),
                 exports: literalArr(exports.map(function (ref) { return ref.value; })),
             })]);
-        var type = new ExpressionType(importExpr(Identifiers$1.NgModuleDef, [
+        var type = new ExpressionType(importExpr(Identifiers$1.NgModuleDefWithMeta, [
             new ExpressionType(moduleType), tupleTypeOf(declarations), tupleTypeOf(imports),
             tupleTypeOf(exports)
         ]));
@@ -16347,7 +16367,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         // e.g. `pure: true`
         definitionMapValues.push({ key: 'pure', value: literal(metadata.pure), quoted: false });
         var expression = importExpr(Identifiers$1.definePipe).callFn([literalMap(definitionMapValues)]);
-        var type = new ExpressionType(importExpr(Identifiers$1.PipeDef, [
+        var type = new ExpressionType(importExpr(Identifiers$1.PipeDefWithMeta, [
             new ExpressionType(metadata.type),
             new ExpressionType(new LiteralExpr(metadata.pipeName)),
         ]));
@@ -17618,20 +17638,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         TemplateDefinitionBuilder.prototype.matchDirectives = function (tagName, elOrTpl) {
             var _this = this;
             if (this.directiveMatcher) {
-                var selector = createCssSelector(tagName, this.getAttrsForDirectiveMatching(elOrTpl));
+                var selector = createCssSelector(tagName, getAttrsForDirectiveMatching(elOrTpl));
                 this.directiveMatcher.match(selector, function (cssSelector, staticType) { _this.directives.add(staticType); });
             }
-        };
-        TemplateDefinitionBuilder.prototype.getAttrsForDirectiveMatching = function (elOrTpl) {
-            var attributesMap = {};
-            elOrTpl.attributes.forEach(function (a) {
-                if (!isI18NAttribute(a.name)) {
-                    attributesMap[a.name] = a.value;
-                }
-            });
-            elOrTpl.inputs.forEach(function (i) { attributesMap[i.name] = ''; });
-            elOrTpl.outputs.forEach(function (o) { attributesMap[o.name] = ''; });
-            return attributesMap;
         };
         TemplateDefinitionBuilder.prototype.prepareSyntheticAndSelectOnlyAttrs = function (inputs, outputs) {
             var attrExprs = [];
@@ -18183,10 +18192,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         // On the type side, remove newlines from the selector as it will need to fit into a TypeScript
         // string literal, which must be on one line.
         var selectorForType = (meta.selector || '').replace(/\n/g, '');
-        var type = new ExpressionType(importExpr(Identifiers$1.DirectiveDef, [
-            typeWithParameters(meta.type, meta.typeArgumentCount),
-            new ExpressionType(literal(selectorForType))
-        ]));
+        var type = createTypeForDef(meta, Identifiers$1.DirectiveDefWithMeta);
         return { expression: expression, type: type, statements: statements };
     }
     /**
@@ -18259,10 +18265,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         // string literal, which must be on one line.
         var selectorForType = (meta.selector || '').replace(/\n/g, '');
         var expression = importExpr(Identifiers$1.defineComponent).callFn([definitionMap.toLiteralMap()]);
-        var type = new ExpressionType(importExpr(Identifiers$1.ComponentDef, [
-            typeWithParameters(meta.type, meta.typeArgumentCount),
-            new ExpressionType(literal(selectorForType))
-        ]));
+        var type = createTypeForDef(meta, Identifiers$1.ComponentDefWithMeta);
         return { expression: expression, type: type, statements: statements };
     }
     function createQueryDefinition(query, constantPool, idx) {
@@ -18347,6 +18350,34 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             return fn(parameters, statements_1, INFERRED_TYPE, null, typeName ? typeName + "_ContentQueriesRefresh" : null);
         }
         return null;
+    }
+    function stringAsType(str) {
+        return expressionType(literal(str));
+    }
+    function stringMapAsType(map) {
+        var mapValues = Object.keys(map).map(function (key) { return ({
+            key: key,
+            value: literal(map[key]),
+            quoted: true,
+        }); });
+        return expressionType(literalMap(mapValues));
+    }
+    function stringArrayAsType(arr) {
+        return arr.length > 0 ? expressionType(literalArr(arr.map(function (value) { return literal(value); }))) :
+            NONE_TYPE;
+    }
+    function createTypeForDef(meta, typeBase) {
+        // On the type side, remove newlines from the selector as it will need to fit into a TypeScript
+        // string literal, which must be on one line.
+        var selectorForType = (meta.selector || '').replace(/\n/g, '');
+        return expressionType(importExpr(typeBase, [
+            typeWithParameters(meta.type, meta.typeArgumentCount),
+            stringAsType(selectorForType),
+            meta.exportAs !== null ? stringAsType(meta.exportAs) : NONE_TYPE,
+            stringMapAsType(meta.inputs),
+            stringMapAsType(meta.outputs),
+            stringArrayAsType(meta.queries.map(function (q) { return q.propertyName; })),
+        ]));
     }
     // Define and update any view queries
     function createViewQueriesFunction(meta, constantPool) {
@@ -21177,6 +21208,148 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             statements: result.statements,
         };
     }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * Processes a template and extract metadata about expressions and symbols within.
+     *
+     * This is a companion to the `DirectiveBinder` that doesn't require knowledge of directives matched
+     * within the template in order to operate.
+     *
+     * Expressions are visited by the superclass `RecursiveAstVisitor`, with custom logic provided
+     * by overridden methods from that visitor.
+     */
+    var TemplateBinder = /** @class */ (function (_super) {
+        __extends(TemplateBinder, _super);
+        function TemplateBinder(bindings, symbols, nestingLevel, scope, template, level) {
+            var _this = _super.call(this) || this;
+            _this.bindings = bindings;
+            _this.symbols = symbols;
+            _this.nestingLevel = nestingLevel;
+            _this.scope = scope;
+            _this.template = template;
+            _this.level = level;
+            // Save a bit of processing time by constructing this closure in advance.
+            _this.visitNode = function (node) { return node.visit(_this); };
+            return _this;
+        }
+        /**
+         * Process a template and extract metadata about expressions and symbols within.
+         *
+         * @param template the nodes of the template to process
+         * @param scope the `Scope` of the template being processed.
+         * @returns three maps which contain metadata about the template: `expressions` which interprets
+         * special `AST` nodes in expressions as pointing to references or variables declared within the
+         * template, `symbols` which maps those variables and references to the nested `Template` which
+         * declares them, if any, and `nestingLevel` which associates each `Template` with a integer
+         * nesting level (how many levels deep within the template structure the `Template` is), starting
+         * at 1.
+         */
+        TemplateBinder.apply = function (template, scope) {
+            var expressions = new Map();
+            var symbols = new Map();
+            var nestingLevel = new Map();
+            // The top-level template has nesting level 0.
+            var binder = new TemplateBinder(expressions, symbols, nestingLevel, scope, template instanceof Template ? template : null, 0);
+            binder.ingest(template);
+            return { expressions: expressions, symbols: symbols, nestingLevel: nestingLevel };
+        };
+        TemplateBinder.prototype.ingest = function (template) {
+            if (template instanceof Template) {
+                // For <ng-template>s, process inputs, outputs, variables, and child nodes. References were
+                // processed in the scope of the containing template.
+                template.inputs.forEach(this.visitNode);
+                template.outputs.forEach(this.visitNode);
+                template.variables.forEach(this.visitNode);
+                template.children.forEach(this.visitNode);
+                // Set the nesting level.
+                this.nestingLevel.set(template, this.level);
+            }
+            else {
+                // Visit each node from the top-level template.
+                template.forEach(this.visitNode);
+            }
+        };
+        TemplateBinder.prototype.visitElement = function (element) {
+            // Vist the inputs, outputs, and children of the element.
+            element.inputs.forEach(this.visitNode);
+            element.outputs.forEach(this.visitNode);
+            element.children.forEach(this.visitNode);
+        };
+        TemplateBinder.prototype.visitTemplate = function (template) {
+            // First, visit the inputs, outputs of the template node.
+            template.inputs.forEach(this.visitNode);
+            template.outputs.forEach(this.visitNode);
+            // References are also evaluated in the outer context.
+            template.references.forEach(this.visitNode);
+            // Next, recurse into the template using its scope, and bumping the nesting level up by one.
+            var childScope = this.scope.getChildScope(template);
+            var binder = new TemplateBinder(this.bindings, this.symbols, this.nestingLevel, childScope, template, this.level + 1);
+            binder.ingest(template);
+        };
+        TemplateBinder.prototype.visitVariable = function (variable) {
+            // Register the `Variable` as a symbol in the current `Template`.
+            if (this.template !== null) {
+                this.symbols.set(variable, this.template);
+            }
+        };
+        TemplateBinder.prototype.visitReference = function (reference) {
+            // Register the `Reference` as a symbol in the current `Template`.
+            if (this.template !== null) {
+                this.symbols.set(reference, this.template);
+            }
+        };
+        // Unused template visitors
+        TemplateBinder.prototype.visitText = function (text) { };
+        TemplateBinder.prototype.visitContent = function (content) { };
+        TemplateBinder.prototype.visitTextAttribute = function (attribute) { };
+        // The remaining visitors are concerned with processing AST expressions within template bindings
+        TemplateBinder.prototype.visitBoundAttribute = function (attribute) { attribute.value.visit(this); };
+        TemplateBinder.prototype.visitBoundEvent = function (event) { event.handler.visit(this); };
+        TemplateBinder.prototype.visitBoundText = function (text) { text.value.visit(this); };
+        // These five types of AST expressions can refer to expression roots, which could be variables
+        // or references in the current scope.
+        TemplateBinder.prototype.visitPropertyRead = function (ast, context) {
+            this.maybeMap(context, ast, ast.name);
+            return _super.prototype.visitPropertyRead.call(this, ast, context);
+        };
+        TemplateBinder.prototype.visitSafePropertyRead = function (ast, context) {
+            this.maybeMap(context, ast, ast.name);
+            return _super.prototype.visitSafePropertyRead.call(this, ast, context);
+        };
+        TemplateBinder.prototype.visitPropertyWrite = function (ast, context) {
+            this.maybeMap(context, ast, ast.name);
+            return _super.prototype.visitPropertyWrite.call(this, ast, context);
+        };
+        TemplateBinder.prototype.visitMethodCall = function (ast, context) {
+            this.maybeMap(context, ast, ast.name);
+            return _super.prototype.visitMethodCall.call(this, ast, context);
+        };
+        TemplateBinder.prototype.visitSafeMethodCall = function (ast, context) {
+            this.maybeMap(context, ast, ast.name);
+            return _super.prototype.visitSafeMethodCall.call(this, ast, context);
+        };
+        TemplateBinder.prototype.maybeMap = function (scope, ast, name) {
+            // If the receiver of the expression isn't the `ImplicitReceiver`, this isn't the root of an
+            // `AST` expression that maps to a `Variable` or `Reference`.
+            if (!(ast.receiver instanceof ImplicitReceiver)) {
+                return;
+            }
+            // Check whether the name exists in the current scope. If so, map it. Otherwise, the name is
+            // probably a property on the top-level component context.
+            var target = this.scope.lookup(name);
+            if (target !== null) {
+                this.bindings.set(ast, target);
+            }
+        };
+        return TemplateBinder;
+    }(RecursiveAstVisitor));
 
     /**
      * @license
@@ -32653,7 +32826,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * found in the LICENSE file at https://angular.io/license
      */
     /**
-     * Determines if a definition is a {@link ComponentDefInternal} or a {@link DirectiveDefInternal}
+     * Determines if a definition is a {@link ComponentDef} or a {@link DirectiveDef}
      * @param definition The definition to examine
      */
     function isComponentDef(definition) {
@@ -40810,7 +40983,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('7.0.0-rc.0+31.sha-532e536');
+    var VERSION$2 = new Version$1('7.0.0-rc.0+45.sha-35bf952');
 
     /**
      * @license
@@ -53201,7 +53374,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.0-rc.0+31.sha-532e536');
+    var VERSION$3 = new Version$1('7.0.0-rc.0+45.sha-35bf952');
 
     /**
      * @license
