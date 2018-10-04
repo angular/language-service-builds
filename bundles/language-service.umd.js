@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.0-rc.0+27.sha-aaaa340
+ * @license Angular v7.0.0-rc.0+46.sha-fdaf573
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1164,7 +1164,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.0-rc.0+27.sha-aaaa340');
+    var VERSION = new Version('7.0.0-rc.0+46.sha-fdaf573');
 
     /**
      * @license
@@ -14457,16 +14457,16 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             moduleName: CORE$1,
         };
         Identifiers.defineComponent = { name: 'ɵdefineComponent', moduleName: CORE$1 };
-        Identifiers.ComponentDef = {
-            name: 'ɵComponentDef',
+        Identifiers.ComponentDefWithMeta = {
+            name: 'ɵComponentDefWithMeta',
             moduleName: CORE$1,
         };
         Identifiers.defineDirective = {
             name: 'ɵdefineDirective',
             moduleName: CORE$1,
         };
-        Identifiers.DirectiveDef = {
-            name: 'ɵDirectiveDef',
+        Identifiers.DirectiveDefWithMeta = {
+            name: 'ɵDirectiveDefWithMeta',
             moduleName: CORE$1,
         };
         Identifiers.InjectorDef = {
@@ -14477,12 +14477,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             name: 'defineInjector',
             moduleName: CORE$1,
         };
-        Identifiers.NgModuleDef = {
-            name: 'ɵNgModuleDef',
+        Identifiers.NgModuleDefWithMeta = {
+            name: 'ɵNgModuleDefWithMeta',
             moduleName: CORE$1,
         };
         Identifiers.defineNgModule = { name: 'ɵdefineNgModule', moduleName: CORE$1 };
-        Identifiers.PipeDef = { name: 'ɵPipeDef', moduleName: CORE$1 };
+        Identifiers.PipeDefWithMeta = { name: 'ɵPipeDefWithMeta', moduleName: CORE$1 };
         Identifiers.definePipe = { name: 'ɵdefinePipe', moduleName: CORE$1 };
         Identifiers.query = { name: 'ɵquery', moduleName: CORE$1 };
         Identifiers.queryRefresh = { name: 'ɵqueryRefresh', moduleName: CORE$1 };
@@ -14595,6 +14595,21 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    var Template = /** @class */ (function () {
+        function Template(attributes, inputs, outputs, children, references, variables, sourceSpan, startSourceSpan, endSourceSpan) {
+            this.attributes = attributes;
+            this.inputs = inputs;
+            this.outputs = outputs;
+            this.children = children;
+            this.references = references;
+            this.variables = variables;
+            this.sourceSpan = sourceSpan;
+            this.startSourceSpan = startSourceSpan;
+            this.endSourceSpan = endSourceSpan;
+        }
+        Template.prototype.visit = function (visitor) { return visitor.visitTemplate(this); };
+        return Template;
+    }());
 
     /**
      * @license
@@ -17524,6 +17539,148 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * Processes a template and extract metadata about expressions and symbols within.
+     *
+     * This is a companion to the `DirectiveBinder` that doesn't require knowledge of directives matched
+     * within the template in order to operate.
+     *
+     * Expressions are visited by the superclass `RecursiveAstVisitor`, with custom logic provided
+     * by overridden methods from that visitor.
+     */
+    var TemplateBinder = /** @class */ (function (_super) {
+        __extends(TemplateBinder, _super);
+        function TemplateBinder(bindings, symbols, nestingLevel, scope, template, level) {
+            var _this = _super.call(this) || this;
+            _this.bindings = bindings;
+            _this.symbols = symbols;
+            _this.nestingLevel = nestingLevel;
+            _this.scope = scope;
+            _this.template = template;
+            _this.level = level;
+            // Save a bit of processing time by constructing this closure in advance.
+            _this.visitNode = function (node) { return node.visit(_this); };
+            return _this;
+        }
+        /**
+         * Process a template and extract metadata about expressions and symbols within.
+         *
+         * @param template the nodes of the template to process
+         * @param scope the `Scope` of the template being processed.
+         * @returns three maps which contain metadata about the template: `expressions` which interprets
+         * special `AST` nodes in expressions as pointing to references or variables declared within the
+         * template, `symbols` which maps those variables and references to the nested `Template` which
+         * declares them, if any, and `nestingLevel` which associates each `Template` with a integer
+         * nesting level (how many levels deep within the template structure the `Template` is), starting
+         * at 1.
+         */
+        TemplateBinder.apply = function (template, scope) {
+            var expressions = new Map();
+            var symbols = new Map();
+            var nestingLevel = new Map();
+            // The top-level template has nesting level 0.
+            var binder = new TemplateBinder(expressions, symbols, nestingLevel, scope, template instanceof Template ? template : null, 0);
+            binder.ingest(template);
+            return { expressions: expressions, symbols: symbols, nestingLevel: nestingLevel };
+        };
+        TemplateBinder.prototype.ingest = function (template) {
+            if (template instanceof Template) {
+                // For <ng-template>s, process inputs, outputs, variables, and child nodes. References were
+                // processed in the scope of the containing template.
+                template.inputs.forEach(this.visitNode);
+                template.outputs.forEach(this.visitNode);
+                template.variables.forEach(this.visitNode);
+                template.children.forEach(this.visitNode);
+                // Set the nesting level.
+                this.nestingLevel.set(template, this.level);
+            }
+            else {
+                // Visit each node from the top-level template.
+                template.forEach(this.visitNode);
+            }
+        };
+        TemplateBinder.prototype.visitElement = function (element) {
+            // Vist the inputs, outputs, and children of the element.
+            element.inputs.forEach(this.visitNode);
+            element.outputs.forEach(this.visitNode);
+            element.children.forEach(this.visitNode);
+        };
+        TemplateBinder.prototype.visitTemplate = function (template) {
+            // First, visit the inputs, outputs of the template node.
+            template.inputs.forEach(this.visitNode);
+            template.outputs.forEach(this.visitNode);
+            // References are also evaluated in the outer context.
+            template.references.forEach(this.visitNode);
+            // Next, recurse into the template using its scope, and bumping the nesting level up by one.
+            var childScope = this.scope.getChildScope(template);
+            var binder = new TemplateBinder(this.bindings, this.symbols, this.nestingLevel, childScope, template, this.level + 1);
+            binder.ingest(template);
+        };
+        TemplateBinder.prototype.visitVariable = function (variable) {
+            // Register the `Variable` as a symbol in the current `Template`.
+            if (this.template !== null) {
+                this.symbols.set(variable, this.template);
+            }
+        };
+        TemplateBinder.prototype.visitReference = function (reference) {
+            // Register the `Reference` as a symbol in the current `Template`.
+            if (this.template !== null) {
+                this.symbols.set(reference, this.template);
+            }
+        };
+        // Unused template visitors
+        TemplateBinder.prototype.visitText = function (text) { };
+        TemplateBinder.prototype.visitContent = function (content) { };
+        TemplateBinder.prototype.visitTextAttribute = function (attribute) { };
+        // The remaining visitors are concerned with processing AST expressions within template bindings
+        TemplateBinder.prototype.visitBoundAttribute = function (attribute) { attribute.value.visit(this); };
+        TemplateBinder.prototype.visitBoundEvent = function (event) { event.handler.visit(this); };
+        TemplateBinder.prototype.visitBoundText = function (text) { text.value.visit(this); };
+        // These five types of AST expressions can refer to expression roots, which could be variables
+        // or references in the current scope.
+        TemplateBinder.prototype.visitPropertyRead = function (ast, context) {
+            this.maybeMap(context, ast, ast.name);
+            return _super.prototype.visitPropertyRead.call(this, ast, context);
+        };
+        TemplateBinder.prototype.visitSafePropertyRead = function (ast, context) {
+            this.maybeMap(context, ast, ast.name);
+            return _super.prototype.visitSafePropertyRead.call(this, ast, context);
+        };
+        TemplateBinder.prototype.visitPropertyWrite = function (ast, context) {
+            this.maybeMap(context, ast, ast.name);
+            return _super.prototype.visitPropertyWrite.call(this, ast, context);
+        };
+        TemplateBinder.prototype.visitMethodCall = function (ast, context) {
+            this.maybeMap(context, ast, ast.name);
+            return _super.prototype.visitMethodCall.call(this, ast, context);
+        };
+        TemplateBinder.prototype.visitSafeMethodCall = function (ast, context) {
+            this.maybeMap(context, ast, ast.name);
+            return _super.prototype.visitSafeMethodCall.call(this, ast, context);
+        };
+        TemplateBinder.prototype.maybeMap = function (scope, ast, name) {
+            // If the receiver of the expression isn't the `ImplicitReceiver`, this isn't the root of an
+            // `AST` expression that maps to a `Variable` or `Reference`.
+            if (!(ast.receiver instanceof ImplicitReceiver)) {
+                return;
+            }
+            // Check whether the name exists in the current scope. If so, map it. Otherwise, the name is
+            // probably a property on the top-level component context.
+            var target = this.scope.lookup(name);
+            if (target !== null) {
+                this.bindings.set(ast, target);
+            }
+        };
+        return TemplateBinder;
+    }(RecursiveAstVisitor));
 
     /**
      * @license
@@ -32316,7 +32473,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('7.0.0-rc.0+27.sha-aaaa340');
+    var VERSION$2 = new Version$1('7.0.0-rc.0+46.sha-fdaf573');
 
     /**
      * @license
@@ -44690,7 +44847,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.0-rc.0+27.sha-aaaa340');
+    var VERSION$3 = new Version$1('7.0.0-rc.0+46.sha-fdaf573');
 
     /**
      * @license
