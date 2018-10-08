@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.0-rc.0+46.sha-fdaf573
+ * @license Angular v7.0.0-rc.0+63.sha-55d54c7
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1197,7 +1197,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.0-rc.0+46.sha-fdaf573');
+    var VERSION = new Version('7.0.0-rc.0+63.sha-55d54c7');
 
     /**
      * @license
@@ -28222,136 +28222,17 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * This property will be monkey-patched on elements, components and directives
      */
     var MONKEY_PATCH_KEY_NAME = '__ngContext__';
-    /** Returns the matching `LContext` data for a given DOM node, directive or component instance.
-     *
-     * This function will examine the provided DOM element, component, or directive instance\'s
-     * monkey-patched property to derive the `LContext` data. Once called then the monkey-patched
-     * value will be that of the newly created `LContext`.
-     *
-     * If the monkey-patched value is the `LViewData` instance then the context value for that
-     * target will be created and the monkey-patch reference will be updated. Therefore when this
-     * function is called it may mutate the provided element\'s, component\'s or any of the associated
-     * directive\'s monkey-patch values.
-     *
-     * If the monkey-patch value is not detected then the code will walk up the DOM until an element
-     * is found which contains a monkey-patch reference. When that occurs then the provided element
-     * will be updated with a new context (which is then returned). If the monkey-patch value is not
-     * detected for a component/directive instance then it will throw an error (all components and
-     * directives should be automatically monkey-patched by ivy).
-     */
-    function getContext(target) {
-        var mpValue = readPatchedData(target);
-        if (mpValue) {
-            // only when it's an array is it considered an LViewData instance
-            // ... otherwise it's an already constructed LContext instance
-            if (Array.isArray(mpValue)) {
-                var lViewData = mpValue;
-                var lNodeIndex = void 0;
-                var component = undefined;
-                var directiveIndices = undefined;
-                var directives = undefined;
-                if (isComponentInstance(target)) {
-                    lNodeIndex = findViaComponent(lViewData, target);
-                    if (lNodeIndex == -1) {
-                        throw new Error('The provided component was not found in the application');
-                    }
-                    component = target;
-                }
-                else if (isDirectiveInstance(target)) {
-                    lNodeIndex = findViaDirective(lViewData, target);
-                    if (lNodeIndex == -1) {
-                        throw new Error('The provided directive was not found in the application');
-                    }
-                    directiveIndices = discoverDirectiveIndices(lViewData, lNodeIndex);
-                    directives = directiveIndices ? discoverDirectives(lViewData, directiveIndices) : null;
-                }
-                else {
-                    lNodeIndex = findViaNativeElement(lViewData, target);
-                    if (lNodeIndex == -1) {
-                        return null;
-                    }
-                }
-                // the goal is not to fill the entire context full of data because the lookups
-                // are expensive. Instead, only the target data (the element, compontent or
-                // directive details) are filled into the context. If called multiple times
-                // with different target values then the missing target data will be filled in.
-                var lNode = getLNodeFromViewData(lViewData, lNodeIndex);
-                var existingCtx = readPatchedData(lNode.native);
-                var context = (existingCtx && !Array.isArray(existingCtx)) ?
-                    existingCtx :
-                    createLContext(lViewData, lNodeIndex, lNode.native);
-                // only when the component has been discovered then update the monkey-patch
-                if (component && context.component === undefined) {
-                    context.component = component;
-                    attachPatchData(context.component, context);
-                }
-                // only when the directives have been discovered then update the monkey-patch
-                if (directives && directiveIndices && context.directives === undefined) {
-                    context.directiveIndices = directiveIndices;
-                    context.directives = directives;
-                    for (var i = 0; i < directives.length; i++) {
-                        attachPatchData(directives[i], context);
-                    }
-                }
-                attachPatchData(context.native, context);
-                mpValue = context;
-            }
-        }
-        else {
-            var rElement = target;
-            ngDevMode && assertDomElement(rElement);
-            // if the context is not found then we need to traverse upwards up the DOM
-            // to find the nearest element that has already been monkey patched with data
-            var parent_1 = rElement;
-            while (parent_1 = parent_1.parentNode) {
-                var parentContext = readPatchedData(parent_1);
-                if (parentContext) {
-                    var lViewData = void 0;
-                    if (Array.isArray(parentContext)) {
-                        lViewData = parentContext;
-                    }
-                    else {
-                        lViewData = parentContext.lViewData;
-                    }
-                    // the edge of the app was also reached here through another means
-                    // (maybe because the DOM was changed manually).
-                    if (!lViewData) {
-                        return null;
-                    }
-                    var index = findViaNativeElement(lViewData, rElement);
-                    if (index >= 0) {
-                        var lNode = getLNodeFromViewData(lViewData, index);
-                        var context = createLContext(lViewData, index, lNode.native);
-                        attachPatchData(lNode.native, context);
-                        mpValue = context;
-                        break;
-                    }
-                }
-            }
-        }
-        return mpValue || null;
-    }
     /**
      * Creates an empty instance of a `LContext` context
      */
     function createLContext(lViewData, lNodeIndex, native) {
         return {
             lViewData: lViewData,
-            lNodeIndex: lNodeIndex,
-            native: native,
+            nodeIndex: lNodeIndex, native: native,
             component: undefined,
-            directiveIndices: undefined,
             directives: undefined,
             localRefs: undefined,
         };
-    }
-    /**
-     * A utility function for retrieving the matching lElementNode
-     * from a given DOM element, component or directive.
-     */
-    function getLElementNode(target) {
-        var context = getContext(target);
-        return context ? getLNodeFromViewData(context.lViewData, context.lNodeIndex) : null;
     }
     /**
      * A simplified lookup function for finding the LElementNode from a component instance.
@@ -28373,7 +28254,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         else {
             var context = lViewData;
-            lNode = readElementValue(context.lViewData[context.lNodeIndex]);
+            lNode = readElementValue(context.lViewData[context.nodeIndex]);
         }
         return lNode;
     }
@@ -28395,41 +28276,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var value = readPatchedData(target);
         if (value) {
             return Array.isArray(value) ? value : value.lViewData;
-        }
-        return null;
-    }
-    function isComponentInstance(instance) {
-        return instance && instance.constructor && instance.constructor.ngComponentDef;
-    }
-    function isDirectiveInstance(instance) {
-        return instance && instance.constructor && instance.constructor.ngDirectiveDef;
-    }
-    /**
-     * Locates the element within the given LViewData and returns the matching index
-     */
-    function findViaNativeElement(lViewData, native) {
-        var tNode = lViewData[TVIEW].firstChild;
-        while (tNode) {
-            var lNode = getLNodeFromViewData(lViewData, tNode.index);
-            if (lNode.native === native) {
-                return tNode.index;
-            }
-            tNode = traverseNextElement(tNode);
-        }
-        return -1;
-    }
-    /**
-     * Locates the next tNode (child, sibling or parent).
-     */
-    function traverseNextElement(tNode) {
-        if (tNode.child) {
-            return tNode.child;
-        }
-        else if (tNode.next) {
-            return tNode.next;
-        }
-        else if (tNode.parent) {
-            return tNode.parent.next || null;
         }
         return null;
     }
@@ -28457,102 +28303,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
         }
         return -1;
-    }
-    /**
-     * Locates the directive within the given LViewData and returns the matching index
-     */
-    function findViaDirective(lViewData, directiveInstance) {
-        // if a directive is monkey patched then it will (by default)
-        // have a reference to the LViewData of the current view. The
-        // element bound to the directive being search lives somewhere
-        // in the view data. By first checking to see if the instance
-        // is actually present we can narrow down to which lElementNode
-        // contains the instance of the directive and then return the index
-        var directivesAcrossView = lViewData[DIRECTIVES];
-        var directiveIndex = directivesAcrossView ? directivesAcrossView.indexOf(directiveInstance) : -1;
-        if (directiveIndex >= 0) {
-            var tNode = lViewData[TVIEW].firstChild;
-            while (tNode) {
-                var directiveIndexStart = getDirectiveStartIndex(tNode);
-                var directiveIndexEnd = getDirectiveEndIndex(tNode, directiveIndexStart);
-                if (directiveIndex >= directiveIndexStart && directiveIndex < directiveIndexEnd) {
-                    return tNode.index;
-                }
-                tNode = traverseNextElement(tNode);
-            }
-        }
-        return -1;
-    }
-    function assertDomElement(element) {
-        assertEqual(element.nodeType, 1, 'The provided value must be an instance of an HTMLElement');
-    }
-    /**
-     * Retruns the instance of the LElementNode at the given index in the LViewData.
-     *
-     * This function will also unwrap the inner value incase it's stuffed into an
-     * array (which is what happens when [style] and [class] bindings are present
-     * in the view instructions for the element being returned).
-     */
-    function getLNodeFromViewData(lViewData, lElementIndex) {
-        var value = lViewData[lElementIndex];
-        return value ? readElementValue(value) : null;
-    }
-    /**
-     * Returns a collection of directive index values that are used on the element
-     * (which is referenced by the lNodeIndex)
-     */
-    function discoverDirectiveIndices(lViewData, lNodeIndex, includeComponents) {
-        var directivesAcrossView = lViewData[DIRECTIVES];
-        var tNode = lViewData[TVIEW].data[lNodeIndex];
-        if (directivesAcrossView && directivesAcrossView.length) {
-            // this check for tNode is to determine if the value is a LElementNode instance
-            var directiveIndexStart = getDirectiveStartIndex(tNode);
-            var directiveIndexEnd = getDirectiveEndIndex(tNode, directiveIndexStart);
-            var directiveIndices = [];
-            for (var i = directiveIndexStart; i < directiveIndexEnd; i++) {
-                // special case since the instance of the component (if it exists)
-                // is stored in the directives array.
-                if (i > directiveIndexStart ||
-                    !isComponentInstance(directivesAcrossView[directiveIndexStart])) {
-                    directiveIndices.push(i);
-                }
-            }
-            return directiveIndices.length ? directiveIndices : null;
-        }
-        return null;
-    }
-    /**
-     * Returns a list of directives extracted from the given view based on the
-     * provided list of directive index values.
-     *
-     * @param lViewData The target view data
-     * @param indices A collection of directive index values which will be used to
-     *    figure out the directive instances
-     */
-    function discoverDirectives(lViewData, indices) {
-        var directives = [];
-        var directiveInstances = lViewData[DIRECTIVES];
-        if (directiveInstances) {
-            for (var i = 0; i < indices.length; i++) {
-                var directiveIndex = indices[i];
-                var directive = directiveInstances[directiveIndex];
-                directives.push(directive);
-            }
-        }
-        return directives;
-    }
-    function getDirectiveStartIndex(tNode) {
-        // the tNode instances store a flag value which then has a
-        // pointer which tells the starting index of where all the
-        // active directives are in the master directive array
-        return tNode.flags >> 15 /* DirectiveStartingIndexShift */;
-    }
-    function getDirectiveEndIndex(tNode, startIndex) {
-        // The end value is also a part of the same flag
-        // (see `TNodeFlags` to see how the flag bit shifting
-        // values are used).
-        var count = tNode.flags & 4095 /* DirectiveCountMask */;
-        return count ? (startIndex + count) : -1;
     }
     function readElementValue(value) {
         return (Array.isArray(value) ? value[0] : value);
@@ -30639,6 +30389,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     function refreshDescendantViews() {
         setHostBindings(tView.hostBindings);
+        var parentFirstTemplatePass = firstTemplatePass;
         // This needs to be set before children are processed to support recursive components
         tView.firstTemplatePass = firstTemplatePass = false;
         if (!checkNoChangesMode) {
@@ -30650,7 +30401,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         if (!checkNoChangesMode) {
             executeHooks(directives, tView.contentHooks, tView.contentCheckHooks, creationMode);
         }
-        refreshChildComponents(tView.components);
+        refreshChildComponents(tView.components, parentFirstTemplatePass);
     }
     /** Sets the host bindings for the current view. */
     function setHostBindings(bindings) {
@@ -30682,10 +30433,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
     }
     /** Refreshes child components in the current view. */
-    function refreshChildComponents(components) {
+    function refreshChildComponents(components, parentFirstTemplatePass) {
         if (components != null) {
             for (var i = 0; i < components.length; i++) {
-                componentRefresh(components[i]);
+                componentRefresh(components[i], parentFirstTemplatePass);
             }
         }
     }
@@ -30891,7 +30642,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 // Element was stored at 0 in data and directive was stored at 0 in directives
                 // in renderComponent()
                 setHostBindings(tView.hostBindings);
-                componentRefresh(HEADER_OFFSET);
+                componentRefresh(HEADER_OFFSET, false);
             }
         }
         finally {
@@ -32222,7 +31973,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      *
      * @param adjustedElementIndex  Element index in LViewData[] (adjusted for HEADER_OFFSET)
      */
-    function componentRefresh(adjustedElementIndex) {
+    function componentRefresh(adjustedElementIndex, parentFirstTemplatePass) {
         ngDevMode && assertDataInRange(adjustedElementIndex);
         var element = readElementValue(viewData[adjustedElementIndex]);
         ngDevMode && assertNodeType(tView.data[adjustedElementIndex], 3 /* Element */);
@@ -32231,7 +31982,40 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var hostView = element.data;
         // Only attached CheckAlways components or attached, dirty OnPush components should be checked
         if (viewAttached(hostView) && hostView[FLAGS] & (2 /* CheckAlways */ | 4 /* Dirty */)) {
+            parentFirstTemplatePass && syncViewWithBlueprint(hostView);
             detectChangesInternal(hostView, hostView[CONTEXT]);
+        }
+    }
+    /**
+     * Syncs an LViewData instance with its blueprint if they have gotten out of sync.
+     *
+     * Typically, blueprints and their view instances should always be in sync, so the loop here
+     * will be skipped. However, consider this case of two components side-by-side:
+     *
+     * App template:
+     * ```
+     * <comp></comp>
+     * <comp></comp>
+     * ```
+     *
+     * The following will happen:
+     * 1. App template begins processing.
+     * 2. First <comp> is matched as a component and its LViewData is created.
+     * 3. Second <comp> is matched as a component and its LViewData is created.
+     * 4. App template completes processing, so it's time to check child templates.
+     * 5. First <comp> template is checked. It has a directive, so its def is pushed to blueprint.
+     * 6. Second <comp> template is checked. Its blueprint has been updated by the first
+     * <comp> template, but its LViewData was created before this update, so it is out of sync.
+     *
+     * Note that embedded views inside ngFor loops will never be out of sync because these views
+     * are processed as soon as they are created.
+     *
+     * @param componentView The view to sync
+     */
+    function syncViewWithBlueprint(componentView) {
+        var componentTView = componentView[TVIEW];
+        for (var i = componentView.length; i < componentTView.blueprint.length; i++) {
+            componentView[i] = componentTView.blueprint[i];
         }
     }
     /** Returns a boolean for whether the view is attached */
@@ -33261,8 +33045,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         if (tView.firstTemplatePass) {
             // TODO(kara): Store node injector with host bindings for that node (see VIEW_DATA.md)
             tNode.injectorIndex = hostView.length;
-            tView.blueprint.push(0, 0, 0, 0, 0, 0, 0, 0, null); // foundation for cumulative bloom
-            tView.data.push(0, 0, 0, 0, 0, 0, 0, 0, tNode); // foundation for node bloom
+            setUpBloom(tView.data, tNode); // foundation for node bloom
+            setUpBloom(hostView, null); // foundation for cumulative bloom
+            setUpBloom(tView.blueprint, null);
             tView.hostBindingStartIndex += INJECTOR_SIZE;
         }
         var parentLoc = getParentInjectorLocation(tNode, hostView);
@@ -33270,13 +33055,21 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var parentView = getParentInjectorView(parentLoc, hostView);
         var parentData = parentView[TVIEW].data;
         var injectorIndex = tNode.injectorIndex;
-        for (var i = 0; i < PARENT_INJECTOR; i++) {
-            var bloomIndex = parentIndex + i;
-            hostView[injectorIndex + i] =
-                parentLoc === -1 ? 0 : parentView[bloomIndex] | parentData[bloomIndex];
+        // If a parent injector can't be found, its location is set to -1.
+        // In that case, we don't need to set up a cumulative bloom
+        if (parentLoc !== -1) {
+            for (var i = 0; i < PARENT_INJECTOR; i++) {
+                var bloomIndex = parentIndex + i;
+                // Creates a cumulative bloom filter that merges the parent's bloom filter
+                // and its own cumulative bloom (which contains tokens for all ancestors)
+                hostView[injectorIndex + i] = parentView[bloomIndex] | parentData[bloomIndex];
+            }
         }
         hostView[injectorIndex + PARENT_INJECTOR] = parentLoc;
         return injectorIndex;
+    }
+    function setUpBloom(arr, footer) {
+        arr.push(0, 0, 0, 0, 0, 0, 0, 0, footer);
     }
     function getInjectorIndex(tNode, hostView) {
         if (tNode.injectorIndex === -1 ||
@@ -40983,7 +40776,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('7.0.0-rc.0+46.sha-fdaf573');
+    var VERSION$2 = new Version$1('7.0.0-rc.0+63.sha-55d54c7');
 
     /**
      * @license
@@ -52268,22 +52061,15 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         Object.defineProperty(Render3DebugContext.prototype, "providerTokens", {
             // TODO(vicb): add view providers when supported
             get: function () {
-                var matchedDirectives = [];
                 // TODO(vicb): why/when
-                if (this.nodeIndex === null) {
-                    return matchedDirectives;
+                var directiveDefs = this.view[TVIEW].directives;
+                if (this.nodeIndex === null || directiveDefs == null) {
+                    return [];
                 }
-                var directives = this.view[DIRECTIVES];
-                if (directives) {
-                    var currentNode = this.view[this.nodeIndex];
-                    for (var dirIndex = 0; dirIndex < directives.length; dirIndex++) {
-                        var directive = directives[dirIndex];
-                        if (getLElementNode(directive) === currentNode) {
-                            matchedDirectives.push(directive.constructor);
-                        }
-                    }
-                }
-                return matchedDirectives;
+                var currentTNode = this.view[TVIEW].data[this.nodeIndex];
+                var dirStart = currentTNode >> 15 /* DirectiveStartingIndexShift */;
+                var dirEnd = dirStart + (currentTNode & 4095 /* DirectiveCountMask */);
+                return directiveDefs.slice(dirStart, dirEnd);
             },
             enumerable: true,
             configurable: true
@@ -53374,7 +53160,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.0-rc.0+46.sha-fdaf573');
+    var VERSION$3 = new Version$1('7.0.0-rc.0+63.sha-55d54c7');
 
     /**
      * @license
