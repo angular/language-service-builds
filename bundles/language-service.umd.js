@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.0-rc.0+105.sha-7acdad6
+ * @license Angular v7.0.0-rc.1+4.sha-39f42ba
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1164,7 +1164,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.0-rc.0+105.sha-7acdad6');
+    var VERSION = new Version('7.0.0-rc.1+4.sha-39f42ba');
 
     /**
      * @license
@@ -14439,6 +14439,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         Identifiers.pipeBind3 = { name: 'ɵpipeBind3', moduleName: CORE$1 };
         Identifiers.pipeBind4 = { name: 'ɵpipeBind4', moduleName: CORE$1 };
         Identifiers.pipeBindV = { name: 'ɵpipeBindV', moduleName: CORE$1 };
+        Identifiers.i18nAttribute = { name: 'ɵi18nAttribute', moduleName: CORE$1 };
+        Identifiers.i18nExp = { name: 'ɵi18nExp', moduleName: CORE$1 };
+        Identifiers.i18nStart = { name: 'ɵi18nStart', moduleName: CORE$1 };
+        Identifiers.i18nEnd = { name: 'ɵi18nEnd', moduleName: CORE$1 };
+        Identifiers.i18nApply = { name: 'ɵi18nApply', moduleName: CORE$1 };
         Identifiers.load = { name: 'ɵload', moduleName: CORE$1 };
         Identifiers.loadQueryList = { name: 'ɵloadQueryList', moduleName: CORE$1 };
         Identifiers.pipe = { name: 'ɵpipe', moduleName: CORE$1 };
@@ -25917,7 +25922,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             childIndex: -1,
             bindingStartIndex: bindingStartIndex,
             expandoStartIndex: initialViewLength,
-            directives: null,
             expandoInstructions: null,
             firstTemplatePass: true,
             initHooks: null,
@@ -32277,7 +32281,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('7.0.0-rc.0+105.sha-7acdad6');
+    var VERSION$2 = new Version$1('7.0.0-rc.1+4.sha-39f42ba');
 
     /**
      * @license
@@ -44644,7 +44648,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.0-rc.0+105.sha-7acdad6');
+    var VERSION$3 = new Version$1('7.0.0-rc.1+4.sha-39f42ba');
 
     /**
      * @license
