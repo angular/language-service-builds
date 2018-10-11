@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.0-rc.1+18.sha-bd186c7
+ * @license Angular v7.0.0-rc.1+22.sha-0a3f817
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1197,7 +1197,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.0-rc.1+18.sha-bd186c7');
+    var VERSION = new Version('7.0.0-rc.1+22.sha-0a3f817');
 
     /**
      * @license
@@ -15932,7 +15932,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         Identifiers.reference = { name: 'ɵreference', moduleName: CORE$1 };
         Identifiers.inject = { name: 'inject', moduleName: CORE$1 };
         Identifiers.injectAttribute = { name: 'ɵinjectAttribute', moduleName: CORE$1 };
-        Identifiers.injectRenderer2 = { name: 'ɵinjectRenderer2', moduleName: CORE$1 };
         Identifiers.directiveInject = { name: 'ɵdirectiveInject', moduleName: CORE$1 };
         Identifiers.templateRefExtractor = { name: 'ɵtemplateRefExtractor', moduleName: CORE$1 };
         Identifiers.defineBase = { name: 'ɵdefineBase', moduleName: CORE$1 };
@@ -16172,10 +16171,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
          * The dependency is for the `Injector` type itself.
          */
         R3ResolvedDependencyType[R3ResolvedDependencyType["Injector"] = 2] = "Injector";
-        /**
-         * The dependency is for `Renderer2`.
-         */
-        R3ResolvedDependencyType[R3ResolvedDependencyType["Renderer2"] = 3] = "Renderer2";
     })(R3ResolvedDependencyType || (R3ResolvedDependencyType = {}));
     /**
      * Construct a factory function expression for the given `R3FactoryMetadata`.
@@ -16280,8 +16275,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             case R3ResolvedDependencyType.Attribute:
                 // In the case of attributes, the attribute name in question is given as the token.
                 return importExpr(Identifiers$1.injectAttribute).callFn([dep.token]);
-            case R3ResolvedDependencyType.Renderer2:
-                return importExpr(Identifiers$1.injectRenderer2).callFn([]);
             default:
                 return unsupported("Unknown R3ResolvedDependencyType: " + R3ResolvedDependencyType[dep.resolved]);
         }
@@ -17469,31 +17462,24 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 var lastInputCommand = null;
                 if (styleInputs.length) {
                     var i = mapBasedStyleInput_1 ? 1 : 0;
-                    var _loop_1 = function () {
+                    for (i; i < styleInputs.length; i++) {
                         var input = styleInputs[i];
-                        var params = [];
-                        var sanitizationRef = resolveSanitizationFn(input, input.securityContext);
-                        if (sanitizationRef)
-                            params.push(sanitizationRef);
                         var key = input.name;
                         var styleIndex = stylesIndexMap[key];
-                        var value = input.value.visit(this_1._valueConverter);
-                        this_1.updateInstruction(input.sourceSpan, Identifiers$1.elementStyleProp, function () {
-                            return __spread([
-                                indexLiteral_1, literal(styleIndex),
-                                _this.convertPropertyBinding(implicit, value, true)
-                            ], params);
-                        });
-                    };
-                    var this_1 = this;
-                    for (i; i < styleInputs.length; i++) {
-                        _loop_1();
+                        var value = input.value.visit(this._valueConverter);
+                        var params = [
+                            indexLiteral_1, literal(styleIndex), this.convertPropertyBinding(implicit, value, true)
+                        ];
+                        if (input.unit != null) {
+                            params.push(literal(input.unit));
+                        }
+                        this.updateInstruction(input.sourceSpan, Identifiers$1.elementStyleProp, params);
                     }
                     lastInputCommand = styleInputs[styleInputs.length - 1];
                 }
                 if (classInputs.length) {
                     var i = mapBasedClassInput_1 ? 1 : 0;
-                    var _loop_2 = function () {
+                    var _loop_1 = function () {
                         var input = classInputs[i];
                         var params = [];
                         var sanitizationRef = resolveSanitizationFn(input, input.securityContext);
@@ -17501,17 +17487,17 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                             params.push(sanitizationRef);
                         var key = input.name;
                         var classIndex = classesIndexMap[key];
-                        var value = input.value.visit(this_2._valueConverter);
-                        this_2.updateInstruction(input.sourceSpan, Identifiers$1.elementClassProp, function () {
+                        var value = input.value.visit(this_1._valueConverter);
+                        this_1.updateInstruction(input.sourceSpan, Identifiers$1.elementClassProp, function () {
                             return __spread([
                                 indexLiteral_1, literal(classIndex),
                                 _this.convertPropertyBinding(implicit, value, true)
                             ], params);
                         });
                     };
-                    var this_2 = this;
+                    var this_1 = this;
                     for (i; i < classInputs.length; i++) {
-                        _loop_2();
+                        _loop_1();
                     }
                     lastInputCommand = classInputs[classInputs.length - 1];
                 }
@@ -31840,8 +31826,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      *        specifically for element styling--the index must be the next index after the element
      *        index.)
      * @param styleIndex Index of the style property on this element. (Monotonically increasing.)
-     * @param styleName Name of property. Because it is going to DOM this is not subject to
-     *        renaming as part of minification.
      * @param value New value to write (null to remove).
      * @param suffix Optional suffix. Used with scalar values to add unit such as `px`.
      *        Note that when a suffix is provided then the underlying sanitizer will
@@ -33234,76 +33218,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * found in the LICENSE file at https://angular.io/license
      */
     /**
-     * @deprecated Use the `Renderer2` instead.
-     */
-    var Renderer = /** @class */ (function () {
-        function Renderer() {
-        }
-        return Renderer;
-    }());
-    var Renderer2Interceptor = new InjectionToken('Renderer2Interceptor');
-    /**
-     * Creates and initializes a custom renderer that implements the `Renderer2` base class.
-     *
-     * @experimental
-     */
-    var RendererFactory2 = /** @class */ (function () {
-        function RendererFactory2() {
-        }
-        return RendererFactory2;
-    }());
-    /**
-     * Flags for renderer-specific style modifiers.
-     * @experimental
-     */
-    var RendererStyleFlags2;
-    (function (RendererStyleFlags2) {
-        /**
-         * Marks a style as important.
-         */
-        RendererStyleFlags2[RendererStyleFlags2["Important"] = 1] = "Important";
-        /**
-         * Marks a style as using dash case naming (this-is-dash-case).
-         */
-        RendererStyleFlags2[RendererStyleFlags2["DashCase"] = 2] = "DashCase";
-    })(RendererStyleFlags2 || (RendererStyleFlags2 = {}));
-    /**
-     * Extend this base class to implement custom rendering. By default, Angular
-     * renders a template into DOM. You can use custom rendering to intercept
-     * rendering calls, or to render to something other than DOM.
-     *
-     * Create your custom renderer using `RendererFactory2`.
-     *
-     * Use a custom renderer to bypass Angular's templating and
-     * make custom UI changes that can't be expressed declaratively.
-     * For example if you need to set a property or an attribute whose name is
-     * not statically known, use the `setProperty()` or
-     * `setAttribute()` method.
-     *
-     * @experimental
-     */
-    var Renderer2 = /** @class */ (function () {
-        function Renderer2() {
-        }
-        return Renderer2;
-    }());
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
      * The number of slots in each bloom filter (used by DI). The larger this number, the fewer
      * directives that will share slots, and thus, the fewer false positives when checking for
      * the existence of a directive.
@@ -33474,9 +33388,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var hostTNode = getPreviousOrParentTNode();
         return getOrCreateInjectable(hostTNode, _getViewData(), token, flags);
     }
-    function injectRenderer2() {
-        return getOrCreateRenderer2(_getViewData());
-    }
     /**
      * Inject static attribute value into directive constructor.
      *
@@ -33524,15 +33435,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
         }
         return undefined;
-    }
-    function getOrCreateRenderer2(view) {
-        var renderer = view[RENDERER];
-        if (isProceduralRenderer(renderer)) {
-            return renderer;
-        }
-        else {
-            throw new Error('Cannot inject Renderer2 when the application uses Renderer3!');
-        }
     }
     /**
      * Returns the value associated to the given token from the injectors.
@@ -33711,9 +33613,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             this._injectorIndex = getOrCreateNodeInjectorForNode(_tNode, _hostView);
         }
         NodeInjector.prototype.get = function (token) {
-            if (token === Renderer2) {
-                return getOrCreateRenderer2(this._hostView);
-            }
             setEnvironment(this._tNode, this._hostView);
             return getOrCreateInjectable(this._tNode, this._hostView, token);
         };
@@ -34364,6 +34263,19 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return null;
     }
+    function getOrCreateRenderer2(view) {
+        var renderer = view[RENDERER];
+        if (isProceduralRenderer(renderer)) {
+            return renderer;
+        }
+        else {
+            throw new Error('Cannot inject Renderer2 when the application uses Renderer3!');
+        }
+    }
+    /** Returns a Renderer2 (or throws when application was bootstrapped with Renderer3) */
+    function injectRenderer2() {
+        return getOrCreateRenderer2(_getViewData());
+    }
 
     /**
      * @license
@@ -34376,6 +34288,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     var R3_TEMPLATE_REF_FACTORY = injectTemplateRef;
     var R3_CHANGE_DETECTOR_REF_FACTORY = injectChangeDetectorRef;
     var R3_VIEW_CONTAINER_REF_FACTORY = injectViewContainerRef;
+    var R3_RENDERER2_FACTORY = injectRenderer2;
 
     /**
      * @license
@@ -34414,6 +34327,70 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         /** @internal */
         ElementRef.__NG_ELEMENT_ID__ = function () { return R3_ELEMENT_REF_FACTORY(ElementRef); };
         return ElementRef;
+    }());
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * @deprecated Use the `Renderer2` instead.
+     */
+    var Renderer = /** @class */ (function () {
+        function Renderer() {
+        }
+        return Renderer;
+    }());
+    var Renderer2Interceptor = new InjectionToken('Renderer2Interceptor');
+    /**
+     * Creates and initializes a custom renderer that implements the `Renderer2` base class.
+     *
+     * @experimental
+     */
+    var RendererFactory2 = /** @class */ (function () {
+        function RendererFactory2() {
+        }
+        return RendererFactory2;
+    }());
+    /**
+     * Flags for renderer-specific style modifiers.
+     * @experimental
+     */
+    var RendererStyleFlags2;
+    (function (RendererStyleFlags2) {
+        /**
+         * Marks a style as important.
+         */
+        RendererStyleFlags2[RendererStyleFlags2["Important"] = 1] = "Important";
+        /**
+         * Marks a style as using dash case naming (this-is-dash-case).
+         */
+        RendererStyleFlags2[RendererStyleFlags2["DashCase"] = 2] = "DashCase";
+    })(RendererStyleFlags2 || (RendererStyleFlags2 = {}));
+    /**
+     * Extend this base class to implement custom rendering. By default, Angular
+     * renders a template into DOM. You can use custom rendering to intercept
+     * rendering calls, or to render to something other than DOM.
+     *
+     * Create your custom renderer using `RendererFactory2`.
+     *
+     * Use a custom renderer to bypass Angular's templating and
+     * make custom UI changes that can't be expressed declaratively.
+     * For example if you need to set a property or an attribute whose name is
+     * not statically known, use the `setProperty()` or
+     * `setAttribute()` method.
+     *
+     * @experimental
+     */
+    var Renderer2 = /** @class */ (function () {
+        function Renderer2() {
+        }
+        /** @internal */
+        Renderer2.__NG_ELEMENT_ID__ = function () { return R3_RENDERER2_FACTORY(); };
+        return Renderer2;
     }());
 
     /**
@@ -40034,7 +40011,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         'inject': inject,
         'ɵinjectAttribute': injectAttribute,
         'ɵtemplateRefExtractor': templateRefExtractor,
-        'ɵinjectRenderer2': injectRenderer2,
         'ɵNgOnChangesFeature': NgOnChangesFeature,
         'ɵPublicFeature': PublicFeature,
         'ɵInheritDefinitionFeature': InheritDefinitionFeature,
@@ -41231,7 +41207,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('7.0.0-rc.1+18.sha-bd186c7');
+    var VERSION$2 = new Version$1('7.0.0-rc.1+22.sha-0a3f817');
 
     /**
      * @license
@@ -47155,6 +47131,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             list.splice(index, 1);
         }
     }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
 
     /**
      * @license
@@ -53641,7 +53625,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.0-rc.1+18.sha-bd186c7');
+    var VERSION$3 = new Version$1('7.0.0-rc.1+22.sha-0a3f817');
 
     /**
      * @license
