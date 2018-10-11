@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.0-rc.0+105.sha-7acdad6
+ * @license Angular v7.0.0-rc.1+4.sha-39f42ba
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1197,7 +1197,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.0-rc.0+105.sha-7acdad6');
+    var VERSION = new Version('7.0.0-rc.1+4.sha-39f42ba');
 
     /**
      * @license
@@ -15919,6 +15919,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         Identifiers.pipeBind3 = { name: 'ɵpipeBind3', moduleName: CORE$1 };
         Identifiers.pipeBind4 = { name: 'ɵpipeBind4', moduleName: CORE$1 };
         Identifiers.pipeBindV = { name: 'ɵpipeBindV', moduleName: CORE$1 };
+        Identifiers.i18nAttribute = { name: 'ɵi18nAttribute', moduleName: CORE$1 };
+        Identifiers.i18nExp = { name: 'ɵi18nExp', moduleName: CORE$1 };
+        Identifiers.i18nStart = { name: 'ɵi18nStart', moduleName: CORE$1 };
+        Identifiers.i18nEnd = { name: 'ɵi18nEnd', moduleName: CORE$1 };
+        Identifiers.i18nApply = { name: 'ɵi18nApply', moduleName: CORE$1 };
         Identifiers.load = { name: 'ɵload', moduleName: CORE$1 };
         Identifiers.loadQueryList = { name: 'ɵloadQueryList', moduleName: CORE$1 };
         Identifiers.pipe = { name: 'ɵpipe', moduleName: CORE$1 };
@@ -16011,6 +16016,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /** I18n separators for metadata **/
     var MEANING_SEPARATOR$1 = '|';
     var ID_SEPARATOR$1 = '@@';
+    /** Placeholder wrapper for i18n expressions **/
+    var I18N_PLACEHOLDER_SYMBOL = '�';
     /** Non bindable attribute name **/
     var NON_BINDABLE_ATTR = 'ngNonBindable';
     /**
@@ -16039,6 +16046,20 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
     function isI18NAttribute(name) {
         return name === I18N_ATTR || name.startsWith(I18N_ATTR_PREFIX);
+    }
+    function wrapI18nPlaceholder(content) {
+        return "" + I18N_PLACEHOLDER_SYMBOL + content + I18N_PLACEHOLDER_SYMBOL;
+    }
+    function assembleI18nTemplate(strings) {
+        if (!strings.length)
+            return '';
+        var acc = '';
+        var lastIdx = strings.length - 1;
+        for (var i = 0; i < lastIdx; i++) {
+            acc += "" + strings[i] + wrapI18nPlaceholder(i);
+        }
+        acc += strings[lastIdx];
+        return acc;
     }
     function asLiteral(value) {
         if (Array.isArray(value)) {
@@ -17113,6 +17134,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         // LocalResolver
         TemplateDefinitionBuilder.prototype.getLocal = function (name) { return this._bindingScope.get(name); };
+        TemplateDefinitionBuilder.prototype.i18nTranslate = function (label, meta) {
+            return this.constantPool.getTranslation(label, parseI18nMeta(meta), this.fileBasedI18nSuffix);
+        };
         TemplateDefinitionBuilder.prototype.visitContent = function (ngContent) {
             var slot = this.allocateDataSlot();
             var selectorIndex = ngContent.selectorIndex;
@@ -17167,7 +17191,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
             var isNonBindableMode = false;
             try {
-                // Handle i18n attributes
+                // Handle i18n and ngNonBindable attributes
                 for (var _c = __values(element.attributes), _d = _c.next(); !_d.done; _d = _c.next()) {
                     var attr = _d.value;
                     var name_1 = attr.name;
@@ -17213,6 +17237,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var styleInputs = [];
             var classInputs = [];
             var allOtherInputs = [];
+            var i18nAttrs = [];
             element.inputs.forEach(function (input) {
                 switch (input.type) {
                     // [attr.style] or [attr.class] should not be treated as styling-based
@@ -17228,6 +17253,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                         else if (isClassBinding(input)) {
                             // this should always go first in the compilation (for [class])
                             classInputs.splice(0, 0, input);
+                        }
+                        else if (attrI18nMetas.hasOwnProperty(input.name)) {
+                            i18nAttrs.push({ name: input.name, value: input.value });
                         }
                         else {
                             allOtherInputs.push(input);
@@ -17264,14 +17292,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     });
                 }
                 else {
-                    attributes.push(literal(name));
                     if (attrI18nMetas.hasOwnProperty(name)) {
-                        var meta = parseI18nMeta(attrI18nMetas[name]);
-                        var variable$$1 = _this.constantPool.getTranslation(value, meta, _this.fileBasedI18nSuffix);
-                        attributes.push(variable$$1);
+                        i18nAttrs.push({ name: name, value: value });
                     }
                     else {
-                        attributes.push(literal(value));
+                        attributes.push(literal(name), literal(value));
                     }
                 }
             });
@@ -17338,7 +17363,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
             var implicit = variable(CONTEXT_NAME);
             var createSelfClosingInstruction = !hasStylingInstructions && !isNgContainer$$1 &&
-                element.children.length === 0 && element.outputs.length === 0;
+                element.children.length === 0 && element.outputs.length === 0 && i18nAttrs.length === 0;
             if (createSelfClosingInstruction) {
                 this.creationInstruction(element.sourceSpan, Identifiers$1.element, trimTrailingNulls(parameters));
             }
@@ -17346,6 +17371,41 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 this.creationInstruction(element.sourceSpan, isNgContainer$$1 ? Identifiers$1.elementContainerStart : Identifiers$1.elementStart, trimTrailingNulls(parameters));
                 if (isNonBindableMode) {
                     this.creationInstruction(element.sourceSpan, Identifiers$1.disableBindings);
+                }
+                // process i18n element attributes
+                if (i18nAttrs.length) {
+                    var hasBindings_1 = false;
+                    var i18nAttrArgs_1 = [];
+                    i18nAttrs.forEach(function (_a) {
+                        var name = _a.name, value = _a.value;
+                        var meta = attrI18nMetas[name];
+                        if (typeof value === 'string') {
+                            // in case of static string value, 3rd argument is 0 declares
+                            // that there are no expressions defined in this translation
+                            i18nAttrArgs_1.push(literal(name), _this.i18nTranslate(value, meta), literal(0));
+                        }
+                        else {
+                            var converted = value.visit(_this._valueConverter);
+                            if (converted instanceof Interpolation) {
+                                var strings = converted.strings, expressions = converted.expressions;
+                                var label = assembleI18nTemplate(strings);
+                                i18nAttrArgs_1.push(literal(name), _this.i18nTranslate(label, meta), literal(expressions.length));
+                                expressions.forEach(function (expression) {
+                                    hasBindings_1 = true;
+                                    var binding = _this.convertExpressionBinding(implicit, expression);
+                                    _this.updateInstruction(element.sourceSpan, Identifiers$1.i18nExp, [binding]);
+                                });
+                            }
+                        }
+                    });
+                    if (i18nAttrArgs_1.length) {
+                        var index = literal(this.allocateDataSlot());
+                        var args = this.constantPool.getConstLiteral(literalArr(i18nAttrArgs_1), true);
+                        this.creationInstruction(element.sourceSpan, Identifiers$1.i18nAttribute, [index, args]);
+                        if (hasBindings_1) {
+                            this.updateInstruction(element.sourceSpan, Identifiers$1.i18nApply, [index]);
+                        }
+                    }
                 }
                 // initial styling for static style="..." attributes
                 if (hasStylingInstructions) {
@@ -17593,8 +17653,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         // i0.ɵtext(1, MSG_XYZ);
         // ```
         TemplateDefinitionBuilder.prototype.visitSingleI18nTextChild = function (text, i18nMeta) {
-            var meta = parseI18nMeta(i18nMeta);
-            var variable$$1 = this.constantPool.getTranslation(text.value, meta, this.fileBasedI18nSuffix);
+            var variable$$1 = this.i18nTranslate(text.value, i18nMeta);
             this.creationInstruction(text.sourceSpan, Identifiers$1.text, [literal(this.allocateDataSlot()), variable$$1]);
         };
         TemplateDefinitionBuilder.prototype.allocateDataSlot = function () { return this._dataIndex++; };
@@ -17624,6 +17683,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         TemplateDefinitionBuilder.prototype.allocateBindingSlots = function (value) {
             this._bindingSlots += value instanceof Interpolation ? value.expressions.length : 1;
+        };
+        TemplateDefinitionBuilder.prototype.convertExpressionBinding = function (implicit, value) {
+            var convertedPropertyBinding = convertPropertyBinding(this, implicit, value, this.bindingContext(), BindingForm.TrySimple);
+            var valExpr = convertedPropertyBinding.currValExpr;
+            return importExpr(Identifiers$1.bind).callFn([valExpr]);
         };
         TemplateDefinitionBuilder.prototype.convertPropertyBinding = function (implicit, value, skipBindFn) {
             var _a;
@@ -29318,6 +29382,25 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
     }
     /**
+     * Removes the `child` element of the `parent` from the DOM.
+     *
+     * @param parentEl The parent element from which to remove the child
+     * @param child The child that should be removed
+     * @param currentView The current LView
+     * @returns Whether or not the child was removed
+     */
+    function removeChild(tNode, child, currentView) {
+        var parentNative = getParentLNode(tNode, currentView).native;
+        if (child !== null && canInsertNativeNode(tNode, currentView)) {
+            // We only remove the element if not in View or not projected.
+            var renderer = currentView[RENDERER];
+            isProceduralRenderer(renderer) ? renderer.removeChild(parentNative, child) :
+                parentNative.removeChild(child);
+            return true;
+        }
+        return false;
+    }
+    /**
      * Appends a projected node to the DOM, or in the case of a projected container,
      * appends the nodes from all of the container's active views to the DOM.
      *
@@ -31034,7 +31117,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             childIndex: -1,
             bindingStartIndex: bindingStartIndex,
             expandoStartIndex: initialViewLength,
-            directives: null,
             expandoInstructions: null,
             firstTemplatePass: true,
             initHooks: null,
@@ -34301,6 +34383,127 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    // TODO: Remove LNode arg when we remove dynamicContainerNode
+    function appendI18nNode(node, tNode, parentTNode, previousTNode) {
+        if (ngDevMode) {
+            ngDevMode.rendererMoveNode++;
+        }
+        var viewData = _getViewData();
+        // On first pass, re-organize node tree to put this node in the correct position.
+        var firstTemplatePass = viewData[TVIEW].firstTemplatePass;
+        if (firstTemplatePass) {
+            if (previousTNode === parentTNode && tNode !== parentTNode.child) {
+                tNode.next = parentTNode.child;
+                parentTNode.child = tNode;
+            }
+            else if (previousTNode !== parentTNode && tNode !== previousTNode.next) {
+                tNode.next = previousTNode.next;
+                previousTNode.next = tNode;
+            }
+            else {
+                tNode.next = null;
+            }
+            if (parentTNode !== viewData[HOST_NODE]) {
+                tNode.parent = parentTNode;
+            }
+        }
+        appendChild(node.native, tNode, viewData);
+        // Template containers also have a comment node for the `ViewContainerRef` that should be moved
+        if (tNode.type === 0 /* Container */ && node.dynamicLContainerNode) {
+            appendChild(node.dynamicLContainerNode.native, tNode, viewData);
+            return tNode.dynamicContainerNode;
+        }
+        return tNode;
+    }
+    function i18nAttribute(index, attrs) {
+        // placeholder for i18nAttribute function
+    }
+    function i18nExp(expression) {
+        // placeholder for i18nExp function
+    }
+    function i18nStart(index, message, subTemplateIndex) {
+        if (subTemplateIndex === void 0) { subTemplateIndex = 0; }
+        // placeholder for i18nExp function
+    }
+    function i18nEnd() {
+        // placeholder for i18nEnd function
+    }
+    /**
+     * Takes a list of instructions generated by `i18nMapping()` to transform the template accordingly.
+     *
+     * @param startIndex Index of the first element to translate (for instance the first child of the
+     * element with the i18n attribute).
+     * @param instructions The list of instructions to apply on the current view.
+     */
+    function i18nApply(startIndex, instructions) {
+        var viewData = _getViewData();
+        if (ngDevMode) {
+            assertEqual(viewData[BINDING_INDEX], viewData[TVIEW].bindingStartIndex, 'i18nApply should be called before any binding');
+        }
+        if (!instructions) {
+            return;
+        }
+        var renderer = getRenderer();
+        var startTNode = getTNode(startIndex);
+        var localParentTNode = startTNode.parent || viewData[HOST_NODE];
+        var localPreviousTNode = localParentTNode;
+        resetComponentState(); // We don't want to add to the tree with the wrong previous node
+        for (var i = 0; i < instructions.length; i++) {
+            var instruction = instructions[i];
+            switch (instruction & -536870912 /* InstructionMask */) {
+                case 1073741824 /* Element */:
+                    var elementIndex = instruction & 536870911 /* IndexMask */;
+                    var element$$1 = load(elementIndex);
+                    var elementTNode = getTNode(elementIndex);
+                    localPreviousTNode =
+                        appendI18nNode(element$$1, elementTNode, localParentTNode, localPreviousTNode);
+                    localParentTNode = elementTNode;
+                    break;
+                case 1610612736 /* Expression */:
+                case -2147483648 /* TemplateRoot */:
+                case -1610612736 /* Any */:
+                    var nodeIndex = instruction & 536870911 /* IndexMask */;
+                    var node = load(nodeIndex);
+                    localPreviousTNode =
+                        appendI18nNode(node, getTNode(nodeIndex), localParentTNode, localPreviousTNode);
+                    break;
+                case 536870912 /* Text */:
+                    if (ngDevMode) {
+                        ngDevMode.rendererCreateTextNode++;
+                    }
+                    var value = instructions[++i];
+                    var textRNode = createTextNode(value, renderer);
+                    // If we were to only create a `RNode` then projections won't move the text.
+                    // Create text node at the current end of viewData. Must subtract header offset because
+                    // createNodeAtIndex takes a raw index (not adjusted by header offset).
+                    adjustBlueprintForNewNode(viewData);
+                    var lastNodeIndex = viewData.length - 1 - HEADER_OFFSET;
+                    var textTNode = createNodeAtIndex(lastNodeIndex, 3 /* Element */, textRNode, null, null);
+                    localPreviousTNode = appendI18nNode(loadElement(lastNodeIndex), textTNode, localParentTNode, localPreviousTNode);
+                    resetComponentState();
+                    break;
+                case -1073741824 /* CloseNode */:
+                    localPreviousTNode = localParentTNode;
+                    localParentTNode = localParentTNode.parent || viewData[HOST_NODE];
+                    break;
+                case -536870912 /* RemoveNode */:
+                    if (ngDevMode) {
+                        ngDevMode.rendererRemoveNode++;
+                    }
+                    var removeIndex = instruction & 536870911 /* IndexMask */;
+                    var removedNode = load(removeIndex);
+                    var removedTNode = getTNode(removeIndex);
+                    removeChild(removedTNode, removedNode.native || null, viewData);
+                    // For template containers we also need to remove their `ViewContainerRef` from the DOM
+                    if (removedTNode.type === 0 /* Container */ && removedNode.dynamicLContainerNode) {
+                        removeChild(removedTNode, removedNode.dynamicLContainerNode.native || null, viewData);
+                        removedTNode.dynamicContainerNode.detached = true;
+                        removedNode.dynamicLContainerNode.data[RENDER_PARENT] = null;
+                    }
+                    break;
+            }
+        }
+    }
 
     /**
      * @license
@@ -39673,6 +39876,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         'ɵtextBinding': textBinding,
         'ɵembeddedViewStart': embeddedViewStart,
         'ɵembeddedViewEnd': embeddedViewEnd,
+        'ɵi18nAttribute': i18nAttribute,
+        'ɵi18nExp': i18nExp,
+        'ɵi18nStart': i18nStart,
+        'ɵi18nEnd': i18nEnd,
+        'ɵi18nApply': i18nApply,
         'ɵsanitizeHtml': sanitizeHtml,
         'ɵsanitizeStyle': sanitizeStyle,
         'ɵdefaultStyleSanitizer': defaultStyleSanitizer,
@@ -40798,7 +41006,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('7.0.0-rc.0+105.sha-7acdad6');
+    var VERSION$2 = new Version$1('7.0.0-rc.1+4.sha-39f42ba');
 
     /**
      * @license
@@ -53182,7 +53390,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.0-rc.0+105.sha-7acdad6');
+    var VERSION$3 = new Version$1('7.0.0-rc.1+4.sha-39f42ba');
 
     /**
      * @license
