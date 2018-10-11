@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.0-rc.1+19.sha-4b494f2
+ * @license Angular v7.0.0-rc.1+17.sha-1657c99
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1197,7 +1197,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.0-rc.1+19.sha-4b494f2');
+    var VERSION = new Version('7.0.0-rc.1+17.sha-1657c99');
 
     /**
      * @license
@@ -17469,24 +17469,31 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 var lastInputCommand = null;
                 if (styleInputs.length) {
                     var i = mapBasedStyleInput_1 ? 1 : 0;
-                    for (i; i < styleInputs.length; i++) {
+                    var _loop_1 = function () {
                         var input = styleInputs[i];
+                        var params = [];
+                        var sanitizationRef = resolveSanitizationFn(input, input.securityContext);
+                        if (sanitizationRef)
+                            params.push(sanitizationRef);
                         var key = input.name;
                         var styleIndex = stylesIndexMap[key];
-                        var value = input.value.visit(this._valueConverter);
-                        var params = [
-                            indexLiteral_1, literal(styleIndex), this.convertPropertyBinding(implicit, value, true)
-                        ];
-                        if (input.unit != null) {
-                            params.push(literal(input.unit));
-                        }
-                        this.updateInstruction(input.sourceSpan, Identifiers$1.elementStyleProp, params);
+                        var value = input.value.visit(this_1._valueConverter);
+                        this_1.updateInstruction(input.sourceSpan, Identifiers$1.elementStyleProp, function () {
+                            return __spread([
+                                indexLiteral_1, literal(styleIndex),
+                                _this.convertPropertyBinding(implicit, value, true)
+                            ], params);
+                        });
+                    };
+                    var this_1 = this;
+                    for (i; i < styleInputs.length; i++) {
+                        _loop_1();
                     }
                     lastInputCommand = styleInputs[styleInputs.length - 1];
                 }
                 if (classInputs.length) {
                     var i = mapBasedClassInput_1 ? 1 : 0;
-                    var _loop_1 = function () {
+                    var _loop_2 = function () {
                         var input = classInputs[i];
                         var params = [];
                         var sanitizationRef = resolveSanitizationFn(input, input.securityContext);
@@ -17494,17 +17501,17 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                             params.push(sanitizationRef);
                         var key = input.name;
                         var classIndex = classesIndexMap[key];
-                        var value = input.value.visit(this_1._valueConverter);
-                        this_1.updateInstruction(input.sourceSpan, Identifiers$1.elementClassProp, function () {
+                        var value = input.value.visit(this_2._valueConverter);
+                        this_2.updateInstruction(input.sourceSpan, Identifiers$1.elementClassProp, function () {
                             return __spread([
                                 indexLiteral_1, literal(classIndex),
                                 _this.convertPropertyBinding(implicit, value, true)
                             ], params);
                         });
                     };
-                    var this_1 = this;
+                    var this_2 = this;
                     for (i; i < classInputs.length; i++) {
-                        _loop_1();
+                        _loop_2();
                     }
                     lastInputCommand = classInputs[classInputs.length - 1];
                 }
@@ -31833,6 +31840,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      *        specifically for element styling--the index must be the next index after the element
      *        index.)
      * @param styleIndex Index of the style property on this element. (Monotonically increasing.)
+     * @param styleName Name of property. Because it is going to DOM this is not subject to
+     *        renaming as part of minification.
      * @param value New value to write (null to remove).
      * @param suffix Optional suffix. Used with scalar values to add unit such as `px`.
      *        Note that when a suffix is provided then the underlying sanitizer will
@@ -41222,7 +41231,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('7.0.0-rc.1+19.sha-4b494f2');
+    var VERSION$2 = new Version$1('7.0.0-rc.1+17.sha-1657c99');
 
     /**
      * @license
@@ -53632,7 +53641,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.0-rc.1+19.sha-4b494f2');
+    var VERSION$3 = new Version$1('7.0.0-rc.1+17.sha-1657c99');
 
     /**
      * @license
