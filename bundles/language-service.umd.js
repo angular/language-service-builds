@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.0-rc.1+4.sha-39f42ba
+ * @license Angular v7.0.0-rc.1+5.sha-053bf27
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1197,7 +1197,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.0-rc.1+4.sha-39f42ba');
+    var VERSION = new Version('7.0.0-rc.1+5.sha-053bf27');
 
     /**
      * @license
@@ -28283,6 +28283,112 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * This property will be monkey-patched on elements, components and directives
      */
     var MONKEY_PATCH_KEY_NAME = '__ngContext__';
+    /** Returns the matching `LContext` data for a given DOM node, directive or component instance.
+     *
+     * This function will examine the provided DOM element, component, or directive instance\'s
+     * monkey-patched property to derive the `LContext` data. Once called then the monkey-patched
+     * value will be that of the newly created `LContext`.
+     *
+     * If the monkey-patched value is the `LViewData` instance then the context value for that
+     * target will be created and the monkey-patch reference will be updated. Therefore when this
+     * function is called it may mutate the provided element\'s, component\'s or any of the associated
+     * directive\'s monkey-patch values.
+     *
+     * If the monkey-patch value is not detected then the code will walk up the DOM until an element
+     * is found which contains a monkey-patch reference. When that occurs then the provided element
+     * will be updated with a new context (which is then returned). If the monkey-patch value is not
+     * detected for a component/directive instance then it will throw an error (all components and
+     * directives should be automatically monkey-patched by ivy).
+     */
+    function getContext(target) {
+        var mpValue = readPatchedData(target);
+        if (mpValue) {
+            // only when it's an array is it considered an LViewData instance
+            // ... otherwise it's an already constructed LContext instance
+            if (Array.isArray(mpValue)) {
+                var lViewData = mpValue;
+                var nodeIndex = void 0;
+                var component = undefined;
+                var directives = undefined;
+                if (isComponentInstance(target)) {
+                    nodeIndex = findViaComponent(lViewData, target);
+                    if (nodeIndex == -1) {
+                        throw new Error('The provided component was not found in the application');
+                    }
+                    component = target;
+                }
+                else if (isDirectiveInstance(target)) {
+                    nodeIndex = findViaDirective(lViewData, target);
+                    if (nodeIndex == -1) {
+                        throw new Error('The provided directive was not found in the application');
+                    }
+                    directives = discoverDirectives(nodeIndex, lViewData, false);
+                }
+                else {
+                    nodeIndex = findViaNativeElement(lViewData, target);
+                    if (nodeIndex == -1) {
+                        return null;
+                    }
+                }
+                // the goal is not to fill the entire context full of data because the lookups
+                // are expensive. Instead, only the target data (the element, compontent or
+                // directive details) are filled into the context. If called multiple times
+                // with different target values then the missing target data will be filled in.
+                var lNode = getLNodeFromViewData(lViewData, nodeIndex);
+                var existingCtx = readPatchedData(lNode.native);
+                var context = (existingCtx && !Array.isArray(existingCtx)) ?
+                    existingCtx :
+                    createLContext(lViewData, nodeIndex, lNode.native);
+                // only when the component has been discovered then update the monkey-patch
+                if (component && context.component === undefined) {
+                    context.component = component;
+                    attachPatchData(context.component, context);
+                }
+                // only when the directives have been discovered then update the monkey-patch
+                if (directives && context.directives === undefined) {
+                    context.directives = directives;
+                    for (var i = 0; i < directives.length; i++) {
+                        attachPatchData(directives[i], context);
+                    }
+                }
+                attachPatchData(context.native, context);
+                mpValue = context;
+            }
+        }
+        else {
+            var rElement = target;
+            ngDevMode && assertDomElement(rElement);
+            // if the context is not found then we need to traverse upwards up the DOM
+            // to find the nearest element that has already been monkey patched with data
+            var parent_1 = rElement;
+            while (parent_1 = parent_1.parentNode) {
+                var parentContext = readPatchedData(parent_1);
+                if (parentContext) {
+                    var lViewData = void 0;
+                    if (Array.isArray(parentContext)) {
+                        lViewData = parentContext;
+                    }
+                    else {
+                        lViewData = parentContext.lViewData;
+                    }
+                    // the edge of the app was also reached here through another means
+                    // (maybe because the DOM was changed manually).
+                    if (!lViewData) {
+                        return null;
+                    }
+                    var index = findViaNativeElement(lViewData, rElement);
+                    if (index >= 0) {
+                        var lNode = getLNodeFromViewData(lViewData, index);
+                        var context = createLContext(lViewData, index, lNode.native);
+                        attachPatchData(lNode.native, context);
+                        mpValue = context;
+                        break;
+                    }
+                }
+            }
+        }
+        return mpValue || null;
+    }
     /**
      * Creates an empty instance of a `LContext` context
      */
@@ -28340,6 +28446,41 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return null;
     }
+    function isComponentInstance(instance) {
+        return instance && instance.constructor && instance.constructor.ngComponentDef;
+    }
+    function isDirectiveInstance(instance) {
+        return instance && instance.constructor && instance.constructor.ngDirectiveDef;
+    }
+    /**
+     * Locates the element within the given LViewData and returns the matching index
+     */
+    function findViaNativeElement(lViewData, native) {
+        var tNode = lViewData[TVIEW].firstChild;
+        while (tNode) {
+            var lNode = getLNodeFromViewData(lViewData, tNode.index);
+            if (lNode.native === native) {
+                return tNode.index;
+            }
+            tNode = traverseNextElement(tNode);
+        }
+        return -1;
+    }
+    /**
+     * Locates the next tNode (child, sibling or parent).
+     */
+    function traverseNextElement(tNode) {
+        if (tNode.child) {
+            return tNode.child;
+        }
+        else if (tNode.next) {
+            return tNode.next;
+        }
+        else if (tNode.parent) {
+            return tNode.parent.next || null;
+        }
+        return null;
+    }
     /**
      * Locates the component within the given LViewData and returns the matching index
      */
@@ -28364,6 +28505,90 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
         }
         return -1;
+    }
+    /**
+     * Locates the directive within the given LViewData and returns the matching index
+     */
+    function findViaDirective(lViewData, directiveInstance) {
+        // if a directive is monkey patched then it will (by default)
+        // have a reference to the LViewData of the current view. The
+        // element bound to the directive being search lives somewhere
+        // in the view data. We loop through the nodes and check their
+        // list of directives for the instance.
+        var tNode = lViewData[TVIEW].firstChild;
+        while (tNode) {
+            var directiveIndexStart = getDirectiveStartIndex(tNode);
+            var directiveIndexEnd = getDirectiveEndIndex(tNode, directiveIndexStart);
+            for (var i = directiveIndexStart; i < directiveIndexEnd; i++) {
+                if (lViewData[i] === directiveInstance) {
+                    return tNode.index;
+                }
+            }
+            tNode = traverseNextElement(tNode);
+        }
+        return -1;
+    }
+    function assertDomElement(element) {
+        assertEqual(element.nodeType, 1, 'The provided value must be an instance of an HTMLElement');
+    }
+    /**
+     * Retruns the instance of the LElementNode at the given index in the LViewData.
+     *
+     * This function will also unwrap the inner value incase it's stuffed into an
+     * array (which is what happens when [style] and [class] bindings are present
+     * in the view instructions for the element being returned).
+     */
+    function getLNodeFromViewData(lViewData, lElementIndex) {
+        var value = lViewData[lElementIndex];
+        return value ? readElementValue(value) : null;
+    }
+    /**
+     * Returns a list of directives extracted from the given view based on the
+     * provided list of directive index values.
+     *
+     * @param nodeIndex The node index
+     * @param lViewData The target view data
+     * @param includeComponents Whether or not to include components in returned directives
+     */
+    function discoverDirectives(nodeIndex, lViewData, includeComponents) {
+        var tNode = lViewData[TVIEW].data[nodeIndex];
+        var directiveStartIndex = getDirectiveStartIndex(tNode);
+        var directiveEndIndex = getDirectiveEndIndex(tNode, directiveStartIndex);
+        if (!includeComponents && tNode.flags & 4096 /* isComponent */)
+            directiveStartIndex++;
+        return lViewData.slice(directiveStartIndex, directiveEndIndex);
+    }
+    /**
+     * Returns a map of local references (local reference name => element or directive instance) that
+     * exist on a given element.
+     */
+    function discoverLocalRefs(lViewData, lNodeIndex) {
+        var tNode = lViewData[TVIEW].data[lNodeIndex];
+        if (tNode && tNode.localNames) {
+            var result = {};
+            for (var i = 0; i < tNode.localNames.length; i += 2) {
+                var localRefName = tNode.localNames[i];
+                var directiveIndex = tNode.localNames[i + 1];
+                result[localRefName] = directiveIndex === -1 ?
+                    getLNodeFromViewData(lViewData, lNodeIndex).native :
+                    lViewData[directiveIndex];
+            }
+            return result;
+        }
+        return null;
+    }
+    function getDirectiveStartIndex(tNode) {
+        // the tNode instances store a flag value which then has a
+        // pointer which tells the starting index of where all the
+        // active directives are in the master directive array
+        return tNode.flags >> 15 /* DirectiveStartingIndexShift */;
+    }
+    function getDirectiveEndIndex(tNode, startIndex) {
+        // The end value is also a part of the same flag
+        // (see `TNodeFlags` to see how the flag bit shifting
+        // values are used).
+        var count = tNode.flags & 4095 /* DirectiveCountMask */;
+        return count ? (startIndex + count) : -1;
     }
     function readElementValue(value) {
         return (Array.isArray(value) ? value[0] : value);
@@ -29119,8 +29344,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     function removeView(lContainer, tContainer, removeIndex) {
         var view = lContainer[VIEWS][removeIndex];
-        destroyLView(view);
         detachView(lContainer, removeIndex, !!tContainer.detached);
+        destroyLView(view);
     }
     /** Gets the child of the given LViewData */
     function getLViewChild(viewData) {
@@ -41006,7 +41231,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('7.0.0-rc.1+4.sha-39f42ba');
+    var VERSION$2 = new Version$1('7.0.0-rc.1+5.sha-053bf27');
 
     /**
      * @license
@@ -52027,11 +52252,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             this.debugContextFactory = getCurrentDebugContext;
             this.data = this.delegate.data;
         }
-        Object.defineProperty(DebugRenderer2.prototype, "debugContext", {
-            get: function () { return this.debugContextFactory(); },
-            enumerable: true,
-            configurable: true
-        });
+        DebugRenderer2.prototype.createDebugContext = function (nativeElement) { return this.debugContextFactory(nativeElement); };
         DebugRenderer2.prototype.destroyNode = function (node) {
             removeDebugNodeFromIndex(getDebugNode(node));
             if (this.delegate.destroyNode) {
@@ -52041,7 +52262,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         DebugRenderer2.prototype.destroy = function () { this.delegate.destroy(); };
         DebugRenderer2.prototype.createElement = function (name, namespace) {
             var el = this.delegate.createElement(name, namespace);
-            var debugCtx = this.debugContext;
+            var debugCtx = this.createDebugContext(el);
             if (debugCtx) {
                 var debugEl = new DebugElement(el, null, debugCtx);
                 debugEl.name = name;
@@ -52051,7 +52272,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         DebugRenderer2.prototype.createComment = function (value) {
             var comment = this.delegate.createComment(value);
-            var debugCtx = this.debugContext;
+            var debugCtx = this.createDebugContext(comment);
             if (debugCtx) {
                 indexDebugNode(new DebugNode(comment, null, debugCtx));
             }
@@ -52059,7 +52280,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         DebugRenderer2.prototype.createText = function (value) {
             var text = this.delegate.createText(value);
-            var debugCtx = this.debugContext;
+            var debugCtx = this.createDebugContext(text);
             if (debugCtx) {
                 indexDebugNode(new DebugNode(text, null, debugCtx));
             }
@@ -52092,7 +52313,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         DebugRenderer2.prototype.selectRootElement = function (selectorOrNode, preserveContent) {
             var el = this.delegate.selectRootElement(selectorOrNode, preserveContent);
-            var debugCtx = getCurrentDebugContext();
+            var debugCtx = getCurrentDebugContext() || (this.createDebugContext(el));
             if (debugCtx) {
                 indexDebugNode(new DebugElement(el, null, debugCtx));
             }
@@ -52223,6 +52444,53 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
 
     /**
+     * Returns the host component instance associated with the target.
+     *
+     * This will only return a component instance of the DOM node
+     * contains an instance of a component on it.
+     */
+    function getHostComponent(target) {
+        var context = loadContext(target);
+        var tNode = context.lViewData[TVIEW].data[context.nodeIndex];
+        if (tNode.flags & 4096 /* isComponent */) {
+            var lNode = context.lViewData[context.nodeIndex];
+            return lNode.data[CONTEXT];
+        }
+        return null;
+    }
+    /**
+     * Returns the injector instance that is associated with
+     * the element, component or directive.
+     */
+    function getInjector(target) {
+        var context = loadContext(target);
+        var tNode = context.lViewData[TVIEW].data[context.nodeIndex];
+        return new NodeInjector(tNode, context.lViewData);
+    }
+    /**
+     * Returns LContext associated with a target passed as an argument.
+     * Throws if a given target doesn't have associated LContext.
+     */
+    function loadContext(target) {
+        var context = getContext(target);
+        if (!context) {
+            throw new Error(ngDevMode ? 'Unable to find the given context data for the given target' :
+                'Invalid ng target');
+        }
+        return context;
+    }
+    /**
+     *  Retrieve map of local references (local reference name => element or directive instance).
+     */
+    function getLocalRefs(target) {
+        var context = loadContext(target);
+        if (context.localRefs === undefined) {
+            context.localRefs = discoverLocalRefs(context.lViewData, context.nodeIndex);
+        }
+        return context.localRefs || {};
+    }
+
+    /**
      * @license
      * Copyright Google Inc. All Rights Reserved.
      *
@@ -52239,9 +52507,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         function Render3DebugRendererFactory2() {
             return _super !== null && _super.apply(this, arguments) || this;
         }
-        Render3DebugRendererFactory2.prototype.createRenderer = function (element$$1, renderData) {
-            var renderer = _super.prototype.createRenderer.call(this, element$$1, renderData);
-            renderer.debugContextFactory = function () { return new Render3DebugContext(_getViewData()); };
+        Render3DebugRendererFactory2.prototype.createRenderer = function (element, renderData) {
+            var renderer = _super.prototype.createRenderer.call(this, element, renderData);
+            renderer.debugContextFactory = function (nativeElement) { return new Render3DebugContext(nativeElement); };
             return renderer;
         };
         return Render3DebugRendererFactory2;
@@ -52252,88 +52520,71 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Used in tests to retrieve information those nodes.
      */
     var Render3DebugContext = /** @class */ (function () {
-        function Render3DebugContext(viewData) {
-            this.viewData = viewData;
-            // The LNode will be created next and appended to viewData
-            this.nodeIndex = viewData ? viewData.length : null;
+        function Render3DebugContext(_nativeNode) {
+            this._nativeNode = _nativeNode;
         }
+        Object.defineProperty(Render3DebugContext.prototype, "nodeIndex", {
+            get: function () { return loadContext(this._nativeNode).nodeIndex; },
+            enumerable: true,
+            configurable: true
+        });
         Object.defineProperty(Render3DebugContext.prototype, "view", {
-            get: function () { return this.viewData; },
+            get: function () { return loadContext(this._nativeNode).lViewData; },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(Render3DebugContext.prototype, "injector", {
-            get: function () {
-                if (this.nodeIndex !== null) {
-                    var tNode = this.view[TVIEW].data[this.nodeIndex];
-                    return new NodeInjector(tNode, this.view);
-                }
-                return Injector.NULL;
-            },
+            get: function () { return getInjector(this._nativeNode); },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(Render3DebugContext.prototype, "component", {
-            get: function () {
-                // TODO(vicb): why/when
-                if (this.nodeIndex === null) {
-                    return null;
-                }
-                var tView = this.view[TVIEW];
-                var components = tView.components;
-                return (components && components.indexOf(this.nodeIndex) == -1) ?
-                    null :
-                    this.view[this.nodeIndex].data[CONTEXT];
-            },
+            get: function () { return getHostComponent(this._nativeNode); },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(Render3DebugContext.prototype, "providerTokens", {
-            // TODO(vicb): add view providers when supported
             get: function () {
-                // TODO(vicb): why/when
-                var directiveDefs = this.view[TVIEW].data;
-                if (this.nodeIndex === null || directiveDefs == null) {
-                    return [];
+                var lDebugCtx = loadContext(this._nativeNode);
+                var lViewData = lDebugCtx.lViewData;
+                var tNode = lViewData[TVIEW].data[lDebugCtx.nodeIndex];
+                var directivesCount = tNode.flags & 4095 /* DirectiveCountMask */;
+                if (directivesCount > 0) {
+                    var directiveIdxStart = tNode.flags >> 15 /* DirectiveStartingIndexShift */;
+                    var directiveIdxEnd = directiveIdxStart + directivesCount;
+                    var viewDirectiveDefs = this.view[TVIEW].data;
+                    var directiveDefs = viewDirectiveDefs.slice(directiveIdxStart, directiveIdxEnd);
+                    return directiveDefs.map(function (directiveDef) { return directiveDef.type; });
                 }
-                var currentTNode = this.view[TVIEW].data[this.nodeIndex];
-                var dirStart = currentTNode >> 15 /* DirectiveStartingIndexShift */;
-                var dirEnd = dirStart + (currentTNode & 4095 /* DirectiveCountMask */);
-                return directiveDefs.slice(dirStart, dirEnd);
+                return [];
             },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(Render3DebugContext.prototype, "references", {
-            get: function () {
-                // TODO(vicb): implement retrieving references
-                throw new Error('Not implemented yet in ivy');
-            },
+            get: function () { return getLocalRefs(this._nativeNode); },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(Render3DebugContext.prototype, "context", {
-            get: function () {
-                if (this.nodeIndex === null) {
-                    return null;
-                }
-                var lNode = this.view[this.nodeIndex];
-                return lNode.view[CONTEXT];
-            },
+            // TODO(pk): check previous implementation and re-implement
+            get: function () { throw new Error('Not implemented in ivy'); },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(Render3DebugContext.prototype, "componentRenderElement", {
+            // TODO(pk): check previous implementation and re-implement
             get: function () { throw new Error('Not implemented in ivy'); },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(Render3DebugContext.prototype, "renderNode", {
+            // TODO(pk): check previous implementation and re-implement
             get: function () { throw new Error('Not implemented in ivy'); },
             enumerable: true,
             configurable: true
         });
-        // TODO(vicb): check previous implementation
+        // TODO(pk): check previous implementation and re-implement
         Render3DebugContext.prototype.logError = function (console) {
             var values = [];
             for (var _i = 1; _i < arguments.length; _i++) {
@@ -53390,7 +53641,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.0-rc.1+4.sha-39f42ba');
+    var VERSION$3 = new Version$1('7.0.0-rc.1+5.sha-053bf27');
 
     /**
      * @license
