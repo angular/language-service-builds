@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.0-rc.1+24.sha-9895553
+ * @license Angular v7.0.0-rc.1+27.sha-071934e
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1164,7 +1164,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.0-rc.1+24.sha-9895553');
+    var VERSION = new Version('7.0.0-rc.1+27.sha-071934e');
 
     /**
      * @license
@@ -24511,6 +24511,26 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * found in the LICENSE file at https://angular.io/license
      */
     /**
+     * Below are constants for LContainer indices to help us look up LContainer members
+     * without having to remember the specific indices.
+     * Uglify will inline these when minifying so there shouldn't be a cost.
+     */
+    var ACTIVE_INDEX = 0;
+    // PARENT, NEXT, and QUERIES are indices 1, 2, and 3.
+    // As we already have these constants in LViewData, we don't need to re-create them.
+    var HOST_NATIVE = 4;
+    var NATIVE = 5;
+    var VIEWS = 6;
+    var RENDER_PARENT = 7;
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
      * This property will be monkey-patched on elements, components and directives
      */
     var MONKEY_PATCH_KEY_NAME = '__ngContext__';
@@ -24821,8 +24841,30 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var count = tNode.flags & 4095 /* DirectiveCountMask */;
         return count ? (startIndex + count) : -1;
     }
+    /**
+     * Takes the value of a slot in `LViewData` and returns the element node.
+     *
+     * Normally, element nodes are stored flat, but if the node has styles/classes on it,
+     * it might be wrapped in a styling context. Or if that node has a directive that injects
+     * ViewContainerRef, it may be wrapped in an LContainer.
+     *
+     * @param value The initial value in `LViewData`
+     */
     function readElementValue(value) {
-        return (Array.isArray(value) ? value[0] : value);
+        if (Array.isArray(value)) {
+            if (typeof value[ACTIVE_INDEX] === 'number') {
+                // This is an LContainer. It may also have a styling context.
+                value = value[HOST_NATIVE];
+                return Array.isArray(value) ? value[0 /* ElementPosition */] : value;
+            }
+            else {
+                // This is a StylingContext, which stores the element node at 0.
+                return value[0 /* ElementPosition */];
+            }
+        }
+        else {
+            return value; // Regular LNode is stored here
+        }
     }
 
     /**
@@ -24940,24 +24982,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function throwCyclicDependencyError(token) {
         throw new Error("Cannot instantiate cyclic dependency! " + token);
     }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * Below are constants for LContainer indices to help us look up LContainer members
-     * without having to remember the specific indices.
-     * Uglify will inline these when minifying so there shouldn't be a cost.
-     */
-    var ACTIVE_INDEX = 0;
-    // PARENT, NEXT, and QUERIES are indices 1, 2, and 3.
-    // As we already have these constants in LViewData, we don't need to re-create them.
-    var VIEWS = 4;
-    var RENDER_PARENT = 5;
 
     /**
      * @license
@@ -25195,6 +25219,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function isContentQueryHost(tNode) {
         return (tNode.flags & 16384 /* hasContentQuery */) !== 0;
     }
+    function isLContainer(value) {
+        // Styling contexts are also arrays, but their first index contains an element node
+        return Array.isArray(value) && typeof value[ACTIVE_INDEX] === 'number';
+    }
 
     /**
      * @license
@@ -25203,33 +25231,16 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    /** Retrieves the parent LNode of a given node. */
-    function getParentLNode(tNode, currentView) {
-        return tNode.parent == null ? getHostElementNode(currentView) :
-            getLNode(tNode.parent, currentView);
-    }
-    /**
-     * Gets the host LElementNode given a view. Will return null if the host element is an
-     * LViewNode, since they are being phased out.
-     */
-    function getHostElementNode(currentView) {
-        var hostTNode = currentView[HOST_NODE];
-        return hostTNode && hostTNode.type !== 2 /* View */ ?
-            getLNode(hostTNode, currentView[PARENT]) :
-            null;
-    }
-    function getContainerNode(tNode, embeddedView) {
+    function getLContainer(tNode, embeddedView) {
         if (tNode.index === -1) {
             // This is a dynamically created view inside a dynamic container.
             // If the host index is -1, the view has not yet been inserted, so it has no parent.
             var containerHostIndex = embeddedView[CONTAINER_INDEX];
-            return containerHostIndex > -1 ?
-                embeddedView[PARENT][containerHostIndex].dynamicLContainerNode :
-                null;
+            return containerHostIndex > -1 ? embeddedView[PARENT][containerHostIndex] : null;
         }
         else {
             // This is a inline view node (e.g. embeddedViewStart)
-            return getParentLNode(tNode, embeddedView[PARENT]);
+            return embeddedView[PARENT][tNode.parent.index];
         }
     }
     /**
@@ -25263,27 +25274,23 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             if (tNode.type === 3 /* Element */) {
                 var elementNode = getLNode(tNode, currentView);
                 executeNodeAction(action, renderer, parent_1, elementNode.native, beforeNode);
-                if (elementNode.dynamicLContainerNode) {
-                    executeNodeAction(action, renderer, parent_1, elementNode.dynamicLContainerNode.native, beforeNode);
+                var nodeOrContainer = currentView[tNode.index];
+                if (isLContainer(nodeOrContainer)) {
+                    // This element has an LContainer, and its comment needs to be handled
+                    executeNodeAction(action, renderer, parent_1, nodeOrContainer[NATIVE], beforeNode);
                 }
             }
             else if (tNode.type === 0 /* Container */) {
-                var lContainerNode = currentView[tNode.index];
-                executeNodeAction(action, renderer, parent_1, lContainerNode.native, beforeNode);
-                var childContainerData = lContainerNode.dynamicLContainerNode ?
-                    lContainerNode.dynamicLContainerNode.data :
-                    lContainerNode.data;
-                if (renderParentNode) {
-                    childContainerData[RENDER_PARENT] = renderParentNode;
-                }
-                if (childContainerData[VIEWS].length) {
-                    currentView = childContainerData[VIEWS][0];
+                var lContainer = currentView[tNode.index];
+                executeNodeAction(action, renderer, parent_1, lContainer[NATIVE], beforeNode);
+                if (renderParentNode)
+                    lContainer[RENDER_PARENT] = renderParentNode;
+                if (lContainer[VIEWS].length) {
+                    currentView = lContainer[VIEWS][0];
                     nextTNode = currentView[TVIEW].node;
                     // When the walker enters a container, then the beforeNode has to become the local native
                     // comment node.
-                    beforeNode = lContainerNode.dynamicLContainerNode ?
-                        lContainerNode.dynamicLContainerNode.native :
-                        lContainerNode.native;
+                    beforeNode = lContainer[NATIVE];
                 }
             }
             else if (tNode.type === 1 /* Projection */) {
@@ -25325,7 +25332,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     // When exiting a container, the beforeNode must be restored to the previous value
                     if (tNode.type === 0 /* Container */) {
                         currentView = currentView[PARENT];
-                        beforeNode = currentView[tNode.index].native;
+                        beforeNode = currentView[tNode.index][NATIVE];
                     }
                     if (tNode.type === 2 /* View */ && currentView[NEXT]) {
                         currentView = currentView[NEXT];
@@ -25463,10 +25470,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
     /** Gets the child of the given LViewData */
     function getLViewChild(viewData) {
-        if (viewData[TVIEW].childIndex === -1)
+        var childIndex = viewData[TVIEW].childIndex;
+        if (childIndex === -1)
             return null;
-        var hostNode = viewData[viewData[TVIEW].childIndex];
-        return hostNode.data ? hostNode.data : hostNode.dynamicLContainerNode.data;
+        var value = viewData[childIndex];
+        // If it's an array, it's an LContainer. Otherwise, it's a component node, so LViewData
+        // is stored in data.
+        return Array.isArray(value) ? value : value.data;
     }
     /**
      * A standalone function which destroys an LView,
@@ -25501,7 +25511,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             tNode.type === 2 /* View */) {
             // if it's an embedded view, the state needs to go up to the container, in case the
             // container has a next
-            return getContainerNode(tNode, state).data;
+            return getLContainer(tNode, state);
         }
         else {
             // otherwise, use parent view for containers or component views
@@ -25514,7 +25524,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * @param view The LViewData to clean up
      */
     function cleanUpView(viewOrContainer) {
-        if (viewOrContainer[TVIEW]) {
+        if (viewOrContainer.length >= HEADER_OFFSET) {
             var view = viewOrContainer;
             removeListeners(view);
             executeOnDestroys(view);
@@ -25843,7 +25853,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * (same properties assigned in the same order).
      */
     function createLNodeObject(type, native, state) {
-        return { native: native, data: state, dynamicLContainerNode: null };
+        return { native: native, data: state };
     }
     function createNodeAtIndex(index, type, native, name, attrs, state) {
         var parent = isParent ? previousOrParentTNode : previousOrParentTNode && previousOrParentTNode.parent;
@@ -25871,8 +25881,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     createTNode(type, adjustedIndex, name, attrs, tParent, null);
                 if (!isParent && previousOrParentTNode) {
                     previousOrParentTNode.next = tNode_1;
-                    if (previousOrParentTNode.dynamicContainerNode)
-                        previousOrParentTNode.dynamicContainerNode.next = tNode_1;
                 }
             }
             tNode = tData[adjustedIndex];
@@ -26293,7 +26301,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             next: null,
             child: null,
             parent: parent,
-            dynamicContainerNode: null,
             detached: null,
             stylingTemplate: null,
             projection: null
@@ -26442,7 +26449,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             // Note: current can be an LViewData or an LContainer instance, but here we are only interested
             // in LContainer. We can tell it's an LContainer because its length is less than the LViewData
             // header.
-            if (current.length < HEADER_OFFSET && current[ACTIVE_INDEX] === null) {
+            if (current.length < HEADER_OFFSET && current[ACTIVE_INDEX] === -1) {
                 var container_1 = current;
                 for (var i = 0; i < container_1[VIEWS].length; i++) {
                     var dynamicViewData = container_1[VIEWS][i];
@@ -27431,10 +27438,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     _this._injectorIndex = _injectorIndex;
                     return _this;
                 }
-                TemplateRef_.prototype.createEmbeddedView = function (context, container$$1, tContainerNode, hostView, index) {
+                TemplateRef_.prototype.createEmbeddedView = function (context, container$$1, hostTNode, hostView, index) {
                     var lView = createEmbeddedViewAndNode(this._tView, context, this._declarationParentView, this._renderer, this._queries, this._injectorIndex);
                     if (container$$1) {
-                        insertView(lView, container$$1, hostView, index, tContainerNode.parent.index);
+                        insertView(lView, container$$1, hostView, index, hostTNode.index);
                     }
                     renderEmbeddedTemplate(lView, this._tView, context, 1 /* Create */);
                     var viewRef = new ViewRef(lView, context, -1);
@@ -27444,10 +27451,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 return TemplateRef_;
             }(TemplateRefToken));
         }
-        var hostNode = getLNode(hostTNode, hostView);
+        var hostContainer = hostView[hostTNode.index];
         ngDevMode && assertNodeType(hostTNode, 0 /* Container */);
         ngDevMode && assertDefined(hostTNode.tViews, 'TView must be allocated');
-        return new R3TemplateRef(hostView, createElementRef(ElementRefToken, hostTNode, hostView), hostTNode.tViews, getRenderer(), hostNode.data[QUERIES], hostTNode.injectorIndex);
+        return new R3TemplateRef(hostView, createElementRef(ElementRefToken, hostTNode, hostView), hostTNode.tViews, getRenderer(), hostContainer[QUERIES], hostTNode.injectorIndex);
     }
 
     /**
@@ -32485,7 +32492,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('7.0.0-rc.1+24.sha-9895553');
+    var VERSION$2 = new Version$1('7.0.0-rc.1+27.sha-071934e');
 
     /**
      * @license
@@ -44886,7 +44893,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.0-rc.1+24.sha-9895553');
+    var VERSION$3 = new Version$1('7.0.0-rc.1+27.sha-071934e');
 
     /**
      * @license
