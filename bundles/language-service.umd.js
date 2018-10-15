@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.0-rc.1+39.sha-b2db32b
+ * @license Angular v7.0.0-rc.1+40.sha-45732e5
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1197,7 +1197,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.0-rc.1+39.sha-b2db32b');
+    var VERSION = new Version('7.0.0-rc.1+40.sha-45732e5');
 
     /**
      * @license
@@ -35449,6 +35449,22 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             pipeInstance.transform(v1);
     }
     /**
+     * Invokes a pipe with 2 arguments.
+     *
+     * This instruction acts as a guard to {@link PipeTransform#transform} invoking
+     * the pipe only when an input to the pipe changes.
+     *
+     * @param index Pipe index where the pipe was stored on creation.
+     * @param slotOffset the offset in the reserved slot space
+     * @param v1 1st argument to {@link PipeTransform#transform}.
+     * @param v2 2nd argument to {@link PipeTransform#transform}.
+     */
+    function pipeBind2(index, slotOffset, v1, v2) {
+        var pipeInstance = load(index);
+        return isPure(index) ? pureFunction2(slotOffset, pipeInstance.transform, v1, v2, pipeInstance) :
+            pipeInstance.transform(v1, v2);
+    }
+    /**
      * Invokes a pipe with 3 arguments.
      *
      * This instruction acts as a guard to {@link PipeTransform#transform} invoking
@@ -40088,7 +40104,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         'ɵprojection': projection,
         'ɵelementProperty': elementProperty,
         'ɵpipeBind1': pipeBind1,
-        'ɵpipeBind2': pipeBind1,
+        'ɵpipeBind2': pipeBind2,
         'ɵpipeBind3': pipeBind3,
         'ɵpipeBind4': pipeBind4,
         'ɵpipeBindV': pipeBindV,
@@ -41237,7 +41253,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('7.0.0-rc.1+39.sha-b2db32b');
+    var VERSION$2 = new Version$1('7.0.0-rc.1+40.sha-45732e5');
 
     /**
      * @license
@@ -53655,7 +53671,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.0-rc.1+39.sha-b2db32b');
+    var VERSION$3 = new Version$1('7.0.0-rc.1+40.sha-45732e5');
 
     /**
      * @license
