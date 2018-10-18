@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.0+7.sha-f85a969
+ * @license Angular v7.0.0+22.sha-6c48455
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1197,7 +1197,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.0+7.sha-f85a969');
+    var VERSION = new Version('7.0.0+22.sha-6c48455');
 
     /**
      * @license
@@ -15523,6 +15523,128 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /** I18n separators for metadata **/
+    var I18N_MEANING_SEPARATOR = '|';
+    var I18N_ID_SEPARATOR = '@@';
+    /** Name of the i18n attributes **/
+    var I18N_ATTR = 'i18n';
+    var I18N_ATTR_PREFIX = 'i18n-';
+    /** Placeholder wrapper for i18n expressions **/
+    var I18N_PLACEHOLDER_SYMBOL = '�';
+    // Parse i18n metas like:
+    // - "@@id",
+    // - "description[@@id]",
+    // - "meaning|description[@@id]"
+    function parseI18nMeta(meta) {
+        var _a, _b;
+        var id;
+        var meaning;
+        var description;
+        if (meta) {
+            var idIndex = meta.indexOf(I18N_ID_SEPARATOR);
+            var descIndex = meta.indexOf(I18N_MEANING_SEPARATOR);
+            var meaningAndDesc = void 0;
+            _a = __read((idIndex > -1) ? [meta.slice(0, idIndex), meta.slice(idIndex + 2)] : [meta, ''], 2), meaningAndDesc = _a[0], id = _a[1];
+            _b = __read((descIndex > -1) ?
+                [meaningAndDesc.slice(0, descIndex), meaningAndDesc.slice(descIndex + 1)] :
+                ['', meaningAndDesc], 2), meaning = _b[0], description = _b[1];
+        }
+        return { id: id, meaning: meaning, description: description };
+    }
+    function isI18NAttribute(name) {
+        return name === I18N_ATTR || name.startsWith(I18N_ATTR_PREFIX);
+    }
+    function wrapI18nPlaceholder(content, contextId) {
+        if (contextId === void 0) { contextId = 0; }
+        var blockId = contextId > 0 ? ":" + contextId : '';
+        return "" + I18N_PLACEHOLDER_SYMBOL + content + blockId + I18N_PLACEHOLDER_SYMBOL;
+    }
+    function assembleI18nBoundString(strings, bindingStartIndex, contextId) {
+        if (bindingStartIndex === void 0) { bindingStartIndex = 0; }
+        if (contextId === void 0) { contextId = 0; }
+        if (!strings.length)
+            return '';
+        var acc = '';
+        var lastIdx = strings.length - 1;
+        for (var i = 0; i < lastIdx; i++) {
+            acc += "" + strings[i] + wrapI18nPlaceholder(bindingStartIndex + i, contextId);
+        }
+        acc += strings[lastIdx];
+        return acc;
+    }
+    function getSeqNumberGenerator(startsAt) {
+        if (startsAt === void 0) { startsAt = 0; }
+        var current = startsAt;
+        return function () { return current++; };
+    }
+    /**
+     * I18nContext is a helper class which keeps track of all i18n-related aspects
+     * (accumulates content, bindings, etc) between i18nStart and i18nEnd instructions.
+     *
+     * When we enter a nested template, the top-level context is being passed down
+     * to the nested component, which uses this context to generate a child instance
+     * of I18nContext class (to handle nested template) and at the end, reconciles it back
+     * with the parent context.
+     */
+    var I18nContext = /** @class */ (function () {
+        function I18nContext(index, templateIndex, ref, level, uniqueIdGen) {
+            if (level === void 0) { level = 0; }
+            this.index = index;
+            this.templateIndex = templateIndex;
+            this.ref = ref;
+            this.level = level;
+            this.uniqueIdGen = uniqueIdGen;
+            this.content = '';
+            this.bindings = new Set();
+            this.uniqueIdGen = uniqueIdGen || getSeqNumberGenerator();
+            this.id = this.uniqueIdGen();
+        }
+        I18nContext.prototype.wrap = function (symbol, elementIndex, contextId, closed) {
+            var state = closed ? '/' : '';
+            return wrapI18nPlaceholder("" + state + symbol + elementIndex, contextId);
+        };
+        I18nContext.prototype.append = function (content) { this.content += content; };
+        I18nContext.prototype.genTemplatePattern = function (contextId, templateId) {
+            return wrapI18nPlaceholder("tmpl:" + contextId + ":" + templateId);
+        };
+        I18nContext.prototype.getId = function () { return this.id; };
+        I18nContext.prototype.getRef = function () { return this.ref; };
+        I18nContext.prototype.getIndex = function () { return this.index; };
+        I18nContext.prototype.getContent = function () { return this.content; };
+        I18nContext.prototype.getTemplateIndex = function () { return this.templateIndex; };
+        I18nContext.prototype.getBindings = function () { return this.bindings; };
+        I18nContext.prototype.appendBinding = function (binding) { this.bindings.add(binding); };
+        I18nContext.prototype.isRoot = function () { return this.level === 0; };
+        I18nContext.prototype.isResolved = function () {
+            var regex = new RegExp(this.genTemplatePattern('\\d+', '\\d+'));
+            return !regex.test(this.content);
+        };
+        I18nContext.prototype.appendText = function (content) { this.append(content.trim()); };
+        I18nContext.prototype.appendTemplate = function (index) { this.append(this.genTemplatePattern(this.id, index)); };
+        I18nContext.prototype.appendElement = function (elementIndex, closed) {
+            this.append(this.wrap('#', elementIndex, this.id, closed));
+        };
+        I18nContext.prototype.forkChildContext = function (index, templateIndex) {
+            return new I18nContext(index, templateIndex, this.ref, this.level + 1, this.uniqueIdGen);
+        };
+        I18nContext.prototype.reconcileChildContext = function (context) {
+            var id = context.getId();
+            var content = context.getContent();
+            var templateIndex = context.getTemplateIndex();
+            var pattern = new RegExp(this.genTemplatePattern(this.id, templateIndex));
+            var replacement = "" + this.wrap('*', templateIndex, id) + content + this.wrap('*', templateIndex, id, true);
+            this.content = this.content.replace(pattern, replacement);
+        };
+        return I18nContext;
+    }());
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     var CONSTANT_PREFIX = '_c';
     // Closure variables holding messages must be named `MSG_[A-Z0-9]+`
     var TRANSLATION_PREFIX = 'MSG_';
@@ -15582,6 +15704,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         function ConstantPool() {
             this.statements = [];
             this.translations = new Map();
+            this.deferredTranslations = new Map();
             this.literals = new Map();
             this.literalFactories = new Map();
             this.injectorDefinitions = new Map();
@@ -15612,6 +15735,27 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
             return fixup;
         };
+        ConstantPool.prototype.getDeferredTranslationConst = function (suffix) {
+            var index = this.statements.push(new ExpressionStatement(NULL_EXPR)) - 1;
+            var variable$$1 = variable(this.freshTranslationName(suffix));
+            this.deferredTranslations.set(variable$$1, index);
+            return variable$$1;
+        };
+        ConstantPool.prototype.setDeferredTranslationConst = function (variable$$1, message) {
+            var index = this.deferredTranslations.get(variable$$1);
+            this.statements[index] = this.getTranslationDeclStmt(variable$$1, message);
+        };
+        ConstantPool.prototype.getTranslationDeclStmt = function (variable$$1, message) {
+            var fnCall = variable(GOOG_GET_MSG).callFn([literal(message)]);
+            return variable$$1.set(fnCall).toDeclStmt(INFERRED_TYPE, [StmtModifier.Final]);
+        };
+        ConstantPool.prototype.appendTranslationMeta = function (meta) {
+            var parsedMeta = typeof meta === 'string' ? parseI18nMeta(meta) : meta;
+            var docStmt = i18nMetaToDocStmt(parsedMeta);
+            if (docStmt) {
+                this.statements.push(docStmt);
+            }
+        };
         // Generates closure specific code for translation.
         //
         // ```
@@ -15622,21 +15766,16 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         // const MSG_XYZ = goog.getMsg('message');
         // ```
         ConstantPool.prototype.getTranslation = function (message, meta, suffix) {
+            var parsedMeta = parseI18nMeta(meta);
             // The identity of an i18n message depends on the message and its meaning
-            var key = meta.meaning ? message + "\0\0" + meta.meaning : message;
+            var key = parsedMeta.meaning ? message + "\0\0" + parsedMeta.meaning : message;
             var exp = this.translations.get(key);
             if (exp) {
                 return exp;
             }
-            var docStmt = i18nMetaToDocStmt(meta);
-            if (docStmt) {
-                this.statements.push(docStmt);
-            }
-            // Call closure to get the translation
             var variable$$1 = variable(this.freshTranslationName(suffix));
-            var fnCall = variable(GOOG_GET_MSG).callFn([literal(message)]);
-            var msgStmt = variable$$1.set(fnCall).toDeclStmt(INFERRED_TYPE, [StmtModifier.Final]);
-            this.statements.push(msgStmt);
+            this.appendTranslationMeta(parsedMeta);
+            this.statements.push(this.getTranslationDeclStmt(variable$$1, message));
             this.translations.set(key, variable$$1);
             return variable$$1;
         };
@@ -15800,12 +15939,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function isVariable(e) {
         return e instanceof ReadVarExpr;
     }
-    // Converts i18n meta informations for a message (description, meaning) to a JsDoc statement
-    // formatted as expected by the Closure compiler.
+    // Converts i18n meta informations for a message (id, description, meaning)
+    // to a JsDoc statement formatted as expected by the Closure compiler.
     function i18nMetaToDocStmt(meta) {
         var tags = [];
-        if (meta.description) {
-            tags.push({ tagName: "desc" /* Desc */, text: meta.description });
+        if (meta.id || meta.description) {
+            var text = meta.id ? "[BACKUP_MESSAGE_ID:" + meta.id + "] " + meta.description : meta.description;
+            tags.push({ tagName: "desc" /* Desc */, text: text.trim() });
         }
         if (meta.meaning) {
             tags.push({ tagName: "meaning" /* Meaning */, text: meta.meaning });
@@ -16009,14 +16149,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     var REFERENCE_PREFIX = '_r';
     /** The name of the implicit context reference */
     var IMPLICIT_REFERENCE = '$implicit';
-    /** Name of the i18n attributes **/
-    var I18N_ATTR = 'i18n';
-    var I18N_ATTR_PREFIX = 'i18n-';
-    /** I18n separators for metadata **/
-    var MEANING_SEPARATOR$1 = '|';
-    var ID_SEPARATOR$1 = '@@';
-    /** Placeholder wrapper for i18n expressions **/
-    var I18N_PLACEHOLDER_SYMBOL = '�';
     /** Non bindable attribute name **/
     var NON_BINDABLE_ATTR = 'ngNonBindable';
     /**
@@ -16042,23 +16174,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
     function invalid$1(arg) {
         throw new Error("Invalid state: Visitor " + this.constructor.name + " doesn't handle " + undefined);
-    }
-    function isI18NAttribute(name) {
-        return name === I18N_ATTR || name.startsWith(I18N_ATTR_PREFIX);
-    }
-    function wrapI18nPlaceholder(content) {
-        return "" + I18N_PLACEHOLDER_SYMBOL + content + I18N_PLACEHOLDER_SYMBOL;
-    }
-    function assembleI18nTemplate(strings) {
-        if (!strings.length)
-            return '';
-        var acc = '';
-        var lastIdx = strings.length - 1;
-        for (var i = 0; i < lastIdx; i++) {
-            acc += "" + strings[i] + wrapI18nPlaceholder(i);
-        }
-        acc += strings[lastIdx];
-        return acc;
     }
     function asLiteral(value) {
         if (Array.isArray(value)) {
@@ -16961,12 +17076,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return ifStmt(variable(RENDER_FLAGS).bitwiseAnd(literal(flags), null, false), statements);
     }
     var TemplateDefinitionBuilder = /** @class */ (function () {
-        function TemplateDefinitionBuilder(constantPool, parentBindingScope, level, contextName, templateName, viewQueries, directiveMatcher, directives, pipeTypeByName, pipes, _namespace, relativeContextFilePath) {
+        function TemplateDefinitionBuilder(constantPool, parentBindingScope, level, contextName, i18nContext, templateIndex, templateName, viewQueries, directiveMatcher, directives, pipeTypeByName, pipes, _namespace, relativeContextFilePath) {
             if (level === void 0) { level = 0; }
             var _this = this;
             this.constantPool = constantPool;
             this.level = level;
             this.contextName = contextName;
+            this.i18nContext = i18nContext;
+            this.templateIndex = templateIndex;
             this.templateName = templateName;
             this.viewQueries = viewQueries;
             this.directiveMatcher = directiveMatcher;
@@ -17000,11 +17117,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
              */
             this._nestedTemplateFns = [];
             this._unsupported = unsupported;
-            // Whether we are inside a translatable element (`<p i18n>... somewhere here ... </p>)
-            this._inI18nSection = false;
-            this._i18nSectionIndex = -1;
-            // Maps of placeholder to node indexes for each of the i18n section
-            this._phToNodeIdxes = [{}];
+            // i18n context local to this template
+            this.i18n = null;
             // Number of slots to reserve for pureFunctions
             this._pureFunctionSlots = 0;
             // Number of binding slots
@@ -17054,7 +17168,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var _this = this;
             if (hasNgContent === void 0) { hasNgContent = false; }
             if (ngContentSelectors === void 0) { ngContentSelectors = []; }
-            var e_1, _a;
             if (this._namespace !== Identifiers$1.namespaceHTML) {
                 this.creationInstruction(null, this._namespace);
             }
@@ -17073,6 +17186,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 }
                 this.creationInstruction(null, Identifiers$1.projectionDef, parameters);
             }
+            if (this.i18nContext) {
+                this.i18nStart();
+            }
             // This is the initial pass through the nodes of this template. In this pass, we
             // queue all creation mode and update mode instructions for generation in the second
             // pass. It's necessary to separate the passes to ensure local refs are defined before
@@ -17088,6 +17204,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             // Nested templates must be processed before creation instructions so template()
             // instructions can be generated with the correct internal const count.
             this._nestedTemplateFns.forEach(function (buildTemplateFn) { return buildTemplateFn(); });
+            if (this.i18nContext) {
+                this.i18nEnd();
+            }
             // Generate all the creation mode instructions (e.g. resolve bindings in listeners)
             var creationStatements = this._creationCodeFns.map(function (fn$$1) { return fn$$1(); });
             // Generate all the update mode instructions (e.g. resolve property or text bindings)
@@ -17102,25 +17221,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var updateBlock = updateStatements.length > 0 ?
                 [renderFlagCheckIfStmt(2 /* Update */, updateVariables.concat(updateStatements))] :
                 [];
-            try {
-                // Generate maps of placeholder name to node indexes
-                // TODO(vicb): This is a WIP, not fully supported yet
-                for (var _b = __values(this._phToNodeIdxes), _c = _b.next(); !_c.done; _c = _b.next()) {
-                    var phToNodeIdx = _c.value;
-                    if (Object.keys(phToNodeIdx).length > 0) {
-                        var scopedName = this._bindingScope.freshReferenceName();
-                        var phMap = variable(scopedName).set(mapToExpression(phToNodeIdx, true)).toConstDecl();
-                        this._prefixCode.push(phMap);
-                    }
-                }
-            }
-            catch (e_1_1) { e_1 = { error: e_1_1 }; }
-            finally {
-                try {
-                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-                }
-                finally { if (e_1) throw e_1.error; }
-            }
             return fn(
             // i.e. (rf: RenderFlags, ctx: any)
             [new FnParam(RENDER_FLAGS, NUMBER_TYPE), new FnParam(CONTEXT_NAME, null)], __spread(this._prefixCode, creationBlock, updateBlock), INFERRED_TYPE, null, this.templateName);
@@ -17128,7 +17228,60 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         // LocalResolver
         TemplateDefinitionBuilder.prototype.getLocal = function (name) { return this._bindingScope.get(name); };
         TemplateDefinitionBuilder.prototype.i18nTranslate = function (label, meta) {
-            return this.constantPool.getTranslation(label, parseI18nMeta(meta), this.fileBasedI18nSuffix);
+            if (meta === void 0) { meta = ''; }
+            return this.constantPool.getTranslation(label, meta, this.fileBasedI18nSuffix);
+        };
+        TemplateDefinitionBuilder.prototype.i18nAppendTranslationMeta = function (meta) {
+            if (meta === void 0) { meta = ''; }
+            this.constantPool.appendTranslationMeta(meta);
+        };
+        TemplateDefinitionBuilder.prototype.i18nAllocateRef = function () {
+            return this.constantPool.getDeferredTranslationConst(this.fileBasedI18nSuffix);
+        };
+        TemplateDefinitionBuilder.prototype.i18nUpdateRef = function (context) {
+            if (context.isRoot() && context.isResolved()) {
+                this.constantPool.setDeferredTranslationConst(context.getRef(), context.getContent());
+            }
+        };
+        TemplateDefinitionBuilder.prototype.i18nStart = function (span, meta) {
+            if (span === void 0) { span = null; }
+            var index = this.allocateDataSlot();
+            if (this.i18nContext) {
+                this.i18n = this.i18nContext.forkChildContext(index, this.templateIndex);
+            }
+            else {
+                this.i18nAppendTranslationMeta(meta);
+                var ref = this.i18nAllocateRef();
+                this.i18n = new I18nContext(index, this.templateIndex, ref);
+            }
+            // generate i18nStart instruction
+            var params = [literal(index), this.i18n.getRef()];
+            if (this.i18n.getId() > 0) {
+                // do not push 3rd argument (sub-block id)
+                // into i18nStart call for top level i18n context
+                params.push(literal(this.i18n.getId()));
+            }
+            this.creationInstruction(span, Identifiers$1.i18nStart, params);
+        };
+        TemplateDefinitionBuilder.prototype.i18nEnd = function (span) {
+            var _this = this;
+            if (span === void 0) { span = null; }
+            if (this.i18nContext) {
+                this.i18nContext.reconcileChildContext(this.i18n);
+                this.i18nUpdateRef(this.i18nContext);
+            }
+            else {
+                this.i18nUpdateRef(this.i18n);
+            }
+            // setup accumulated bindings
+            var bindings = this.i18n.getBindings();
+            if (bindings.size) {
+                bindings.forEach(function (binding) { _this.updateInstruction(span, Identifiers$1.i18nExp, [binding]); });
+                var index = literal(this.i18n.getIndex());
+                this.updateInstruction(span, Identifiers$1.i18nApply, [index]);
+            }
+            this.creationInstruction(span, Identifiers$1.i18nEnd);
+            this.i18n = null; // reset local i18n context
         };
         TemplateDefinitionBuilder.prototype.visitContent = function (ngContent) {
             var slot = this.allocateDataSlot();
@@ -17165,24 +17318,15 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         TemplateDefinitionBuilder.prototype.visitElement = function (element) {
             var _this = this;
-            var e_2, _a;
+            var e_1, _a;
             var elementIndex = this.allocateDataSlot();
-            var wasInI18nSection = this._inI18nSection;
+            var isNonBindableMode = false;
+            var isI18nRootElement = false;
             var outputAttrs = {};
             var attrI18nMetas = {};
             var i18nMeta = '';
             var _b = __read(splitNsName(element.name), 2), namespaceKey = _b[0], elementName = _b[1];
             var isNgContainer$$1 = isNgContainer(element.name);
-            // Elements inside i18n sections are replaced with placeholders
-            // TODO(vicb): nested elements are a WIP in this phase
-            if (this._inI18nSection) {
-                var phName = element.name.toLowerCase();
-                if (!this._phToNodeIdxes[this._i18nSectionIndex][phName]) {
-                    this._phToNodeIdxes[this._i18nSectionIndex][phName] = [];
-                }
-                this._phToNodeIdxes[this._i18nSectionIndex][phName].push(elementIndex);
-            }
-            var isNonBindableMode = false;
             try {
                 // Handle i18n and ngNonBindable attributes
                 for (var _c = __values(element.attributes), _d = _c.next(); !_d.done; _d = _c.next()) {
@@ -17193,12 +17337,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                         isNonBindableMode = true;
                     }
                     else if (name_1 === I18N_ATTR) {
-                        if (this._inI18nSection) {
+                        if (this.i18n) {
                             throw new Error("Could not mark an element as translatable inside of a translatable section");
                         }
-                        this._inI18nSection = true;
-                        this._i18nSectionIndex++;
-                        this._phToNodeIdxes[this._i18nSectionIndex] = {};
+                        isI18nRootElement = true;
                         i18nMeta = value;
                     }
                     else if (name_1.startsWith(I18N_ATTR_PREFIX)) {
@@ -17209,12 +17351,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     }
                 }
             }
-            catch (e_2_1) { e_2 = { error: e_2_1 }; }
+            catch (e_1_1) { e_1 = { error: e_1_1 }; }
             finally {
                 try {
                     if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
                 }
-                finally { if (e_2) throw e_2.error; }
+                finally { if (e_1) throw e_1.error; }
             }
             // Match directives on non i18n attributes
             this.matchDirectives(element.name, element);
@@ -17355,8 +17497,19 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 this.addNamespaceInstruction(currentNamespace, element);
             }
             var implicit = variable(CONTEXT_NAME);
+            if (this.i18n) {
+                this.i18n.appendElement(elementIndex);
+            }
+            var hasChildren = function () {
+                if (!isI18nRootElement && _this.i18n) {
+                    // we do not append text node instructions inside i18n section, so we
+                    // exclude them while calculating whether current element has children
+                    return element.children.find(function (child) { return !(child instanceof Text$3 || child instanceof BoundText); });
+                }
+                return element.children.length > 0;
+            };
             var createSelfClosingInstruction = !hasStylingInstructions && !isNgContainer$$1 &&
-                element.children.length === 0 && element.outputs.length === 0 && i18nAttrs.length === 0;
+                element.outputs.length === 0 && i18nAttrs.length === 0 && !hasChildren();
             if (createSelfClosingInstruction) {
                 this.creationInstruction(element.sourceSpan, Identifiers$1.element, trimTrailingNulls(parameters));
             }
@@ -17364,6 +17517,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 this.creationInstruction(element.sourceSpan, isNgContainer$$1 ? Identifiers$1.elementContainerStart : Identifiers$1.elementStart, trimTrailingNulls(parameters));
                 if (isNonBindableMode) {
                     this.creationInstruction(element.sourceSpan, Identifiers$1.disableBindings);
+                }
+                if (isI18nRootElement) {
+                    this.i18nStart(element.sourceSpan, i18nMeta);
                 }
                 // process i18n element attributes
                 if (i18nAttrs.length) {
@@ -17381,7 +17537,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                             var converted = value.visit(_this._valueConverter);
                             if (converted instanceof Interpolation) {
                                 var strings = converted.strings, expressions = converted.expressions;
-                                var label = assembleI18nTemplate(strings);
+                                var label = assembleI18nBoundString(strings);
                                 i18nAttrArgs_1.push(literal(name), _this.i18nTranslate(label, meta), literal(expressions.length));
                                 expressions.forEach(function (expression) {
                                     hasBindings_1 = true;
@@ -17538,27 +17694,28 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 }
             });
             // Traverse element child nodes
-            if (this._inI18nSection && element.children.length == 1 &&
-                element.children[0] instanceof Text$3) {
-                var text = element.children[0];
-                this.visitSingleI18nTextChild(text, i18nMeta);
-            }
-            else {
-                visitAll$1(this, element.children);
+            visitAll$1(this, element.children);
+            if (!isI18nRootElement && this.i18n) {
+                this.i18n.appendElement(elementIndex, true);
             }
             if (!createSelfClosingInstruction) {
                 // Finish element construction mode.
-                if (isNonBindableMode) {
-                    this.creationInstruction(element.endSourceSpan || element.sourceSpan, Identifiers$1.enableBindings);
+                var span = element.endSourceSpan || element.sourceSpan;
+                if (isI18nRootElement) {
+                    this.i18nEnd(span);
                 }
-                this.creationInstruction(element.endSourceSpan || element.sourceSpan, isNgContainer$$1 ? Identifiers$1.elementContainerEnd : Identifiers$1.elementEnd);
+                if (isNonBindableMode) {
+                    this.creationInstruction(span, Identifiers$1.enableBindings);
+                }
+                this.creationInstruction(span, isNgContainer$$1 ? Identifiers$1.elementContainerEnd : Identifiers$1.elementEnd);
             }
-            // Restore the state before exiting this node
-            this._inI18nSection = wasInI18nSection;
         };
         TemplateDefinitionBuilder.prototype.visitTemplate = function (template) {
             var _this = this;
             var templateIndex = this.allocateDataSlot();
+            if (this.i18n) {
+                this.i18n.appendTemplate(templateIndex);
+            }
             var elName = '';
             if (template.children.length === 1 && template.children[0] instanceof Element$1) {
                 // When the template as a single child, derive the context name from the tag
@@ -17596,7 +17753,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 });
             });
             // Create the template function
-            var templateVisitor = new TemplateDefinitionBuilder(this.constantPool, this._bindingScope, this.level + 1, contextName, templateName, [], this.directiveMatcher, this.directives, this.pipeTypeByName, this.pipes, this._namespace, this.fileBasedI18nSuffix);
+            var templateVisitor = new TemplateDefinitionBuilder(this.constantPool, this._bindingScope, this.level + 1, contextName, this.i18n, templateIndex, templateName, [], this.directiveMatcher, this.directives, this.pipeTypeByName, this.pipes, this._namespace, this.fileBasedI18nSuffix);
             // Nested templates must not be visited until after their parent templates have completed
             // processing, so they are queued here until after the initial pass. Otherwise, we wouldn't
             // be able to support bindings in nested templates to local refs that occur after the
@@ -17617,6 +17774,20 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         TemplateDefinitionBuilder.prototype.visitBoundText = function (text) {
             var _this = this;
+            if (this.i18n) {
+                var value_3 = text.value.visit(this._valueConverter);
+                if (value_3 instanceof Interpolation) {
+                    var strings = value_3.strings, expressions = value_3.expressions;
+                    var label = assembleI18nBoundString(strings, this.i18n.getBindings().size, this.i18n.getId());
+                    var implicit_1 = variable(CONTEXT_NAME);
+                    expressions.forEach(function (expression) {
+                        var binding = _this.convertExpressionBinding(implicit_1, expression);
+                        _this.i18n.appendBinding(binding);
+                    });
+                    this.i18n.appendText(label);
+                }
+                return;
+            }
             var nodeIndex = this.allocateDataSlot();
             this.creationInstruction(text.sourceSpan, Identifiers$1.text, [literal(nodeIndex)]);
             var value = text.value.visit(this._valueConverter);
@@ -17624,23 +17795,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             this.updateInstruction(text.sourceSpan, Identifiers$1.textBinding, function () { return [literal(nodeIndex), _this.convertPropertyBinding(variable(CONTEXT_NAME), value)]; });
         };
         TemplateDefinitionBuilder.prototype.visitText = function (text) {
+            if (this.i18n) {
+                this.i18n.appendText(text.value);
+                return;
+            }
             this.creationInstruction(text.sourceSpan, Identifiers$1.text, [literal(this.allocateDataSlot()), literal(text.value)]);
-        };
-        // When the content of the element is a single text node the translation can be inlined:
-        //
-        // `<p i18n="desc|mean">some content</p>`
-        // compiles to
-        // ```
-        // /**
-        // * @desc desc
-        // * @meaning mean
-        // */
-        // const MSG_XYZ = goog.getMsg('some content');
-        // i0.ɵtext(1, MSG_XYZ);
-        // ```
-        TemplateDefinitionBuilder.prototype.visitSingleI18nTextChild = function (text, i18nMeta) {
-            var variable$$1 = this.i18nTranslate(text.value, i18nMeta);
-            this.creationInstruction(text.sourceSpan, Identifiers$1.text, [literal(this.allocateDataSlot()), variable$$1]);
         };
         TemplateDefinitionBuilder.prototype.allocateDataSlot = function () { return this._dataIndex++; };
         TemplateDefinitionBuilder.prototype.getConstCount = function () { return this._dataIndex; };
@@ -18050,27 +18209,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         });
         return cssSelector;
     }
-    // Parse i18n metas like:
-    // - "@@id",
-    // - "description[@@id]",
-    // - "meaning|description[@@id]"
-    function parseI18nMeta(i18n) {
-        var _a, _b;
-        var meaning;
-        var description;
-        var id;
-        if (i18n) {
-            // TODO(vicb): figure out how to force a message ID with closure ?
-            var idIndex = i18n.indexOf(ID_SEPARATOR$1);
-            var descIndex = i18n.indexOf(MEANING_SEPARATOR$1);
-            var meaningAndDesc = void 0;
-            _a = __read((idIndex > -1) ? [i18n.slice(0, idIndex), i18n.slice(idIndex + 2)] : [i18n, ''], 2), meaningAndDesc = _a[0], id = _a[1];
-            _b = __read((descIndex > -1) ?
-                [meaningAndDesc.slice(0, descIndex), meaningAndDesc.slice(descIndex + 1)] :
-                ['', meaningAndDesc], 2), meaning = _b[0], description = _b[1];
-        }
-        return { description: description, id: id, meaning: meaning };
-    }
     function interpolate(args) {
         args = args.slice(1); // Ignore the length prefix added for render2
         switch (args.length) {
@@ -18278,7 +18416,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var directivesUsed = new Set();
         var pipesUsed = new Set();
         var template = meta.template;
-        var templateBuilder = new TemplateDefinitionBuilder(constantPool, BindingScope.ROOT_SCOPE, 0, templateTypeName, templateName, meta.viewQueries, directiveMatcher, directivesUsed, meta.pipes, pipesUsed, Identifiers$1.namespaceHTML, meta.template.relativeContextFilePath);
+        var templateBuilder = new TemplateDefinitionBuilder(constantPool, BindingScope.ROOT_SCOPE, 0, templateTypeName, null, null, templateName, meta.viewQueries, directiveMatcher, directivesUsed, meta.pipes, pipesUsed, Identifiers$1.namespaceHTML, meta.template.relativeContextFilePath);
         var templateFunctionExpression = templateBuilder.buildTemplateFunction(template.nodes, [], template.hasNgContent, template.ngContentSelectors);
         // e.g. `consts: 2`
         definitionMap.set('consts', literal(templateBuilder.getConstCount()));
@@ -18307,7 +18445,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         // e.g. `animations: [trigger('123', [])]`
         if (meta.animations !== null) {
-            definitionMap.set('animations', meta.animations);
+            definitionMap.set('data', literalMap([{ key: 'animations', value: meta.animations, quoted: false }]));
         }
         // On the type side, remove newlines from the selector as it will need to fit into a TypeScript
         // string literal, which must be on one line.
@@ -27387,6 +27525,18 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var newLineIndex = res.indexOf('\n');
         return newLineIndex === -1 ? res : res.substring(0, newLineIndex);
     }
+    /**
+     * Convince closure compiler that the wrapped function has no side-effects.
+     *
+     * Closure compiler always assumes that `toString` has no side-effects. We use this quirk to
+     * allow us to execute a function but have closure compiler mark the call as no-side-effects.
+     * It is important that the return value for the `noSideEffects` function be assigned
+     * to something which is retained otherwise the call to `noSideEffects` will be removed by closure
+     * compiler.
+     */
+    function noSideEffects(fn) {
+        return '' + { toString: fn };
+    }
 
     /**
      * @license
@@ -27963,16 +28113,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     function defineComponent(componentDefinition) {
         var type = componentDefinition.type;
-        var pipeTypes = componentDefinition.pipes;
-        var directiveTypes = componentDefinition.directives;
+        var typePrototype = type.prototype;
         var declaredInputs = {};
-        var encapsulation = componentDefinition.encapsulation || ViewEncapsulation$1.Emulated;
-        var styles = componentDefinition.styles || EMPTY_ARRAY$1;
-        var animations = componentDefinition.animations || null;
-        var data = componentDefinition.data || {};
-        if (animations) {
-            data.animations = animations;
-        }
         var def = {
             type: type,
             diPublic: null,
@@ -27985,38 +28127,49 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             contentQueries: componentDefinition.contentQueries || null,
             contentQueriesRefresh: componentDefinition.contentQueriesRefresh || null,
             attributes: componentDefinition.attributes || null,
-            inputs: invertObject(componentDefinition.inputs, declaredInputs),
             declaredInputs: declaredInputs,
-            outputs: invertObject(componentDefinition.outputs),
+            inputs: null,
+            outputs: null,
             exportAs: componentDefinition.exportAs || null,
-            onInit: type.prototype.ngOnInit || null,
-            doCheck: type.prototype.ngDoCheck || null,
-            afterContentInit: type.prototype.ngAfterContentInit || null,
-            afterContentChecked: type.prototype.ngAfterContentChecked || null,
-            afterViewInit: type.prototype.ngAfterViewInit || null,
-            afterViewChecked: type.prototype.ngAfterViewChecked || null,
-            onDestroy: type.prototype.ngOnDestroy || null,
+            onInit: typePrototype.ngOnInit || null,
+            doCheck: typePrototype.ngDoCheck || null,
+            afterContentInit: typePrototype.ngAfterContentInit || null,
+            afterContentChecked: typePrototype.ngAfterContentChecked || null,
+            afterViewInit: typePrototype.ngAfterViewInit || null,
+            afterViewChecked: typePrototype.ngAfterViewChecked || null,
+            onDestroy: typePrototype.ngOnDestroy || null,
             onPush: componentDefinition.changeDetection === ChangeDetectionStrategy$1.OnPush,
-            directiveDefs: directiveTypes ?
-                function () { return (typeof directiveTypes === 'function' ? directiveTypes() : directiveTypes)
-                    .map(extractDirectiveDef); } :
-                null,
-            pipeDefs: pipeTypes ?
-                function () { return (typeof pipeTypes === 'function' ? pipeTypes() : pipeTypes).map(extractPipeDef); } :
-                null,
+            directiveDefs: null,
+            pipeDefs: null,
             selectors: componentDefinition.selectors,
             viewQuery: componentDefinition.viewQuery || null,
             features: componentDefinition.features || null,
-            data: data,
+            data: componentDefinition.data || {},
             // TODO(misko): convert ViewEncapsulation into const enum so that it can be used directly in the
             // next line. Also `None` should be 0 not 2.
-            encapsulation: encapsulation,
+            encapsulation: componentDefinition.encapsulation || ViewEncapsulation$1.Emulated,
             providers: EMPTY_ARRAY$1,
             viewProviders: EMPTY_ARRAY$1,
-            id: "c" + _renderCompCount++, styles: styles,
+            id: 'c',
+            styles: componentDefinition.styles || EMPTY_ARRAY$1,
+            _: null,
         };
-        var feature = componentDefinition.features;
-        feature && feature.forEach(function (fn) { return fn(def); });
+        def._ = noSideEffects(function () {
+            var directiveTypes = componentDefinition.directives;
+            var feature = componentDefinition.features;
+            var pipeTypes = componentDefinition.pipes;
+            def.id += _renderCompCount++;
+            def.inputs = invertObject(componentDefinition.inputs, declaredInputs),
+                def.outputs = invertObject(componentDefinition.outputs),
+                feature && feature.forEach(function (fn) { return fn(def); });
+            def.directiveDefs = directiveTypes ?
+                function () { return (typeof directiveTypes === 'function' ? directiveTypes() : directiveTypes)
+                    .map(extractDirectiveDef); } :
+                null;
+            def.pipeDefs = pipeTypes ?
+                function () { return (typeof pipeTypes === 'function' ? pipeTypes() : pipeTypes).map(extractPipeDef); } :
+                null;
+        });
         return def;
     }
     function extractDirectiveDef(type) {
@@ -28508,6 +28661,23 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function isLContainer(value) {
         // Styling contexts are also arrays, but their first index contains an element node
         return Array.isArray(value) && typeof value[ACTIVE_INDEX] === 'number';
+    }
+    /**
+     * Retrieve the root view from any component by walking the parent `LViewData` until
+     * reaching the root `LViewData`.
+     *
+     * @param component any component
+     */
+    function getRootView(target) {
+        ngDevMode && assertDefined(target, 'component');
+        var lViewData = Array.isArray(target) ? target : readPatchedLViewData(target);
+        while (lViewData && !(lViewData[FLAGS] & 64 /* IsRoot */)) {
+            lViewData = lViewData[PARENT];
+        }
+        return lViewData;
+    }
+    function getRootContext(viewOrComponent) {
+        return getRootView(viewOrComponent)[CONTEXT];
     }
     /**
      * Returns the monkey-patch value data present on the target (which could be
@@ -29832,14 +30002,53 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
 
     /**
+     * Combines the binding value and a factory for an animation player.
+     *
+     * Used to bind a player to an element template binding (currently only
+     * `[style]`, `[style.prop]`, `[class]` and `[class.name]` bindings
+     * supported). The provided `factoryFn` function will be run once all
+     * the associated bindings have been evaluated on the element and is
+     * designed to return a player which will then be placed on the element.
+     *
+     * @param factoryFn The function that is used to create a player
+     *   once all the rendering-related (styling values) have been
+     *   processed for the element binding.
+     * @param value The raw value that will be exposed to the binding
+     *   so that the binding can update its internal values when
+     *   any changes are evaluated.
+     */
+    var BoundPlayerFactory = /** @class */ (function () {
+        function BoundPlayerFactory(fn, value) {
+            this.fn = fn;
+            this.value = value;
+        }
+        return BoundPlayerFactory;
+    }());
+
+    var CorePlayerHandler = /** @class */ (function () {
+        function CorePlayerHandler() {
+            this._players = [];
+        }
+        CorePlayerHandler.prototype.flushPlayers = function () {
+            for (var i = 0; i < this._players.length; i++) {
+                var player = this._players[i];
+                if (!player.parent && player.state === 0 /* Pending */) {
+                    player.play();
+                }
+            }
+            this._players.length = 0;
+        };
+        CorePlayerHandler.prototype.queuePlayer = function (player) { this._players.push(player); };
+        return CorePlayerHandler;
+    }());
+
+    /**
      * @license
      * Copyright Google Inc. All Rights Reserved.
      *
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var EMPTY_ARR = [];
-    var EMPTY_OBJ = {};
     function createEmptyStylingContext(element, sanitizer, initialStylingValues) {
         return [
             null,
@@ -29889,8 +30098,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         else {
             // This is an LViewData or an LContainer
             var stylingTemplate = getTNode(index, viewData).stylingTemplate;
-            if (wrapper !== viewData)
+            if (wrapper !== viewData) {
                 storageIndex = HOST;
+            }
             return wrapper[storageIndex] = stylingTemplate ?
                 allocStylingContext(slotValue, stylingTemplate) :
                 createEmptyStylingContext(slotValue);
@@ -29900,14 +30110,48 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         // Not an LViewData or an LContainer
         return typeof value[FLAGS] !== 'number' && typeof value[ACTIVE_INDEX] !== 'number';
     }
+    function addPlayerInternal(playerContext, rootContext, element, player, playerContextIndex, ref) {
+        ref = ref || element;
+        if (playerContextIndex) {
+            playerContext[playerContextIndex] = player;
+        }
+        else {
+            playerContext.push(player);
+        }
+        if (player) {
+            player.addEventListener(200 /* Destroyed */, function () {
+                var index = playerContext.indexOf(player);
+                var nonFactoryPlayerIndex = playerContext[0 /* NonBuilderPlayersStart */];
+                // if the player is being removed from the factory side of the context
+                // (which is where the [style] and [class] bindings do their thing) then
+                // that side of the array cannot be resized since the respective bindings
+                // have pointer index values that point to the associated factory instance
+                if (index) {
+                    if (index < nonFactoryPlayerIndex) {
+                        playerContext[index] = null;
+                    }
+                    else {
+                        playerContext.splice(index, 1);
+                    }
+                }
+                player.destroy();
+            });
+            var playerHandler = rootContext.playerHandler || (rootContext.playerHandler = new CorePlayerHandler());
+            playerHandler.queuePlayer(player, ref);
+            return true;
+        }
+        return false;
+    }
+    function getPlayerContext(stylingContext) {
+        return stylingContext[0 /* PlayerContext */];
+    }
+    function allocPlayerContext(data) {
+        return data[0 /* PlayerContext */] =
+            [5 /* SinglePlayerBuildersStartPosition */, null, null, null, null];
+    }
 
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
+    var EMPTY_ARR = [];
+    var EMPTY_OBJ = {};
     /**
      * Creates a styling context template where styling information is stored.
      * Any styles that are later referenced using `updateStyleProp` must be
@@ -29987,30 +30231,32 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var classNamesIndexStart = styleProps.length;
         var totalProps = styleProps.length + classNames.length;
         // *2 because we are filling for both single and multi style spaces
-        var maxLength = totalProps * 3 /* Size */ * 2 + 8 /* SingleStylesStartPosition */;
+        var maxLength = totalProps * 4 /* Size */ * 2 + 8 /* SingleStylesStartPosition */;
         // we need to fill the array from the start so that we can access
         // both the multi and the single array positions in the same loop block
         for (var i = 8 /* SingleStylesStartPosition */; i < maxLength; i++) {
             context.push(null);
         }
         var singleStart = 8 /* SingleStylesStartPosition */;
-        var multiStart = totalProps * 3 /* Size */ + 8 /* SingleStylesStartPosition */;
+        var multiStart = totalProps * 4 /* Size */ + 8 /* SingleStylesStartPosition */;
         // fill single and multi-level styles
         for (var i = 0; i < totalProps; i++) {
             var isClassBased_1 = i >= classNamesIndexStart;
             var prop = isClassBased_1 ? classNames[i - classNamesIndexStart] : styleProps[i];
             var indexForInitial = isClassBased_1 ? classesLookup[prop] : stylesLookup[prop];
             var initialValue = initialStylingValues[indexForInitial];
-            var indexForMulti = i * 3 /* Size */ + multiStart;
-            var indexForSingle = i * 3 /* Size */ + singleStart;
+            var indexForMulti = i * 4 /* Size */ + multiStart;
+            var indexForSingle = i * 4 /* Size */ + singleStart;
             var initialFlag = prepareInitialFlag(prop, isClassBased_1, styleSanitizer || null);
             setFlag(context, indexForSingle, pointers(initialFlag, indexForInitial, indexForMulti));
             setProp(context, indexForSingle, prop);
             setValue(context, indexForSingle, null);
+            setPlayerBuilderIndex(context, indexForSingle, 0);
             var flagForMulti = initialFlag | (initialValue !== null ? 1 /* Dirty */ : 0 /* None */);
             setFlag(context, indexForMulti, pointers(flagForMulti, indexForInitial, indexForSingle));
             setProp(context, indexForMulti, prop);
             setValue(context, indexForMulti, null);
+            setPlayerBuilderIndex(context, indexForMulti, 0);
         }
         // there is no initial value flag for the master index since it doesn't
         // reference an initial style value
@@ -30020,7 +30266,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
     /**
      * Sets and resolves all `multi` styling on an `StylingContext` so that they can be
-     * applied to the element once `renderStyling` is called.
+     * applied to the element once `renderStyleAndClassBindings` is called.
      *
      * All missing styles/class (any values that are not provided in the new `styles`
      * or `classes` params) will resolve to `null` within their respective positions
@@ -30028,38 +30274,58 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      *
      * @param context The styling context that will be updated with the
      *    newly provided style values.
-     * @param classes The key/value map of CSS class names that will be used for the update.
-     * @param styles The key/value map of CSS styles that will be used for the update.
+     * @param classesInput The key/value map of CSS class names that will be used for the update.
+     * @param stylesInput The key/value map of CSS styles that will be used for the update.
      */
-    function updateStylingMap(context, classes, styles) {
-        styles = styles || null;
+    function updateStylingMap(context, classesInput, stylesInput) {
+        stylesInput = stylesInput || null;
+        var element = context[5 /* ElementPosition */];
+        var classesPlayerBuilder = classesInput instanceof BoundPlayerFactory ?
+            new ClassAndStylePlayerBuilder(classesInput, element, 2 /* Class */) :
+            null;
+        var stylesPlayerBuilder = stylesInput instanceof BoundPlayerFactory ?
+            new ClassAndStylePlayerBuilder(stylesInput, element, 3 /* Style */) :
+            null;
+        var classesValue = classesPlayerBuilder ?
+            classesInput.value :
+            classesInput;
+        var stylesValue = stylesPlayerBuilder ? stylesInput.value : stylesInput;
         // early exit (this is what's done to avoid using ctx.bind() to cache the value)
-        var ignoreAllClassUpdates = classes === context[6 /* PreviousMultiClassValue */];
-        var ignoreAllStyleUpdates = styles === context[7 /* PreviousMultiStyleValue */];
+        var ignoreAllClassUpdates = classesValue === context[6 /* PreviousMultiClassValue */];
+        var ignoreAllStyleUpdates = stylesValue === context[7 /* PreviousMultiStyleValue */];
         if (ignoreAllClassUpdates && ignoreAllStyleUpdates)
             return;
+        context[6 /* PreviousMultiClassValue */] = classesValue;
+        context[7 /* PreviousMultiStyleValue */] = stylesValue;
         var classNames = EMPTY_ARR;
         var applyAllClasses = false;
+        var playerBuildersAreDirty = false;
+        var classesPlayerBuilderIndex = classesPlayerBuilder ? 1 /* ClassMapPlayerBuilderPosition */ : 0;
+        if (hasPlayerBuilderChanged(context, classesPlayerBuilder, 1 /* ClassMapPlayerBuilderPosition */)) {
+            setPlayerBuilder(context, classesPlayerBuilder, 1 /* ClassMapPlayerBuilderPosition */);
+            playerBuildersAreDirty = true;
+        }
+        var stylesPlayerBuilderIndex = stylesPlayerBuilder ? 3 /* StyleMapPlayerBuilderPosition */ : 0;
+        if (hasPlayerBuilderChanged(context, stylesPlayerBuilder, 3 /* StyleMapPlayerBuilderPosition */)) {
+            setPlayerBuilder(context, stylesPlayerBuilder, 3 /* StyleMapPlayerBuilderPosition */);
+            playerBuildersAreDirty = true;
+        }
         // each time a string-based value pops up then it shouldn't require a deep
         // check of what's changed.
         if (!ignoreAllClassUpdates) {
-            context[6 /* PreviousMultiClassValue */] = classes;
-            if (typeof classes == 'string') {
-                classNames = classes.split(/\s+/);
+            if (typeof classesValue == 'string') {
+                classNames = classesValue.split(/\s+/);
                 // this boolean is used to avoid having to create a key/value map of `true` values
                 // since a classname string implies that all those classes are added
                 applyAllClasses = true;
             }
             else {
-                classNames = classes ? Object.keys(classes) : EMPTY_ARR;
+                classNames = classesValue ? Object.keys(classesValue) : EMPTY_ARR;
             }
         }
-        classes = (classes || EMPTY_OBJ);
-        if (!ignoreAllStyleUpdates) {
-            context[7 /* PreviousMultiStyleValue */] = styles;
-        }
-        var styleProps = styles ? Object.keys(styles) : EMPTY_ARR;
-        styles = styles || EMPTY_OBJ;
+        var classes = (classesValue || EMPTY_OBJ);
+        var styleProps = stylesValue ? Object.keys(stylesValue) : EMPTY_ARR;
+        var styles = stylesValue || EMPTY_OBJ;
         var classesStartIndex = styleProps.length;
         var multiStartIndex = getMultiStartIndex(context);
         var dirty = false;
@@ -30078,12 +30344,15 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 var adjustedPropIndex = isClassBased_2 ? propIndex - classesStartIndex : propIndex;
                 var newProp = isClassBased_2 ? classNames[adjustedPropIndex] : styleProps[adjustedPropIndex];
                 var newValue = isClassBased_2 ? (applyAllClasses ? true : classes[newProp]) : styles[newProp];
+                var playerBuilderIndex = isClassBased_2 ? classesPlayerBuilderIndex : stylesPlayerBuilderIndex;
                 var prop = getProp(context, ctxIndex);
                 if (prop === newProp) {
                     var value = getValue(context, ctxIndex);
                     var flag = getPointers(context, ctxIndex);
+                    setPlayerBuilderIndex(context, ctxIndex, playerBuilderIndex);
                     if (hasValueChanged(flag, value, newValue)) {
                         setValue(context, ctxIndex, newValue);
+                        playerBuildersAreDirty = playerBuildersAreDirty || !!playerBuilderIndex;
                         var initialValue = getInitialValue(context, flag);
                         // there is no point in setting this to dirty if the previously
                         // rendered value was being referenced by the initial style (or null)
@@ -30105,6 +30374,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                             setValue(context, ctxIndex, newValue);
                             if (hasValueChanged(flagToCompare, initialValue, newValue)) {
                                 setDirty(context, ctxIndex, true);
+                                playerBuildersAreDirty = playerBuildersAreDirty || !!playerBuilderIndex;
                                 dirty = true;
                             }
                         }
@@ -30112,12 +30382,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     else {
                         // we only care to do this if the insertion is in the middle
                         var newFlag = prepareInitialFlag(newProp, isClassBased_2, getStyleSanitizer(context));
-                        insertNewMultiProperty(context, ctxIndex, isClassBased_2, newProp, newFlag, newValue);
+                        playerBuildersAreDirty = playerBuildersAreDirty || !!playerBuilderIndex;
+                        insertNewMultiProperty(context, ctxIndex, isClassBased_2, newProp, newFlag, newValue, playerBuilderIndex);
                         dirty = true;
                     }
                 }
             }
-            ctxIndex += 3 /* Size */;
+            ctxIndex += 4 /* Size */;
             propIndex++;
         }
         // this means that there are left-over values in the context that
@@ -30133,10 +30404,15 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 if (doRemoveValue) {
                     setDirty(context, ctxIndex, true);
                     setValue(context, ctxIndex, null);
+                    // we keep the player factory the same so that the `nulled` value can
+                    // be instructed into the player because removing a style and/or a class
+                    // is a valid animation player instruction.
+                    var playerBuilderIndex = isClassBased_3 ? classesPlayerBuilderIndex : stylesPlayerBuilderIndex;
+                    setPlayerBuilderIndex(context, ctxIndex, playerBuilderIndex);
                     dirty = true;
                 }
             }
-            ctxIndex += 3 /* Size */;
+            ctxIndex += 4 /* Size */;
         }
         // this means that there are left-over properties in the context that
         // were not detected in the context during the loop above. In that
@@ -30150,7 +30426,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 var prop = isClassBased_4 ? classNames[adjustedPropIndex] : styleProps[adjustedPropIndex];
                 var value = isClassBased_4 ? (applyAllClasses ? true : classes[prop]) : styles[prop];
                 var flag = prepareInitialFlag(prop, isClassBased_4, sanitizer) | 1 /* Dirty */;
-                context.push(flag, prop, value);
+                var playerBuilderIndex = isClassBased_4 ? classesPlayerBuilderIndex : stylesPlayerBuilderIndex;
+                context.push(flag, prop, value, playerBuilderIndex);
                 dirty = true;
             }
             propIndex++;
@@ -30158,10 +30435,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         if (dirty) {
             setContextDirty(context, true);
         }
+        if (playerBuildersAreDirty) {
+            setContextPlayersDirty(context, true);
+        }
     }
     /**
      * Sets and resolves a single styling property/value on the provided `StylingContext` so
-     * that they can be applied to the element once `renderStyling` is called.
+     * that they can be applied to the element once `renderStyleAndClassBindings` is called.
      *
      * Note that prop-level styling values are considered higher priority than any styling that
      * has been applied using `updateStylingMap`, therefore, when styling values are rendered
@@ -30173,29 +30453,47 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * @param index The index of the property which is being updated.
      * @param value The CSS style value that will be assigned
      */
-    function updateStyleProp(context, index, value) {
-        var singleIndex = 8 /* SingleStylesStartPosition */ + index * 3 /* Size */;
+    function updateStyleProp(context, index, input) {
+        var singleIndex = 8 /* SingleStylesStartPosition */ + index * 4 /* Size */;
         var currValue = getValue(context, singleIndex);
         var currFlag = getPointers(context, singleIndex);
+        var value = (input instanceof BoundPlayerFactory) ? input.value : input;
         // didn't change ... nothing to make a note of
         if (hasValueChanged(currFlag, currValue, value)) {
+            var isClassBased_5 = (currFlag & 2 /* Class */) === 2 /* Class */;
+            var element = context[5 /* ElementPosition */];
+            var playerBuilder = input instanceof BoundPlayerFactory ?
+                new ClassAndStylePlayerBuilder(input, element, isClassBased_5 ? 2 /* Class */ : 3 /* Style */) :
+                null;
+            var value_1 = (playerBuilder ? input.value : input);
+            var currPlayerIndex = getPlayerBuilderIndex(context, singleIndex);
+            var playerBuildersAreDirty = false;
+            var playerBuilderIndex = playerBuilder ? currPlayerIndex : 0;
+            if (hasPlayerBuilderChanged(context, playerBuilder, currPlayerIndex)) {
+                var newIndex = setPlayerBuilder(context, playerBuilder, currPlayerIndex);
+                playerBuilderIndex = playerBuilder ? newIndex : 0;
+                setPlayerBuilderIndex(context, singleIndex, playerBuilderIndex);
+                playerBuildersAreDirty = true;
+            }
             // the value will always get updated (even if the dirty flag is skipped)
-            setValue(context, singleIndex, value);
+            setValue(context, singleIndex, value_1);
             var indexForMulti = getMultiOrSingleIndex(currFlag);
             // if the value is the same in the multi-area then there's no point in re-assembling
             var valueForMulti = getValue(context, indexForMulti);
-            if (!valueForMulti || hasValueChanged(currFlag, valueForMulti, value)) {
+            if (!valueForMulti || hasValueChanged(currFlag, valueForMulti, value_1)) {
                 var multiDirty = false;
                 var singleDirty = true;
-                var isClassBased_5 = (currFlag & 2 /* Class */) === 2 /* Class */;
                 // only when the value is set to `null` should the multi-value get flagged
-                if (!valueExists(value, isClassBased_5) && valueExists(valueForMulti, isClassBased_5)) {
+                if (!valueExists(value_1, isClassBased_5) && valueExists(valueForMulti, isClassBased_5)) {
                     multiDirty = true;
                     singleDirty = false;
                 }
                 setDirty(context, indexForMulti, multiDirty);
                 setDirty(context, singleIndex, singleDirty);
                 setContextDirty(context, true);
+            }
+            if (playerBuildersAreDirty) {
+                setContextPlayersDirty(context, true);
             }
         }
     }
@@ -30225,22 +30523,26 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * @param context The styling context that will be used to determine
      *      what styles will be rendered
      * @param renderer the renderer that will be used to apply the styling
-     * @param styleStore if provided, the updated style values will be applied
+     * @param classesStore if provided, the updated class values will be applied
      *    to this key/value map instead of being renderered via the renderer.
-     * @param classStore if provided, the updated class values will be applied
+     * @param stylesStore if provided, the updated style values will be applied
      *    to this key/value map instead of being renderered via the renderer.
+     * @returns number the total amount of players that got queued for animation (if any)
      */
-    function renderStyling(context, renderer, styleStore, classStore) {
+    function renderStyleAndClassBindings(context, renderer, rootOrView, classesStore, stylesStore) {
+        var totalPlayersQueued = 0;
         if (isContextDirty(context)) {
+            var flushPlayerBuilders = context[3 /* MasterFlagPosition */] & 8 /* PlayerBuildersDirty */;
             var native = context[5 /* ElementPosition */];
             var multiStartIndex = getMultiStartIndex(context);
             var styleSanitizer = getStyleSanitizer(context);
-            for (var i = 8 /* SingleStylesStartPosition */; i < context.length; i += 3 /* Size */) {
+            for (var i = 8 /* SingleStylesStartPosition */; i < context.length; i += 4 /* Size */) {
                 // there is no point in rendering styles that have not changed on screen
                 if (isDirty(context, i)) {
                     var prop = getProp(context, i);
                     var value = getValue(context, i);
                     var flag = getPointers(context, i);
+                    var playerBuilder = getPlayerBuilder(context, i);
                     var isClassBased_6 = flag & 2 /* Class */ ? true : false;
                     var isInSingleRegion = i < multiStartIndex;
                     var valueToApply = value;
@@ -30262,17 +30564,46 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                         valueToApply = getInitialValue(context, flag);
                     }
                     if (isClassBased_6) {
-                        setClass(native, prop, valueToApply ? true : false, renderer, classStore);
+                        setClass(native, prop, valueToApply ? true : false, renderer, classesStore, playerBuilder);
                     }
                     else {
                         var sanitizer = (flag & 4 /* Sanitize */) ? styleSanitizer : null;
-                        setStyle(native, prop, valueToApply, renderer, sanitizer, styleStore);
+                        setStyle(native, prop, valueToApply, renderer, sanitizer, stylesStore, playerBuilder);
                     }
                     setDirty(context, i, false);
                 }
             }
+            if (flushPlayerBuilders) {
+                var rootContext = Array.isArray(rootOrView) ? getRootContext(rootOrView) : rootOrView;
+                var playerContext = getPlayerContext(context);
+                var playersStartIndex = playerContext[0 /* NonBuilderPlayersStart */];
+                for (var i = 1 /* PlayerBuildersStartPosition */; i < playersStartIndex; i += 2 /* PlayerAndPlayerBuildersTupleSize */) {
+                    var builder = playerContext[i];
+                    var playerInsertionIndex = i + 1 /* PlayerOffsetPosition */;
+                    var oldPlayer = playerContext[playerInsertionIndex];
+                    if (builder) {
+                        var player = builder.buildPlayer(oldPlayer);
+                        if (player !== undefined) {
+                            if (player != null) {
+                                var wasQueued = addPlayerInternal(playerContext, rootContext, native, player, playerInsertionIndex);
+                                wasQueued && totalPlayersQueued++;
+                            }
+                            if (oldPlayer) {
+                                oldPlayer.destroy();
+                            }
+                        }
+                    }
+                    else if (oldPlayer) {
+                        // the player builder has been removed ... therefore we should delete the associated
+                        // player
+                        oldPlayer.destroy();
+                    }
+                }
+                setContextPlayersDirty(context, false);
+            }
             setContextDirty(context, false);
         }
+        return totalPlayersQueued;
     }
     /**
      * This function renders a given CSS prop/value entry using the
@@ -30286,10 +30617,15 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * @param renderer
      * @param store an optional key/value map that will be used as a context to render styles on
      */
-    function setStyle(native, prop, value, renderer, sanitizer, store) {
+    function setStyle(native, prop, value, renderer, sanitizer, store, playerBuilder) {
         value = sanitizer && value ? sanitizer(prop, value) : value;
-        if (store) {
-            store[prop] = value;
+        if (store || playerBuilder) {
+            if (store) {
+                store.setValue(prop, value);
+            }
+            if (playerBuilder) {
+                playerBuilder.setValue(prop, value);
+            }
         }
         else if (value) {
             ngDevMode && ngDevMode.rendererSetStyle++;
@@ -30316,9 +30652,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * @param renderer
      * @param store an optional key/value map that will be used as a context to render styles on
      */
-    function setClass(native, className, add, renderer, store) {
-        if (store) {
-            store[className] = add;
+    function setClass(native, className, add, renderer, store, playerBuilder) {
+        if (store || playerBuilder) {
+            if (store) {
+                store.setValue(className, add);
+            }
+            if (playerBuilder) {
+                playerBuilder.setValue(className, add);
+            }
         }
         else if (add) {
             ngDevMode && ngDevMode.rendererAddClass++;
@@ -30353,18 +30694,18 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return (context[adjustedIndex] & 4 /* Sanitize */) == 4 /* Sanitize */;
     }
     function pointers(configFlag, staticIndex, dynamicIndex) {
-        return (configFlag & 7 /* BitMask */) | (staticIndex << 3 /* BitCountSize */) |
-            (dynamicIndex << (14 /* BitCountSize */ + 3 /* BitCountSize */));
+        return (configFlag & 15 /* BitMask */) | (staticIndex << 4 /* BitCountSize */) |
+            (dynamicIndex << (14 /* BitCountSize */ + 4 /* BitCountSize */));
     }
     function getInitialValue(context, flag) {
         var index = getInitialIndex(flag);
         return context[2 /* InitialStylesPosition */][index];
     }
     function getInitialIndex(flag) {
-        return (flag >> 3 /* BitCountSize */) & 16383 /* BitMask */;
+        return (flag >> 4 /* BitCountSize */) & 16383 /* BitMask */;
     }
     function getMultiOrSingleIndex(flag) {
-        var index = (flag >> (14 /* BitCountSize */ + 3 /* BitCountSize */)) & 16383 /* BitMask */;
+        var index = (flag >> (14 /* BitCountSize */ + 4 /* BitCountSize */)) & 16383 /* BitMask */;
         return index >= 8 /* SingleStylesStartPosition */ ? index : -1;
     }
     function getMultiStartIndex(context) {
@@ -30378,6 +30719,47 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
     function setValue(context, index, value) {
         context[index + 2 /* ValueOffset */] = value;
+    }
+    function hasPlayerBuilderChanged(context, builder, index) {
+        var playerContext = context[0 /* PlayerContext */];
+        if (builder) {
+            if (!playerContext || index === 0) {
+                return true;
+            }
+        }
+        else if (!playerContext) {
+            return false;
+        }
+        return playerContext[index] !== builder;
+    }
+    function setPlayerBuilder(context, builder, insertionIndex) {
+        var playerContext = context[0 /* PlayerContext */] || allocPlayerContext(context);
+        if (insertionIndex > 0) {
+            playerContext[insertionIndex] = builder;
+        }
+        else {
+            insertionIndex = playerContext[0 /* NonBuilderPlayersStart */];
+            playerContext.splice(insertionIndex, 0, builder, null);
+            playerContext[0 /* NonBuilderPlayersStart */] +=
+                2 /* PlayerAndPlayerBuildersTupleSize */;
+        }
+        return insertionIndex;
+    }
+    function setPlayerBuilderIndex(context, index, playerBuilderIndex) {
+        context[index + 3 /* PlayerBuilderIndexOffset */] = playerBuilderIndex;
+    }
+    function getPlayerBuilderIndex(context, index) {
+        return context[index + 3 /* PlayerBuilderIndexOffset */] || 0;
+    }
+    function getPlayerBuilder(context, index) {
+        var playerBuilderIndex = getPlayerBuilderIndex(context, index);
+        if (playerBuilderIndex) {
+            var playerContext = context[0 /* PlayerContext */];
+            if (playerContext) {
+                return playerContext[playerBuilderIndex];
+            }
+        }
+        return null;
     }
     function setFlag(context, index, flag) {
         var adjustedIndex = index === 3 /* MasterFlagPosition */ ? index : (index + 0 /* FlagsOffset */);
@@ -30399,8 +30781,16 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function setContextDirty(context, isDirtyYes) {
         setDirty(context, 3 /* MasterFlagPosition */, isDirtyYes);
     }
+    function setContextPlayersDirty(context, isDirtyYes) {
+        if (isDirtyYes) {
+            context[3 /* MasterFlagPosition */] |= 8 /* PlayerBuildersDirty */;
+        }
+        else {
+            context[3 /* MasterFlagPosition */] &= ~8 /* PlayerBuildersDirty */;
+        }
+    }
     function findEntryPositionByProp(context, prop, startIndex) {
-        for (var i = (startIndex || 0) + 1 /* PropertyOffset */; i < context.length; i += 3 /* Size */) {
+        for (var i = (startIndex || 0) + 1 /* PropertyOffset */; i < context.length; i += 4 /* Size */) {
             var thisProp = context[i];
             if (thisProp == prop) {
                 return i - 1 /* PropertyOffset */;
@@ -30412,6 +30802,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var tmpValue = getValue(context, indexA);
         var tmpProp = getProp(context, indexA);
         var tmpFlag = getPointers(context, indexA);
+        var tmpPlayerBuilderIndex = getPlayerBuilderIndex(context, indexA);
         var flagA = tmpFlag;
         var flagB = getPointers(context, indexB);
         var singleIndexA = getMultiOrSingleIndex(flagA);
@@ -30429,12 +30820,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         setValue(context, indexA, getValue(context, indexB));
         setProp(context, indexA, getProp(context, indexB));
         setFlag(context, indexA, getPointers(context, indexB));
+        setPlayerBuilderIndex(context, indexA, getPlayerBuilderIndex(context, indexB));
         setValue(context, indexB, tmpValue);
         setProp(context, indexB, tmpProp);
         setFlag(context, indexB, tmpFlag);
+        setPlayerBuilderIndex(context, indexB, tmpPlayerBuilderIndex);
     }
     function updateSinglePointerValues(context, indexStartPosition) {
-        for (var i = indexStartPosition; i < context.length; i += 3 /* Size */) {
+        for (var i = indexStartPosition; i < context.length; i += 4 /* Size */) {
             var multiFlag = getPointers(context, i);
             var singleIndex = getMultiOrSingleIndex(multiFlag);
             if (singleIndex > 0) {
@@ -30448,15 +30841,15 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
         }
     }
-    function insertNewMultiProperty(context, index, classBased, name, flag, value) {
+    function insertNewMultiProperty(context, index, classBased, name, flag, value, playerIndex) {
         var doShift = index < context.length;
         // prop does not exist in the list, add it in
-        context.splice(index, 0, flag | 1 /* Dirty */ | (classBased ? 2 /* Class */ : 0 /* None */), name, value);
+        context.splice(index, 0, flag | 1 /* Dirty */ | (classBased ? 2 /* Class */ : 0 /* None */), name, value, playerIndex);
         if (doShift) {
             // because the value was inserted midway into the array then we
             // need to update all the shifted multi values' single value
             // pointers to point to the newly shifted location
-            updateSinglePointerValues(context, index + 3 /* Size */);
+            updateSinglePointerValues(context, index + 4 /* Size */);
         }
     }
     function valueExists(value, isClassBased) {
@@ -30488,6 +30881,34 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         // everything else is safe to check with a normal equality check
         return a !== b;
     }
+    var ClassAndStylePlayerBuilder = /** @class */ (function () {
+        function ClassAndStylePlayerBuilder(factory, _element, _type) {
+            this._element = _element;
+            this._type = _type;
+            this._values = {};
+            this._dirty = false;
+            this._factory = factory;
+        }
+        ClassAndStylePlayerBuilder.prototype.setValue = function (prop, value) {
+            if (this._values[prop] !== value) {
+                this._values[prop] = value;
+                this._dirty = true;
+            }
+        };
+        ClassAndStylePlayerBuilder.prototype.buildPlayer = function (currentPlayer) {
+            // if no values have been set here then this means the binding didn't
+            // change and therefore the binding values were not updated through
+            // `setValue` which means no new player will be provided.
+            if (this._dirty) {
+                var player = this._factory.fn(this._element, this._type, this._values, currentPlayer || null);
+                this._values = {};
+                this._dirty = false;
+                return player;
+            }
+            return undefined;
+        };
+        return ClassAndStylePlayerBuilder;
+    }());
 
     /**
      * @license
@@ -31735,7 +32156,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * @param value A value indicating if a given class should be added or removed.
      */
     function elementClassProp(index, stylingIndex, value) {
-        updateClassProp(getStylingContext(index, viewData), stylingIndex, value ? true : false);
+        var val = (value instanceof BoundPlayerFactory) ? value : (!!value);
+        updateClassProp(getStylingContext(index, viewData), stylingIndex, val);
     }
     /**
      * Assign any inline style values to the element during creation mode.
@@ -31792,7 +32214,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      *        index.)
      */
     function elementStylingApply(index) {
-        renderStyling(getStylingContext(index, viewData), renderer);
+        var totalPlayersQueued = renderStyleAndClassBindings(getStylingContext(index, viewData), renderer, viewData);
+        if (totalPlayersQueued > 0) {
+            var rootContext = getRootContext(viewData);
+            scheduleTick(rootContext, 2 /* FlushPlayers */);
+        }
     }
     /**
      * Queue a given style to be rendered on an Element.
@@ -32493,11 +32919,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         currentView[FLAGS] |= 4 /* Dirty */;
         ngDevMode && assertDefined(currentView[CONTEXT], 'rootContext should be defined');
         var rootContext = currentView[CONTEXT];
-        var nothingScheduled = rootContext.flags === 0 /* Empty */;
-        rootContext.flags |= 1 /* DetectChanges */;
-        if (nothingScheduled) {
-            scheduleTick(rootContext);
-        }
+        scheduleTick(rootContext, 1 /* DetectChanges */);
     }
     /**
      * Used to schedule change detection on the whole application.
@@ -32510,8 +32932,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * `scheduleTick` requests. The scheduling function can be overridden in
      * `renderComponent`'s `scheduler` option.
      */
-    function scheduleTick(rootContext) {
-        if (rootContext.clean == _CLEAN_PROMISE) {
+    function scheduleTick(rootContext, flags) {
+        var nothingScheduled = rootContext.flags === 0 /* Empty */;
+        rootContext.flags |= flags;
+        if (nothingScheduled && rootContext.clean == _CLEAN_PROMISE) {
             var res_1;
             rootContext.clean = new Promise(function (r) { return res_1 = r; });
             rootContext.scheduler(function () {
@@ -41221,7 +41645,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('7.0.0+7.sha-f85a969');
+    var VERSION$2 = new Version$1('7.0.0+22.sha-6c48455');
 
     /**
      * @license
@@ -53639,7 +54063,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.0+7.sha-f85a969');
+    var VERSION$3 = new Version$1('7.0.0+22.sha-6c48455');
 
     /**
      * @license
