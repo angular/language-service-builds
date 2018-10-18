@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.0+7.sha-f85a969
+ * @license Angular v7.0.0+22.sha-6c48455
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1164,7 +1164,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.0+7.sha-f85a969');
+    var VERSION = new Version('7.0.0+22.sha-6c48455');
 
     /**
      * @license
@@ -14289,6 +14289,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     /**
      * Context to use when producing a key.
      *
@@ -25575,11 +25583,20 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
 
     /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
+     * Combines the binding value and a factory for an animation player.
      *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
+     * Used to bind a player to an element template binding (currently only
+     * `[style]`, `[style.prop]`, `[class]` and `[class.name]` bindings
+     * supported). The provided `factoryFn` function will be run once all
+     * the associated bindings have been evaluated on the element and is
+     * designed to return a player which will then be placed on the element.
+     *
+     * @param factoryFn The function that is used to create a player
+     *   once all the rendering-related (styling values) have been
+     *   processed for the element binding.
+     * @param value The raw value that will be exposed to the binding
+     *   so that the binding can update its internal values when
+     *   any changes are evaluated.
      */
 
     /**
@@ -26474,11 +26491,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         currentView[FLAGS] |= 4 /* Dirty */;
         ngDevMode && assertDefined(currentView[CONTEXT], 'rootContext should be defined');
         var rootContext = currentView[CONTEXT];
-        var nothingScheduled = rootContext.flags === 0 /* Empty */;
-        rootContext.flags |= 1 /* DetectChanges */;
-        if (nothingScheduled) {
-            scheduleTick(rootContext);
-        }
+        scheduleTick(rootContext, 1 /* DetectChanges */);
     }
     /**
      * Used to schedule change detection on the whole application.
@@ -26491,8 +26504,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * `scheduleTick` requests. The scheduling function can be overridden in
      * `renderComponent`'s `scheduler` option.
      */
-    function scheduleTick(rootContext) {
-        if (rootContext.clean == _CLEAN_PROMISE) {
+    function scheduleTick(rootContext, flags) {
+        var nothingScheduled = rootContext.flags === 0 /* Empty */;
+        rootContext.flags |= flags;
+        if (nothingScheduled && rootContext.clean == _CLEAN_PROMISE) {
             var res_1;
             rootContext.clean = new Promise(function (r) { return res_1 = r; });
             rootContext.scheduler(function () {
@@ -32463,7 +32478,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('7.0.0+7.sha-f85a969');
+    var VERSION$2 = new Version$1('7.0.0+22.sha-6c48455');
 
     /**
      * @license
@@ -44864,7 +44879,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.0+7.sha-f85a969');
+    var VERSION$3 = new Version$1('7.0.0+22.sha-6c48455');
 
     /**
      * @license
