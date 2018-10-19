@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.0+32.sha-3f94759
+ * @license Angular v7.0.0+52.sha-778e1c2
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1197,7 +1197,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.0+32.sha-3f94759');
+    var VERSION = new Version('7.0.0+52.sha-778e1c2');
 
     /**
      * @license
@@ -21638,7 +21638,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * An enumeration of basic types.
      *
-     * @experimental
+     * @publicApi
      */
     var BuiltinType$1;
     (function (BuiltinType) {
@@ -25115,7 +25115,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * The kind of diagnostic message.
      *
-     * @experimental
+     * @publicApi
      */
     var DiagnosticKind$1;
     (function (DiagnosticKind$$1) {
@@ -26729,7 +26729,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * Create an instance of an Angular `LanguageService`.
      *
-     * @experimental
+     * @publicApi
      */
     function createLanguageService(host) {
         return new LanguageServiceImpl(host);
@@ -26976,7 +26976,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * * `factory` gives the zero argument function which will create an instance of the injectable.
      *   The factory can call `inject` to access the `Injector` and request injection of dependencies.
      *
-     * @experimental
+     * @publicApi
      */
     function defineInjectable(opts) {
         return {
@@ -27001,7 +27001,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      *   whose providers will also be added to the injector. Locally provided types will override
      *   providers from imports.
      *
-     * @experimental
+     * @publicApi
      */
     function defineInjector(options) {
         return {
@@ -27069,6 +27069,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      *
      * {@example core/di/ts/injector_spec.ts region='ShakableInjectionToken'}
      *
+     *
+     * @publicApi
      */
     var InjectionToken = /** @class */ (function () {
         function InjectionToken(_desc, options) {
@@ -27262,13 +27264,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * class ModuleWithRoutes {}
      * ```
      *
-     * @experimental
+     * @publicApi
      */
     var ANALYZE_FOR_ENTRY_COMPONENTS = new InjectionToken('AnalyzeForEntryComponents');
     /**
      * Attribute decorator and metadata.
      *
      * @Annotation
+     * @publicApi
      */
     var Attribute$1 = makeParamDecorator('Attribute', function (attributeName) { return ({ attributeName: attributeName }); });
     /**
@@ -27278,6 +27281,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * @see `ContentChild`.
      * @see `ViewChildren`.
      * @see `ViewChild`.
+     *
+     * @publicApi
      */
     var Query = /** @class */ (function () {
         function Query() {
@@ -27288,7 +27293,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * ContentChildren decorator and metadata.
      *
      *
-     *  @Annotation
+     * @Annotation
+     * @publicApi
      */
     var ContentChildren = makePropDecorator('ContentChildren', function (selector, data) {
         if (data === void 0) { data = {}; }
@@ -27299,6 +27305,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      *
      *
      * @Annotation
+     * @publicApi
      */
     var ContentChild = makePropDecorator('ContentChild', function (selector, data) {
         if (data === void 0) { data = {}; }
@@ -27308,6 +27315,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * ViewChildren decorator and metadata.
      *
      * @Annotation
+     * @publicApi
      */
     var ViewChildren = makePropDecorator('ViewChildren', function (selector, data) {
         if (data === void 0) { data = {}; }
@@ -27317,6 +27325,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * ViewChild decorator and metadata.
      *
      * @Annotation
+     * @publicApi
      */
     var ViewChild = makePropDecorator('ViewChild', function (selector, data) {
         return (__assign({ selector: selector, first: true, isViewQuery: true, descendants: true }, data));
@@ -27333,6 +27342,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * The strategy that the default change detector uses to detect changes.
      * When set, takes effect the next time change detection is triggered.
      *
+     * @publicApi
      */
     var ChangeDetectionStrategy$1;
     (function (ChangeDetectionStrategy) {
@@ -27417,7 +27427,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      *
      * @usageNotes
      * ### Example
+     *
      * {@example core/ts/metadata/encapsulation.ts region='longform'}
+     *
+     * @publicApi
      */
     var ViewEncapsulation$1;
     (function (ViewEncapsulation) {
@@ -27555,7 +27568,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * @usageNotes
      * ### Example
      * {@example core/di/ts/forward_ref/forward_ref_spec.ts region='forward_ref'}
-     * @experimental
+     * @publicApi
      */
     function forwardRef(forwardRefFn) {
         forwardRefFn.__forward_ref__ = forwardRef;
@@ -27573,7 +27586,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * {@example core/di/ts/forward_ref/forward_ref_spec.ts region='resolve_forward_ref'}
      *
      * @see `forwardRef`
-     * @experimental
+     * @publicApi
      */
     function resolveForwardRef$1(type) {
         if (typeof type === 'function' && type.hasOwnProperty('__forward_ref__') &&
@@ -27596,30 +27609,35 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Inject decorator and metadata.
      *
      * @Annotation
+     * @publicApi
      */
     var Inject = makeParamDecorator('Inject', function (token) { return ({ token: token }); });
     /**
      * Optional decorator and metadata.
      *
      * @Annotation
+     * @publicApi
      */
     var Optional = makeParamDecorator('Optional');
     /**
      * Self decorator and metadata.
      *
      * @Annotation
+     * @publicApi
      */
     var Self = makeParamDecorator('Self');
     /**
      * SkipSelf decorator and metadata.
      *
      * @Annotation
+     * @publicApi
      */
     var SkipSelf = makeParamDecorator('SkipSelf');
     /**
      * Host decorator and metadata.
      *
      * @Annotation
+     * @publicApi
      */
     var Host = makeParamDecorator('Host');
 
@@ -27639,7 +27657,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Requesting this token instead of `Injector` allows `StaticInjector` to be tree-shaken from a
      * project.
      *
-     * @experimental
+     * @publicApi
      */
     var INJECTOR = new InjectionToken('INJECTOR');
     var NullInjector = /** @class */ (function () {
@@ -27672,7 +27690,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      *
      * {@example core/di/ts/injector_spec.ts region='injectInjector'}
      *
-     *
+     * @publicApi
      */
     var Injector = /** @class */ (function () {
         function Injector() {
@@ -28466,6 +28484,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      *  }
      * ```
      *
+     * @publicApi
      */
     var WrappedValue = /** @class */ (function () {
         function WrappedValue(value) {
@@ -28485,6 +28504,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * Represents a basic change from a previous to a new value.
      *
+     * @publicApi
      */
     var SimpleChange = /** @class */ (function () {
         function SimpleChange(previousValue, currentValue, firstChange) {
@@ -33844,7 +33864,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * })
      * ```
      *
-     * @experimental
+     * @publicApi
      */
     function injectAttribute(attrNameToInject) {
         var tNode = getPreviousOrParentTNode();
@@ -34098,12 +34118,16 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Provides access to the component instance and related objects,
      * and provides the means of destroying the instance.
      *
+     * @publicApi
      */
     var ComponentRef = /** @class */ (function () {
         function ComponentRef() {
         }
         return ComponentRef;
     }());
+    /**
+     * @publicApi
+     */
     var ComponentFactory = /** @class */ (function () {
         function ComponentFactory() {
         }
@@ -34131,6 +34155,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         return _NullComponentFactoryResolver;
     }());
+    /**
+     * @publicApi
+     */
     var ComponentFactoryResolver = /** @class */ (function () {
         function ComponentFactoryResolver() {
         }
@@ -34169,7 +34196,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * `NgModuleRef` provides access to the NgModule Instance as well other objects related to this
      * NgModule Instance.
      *
-     *
+     * @publicApi
      */
     var NgModuleRef = /** @class */ (function () {
         function NgModuleRef() {
@@ -34177,7 +34204,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return NgModuleRef;
     }());
     /**
-     * @experimental
+     * @publicApi
      */
     var NgModuleFactory = /** @class */ (function () {
         function NgModuleFactory() {
@@ -34742,7 +34769,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * XSS attacks. Carefully review any use of `ElementRef` in your code. For more detail, see the
      * [Security Guide](http://g.co/ng/security).
      *
-     *
+     * @publicApi
      */
     // Note: We don't expose things like `Injector`, `ViewContainer`, ... here,
     // i.e. users have to ask for what they need. With that, we can build better analysis tools
@@ -34765,6 +34792,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     /**
      * @deprecated Use the `Renderer2` instead.
+     * @publicApi
      */
     var Renderer = /** @class */ (function () {
         function Renderer() {
@@ -34775,7 +34803,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * Creates and initializes a custom renderer that implements the `Renderer2` base class.
      *
-     * @experimental
+     * @publicApi
      */
     var RendererFactory2 = /** @class */ (function () {
         function RendererFactory2() {
@@ -34784,7 +34812,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }());
     /**
      * Flags for renderer-specific style modifiers.
-     * @experimental
+     * @publicApi
      */
     var RendererStyleFlags2;
     (function (RendererStyleFlags2) {
@@ -34810,7 +34838,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * not statically known, use the `setProperty()` or
      * `setAttribute()` method.
      *
-     * @experimental
+     * @publicApi
      */
     var Renderer2 = /** @class */ (function () {
         function Renderer2() {
@@ -35176,7 +35204,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * Create a new `Injector` which is configured using a `defType` of `InjectorType<any>`s.
      *
-     * @experimental
+     * @publicApi
      */
     function createInjector(defType, parent, additionalProviders) {
         if (parent === void 0) { parent = null; }
@@ -39169,6 +39197,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      *
      * Once a reference implementation of the spec is available, switch to it.
      *
+     * @publicApi
      */
     var EventEmitter = /** @class */ (function (_super) {
         __extends(EventEmitter, _super);
@@ -39259,6 +39288,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * @see `ViewContainerRef`
      * @see [Navigate the Component Tree with DI](guide/dependency-injection-navtree)
      *
+     * @publicApi
      */
     var TemplateRef = /** @class */ (function () {
         function TemplateRef() {
@@ -39701,7 +39731,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      *
      * By default, this is true, unless a user calls `enableProdMode` before calling this.
      *
-     * @experimental APIs related to application bootstrap are currently under review.
+     * @publicApi
      */
     function isDevMode() {
         return _devMode;
@@ -40181,7 +40211,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      *
      * See DomSanitizer for more details on security in Angular applications.
      *
-     *
+     * @publicApi
      */
     var SecurityContext$1;
     (function (SecurityContext) {
@@ -40195,7 +40225,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * Sanitizer is used by the views to sanitize potentially dangerous values.
      *
-     *
+     * @publicApi
      */
     var Sanitizer = /** @class */ (function () {
         function Sanitizer() {
@@ -40543,7 +40573,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * An example of a `Type` is `MyCustomComponent` class, which in JavaScript is be represented by
      * the `MyCustomComponent` constructor function.
      *
-     *
+     * @publicApi
      */
     var Type$2 = Function;
     function isType(v) {
@@ -41408,6 +41438,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     /**
      * Type of the Directive metadata.
+     *
+     * @publicApi
      */
     var Directive = makeDecorator('Directive', function (dir) {
         if (dir === void 0) { dir = {}; }
@@ -41500,15 +41532,15 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * `ngPreserveWhitespaces` attribute.
      *
      * @Annotation
+     * @publicApi
      */
     var Component = makeDecorator('Component', function (c) {
         if (c === void 0) { c = {}; }
         return (__assign({ changeDetection: ChangeDetectionStrategy$1.Default }, c));
     }, Directive, undefined, function (type, meta) { return R3_COMPILE_COMPONENT(type, meta); });
     /**
-     *
-     *
      * @Annotation
+     * @publicApi
      */
     var Pipe = makeDecorator('Pipe', function (p) { return (__assign({ pure: true }, p)); }, undefined, undefined, function (type, meta) { return R3_COMPILE_PIPE(type, meta); });
     var initializeBaseDef = function (target) {
@@ -41545,18 +41577,18 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
     };
     /**
-     *
      * @Annotation
+     * @publicApi
      */
     var Input = makePropDecorator('Input', function (bindingPropertyName) { return ({ bindingPropertyName: bindingPropertyName }); }, undefined, updateBaseDefFromIOProp(function (baseDef) { return baseDef.inputs || {}; }));
     /**
-     *
      * @Annotation
+     * @publicApi
      */
     var Output = makePropDecorator('Output', function (bindingPropertyName) { return ({ bindingPropertyName: bindingPropertyName }); }, undefined, updateBaseDefFromIOProp(function (baseDef) { return baseDef.outputs || {}; }));
     /**
-     *
      * @Annotation
+     * @publicApi
      */
     var HostBinding = makePropDecorator('HostBinding', function (hostPropertyName) { return ({ hostPropertyName: hostPropertyName }); });
     /**
@@ -41589,6 +41621,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * ```
      *
      * @Annotation
+     * @publicApi
      */
     var HostListener = makePropDecorator('HostListener', function (eventName, args) { return ({ eventName: eventName, args: args }); });
 
@@ -41601,6 +41634,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     /**
      * @Annotation
+     * @publicApi
      */
     var NgModule = makeDecorator('NgModule', function (ngModule) { return ngModule; }, undefined, undefined, 
     /**
@@ -41634,7 +41668,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @description Represents the version of Angular
      *
-     *
+     * @publicApi
      */
     var Version$1 = /** @class */ (function () {
         function Version(full) {
@@ -41645,7 +41679,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('7.0.0+32.sha-3f94759');
+    /**
+     * @publicApi
+     */
+    var VERSION$2 = new Version$1('7.0.0+52.sha-778e1c2');
 
     /**
      * @license
@@ -41655,10 +41692,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * found in the LICENSE file at https://angular.io/license
      */
     /**
-    * Injectable decorator and metadata.
-    *
-    * @Annotation
-    */
+     * Injectable decorator and metadata.
+     *
+     * @Annotation
+     * @publicApi
+     */
     var Injectable = makeDecorator('Injectable', undefined, undefined, undefined, function (type, meta) { return R3_COMPILE_INJECTABLE(type, meta); });
 
     /**
@@ -41717,6 +41755,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * })
      * class MyModule {}
      * ```
+     *
+     * @publicApi
      */
     var ErrorHandler = /** @class */ (function () {
         function ErrorHandler() {
@@ -42000,7 +42040,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * `Key` should not be created directly. {@link ReflectiveInjector} creates keys automatically when
      * resolving
      * providers.
+     *
      * @deprecated No replacement
+     * @publicApi
      */
     var ReflectiveKey = /** @class */ (function () {
         /**
@@ -42143,7 +42185,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }());
     /**
      * An internal resolved representation of a factory function created by resolving `Provider`.
-     * @experimental
+     * @publicApi
      */
     var ResolvedReflectiveFactory = /** @class */ (function () {
         function ResolvedReflectiveFactory(
@@ -42358,6 +42400,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * resolve all of the object's dependencies automatically.
      *
      * @deprecated from v5 - slow and brings in a lot of code, Use `Injector.create` instead.
+     * @publicApi
      */
     var ReflectiveInjector = /** @class */ (function () {
         function ReflectiveInjector() {
@@ -42447,7 +42490,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
          * var injector = ReflectiveInjector.fromResolvedProviders(providers);
          * expect(injector.get(Car) instanceof Car).toBe(true);
          * ```
-         * @experimental
          */
         ReflectiveInjector.fromResolvedProviders = function (providers, parent) {
             return new ReflectiveInjector_(providers, parent);
@@ -46268,10 +46310,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     /**
      * A function that will be executed when an application is initialized.
+     *
+     * @publicApi
      */
     var APP_INITIALIZER = new InjectionToken('Application Initializer');
     /**
      * A class that reflects the state of running {@link APP_INITIALIZER}s.
+     *
+     * @publicApi
      */
     var ApplicationInitStatus = /** @class */ (function () {
         function ApplicationInitStatus(appInits) {
@@ -46332,7 +46378,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * If you need to avoid randomly generated value to be used as an application id, you can provide
      * a custom value via a DI provider <!-- TODO: provider --> configuring the root {@link Injector}
      * using this token.
-     * @experimental
+     * @publicApi
      */
     var APP_ID = new InjectionToken('AppId');
     function _appIdRandomProviderFactory() {
@@ -46340,7 +46386,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
     /**
      * Providers that will generate a random APP_ID_TOKEN.
-     * @experimental
+     * @publicApi
      */
     var APP_ID_RANDOM_PROVIDER = {
         provide: APP_ID,
@@ -46352,12 +46398,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
     /**
      * A function that will be executed when a platform is initialized.
-     * @experimental
+     * @publicApi
      */
     var PLATFORM_INITIALIZER = new InjectionToken('Platform Initializer');
     /**
      * A token that indicates an opaque platform id.
-     * @experimental
+     * @publicApi
      */
     var PLATFORM_ID = new InjectionToken('Platform ID');
     /**
@@ -46366,12 +46412,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      *
      * `(componentRef: ComponentRef) => void`.
      *
-     * @experimental
+     * @publicApi
      */
     var APP_BOOTSTRAP_LISTENER = new InjectionToken('appBootstrapListener');
     /**
      * A token which indicates the root directory of the application
-     * @experimental
+     * @publicApi
      */
     var PACKAGE_ROOT_URL = new InjectionToken('Application Packages Root URL');
 
@@ -46419,6 +46465,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * that will use the directives/pipes of the ng module for compilation
      * of components.
      *
+     * @publicApi
      */
     var Compiler = /** @class */ (function () {
         function Compiler() {
@@ -46464,13 +46511,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * Token to provide CompilerOptions in the platform injector.
      *
-     * @experimental
+     * @publicApi
      */
     var COMPILER_OPTIONS = new InjectionToken('compilerOptions');
     /**
      * A factory for creating a Compiler
      *
-     * @experimental
+     * @publicApi
      */
     var CompilerFactory = /** @class */ (function () {
         function CompilerFactory() {
@@ -46549,7 +46596,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * needs to be fixed before the app should be profiled. Add try-finally only when you expect that
      * an exception is expected during normal execution while profiling.
      *
-     * @experimental
+     * @publicApi
      */
     var wtfCreateScope = wtfEnabled ? createScope : function (signature, flags) { return noopScope; };
     /**
@@ -46559,7 +46606,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * - `returnValue` (optional) to be passed to the WTF.
      *
      * Returns the `returnValue for easy chaining.
-     * @experimental
+     * @publicApi
      */
     var wtfLeave = wtfEnabled ? leave : function (s, r) { return r; };
 
@@ -46642,7 +46689,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * }
      * ```
      *
-     * @experimental
+     * @publicApi
      */
     var NgZone = /** @class */ (function () {
         function NgZone(_a) {
@@ -46871,7 +46918,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * The Testability service provides testing hooks that can be accessed from
      * the browser and by services such as Protractor. Each bootstrapped Angular
      * application on the page will have an instance of Testability.
-     * @experimental
+     * @publicApi
      */
     var Testability = /** @class */ (function () {
         function Testability(_ngZone) {
@@ -47033,7 +47080,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }());
     /**
      * A global registry of {@link Testability} instances for specific elements.
-     * @experimental
+     * @publicApi
      */
     var TestabilityRegistry = /** @class */ (function () {
         function TestabilityRegistry() {
@@ -47117,7 +47164,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Creates a platform.
      * Platforms have to be eagerly created via this function.
      *
-     * @experimental APIs related to application bootstrap are currently under review.
+     * @publicApi
      */
     function createPlatform(injector) {
         if (_platform && !_platform.destroyed &&
@@ -47133,7 +47180,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * Creates a factory for a platform
      *
-     * @experimental APIs related to application bootstrap are currently under review.
+     * @publicApi
      */
     function createPlatformFactory(parentPlatformFactory, name, providers) {
         if (providers === void 0) { providers = []; }
@@ -47157,7 +47204,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * Checks that there currently is a platform which contains the given token as a provider.
      *
-     * @experimental APIs related to application bootstrap are currently under review.
+     * @publicApi
      */
     function assertPlatform(requiredToken) {
         var platform = getPlatform();
@@ -47172,7 +47219,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * Returns the current platform.
      *
-     * @experimental APIs related to application bootstrap are currently under review.
+     * @publicApi
      */
     function getPlatform() {
         return _platform && !_platform.destroyed ? _platform : null;
@@ -47184,6 +47231,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      *
      * A page's platform is initialized implicitly when a platform is created via a platform factory
      * (e.g. {@link platformBrowser}), or explicitly by calling the {@link createPlatform} function.
+     *
+     * @publicApi
      */
     var PlatformRef = /** @class */ (function () {
         /** @internal */
@@ -47214,8 +47263,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
          *
          * let moduleRef = platformBrowser().bootstrapModuleFactory(MyModuleNgFactory);
          * ```
-         *
-         * @experimental APIs related to application bootstrap are currently under review.
          */
         PlatformRef.prototype.bootstrapModuleFactory = function (moduleFactory, options) {
             var _this = this;
@@ -47359,6 +47406,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
     /**
      * A reference to an Angular application running on a page.
+     *
+     * @publicApi
      */
     var ApplicationRef = /** @class */ (function () {
         /** @internal */
@@ -47624,6 +47673,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      *   @ViewChildren(Item) items:QueryList<Item>;
      * }
      * ```
+     *
+     * @publicApi
      */
     var QueryList$1 = /** @class */ (function () {
         function QueryList() {
@@ -47710,7 +47761,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Configuration for SystemJsNgModuleLoader.
      * token.
      *
-     * @experimental
+     * @publicApi
      */
     var SystemJsNgModuleLoaderConfig = /** @class */ (function () {
         function SystemJsNgModuleLoaderConfig() {
@@ -47723,7 +47774,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     };
     /**
      * NgModuleFactoryLoader that uses SystemJS to load NgModuleFactory
-     * @experimental
+     * @publicApi
      */
     var SystemJsNgModuleLoader = /** @class */ (function () {
         function SystemJsNgModuleLoader(_compiler, config) {
@@ -47790,6 +47841,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * @see `ComponentRef`
      * @see `EmbeddedViewRef`
      *
+     * @publicApi
      */
     var ViewContainerRef = /** @class */ (function () {
         function ViewContainerRef() {
@@ -47846,6 +47898,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      *
      * <code-example path="core/ts/change_detect/change-detection.ts" region="reattach"></code-example>
      *
+     * @publicApi
      */
     var ChangeDetectorRef = /** @class */ (function () {
         function ChangeDetectorRef() {
@@ -47869,6 +47922,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * that adds destroy methods for [embedded views](guide/glossary#view-tree).
      *
      * @see `EmbeddedViewRef`
+     *
+     * @publicApi
      */
     var ViewRef$1 = /** @class */ (function (_super) {
         __extends(ViewRef, _super);
@@ -47928,7 +47983,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * </ul>
      * <!-- /ViewRef: outer-0 -->
      * ```
-     * @experimental
+     * @publicApi
      */
     var EmbeddedViewRef = /** @class */ (function (_super) {
         __extends(EmbeddedViewRef, _super);
@@ -47961,7 +48016,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return EventListener;
     }());
     /**
-     * @experimental All debugging apis are currently experimental.
+     * @publicApi
      */
     var DebugNode = /** @class */ (function () {
         function DebugNode(nativeNode, parent, _debugContext) {
@@ -48001,7 +48056,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return DebugNode;
     }());
     /**
-     * @experimental All debugging apis are currently experimental.
+     * @publicApi
      */
     var DebugElement = /** @class */ (function (_super) {
         __extends(DebugElement, _super);
@@ -48110,7 +48165,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     // Need to keep the nodes in a global Map so that multiple angular apps are supported.
     var _nativeNodeToDebugNode = new Map();
     /**
-     * @experimental
+     * @publicApi
      */
     function getDebugNode(nativeNode) {
         return _nativeNodeToDebugNode.get(nativeNode) || null;
@@ -48141,6 +48196,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     var trackByIdentity = function (index, item) { return item; };
     /**
      * @deprecated v4.0.0 - Should not be part of public API.
+     * @publicApi
      */
     var DefaultIterableDiffer = /** @class */ (function () {
         function DefaultIterableDiffer(trackByFn) {
@@ -49061,6 +49117,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * A repository of different iterable diffing strategies used by NgFor, NgClass, and others.
      *
+     * @publicApi
      */
     var IterableDiffers = /** @class */ (function () {
         function IterableDiffers(factories) {
@@ -49138,6 +49195,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * A repository of different Map diffing strategies used by NgClass, NgStyle, and others.
      *
+     * @publicApi
      */
     var KeyValueDiffers = /** @class */ (function () {
         function KeyValueDiffers(factories) {
@@ -49238,7 +49296,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * This platform has to be included in any other platform
      *
-     * @experimental
+     * @publicApi
      */
     var platformCore = createPlatformFactory(null, 'core', _CORE_PLATFORM_PROVIDERS);
 
@@ -49269,7 +49327,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * });
      * ```
      *
-     * @experimental i18n support is experimental.
+     * @publicApi
      */
     var LOCALE_ID = new InjectionToken('LocaleId');
     /**
@@ -49294,7 +49352,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * });
      * ```
      *
-     * @experimental i18n support is experimental.
+     * @publicApi
      */
     var TRANSLATIONS = new InjectionToken('Translations');
     /**
@@ -49316,7 +49374,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * });
      * ```
      *
-     * @experimental i18n support is experimental.
+     * @publicApi
      */
     var TRANSLATIONS_FORMAT = new InjectionToken('TranslationsFormat');
     /**
@@ -49340,7 +49398,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * });
      * ```
      *
-     * @experimental i18n support is experimental.
+     * @publicApi
      */
     var MissingTranslationStrategy$1;
     (function (MissingTranslationStrategy) {
@@ -49398,7 +49456,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Re-exported by `BrowserModule`, which is included automatically in the root
      * `AppModule` when you create a new app with the CLI `new` command.
      *
-     * @experimental
+     * @publicApi
      */
     var ApplicationModule = /** @class */ (function () {
         // Inject ApplicationRef to make it eager...
@@ -53199,7 +53257,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * The `TypeScriptServiceHost` implements the Angular `LanguageServiceHost` using
      * the TypeScript language services.
      *
-     * @experimental
+     * @publicApi
      */
     var TypeScriptServiceHost = /** @class */ (function () {
         function TypeScriptServiceHost(host, tsService) {
@@ -54063,7 +54121,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.0+32.sha-3f94759');
+    var VERSION$3 = new Version$1('7.0.0+52.sha-778e1c2');
 
     /**
      * @license
