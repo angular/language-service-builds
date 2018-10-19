@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.0-rc.1+85.sha-f8195e5
+ * @license Angular v7.0.0-rc.1+102.sha-d4cee51
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1197,7 +1197,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.0-rc.1+85.sha-f8195e5');
+    var VERSION = new Version('7.0.0-rc.1+102.sha-d4cee51');
 
     /**
      * @license
@@ -28376,6 +28376,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             throwError(msg);
         }
     }
+    function assertNgModuleType(actual, msg) {
+        if (msg === void 0) { msg = 'Type passed in is not NgModuleType, it does not have \'ngModuleDef\' property.'; }
+        if (!getNgModuleDef(actual)) {
+            throwError(msg);
+        }
+    }
     function throwError(msg) {
         // tslint:disable-next-line
         debugger; // Left intentionally for better debugger experience.
@@ -34711,19 +34717,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var R3_ELEMENT_REF_FACTORY = injectElementRef;
-    var R3_TEMPLATE_REF_FACTORY = injectTemplateRef;
-    var R3_CHANGE_DETECTOR_REF_FACTORY = injectChangeDetectorRef;
-    var R3_VIEW_CONTAINER_REF_FACTORY = injectViewContainerRef;
-    var R3_RENDERER2_FACTORY = injectRenderer2;
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
 
     /**
      * @license
@@ -34752,9 +34745,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             this.nativeElement = nativeElement;
         }
         /** @internal */
-        ElementRef.__NG_ELEMENT_ID__ = function () { return R3_ELEMENT_REF_FACTORY(ElementRef); };
+        ElementRef.__NG_ELEMENT_ID__ = function () { return SWITCH_ELEMENT_REF_FACTORY(ElementRef); };
         return ElementRef;
     }());
+    var SWITCH_ELEMENT_REF_FACTORY__POST_R3__ = injectElementRef;
+    var SWITCH_ELEMENT_REF_FACTORY = SWITCH_ELEMENT_REF_FACTORY__POST_R3__;
 
     /**
      * @license
@@ -34816,9 +34811,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         function Renderer2() {
         }
         /** @internal */
-        Renderer2.__NG_ELEMENT_ID__ = function () { return R3_RENDERER2_FACTORY(); };
+        Renderer2.__NG_ELEMENT_ID__ = function () { return SWITCH_RENDERER2_FACTORY(); };
         return Renderer2;
     }());
+    var SWITCH_RENDERER2_FACTORY__POST_R3__ = injectRenderer2;
+    var SWITCH_RENDERER2_FACTORY = SWITCH_RENDERER2_FACTORY__POST_R3__;
 
     /**
      * @license
@@ -36387,11 +36384,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
 
     var observable = typeof Symbol === 'function' && Symbol.observable || '@@observable';
 
-    function noop$1() { }
+    function noop$2() { }
 
     function pipeFromArray(fns) {
         if (!fns) {
-            return noop$1;
+            return noop$2;
         }
         if (fns.length === 1) {
             return fns[0];
@@ -38829,7 +38826,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return mergeAll(concurrent)(fromArray(observables, scheduler));
     }
 
-    var NEVER = new Observable(noop$1);
+    var NEVER = new Observable(noop$2);
 
     var __read$7 = (undefined && undefined.__read) || function (o, n) {
         var m = typeof Symbol === "function" && o[Symbol.iterator];
@@ -39264,9 +39261,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         function TemplateRef() {
         }
         /** @internal */
-        TemplateRef.__NG_ELEMENT_ID__ = function () { return R3_TEMPLATE_REF_FACTORY(TemplateRef, ElementRef); };
+        TemplateRef.__NG_ELEMENT_ID__ = function () { return SWITCH_TEMPLATE_REF_FACTORY(TemplateRef, ElementRef); };
         return TemplateRef;
     }());
+    var SWITCH_TEMPLATE_REF_FACTORY__POST_R3__ = injectTemplateRef;
+    var SWITCH_TEMPLATE_REF_FACTORY = SWITCH_TEMPLATE_REF_FACTORY__POST_R3__;
 
     /**
      * @license
@@ -41257,104 +41256,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    /**
-     * Compile an Angular injectable according to its `Injectable` metadata, and patch the resulting
-     * `ngInjectableDef` onto the injectable type.
-     */
-    function compileInjectable$1(type, srcMeta) {
-        // Allow the compilation of a class with a `@Injectable()` decorator without parameters
-        var meta = srcMeta || { providedIn: null };
-        var def = null;
-        Object.defineProperty(type, NG_INJECTABLE_DEF, {
-            get: function () {
-                if (def === null) {
-                    // Check whether the injectable metadata includes a provider specification.
-                    var hasAProvider = isUseClassProvider(meta) || isUseFactoryProvider(meta) ||
-                        isUseValueProvider(meta) || isUseExistingProvider(meta);
-                    var ctorDeps = reflectDependencies(type);
-                    var userDeps = undefined;
-                    if ((isUseClassProvider(meta) || isUseFactoryProvider(meta)) && meta.deps !== undefined) {
-                        userDeps = convertDependencies(meta.deps);
-                    }
-                    // Decide which flavor of factory to generate, based on the provider specified.
-                    // Only one of the use* fields should be set.
-                    var useClass = undefined;
-                    var useFactory = undefined;
-                    var useValue = undefined;
-                    var useExisting = undefined;
-                    if (!hasAProvider) {
-                        // In the case the user specifies a type provider, treat it as {provide: X, useClass: X}.
-                        // The deps will have been reflected above, causing the factory to create the class by
-                        // calling
-                        // its constructor with injected deps.
-                        useClass = new WrappedNodeExpr(type);
-                    }
-                    else if (isUseClassProvider(meta)) {
-                        // The user explicitly specified useClass, and may or may not have provided deps.
-                        useClass = new WrappedNodeExpr(meta.useClass);
-                    }
-                    else if (isUseValueProvider(meta)) {
-                        // The user explicitly specified useValue.
-                        useValue = new WrappedNodeExpr(meta.useValue);
-                    }
-                    else if (isUseFactoryProvider(meta)) {
-                        // The user explicitly specified useFactory.
-                        useFactory = new WrappedNodeExpr(meta.useFactory);
-                    }
-                    else if (isUseExistingProvider(meta)) {
-                        // The user explicitly specified useExisting.
-                        useExisting = new WrappedNodeExpr(meta.useExisting);
-                    }
-                    else {
-                        // Can't happen - either hasAProvider will be false, or one of the providers will be set.
-                        throw new Error("Unreachable state.");
-                    }
-                    var _a = compileInjectable({
-                        name: type.name,
-                        type: new WrappedNodeExpr(type),
-                        providedIn: computeProvidedIn(meta.providedIn),
-                        useClass: useClass,
-                        useFactory: useFactory,
-                        useValue: useValue,
-                        useExisting: useExisting,
-                        ctorDeps: ctorDeps,
-                        userDeps: userDeps,
-                    }), expression = _a.expression, statements = _a.statements;
-                    def = jitExpression(expression, angularCoreEnv, "ng://" + type.name + "/ngInjectableDef.js", statements);
-                }
-                return def;
-            },
-        });
-    }
-    function computeProvidedIn(providedIn) {
-        if (providedIn == null || typeof providedIn === 'string') {
-            return new LiteralExpr(providedIn);
-        }
-        else {
-            return new WrappedNodeExpr(providedIn);
-        }
-    }
-    function isUseClassProvider(meta) {
-        return meta.useClass !== undefined;
-    }
-    var USE_VALUE$2 = getClosureSafeProperty({ provide: String, useValue: getClosureSafeProperty });
-    function isUseValueProvider(meta) {
-        return USE_VALUE$2 in meta;
-    }
-    function isUseFactoryProvider(meta) {
-        return meta.useFactory !== undefined;
-    }
-    function isUseExistingProvider(meta) {
-        return meta.useExisting !== undefined;
-    }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     function compilePipe(type, meta) {
         var ngPipeDef = null;
         Object.defineProperty(type, NG_PIPE_DEF, {
@@ -41379,40 +41280,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
 
     /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    var R3_COMPILE_COMPONENT = compileComponent;
-    var R3_COMPILE_DIRECTIVE = compileDirective;
-    var R3_COMPILE_INJECTABLE = compileInjectable$1;
-    var R3_COMPILE_NGMODULE = compileNgModule$1;
-    var R3_COMPILE_PIPE = compilePipe;
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
      * Type of the Directive metadata.
      */
     var Directive = makeDecorator('Directive', function (dir) {
         if (dir === void 0) { dir = {}; }
         return dir;
-    }, undefined, undefined, function (type, meta) { return R3_COMPILE_DIRECTIVE(type, meta); });
+    }, undefined, undefined, function (type, meta) { return SWITCH_COMPILE_DIRECTIVE(type, meta); });
     /**
      * Component decorator and metadata.
      *
@@ -41504,13 +41377,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     var Component = makeDecorator('Component', function (c) {
         if (c === void 0) { c = {}; }
         return (__assign({ changeDetection: ChangeDetectionStrategy$1.Default }, c));
-    }, Directive, undefined, function (type, meta) { return R3_COMPILE_COMPONENT(type, meta); });
+    }, Directive, undefined, function (type, meta) { return SWITCH_COMPILE_COMPONENT(type, meta); });
     /**
      *
      *
      * @Annotation
      */
-    var Pipe = makeDecorator('Pipe', function (p) { return (__assign({ pure: true }, p)); }, undefined, undefined, function (type, meta) { return R3_COMPILE_PIPE(type, meta); });
+    var Pipe = makeDecorator('Pipe', function (p) { return (__assign({ pure: true }, p)); }, undefined, undefined, function (type, meta) { return SWITCH_COMPILE_PIPE(type, meta); });
     var initializeBaseDef = function (target) {
         var constructor = target.constructor;
         var inheritedBaseDef = constructor.ngBaseDef;
@@ -41591,6 +41464,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * @Annotation
      */
     var HostListener = makePropDecorator('HostListener', function (eventName, args) { return ({ eventName: eventName, args: args }); });
+    var SWITCH_COMPILE_COMPONENT__POST_R3__ = compileComponent;
+    var SWITCH_COMPILE_DIRECTIVE__POST_R3__ = compileDirective;
+    var SWITCH_COMPILE_PIPE__POST_R3__ = compilePipe;
+    var SWITCH_COMPILE_COMPONENT = SWITCH_COMPILE_COMPONENT__POST_R3__;
+    var SWITCH_COMPILE_DIRECTIVE = SWITCH_COMPILE_DIRECTIVE__POST_R3__;
+    var SWITCH_COMPILE_PIPE = SWITCH_COMPILE_PIPE__POST_R3__;
 
     /**
      * @license
@@ -41599,6 +41478,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    var USE_VALUE$2 = getClosureSafeProperty({ provide: String, useValue: getClosureSafeProperty });
+
     /**
      * @Annotation
      */
@@ -41614,7 +41495,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * * The `imports` and `exports` options bring in members from other modules, and make
      * this module's members available to others.
      */
-    function (type, meta) { return R3_COMPILE_NGMODULE(type, meta); });
+    function (type, meta) { return SWITCH_COMPILE_NGMODULE(type, meta); });
+    var SWITCH_COMPILE_NGMODULE__POST_R3__ = compileNgModule$1;
+    var SWITCH_COMPILE_NGMODULE = SWITCH_COMPILE_NGMODULE__POST_R3__;
 
     /**
      * @license
@@ -41645,7 +41528,105 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return Version;
     }());
-    var VERSION$2 = new Version$1('7.0.0-rc.1+85.sha-f8195e5');
+    var VERSION$2 = new Version$1('7.0.0-rc.1+102.sha-d4cee51');
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * Compile an Angular injectable according to its `Injectable` metadata, and patch the resulting
+     * `ngInjectableDef` onto the injectable type.
+     */
+    function compileInjectable$1(type, srcMeta) {
+        // Allow the compilation of a class with a `@Injectable()` decorator without parameters
+        var meta = srcMeta || { providedIn: null };
+        var def = null;
+        Object.defineProperty(type, NG_INJECTABLE_DEF, {
+            get: function () {
+                if (def === null) {
+                    // Check whether the injectable metadata includes a provider specification.
+                    var hasAProvider = isUseClassProvider(meta) || isUseFactoryProvider(meta) ||
+                        isUseValueProvider(meta) || isUseExistingProvider(meta);
+                    var ctorDeps = reflectDependencies(type);
+                    var userDeps = undefined;
+                    if ((isUseClassProvider(meta) || isUseFactoryProvider(meta)) && meta.deps !== undefined) {
+                        userDeps = convertDependencies(meta.deps);
+                    }
+                    // Decide which flavor of factory to generate, based on the provider specified.
+                    // Only one of the use* fields should be set.
+                    var useClass = undefined;
+                    var useFactory = undefined;
+                    var useValue = undefined;
+                    var useExisting = undefined;
+                    if (!hasAProvider) {
+                        // In the case the user specifies a type provider, treat it as {provide: X, useClass: X}.
+                        // The deps will have been reflected above, causing the factory to create the class by
+                        // calling
+                        // its constructor with injected deps.
+                        useClass = new WrappedNodeExpr(type);
+                    }
+                    else if (isUseClassProvider(meta)) {
+                        // The user explicitly specified useClass, and may or may not have provided deps.
+                        useClass = new WrappedNodeExpr(meta.useClass);
+                    }
+                    else if (isUseValueProvider(meta)) {
+                        // The user explicitly specified useValue.
+                        useValue = new WrappedNodeExpr(meta.useValue);
+                    }
+                    else if (isUseFactoryProvider(meta)) {
+                        // The user explicitly specified useFactory.
+                        useFactory = new WrappedNodeExpr(meta.useFactory);
+                    }
+                    else if (isUseExistingProvider(meta)) {
+                        // The user explicitly specified useExisting.
+                        useExisting = new WrappedNodeExpr(meta.useExisting);
+                    }
+                    else {
+                        // Can't happen - either hasAProvider will be false, or one of the providers will be set.
+                        throw new Error("Unreachable state.");
+                    }
+                    var _a = compileInjectable({
+                        name: type.name,
+                        type: new WrappedNodeExpr(type),
+                        providedIn: computeProvidedIn(meta.providedIn),
+                        useClass: useClass,
+                        useFactory: useFactory,
+                        useValue: useValue,
+                        useExisting: useExisting,
+                        ctorDeps: ctorDeps,
+                        userDeps: userDeps,
+                    }), expression = _a.expression, statements = _a.statements;
+                    def = jitExpression(expression, angularCoreEnv, "ng://" + type.name + "/ngInjectableDef.js", statements);
+                }
+                return def;
+            },
+        });
+    }
+    function computeProvidedIn(providedIn) {
+        if (providedIn == null || typeof providedIn === 'string') {
+            return new LiteralExpr(providedIn);
+        }
+        else {
+            return new WrappedNodeExpr(providedIn);
+        }
+    }
+    function isUseClassProvider(meta) {
+        return meta.useClass !== undefined;
+    }
+    var USE_VALUE$3 = getClosureSafeProperty({ provide: String, useValue: getClosureSafeProperty });
+    function isUseValueProvider(meta) {
+        return USE_VALUE$3 in meta;
+    }
+    function isUseFactoryProvider(meta) {
+        return meta.useFactory !== undefined;
+    }
+    function isUseExistingProvider(meta) {
+        return meta.useExisting !== undefined;
+    }
 
     /**
      * @license
@@ -41659,7 +41640,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     *
     * @Annotation
     */
-    var Injectable = makeDecorator('Injectable', undefined, undefined, undefined, function (type, meta) { return R3_COMPILE_INJECTABLE(type, meta); });
+    var Injectable = makeDecorator('Injectable', undefined, undefined, undefined, function (type, meta) { return SWITCH_COMPILE_INJECTABLE(type, meta); });
+    var SWITCH_COMPILE_INJECTABLE__POST_R3__ = compileInjectable$1;
+    var SWITCH_COMPILE_INJECTABLE = SWITCH_COMPILE_INJECTABLE__POST_R3__;
 
     /**
      * @license
@@ -43792,20 +43775,20 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         __extends$K(TapSubscriber, _super);
         function TapSubscriber(destination, observerOrNext, error, complete) {
             var _this = _super.call(this, destination) || this;
-            _this._tapNext = noop$1;
-            _this._tapError = noop$1;
-            _this._tapComplete = noop$1;
-            _this._tapError = error || noop$1;
-            _this._tapComplete = complete || noop$1;
+            _this._tapNext = noop$2;
+            _this._tapError = noop$2;
+            _this._tapComplete = noop$2;
+            _this._tapError = error || noop$2;
+            _this._tapComplete = complete || noop$2;
             if (isFunction(observerOrNext)) {
                 _this._context = _this;
                 _this._tapNext = observerOrNext;
             }
             else if (observerOrNext) {
                 _this._context = observerOrNext;
-                _this._tapNext = observerOrNext.next || noop$1;
-                _this._tapError = observerOrNext.error || noop$1;
-                _this._tapComplete = observerOrNext.complete || noop$1;
+                _this._tapNext = observerOrNext.next || noop$2;
+                _this._tapError = observerOrNext.error || noop$2;
+                _this._tapComplete = observerOrNext.complete || noop$2;
             }
             return _this;
         }
@@ -46467,16 +46450,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * @experimental
      */
     var COMPILER_OPTIONS = new InjectionToken('compilerOptions');
-    /**
-     * A factory for creating a Compiler
-     *
-     * @experimental
-     */
-    var CompilerFactory = /** @class */ (function () {
-        function CompilerFactory() {
-        }
-        return CompilerFactory;
-    }());
 
     /**
      * @license
@@ -46731,7 +46704,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
          */
         NgZone.prototype.runTask = function (fn, applyThis, applyArgs, name) {
             var zone = this._inner;
-            var task = zone.scheduleEventTask('NgZoneEvent: ' + name, fn, EMPTY_PAYLOAD, noop$2, noop$2);
+            var task = zone.scheduleEventTask('NgZoneEvent: ' + name, fn, EMPTY_PAYLOAD, noop$3, noop$3);
             try {
                 return zone.runTask(task, applyThis, applyArgs);
             }
@@ -46764,7 +46737,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         return NgZone;
     }());
-    function noop$2() { }
+    function noop$3() { }
     var EMPTY_PAYLOAD = {};
     function checkStable(zone) {
         if (zone._nesting == 0 && !zone.hasPendingMicrotasks && !zone.isStable) {
@@ -47098,19 +47071,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }());
     var _testabilityGetter = new _NoopGetTestability();
 
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     var _platform;
-    var compileNgModuleFactory = compileNgModuleFactory__PRE_NGCC__;
-    function compileNgModuleFactory__PRE_NGCC__(injector, options, moduleType) {
-        var compilerFactory = injector.get(CompilerFactory);
-        var compiler = compilerFactory.createCompiler([options]);
-        return compiler.compileModuleAsync(moduleType);
+    var compileNgModuleFactory = compileNgModuleFactory__POST_R3__;
+    function compileNgModuleFactory__POST_R3__(injector, options, moduleType) {
+        ngDevMode && assertNgModuleType(moduleType);
+        return Promise.resolve(new NgModuleFactory$1(moduleType));
     }
     var ALLOW_MULTIPLE_PLATFORMS = new InjectionToken('AllowMultipleToken');
     /**
@@ -47771,13 +47736,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
 
     /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
      * Represents a container where one or more views can be attached to a component.
      *
      * Can contain *host views* (created by instantiating a
@@ -47795,9 +47753,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         function ViewContainerRef() {
         }
         /** @internal */
-        ViewContainerRef.__NG_ELEMENT_ID__ = function () { return R3_VIEW_CONTAINER_REF_FACTORY(ViewContainerRef, ElementRef); };
+        ViewContainerRef.__NG_ELEMENT_ID__ = function () { return SWITCH_VIEW_CONTAINER_REF_FACTORY(ViewContainerRef, ElementRef); };
         return ViewContainerRef;
     }());
+    var SWITCH_VIEW_CONTAINER_REF_FACTORY__POST_R3__ = injectViewContainerRef;
+    var SWITCH_VIEW_CONTAINER_REF_FACTORY = SWITCH_VIEW_CONTAINER_REF_FACTORY__POST_R3__;
 
     /**
      * @license
@@ -47851,9 +47811,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         function ChangeDetectorRef() {
         }
         /** @internal */
-        ChangeDetectorRef.__NG_ELEMENT_ID__ = function () { return R3_CHANGE_DETECTOR_REF_FACTORY(); };
+        ChangeDetectorRef.__NG_ELEMENT_ID__ = function () { return SWITCH_CHANGE_DETECTOR_REF_FACTORY(); };
         return ChangeDetectorRef;
     }());
+    var SWITCH_CHANGE_DETECTOR_REF_FACTORY__POST_R3__ = injectChangeDetectorRef;
+    var SWITCH_CHANGE_DETECTOR_REF_FACTORY = SWITCH_CHANGE_DETECTOR_REF_FACTORY__POST_R3__;
 
     /**
      * @license
@@ -49410,6 +49372,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         ], ApplicationModule);
         return ApplicationModule;
     }());
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
 
     /**
      * @license
@@ -53032,23 +53002,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var USE_VALUE$3 = getClosureSafeProperty({ provide: String, useValue: getClosureSafeProperty });
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     // clang-format on
 
     /**
@@ -54063,7 +54016,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.0-rc.1+85.sha-f8195e5');
+    var VERSION$3 = new Version$1('7.0.0-rc.1+102.sha-d4cee51');
 
     /**
      * @license
