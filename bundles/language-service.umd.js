@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.1.0-beta.0+3.sha-1880c95
+ * @license Angular v7.1.0-beta.0+6.sha-297dc2b
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1164,7 +1164,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.1.0-beta.0+3.sha-1880c95');
+    var VERSION = new Version('7.1.0-beta.0+6.sha-297dc2b');
 
     /**
      * @license
@@ -24791,7 +24791,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         // the tNode instances store a flag value which then has a
         // pointer which tells the starting index of where all the
         // active directives are in the master directive array
-        return tNode.flags >> 15 /* DirectiveStartingIndexShift */;
+        return tNode.flags >> 16 /* DirectiveStartingIndexShift */;
     }
     function getDirectiveEndIndex(tNode, startIndex) {
         // The end value is also a part of the same flag
@@ -24837,7 +24837,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     function queueLifecycleHooks(flags, tView) {
         if (tView.firstTemplatePass) {
-            var start = flags >> 15 /* DirectiveStartingIndexShift */;
+            var start = flags >> 16 /* DirectiveStartingIndexShift */;
             var count = flags & 4095 /* DirectiveCountMask */;
             var end = start + count;
             // It's necessary to loop through the directives at elementEnd() (rather than processing in
@@ -25345,6 +25345,16 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /** A special value which designates that a value has not changed. */
+    var NO_CHANGE = {};
 
     /**
      * Combines the binding value and a factory for an animation player.
@@ -26092,7 +26102,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 // - save the index,
                 // - set the number of directives to 1
                 previousOrParentTNode.flags =
-                    index << 15 /* DirectiveStartingIndexShift */ | flags & 4096 /* isComponent */ | 1;
+                    index << 16 /* DirectiveStartingIndexShift */ | flags & 4096 /* isComponent */ | 1;
             }
             else {
                 // Only need to bump the size when subsequent directives are created
@@ -26381,8 +26391,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             viewQuery(2 /* Update */, component);
         }
     }
-    /** A special value which designates that a value has not changed. */
-    var NO_CHANGE = {};
     function assertPreviousIsParent() {
         assertEqual(isParent, true, 'previousOrParentTNode should be a parent');
     }
@@ -26423,7 +26431,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             if (def.diPublic)
                 def.diPublic(def);
             tNode.flags =
-                rootView.length << 15 /* DirectiveStartingIndexShift */ | 4096 /* isComponent */;
+                rootView.length << 16 /* DirectiveStartingIndexShift */ | 4096 /* isComponent */;
         }
         // Store component view at node index, with node as the HOST
         componentView[HOST] = rootView[HEADER_OFFSET];
@@ -26471,7 +26479,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var rootTView = readPatchedLViewData(component)[TVIEW];
         var dirIndex = rootTView.data.length - 1;
         queueInitHooks(dirIndex, def.onInit, def.doCheck, rootTView);
-        queueLifecycleHooks(dirIndex << 15 /* DirectiveStartingIndexShift */ | 1, rootTView);
+        queueLifecycleHooks(dirIndex << 16 /* DirectiveStartingIndexShift */ | 1, rootTView);
     }
 
     /**
@@ -26714,7 +26722,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var nodeFlags = tNode.flags;
         var count = nodeFlags & 4095 /* DirectiveCountMask */;
         if (count !== 0) {
-            var start = nodeFlags >> 15 /* DirectiveStartingIndexShift */;
+            var start = nodeFlags >> 16 /* DirectiveStartingIndexShift */;
             var end = start + count;
             var defs = injectorView[TVIEW].data;
             for (var i = start; i < end; i++) {
@@ -31467,7 +31475,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         if (defs) {
             var flags = tNode.flags;
             var count = flags & 4095 /* DirectiveCountMask */;
-            var start = flags >> 15 /* DirectiveStartingIndexShift */;
+            var start = flags >> 16 /* DirectiveStartingIndexShift */;
             var end = start + count;
             for (var i = start; i < end; i++) {
                 var def = defs[i];
@@ -32469,7 +32477,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.1.0-beta.0+3.sha-1880c95');
+    var VERSION$2 = new Version$1('7.1.0-beta.0+6.sha-297dc2b');
 
     /**
      * @license
@@ -43857,7 +43865,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 var tNode = lViewData[TVIEW].data[lDebugCtx.nodeIndex];
                 var directivesCount = tNode.flags & 4095 /* DirectiveCountMask */;
                 if (directivesCount > 0) {
-                    var directiveIdxStart = tNode.flags >> 15 /* DirectiveStartingIndexShift */;
+                    var directiveIdxStart = tNode.flags >> 16 /* DirectiveStartingIndexShift */;
                     var directiveIdxEnd = directiveIdxStart + directivesCount;
                     var viewDirectiveDefs = this.view[TVIEW].data;
                     var directiveDefs = viewDirectiveDefs.slice(directiveIdxStart, directiveIdxEnd);
@@ -44931,7 +44939,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.1.0-beta.0+3.sha-1880c95');
+    var VERSION$3 = new Version$1('7.1.0-beta.0+6.sha-297dc2b');
 
     /**
      * @license
