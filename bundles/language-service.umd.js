@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.1.0-beta.0+42.sha-d2e6d69
+ * @license Angular v7.1.0-beta.0+44.sha-95993e1
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1182,7 +1182,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.1.0-beta.0+42.sha-d2e6d69');
+    var VERSION = new Version('7.1.0-beta.0+44.sha-95993e1');
 
     /**
      * @license
@@ -17594,42 +17594,44 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 var lastInputCommand = null;
                 if (styleInputs.length) {
                     var i = mapBasedStyleInput_1 ? 1 : 0;
-                    for (i; i < styleInputs.length; i++) {
+                    var _loop_1 = function () {
                         var input = styleInputs[i];
                         var key = input.name;
                         var styleIndex = stylesIndexMap[key];
-                        var value = input.value.visit(this._valueConverter);
-                        var params = [
-                            indexLiteral_1, literal(styleIndex), this.convertPropertyBinding(implicit, value, true)
-                        ];
-                        if (input.unit != null) {
-                            params.push(literal(input.unit));
-                        }
-                        this.updateInstruction(input.sourceSpan, Identifiers$1.elementStyleProp, params);
+                        var value = input.value.visit(this_1._valueConverter);
+                        this_1.updateInstruction(input.sourceSpan, Identifiers$1.elementStyleProp, function () {
+                            var params = [
+                                indexLiteral_1, literal(styleIndex),
+                                _this.convertPropertyBinding(implicit, value, true)
+                            ];
+                            if (input.unit != null) {
+                                params.push(literal(input.unit));
+                            }
+                            return params;
+                        });
+                    };
+                    var this_1 = this;
+                    for (i; i < styleInputs.length; i++) {
+                        _loop_1();
                     }
                     lastInputCommand = styleInputs[styleInputs.length - 1];
                 }
                 if (classInputs.length) {
                     var i = mapBasedClassInput ? 1 : 0;
-                    var _loop_1 = function () {
+                    var _loop_2 = function () {
                         var input = classInputs[i];
-                        var params = [];
                         var sanitizationRef = resolveSanitizationFn(input, input.securityContext);
-                        if (sanitizationRef)
-                            params.push(sanitizationRef);
                         var key = input.name;
                         var classIndex = classesIndexMap[key];
-                        var value = input.value.visit(this_1._valueConverter);
-                        this_1.updateInstruction(input.sourceSpan, Identifiers$1.elementClassProp, function () {
-                            return __spread([
-                                indexLiteral_1, literal(classIndex),
-                                _this.convertPropertyBinding(implicit, value, true)
-                            ], params);
+                        var value = input.value.visit(this_2._valueConverter);
+                        this_2.updateInstruction(input.sourceSpan, Identifiers$1.elementClassProp, function () {
+                            var valueLiteral = _this.convertPropertyBinding(implicit, value, true);
+                            return [indexLiteral_1, literal(classIndex), valueLiteral];
                         });
                     };
-                    var this_1 = this;
+                    var this_2 = this;
                     for (i; i < classInputs.length; i++) {
-                        _loop_1();
+                        _loop_2();
                     }
                     lastInputCommand = classInputs[classInputs.length - 1];
                 }
@@ -29611,7 +29613,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var saveViewData = getViewData();
             setTNodeAndViewData(tNode, lViewData);
             try {
-                return bloomHash();
+                var value = bloomHash();
+                if (value == null && !(flags & 8 /* Optional */)) {
+                    throw new Error("No provider for " + stringify$2(token));
+                }
+                else {
+                    return value;
+                }
             }
             finally {
                 setTNodeAndViewData(savePreviousOrParentTNode, saveViewData);
@@ -34557,10 +34565,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 return TemplateRef_;
             }(TemplateRefToken));
         }
-        var hostContainer = hostView[hostTNode.index];
-        ngDevMode && assertNodeType(hostTNode, 0 /* Container */);
-        ngDevMode && assertDefined(hostTNode.tViews, 'TView must be allocated');
-        return new R3TemplateRef(hostView, createElementRef(ElementRefToken, hostTNode, hostView), hostTNode.tViews, getRenderer(), hostContainer[QUERIES], hostTNode.injectorIndex);
+        if (hostTNode.type === 0 /* Container */) {
+            var hostContainer = hostView[hostTNode.index];
+            ngDevMode && assertDefined(hostTNode.tViews, 'TView must be allocated');
+            return new R3TemplateRef(hostView, createElementRef(ElementRefToken, hostTNode, hostView), hostTNode.tViews, getRenderer(), hostContainer[QUERIES], hostTNode.injectorIndex);
+        }
+        else {
+            return null;
+        }
     }
     var R3ViewContainerRef;
     /**
@@ -42345,7 +42357,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.1.0-beta.0+42.sha-d2e6d69');
+    var VERSION$2 = new Version$1('7.1.0-beta.0+44.sha-95993e1');
 
     /**
      * @license
@@ -54777,7 +54789,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.1.0-beta.0+42.sha-d2e6d69');
+    var VERSION$3 = new Version$1('7.1.0-beta.0+44.sha-95993e1');
 
     /**
      * @license
