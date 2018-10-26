@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.1.0-beta.0+43.sha-d52d82d
+ * @license Angular v7.1.0-beta.0+42.sha-d2e6d69
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1182,7 +1182,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.1.0-beta.0+43.sha-d52d82d');
+    var VERSION = new Version('7.1.0-beta.0+42.sha-d2e6d69');
 
     /**
      * @license
@@ -29611,13 +29611,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var saveViewData = getViewData();
             setTNodeAndViewData(tNode, lViewData);
             try {
-                var value = bloomHash();
-                if (value == null && !(flags & 8 /* Optional */)) {
-                    throw new Error("No provider for " + stringify$2(token));
-                }
-                else {
-                    return value;
-                }
+                return bloomHash();
             }
             finally {
                 setTNodeAndViewData(savePreviousOrParentTNode, saveViewData);
@@ -34563,14 +34557,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 return TemplateRef_;
             }(TemplateRefToken));
         }
-        if (hostTNode.type === 0 /* Container */) {
-            var hostContainer = hostView[hostTNode.index];
-            ngDevMode && assertDefined(hostTNode.tViews, 'TView must be allocated');
-            return new R3TemplateRef(hostView, createElementRef(ElementRefToken, hostTNode, hostView), hostTNode.tViews, getRenderer(), hostContainer[QUERIES], hostTNode.injectorIndex);
-        }
-        else {
-            return null;
-        }
+        var hostContainer = hostView[hostTNode.index];
+        ngDevMode && assertNodeType(hostTNode, 0 /* Container */);
+        ngDevMode && assertDefined(hostTNode.tViews, 'TView must be allocated');
+        return new R3TemplateRef(hostView, createElementRef(ElementRefToken, hostTNode, hostView), hostTNode.tViews, getRenderer(), hostContainer[QUERIES], hostTNode.injectorIndex);
     }
     var R3ViewContainerRef;
     /**
@@ -42355,7 +42345,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.1.0-beta.0+43.sha-d52d82d');
+    var VERSION$2 = new Version$1('7.1.0-beta.0+42.sha-d2e6d69');
 
     /**
      * @license
@@ -54787,7 +54777,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.1.0-beta.0+43.sha-d52d82d');
+    var VERSION$3 = new Version$1('7.1.0-beta.0+42.sha-d2e6d69');
 
     /**
      * @license
