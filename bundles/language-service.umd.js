@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.1.0-beta.0+60.sha-ede65db
+ * @license Angular v7.1.0-beta.0+59.sha-578e4c7
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1182,7 +1182,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.1.0-beta.0+60.sha-ede65db');
+    var VERSION = new Version('7.1.0-beta.0+59.sha-578e4c7');
 
     /**
      * @license
@@ -28493,9 +28493,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         // Styling contexts are also arrays, but their first index contains an element node
         return Array.isArray(value) && typeof value[ACTIVE_INDEX] === 'number';
     }
-    function isRootView(target) {
-        return (target[FLAGS] & 64 /* IsRoot */) !== 0;
-    }
     /**
      * Retrieve the root view from any component by walking the parent `LViewData` until
      * reaching the root `LViewData`.
@@ -30350,12 +30347,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
     function getRenderParent(tNode, currentView) {
         if (canInsertNativeNode(tNode, currentView)) {
-            // If we are asked for a render parent of the root component we need to do low-level DOM
-            // operation as LTree doesn't exist above the topmost host node. We might need to find a render
-            // parent of the topmost host node if the root component injects ViewContainerRef.
-            if (isRootView(currentView)) {
-                return nativeParentNode(currentView[RENDERER], getNativeByTNode(tNode, currentView));
-            }
             var hostTNode = currentView[HOST_NODE];
             var tNodeParent = tNode.parent;
             if (tNodeParent != null && tNodeParent.type === 4 /* ElementContainer */) {
@@ -30452,18 +30443,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         else {
             parent.insertBefore(child, beforeNode, true);
         }
-    }
-    /**
-     * Returns a native parent of a given native node.
-     */
-    function nativeParentNode(renderer, node) {
-        return (isProceduralRenderer(renderer) ? renderer.parentNode(node) : node.parentNode);
-    }
-    /**
-     * Returns a native sibling of a given native node.
-     */
-    function nativeNextSibling(renderer, node) {
-        return isProceduralRenderer(renderer) ? renderer.nextSibling(node) : node.nextSibling;
     }
     /**
      * Appends the `child` element to the `parent`.
@@ -34763,23 +34742,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             lContainer[ACTIVE_INDEX] = -1;
         }
         else {
-            var commentNode = hostView[RENDERER].createComment(ngDevMode ? 'container' : '');
+            var comment = hostView[RENDERER].createComment(ngDevMode ? 'container' : '');
             ngDevMode && ngDevMode.rendererCreateComment++;
-            // A container can be created on the root (topmost / bootstrapped) component and in this case we
-            // can't use LTree to insert container's marker node (both parent of a comment node and the
-            // commend node itself is located outside of elements hold by LTree). In this specific case we
-            // use low-level DOM manipulation to insert container's marker (comment) node.
-            if (isRootView(hostView)) {
-                var renderer = hostView[RENDERER];
-                var hostNative = getNativeByTNode(hostTNode, hostView);
-                var parentOfHostNative = nativeParentNode(renderer, hostNative);
-                nativeInsertBefore(renderer, parentOfHostNative, commentNode, nativeNextSibling(renderer, hostNative));
-            }
-            else {
-                appendChild(commentNode, hostTNode, hostView);
-            }
             hostView[hostTNode.index] = lContainer =
-                createLContainer(slotValue, hostTNode, hostView, commentNode, true);
+                createLContainer(slotValue, hostTNode, hostView, comment, true);
+            appendChild(comment, hostTNode, hostView);
             addToViewTree(hostView, hostTNode.index, lContainer);
         }
         return new R3ViewContainerRef(lContainer, hostTNode, hostView);
@@ -42446,7 +42413,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.1.0-beta.0+60.sha-ede65db');
+    var VERSION$2 = new Version$1('7.1.0-beta.0+59.sha-578e4c7');
 
     /**
      * @license
@@ -54878,7 +54845,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.1.0-beta.0+60.sha-ede65db');
+    var VERSION$3 = new Version$1('7.1.0-beta.0+59.sha-578e4c7');
 
     /**
      * @license
