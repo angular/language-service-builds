@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.1.0-beta.0+56.sha-2a86927
+ * @license Angular v7.1.0-beta.0+57.sha-1130e48
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1164,7 +1164,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.1.0-beta.0+56.sha-2a86927');
+    var VERSION = new Version('7.1.0-beta.0+57.sha-1130e48');
 
     /**
      * @license
@@ -24314,7 +24314,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return parentLocation & 32767 /* InjectorIndexMask */;
     }
     function getParentInjectorViewOffset(parentLocation) {
-        return parentLocation >> 15 /* ViewOffsetShift */;
+        return parentLocation >> 16 /* ViewOffsetShift */;
     }
     /**
      * Unwraps a parent injector location number to find the view offset from the current injector,
@@ -25123,7 +25123,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     function getParentInjectorLocation(tNode, view) {
         if (tNode.parent && tNode.parent.injectorIndex !== -1) {
-            return tNode.parent.injectorIndex; // view offset is 0
+            return tNode.parent.injectorIndex; // ViewOffset is 0, AcrossHostBoundary is 0
         }
         // For most cases, the parent injector index can be found on the host node (e.g. for component
         // or container), so this loop will be skipped, but we must keep the loop here to support
@@ -25135,8 +25135,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             hostTNode = view[HOST_NODE];
             viewOffset++;
         }
+        var acrossHostBoundary = hostTNode && hostTNode.type === 3 /* Element */ ?
+            32768 /* AcrossHostBoundary */ :
+            0;
         return hostTNode ?
-            hostTNode.injectorIndex | (viewOffset << 15 /* ViewOffsetShift */) :
+            hostTNode.injectorIndex | (viewOffset << 16 /* ViewOffsetShift */) |
+                acrossHostBoundary :
             -1;
     }
     /**
@@ -25364,7 +25368,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /** Returns true if flags prevent parent injector from being searched for tokens */
     function shouldSearchParent(flags, parentLocation) {
         return !(flags & 2 /* Self */ ||
-            (flags & 1 /* Host */ && getParentInjectorViewOffset(parentLocation) > 0));
+            (flags & 1 /* Host */ &&
+                (parentLocation & 32768 /* AcrossHostBoundary */)));
     }
 
     /** Called when directives inject each other (creating a circular dependency) */
@@ -32837,7 +32842,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.1.0-beta.0+56.sha-2a86927');
+    var VERSION$2 = new Version$1('7.1.0-beta.0+57.sha-1130e48');
 
     /**
      * @license
@@ -45252,7 +45257,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.1.0-beta.0+56.sha-2a86927');
+    var VERSION$3 = new Version$1('7.1.0-beta.0+57.sha-1130e48');
 
     /**
      * @license
