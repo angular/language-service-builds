@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.0.1+14.sha-cc5e4fb.with-local-changes
+ * @license Angular v7.0.1+54.sha-bc93d47.with-local-changes
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1164,7 +1164,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION = new Version('7.0.1+14.sha-cc5e4fb.with-local-changes');
+    var VERSION = new Version('7.0.1+54.sha-bc93d47.with-local-changes');
 
     /**
      * @license
@@ -15270,7 +15270,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                         // correctly.
                         var originFilePath = _this.resolveModule(origin, filePath);
                         if (!originFilePath) {
-                            _this.reportError(new Error("Couldn't resolve original symbol for " + origin + " from " + filePath));
+                            _this.reportError(new Error("Couldn't resolve original symbol for " + origin + " from " + _this.host.getOutputName(filePath)));
                         }
                         else {
                             _this.symbolResourcePaths.set(symbol, originFilePath);
@@ -15335,7 +15335,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                             if (!filePath) {
                                 return {
                                     __symbolic: 'error',
-                                    message: "Could not resolve " + module + " relative to " + sourceSymbol.filePath + ".",
+                                    message: "Could not resolve " + module + " relative to " + self.host.getMetadataFor(sourceSymbol.filePath) + ".",
                                     line: map.line,
                                     character: map.character,
                                     fileName: getOriginalName()
@@ -15419,7 +15419,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 if (moduleMetadata['version'] != SUPPORTED_SCHEMA_VERSION) {
                     var errorMessage = moduleMetadata['version'] == 2 ?
                         "Unsupported metadata version " + moduleMetadata['version'] + " for module " + module + ". This module should be compiled with a newer version of ngc" :
-                        "Metadata version mismatch for module " + module + ", found version " + moduleMetadata['version'] + ", expected " + SUPPORTED_SCHEMA_VERSION;
+                        "Metadata version mismatch for module " + this.host.getOutputName(module) + ", found version " + moduleMetadata['version'] + ", expected " + SUPPORTED_SCHEMA_VERSION;
                     this.reportError(new Error(errorMessage));
                 }
                 this.metadataCache.set(module, moduleMetadata);
@@ -15430,7 +15430,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var filePath = this.resolveModule(module, containingFile);
             if (!filePath) {
                 this.reportError(new Error("Could not resolve module " + module + (containingFile ? ' relative to ' +
-                    containingFile : '')));
+                    this.host.getOutputName(containingFile) : '')));
                 return this.getStaticSymbol("ERROR:" + module, symbolName);
             }
             return this.getStaticSymbol(filePath, symbolName);
@@ -24096,8 +24096,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Attention: These regex has to hold even if the code is minified!
      */
     var DELEGATE_CTOR = /^function\s+\S+\(\)\s*{[\s\S]+\.apply\(this,\s*arguments\)/;
-    var INHERITED_CLASS = /^class\s+[A-Za-z\d$_]*\s*extends\s+[A-Za-z\d$_]+\s*{/;
-    var INHERITED_CLASS_WITH_CTOR = /^class\s+[A-Za-z\d$_]*\s*extends\s+[A-Za-z\d$_]+\s*{[\s\S]*constructor\s*\(/;
+    var INHERITED_CLASS = /^class\s+[A-Za-z\d$_]*\s*extends\s+[^{]+{/;
+    var INHERITED_CLASS_WITH_CTOR = /^class\s+[A-Za-z\d$_]*\s*extends\s+[^{]+{[\s\S]*constructor\s*\(/;
     var ReflectionCapabilities = /** @class */ (function () {
         function ReflectionCapabilities(reflect) {
             this._reflect = reflect || _global['Reflect'];
@@ -32515,7 +32515,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.0.1+14.sha-cc5e4fb.with-local-changes');
+    var VERSION$2 = new Version$1('7.0.1+54.sha-bc93d47.with-local-changes');
 
     /**
      * @license
@@ -44937,7 +44937,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.0.1+14.sha-cc5e4fb.with-local-changes');
+    var VERSION$3 = new Version$1('7.0.1+54.sha-bc93d47.with-local-changes');
 
     /**
      * @license
