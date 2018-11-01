@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.1.0-beta.1+15.sha-aadbc8a
+ * @license Angular v7.1.0-beta.1+17.sha-a2929df
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -13334,7 +13334,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.1.0-beta.1+15.sha-aadbc8a');
+    var VERSION$1 = new Version('7.1.0-beta.1+17.sha-a2929df');
 
     /**
      * @license
@@ -29995,25 +29995,30 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * bindings, refreshes child components.
      * Note: view hooks are triggered later when leaving the view.
      */
-    function refreshDescendantViews(viewData) {
+    function refreshDescendantViews(viewData, rf) {
         var tView = getTView();
-        var creationMode = getCreationMode();
-        var checkNoChangesMode = getCheckNoChangesMode();
-        setHostBindings(tView, viewData);
         var parentFirstTemplatePass = getFirstTemplatePass();
         // This needs to be set before children are processed to support recursive components
         tView.firstTemplatePass = false;
         setFirstTemplatePass(false);
-        if (!checkNoChangesMode) {
-            executeInitHooks(viewData, tView, creationMode);
+        // Dynamically created views must run first only in creation mode. If this is a
+        // creation-only pass, we should not call lifecycle hooks or evaluate bindings.
+        // This will be done in the update-only pass.
+        if (rf !== 1 /* Create */) {
+            var creationMode = getCreationMode();
+            var checkNoChangesMode = getCheckNoChangesMode();
+            setHostBindings(tView, viewData);
+            if (!checkNoChangesMode) {
+                executeInitHooks(viewData, tView, creationMode);
+            }
+            refreshDynamicEmbeddedViews(viewData);
+            // Content query results must be refreshed before content hooks are called.
+            refreshContentQueries(tView);
+            if (!checkNoChangesMode) {
+                executeHooks(viewData, tView.contentHooks, tView.contentCheckHooks, creationMode);
+            }
         }
-        refreshDynamicEmbeddedViews(viewData);
-        // Content query results must be refreshed before content hooks are called.
-        refreshContentQueries(tView);
-        if (!checkNoChangesMode) {
-            executeHooks(viewData, tView.contentHooks, tView.contentCheckHooks, creationMode);
-        }
-        refreshChildComponents(tView.components, parentFirstTemplatePass);
+        refreshChildComponents(tView.components, parentFirstTemplatePass, rf);
     }
     /** Sets the host bindings for the current view. */
     function setHostBindings(tView, viewData) {
@@ -30064,19 +30069,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
     }
     /** Refreshes child components in the current view. */
-    function refreshChildComponents(components, parentFirstTemplatePass) {
+    function refreshChildComponents(components, parentFirstTemplatePass, rf) {
         if (components != null) {
             for (var i = 0; i < components.length; i++) {
-                componentRefresh(components[i], parentFirstTemplatePass);
+                componentRefresh(components[i], parentFirstTemplatePass, rf);
             }
-        }
-    }
-    function executeInitAndContentHooks(viewData) {
-        if (!getCheckNoChangesMode()) {
-            var tView = getTView();
-            var creationMode = getCreationMode();
-            executeInitHooks(viewData, tView, creationMode);
-            executeHooks(viewData, tView.contentHooks, tView.contentCheckHooks, creationMode);
         }
     }
     function createLViewData(renderer, tView, context, flags, sanitizer) {
@@ -30184,7 +30181,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 namespaceHTML();
                 tView.template(rf, context);
                 if (rf & 2 /* Update */) {
-                    refreshDescendantViews(viewToRender);
+                    refreshDescendantViews(viewToRender, null);
                 }
                 else {
                     // This must be set to false immediately after the first creation run because in an
@@ -30205,7 +30202,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
         }
     }
-    function renderComponentOrTemplate(hostView, componentOrContext, templateFn) {
+    function renderComponentOrTemplate(hostView, componentOrContext, rf, templateFn) {
         var rendererFactory = getRendererFactory();
         var oldView = enterView(hostView, hostView[HOST_NODE]);
         try {
@@ -30214,16 +30211,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
             if (templateFn) {
                 namespaceHTML();
-                templateFn(getRenderFlags(hostView), componentOrContext);
-                refreshDescendantViews(hostView);
+                templateFn(rf || getRenderFlags(hostView), componentOrContext);
             }
-            else {
-                executeInitAndContentHooks(hostView);
-                // Element was stored at 0 in data and directive was stored at 0 in directives
-                // in renderComponent()
-                setHostBindings(getTView(), hostView);
-                componentRefresh(HEADER_OFFSET, false);
-            }
+            refreshDescendantViews(hostView, rf);
         }
         finally {
             if (rendererFactory.end) {
@@ -30524,6 +30514,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             setUpAttributes(native, def.attributes);
         }
     }
+    /** Stores index of component's host element so it will be queued for view refresh during CD. */
+    function queueComponentIndexForCheck(previousOrParentTNode) {
+        ngDevMode &&
+            assertEqual(getFirstTemplatePass(), true, 'Should only be called in first template pass.');
+        var tView = getTView();
+        (tView.components || (tView.components = [])).push(previousOrParentTNode.index);
+    }
     /** Stores index of directive and host element so it will be queued for binding refresh during CD.
     */
     function queueHostBindingForCheck(tView, def) {
@@ -30580,14 +30577,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      *
      * @param adjustedElementIndex  Element index in LViewData[] (adjusted for HEADER_OFFSET)
      */
-    function componentRefresh(adjustedElementIndex, parentFirstTemplatePass) {
+    function componentRefresh(adjustedElementIndex, parentFirstTemplatePass, rf) {
         ngDevMode && assertDataInRange(adjustedElementIndex);
         var hostView = getComponentViewByIndex(adjustedElementIndex, getViewData());
         ngDevMode && assertNodeType(getTView().data[adjustedElementIndex], 3 /* Element */);
         // Only attached CheckAlways components or attached, dirty OnPush components should be checked
         if (viewAttached(hostView) && hostView[FLAGS] & (2 /* CheckAlways */ | 4 /* Dirty */)) {
             parentFirstTemplatePass && syncViewWithBlueprint(hostView);
-            detectChangesInternal(hostView, hostView[CONTEXT]);
+            detectChangesInternal(hostView, hostView[CONTEXT], rf);
         }
     }
     /**
@@ -30675,7 +30672,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function tickRootContext(rootContext) {
         for (var i = 0; i < rootContext.components.length; i++) {
             var rootComponent = rootContext.components[i];
-            renderComponentOrTemplate(readPatchedLViewData(rootComponent), rootComponent);
+            renderComponentOrTemplate(readPatchedLViewData(rootComponent), rootComponent, 2 /* Update */);
         }
     }
     /**
@@ -30692,7 +30689,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * @param component The component which the change detection should be performed on.
      */
     function detectChanges(component) {
-        detectChangesInternal(getComponentViewByInstance(component), component);
+        detectChangesInternal(getComponentViewByInstance(component), component, null);
     }
     /**
      * Synchronously perform change detection on a root view and its components.
@@ -30736,29 +30733,30 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
     }
     /** Checks the view of the component provided. Does not gate on dirty checks or execute doCheck. */
-    function detectChangesInternal(hostView, component) {
+    function detectChangesInternal(hostView, component, rf) {
         var hostTView = hostView[TVIEW];
         var oldView = enterView(hostView, hostView[HOST_NODE]);
         var templateFn = hostTView.template;
         var viewQuery = hostTView.viewQuery;
         try {
             namespaceHTML();
-            createViewQuery(viewQuery, hostView[FLAGS], component);
-            templateFn(getRenderFlags(hostView), component);
-            refreshDescendantViews(hostView);
-            updateViewQuery(viewQuery, component);
+            createViewQuery(viewQuery, rf, hostView[FLAGS], component);
+            templateFn(rf || getRenderFlags(hostView), component);
+            refreshDescendantViews(hostView, rf);
+            updateViewQuery(viewQuery, hostView[FLAGS], component);
         }
         finally {
-            leaveView(oldView);
+            leaveView(oldView, rf === 1 /* Create */);
         }
     }
-    function createViewQuery(viewQuery, flags, component) {
-        if (viewQuery && (flags & 1 /* CreationMode */)) {
+    function createViewQuery(viewQuery, renderFlags, viewFlags, component) {
+        if (viewQuery && (renderFlags === 1 /* Create */ ||
+            (renderFlags === null && (viewFlags & 1 /* CreationMode */)))) {
             viewQuery(1 /* Create */, component);
         }
     }
-    function updateViewQuery(viewQuery, component) {
-        if (viewQuery) {
+    function updateViewQuery(viewQuery, flags, component) {
+        if (viewQuery && flags & 2 /* Update */) {
             viewQuery(2 /* Update */, component);
         }
     }
@@ -31608,6 +31606,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             diPublicInInjector(getOrCreateNodeInjectorForNode(tNode, rootView), rootView, def.type);
             tNode.flags = 4096 /* isComponent */;
             initNodeFlags(tNode, rootView.length, 1);
+            queueComponentIndexForCheck(tNode);
         }
         // Store component view at node index, with node as the HOST
         componentView[HOST] = rootView[HEADER_OFFSET];
@@ -31627,7 +31626,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         hostFeatures && hostFeatures.forEach(function (feature) { return feature(component, componentDef); });
         if (tView.firstTemplatePass)
             prefillHostVars(tView, rootView, componentDef.hostVars);
-        setHostBindings(tView, rootView);
         return component;
     }
     function createRootContext(scheduler, playerHandler) {
@@ -32360,12 +32358,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 // executed here?
                 // Angular 5 reference: https://stackblitz.com/edit/lifecycle-hooks-vcref
                 component = createRootComponent(hostRNode, componentView, this.componentDef, rootView, rootContext, [LifecycleHooksFeature]);
-                // Execute the template in creation mode only, and then turn off the CreationMode flag
-                renderEmbeddedTemplate(componentView, componentView[TVIEW], component, 1 /* Create */);
-                componentView[FLAGS] &= ~1 /* CreationMode */;
+                refreshDescendantViews(rootView, 1 /* Create */);
             }
             finally {
-                enterView(oldView, null);
+                leaveView(oldView, true);
                 if (rendererFactory.end)
                     rendererFactory.end();
             }
@@ -37025,7 +37021,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.1.0-beta.1+15.sha-aadbc8a');
+    var VERSION$2 = new Version$1('7.1.0-beta.1+17.sha-a2929df');
 
     /**
      * @license
@@ -49440,7 +49436,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.1.0-beta.1+15.sha-aadbc8a');
+    var VERSION$3 = new Version$1('7.1.0-beta.1+17.sha-a2929df');
 
     /**
      * @license
