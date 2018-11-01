@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.1.0-beta.1+31.sha-bc68b59
+ * @license Angular v7.1.0-beta.1+37.sha-3b9bc73
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -13319,7 +13319,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.1.0-beta.1+31.sha-bc68b59');
+    var VERSION$1 = new Version('7.1.0-beta.1+37.sha-3b9bc73');
 
     /**
      * @license
@@ -30124,6 +30124,21 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
     }
 
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    function noop$1() {
+        var args = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            args[_i] = arguments[_i];
+        }
+        // Do nothing.
+    }
+
     /** Called when directives inject each other (creating a circular dependency) */
     /** Called when there are multiple component selectors that match a given node */
     function throwMultipleComponentError(tNode) {
@@ -33148,7 +33163,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function queueHostBindingForCheck(tView, def) {
         ngDevMode &&
             assertEqual(getFirstTemplatePass(), true, 'Should only be called in first template pass.');
-        tView.expandoInstructions.push(def.hostBindings, def.hostVars);
+        tView.expandoInstructions.push(def.hostBindings || noop$1);
+        if (def.hostVars)
+            tView.expandoInstructions.push(def.hostVars);
     }
     /** Caches local names and their matching directive indices for query and template lookups. */
     function cacheMatchingLocalNames(tNode, localRefs, exportsMap) {
@@ -33197,8 +33214,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var nodeInjectorFactory = new NodeInjectorFactory(directiveFactory, isComponentDef(def), null);
         tView.blueprint.push(nodeInjectorFactory);
         viewData.push(nodeInjectorFactory);
-        if (def.hostBindings)
-            queueHostBindingForCheck(tView, def);
+        queueHostBindingForCheck(tView, def);
     }
     function addComponentLogic(viewData, previousOrParentTNode, def) {
         var native = getNativeByTNode(previousOrParentTNode, viewData);
@@ -34110,14 +34126,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function delegateToClassInput(tNode) {
         return tNode.flags & 32768 /* hasClassInput */;
     }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
 
     /**
      * @license
@@ -42650,7 +42658,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.1.0-beta.1+31.sha-bc68b59');
+    var VERSION$2 = new Version$1('7.1.0-beta.1+37.sha-3b9bc73');
 
     /**
      * @license
@@ -55121,7 +55129,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.1.0-beta.1+31.sha-bc68b59');
+    var VERSION$3 = new Version$1('7.1.0-beta.1+37.sha-3b9bc73');
 
     /**
      * @license
