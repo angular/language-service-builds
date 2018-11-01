@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.1.0-beta.1+6.sha-4e9f2e5
+ * @license Angular v7.1.0-beta.1+14.sha-2e7b5c5
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1372,15 +1372,17 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }(Expression));
     var InvokeFunctionExpr = /** @class */ (function (_super) {
         __extends(InvokeFunctionExpr, _super);
-        function InvokeFunctionExpr(fn, args, type, sourceSpan) {
+        function InvokeFunctionExpr(fn, args, type, sourceSpan, pure) {
+            if (pure === void 0) { pure = false; }
             var _this = _super.call(this, type, sourceSpan) || this;
             _this.fn = fn;
             _this.args = args;
+            _this.pure = pure;
             return _this;
         }
         InvokeFunctionExpr.prototype.isEquivalent = function (e) {
             return e instanceof InvokeFunctionExpr && this.fn.isEquivalent(e.fn) &&
-                areAllEquivalent(this.args, e.args);
+                areAllEquivalent(this.args, e.args) && this.pure === e.pure;
         };
         InvokeFunctionExpr.prototype.isConstant = function () { return false; };
         InvokeFunctionExpr.prototype.visitExpression = function (visitor, context) {
@@ -3094,6 +3096,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             moduleName: CORE,
         };
         Identifiers.createComponentFactory = { name: 'ɵccf', moduleName: CORE };
+        Identifiers.setClassMetadata = { name: 'ɵsetClassMetadata', moduleName: CORE };
         return Identifiers;
     }());
     function createTokenForReference(reference) {
@@ -13316,7 +13319,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.1.0-beta.1+6.sha-4e9f2e5');
+    var VERSION$1 = new Version('7.1.0-beta.1+14.sha-2e7b5c5');
 
     /**
      * @license
@@ -36663,6 +36666,53 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * found in the LICENSE file at https://angular.io/license
      */
     /**
+     * Adds decorator, constructor, and property metadata to a given type via static metadata fields
+     * on the type.
+     *
+     * These metadata fields can later be read with Angular's `ReflectionCapabilities` API.
+     *
+     * Calls to `setClassMetadata` can be marked as pure, resulting in the metadata assignments being
+     * tree-shaken away during production builds.
+     */
+    function setClassMetadata(type, decorators, ctorParameters, propDecorators) {
+        var _a;
+        var clazz = type;
+        if (decorators !== null) {
+            if (clazz.decorators !== undefined) {
+                (_a = clazz.decorators).push.apply(_a, __spread(decorators));
+            }
+            else {
+                clazz.decorators = decorators;
+            }
+        }
+        if (ctorParameters !== null) {
+            // Rather than merging, clobber the existing parameters. If other projects exist which use
+            // tsickle-style annotations and reflect over them in the same way, this could cause issues,
+            // but that is vanishingly unlikely.
+            clazz.ctorParameters = ctorParameters;
+        }
+        if (propDecorators !== null) {
+            // The property decorator objects are merged as it is possible different fields have different
+            // decorator types. Decorators on individual fields are not merged, as it's also incredibly
+            // unlikely that a field will be decorated both with an Angular decorator and a non-Angular
+            // decorator that's also been downleveled.
+            if (clazz.propDecorators !== undefined) {
+                clazz.propDecorators = __assign({}, clazz.propDecorators, propDecorators);
+            }
+            else {
+                clazz.propDecorators = propDecorators;
+            }
+        }
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
      * Bindings for pure functions are stored after regular bindings.
      *
      * |------consts------|---------vars---------|                 |----- hostVars (dir1) ------|
@@ -42611,7 +42661,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.1.0-beta.1+6.sha-4e9f2e5');
+    var VERSION$2 = new Version$1('7.1.0-beta.1+14.sha-2e7b5c5');
 
     /**
      * @license
@@ -47373,6 +47423,17 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         ApplicationInitStatus.ngInjectableDef = defineInjectable({ token: ApplicationInitStatus, factory: function ApplicationInitStatus_Factory(t) { return new (t || ApplicationInitStatus)(inject(APP_INITIALIZER, 8)); }, providedIn: null });
         return ApplicationInitStatus;
     }());
+    /*@__PURE__*/ setClassMetadata(ApplicationInitStatus, [{
+            type: Injectable
+        }], [{
+            type: undefined,
+            decorators: [{
+                    type: Inject,
+                    args: [APP_INITIALIZER]
+                }, {
+                    type: Optional
+                }]
+        }], null);
 
     /**
      * @license
@@ -47454,6 +47515,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         Console.ngInjectableDef = defineInjectable({ token: Console, factory: function Console_Factory(t) { return new (t || Console)(); }, providedIn: null });
         return Console;
     }());
+    /*@__PURE__*/ setClassMetadata(Console, [{
+            type: Injectable
+        }], null, null);
 
     /**
      * @license
@@ -47515,6 +47579,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         Compiler.ngInjectableDef = defineInjectable({ token: Compiler, factory: function Compiler_Factory(t) { return new (t || Compiler)(); }, providedIn: null });
         return Compiler;
     }());
+    /*@__PURE__*/ setClassMetadata(Compiler, [{
+            type: Injectable
+        }], null, null);
     /**
      * Token to provide CompilerOptions in the platform injector.
      *
@@ -48072,6 +48139,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         Testability.ngInjectableDef = defineInjectable({ token: Testability, factory: function Testability_Factory(t) { return new (t || Testability)(inject(NgZone)); }, providedIn: null });
         return Testability;
     }());
+    /*@__PURE__*/ setClassMetadata(Testability, [{
+            type: Injectable
+        }], [{
+            type: NgZone
+        }], null);
     /**
      * A global registry of {@link Testability} instances for specific elements.
      * @publicApi
@@ -48125,6 +48197,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         TestabilityRegistry.ngInjectableDef = defineInjectable({ token: TestabilityRegistry, factory: function TestabilityRegistry_Factory(t) { return new (t || TestabilityRegistry)(); }, providedIn: null });
         return TestabilityRegistry;
     }());
+    /*@__PURE__*/ setClassMetadata(TestabilityRegistry, [{
+            type: Injectable
+        }], [], null);
     var _NoopGetTestability = /** @class */ (function () {
         function _NoopGetTestability() {
         }
@@ -48346,6 +48421,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         PlatformRef.ngInjectableDef = defineInjectable({ token: PlatformRef, factory: function PlatformRef_Factory(t) { return new (t || PlatformRef)(inject(Injector)); }, providedIn: null });
         return PlatformRef;
     }());
+    /*@__PURE__*/ setClassMetadata(PlatformRef, [{
+            type: Injectable
+        }], [{
+            type: Injector
+        }], null);
     function getNgZone(ngZoneOption) {
         var ngZone;
         if (ngZoneOption === 'noop') {
@@ -48584,6 +48664,21 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         ApplicationRef.ngInjectableDef = defineInjectable({ token: ApplicationRef, factory: function ApplicationRef_Factory(t) { return new (t || ApplicationRef)(inject(NgZone), inject(Console), inject(Injector), inject(ErrorHandler), inject(ComponentFactoryResolver), inject(ApplicationInitStatus)); }, providedIn: null });
         return ApplicationRef;
     }());
+    /*@__PURE__*/ setClassMetadata(ApplicationRef, [{
+            type: Injectable
+        }], [{
+            type: NgZone
+        }, {
+            type: Console
+        }, {
+            type: Injector
+        }, {
+            type: ErrorHandler
+        }, {
+            type: ComponentFactoryResolver
+        }, {
+            type: ApplicationInitStatus
+        }], null);
     function remove(list, el) {
         var index = list.indexOf(el);
         if (index > -1) {
@@ -48775,6 +48870,16 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         SystemJsNgModuleLoader.ngInjectableDef = defineInjectable({ token: SystemJsNgModuleLoader, factory: function SystemJsNgModuleLoader_Factory(t) { return new (t || SystemJsNgModuleLoader)(inject(Compiler), inject(SystemJsNgModuleLoaderConfig, 8)); }, providedIn: null });
         return SystemJsNgModuleLoader;
     }());
+    /*@__PURE__*/ setClassMetadata(SystemJsNgModuleLoader, [{
+            type: Injectable
+        }], [{
+            type: Compiler
+        }, {
+            type: SystemJsNgModuleLoaderConfig,
+            decorators: [{
+                    type: Optional
+                }]
+        }], null);
     function checkNotEmpty(value, modulePath, exportName) {
         if (!value) {
             throw new Error("Cannot find '" + exportName + "' in '" + modulePath + "'");
@@ -50424,6 +50529,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         ApplicationModule.ngInjectorDef = defineInjector({ factory: function ApplicationModule_Factory(t) { return new (t || ApplicationModule)(inject(ApplicationRef)); }, providers: APPLICATION_MODULE_PROVIDERS, imports: [] });
         return ApplicationModule;
     }());
+    /*@__PURE__*/ setClassMetadata(ApplicationModule, [{
+            type: NgModule,
+            args: [{ providers: APPLICATION_MODULE_PROVIDERS }]
+        }], [{
+            type: ApplicationRef
+        }], null);
 
     /**
      * @license
@@ -55021,7 +55132,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.1.0-beta.1+6.sha-4e9f2e5');
+    var VERSION$3 = new Version$1('7.1.0-beta.1+14.sha-2e7b5c5');
 
     /**
      * @license
