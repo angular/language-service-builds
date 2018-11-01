@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.1.0-beta.1+31.sha-bc68b59
+ * @license Angular v7.1.0-beta.1+37.sha-3b9bc73
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -13334,7 +13334,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.1.0-beta.1+31.sha-bc68b59');
+    var VERSION$1 = new Version('7.1.0-beta.1+37.sha-3b9bc73');
 
     /**
      * @license
@@ -29547,6 +29547,21 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 (parentLocation & 32768 /* AcrossHostBoundary */)));
     }
 
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    function noop$1() {
+        var args = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            args[_i] = arguments[_i];
+        }
+        // Do nothing.
+    }
+
     /** Called when directives inject each other (creating a circular dependency) */
 
     /**
@@ -30526,7 +30541,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function queueHostBindingForCheck(tView, def) {
         ngDevMode &&
             assertEqual(getFirstTemplatePass(), true, 'Should only be called in first template pass.');
-        tView.expandoInstructions.push(def.hostBindings, def.hostVars);
+        tView.expandoInstructions.push(def.hostBindings || noop$1);
+        if (def.hostVars)
+            tView.expandoInstructions.push(def.hostVars);
     }
     /**
      * Initializes the flags on the current node, setting all indices to the initial index,
@@ -30548,8 +30565,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var nodeInjectorFactory = new NodeInjectorFactory(directiveFactory, isComponentDef(def), null);
         tView.blueprint.push(nodeInjectorFactory);
         viewData.push(nodeInjectorFactory);
-        if (def.hostBindings)
-            queueHostBindingForCheck(tView, def);
+        queueHostBindingForCheck(tView, def);
     }
     /**
      * Goes over dynamic embedded views (ones created through ViewContainerRef APIs) and refreshes them
@@ -30761,21 +30777,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
     }
     var CLEAN_PROMISE = _CLEAN_PROMISE;
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    function noop$1() {
-        var args = [];
-        for (var _i = 0; _i < arguments.length; _i++) {
-            args[_i] = arguments[_i];
-        }
-        // Do nothing.
-    }
 
     /**
      * @license
@@ -37021,7 +37022,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.1.0-beta.1+31.sha-bc68b59');
+    var VERSION$2 = new Version$1('7.1.0-beta.1+37.sha-3b9bc73');
 
     /**
      * @license
@@ -49436,7 +49437,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.1.0-beta.1+31.sha-bc68b59');
+    var VERSION$3 = new Version$1('7.1.0-beta.1+37.sha-3b9bc73');
 
     /**
      * @license
