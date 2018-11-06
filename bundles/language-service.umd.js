@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.1.0-beta.1+78.sha-dc2464e
+ * @license Angular v7.1.0-beta.1+79.sha-297c54e
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -13334,7 +13334,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.1.0-beta.1+78.sha-dc2464e');
+    var VERSION$1 = new Version('7.1.0-beta.1+79.sha-297c54e');
 
     /**
      * @license
@@ -28464,6 +28464,26 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return Array.isArray(value) && typeof value[ACTIVE_INDEX] === 'number';
     }
     /**
+     * Retrieve the root view from any component by walking the parent `LViewData` until
+     * reaching the root `LViewData`.
+     *
+     * @param component any component
+     */
+    function getRootView(target) {
+        ngDevMode && assertDefined(target, 'component');
+        var lViewData = Array.isArray(target) ? target : readPatchedLViewData(target);
+        while (lViewData && !(lViewData[FLAGS] & 64 /* IsRoot */)) {
+            lViewData = lViewData[PARENT];
+        }
+        return lViewData;
+    }
+    function getRootContext(viewOrComponent) {
+        var rootView = getRootView(viewOrComponent);
+        ngDevMode &&
+            assertDefined(rootView[CONTEXT], 'RootView has no context. Perhaps it is disconnected?');
+        return rootView[CONTEXT];
+    }
+    /**
      * Returns the monkey-patch value data present on the target (which could be
      * a component, directive or a DOM node).
      */
@@ -28508,6 +28528,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return parentView;
     }
+    var defaultScheduler = (typeof requestAnimationFrame !== 'undefined' && requestAnimationFrame || // browser only
+        setTimeout // everything else
+    ).bind(_global$1);
 
     /**
      * @license
@@ -30186,7 +30209,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var oldView;
         if (viewToRender[FLAGS] & 64 /* IsRoot */) {
             // This is a root view inside the view tree
-            tickRootContext(viewToRender[CONTEXT]);
+            tickRootContext(getRootContext(viewToRender));
         }
         else {
             try {
@@ -31618,7 +31641,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Creates a root component and sets it up with features and host bindings. Shared by
      * renderComponent() and ViewContainerRef.createComponent().
      */
-    function createRootComponent(hostRNode, componentView, componentDef, rootView, rootContext, hostFeatures) {
+    function createRootComponent(componentView, componentDef, rootView, rootContext, hostFeatures) {
         var tView = rootView[TVIEW];
         // Create directive instance with factory() and store at next index in viewData
         var component = instantiateRootComponent(tView, rootView, componentDef);
@@ -31632,7 +31655,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function createRootContext(scheduler, playerHandler) {
         return {
             components: [],
-            scheduler: scheduler,
+            scheduler: scheduler || defaultScheduler,
             clean: CLEAN_PROMISE,
             playerHandler: playerHandler || null,
             flags: 0 /* Empty */
@@ -32259,10 +32282,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     var SCHEDULER = new InjectionToken('SCHEDULER_TOKEN', {
         providedIn: 'root',
-        factory: function () {
-            var useRaf = typeof requestAnimationFrame !== 'undefined' && typeof window !== 'undefined';
-            return useRaf ? requestAnimationFrame.bind(window) : setTimeout;
-        },
+        factory: function () { return defaultScheduler; },
     });
     /**
      * A function used to wrap the `RendererFactory2`.
@@ -32311,9 +32331,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 locateHostElement(rendererFactory, rootSelectorOrNode);
             var rootFlags = this.componentDef.onPush ? 4 /* Dirty */ | 64 /* IsRoot */ :
                 2 /* CheckAlways */ | 64 /* IsRoot */;
-            var rootContext = ngModule && !isInternalRootView ?
-                ngModule.injector.get(ROOT_CONTEXT) :
-                createRootContext(requestAnimationFrame.bind(window));
+            var rootContext = ngModule && !isInternalRootView ? ngModule.injector.get(ROOT_CONTEXT) : createRootContext();
             var renderer = rendererFactory.createRenderer(hostRNode, this.componentDef);
             // Create the root view. Uses empty TView and ContentTemplate.
             var rootView = createLViewData(renderer, createTView(-1, null, 1, 0, null, null, null), rootContext, rootFlags);
@@ -32358,7 +32376,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 // TODO: should LifecycleHooksFeature and other host features be generated by the compiler and
                 // executed here?
                 // Angular 5 reference: https://stackblitz.com/edit/lifecycle-hooks-vcref
-                component = createRootComponent(hostRNode, componentView, this.componentDef, rootView, rootContext, [LifecycleHooksFeature]);
+                component = createRootComponent(componentView, this.componentDef, rootView, rootContext, [LifecycleHooksFeature]);
                 refreshDescendantViews(rootView, 1 /* Create */);
             }
             finally {
@@ -37022,7 +37040,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.1.0-beta.1+78.sha-dc2464e');
+    var VERSION$2 = new Version$1('7.1.0-beta.1+79.sha-297c54e');
 
     /**
      * @license
@@ -49437,7 +49455,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.1.0-beta.1+78.sha-dc2464e');
+    var VERSION$3 = new Version$1('7.1.0-beta.1+79.sha-297c54e');
 
     /**
      * @license
