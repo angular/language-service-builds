@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.1.0-beta.2
+ * @license Angular v7.1.0-beta.2+1.sha-3567e81
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -13336,7 +13336,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.1.0-beta.2');
+    var VERSION$1 = new Version('7.1.0-beta.2+1.sha-3567e81');
 
     /**
      * @license
@@ -40631,7 +40631,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return null;
     }
     // TODO: "read" should be an AbstractType (FW-486)
-    function queryRead(tNode, currentView, read) {
+    function queryByReadToken(read, tNode, currentView) {
         var factoryFn = read[NG_ELEMENT_ID];
         if (typeof factoryFn === 'function') {
             return factoryFn();
@@ -40644,7 +40644,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return null;
     }
-    function queryReadByTNodeType(tNode, currentView) {
+    function queryByTNodeType(tNode, currentView) {
         if (tNode.type === 3 /* Element */ || tNode.type === 4 /* ElementContainer */) {
             return createElementRef(ElementRef, tNode, currentView);
         }
@@ -40653,14 +40653,40 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return null;
     }
+    function queryByTemplateRef(templateRefToken, tNode, currentView, read) {
+        var templateRefResult = templateRefToken[NG_ELEMENT_ID]();
+        if (read) {
+            return templateRefResult ? queryByReadToken(read, tNode, currentView) : null;
+        }
+        return templateRefResult;
+    }
+    function queryRead(tNode, currentView, read, matchingIdx) {
+        if (read) {
+            return queryByReadToken(read, tNode, currentView);
+        }
+        if (matchingIdx > -1) {
+            return currentView[matchingIdx];
+        }
+        // if read token and / or strategy is not specified,
+        // detect it using appropriate tNode type
+        return queryByTNodeType(tNode, currentView);
+    }
     function add(query, tNode) {
         var currentView = getViewData();
         while (query) {
             var predicate = query.predicate;
             var type = predicate.type;
             if (type) {
-                // if read token and / or strategy is not specified, use type as read token
-                var result = queryRead(tNode, currentView, predicate.read || type);
+                var result = null;
+                if (type === TemplateRef) {
+                    result = queryByTemplateRef(type, tNode, currentView, predicate.read);
+                }
+                else {
+                    var matchingIdx = getIdxOfMatchingDirective(tNode, currentView, type);
+                    if (matchingIdx !== null) {
+                        result = queryRead(tNode, currentView, predicate.read, matchingIdx);
+                    }
+                }
                 if (result !== null) {
                     addMatch(query, result);
                 }
@@ -40668,22 +40694,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             else {
                 var selector = predicate.selector;
                 for (var i = 0; i < selector.length; i++) {
-                    var directiveIdx = getIdxOfMatchingSelector(tNode, selector[i]);
-                    if (directiveIdx !== null) {
-                        var result = null;
-                        if (predicate.read) {
-                            result = queryRead(tNode, currentView, predicate.read);
-                        }
-                        else {
-                            if (directiveIdx > -1) {
-                                result = currentView[directiveIdx];
-                            }
-                            else {
-                                // if read token and / or strategy is not specified,
-                                // detect it using appropriate tNode type
-                                result = queryReadByTNodeType(tNode, currentView);
-                            }
-                        }
+                    var matchingIdx = getIdxOfMatchingSelector(tNode, selector[i]);
+                    if (matchingIdx !== null) {
+                        var result = queryRead(tNode, currentView, predicate.read, matchingIdx);
                         if (result !== null) {
                             addMatch(query, result);
                         }
@@ -42681,7 +42694,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.1.0-beta.2');
+    var VERSION$2 = new Version$1('7.1.0-beta.2+1.sha-3567e81');
 
     /**
      * @license
@@ -55153,7 +55166,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.1.0-beta.2');
+    var VERSION$3 = new Version$1('7.1.0-beta.2+1.sha-3567e81');
 
     /**
      * @license
