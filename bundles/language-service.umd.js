@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.1.0-beta.2+16.sha-83c9bff
+ * @license Angular v7.1.0-beta.2+19.sha-78b6f88
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -13336,7 +13336,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.1.0-beta.2+16.sha-83c9bff');
+    var VERSION$1 = new Version('7.1.0-beta.2+19.sha-78b6f88');
 
     /**
      * @license
@@ -35327,6 +35327,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                             superHostBindings_1(directiveIndex, elementIndex);
                             prevHostBindings_1(directiveIndex, elementIndex);
                         };
+                        definition.hostVars += superDef.hostVars;
                     }
                     else {
                         definition.hostBindings = superHostBindings_1;
@@ -35396,7 +35397,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     try {
                         for (var features_1 = __values(features), features_1_1 = features_1.next(); !features_1_1.done; features_1_1 = features_1.next()) {
                             var feature = features_1_1.value;
-                            if (feature && feature !== InheritDefinitionFeature) {
+                            if (feature && feature.ngInherit) {
                                 feature(definition);
                             }
                         }
@@ -35539,6 +35540,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         definition.doCheck = onChangesWrapper(definition.doCheck);
     }
+    // This option ensures that the ngOnChanges lifecycle hook will be inherited
+    // from superclasses (in InheritDefinitionFeature).
+    NgOnChangesFeature.ngInherit = true;
     function onChangesWrapper(delegateHook) {
         return function () {
             var simpleChanges = this[PRIVATE_PREFIX];
@@ -42718,7 +42722,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.1.0-beta.2+16.sha-83c9bff');
+    var VERSION$2 = new Version$1('7.1.0-beta.2+19.sha-78b6f88');
 
     /**
      * @license
@@ -55182,7 +55186,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.1.0-beta.2+16.sha-83c9bff');
+    var VERSION$3 = new Version$1('7.1.0-beta.2+19.sha-78b6f88');
 
     /**
      * @license
