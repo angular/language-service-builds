@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.1.0-beta.2+29.sha-5247594
+ * @license Angular v7.1.0-beta.2+40.sha-bc652a2
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -12965,7 +12965,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
     function createQueryDefinition(query, constantPool, idx) {
         var predicate = getQueryPredicate(query, constantPool);
-        // e.g. r3.Q(null, somePredicate, false) or r3.Q(0, ['div'], false)
+        // e.g. r3.query(null, somePredicate, false) or r3.query(0, ['div'], false)
         var parameters = [
             literal(idx, INFERRED_TYPE),
             predicate,
@@ -13339,7 +13339,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         for (var field in propMetadata) {
             _loop_1(field);
         }
-        return __assign({}, facade, { typeSourceSpan: null, type: new WrappedNodeExpr(facade.type), deps: convertR3DependencyMetadataArray(facade.deps), host: extractHostBindings(facade.host, facade.propMetadata), inputs: __assign({}, inputsFromMetadata, inputsFromType), outputs: __assign({}, outputsFromMetadata, outputsFromType), providers: facade.providers != null ? new WrappedNodeExpr(facade.providers) : null });
+        return __assign({}, facade, { typeSourceSpan: null, type: new WrappedNodeExpr(facade.type), deps: convertR3DependencyMetadataArray(facade.deps), host: extractHostBindings(facade.host, facade.propMetadata), inputs: __assign({}, inputsFromMetadata, inputsFromType), outputs: __assign({}, outputsFromMetadata, outputsFromType), queries: facade.queries.map(convertToR3QueryMetadata), providers: facade.providers != null ? new WrappedNodeExpr(facade.providers) : null });
     }
     function wrapExpression(obj, property) {
         if (obj.hasOwnProperty(property)) {
@@ -13435,7 +13435,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.1.0-beta.2+29.sha-5247594');
+    var VERSION$1 = new Version('7.1.0-beta.2+40.sha-bc652a2');
 
     /**
      * @license
@@ -36875,89 +36875,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * Component decorator and metadata.
      *
-     * @usageNotes
-     *
-     * ### Using animations
-     *
-     * The following snippet shows an animation trigger in a component's
-     * metadata. The trigger is attached to an element in the component's
-     * template, using "@_trigger_name_", and a state expression that is evaluated
-     * at run time to determine whether the animation should start.
-     *
-     * ```typescript
-     * @Component({
-     *   selector: 'animation-cmp',
-     *   templateUrl: 'animation-cmp.html',
-     *   animations: [
-     *     trigger('myTriggerName', [
-     *       state('on', style({ opacity: 1 }),
-     *       state('off', style({ opacity: 0 }),
-     *       transition('on => off', [
-     *         animate("1s")
-     *       ])
-     *     ])
-     *   ]
-     * })
-     * ```
-     *
-     * ```html
-     * <!-- animation-cmp.html -->
-     * <div @myTriggerName="expression">...</div>
-     * ```
-     *
-     * ### Preserving whitespace
-     *
-     * Removing whitespace can greatly reduce AOT-generated code size, and speed up view creation.
-     * As of Angular 6, default for `preserveWhitespaces` is false (whitespace is removed).
-     * To change the default setting for all components in your application, set
-     * the `preserveWhitespaces` option of the AOT compiler.
-     *
-     * Current implementation removes whitespace characters as follows:
-     * - Trims all whitespaces at the beginning and the end of a template.
-     * - Removes whitespace-only text nodes. For example,
-     * `<button>Action 1</button>  <button>Action 2</button>` becomes
-     * `<button>Action 1</button><button>Action 2</button>`.
-     * - Replaces a series of whitespace characters in text nodes with a single space.
-     * For example, `<span>\n some text\n</span>` becomes `<span> some text </span>`.
-     * - Does NOT alter text nodes inside HTML tags such as `<pre>` or `<textarea>`,
-     * where whitespace characters are significant.
-     *
-     * Note that these transformations can influence DOM nodes layout, although impact
-     * should be minimal.
-     *
-     * You can override the default behavior to preserve whitespace characters
-     * in certain fragments of a template. For example, you can exclude an entire
-     * DOM sub-tree by using the `ngPreserveWhitespaces` attribute:
-     *
-     * ```html
-     * <div ngPreserveWhitespaces>
-     *     whitespaces are preserved here
-     *     <span>    and here </span>
-     * </div>
-     * ```
-     *
-     * You can force a single space to be preserved in a text node by using `&ngsp;`,
-     * which is replaced with a space character by Angular's template
-     * compiler:
-     *
-     * ```html
-     * <a>Spaces</a>&ngsp;<a>between</a>&ngsp;<a>links.</a>
-     * <!-->compiled to be equivalent to:</>
-     *  <a>Spaces</a> <a>between</a> <a>links.</a>
-     * ```
-     *
-     * Note that sequences of `&ngsp;` are still collapsed to just one space character when
-     * the `preserveWhitespaces` option is set to `false`.
-     *
-     * ```html
-     * <a>before</a>&ngsp;&ngsp;&ngsp;<a>after</a>
-     * <!-->compiled to be equivalent to:</>
-     *  <a>Spaces</a> <a>between</a> <a>links.</a>
-     * ```
-     *
-     * To preserve sequences of whitespace characters, use the
-     * `ngPreserveWhitespaces` attribute.
-     *
      * @Annotation
      * @publicApi
      */
@@ -37179,7 +37096,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.1.0-beta.2+29.sha-5247594');
+    var VERSION$2 = new Version$1('7.1.0-beta.2+40.sha-bc652a2');
 
     /**
      * @license
@@ -49587,7 +49504,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.1.0-beta.2+29.sha-5247594');
+    var VERSION$3 = new Version$1('7.1.0-beta.2+40.sha-bc652a2');
 
     /**
      * @license
