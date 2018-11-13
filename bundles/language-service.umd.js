@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.1.0-beta.2+36.sha-9741f5b
+ * @license Angular v7.1.0-beta.2+39.sha-e6e5904
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -13420,7 +13420,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.1.0-beta.2+36.sha-9741f5b');
+    var VERSION$1 = new Version('7.1.0-beta.2+39.sha-e6e5904');
 
     /**
      * @license
@@ -34605,6 +34605,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
     function directiveInject(token, flags) {
         if (flags === void 0) { flags = 0 /* Default */; }
+        token = resolveForwardRef$1(token);
         return getOrCreateInjectable(getPreviousOrParentTNode(), getViewData(), token, flags);
     }
     /**
@@ -42723,7 +42724,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.1.0-beta.2+36.sha-9741f5b');
+    var VERSION$2 = new Version$1('7.1.0-beta.2+39.sha-e6e5904');
 
     /**
      * @license
@@ -55187,7 +55188,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.1.0-beta.2+36.sha-9741f5b');
+    var VERSION$3 = new Version$1('7.1.0-beta.2+39.sha-e6e5904');
 
     /**
      * @license
