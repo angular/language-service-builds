@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.1.0-beta.2+47.sha-3da8233
+ * @license Angular v7.1.0-beta.2+51.sha-ce52424
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -13435,7 +13435,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.1.0-beta.2+47.sha-3da8233');
+    var VERSION$1 = new Version('7.1.0-beta.2+51.sha-ce52424');
 
     /**
      * @license
@@ -31338,6 +31338,17 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             this._tViewNode = null;
             this._view = _view;
         }
+        Object.defineProperty(ViewRef.prototype, "rootNodes", {
+            get: function () {
+                if (this._view[HOST] == null) {
+                    var tView = this._view[HOST_NODE];
+                    return collectNativeNodes(this._view, tView, []);
+                }
+                return [];
+            },
+            enumerable: true,
+            configurable: true
+        });
         Object.defineProperty(ViewRef.prototype, "context", {
             get: function () { return this._context ? this._context : this._lookUpContext(); },
             enumerable: true,
@@ -31562,6 +31573,17 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         RootViewRef.prototype.checkNoChanges = function () { checkNoChangesInRootView(this._view); };
         return RootViewRef;
     }(ViewRef));
+    function collectNativeNodes(lView, parentTNode, result) {
+        var tNodeChild = parentTNode.child;
+        while (tNodeChild) {
+            result.push(getNativeByTNode(tNodeChild, lView));
+            if (tNodeChild.type === 4 /* ElementContainer */) {
+                collectNativeNodes(lView, tNodeChild, result);
+            }
+            tNodeChild = tNodeChild.next;
+        }
+        return result;
+    }
 
     /**
      * @license
@@ -31645,7 +31667,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             this._hostView = _hostView;
         }
         NodeInjector$$1.prototype.get = function (token, notFoundValue) {
-            return getOrCreateInjectable(this._tNode, this._hostView, token, notFoundValue);
+            return getOrCreateInjectable(this._tNode, this._hostView, token, 0 /* Default */, notFoundValue);
         };
         return NodeInjector$$1;
     }());
@@ -32415,6 +32437,21 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Used in tests to change the `RendererFactory2` into a `DebugRendererFactory2`.
      */
     var WRAP_RENDERER_FACTORY2 = new InjectionToken('WRAP_RENDERER_FACTORY2');
+    var NOT_FOUND_CHECK_ONLY_ELEMENT_INJECTOR = {};
+    function createChainedInjector(rootViewInjector, moduleInjector) {
+        return {
+            get: function (token, notFoundValue) {
+                var value = rootViewInjector.get(token, NOT_FOUND_CHECK_ONLY_ELEMENT_INJECTOR);
+                if (value !== NOT_FOUND_CHECK_ONLY_ELEMENT_INJECTOR) {
+                    // Return the value from the root element injector when
+                    // - it provides it
+                    //   (value !== NOT_FOUND_CHECK_ONLY_ELEMENT_INJECTOR)
+                    return value;
+                }
+                return moduleInjector.get(token, notFoundValue);
+            }
+        };
+    }
     /**
      * Render3 implementation of {@link viewEngine_ComponentFactory}.
      */
@@ -32461,7 +32498,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var renderer = rendererFactory.createRenderer(hostRNode, this.componentDef);
             // Create the root view. Uses empty TView and ContentTemplate.
             var rootView = createLViewData(renderer, createTView(-1, null, 1, 0, null, null, null), rootContext, rootFlags);
-            rootView[INJECTOR] = ngModule && ngModule.injector || null;
+            rootView[INJECTOR] = ngModule ? createChainedInjector(injector, ngModule.injector) : injector;
             // rootView is the parent when bootstrapping
             var oldView = enterView(rootView, null);
             var component;
@@ -37096,7 +37133,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.1.0-beta.2+47.sha-3da8233');
+    var VERSION$2 = new Version$1('7.1.0-beta.2+51.sha-ce52424');
 
     /**
      * @license
@@ -46445,7 +46482,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     // - el2.injector.get(token, default)
     // - el1.injector.get(token, NOT_FOUND_CHECK_ONLY_ELEMENT_INJECTOR) -> do not check the module
     // - mod2.injector.get(token, default)
-    var NOT_FOUND_CHECK_ONLY_ELEMENT_INJECTOR = {};
+    var NOT_FOUND_CHECK_ONLY_ELEMENT_INJECTOR$1 = {};
     function resolveDep(view, elDef, allowPrivateServices, depDef, notFoundValue) {
         if (notFoundValue === void 0) { notFoundValue = Injector.THROW_IF_NOT_FOUND; }
         if (depDef.flags & 8 /* Value */) {
@@ -46514,9 +46551,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 searchView = null;
             }
         }
-        var value = startView.root.injector.get(depDef.token, NOT_FOUND_CHECK_ONLY_ELEMENT_INJECTOR);
-        if (value !== NOT_FOUND_CHECK_ONLY_ELEMENT_INJECTOR ||
-            notFoundValue === NOT_FOUND_CHECK_ONLY_ELEMENT_INJECTOR) {
+        var value = startView.root.injector.get(depDef.token, NOT_FOUND_CHECK_ONLY_ELEMENT_INJECTOR$1);
+        if (value !== NOT_FOUND_CHECK_ONLY_ELEMENT_INJECTOR$1 ||
+            notFoundValue === NOT_FOUND_CHECK_ONLY_ELEMENT_INJECTOR$1) {
             // Return the value from the root element injector when
             // - it provides it
             //   (value !== NOT_FOUND_CHECK_ONLY_ELEMENT_INJECTOR)
@@ -49504,7 +49541,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.1.0-beta.2+47.sha-3da8233');
+    var VERSION$3 = new Version$1('7.1.0-beta.2+51.sha-ce52424');
 
     /**
      * @license
