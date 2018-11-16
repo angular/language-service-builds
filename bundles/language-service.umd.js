@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.1.0-rc.0+2.sha-3ec7c50
+ * @license Angular v7.1.0-rc.0+5.sha-65943b4
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -13420,7 +13420,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.1.0-rc.0+2.sha-3ec7c50');
+    var VERSION$1 = new Version('7.1.0-rc.0+5.sha-65943b4');
 
     /**
      * @license
@@ -32619,13 +32619,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
         }
     }
-    function createLViewData(renderer, tView, context, flags, sanitizer) {
+    function createLViewData(renderer, tView, context, flags, sanitizer, injector) {
         var viewData = getViewData();
         var instance = tView.blueprint.slice();
         instance[FLAGS] = flags | 1 /* CreationMode */ | 8 /* Attached */ | 16 /* RunInit */;
         instance[PARENT] = instance[DECLARATION_VIEW] = viewData;
         instance[CONTEXT] = context;
-        instance[INJECTOR] = viewData ? viewData[INJECTOR] : null;
+        instance[INJECTOR] =
+            injector === undefined ? (viewData ? viewData[INJECTOR] : null) : injector;
         instance[RENDERER] = renderer;
         instance[SANITIZER] = sanitizer || null;
         return instance;
@@ -34942,6 +34943,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         RootViewRef.prototype.detectChanges = function () { detectChangesInRootView(this._view); };
         RootViewRef.prototype.checkNoChanges = function () { checkNoChangesInRootView(this._view); };
+        Object.defineProperty(RootViewRef.prototype, "context", {
+            get: function () { return null; },
+            enumerable: true,
+            configurable: true
+        });
         return RootViewRef;
     }(ViewRef));
     function collectNativeNodes(lView, parentTNode, result) {
@@ -36590,9 +36596,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 2 /* CheckAlways */ | 64 /* IsRoot */;
             var rootContext = ngModule && !isInternalRootView ? ngModule.injector.get(ROOT_CONTEXT) : createRootContext();
             var renderer = rendererFactory.createRenderer(hostRNode, this.componentDef);
+            var rootViewInjector = ngModule ? createChainedInjector(injector, ngModule.injector) : injector;
             // Create the root view. Uses empty TView and ContentTemplate.
-            var rootView = createLViewData(renderer, createTView(-1, null, 1, 0, null, null, null), rootContext, rootFlags);
-            rootView[INJECTOR] = ngModule ? createChainedInjector(injector, ngModule.injector) : injector;
+            var rootView = createLViewData(renderer, createTView(-1, null, 1, 0, null, null, null), rootContext, rootFlags, undefined, rootViewInjector);
             // rootView is the parent when bootstrapping
             var oldView = enterView(rootView, null);
             var component;
@@ -36641,7 +36647,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 if (rendererFactory.end)
                     rendererFactory.end();
             }
-            var componentRef = new ComponentRef$1(this.componentType, component, rootView, injector, createElementRef(ElementRef, tElementNode, rootView));
+            var componentRef = new ComponentRef$1(this.componentType, component, createElementRef(ElementRef, tElementNode, rootView), rootView, tElementNode);
             if (isInternalRootView) {
                 // The host element of the internal root view is attached to the component's host view node
                 componentRef.hostView._tViewNode.child = tElementNode;
@@ -36661,17 +36667,23 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     var ComponentRef$1 = /** @class */ (function (_super) {
         __extends(ComponentRef$$1, _super);
-        function ComponentRef$$1(componentType, instance, rootView, injector, location) {
+        function ComponentRef$$1(componentType, instance, location, _rootView, _tNode) {
             var _this = _super.call(this) || this;
             _this.location = location;
+            _this._rootView = _rootView;
+            _this._tNode = _tNode;
             _this.destroyCbs = [];
             _this.instance = instance;
-            _this.hostView = _this.changeDetectorRef = new RootViewRef(rootView);
-            _this.hostView._tViewNode = createViewNode(-1, rootView);
-            _this.injector = injector;
+            _this.hostView = _this.changeDetectorRef = new RootViewRef(_rootView);
+            _this.hostView._tViewNode = createViewNode(-1, _rootView);
             _this.componentType = componentType;
             return _this;
         }
+        Object.defineProperty(ComponentRef$$1.prototype, "injector", {
+            get: function () { return new NodeInjector(this._tNode, this._rootView); },
+            enumerable: true,
+            configurable: true
+        });
         ComponentRef$$1.prototype.destroy = function () {
             ngDevMode && assertDefined(this.destroyCbs, 'NgModule already destroyed');
             this.destroyCbs.forEach(function (fn) { return fn(); });
@@ -43998,7 +44010,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.1.0-rc.0+2.sha-3ec7c50');
+    var VERSION$2 = new Version$1('7.1.0-rc.0+5.sha-65943b4');
 
     /**
      * @license
@@ -49335,8 +49347,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
              */
             this._didWork = false;
             this._callbacks = [];
+            this.taskTrackingZone = null;
             this._watchAngularEvents();
-            _ngZone.run(function () { _this.taskTrackingZone = Zone.current.get('TaskTrackingZone'); });
+            _ngZone.run(function () {
+                _this.taskTrackingZone =
+                    typeof Zone == 'undefined' ? null : Zone.current.get('TaskTrackingZone');
+            });
         }
         Testability.prototype._watchAngularEvents = function () {
             var _this = this;
@@ -56462,7 +56478,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.1.0-rc.0+2.sha-3ec7c50');
+    var VERSION$3 = new Version$1('7.1.0-rc.0+5.sha-65943b4');
 
     /**
      * @license
