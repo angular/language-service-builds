@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.1.0-rc.0+5.sha-65943b4
+ * @license Angular v7.1.0-rc.0+6.sha-848f414
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -13420,7 +13420,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.1.0-rc.0+5.sha-65943b4');
+    var VERSION$1 = new Version('7.1.0-rc.0+6.sha-848f414');
 
     /**
      * @license
@@ -30024,8 +30024,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var previousTView = null;
             var injectorIndex = getInjectorIndex(tNode, lViewData);
             var parentLocation = NO_PARENT_INJECTOR;
-            // If we should skip this injector, start by searching the parent injector.
-            if (flags & 4 /* SkipSelf */) {
+            // If we should skip this injector, or if there is no injector on this node, start by searching
+            // the parent injector.
+            if (injectorIndex === -1 || flags & 4 /* SkipSelf */) {
                 parentLocation = injectorIndex === -1 ? getParentInjectorLocation(tNode, lViewData) :
                     lViewData[injectorIndex + PARENT_INJECTOR];
                 if (!shouldSearchParent(flags, parentLocation)) {
@@ -44010,7 +44011,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.1.0-rc.0+5.sha-65943b4');
+    var VERSION$2 = new Version$1('7.1.0-rc.0+6.sha-848f414');
 
     /**
      * @license
@@ -56478,7 +56479,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.1.0-rc.0+5.sha-65943b4');
+    var VERSION$3 = new Version$1('7.1.0-rc.0+6.sha-848f414');
 
     /**
      * @license
