@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.1.0-rc.0+17.sha-893c173.with-local-changes
+ * @license Angular v7.1.0-rc.0+19.sha-20729b3.with-local-changes
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -15120,7 +15120,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.1.0-rc.0+17.sha-893c173.with-local-changes');
+    var VERSION$1 = new Version('7.1.0-rc.0+19.sha-20729b3.with-local-changes');
 
     /**
      * @license
@@ -36493,7 +36493,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             this.destroyed = false;
             // Start off by creating Records for every provider declared in every InjectorType
             // included transitively in `def`.
-            deepForEach([def], function (injectorDef) { return _this.processInjectorType(injectorDef, new Set()); });
+            var dedupStack = [];
+            deepForEach([def], function (injectorDef) { return _this.processInjectorType(injectorDef, [], dedupStack); });
             additionalProviders &&
                 deepForEach(additionalProviders, function (provider) { return _this.processProvider(provider); });
             // Make sure the INJECTOR token provides this injector.
@@ -36571,7 +36572,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
          * Add an `InjectorType` or `InjectorDefTypeWithProviders` and all of its transitive providers
          * to this injector.
          */
-        R3Injector.prototype.processInjectorType = function (defOrWrappedDef, parents) {
+        R3Injector.prototype.processInjectorType = function (defOrWrappedDef, parents, dedupStack) {
             var _this = this;
             defOrWrappedDef = resolveForwardRef$1(defOrWrappedDef);
             // Either the defOrWrappedDef is an InjectorType (with ngInjectorDef) or an
@@ -36585,6 +36586,15 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             // then this is easy. In the case of an InjectorDefTypeWithProviders, then the definition type
             // is the `ngModule`.
             var defType = (ngModule === undefined) ? defOrWrappedDef : ngModule;
+            // Check for circular dependencies.
+            if (ngDevMode && parents.indexOf(defType) !== -1) {
+                var defName = stringify$1(defType);
+                throw new Error("Circular dependency in DI detected for type " + defName + ". Dependency path: " + parents.map(function (defType) { return stringify$1(defType); }).join(' > ') + " > " + defName + ".");
+            }
+            // Check for multiple imports of the same module
+            if (dedupStack.indexOf(defType) !== -1) {
+                return;
+            }
             // If defOrWrappedType was an InjectorDefTypeWithProviders, then .providers may hold some
             // extra providers.
             var providers = (ngModule !== undefined) && defOrWrappedDef.providers ||
@@ -36598,10 +36608,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             if (def == null) {
                 return;
             }
-            // Check for circular dependencies.
-            if (parents.has(defType)) {
-                throw new Error("Circular dependency: type " + stringify$1(defType) + " ends up importing itself.");
-            }
             // Track the InjectorType and add a provider for it.
             this.injectorDefTypes.add(defType);
             this.records.set(defType, makeRecord(def.factory));
@@ -36610,13 +36616,15 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             if (def.imports != null) {
                 // Before processing defType's imports, add it to the set of parents. This way, if it ends
                 // up deeply importing itself, this can be detected.
-                parents.add(defType);
+                ngDevMode && parents.push(defType);
+                // Add it to the set of dedups. This way we can detect multiple imports of the same module
+                dedupStack.push(defType);
                 try {
-                    deepForEach(def.imports, function (imported) { return _this.processInjectorType(imported, parents); });
+                    deepForEach(def.imports, function (imported) { return _this.processInjectorType(imported, parents, dedupStack); });
                 }
                 finally {
                     // Remove it from the parents set when finished.
-                    parents.delete(defType);
+                    ngDevMode && parents.pop();
                 }
             }
             // Next, include providers listed on the definition itself.
@@ -44813,7 +44821,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.1.0-rc.0+17.sha-893c173.with-local-changes');
+    var VERSION$2 = new Version$1('7.1.0-rc.0+19.sha-20729b3.with-local-changes');
 
     /**
      * @license
@@ -57281,7 +57289,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.1.0-rc.0+17.sha-893c173.with-local-changes');
+    var VERSION$3 = new Version$1('7.1.0-rc.0+19.sha-20729b3.with-local-changes');
 
     /**
      * @license
