@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.1.0-rc.0+26.sha-34306c3.with-local-changes
+ * @license Angular v7.1.0-rc.0+28.sha-ca40565.with-local-changes
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -15142,7 +15142,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.1.0-rc.0+26.sha-34306c3.with-local-changes');
+    var VERSION$1 = new Version('7.1.0-rc.0+28.sha-ca40565.with-local-changes');
 
     /**
      * @license
@@ -31319,6 +31319,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     viewData[BINDING_INDEX] = bindingRootIndex;
                     // We must subtract the header offset because the load() instruction
                     // expects a raw, unadjusted index.
+                    // <HACK(misko)>: set the `previousOrParentTNode` so that hostBindings functions can
+                    // correctly retrieve it. This should be removed once we call the hostBindings function
+                    // inline as part of the `RenderFlags.Create` because in that case the value will already be
+                    // correctly set.
+                    setPreviousOrParentTNode(getTView().data[currentElementIndex + HEADER_OFFSET]);
+                    // </HACK>
                     instruction(currentDirectiveIndex - HEADER_OFFSET, currentElementIndex);
                     currentDirectiveIndex++;
                 }
@@ -33140,7 +33146,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.1.0-rc.0+26.sha-34306c3.with-local-changes');
+    var VERSION$2 = new Version$1('7.1.0-rc.0+28.sha-ca40565.with-local-changes');
 
     /**
      * @license
@@ -50299,7 +50305,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.1.0-rc.0+26.sha-34306c3.with-local-changes');
+    var VERSION$3 = new Version$1('7.1.0-rc.0+28.sha-ca40565.with-local-changes');
 
     /**
      * @license
