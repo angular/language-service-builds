@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.1.0-rc.0+21.sha-859da3a.with-local-changes
+ * @license Angular v7.1.0-rc.0+24.sha-391767f.with-local-changes
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -14594,6 +14594,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
             definitionMap.set('pipes', pipesExpr);
         }
+        if (meta.encapsulation === null) {
+            meta.encapsulation = ViewEncapsulation.Emulated;
+        }
         // e.g. `styles: [str1, str2]`
         if (meta.styles && meta.styles.length) {
             var styleValues = meta.encapsulation == ViewEncapsulation.Emulated ?
@@ -14602,8 +14605,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var strings = styleValues.map(function (str) { return literal(str); });
             definitionMap.set('styles', literalArr(strings));
         }
+        else if (meta.encapsulation === ViewEncapsulation.Emulated) {
+            // If there is no style, don't generate css selectors on elements
+            meta.encapsulation = ViewEncapsulation.None;
+        }
         // Only set view encapsulation if it's not the default value
-        if (meta.encapsulation !== null && meta.encapsulation !== ViewEncapsulation.Emulated) {
+        if (meta.encapsulation !== ViewEncapsulation.Emulated) {
             definitionMap.set('encapsulation', literal(meta.encapsulation));
         }
         // e.g. `animations: [trigger('123', [])]`
@@ -15135,7 +15142,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.1.0-rc.0+21.sha-859da3a.with-local-changes');
+    var VERSION$1 = new Version('7.1.0-rc.0+24.sha-391767f.with-local-changes');
 
     /**
      * @license
@@ -33116,6 +33123,32 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * @description Represents the version of Angular
+     *
+     * @publicApi
+     */
+    var Version$1 = /** @class */ (function () {
+        function Version(full) {
+            this.full = full;
+            this.major = full.split('.')[0];
+            this.minor = full.split('.')[1];
+            this.patch = full.split('.').slice(2).join('.');
+        }
+        return Version;
+    }());
+    /**
+     * @publicApi
+     */
+    var VERSION$2 = new Version$1('7.1.0-rc.0+24.sha-391767f.with-local-changes');
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     var ComponentFactoryResolver$1 = /** @class */ (function (_super) {
         __extends(ComponentFactoryResolver$$1, _super);
         function ComponentFactoryResolver$$1() {
@@ -33215,6 +33248,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var rootContext = ngModule && !isInternalRootView ? ngModule.injector.get(ROOT_CONTEXT) : createRootContext();
             var renderer = rendererFactory.createRenderer(hostRNode, this.componentDef);
             var rootViewInjector = ngModule ? createChainedInjector(injector, ngModule.injector) : injector;
+            if (rootSelectorOrNode && hostRNode) {
+                ngDevMode && ngDevMode.rendererSetAttribute++;
+                isProceduralRenderer(renderer) ?
+                    renderer.setAttribute(hostRNode, 'ng-version', VERSION$2.full) :
+                    hostRNode.setAttribute('ng-version', VERSION$2.full);
+            }
             // Create the root view. Uses empty TView and ContentTemplate.
             var rootView = createLViewData(renderer, createTView(-1, null, 1, 0, null, null, null), rootContext, rootFlags, undefined, rootViewInjector);
             // rootView is the parent when bootstrapping
@@ -37849,32 +37888,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * @description Represents the version of Angular
-     *
-     * @publicApi
-     */
-    var Version$1 = /** @class */ (function () {
-        function Version(full) {
-            this.full = full;
-            this.major = full.split('.')[0];
-            this.minor = full.split('.')[1];
-            this.patch = full.split('.').slice(2).join('.');
-        }
-        return Version;
-    }());
-    /**
-     * @publicApi
-     */
-    var VERSION$2 = new Version$1('7.1.0-rc.0+21.sha-859da3a.with-local-changes');
 
     /**
      * @license
@@ -50286,7 +50299,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.1.0-rc.0+21.sha-859da3a.with-local-changes');
+    var VERSION$3 = new Version$1('7.1.0-rc.0+24.sha-391767f.with-local-changes');
 
     /**
      * @license
