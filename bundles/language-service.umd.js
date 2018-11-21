@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.1.0
+ * @license Angular v7.1.0+1.sha-dc300c5
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -4725,20 +4725,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             // TODO(alxhub): decide whether to lower the value here or in the caller
             retExpr = makeConditionalFactory(meta.expression);
         }
-        else if (meta.extraStatementFn) {
-            // if extraStatementsFn is specified and the 'makeConditionalFactory' function
-            // was not invoked, we need to create a reference to the instance, so we can
-            // pass it as an argument to the 'extraStatementFn' function while calling it
-            var variable$$1 = variable('f');
-            body.push(variable$$1.set(ctorExpr).toDeclStmt());
-            retExpr = variable$$1;
-        }
         else {
             retExpr = ctorExpr;
-        }
-        if (meta.extraStatementFn) {
-            var extraStmts = meta.extraStatementFn(retExpr);
-            body.push.apply(body, __spread(extraStmts));
         }
         return {
             factory: fn([new FnParam('t', DYNAMIC_TYPE)], __spread(body, [new ReturnStatement(retExpr)]), INFERRED_TYPE, undefined, meta.name + "_Factory"),
@@ -4819,7 +4807,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             type: meta.type,
             deps: meta.ctorDeps,
             injectFn: Identifiers.inject,
-            extraStatementFn: null,
         };
         if (meta.useClass !== undefined) {
             // meta.useClass has two modes of operation. Either deps are specified, in which case `new` is
@@ -5884,7 +5871,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             type: meta.type,
             deps: meta.deps,
             injectFn: Identifiers$1.inject,
-            extraStatementFn: null,
         });
         var expression = importExpr(Identifiers$1.defineInjector).callFn([mapToMapExpression({
                 factory: result.factory,
@@ -5917,7 +5903,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             type: metadata.type,
             deps: metadata.deps,
             injectFn: Identifiers$1.directiveInject,
-            extraStatementFn: null,
         });
         definitionMapValues.push({ key: 'factory', value: templateFactory.factory, quoted: false });
         // e.g. `pure: true`
@@ -8368,9 +8353,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * The creation/update methods within the builder class produce these instructions.
      */
     var StylingBuilder = /** @class */ (function () {
-        function StylingBuilder(_elementIndexExpr, _directiveIndexExpr) {
+        function StylingBuilder(_elementIndexExpr, _directiveExpr) {
             this._elementIndexExpr = _elementIndexExpr;
-            this._directiveIndexExpr = _directiveIndexExpr;
+            this._directiveExpr = _directiveExpr;
             this.hasBindingsOrInitialValues = false;
             this._classMapInput = null;
             this._styleMapInput = null;
@@ -8510,14 +8495,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     // a constant because the inital style values do not change (since they're static).
                     params_1.push(constantPool.getConstLiteral(initialStyles, true));
                 }
-                else if (useSanitizer || this._directiveIndexExpr) {
+                else if (useSanitizer || this._directiveExpr) {
                     // no point in having an extra `null` value unless there are follow-up params
                     params_1.push(NULL_EXPR);
                 }
-                if (useSanitizer || this._directiveIndexExpr) {
+                if (useSanitizer || this._directiveExpr) {
                     params_1.push(useSanitizer ? importExpr(Identifiers$1.defaultStyleSanitizer) : NULL_EXPR);
-                    if (this._directiveIndexExpr) {
-                        params_1.push(this._directiveIndexExpr);
+                    if (this._directiveExpr) {
+                        params_1.push(this._directiveExpr);
                     }
                 }
                 return { sourceSpan: sourceSpan, reference: Identifiers$1.elementStyling, buildParams: function () { return params_1; } };
@@ -8547,11 +8532,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                         if (mapBasedStyleValue_1) {
                             params.push(convertFn(mapBasedStyleValue_1));
                         }
-                        else if (_this._directiveIndexExpr) {
+                        else if (_this._directiveExpr) {
                             params.push(NULL_EXPR);
                         }
-                        if (_this._directiveIndexExpr) {
-                            params.push(_this._directiveIndexExpr);
+                        if (_this._directiveExpr) {
+                            params.push(_this._directiveExpr);
                         }
                         return params;
                     }
@@ -8573,12 +8558,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                             if (input.unit) {
                                 params.push(literal(input.unit));
                             }
-                            else if (_this._directiveIndexExpr) {
+                            else if (_this._directiveExpr) {
                                 params.push(NULL_EXPR);
                             }
                         }
-                        if (_this._directiveIndexExpr) {
-                            params.push(_this._directiveIndexExpr);
+                        if (_this._directiveExpr) {
+                            params.push(_this._directiveExpr);
                         }
                         return params;
                     }
@@ -8604,8 +8589,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 reference: Identifiers$1.elementStylingApply,
                 buildParams: function () {
                     var params = [_this._elementIndexExpr];
-                    if (_this._directiveIndexExpr) {
-                        params.push(_this._directiveIndexExpr);
+                    if (_this._directiveExpr) {
+                        params.push(_this._directiveExpr);
                     }
                     return params;
                 }
@@ -14448,7 +14433,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             type: meta.type,
             deps: meta.deps,
             injectFn: Identifiers$1.directiveInject,
-            extraStatementFn: createFactoryExtraStatementsFn(meta, bindingParser)
         });
         definitionMap.set('factory', result.factory);
         definitionMap.set('contentQueries', createContentQueriesFunction(meta, constantPool));
@@ -14456,8 +14440,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         // Initialize hostVars to number of bound host properties (interpolations illegal)
         var hostVars = Object.keys(meta.host.properties).length;
         var elVarExp = variable('elIndex');
-        var dirVarExp = variable('dirIndex');
-        var styleBuilder = new StylingBuilder(elVarExp, dirVarExp);
+        var contextVarExp = variable(CONTEXT_NAME);
+        var styleBuilder = new StylingBuilder(elVarExp, contextVarExp);
         var allOtherAttributes = {};
         var attrNames = Object.getOwnPropertyNames(meta.host.attributes);
         for (var i = 0; i < attrNames.length; i++) {
@@ -14479,8 +14463,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         // e.g. `attributes: ['role', 'listbox']`
         definitionMap.set('attributes', createHostAttributesArray(allOtherAttributes));
-        // e.g. `hostBindings: (dirIndex, elIndex) => { ... }
-        definitionMap.set('hostBindings', createHostBindingsFunction(meta, elVarExp, dirVarExp, styleBuilder, bindingParser, constantPool, function (slots) {
+        // e.g. `hostBindings: (rf, ctx, elIndex) => { ... }
+        definitionMap.set('hostBindings', createHostBindingsFunction(meta, elVarExp, contextVarExp, styleBuilder, bindingParser, constantPool, function (slots) {
             var originalSlots = hostVars;
             hostVars += slots;
             return originalSlots;
@@ -14766,14 +14750,20 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         ], INFERRED_TYPE, null, viewQueryFnName);
     }
     // Return a host binding function or null if one is not necessary.
-    function createHostBindingsFunction(meta, elVarExp, dirVarExp, styleBuilder, bindingParser, constantPool, allocatePureFunctionSlots) {
+    function createHostBindingsFunction(meta, elVarExp, bindingContext, styleBuilder, bindingParser, constantPool, allocatePureFunctionSlots) {
         var e_2, _a;
-        var statements = [];
+        var createStatements = [];
+        var updateStatements = [];
         var hostBindingSourceSpan = meta.typeSourceSpan;
         var directiveSummary = metadataAsSummary(meta);
+        // Calculate host event bindings
+        var eventBindings = bindingParser.createDirectiveHostEventAsts(directiveSummary, hostBindingSourceSpan);
+        if (eventBindings && eventBindings.length) {
+            var listeners = createHostListeners(bindingContext, eventBindings, meta);
+            createStatements.push.apply(createStatements, __spread(listeners));
+        }
         // Calculate the host property bindings
         var bindings = bindingParser.createBoundHostProperties(directiveSummary, hostBindingSourceSpan);
-        var bindingContext = importExpr(Identifiers$1.load).callFn([dirVarExp]);
         var bindingFn = function (implicit, value) {
             return convertPropertyBinding(null, implicit, value, 'b', BindingForm.TrySimple, function () { return error('Unexpected interpolation'); });
         };
@@ -14798,8 +14788,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                         var value = binding.expression.visit(valueConverter);
                         var bindingExpr = bindingFn(bindingContext, value);
                         var _c = getBindingNameAndInstruction(name_1), bindingName = _c.bindingName, instruction = _c.instruction;
-                        statements.push.apply(statements, __spread(bindingExpr.stmts));
-                        statements.push(importExpr(instruction)
+                        updateStatements.push.apply(updateStatements, __spread(bindingExpr.stmts));
+                        updateStatements.push(importExpr(instruction)
                             .callFn([
                             elVarExp,
                             literal(bindingName),
@@ -14820,20 +14810,27 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 var createInstruction = styleBuilder.buildCreateLevelInstruction(null, constantPool);
                 if (createInstruction) {
                     var createStmt = createStylingStmt(createInstruction, bindingContext, bindingFn);
-                    statements.push(createStmt);
+                    createStatements.push(createStmt);
                 }
                 styleBuilder.buildUpdateLevelInstructions(valueConverter).forEach(function (instruction) {
                     var updateStmt = createStylingStmt(instruction, bindingContext, bindingFn);
-                    statements.push(updateStmt);
+                    updateStatements.push(updateStmt);
                 });
             }
         }
-        if (statements.length > 0) {
-            var typeName = meta.name;
+        if (createStatements.length > 0 || updateStatements.length > 0) {
+            var hostBindingsFnName = meta.name ? meta.name + "_HostBindings" : null;
+            var statements = [];
+            if (createStatements.length > 0) {
+                statements.push(renderFlagCheckIfStmt(1 /* Create */, createStatements));
+            }
+            if (updateStatements.length > 0) {
+                statements.push(renderFlagCheckIfStmt(2 /* Update */, updateStatements));
+            }
             return fn([
-                new FnParam(dirVarExp.name, NUMBER_TYPE),
-                new FnParam(elVarExp.name, NUMBER_TYPE),
-            ], statements, INFERRED_TYPE, null, typeName ? typeName + "_HostBindings" : null);
+                new FnParam(RENDER_FLAGS, NUMBER_TYPE), new FnParam(CONTEXT_NAME, null),
+                new FnParam(elVarExp.name, NUMBER_TYPE)
+            ], statements, INFERRED_TYPE, null, hostBindingsFnName);
         }
         return null;
     }
@@ -14855,12 +14852,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             instruction = Identifiers$1.elementProperty;
         }
         return { bindingName: bindingName, instruction: instruction };
-    }
-    function createFactoryExtraStatementsFn(meta, bindingParser) {
-        var eventBindings = bindingParser.createDirectiveHostEventAsts(metadataAsSummary(meta), meta.typeSourceSpan);
-        return eventBindings && eventBindings.length ?
-            function (instance) { return createHostListeners(instance, eventBindings, meta); } :
-            null;
     }
     function createHostListeners(bindingContext, eventBindings, meta) {
         return eventBindings.map(function (binding) {
@@ -15142,7 +15133,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.1.0');
+    var VERSION$1 = new Version('7.1.0+1.sha-dc300c5');
 
     /**
      * @license
@@ -31327,15 +31318,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 else {
                     // If it's not a number, it's a host binding function that needs to be executed.
                     viewData[BINDING_INDEX] = bindingRootIndex;
-                    // We must subtract the header offset because the load() instruction
-                    // expects a raw, unadjusted index.
-                    // <HACK(misko)>: set the `previousOrParentTNode` so that hostBindings functions can
-                    // correctly retrieve it. This should be removed once we call the hostBindings function
-                    // inline as part of the `RenderFlags.Create` because in that case the value will already be
-                    // correctly set.
-                    setPreviousOrParentTNode(getTView().data[currentElementIndex + HEADER_OFFSET]);
-                    // </HACK>
-                    instruction(currentDirectiveIndex - HEADER_OFFSET, currentElementIndex);
+                    instruction(2 /* Update */, readElementValue(viewData[currentDirectiveIndex]), currentElementIndex);
                     currentDirectiveIndex++;
                 }
             }
@@ -31788,6 +31771,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var native = getNativeByTNode(previousOrParentTNode, viewData);
         ngDevMode && assertEqual(viewData[BINDING_INDEX], getTView().bindingStartIndex, 'directives should be created before any bindings');
         ngDevMode && assertPreviousIsParent();
+        if (def.hostBindings) {
+            def.hostBindings(1 /* Create */, directive, previousOrParentTNode.index);
+        }
         attachPatchData(directive, viewData);
         if (native) {
             attachPatchData(native, viewData);
@@ -33173,7 +33159,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.1.0');
+    var VERSION$2 = new Version$1('7.1.0+1.sha-dc300c5');
 
     /**
      * @license
@@ -50337,7 +50323,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.1.0');
+    var VERSION$3 = new Version$1('7.1.0+1.sha-dc300c5');
 
     /**
      * @license
