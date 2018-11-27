@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.1.0+4.sha-a71038b
+ * @license Angular v7.1.0+5.sha-bdf5f3e
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -15142,7 +15142,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.1.0+4.sha-a71038b');
+    var VERSION$1 = new Version('7.1.0+5.sha-bdf5f3e');
 
     /**
      * @license
@@ -28732,6 +28732,27 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * found in the LICENSE file at https://angular.io/license
      */
     /**
+     * Injection flags for DI.
+     *
+     * @publicApi
+     */
+    var InjectFlags;
+    (function (InjectFlags) {
+        // TODO(alxhub): make this 'const' when ngc no longer writes exports of it into ngfactory files.
+        InjectFlags[InjectFlags["Default"] = 0] = "Default";
+        /**
+         * Specifies that an injector should retrieve a dependency from any injector until reaching the
+         * host element of the current component. (Only used with Element Injector)
+         */
+        InjectFlags[InjectFlags["Host"] = 1] = "Host";
+        /** Don't descend into ancestors of the node requesting injection. */
+        InjectFlags[InjectFlags["Self"] = 2] = "Self";
+        /** Skip the node that is requesting injection. */
+        InjectFlags[InjectFlags["SkipSelf"] = 4] = "SkipSelf";
+        /** Inject `defaultValue` instead if token not found. */
+        InjectFlags[InjectFlags["Optional"] = 8] = "Optional";
+    })(InjectFlags || (InjectFlags = {}));
+    /**
      * Current injector value used by `inject`.
      * - `undefined`: it is an error to call `inject`
      * - `null`: `inject` can be called but there is no injector (limp-mode).
@@ -28762,7 +28783,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return previous;
     }
     function injectInjectorOnly(token, flags) {
-        if (flags === void 0) { flags = 0 /* Default */; }
+        if (flags === void 0) { flags = InjectFlags.Default; }
         if (_currentInjector === undefined) {
             throw new Error("inject() must be called from an injection context");
         }
@@ -28770,11 +28791,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             return injectRootLimpMode(token, undefined, flags);
         }
         else {
-            return _currentInjector.get(token, flags & 8 /* Optional */ ? null : undefined, flags);
+            return _currentInjector.get(token, flags & InjectFlags.Optional ? null : undefined, flags);
         }
     }
     function inject(token, flags) {
-        if (flags === void 0) { flags = 0 /* Default */; }
+        if (flags === void 0) { flags = InjectFlags.Default; }
         return (_injectImplementation || injectInjectorOnly)(token, flags);
     }
     /**
@@ -28790,7 +28811,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             return injectableDef.value === undefined ? injectableDef.value = injectableDef.factory() :
                 injectableDef.value;
         }
-        if (flags & 8 /* Optional */)
+        if (flags & InjectFlags.Optional)
             return null;
         if (notFoundValue !== undefined)
             return notFoundValue;
@@ -28805,17 +28826,17 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     throw new Error('Arguments array must have arguments.');
                 }
                 var type = undefined;
-                var flags = 0 /* Default */;
+                var flags = InjectFlags.Default;
                 for (var j = 0; j < arg.length; j++) {
                     var meta = arg[j];
                     if (meta instanceof Optional || meta.ngMetadataName === 'Optional') {
-                        flags |= 8 /* Optional */;
+                        flags |= InjectFlags.Optional;
                     }
                     else if (meta instanceof SkipSelf || meta.ngMetadataName === 'SkipSelf') {
-                        flags |= 4 /* SkipSelf */;
+                        flags |= InjectFlags.SkipSelf;
                     }
                     else if (meta instanceof Self || meta.ngMetadataName === 'Self') {
-                        flags |= 2 /* Self */;
+                        flags |= InjectFlags.Self;
                     }
                     else if (meta instanceof Inject) {
                         type = meta.token;
@@ -29869,7 +29890,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * @returns the value from the injector or `null` when not found
      */
     function getOrCreateInjectable(tNode, lViewData, token, flags, notFoundValue) {
-        if (flags === void 0) { flags = 0 /* Default */; }
+        if (flags === void 0) { flags = InjectFlags.Default; }
         var bloomHash = bloomHashBitOrFactory(token);
         // If the ID stored here is a function, this is a special object like ElementRef or TemplateRef
         // so just call the factory function to create it.
@@ -29879,7 +29900,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             setTNodeAndViewData(tNode, lViewData);
             try {
                 var value = bloomHash();
-                if (value == null && !(flags & 8 /* Optional */)) {
+                if (value == null && !(flags & InjectFlags.Optional)) {
                     throw new Error("No provider for " + stringify$2(token));
                 }
                 else {
@@ -29899,7 +29920,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var parentLocation = NO_PARENT_INJECTOR;
             // If we should skip this injector, or if there is no injector on this node, start by searching
             // the parent injector.
-            if (injectorIndex === -1 || flags & 4 /* SkipSelf */) {
+            if (injectorIndex === -1 || flags & InjectFlags.SkipSelf) {
                 parentLocation = injectorIndex === -1 ? getParentInjectorLocation(tNode, lViewData) :
                     lViewData[injectorIndex + PARENT_INJECTOR];
                 if (!shouldSearchParent(flags, parentLocation)) {
@@ -29942,20 +29963,20 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 }
             }
         }
-        if (flags & 8 /* Optional */ && notFoundValue === undefined) {
+        if (flags & InjectFlags.Optional && notFoundValue === undefined) {
             // This must be set or the NullInjector will throw for optional deps
             notFoundValue = null;
         }
-        if ((flags & (2 /* Self */ | 1 /* Host */)) === 0) {
+        if ((flags & (InjectFlags.Self | InjectFlags.Host)) === 0) {
             var moduleInjector = lViewData[INJECTOR];
             if (moduleInjector) {
-                return moduleInjector.get(token, notFoundValue, flags & 8 /* Optional */);
+                return moduleInjector.get(token, notFoundValue, flags & InjectFlags.Optional);
             }
             else {
-                return injectRootLimpMode(token, notFoundValue, flags & 8 /* Optional */);
+                return injectRootLimpMode(token, notFoundValue, flags & InjectFlags.Optional);
             }
         }
-        if (flags & 8 /* Optional */) {
+        if (flags & InjectFlags.Optional) {
             return notFoundValue;
         }
         else {
@@ -30077,8 +30098,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
     /** Returns true if flags prevent parent injector from being searched for tokens */
     function shouldSearchParent(flags, parentLocation) {
-        return !(flags & 2 /* Self */ ||
-            (flags & 1 /* Host */ &&
+        return !(flags & InjectFlags.Self ||
+            (flags & InjectFlags.Host &&
                 (parentLocation & 32768 /* AcrossHostBoundary */)));
     }
     var NodeInjector = /** @class */ (function () {
@@ -30565,7 +30586,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             recursivelyProcessProviders(records, providers);
         }
         StaticInjector.prototype.get = function (token, notFoundValue, flags) {
-            if (flags === void 0) { flags = 0 /* Default */; }
+            if (flags === void 0) { flags = InjectFlags.Default; }
             var record = this._records.get(token);
             try {
                 return tryResolveToken(token, record, this._records, this.parent, notFoundValue, flags);
@@ -30690,7 +30711,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function resolveToken(token, record, records, parent, notFoundValue, flags) {
         var _a;
         var value;
-        if (record && !(flags & 4 /* SkipSelf */)) {
+        if (record && !(flags & InjectFlags.SkipSelf)) {
             // If we don't have a record, this implies that we don't own the provider hence don't know how
             // to resolve it.
             value = record.value;
@@ -30720,14 +30741,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                         records, 
                         // If we don't know how to resolve dependency and we should not check parent for it,
                         // than pass in Null injector.
-                        !childRecord && !(options & 4 /* CheckParent */) ? NULL_INJECTOR : parent, options & 1 /* Optional */ ? null : Injector.THROW_IF_NOT_FOUND, 0 /* Default */));
+                        !childRecord && !(options & 4 /* CheckParent */) ? NULL_INJECTOR : parent, options & 1 /* Optional */ ? null : Injector.THROW_IF_NOT_FOUND, InjectFlags.Default));
                     }
                 }
                 record.value = value = useNew ? new ((_a = fn).bind.apply(_a, __spread([void 0], deps)))() : fn.apply(obj, deps);
             }
         }
-        else if (!(flags & 2 /* Self */)) {
-            value = parent.get(token, notFoundValue, 0 /* Default */);
+        else if (!(flags & InjectFlags.Self)) {
+            value = parent.get(token, notFoundValue, InjectFlags.Default);
         }
         return value;
     }
@@ -32399,7 +32420,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             this._hostView = _hostView;
         }
         NodeInjector$$1.prototype.get = function (token, notFoundValue) {
-            return getOrCreateInjectable(this._tNode, this._hostView, token, 0 /* Default */, notFoundValue);
+            return getOrCreateInjectable(this._tNode, this._hostView, token, InjectFlags.Default, notFoundValue);
         };
         return NodeInjector$$1;
     }());
@@ -32705,13 +32726,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         R3Injector.prototype.get = function (token, notFoundValue, flags) {
             if (notFoundValue === void 0) { notFoundValue = THROW_IF_NOT_FOUND; }
-            if (flags === void 0) { flags = 0 /* Default */; }
+            if (flags === void 0) { flags = InjectFlags.Default; }
             this.assertNotDestroyed();
             // Set the injection context.
             var previousInjector = setCurrentInjector(this);
             try {
                 // Check for the SkipSelf flag.
-                if (!(flags & 4 /* SkipSelf */)) {
+                if (!(flags & InjectFlags.SkipSelf)) {
                     // SkipSelf isn't set, check if the record belongs to this injector.
                     var record = this.records.get(token);
                     if (record === undefined) {
@@ -32732,7 +32753,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 }
                 // Select the next injector based on the Self flag - if self is set, the next injector is
                 // the NullInjector, otherwise it's the parent.
-                var nextInjector = !(flags & 2 /* Self */) ? this.parent : getNullInjector();
+                var nextInjector = !(flags & InjectFlags.Self) ? this.parent : getNullInjector();
                 return nextInjector.get(token, notFoundValue);
             }
             finally {
@@ -33173,7 +33194,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.1.0+4.sha-a71038b');
+    var VERSION$2 = new Version$1('7.1.0+5.sha-bdf5f3e');
 
     /**
      * @license
@@ -47043,12 +47064,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         NgModuleRef_.prototype.get = function (token, notFoundValue, injectFlags) {
             if (notFoundValue === void 0) { notFoundValue = Injector.THROW_IF_NOT_FOUND; }
-            if (injectFlags === void 0) { injectFlags = 0 /* Default */; }
+            if (injectFlags === void 0) { injectFlags = InjectFlags.Default; }
             var flags = 0 /* None */;
-            if (injectFlags & 4 /* SkipSelf */) {
+            if (injectFlags & InjectFlags.SkipSelf) {
                 flags |= 1 /* SkipSelf */;
             }
-            else if (injectFlags & 2 /* Self */) {
+            else if (injectFlags & InjectFlags.Self) {
                 flags |= 4 /* Self */;
             }
             return resolveNgModuleDep(this, { token: token, tokenKey: tokenKey(token), flags: flags }, notFoundValue);
@@ -50337,7 +50358,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.1.0+4.sha-a71038b');
+    var VERSION$3 = new Version$1('7.1.0+5.sha-bdf5f3e');
 
     /**
      * @license
