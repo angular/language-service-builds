@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.1.0+19.sha-a7ba05a
+ * @license Angular v7.1.0+20.sha-d0e8020
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -15118,7 +15118,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.1.0+19.sha-a7ba05a');
+    var VERSION$1 = new Version('7.1.0+20.sha-d0e8020');
 
     /**
      * @license
@@ -33291,7 +33291,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     function refreshDescendantViews(viewData, rf) {
         var tView = getTView();
-        var parentFirstTemplatePass = getFirstTemplatePass();
         // This needs to be set before children are processed to support recursive components
         tView.firstTemplatePass = false;
         setFirstTemplatePass(false);
@@ -33312,7 +33311,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
             setHostBindings(tView, viewData);
         }
-        refreshChildComponents(tView.components, parentFirstTemplatePass, rf);
+        refreshChildComponents(tView.components, rf);
     }
     /** Sets the host bindings for the current view. */
     function setHostBindings(tView, viewData) {
@@ -33361,10 +33360,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
     }
     /** Refreshes child components in the current view. */
-    function refreshChildComponents(components, parentFirstTemplatePass, rf) {
+    function refreshChildComponents(components, rf) {
         if (components != null) {
             for (var i = 0; i < components.length; i++) {
-                componentRefresh(components[i], parentFirstTemplatePass, rf);
+                componentRefresh(components[i], rf);
             }
         }
     }
@@ -34935,14 +34934,15 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Refreshes components by entering the component view and processing its bindings, queries, etc.
      *
      * @param adjustedElementIndex  Element index in LViewData[] (adjusted for HEADER_OFFSET)
+     * @param rf  The render flags that should be used to process this template
      */
-    function componentRefresh(adjustedElementIndex, parentFirstTemplatePass, rf) {
+    function componentRefresh(adjustedElementIndex, rf) {
         ngDevMode && assertDataInRange(adjustedElementIndex);
         var hostView = getComponentViewByIndex(adjustedElementIndex, getViewData());
         ngDevMode && assertNodeType(getTView().data[adjustedElementIndex], 3 /* Element */);
         // Only attached CheckAlways components or attached, dirty OnPush components should be checked
         if (viewAttached(hostView) && hostView[FLAGS] & (2 /* CheckAlways */ | 4 /* Dirty */)) {
-            parentFirstTemplatePass && syncViewWithBlueprint(hostView);
+            syncViewWithBlueprint(hostView);
             detectChangesInternal(hostView, hostView[CONTEXT], rf);
         }
     }
@@ -37358,7 +37358,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.1.0+19.sha-a7ba05a');
+    var VERSION$2 = new Version$1('7.1.0+20.sha-d0e8020');
 
     /**
      * @license
@@ -57382,7 +57382,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.1.0+19.sha-a7ba05a');
+    var VERSION$3 = new Version$1('7.1.0+20.sha-d0e8020');
 
     /**
      * @license
