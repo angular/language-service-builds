@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.1.0+13.sha-d767e0b
+ * @license Angular v7.1.0+14.sha-c2f3054
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1006,8 +1006,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return positive.concat.apply(positive, __spread(negative));
     }
     function parseSelectorToR3Selector(selector) {
-        var selectors = CssSelector.parse(selector);
-        return selectors.map(parserSelectorToR3Selector);
+        return selector ? CssSelector.parse(selector).map(parserSelectorToR3Selector) : [];
     }
 
     /**
@@ -14927,6 +14926,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     var CompilerFacadeImpl = /** @class */ (function () {
         function CompilerFacadeImpl() {
             this.R3ResolvedDependencyType = R3ResolvedDependencyType;
+            this.elementSchemaRegistry = new DomElementSchemaRegistry();
         }
         CompilerFacadeImpl.prototype.compilePipe = function (angularCoreEnv, sourceMapUrl, facade) {
             var res = compilePipeFromMetadata({
@@ -14996,7 +14996,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
             // Compile the component metadata, including template, into an expression.
             // TODO(alxhub): implement inputs, outputs, queries, etc.
-            var res = compileComponentFromMetadata(__assign({}, facade, convertDirectiveFacadeToMetadata(facade), { template: template, viewQueries: facade.viewQueries.map(convertToR3QueryMetadata), wrapDirectivesAndPipesInClosure: false, styles: facade.styles || [], encapsulation: facade.encapsulation, animations: facade.animations != null ? new WrappedNodeExpr(facade.animations) : null, viewProviders: facade.viewProviders != null ? new WrappedNodeExpr(facade.viewProviders) :
+            var res = compileComponentFromMetadata(__assign({}, facade, convertDirectiveFacadeToMetadata(facade), { selector: facade.selector || this.elementSchemaRegistry.getDefaultComponentElementName(), template: template, viewQueries: facade.viewQueries.map(convertToR3QueryMetadata), wrapDirectivesAndPipesInClosure: false, styles: facade.styles || [], encapsulation: facade.encapsulation, animations: facade.animations != null ? new WrappedNodeExpr(facade.animations) : null, viewProviders: facade.viewProviders != null ? new WrappedNodeExpr(facade.viewProviders) :
                     null }), constantPool, makeBindingParser());
             var preStatements = __spread(constantPool.statements, res.statements);
             return jitExpression(res.expression, angularCoreEnv, sourceMapUrl, preStatements);
@@ -15133,7 +15133,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.1.0+13.sha-d767e0b');
+    var VERSION$1 = new Version('7.1.0+14.sha-c2f3054');
 
     /**
      * @license
@@ -33178,7 +33178,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.1.0+13.sha-d767e0b');
+    var VERSION$2 = new Version$1('7.1.0+14.sha-c2f3054');
 
     /**
      * @license
@@ -50318,7 +50318,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.1.0+13.sha-d767e0b');
+    var VERSION$3 = new Version$1('7.1.0+14.sha-c2f3054');
 
     /**
      * @license
