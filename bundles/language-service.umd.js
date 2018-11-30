@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.1.0+70.sha-9129f9a
+ * @license Angular v7.1.0+71.sha-aedc343
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -4290,10 +4290,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     var TRANSLATION_PREFIX = 'MSG_';
     /** Closure uses `goog.getMsg(message)` to lookup translations */
     var GOOG_GET_MSG = 'goog.getMsg';
-    /** String key that is used to provide backup id of translatable message in Closure */
-    var BACKUP_MESSAGE_ID = 'BACKUP_MESSAGE_ID';
-    /** Regexp to identify whether backup id already provided in description */
-    var BACKUP_MESSAGE_ID_REGEXP = new RegExp(BACKUP_MESSAGE_ID);
     /** I18n separators for metadata **/
     var I18N_MEANING_SEPARATOR = '|';
     var I18N_ID_SEPARATOR = '@@';
@@ -4318,14 +4314,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     // to a JsDoc statement formatted as expected by the Closure compiler.
     function i18nMetaToDocStmt(meta) {
         var tags = [];
-        var id = meta.id, description = meta.description, meaning = meta.meaning;
-        if (id || description) {
-            var hasBackupId = !!description && BACKUP_MESSAGE_ID_REGEXP.test(description);
-            var text = id && !hasBackupId ? "[" + BACKUP_MESSAGE_ID + ":" + id + "] " + (description || '') : description;
-            tags.push({ tagName: "desc" /* Desc */, text: text.trim() });
+        if (meta.description) {
+            tags.push({ tagName: "desc" /* Desc */, text: meta.description });
         }
-        if (meaning) {
-            tags.push({ tagName: "meaning" /* Meaning */, text: meaning });
+        if (meta.meaning) {
+            tags.push({ tagName: "meaning" /* Meaning */, text: meta.meaning });
         }
         return tags.length == 0 ? null : new JSDocCommentStmt(tags);
     }
@@ -4341,9 +4334,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function hasI18nAttrs(element) {
         return element.attrs.some(function (attr) { return isI18nAttribute(attr.name); });
     }
-    function metaFromI18nMessage(message) {
+    function metaFromI18nMessage(message, id) {
+        if (id === void 0) { id = null; }
         return {
-            id: message.id || '',
+            id: typeof id === 'string' ? id : message.id || '',
             meaning: message.meaning || '',
             description: message.description || ''
         };
@@ -4465,8 +4459,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return postfix ? raw + "_" + postfix : raw;
     }
-    function getTranslationConstPrefix(fileBasedSuffix) {
-        return ("" + TRANSLATION_PREFIX + fileBasedSuffix).toUpperCase();
+    /**
+     * Generates a prefix for translation const name.
+     *
+     * @param extra Additional local prefix that should be injected into translation var name
+     * @returns Complete translation const prefix
+     */
+    function getTranslationConstPrefix(extra) {
+        return ("" + TRANSLATION_PREFIX + extra).toUpperCase();
     }
     /**
      * Generates translation declaration statements.
@@ -4486,7 +4486,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             statements.push(docStatements);
         }
         if (transformFn) {
-            var raw = variable(variable$$1.name + "_RAW");
+            var raw = variable(variable$$1.name + "$$RAW");
             statements.push(i18nTranslationToDeclStmt(raw, message, params));
             statements.push(variable$$1.set(transformFn(raw)).toDeclStmt(INFERRED_TYPE, [StmtModifier.Final]));
         }
@@ -13213,7 +13213,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return ifStmt(variable(RENDER_FLAGS).bitwiseAnd(literal(flags), null, false), statements);
     }
     var TemplateDefinitionBuilder = /** @class */ (function () {
-        function TemplateDefinitionBuilder(constantPool, parentBindingScope, level, contextName, i18nContext, templateIndex, templateName, viewQueries, directiveMatcher, directives, pipeTypeByName, pipes, _namespace, relativeContextFilePath) {
+        function TemplateDefinitionBuilder(constantPool, parentBindingScope, level, contextName, i18nContext, templateIndex, templateName, viewQueries, directiveMatcher, directives, pipeTypeByName, pipes, _namespace, relativeContextFilePath, i18nUseExternalIds) {
             if (level === void 0) { level = 0; }
             var _this = this;
             this.constantPool = constantPool;
@@ -13229,6 +13229,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             this.pipes = pipes;
             this._namespace = _namespace;
             this.relativeContextFilePath = relativeContextFilePath;
+            this.i18nUseExternalIds = i18nUseExternalIds;
             this._dataIndex = 0;
             this._bindingContext = 0;
             this._prefixCode = [];
@@ -13327,8 +13328,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             // - this template has parent i18n context
             // - or the template has i18n meta associated with it,
             //   but it's not initiated by the Element (e.g. <ng-template i18n>)
-            var initI18nContext = this.i18nContext ||
-                (isI18nRootNode(i18n) && !(isSingleElementTemplate(nodes) && nodes[0].i18n === i18n));
+            var initI18nContext = this.i18nContext || (isI18nRootNode(i18n) && !isSingleI18nIcu(i18n) &&
+                !(isSingleElementTemplate(nodes) && nodes[0].i18n === i18n));
             var selfClosingI18nInstruction = hasTextChildrenOnly(nodes);
             if (initI18nContext) {
                 this.i18nStart(null, i18n, selfClosingI18nInstruction);
@@ -13375,7 +13376,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         TemplateDefinitionBuilder.prototype.i18nTranslate = function (message, params, ref, transformFn) {
             if (params === void 0) { params = {}; }
             var _a;
-            var _ref = ref || this.i18nAllocateRef();
+            var _ref = ref || this.i18nAllocateRef(message.id);
             var _params = {};
             if (params && Object.keys(params).length) {
                 Object.keys(params).forEach(function (key) { return _params[formatI18nPlaceholderName(key)] = params[key]; });
@@ -13417,9 +13418,17 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             });
             return bound;
         };
-        TemplateDefinitionBuilder.prototype.i18nAllocateRef = function () {
-            var prefix = getTranslationConstPrefix(this.fileBasedI18nSuffix);
-            return variable(this.constantPool.uniqueName(prefix));
+        TemplateDefinitionBuilder.prototype.i18nAllocateRef = function (messageId) {
+            var name;
+            if (this.i18nUseExternalIds) {
+                var prefix = getTranslationConstPrefix("EXTERNAL_");
+                name = "" + prefix + messageId;
+            }
+            else {
+                var prefix = getTranslationConstPrefix(this.fileBasedI18nSuffix);
+                name = this.constantPool.uniqueName(prefix);
+            }
+            return variable(name);
         };
         TemplateDefinitionBuilder.prototype.i18nUpdateRef = function (context) {
             var icus = context.icus, meta = context.meta, isRoot = context.isRoot, isResolved = context.isResolved;
@@ -13468,7 +13477,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 this.i18n = this.i18nContext.forkChildContext(index, this.templateIndex, meta);
             }
             else {
-                var ref_1 = this.i18nAllocateRef();
+                var ref_1 = this.i18nAllocateRef(meta.id);
                 this.i18n = new I18nContext(index, ref_1, 0, this.templateIndex, meta);
             }
             // generate i18nStart instruction
@@ -13544,7 +13553,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var elementIndex = this.allocateDataSlot();
             var stylingBuilder = new StylingBuilder(literal(elementIndex), null);
             var isNonBindableMode = false;
-            var isI18nRootElement = isI18nRootNode(element.i18n);
+            var isI18nRootElement = isI18nRootNode(element.i18n) && !isSingleI18nIcu(element.i18n);
             if (isI18nRootElement && this.i18n) {
                 throw new Error("Could not mark an element as translatable inside of a translatable section");
             }
@@ -13782,7 +13791,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 });
             });
             // Create the template function
-            var templateVisitor = new TemplateDefinitionBuilder(this.constantPool, this._bindingScope, this.level + 1, contextName, this.i18n, templateIndex, templateName, [], this.directiveMatcher, this.directives, this.pipeTypeByName, this.pipes, this._namespace, this.fileBasedI18nSuffix);
+            var templateVisitor = new TemplateDefinitionBuilder(this.constantPool, this._bindingScope, this.level + 1, contextName, this.i18n, templateIndex, templateName, [], this.directiveMatcher, this.directives, this.pipeTypeByName, this.pipes, this._namespace, this.fileBasedI18nSuffix, this.i18nUseExternalIds);
             // Nested templates must not be visited until after their parent templates have completed
             // processing, so they are queued here until after the initial pass. Otherwise, we wouldn't
             // be able to support bindings in nested templates to local refs that occur after the
@@ -14319,18 +14328,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * @param template text of the template to parse
      * @param templateUrl URL to use for source mapping of the parsed template
      */
-    function parseTemplate(template, templateUrl, options, relativeContextFilePath) {
-        if (options === void 0) { options = {}; }
+    function parseTemplate(template, templateUrl, options) {
         var bindingParser = makeBindingParser();
         var htmlParser = new HtmlParser();
         var parseResult = htmlParser.parse(template, templateUrl, true);
         if (parseResult.errors && parseResult.errors.length > 0) {
-            return {
-                errors: parseResult.errors,
-                nodes: [],
-                hasNgContent: false,
-                ngContentSelectors: [], relativeContextFilePath: relativeContextFilePath
-            };
+            return { errors: parseResult.errors, nodes: [], hasNgContent: false, ngContentSelectors: [] };
         }
         var rootNodes = parseResult.rootNodes;
         // process i18n meta information (scan attributes, generate ids)
@@ -14349,14 +14352,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         var _a = htmlAstToRender3Ast(rootNodes, bindingParser), nodes = _a.nodes, hasNgContent = _a.hasNgContent, ngContentSelectors = _a.ngContentSelectors, errors = _a.errors;
         if (errors && errors.length > 0) {
-            return {
-                errors: errors,
-                nodes: [],
-                hasNgContent: false,
-                ngContentSelectors: [], relativeContextFilePath: relativeContextFilePath
-            };
+            return { errors: errors, nodes: [], hasNgContent: false, ngContentSelectors: [] };
         }
-        return { nodes: nodes, hasNgContent: hasNgContent, ngContentSelectors: ngContentSelectors, relativeContextFilePath: relativeContextFilePath };
+        return { nodes: nodes, hasNgContent: hasNgContent, ngContentSelectors: ngContentSelectors };
     }
     /**
      * Construct a `BindingParser` with a default configuration.
@@ -14550,7 +14548,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var directivesUsed = new Set();
         var pipesUsed = new Set();
         var template = meta.template;
-        var templateBuilder = new TemplateDefinitionBuilder(constantPool, BindingScope.ROOT_SCOPE, 0, templateTypeName, null, null, templateName, meta.viewQueries, directiveMatcher, directivesUsed, meta.pipes, pipesUsed, Identifiers$1.namespaceHTML, meta.template.relativeContextFilePath);
+        var templateBuilder = new TemplateDefinitionBuilder(constantPool, BindingScope.ROOT_SCOPE, 0, templateTypeName, null, null, templateName, meta.viewQueries, directiveMatcher, directivesUsed, meta.pipes, pipesUsed, Identifiers$1.namespaceHTML, meta.relativeContextFilePath, meta.i18nUseExternalIds);
         var templateFunctionExpression = templateBuilder.buildTemplateFunction(template.nodes, [], template.hasNgContent, template.ngContentSelectors);
         // e.g. `consts: 2`
         definitionMap.set('consts', literal(templateBuilder.getConstCount()));
@@ -14985,7 +14983,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             // Parse the template and check for errors.
             var template = parseTemplate(facade.template, sourceMapUrl, {
                 preserveWhitespaces: facade.preserveWhitespaces || false,
-            }, '');
+            });
             if (template.errors !== undefined) {
                 var errors = template.errors.map(function (err) { return err.toString(); }).join(', ');
                 throw new Error("Errors during JIT compilation of template for " + facade.name + ": " + errors);
@@ -14993,7 +14991,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             // Compile the component metadata, including template, into an expression.
             // TODO(alxhub): implement inputs, outputs, queries, etc.
             var res = compileComponentFromMetadata(__assign({}, facade, convertDirectiveFacadeToMetadata(facade), { selector: facade.selector || this.elementSchemaRegistry.getDefaultComponentElementName(), template: template, viewQueries: facade.viewQueries.map(convertToR3QueryMetadata), wrapDirectivesAndPipesInClosure: false, styles: facade.styles || [], encapsulation: facade.encapsulation, animations: facade.animations != null ? new WrappedNodeExpr(facade.animations) : null, viewProviders: facade.viewProviders != null ? new WrappedNodeExpr(facade.viewProviders) :
-                    null }), constantPool, makeBindingParser());
+                    null, relativeContextFilePath: '', i18nUseExternalIds: true }), constantPool, makeBindingParser());
             var preStatements = __spread(constantPool.statements, res.statements);
             return jitExpression(res.expression, angularCoreEnv, sourceMapUrl, preStatements);
         };
@@ -15129,7 +15127,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.1.0+70.sha-9129f9a');
+    var VERSION$1 = new Version('7.1.0+71.sha-aedc343');
 
     /**
      * @license
@@ -37400,7 +37398,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.1.0+70.sha-9129f9a');
+    var VERSION$2 = new Version$1('7.1.0+71.sha-aedc343');
 
     /**
      * @license
@@ -57529,7 +57527,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.1.0+70.sha-9129f9a');
+    var VERSION$3 = new Version$1('7.1.0+71.sha-aedc343');
 
     /**
      * @license
