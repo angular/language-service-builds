@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.1.0+96.sha-0df914e
+ * @license Angular v7.1.0+97.sha-a088b8c
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -3395,6 +3395,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         Identifiers.bind = { name: 'ɵbind', moduleName: CORE$1 };
         Identifiers.enableBindings = { name: 'ɵenableBindings', moduleName: CORE$1 };
         Identifiers.disableBindings = { name: 'ɵdisableBindings', moduleName: CORE$1 };
+        Identifiers.allocHostVars = { name: 'ɵallocHostVars', moduleName: CORE$1 };
         Identifiers.getCurrentView = { name: 'ɵgetCurrentView', moduleName: CORE$1 };
         Identifiers.restoreView = { name: 'ɵrestoreView', moduleName: CORE$1 };
         Identifiers.interpolation1 = { name: 'ɵinterpolation1', moduleName: CORE$1 };
@@ -14434,8 +14435,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         definitionMap.set('factory', result.factory);
         definitionMap.set('contentQueries', createContentQueriesFunction(meta, constantPool));
         definitionMap.set('contentQueriesRefresh', createContentQueriesRefreshFunction(meta));
-        // Initialize hostVars to number of bound host properties (interpolations illegal)
-        var hostVars = Object.keys(meta.host.properties).length;
+        // Initialize hostVarsCount to number of bound host properties (interpolations illegal)
+        var hostVarsCount = Object.keys(meta.host.properties).length;
         var elVarExp = variable('elIndex');
         var contextVarExp = variable(CONTEXT_NAME);
         var styleBuilder = new StylingBuilder(elVarExp, contextVarExp);
@@ -14461,15 +14462,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         // e.g. `attributes: ['role', 'listbox']`
         definitionMap.set('attributes', createHostAttributesArray(allOtherAttributes));
         // e.g. `hostBindings: (rf, ctx, elIndex) => { ... }
-        definitionMap.set('hostBindings', createHostBindingsFunction(meta, elVarExp, contextVarExp, styleBuilder, bindingParser, constantPool, function (slots) {
-            var originalSlots = hostVars;
-            hostVars += slots;
-            return originalSlots;
-        }));
-        if (hostVars) {
-            // e.g. `hostVars: 2
-            definitionMap.set('hostVars', literal(hostVars));
-        }
+        definitionMap.set('hostBindings', createHostBindingsFunction(meta, elVarExp, contextVarExp, styleBuilder, bindingParser, constantPool, hostVarsCount));
         // e.g 'inputs: {a: 'a'}`
         definitionMap.set('inputs', conditionallyCreateMapObjectLiteral(meta.inputs));
         // e.g 'outputs: {a: 'a'}`
@@ -14758,10 +14751,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         ], INFERRED_TYPE, null, viewQueryFnName);
     }
     // Return a host binding function or null if one is not necessary.
-    function createHostBindingsFunction(meta, elVarExp, bindingContext, styleBuilder, bindingParser, constantPool, allocatePureFunctionSlots) {
+    function createHostBindingsFunction(meta, elVarExp, bindingContext, styleBuilder, bindingParser, constantPool, hostVarsCount) {
         var e_3, _a;
         var createStatements = [];
         var updateStatements = [];
+        var totalHostVarsCount = hostVarsCount;
         var hostBindingSourceSpan = meta.typeSourceSpan;
         var directiveSummary = metadataAsSummary(meta);
         // Calculate host event bindings
@@ -14776,8 +14770,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             return convertPropertyBinding(null, implicit, value, 'b', BindingForm.TrySimple, function () { return error('Unexpected interpolation'); });
         };
         if (bindings) {
+            var hostVarsCountFn = function (numSlots) {
+                totalHostVarsCount += numSlots;
+                return hostVarsCount;
+            };
             var valueConverter = new ValueConverter(constantPool, 
-            /* new nodes are illegal here */ function () { return error('Unexpected node'); }, allocatePureFunctionSlots, 
+            /* new nodes are illegal here */ function () { return error('Unexpected node'); }, hostVarsCountFn, 
             /* pipes are illegal here */ function () { return error('Unexpected pipe'); });
             try {
                 for (var bindings_1 = __values(bindings), bindings_1_1 = bindings_1.next(); !bindings_1_1.done; bindings_1_1 = bindings_1.next()) {
@@ -14825,6 +14823,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     updateStatements.push(updateStmt);
                 });
             }
+        }
+        if (totalHostVarsCount) {
+            createStatements.unshift(importExpr(Identifiers$1.allocHostVars).callFn([literal(totalHostVarsCount)]).toStmt());
         }
         if (createStatements.length > 0 || updateStatements.length > 0) {
             var hostBindingsFnName = meta.name ? meta.name + "_HostBindings" : null;
@@ -15142,7 +15143,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.1.0+96.sha-0df914e');
+    var VERSION$1 = new Version('7.1.0+97.sha-a088b8c');
 
     /**
      * @license
@@ -31360,8 +31361,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 }
                 else {
                     // If it's not a number, it's a host binding function that needs to be executed.
-                    viewData[BINDING_INDEX] = bindingRootIndex;
-                    instruction(2 /* Update */, readElementValue(viewData[currentDirectiveIndex]), currentElementIndex);
+                    if (instruction !== null) {
+                        viewData[BINDING_INDEX] = bindingRootIndex;
+                        instruction(2 /* Update */, readElementValue(viewData[currentDirectiveIndex]), currentElementIndex);
+                    }
                     currentDirectiveIndex++;
                 }
             }
@@ -31795,27 +31798,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         (tView.expandoInstructions || (tView.expandoInstructions = [])).push(elementIndex, providerCount, directiveCount);
     }
     /**
-    * On the first template pass, we need to reserve space for host binding values
-    * after directives are matched (so all directives are saved, then bindings).
-    * Because we are updating the blueprint, we only need to do this once.
-    */
-    function prefillHostVars(tView, lView, totalHostVars) {
-        for (var i = 0; i < totalHostVars; i++) {
-            lView.push(NO_CHANGE);
-            tView.blueprint.push(NO_CHANGE);
-            tView.data.push(null);
-        }
-    }
-    /**
      * A lighter version of postProcessDirective() that is used for the root component.
      */
     function postProcessBaseDirective(lView, previousOrParentTNode, directive, def) {
         var native = getNativeByTNode(previousOrParentTNode, lView);
         ngDevMode && assertEqual(lView[BINDING_INDEX], lView[TVIEW].bindingStartIndex, 'directives should be created before any bindings');
         ngDevMode && assertPreviousIsParent(getIsParent());
-        if (def.hostBindings) {
-            def.hostBindings(1 /* Create */, directive, previousOrParentTNode.index);
-        }
         attachPatchData(directive, lView);
         if (native) {
             attachPatchData(native, lView);
@@ -31831,15 +31819,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             assertEqual(getFirstTemplatePass(), true, 'Should only be called in first template pass.');
         var tView = getLView()[TVIEW];
         (tView.components || (tView.components = [])).push(previousOrParentTNode.index);
-    }
-    /** Stores index of directive and host element so it will be queued for binding refresh during CD.
-    */
-    function queueHostBindingForCheck(tView, def) {
-        ngDevMode &&
-            assertEqual(getFirstTemplatePass(), true, 'Should only be called in first template pass.');
-        tView.expandoInstructions.push(def.hostBindings || noop$1);
-        if (def.hostVars)
-            tView.expandoInstructions.push(def.hostVars);
     }
     /**
      * Initializes the flags on the current node, setting all indices to the initial index,
@@ -31861,7 +31840,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var nodeInjectorFactory = new NodeInjectorFactory(directiveFactory, isComponentDef(def), null);
         tView.blueprint.push(nodeInjectorFactory);
         viewData.push(nodeInjectorFactory);
-        queueHostBindingForCheck(tView, def);
     }
     /**
      * Goes over dynamic embedded views (ones created through ViewContainerRef APIs) and refreshes them
@@ -32579,8 +32557,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         rootContext.components.push(component);
         componentView[CONTEXT] = component;
         hostFeatures && hostFeatures.forEach(function (feature) { return feature(component, componentDef); });
-        if (tView.firstTemplatePass)
-            prefillHostVars(tView, rootView, componentDef.hostVars);
+        if (tView.firstTemplatePass && componentDef.hostBindings) {
+            var rootTNode = getPreviousOrParentTNode();
+            componentDef.hostBindings(1 /* Create */, component, rootTNode.index);
+        }
         return component;
     }
     function createRootContext(scheduler, playerHandler) {
@@ -33242,7 +33222,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.1.0+96.sha-0df914e');
+    var VERSION$2 = new Version$1('7.1.0+97.sha-a088b8c');
 
     /**
      * @license
@@ -50438,7 +50418,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.1.0+96.sha-0df914e');
+    var VERSION$3 = new Version$1('7.1.0+97.sha-a088b8c');
 
     /**
      * @license
