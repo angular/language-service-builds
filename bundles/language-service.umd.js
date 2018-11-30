@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.1.0+67.sha-2389a68
+ * @license Angular v7.1.0+69.sha-412e47d
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -14508,7 +14508,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Compile a component for the render3 runtime as defined by the `R3ComponentMetadata`.
      */
     function compileComponentFromMetadata(meta, constantPool, bindingParser) {
-        var _a = baseDirectiveFields(meta, constantPool, bindingParser), definitionMap = _a.definitionMap, statements = _a.statements;
+        var e_1, _a;
+        var _b = baseDirectiveFields(meta, constantPool, bindingParser), definitionMap = _b.definitionMap, statements = _b.statements;
         addFeatures(definitionMap, meta);
         var selector = meta.selector && CssSelector.parse(meta.selector);
         var firstSelector = selector && selector[0];
@@ -14523,12 +14524,22 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         // Generate the CSS matcher that recognize directive
         var directiveMatcher = null;
-        if (meta.directives.size) {
-            var matcher_1 = new SelectorMatcher();
-            meta.directives.forEach(function (expression, selector) {
-                matcher_1.addSelectables(CssSelector.parse(selector), expression);
-            });
-            directiveMatcher = matcher_1;
+        if (meta.directives.length > 0) {
+            var matcher = new SelectorMatcher();
+            try {
+                for (var _c = __values(meta.directives), _d = _c.next(); !_d.done; _d = _c.next()) {
+                    var _e = _d.value, selector_1 = _e.selector, expression_1 = _e.expression;
+                    matcher.addSelectables(CssSelector.parse(selector_1), expression_1);
+                }
+            }
+            catch (e_1_1) { e_1 = { error: e_1_1 }; }
+            finally {
+                try {
+                    if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
+                }
+                finally { if (e_1) throw e_1.error; }
+            }
+            directiveMatcher = matcher;
         }
         if (meta.viewQueries.length) {
             definitionMap.set('viewQuery', createViewQueriesFunction(meta, constantPool));
@@ -14610,7 +14621,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return asLiteral(parseSelectorToR3Selector(selector));
     }
     function createHostAttributesArray(attributes) {
-        var e_1, _a;
+        var e_2, _a;
         var values = [];
         try {
             for (var _b = __values(Object.getOwnPropertyNames(attributes)), _c = _b.next(); !_c.done; _c = _b.next()) {
@@ -14619,12 +14630,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 values.push(literal(key), literal(value));
             }
         }
-        catch (e_1_1) { e_1 = { error: e_1_1 }; }
+        catch (e_2_1) { e_2 = { error: e_2_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_1) throw e_1.error; }
+            finally { if (e_2) throw e_2.error; }
         }
         if (values.length > 0) {
             return literalArr(values);
@@ -14735,7 +14746,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
     // Return a host binding function or null if one is not necessary.
     function createHostBindingsFunction(meta, elVarExp, bindingContext, styleBuilder, bindingParser, constantPool, allocatePureFunctionSlots) {
-        var e_2, _a;
+        var e_3, _a;
         var createStatements = [];
         var updateStatements = [];
         var hostBindingSourceSpan = meta.typeSourceSpan;
@@ -14783,12 +14794,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     }
                 }
             }
-            catch (e_2_1) { e_2 = { error: e_2_1 }; }
+            catch (e_3_1) { e_3 = { error: e_3_1 }; }
             finally {
                 try {
                     if (bindings_1_1 && !bindings_1_1.done && (_a = bindings_1.return)) _a.call(bindings_1);
                 }
-                finally { if (e_2) throw e_2.error; }
+                finally { if (e_3) throw e_3.error; }
             }
             if (styleBuilder.hasBindingsOrInitialValues) {
                 var createInstruction = styleBuilder.buildCreateLevelInstruction(null, constantPool);
@@ -15118,7 +15129,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.1.0+67.sha-2389a68');
+    var VERSION$1 = new Version('7.1.0+69.sha-412e47d');
 
     /**
      * @license
@@ -37389,7 +37400,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.1.0+67.sha-2389a68');
+    var VERSION$2 = new Version$1('7.1.0+69.sha-412e47d');
 
     /**
      * @license
@@ -44654,7 +44665,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                         error.push("Did you run and wait for 'resolveComponentResources()'?");
                         throw new Error(error.join('\n'));
                     }
-                    var meta = __assign({}, directiveMetadata(type, metadata), { template: metadata.template || '', preserveWhitespaces: metadata.preserveWhitespaces || false, styles: metadata.styles || EMPTY_ARRAY$1, animations: metadata.animations, viewQueries: extractQueriesMetadata(getReflect().propMetadata(type), isViewQuery), directives: new Map(), pipes: new Map(), encapsulation: metadata.encapsulation || ViewEncapsulation$1.Emulated, viewProviders: metadata.viewProviders || null });
+                    var meta = __assign({}, directiveMetadata(type, metadata), { template: metadata.template || '', preserveWhitespaces: metadata.preserveWhitespaces || false, styles: metadata.styles || EMPTY_ARRAY$1, animations: metadata.animations, viewQueries: extractQueriesMetadata(getReflect().propMetadata(type), isViewQuery), directives: [], pipes: new Map(), encapsulation: metadata.encapsulation || ViewEncapsulation$1.Emulated, viewProviders: metadata.viewProviders || null });
                     ngComponentDef = compiler.compileComponent(angularCoreEnv, "ng://" + stringify$1(type) + "/template.html", meta);
                     // If component compilation is async, then the @NgModule annotation which declares the
                     // component may execute and set an ngSelectorScope property on the component type. This
@@ -57518,7 +57529,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.1.0+67.sha-2389a68');
+    var VERSION$3 = new Version$1('7.1.0+69.sha-412e47d');
 
     /**
      * @license
