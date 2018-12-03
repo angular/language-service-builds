@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.1.0+110.sha-2a39425
+ * @license Angular v7.1.0+112.sha-7ec05b4
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -14423,6 +14423,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     // This regex matches any binding names that contain the "attr." prefix, e.g. "attr.required"
     // If there is a match, the first matching group will contain the attribute name to bind.
     var ATTR_REGEX = /attr\.([^\]]+)/;
+    function getStylingPrefix(propName) {
+        return propName.substring(0, 5).toLowerCase();
+    }
     function baseDirectiveFields(meta, constantPool, bindingParser) {
         var definitionMap = new DefinitionMap();
         // e.g. `type: MyDirective`
@@ -14439,8 +14442,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         definitionMap.set('factory', result.factory);
         definitionMap.set('contentQueries', createContentQueriesFunction(meta, constantPool));
         definitionMap.set('contentQueriesRefresh', createContentQueriesRefreshFunction(meta));
-        // Initialize hostVarsCount to number of bound host properties (interpolations illegal)
-        var hostVarsCount = Object.keys(meta.host.properties).length;
+        // Initialize hostVarsCount to number of bound host properties (interpolations illegal),
+        // except 'style' and 'class' properties, since they should *not* allocate host var slots
+        var hostVarsCount = Object.keys(meta.host.properties)
+            .filter(function (name) {
+            var prefix = getStylingPrefix(name);
+            return prefix !== 'style' && prefix !== 'class';
+        })
+            .length;
         var elVarExp = variable('elIndex');
         var contextVarExp = variable(CONTEXT_NAME);
         var styleBuilder = new StylingBuilder(elVarExp, contextVarExp);
@@ -14785,7 +14794,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 for (var bindings_1 = __values(bindings), bindings_1_1 = bindings_1.next(); !bindings_1_1.done; bindings_1_1 = bindings_1.next()) {
                     var binding = bindings_1_1.value;
                     var name_1 = binding.name;
-                    var stylePrefix = name_1.substring(0, 5).toLowerCase();
+                    var stylePrefix = getStylingPrefix(name_1);
                     if (stylePrefix === 'style') {
                         var _b = parseNamedProperty(name_1), propertyName = _b.propertyName, unit = _b.unit;
                         styleBuilder.registerStyleInput(propertyName, binding.expression, unit, binding.sourceSpan);
@@ -15147,7 +15156,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.1.0+110.sha-2a39425');
+    var VERSION$1 = new Version('7.1.0+112.sha-7ec05b4');
 
     /**
      * @license
@@ -33226,7 +33235,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.1.0+110.sha-2a39425');
+    var VERSION$2 = new Version$1('7.1.0+112.sha-7ec05b4');
 
     /**
      * @license
@@ -50415,7 +50424,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.1.0+110.sha-2a39425');
+    var VERSION$3 = new Version$1('7.1.0+112.sha-7ec05b4');
 
     /**
      * @license
