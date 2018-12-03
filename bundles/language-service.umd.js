@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.1.0+99.sha-01fd0cd
+ * @license Angular v7.1.0+109.sha-7d89cff
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -15147,7 +15147,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.1.0+99.sha-01fd0cd');
+    var VERSION$1 = new Version('7.1.0+109.sha-7d89cff');
 
     /**
      * @license
@@ -33226,7 +33226,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.1.0+99.sha-01fd0cd');
+    var VERSION$2 = new Version$1('7.1.0+109.sha-7d89cff');
 
     /**
      * @license
@@ -33313,23 +33313,16 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         });
         ComponentFactory$$1.prototype.create = function (injector, projectableNodes, rootSelectorOrNode, ngModule) {
             var isInternalRootView = rootSelectorOrNode === undefined;
-            var rendererFactory;
-            var sanitizer = null;
-            if (ngModule) {
-                rendererFactory = ngModule.injector.get(RendererFactory2);
-                sanitizer = ngModule.injector.get(Sanitizer, null);
-            }
-            else {
-                rendererFactory = domRendererFactory3;
-            }
+            var rootViewInjector = ngModule ? createChainedInjector(injector, ngModule.injector) : injector;
+            var rendererFactory = rootViewInjector.get(RendererFactory2, domRendererFactory3);
+            var sanitizer = rootViewInjector.get(Sanitizer, null);
             var hostRNode = isInternalRootView ?
                 elementCreate(this.selector, rendererFactory.createRenderer(null, this.componentDef)) :
                 locateHostElement(rendererFactory, rootSelectorOrNode);
             var rootFlags = this.componentDef.onPush ? 4 /* Dirty */ | 64 /* IsRoot */ :
                 2 /* CheckAlways */ | 64 /* IsRoot */;
-            var rootContext = ngModule && !isInternalRootView ? ngModule.injector.get(ROOT_CONTEXT) : createRootContext();
+            var rootContext = !isInternalRootView ? rootViewInjector.get(ROOT_CONTEXT) : createRootContext();
             var renderer = rendererFactory.createRenderer(hostRNode, this.componentDef);
-            var rootViewInjector = ngModule ? createChainedInjector(injector, ngModule.injector) : injector;
             if (rootSelectorOrNode && hostRNode) {
                 ngDevMode && ngDevMode.rendererSetAttribute++;
                 isProceduralRenderer(renderer) ?
@@ -50422,7 +50415,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.1.0+99.sha-01fd0cd');
+    var VERSION$3 = new Version$1('7.1.0+109.sha-7d89cff');
 
     /**
      * @license
