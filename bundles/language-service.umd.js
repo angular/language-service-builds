@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.1.0+111.sha-8eb102a
+ * @license Angular v7.1.0+116.sha-0cf49c8
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -15156,7 +15156,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.1.0+111.sha-8eb102a');
+    var VERSION$1 = new Version('7.1.0+116.sha-0cf49c8');
 
     /**
      * @license
@@ -32815,7 +32815,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
             // Track the InjectorType and add a provider for it.
             this.injectorDefTypes.add(defType);
-            this.records.set(defType, makeRecord(def.factory));
+            this.records.set(defType, makeRecord(def.factory, NOT_YET));
             // Add providers in the same way that @NgModule resolution did:
             // First, include providers from any imports.
             if (def.imports != null && !isDuplicate) {
@@ -32955,7 +32955,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return factory;
     }
     function makeRecord(factory, value, multi) {
-        if (value === void 0) { value = NOT_YET; }
         if (multi === void 0) { multi = false; }
         return {
             factory: factory,
@@ -33235,7 +33234,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.1.0+111.sha-8eb102a');
+    var VERSION$2 = new Version$1('7.1.0+116.sha-0cf49c8');
 
     /**
      * @license
@@ -50424,7 +50423,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.1.0+111.sha-8eb102a');
+    var VERSION$3 = new Version$1('7.1.0+116.sha-0cf49c8');
 
     /**
      * @license
