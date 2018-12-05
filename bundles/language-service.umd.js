@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.1.0+155.sha-2bc3986
+ * @license Angular v7.1.0+156.sha-cd85832
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -15161,7 +15161,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.1.0+155.sha-2bc3986');
+    var VERSION$1 = new Version('7.1.0+156.sha-cd85832');
 
     /**
      * @license
@@ -37690,7 +37690,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.1.0+155.sha-2bc3986');
+    var VERSION$2 = new Version$1('7.1.0+156.sha-cd85832');
 
     /**
      * @license
@@ -44742,6 +44742,45 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * found in the LICENSE file at https://angular.io/license
      */
     var EMPTY_ARRAY$3 = [];
+    var moduleQueue = [];
+    /**
+     * Enqueues moduleDef to be checked later to see if scope can be set on its
+     * component declarations.
+     */
+    function enqueueModuleForDelayedScoping(moduleType, ngModule) {
+        moduleQueue.push({ moduleType: moduleType, ngModule: ngModule });
+    }
+    var flushingModuleQueue = false;
+    /**
+     * Loops over queued module definitions, if a given module definition has all of its
+     * declarations resolved, it dequeues that module definition and sets the scope on
+     * its declarations.
+     */
+    function flushModuleScopingQueueAsMuchAsPossible() {
+        if (!flushingModuleQueue) {
+            flushingModuleQueue = true;
+            for (var i = moduleQueue.length - 1; i >= 0; i--) {
+                var _a = moduleQueue[i], moduleType = _a.moduleType, ngModule = _a.ngModule;
+                if (ngModule.declarations && ngModule.declarations.every(isResolvedDeclaration)) {
+                    // dequeue
+                    moduleQueue.splice(i, 1);
+                    setScopeOnDeclaredComponents(moduleType, ngModule);
+                }
+            }
+            flushingModuleQueue = false;
+        }
+    }
+    /**
+     * Returns truthy if a declaration has resolved. If the declaration happens to be
+     * an array of declarations, it will recurse to check each declaration in that array
+     * (which may also be arrays).
+     */
+    function isResolvedDeclaration(declaration) {
+        if (Array.isArray(declaration)) {
+            return declaration.every(isResolvedDeclaration);
+        }
+        return !!resolveForwardRef$1(declaration);
+    }
     /**
      * Compiles a module in JIT mode.
      *
@@ -44750,7 +44789,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function compileNgModule$1(moduleType, ngModule) {
         if (ngModule === void 0) { ngModule = {}; }
         compileNgModuleDefs(moduleType, ngModule);
-        setScopeOnDeclaredComponents(moduleType, ngModule);
+        // Because we don't know if all declarations have resolved yet at the moment the
+        // NgModule decorator is executing, we're enqueueing the setting of module scope
+        // on its declarations to be run at a later time when all declarations for the module,
+        // including forward refs, have resolved.
+        enqueueModuleForDelayedScoping(moduleType, ngModule);
     }
     /**
      * Compiles and adds the `ngModuleDef` and `ngInjectorDef` properties to the module class.
@@ -44968,6 +45011,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     }
                     var meta = __assign({}, directiveMetadata(type, metadata), { template: metadata.template || '', preserveWhitespaces: metadata.preserveWhitespaces || false, styles: metadata.styles || EMPTY_ARRAY$1, animations: metadata.animations, viewQueries: extractQueriesMetadata(getReflect().propMetadata(type), isViewQuery), directives: [], pipes: new Map(), encapsulation: metadata.encapsulation || ViewEncapsulation$1.Emulated, interpolation: metadata.interpolation, viewProviders: metadata.viewProviders || null });
                     ngComponentDef = compiler.compileComponent(angularCoreEnv, "ng://" + stringify$1(type) + "/template.html", meta);
+                    // When NgModule decorator executed, we enqueued the module definition such that
+                    // it would only dequeue and add itself as module scope to all of its declarations,
+                    // but only if  if all of its declarations had resolved. This call runs the check
+                    // to see if any modules that are in the queue can be dequeued and add scope to
+                    // their declarations.
+                    flushModuleScopingQueueAsMuchAsPossible();
                     // If component compilation is async, then the @NgModule annotation which declares the
                     // component may execute and set an ngSelectorScope property on the component type. This
                     // allows the component to patch itself with directiveDefs from the module after it
@@ -57847,7 +57896,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.1.0+155.sha-2bc3986');
+    var VERSION$3 = new Version$1('7.1.0+156.sha-cd85832');
 
     /**
      * @license
