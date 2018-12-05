@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.1.0+153.sha-20cef50
+ * @license Angular v7.1.0+155.sha-2bc3986
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -4552,9 +4552,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return null;
     }
-    function mapToExpression(map, quoted) {
-        if (quoted === void 0) { quoted = false; }
-        return literalMap(Object.getOwnPropertyNames(map).map(function (key) { return ({ key: key, quoted: quoted, value: asLiteral(map[key]) }); }));
+    function mapToExpression(map) {
+        return literalMap(Object.getOwnPropertyNames(map).map(function (key) {
+            // canonical syntax: `dirProp: elProp`
+            // if there is no `:`, use dirProp = elProp
+            var parts = splitAtColon(key, [key, map[key]]);
+            return { key: parts[0], quoted: false, value: asLiteral(parts[1]) };
+        }));
     }
     /**
      *  Remove trailing null nodes as they are implied.
@@ -15157,7 +15161,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.1.0+153.sha-20cef50');
+    var VERSION$1 = new Version('7.1.0+155.sha-2bc3986');
 
     /**
      * @license
@@ -34073,8 +34077,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             setInputsForProperty(lView, dataValue, value);
             if (isComponent(tNode))
                 markDirtyIfOnPush(lView, index + HEADER_OFFSET);
-            if (ngDevMode && tNode.type === 3 /* Element */) {
-                setNgReflectProperties(lView, element, propName, value);
+            if (ngDevMode) {
+                if (tNode.type === 3 /* Element */ || tNode.type === 0 /* Container */) {
+                    setNgReflectProperties(lView, element, tNode.type, dataValue, value);
+                }
             }
         }
         else if (tNode.type === 3 /* Element */) {
@@ -34140,18 +34146,33 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             lView[inputs[i]][inputs[i + 1]] = value;
         }
     }
-    function setNgReflectProperties(lView, element, propName, value) {
-        var renderer = lView[RENDERER];
-        var attrName = normalizeDebugBindingName(propName);
-        var debugValue = normalizeDebugBindingValue(value);
-        isProceduralRenderer(renderer) ? renderer.setAttribute(element, attrName, debugValue) :
-            element.setAttribute(attrName, debugValue);
+    function setNgReflectProperties(lView, element, type, inputs, value) {
+        var _a;
+        for (var i = 0; i < inputs.length; i += 2) {
+            var renderer = lView[RENDERER];
+            var attrName = normalizeDebugBindingName(inputs[i + 1]);
+            var debugValue = normalizeDebugBindingValue(value);
+            if (type === 3 /* Element */) {
+                isProceduralRenderer(renderer) ?
+                    renderer.setAttribute(element, attrName, debugValue) :
+                    element.setAttribute(attrName, debugValue);
+            }
+            else if (value !== undefined) {
+                var value_1 = "bindings=" + JSON.stringify((_a = {}, _a[attrName] = debugValue, _a), null, 2);
+                if (isProceduralRenderer(renderer)) {
+                    renderer.setValue(element, value_1);
+                }
+                else {
+                    element.textContent = value_1;
+                }
+            }
+        }
     }
     /**
      * Consolidates all inputs or outputs of all directives on this logical node.
      *
-     * @param number tNodeFlags node flags
-     * @param Direction direction whether to consider inputs or outputs
+     * @param tNodeFlags node flags
+     * @param direction whether to consider inputs or outputs
      * @returns PropertyAliases|null aggregate of all properties if any, `null` otherwise
      */
     function generatePropertyAliases(tNode, direction) {
@@ -37669,7 +37690,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.1.0+153.sha-20cef50');
+    var VERSION$2 = new Version$1('7.1.0+155.sha-2bc3986');
 
     /**
      * @license
@@ -57826,7 +57847,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.1.0+153.sha-20cef50');
+    var VERSION$3 = new Version$1('7.1.0+155.sha-2bc3986');
 
     /**
      * @license
