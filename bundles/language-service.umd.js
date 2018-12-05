@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.1.0+131.sha-c61a8b7
+ * @license Angular v7.1.0+148.sha-a3ee089
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -8550,7 +8550,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     // a constant because the inital class values do not change (since they're static).
                     params_1.push(constantPool.getConstLiteral(initialClasses, true));
                 }
-                else if (initialStyles || useSanitizer) {
+                else if (initialStyles || useSanitizer || this._directiveExpr) {
                     // no point in having an extra `null` value unless there are follow-up params
                     params_1.push(NULL_EXPR);
                 }
@@ -15172,7 +15172,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.1.0+131.sha-c61a8b7');
+    var VERSION$1 = new Version('7.1.0+148.sha-a3ee089');
 
     /**
      * @license
@@ -32410,9 +32410,19 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
          * introduce other changes.
          */
         ViewRef.prototype.checkNoChanges = function () { checkNoChanges(this.context); };
-        ViewRef.prototype.attachToViewContainerRef = function (vcRef) { this._viewContainerRef = vcRef; };
+        ViewRef.prototype.attachToViewContainerRef = function (vcRef) {
+            if (this._appRef) {
+                throw new Error('This view is already attached directly to the ApplicationRef!');
+            }
+            this._viewContainerRef = vcRef;
+        };
         ViewRef.prototype.detachFromAppRef = function () { this._appRef = null; };
-        ViewRef.prototype.attachToAppRef = function (appRef) { this._appRef = appRef; };
+        ViewRef.prototype.attachToAppRef = function (appRef) {
+            if (this._viewContainerRef) {
+                throw new Error('This view is already attached to a ViewContainer!');
+            }
+            this._appRef = appRef;
+        };
         ViewRef.prototype._lookUpContext = function () {
             return this._context = this._lView[PARENT][this._componentIndex];
         };
@@ -32976,7 +32986,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                         if (def && this.injectableDefInScope(def)) {
                             // Found an ngInjectableDef and it's scoped to this injector. Pretend as if it was here
                             // all along.
-                            record = makeRecord(injectableDefFactory(token), NOT_YET);
+                            record = makeRecord(injectableDefOrInjectorDefFactory(token), NOT_YET);
                             this.records.set(token, record);
                         }
                     }
@@ -33128,9 +33138,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         return R3Injector;
     }());
-    function injectableDefFactory(token) {
+    function injectableDefOrInjectorDefFactory(token) {
         var injectableDef = getInjectableDef(token);
         if (injectableDef === null) {
+            var injectorDef = getInjectorDef(token);
+            if (injectorDef !== null) {
+                return injectorDef.factory;
+            }
             if (token instanceof InjectionToken) {
                 throw new Error("Token " + stringify$1(token) + " is missing an ngInjectableDef definition.");
             }
@@ -33157,7 +33171,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function providerToFactory(provider) {
         var factory = undefined;
         if (isTypeProvider(provider)) {
-            return injectableDefFactory(resolveForwardRef$1(provider));
+            return injectableDefOrInjectorDefFactory(resolveForwardRef$1(provider));
         }
         else {
             if (isValueProvider(provider)) {
@@ -33175,7 +33189,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     factory = function () { return new ((classRef_1).bind.apply((classRef_1), __spread([void 0], injectArgs(provider.deps))))(); };
                 }
                 else {
-                    return injectableDefFactory(classRef_1);
+                    return injectableDefOrInjectorDefFactory(classRef_1);
                 }
             }
         }
@@ -33461,7 +33475,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.1.0+131.sha-c61a8b7');
+    var VERSION$2 = new Version$1('7.1.0+148.sha-a3ee089');
 
     /**
      * @license
@@ -50667,7 +50681,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.1.0+131.sha-c61a8b7');
+    var VERSION$3 = new Version$1('7.1.0+148.sha-a3ee089');
 
     /**
      * @license
