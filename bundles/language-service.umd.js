@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.1.0+202.sha-159ab1c
+ * @license Angular v7.1.0+204.sha-21d13dd
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -15177,7 +15177,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.1.0+202.sha-159ab1c');
+    var VERSION$1 = new Version('7.1.0+204.sha-21d13dd');
 
     /**
      * @license
@@ -33480,7 +33480,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.1.0+202.sha-159ab1c');
+    var VERSION$2 = new Version$1('7.1.0+204.sha-21d13dd');
 
     /**
      * @license
@@ -33491,13 +33491,18 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     var ComponentFactoryResolver$1 = /** @class */ (function (_super) {
         __extends(ComponentFactoryResolver$$1, _super);
-        function ComponentFactoryResolver$$1() {
-            return _super !== null && _super.apply(this, arguments) || this;
+        /**
+         * @param ngModule The NgModuleRef to which all resolved factories are bound.
+         */
+        function ComponentFactoryResolver$$1(ngModule) {
+            var _this = _super.call(this) || this;
+            _this.ngModule = ngModule;
+            return _this;
         }
         ComponentFactoryResolver$$1.prototype.resolveComponentFactory = function (component) {
             ngDevMode && assertComponentType(component);
             var componentDef = getComponentDef(component);
-            return new ComponentFactory$1(componentDef);
+            return new ComponentFactory$1(componentDef, this.ngModule);
         };
         return ComponentFactoryResolver$$1;
     }(ComponentFactoryResolver));
@@ -33528,10 +33533,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return {
             get: function (token, notFoundValue) {
                 var value = rootViewInjector.get(token, NOT_FOUND_CHECK_ONLY_ELEMENT_INJECTOR);
-                if (value !== NOT_FOUND_CHECK_ONLY_ELEMENT_INJECTOR) {
+                if (value !== NOT_FOUND_CHECK_ONLY_ELEMENT_INJECTOR ||
+                    notFoundValue === NOT_FOUND_CHECK_ONLY_ELEMENT_INJECTOR) {
                     // Return the value from the root element injector when
                     // - it provides it
                     //   (value !== NOT_FOUND_CHECK_ONLY_ELEMENT_INJECTOR)
+                    // - the module injector should not be checked
+                    //   (notFoundValue === NOT_FOUND_CHECK_ONLY_ELEMENT_INJECTOR)
                     return value;
                 }
                 return moduleInjector.get(token, notFoundValue);
@@ -33543,9 +33551,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     var ComponentFactory$1 = /** @class */ (function (_super) {
         __extends(ComponentFactory$$1, _super);
-        function ComponentFactory$$1(componentDef) {
+        /**
+         * @param componentDef The component definition.
+         * @param ngModule The NgModuleRef to which the factory is bound.
+         */
+        function ComponentFactory$$1(componentDef, ngModule) {
             var _this = _super.call(this) || this;
             _this.componentDef = componentDef;
+            _this.ngModule = ngModule;
             _this.componentType = componentDef.type;
             _this.selector = componentDef.selectors[0][0];
             _this.ngContentSelectors = [];
@@ -33567,6 +33580,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         });
         ComponentFactory$$1.prototype.create = function (injector, projectableNodes, rootSelectorOrNode, ngModule) {
             var isInternalRootView = rootSelectorOrNode === undefined;
+            ngModule = ngModule || this.ngModule;
             var rootViewInjector = ngModule ? createChainedInjector(injector, ngModule.injector) : injector;
             var rendererFactory = rootViewInjector.get(RendererFactory2, domRendererFactory3);
             var sanitizer = rootViewInjector.get(Sanitizer, null);
@@ -33846,30 +33860,47 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     var COMPONENT_FACTORY_RESOLVER = {
         provide: ComponentFactoryResolver,
-        useFactory: function () { return new ComponentFactoryResolver$1(); },
-        deps: [],
+        useClass: ComponentFactoryResolver$1,
+        deps: [NgModuleRef],
     };
     var NgModuleRef$1 = /** @class */ (function (_super) {
         __extends(NgModuleRef$$1, _super);
-        function NgModuleRef$$1(ngModuleType, parentInjector) {
+        function NgModuleRef$$1(ngModuleType, _parent) {
             var _this = _super.call(this) || this;
+            _this._parent = _parent;
             // tslint:disable-next-line:require-internal-with-underscore
             _this._bootstrapComponents = [];
+            _this.injector = _this;
             _this.destroyCbs = [];
             var ngModuleDef = getNgModuleDef(ngModuleType);
             ngDevMode && assertDefined(ngModuleDef, "NgModule '" + stringify$1(ngModuleType) + "' is not a subtype of 'NgModuleType'.");
             _this._bootstrapComponents = ngModuleDef.bootstrap;
             var additionalProviders = [
-                COMPONENT_FACTORY_RESOLVER, {
+                {
                     provide: NgModuleRef,
                     useValue: _this,
-                }
+                },
+                COMPONENT_FACTORY_RESOLVER
             ];
-            _this.injector = createInjector(ngModuleType, parentInjector, additionalProviders);
-            _this.instance = _this.injector.get(ngModuleType);
-            _this.componentFactoryResolver = new ComponentFactoryResolver$1();
+            _this._r3Injector = createInjector(ngModuleType, _parent, additionalProviders);
+            _this.instance = _this.get(ngModuleType);
             return _this;
         }
+        NgModuleRef$$1.prototype.get = function (token, notFoundValue, injectFlags) {
+            if (notFoundValue === void 0) { notFoundValue = Injector.THROW_IF_NOT_FOUND; }
+            if (injectFlags === void 0) { injectFlags = InjectFlags.Default; }
+            if (token === Injector || token === NgModuleRef || token === INJECTOR$1) {
+                return this;
+            }
+            return this._r3Injector.get(token, notFoundValue, injectFlags);
+        };
+        Object.defineProperty(NgModuleRef$$1.prototype, "componentFactoryResolver", {
+            get: function () {
+                return this.get(ComponentFactoryResolver);
+            },
+            enumerable: true,
+            configurable: true
+        });
         NgModuleRef$$1.prototype.destroy = function () {
             ngDevMode && assertDefined(this.destroyCbs, 'NgModule already destroyed');
             this.destroyCbs.forEach(function (fn) { return fn(); });
@@ -50686,7 +50717,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.1.0+202.sha-159ab1c');
+    var VERSION$3 = new Version$1('7.1.0+204.sha-21d13dd');
 
     /**
      * @license
