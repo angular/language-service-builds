@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.1.0+201.sha-7f221d8
+ * @license Angular v7.1.0+202.sha-159ab1c
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -4833,7 +4833,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var token = meta.type;
         var providedIn = meta.providedIn;
         var expression = importExpr(Identifiers.defineInjectable).callFn([mapToMapExpression({ token: token, factory: result.factory, providedIn: providedIn })]);
-        var type = new ExpressionType(importExpr(Identifiers.InjectableDef, [new ExpressionType(meta.type)]));
+        var type = new ExpressionType(importExpr(Identifiers.InjectableDef, [typeWithParameters(meta.type, meta.typeArgumentCount)]));
         return {
             expression: expression,
             type: type,
@@ -14969,6 +14969,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var _a = compileInjectable({
                 name: facade.name,
                 type: new WrappedNodeExpr(facade.type),
+                typeArgumentCount: facade.typeArgumentCount,
                 providedIn: computeProvidedIn(facade.providedIn),
                 useClass: wrapExpression(facade, USE_CLASS),
                 useFactory: wrapExpression(facade, USE_FACTORY),
@@ -15161,7 +15162,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.1.0+201.sha-7f221d8');
+    var VERSION$1 = new Version('7.1.0+202.sha-159ab1c');
 
     /**
      * @license
@@ -37690,7 +37691,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.1.0+201.sha-7f221d8');
+    var VERSION$2 = new Version$1('7.1.0+202.sha-159ab1c');
 
     /**
      * @license
@@ -45322,18 +45323,20 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         Object.defineProperty(type, NG_INJECTABLE_DEF, {
             get: function () {
                 if (def === null) {
-                    var meta_1 = srcMeta || { providedIn: null };
-                    var hasAProvider = isUseClassProvider(meta_1) || isUseFactoryProvider(meta_1) ||
-                        isUseValueProvider(meta_1) || isUseExistingProvider(meta_1);
+                    // Allow the compilation of a class with a `@Injectable()` decorator without parameters
+                    var meta = srcMeta || { providedIn: null };
+                    var hasAProvider = isUseClassProvider(meta) || isUseFactoryProvider(meta) ||
+                        isUseValueProvider(meta) || isUseExistingProvider(meta);
                     var compilerMeta = {
                         name: type.name,
                         type: type,
-                        providedIn: meta_1.providedIn,
+                        typeArgumentCount: 0,
+                        providedIn: meta.providedIn,
                         ctorDeps: reflectDependencies(type),
                         userDeps: undefined
                     };
-                    if ((isUseClassProvider(meta_1) || isUseFactoryProvider(meta_1)) && meta_1.deps !== undefined) {
-                        compilerMeta.userDeps = convertDependencies(meta_1.deps);
+                    if ((isUseClassProvider(meta) || isUseFactoryProvider(meta)) && meta.deps !== undefined) {
+                        compilerMeta.userDeps = convertDependencies(meta.deps);
                     }
                     if (!hasAProvider) {
                         // In the case the user specifies a type provider, treat it as {provide: X, useClass: X}.
@@ -45342,21 +45345,21 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                         // its constructor with injected deps.
                         compilerMeta.useClass = type;
                     }
-                    else if (isUseClassProvider(meta_1)) {
+                    else if (isUseClassProvider(meta)) {
                         // The user explicitly specified useClass, and may or may not have provided deps.
-                        compilerMeta.useClass = meta_1.useClass;
+                        compilerMeta.useClass = meta.useClass;
                     }
-                    else if (isUseValueProvider(meta_1)) {
+                    else if (isUseValueProvider(meta)) {
                         // The user explicitly specified useValue.
-                        compilerMeta.useValue = meta_1.useValue;
+                        compilerMeta.useValue = meta.useValue;
                     }
-                    else if (isUseFactoryProvider(meta_1)) {
+                    else if (isUseFactoryProvider(meta)) {
                         // The user explicitly specified useFactory.
-                        compilerMeta.useFactory = meta_1.useFactory;
+                        compilerMeta.useFactory = meta.useFactory;
                     }
-                    else if (isUseExistingProvider(meta_1)) {
+                    else if (isUseExistingProvider(meta)) {
                         // The user explicitly specified useExisting.
-                        compilerMeta.useExisting = meta_1.useExisting;
+                        compilerMeta.useExisting = meta.useExisting;
                     }
                     else {
                         // Can't happen - either hasAProvider will be false, or one of the providers will be set.
@@ -57896,7 +57899,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.1.0+201.sha-7f221d8');
+    var VERSION$3 = new Version$1('7.1.0+202.sha-159ab1c');
 
     /**
      * @license
