@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.1.0+201.sha-7f221d8
+ * @license Angular v7.1.0+202.sha-159ab1c
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -4848,7 +4848,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var token = meta.type;
         var providedIn = meta.providedIn;
         var expression = importExpr(Identifiers.defineInjectable).callFn([mapToMapExpression({ token: token, factory: result.factory, providedIn: providedIn })]);
-        var type = new ExpressionType(importExpr(Identifiers.InjectableDef, [new ExpressionType(meta.type)]));
+        var type = new ExpressionType(importExpr(Identifiers.InjectableDef, [typeWithParameters(meta.type, meta.typeArgumentCount)]));
         return {
             expression: expression,
             type: type,
@@ -14984,6 +14984,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var _a = compileInjectable({
                 name: facade.name,
                 type: new WrappedNodeExpr(facade.type),
+                typeArgumentCount: facade.typeArgumentCount,
                 providedIn: computeProvidedIn(facade.providedIn),
                 useClass: wrapExpression(facade, USE_CLASS),
                 useFactory: wrapExpression(facade, USE_FACTORY),
@@ -15176,7 +15177,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.1.0+201.sha-7f221d8');
+    var VERSION$1 = new Version('7.1.0+202.sha-159ab1c');
 
     /**
      * @license
@@ -33479,7 +33480,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.1.0+201.sha-7f221d8');
+    var VERSION$2 = new Version$1('7.1.0+202.sha-159ab1c');
 
     /**
      * @license
@@ -50685,7 +50686,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.1.0+201.sha-7f221d8');
+    var VERSION$3 = new Version$1('7.1.0+202.sha-159ab1c');
 
     /**
      * @license
