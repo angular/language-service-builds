@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.2.0-beta.1+28.sha-3cb6dad
+ * @license Angular v7.2.0-beta.1+32.sha-053b43d
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -14796,8 +14796,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         if (bindings) {
             var hostVarsCountFn = function (numSlots) {
+                var originalVarsCount = totalHostVarsCount;
                 totalHostVarsCount += numSlots;
-                return hostVarsCount;
+                return originalVarsCount;
             };
             var valueConverter = new ValueConverter(constantPool, 
             /* new nodes are illegal here */ function () { return error('Unexpected node'); }, hostVarsCountFn, 
@@ -14818,15 +14819,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                         // resolve literal arrays and literal objects
                         var value = binding.expression.visit(valueConverter);
                         var bindingExpr = bindingFn(bindingContext, value);
-                        var _c = getBindingNameAndInstruction(name_1), bindingName = _c.bindingName, instruction = _c.instruction;
+                        var _c = getBindingNameAndInstruction(name_1), bindingName = _c.bindingName, instruction = _c.instruction, extraParams = _c.extraParams;
+                        var instructionParams = [
+                            elVarExp, literal(bindingName), importExpr(Identifiers$1.bind).callFn([bindingExpr.currValExpr])
+                        ];
                         updateStatements.push.apply(updateStatements, __spread(bindingExpr.stmts));
-                        updateStatements.push(importExpr(instruction)
-                            .callFn([
-                            elVarExp,
-                            literal(bindingName),
-                            importExpr(Identifiers$1.bind).callFn([bindingExpr.currValExpr]),
-                        ])
-                            .toStmt());
+                        updateStatements.push(importExpr(instruction).callFn(instructionParams.concat(extraParams)).toStmt());
                     }
                 }
             }
@@ -14876,6 +14874,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
     function getBindingNameAndInstruction(bindingName) {
         var instruction;
+        var extraParams = [];
         // Check to see if this is an attr binding or a property binding
         var attrMatches = bindingName.match(ATTR_REGEX);
         if (attrMatches) {
@@ -14884,8 +14883,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         else {
             instruction = Identifiers$1.elementProperty;
+            extraParams.push(literal(null), // TODO: This should be a sanitizer fn (FW-785)
+            literal(true) // host bindings must have nativeOnly prop set to true
+            );
         }
-        return { bindingName: bindingName, instruction: instruction };
+        return { bindingName: bindingName, instruction: instruction, extraParams: extraParams };
     }
     function createHostListeners(bindingContext, eventBindings, meta) {
         return eventBindings.map(function (binding) {
@@ -15170,7 +15172,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.2.0-beta.1+28.sha-3cb6dad');
+    var VERSION$1 = new Version('7.2.0-beta.1+32.sha-053b43d');
 
     /**
      * @license
@@ -33894,7 +33896,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
     }
     /**
-     * Update a property on an Element.
+     * Update a property on an element.
      *
      * If the property name also exists as an input property on one of the element's directives,
      * the component property will be set instead of the element property. This check must
@@ -33905,16 +33907,19 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      *        renaming as part of minification.
      * @param value New value to write.
      * @param sanitizer An optional function used to sanitize the value.
+     * @param nativeOnly Whether or not we should only set native properties and skip input check
+     * (this is necessary for host property bindings)
      */
-    function elementProperty(index, propName, value, sanitizer) {
+    function elementProperty(index, propName, value, sanitizer, nativeOnly) {
         if (value === NO_CHANGE)
             return;
         var lView = getLView();
         var element = getNativeByIndex(index, lView);
         var tNode = getTNode(index, lView);
-        var inputData = initializeTNodeInputs(tNode);
+        var inputData;
         var dataValue;
-        if (inputData && (dataValue = inputData[propName])) {
+        if (!nativeOnly && (inputData = initializeTNodeInputs(tNode)) &&
+            (dataValue = inputData[propName])) {
             setInputsForProperty(lView, dataValue, value);
             if (isComponent(tNode))
                 markDirtyIfOnPush(lView, index + HEADER_OFFSET);
@@ -37703,7 +37708,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.2.0-beta.1+28.sha-3cb6dad');
+    var VERSION$2 = new Version$1('7.2.0-beta.1+32.sha-053b43d');
 
     /**
      * @license
@@ -57942,7 +57947,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.2.0-beta.1+28.sha-3cb6dad');
+    var VERSION$3 = new Version$1('7.2.0-beta.1+32.sha-053b43d');
 
     /**
      * @license
