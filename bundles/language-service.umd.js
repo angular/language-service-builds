@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.2.0-beta.2+6.sha-28ceca0
+ * @license Angular v7.2.0-beta.2+9.sha-37c05bd
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -15187,7 +15187,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.2.0-beta.2+6.sha-28ceca0');
+    var VERSION$1 = new Version('7.2.0-beta.2+9.sha-37c05bd');
 
     /**
      * @license
@@ -31055,8 +31055,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             removeListeners(view);
             executeOnDestroys(view);
             executePipeOnDestroys(view);
+            var hostTNode = view[HOST_NODE];
             // For component views only, the local renderer is destroyed as clean up time.
-            if (view[TVIEW].id === -1 && isProceduralRenderer(view[RENDERER])) {
+            if (hostTNode && hostTNode.type === 3 /* Element */ && isProceduralRenderer(view[RENDERER])) {
                 ngDevMode && ngDevMode.rendererDestroy++;
                 view[RENDERER].destroy();
             }
@@ -33491,7 +33492,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.2.0-beta.2+6.sha-28ceca0');
+    var VERSION$2 = new Version$1('7.2.0-beta.2+9.sha-37c05bd');
 
     /**
      * @license
@@ -50728,7 +50729,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.2.0-beta.2+6.sha-28ceca0');
+    var VERSION$3 = new Version$1('7.2.0-beta.2+9.sha-37c05bd');
 
     /**
      * @license
