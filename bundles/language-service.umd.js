@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.2.0-beta.2+39.sha-d0d351c
+ * @license Angular v7.2.0-beta.2+37.sha-a8ebc83
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -15181,7 +15181,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.2.0-beta.2+39.sha-d0d351c');
+    var VERSION$1 = new Version('7.2.0-beta.2+37.sha-a8ebc83');
 
     /**
      * @license
@@ -37721,7 +37721,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.2.0-beta.2+39.sha-d0d351c');
+    var VERSION$2 = new Version$1('7.2.0-beta.2+37.sha-a8ebc83');
 
     /**
      * @license
@@ -50132,7 +50132,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }());
     /*@__PURE__*/ setClassMetadata(ApplicationInitStatus, [{
             type: Injectable
-        }], function () { return [{
+        }], [{
             type: undefined,
             decorators: [{
                     type: Inject,
@@ -50140,7 +50140,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 }, {
                     type: Optional
                 }]
-        }]; }, null);
+        }], null);
 
     /**
      * @license
@@ -50873,9 +50873,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }());
     /*@__PURE__*/ setClassMetadata(Testability, [{
             type: Injectable
-        }], function () { return [{
+        }], [{
             type: NgZone
-        }]; }, null);
+        }], null);
     /**
      * A global registry of {@link Testability} instances for specific elements.
      * @publicApi
@@ -50931,7 +50931,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }());
     /*@__PURE__*/ setClassMetadata(TestabilityRegistry, [{
             type: Injectable
-        }], function () { return []; }, null);
+        }], [], null);
     var _NoopGetTestability = /** @class */ (function () {
         function _NoopGetTestability() {
         }
@@ -51155,9 +51155,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }());
     /*@__PURE__*/ setClassMetadata(PlatformRef, [{
             type: Injectable
-        }], function () { return [{
+        }], [{
             type: Injector
-        }]; }, null);
+        }], null);
     function getNgZone(ngZoneOption) {
         var ngZone;
         if (ngZoneOption === 'noop') {
@@ -51398,7 +51398,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }());
     /*@__PURE__*/ setClassMetadata(ApplicationRef, [{
             type: Injectable
-        }], function () { return [{
+        }], [{
             type: NgZone
         }, {
             type: Console
@@ -51410,7 +51410,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             type: ComponentFactoryResolver
         }, {
             type: ApplicationInitStatus
-        }]; }, null);
+        }], null);
     function remove(list, el) {
         var index = list.indexOf(el);
         if (index > -1) {
@@ -51604,14 +51604,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }());
     /*@__PURE__*/ setClassMetadata(SystemJsNgModuleLoader, [{
             type: Injectable
-        }], function () { return [{
+        }], [{
             type: Compiler
         }, {
             type: SystemJsNgModuleLoaderConfig,
             decorators: [{
                     type: Optional
                 }]
-        }]; }, null);
+        }], null);
     function checkNotEmpty(value, modulePath, exportName) {
         if (!value) {
             throw new Error("Cannot find '" + exportName + "' in '" + modulePath + "'");
@@ -53497,9 +53497,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /*@__PURE__*/ setClassMetadata(ApplicationModule, [{
             type: NgModule,
             args: [{ providers: APPLICATION_MODULE_PROVIDERS }]
-        }], function () { return [{
+        }], [{
             type: ApplicationRef
-        }]; }, null);
+        }], null);
 
     /**
      * @license
@@ -57960,7 +57960,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.2.0-beta.2+39.sha-d0d351c');
+    var VERSION$3 = new Version$1('7.2.0-beta.2+37.sha-a8ebc83');
 
     /**
      * @license
