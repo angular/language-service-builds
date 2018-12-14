@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.2.0-beta.2+30.sha-c6ae729
+ * @license Angular v7.2.0-beta.2+41.sha-522919a
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -15196,7 +15196,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.2.0-beta.2+30.sha-c6ae729');
+    var VERSION$1 = new Version('7.2.0-beta.2+41.sha-522919a');
 
     /**
      * @license
@@ -33026,8 +33026,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             if (this._appRef) {
                 this._appRef.detachView(this);
             }
-            else if (this._viewContainerRef && viewAttached(this._lView)) {
-                this._viewContainerRef.detach(this._viewContainerRef.indexOf(this));
+            else if (this._viewContainerRef) {
+                var index = this._viewContainerRef.indexOf(this);
+                if (index > -1) {
+                    this._viewContainerRef.detach(index);
+                }
                 this._viewContainerRef = null;
             }
             destroyLView(this._lView);
@@ -33501,7 +33504,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.2.0-beta.2+30.sha-c6ae729');
+    var VERSION$2 = new Version$1('7.2.0-beta.2+41.sha-522919a');
 
     /**
      * @license
@@ -50738,7 +50741,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.2.0-beta.2+30.sha-c6ae729');
+    var VERSION$3 = new Version$1('7.2.0-beta.2+41.sha-522919a');
 
     /**
      * @license
