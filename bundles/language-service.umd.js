@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.2.0-beta.2+40.sha-650c5a0
+ * @license Angular v7.2.0-beta.2+52.sha-f8096d4
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -15196,7 +15196,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.2.0-beta.2+40.sha-650c5a0');
+    var VERSION$1 = new Version('7.2.0-beta.2+52.sha-f8096d4');
 
     /**
      * @license
@@ -29118,6 +29118,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     var RENDERER_FACTORY = 11;
     var RENDERER = 12;
     var SANITIZER = 13;
+    var TAIL = 14;
     var CONTAINER_INDEX = 15;
     var DECLARATION_VIEW = 17;
     /** Size of LView's header. Necessary to adjust for it when setting slots.  */
@@ -31054,16 +31055,18 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
     }
     /**
-     * Removes all listeners and call all onDestroys in a given view.
+     * Calls onDestroys hooks for all directives and pipes in a given view and then removes all
+     * listeners. Listeners are removed as the last step so events delivered in the onDestroys hooks
+     * can be propagated to @Output listeners.
      *
      * @param view The LView to clean up
      */
     function cleanUpView(viewOrContainer) {
         if (viewOrContainer.length >= HEADER_OFFSET) {
             var view = viewOrContainer;
-            removeListeners(view);
             executeOnDestroys(view);
             executePipeOnDestroys(view);
+            removeListeners(view);
             var hostTNode = view[HOST_NODE];
             // For component views only, the local renderer is destroyed as clean up time.
             if (hostTNode && hostTNode.type === 3 /* Element */ && isProceduralRenderer(view[RENDERER])) {
@@ -31872,6 +31875,29 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /** Returns a boolean for whether the view is attached */
     function viewAttached(view) {
         return (view[FLAGS] & 8 /* Attached */) === 8 /* Attached */;
+    }
+    /**
+     * Adds LView or LContainer to the end of the current view tree.
+     *
+     * This structure will be used to traverse through nested views to remove listeners
+     * and call onDestroy callbacks.
+     *
+     * @param lView The view where LView or LContainer should be added
+     * @param adjustedHostIndex Index of the view's host node in LView[], adjusted for header
+     * @param state The LView or LContainer to add to the view tree
+     * @returns The state passed in
+     */
+    function addToViewTree(lView, adjustedHostIndex, state) {
+        var tView = lView[TVIEW];
+        var firstTemplatePass = getFirstTemplatePass();
+        if (lView[TAIL]) {
+            lView[TAIL][NEXT] = state;
+        }
+        else if (firstTemplatePass) {
+            tView.childIndex = adjustedHostIndex;
+        }
+        lView[TAIL] = state;
+        return state;
     }
     /** Marks current view and all ancestors dirty */
     function markViewDirty(lView) {
@@ -33504,7 +33530,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.2.0-beta.2+40.sha-650c5a0');
+    var VERSION$2 = new Version$1('7.2.0-beta.2+52.sha-f8096d4');
 
     /**
      * @license
@@ -33664,6 +33690,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 // executed here?
                 // Angular 5 reference: https://stackblitz.com/edit/lifecycle-hooks-vcref
                 component = createRootComponent(componentView, this.componentDef, rootLView, rootContext, [LifecycleHooksFeature]);
+                addToViewTree(rootLView, HEADER_OFFSET, componentView);
                 refreshDescendantViews(rootLView, 1 /* Create */);
             }
             finally {
@@ -50741,7 +50768,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.2.0-beta.2+40.sha-650c5a0');
+    var VERSION$3 = new Version$1('7.2.0-beta.2+52.sha-f8096d4');
 
     /**
      * @license
