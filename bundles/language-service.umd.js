@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.1.0+202.sha-3fa2a5f
+ * @license Angular v7.2.0-beta.2+63.sha-19508c4
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -4303,7 +4303,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * found in the LICENSE file at https://angular.io/license
      */
     /* Closure variables holding messages must be named `MSG_[A-Z0-9]+` */
-    var TRANSLATION_PREFIX = 'MSG_';
+    var CLOSURE_TRANSLATION_PREFIX = 'MSG_';
+    var CLOSURE_TRANSLATION_MATCHER_REGEXP = new RegExp("^" + CLOSURE_TRANSLATION_PREFIX);
+    /* Prefix for non-`goog.getMsg` i18n-related vars */
+    var TRANSLATION_PREFIX = 'I18N_';
     /** Closure uses `goog.getMsg(message)` to lookup translations */
     var GOOG_GET_MSG = 'goog.getMsg';
     /** I18n separators for metadata **/
@@ -4482,7 +4485,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * @returns Complete translation const prefix
      */
     function getTranslationConstPrefix(extra) {
-        return ("" + TRANSLATION_PREFIX + extra).toUpperCase();
+        return ("" + CLOSURE_TRANSLATION_PREFIX + extra).toUpperCase();
     }
     /**
      * Generates translation declaration statements.
@@ -4502,8 +4505,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             statements.push(docStatements);
         }
         if (transformFn) {
-            var raw = variable(variable$$1.name + "$$RAW");
-            statements.push(i18nTranslationToDeclStmt(raw, message, params));
+            statements.push(i18nTranslationToDeclStmt(variable$$1, message, params));
+            // Closure Compiler doesn't allow non-goo.getMsg const names to start with `MSG_`,
+            // so we update variable name prefix in case post processing is required, so we can
+            // assign the result of post-processing function to the var that starts with `I18N_`
+            var raw = variable(variable$$1.name);
+            variable$$1.name = variable$$1.name.replace(CLOSURE_TRANSLATION_MATCHER_REGEXP, TRANSLATION_PREFIX);
             statements.push(variable$$1.set(transformFn(raw)).toDeclStmt(INFERRED_TYPE, [StmtModifier.Final]));
         }
         else {
@@ -4848,7 +4855,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var token = meta.type;
         var providedIn = meta.providedIn;
         var expression = importExpr(Identifiers.defineInjectable).callFn([mapToMapExpression({ token: token, factory: result.factory, providedIn: providedIn })]);
-        var type = new ExpressionType(importExpr(Identifiers.InjectableDef, [new ExpressionType(meta.type)]));
+        var type = new ExpressionType(importExpr(Identifiers.InjectableDef, [typeWithParameters(meta.type, meta.typeArgumentCount)]));
         return {
             expression: expression,
             type: type,
@@ -12033,8 +12040,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return BoundAttribute;
     }());
     var BoundEvent = /** @class */ (function () {
-        function BoundEvent(name, handler, target, phase, sourceSpan) {
+        function BoundEvent(name, type, handler, target, phase, sourceSpan) {
             this.name = name;
+            this.type = type;
             this.handler = handler;
             this.target = target;
             this.phase = phase;
@@ -12043,7 +12051,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         BoundEvent.fromParsedEvent = function (event) {
             var target = event.type === 0 /* Regular */ ? event.targetOrPhase : null;
             var phase = event.type === 1 /* Animation */ ? event.targetOrPhase : null;
-            return new BoundEvent(event.name, event.handler, target, phase, event.sourceSpan);
+            return new BoundEvent(event.name, event.type, event.handler, target, phase, event.sourceSpan);
         };
         BoundEvent.prototype.visit = function (visitor) { return visitor.visitBoundEvent(this); };
         return BoundEvent;
@@ -12065,7 +12073,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return Element;
     }());
     var Template = /** @class */ (function () {
-        function Template(attributes, inputs, outputs, children, references, variables, sourceSpan, startSourceSpan, endSourceSpan, i18n) {
+        function Template(tagName, attributes, inputs, outputs, children, references, variables, sourceSpan, startSourceSpan, endSourceSpan, i18n) {
+            this.tagName = tagName;
             this.attributes = attributes;
             this.inputs = inputs;
             this.outputs = outputs;
@@ -12421,7 +12430,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             else if (isTemplateElement) {
                 // `<ng-template>`
                 var attrs = this.extractAttributes(element.name, parsedProperties, i18nAttrsMeta);
-                parsedElement = new Template(attributes, attrs.bound, boundEvents, children, references, variables, element.sourceSpan, element.startSourceSpan, element.endSourceSpan, element.i18n);
+                parsedElement = new Template(element.name, attributes, attrs.bound, boundEvents, children, references, variables, element.sourceSpan, element.startSourceSpan, element.endSourceSpan, element.i18n);
             }
             else {
                 var attrs = this.extractAttributes(element.name, parsedProperties, i18nAttrsMeta);
@@ -12430,7 +12439,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             if (elementHasInlineTemplate) {
                 var attrs = this.extractAttributes('ng-template', templateParsedProperties, i18nAttrsMeta);
                 // TODO(pk): test for this case
-                parsedElement = new Template(attrs.literal, attrs.bound, [], [parsedElement], [], templateVariables, element.sourceSpan, element.startSourceSpan, element.endSourceSpan, element.i18n);
+                parsedElement = new Template(parsedElement.name, attrs.literal, attrs.bound, [], [parsedElement], [], templateVariables, element.sourceSpan, element.startSourceSpan, element.endSourceSpan, element.i18n);
             }
             return parsedElement;
         };
@@ -13219,11 +13228,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function mapBindingToInstruction(type) {
         switch (type) {
             case 0 /* Property */:
+            case 4 /* Animation */:
                 return Identifiers$1.elementProperty;
             case 2 /* Class */:
                 return Identifiers$1.elementClassProp;
             case 1 /* Attribute */:
-            case 4 /* Animation */:
                 return Identifiers$1.elementAttribute;
             default:
                 return undefined;
@@ -13234,7 +13243,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return ifStmt(variable(RENDER_FLAGS).bitwiseAnd(literal(flags), null, false), statements);
     }
     // Default selector used by `<ng-content>` if none specified
-    var DEFAULT_CONTENT_SELECTOR = '*';
+    var DEFAULT_NG_CONTENT_SELECTOR = '*';
+    // Selector attribute name of `<ng-content>`
+    var NG_CONTENT_SELECT_ATTR$1 = 'select';
     var TemplateDefinitionBuilder = /** @class */ (function () {
         function TemplateDefinitionBuilder(constantPool, parentBindingScope, level, contextName, i18nContext, templateIndex, templateName, viewQueries, directiveMatcher, directives, pipeTypeByName, pipes, _namespace, relativeContextFilePath, i18nUseExternalIds) {
             if (level === void 0) { level = 0; }
@@ -13449,12 +13460,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         TemplateDefinitionBuilder.prototype.i18nAllocateRef = function (messageId) {
             var name;
+            var suffix = this.fileBasedI18nSuffix.toUpperCase();
             if (this.i18nUseExternalIds) {
                 var prefix = getTranslationConstPrefix("EXTERNAL_");
-                name = "" + prefix + messageId;
+                var uniqueSuffix = this.constantPool.uniqueName(suffix);
+                name = "" + prefix + messageId + "$$" + uniqueSuffix;
             }
             else {
-                var prefix = getTranslationConstPrefix(this.fileBasedI18nSuffix);
+                var prefix = getTranslationConstPrefix(suffix);
                 name = this.constantPool.uniqueName(prefix);
             }
             return variable(name);
@@ -13546,15 +13559,15 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         TemplateDefinitionBuilder.prototype.visitContent = function (ngContent) {
             this._hasNgContent = true;
             var slot = this.allocateDataSlot();
-            var selectorIndex = ngContent.selector === DEFAULT_CONTENT_SELECTOR ?
+            var selectorIndex = ngContent.selector === DEFAULT_NG_CONTENT_SELECTOR ?
                 0 :
                 this._ngContentSelectors.push(ngContent.selector);
             var parameters = [literal(slot)];
             var attributeAsList = [];
             ngContent.attributes.forEach(function (attribute) {
-                var name = attribute.name;
-                if (name !== 'select') {
-                    attributeAsList.push(name, attribute.value);
+                var name = attribute.name, value = attribute.value;
+                if (name.toLowerCase() !== NG_CONTENT_SELECT_ATTR$1) {
+                    attributeAsList.push(name, value);
                 }
             });
             if (attributeAsList.length > 0) {
@@ -13736,10 +13749,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 var instruction = mapBindingToInstruction(input.type);
                 if (input.type === 4 /* Animation */) {
                     var value_1 = input.value.visit(_this._valueConverter);
-                    // setAttribute without a value doesn't make any sense
+                    // setProperty without a value doesn't make any sense
                     if (value_1.name || value_1.value) {
+                        _this.allocateBindingSlots(value_1);
                         var name_2 = prepareSyntheticAttributeName(input.name);
-                        _this.updateInstruction(input.sourceSpan, Identifiers$1.elementAttribute, function () {
+                        _this.updateInstruction(input.sourceSpan, Identifiers$1.elementProperty, function () {
                             return [
                                 literal(elementIndex), literal(name_2), _this.convertPropertyBinding(implicit, value_1)
                             ];
@@ -13788,17 +13802,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             if (this.i18n) {
                 this.i18n.appendTemplate(template.i18n, templateIndex);
             }
-            var elName = '';
-            if (isSingleElementTemplate(template.children)) {
-                // When the template as a single child, derive the context name from the tag
-                elName = sanitizeIdentifier(template.children[0].name);
-            }
-            var contextName = elName ? this.contextName + "_" + elName : '';
+            var tagName = sanitizeIdentifier(template.tagName || '');
+            var contextName = tagName ? this.contextName + "_" + tagName : '';
             var templateName = contextName ? contextName + "_Template_" + templateIndex : "Template_" + templateIndex;
             var parameters = [
                 literal(templateIndex),
                 variable(templateName),
-                TYPED_NULL_EXPR,
+                literal(template.tagName),
             ];
             // find directives matching on a given <ng-template> node
             this.matchDirectives('ng-template', template);
@@ -14020,7 +14030,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         TemplateDefinitionBuilder.prototype.prepareListenerParameter = function (tagName, outputAst) {
             var _this = this;
-            var evNameSanitized = sanitizeIdentifier(outputAst.name);
+            var eventName = outputAst.name;
+            if (outputAst.type === 1 /* Animation */) {
+                eventName = prepareSyntheticAttributeName(outputAst.name + "." + outputAst.phase);
+            }
+            var evNameSanitized = sanitizeIdentifier(eventName);
             var tagNameSanitized = sanitizeIdentifier(tagName);
             var functionName = this.templateName + "_" + tagNameSanitized + "_" + evNameSanitized + "_listener";
             return function () {
@@ -14028,7 +14042,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 var bindingExpr = convertActionBinding(listenerScope, variable(CONTEXT_NAME), outputAst.handler, 'b', function () { return error('Unexpected interpolation'); });
                 var statements = __spread(listenerScope.restoreViewStatement(), listenerScope.variableDeclarations(), bindingExpr.render3Stmts);
                 var handler = fn([new FnParam('$event', DYNAMIC_TYPE)], statements, INFERRED_TYPE, null, functionName);
-                return [literal(outputAst.name), handler];
+                return [literal(eventName), handler];
             };
         };
         return TemplateDefinitionBuilder;
@@ -14630,9 +14644,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         if (meta.encapsulation !== ViewEncapsulation.Emulated) {
             definitionMap.set('encapsulation', literal(meta.encapsulation));
         }
-        // e.g. `animations: [trigger('123', [])]`
+        // e.g. `animation: [trigger('123', [])]`
         if (meta.animations !== null) {
-            definitionMap.set('data', literalMap([{ key: 'animations', value: meta.animations, quoted: false }]));
+            definitionMap.set('data', literalMap([{ key: 'animation', value: meta.animations, quoted: false }]));
         }
         // On the type side, remove newlines from the selector as it will need to fit into a TypeScript
         // string literal, which must be on one line.
@@ -14803,8 +14817,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         if (bindings) {
             var hostVarsCountFn = function (numSlots) {
+                var originalVarsCount = totalHostVarsCount;
                 totalHostVarsCount += numSlots;
-                return hostVarsCount;
+                return originalVarsCount;
             };
             var valueConverter = new ValueConverter(constantPool, 
             /* new nodes are illegal here */ function () { return error('Unexpected node'); }, hostVarsCountFn, 
@@ -14825,15 +14840,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                         // resolve literal arrays and literal objects
                         var value = binding.expression.visit(valueConverter);
                         var bindingExpr = bindingFn(bindingContext, value);
-                        var _c = getBindingNameAndInstruction(name_1), bindingName = _c.bindingName, instruction = _c.instruction;
+                        var _c = getBindingNameAndInstruction(name_1), bindingName = _c.bindingName, instruction = _c.instruction, extraParams = _c.extraParams;
+                        var instructionParams = [
+                            elVarExp, literal(bindingName), importExpr(Identifiers$1.bind).callFn([bindingExpr.currValExpr])
+                        ];
                         updateStatements.push.apply(updateStatements, __spread(bindingExpr.stmts));
-                        updateStatements.push(importExpr(instruction)
-                            .callFn([
-                            elVarExp,
-                            literal(bindingName),
-                            importExpr(Identifiers$1.bind).callFn([bindingExpr.currValExpr]),
-                        ])
-                            .toStmt());
+                        updateStatements.push(importExpr(instruction).callFn(instructionParams.concat(extraParams)).toStmt());
                     }
                 }
             }
@@ -14883,6 +14895,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
     function getBindingNameAndInstruction(bindingName) {
         var instruction;
+        var extraParams = [];
         // Check to see if this is an attr binding or a property binding
         var attrMatches = bindingName.match(ATTR_REGEX);
         if (attrMatches) {
@@ -14891,8 +14904,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         else {
             instruction = Identifiers$1.elementProperty;
+            extraParams.push(literal(null), // TODO: This should be a sanitizer fn (FW-785)
+            literal(true) // host bindings must have nativeOnly prop set to true
+            );
         }
-        return { bindingName: bindingName, instruction: instruction };
+        return { bindingName: bindingName, instruction: instruction, extraParams: extraParams };
     }
     function createHostListeners(bindingContext, eventBindings, meta) {
         return eventBindings.map(function (binding) {
@@ -14984,6 +15000,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var _a = compileInjectable({
                 name: facade.name,
                 type: new WrappedNodeExpr(facade.type),
+                typeArgumentCount: facade.typeArgumentCount,
                 providedIn: computeProvidedIn(facade.providedIn),
                 useClass: wrapExpression(facade, USE_CLASS),
                 useFactory: wrapExpression(facade, USE_FACTORY),
@@ -15176,7 +15193,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.1.0+202.sha-3fa2a5f');
+    var VERSION$1 = new Version('7.2.0-beta.2+63.sha-19508c4');
 
     /**
      * @license
@@ -29098,6 +29115,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     var RENDERER_FACTORY = 11;
     var RENDERER = 12;
     var SANITIZER = 13;
+    var TAIL = 14;
     var CONTAINER_INDEX = 15;
     var DECLARATION_VIEW = 17;
     /** Size of LView's header. Necessary to adjust for it when setting slots.  */
@@ -29756,10 +29774,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Look for the injector providing the token by walking up the node injector tree and then
      * the module injector tree.
      *
-     * @param nodeInjector Node injector where the search should start
+     * @param tNode The Node where the search for the injector should start
+     * @param lView The `LView` that contains the `tNode`
      * @param token The token to look for
      * @param flags Injection flags
-     * @returns the value from the injector or `null` when not found
+     * @param notFoundValue The value to return when the injection flags is `InjectFlags.Optional`
+     * @returns the value from the injector, `null` when not found, or `notFoundValue` if provided
      */
     function getOrCreateInjectable(tNode, lView, token, flags, notFoundValue) {
         if (flags === void 0) { flags = InjectFlags.Default; }
@@ -30002,18 +30022,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         function NodeInjector(_tNode, _lView) {
             this._tNode = _tNode;
             this._lView = _lView;
-            this._injectorIndex = getOrCreateNodeInjectorForNode(_tNode, _lView);
         }
-        NodeInjector.prototype.get = function (token) {
-            var previousTNode = getPreviousOrParentTNode();
-            var previousLView = getLView();
-            setTNodeAndViewData(this._tNode, this._lView);
-            try {
-                return getOrCreateInjectable(this._tNode, this._lView, token);
-            }
-            finally {
-                setTNodeAndViewData(previousTNode, previousLView);
-            }
+        NodeInjector.prototype.get = function (token, notFoundValue) {
+            return getOrCreateInjectable(this._tNode, this._lView, token, undefined, notFoundValue);
         };
         return NodeInjector;
     }());
@@ -30307,12 +30318,196 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    function noop$1() {
-        var args = [];
-        for (var _i = 0; _i < arguments.length; _i++) {
-            args[_i] = arguments[_i];
+    /**
+     * Returns the component instance associated with a given DOM host element.
+     * Elements which don't represent components return `null`.
+     *
+     * @param element Host DOM element from which the component should be retrieved.
+     *
+     * ```
+     * <my-app>
+     *   #VIEW
+     *     <div>
+     *       <child-comp></child-comp>
+     *     </div>
+     * </mp-app>
+     *
+     * expect(getComponent(<child-comp>) instanceof ChildComponent).toBeTruthy();
+     * expect(getComponent(<my-app>) instanceof MyApp).toBeTruthy();
+     * ```
+     *
+     * @publicApi
+     */
+    function getComponent(element) {
+        var context = loadLContextFromNode(element);
+        if (context.component === undefined) {
+            context.component = getComponentAtNodeIndex(context.nodeIndex, context.lView);
         }
-        // Do nothing.
+        return context.component;
+    }
+    /**
+     * Returns the component instance associated with a given DOM host element.
+     * Elements which don't represent components return `null`.
+     *
+     * @param element Host DOM element from which the component should be retrieved.
+     *
+     * ```
+     * <my-app>
+     *   #VIEW
+     *     <div>
+     *       <child-comp></child-comp>
+     *     </div>
+     * </mp-app>
+     *
+     * expect(getComponent(<child-comp>) instanceof ChildComponent).toBeTruthy();
+     * expect(getComponent(<my-app>) instanceof MyApp).toBeTruthy();
+     * ```
+     *
+     * @publicApi
+     */
+    function getContext(element) {
+        var context = loadLContextFromNode(element);
+        return context.lView[CONTEXT];
+    }
+    /**
+     * Retrieves an `Injector` associated with the element, component or directive.
+     *
+     * @param target A DOM element, component or directive instance.
+     *
+     * @publicApi
+     */
+    function getInjector(target) {
+        var context = loadLContext(target);
+        var tNode = context.lView[TVIEW].data[context.nodeIndex];
+        return new NodeInjector(tNode, context.lView);
+    }
+    /**
+     * Retrieve a set of injection tokens at a given DOM node.
+     *
+     * @param element Element for which the injection tokens should be retrieved.
+     * @publicApi
+     */
+    function getInjectionTokens(element) {
+        var context = loadLContext(element, false);
+        if (!context)
+            return [];
+        var lView = context.lView;
+        var tView = lView[TVIEW];
+        var tNode = tView.data[context.nodeIndex];
+        var providerTokens = [];
+        var startIndex = tNode.providerIndexes & 65535 /* ProvidersStartIndexMask */;
+        var endIndex = tNode.directiveEnd;
+        for (var i = startIndex; i < endIndex; i++) {
+            var value = tView.data[i];
+            if (isDirectiveDefHack(value)) {
+                // The fact that we sometimes store Type and sometimes DirectiveDef in this location is a
+                // design flaw.  We should always store same type so that we can be monomorphic. The issue
+                // is that for Components/Directives we store the def instead the type. The correct behavior
+                // is that we should always be storing injectable type in this location.
+                value = value.type;
+            }
+            providerTokens.push(value);
+        }
+        return providerTokens;
+    }
+    function loadLContext(target, throwOnNotFound) {
+        if (throwOnNotFound === void 0) { throwOnNotFound = true; }
+        var context = getLContext(target);
+        if (!context && throwOnNotFound) {
+            throw new Error(ngDevMode ? "Unable to find context associated with " + stringify$2(target) :
+                'Invalid ng target');
+        }
+        return context;
+    }
+    /**
+     * Retrieve map of local references.
+     *
+     * The references are retrieved as a map of local reference name to element or directive instance.
+     *
+     * @param target A DOM element, component or directive instance.
+     *
+     * @publicApi
+     */
+    function getLocalRefs(target) {
+        var context = loadLContext(target);
+        if (context.localRefs === undefined) {
+            context.localRefs = discoverLocalRefs(context.lView, context.nodeIndex);
+        }
+        return context.localRefs || {};
+    }
+    function loadLContextFromNode(node) {
+        if (!(node instanceof Node))
+            throw new Error('Expecting instance of DOM Node');
+        return loadLContext(node);
+    }
+    function isBrowserEvents(listener) {
+        // Browser events are those which don't have `useCapture` as boolean.
+        return typeof listener.useCapture === 'boolean';
+    }
+    /**
+     * Retrieves a list of DOM listeners.
+     *
+     * ```
+     * <my-app>
+     *   #VIEW
+     *     <div (click)="doSomething()">
+     *     </div>
+     * </mp-app>
+     *
+     * expect(getListeners(<div>)).toEqual({
+     *   name: 'click',
+     *   element: <div>,
+     *   callback: () => doSomething(),
+     *   useCapture: false
+     * });
+     * ```
+     *
+     * @param element Element for which the DOM listeners should be retrieved.
+     * @publicApi
+     */
+    function getListeners(element) {
+        var lContext = loadLContextFromNode(element);
+        var lView = lContext.lView;
+        var tView = lView[TVIEW];
+        var lCleanup = lView[CLEANUP];
+        var tCleanup = tView.cleanup;
+        var listeners = [];
+        if (tCleanup && lCleanup) {
+            for (var i = 0; i < tCleanup.length;) {
+                var firstParam = tCleanup[i++];
+                var secondParam = tCleanup[i++];
+                if (typeof firstParam === 'string') {
+                    var name_1 = firstParam;
+                    var listenerElement = lView[secondParam];
+                    var callback = lCleanup[tCleanup[i++]];
+                    var useCaptureOrIndx = tCleanup[i++];
+                    // if useCaptureOrIndx is boolean then report it as is.
+                    // if useCaptureOrIndx is positive number then it in unsubscribe method
+                    // if useCaptureOrIndx is negative number then it is a Subscription
+                    var useCapture = typeof useCaptureOrIndx === 'boolean' ?
+                        useCaptureOrIndx :
+                        (useCaptureOrIndx >= 0 ? false : null);
+                    if (element == listenerElement) {
+                        listeners.push({ element: element, name: name_1, callback: callback, useCapture: useCapture });
+                    }
+                }
+            }
+        }
+        listeners.sort(sortListeners);
+        return listeners;
+    }
+    function sortListeners(a, b) {
+        if (a.name == b.name)
+            return 0;
+        return a.name < b.name ? -1 : 1;
+    }
+    /**
+     * This function should not exist because it is megamorphic and only mostly correct.
+     *
+     * See call site for more info.
+     */
+    function isDirectiveDefHack(obj) {
+        return obj.type !== undefined && obj.template !== undefined && obj.declaredInputs !== undefined;
     }
 
     /**
@@ -30363,374 +30558,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             return type;
         }
     }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    var SOURCE$1 = '__source';
-    var _THROW_IF_NOT_FOUND = new Object();
-    var THROW_IF_NOT_FOUND = _THROW_IF_NOT_FOUND;
-    /**
-     * An InjectionToken that gets the current `Injector` for `createInjector()`-style injectors.
-     *
-     * Requesting this token instead of `Injector` allows `StaticInjector` to be tree-shaken from a
-     * project.
-     *
-     * @publicApi
-     */
-    var INJECTOR$1 = new InjectionToken('INJECTOR');
-    var NullInjector = /** @class */ (function () {
-        function NullInjector() {
-        }
-        NullInjector.prototype.get = function (token, notFoundValue) {
-            if (notFoundValue === void 0) { notFoundValue = _THROW_IF_NOT_FOUND; }
-            if (notFoundValue === _THROW_IF_NOT_FOUND) {
-                // Intentionally left behind: With dev tools open the debugger will stop here. There is no
-                // reason why correctly written application should cause this exception.
-                // TODO(misko): uncomment the next line once `ngDevMode` works with closure.
-                // if(ngDevMode) debugger;
-                throw new Error("NullInjectorError: No provider for " + stringify$1(token) + "!");
-            }
-            return notFoundValue;
-        };
-        return NullInjector;
-    }());
-    /**
-     * Concrete injectors implement this interface.
-     *
-     * For more details, see the ["Dependency Injection Guide"](guide/dependency-injection).
-     *
-     * @usageNotes
-     * ### Example
-     *
-     * {@example core/di/ts/injector_spec.ts region='Injector'}
-     *
-     * `Injector` returns itself when given `Injector` as a token:
-     *
-     * {@example core/di/ts/injector_spec.ts region='injectInjector'}
-     *
-     * @publicApi
-     */
-    var Injector = /** @class */ (function () {
-        function Injector() {
-        }
-        /**
-         * Create a new Injector which is configure using `StaticProvider`s.
-         *
-         * @usageNotes
-         * ### Example
-         *
-         * {@example core/di/ts/provider_spec.ts region='ConstructorProvider'}
-         */
-        Injector.create = function (options, parent) {
-            if (Array.isArray(options)) {
-                return new StaticInjector(options, parent);
-            }
-            else {
-                return new StaticInjector(options.providers, options.parent, options.name || null);
-            }
-        };
-        Injector.THROW_IF_NOT_FOUND = _THROW_IF_NOT_FOUND;
-        Injector.NULL = new NullInjector();
-        /** @nocollapse */
-        Injector.ngInjectableDef = defineInjectable({
-            providedIn: 'any',
-            factory: function () { return inject(INJECTOR$1); },
-        });
-        /** @internal */
-        Injector.__NG_ELEMENT_ID__ = function () { return SWITCH_INJECTOR_FACTORY(); };
-        return Injector;
-    }());
-    var SWITCH_INJECTOR_FACTORY__PRE_R3__ = noop$1;
-    var SWITCH_INJECTOR_FACTORY = SWITCH_INJECTOR_FACTORY__PRE_R3__;
-    var IDENT = function (value) {
-        return value;
-    };
-    var EMPTY$1 = [];
-    var CIRCULAR = IDENT;
-    var MULTI_PROVIDER_FN = function () {
-        return Array.prototype.slice.call(arguments);
-    };
-    var USE_VALUE$2 = getClosureSafeProperty({ provide: String, useValue: getClosureSafeProperty });
-    var NG_TOKEN_PATH = 'ngTokenPath';
-    var NG_TEMP_TOKEN_PATH = 'ngTempTokenPath';
-    var NULL_INJECTOR = Injector.NULL;
-    var NEW_LINE = /\n/gm;
-    var NO_NEW_LINE = 'ɵ';
-    var StaticInjector = /** @class */ (function () {
-        function StaticInjector(providers, parent, source) {
-            if (parent === void 0) { parent = NULL_INJECTOR; }
-            if (source === void 0) { source = null; }
-            this.parent = parent;
-            this.source = source;
-            var records = this._records = new Map();
-            records.set(Injector, { token: Injector, fn: IDENT, deps: EMPTY$1, value: this, useNew: false });
-            records.set(INJECTOR$1, { token: INJECTOR$1, fn: IDENT, deps: EMPTY$1, value: this, useNew: false });
-            recursivelyProcessProviders(records, providers);
-        }
-        StaticInjector.prototype.get = function (token, notFoundValue, flags) {
-            if (flags === void 0) { flags = InjectFlags.Default; }
-            var record = this._records.get(token);
-            try {
-                return tryResolveToken(token, record, this._records, this.parent, notFoundValue, flags);
-            }
-            catch (e) {
-                var tokenPath = e[NG_TEMP_TOKEN_PATH];
-                if (token[SOURCE$1]) {
-                    tokenPath.unshift(token[SOURCE$1]);
-                }
-                e.message = formatError('\n' + e.message, tokenPath, this.source);
-                e[NG_TOKEN_PATH] = tokenPath;
-                e[NG_TEMP_TOKEN_PATH] = null;
-                throw e;
-            }
-        };
-        StaticInjector.prototype.toString = function () {
-            var tokens = [], records = this._records;
-            records.forEach(function (v, token) { return tokens.push(stringify$1(token)); });
-            return "StaticInjector[" + tokens.join(', ') + "]";
-        };
-        return StaticInjector;
-    }());
-    function resolveProvider(provider) {
-        var deps = computeDeps(provider);
-        var fn = IDENT;
-        var value = EMPTY$1;
-        var useNew = false;
-        var provide = resolveForwardRef$1(provider.provide);
-        if (USE_VALUE$2 in provider) {
-            // We need to use USE_VALUE in provider since provider.useValue could be defined as undefined.
-            value = provider.useValue;
-        }
-        else if (provider.useFactory) {
-            fn = provider.useFactory;
-        }
-        else if (provider.useExisting) ;
-        else if (provider.useClass) {
-            useNew = true;
-            fn = resolveForwardRef$1(provider.useClass);
-        }
-        else if (typeof provide == 'function') {
-            useNew = true;
-            fn = provide;
-        }
-        else {
-            throw staticError('StaticProvider does not have [useValue|useFactory|useExisting|useClass] or [provide] is not newable', provider);
-        }
-        return { deps: deps, fn: fn, useNew: useNew, value: value };
-    }
-    function multiProviderMixError(token) {
-        return staticError('Cannot mix multi providers and regular providers', token);
-    }
-    function recursivelyProcessProviders(records, provider) {
-        if (provider) {
-            provider = resolveForwardRef$1(provider);
-            if (provider instanceof Array) {
-                // if we have an array recurse into the array
-                for (var i = 0; i < provider.length; i++) {
-                    recursivelyProcessProviders(records, provider[i]);
-                }
-            }
-            else if (typeof provider === 'function') {
-                // Functions were supported in ReflectiveInjector, but are not here. For safety give useful
-                // error messages
-                throw staticError('Function/Class not supported', provider);
-            }
-            else if (provider && typeof provider === 'object' && provider.provide) {
-                // At this point we have what looks like a provider: {provide: ?, ....}
-                var token = resolveForwardRef$1(provider.provide);
-                var resolvedProvider = resolveProvider(provider);
-                if (provider.multi === true) {
-                    // This is a multi provider.
-                    var multiProvider = records.get(token);
-                    if (multiProvider) {
-                        if (multiProvider.fn !== MULTI_PROVIDER_FN) {
-                            throw multiProviderMixError(token);
-                        }
-                    }
-                    else {
-                        // Create a placeholder factory which will look up the constituents of the multi provider.
-                        records.set(token, multiProvider = {
-                            token: provider.provide,
-                            deps: [],
-                            useNew: false,
-                            fn: MULTI_PROVIDER_FN,
-                            value: EMPTY$1
-                        });
-                    }
-                    // Treat the provider as the token.
-                    token = provider;
-                    multiProvider.deps.push({ token: token, options: 6 /* Default */ });
-                }
-                var record = records.get(token);
-                if (record && record.fn == MULTI_PROVIDER_FN) {
-                    throw multiProviderMixError(token);
-                }
-                records.set(token, resolvedProvider);
-            }
-            else {
-                throw staticError('Unexpected provider', provider);
-            }
-        }
-    }
-    function tryResolveToken(token, record, records, parent, notFoundValue, flags) {
-        try {
-            return resolveToken(token, record, records, parent, notFoundValue, flags);
-        }
-        catch (e) {
-            // ensure that 'e' is of type Error.
-            if (!(e instanceof Error)) {
-                e = new Error(e);
-            }
-            var path$$1 = e[NG_TEMP_TOKEN_PATH] = e[NG_TEMP_TOKEN_PATH] || [];
-            path$$1.unshift(token);
-            if (record && record.value == CIRCULAR) {
-                // Reset the Circular flag.
-                record.value = EMPTY$1;
-            }
-            throw e;
-        }
-    }
-    function resolveToken(token, record, records, parent, notFoundValue, flags) {
-        var _a;
-        var value;
-        if (record && !(flags & InjectFlags.SkipSelf)) {
-            // If we don't have a record, this implies that we don't own the provider hence don't know how
-            // to resolve it.
-            value = record.value;
-            if (value == CIRCULAR) {
-                throw Error(NO_NEW_LINE + 'Circular dependency');
-            }
-            else if (value === EMPTY$1) {
-                record.value = CIRCULAR;
-                var obj = undefined;
-                var useNew = record.useNew;
-                var fn = record.fn;
-                var depRecords = record.deps;
-                var deps = EMPTY$1;
-                if (depRecords.length) {
-                    deps = [];
-                    for (var i = 0; i < depRecords.length; i++) {
-                        var depRecord = depRecords[i];
-                        var options = depRecord.options;
-                        var childRecord = options & 2 /* CheckSelf */ ? records.get(depRecord.token) : undefined;
-                        deps.push(tryResolveToken(
-                        // Current Token to resolve
-                        depRecord.token, 
-                        // A record which describes how to resolve the token.
-                        // If undefined, this means we don't have such a record
-                        childRecord, 
-                        // Other records we know about.
-                        records, 
-                        // If we don't know how to resolve dependency and we should not check parent for it,
-                        // than pass in Null injector.
-                        !childRecord && !(options & 4 /* CheckParent */) ? NULL_INJECTOR : parent, options & 1 /* Optional */ ? null : Injector.THROW_IF_NOT_FOUND, InjectFlags.Default));
-                    }
-                }
-                record.value = value = useNew ? new ((_a = fn).bind.apply(_a, __spread([void 0], deps)))() : fn.apply(obj, deps);
-            }
-        }
-        else if (!(flags & InjectFlags.Self)) {
-            value = parent.get(token, notFoundValue, InjectFlags.Default);
-        }
-        return value;
-    }
-    function computeDeps(provider) {
-        var deps = EMPTY$1;
-        var providerDeps = provider.deps;
-        if (providerDeps && providerDeps.length) {
-            deps = [];
-            for (var i = 0; i < providerDeps.length; i++) {
-                var options = 6 /* Default */;
-                var token = resolveForwardRef$1(providerDeps[i]);
-                if (token instanceof Array) {
-                    for (var j = 0, annotations = token; j < annotations.length; j++) {
-                        var annotation = annotations[j];
-                        if (annotation instanceof Optional || annotation == Optional) {
-                            options = options | 1 /* Optional */;
-                        }
-                        else if (annotation instanceof SkipSelf || annotation == SkipSelf) {
-                            options = options & ~2 /* CheckSelf */;
-                        }
-                        else if (annotation instanceof Self || annotation == Self) {
-                            options = options & ~4 /* CheckParent */;
-                        }
-                        else if (annotation instanceof Inject) {
-                            token = annotation.token;
-                        }
-                        else {
-                            token = resolveForwardRef$1(annotation);
-                        }
-                    }
-                }
-                deps.push({ token: token, options: options });
-            }
-        }
-        else if (provider.useExisting) {
-            var token = resolveForwardRef$1(provider.useExisting);
-            deps = [{ token: token, options: 6 /* Default */ }];
-        }
-        else if (!providerDeps && !(USE_VALUE$2 in provider)) {
-            // useValue & useExisting are the only ones which are exempt from deps all others need it.
-            throw staticError('\'deps\' required', provider);
-        }
-        return deps;
-    }
-    function formatError(text, obj, source) {
-        if (source === void 0) { source = null; }
-        text = text && text.charAt(0) === '\n' && text.charAt(1) == NO_NEW_LINE ? text.substr(2) : text;
-        var context = stringify$1(obj);
-        if (obj instanceof Array) {
-            context = obj.map(stringify$1).join(' -> ');
-        }
-        else if (typeof obj === 'object') {
-            var parts = [];
-            for (var key in obj) {
-                if (obj.hasOwnProperty(key)) {
-                    var value = obj[key];
-                    parts.push(key + ':' + (typeof value === 'string' ? JSON.stringify(value) : stringify$1(value)));
-                }
-            }
-            context = "{" + parts.join(', ') + "}";
-        }
-        return "StaticInjectorError" + (source ? '(' + source + ')' : '') + "[" + context + "]: " + text.replace(NEW_LINE, '\n  ');
-    }
-    function staticError(text, obj) {
-        return new Error(formatError(text, obj));
-    }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * Represents an instance of an NgModule created via a {@link NgModuleFactory}.
-     *
-     * `NgModuleRef` provides access to the NgModule Instance as well other objects related to this
-     * NgModule Instance.
-     *
-     * @publicApi
-     */
-    var NgModuleRef = /** @class */ (function () {
-        function NgModuleRef() {
-        }
-        return NgModuleRef;
-    }());
-    /**
-     * @publicApi
-     */
-    var NgModuleFactory = /** @class */ (function () {
-        function NgModuleFactory() {
-        }
-        return NgModuleFactory;
-    }());
 
     /**
      * @license
@@ -31225,18 +31052,21 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
     }
     /**
-     * Removes all listeners and call all onDestroys in a given view.
+     * Calls onDestroys hooks for all directives and pipes in a given view and then removes all
+     * listeners. Listeners are removed as the last step so events delivered in the onDestroys hooks
+     * can be propagated to @Output listeners.
      *
      * @param view The LView to clean up
      */
     function cleanUpView(viewOrContainer) {
         if (viewOrContainer.length >= HEADER_OFFSET) {
             var view = viewOrContainer;
-            removeListeners(view);
             executeOnDestroys(view);
             executePipeOnDestroys(view);
+            removeListeners(view);
+            var hostTNode = view[HOST_NODE];
             // For component views only, the local renderer is destroyed as clean up time.
-            if (view[TVIEW].id === -1 && isProceduralRenderer(view[RENDERER])) {
+            if (hostTNode && hostTNode.type === 3 /* Element */ && isProceduralRenderer(view[RENDERER])) {
                 ngDevMode && ngDevMode.rendererDestroy++;
                 view[RENDERER].destroy();
             }
@@ -31332,6 +31162,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    var ANIMATION_PROP_PREFIX = '@';
     function createEmptyStylingContext(element, sanitizer, initialStylingValues) {
         return [
             null,
@@ -31393,6 +31224,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         // Not an LView or an LContainer
         return Array.isArray(value) && typeof value[FLAGS] !== 'number' &&
             typeof value[ACTIVE_INDEX] !== 'number';
+    }
+    function isAnimationProp(name) {
+        return name[0] === ANIMATION_PROP_PREFIX;
     }
 
     function isClassBased(context, index) {
@@ -31793,10 +31627,17 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 else {
                     // Standard attributes
                     var attrVal = attrs[i + 1];
-                    isProc ?
-                        renderer
-                            .setAttribute(native, attrName, attrVal) :
-                        native.setAttribute(attrName, attrVal);
+                    if (isAnimationProp(attrName)) {
+                        if (isProc) {
+                            renderer.setProperty(native, attrName, attrVal);
+                        }
+                    }
+                    else {
+                        isProc ?
+                            renderer
+                                .setAttribute(native, attrName, attrVal) :
+                            native.setAttribute(attrName, attrVal);
+                    }
                     i += 2;
                 }
             }
@@ -32032,6 +31873,29 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function viewAttached(view) {
         return (view[FLAGS] & 8 /* Attached */) === 8 /* Attached */;
     }
+    /**
+     * Adds LView or LContainer to the end of the current view tree.
+     *
+     * This structure will be used to traverse through nested views to remove listeners
+     * and call onDestroy callbacks.
+     *
+     * @param lView The view where LView or LContainer should be added
+     * @param adjustedHostIndex Index of the view's host node in LView[], adjusted for header
+     * @param state The LView or LContainer to add to the view tree
+     * @returns The state passed in
+     */
+    function addToViewTree(lView, adjustedHostIndex, state) {
+        var tView = lView[TVIEW];
+        var firstTemplatePass = getFirstTemplatePass();
+        if (lView[TAIL]) {
+            lView[TAIL][NEXT] = state;
+        }
+        else if (firstTemplatePass) {
+            tView.childIndex = adjustedHostIndex;
+        }
+        lView[TAIL] = state;
+        return state;
+    }
     /** Marks current view and all ancestors dirty */
     function markViewDirty(lView) {
         while (lView && !(lView[FLAGS] & 64 /* IsRoot */)) {
@@ -32184,569 +32048,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var ViewRef = /** @class */ (function () {
-        function ViewRef(_lView, _context, _componentIndex) {
-            this._context = _context;
-            this._componentIndex = _componentIndex;
-            this._appRef = null;
-            this._viewContainerRef = null;
-            /**
-             * @internal
-             */
-            this._tViewNode = null;
-            this._lView = _lView;
-        }
-        Object.defineProperty(ViewRef.prototype, "rootNodes", {
-            get: function () {
-                if (this._lView[HOST] == null) {
-                    var tView = this._lView[HOST_NODE];
-                    return collectNativeNodes(this._lView, tView, []);
-                }
-                return [];
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(ViewRef.prototype, "context", {
-            get: function () { return this._context ? this._context : this._lookUpContext(); },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(ViewRef.prototype, "destroyed", {
-            get: function () {
-                return (this._lView[FLAGS] & 32 /* Destroyed */) === 32 /* Destroyed */;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        ViewRef.prototype.destroy = function () {
-            if (this._appRef) {
-                this._appRef.detachView(this);
-            }
-            else if (this._viewContainerRef && viewAttached(this._lView)) {
-                this._viewContainerRef.detach(this._viewContainerRef.indexOf(this));
-                this._viewContainerRef = null;
-            }
-            destroyLView(this._lView);
-        };
-        ViewRef.prototype.onDestroy = function (callback) { storeCleanupFn(this._lView, callback); };
-        /**
-         * Marks a view and all of its ancestors dirty.
-         *
-         * It also triggers change detection by calling `scheduleTick` internally, which coalesces
-         * multiple `markForCheck` calls to into one change detection run.
-         *
-         * This can be used to ensure an {@link ChangeDetectionStrategy#OnPush OnPush} component is
-         * checked when it needs to be re-rendered but the two normal triggers haven't marked it
-         * dirty (i.e. inputs haven't changed and events haven't fired in the view).
-         *
-         * <!-- TODO: Add a link to a chapter on OnPush components -->
-         *
-         * @usageNotes
-         * ### Example
-         *
-         * ```typescript
-         * @Component({
-         *   selector: 'my-app',
-         *   template: `Number of ticks: {{numberOfTicks}}`
-         *   changeDetection: ChangeDetectionStrategy.OnPush,
-         * })
-         * class AppComponent {
-         *   numberOfTicks = 0;
-         *
-         *   constructor(private ref: ChangeDetectorRef) {
-         *     setInterval(() => {
-         *       this.numberOfTicks++;
-         *       // the following is required, otherwise the view will not be updated
-         *       this.ref.markForCheck();
-         *     }, 1000);
-         *   }
-         * }
-         * ```
-         */
-        ViewRef.prototype.markForCheck = function () { markViewDirty(this._lView); };
-        /**
-         * Detaches the view from the change detection tree.
-         *
-         * Detached views will not be checked during change detection runs until they are
-         * re-attached, even if they are dirty. `detach` can be used in combination with
-         * {@link ChangeDetectorRef#detectChanges detectChanges} to implement local change
-         * detection checks.
-         *
-         * <!-- TODO: Add a link to a chapter on detach/reattach/local digest -->
-         * <!-- TODO: Add a live demo once ref.detectChanges is merged into master -->
-         *
-         * @usageNotes
-         * ### Example
-         *
-         * The following example defines a component with a large list of readonly data.
-         * Imagine the data changes constantly, many times per second. For performance reasons,
-         * we want to check and update the list every five seconds. We can do that by detaching
-         * the component's change detector and doing a local check every five seconds.
-         *
-         * ```typescript
-         * class DataProvider {
-         *   // in a real application the returned data will be different every time
-         *   get data() {
-         *     return [1,2,3,4,5];
-         *   }
-         * }
-         *
-         * @Component({
-         *   selector: 'giant-list',
-         *   template: `
-         *     <li *ngFor="let d of dataProvider.data">Data {{d}}</li>
-         *   `,
-         * })
-         * class GiantList {
-         *   constructor(private ref: ChangeDetectorRef, private dataProvider: DataProvider) {
-         *     ref.detach();
-         *     setInterval(() => {
-         *       this.ref.detectChanges();
-         *     }, 5000);
-         *   }
-         * }
-         *
-         * @Component({
-         *   selector: 'app',
-         *   providers: [DataProvider],
-         *   template: `
-         *     <giant-list><giant-list>
-         *   `,
-         * })
-         * class App {
-         * }
-         * ```
-         */
-        ViewRef.prototype.detach = function () { this._lView[FLAGS] &= ~8 /* Attached */; };
-        /**
-         * Re-attaches a view to the change detection tree.
-         *
-         * This can be used to re-attach views that were previously detached from the tree
-         * using {@link ChangeDetectorRef#detach detach}. Views are attached to the tree by default.
-         *
-         * <!-- TODO: Add a link to a chapter on detach/reattach/local digest -->
-         *
-         * @usageNotes
-         * ### Example
-         *
-         * The following example creates a component displaying `live` data. The component will detach
-         * its change detector from the main change detector tree when the component's live property
-         * is set to false.
-         *
-         * ```typescript
-         * class DataProvider {
-         *   data = 1;
-         *
-         *   constructor() {
-         *     setInterval(() => {
-         *       this.data = this.data * 2;
-         *     }, 500);
-         *   }
-         * }
-         *
-         * @Component({
-         *   selector: 'live-data',
-         *   inputs: ['live'],
-         *   template: 'Data: {{dataProvider.data}}'
-         * })
-         * class LiveData {
-         *   constructor(private ref: ChangeDetectorRef, private dataProvider: DataProvider) {}
-         *
-         *   set live(value) {
-         *     if (value) {
-         *       this.ref.reattach();
-         *     } else {
-         *       this.ref.detach();
-         *     }
-         *   }
-         * }
-         *
-         * @Component({
-         *   selector: 'my-app',
-         *   providers: [DataProvider],
-         *   template: `
-         *     Live Update: <input type="checkbox" [(ngModel)]="live">
-         *     <live-data [live]="live"><live-data>
-         *   `,
-         * })
-         * class AppComponent {
-         *   live = true;
-         * }
-         * ```
-         */
-        ViewRef.prototype.reattach = function () { this._lView[FLAGS] |= 8 /* Attached */; };
-        /**
-         * Checks the view and its children.
-         *
-         * This can also be used in combination with {@link ChangeDetectorRef#detach detach} to implement
-         * local change detection checks.
-         *
-         * <!-- TODO: Add a link to a chapter on detach/reattach/local digest -->
-         * <!-- TODO: Add a live demo once ref.detectChanges is merged into master -->
-         *
-         * @usageNotes
-         * ### Example
-         *
-         * The following example defines a component with a large list of readonly data.
-         * Imagine, the data changes constantly, many times per second. For performance reasons,
-         * we want to check and update the list every five seconds.
-         *
-         * We can do that by detaching the component's change detector and doing a local change detection
-         * check every five seconds.
-         *
-         * See {@link ChangeDetectorRef#detach detach} for more information.
-         */
-        ViewRef.prototype.detectChanges = function () {
-            var rendererFactory = this._lView[RENDERER_FACTORY];
-            if (rendererFactory.begin) {
-                rendererFactory.begin();
-            }
-            detectChanges(this.context);
-            if (rendererFactory.end) {
-                rendererFactory.end();
-            }
-        };
-        /**
-         * Checks the change detector and its children, and throws if any changes are detected.
-         *
-         * This is used in development mode to verify that running change detection doesn't
-         * introduce other changes.
-         */
-        ViewRef.prototype.checkNoChanges = function () { checkNoChanges(this.context); };
-        ViewRef.prototype.attachToViewContainerRef = function (vcRef) {
-            if (this._appRef) {
-                throw new Error('This view is already attached directly to the ApplicationRef!');
-            }
-            this._viewContainerRef = vcRef;
-        };
-        ViewRef.prototype.detachFromAppRef = function () { this._appRef = null; };
-        ViewRef.prototype.attachToAppRef = function (appRef) {
-            if (this._viewContainerRef) {
-                throw new Error('This view is already attached to a ViewContainer!');
-            }
-            this._appRef = appRef;
-        };
-        ViewRef.prototype._lookUpContext = function () {
-            return this._context = this._lView[PARENT][this._componentIndex];
-        };
-        return ViewRef;
-    }());
-    /** @internal */
-    var RootViewRef = /** @class */ (function (_super) {
-        __extends(RootViewRef, _super);
-        function RootViewRef(_view) {
-            var _this = _super.call(this, _view, null, -1) || this;
-            _this._view = _view;
-            return _this;
-        }
-        RootViewRef.prototype.detectChanges = function () { detectChangesInRootView(this._view); };
-        RootViewRef.prototype.checkNoChanges = function () { checkNoChangesInRootView(this._view); };
-        Object.defineProperty(RootViewRef.prototype, "context", {
-            get: function () { return null; },
-            enumerable: true,
-            configurable: true
-        });
-        return RootViewRef;
-    }(ViewRef));
-    function collectNativeNodes(lView, parentTNode, result) {
-        var tNodeChild = parentTNode.child;
-        while (tNodeChild) {
-            result.push(getNativeByTNode(tNodeChild, lView));
-            if (tNodeChild.type === 4 /* ElementContainer */) {
-                collectNativeNodes(lView, tNodeChild, result);
-            }
-            tNodeChild = tNodeChild.next;
-        }
-        return result;
-    }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    var R3ElementRef;
-    /**
-     * Creates an ElementRef given a node.
-     *
-     * @param ElementRefToken The ElementRef type
-     * @param tNode The node for which you'd like an ElementRef
-     * @param view The view to which the node belongs
-     * @returns The ElementRef instance to use
-     */
-    function createElementRef(ElementRefToken, tNode, view) {
-        if (!R3ElementRef) {
-            // TODO: Fix class name, should be ElementRef, but there appears to be a rollup bug
-            R3ElementRef = /** @class */ (function (_super) {
-                __extends(ElementRef_, _super);
-                function ElementRef_() {
-                    return _super !== null && _super.apply(this, arguments) || this;
-                }
-                return ElementRef_;
-            }(ElementRefToken));
-        }
-        return new R3ElementRef(getNativeByTNode(tNode, view));
-    }
-    var R3TemplateRef;
-    /**
-     * Creates a TemplateRef and stores it on the injector.
-     *
-     * @param TemplateRefToken The TemplateRef type
-     * @param ElementRefToken The ElementRef type
-     * @param hostTNode The node that is requesting a TemplateRef
-     * @param hostView The view to which the node belongs
-     * @returns The TemplateRef instance to use
-     */
-    function createTemplateRef(TemplateRefToken, ElementRefToken, hostTNode, hostView) {
-        if (!R3TemplateRef) {
-            // TODO: Fix class name, should be TemplateRef, but there appears to be a rollup bug
-            R3TemplateRef = /** @class */ (function (_super) {
-                __extends(TemplateRef_, _super);
-                function TemplateRef_(_declarationParentView, elementRef, _tView, _renderer, _queries, _injectorIndex) {
-                    var _this = _super.call(this) || this;
-                    _this._declarationParentView = _declarationParentView;
-                    _this.elementRef = elementRef;
-                    _this._tView = _tView;
-                    _this._renderer = _renderer;
-                    _this._queries = _queries;
-                    _this._injectorIndex = _injectorIndex;
-                    return _this;
-                }
-                TemplateRef_.prototype.createEmbeddedView = function (context, container$$1, hostTNode, hostView, index) {
-                    var lView = createEmbeddedViewAndNode(this._tView, context, this._declarationParentView, this._renderer, this._queries, this._injectorIndex);
-                    if (container$$1) {
-                        insertView(lView, container$$1, hostView, index, hostTNode.index);
-                    }
-                    renderEmbeddedTemplate(lView, this._tView, context, 1 /* Create */);
-                    var viewRef = new ViewRef(lView, context, -1);
-                    viewRef._tViewNode = lView[HOST_NODE];
-                    return viewRef;
-                };
-                return TemplateRef_;
-            }(TemplateRefToken));
-        }
-        if (hostTNode.type === 0 /* Container */) {
-            var hostContainer = hostView[hostTNode.index];
-            ngDevMode && assertDefined(hostTNode.tViews, 'TView must be allocated');
-            return new R3TemplateRef(hostView, createElementRef(ElementRefToken, hostTNode, hostView), hostTNode.tViews, getLView()[RENDERER], hostContainer[QUERIES], hostTNode.injectorIndex);
-        }
-        else {
-            return null;
-        }
-    }
-    var NodeInjector$1 = /** @class */ (function () {
-        function NodeInjector$$1(_tNode, _hostView) {
-            this._tNode = _tNode;
-            this._hostView = _hostView;
-        }
-        NodeInjector$$1.prototype.get = function (token, notFoundValue) {
-            return getOrCreateInjectable(this._tNode, this._hostView, token, InjectFlags.Default, notFoundValue);
-        };
-        return NodeInjector$$1;
-    }());
-
-    /**
-     * Returns the component instance associated with a given DOM host element.
-     * Elements which don't represent components return `null`.
-     *
-     * @param element Host DOM element from which the component should be retrieved.
-     *
-     * ```
-     * <my-app>
-     *   #VIEW
-     *     <div>
-     *       <child-comp></child-comp>
-     *     </div>
-     * </mp-app>
-     *
-     * expect(getComponent(<child-comp>) instanceof ChildComponent).toBeTruthy();
-     * expect(getComponent(<my-app>) instanceof MyApp).toBeTruthy();
-     * ```
-     *
-     * @publicApi
-     */
-    function getComponent(element) {
-        var context = loadLContextFromNode(element);
-        if (context.component === undefined) {
-            context.component = getComponentAtNodeIndex(context.nodeIndex, context.lView);
-        }
-        return context.component;
-    }
-    /**
-     * Returns the component instance associated with a given DOM host element.
-     * Elements which don't represent components return `null`.
-     *
-     * @param element Host DOM element from which the component should be retrieved.
-     *
-     * ```
-     * <my-app>
-     *   #VIEW
-     *     <div>
-     *       <child-comp></child-comp>
-     *     </div>
-     * </mp-app>
-     *
-     * expect(getComponent(<child-comp>) instanceof ChildComponent).toBeTruthy();
-     * expect(getComponent(<my-app>) instanceof MyApp).toBeTruthy();
-     * ```
-     *
-     * @publicApi
-     */
-    function getContext(element) {
-        var context = loadLContextFromNode(element);
-        return context.lView[CONTEXT];
-    }
-    /**
-     * Retrieves an `Injector` associated with the element, component or directive.
-     *
-     * @param target A DOM element, component or directive instance.
-     *
-     * @publicApi
-     */
-    function getInjector(target) {
-        var context = loadLContext(target);
-        var tNode = context.lView[TVIEW].data[context.nodeIndex];
-        return new NodeInjector$1(tNode, context.lView);
-    }
-    /**
-     * Retrieve a set of injection tokens at a given DOM node.
-     *
-     * @param element Element for which the injection tokens should be retrieved.
-     * @publicApi
-     */
-    function getInjectionTokens(element) {
-        var context = loadLContext(element, false);
-        if (!context)
-            return [];
-        var lView = context.lView;
-        var tView = lView[TVIEW];
-        var tNode = tView.data[context.nodeIndex];
-        var providerTokens = [];
-        var startIndex = tNode.providerIndexes & 65535 /* ProvidersStartIndexMask */;
-        var endIndex = tNode.directiveEnd;
-        for (var i = startIndex; i < endIndex; i++) {
-            var value = tView.data[i];
-            if (isDirectiveDefHack(value)) {
-                // The fact that we sometimes store Type and sometimes DirectiveDef in this location is a
-                // design flaw.  We should always store same type so that we can be monomorphic. The issue
-                // is that for Components/Directives we store the def instead the type. The correct behavior
-                // is that we should always be storing injectable type in this location.
-                value = value.type;
-            }
-            providerTokens.push(value);
-        }
-        return providerTokens;
-    }
-    function loadLContext(target, throwOnNotFound) {
-        if (throwOnNotFound === void 0) { throwOnNotFound = true; }
-        var context = getLContext(target);
-        if (!context && throwOnNotFound) {
-            throw new Error(ngDevMode ? "Unable to find context associated with " + stringify$2(target) :
-                'Invalid ng target');
-        }
-        return context;
-    }
-    /**
-     * Retrieve map of local references.
-     *
-     * The references are retrieved as a map of local reference name to element or directive instance.
-     *
-     * @param target A DOM element, component or directive instance.
-     *
-     * @publicApi
-     */
-    function getLocalRefs(target) {
-        var context = loadLContext(target);
-        if (context.localRefs === undefined) {
-            context.localRefs = discoverLocalRefs(context.lView, context.nodeIndex);
-        }
-        return context.localRefs || {};
-    }
-    function loadLContextFromNode(node) {
-        if (!(node instanceof Node))
-            throw new Error('Expecting instance of DOM Node');
-        return loadLContext(node);
-    }
-    function isBrowserEvents(listener) {
-        // Browser events are those which don't have `useCapture` as boolean.
-        return typeof listener.useCapture === 'boolean';
-    }
-    /**
-     * Retrieves a list of DOM listeners.
-     *
-     * ```
-     * <my-app>
-     *   #VIEW
-     *     <div (click)="doSomething()">
-     *     </div>
-     * </mp-app>
-     *
-     * expect(getListeners(<div>)).toEqual({
-     *   name: 'click',
-     *   element: <div>,
-     *   callback: () => doSomething(),
-     *   useCapture: false
-     * });
-     * ```
-     *
-     * @param element Element for which the DOM listeners should be retrieved.
-     * @publicApi
-     */
-    function getListeners(element) {
-        var lContext = loadLContextFromNode(element);
-        var lView = lContext.lView;
-        var tView = lView[TVIEW];
-        var lCleanup = lView[CLEANUP];
-        var tCleanup = tView.cleanup;
-        var listeners = [];
-        if (tCleanup && lCleanup) {
-            for (var i = 0; i < tCleanup.length;) {
-                var firstParam = tCleanup[i++];
-                var secondParam = tCleanup[i++];
-                if (typeof firstParam === 'string') {
-                    var name_1 = firstParam;
-                    var listenerElement = lView[secondParam];
-                    var callback = lCleanup[tCleanup[i++]];
-                    var useCaptureOrIndx = tCleanup[i++];
-                    // if useCaptureOrIndx is boolean then report it as is.
-                    // if useCaptureOrIndx is positive number then it in unsubscribe method
-                    // if useCaptureOrIndx is negative number then it is a Subscription
-                    var useCapture = typeof useCaptureOrIndx === 'boolean' ?
-                        useCaptureOrIndx :
-                        (useCaptureOrIndx >= 0 ? false : null);
-                    if (element == listenerElement) {
-                        listeners.push({ element: element, name: name_1, callback: callback, useCapture: useCapture });
-                    }
-                }
-            }
-        }
-        listeners.sort(sortListeners);
-        return listeners;
-    }
-    function sortListeners(a, b) {
-        if (a.name == b.name)
-            return 0;
-        return a.name < b.name ? -1 : 1;
-    }
-    /**
-     * This function should not exist because it is megamorphic and only mostly correct.
-     *
-     * See call site for more info.
-     */
-    function isDirectiveDefHack(obj) {
-        return obj.type !== undefined && obj.template !== undefined && obj.declaredInputs !== undefined;
-    }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
 
     /**
      * @license
@@ -32861,6 +32162,360 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    function noop$1() {
+        var args = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            args[_i] = arguments[_i];
+        }
+        // Do nothing.
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    var SOURCE$1 = '__source';
+    var _THROW_IF_NOT_FOUND = new Object();
+    var THROW_IF_NOT_FOUND = _THROW_IF_NOT_FOUND;
+    /**
+     * An InjectionToken that gets the current `Injector` for `createInjector()`-style injectors.
+     *
+     * Requesting this token instead of `Injector` allows `StaticInjector` to be tree-shaken from a
+     * project.
+     *
+     * @publicApi
+     */
+    var INJECTOR$1 = new InjectionToken('INJECTOR');
+    var NullInjector = /** @class */ (function () {
+        function NullInjector() {
+        }
+        NullInjector.prototype.get = function (token, notFoundValue) {
+            if (notFoundValue === void 0) { notFoundValue = _THROW_IF_NOT_FOUND; }
+            if (notFoundValue === _THROW_IF_NOT_FOUND) {
+                // Intentionally left behind: With dev tools open the debugger will stop here. There is no
+                // reason why correctly written application should cause this exception.
+                // TODO(misko): uncomment the next line once `ngDevMode` works with closure.
+                // if(ngDevMode) debugger;
+                throw new Error("NullInjectorError: No provider for " + stringify$1(token) + "!");
+            }
+            return notFoundValue;
+        };
+        return NullInjector;
+    }());
+    /**
+     * Concrete injectors implement this interface.
+     *
+     * For more details, see the ["Dependency Injection Guide"](guide/dependency-injection).
+     *
+     * @usageNotes
+     * ### Example
+     *
+     * {@example core/di/ts/injector_spec.ts region='Injector'}
+     *
+     * `Injector` returns itself when given `Injector` as a token:
+     *
+     * {@example core/di/ts/injector_spec.ts region='injectInjector'}
+     *
+     * @publicApi
+     */
+    var Injector = /** @class */ (function () {
+        function Injector() {
+        }
+        /**
+         * Create a new Injector which is configure using `StaticProvider`s.
+         *
+         * @usageNotes
+         * ### Example
+         *
+         * {@example core/di/ts/provider_spec.ts region='ConstructorProvider'}
+         */
+        Injector.create = function (options, parent) {
+            if (Array.isArray(options)) {
+                return new StaticInjector(options, parent);
+            }
+            else {
+                return new StaticInjector(options.providers, options.parent, options.name || null);
+            }
+        };
+        Injector.THROW_IF_NOT_FOUND = _THROW_IF_NOT_FOUND;
+        Injector.NULL = new NullInjector();
+        /** @nocollapse */
+        Injector.ngInjectableDef = defineInjectable({
+            providedIn: 'any',
+            factory: function () { return inject(INJECTOR$1); },
+        });
+        /** @internal */
+        Injector.__NG_ELEMENT_ID__ = function () { return SWITCH_INJECTOR_FACTORY(); };
+        return Injector;
+    }());
+    var SWITCH_INJECTOR_FACTORY__PRE_R3__ = noop$1;
+    var SWITCH_INJECTOR_FACTORY = SWITCH_INJECTOR_FACTORY__PRE_R3__;
+    var IDENT = function (value) {
+        return value;
+    };
+    var EMPTY$1 = [];
+    var CIRCULAR = IDENT;
+    var MULTI_PROVIDER_FN = function () {
+        return Array.prototype.slice.call(arguments);
+    };
+    var USE_VALUE$2 = getClosureSafeProperty({ provide: String, useValue: getClosureSafeProperty });
+    var NG_TOKEN_PATH = 'ngTokenPath';
+    var NG_TEMP_TOKEN_PATH = 'ngTempTokenPath';
+    var NULL_INJECTOR$1 = Injector.NULL;
+    var NEW_LINE = /\n/gm;
+    var NO_NEW_LINE = 'ɵ';
+    var StaticInjector = /** @class */ (function () {
+        function StaticInjector(providers, parent, source) {
+            if (parent === void 0) { parent = NULL_INJECTOR$1; }
+            if (source === void 0) { source = null; }
+            this.parent = parent;
+            this.source = source;
+            var records = this._records = new Map();
+            records.set(Injector, { token: Injector, fn: IDENT, deps: EMPTY$1, value: this, useNew: false });
+            records.set(INJECTOR$1, { token: INJECTOR$1, fn: IDENT, deps: EMPTY$1, value: this, useNew: false });
+            recursivelyProcessProviders(records, providers);
+        }
+        StaticInjector.prototype.get = function (token, notFoundValue, flags) {
+            if (flags === void 0) { flags = InjectFlags.Default; }
+            var record = this._records.get(token);
+            try {
+                return tryResolveToken(token, record, this._records, this.parent, notFoundValue, flags);
+            }
+            catch (e) {
+                var tokenPath = e[NG_TEMP_TOKEN_PATH];
+                if (token[SOURCE$1]) {
+                    tokenPath.unshift(token[SOURCE$1]);
+                }
+                e.message = formatError('\n' + e.message, tokenPath, this.source);
+                e[NG_TOKEN_PATH] = tokenPath;
+                e[NG_TEMP_TOKEN_PATH] = null;
+                throw e;
+            }
+        };
+        StaticInjector.prototype.toString = function () {
+            var tokens = [], records = this._records;
+            records.forEach(function (v, token) { return tokens.push(stringify$1(token)); });
+            return "StaticInjector[" + tokens.join(', ') + "]";
+        };
+        return StaticInjector;
+    }());
+    function resolveProvider(provider) {
+        var deps = computeDeps(provider);
+        var fn = IDENT;
+        var value = EMPTY$1;
+        var useNew = false;
+        var provide = resolveForwardRef$1(provider.provide);
+        if (USE_VALUE$2 in provider) {
+            // We need to use USE_VALUE in provider since provider.useValue could be defined as undefined.
+            value = provider.useValue;
+        }
+        else if (provider.useFactory) {
+            fn = provider.useFactory;
+        }
+        else if (provider.useExisting) ;
+        else if (provider.useClass) {
+            useNew = true;
+            fn = resolveForwardRef$1(provider.useClass);
+        }
+        else if (typeof provide == 'function') {
+            useNew = true;
+            fn = provide;
+        }
+        else {
+            throw staticError('StaticProvider does not have [useValue|useFactory|useExisting|useClass] or [provide] is not newable', provider);
+        }
+        return { deps: deps, fn: fn, useNew: useNew, value: value };
+    }
+    function multiProviderMixError(token) {
+        return staticError('Cannot mix multi providers and regular providers', token);
+    }
+    function recursivelyProcessProviders(records, provider) {
+        if (provider) {
+            provider = resolveForwardRef$1(provider);
+            if (provider instanceof Array) {
+                // if we have an array recurse into the array
+                for (var i = 0; i < provider.length; i++) {
+                    recursivelyProcessProviders(records, provider[i]);
+                }
+            }
+            else if (typeof provider === 'function') {
+                // Functions were supported in ReflectiveInjector, but are not here. For safety give useful
+                // error messages
+                throw staticError('Function/Class not supported', provider);
+            }
+            else if (provider && typeof provider === 'object' && provider.provide) {
+                // At this point we have what looks like a provider: {provide: ?, ....}
+                var token = resolveForwardRef$1(provider.provide);
+                var resolvedProvider = resolveProvider(provider);
+                if (provider.multi === true) {
+                    // This is a multi provider.
+                    var multiProvider = records.get(token);
+                    if (multiProvider) {
+                        if (multiProvider.fn !== MULTI_PROVIDER_FN) {
+                            throw multiProviderMixError(token);
+                        }
+                    }
+                    else {
+                        // Create a placeholder factory which will look up the constituents of the multi provider.
+                        records.set(token, multiProvider = {
+                            token: provider.provide,
+                            deps: [],
+                            useNew: false,
+                            fn: MULTI_PROVIDER_FN,
+                            value: EMPTY$1
+                        });
+                    }
+                    // Treat the provider as the token.
+                    token = provider;
+                    multiProvider.deps.push({ token: token, options: 6 /* Default */ });
+                }
+                var record = records.get(token);
+                if (record && record.fn == MULTI_PROVIDER_FN) {
+                    throw multiProviderMixError(token);
+                }
+                records.set(token, resolvedProvider);
+            }
+            else {
+                throw staticError('Unexpected provider', provider);
+            }
+        }
+    }
+    function tryResolveToken(token, record, records, parent, notFoundValue, flags) {
+        try {
+            return resolveToken(token, record, records, parent, notFoundValue, flags);
+        }
+        catch (e) {
+            // ensure that 'e' is of type Error.
+            if (!(e instanceof Error)) {
+                e = new Error(e);
+            }
+            var path$$1 = e[NG_TEMP_TOKEN_PATH] = e[NG_TEMP_TOKEN_PATH] || [];
+            path$$1.unshift(token);
+            if (record && record.value == CIRCULAR) {
+                // Reset the Circular flag.
+                record.value = EMPTY$1;
+            }
+            throw e;
+        }
+    }
+    function resolveToken(token, record, records, parent, notFoundValue, flags) {
+        var _a;
+        var value;
+        if (record && !(flags & InjectFlags.SkipSelf)) {
+            // If we don't have a record, this implies that we don't own the provider hence don't know how
+            // to resolve it.
+            value = record.value;
+            if (value == CIRCULAR) {
+                throw Error(NO_NEW_LINE + 'Circular dependency');
+            }
+            else if (value === EMPTY$1) {
+                record.value = CIRCULAR;
+                var obj = undefined;
+                var useNew = record.useNew;
+                var fn = record.fn;
+                var depRecords = record.deps;
+                var deps = EMPTY$1;
+                if (depRecords.length) {
+                    deps = [];
+                    for (var i = 0; i < depRecords.length; i++) {
+                        var depRecord = depRecords[i];
+                        var options = depRecord.options;
+                        var childRecord = options & 2 /* CheckSelf */ ? records.get(depRecord.token) : undefined;
+                        deps.push(tryResolveToken(
+                        // Current Token to resolve
+                        depRecord.token, 
+                        // A record which describes how to resolve the token.
+                        // If undefined, this means we don't have such a record
+                        childRecord, 
+                        // Other records we know about.
+                        records, 
+                        // If we don't know how to resolve dependency and we should not check parent for it,
+                        // than pass in Null injector.
+                        !childRecord && !(options & 4 /* CheckParent */) ? NULL_INJECTOR$1 : parent, options & 1 /* Optional */ ? null : Injector.THROW_IF_NOT_FOUND, InjectFlags.Default));
+                    }
+                }
+                record.value = value = useNew ? new ((_a = fn).bind.apply(_a, __spread([void 0], deps)))() : fn.apply(obj, deps);
+            }
+        }
+        else if (!(flags & InjectFlags.Self)) {
+            value = parent.get(token, notFoundValue, InjectFlags.Default);
+        }
+        return value;
+    }
+    function computeDeps(provider) {
+        var deps = EMPTY$1;
+        var providerDeps = provider.deps;
+        if (providerDeps && providerDeps.length) {
+            deps = [];
+            for (var i = 0; i < providerDeps.length; i++) {
+                var options = 6 /* Default */;
+                var token = resolveForwardRef$1(providerDeps[i]);
+                if (token instanceof Array) {
+                    for (var j = 0, annotations = token; j < annotations.length; j++) {
+                        var annotation = annotations[j];
+                        if (annotation instanceof Optional || annotation == Optional) {
+                            options = options | 1 /* Optional */;
+                        }
+                        else if (annotation instanceof SkipSelf || annotation == SkipSelf) {
+                            options = options & ~2 /* CheckSelf */;
+                        }
+                        else if (annotation instanceof Self || annotation == Self) {
+                            options = options & ~4 /* CheckParent */;
+                        }
+                        else if (annotation instanceof Inject) {
+                            token = annotation.token;
+                        }
+                        else {
+                            token = resolveForwardRef$1(annotation);
+                        }
+                    }
+                }
+                deps.push({ token: token, options: options });
+            }
+        }
+        else if (provider.useExisting) {
+            var token = resolveForwardRef$1(provider.useExisting);
+            deps = [{ token: token, options: 6 /* Default */ }];
+        }
+        else if (!providerDeps && !(USE_VALUE$2 in provider)) {
+            // useValue & useExisting are the only ones which are exempt from deps all others need it.
+            throw staticError('\'deps\' required', provider);
+        }
+        return deps;
+    }
+    function formatError(text, obj, source) {
+        if (source === void 0) { source = null; }
+        text = text && text.charAt(0) === '\n' && text.charAt(1) == NO_NEW_LINE ? text.substr(2) : text;
+        var context = stringify$1(obj);
+        if (obj instanceof Array) {
+            context = obj.map(stringify$1).join(' -> ');
+        }
+        else if (typeof obj === 'object') {
+            var parts = [];
+            for (var key in obj) {
+                if (obj.hasOwnProperty(key)) {
+                    var value = obj[key];
+                    parts.push(key + ':' + (typeof value === 'string' ? JSON.stringify(value) : stringify$1(value)));
+                }
+            }
+            context = "{" + parts.join(', ') + "}";
+        }
+        return "StaticInjectorError" + (source ? '(' + source + ')' : '') + "[" + context + "]: " + text.replace(NEW_LINE, '\n  ');
+    }
+    function staticError(text, obj) {
+        return new Error(formatError(text, obj));
+    }
 
     /**
      * @license
@@ -33327,6 +32982,399 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * found in the LICENSE file at https://angular.io/license
      */
     /**
+     * Represents an instance of an NgModule created via a {@link NgModuleFactory}.
+     *
+     * `NgModuleRef` provides access to the NgModule Instance as well other objects related to this
+     * NgModule Instance.
+     *
+     * @publicApi
+     */
+    var NgModuleRef = /** @class */ (function () {
+        function NgModuleRef() {
+        }
+        return NgModuleRef;
+    }());
+    /**
+     * @publicApi
+     */
+    var NgModuleFactory = /** @class */ (function () {
+        function NgModuleFactory() {
+        }
+        return NgModuleFactory;
+    }());
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    var ViewRef = /** @class */ (function () {
+        function ViewRef(_lView, _context, _componentIndex) {
+            this._context = _context;
+            this._componentIndex = _componentIndex;
+            this._appRef = null;
+            this._viewContainerRef = null;
+            /**
+             * @internal
+             */
+            this._tViewNode = null;
+            this._lView = _lView;
+        }
+        Object.defineProperty(ViewRef.prototype, "rootNodes", {
+            get: function () {
+                if (this._lView[HOST] == null) {
+                    var tView = this._lView[HOST_NODE];
+                    return collectNativeNodes(this._lView, tView, []);
+                }
+                return [];
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(ViewRef.prototype, "context", {
+            get: function () { return this._context ? this._context : this._lookUpContext(); },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(ViewRef.prototype, "destroyed", {
+            get: function () {
+                return (this._lView[FLAGS] & 32 /* Destroyed */) === 32 /* Destroyed */;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        ViewRef.prototype.destroy = function () {
+            if (this._appRef) {
+                this._appRef.detachView(this);
+            }
+            else if (this._viewContainerRef) {
+                var index = this._viewContainerRef.indexOf(this);
+                if (index > -1) {
+                    this._viewContainerRef.detach(index);
+                }
+                this._viewContainerRef = null;
+            }
+            destroyLView(this._lView);
+        };
+        ViewRef.prototype.onDestroy = function (callback) { storeCleanupFn(this._lView, callback); };
+        /**
+         * Marks a view and all of its ancestors dirty.
+         *
+         * It also triggers change detection by calling `scheduleTick` internally, which coalesces
+         * multiple `markForCheck` calls to into one change detection run.
+         *
+         * This can be used to ensure an {@link ChangeDetectionStrategy#OnPush OnPush} component is
+         * checked when it needs to be re-rendered but the two normal triggers haven't marked it
+         * dirty (i.e. inputs haven't changed and events haven't fired in the view).
+         *
+         * <!-- TODO: Add a link to a chapter on OnPush components -->
+         *
+         * @usageNotes
+         * ### Example
+         *
+         * ```typescript
+         * @Component({
+         *   selector: 'my-app',
+         *   template: `Number of ticks: {{numberOfTicks}}`
+         *   changeDetection: ChangeDetectionStrategy.OnPush,
+         * })
+         * class AppComponent {
+         *   numberOfTicks = 0;
+         *
+         *   constructor(private ref: ChangeDetectorRef) {
+         *     setInterval(() => {
+         *       this.numberOfTicks++;
+         *       // the following is required, otherwise the view will not be updated
+         *       this.ref.markForCheck();
+         *     }, 1000);
+         *   }
+         * }
+         * ```
+         */
+        ViewRef.prototype.markForCheck = function () { markViewDirty(this._lView); };
+        /**
+         * Detaches the view from the change detection tree.
+         *
+         * Detached views will not be checked during change detection runs until they are
+         * re-attached, even if they are dirty. `detach` can be used in combination with
+         * {@link ChangeDetectorRef#detectChanges detectChanges} to implement local change
+         * detection checks.
+         *
+         * <!-- TODO: Add a link to a chapter on detach/reattach/local digest -->
+         * <!-- TODO: Add a live demo once ref.detectChanges is merged into master -->
+         *
+         * @usageNotes
+         * ### Example
+         *
+         * The following example defines a component with a large list of readonly data.
+         * Imagine the data changes constantly, many times per second. For performance reasons,
+         * we want to check and update the list every five seconds. We can do that by detaching
+         * the component's change detector and doing a local check every five seconds.
+         *
+         * ```typescript
+         * class DataProvider {
+         *   // in a real application the returned data will be different every time
+         *   get data() {
+         *     return [1,2,3,4,5];
+         *   }
+         * }
+         *
+         * @Component({
+         *   selector: 'giant-list',
+         *   template: `
+         *     <li *ngFor="let d of dataProvider.data">Data {{d}}</li>
+         *   `,
+         * })
+         * class GiantList {
+         *   constructor(private ref: ChangeDetectorRef, private dataProvider: DataProvider) {
+         *     ref.detach();
+         *     setInterval(() => {
+         *       this.ref.detectChanges();
+         *     }, 5000);
+         *   }
+         * }
+         *
+         * @Component({
+         *   selector: 'app',
+         *   providers: [DataProvider],
+         *   template: `
+         *     <giant-list><giant-list>
+         *   `,
+         * })
+         * class App {
+         * }
+         * ```
+         */
+        ViewRef.prototype.detach = function () { this._lView[FLAGS] &= ~8 /* Attached */; };
+        /**
+         * Re-attaches a view to the change detection tree.
+         *
+         * This can be used to re-attach views that were previously detached from the tree
+         * using {@link ChangeDetectorRef#detach detach}. Views are attached to the tree by default.
+         *
+         * <!-- TODO: Add a link to a chapter on detach/reattach/local digest -->
+         *
+         * @usageNotes
+         * ### Example
+         *
+         * The following example creates a component displaying `live` data. The component will detach
+         * its change detector from the main change detector tree when the component's live property
+         * is set to false.
+         *
+         * ```typescript
+         * class DataProvider {
+         *   data = 1;
+         *
+         *   constructor() {
+         *     setInterval(() => {
+         *       this.data = this.data * 2;
+         *     }, 500);
+         *   }
+         * }
+         *
+         * @Component({
+         *   selector: 'live-data',
+         *   inputs: ['live'],
+         *   template: 'Data: {{dataProvider.data}}'
+         * })
+         * class LiveData {
+         *   constructor(private ref: ChangeDetectorRef, private dataProvider: DataProvider) {}
+         *
+         *   set live(value) {
+         *     if (value) {
+         *       this.ref.reattach();
+         *     } else {
+         *       this.ref.detach();
+         *     }
+         *   }
+         * }
+         *
+         * @Component({
+         *   selector: 'my-app',
+         *   providers: [DataProvider],
+         *   template: `
+         *     Live Update: <input type="checkbox" [(ngModel)]="live">
+         *     <live-data [live]="live"><live-data>
+         *   `,
+         * })
+         * class AppComponent {
+         *   live = true;
+         * }
+         * ```
+         */
+        ViewRef.prototype.reattach = function () { this._lView[FLAGS] |= 8 /* Attached */; };
+        /**
+         * Checks the view and its children.
+         *
+         * This can also be used in combination with {@link ChangeDetectorRef#detach detach} to implement
+         * local change detection checks.
+         *
+         * <!-- TODO: Add a link to a chapter on detach/reattach/local digest -->
+         * <!-- TODO: Add a live demo once ref.detectChanges is merged into master -->
+         *
+         * @usageNotes
+         * ### Example
+         *
+         * The following example defines a component with a large list of readonly data.
+         * Imagine, the data changes constantly, many times per second. For performance reasons,
+         * we want to check and update the list every five seconds.
+         *
+         * We can do that by detaching the component's change detector and doing a local change detection
+         * check every five seconds.
+         *
+         * See {@link ChangeDetectorRef#detach detach} for more information.
+         */
+        ViewRef.prototype.detectChanges = function () {
+            var rendererFactory = this._lView[RENDERER_FACTORY];
+            if (rendererFactory.begin) {
+                rendererFactory.begin();
+            }
+            detectChangesInternal(this._lView, this.context, null);
+            if (rendererFactory.end) {
+                rendererFactory.end();
+            }
+        };
+        /**
+         * Checks the change detector and its children, and throws if any changes are detected.
+         *
+         * This is used in development mode to verify that running change detection doesn't
+         * introduce other changes.
+         */
+        ViewRef.prototype.checkNoChanges = function () { checkNoChanges(this.context); };
+        ViewRef.prototype.attachToViewContainerRef = function (vcRef) {
+            if (this._appRef) {
+                throw new Error('This view is already attached directly to the ApplicationRef!');
+            }
+            this._viewContainerRef = vcRef;
+        };
+        ViewRef.prototype.detachFromAppRef = function () { this._appRef = null; };
+        ViewRef.prototype.attachToAppRef = function (appRef) {
+            if (this._viewContainerRef) {
+                throw new Error('This view is already attached to a ViewContainer!');
+            }
+            this._appRef = appRef;
+        };
+        ViewRef.prototype._lookUpContext = function () {
+            return this._context = this._lView[PARENT][this._componentIndex];
+        };
+        return ViewRef;
+    }());
+    /** @internal */
+    var RootViewRef = /** @class */ (function (_super) {
+        __extends(RootViewRef, _super);
+        function RootViewRef(_view) {
+            var _this = _super.call(this, _view, null, -1) || this;
+            _this._view = _view;
+            return _this;
+        }
+        RootViewRef.prototype.detectChanges = function () { detectChangesInRootView(this._view); };
+        RootViewRef.prototype.checkNoChanges = function () { checkNoChangesInRootView(this._view); };
+        Object.defineProperty(RootViewRef.prototype, "context", {
+            get: function () { return null; },
+            enumerable: true,
+            configurable: true
+        });
+        return RootViewRef;
+    }(ViewRef));
+    function collectNativeNodes(lView, parentTNode, result) {
+        var tNodeChild = parentTNode.child;
+        while (tNodeChild) {
+            result.push(getNativeByTNode(tNodeChild, lView));
+            if (tNodeChild.type === 4 /* ElementContainer */) {
+                collectNativeNodes(lView, tNodeChild, result);
+            }
+            tNodeChild = tNodeChild.next;
+        }
+        return result;
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    var R3ElementRef;
+    /**
+     * Creates an ElementRef given a node.
+     *
+     * @param ElementRefToken The ElementRef type
+     * @param tNode The node for which you'd like an ElementRef
+     * @param view The view to which the node belongs
+     * @returns The ElementRef instance to use
+     */
+    function createElementRef(ElementRefToken, tNode, view) {
+        if (!R3ElementRef) {
+            // TODO: Fix class name, should be ElementRef, but there appears to be a rollup bug
+            R3ElementRef = /** @class */ (function (_super) {
+                __extends(ElementRef_, _super);
+                function ElementRef_() {
+                    return _super !== null && _super.apply(this, arguments) || this;
+                }
+                return ElementRef_;
+            }(ElementRefToken));
+        }
+        return new R3ElementRef(getNativeByTNode(tNode, view));
+    }
+    var R3TemplateRef;
+    /**
+     * Creates a TemplateRef and stores it on the injector.
+     *
+     * @param TemplateRefToken The TemplateRef type
+     * @param ElementRefToken The ElementRef type
+     * @param hostTNode The node that is requesting a TemplateRef
+     * @param hostView The view to which the node belongs
+     * @returns The TemplateRef instance to use
+     */
+    function createTemplateRef(TemplateRefToken, ElementRefToken, hostTNode, hostView) {
+        if (!R3TemplateRef) {
+            // TODO: Fix class name, should be TemplateRef, but there appears to be a rollup bug
+            R3TemplateRef = /** @class */ (function (_super) {
+                __extends(TemplateRef_, _super);
+                function TemplateRef_(_declarationParentView, elementRef, _tView, _renderer, _queries, _injectorIndex) {
+                    var _this = _super.call(this) || this;
+                    _this._declarationParentView = _declarationParentView;
+                    _this.elementRef = elementRef;
+                    _this._tView = _tView;
+                    _this._renderer = _renderer;
+                    _this._queries = _queries;
+                    _this._injectorIndex = _injectorIndex;
+                    return _this;
+                }
+                TemplateRef_.prototype.createEmbeddedView = function (context, container$$1, hostTNode, hostView, index) {
+                    var lView = createEmbeddedViewAndNode(this._tView, context, this._declarationParentView, this._renderer, this._queries, this._injectorIndex);
+                    if (container$$1) {
+                        insertView(lView, container$$1, hostView, index, hostTNode.index);
+                    }
+                    renderEmbeddedTemplate(lView, this._tView, context, 1 /* Create */);
+                    var viewRef = new ViewRef(lView, context, -1);
+                    viewRef._tViewNode = lView[HOST_NODE];
+                    return viewRef;
+                };
+                return TemplateRef_;
+            }(TemplateRefToken));
+        }
+        if (hostTNode.type === 0 /* Container */) {
+            var hostContainer = hostView[hostTNode.index];
+            ngDevMode && assertDefined(hostTNode.tViews, 'TView must be allocated');
+            return new R3TemplateRef(hostView, createElementRef(ElementRefToken, hostTNode, hostView), hostTNode.tViews, getLView()[RENDERER], hostContainer[QUERIES], hostTNode.injectorIndex);
+        }
+        else {
+            return null;
+        }
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
      * A wrapper around a native element inside of a View.
      *
      * An `ElementRef` is backed by a render-specific element. In the browser, this is usually a DOM
@@ -33479,7 +33527,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.1.0+202.sha-3fa2a5f');
+    var VERSION$2 = new Version$1('7.2.0-beta.2+63.sha-19508c4');
 
     /**
      * @license
@@ -33490,13 +33538,18 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     var ComponentFactoryResolver$1 = /** @class */ (function (_super) {
         __extends(ComponentFactoryResolver$$1, _super);
-        function ComponentFactoryResolver$$1() {
-            return _super !== null && _super.apply(this, arguments) || this;
+        /**
+         * @param ngModule The NgModuleRef to which all resolved factories are bound.
+         */
+        function ComponentFactoryResolver$$1(ngModule) {
+            var _this = _super.call(this) || this;
+            _this.ngModule = ngModule;
+            return _this;
         }
         ComponentFactoryResolver$$1.prototype.resolveComponentFactory = function (component) {
             ngDevMode && assertComponentType(component);
             var componentDef = getComponentDef(component);
-            return new ComponentFactory$1(componentDef);
+            return new ComponentFactory$1(componentDef, this.ngModule);
         };
         return ComponentFactoryResolver$$1;
     }(ComponentFactoryResolver));
@@ -33527,10 +33580,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return {
             get: function (token, notFoundValue) {
                 var value = rootViewInjector.get(token, NOT_FOUND_CHECK_ONLY_ELEMENT_INJECTOR);
-                if (value !== NOT_FOUND_CHECK_ONLY_ELEMENT_INJECTOR) {
+                if (value !== NOT_FOUND_CHECK_ONLY_ELEMENT_INJECTOR ||
+                    notFoundValue === NOT_FOUND_CHECK_ONLY_ELEMENT_INJECTOR) {
                     // Return the value from the root element injector when
                     // - it provides it
                     //   (value !== NOT_FOUND_CHECK_ONLY_ELEMENT_INJECTOR)
+                    // - the module injector should not be checked
+                    //   (notFoundValue === NOT_FOUND_CHECK_ONLY_ELEMENT_INJECTOR)
                     return value;
                 }
                 return moduleInjector.get(token, notFoundValue);
@@ -33542,9 +33598,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     var ComponentFactory$1 = /** @class */ (function (_super) {
         __extends(ComponentFactory$$1, _super);
-        function ComponentFactory$$1(componentDef) {
+        /**
+         * @param componentDef The component definition.
+         * @param ngModule The NgModuleRef to which the factory is bound.
+         */
+        function ComponentFactory$$1(componentDef, ngModule) {
             var _this = _super.call(this) || this;
             _this.componentDef = componentDef;
+            _this.ngModule = ngModule;
             _this.componentType = componentDef.type;
             _this.selector = componentDef.selectors[0][0];
             _this.ngContentSelectors = [];
@@ -33566,6 +33627,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         });
         ComponentFactory$$1.prototype.create = function (injector, projectableNodes, rootSelectorOrNode, ngModule) {
             var isInternalRootView = rootSelectorOrNode === undefined;
+            ngModule = ngModule || this.ngModule;
             var rootViewInjector = ngModule ? createChainedInjector(injector, ngModule.injector) : injector;
             var rendererFactory = rootViewInjector.get(RendererFactory2, domRendererFactory3);
             var sanitizer = rootViewInjector.get(Sanitizer, null);
@@ -33625,6 +33687,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 // executed here?
                 // Angular 5 reference: https://stackblitz.com/edit/lifecycle-hooks-vcref
                 component = createRootComponent(componentView, this.componentDef, rootLView, rootContext, [LifecycleHooksFeature]);
+                addToViewTree(rootLView, HEADER_OFFSET, componentView);
                 refreshDescendantViews(rootLView, 1 /* Create */);
             }
             finally {
@@ -33845,30 +33908,47 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     var COMPONENT_FACTORY_RESOLVER = {
         provide: ComponentFactoryResolver,
-        useFactory: function () { return new ComponentFactoryResolver$1(); },
-        deps: [],
+        useClass: ComponentFactoryResolver$1,
+        deps: [NgModuleRef],
     };
     var NgModuleRef$1 = /** @class */ (function (_super) {
         __extends(NgModuleRef$$1, _super);
-        function NgModuleRef$$1(ngModuleType, parentInjector) {
+        function NgModuleRef$$1(ngModuleType, _parent) {
             var _this = _super.call(this) || this;
+            _this._parent = _parent;
             // tslint:disable-next-line:require-internal-with-underscore
             _this._bootstrapComponents = [];
+            _this.injector = _this;
             _this.destroyCbs = [];
             var ngModuleDef = getNgModuleDef(ngModuleType);
             ngDevMode && assertDefined(ngModuleDef, "NgModule '" + stringify$1(ngModuleType) + "' is not a subtype of 'NgModuleType'.");
             _this._bootstrapComponents = ngModuleDef.bootstrap;
             var additionalProviders = [
-                COMPONENT_FACTORY_RESOLVER, {
+                {
                     provide: NgModuleRef,
                     useValue: _this,
-                }
+                },
+                COMPONENT_FACTORY_RESOLVER
             ];
-            _this.injector = createInjector(ngModuleType, parentInjector, additionalProviders);
-            _this.instance = _this.injector.get(ngModuleType);
-            _this.componentFactoryResolver = new ComponentFactoryResolver$1();
+            _this._r3Injector = createInjector(ngModuleType, _parent, additionalProviders);
+            _this.instance = _this.get(ngModuleType);
             return _this;
         }
+        NgModuleRef$$1.prototype.get = function (token, notFoundValue, injectFlags) {
+            if (notFoundValue === void 0) { notFoundValue = Injector.THROW_IF_NOT_FOUND; }
+            if (injectFlags === void 0) { injectFlags = InjectFlags.Default; }
+            if (token === Injector || token === NgModuleRef || token === INJECTOR$1) {
+                return this;
+            }
+            return this._r3Injector.get(token, notFoundValue, injectFlags);
+        };
+        Object.defineProperty(NgModuleRef$$1.prototype, "componentFactoryResolver", {
+            get: function () {
+                return this.get(ComponentFactoryResolver);
+            },
+            enumerable: true,
+            configurable: true
+        });
         NgModuleRef$$1.prototype.destroy = function () {
             ngDevMode && assertDefined(this.destroyCbs, 'NgModule already destroyed');
             this.destroyCbs.forEach(function (fn) { return fn(); });
@@ -50685,7 +50765,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.1.0+202.sha-3fa2a5f');
+    var VERSION$3 = new Version$1('7.2.0-beta.2+63.sha-19508c4');
 
     /**
      * @license
