@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.2.0-beta.2+53.sha-ea10a3a
+ * @license Angular v7.2.0-beta.2+62.sha-94f17e9
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -12058,7 +12058,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return Element;
     }());
     var Template = /** @class */ (function () {
-        function Template(attributes, inputs, outputs, children, references, variables, sourceSpan, startSourceSpan, endSourceSpan, i18n) {
+        function Template(tagName, attributes, inputs, outputs, children, references, variables, sourceSpan, startSourceSpan, endSourceSpan, i18n) {
+            this.tagName = tagName;
             this.attributes = attributes;
             this.inputs = inputs;
             this.outputs = outputs;
@@ -12414,7 +12415,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             else if (isTemplateElement) {
                 // `<ng-template>`
                 var attrs = this.extractAttributes(element.name, parsedProperties, i18nAttrsMeta);
-                parsedElement = new Template(attributes, attrs.bound, boundEvents, children, references, variables, element.sourceSpan, element.startSourceSpan, element.endSourceSpan, element.i18n);
+                parsedElement = new Template(element.name, attributes, attrs.bound, boundEvents, children, references, variables, element.sourceSpan, element.startSourceSpan, element.endSourceSpan, element.i18n);
             }
             else {
                 var attrs = this.extractAttributes(element.name, parsedProperties, i18nAttrsMeta);
@@ -12423,7 +12424,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             if (elementHasInlineTemplate) {
                 var attrs = this.extractAttributes('ng-template', templateParsedProperties, i18nAttrsMeta);
                 // TODO(pk): test for this case
-                parsedElement = new Template(attrs.literal, attrs.bound, [], [parsedElement], [], templateVariables, element.sourceSpan, element.startSourceSpan, element.endSourceSpan, element.i18n);
+                parsedElement = new Template(parsedElement.name, attrs.literal, attrs.bound, [], [parsedElement], [], templateVariables, element.sourceSpan, element.startSourceSpan, element.endSourceSpan, element.i18n);
             }
             return parsedElement;
         };
@@ -13786,17 +13787,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             if (this.i18n) {
                 this.i18n.appendTemplate(template.i18n, templateIndex);
             }
-            var elName = '';
-            if (isSingleElementTemplate(template.children)) {
-                // When the template as a single child, derive the context name from the tag
-                elName = sanitizeIdentifier(template.children[0].name);
-            }
-            var contextName = elName ? this.contextName + "_" + elName : '';
+            var tagName = sanitizeIdentifier(template.tagName || '');
+            var contextName = tagName ? this.contextName + "_" + tagName : '';
             var templateName = contextName ? contextName + "_Template_" + templateIndex : "Template_" + templateIndex;
             var parameters = [
                 literal(templateIndex),
                 variable(templateName),
-                TYPED_NULL_EXPR,
+                literal(template.tagName),
             ];
             // find directives matching on a given <ng-template> node
             this.matchDirectives('ng-template', template);
@@ -15181,7 +15178,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.2.0-beta.2+53.sha-ea10a3a');
+    var VERSION$1 = new Version('7.2.0-beta.2+62.sha-94f17e9');
 
     /**
      * @license
@@ -32086,6 +32083,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    var NG_TEMPLATE_SELECTOR = 'ng-template';
     function isCssClassMatching(nodeClassAttrVal, cssClassToMatch) {
         var nodeClassesLen = nodeClassAttrVal.length;
         var matchIndex = nodeClassAttrVal.indexOf(cssClassToMatch);
@@ -32100,13 +32098,29 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return true;
     }
     /**
+     * Function that checks whether a given tNode matches tag-based selector and has a valid type.
+     *
+     * Matching can be perfomed in 2 modes: projection mode (when we project nodes) and regular
+     * directive matching mode. In "projection" mode, we do not need to check types, so if tag name
+     * matches selector, we declare a match. In "directive matching" mode, we also check whether tNode
+     * is of expected type:
+     * - whether tNode has either Element or ElementContainer type
+     * - or if we want to match "ng-template" tag, we check for Container type
+     */
+    function hasTagAndTypeMatch(tNode, currentSelector, isProjectionMode) {
+        return currentSelector === tNode.tagName &&
+            (isProjectionMode ||
+                (tNode.type === 3 /* Element */ || tNode.type === 4 /* ElementContainer */) ||
+                (tNode.type === 0 /* Container */ && currentSelector === NG_TEMPLATE_SELECTOR));
+    }
+    /**
      * A utility function to match an Ivy node static data against a simple CSS selector
      *
      * @param node static data to match
      * @param selector
      * @returns true if node matches the selector.
      */
-    function isNodeMatchingSelector(tNode, selector) {
+    function isNodeMatchingSelector(tNode, selector, isProjectionMode) {
         ngDevMode && assertDefined(selector[0], 'Selector should have a tag name');
         var mode = 4 /* ELEMENT */;
         var nodeAttrs = tNode.attrs;
@@ -32133,7 +32147,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 continue;
             if (mode & 4 /* ELEMENT */) {
                 mode = 2 /* ATTRIBUTE */ | mode & 1 /* NOT */;
-                if (current !== '' && current !== tNode.tagName || current === '' && selector.length === 1) {
+                if (current !== '' && !hasTagAndTypeMatch(tNode, current, isProjectionMode) ||
+                    current === '' && selector.length === 1) {
                     if (isPositive(mode))
                         return false;
                     skipToNextSelector = true;
@@ -32206,9 +32221,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return -1;
     }
-    function isNodeMatchingSelectorList(tNode, selector) {
+    function isNodeMatchingSelectorList(tNode, selector, isProjectionMode) {
+        if (isProjectionMode === void 0) { isProjectionMode = false; }
         for (var i = 0; i < selector.length; i++) {
-            if (isNodeMatchingSelector(tNode, selector[i])) {
+            if (isNodeMatchingSelector(tNode, selector[i], isProjectionMode)) {
                 return true;
             }
         }
@@ -32239,7 +32255,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             // if a node has the ngProjectAs attribute match it against unparsed selector
             // match a node against a parsed selector only if ngProjectAs attribute is not present
             if (ngProjectAsAttrVal === textSelectors[i] ||
-                ngProjectAsAttrVal === null && isNodeMatchingSelectorList(tNode, selectors[i])) {
+                ngProjectAsAttrVal === null &&
+                    isNodeMatchingSelectorList(tNode, selectors[i], /* isProjectionMode */ true)) {
                 return i + 1; // first matching selector "captures" a given node
             }
         }
@@ -33508,11 +33525,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var lView = getLView();
         var tView = lView[TVIEW];
         var renderer = lView[RENDERER];
+        var tagName = 'ng-container';
         ngDevMode && assertEqual(lView[BINDING_INDEX], tView.bindingStartIndex, 'element containers should be created before any bindings');
         ngDevMode && ngDevMode.rendererCreateComment++;
-        var native = renderer.createComment(ngDevMode ? 'ng-container' : '');
+        var native = renderer.createComment(ngDevMode ? tagName : '');
         ngDevMode && assertDataInRange(lView, index - 1);
-        var tNode = createNodeAtIndex(index, 4 /* ElementContainer */, native, null, attrs || null);
+        var tNode = createNodeAtIndex(index, 4 /* ElementContainer */, native, tagName, attrs || null);
         appendChild(native, tNode, lView);
         createDirectivesAndLocals(tView, lView, localRefs);
     }
@@ -34515,7 +34533,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         if (registry) {
             for (var i = 0; i < registry.length; i++) {
                 var def = registry[i];
-                if (isNodeMatchingSelectorList(tNode, def.selectors)) {
+                if (isNodeMatchingSelectorList(tNode, def.selectors, /* isProjectionMode */ false)) {
                     matches || (matches = []);
                     diPublicInInjector(getOrCreateNodeInjectorForNode(getPreviousOrParentTNode(), viewData), viewData, def.type);
                     if (isComponentDef(def)) {
@@ -37723,7 +37741,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.2.0-beta.2+53.sha-ea10a3a');
+    var VERSION$2 = new Version$1('7.2.0-beta.2+62.sha-94f17e9');
 
     /**
      * @license
@@ -45004,7 +45022,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     scopes.exported.pipes.add(entry);
                 });
             }
-            else if (getNgModuleDef(exportedTyped)) {
+            else if (getPipeDef(exportedTyped)) {
                 scopes.exported.pipes.add(exportedTyped);
             }
             else {
@@ -57963,7 +57981,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.2.0-beta.2+53.sha-ea10a3a');
+    var VERSION$3 = new Version$1('7.2.0-beta.2+62.sha-94f17e9');
 
     /**
      * @license
