@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.2.0-beta.2+63.sha-d132bae
+ * @license Angular v7.2.0-beta.2+64.sha-e94975d
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -15178,7 +15178,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.2.0-beta.2+63.sha-d132bae');
+    var VERSION$1 = new Version('7.2.0-beta.2+64.sha-e94975d');
 
     /**
      * @license
@@ -28097,7 +28097,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * @param type type which may have `ngInjectableDef`
      */
     function getInjectableDef(type) {
-        return type.hasOwnProperty(NG_INJECTABLE_DEF) ? type[NG_INJECTABLE_DEF] : null;
+        return type && type.hasOwnProperty(NG_INJECTABLE_DEF) ? type[NG_INJECTABLE_DEF] : null;
     }
     /**
      * Read the `ngInjectorDef` type in a way which is immune to accidentally reading inherited value.
@@ -28105,7 +28105,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * @param type type which may have `ngInjectorDef`
      */
     function getInjectorDef(type) {
-        return type.hasOwnProperty(NG_INJECTOR_DEF) ? type[NG_INJECTOR_DEF] : null;
+        return type && type.hasOwnProperty(NG_INJECTOR_DEF) ? type[NG_INJECTOR_DEF] : null;
     }
 
     /**
@@ -28942,8 +28942,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function getPipeDef(type) {
         return type[NG_PIPE_DEF] || null;
     }
-    function getNgModuleDef(type) {
-        return type[NG_MODULE_DEF] || null;
+    function getNgModuleDef(type, throwNotFound) {
+        var ngModuleDef = type[NG_MODULE_DEF] || null;
+        if (!ngModuleDef && throwNotFound === true) {
+            throw new Error("Type " + stringify$1(type) + " does not have 'ngModuleDef' property.");
+        }
+        return ngModuleDef;
     }
 
     /**
@@ -36358,8 +36362,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             // included transitively in `def`.
             var dedupStack = [];
             deepForEach([def], function (injectorDef) { return _this.processInjectorType(injectorDef, [], dedupStack); });
-            additionalProviders &&
-                deepForEach(additionalProviders, function (provider) { return _this.processProvider(provider); });
+            additionalProviders && deepForEach(additionalProviders, function (provider) { return _this.processProvider(provider, def, additionalProviders); });
             // Make sure the INJECTOR token provides this injector.
             this.records.set(INJECTOR$1, makeRecord(undefined, this));
             // Detect whether this injector has the APP_ROOT_SCOPE token and thus should provide
@@ -36491,22 +36494,25 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 }
             }
             // Next, include providers listed on the definition itself.
-            if (def.providers != null && !isDuplicate) {
-                deepForEach(def.providers, function (provider) { return _this.processProvider(provider); });
+            var defProviders = def.providers;
+            if (defProviders != null && !isDuplicate) {
+                var injectorType_1 = defOrWrappedDef;
+                deepForEach(defProviders, function (provider) { return _this.processProvider(provider, injectorType_1, defProviders); });
             }
             // Finally, include providers from an InjectorDefTypeWithProviders if there was one.
-            deepForEach(providers, function (provider) { return _this.processProvider(provider); });
+            var ngModuleType = defOrWrappedDef.ngModule;
+            deepForEach(providers, function (provider) { return _this.processProvider(provider, ngModuleType, providers); });
         };
         /**
          * Process a `SingleProvider` and add it.
          */
-        R3Injector.prototype.processProvider = function (provider) {
+        R3Injector.prototype.processProvider = function (provider, ngModuleType, providers) {
             // Determine the token from the provider. Either it's its own token, or has a {provide: ...}
             // property.
             provider = resolveForwardRef$1(provider);
-            var token = isTypeProvider(provider) ? provider : resolveForwardRef$1(provider.provide);
+            var token = isTypeProvider(provider) ? provider : resolveForwardRef$1(provider && provider.provide);
             // Construct a `Record` for the provider.
-            var record = providerToRecord(provider);
+            var record = providerToRecord(provider, ngModuleType, providers);
             if (!isTypeProvider(provider) && provider.multi === true) {
                 // If the provider indicates that it's a multi-provider, process it specially.
                 // First check whether it's been defined already.
@@ -36535,7 +36541,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         R3Injector.prototype.hydrate = function (token, record) {
             if (record.value === CIRCULAR$1) {
-                throw new Error("Circular dep for " + stringify$1(token));
+                throw new Error("Cannot instantiate cyclic dependency! " + stringify$1(token));
             }
             else if (record.value === NOT_YET) {
                 record.value = CIRCULAR$1;
@@ -36566,17 +36572,23 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             if (injectorDef !== null) {
                 return injectorDef.factory;
             }
-            if (token instanceof InjectionToken) {
+            else if (token instanceof InjectionToken) {
                 throw new Error("Token " + stringify$1(token) + " is missing an ngInjectableDef definition.");
             }
-            // TODO(alxhub): there should probably be a strict mode which throws here instead of assuming a
-            // no-args constructor.
-            return function () { return new token(); };
+            else if (token instanceof Function) {
+                var paramLength = token.length;
+                if (paramLength > 0) {
+                    var args = new Array(paramLength).fill('?');
+                    throw new Error("Can't resolve all parameters for " + stringify$1(token) + ": (" + args.join(', ') + ").");
+                }
+                return function () { return new token(); };
+            }
+            throw new Error('unreachable');
         }
         return injectableDef.factory;
     }
-    function providerToRecord(provider) {
-        var factory = providerToFactory(provider);
+    function providerToRecord(provider, ngModuleType, providers) {
+        var factory = providerToFactory(provider, ngModuleType, providers);
         if (isValueProvider(provider)) {
             return makeRecord(undefined, provider.useValue);
         }
@@ -36589,7 +36601,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      *
      * @param provider provider to convert to factory
      */
-    function providerToFactory(provider) {
+    function providerToFactory(provider, ngModuleType, providers) {
         var factory = undefined;
         if (isTypeProvider(provider)) {
             return injectableDefOrInjectorDefFactory(resolveForwardRef$1(provider));
@@ -36605,7 +36617,17 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 factory = function () { return provider.useFactory.apply(provider, __spread(injectArgs(provider.deps || []))); };
             }
             else {
-                var classRef_1 = resolveForwardRef$1(provider.useClass || provider.provide);
+                var classRef_1 = resolveForwardRef$1(provider &&
+                    (provider.useClass || provider.provide));
+                if (!classRef_1) {
+                    var ngModuleDetail = '';
+                    if (ngModuleType && providers) {
+                        var providerDetail = providers.map(function (v) { return v == provider ? '?' + provider + '?' : '...'; });
+                        ngModuleDetail =
+                            " - only instances of Provider and Type are allowed, got: [" + providerDetail.join(', ') + "]";
+                    }
+                    throw new Error("Invalid provider for the NgModule '" + stringify$1(ngModuleType) + "'" + ngModuleDetail);
+                }
                 if (hasDeps(provider)) {
                     factory = function () { return new ((classRef_1).bind.apply((classRef_1), __spread([void 0], injectArgs(provider.deps))))(); };
                 }
@@ -36628,13 +36650,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         input.forEach(function (value) { return Array.isArray(value) ? deepForEach(value, fn) : fn(value); });
     }
     function isValueProvider(value) {
-        return USE_VALUE$2 in value;
+        return value && typeof value == 'object' && USE_VALUE$2 in value;
     }
     function isExistingProvider(value) {
-        return !!value.useExisting;
+        return !!(value && value.useExisting);
     }
     function isFactoryProvider(value) {
-        return !!value.useFactory;
+        return !!(value && value.useFactory);
     }
     function isTypeProvider(value) {
         return typeof value === 'function';
@@ -37741,7 +37763,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.2.0-beta.2+63.sha-d132bae');
+    var VERSION$2 = new Version$1('7.2.0-beta.2+64.sha-e94975d');
 
     /**
      * @license
@@ -40290,7 +40312,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 }
             }
         }
-        throw new Error("Pipe with name '" + name + "' not found!");
+        throw new Error("The pipe '" + name + "' could not be found!");
     }
     /**
      * Invokes a pipe with 1 arguments.
@@ -44495,6 +44517,30 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * found in the LICENSE file at https://angular.io/license
      */
     /**
+     * Map of module-id to the corresponding NgModule.
+     * - In pre Ivy we track NgModuleFactory,
+     * - In post Ivy we track the NgModuleType
+     */
+    var modules = new Map();
+    function assertNotExisting(id, type) {
+        if (type) {
+            throw new Error("Duplicate module registered for " + id + " - " + stringify$1(type) + " vs " + stringify$1(type.name));
+        }
+    }
+    function registerNgModuleType(id, ngModuleType) {
+        var existing = modules.get(id);
+        assertNotExisting(id, existing);
+        modules.set(id, ngModuleType);
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
      * @description
      *
      * Represents a type that a Component or other object is instances of.
@@ -44842,15 +44888,19 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function flushModuleScopingQueueAsMuchAsPossible() {
         if (!flushingModuleQueue) {
             flushingModuleQueue = true;
-            for (var i = moduleQueue.length - 1; i >= 0; i--) {
-                var _a = moduleQueue[i], moduleType = _a.moduleType, ngModule = _a.ngModule;
-                if (ngModule.declarations && ngModule.declarations.every(isResolvedDeclaration)) {
-                    // dequeue
-                    moduleQueue.splice(i, 1);
-                    setScopeOnDeclaredComponents(moduleType, ngModule);
+            try {
+                for (var i = moduleQueue.length - 1; i >= 0; i--) {
+                    var _a = moduleQueue[i], moduleType = _a.moduleType, ngModule = _a.ngModule;
+                    if (ngModule.declarations && ngModule.declarations.every(isResolvedDeclaration)) {
+                        // dequeue
+                        moduleQueue.splice(i, 1);
+                        setScopeOnDeclaredComponents(moduleType, ngModule);
+                    }
                 }
             }
-            flushingModuleQueue = false;
+            finally {
+                flushingModuleQueue = false;
+            }
         }
     }
     /**
@@ -44902,10 +44952,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 return ngModuleDef;
             }
         });
+        if (ngModule.id) {
+            registerNgModuleType(ngModule.id, moduleType);
+        }
         var ngInjectorDef = null;
         Object.defineProperty(moduleType, NG_INJECTOR_DEF, {
             get: function () {
                 if (ngInjectorDef === null) {
+                    ngDevMode && verifySemanticsOfNgModuleDef(moduleType);
                     var meta = {
                         name: moduleType.name,
                         type: moduleType,
@@ -44923,6 +44977,140 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             // Make the property configurable in dev mode to allow overriding in tests
             configurable: !!ngDevMode,
         });
+    }
+    function verifySemanticsOfNgModuleDef(moduleType) {
+        if (verifiedNgModule.get(moduleType))
+            return;
+        verifiedNgModule.set(moduleType, true);
+        moduleType = resolveForwardRef$1(moduleType);
+        var ngModuleDef = getNgModuleDef(moduleType, true);
+        var errors = [];
+        ngModuleDef.declarations.forEach(verifyDeclarationsHaveDefinitions);
+        var combinedDeclarations = __spread(ngModuleDef.declarations, flatten$3(ngModuleDef.imports.map(computeCombinedExports)));
+        ngModuleDef.exports.forEach(verifyExportsAreDeclaredOrReExported);
+        ngModuleDef.declarations.forEach(verifyDeclarationIsUnique);
+        ngModuleDef.declarations.forEach(verifyComponentEntryComponentsIsPartOfNgModule);
+        var ngModule = getAnnotation(moduleType, 'NgModule');
+        if (ngModule) {
+            ngModule.imports &&
+                flatten$3(ngModule.imports, unwrapModuleWithProvidersImports)
+                    .forEach(verifySemanticsOfNgModuleDef);
+            ngModule.bootstrap && ngModule.bootstrap.forEach(verifyComponentIsPartOfNgModule);
+            ngModule.entryComponents && ngModule.entryComponents.forEach(verifyComponentIsPartOfNgModule);
+        }
+        // Throw Error if any errors were detected.
+        if (errors.length) {
+            throw new Error(errors.join('\n'));
+        }
+        ////////////////////////////////////////////////////////////////////////////////////////////////
+        function verifyDeclarationsHaveDefinitions(type) {
+            type = resolveForwardRef$1(type);
+            var def = getComponentDef(type) || getDirectiveDef(type) || getPipeDef(type);
+            if (!def) {
+                errors.push("Unexpected value '" + stringify$2(type) + "' declared by the module '" + stringify$2(moduleType) + "'. Please add a @Pipe/@Directive/@Component annotation.");
+            }
+        }
+        function verifyExportsAreDeclaredOrReExported(type) {
+            type = resolveForwardRef$1(type);
+            var kind = getComponentDef(type) && 'component' || getDirectiveDef(type) && 'directive' ||
+                getPipeDef(type) && 'pipe';
+            if (kind) {
+                // only checked if we are declared as Component, Directive, or Pipe
+                // Modules don't need to be declared or imported.
+                if (combinedDeclarations.lastIndexOf(type) === -1) {
+                    // We are exporting something which we don't explicitly declare or import.
+                    errors.push("Can't export " + kind + " " + stringify$2(type) + " from " + stringify$2(moduleType) + " as it was neither declared nor imported!");
+                }
+            }
+        }
+        function verifyDeclarationIsUnique(type) {
+            type = resolveForwardRef$1(type);
+            var existingModule = ownerNgModule.get(type);
+            if (existingModule && existingModule !== moduleType) {
+                var modules = [existingModule, moduleType].map(stringify$2).sort();
+                errors.push("Type " + stringify$2(type) + " is part of the declarations of 2 modules: " + modules[0] + " and " + modules[1] + "! " +
+                    ("Please consider moving " + stringify$2(type) + " to a higher module that imports " + modules[0] + " and " + modules[1] + ". ") +
+                    ("You can also create a new NgModule that exports and includes " + stringify$2(type) + " then import that NgModule in " + modules[0] + " and " + modules[1] + "."));
+            }
+            else {
+                // Mark type as having owner.
+                ownerNgModule.set(type, moduleType);
+            }
+        }
+        function verifyComponentIsPartOfNgModule(type) {
+            type = resolveForwardRef$1(type);
+            var existingModule = ownerNgModule.get(type);
+            if (!existingModule) {
+                errors.push("Component " + stringify$2(type) + " is not part of any NgModule or the module has not been imported into your module.");
+            }
+        }
+        function verifyComponentEntryComponentsIsPartOfNgModule(type) {
+            type = resolveForwardRef$1(type);
+            if (getComponentDef(type)) {
+                // We know we are component
+                var component = getAnnotation(type, 'Component');
+                if (component && component.entryComponents) {
+                    component.entryComponents.forEach(verifyComponentIsPartOfNgModule);
+                }
+            }
+        }
+    }
+    function unwrapModuleWithProvidersImports(typeOrWithProviders) {
+        typeOrWithProviders = resolveForwardRef$1(typeOrWithProviders);
+        return typeOrWithProviders.ngModule || typeOrWithProviders;
+    }
+    function getAnnotation(type, name) {
+        var annotation = null;
+        collect(type.__annotations__);
+        collect(type.decorators);
+        return annotation;
+        function collect(annotations) {
+            if (annotations) {
+                annotations.forEach(readAnnotation);
+            }
+        }
+        function readAnnotation(decorator) {
+            if (!annotation) {
+                var proto = Object.getPrototypeOf(decorator);
+                if (proto.ngMetadataName == name) {
+                    annotation = decorator;
+                }
+                else if (decorator.type) {
+                    var proto_1 = Object.getPrototypeOf(decorator.type);
+                    if (proto_1.ngMetadataName == name) {
+                        annotation = decorator.args[0];
+                    }
+                }
+            }
+        }
+    }
+    /**
+     * Keep track of compiled components. This is needed because in tests we often want to compile the
+     * same component with more than one NgModule. This would cause an error unless we reset which
+     * NgModule the component belongs to. We keep the list of compiled components here so that the
+     * TestBed can reset it later.
+     */
+    var ownerNgModule = new Map();
+    var verifiedNgModule = new Map();
+    /**
+     * Computes the combined declarations of explicit declarations, as well as declarations inherited
+     * by
+     * traversing the exports of imported modules.
+     * @param type
+     */
+    function computeCombinedExports(type) {
+        type = resolveForwardRef$1(type);
+        var ngModuleDef = getNgModuleDef(type, true);
+        return __spread(flatten$3(ngModuleDef.exports.map(function (type) {
+            var ngModuleDef = getNgModuleDef(type);
+            if (ngModuleDef) {
+                verifySemanticsOfNgModuleDef(type);
+                return computeCombinedExports(type);
+            }
+            else {
+                return type;
+            }
+        })));
     }
     /**
      * Some declared components may be compiled asynchronously, and thus may not have their
@@ -45032,14 +45220,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         def.transitiveCompileScopes = scopes;
         return scopes;
     }
-    function flatten$3(values) {
+    function flatten$3(values, mapFn) {
         var out = [];
         values.forEach(function (value) {
             if (Array.isArray(value)) {
-                out.push.apply(out, __spread(flatten$3(value)));
+                out.push.apply(out, __spread(flatten$3(value, mapFn)));
             }
             else {
-                out.push(value);
+                out.push(mapFn ? mapFn(value) : value);
             }
         });
         return out;
@@ -45092,7 +45280,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                         error.push("Did you run and wait for 'resolveComponentResources()'?");
                         throw new Error(error.join('\n'));
                     }
-                    var meta = __assign({}, directiveMetadata(type, metadata), { template: metadata.template || '', preserveWhitespaces: metadata.preserveWhitespaces || false, styles: metadata.styles || EMPTY_ARRAY$1, animations: metadata.animations, viewQueries: extractQueriesMetadata(getReflect().propMetadata(type), isViewQuery), directives: [], pipes: new Map(), encapsulation: metadata.encapsulation || ViewEncapsulation$1.Emulated, interpolation: metadata.interpolation, viewProviders: metadata.viewProviders || null });
+                    var meta = __assign({}, directiveMetadata(type, metadata), { template: metadata.template || '', preserveWhitespaces: metadata.preserveWhitespaces || false, styles: metadata.styles || EMPTY_ARRAY$1, animations: metadata.animations, viewQueries: extractQueriesMetadata(type, getReflect().propMetadata(type), isViewQuery), directives: [], pipes: new Map(), encapsulation: metadata.encapsulation || ViewEncapsulation$1.Emulated, interpolation: metadata.interpolation, viewProviders: metadata.viewProviders || null });
                     ngComponentDef = compiler.compileComponent(angularCoreEnv, "ng://" + stringify$1(type) + "/template.html", meta);
                     // When NgModule decorator executed, we enqueued the module definition such that
                     // it would only dequeue and add itself as module scope to all of its declarations,
@@ -45159,7 +45347,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             propMetadata: propMetadata,
             inputs: metadata.inputs || EMPTY_ARRAY$1,
             outputs: metadata.outputs || EMPTY_ARRAY$1,
-            queries: extractQueriesMetadata(propMetadata, isContentQuery),
+            queries: extractQueriesMetadata(type, propMetadata, isContentQuery),
             lifecycle: {
                 usesOnChanges: type.prototype.ngOnChanges !== undefined,
             },
@@ -45182,12 +45370,16 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             read: ann.read ? ann.read : null
         };
     }
-    function extractQueriesMetadata(propMetadata, isQueryAnn) {
+    function extractQueriesMetadata(type, propMetadata, isQueryAnn) {
         var queriesMeta = [];
         var _loop_1 = function (field) {
             if (propMetadata.hasOwnProperty(field)) {
                 propMetadata[field].forEach(function (ann) {
                     if (isQueryAnn(ann)) {
+                        if (!ann.selector) {
+                            throw new Error("Can't construct a query for the property \"" + field + "\" of " +
+                                ("\"" + stringify$1(type) + "\" since the query selector wasn't defined."));
+                        }
                         queriesMeta.push(convertToR3QueryMetadata$1(field, ann));
                     }
                 });
@@ -51438,14 +51630,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             list.splice(index, 1);
         }
     }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
 
     /**
      * @license
@@ -57981,7 +58165,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.2.0-beta.2+63.sha-d132bae');
+    var VERSION$3 = new Version$1('7.2.0-beta.2+64.sha-e94975d');
 
     /**
      * @license
