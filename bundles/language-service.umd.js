@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.2.0-beta.2+52.sha-f8096d4
+ * @license Angular v7.2.0-beta.2+58.sha-52544ff
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -12073,7 +12073,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return Element;
     }());
     var Template = /** @class */ (function () {
-        function Template(attributes, inputs, outputs, children, references, variables, sourceSpan, startSourceSpan, endSourceSpan, i18n) {
+        function Template(tagName, attributes, inputs, outputs, children, references, variables, sourceSpan, startSourceSpan, endSourceSpan, i18n) {
+            this.tagName = tagName;
             this.attributes = attributes;
             this.inputs = inputs;
             this.outputs = outputs;
@@ -12429,7 +12430,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             else if (isTemplateElement) {
                 // `<ng-template>`
                 var attrs = this.extractAttributes(element.name, parsedProperties, i18nAttrsMeta);
-                parsedElement = new Template(attributes, attrs.bound, boundEvents, children, references, variables, element.sourceSpan, element.startSourceSpan, element.endSourceSpan, element.i18n);
+                parsedElement = new Template(element.name, attributes, attrs.bound, boundEvents, children, references, variables, element.sourceSpan, element.startSourceSpan, element.endSourceSpan, element.i18n);
             }
             else {
                 var attrs = this.extractAttributes(element.name, parsedProperties, i18nAttrsMeta);
@@ -12438,7 +12439,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             if (elementHasInlineTemplate) {
                 var attrs = this.extractAttributes('ng-template', templateParsedProperties, i18nAttrsMeta);
                 // TODO(pk): test for this case
-                parsedElement = new Template(attrs.literal, attrs.bound, [], [parsedElement], [], templateVariables, element.sourceSpan, element.startSourceSpan, element.endSourceSpan, element.i18n);
+                parsedElement = new Template(parsedElement.name, attrs.literal, attrs.bound, [], [parsedElement], [], templateVariables, element.sourceSpan, element.startSourceSpan, element.endSourceSpan, element.i18n);
             }
             return parsedElement;
         };
@@ -13801,17 +13802,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             if (this.i18n) {
                 this.i18n.appendTemplate(template.i18n, templateIndex);
             }
-            var elName = '';
-            if (isSingleElementTemplate(template.children)) {
-                // When the template as a single child, derive the context name from the tag
-                elName = sanitizeIdentifier(template.children[0].name);
-            }
-            var contextName = elName ? this.contextName + "_" + elName : '';
+            var tagName = sanitizeIdentifier(template.tagName || '');
+            var contextName = tagName ? this.contextName + "_" + tagName : '';
             var templateName = contextName ? contextName + "_Template_" + templateIndex : "Template_" + templateIndex;
             var parameters = [
                 literal(templateIndex),
                 variable(templateName),
-                TYPED_NULL_EXPR,
+                literal(template.tagName),
             ];
             // find directives matching on a given <ng-template> node
             this.matchDirectives('ng-template', template);
@@ -15196,7 +15193,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.2.0-beta.2+52.sha-f8096d4');
+    var VERSION$1 = new Version('7.2.0-beta.2+58.sha-52544ff');
 
     /**
      * @license
@@ -33530,7 +33527,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.2.0-beta.2+52.sha-f8096d4');
+    var VERSION$2 = new Version$1('7.2.0-beta.2+58.sha-52544ff');
 
     /**
      * @license
@@ -50768,7 +50765,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.2.0-beta.2+52.sha-f8096d4');
+    var VERSION$3 = new Version$1('7.2.0-beta.2+58.sha-52544ff');
 
     /**
      * @license
