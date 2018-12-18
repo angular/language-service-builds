@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.2.0-beta.2+83.sha-b04bc5d
+ * @license Angular v7.2.0-beta.2+89.sha-69198ba
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -15195,7 +15195,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.2.0-beta.2+83.sha-b04bc5d');
+    var VERSION$1 = new Version('7.2.0-beta.2+89.sha-69198ba');
 
     /**
      * @license
@@ -24262,12 +24262,18 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     checker.getTypeAtLocation(setParents({ kind: ts.SyntaxKind.NullKeyword }, node));
                 break;
             case BuiltinType$1.Number:
-                var numeric = { kind: ts.SyntaxKind.NumericLiteral };
+                var numeric = {
+                    kind: ts.SyntaxKind.NumericLiteral,
+                    text: node.getText(),
+                };
                 setParents({ kind: ts.SyntaxKind.ExpressionStatement, expression: numeric }, node);
                 type = checker.getTypeAtLocation(numeric);
                 break;
             case BuiltinType$1.String:
-                type = checker.getTypeAtLocation(setParents({ kind: ts.SyntaxKind.NoSubstitutionTemplateLiteral }, node));
+                type = checker.getTypeAtLocation(setParents({
+                    kind: ts.SyntaxKind.NoSubstitutionTemplateLiteral,
+                    text: node.getText(),
+                }, node));
                 break;
             case BuiltinType$1.Undefined:
                 type = checker.getTypeAtLocation(setParents({
@@ -37803,7 +37809,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.2.0-beta.2+83.sha-b04bc5d');
+    var VERSION$2 = new Version$1('7.2.0-beta.2+89.sha-69198ba');
 
     /**
      * @license
@@ -58163,12 +58169,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             return tryOperation('get definition', function () {
                 var e_3, _a;
                 var ours = ls.getDefinitionAt(fileName, position);
+                var combined;
                 if (ours && ours.length) {
-                    base = base || [];
+                    combined = base && base.concat([]) || [];
                     try {
                         for (var ours_1 = __values(ours), ours_1_1 = ours_1.next(); !ours_1_1.done; ours_1_1 = ours_1.next()) {
                             var loc = ours_1_1.value;
-                            base.push({
+                            combined.push({
                                 fileName: loc.fileName,
                                 textSpan: { start: loc.span.start, length: loc.span.end - loc.span.start },
                                 name: '',
@@ -58187,7 +58194,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                         finally { if (e_3) throw e_3.error; }
                     }
                 }
-                return base;
+                else {
+                    combined = base;
+                }
+                return combined;
             }) || [];
         };
         return proxy;
@@ -58200,7 +58210,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.2.0-beta.2+83.sha-b04bc5d');
+    var VERSION$3 = new Version$1('7.2.0-beta.2+89.sha-69198ba');
 
     /**
      * @license
