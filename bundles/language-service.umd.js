@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.2.0-beta.2+66.sha-c986d3d
+ * @license Angular v7.2.0-beta.2+82.sha-1c93afe
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -4568,18 +4568,35 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return literal(value, INFERRED_TYPE);
     }
-    function conditionallyCreateMapObjectLiteral(keys) {
+    function conditionallyCreateMapObjectLiteral(keys, keepDeclared) {
         if (Object.getOwnPropertyNames(keys).length > 0) {
-            return mapToExpression(keys);
+            return mapToExpression(keys, keepDeclared);
         }
         return null;
     }
-    function mapToExpression(map) {
+    function mapToExpression(map, keepDeclared) {
         return literalMap(Object.getOwnPropertyNames(map).map(function (key) {
-            // canonical syntax: `dirProp: elProp`
+            var _a, _b;
+            // canonical syntax: `dirProp: publicProp`
             // if there is no `:`, use dirProp = elProp
-            var parts = splitAtColon(key, [key, map[key]]);
-            return { key: parts[0], quoted: false, value: asLiteral(parts[1]) };
+            var value = map[key];
+            var declaredName;
+            var publicName;
+            var minifiedName;
+            if (Array.isArray(value)) {
+                _a = __read(value, 2), publicName = _a[0], declaredName = _a[1];
+            }
+            else {
+                _b = __read(splitAtColon(key, [key, value]), 2), declaredName = _b[0], publicName = _b[1];
+            }
+            minifiedName = declaredName;
+            return {
+                key: minifiedName,
+                quoted: false,
+                value: (keepDeclared && publicName !== declaredName) ?
+                    literalArr([asLiteral(publicName), asLiteral(declaredName)]) :
+                    asLiteral(publicName)
+            };
         }));
     }
     /**
@@ -14510,7 +14527,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         // e.g. `hostBindings: (rf, ctx, elIndex) => { ... }
         definitionMap.set('hostBindings', createHostBindingsFunction(meta, elVarExp, contextVarExp, styleBuilder, bindingParser, constantPool, hostVarsCount));
         // e.g 'inputs: {a: 'a'}`
-        definitionMap.set('inputs', conditionallyCreateMapObjectLiteral(meta.inputs));
+        definitionMap.set('inputs', conditionallyCreateMapObjectLiteral(meta.inputs, true));
         // e.g 'outputs: {a: 'a'}`
         definitionMap.set('outputs', conditionallyCreateMapObjectLiteral(meta.outputs));
         if (meta.exportAs !== null) {
@@ -15193,7 +15210,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.2.0-beta.2+66.sha-c986d3d');
+    var VERSION$1 = new Version('7.2.0-beta.2+82.sha-1c93afe');
 
     /**
      * @license
@@ -29303,6 +29320,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             return value;
         if (value == null)
             return '';
+        if (typeof value == 'object' && typeof value.type == 'function')
+            return value.type.name || value.type;
         return '' + value;
     }
     /**
@@ -29797,7 +29816,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             try {
                 var value = bloomHash();
                 if (value == null && !(flags & InjectFlags.Optional)) {
-                    throw new Error("No provider for " + stringify$2(token));
+                    throw new Error("No provider for " + stringify$2(token) + "!");
                 }
                 else {
                     return value;
@@ -30090,8 +30109,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     }
                 }
                 // the goal is not to fill the entire context full of data because the lookups
-                // are expensive. Instead, only the target data (the element, compontent or
-                // directive details) are filled into the context. If called multiple times
+                // are expensive. Instead, only the target data (the element, component, container, ICU
+                // expression or directive details) are filled into the context. If called multiple times
                 // with different target values then the missing target data will be filled in.
                 var native = readElementValue(lView[nodeIndex]);
                 var existingCtx = readPatchedData(native);
@@ -30221,10 +30240,15 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         else if (tNode.next) {
             return tNode.next;
         }
-        else if (tNode.parent) {
-            return tNode.parent.next || null;
+        else {
+            // Let's take the following template: <div><span>text</span></div><component/>
+            // After checking the text node, we need to find the next parent that has a "next" TNode,
+            // in this case the parent `div`, so that we can find the component.
+            while (tNode.parent && !tNode.parent.next) {
+                tNode = tNode.parent;
+            }
+            return tNode.parent && tNode.parent.next;
         }
-        return null;
     }
     /**
      * Locates the component within the given LView and returns the matching index
@@ -31364,23 +31388,25 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         lView[adjustedIndex] = native;
         var tNode = tView.data[adjustedIndex];
         if (tNode == null) {
-            var previousOrParentTNode = getPreviousOrParentTNode();
-            var isParent = getIsParent();
             // TODO(misko): Refactor createTNode so that it does not depend on LView.
             tNode = tView.data[adjustedIndex] = createTNode(lView, type, adjustedIndex, name, attrs, null);
-            // Now link ourselves into the tree.
-            if (previousOrParentTNode) {
-                if (isParent && previousOrParentTNode.child == null &&
-                    (tNode.parent !== null || previousOrParentTNode.type === 2 /* View */)) {
-                    // We are in the same view, which means we are adding content node to the parent view.
-                    previousOrParentTNode.child = tNode;
-                }
-                else if (!isParent) {
-                    previousOrParentTNode.next = tNode;
-                }
+        }
+        // Now link ourselves into the tree.
+        // We need this even if tNode exists, otherwise we might end up pointing to unexisting tNodes when
+        // we use i18n (especially with ICU expressions that update the DOM during the update phase).
+        var previousOrParentTNode = getPreviousOrParentTNode();
+        var isParent = getIsParent();
+        if (previousOrParentTNode) {
+            if (isParent && previousOrParentTNode.child == null &&
+                (tNode.parent !== null || previousOrParentTNode.type === 2 /* View */)) {
+                // We are in the same view, which means we are adding content node to the parent view.
+                previousOrParentTNode.child = tNode;
+            }
+            else if (!isParent) {
+                previousOrParentTNode.next = tNode;
             }
         }
-        if (tView.firstChild == null && type === 3 /* Element */) {
+        if (tView.firstChild == null) {
             tView.firstChild = tNode;
         }
         setPreviousOrParentTNode(tNode);
@@ -32116,7 +32142,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         hostFeatures && hostFeatures.forEach(function (feature) { return feature(component, componentDef); });
         if (tView.firstTemplatePass && componentDef.hostBindings) {
             var rootTNode = getPreviousOrParentTNode();
-            componentDef.hostBindings(1 /* Create */, component, rootTNode.index);
+            componentDef.hostBindings(1 /* Create */, component, rootTNode.index - HEADER_OFFSET);
         }
         return component;
     }
@@ -33549,7 +33575,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.2.0-beta.2+66.sha-c986d3d');
+    var VERSION$2 = new Version$1('7.2.0-beta.2+82.sha-1c93afe');
 
     /**
      * @license
@@ -50787,7 +50813,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.2.0-beta.2+66.sha-c986d3d');
+    var VERSION$3 = new Version$1('7.2.0-beta.2+82.sha-1c93afe');
 
     /**
      * @license
