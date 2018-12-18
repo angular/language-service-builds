@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.2.0-beta.2+70.sha-8042140
+ * @license Angular v7.2.0-beta.2+74.sha-4bf8d64
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -15193,7 +15193,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.2.0-beta.2+70.sha-8042140');
+    var VERSION$1 = new Version('7.2.0-beta.2+74.sha-4bf8d64');
 
     /**
      * @license
@@ -30092,8 +30092,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     }
                 }
                 // the goal is not to fill the entire context full of data because the lookups
-                // are expensive. Instead, only the target data (the element, compontent or
-                // directive details) are filled into the context. If called multiple times
+                // are expensive. Instead, only the target data (the element, component, container, ICU
+                // expression or directive details) are filled into the context. If called multiple times
                 // with different target values then the missing target data will be filled in.
                 var native = readElementValue(lView[nodeIndex]);
                 var existingCtx = readPatchedData(native);
@@ -30223,10 +30223,15 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         else if (tNode.next) {
             return tNode.next;
         }
-        else if (tNode.parent) {
-            return tNode.parent.next || null;
+        else {
+            // Let's take the following template: <div><span>text</span></div><component/>
+            // After checking the text node, we need to find the next parent that has a "next" TNode,
+            // in this case the parent `div`, so that we can find the component.
+            while (tNode.parent && !tNode.parent.next) {
+                tNode = tNode.parent;
+            }
+            return tNode.parent && tNode.parent.next;
         }
-        return null;
     }
     /**
      * Locates the component within the given LView and returns the matching index
@@ -31366,23 +31371,25 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         lView[adjustedIndex] = native;
         var tNode = tView.data[adjustedIndex];
         if (tNode == null) {
-            var previousOrParentTNode = getPreviousOrParentTNode();
-            var isParent = getIsParent();
             // TODO(misko): Refactor createTNode so that it does not depend on LView.
             tNode = tView.data[adjustedIndex] = createTNode(lView, type, adjustedIndex, name, attrs, null);
-            // Now link ourselves into the tree.
-            if (previousOrParentTNode) {
-                if (isParent && previousOrParentTNode.child == null &&
-                    (tNode.parent !== null || previousOrParentTNode.type === 2 /* View */)) {
-                    // We are in the same view, which means we are adding content node to the parent view.
-                    previousOrParentTNode.child = tNode;
-                }
-                else if (!isParent) {
-                    previousOrParentTNode.next = tNode;
-                }
+        }
+        // Now link ourselves into the tree.
+        // We need this even if tNode exists, otherwise we might end up pointing to unexisting tNodes when
+        // we use i18n (especially with ICU expressions that update the DOM during the update phase).
+        var previousOrParentTNode = getPreviousOrParentTNode();
+        var isParent = getIsParent();
+        if (previousOrParentTNode) {
+            if (isParent && previousOrParentTNode.child == null &&
+                (tNode.parent !== null || previousOrParentTNode.type === 2 /* View */)) {
+                // We are in the same view, which means we are adding content node to the parent view.
+                previousOrParentTNode.child = tNode;
+            }
+            else if (!isParent) {
+                previousOrParentTNode.next = tNode;
             }
         }
-        if (tView.firstChild == null && type === 3 /* Element */) {
+        if (tView.firstChild == null) {
             tView.firstChild = tNode;
         }
         setPreviousOrParentTNode(tNode);
@@ -32118,7 +32125,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         hostFeatures && hostFeatures.forEach(function (feature) { return feature(component, componentDef); });
         if (tView.firstTemplatePass && componentDef.hostBindings) {
             var rootTNode = getPreviousOrParentTNode();
-            componentDef.hostBindings(1 /* Create */, component, rootTNode.index);
+            componentDef.hostBindings(1 /* Create */, component, rootTNode.index - HEADER_OFFSET);
         }
         return component;
     }
@@ -33551,7 +33558,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.2.0-beta.2+70.sha-8042140');
+    var VERSION$2 = new Version$1('7.2.0-beta.2+74.sha-4bf8d64');
 
     /**
      * @license
@@ -50789,7 +50796,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.2.0-beta.2+70.sha-8042140');
+    var VERSION$3 = new Version$1('7.2.0-beta.2+74.sha-4bf8d64');
 
     /**
      * @license
