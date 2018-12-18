@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.2.0-beta.2+81.sha-4774a1a
+ * @license Angular v7.2.0-beta.2+82.sha-1c93afe
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -4553,18 +4553,35 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return literal(value, INFERRED_TYPE);
     }
-    function conditionallyCreateMapObjectLiteral(keys) {
+    function conditionallyCreateMapObjectLiteral(keys, keepDeclared) {
         if (Object.getOwnPropertyNames(keys).length > 0) {
-            return mapToExpression(keys);
+            return mapToExpression(keys, keepDeclared);
         }
         return null;
     }
-    function mapToExpression(map) {
+    function mapToExpression(map, keepDeclared) {
         return literalMap(Object.getOwnPropertyNames(map).map(function (key) {
-            // canonical syntax: `dirProp: elProp`
+            var _a, _b;
+            // canonical syntax: `dirProp: publicProp`
             // if there is no `:`, use dirProp = elProp
-            var parts = splitAtColon(key, [key, map[key]]);
-            return { key: parts[0], quoted: false, value: asLiteral(parts[1]) };
+            var value = map[key];
+            var declaredName;
+            var publicName;
+            var minifiedName;
+            if (Array.isArray(value)) {
+                _a = __read(value, 2), publicName = _a[0], declaredName = _a[1];
+            }
+            else {
+                _b = __read(splitAtColon(key, [key, value]), 2), declaredName = _b[0], publicName = _b[1];
+            }
+            minifiedName = declaredName;
+            return {
+                key: minifiedName,
+                quoted: false,
+                value: (keepDeclared && publicName !== declaredName) ?
+                    literalArr([asLiteral(publicName), asLiteral(declaredName)]) :
+                    asLiteral(publicName)
+            };
         }));
     }
     /**
@@ -14495,7 +14512,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         // e.g. `hostBindings: (rf, ctx, elIndex) => { ... }
         definitionMap.set('hostBindings', createHostBindingsFunction(meta, elVarExp, contextVarExp, styleBuilder, bindingParser, constantPool, hostVarsCount));
         // e.g 'inputs: {a: 'a'}`
-        definitionMap.set('inputs', conditionallyCreateMapObjectLiteral(meta.inputs));
+        definitionMap.set('inputs', conditionallyCreateMapObjectLiteral(meta.inputs, true));
         // e.g 'outputs: {a: 'a'}`
         definitionMap.set('outputs', conditionallyCreateMapObjectLiteral(meta.outputs));
         if (meta.exportAs !== null) {
@@ -15178,7 +15195,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.2.0-beta.2+81.sha-4774a1a');
+    var VERSION$1 = new Version('7.2.0-beta.2+82.sha-1c93afe');
 
     /**
      * @license
@@ -28817,8 +28834,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      *   @Input()
      *   propName1: string;
      *
-     *   @Input('publicName')
-     *   propName2: number;
+     *   @Input('publicName2')
+     *   declaredPropName2: number;
      * }
      * ```
      *
@@ -28826,26 +28843,35 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      *
      * ```
      * {
-     *   a0: 'propName1',
-     *   b1: ['publicName', 'propName2'],
+     *   propName1: 'propName1',
+     *   declaredPropName2: ['publicName2', 'declaredPropName2'],
      * }
      * ```
      *
-     * becomes
+     * which is than translated by the minifier as:
      *
      * ```
      * {
-     *  'propName1': 'a0',
-     *  'publicName': 'b1'
+     *   minifiedPropName1: 'propName1',
+     *   minifiedPropName2: ['publicName2', 'declaredPropName2'],
      * }
      * ```
      *
-     * Optionally the function can take `secondary` which will result in:
+     * becomes: (public name => minifiedName)
      *
      * ```
      * {
-     *  'propName1': 'a0',
-     *  'propName2': 'b1'
+     *  'propName1': 'minifiedPropName1',
+     *  'publicName2': 'minifiedPropName2',
+     * }
+     * ```
+     *
+     * Optionally the function can take `secondary` which will result in: (public name => declared name)
+     *
+     * ```
+     * {
+     *  'propName1': 'propName1',
+     *  'publicName2': 'declaredPropName2',
      * }
      * ```
      *
@@ -28865,7 +28891,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 }
                 newLookup[publicName] = minifiedKey;
                 if (secondary) {
-                    (secondary[declaredName] = minifiedKey);
+                    (secondary[publicName] = declaredName);
                 }
             }
         }
@@ -35875,11 +35901,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * ```
      */
     function NgOnChangesFeature(definition) {
-        var declaredToMinifiedInputs = definition.declaredInputs;
+        var publicToDeclaredInputs = definition.declaredInputs;
+        var publicToMinifiedInputs = definition.inputs;
         var proto = definition.type.prototype;
-        var _loop_1 = function (declaredName) {
-            if (declaredToMinifiedInputs.hasOwnProperty(declaredName)) {
-                var minifiedKey = declaredToMinifiedInputs[declaredName];
+        var _loop_1 = function (publicName) {
+            if (publicToDeclaredInputs.hasOwnProperty(publicName)) {
+                var minifiedKey = publicToMinifiedInputs[publicName];
+                var declaredKey_1 = publicToDeclaredInputs[publicName];
                 var privateMinKey_1 = PRIVATE_PREFIX + minifiedKey;
                 // Walk the prototype chain to see if we find a property descriptor
                 // That way we can honor setters and getters that were inherited.
@@ -35904,12 +35932,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                             Object.defineProperty(this, PRIVATE_PREFIX, { value: simpleChanges, writable: true });
                         }
                         var isFirstChange = !this.hasOwnProperty(privateMinKey_1);
-                        var currentChange = simpleChanges[declaredName];
+                        var currentChange = simpleChanges[declaredKey_1];
                         if (currentChange) {
                             currentChange.currentValue = value;
                         }
                         else {
-                            simpleChanges[declaredName] =
+                            simpleChanges[declaredKey_1] =
                                 new SimpleChange(this[privateMinKey_1], value, isFirstChange);
                         }
                         if (isFirstChange) {
@@ -35927,8 +35955,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 });
             }
         };
-        for (var declaredName in declaredToMinifiedInputs) {
-            _loop_1(declaredName);
+        for (var publicName in publicToDeclaredInputs) {
+            _loop_1(publicName);
         }
         // If an onInit hook is defined, it will need to wrap the ngOnChanges call
         // so the call order is changes-init-check in creation mode. In subsequent
@@ -37775,7 +37803,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.2.0-beta.2+81.sha-4774a1a');
+    var VERSION$2 = new Version$1('7.2.0-beta.2+82.sha-1c93afe');
 
     /**
      * @license
@@ -58172,7 +58200,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.2.0-beta.2+81.sha-4774a1a');
+    var VERSION$3 = new Version$1('7.2.0-beta.2+82.sha-1c93afe');
 
     /**
      * @license
