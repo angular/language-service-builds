@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.2.0-beta.2+68.sha-87d7b74
+ * @license Angular v7.2.0-beta.2+70.sha-8042140
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -15178,7 +15178,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.2.0-beta.2+68.sha-87d7b74');
+    var VERSION$1 = new Version('7.2.0-beta.2+70.sha-8042140');
 
     /**
      * @license
@@ -29576,6 +29576,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             return value;
         if (value == null)
             return '';
+        if (typeof value == 'object' && typeof value.type == 'function')
+            return value.type.name || value.type;
         return '' + value;
     }
     /**
@@ -30314,7 +30316,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             try {
                 var value = bloomHash();
                 if (value == null && !(flags & InjectFlags.Optional)) {
-                    throw new Error("No provider for " + stringify$2(token));
+                    throw new Error("No provider for " + stringify$2(token) + "!");
                 }
                 else {
                     return value;
@@ -37763,7 +37765,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.2.0-beta.2+68.sha-87d7b74');
+    var VERSION$2 = new Version$1('7.2.0-beta.2+70.sha-8042140');
 
     /**
      * @license
@@ -58165,7 +58167,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.2.0-beta.2+68.sha-87d7b74');
+    var VERSION$3 = new Version$1('7.2.0-beta.2+70.sha-8042140');
 
     /**
      * @license
