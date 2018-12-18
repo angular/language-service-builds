@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.2.0-beta.2+58.sha-52544ff
+ * @license Angular v7.2.0-beta.2+66.sha-c986d3d
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -15193,7 +15193,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.2.0-beta.2+58.sha-52544ff');
+    var VERSION$1 = new Version('7.2.0-beta.2+66.sha-c986d3d');
 
     /**
      * @license
@@ -28112,7 +28112,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * @param type type which may have `ngInjectableDef`
      */
     function getInjectableDef(type) {
-        return type.hasOwnProperty(NG_INJECTABLE_DEF) ? type[NG_INJECTABLE_DEF] : null;
+        return type && type.hasOwnProperty(NG_INJECTABLE_DEF) ? type[NG_INJECTABLE_DEF] : null;
     }
     /**
      * Read the `ngInjectorDef` type in a way which is immune to accidentally reading inherited value.
@@ -28120,7 +28120,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * @param type type which may have `ngInjectorDef`
      */
     function getInjectorDef(type) {
-        return type.hasOwnProperty(NG_INJECTOR_DEF) ? type[NG_INJECTOR_DEF] : null;
+        return type && type.hasOwnProperty(NG_INJECTOR_DEF) ? type[NG_INJECTOR_DEF] : null;
     }
 
     /**
@@ -28708,8 +28708,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function getComponentDef(type) {
         return type[NG_COMPONENT_DEF] || null;
     }
-    function getNgModuleDef(type) {
-        return type[NG_MODULE_DEF] || null;
+    function getNgModuleDef(type, throwNotFound) {
+        var ngModuleDef = type[NG_MODULE_DEF] || null;
+        if (!ngModuleDef && throwNotFound === true) {
+            throw new Error("Type " + stringify$1(type) + " does not have 'ngModuleDef' property.");
+        }
+        return ngModuleDef;
     }
 
     /**
@@ -32596,8 +32600,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             // included transitively in `def`.
             var dedupStack = [];
             deepForEach([def], function (injectorDef) { return _this.processInjectorType(injectorDef, [], dedupStack); });
-            additionalProviders &&
-                deepForEach(additionalProviders, function (provider) { return _this.processProvider(provider); });
+            additionalProviders && deepForEach(additionalProviders, function (provider) { return _this.processProvider(provider, def, additionalProviders); });
             // Make sure the INJECTOR token provides this injector.
             this.records.set(INJECTOR$1, makeRecord(undefined, this));
             // Detect whether this injector has the APP_ROOT_SCOPE token and thus should provide
@@ -32729,22 +32732,25 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 }
             }
             // Next, include providers listed on the definition itself.
-            if (def.providers != null && !isDuplicate) {
-                deepForEach(def.providers, function (provider) { return _this.processProvider(provider); });
+            var defProviders = def.providers;
+            if (defProviders != null && !isDuplicate) {
+                var injectorType_1 = defOrWrappedDef;
+                deepForEach(defProviders, function (provider) { return _this.processProvider(provider, injectorType_1, defProviders); });
             }
             // Finally, include providers from an InjectorDefTypeWithProviders if there was one.
-            deepForEach(providers, function (provider) { return _this.processProvider(provider); });
+            var ngModuleType = defOrWrappedDef.ngModule;
+            deepForEach(providers, function (provider) { return _this.processProvider(provider, ngModuleType, providers); });
         };
         /**
          * Process a `SingleProvider` and add it.
          */
-        R3Injector.prototype.processProvider = function (provider) {
+        R3Injector.prototype.processProvider = function (provider, ngModuleType, providers) {
             // Determine the token from the provider. Either it's its own token, or has a {provide: ...}
             // property.
             provider = resolveForwardRef$1(provider);
-            var token = isTypeProvider(provider) ? provider : resolveForwardRef$1(provider.provide);
+            var token = isTypeProvider(provider) ? provider : resolveForwardRef$1(provider && provider.provide);
             // Construct a `Record` for the provider.
-            var record = providerToRecord(provider);
+            var record = providerToRecord(provider, ngModuleType, providers);
             if (!isTypeProvider(provider) && provider.multi === true) {
                 // If the provider indicates that it's a multi-provider, process it specially.
                 // First check whether it's been defined already.
@@ -32773,7 +32779,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         R3Injector.prototype.hydrate = function (token, record) {
             if (record.value === CIRCULAR$1) {
-                throw new Error("Circular dep for " + stringify$1(token));
+                throw new Error("Cannot instantiate cyclic dependency! " + stringify$1(token));
             }
             else if (record.value === NOT_YET) {
                 record.value = CIRCULAR$1;
@@ -32804,17 +32810,23 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             if (injectorDef !== null) {
                 return injectorDef.factory;
             }
-            if (token instanceof InjectionToken) {
+            else if (token instanceof InjectionToken) {
                 throw new Error("Token " + stringify$1(token) + " is missing an ngInjectableDef definition.");
             }
-            // TODO(alxhub): there should probably be a strict mode which throws here instead of assuming a
-            // no-args constructor.
-            return function () { return new token(); };
+            else if (token instanceof Function) {
+                var paramLength = token.length;
+                if (paramLength > 0) {
+                    var args = new Array(paramLength).fill('?');
+                    throw new Error("Can't resolve all parameters for " + stringify$1(token) + ": (" + args.join(', ') + ").");
+                }
+                return function () { return new token(); };
+            }
+            throw new Error('unreachable');
         }
         return injectableDef.factory;
     }
-    function providerToRecord(provider) {
-        var factory = providerToFactory(provider);
+    function providerToRecord(provider, ngModuleType, providers) {
+        var factory = providerToFactory(provider, ngModuleType, providers);
         if (isValueProvider(provider)) {
             return makeRecord(undefined, provider.useValue);
         }
@@ -32827,7 +32839,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      *
      * @param provider provider to convert to factory
      */
-    function providerToFactory(provider) {
+    function providerToFactory(provider, ngModuleType, providers) {
         var factory = undefined;
         if (isTypeProvider(provider)) {
             return injectableDefOrInjectorDefFactory(resolveForwardRef$1(provider));
@@ -32843,7 +32855,17 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 factory = function () { return provider.useFactory.apply(provider, __spread(injectArgs(provider.deps || []))); };
             }
             else {
-                var classRef_1 = resolveForwardRef$1(provider.useClass || provider.provide);
+                var classRef_1 = resolveForwardRef$1(provider &&
+                    (provider.useClass || provider.provide));
+                if (!classRef_1) {
+                    var ngModuleDetail = '';
+                    if (ngModuleType && providers) {
+                        var providerDetail = providers.map(function (v) { return v == provider ? '?' + provider + '?' : '...'; });
+                        ngModuleDetail =
+                            " - only instances of Provider and Type are allowed, got: [" + providerDetail.join(', ') + "]";
+                    }
+                    throw new Error("Invalid provider for the NgModule '" + stringify$1(ngModuleType) + "'" + ngModuleDetail);
+                }
                 if (hasDeps(provider)) {
                     factory = function () { return new ((classRef_1).bind.apply((classRef_1), __spread([void 0], injectArgs(provider.deps))))(); };
                 }
@@ -32866,13 +32888,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         input.forEach(function (value) { return Array.isArray(value) ? deepForEach(value, fn) : fn(value); });
     }
     function isValueProvider(value) {
-        return USE_VALUE$2 in value;
+        return value && typeof value == 'object' && USE_VALUE$2 in value;
     }
     function isExistingProvider(value) {
-        return !!value.useExisting;
+        return !!(value && value.useExisting);
     }
     function isFactoryProvider(value) {
-        return !!value.useFactory;
+        return !!(value && value.useFactory);
     }
     function isTypeProvider(value) {
         return typeof value === 'function';
@@ -33527,7 +33549,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.2.0-beta.2+58.sha-52544ff');
+    var VERSION$2 = new Version$1('7.2.0-beta.2+66.sha-c986d3d');
 
     /**
      * @license
@@ -37685,6 +37707,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         return QueryList_;
     }());
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
 
     /**
      * @license
@@ -44203,14 +44233,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             list.splice(index, 1);
         }
     }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
 
     /**
      * @license
@@ -50765,7 +50787,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.2.0-beta.2+58.sha-52544ff');
+    var VERSION$3 = new Version$1('7.2.0-beta.2+66.sha-c986d3d');
 
     /**
      * @license
