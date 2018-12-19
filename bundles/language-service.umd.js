@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.2.0-rc.0+2.sha-e8f7241
+ * @license Angular v7.2.0-rc.0+3.sha-8f8572f
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -15195,7 +15195,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.2.0-rc.0+2.sha-e8f7241');
+    var VERSION$1 = new Version('7.2.0-rc.0+3.sha-8f8572f');
 
     /**
      * @license
@@ -29807,6 +29807,30 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             arr.push(items[i]);
         }
     }
+    /**
+     * Given a current view, finds the nearest component's host (LElement).
+     *
+     * @param lView LView for which we want a host element node
+     * @param declarationMode indicates whether DECLARATION_VIEW or PARENT should be used to climb the
+     * tree.
+     * @returns The host node
+     */
+    function findComponentView(lView, declarationMode) {
+        var rootTNode = lView[HOST_NODE];
+        while (rootTNode && rootTNode.type === 2 /* View */) {
+            ngDevMode && assertDefined(lView[declarationMode ? DECLARATION_VIEW : PARENT], declarationMode ? 'lView.declarationView' : 'lView.parent');
+            lView = lView[declarationMode ? DECLARATION_VIEW : PARENT];
+            rootTNode = lView[HOST_NODE];
+        }
+        return lView;
+    }
+    /**
+     * Return the host TElementNode of the starting LView
+     * @param lView the starting LView.
+     */
+    function getHostTElementNode(lView) {
+        return findComponentView(lView, true)[HOST_NODE];
+    }
 
     /**
      * @license
@@ -30243,7 +30267,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     function getParentInjectorLocation(tNode, view) {
         if (tNode.parent && tNode.parent.injectorIndex !== -1) {
-            return tNode.parent.injectorIndex; // ViewOffset is 0, AcrossHostBoundary is 0
+            return tNode.parent.injectorIndex; // ViewOffset is 0
         }
         // For most cases, the parent injector index can be found on the host node (e.g. for component
         // or container), so this loop will be skipped, but we must keep the loop here to support
@@ -30255,12 +30279,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             hostTNode = view[HOST_NODE];
             viewOffset++;
         }
-        var acrossHostBoundary = hostTNode && hostTNode.type === 3 /* Element */ ?
-            32768 /* AcrossHostBoundary */ :
-            0;
         return hostTNode ?
-            hostTNode.injectorIndex | (viewOffset << 16 /* ViewOffsetShift */) |
-                acrossHostBoundary :
+            hostTNode.injectorIndex | (viewOffset << 16 /* ViewOffsetShift */) :
             -1;
     }
     /**
@@ -30362,12 +30382,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var previousTView = null;
             var injectorIndex = getInjectorIndex(tNode, lView);
             var parentLocation = NO_PARENT_INJECTOR;
+            var hostTElementNode = flags & InjectFlags.Host ? getHostTElementNode(lView) : null;
             // If we should skip this injector, or if there is no injector on this node, start by searching
             // the parent injector.
             if (injectorIndex === -1 || flags & InjectFlags.SkipSelf) {
                 parentLocation = injectorIndex === -1 ? getParentInjectorLocation(tNode, lView) :
                     lView[injectorIndex + PARENT_INJECTOR];
-                if (!shouldSearchParent(flags, parentLocation)) {
+                if (!shouldSearchParent(flags, false)) {
                     injectorIndex = -1;
                 }
                 else {
@@ -30386,12 +30407,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     // At this point, we have an injector which *may* contain the token, so we step through
                     // the providers and directives associated with the injector's corresponding node to get
                     // the instance.
-                    var instance = searchTokensOnInjector(injectorIndex, lView, token, previousTView);
+                    var instance = searchTokensOnInjector(injectorIndex, lView, token, previousTView, flags, hostTElementNode);
                     if (instance !== NOT_FOUND) {
                         return instance;
                     }
                 }
-                if (shouldSearchParent(flags, parentLocation) &&
+                if (shouldSearchParent(flags, lView[TVIEW].data[injectorIndex + TNODE] === hostTElementNode) &&
                     bloomHasToken(bloomHash, injectorIndex, lView)) {
                     // The def wasn't found anywhere on this node, so it was a false positive.
                     // Traverse up the tree and continue searching.
@@ -30428,7 +30449,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
     }
     var NOT_FOUND = {};
-    function searchTokensOnInjector(injectorIndex, lView, token, previousTView) {
+    function searchTokensOnInjector(injectorIndex, lView, token, previousTView, flags, hostTElementNode) {
         var currentTView = lView[TVIEW];
         var tNode = currentTView.data[injectorIndex + TNODE];
         // First, we need to determine if view providers can be accessed by the starting element.
@@ -30449,7 +30470,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             // This means that we just came from the Component's View and therefore are allowed to see
             // into the ViewProviders.
             (previousTView != currentTView && (tNode.type === 3 /* Element */));
-        var injectableIdx = locateDirectiveOrProvider(tNode, lView, token, canAccessViewProviders);
+        // This special case happens when there is a @host on the inject and when we are searching
+        // on the host element node.
+        var isHostSpecialCase = (flags & InjectFlags.Host) && hostTElementNode === tNode;
+        var injectableIdx = locateDirectiveOrProvider(tNode, lView, token, canAccessViewProviders, isHostSpecialCase);
         if (injectableIdx !== null) {
             return getNodeInjectable(currentTView.data, lView, injectableIdx, tNode);
         }
@@ -30464,11 +30488,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * @param lView The view we are currently processing
      * @param token Provider token or type of a directive to look for.
      * @param canAccessViewProviders Whether view providers should be considered.
+     * @param isHostSpecialCase Whether the host special case applies.
      * @returns Index of a found directive or provider, or null when none found.
      */
-    function locateDirectiveOrProvider(tNode, lView, token, canAccessViewProviders) {
+    function locateDirectiveOrProvider(tNode, lView, token, canAccessViewProviders, isHostSpecialCase) {
         var tView = lView[TVIEW];
-        var nodeFlags = tNode.flags;
         var nodeProviderIndexes = tNode.providerIndexes;
         var tInjectables = tView.data;
         var injectablesStart = nodeProviderIndexes & 65535 /* ProvidersStartIndexMask */;
@@ -30476,11 +30500,19 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var directiveEnd = tNode.directiveEnd;
         var cptViewProvidersCount = nodeProviderIndexes >> 16 /* CptViewProvidersCountShift */;
         var startingIndex = canAccessViewProviders ? injectablesStart : injectablesStart + cptViewProvidersCount;
-        for (var i = startingIndex; i < directiveEnd; i++) {
+        // When the host special case applies, only the viewProviders and the component are visible
+        var endIndex = isHostSpecialCase ? injectablesStart + cptViewProvidersCount : directiveEnd;
+        for (var i = startingIndex; i < endIndex; i++) {
             var providerTokenOrDef = tInjectables[i];
             if (i < directivesStart && token === providerTokenOrDef ||
                 i >= directivesStart && providerTokenOrDef.type === token) {
                 return i;
+            }
+        }
+        if (isHostSpecialCase) {
+            var dirDef = tInjectables[directivesStart];
+            if (dirDef && isComponentDef(dirDef) && dirDef.type === token) {
+                return directivesStart;
             }
         }
         return null;
@@ -30565,10 +30597,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return !!(value & mask);
     }
     /** Returns true if flags prevent parent injector from being searched for tokens */
-    function shouldSearchParent(flags, parentLocation) {
-        return !(flags & InjectFlags.Self ||
-            (flags & InjectFlags.Host &&
-                (parentLocation & 32768 /* AcrossHostBoundary */)));
+    function shouldSearchParent(flags, isFirstHostTNode) {
+        return !(flags & InjectFlags.Self) && !(flags & InjectFlags.Host && isFirstHostTNode);
     }
     function injectInjector() {
         var tNode = getPreviousOrParentTNode();
@@ -31569,21 +31599,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
             tNode = nextTNode;
         }
-    }
-    /**
-     * Given a current view, finds the nearest component's host (LElement).
-     *
-     * @param lView LView for which we want a host element node
-     * @returns The host node
-     */
-    function findComponentView(lView) {
-        var rootTNode = lView[HOST_NODE];
-        while (rootTNode && rootTNode.type === 2 /* View */) {
-            ngDevMode && assertDefined(lView[PARENT], 'lView.parent');
-            lView = lView[PARENT];
-            rootTNode = lView[HOST_NODE];
-        }
-        return lView;
     }
     /**
      * NOTE: for performance reasons, the possible actions are inlined within the function instead of
@@ -37800,7 +37815,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.2.0-rc.0+2.sha-e8f7241');
+    var VERSION$2 = new Version$1('7.2.0-rc.0+3.sha-8f8572f');
 
     /**
      * @license
@@ -43962,7 +43977,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             return factoryFn();
         }
         else {
-            var matchingIdx = locateDirectiveOrProvider(tNode, currentView, read, false);
+            var matchingIdx = locateDirectiveOrProvider(tNode, currentView, read, false, false);
             if (matchingIdx !== null) {
                 return getNodeInjectable(currentView[TVIEW].data, currentView, matchingIdx, tNode);
             }
@@ -44007,7 +44022,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     result = queryByTemplateRef(type, tNode, currentView, predicate.read);
                 }
                 else {
-                    var matchingIdx = locateDirectiveOrProvider(tNode, currentView, type, false);
+                    var matchingIdx = locateDirectiveOrProvider(tNode, currentView, type, false, false);
                     if (matchingIdx !== null) {
                         result = queryRead(tNode, currentView, predicate.read, matchingIdx);
                     }
@@ -58201,7 +58216,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.2.0-rc.0+2.sha-e8f7241');
+    var VERSION$3 = new Version$1('7.2.0-rc.0+3.sha-8f8572f');
 
     /**
      * @license
