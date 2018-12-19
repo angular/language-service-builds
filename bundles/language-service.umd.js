@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.2.0-rc.0+5.sha-3ab25ab
+ * @license Angular v7.2.0-rc.0+6.sha-b08f3ac
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -15210,7 +15210,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.2.0-rc.0+5.sha-3ab25ab');
+    var VERSION$1 = new Version('7.2.0-rc.0+6.sha-b08f3ac');
 
     /**
      * @license
@@ -33584,7 +33584,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.2.0-rc.0+5.sha-3ab25ab');
+    var VERSION$2 = new Version$1('7.2.0-rc.0+6.sha-b08f3ac');
 
     /**
      * @license
@@ -50826,7 +50826,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.2.0-rc.0+5.sha-3ab25ab');
+    var VERSION$3 = new Version$1('7.2.0-rc.0+6.sha-b08f3ac');
 
     /**
      * @license
