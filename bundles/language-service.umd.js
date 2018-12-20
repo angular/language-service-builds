@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.2.0-rc.0+10.sha-4b70a4e
+ * @license Angular v7.2.0-rc.0+12.sha-a0585c9
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -13301,6 +13301,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             this._hasNgContent = false;
             // Selectors found in the <ng-content> tags in the template.
             this._ngContentSelectors = [];
+            // Number of non-default selectors found in all parent templates of this template. We need to
+            // track it to properly adjust projection bucket index in the `projection` instruction.
+            this._ngContentSelectorsOffset = 0;
             // These should be handled in the template or element directly.
             this.visitReference = invalid$1;
             this.visitVariable = invalid$1;
@@ -13342,8 +13345,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 return [lhs.set(rhs.prop(variable$$1.value || IMPLICIT_REFERENCE)).toConstDecl()];
             });
         };
-        TemplateDefinitionBuilder.prototype.buildTemplateFunction = function (nodes, variables, i18n) {
+        TemplateDefinitionBuilder.prototype.buildTemplateFunction = function (nodes, variables, ngContentSelectorsOffset, i18n) {
             var _this = this;
+            if (ngContentSelectorsOffset === void 0) { ngContentSelectorsOffset = 0; }
+            this._ngContentSelectorsOffset = ngContentSelectorsOffset;
             if (this._namespace !== Identifiers$1.namespaceHTML) {
                 this.creationInstruction(null, this._namespace);
             }
@@ -13364,8 +13369,20 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             // pass. It's necessary to separate the passes to ensure local refs are defined before
             // resolving bindings. We also count bindings in this pass as we walk bound expressions.
             visitAll$1(this, nodes);
-            // Output a `ProjectionDef` instruction when some `<ng-content>` are present
-            if (this._hasNgContent) {
+            // Add total binding count to pure function count so pure function instructions are
+            // generated with the correct slot offset when update instructions are processed.
+            this._pureFunctionSlots += this._bindingSlots;
+            // Pipes are walked in the first pass (to enqueue `pipe()` creation instructions and
+            // `pipeBind` update instructions), so we have to update the slot offsets manually
+            // to account for bindings.
+            this._valueConverter.updatePipeSlotOffsets(this._bindingSlots);
+            // Nested templates must be processed before creation instructions so template()
+            // instructions can be generated with the correct internal const count.
+            this._nestedTemplateFns.forEach(function (buildTemplateFn) { return buildTemplateFn(); });
+            // Output the `projectionDef` instruction when some `<ng-content>` are present.
+            // The `projectionDef` instruction only emitted for the component template and it is skipped for
+            // nested templates (<ng-template> tags).
+            if (this.level === 0 && this._hasNgContent) {
                 var parameters = [];
                 // Only selectors with a non-default value are generated
                 if (this._ngContentSelectors.length) {
@@ -13380,16 +13397,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 // any `projection` instructions
                 this.creationInstruction(null, Identifiers$1.projectionDef, parameters, /* prepend */ true);
             }
-            // Add total binding count to pure function count so pure function instructions are
-            // generated with the correct slot offset when update instructions are processed.
-            this._pureFunctionSlots += this._bindingSlots;
-            // Pipes are walked in the first pass (to enqueue `pipe()` creation instructions and
-            // `pipeBind` update instructions), so we have to update the slot offsets manually
-            // to account for bindings.
-            this._valueConverter.updatePipeSlotOffsets(this._bindingSlots);
-            // Nested templates must be processed before creation instructions so template()
-            // instructions can be generated with the correct internal const count.
-            this._nestedTemplateFns.forEach(function (buildTemplateFn) { return buildTemplateFn(); });
             if (initI18nContext) {
                 this.i18nEnd(null, selfClosingI18nInstruction);
             }
@@ -13563,7 +13570,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var slot = this.allocateDataSlot();
             var selectorIndex = ngContent.selector === DEFAULT_NG_CONTENT_SELECTOR ?
                 0 :
-                this._ngContentSelectors.push(ngContent.selector);
+                this._ngContentSelectors.push(ngContent.selector) + this._ngContentSelectorsOffset;
             var parameters = [literal(slot)];
             var attributeAsList = [];
             ngContent.attributes.forEach(function (attribute) {
@@ -13843,8 +13850,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             // be able to support bindings in nested templates to local refs that occur after the
             // template definition. e.g. <div *ngIf="showing"> {{ foo }} </div>  <div #foo></div>
             this._nestedTemplateFns.push(function () {
-                var templateFunctionExpr = templateVisitor.buildTemplateFunction(template.children, template.variables, template.i18n);
+                var _a;
+                var templateFunctionExpr = templateVisitor.buildTemplateFunction(template.children, template.variables, _this._ngContentSelectors.length + _this._ngContentSelectorsOffset, template.i18n);
                 _this.constantPool.statements.push(templateFunctionExpr.toDeclStmt(templateName, null));
+                if (templateVisitor._hasNgContent) {
+                    _this._hasNgContent = true;
+                    (_a = _this._ngContentSelectors).push.apply(_a, __spread(templateVisitor._ngContentSelectors));
+                }
             });
             // e.g. template(1, MyComp_Template_1)
             this.creationInstruction(template.sourceSpan, Identifiers$1.templateCreate, function () {
@@ -14603,6 +14615,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var templateName = templateTypeName ? templateTypeName + "_Template" : null;
         var directivesUsed = new Set();
         var pipesUsed = new Set();
+        var changeDetection = meta.changeDetection;
         var template = meta.template;
         var templateBuilder = new TemplateDefinitionBuilder(constantPool, BindingScope.ROOT_SCOPE, 0, templateTypeName, null, null, templateName, meta.viewQueries, directiveMatcher, directivesUsed, meta.pipes, pipesUsed, Identifiers$1.namespaceHTML, meta.relativeContextFilePath, meta.i18nUseExternalIds);
         var templateFunctionExpression = templateBuilder.buildTemplateFunction(template.nodes, []);
@@ -14649,6 +14662,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         // e.g. `animation: [trigger('123', [])]`
         if (meta.animations !== null) {
             definitionMap.set('data', literalMap([{ key: 'animation', value: meta.animations, quoted: false }]));
+        }
+        // Only set the change detection flag if it's defined and it's not the default.
+        if (changeDetection != null && changeDetection !== ChangeDetectionStrategy.Default) {
+            definitionMap.set('changeDetection', literal(changeDetection));
         }
         // On the type side, remove newlines from the selector as it will need to fit into a TypeScript
         // string literal, which must be on one line.
@@ -15058,7 +15075,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
             // Compile the component metadata, including template, into an expression.
             // TODO(alxhub): implement inputs, outputs, queries, etc.
-            var res = compileComponentFromMetadata(__assign({}, facade, convertDirectiveFacadeToMetadata(facade), { selector: facade.selector || this.elementSchemaRegistry.getDefaultComponentElementName(), template: template, viewQueries: facade.viewQueries.map(convertToR3QueryMetadata), wrapDirectivesAndPipesInClosure: false, styles: facade.styles || [], encapsulation: facade.encapsulation, interpolation: interpolationConfig, animations: facade.animations != null ? new WrappedNodeExpr(facade.animations) : null, viewProviders: facade.viewProviders != null ? new WrappedNodeExpr(facade.viewProviders) :
+            var res = compileComponentFromMetadata(__assign({}, facade, convertDirectiveFacadeToMetadata(facade), { selector: facade.selector || this.elementSchemaRegistry.getDefaultComponentElementName(), template: template, viewQueries: facade.viewQueries.map(convertToR3QueryMetadata), wrapDirectivesAndPipesInClosure: false, styles: facade.styles || [], encapsulation: facade.encapsulation, interpolation: interpolationConfig, changeDetection: facade.changeDetection, animations: facade.animations != null ? new WrappedNodeExpr(facade.animations) : null, viewProviders: facade.viewProviders != null ? new WrappedNodeExpr(facade.viewProviders) :
                     null, relativeContextFilePath: '', i18nUseExternalIds: true }), constantPool, makeBindingParser(interpolationConfig));
             var preStatements = __spread(constantPool.statements, res.statements);
             return jitExpression(res.expression, angularCoreEnv, sourceMapUrl, preStatements);
@@ -15195,7 +15212,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.2.0-rc.0+10.sha-4b70a4e');
+    var VERSION$1 = new Version('7.2.0-rc.0+12.sha-a0585c9');
 
     /**
      * @license
@@ -37815,7 +37832,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.2.0-rc.0+10.sha-4b70a4e');
+    var VERSION$2 = new Version$1('7.2.0-rc.0+12.sha-a0585c9');
 
     /**
      * @license
@@ -45327,7 +45344,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                         error.push("Did you run and wait for 'resolveComponentResources()'?");
                         throw new Error(error.join('\n'));
                     }
-                    var meta = __assign({}, directiveMetadata(type, metadata), { template: metadata.template || '', preserveWhitespaces: metadata.preserveWhitespaces || false, styles: metadata.styles || EMPTY_ARRAY$1, animations: metadata.animations, viewQueries: extractQueriesMetadata(type, getReflect().propMetadata(type), isViewQuery), directives: [], pipes: new Map(), encapsulation: metadata.encapsulation || ViewEncapsulation$1.Emulated, interpolation: metadata.interpolation, viewProviders: metadata.viewProviders || null });
+                    var meta = __assign({}, directiveMetadata(type, metadata), { template: metadata.template || '', preserveWhitespaces: metadata.preserveWhitespaces || false, styles: metadata.styles || EMPTY_ARRAY$1, animations: metadata.animations, viewQueries: extractQueriesMetadata(type, getReflect().propMetadata(type), isViewQuery), directives: [], changeDetection: metadata.changeDetection, pipes: new Map(), encapsulation: metadata.encapsulation || ViewEncapsulation$1.Emulated, interpolation: metadata.interpolation, viewProviders: metadata.viewProviders || null });
                     ngComponentDef = compiler.compileComponent(angularCoreEnv, "ng://" + stringify$1(type) + "/template.html", meta);
                     // When NgModule decorator executed, we enqueued the module definition such that
                     // it would only dequeue and add itself as module scope to all of its declarations,
@@ -58216,7 +58233,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.2.0-rc.0+10.sha-4b70a4e');
+    var VERSION$3 = new Version$1('7.2.0-rc.0+12.sha-a0585c9');
 
     /**
      * @license
