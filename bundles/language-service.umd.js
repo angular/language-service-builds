@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.2.0-rc.0+26.sha-0b3ae3d
+ * @license Angular v7.2.0-rc.0+27.sha-13eb57a
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -3384,6 +3384,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         Identifiers.elementContainerStart = { name: 'ɵelementContainerStart', moduleName: CORE$1 };
         Identifiers.elementContainerEnd = { name: 'ɵelementContainerEnd', moduleName: CORE$1 };
         Identifiers.elementStyling = { name: 'ɵelementStyling', moduleName: CORE$1 };
+        Identifiers.elementHostAttrs = { name: 'ɵelementHostAttrs', moduleName: CORE$1 };
         Identifiers.elementStylingMap = { name: 'ɵelementStylingMap', moduleName: CORE$1 };
         Identifiers.elementStyleProp = { name: 'ɵelementStyleProp', moduleName: CORE$1 };
         Identifiers.elementStylingApply = { name: 'ɵelementStylingApply', moduleName: CORE$1 };
@@ -8337,10 +8338,15 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      *
      * @param value string representation of style as used in the `style` attribute in HTML.
      *   Example: `color: red; height: auto`.
-     * @returns an object literal. `{ color: 'red', height: 'auto'}`.
+     * @returns An array of style property name and value pairs, e.g. `['color', 'red', 'height',
+     * 'auto']`
      */
     function parse(value) {
-        var styles = {};
+        // we use a string array here instead of a string map
+        // because a string-map is not guaranteed to retain the
+        // order of the entries whereas a string array can be
+        // construted in a [key, value, key, value] format.
+        var styles = [];
         var i = 0;
         var parenDepth = 0;
         var quote = 0 /* QuoteNone */;
@@ -8387,7 +8393,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 case 59 /* Semicolon */:
                     if (currentProp && valueStart > 0 && parenDepth === 0 && quote === 0 /* QuoteNone */) {
                         var styleVal = value.substring(valueStart, i - 1).trim();
-                        styles[currentProp] = valueHasQuotes ? stripUnnecessaryQuotes(styleVal) : styleVal;
+                        styles.push(currentProp, valueHasQuotes ? stripUnnecessaryQuotes(styleVal) : styleVal);
                         propStart = i;
                         valueStart = 0;
                         currentProp = null;
@@ -8398,7 +8404,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         if (currentProp && valueStart) {
             var styleVal = value.substr(valueStart).trim();
-            styles[currentProp] = valueHasQuotes ? stripUnnecessaryQuotes(styleVal) : styleVal;
+            styles.push(currentProp, valueHasQuotes ? stripUnnecessaryQuotes(styleVal) : styleVal);
         }
         return styles;
     }
@@ -8423,6 +8429,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
 
     /**
      * Produces creation/update instructions for all styling bindings (class and style)
+     *
+     * It also produces the creation instruction to register all initial styling values
+     * (which are all the static class="..." and style="..." attribute values that exist
+     * on an element within a template).
      *
      * The builder class below handles producing instructions for the following cases:
      *
@@ -8450,21 +8460,49 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         function StylingBuilder(_elementIndexExpr, _directiveExpr) {
             this._elementIndexExpr = _elementIndexExpr;
             this._directiveExpr = _directiveExpr;
-            this.hasBindingsOrInitialValues = false;
+            /** Whether or not there are any static styling values present */
+            this._hasInitialValues = false;
+            /**
+             *  Whether or not there are any styling bindings present
+             *  (i.e. `[style]`, `[class]`, `[style.prop]` or `[class.name]`)
+             */
+            this._hasBindings = false;
+            /** the input for [class] (if it exists) */
             this._classMapInput = null;
+            /** the input for [style] (if it exists) */
             this._styleMapInput = null;
+            /** an array of each [style.prop] input */
             this._singleStyleInputs = null;
+            /** an array of each [class.name] input */
             this._singleClassInputs = null;
             this._lastStylingInput = null;
             // maps are used instead of hash maps because a Map will
             // retain the ordering of the keys
+            /**
+             * Represents the location of each style binding in the template
+             * (e.g. `<div [style.width]="w" [style.height]="h">` implies
+             * that `width=0` and `height=1`)
+             */
             this._stylesIndex = new Map();
+            /**
+             * Represents the location of each class binding in the template
+             * (e.g. `<div [class.big]="b" [class.hidden]="h">` implies
+             * that `big=0` and `hidden=1`)
+             */
             this._classesIndex = new Map();
-            this._initialStyleValues = {};
-            this._initialClassValues = {};
+            this._initialStyleValues = [];
+            this._initialClassValues = [];
+            // certain style properties ALWAYS need sanitization
+            // this is checked each time new styles are encountered
             this._useDefaultSanitizer = false;
-            this._applyFnRequired = false;
         }
+        StylingBuilder.prototype.hasBindingsOrInitialValues = function () { return this._hasBindings || this._hasInitialValues; };
+        /**
+         * Registers a given input to the styling builder to be later used when producing AOT code.
+         *
+         * The code below will only accept the input if it is somehow tied to styling (whether it be
+         * style/class bindings or static style/class attributes).
+         */
         StylingBuilder.prototype.registerBoundInput = function (input) {
             // [attr.style] or [attr.class] are skipped in the code below,
             // they should not be treated as styling-based bindings since
@@ -8498,112 +8536,149 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 (this._singleStyleInputs = this._singleStyleInputs || []).push(entry);
                 this._useDefaultSanitizer = this._useDefaultSanitizer || isStyleSanitizable(propertyName);
                 registerIntoMap(this._stylesIndex, propertyName);
-                this.hasBindingsOrInitialValues = true;
             }
             else {
                 this._useDefaultSanitizer = true;
                 this._styleMapInput = entry;
             }
             this._lastStylingInput = entry;
-            this.hasBindingsOrInitialValues = true;
-            this._applyFnRequired = true;
+            this._hasBindings = true;
             return entry;
         };
         StylingBuilder.prototype.registerClassInput = function (className, value, sourceSpan) {
             var entry = { name: className, value: value, sourceSpan: sourceSpan };
             if (className) {
                 (this._singleClassInputs = this._singleClassInputs || []).push(entry);
-                this.hasBindingsOrInitialValues = true;
                 registerIntoMap(this._classesIndex, className);
             }
             else {
                 this._classMapInput = entry;
             }
             this._lastStylingInput = entry;
-            this.hasBindingsOrInitialValues = true;
-            this._applyFnRequired = true;
+            this._hasBindings = true;
             return entry;
         };
+        /**
+         * Registers the element's static style string value to the builder.
+         *
+         * @param value the style string (e.g. `width:100px; height:200px;`)
+         */
         StylingBuilder.prototype.registerStyleAttr = function (value) {
-            var _this = this;
             this._initialStyleValues = parse(value);
-            Object.keys(this._initialStyleValues).forEach(function (prop) {
-                registerIntoMap(_this._stylesIndex, prop);
-                _this.hasBindingsOrInitialValues = true;
-            });
+            this._hasInitialValues = true;
         };
+        /**
+         * Registers the element's static class string value to the builder.
+         *
+         * @param value the className string (e.g. `disabled gold zoom`)
+         */
         StylingBuilder.prototype.registerClassAttr = function (value) {
-            var _this = this;
-            this._initialClassValues = {};
-            value.split(/\s+/g).forEach(function (className) {
-                _this._initialClassValues[className] = true;
-                registerIntoMap(_this._classesIndex, className);
-                _this.hasBindingsOrInitialValues = true;
-            });
+            this._initialClassValues = value.trim().split(/\s+/g);
+            this._hasInitialValues = true;
         };
-        StylingBuilder.prototype._buildInitExpr = function (registry, initialValues) {
-            var exprs = [];
-            var nameAndValueExprs = [];
-            // _c0 = [prop, prop2, prop3, ...]
-            registry.forEach(function (value, key) {
-                var keyLiteral = literal(key);
-                exprs.push(keyLiteral);
-                var initialValue = initialValues[key];
-                if (initialValue) {
-                    nameAndValueExprs.push(keyLiteral, literal(initialValue));
+        /**
+         * Appends all styling-related expressions to the provided attrs array.
+         *
+         * @param attrs an existing array where each of the styling expressions
+         * will be inserted into.
+         */
+        StylingBuilder.prototype.populateInitialStylingAttrs = function (attrs) {
+            // [CLASS_MARKER, 'foo', 'bar', 'baz' ...]
+            if (this._initialClassValues.length) {
+                attrs.push(literal(1 /* Classes */));
+                for (var i = 0; i < this._initialClassValues.length; i++) {
+                    attrs.push(literal(this._initialClassValues[i]));
                 }
-            });
-            if (nameAndValueExprs.length) {
-                // _c0 = [... MARKER ...]
-                exprs.push(literal(1 /* VALUES_MODE */));
-                // _c0 = [prop, VALUE, prop2, VALUE2, ...]
-                exprs.push.apply(exprs, __spread(nameAndValueExprs));
             }
-            return exprs.length ? literalArr(exprs) : null;
+            // [STYLE_MARKER, 'width', '200px', 'height', '100px', ...]
+            if (this._initialStyleValues.length) {
+                attrs.push(literal(2 /* Styles */));
+                for (var i = 0; i < this._initialStyleValues.length; i += 2) {
+                    attrs.push(literal(this._initialStyleValues[i]), literal(this._initialStyleValues[i + 1]));
+                }
+            }
         };
-        StylingBuilder.prototype.buildCreateLevelInstruction = function (sourceSpan, constantPool) {
-            if (this.hasBindingsOrInitialValues) {
-                var initialClasses = this._buildInitExpr(this._classesIndex, this._initialClassValues);
-                var initialStyles = this._buildInitExpr(this._stylesIndex, this._initialStyleValues);
-                // in the event that a [style] binding is used then sanitization will
-                // always be imported because it is not possible to know ahead of time
-                // whether style bindings will use or not use any sanitizable properties
-                // that isStyleSanitizable() will detect
-                var useSanitizer = this._useDefaultSanitizer;
-                var params_1 = [];
-                if (initialClasses) {
-                    // the template compiler handles initial class styling (e.g. class="foo") values
-                    // in a special command called `elementClass` so that the initial class
-                    // can be processed during runtime. These initial class values are bound to
-                    // a constant because the inital class values do not change (since they're static).
-                    params_1.push(constantPool.getConstLiteral(initialClasses, true));
-                }
-                else if (initialStyles || useSanitizer || this._directiveExpr) {
-                    // no point in having an extra `null` value unless there are follow-up params
-                    params_1.push(NULL_EXPR);
-                }
-                if (initialStyles) {
-                    // the template compiler handles initial style (e.g. style="foo") values
-                    // in a special command called `elementStyle` so that the initial styles
-                    // can be processed during runtime. These initial styles values are bound to
-                    // a constant because the inital style values do not change (since they're static).
-                    params_1.push(constantPool.getConstLiteral(initialStyles, true));
-                }
-                else if (useSanitizer || this._directiveExpr) {
-                    // no point in having an extra `null` value unless there are follow-up params
-                    params_1.push(NULL_EXPR);
-                }
-                if (useSanitizer || this._directiveExpr) {
-                    params_1.push(useSanitizer ? importExpr(Identifiers$1.defaultStyleSanitizer) : NULL_EXPR);
-                    if (this._directiveExpr) {
-                        params_1.push(this._directiveExpr);
+        /**
+         * Builds an instruction with all the expressions and parameters for `elementHostAttrs`.
+         *
+         * The instruction generation code below is used for producing the AOT statement code which is
+         * responsible for registering initial styles (within a directive hostBindings' creation block)
+         * to the directive host element.
+         */
+        StylingBuilder.prototype.buildDirectiveHostAttrsInstruction = function (sourceSpan, constantPool) {
+            var _this = this;
+            if (this._hasInitialValues && this._directiveExpr) {
+                return {
+                    sourceSpan: sourceSpan,
+                    reference: Identifiers$1.elementHostAttrs,
+                    buildParams: function () {
+                        var attrs = [];
+                        _this.populateInitialStylingAttrs(attrs);
+                        return [_this._directiveExpr, getConstantLiteralFromArray(constantPool, attrs)];
                     }
-                }
-                return { sourceSpan: sourceSpan, reference: Identifiers$1.elementStyling, buildParams: function () { return params_1; } };
+                };
             }
             return null;
         };
-        StylingBuilder.prototype._buildStylingMap = function (valueConverter) {
+        /**
+         * Builds an instruction with all the expressions and parameters for `elementStyling`.
+         *
+         * The instruction generation code below is used for producing the AOT statement code which is
+         * responsible for registering style/class bindings to an element.
+         */
+        StylingBuilder.prototype.buildElementStylingInstruction = function (sourceSpan, constantPool) {
+            var _this = this;
+            if (this._hasBindings) {
+                return {
+                    sourceSpan: sourceSpan,
+                    reference: Identifiers$1.elementStyling,
+                    buildParams: function () {
+                        // a string array of every style-based binding
+                        var styleBindingProps = _this._singleStyleInputs ? _this._singleStyleInputs.map(function (i) { return literal(i.name); }) : [];
+                        // a string array of every class-based binding
+                        var classBindingNames = _this._singleClassInputs ? _this._singleClassInputs.map(function (i) { return literal(i.name); }) : [];
+                        // to salvage space in the AOT generated code, there is no point in passing
+                        // in `null` into a param if any follow-up params are not used. Therefore,
+                        // only when a trailing param is used then it will be filled with nulls in between
+                        // (otherwise a shorter amount of params will be filled). The code below helps
+                        // determine how many params are required in the expression code.
+                        //
+                        // min params => elementStyling()
+                        // max params => elementStyling(classBindings, styleBindings, sanitizer, directive)
+                        var expectedNumberOfArgs = 0;
+                        if (_this._directiveExpr) {
+                            expectedNumberOfArgs = 4;
+                        }
+                        else if (_this._useDefaultSanitizer) {
+                            expectedNumberOfArgs = 3;
+                        }
+                        else if (styleBindingProps.length) {
+                            expectedNumberOfArgs = 2;
+                        }
+                        else if (classBindingNames.length) {
+                            expectedNumberOfArgs = 1;
+                        }
+                        var params = [];
+                        addParam(params, classBindingNames.length > 0, getConstantLiteralFromArray(constantPool, classBindingNames), 1, expectedNumberOfArgs);
+                        addParam(params, styleBindingProps.length > 0, getConstantLiteralFromArray(constantPool, styleBindingProps), 2, expectedNumberOfArgs);
+                        addParam(params, _this._useDefaultSanitizer, importExpr(Identifiers$1.defaultStyleSanitizer), 3, expectedNumberOfArgs);
+                        if (_this._directiveExpr) {
+                            params.push(_this._directiveExpr);
+                        }
+                        return params;
+                    }
+                };
+            }
+            return null;
+        };
+        /**
+         * Builds an instruction with all the expressions and parameters for `elementStylingMap`.
+         *
+         * The instruction data will contain all expressions for `elementStylingMap` to function
+         * which include the `[style]` and `[class]` expression params (if they exist) as well as
+         * the sanitizer and directive reference expression.
+         */
+        StylingBuilder.prototype.buildElementStylingMapInstruction = function (valueConverter) {
             var _this = this;
             if (this._classMapInput || this._styleMapInput) {
                 var stylingInput = this._classMapInput || this._styleMapInput;
@@ -8690,18 +8765,20 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 }
             };
         };
+        /**
+         * Constructs all instructions which contain the expressions that will be placed
+         * into the update block of a template function or a directive hostBindings function.
+         */
         StylingBuilder.prototype.buildUpdateLevelInstructions = function (valueConverter) {
             var instructions = [];
-            if (this.hasBindingsOrInitialValues) {
-                var mapInstruction = this._buildStylingMap(valueConverter);
+            if (this._hasBindings) {
+                var mapInstruction = this.buildElementStylingMapInstruction(valueConverter);
                 if (mapInstruction) {
                     instructions.push(mapInstruction);
                 }
                 instructions.push.apply(instructions, __spread(this._buildStyleInputs(valueConverter)));
                 instructions.push.apply(instructions, __spread(this._buildClassInputs(valueConverter)));
-                if (this._applyFnRequired) {
-                    instructions.push(this._buildApplyFn());
-                }
+                instructions.push(this._buildApplyFn());
             }
             return instructions;
         };
@@ -8718,6 +8795,25 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function isStyleSanitizable(prop) {
         return prop === 'background-image' || prop === 'background' || prop === 'border-image' ||
             prop === 'filter' || prop === 'list-style' || prop === 'list-style-image';
+    }
+    /**
+     * Simple helper function to either provide the constant literal that will house the value
+     * here or a null value if the provided values are empty.
+     */
+    function getConstantLiteralFromArray(constantPool, values) {
+        return values.length ? constantPool.getConstLiteral(literalArr(values), true) : NULL_EXPR;
+    }
+    /**
+     * Simple helper function that adds a parameter or does nothing at all depending on the provided
+     * predicate and totalExpectedArgs values
+     */
+    function addParam(params, predicate, value, argNumber, totalExpectedArgs) {
+        if (predicate) {
+            params.push(value);
+        }
+        else if (argNumber < totalExpectedArgs) {
+            params.push(NULL_EXPR);
+        }
     }
 
     /**
@@ -13687,7 +13783,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             outputAttrs.forEach(function (attr) { return attributes.push(literal(attr.name), literal(attr.value)); });
             // this will build the instructions so that they fall into the following syntax
             // add attributes for directive matching purposes
-            attributes.push.apply(attributes, __spread(this.prepareSyntheticAndSelectOnlyAttrs(allOtherInputs, element.outputs)));
+            attributes.push.apply(attributes, __spread(this.prepareSyntheticAndSelectOnlyAttrs(allOtherInputs, element.outputs, stylingBuilder)));
             parameters.push(this.toAttrsParam(attributes));
             // local refs (ex.: <div #foo #bar="baz">)
             parameters.push(this.prepareRefsParameter(element.references));
@@ -13710,10 +13806,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 }
                 return element.children.length > 0;
             };
-            var createSelfClosingInstruction = !stylingBuilder.hasBindingsOrInitialValues &&
+            var createSelfClosingInstruction = !stylingBuilder.hasBindingsOrInitialValues() &&
                 !isNgContainer$$1 && element.outputs.length === 0 && i18nAttrs.length === 0 && !hasChildren();
             var createSelfClosingI18nInstruction = !createSelfClosingInstruction &&
-                !stylingBuilder.hasBindingsOrInitialValues && hasTextChildrenOnly(element.children);
+                !stylingBuilder.hasBindingsOrInitialValues() && hasTextChildrenOnly(element.children);
             if (createSelfClosingInstruction) {
                 this.creationInstruction(element.sourceSpan, Identifiers$1.element, trimTrailingNulls(parameters));
             }
@@ -13758,13 +13854,22 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                         }
                     }
                 }
-                // initial styling for static style="..." and class="..." attributes
-                this.processStylingInstruction(implicit, stylingBuilder.buildCreateLevelInstruction(element.sourceSpan, this.constantPool), true);
+                // The style bindings code is placed into two distinct blocks within the template function AOT
+                // code: creation and update. The creation code contains the `elementStyling` instructions
+                // which will apply the collected binding values to the element. `elementStyling` is
+                // designed to run inside of `elementStart` and `elementEnd`. The update instructions
+                // (things like `elementStyleProp`, `elementClassProp`, etc..) are applied later on in this
+                // file
+                this.processStylingInstruction(implicit, stylingBuilder.buildElementStylingInstruction(element.sourceSpan, this.constantPool), true);
                 // Generate Listeners (outputs)
                 element.outputs.forEach(function (outputAst) {
                     _this.creationInstruction(outputAst.sourceSpan, Identifiers$1.listener, _this.prepareListenerParameter(element.name, outputAst));
                 });
             }
+            // the code here will collect all update-level styling instructions and add them to the
+            // update block of the template function AOT code. Instructions like `elementStyleProp`,
+            // `elementStylingMap`, `elementClassProp` and `elementStylingApply` are all generated
+            // and assign in the code below.
             stylingBuilder.buildUpdateLevelInstructions(this._valueConverter).forEach(function (instruction) {
                 _this.processStylingInstruction(implicit, instruction, false);
             });
@@ -14005,7 +14110,24 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 this.directiveMatcher.match(selector, function (cssSelector, staticType) { _this.directives.add(staticType); });
             }
         };
-        TemplateDefinitionBuilder.prototype.prepareSyntheticAndSelectOnlyAttrs = function (inputs, outputs) {
+        /**
+         * Prepares all attribute expression values for the `TAttributes` array.
+         *
+         * The purpose of this function is to properly construct an attributes array that
+         * is passed into the `elementStart` (or just `element`) functions. Because there
+         * are many different types of attributes, the array needs to be constructed in a
+         * special way so that `elementStart` can properly evaluate them.
+         *
+         * The format looks like this:
+         *
+         * ```
+         * attrs = [prop, value, prop2, value2,
+         *   CLASSES, class1, class2,
+         *   STYLES, style1, value1, style2, value2,
+         *   SELECT_ONLY, name1, name2, name2, ...]
+         * ```
+         */
+        TemplateDefinitionBuilder.prototype.prepareSyntheticAndSelectOnlyAttrs = function (inputs, outputs, styles) {
             var attrExprs = [];
             var nonSyntheticInputs = [];
             if (inputs.length) {
@@ -14023,8 +14145,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     }
                 });
             }
+            // it's important that this occurs before SelectOnly because once `elementStart`
+            // comes across the SelectOnly marker then it will continue reading each value as
+            // as single property value cell by cell.
+            if (styles) {
+                styles.populateInitialStylingAttrs(attrExprs);
+            }
             if (nonSyntheticInputs.length || outputs.length) {
-                attrExprs.push(literal(1 /* SelectOnly */));
+                attrExprs.push(literal(3 /* SelectOnly */));
                 nonSyntheticInputs.forEach(function (i) { return attrExprs.push(asLiteral(i.name)); });
                 outputs.forEach(function (o) { return attrExprs.push(asLiteral(o.name)); });
             }
@@ -14890,15 +15018,30 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 }
                 finally { if (e_3) throw e_3.error; }
             }
-            if (styleBuilder.hasBindingsOrInitialValues) {
-                var createInstruction = styleBuilder.buildCreateLevelInstruction(null, constantPool);
-                if (createInstruction) {
-                    var createStmt = createStylingStmt(createInstruction, bindingContext, bindingFn);
-                    createStatements.push(createStmt);
+            if (styleBuilder.hasBindingsOrInitialValues()) {
+                // since we're dealing with directives here and directives have a hostBinding
+                // function, we need to generate special instructions that deal with styling
+                // (both bindings and initial values). The instruction below will instruct
+                // all initial styling (styling that is inside of a host binding within a
+                // directive) to be attached to the host element of the directive.
+                var hostAttrsInstruction = styleBuilder.buildDirectiveHostAttrsInstruction(null, constantPool);
+                if (hostAttrsInstruction) {
+                    createStatements.push(createStylingStmt(hostAttrsInstruction, bindingContext, bindingFn));
                 }
+                // singular style/class bindings (things like `[style.prop]` and `[class.name]`)
+                // MUST be registered on a given element within the component/directive
+                // templateFn/hostBindingsFn functions. The instruction below will figure out
+                // what all the bindings are and then generate the statements required to register
+                // those bindings to the element via `elementStyling`.
+                var elementStylingInstruction = styleBuilder.buildElementStylingInstruction(null, constantPool);
+                if (elementStylingInstruction) {
+                    createStatements.push(createStylingStmt(elementStylingInstruction, bindingContext, bindingFn));
+                }
+                // finally each binding that was registered in the statement above will need to be added to
+                // the update block of a component/directive templateFn/hostBindingsFn so that the bindings
+                // are evaluated and updated for the element.
                 styleBuilder.buildUpdateLevelInstructions(valueConverter).forEach(function (instruction) {
-                    var updateStmt = createStylingStmt(instruction, bindingContext, bindingFn);
-                    updateStatements.push(updateStmt);
+                    updateStatements.push(createStylingStmt(instruction, bindingContext, bindingFn));
                 });
             }
         }
@@ -15227,7 +15370,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.2.0-rc.0+26.sha-0b3ae3d');
+    var VERSION$1 = new Version('7.2.0-rc.0+27.sha-13eb57a');
 
     /**
      * @license
@@ -28603,6 +28746,85 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    function ngDevModeResetPerfCounters() {
+        var newCounters = {
+            firstTemplatePass: 0,
+            tNode: 0,
+            tView: 0,
+            rendererCreateTextNode: 0,
+            rendererSetText: 0,
+            rendererCreateElement: 0,
+            rendererAddEventListener: 0,
+            rendererSetAttribute: 0,
+            rendererRemoveAttribute: 0,
+            rendererSetProperty: 0,
+            rendererSetClassName: 0,
+            rendererAddClass: 0,
+            rendererRemoveClass: 0,
+            rendererSetStyle: 0,
+            rendererRemoveStyle: 0,
+            rendererDestroy: 0,
+            rendererDestroyNode: 0,
+            rendererMoveNode: 0,
+            rendererRemoveNode: 0,
+            rendererCreateComment: 0,
+        };
+        // NOTE: Under Ivy we may have both window & global defined in the Node
+        //    environment since ensureDocument() in render3.ts sets global.window.
+        if (typeof window != 'undefined') {
+            // Make sure to refer to ngDevMode as ['ngDevMode'] for closure.
+            window['ngDevMode'] = newCounters;
+        }
+        if (typeof global != 'undefined') {
+            // Make sure to refer to ngDevMode as ['ngDevMode'] for closure.
+            global['ngDevMode'] = newCounters;
+        }
+        if (typeof self != 'undefined') {
+            // Make sure to refer to ngDevMode as ['ngDevMode'] for closure.
+            self['ngDevMode'] = newCounters;
+        }
+        return newCounters;
+    }
+    /**
+     * This checks to see if the `ngDevMode` has been set. If yes,
+     * than we honor it, otherwise we default to dev mode with additional checks.
+     *
+     * The idea is that unless we are doing production build where we explicitly
+     * set `ngDevMode == false` we should be helping the developer by providing
+     * as much early warning and errors as possible.
+     */
+    if (typeof ngDevMode === 'undefined' || ngDevMode) {
+        ngDevModeResetPerfCounters();
+    }
+
+    /**
+    * @license
+    * Copyright Google Inc. All Rights Reserved.
+    *
+    * Use of this source code is governed by an MIT-style license that can be
+    * found in the LICENSE file at https://angular.io/license
+    */
+    /**
+     * This file contains reuseable "empty" symbols that can be used as default return values
+     * in different parts of the rendering code. Because the same symbols are returned, this
+     * allows for identity checks against these values to be consistently used by the framework
+     * code.
+     */
+    var EMPTY_OBJ = {};
+    var EMPTY_ARRAY$1 = [];
+    // freezing the values prevents any code from accidentally inserting new values in
+    if (typeof ngDevMode !== 'undefined' && ngDevMode) {
+        Object.freeze(EMPTY_OBJ);
+        Object.freeze(EMPTY_ARRAY$1);
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     var __window$1 = typeof window !== 'undefined' && window;
     var __self$1 = typeof self !== 'undefined' && typeof WorkerGlobalScope !== 'undefined' &&
         self instanceof WorkerGlobalScope && self;
@@ -28676,70 +28898,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    function ngDevModeResetPerfCounters() {
-        var newCounters = {
-            firstTemplatePass: 0,
-            tNode: 0,
-            tView: 0,
-            rendererCreateTextNode: 0,
-            rendererSetText: 0,
-            rendererCreateElement: 0,
-            rendererAddEventListener: 0,
-            rendererSetAttribute: 0,
-            rendererRemoveAttribute: 0,
-            rendererSetProperty: 0,
-            rendererSetClassName: 0,
-            rendererAddClass: 0,
-            rendererRemoveClass: 0,
-            rendererSetStyle: 0,
-            rendererRemoveStyle: 0,
-            rendererDestroy: 0,
-            rendererDestroyNode: 0,
-            rendererMoveNode: 0,
-            rendererRemoveNode: 0,
-            rendererCreateComment: 0,
-        };
-        // NOTE: Under Ivy we may have both window & global defined in the Node
-        //    environment since ensureDocument() in render3.ts sets global.window.
-        if (typeof window != 'undefined') {
-            // Make sure to refer to ngDevMode as ['ngDevMode'] for closure.
-            window['ngDevMode'] = newCounters;
-        }
-        if (typeof global != 'undefined') {
-            // Make sure to refer to ngDevMode as ['ngDevMode'] for closure.
-            global['ngDevMode'] = newCounters;
-        }
-        if (typeof self != 'undefined') {
-            // Make sure to refer to ngDevMode as ['ngDevMode'] for closure.
-            self['ngDevMode'] = newCounters;
-        }
-        return newCounters;
-    }
-    /**
-     * This checks to see if the `ngDevMode` has been set. If yes,
-     * than we honor it, otherwise we default to dev mode with additional checks.
-     *
-     * The idea is that unless we are doing production build where we explicitly
-     * set `ngDevMode == false` we should be helping the developer by providing
-     * as much early warning and errors as possible.
-     */
-    if (typeof ngDevMode === 'undefined' || ngDevMode) {
-        ngDevModeResetPerfCounters();
-    }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    var EMPTY = {};
-    var EMPTY_ARRAY$1 = [];
-    if (typeof ngDevMode !== 'undefined' && ngDevMode) {
-        Object.freeze(EMPTY);
-        Object.freeze(EMPTY_ARRAY$1);
-    }
     /**
      * The following getter methods retrieve the definition form the type. Currently the retrieval
      * honors inheritance, but in the future we may change the rule to require that definitions are
@@ -28754,6 +28912,439 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             throw new Error("Type " + stringify$1(type) + " does not have 'ngModuleDef' property.");
         }
         return ngModuleDef;
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    function assertEqual(actual, expected, msg) {
+        if (actual != expected) {
+            throwError(msg);
+        }
+    }
+    function assertNotEqual(actual, expected, msg) {
+        if (actual == expected) {
+            throwError(msg);
+        }
+    }
+    function assertLessThan(actual, expected, msg) {
+        if (actual >= expected) {
+            throwError(msg);
+        }
+    }
+    function assertGreaterThan(actual, expected, msg) {
+        if (actual <= expected) {
+            throwError(msg);
+        }
+    }
+    function assertDefined(actual, msg) {
+        if (actual == null) {
+            throwError(msg);
+        }
+    }
+    function assertComponentType(actual, msg) {
+        if (msg === void 0) { msg = 'Type passed in is not ComponentType, it does not have \'ngComponentDef\' property.'; }
+        if (!getComponentDef(actual)) {
+            throwError(msg);
+        }
+    }
+    function throwError(msg) {
+        // tslint:disable-next-line
+        debugger; // Left intentionally for better debugger experience.
+        throw new Error("ASSERTION ERROR: " + msg);
+    }
+    function assertDomNode(node) {
+        assertEqual(node instanceof Node, true, 'The provided value must be an instance of a DOM Node');
+    }
+    function assertPreviousIsParent(isParent) {
+        assertEqual(isParent, true, 'previousOrParentTNode should be a parent');
+    }
+    function assertDataInRange(arr, index) {
+        assertLessThan(index, arr ? arr.length : 0, 'index expected to be a valid data index');
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    // Below are constants for LView indices to help us look up LView members
+    // without having to remember the specific indices.
+    // Uglify will inline these when minifying so there shouldn't be a cost.
+    var TVIEW = 0;
+    var FLAGS = 1;
+    var PARENT = 2;
+    var NEXT = 3;
+    var QUERIES = 4;
+    var HOST = 5;
+    var HOST_NODE = 6; // Rename to `T_HOST`?
+    var BINDING_INDEX = 7;
+    var CLEANUP = 8;
+    var CONTEXT = 9;
+    var INJECTOR = 10;
+    var RENDERER_FACTORY = 11;
+    var RENDERER = 12;
+    var SANITIZER = 13;
+    var TAIL = 14;
+    var CONTAINER_INDEX = 15;
+    var DECLARATION_VIEW = 17;
+    /** Size of LView's header. Necessary to adjust for it when setting slots.  */
+    var HEADER_OFFSET = 18;
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * Below are constants for LContainer indices to help us look up LContainer members
+     * without having to remember the specific indices.
+     * Uglify will inline these when minifying so there shouldn't be a cost.
+     */
+    var ACTIVE_INDEX = 0;
+    var VIEWS = 1;
+    // PARENT, NEXT, QUERIES, and HOST are indices 2, 3, 4, and 5.
+    // As we already have these constants in LView, we don't need to re-create them.
+    var NATIVE = 6;
+    var RENDER_PARENT = 7;
+    // Because interfaces in TS/JS cannot be instanceof-checked this means that we
+    // need to rely on predictable characteristics of data-structures to check if they
+    // are what we expect for them to be. The `LContainer` interface code below has a
+    // fixed length and the constant value below references that. Using the length value
+    // below we can predictably gaurantee that we are dealing with an `LContainer` array.
+    // This value MUST be kept up to date with the length of the `LContainer` array
+    // interface below so that runtime type checking can work.
+    var LCONTAINER_LENGTH = 8;
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * This property will be monkey-patched on elements, components and directives
+     */
+    var MONKEY_PATCH_KEY_NAME = '__ngContext__';
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    var TNODE = 8;
+    var PARENT_INJECTOR = 8;
+    var INJECTOR_BLOOM_PARENT_SIZE = 9;
+    var NO_PARENT_INJECTOR = -1;
+    /**
+     * Each injector is saved in 9 contiguous slots in `LView` and 9 contiguous slots in
+     * `TView.data`. This allows us to store information about the current node's tokens (which
+     * can be shared in `TView`) as well as the tokens of its ancestor nodes (which cannot be
+     * shared, so they live in `LView`).
+     *
+     * Each of these slots (aside from the last slot) contains a bloom filter. This bloom filter
+     * determines whether a directive is available on the associated node or not. This prevents us
+     * from searching the directives array at this level unless it's probable the directive is in it.
+     *
+     * See: https://en.wikipedia.org/wiki/Bloom_filter for more about bloom filters.
+     *
+     * Because all injectors have been flattened into `LView` and `TViewData`, they cannot typed
+     * using interfaces as they were previously. The start index of each `LInjector` and `TInjector`
+     * will differ based on where it is flattened into the main array, so it's not possible to know
+     * the indices ahead of time and save their types here. The interfaces are still included here
+     * for documentation purposes.
+     *
+     * export interface LInjector extends Array<any> {
+     *
+     *    // Cumulative bloom for directive IDs 0-31  (IDs are % BLOOM_SIZE)
+     *    [0]: number;
+     *
+     *    // Cumulative bloom for directive IDs 32-63
+     *    [1]: number;
+     *
+     *    // Cumulative bloom for directive IDs 64-95
+     *    [2]: number;
+     *
+     *    // Cumulative bloom for directive IDs 96-127
+     *    [3]: number;
+     *
+     *    // Cumulative bloom for directive IDs 128-159
+     *    [4]: number;
+     *
+     *    // Cumulative bloom for directive IDs 160 - 191
+     *    [5]: number;
+     *
+     *    // Cumulative bloom for directive IDs 192 - 223
+     *    [6]: number;
+     *
+     *    // Cumulative bloom for directive IDs 224 - 255
+     *    [7]: number;
+     *
+     *    // We need to store a reference to the injector's parent so DI can keep looking up
+     *    // the injector tree until it finds the dependency it's looking for.
+     *    [PARENT_INJECTOR]: number;
+     * }
+     *
+     * export interface TInjector extends Array<any> {
+     *
+     *    // Shared node bloom for directive IDs 0-31  (IDs are % BLOOM_SIZE)
+     *    [0]: number;
+     *
+     *    // Shared node bloom for directive IDs 32-63
+     *    [1]: number;
+     *
+     *    // Shared node bloom for directive IDs 64-95
+     *    [2]: number;
+     *
+     *    // Shared node bloom for directive IDs 96-127
+     *    [3]: number;
+     *
+     *    // Shared node bloom for directive IDs 128-159
+     *    [4]: number;
+     *
+     *    // Shared node bloom for directive IDs 160 - 191
+     *    [5]: number;
+     *
+     *    // Shared node bloom for directive IDs 192 - 223
+     *    [6]: number;
+     *
+     *    // Shared node bloom for directive IDs 224 - 255
+     *    [7]: number;
+     *
+     *    // Necessary to find directive indices for a particular node.
+     *    [TNODE]: TElementNode|TElementContainerNode|TContainerNode;
+     *  }
+     */
+    /**
+    * Factory for creating instances of injectors in the NodeInjector.
+    *
+    * This factory is complicated by the fact that it can resolve `multi` factories as well.
+    *
+    * NOTE: Some of the fields are optional which means that this class has two hidden classes.
+    * - One without `multi` support (most common)
+    * - One with `multi` values, (rare).
+    *
+    * Since VMs can cache up to 4 inline hidden classes this is OK.
+    *
+    * - Single factory: Only `resolving` and `factory` is defined.
+    * - `providers` factory: `componentProviders` is a number and `index = -1`.
+    * - `viewProviders` factory: `componentProviders` is a number and `index` points to `providers`.
+    */
+    var NodeInjectorFactory = /** @class */ (function () {
+        function NodeInjectorFactory(
+        /**
+         * Factory to invoke in order to create a new instance.
+         */
+        factory, 
+        /**
+         * Set to `true` if the token is declared in `viewProviders` (or if it is component).
+         */
+        isViewProvider, injectImplementation) {
+            this.factory = factory;
+            /**
+             * Marker set to true during factory invocation to see if we get into recursive loop.
+             * Recursive loop causes an error to be displayed.
+             */
+            this.resolving = false;
+            this.canSeeViewProviders = isViewProvider;
+            this.injectImpl = injectImplementation;
+        }
+        return NodeInjectorFactory;
+    }());
+    var FactoryPrototype = NodeInjectorFactory.prototype;
+    function isFactory(obj) {
+        // See: https://jsperf.com/instanceof-vs-getprototypeof
+        return obj != null && typeof obj == 'object' && Object.getPrototypeOf(obj) == FactoryPrototype;
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    function stringify$2(value) {
+        if (typeof value == 'function')
+            return value.name || value;
+        if (typeof value == 'string')
+            return value;
+        if (value == null)
+            return '';
+        if (typeof value == 'object' && typeof value.type == 'function')
+            return value.type.name || value.type;
+        return '' + value;
+    }
+    /**
+     * Flattens an array in non-recursive way. Input arrays are not modified.
+     */
+    function flatten$2(list) {
+        var result = [];
+        var i = 0;
+        while (i < list.length) {
+            var item = list[i];
+            if (Array.isArray(item)) {
+                if (item.length > 0) {
+                    list = item.concat(list.slice(i + 1));
+                    i = 0;
+                }
+                else {
+                    i++;
+                }
+            }
+            else {
+                result.push(item);
+                i++;
+            }
+        }
+        return result;
+    }
+    /**
+     * Takes the value of a slot in `LView` and returns the element node.
+     *
+     * Normally, element nodes are stored flat, but if the node has styles/classes on it,
+     * it might be wrapped in a styling context. Or if that node has a directive that injects
+     * ViewContainerRef, it may be wrapped in an LContainer. Or if that node is a component,
+     * it will be wrapped in LView. It could even have all three, so we keep looping
+     * until we find something that isn't an array.
+     *
+     * @param value The initial value in `LView`
+     */
+    function readElementValue(value) {
+        while (Array.isArray(value)) {
+            value = value[HOST];
+        }
+        return value;
+    }
+    function getNativeByTNode(tNode, hostView) {
+        return readElementValue(hostView[tNode.index]);
+    }
+    function getTNode(index, view) {
+        ngDevMode && assertGreaterThan(index, -1, 'wrong index for TNode');
+        ngDevMode && assertLessThan(index, view[TVIEW].data.length, 'wrong index for TNode');
+        return view[TVIEW].data[index + HEADER_OFFSET];
+    }
+    function getComponentViewByIndex(nodeIndex, hostView) {
+        // Could be an LView or an LContainer. If LContainer, unwrap to find LView.
+        var slotValue = hostView[nodeIndex];
+        return slotValue.length >= HEADER_OFFSET ? slotValue : slotValue[HOST];
+    }
+    function isContentQueryHost(tNode) {
+        return (tNode.flags & 4 /* hasContentQuery */) !== 0;
+    }
+    function isComponent(tNode) {
+        return (tNode.flags & 1 /* isComponent */) === 1 /* isComponent */;
+    }
+    function isComponentDef(def) {
+        return def.template !== null;
+    }
+    function isLContainer(value) {
+        // Styling contexts are also arrays, but their first index contains an element node
+        return Array.isArray(value) && value.length === LCONTAINER_LENGTH;
+    }
+    /**
+     * Retrieve the root view from any component by walking the parent `LView` until
+     * reaching the root `LView`.
+     *
+     * @param component any component
+     */
+    function getRootView(target) {
+        ngDevMode && assertDefined(target, 'component');
+        var lView = Array.isArray(target) ? target : readPatchedLView(target);
+        while (lView && !(lView[FLAGS] & 128 /* IsRoot */)) {
+            lView = lView[PARENT];
+        }
+        return lView;
+    }
+    function getRootContext(viewOrComponent) {
+        var rootView = getRootView(viewOrComponent);
+        ngDevMode &&
+            assertDefined(rootView[CONTEXT], 'RootView has no context. Perhaps it is disconnected?');
+        return rootView[CONTEXT];
+    }
+    /**
+     * Returns the monkey-patch value data present on the target (which could be
+     * a component, directive or a DOM node).
+     */
+    function readPatchedData(target) {
+        ngDevMode && assertDefined(target, 'Target expected');
+        return target[MONKEY_PATCH_KEY_NAME];
+    }
+    function readPatchedLView(target) {
+        var value = readPatchedData(target);
+        if (value) {
+            return Array.isArray(value) ? value : value.lView;
+        }
+        return null;
+    }
+    function hasParentInjector(parentLocation) {
+        return parentLocation !== NO_PARENT_INJECTOR;
+    }
+    function getParentInjectorIndex(parentLocation) {
+        return parentLocation & 32767 /* InjectorIndexMask */;
+    }
+    function getParentInjectorViewOffset(parentLocation) {
+        return parentLocation >> 16 /* ViewOffsetShift */;
+    }
+    /**
+     * Unwraps a parent injector location number to find the view offset from the current injector,
+     * then walks up the declaration view tree until the view is found that contains the parent
+     * injector.
+     *
+     * @param location The location of the parent injector, which contains the view offset
+     * @param startView The LView instance from which to start walking up the view tree
+     * @returns The LView instance that contains the parent injector
+     */
+    function getParentInjectorView(location, startView) {
+        var viewOffset = getParentInjectorViewOffset(location);
+        var parentView = startView;
+        // For most cases, the parent injector can be found on the host node (e.g. for component
+        // or container), but we must keep the loop here to support the rarer case of deeply nested
+        // <ng-template> tags or inline views, where the parent injector might live many views
+        // above the child injector.
+        while (viewOffset > 0) {
+            parentView = parentView[DECLARATION_VIEW];
+            viewOffset--;
+        }
+        return parentView;
+    }
+    var defaultScheduler = (typeof requestAnimationFrame !== 'undefined' && requestAnimationFrame || // browser only
+        setTimeout // everything else
+    ).bind(_global$1);
+    /**
+     * Given a current view, finds the nearest component's host (LElement).
+     *
+     * @param lView LView for which we want a host element node
+     * @param declarationMode indicates whether DECLARATION_VIEW or PARENT should be used to climb the
+     * tree.
+     * @returns The host node
+     */
+    function findComponentView(lView, declarationMode) {
+        var rootTNode = lView[HOST_NODE];
+        while (rootTNode && rootTNode.type === 2 /* View */) {
+            ngDevMode && assertDefined(lView[declarationMode ? DECLARATION_VIEW : PARENT], declarationMode ? 'lView.declarationView' : 'lView.parent');
+            lView = lView[declarationMode ? DECLARATION_VIEW : PARENT];
+            rootTNode = lView[HOST_NODE];
+        }
+        return lView;
+    }
+    /**
+     * Return the host TElementNode of the starting LView
+     * @param lView the starting LView.
+     */
+    function getHostTElementNode(lView) {
+        return findComponentView(lView, true)[HOST_NODE];
     }
 
     /**
@@ -28957,221 +29548,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    function assertEqual(actual, expected, msg) {
-        if (actual != expected) {
-            throwError(msg);
-        }
-    }
-    function assertNotEqual(actual, expected, msg) {
-        if (actual == expected) {
-            throwError(msg);
-        }
-    }
-    function assertLessThan(actual, expected, msg) {
-        if (actual >= expected) {
-            throwError(msg);
-        }
-    }
-    function assertGreaterThan(actual, expected, msg) {
-        if (actual <= expected) {
-            throwError(msg);
-        }
-    }
-    function assertDefined(actual, msg) {
-        if (actual == null) {
-            throwError(msg);
-        }
-    }
-    function assertComponentType(actual, msg) {
-        if (msg === void 0) { msg = 'Type passed in is not ComponentType, it does not have \'ngComponentDef\' property.'; }
-        if (!getComponentDef(actual)) {
-            throwError(msg);
-        }
-    }
-    function throwError(msg) {
-        // tslint:disable-next-line
-        debugger; // Left intentionally for better debugger experience.
-        throw new Error("ASSERTION ERROR: " + msg);
-    }
-    function assertDomNode(node) {
-        assertEqual(node instanceof Node, true, 'The provided value must be an instance of a DOM Node');
-    }
-    function assertPreviousIsParent(isParent) {
-        assertEqual(isParent, true, 'previousOrParentTNode should be a parent');
-    }
-    function assertDataInRange(arr, index) {
-        assertLessThan(index, arr ? arr.length : 0, 'index expected to be a valid data index');
-    }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    var TNODE = 8;
-    var PARENT_INJECTOR = 8;
-    var INJECTOR_BLOOM_PARENT_SIZE = 9;
-    var NO_PARENT_INJECTOR = -1;
-    /**
-     * Each injector is saved in 9 contiguous slots in `LView` and 9 contiguous slots in
-     * `TView.data`. This allows us to store information about the current node's tokens (which
-     * can be shared in `TView`) as well as the tokens of its ancestor nodes (which cannot be
-     * shared, so they live in `LView`).
-     *
-     * Each of these slots (aside from the last slot) contains a bloom filter. This bloom filter
-     * determines whether a directive is available on the associated node or not. This prevents us
-     * from searching the directives array at this level unless it's probable the directive is in it.
-     *
-     * See: https://en.wikipedia.org/wiki/Bloom_filter for more about bloom filters.
-     *
-     * Because all injectors have been flattened into `LView` and `TViewData`, they cannot typed
-     * using interfaces as they were previously. The start index of each `LInjector` and `TInjector`
-     * will differ based on where it is flattened into the main array, so it's not possible to know
-     * the indices ahead of time and save their types here. The interfaces are still included here
-     * for documentation purposes.
-     *
-     * export interface LInjector extends Array<any> {
-     *
-     *    // Cumulative bloom for directive IDs 0-31  (IDs are % BLOOM_SIZE)
-     *    [0]: number;
-     *
-     *    // Cumulative bloom for directive IDs 32-63
-     *    [1]: number;
-     *
-     *    // Cumulative bloom for directive IDs 64-95
-     *    [2]: number;
-     *
-     *    // Cumulative bloom for directive IDs 96-127
-     *    [3]: number;
-     *
-     *    // Cumulative bloom for directive IDs 128-159
-     *    [4]: number;
-     *
-     *    // Cumulative bloom for directive IDs 160 - 191
-     *    [5]: number;
-     *
-     *    // Cumulative bloom for directive IDs 192 - 223
-     *    [6]: number;
-     *
-     *    // Cumulative bloom for directive IDs 224 - 255
-     *    [7]: number;
-     *
-     *    // We need to store a reference to the injector's parent so DI can keep looking up
-     *    // the injector tree until it finds the dependency it's looking for.
-     *    [PARENT_INJECTOR]: number;
-     * }
-     *
-     * export interface TInjector extends Array<any> {
-     *
-     *    // Shared node bloom for directive IDs 0-31  (IDs are % BLOOM_SIZE)
-     *    [0]: number;
-     *
-     *    // Shared node bloom for directive IDs 32-63
-     *    [1]: number;
-     *
-     *    // Shared node bloom for directive IDs 64-95
-     *    [2]: number;
-     *
-     *    // Shared node bloom for directive IDs 96-127
-     *    [3]: number;
-     *
-     *    // Shared node bloom for directive IDs 128-159
-     *    [4]: number;
-     *
-     *    // Shared node bloom for directive IDs 160 - 191
-     *    [5]: number;
-     *
-     *    // Shared node bloom for directive IDs 192 - 223
-     *    [6]: number;
-     *
-     *    // Shared node bloom for directive IDs 224 - 255
-     *    [7]: number;
-     *
-     *    // Necessary to find directive indices for a particular node.
-     *    [TNODE]: TElementNode|TElementContainerNode|TContainerNode;
-     *  }
-     */
-    /**
-    * Factory for creating instances of injectors in the NodeInjector.
-    *
-    * This factory is complicated by the fact that it can resolve `multi` factories as well.
-    *
-    * NOTE: Some of the fields are optional which means that this class has two hidden classes.
-    * - One without `multi` support (most common)
-    * - One with `multi` values, (rare).
-    *
-    * Since VMs can cache up to 4 inline hidden classes this is OK.
-    *
-    * - Single factory: Only `resolving` and `factory` is defined.
-    * - `providers` factory: `componentProviders` is a number and `index = -1`.
-    * - `viewProviders` factory: `componentProviders` is a number and `index` points to `providers`.
-    */
-    var NodeInjectorFactory = /** @class */ (function () {
-        function NodeInjectorFactory(
-        /**
-         * Factory to invoke in order to create a new instance.
-         */
-        factory, 
-        /**
-         * Set to `true` if the token is declared in `viewProviders` (or if it is component).
-         */
-        isViewProvider, injectImplementation) {
-            this.factory = factory;
-            /**
-             * Marker set to true during factory invocation to see if we get into recursive loop.
-             * Recursive loop causes an error to be displayed.
-             */
-            this.resolving = false;
-            this.canSeeViewProviders = isViewProvider;
-            this.injectImpl = injectImplementation;
-        }
-        return NodeInjectorFactory;
-    }());
-    var FactoryPrototype = NodeInjectorFactory.prototype;
-    function isFactory(obj) {
-        // See: https://jsperf.com/instanceof-vs-getprototypeof
-        return obj != null && typeof obj == 'object' && Object.getPrototypeOf(obj) == FactoryPrototype;
-    }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    // Below are constants for LView indices to help us look up LView members
-    // without having to remember the specific indices.
-    // Uglify will inline these when minifying so there shouldn't be a cost.
-    var TVIEW = 0;
-    var FLAGS = 1;
-    var PARENT = 2;
-    var NEXT = 3;
-    var QUERIES = 4;
-    var HOST = 5;
-    var HOST_NODE = 6; // Rename to `T_HOST`?
-    var BINDING_INDEX = 7;
-    var CLEANUP = 8;
-    var CONTEXT = 9;
-    var INJECTOR = 10;
-    var RENDERER_FACTORY = 11;
-    var RENDERER = 12;
-    var SANITIZER = 13;
-    var TAIL = 14;
-    var CONTAINER_INDEX = 15;
-    var DECLARATION_VIEW = 17;
-    /** Size of LView's header. Necessary to adjust for it when setting slots.  */
-    var HEADER_OFFSET = 18;
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     function assertNodeType(tNode, type) {
         assertDefined(tNode, 'should be called with a TNode');
         assertEqual(tNode.type, type, "should be a " + typeName(type));
@@ -29298,216 +29674,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         for (var i = 0; i < arr.length; i += 2) {
             arr[i + 1].call(currentView[arr[i]]);
         }
-    }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * Below are constants for LContainer indices to help us look up LContainer members
-     * without having to remember the specific indices.
-     * Uglify will inline these when minifying so there shouldn't be a cost.
-     */
-    var ACTIVE_INDEX = 0;
-    var VIEWS = 1;
-    // PARENT, NEXT, QUERIES, and HOST are indices 2, 3, 4, and 5.
-    // As we already have these constants in LView, we don't need to re-create them.
-    var NATIVE = 6;
-    var RENDER_PARENT = 7;
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * This property will be monkey-patched on elements, components and directives
-     */
-    var MONKEY_PATCH_KEY_NAME = '__ngContext__';
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    function stringify$2(value) {
-        if (typeof value == 'function')
-            return value.name || value;
-        if (typeof value == 'string')
-            return value;
-        if (value == null)
-            return '';
-        if (typeof value == 'object' && typeof value.type == 'function')
-            return value.type.name || value.type;
-        return '' + value;
-    }
-    /**
-     * Flattens an array in non-recursive way. Input arrays are not modified.
-     */
-    function flatten$2(list) {
-        var result = [];
-        var i = 0;
-        while (i < list.length) {
-            var item = list[i];
-            if (Array.isArray(item)) {
-                if (item.length > 0) {
-                    list = item.concat(list.slice(i + 1));
-                    i = 0;
-                }
-                else {
-                    i++;
-                }
-            }
-            else {
-                result.push(item);
-                i++;
-            }
-        }
-        return result;
-    }
-    /**
-     * Takes the value of a slot in `LView` and returns the element node.
-     *
-     * Normally, element nodes are stored flat, but if the node has styles/classes on it,
-     * it might be wrapped in a styling context. Or if that node has a directive that injects
-     * ViewContainerRef, it may be wrapped in an LContainer. Or if that node is a component,
-     * it will be wrapped in LView. It could even have all three, so we keep looping
-     * until we find something that isn't an array.
-     *
-     * @param value The initial value in `LView`
-     */
-    function readElementValue(value) {
-        while (Array.isArray(value)) {
-            value = value[HOST];
-        }
-        return value;
-    }
-    function getNativeByTNode(tNode, hostView) {
-        return readElementValue(hostView[tNode.index]);
-    }
-    function getTNode(index, view) {
-        ngDevMode && assertGreaterThan(index, -1, 'wrong index for TNode');
-        ngDevMode && assertLessThan(index, view[TVIEW].data.length, 'wrong index for TNode');
-        return view[TVIEW].data[index + HEADER_OFFSET];
-    }
-    function getComponentViewByIndex(nodeIndex, hostView) {
-        // Could be an LView or an LContainer. If LContainer, unwrap to find LView.
-        var slotValue = hostView[nodeIndex];
-        return slotValue.length >= HEADER_OFFSET ? slotValue : slotValue[HOST];
-    }
-    function isContentQueryHost(tNode) {
-        return (tNode.flags & 4 /* hasContentQuery */) !== 0;
-    }
-    function isComponent(tNode) {
-        return (tNode.flags & 1 /* isComponent */) === 1 /* isComponent */;
-    }
-    function isComponentDef(def) {
-        return def.template !== null;
-    }
-    function isLContainer(value) {
-        // Styling contexts are also arrays, but their first index contains an element node
-        return Array.isArray(value) && typeof value[ACTIVE_INDEX] === 'number';
-    }
-    /**
-     * Retrieve the root view from any component by walking the parent `LView` until
-     * reaching the root `LView`.
-     *
-     * @param component any component
-     */
-    function getRootView(target) {
-        ngDevMode && assertDefined(target, 'component');
-        var lView = Array.isArray(target) ? target : readPatchedLView(target);
-        while (lView && !(lView[FLAGS] & 128 /* IsRoot */)) {
-            lView = lView[PARENT];
-        }
-        return lView;
-    }
-    function getRootContext(viewOrComponent) {
-        var rootView = getRootView(viewOrComponent);
-        ngDevMode &&
-            assertDefined(rootView[CONTEXT], 'RootView has no context. Perhaps it is disconnected?');
-        return rootView[CONTEXT];
-    }
-    /**
-     * Returns the monkey-patch value data present on the target (which could be
-     * a component, directive or a DOM node).
-     */
-    function readPatchedData(target) {
-        ngDevMode && assertDefined(target, 'Target expected');
-        return target[MONKEY_PATCH_KEY_NAME];
-    }
-    function readPatchedLView(target) {
-        var value = readPatchedData(target);
-        if (value) {
-            return Array.isArray(value) ? value : value.lView;
-        }
-        return null;
-    }
-    function hasParentInjector(parentLocation) {
-        return parentLocation !== NO_PARENT_INJECTOR;
-    }
-    function getParentInjectorIndex(parentLocation) {
-        return parentLocation & 32767 /* InjectorIndexMask */;
-    }
-    function getParentInjectorViewOffset(parentLocation) {
-        return parentLocation >> 16 /* ViewOffsetShift */;
-    }
-    /**
-     * Unwraps a parent injector location number to find the view offset from the current injector,
-     * then walks up the declaration view tree until the view is found that contains the parent
-     * injector.
-     *
-     * @param location The location of the parent injector, which contains the view offset
-     * @param startView The LView instance from which to start walking up the view tree
-     * @returns The LView instance that contains the parent injector
-     */
-    function getParentInjectorView(location, startView) {
-        var viewOffset = getParentInjectorViewOffset(location);
-        var parentView = startView;
-        // For most cases, the parent injector can be found on the host node (e.g. for component
-        // or container), but we must keep the loop here to support the rarer case of deeply nested
-        // <ng-template> tags or inline views, where the parent injector might live many views
-        // above the child injector.
-        while (viewOffset > 0) {
-            parentView = parentView[DECLARATION_VIEW];
-            viewOffset--;
-        }
-        return parentView;
-    }
-    var defaultScheduler = (typeof requestAnimationFrame !== 'undefined' && requestAnimationFrame || // browser only
-        setTimeout // everything else
-    ).bind(_global$1);
-    /**
-     * Given a current view, finds the nearest component's host (LElement).
-     *
-     * @param lView LView for which we want a host element node
-     * @param declarationMode indicates whether DECLARATION_VIEW or PARENT should be used to climb the
-     * tree.
-     * @returns The host node
-     */
-    function findComponentView(lView, declarationMode) {
-        var rootTNode = lView[HOST_NODE];
-        while (rootTNode && rootTNode.type === 2 /* View */) {
-            ngDevMode && assertDefined(lView[declarationMode ? DECLARATION_VIEW : PARENT], declarationMode ? 'lView.declarationView' : 'lView.parent');
-            lView = lView[declarationMode ? DECLARATION_VIEW : PARENT];
-            rootTNode = lView[HOST_NODE];
-        }
-        return lView;
-    }
-    /**
-     * Return the host TElementNode of the starting LView
-     * @param lView the starting LView.
-     */
-    function getHostTElementNode(lView) {
-        return findComponentView(lView, true)[HOST_NODE];
     }
 
     /**
@@ -30556,7 +30722,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 var secondParam = tCleanup[i++];
                 if (typeof firstParam === 'string') {
                     var name_1 = firstParam;
-                    var listenerElement = lView[secondParam];
+                    var listenerElement = readElementValue(lView[secondParam]);
                     var callback = lCleanup[tCleanup[i++]];
                     var useCaptureOrIndx = tCleanup[i++];
                     // if useCaptureOrIndx is boolean then report it as is.
@@ -31226,16 +31392,17 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * found in the LICENSE file at https://angular.io/license
      */
     var ANIMATION_PROP_PREFIX = '@';
-    function createEmptyStylingContext(element, sanitizer, initialStylingValues) {
+    function createEmptyStylingContext(element, sanitizer, initialStyles, initialClasses) {
         return [
-            null,
-            sanitizer || null,
-            initialStylingValues || [null],
             0,
-            0,
+            [null, -1, false, sanitizer || null],
+            initialStyles || [null],
+            initialClasses || [null],
+            [0, 0],
             element || null,
             null,
-            null // PreviousMultiStyleValue
+            null,
+            null,
         ];
     }
     /**
@@ -31248,6 +31415,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         // each instance gets a copy
         var context = templateStyleContext.slice();
         context[5 /* ElementPosition */] = element;
+        // this will prevent any other directives from extending the context
+        context[0 /* MasterFlagPosition */] |= 32 /* BindingAllocationLocked */;
         return context;
     }
     /**
@@ -31285,15 +31454,15 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
     function isStylingContext(value) {
         // Not an LView or an LContainer
-        return Array.isArray(value) && typeof value[FLAGS] !== 'number' &&
-            typeof value[ACTIVE_INDEX] !== 'number';
+        return Array.isArray(value) && typeof value[0 /* MasterFlagPosition */] === 'number' &&
+            Array.isArray(value[2 /* InitialStyleValuesPosition */]);
     }
     function isAnimationProp(name) {
         return name[0] === ANIMATION_PROP_PREFIX;
     }
 
-    function isClassBased(context, index) {
-        var adjustedIndex = index >= 8 /* SingleStylesStartPosition */ ? (index + 0 /* FlagsOffset */) : index;
+    function isClassBasedValue(context, index) {
+        var adjustedIndex = index >= 9 /* SingleStylesStartPosition */ ? (index + 0 /* FlagsOffset */) : index;
         return (context[adjustedIndex] & 2 /* Class */) == 2 /* Class */;
     }
     function getValue(context, index) {
@@ -31660,28 +31829,30 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var isProc = isProceduralRenderer(renderer);
         var i = 0;
         while (i < attrs.length) {
-            var attrName = attrs[i];
-            if (attrName === 1 /* SelectOnly */)
-                break;
-            if (attrName === NG_PROJECT_AS_ATTR_NAME) {
-                i += 2;
-            }
-            else {
-                ngDevMode && ngDevMode.rendererSetAttribute++;
+            var attrName = attrs[i++];
+            if (typeof attrName == 'number') {
                 if (attrName === 0 /* NamespaceURI */) {
                     // Namespaced attributes
-                    var namespaceURI = attrs[i + 1];
-                    var attrName_1 = attrs[i + 2];
-                    var attrVal = attrs[i + 3];
+                    var namespaceURI = attrs[i++];
+                    var attrName_1 = attrs[i++];
+                    var attrVal = attrs[i++];
+                    ngDevMode && ngDevMode.rendererSetAttribute++;
                     isProc ?
                         renderer
                             .setAttribute(native, attrName_1, attrVal, namespaceURI) :
                         native.setAttributeNS(namespaceURI, attrName_1, attrVal);
-                    i += 4;
                 }
                 else {
+                    // All other `AttributeMarker`s are ignored here.
+                    break;
+                }
+            }
+            else {
+                /// attrName is string;
+                var attrVal = attrs[i++];
+                if (attrName !== NG_PROJECT_AS_ATTR_NAME) {
                     // Standard attributes
-                    var attrVal = attrs[i + 1];
+                    ngDevMode && ngDevMode.rendererSetAttribute++;
                     if (isAnimationProp(attrName)) {
                         if (isProc) {
                             renderer.setProperty(native, attrName, attrVal);
@@ -31693,7 +31864,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                                 .setAttribute(native, attrName, attrVal) :
                             native.setAttribute(attrName, attrVal);
                     }
-                    i += 2;
                 }
             }
         }
@@ -32329,7 +32499,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     var IDENT = function (value) {
         return value;
     };
-    var EMPTY$1 = [];
+    var EMPTY = [];
     var CIRCULAR = IDENT;
     var MULTI_PROVIDER_FN = function () {
         return Array.prototype.slice.call(arguments);
@@ -32347,8 +32517,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             this.parent = parent;
             this.source = source;
             var records = this._records = new Map();
-            records.set(Injector, { token: Injector, fn: IDENT, deps: EMPTY$1, value: this, useNew: false });
-            records.set(INJECTOR$1, { token: INJECTOR$1, fn: IDENT, deps: EMPTY$1, value: this, useNew: false });
+            records.set(Injector, { token: Injector, fn: IDENT, deps: EMPTY, value: this, useNew: false });
+            records.set(INJECTOR$1, { token: INJECTOR$1, fn: IDENT, deps: EMPTY, value: this, useNew: false });
             recursivelyProcessProviders(records, providers);
         }
         StaticInjector.prototype.get = function (token, notFoundValue, flags) {
@@ -32378,7 +32548,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function resolveProvider(provider) {
         var deps = computeDeps(provider);
         var fn = IDENT;
-        var value = EMPTY$1;
+        var value = EMPTY;
         var useNew = false;
         var provide = resolveForwardRef$1(provider.provide);
         if (USE_VALUE$2 in provider) {
@@ -32438,7 +32608,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                             deps: [],
                             useNew: false,
                             fn: MULTI_PROVIDER_FN,
-                            value: EMPTY$1
+                            value: EMPTY
                         });
                     }
                     // Treat the provider as the token.
@@ -32469,7 +32639,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             path$$1.unshift(token);
             if (record && record.value == CIRCULAR) {
                 // Reset the Circular flag.
-                record.value = EMPTY$1;
+                record.value = EMPTY;
             }
             throw e;
         }
@@ -32484,13 +32654,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             if (value == CIRCULAR) {
                 throw Error(NO_NEW_LINE + 'Circular dependency');
             }
-            else if (value === EMPTY$1) {
+            else if (value === EMPTY) {
                 record.value = CIRCULAR;
                 var obj = undefined;
                 var useNew = record.useNew;
                 var fn = record.fn;
                 var depRecords = record.deps;
-                var deps = EMPTY$1;
+                var deps = EMPTY;
                 if (depRecords.length) {
                     deps = [];
                     for (var i = 0; i < depRecords.length; i++) {
@@ -32519,7 +32689,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return value;
     }
     function computeDeps(provider) {
-        var deps = EMPTY$1;
+        var deps = EMPTY;
         var providerDeps = provider.deps;
         if (providerDeps && providerDeps.length) {
             deps = [];
@@ -33601,7 +33771,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.2.0-rc.0+26.sha-0b3ae3d');
+    var VERSION$2 = new Version$1('7.2.0-rc.0+27.sha-13eb57a');
 
     /**
      * @license
@@ -35569,9 +35739,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
 
     var queue = new QueueScheduler(QueueAction);
 
-    var EMPTY$2 = new Observable(function (subscriber) { return subscriber.complete(); });
+    var EMPTY$1 = new Observable(function (subscriber) { return subscriber.complete(); });
     function empty$2(scheduler) {
-        return scheduler ? emptyScheduled(scheduler) : EMPTY$2;
+        return scheduler ? emptyScheduled(scheduler) : EMPTY$1;
     }
     function emptyScheduled(scheduler) {
         return new Observable(function (subscriber) { return scheduler.schedule(function () { return subscriber.complete(); }); });
@@ -44934,8 +45104,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     var lNode = lContext.lView[lContext.nodeIndex];
                     var stylingContext = getStylingContext(lContext.nodeIndex, lContext.lView);
                     if (stylingContext) {
-                        for (var i = 8 /* SingleStylesStartPosition */; i < lNode.length; i += 4 /* Size */) {
-                            if (isClassBased(lNode, i)) {
+                        for (var i = 9 /* SingleStylesStartPosition */; i < lNode.length; i += 4 /* Size */) {
+                            if (isClassBasedValue(lNode, i)) {
                                 var className = getProp(lNode, i);
                                 var value = getValue(lNode, i);
                                 if (typeof value == 'boolean') {
@@ -44967,8 +45137,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     var lNode = lContext.lView[lContext.nodeIndex];
                     var stylingContext = getStylingContext(lContext.nodeIndex, lContext.lView);
                     if (stylingContext) {
-                        for (var i = 8 /* SingleStylesStartPosition */; i < lNode.length; i += 4 /* Size */) {
-                            if (!isClassBased(lNode, i)) {
+                        for (var i = 9 /* SingleStylesStartPosition */; i < lNode.length; i += 4 /* Size */) {
+                            if (!isClassBasedValue(lNode, i)) {
                                 var styleName = getProp(lNode, i);
                                 var value = getValue(lNode, i);
                                 if (value !== null) {
@@ -50843,7 +51013,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.2.0-rc.0+26.sha-0b3ae3d');
+    var VERSION$3 = new Version$1('7.2.0-rc.0+27.sha-13eb57a');
 
     /**
      * @license
