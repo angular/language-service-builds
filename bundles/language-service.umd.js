@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.2.0-rc.0+27.sha-13eb57a
+ * @license Angular v7.2.0-rc.0+29.sha-9b91bee
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -15370,7 +15370,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.2.0-rc.0+27.sha-13eb57a');
+    var VERSION$1 = new Version('7.2.0-rc.0+29.sha-9b91bee');
 
     /**
      * @license
@@ -28631,7 +28631,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         /**
          * Use the `CheckOnce` strategy, meaning that automatic change detection is deactivated
          * until reactivated by setting the strategy to `Default` (`CheckAlways`).
-         * Change detection can still be explictly invoked.
+         * Change detection can still be explicitly invoked.
          */
         ChangeDetectionStrategy[ChangeDetectionStrategy["OnPush"] = 0] = "OnPush";
         /**
@@ -28657,7 +28657,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
          */
         ChangeDetectorStatus[ChangeDetectorStatus["Checked"] = 1] = "Checked";
         /**
-         * A state in which change detection continues automatically until explictly
+         * A state in which change detection continues automatically until explicitly
          * deactivated.
          */
         ChangeDetectorStatus[ChangeDetectorStatus["CheckAlways"] = 2] = "CheckAlways";
@@ -33771,7 +33771,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.2.0-rc.0+27.sha-13eb57a');
+    var VERSION$2 = new Version$1('7.2.0-rc.0+29.sha-9b91bee');
 
     /**
      * @license
@@ -51013,7 +51013,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.2.0-rc.0+27.sha-13eb57a');
+    var VERSION$3 = new Version$1('7.2.0-rc.0+29.sha-9b91bee');
 
     /**
      * @license
