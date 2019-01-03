@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.2.0-rc.0+42.sha-7df9040
+ * @license Angular v7.2.0-rc.0+45.sha-a979001
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -15355,7 +15355,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.2.0-rc.0+42.sha-7df9040');
+    var VERSION$1 = new Version('7.2.0-rc.0+45.sha-a979001');
 
     /**
      * @license
@@ -28670,6 +28670,140 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    var __window$1 = typeof window !== 'undefined' && window;
+    var __self$1 = typeof self !== 'undefined' && typeof WorkerGlobalScope !== 'undefined' &&
+        self instanceof WorkerGlobalScope && self;
+    var __global$1 = typeof global !== 'undefined' && global;
+    // Check __global first, because in Node tests both __global and __window may be defined and _global
+    // should be __global in that case.
+    var _global$1 = __global$1 || __window$1 || __self$1;
+    var promise = Promise.resolve(0);
+    var _symbolIterator = null;
+    function getSymbolIterator() {
+        if (!_symbolIterator) {
+            var Symbol_1 = _global$1['Symbol'];
+            if (Symbol_1 && Symbol_1.iterator) {
+                _symbolIterator = Symbol_1.iterator;
+            }
+            else {
+                // es6-shim specific logic
+                var keys = Object.getOwnPropertyNames(Map.prototype);
+                for (var i = 0; i < keys.length; ++i) {
+                    var key = keys[i];
+                    if (key !== 'entries' && key !== 'size' &&
+                        Map.prototype[key] === Map.prototype['entries']) {
+                        _symbolIterator = key;
+                    }
+                }
+            }
+        }
+        return _symbolIterator;
+    }
+    function scheduleMicroTask(fn) {
+        if (typeof Zone === 'undefined') {
+            // use promise to schedule microTask instead of use Zone
+            promise.then(function () { fn && fn.apply(null, null); });
+        }
+        else {
+            Zone.current.scheduleMicroTask('scheduleMicrotask', fn);
+        }
+    }
+    // JS has NaN !== NaN
+    function looseIdentical(a, b) {
+        return a === b || typeof a === 'number' && typeof b === 'number' && isNaN(a) && isNaN(b);
+    }
+    function stringify$1(token) {
+        if (typeof token === 'string') {
+            return token;
+        }
+        if (token instanceof Array) {
+            return '[' + token.map(stringify$1).join(', ') + ']';
+        }
+        if (token == null) {
+            return '' + token;
+        }
+        if (token.overriddenName) {
+            return "" + token.overriddenName;
+        }
+        if (token.name) {
+            return "" + token.name;
+        }
+        var res = token.toString();
+        if (res == null) {
+            return '' + res;
+        }
+        var newLineIndex = res.indexOf('\n');
+        return newLineIndex === -1 ? res : res.substring(0, newLineIndex);
+    }
+    /**
+     * Convince closure compiler that the wrapped function has no side-effects.
+     *
+     * Closure compiler always assumes that `toString` has no side-effects. We use this quirk to
+     * allow us to execute a function but have closure compiler mark the call as no-side-effects.
+     * It is important that the return value for the `noSideEffects` function be assigned
+     * to something which is retained otherwise the call to `noSideEffects` will be removed by closure
+     * compiler.
+     */
+    function noSideEffects(fn) {
+        return '' + { toString: fn };
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    var __forward_ref__ = getClosureSafeProperty({ __forward_ref__: getClosureSafeProperty });
+    /**
+     * Allows to refer to references which are not yet defined.
+     *
+     * For instance, `forwardRef` is used when the `token` which we need to refer to for the purposes of
+     * DI is declared, but not yet defined. It is also used when the `token` which we use when creating
+     * a query is not yet defined.
+     *
+     * @usageNotes
+     * ### Example
+     * {@example core/di/ts/forward_ref/forward_ref_spec.ts region='forward_ref'}
+     * @publicApi
+     */
+    function forwardRef(forwardRefFn) {
+        forwardRefFn.__forward_ref__ = forwardRef;
+        forwardRefFn.toString = function () { return stringify$1(this()); };
+        return forwardRefFn;
+    }
+    /**
+     * Lazily retrieves the reference value from a forwardRef.
+     *
+     * Acts as the identity function when given a non-forward-ref value.
+     *
+     * @usageNotes
+     * ### Example
+     *
+     * {@example core/di/ts/forward_ref/forward_ref_spec.ts region='resolve_forward_ref'}
+     *
+     * @see `forwardRef`
+     * @publicApi
+     */
+    function resolveForwardRef$1(type) {
+        var fn = type;
+        if (typeof fn === 'function' && fn.hasOwnProperty(__forward_ref__) &&
+            fn.__forward_ref__ === forwardRef) {
+            return fn();
+        }
+        else {
+            return type;
+        }
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     var componentResourceResolutionQueue = new Set();
     function maybeQueueResolutionOfComponentResources(metadata) {
         if (componentNeedsResolution(metadata)) {
@@ -28810,91 +28944,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     if (typeof ngDevMode !== 'undefined' && ngDevMode) {
         Object.freeze(EMPTY_OBJ);
         Object.freeze(EMPTY_ARRAY$1);
-    }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    var __window$1 = typeof window !== 'undefined' && window;
-    var __self$1 = typeof self !== 'undefined' && typeof WorkerGlobalScope !== 'undefined' &&
-        self instanceof WorkerGlobalScope && self;
-    var __global$1 = typeof global !== 'undefined' && global;
-    // Check __global first, because in Node tests both __global and __window may be defined and _global
-    // should be __global in that case.
-    var _global$1 = __global$1 || __window$1 || __self$1;
-    var promise = Promise.resolve(0);
-    var _symbolIterator = null;
-    function getSymbolIterator() {
-        if (!_symbolIterator) {
-            var Symbol_1 = _global$1['Symbol'];
-            if (Symbol_1 && Symbol_1.iterator) {
-                _symbolIterator = Symbol_1.iterator;
-            }
-            else {
-                // es6-shim specific logic
-                var keys = Object.getOwnPropertyNames(Map.prototype);
-                for (var i = 0; i < keys.length; ++i) {
-                    var key = keys[i];
-                    if (key !== 'entries' && key !== 'size' &&
-                        Map.prototype[key] === Map.prototype['entries']) {
-                        _symbolIterator = key;
-                    }
-                }
-            }
-        }
-        return _symbolIterator;
-    }
-    function scheduleMicroTask(fn) {
-        if (typeof Zone === 'undefined') {
-            // use promise to schedule microTask instead of use Zone
-            promise.then(function () { fn && fn.apply(null, null); });
-        }
-        else {
-            Zone.current.scheduleMicroTask('scheduleMicrotask', fn);
-        }
-    }
-    // JS has NaN !== NaN
-    function looseIdentical(a, b) {
-        return a === b || typeof a === 'number' && typeof b === 'number' && isNaN(a) && isNaN(b);
-    }
-    function stringify$1(token) {
-        if (typeof token === 'string') {
-            return token;
-        }
-        if (token instanceof Array) {
-            return '[' + token.map(stringify$1).join(', ') + ']';
-        }
-        if (token == null) {
-            return '' + token;
-        }
-        if (token.overriddenName) {
-            return "" + token.overriddenName;
-        }
-        if (token.name) {
-            return "" + token.name;
-        }
-        var res = token.toString();
-        if (res == null) {
-            return '' + res;
-        }
-        var newLineIndex = res.indexOf('\n');
-        return newLineIndex === -1 ? res : res.substring(0, newLineIndex);
-    }
-    /**
-     * Convince closure compiler that the wrapped function has no side-effects.
-     *
-     * Closure compiler always assumes that `toString` has no side-effects. We use this quirk to
-     * allow us to execute a function but have closure compiler mark the call as no-side-effects.
-     * It is important that the return value for the `noSideEffects` function be assigned
-     * to something which is retained otherwise the call to `noSideEffects` will be removed by closure
-     * compiler.
-     */
-    function noSideEffects(fn) {
-        return '' + { toString: fn };
     }
 
     /**
@@ -31305,55 +31354,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     function isDirectiveDefHack(obj) {
         return obj.type !== undefined && obj.template !== undefined && obj.declaredInputs !== undefined;
-    }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    var __forward_ref__ = getClosureSafeProperty({ __forward_ref__: getClosureSafeProperty });
-    /**
-     * Allows to refer to references which are not yet defined.
-     *
-     * For instance, `forwardRef` is used when the `token` which we need to refer to for the purposes of
-     * DI is declared, but not yet defined. It is also used when the `token` which we use when creating
-     * a query is not yet defined.
-     *
-     * @usageNotes
-     * ### Example
-     * {@example core/di/ts/forward_ref/forward_ref_spec.ts region='forward_ref'}
-     * @publicApi
-     */
-    function forwardRef(forwardRefFn) {
-        forwardRefFn.__forward_ref__ = forwardRef;
-        forwardRefFn.toString = function () { return stringify$1(this()); };
-        return forwardRefFn;
-    }
-    /**
-     * Lazily retrieves the reference value from a forwardRef.
-     *
-     * Acts as the identity function when given a non-forward-ref value.
-     *
-     * @usageNotes
-     * ### Example
-     *
-     * {@example core/di/ts/forward_ref/forward_ref_spec.ts region='resolve_forward_ref'}
-     *
-     * @see `forwardRef`
-     * @publicApi
-     */
-    function resolveForwardRef$1(type) {
-        var fn = type;
-        if (typeof fn === 'function' && fn.hasOwnProperty(__forward_ref__) &&
-            fn.__forward_ref__ === forwardRef) {
-            return fn();
-        }
-        else {
-            return type;
-        }
     }
 
     /**
@@ -38383,7 +38383,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.2.0-rc.0+42.sha-7df9040');
+    var VERSION$2 = new Version$1('7.2.0-rc.0+45.sha-a979001');
 
     /**
      * @license
@@ -45558,10 +45558,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 if (ngModuleDef === null) {
                     ngModuleDef = getCompilerFacade().compileNgModule(angularCoreEnv, "ng://" + moduleType.name + "/ngModuleDef.js", {
                         type: moduleType,
-                        bootstrap: flatten$3(ngModule.bootstrap || EMPTY_ARRAY$3),
-                        declarations: declarations,
-                        imports: flatten$3(ngModule.imports || EMPTY_ARRAY$3).map(expandModuleWithProviders),
-                        exports: flatten$3(ngModule.exports || EMPTY_ARRAY$3).map(expandModuleWithProviders),
+                        bootstrap: flatten$3(ngModule.bootstrap || EMPTY_ARRAY$3, resolveForwardRef$1),
+                        declarations: declarations.map(resolveForwardRef$1),
+                        imports: flatten$3(ngModule.imports || EMPTY_ARRAY$3, resolveForwardRef$1)
+                            .map(expandModuleWithProviders),
+                        exports: flatten$3(ngModule.exports || EMPTY_ARRAY$3, resolveForwardRef$1)
+                            .map(expandModuleWithProviders),
                         emitInline: true,
                     });
                 }
@@ -45582,8 +45584,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                         deps: reflectDependencies(moduleType),
                         providers: ngModule.providers || EMPTY_ARRAY$3,
                         imports: [
-                            ngModule.imports || EMPTY_ARRAY$3,
-                            ngModule.exports || EMPTY_ARRAY$3,
+                            (ngModule.imports || EMPTY_ARRAY$3).map(resolveForwardRef$1),
+                            (ngModule.exports || EMPTY_ARRAY$3).map(resolveForwardRef$1),
                         ],
                     };
                     ngInjectorDef = getCompilerFacade().compileInjector(angularCoreEnv, "ng://" + moduleType.name + "/ngInjectorDef.js", meta);
@@ -45602,7 +45604,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var ngModuleDef = getNgModuleDef(moduleType, true);
         var errors = [];
         ngModuleDef.declarations.forEach(verifyDeclarationsHaveDefinitions);
-        var combinedDeclarations = __spread(ngModuleDef.declarations, flatten$3(ngModuleDef.imports.map(computeCombinedExports)));
+        var combinedDeclarations = __spread(ngModuleDef.declarations.map(resolveForwardRef$1), flatten$3(ngModuleDef.imports.map(computeCombinedExports), resolveForwardRef$1));
         ngModuleDef.exports.forEach(verifyExportsAreDeclaredOrReExported);
         ngModuleDef.declarations.forEach(verifyDeclarationIsUnique);
         ngModuleDef.declarations.forEach(verifyComponentEntryComponentsIsPartOfNgModule);
@@ -45974,7 +45976,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
     }
     function convertToR3QueryPredicate(selector) {
-        return typeof selector === 'string' ? splitByComma(selector) : selector;
+        return typeof selector === 'string' ? splitByComma(selector) : resolveForwardRef$1(selector);
     }
     function convertToR3QueryMetadata$1(propertyName, ann) {
         return {
@@ -58784,7 +58786,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.2.0-rc.0+42.sha-7df9040');
+    var VERSION$3 = new Version$1('7.2.0-rc.0+45.sha-a979001');
 
     /**
      * @license
