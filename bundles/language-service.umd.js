@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.2.0-rc.0+57.sha-7eb2c41
+ * @license Angular v7.2.0-rc.0+56.sha-3f2ebbd
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -15397,7 +15397,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.2.0-rc.0+57.sha-7eb2c41');
+    var VERSION$1 = new Version('7.2.0-rc.0+56.sha-3f2ebbd');
 
     /**
      * @license
@@ -29402,16 +29402,25 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Given a current view, finds the nearest component's host (LElement).
      *
      * @param lView LView for which we want a host element node
+     * @param declarationMode indicates whether DECLARATION_VIEW or PARENT should be used to climb the
+     * tree.
      * @returns The host node
      */
-    function findComponentView(lView) {
+    function findComponentView(lView, declarationMode) {
         var rootTNode = lView[HOST_NODE];
         while (rootTNode && rootTNode.type === 2 /* View */) {
-            ngDevMode && assertDefined(lView[DECLARATION_VIEW], 'lView[DECLARATION_VIEW]');
-            lView = lView[DECLARATION_VIEW];
+            ngDevMode && assertDefined(lView[declarationMode ? DECLARATION_VIEW : PARENT], declarationMode ? 'lView.declarationView' : 'lView.parent');
+            lView = lView[declarationMode ? DECLARATION_VIEW : PARENT];
             rootTNode = lView[HOST_NODE];
         }
         return lView;
+    }
+    /**
+     * Return the host TElementNode of the starting LView
+     * @param lView the starting LView.
+     */
+    function getHostTElementNode(lView) {
+        return findComponentView(lView, true)[HOST_NODE];
     }
 
     /**
@@ -30106,7 +30115,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var previousTView = null;
             var injectorIndex = getInjectorIndex(tNode, lView);
             var parentLocation = NO_PARENT_INJECTOR;
-            var hostTElementNode = flags & InjectFlags.Host ? findComponentView(lView)[HOST_NODE] : null;
+            var hostTElementNode = flags & InjectFlags.Host ? getHostTElementNode(lView) : null;
             // If we should skip this injector, or if there is no injector on this node, start by searching
             // the parent injector.
             if (injectorIndex === -1 || flags & InjectFlags.SkipSelf) {
@@ -33790,7 +33799,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.2.0-rc.0+57.sha-7eb2c41');
+    var VERSION$2 = new Version$1('7.2.0-rc.0+56.sha-3f2ebbd');
 
     /**
      * @license
@@ -51032,7 +51041,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.2.0-rc.0+57.sha-7eb2c41');
+    var VERSION$3 = new Version$1('7.2.0-rc.0+56.sha-3f2ebbd');
 
     /**
      * @license
