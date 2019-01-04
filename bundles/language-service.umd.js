@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.2.0-rc.0+54.sha-176b3f1
+ * @license Angular v7.2.0-rc.0+59.sha-48555f9
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -13719,10 +13719,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     if (name_1 === NON_BINDABLE_ATTR) {
                         isNonBindableMode = true;
                     }
-                    else if (name_1 == 'style') {
+                    else if (name_1 === 'style') {
                         stylingBuilder.registerStyleAttr(value);
                     }
-                    else if (name_1 == 'class') {
+                    else if (name_1 === 'class') {
                         stylingBuilder.registerClassAttr(value);
                     }
                     else if (attr.i18n) {
@@ -13752,7 +13752,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var allOtherInputs = [];
             element.inputs.forEach(function (input) {
                 if (!stylingBuilder.registerBoundInput(input)) {
-                    if (input.type == 0 /* Property */) {
+                    if (input.type === 0 /* Property */) {
                         if (input.i18n) {
                             i18nAttrs.push(input);
                         }
@@ -13848,7 +13848,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 this.processStylingInstruction(implicit, stylingBuilder.buildElementStylingInstruction(element.sourceSpan, this.constantPool), true);
                 // Generate Listeners (outputs)
                 element.outputs.forEach(function (outputAst) {
-                    _this.creationInstruction(outputAst.sourceSpan, Identifiers$1.listener, _this.prepareListenerParameter(element.name, outputAst));
+                    _this.creationInstruction(outputAst.sourceSpan, Identifiers$1.listener, _this.prepareListenerParameter(element.name, outputAst, elementIndex));
                 });
             }
             // the code here will collect all update-level styling instructions and add them to the
@@ -13917,8 +13917,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 this.i18n.appendTemplate(template.i18n, templateIndex);
             }
             var tagName = sanitizeIdentifier(template.tagName || '');
-            var contextName = tagName ? this.contextName + "_" + tagName : '';
-            var templateName = contextName ? contextName + "_Template_" + templateIndex : "Template_" + templateIndex;
+            var contextName = (tagName ? this.contextName + '_' + tagName : '') + "_" + templateIndex;
+            var templateName = contextName + "_Template";
             var parameters = [
                 literal(templateIndex),
                 variable(templateName),
@@ -13936,7 +13936,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 parameters.push(this.prepareRefsParameter(template.references));
                 parameters.push(importExpr(Identifiers$1.templateRefExtractor));
             }
-            // handle property bindings e.g. p(1, 'forOf', ɵbind(ctx.items));
+            // handle property bindings e.g. p(1, 'ngForOf', ɵbind(ctx.items));
             var context = variable(CONTEXT_NAME);
             template.inputs.forEach(function (input) {
                 var value = input.value.visit(_this._valueConverter);
@@ -13953,7 +13953,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             // Nested templates must not be visited until after their parent templates have completed
             // processing, so they are queued here until after the initial pass. Otherwise, we wouldn't
             // be able to support bindings in nested templates to local refs that occur after the
-            // template definition. e.g. <div *ngIf="showing"> {{ foo }} </div>  <div #foo></div>
+            // template definition. e.g. <div *ngIf="showing">{{ foo }}</div>  <div #foo></div>
             this._nestedTemplateFns.push(function () {
                 var _a;
                 var templateFunctionExpr = templateVisitor.buildTemplateFunction(template.children, template.variables, _this._ngContentSelectors.length + _this._ngContentSelectorsOffset, template.i18n);
@@ -13970,7 +13970,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             });
             // Generate listeners for directive output
             template.outputs.forEach(function (outputAst) {
-                _this.creationInstruction(outputAst.sourceSpan, Identifiers$1.listener, _this.prepareListenerParameter('ng_template', outputAst));
+                _this.creationInstruction(outputAst.sourceSpan, Identifiers$1.listener, _this.prepareListenerParameter('ng_template', outputAst, templateIndex));
             });
         };
         TemplateDefinitionBuilder.prototype.visitBoundText = function (text) {
@@ -14197,7 +14197,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }));
             return this.constantPool.getConstLiteral(asLiteral(refsParam), true);
         };
-        TemplateDefinitionBuilder.prototype.prepareListenerParameter = function (tagName, outputAst) {
+        TemplateDefinitionBuilder.prototype.prepareListenerParameter = function (tagName, outputAst, index) {
             var _this = this;
             var eventName = outputAst.name;
             if (outputAst.type === 1 /* Animation */) {
@@ -14205,7 +14205,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
             var evNameSanitized = sanitizeIdentifier(eventName);
             var tagNameSanitized = sanitizeIdentifier(tagName);
-            var functionName = this.templateName + "_" + tagNameSanitized + "_" + evNameSanitized + "_listener";
+            var functionName = this.templateName + "_" + tagNameSanitized + "_" + evNameSanitized + "_" + index + "_listener";
             return function () {
                 var listenerScope = _this._bindingScope.nestedScope(_this._bindingScope.bindingLevel);
                 var bindingExpr = convertActionBinding(listenerScope, variable(CONTEXT_NAME), outputAst.handler, 'b', function () { return error('Unexpected interpolation'); });
@@ -14511,7 +14511,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var value = attributes[name];
             cssSelector.addAttribute(name, value);
             if (name.toLowerCase() === 'class') {
-                var classes = value.trim().split(/\s+/g);
+                var classes = value.trim().split(/\s+/);
                 classes.forEach(function (className) { return cssSelector.addClassName(className); });
             }
         });
@@ -14609,10 +14609,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function isSingleElementTemplate(children) {
         return children.length === 1 && children[0] instanceof Element$1;
     }
+    function isTextNode(node) {
+        return node instanceof Text$3 || node instanceof BoundText || node instanceof Icu$1;
+    }
     function hasTextChildrenOnly(children) {
-        return !children.find(function (child) {
-            return !(child instanceof Text$3 || child instanceof BoundText || child instanceof Icu$1);
-        });
+        return children.every(isTextNode);
     }
 
     /**
@@ -15382,7 +15383,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.2.0-rc.0+54.sha-176b3f1');
+    var VERSION$1 = new Version('7.2.0-rc.0+59.sha-48555f9');
 
     /**
      * @license
@@ -29722,25 +29723,16 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Given a current view, finds the nearest component's host (LElement).
      *
      * @param lView LView for which we want a host element node
-     * @param declarationMode indicates whether DECLARATION_VIEW or PARENT should be used to climb the
-     * tree.
      * @returns The host node
      */
-    function findComponentView(lView, declarationMode) {
+    function findComponentView(lView) {
         var rootTNode = lView[HOST_NODE];
         while (rootTNode && rootTNode.type === 2 /* View */) {
-            ngDevMode && assertDefined(lView[declarationMode ? DECLARATION_VIEW : PARENT], declarationMode ? 'lView.declarationView' : 'lView.parent');
-            lView = lView[declarationMode ? DECLARATION_VIEW : PARENT];
+            ngDevMode && assertDefined(lView[DECLARATION_VIEW], 'lView[DECLARATION_VIEW]');
+            lView = lView[DECLARATION_VIEW];
             rootTNode = lView[HOST_NODE];
         }
         return lView;
-    }
-    /**
-     * Return the host TElementNode of the starting LView
-     * @param lView the starting LView.
-     */
-    function getHostTElementNode(lView) {
-        return findComponentView(lView, true)[HOST_NODE];
     }
 
     /**
@@ -30641,7 +30633,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var previousTView = null;
             var injectorIndex = getInjectorIndex(tNode, lView);
             var parentLocation = NO_PARENT_INJECTOR;
-            var hostTElementNode = flags & InjectFlags.Host ? getHostTElementNode(lView) : null;
+            var hostTElementNode = flags & InjectFlags.Host ? findComponentView(lView)[HOST_NODE] : null;
             // If we should skip this injector, or if there is no injector on this node, start by searching
             // the parent injector.
             if (injectorIndex === -1 || flags & InjectFlags.SkipSelf) {
@@ -38411,7 +38403,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.2.0-rc.0+54.sha-176b3f1');
+    var VERSION$2 = new Version$1('7.2.0-rc.0+59.sha-48555f9');
 
     /**
      * @license
@@ -39157,11 +39149,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * found in the LICENSE file at https://angular.io/license
      */
     var MARKER = "\uFFFD";
-    var ICU_BLOCK_REGEX = /^\s*(�\d+�)\s*,\s*(select|plural)\s*,/;
+    var ICU_BLOCK_REGEX = /^\s*(�\d+:?\d*�)\s*,\s*(select|plural)\s*,/;
     var SUBTEMPLATE_REGEXP = /�\/?\*(\d+:\d+)�/gi;
     var PH_REGEXP = /�(\/?[#*]\d+):?\d*�/gi;
     var BINDING_REGEXP = /�(\d+):?\d*�/gi;
-    var ICU_REGEXP = /({\s*�\d+�\s*,\s*\S{6}\s*,[\s\S]*})/gi;
+    var ICU_REGEXP = /({\s*�\d+:?\d*�\s*,\s*\S{6}\s*,[\s\S]*})/gi;
     // i18nPostproocess regexps
     var PP_PLACEHOLDERS = /\[(�.+?�?)\]/g;
     var PP_ICU_VARS = /({\s*)(VAR_(PLURAL|SELECT)(_\d+)?)(\s*,)/g;
@@ -58814,7 +58806,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.2.0-rc.0+54.sha-176b3f1');
+    var VERSION$3 = new Version$1('7.2.0-rc.0+59.sha-48555f9');
 
     /**
      * @license
