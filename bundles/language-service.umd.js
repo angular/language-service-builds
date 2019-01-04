@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.2.0-rc.0+62.sha-5d3dcfc
+ * @license Angular v7.2.0-rc.0+63.sha-fb7816f
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -15436,7 +15436,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.2.0-rc.0+62.sha-5d3dcfc');
+    var VERSION$1 = new Version('7.2.0-rc.0+63.sha-fb7816f');
 
     /**
      * @license
@@ -29962,7 +29962,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      *
      * ```
      */
-    var includeViewProviders = false;
+    var includeViewProviders = true;
     function setIncludeViewProviders(v) {
         var oldValue = includeViewProviders;
         includeViewProviders = v;
@@ -33829,7 +33829,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.2.0-rc.0+62.sha-5d3dcfc');
+    var VERSION$2 = new Version$1('7.2.0-rc.0+63.sha-fb7816f');
 
     /**
      * @license
@@ -51071,7 +51071,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.2.0-rc.0+62.sha-5d3dcfc');
+    var VERSION$3 = new Version$1('7.2.0-rc.0+63.sha-fb7816f');
 
     /**
      * @license
