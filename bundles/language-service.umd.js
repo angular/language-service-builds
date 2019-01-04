@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.2.0-rc.0+46.sha-1e6c9be
+ * @license Angular v7.2.0-rc.0+52.sha-51a0bd2
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -14115,6 +14115,27 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         TemplateDefinitionBuilder.prototype.prepareSyntheticAndSelectOnlyAttrs = function (inputs, outputs, styles) {
             var attrExprs = [];
             var nonSyntheticInputs = [];
+            var alreadySeen = new Set();
+            function isASTWithSource(ast) {
+                return ast instanceof ASTWithSource;
+            }
+            function isLiteralPrimitive(ast) {
+                return ast instanceof LiteralPrimitive;
+            }
+            function addAttrExpr(key, value) {
+                if (typeof key === 'string') {
+                    if (!alreadySeen.has(key)) {
+                        attrExprs.push(literal(key));
+                        if (value !== undefined) {
+                            attrExprs.push(value);
+                        }
+                        alreadySeen.add(key);
+                    }
+                }
+                else {
+                    attrExprs.push(literal(key));
+                }
+            }
             if (inputs.length) {
                 var EMPTY_STRING_EXPR_1 = asLiteral('');
                 inputs.forEach(function (input) {
@@ -14123,7 +14144,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                         // may be supported differently in future versions of angular. However,
                         // @triggers should always just be treated as regular attributes (it's up
                         // to the renderer to detect and use them in a special way).
-                        attrExprs.push(asLiteral(prepareSyntheticAttributeName(input.name)), EMPTY_STRING_EXPR_1);
+                        var valueExp = input.value;
+                        if (isASTWithSource(valueExp)) {
+                            var literal$$1 = valueExp.ast;
+                            if (isLiteralPrimitive(literal$$1) && literal$$1.value === undefined) {
+                                addAttrExpr(prepareSyntheticAttributeName(input.name), EMPTY_STRING_EXPR_1);
+                            }
+                        }
                     }
                     else {
                         nonSyntheticInputs.push(input);
@@ -14137,9 +14164,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 styles.populateInitialStylingAttrs(attrExprs);
             }
             if (nonSyntheticInputs.length || outputs.length) {
-                attrExprs.push(literal(3 /* SelectOnly */));
-                nonSyntheticInputs.forEach(function (i) { return attrExprs.push(asLiteral(i.name)); });
-                outputs.forEach(function (o) { return attrExprs.push(asLiteral(o.name)); });
+                addAttrExpr(3 /* SelectOnly */);
+                nonSyntheticInputs.forEach(function (i) { return addAttrExpr(i.name); });
+                outputs.forEach(function (o) { return addAttrExpr(o.name); });
             }
             return attrExprs;
         };
@@ -15355,7 +15382,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.2.0-rc.0+46.sha-1e6c9be');
+    var VERSION$1 = new Version('7.2.0-rc.0+52.sha-51a0bd2');
 
     /**
      * @license
@@ -34099,8 +34126,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function renderComponentOrTemplate(hostView, context, templateFn) {
         var rendererFactory = hostView[RENDERER_FACTORY];
         var oldView = enterView(hostView, hostView[HOST_NODE]);
+        var normalExecutionPath = !getCheckNoChangesMode();
         try {
-            if (rendererFactory.begin) {
+            if (normalExecutionPath && rendererFactory.begin) {
                 rendererFactory.begin();
             }
             if (isCreationMode(hostView)) {
@@ -34117,7 +34145,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             refreshDescendantViews(hostView);
         }
         finally {
-            if (rendererFactory.end) {
+            if (normalExecutionPath && rendererFactory.end) {
                 rendererFactory.end();
             }
             leaveView(oldView);
@@ -38383,7 +38411,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.2.0-rc.0+46.sha-1e6c9be');
+    var VERSION$2 = new Version$1('7.2.0-rc.0+52.sha-51a0bd2');
 
     /**
      * @license
@@ -58786,7 +58814,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.2.0-rc.0+46.sha-1e6c9be');
+    var VERSION$3 = new Version$1('7.2.0-rc.0+52.sha-51a0bd2');
 
     /**
      * @license
