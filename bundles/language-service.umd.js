@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.2.0-rc.0+64.sha-929334b
+ * @license Angular v7.2.0-rc.0+65.sha-b61dafa
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -10452,7 +10452,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     var charCode = parseInt(strNum, isHex ? 16 : 10);
                     return String.fromCharCode(charCode);
                 }
-                catch (e) {
+                catch (_a) {
                     var entity = this._input.substring(start.offset + 1, this._index - 1);
                     throw this._createError(_unknownEntityErrorMsg(entity), this._getSpan(start));
                 }
@@ -15421,7 +15421,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.2.0-rc.0+64.sha-929334b');
+    var VERSION$1 = new Version('7.2.0-rc.0+65.sha-b61dafa');
 
     /**
      * @license
@@ -38476,7 +38476,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.2.0-rc.0+64.sha-929334b');
+    var VERSION$2 = new Version$1('7.2.0-rc.0+65.sha-b61dafa');
 
     /**
      * @license
@@ -38783,7 +38783,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             try {
                 html = encodeURI(html);
             }
-            catch (e) {
+            catch (_a) {
                 return null;
             }
             var xhr = new XMLHttpRequest();
@@ -38812,7 +38812,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 body.removeChild(body.firstChild);
                 return body;
             }
-            catch (e) {
+            catch (_a) {
                 return null;
             }
         };
@@ -38875,7 +38875,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         try {
             return !!window.DOMParser;
         }
-        catch (e) {
+        catch (_a) {
             return false;
         }
     }
@@ -58880,7 +58880,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.2.0-rc.0+64.sha-929334b');
+    var VERSION$3 = new Version$1('7.2.0-rc.0+65.sha-b61dafa');
 
     /**
      * @license
