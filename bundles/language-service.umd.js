@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.2.0-rc.0+61.sha-0bd9deb
+ * @license Angular v7.2.0-rc.0+65.sha-b61dafa
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -3379,6 +3379,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         Identifiers.elementStart = { name: 'ɵelementStart', moduleName: CORE$1 };
         Identifiers.elementEnd = { name: 'ɵelementEnd', moduleName: CORE$1 };
         Identifiers.elementProperty = { name: 'ɵelementProperty', moduleName: CORE$1 };
+        Identifiers.componentHostSyntheticProperty = { name: 'ɵcomponentHostSyntheticProperty', moduleName: CORE$1 };
         Identifiers.elementAttribute = { name: 'ɵelementAttribute', moduleName: CORE$1 };
         Identifiers.elementClassProp = { name: 'ɵelementClassProp', moduleName: CORE$1 };
         Identifiers.elementContainerStart = { name: 'ɵelementContainerStart', moduleName: CORE$1 };
@@ -4820,6 +4821,26 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
         }
         return expressionType(type, null, params);
+    }
+    var ANIMATE_SYMBOL_PREFIX = '@';
+    function prepareSyntheticPropertyName(name) {
+        return "" + ANIMATE_SYMBOL_PREFIX + name;
+    }
+    function prepareSyntheticListenerName(name, phase) {
+        return "" + ANIMATE_SYMBOL_PREFIX + name + "." + phase;
+    }
+    function getSyntheticPropertyName(name) {
+        // this will strip out listener phase values...
+        // @foo.start => @foo
+        var i = name.indexOf('.');
+        name = i > 0 ? name.substring(0, i) : name;
+        if (name.charAt(0) !== ANIMATE_SYMBOL_PREFIX) {
+            name = ANIMATE_SYMBOL_PREFIX + name;
+        }
+        return name;
+    }
+    function prepareSyntheticListenerFunctionName(name, phase) {
+        return "animation_" + name + "_" + phase;
     }
 
     /**
@@ -10446,7 +10467,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     var charCode = parseInt(strNum, isHex ? 16 : 10);
                     return String.fromCharCode(charCode);
                 }
-                catch (e) {
+                catch (_a) {
                     var entity = this._input.substring(start.offset + 1, this._index - 1);
                     throw this._createError(_unknownEntityErrorMsg(entity), this._getSpan(start));
                 }
@@ -13880,11 +13901,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     var value_1 = input.value.visit(_this._valueConverter);
                     // setProperty without a value doesn't make any sense
                     if (value_1.name || value_1.value) {
+                        var bindingName_1 = prepareSyntheticPropertyName(input.name);
                         _this.allocateBindingSlots(value_1);
-                        var name_2 = prepareSyntheticAttributeName(input.name);
                         _this.updateInstruction(input.sourceSpan, Identifiers$1.elementProperty, function () {
                             return [
-                                literal(elementIndex), literal(name_2), _this.convertPropertyBinding(implicit, value_1)
+                                literal(elementIndex), literal(bindingName_1),
+                                _this.convertPropertyBinding(implicit, value_1)
                             ];
                         });
                     }
@@ -14163,7 +14185,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                         if (isASTWithSource(valueExp)) {
                             var literal$$1 = valueExp.ast;
                             if (isLiteralPrimitive(literal$$1) && literal$$1.value === undefined) {
-                                addAttrExpr(prepareSyntheticAttributeName(input.name), EMPTY_STRING_EXPR_1);
+                                addAttrExpr(prepareSyntheticPropertyName(input.name), EMPTY_STRING_EXPR_1);
                             }
                         }
                     }
@@ -14181,7 +14203,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             if (nonSyntheticInputs.length || outputs.length) {
                 addAttrExpr(3 /* SelectOnly */);
                 nonSyntheticInputs.forEach(function (i) { return addAttrExpr(i.name); });
-                outputs.forEach(function (o) { return addAttrExpr(o.name); });
+                outputs.forEach(function (o) {
+                    var name = o.type === 1 /* Animation */ ? getSyntheticPropertyName(o.name) : o.name;
+                    addAttrExpr(name);
+                });
             }
             return attrExprs;
         };
@@ -14215,12 +14240,17 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         TemplateDefinitionBuilder.prototype.prepareListenerParameter = function (tagName, outputAst, index) {
             var _this = this;
             var eventName = outputAst.name;
+            var bindingFnName;
             if (outputAst.type === 1 /* Animation */) {
-                eventName = prepareSyntheticAttributeName(outputAst.name + "." + outputAst.phase);
+                // synthetic @listener.foo values are treated the exact same as are standard listeners
+                bindingFnName = prepareSyntheticListenerFunctionName(eventName, outputAst.phase);
+                eventName = prepareSyntheticListenerName(eventName, outputAst.phase);
             }
-            var evNameSanitized = sanitizeIdentifier(eventName);
+            else {
+                bindingFnName = sanitizeIdentifier(eventName);
+            }
             var tagNameSanitized = sanitizeIdentifier(tagName);
-            var functionName = this.templateName + "_" + tagNameSanitized + "_" + evNameSanitized + "_" + index + "_listener";
+            var functionName = this.templateName + "_" + tagNameSanitized + "_" + bindingFnName + "_" + index + "_listener";
             return function () {
                 var listenerScope = _this._bindingScope.nestedScope(_this._bindingScope.bindingLevel);
                 var bindingExpr = convertActionBinding(listenerScope, variable(CONTEXT_NAME), outputAst.handler, 'b', function () { return error('Unexpected interpolation'); });
@@ -14617,9 +14647,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             default:
                 return null;
         }
-    }
-    function prepareSyntheticAttributeName(name) {
-        return '@' + name;
     }
     function isSingleElementTemplate(children) {
         return children.length === 1 && children[0] instanceof Element$1;
@@ -15030,7 +15057,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                         // resolve literal arrays and literal objects
                         var value = binding.expression.visit(valueConverter);
                         var bindingExpr = bindingFn(bindingContext, value);
-                        var _c = getBindingNameAndInstruction(name_1), bindingName = _c.bindingName, instruction = _c.instruction, extraParams = _c.extraParams;
+                        var _c = getBindingNameAndInstruction(binding), bindingName = _c.bindingName, instruction = _c.instruction, extraParams = _c.extraParams;
                         var instructionParams = [
                             elVarExp, literal(bindingName), importExpr(Identifiers$1.bind).callFn([bindingExpr.currValExpr])
                         ];
@@ -15098,7 +15125,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             .callFn(params, instruction.sourceSpan)
             .toStmt();
     }
-    function getBindingNameAndInstruction(bindingName) {
+    function getBindingNameAndInstruction(binding) {
+        var bindingName = binding.name;
         var instruction;
         var extraParams = [];
         // Check to see if this is an attr binding or a property binding
@@ -15108,7 +15136,16 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             instruction = Identifiers$1.elementAttribute;
         }
         else {
-            instruction = Identifiers$1.elementProperty;
+            if (binding.isAnimation) {
+                bindingName = prepareSyntheticPropertyName(bindingName);
+                // host bindings that have a synthetic property (e.g. @foo) should always be rendered
+                // in the context of the component and not the parent. Therefore there is a special
+                // compatibility instruction available for this purpose.
+                instruction = Identifiers$1.componentHostSyntheticProperty;
+            }
+            else {
+                instruction = Identifiers$1.elementProperty;
+            }
             extraParams.push(literal(null), // TODO: This should be a sanitizer fn (FW-785)
             literal(true) // host bindings must have nativeOnly prop set to true
             );
@@ -15119,10 +15156,15 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return eventBindings.map(function (binding) {
             var bindingExpr = convertActionBinding(null, bindingContext, binding.handler, 'b', function () { return error('Unexpected interpolation'); });
             var bindingName = binding.name && sanitizeIdentifier(binding.name);
+            var bindingFnName = bindingName;
+            if (binding.type === 1 /* Animation */) {
+                bindingFnName = prepareSyntheticListenerFunctionName(bindingName, binding.targetOrPhase);
+                bindingName = prepareSyntheticListenerName(bindingName, binding.targetOrPhase);
+            }
             var typeName = meta.name;
-            var functionName = typeName && bindingName ? typeName + "_" + bindingName + "_HostBindingHandler" : null;
+            var functionName = typeName && bindingName ? typeName + "_" + bindingFnName + "_HostBindingHandler" : null;
             var handler = fn([new FnParam('$event', DYNAMIC_TYPE)], __spread(bindingExpr.render3Stmts), INFERRED_TYPE, null, functionName);
-            return importExpr(Identifiers$1.listener).callFn([literal(binding.name), handler]).toStmt();
+            return importExpr(Identifiers$1.listener).callFn([literal(bindingName), handler]).toStmt();
         });
     }
     function metadataAsSummary(meta) {
@@ -15134,12 +15176,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         // clang-format on
     }
-    var HOST_REG_EXP$1 = /^(?:(?:\[([^\]]+)\])|(?:\(([^\)]+)\)))|(\@[-\w]+)$/;
+    var HOST_REG_EXP$1 = /^(?:\[([^\]]+)\])|(?:\(([^\)]+)\))$/;
     function parseHostBindings(host) {
         var attributes = {};
         var listeners = {};
         var properties = {};
-        var animations = {};
         Object.keys(host).forEach(function (key) {
             var value = host[key];
             var matches = key.match(HOST_REG_EXP$1);
@@ -15147,16 +15188,16 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 attributes[key] = value;
             }
             else if (matches[1 /* Binding */] != null) {
+                // synthetic properties (the ones that have a `@` as a prefix)
+                // are still treated the same as regular properties. Therefore
+                // there is no point in storing them in a separate map.
                 properties[matches[1 /* Binding */]] = value;
             }
             else if (matches[2 /* Event */] != null) {
                 listeners[matches[2 /* Event */]] = value;
             }
-            else if (matches[3 /* Animation */] != null) {
-                animations[matches[3 /* Animation */]] = value;
-            }
         });
-        return { attributes: attributes, listeners: listeners, properties: properties, animations: animations };
+        return { attributes: attributes, listeners: listeners, properties: properties };
     }
     function compileStyles(styles, selector, hostSelector) {
         var shadowCss = new ShadowCss();
@@ -15345,10 +15386,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
     function extractHostBindings(host, propMetadata) {
         // First parse the declarations from the metadata.
-        var _a = parseHostBindings(host || {}), attributes = _a.attributes, listeners = _a.listeners, properties = _a.properties, animations = _a.animations;
-        if (Object.keys(animations).length > 0) {
-            throw new Error("Animation bindings are as-of-yet unsupported in Ivy");
-        }
+        var _a = parseHostBindings(host || {}), attributes = _a.attributes, listeners = _a.listeners, properties = _a.properties;
         var _loop_2 = function (field) {
             if (propMetadata.hasOwnProperty(field)) {
                 propMetadata[field].forEach(function (ann) {
@@ -15398,7 +15436,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.2.0-rc.0+61.sha-0bd9deb');
+    var VERSION$1 = new Version('7.2.0-rc.0+65.sha-b61dafa');
 
     /**
      * @license
@@ -29924,7 +29962,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      *
      * ```
      */
-    var includeViewProviders = false;
+    var includeViewProviders = true;
     function setIncludeViewProviders(v) {
         var oldValue = includeViewProviders;
         includeViewProviders = v;
@@ -30048,7 +30086,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var viewOffset = 1;
         while (hostTNode && hostTNode.injectorIndex === -1) {
             view = view[DECLARATION_VIEW];
-            hostTNode = view[HOST_NODE];
+            hostTNode = view ? view[HOST_NODE] : null;
             viewOffset++;
         }
         return hostTNode ?
@@ -30080,76 +30118,80 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     function getOrCreateInjectable(tNode, lView, token, flags, notFoundValue) {
         if (flags === void 0) { flags = InjectFlags.Default; }
-        var bloomHash = bloomHashBitOrFactory(token);
-        // If the ID stored here is a function, this is a special object like ElementRef or TemplateRef
-        // so just call the factory function to create it.
-        if (typeof bloomHash === 'function') {
-            var savePreviousOrParentTNode = getPreviousOrParentTNode();
-            var saveLView = getLView();
-            setTNodeAndViewData(tNode, lView);
-            try {
-                var value = bloomHash();
-                if (value == null && !(flags & InjectFlags.Optional)) {
-                    throw new Error("No provider for " + stringify$2(token) + "!");
-                }
-                else {
-                    return value;
-                }
-            }
-            finally {
-                setTNodeAndViewData(savePreviousOrParentTNode, saveLView);
-            }
-        }
-        else if (typeof bloomHash == 'number') {
-            // If the token has a bloom hash, then it is a token which could be in NodeInjector.
-            // A reference to the previous injector TView that was found while climbing the element injector
-            // tree. This is used to know if viewProviders can be accessed on the current injector.
-            var previousTView = null;
-            var injectorIndex = getInjectorIndex(tNode, lView);
-            var parentLocation = NO_PARENT_INJECTOR;
-            var hostTElementNode = flags & InjectFlags.Host ? findComponentView(lView)[HOST_NODE] : null;
-            // If we should skip this injector, or if there is no injector on this node, start by searching
-            // the parent injector.
-            if (injectorIndex === -1 || flags & InjectFlags.SkipSelf) {
-                parentLocation = injectorIndex === -1 ? getParentInjectorLocation(tNode, lView) :
-                    lView[injectorIndex + PARENT_INJECTOR];
-                if (!shouldSearchParent(flags, false)) {
-                    injectorIndex = -1;
-                }
-                else {
-                    previousTView = lView[TVIEW];
-                    injectorIndex = getParentInjectorIndex(parentLocation);
-                    lView = getParentInjectorView(parentLocation, lView);
-                }
-            }
-            // Traverse up the injector tree until we find a potential match or until we know there
-            // *isn't* a match.
-            while (injectorIndex !== -1) {
-                parentLocation = lView[injectorIndex + PARENT_INJECTOR];
-                // Check the current injector. If it matches, see if it contains token.
-                var tView = lView[TVIEW];
-                if (bloomHasToken(bloomHash, injectorIndex, tView.data)) {
-                    // At this point, we have an injector which *may* contain the token, so we step through
-                    // the providers and directives associated with the injector's corresponding node to get
-                    // the instance.
-                    var instance = searchTokensOnInjector(injectorIndex, lView, token, previousTView, flags, hostTElementNode);
-                    if (instance !== NOT_FOUND) {
-                        return instance;
+        if (tNode) {
+            var bloomHash = bloomHashBitOrFactory(token);
+            // If the ID stored here is a function, this is a special object like ElementRef or TemplateRef
+            // so just call the factory function to create it.
+            if (typeof bloomHash === 'function') {
+                var savePreviousOrParentTNode = getPreviousOrParentTNode();
+                var saveLView = getLView();
+                setTNodeAndViewData(tNode, lView);
+                try {
+                    var value = bloomHash();
+                    if (value == null && !(flags & InjectFlags.Optional)) {
+                        throw new Error("No provider for " + stringify$2(token) + "!");
+                    }
+                    else {
+                        return value;
                     }
                 }
-                if (shouldSearchParent(flags, lView[TVIEW].data[injectorIndex + TNODE] === hostTElementNode) &&
-                    bloomHasToken(bloomHash, injectorIndex, lView)) {
-                    // The def wasn't found anywhere on this node, so it was a false positive.
-                    // Traverse up the tree and continue searching.
-                    previousTView = tView;
-                    injectorIndex = getParentInjectorIndex(parentLocation);
-                    lView = getParentInjectorView(parentLocation, lView);
+                finally {
+                    setTNodeAndViewData(savePreviousOrParentTNode, saveLView);
                 }
-                else {
-                    // If we should not search parent OR If the ancestor bloom filter value does not have the
-                    // bit corresponding to the directive we can give up on traversing up to find the specific
-                    // injector.
-                    injectorIndex = -1;
+            }
+            else if (typeof bloomHash == 'number') {
+                // If the token has a bloom hash, then it is a token which could be in NodeInjector.
+                // A reference to the previous injector TView that was found while climbing the element
+                // injector tree. This is used to know if viewProviders can be accessed on the current
+                // injector.
+                var previousTView = null;
+                var injectorIndex = getInjectorIndex(tNode, lView);
+                var parentLocation = NO_PARENT_INJECTOR;
+                var hostTElementNode = flags & InjectFlags.Host ? findComponentView(lView)[HOST_NODE] : null;
+                // If we should skip this injector, or if there is no injector on this node, start by
+                // searching
+                // the parent injector.
+                if (injectorIndex === -1 || flags & InjectFlags.SkipSelf) {
+                    parentLocation = injectorIndex === -1 ? getParentInjectorLocation(tNode, lView) :
+                        lView[injectorIndex + PARENT_INJECTOR];
+                    if (!shouldSearchParent(flags, false)) {
+                        injectorIndex = -1;
+                    }
+                    else {
+                        previousTView = lView[TVIEW];
+                        injectorIndex = getParentInjectorIndex(parentLocation);
+                        lView = getParentInjectorView(parentLocation, lView);
+                    }
+                }
+                // Traverse up the injector tree until we find a potential match or until we know there
+                // *isn't* a match.
+                while (injectorIndex !== -1) {
+                    parentLocation = lView[injectorIndex + PARENT_INJECTOR];
+                    // Check the current injector. If it matches, see if it contains token.
+                    var tView = lView[TVIEW];
+                    if (bloomHasToken(bloomHash, injectorIndex, tView.data)) {
+                        // At this point, we have an injector which *may* contain the token, so we step through
+                        // the providers and directives associated with the injector's corresponding node to get
+                        // the instance.
+                        var instance = searchTokensOnInjector(injectorIndex, lView, token, previousTView, flags, hostTElementNode);
+                        if (instance !== NOT_FOUND) {
+                            return instance;
+                        }
+                    }
+                    if (shouldSearchParent(flags, lView[TVIEW].data[injectorIndex + TNODE] === hostTElementNode) &&
+                        bloomHasToken(bloomHash, injectorIndex, lView)) {
+                        // The def wasn't found anywhere on this node, so it was a false positive.
+                        // Traverse up the tree and continue searching.
+                        previousTView = tView;
+                        injectorIndex = getParentInjectorIndex(parentLocation);
+                        lView = getParentInjectorView(parentLocation, lView);
+                    }
+                    else {
+                        // If we should not search parent OR If the ancestor bloom filter value does not have the
+                        // bit corresponding to the directive we can give up on traversing up to find the specific
+                        // injector.
+                        injectorIndex = -1;
+                    }
                 }
             }
         }
@@ -33791,7 +33833,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.2.0-rc.0+61.sha-0bd9deb');
+    var VERSION$2 = new Version$1('7.2.0-rc.0+65.sha-b61dafa');
 
     /**
      * @license
@@ -51033,7 +51075,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.2.0-rc.0+61.sha-0bd9deb');
+    var VERSION$3 = new Version$1('7.2.0-rc.0+65.sha-b61dafa');
 
     /**
      * @license
