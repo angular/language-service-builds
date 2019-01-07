@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.2.0+7.sha-4588053
+ * @license Angular v7.2.0+9.sha-e775313
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -15436,7 +15436,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.2.0+7.sha-4588053');
+    var VERSION$1 = new Version('7.2.0+9.sha-e775313');
 
     /**
      * @license
@@ -29265,8 +29265,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         /**
          * Set to `true` if the token is declared in `viewProviders` (or if it is component).
          */
-        isViewProvider, injectImplementation) {
+        isViewProvider, 
+        /**
+         * Set to `true` if the token is a provider, and not a directive.
+         */
+        isProvider, injectImplementation) {
             this.factory = factory;
+            this.isProvider = isProvider;
             /**
              * Marker set to true during factory invocation to see if we get into recursive loop.
              * Recursive loop causes an error to be displayed.
@@ -30309,6 +30314,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             setTNodeAndViewData(tNode, lData);
             try {
                 value = lData[index] = factory.factory(null, tData, lData, tNode);
+                var tView = lData[TVIEW];
+                if (value && factory.isProvider && value.ngOnDestroy) {
+                    (tView.destroyHooks || (tView.destroyHooks = [])).push(index, value.ngOnDestroy);
+                }
             }
             finally {
                 if (factory.injectImpl)
@@ -31348,7 +31357,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         if (viewOrContainer.length >= HEADER_OFFSET) {
             var view = viewOrContainer;
             executeOnDestroys(view);
-            executePipeOnDestroys(view);
             removeListeners(view);
             var hostTNode = view[HOST_NODE];
             // For component views only, the local renderer is destroyed as clean up time.
@@ -31406,13 +31414,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var destroyHooks;
         if (tView != null && (destroyHooks = tView.destroyHooks) != null) {
             callHooks(view, destroyHooks);
-        }
-    }
-    /** Calls pipe destroy hooks for this view */
-    function executePipeOnDestroys(lView) {
-        var pipeDestroyHooks = lView[TVIEW] && lView[TVIEW].pipeDestroyHooks;
-        if (pipeDestroyHooks) {
-            callHooks(lView, pipeDestroyHooks);
         }
     }
     /**
@@ -31885,7 +31886,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             viewHooks: null,
             viewCheckHooks: null,
             destroyHooks: null,
-            pipeDestroyHooks: null,
             cleanup: null,
             contentQueries: null,
             components: null,
@@ -32098,7 +32098,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
     function baseResolveDirective(tView, viewData, def, directiveFactory) {
         tView.data.push(def);
-        var nodeInjectorFactory = new NodeInjectorFactory(directiveFactory, isComponentDef(def), null);
+        var nodeInjectorFactory = new NodeInjectorFactory(directiveFactory, isComponentDef(def), false, null);
         tView.blueprint.push(nodeInjectorFactory);
         viewData.push(nodeInjectorFactory);
     }
@@ -33849,7 +33849,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.2.0+7.sha-4588053');
+    var VERSION$2 = new Version$1('7.2.0+9.sha-e775313');
 
     /**
      * @license
@@ -51091,7 +51091,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.2.0+7.sha-4588053');
+    var VERSION$3 = new Version$1('7.2.0+9.sha-e775313');
 
     /**
      * @license
