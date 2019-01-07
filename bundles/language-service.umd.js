@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.2.0+10.sha-a75c734
+ * @license Angular v7.2.0+15.sha-4613864
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -15421,7 +15421,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.2.0+10.sha-a75c734');
+    var VERSION$1 = new Version('7.2.0+15.sha-4613864');
 
     /**
      * @license
@@ -38451,7 +38451,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.2.0+10.sha-a75c734');
+    var VERSION$2 = new Version$1('7.2.0+15.sha-4613864');
 
     /**
      * @license
@@ -39596,6 +39596,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * @publicAPI
      */
     function i18nPostprocess(message, replacements) {
+        if (replacements === void 0) { replacements = {}; }
         //
         // Step 1: resolve all multi-value cases (like [�*1:1��#2:1�|�#4:1�|�5�])
         //
@@ -58855,7 +58856,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.2.0+10.sha-a75c734');
+    var VERSION$3 = new Version$1('7.2.0+15.sha-4613864');
 
     /**
      * @license
