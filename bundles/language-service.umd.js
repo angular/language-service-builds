@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.2.0+14.sha-ac5f5ed
+ * @license Angular v7.2.0+17.sha-c1dacdd
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -15421,7 +15421,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.2.0+14.sha-ac5f5ed');
+    var VERSION$1 = new Version('7.2.0+17.sha-c1dacdd');
 
     /**
      * @license
@@ -29569,30 +29569,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             return value.type.name || value.type;
         return '' + value;
     }
-    /**
-     * Flattens an array in non-recursive way. Input arrays are not modified.
-     */
-    function flatten$2(list) {
-        var result = [];
-        var i = 0;
-        while (i < list.length) {
-            var item = list[i];
-            if (Array.isArray(item)) {
-                if (item.length > 0) {
-                    list = item.concat(list.slice(i + 1));
-                    i = 0;
-                }
-                else {
-                    i++;
-                }
-            }
-            else {
-                result.push(item);
-                i++;
-            }
-        }
-        return result;
-    }
     /** Retrieves a value from any `LView` or `TData`. */
     function loadInternal(view, index) {
         ngDevMode && assertDataInRange(view, index + HEADER_OFFSET);
@@ -38451,7 +38427,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.2.0+14.sha-ac5f5ed');
+    var VERSION$2 = new Version$1('7.2.0+17.sha-c1dacdd');
 
     /**
      * @license
@@ -39596,6 +39572,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * @publicAPI
      */
     function i18nPostprocess(message, replacements) {
+        if (replacements === void 0) { replacements = {}; }
         //
         // Step 1: resolve all multi-value cases (like [�*1:1��#2:1�|�#4:1�|�5�])
         //
@@ -44430,6 +44407,111 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * found in the LICENSE file at https://angular.io/license
      */
     /**
+     * An unmodifiable list of items that Angular keeps up to date when the state
+     * of the application changes.
+     *
+     * The type of object that {@link ViewChildren}, {@link ContentChildren}, and {@link QueryList}
+     * provide.
+     *
+     * Implements an iterable interface, therefore it can be used in both ES6
+     * javascript `for (var i of items)` loops as well as in Angular templates with
+     * `*ngFor="let i of myList"`.
+     *
+     * Changes can be observed by subscribing to the changes `Observable`.
+     *
+     * NOTE: In the future this class will implement an `Observable` interface.
+     *
+     * @usageNotes
+     * ### Example
+     * ```typescript
+     * @Component({...})
+     * class Container {
+     *   @ViewChildren(Item) items:QueryList<Item>;
+     * }
+     * ```
+     *
+     * @publicApi
+     */
+    var QueryList = /** @class */ (function () {
+        function QueryList() {
+            this.dirty = true;
+            this._results = [];
+            this.changes = new EventEmitter();
+            this.length = 0;
+        }
+        /**
+         * See
+         * [Array.map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map)
+         */
+        QueryList.prototype.map = function (fn) { return this._results.map(fn); };
+        /**
+         * See
+         * [Array.filter](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter)
+         */
+        QueryList.prototype.filter = function (fn) {
+            return this._results.filter(fn);
+        };
+        /**
+         * See
+         * [Array.find](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/find)
+         */
+        QueryList.prototype.find = function (fn) {
+            return this._results.find(fn);
+        };
+        /**
+         * See
+         * [Array.reduce](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce)
+         */
+        QueryList.prototype.reduce = function (fn, init) {
+            return this._results.reduce(fn, init);
+        };
+        /**
+         * See
+         * [Array.forEach](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach)
+         */
+        QueryList.prototype.forEach = function (fn) { this._results.forEach(fn); };
+        /**
+         * See
+         * [Array.some](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/some)
+         */
+        QueryList.prototype.some = function (fn) {
+            return this._results.some(fn);
+        };
+        QueryList.prototype.toArray = function () { return this._results.slice(); };
+        QueryList.prototype[getSymbolIterator()] = function () { return this._results[getSymbolIterator()](); };
+        QueryList.prototype.toString = function () { return this._results.toString(); };
+        QueryList.prototype.reset = function (res) {
+            this._results = flatten$3(res);
+            this.dirty = false;
+            this.length = this._results.length;
+            this.last = this._results[this.length - 1];
+            this.first = this._results[0];
+        };
+        QueryList.prototype.notifyOnChanges = function () { this.changes.emit(this); };
+        /** internal */
+        QueryList.prototype.setDirty = function () { this.dirty = true; };
+        /** internal */
+        QueryList.prototype.destroy = function () {
+            this.changes.complete();
+            this.changes.unsubscribe();
+        };
+        return QueryList;
+    }());
+    function flatten$3(list) {
+        return list.reduce(function (flat, item) {
+            var flatItem = Array.isArray(item) ? flatten$3(item) : item;
+            return flat.concat(flatItem);
+        }, []);
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
      * Represents an embedded template that can be used to instantiate embedded views.
      * To instantiate embedded views based on a template, use the `ViewContainerRef`
      * method `createEmbeddedView()`.
@@ -44703,89 +44785,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             containerValues: null
         };
     }
-    var QueryList_ = /** @class */ (function () {
-        function QueryList_() {
-            this.dirty = true;
-            this.changes = new EventEmitter();
-            this._values = [];
-            /** @internal */
-            this._valuesTree = [];
-        }
-        Object.defineProperty(QueryList_.prototype, "length", {
-            get: function () { return this._values.length; },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(QueryList_.prototype, "first", {
-            get: function () {
-                var values = this._values;
-                return values.length ? values[0] : null;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(QueryList_.prototype, "last", {
-            get: function () {
-                var values = this._values;
-                return values.length ? values[values.length - 1] : null;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        /**
-         * See
-         * [Array.map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map)
-         */
-        QueryList_.prototype.map = function (fn) { return this._values.map(fn); };
-        /**
-         * See
-         * [Array.filter](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter)
-         */
-        QueryList_.prototype.filter = function (fn) {
-            return this._values.filter(fn);
-        };
-        /**
-         * See
-         * [Array.find](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/find)
-         */
-        QueryList_.prototype.find = function (fn) {
-            return this._values.find(fn);
-        };
-        /**
-         * See
-         * [Array.reduce](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce)
-         */
-        QueryList_.prototype.reduce = function (fn, init) {
-            return this._values.reduce(fn, init);
-        };
-        /**
-         * See
-         * [Array.forEach](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach)
-         */
-        QueryList_.prototype.forEach = function (fn) { this._values.forEach(fn); };
-        /**
-         * See
-         * [Array.some](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/some)
-         */
-        QueryList_.prototype.some = function (fn) {
-            return this._values.some(fn);
-        };
-        QueryList_.prototype.toArray = function () { return this._values.slice(0); };
-        QueryList_.prototype[getSymbolIterator()] = function () { return this._values[getSymbolIterator()](); };
-        QueryList_.prototype.toString = function () { return this._values.toString(); };
-        QueryList_.prototype.reset = function (res) {
-            this._values = flatten$2(res);
-            this.dirty = false;
-        };
-        QueryList_.prototype.notifyOnChanges = function () { this.changes.emit(this); };
-        QueryList_.prototype.setDirty = function () { this.dirty = true; };
-        QueryList_.prototype.destroy = function () {
-            this.changes.complete();
-            this.changes.unsubscribe();
-        };
-        return QueryList_;
-    }());
-    var QueryList = QueryList_;
     /**
      * Creates and returns a QueryList.
      *
@@ -44802,6 +44801,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         ngDevMode && assertPreviousIsParent(getIsParent());
         var queryList = new QueryList();
         var queries = getOrCreateCurrentQueries(LQueries_);
+        queryList._valuesTree = [];
         queries.track(queryList, predicate, descend, read);
         storeCleanupWithContext(getLView(), queryList, queryList.destroy);
         if (memoryIndex != null) {
@@ -44817,7 +44817,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function queryRefresh(queryList) {
         var queryListImpl = queryList;
         if (queryList.dirty) {
-            queryList.reset(queryListImpl._valuesTree);
+            queryList.reset(queryListImpl._valuesTree || []);
             queryList.notifyOnChanges();
             return true;
         }
@@ -45619,7 +45619,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function compileNgModuleDefs(moduleType, ngModule) {
         ngDevMode && assertDefined(moduleType, 'Required value moduleType');
         ngDevMode && assertDefined(ngModule, 'Required value ngModule');
-        var declarations = flatten$3(ngModule.declarations || EMPTY_ARRAY$3);
+        var declarations = flatten$4(ngModule.declarations || EMPTY_ARRAY$3);
         var ngModuleDef = null;
         Object.defineProperty(moduleType, NG_MODULE_DEF, {
             configurable: true,
@@ -45627,11 +45627,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 if (ngModuleDef === null) {
                     ngModuleDef = getCompilerFacade().compileNgModule(angularCoreEnv, "ng://" + moduleType.name + "/ngModuleDef.js", {
                         type: moduleType,
-                        bootstrap: flatten$3(ngModule.bootstrap || EMPTY_ARRAY$3, resolveForwardRef$1),
+                        bootstrap: flatten$4(ngModule.bootstrap || EMPTY_ARRAY$3, resolveForwardRef$1),
                         declarations: declarations.map(resolveForwardRef$1),
-                        imports: flatten$3(ngModule.imports || EMPTY_ARRAY$3, resolveForwardRef$1)
+                        imports: flatten$4(ngModule.imports || EMPTY_ARRAY$3, resolveForwardRef$1)
                             .map(expandModuleWithProviders),
-                        exports: flatten$3(ngModule.exports || EMPTY_ARRAY$3, resolveForwardRef$1)
+                        exports: flatten$4(ngModule.exports || EMPTY_ARRAY$3, resolveForwardRef$1)
                             .map(expandModuleWithProviders),
                         emitInline: true,
                     });
@@ -45673,14 +45673,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var ngModuleDef = getNgModuleDef(moduleType, true);
         var errors = [];
         ngModuleDef.declarations.forEach(verifyDeclarationsHaveDefinitions);
-        var combinedDeclarations = __spread(ngModuleDef.declarations.map(resolveForwardRef$1), flatten$3(ngModuleDef.imports.map(computeCombinedExports), resolveForwardRef$1));
+        var combinedDeclarations = __spread(ngModuleDef.declarations.map(resolveForwardRef$1), flatten$4(ngModuleDef.imports.map(computeCombinedExports), resolveForwardRef$1));
         ngModuleDef.exports.forEach(verifyExportsAreDeclaredOrReExported);
         ngModuleDef.declarations.forEach(verifyDeclarationIsUnique);
         ngModuleDef.declarations.forEach(verifyComponentEntryComponentsIsPartOfNgModule);
         var ngModule = getAnnotation(moduleType, 'NgModule');
         if (ngModule) {
             ngModule.imports &&
-                flatten$3(ngModule.imports, unwrapModuleWithProvidersImports)
+                flatten$4(ngModule.imports, unwrapModuleWithProvidersImports)
                     .forEach(verifySemanticsOfNgModuleDef);
             ngModule.bootstrap && ngModule.bootstrap.forEach(verifyComponentIsPartOfNgModule);
             ngModule.entryComponents && ngModule.entryComponents.forEach(verifyComponentIsPartOfNgModule);
@@ -45788,7 +45788,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function computeCombinedExports(type) {
         type = resolveForwardRef$1(type);
         var ngModuleDef = getNgModuleDef(type, true);
-        return __spread(flatten$3(ngModuleDef.exports.map(function (type) {
+        return __spread(flatten$4(ngModuleDef.exports.map(function (type) {
             var ngModuleDef = getNgModuleDef(type);
             if (ngModuleDef) {
                 verifySemanticsOfNgModuleDef(type);
@@ -45805,7 +45805,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * the `ngSelectorScope` property of the declared type.
      */
     function setScopeOnDeclaredComponents(moduleType, ngModule) {
-        var declarations = flatten$3(ngModule.declarations || EMPTY_ARRAY$3);
+        var declarations = flatten$4(ngModule.declarations || EMPTY_ARRAY$3);
         var transitiveScopes = transitiveScopesFor(moduleType);
         declarations.forEach(function (declaration) {
             if (declaration.hasOwnProperty(NG_COMPONENT_DEF)) {
@@ -45907,11 +45907,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         def.transitiveCompileScopes = scopes;
         return scopes;
     }
-    function flatten$3(values, mapFn) {
+    function flatten$4(values, mapFn) {
         var out = [];
         values.forEach(function (value) {
             if (Array.isArray(value)) {
-                out.push.apply(out, __spread(flatten$3(value, mapFn)));
+                out.push.apply(out, __spread(flatten$4(value, mapFn)));
             }
             else {
                 out.push(mapFn ? mapFn(value) : value);
@@ -52333,111 +52333,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * found in the LICENSE file at https://angular.io/license
      */
 
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * An unmodifiable list of items that Angular keeps up to date when the state
-     * of the application changes.
-     *
-     * The type of object that {@link ViewChildren}, {@link ContentChildren}, and {@link QueryList}
-     * provide.
-     *
-     * Implements an iterable interface, therefore it can be used in both ES6
-     * javascript `for (var i of items)` loops as well as in Angular templates with
-     * `*ngFor="let i of myList"`.
-     *
-     * Changes can be observed by subscribing to the changes `Observable`.
-     *
-     * NOTE: In the future this class will implement an `Observable` interface.
-     *
-     * @usageNotes
-     * ### Example
-     * ```typescript
-     * @Component({...})
-     * class Container {
-     *   @ViewChildren(Item) items:QueryList<Item>;
-     * }
-     * ```
-     *
-     * @publicApi
-     */
-    var QueryList$1 = /** @class */ (function () {
-        function QueryList() {
-            this.dirty = true;
-            this._results = [];
-            this.changes = new EventEmitter();
-            this.length = 0;
-        }
-        /**
-         * See
-         * [Array.map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map)
-         */
-        QueryList.prototype.map = function (fn) { return this._results.map(fn); };
-        /**
-         * See
-         * [Array.filter](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter)
-         */
-        QueryList.prototype.filter = function (fn) {
-            return this._results.filter(fn);
-        };
-        /**
-         * See
-         * [Array.find](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/find)
-         */
-        QueryList.prototype.find = function (fn) {
-            return this._results.find(fn);
-        };
-        /**
-         * See
-         * [Array.reduce](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce)
-         */
-        QueryList.prototype.reduce = function (fn, init) {
-            return this._results.reduce(fn, init);
-        };
-        /**
-         * See
-         * [Array.forEach](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach)
-         */
-        QueryList.prototype.forEach = function (fn) { this._results.forEach(fn); };
-        /**
-         * See
-         * [Array.some](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/some)
-         */
-        QueryList.prototype.some = function (fn) {
-            return this._results.some(fn);
-        };
-        QueryList.prototype.toArray = function () { return this._results.slice(); };
-        QueryList.prototype[getSymbolIterator()] = function () { return this._results[getSymbolIterator()](); };
-        QueryList.prototype.toString = function () { return this._results.toString(); };
-        QueryList.prototype.reset = function (res) {
-            this._results = flatten$4(res);
-            this.dirty = false;
-            this.length = this._results.length;
-            this.last = this._results[this.length - 1];
-            this.first = this._results[0];
-        };
-        QueryList.prototype.notifyOnChanges = function () { this.changes.emit(this); };
-        /** internal */
-        QueryList.prototype.setDirty = function () { this.dirty = true; };
-        /** internal */
-        QueryList.prototype.destroy = function () {
-            this.changes.complete();
-            this.changes.unsubscribe();
-        };
-        return QueryList;
-    }());
-    function flatten$4(list) {
-        return list.reduce(function (flat, item) {
-            var flatItem = Array.isArray(item) ? flatten$4(item) : item;
-            return flat.concat(flatItem);
-        }, []);
-    }
-
     var _SEPARATOR = '#';
     var FACTORY_CLASS_SUFFIX = 'NgFactory';
     /**
@@ -56156,7 +56051,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * found in the LICENSE file at https://angular.io/license
      */
     function createQuery$1() {
-        return new QueryList$1();
+        return new QueryList();
     }
     function dirtyParentQueries(view) {
         var queryIds = view.def.nodeMatchedQueries;
@@ -58855,7 +58750,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.2.0+14.sha-ac5f5ed');
+    var VERSION$3 = new Version$1('7.2.0+17.sha-c1dacdd');
 
     /**
      * @license
