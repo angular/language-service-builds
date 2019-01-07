@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.2.0+1.sha-654055b
+ * @license Angular v7.2.0+6.sha-e08feb7
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -15436,7 +15436,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.2.0+1.sha-654055b');
+    var VERSION$1 = new Version('7.2.0+6.sha-e08feb7');
 
     /**
      * @license
@@ -31195,14 +31195,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     function executeNodeAction(action, renderer, parent, node, beforeNode) {
         if (action === 0 /* Insert */) {
-            isProceduralRenderer(renderer) ?
-                renderer.insertBefore(parent, node, beforeNode) :
-                parent.insertBefore(node, beforeNode, true);
+            nativeInsertBefore(renderer, parent, node, beforeNode || null);
         }
         else if (action === 1 /* Detach */) {
-            isProceduralRenderer(renderer) ?
-                renderer.removeChild(parent, node) :
-                parent.removeChild(node);
+            nativeRemoveChild(renderer, parent, node);
         }
         else if (action === 2 /* Destroy */) {
             ngDevMode && ngDevMode.rendererDestroyNode++;
@@ -31418,6 +31414,26 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         if (pipeDestroyHooks) {
             callHooks(lView, pipeDestroyHooks);
         }
+    }
+    /**
+     * Inserts a native node before another native node for a given parent using {@link Renderer3}.
+     * This is a utility function that can be used when native nodes were determined - it abstracts an
+     * actual renderer being used.
+     */
+    function nativeInsertBefore(renderer, parent, child, beforeNode) {
+        if (isProceduralRenderer(renderer)) {
+            renderer.insertBefore(parent, child, beforeNode);
+        }
+        else {
+            parent.insertBefore(child, beforeNode, true);
+        }
+    }
+    /**
+     * Removes a native child node from a given native parent node.
+     */
+    function nativeRemoveChild(renderer, parent, child) {
+        isProceduralRenderer(renderer) ? renderer.removeChild(parent, child) :
+            parent.removeChild(child);
     }
 
     /**
@@ -33833,7 +33849,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.2.0+1.sha-654055b');
+    var VERSION$2 = new Version$1('7.2.0+6.sha-e08feb7');
 
     /**
      * @license
@@ -51075,7 +51091,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.2.0+1.sha-654055b');
+    var VERSION$3 = new Version$1('7.2.0+6.sha-e08feb7');
 
     /**
      * @license
