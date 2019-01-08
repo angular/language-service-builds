@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.2.0-rc.0+65.sha-b61dafa
+ * @license Angular v7.2.0+15.sha-4613864
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -15436,7 +15436,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.2.0-rc.0+65.sha-b61dafa');
+    var VERSION$1 = new Version('7.2.0+15.sha-4613864');
 
     /**
      * @license
@@ -29265,8 +29265,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         /**
          * Set to `true` if the token is declared in `viewProviders` (or if it is component).
          */
-        isViewProvider, injectImplementation) {
+        isViewProvider, 
+        /**
+         * Set to `true` if the token is a provider, and not a directive.
+         */
+        isProvider, injectImplementation) {
             this.factory = factory;
+            this.isProvider = isProvider;
             /**
              * Marker set to true during factory invocation to see if we get into recursive loop.
              * Recursive loop causes an error to be displayed.
@@ -30309,6 +30314,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             setTNodeAndViewData(tNode, lData);
             try {
                 value = lData[index] = factory.factory(null, tData, lData, tNode);
+                var tView = lData[TVIEW];
+                if (value && factory.isProvider && value.ngOnDestroy) {
+                    (tView.destroyHooks || (tView.destroyHooks = [])).push(index, value.ngOnDestroy);
+                }
             }
             finally {
                 if (factory.injectImpl)
@@ -31195,14 +31204,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     function executeNodeAction(action, renderer, parent, node, beforeNode) {
         if (action === 0 /* Insert */) {
-            isProceduralRenderer(renderer) ?
-                renderer.insertBefore(parent, node, beforeNode) :
-                parent.insertBefore(node, beforeNode, true);
+            nativeInsertBefore(renderer, parent, node, beforeNode || null);
         }
         else if (action === 1 /* Detach */) {
-            isProceduralRenderer(renderer) ?
-                renderer.removeChild(parent, node) :
-                parent.removeChild(node);
+            nativeRemoveChild(renderer, parent, node);
         }
         else if (action === 2 /* Destroy */) {
             ngDevMode && ngDevMode.rendererDestroyNode++;
@@ -31352,7 +31357,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         if (viewOrContainer.length >= HEADER_OFFSET) {
             var view = viewOrContainer;
             executeOnDestroys(view);
-            executePipeOnDestroys(view);
             removeListeners(view);
             var hostTNode = view[HOST_NODE];
             // For component views only, the local renderer is destroyed as clean up time.
@@ -31412,12 +31416,25 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             callHooks(view, destroyHooks);
         }
     }
-    /** Calls pipe destroy hooks for this view */
-    function executePipeOnDestroys(lView) {
-        var pipeDestroyHooks = lView[TVIEW] && lView[TVIEW].pipeDestroyHooks;
-        if (pipeDestroyHooks) {
-            callHooks(lView, pipeDestroyHooks);
+    /**
+     * Inserts a native node before another native node for a given parent using {@link Renderer3}.
+     * This is a utility function that can be used when native nodes were determined - it abstracts an
+     * actual renderer being used.
+     */
+    function nativeInsertBefore(renderer, parent, child, beforeNode) {
+        if (isProceduralRenderer(renderer)) {
+            renderer.insertBefore(parent, child, beforeNode);
         }
+        else {
+            parent.insertBefore(child, beforeNode, true);
+        }
+    }
+    /**
+     * Removes a native child node from a given native parent node.
+     */
+    function nativeRemoveChild(renderer, parent, child) {
+        isProceduralRenderer(renderer) ? renderer.removeChild(parent, child) :
+            parent.removeChild(child);
     }
 
     /**
@@ -31869,7 +31886,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             viewHooks: null,
             viewCheckHooks: null,
             destroyHooks: null,
-            pipeDestroyHooks: null,
             cleanup: null,
             contentQueries: null,
             components: null,
@@ -32082,7 +32098,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
     function baseResolveDirective(tView, viewData, def, directiveFactory) {
         tView.data.push(def);
-        var nodeInjectorFactory = new NodeInjectorFactory(directiveFactory, isComponentDef(def), null);
+        var nodeInjectorFactory = new NodeInjectorFactory(directiveFactory, isComponentDef(def), false, null);
         tView.blueprint.push(nodeInjectorFactory);
         viewData.push(nodeInjectorFactory);
     }
@@ -33833,7 +33849,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.2.0-rc.0+65.sha-b61dafa');
+    var VERSION$2 = new Version$1('7.2.0+15.sha-4613864');
 
     /**
      * @license
@@ -51075,7 +51091,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.2.0-rc.0+65.sha-b61dafa');
+    var VERSION$3 = new Version$1('7.2.0+15.sha-4613864');
 
     /**
      * @license
