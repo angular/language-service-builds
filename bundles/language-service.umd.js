@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.2.0+56.sha-c3aa24c
+ * @license Angular v7.2.0+67.sha-d6cfe2e
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -15470,7 +15470,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.2.0+56.sha-c3aa24c');
+    var VERSION$1 = new Version('7.2.0+67.sha-d6cfe2e');
 
     /**
      * @license
@@ -38497,7 +38497,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.2.0+56.sha-c3aa24c');
+    var VERSION$2 = new Version$1('7.2.0+67.sha-d6cfe2e');
 
     /**
      * @license
@@ -39188,7 +39188,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var sanitizer = new SanitizingHtmlSerializer();
             var safeHtml = sanitizer.sanitizeChildren(getTemplateContent(inertBodyElement) || inertBodyElement);
             if (isDevMode() && sanitizer.sanitizedSomething) {
-                console.warn('WARNING: sanitizing HTML stripped some content (see http://g.co/ng/security#xss).');
+                console.warn('WARNING: sanitizing HTML stripped some content, see http://g.co/ng/security#xss');
             }
             return safeHtml;
         }
@@ -58874,7 +58874,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.2.0+56.sha-c3aa24c');
+    var VERSION$3 = new Version$1('7.2.0+67.sha-d6cfe2e');
 
     /**
      * @license
