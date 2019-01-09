@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.2.0+73.sha-91a8a4f
+ * @license Angular v7.2.0+78.sha-e1e4887
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -15485,7 +15485,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.2.0+73.sha-91a8a4f');
+    var VERSION$1 = new Version('7.2.0+78.sha-e1e4887');
 
     /**
      * @license
@@ -29178,7 +29178,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     // PARENT, NEXT, QUERIES, and HOST are indices 2, 3, 4, and 5.
     // As we already have these constants in LView, we don't need to re-create them.
     var NATIVE = 6;
-    var RENDER_PARENT = 7;
     // Because interfaces in TS/JS cannot be instanceof-checked this means that we
     // need to rely on predictable characteristics of data-structures to check if they
     // are what we expect for them to be. The `LContainer` interface code below has a
@@ -29186,7 +29185,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     // below we can predictably gaurantee that we are dealing with an `LContainer` array.
     // This value MUST be kept up to date with the length of the `LContainer` array
     // interface below so that runtime type checking can work.
-    var LCONTAINER_LENGTH = 8;
+    var LCONTAINER_LENGTH = 7;
 
     /**
      * @license
@@ -31160,8 +31159,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             else if (tNode.type === 0 /* Container */) {
                 var lContainer = currentView[tNode.index];
                 executeNodeAction(action, renderer, renderParent, lContainer[NATIVE], beforeNode);
-                if (renderParent)
-                    lContainer[RENDER_PARENT] = renderParent;
                 if (lContainer[VIEWS].length) {
                     currentView = lContainer[VIEWS][0];
                     nextTNode = currentView[TVIEW].node;
@@ -33876,7 +33873,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.2.0+73.sha-91a8a4f');
+    var VERSION$2 = new Version$1('7.2.0+78.sha-e1e4887');
 
     /**
      * @license
@@ -51055,7 +51052,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.2.0+73.sha-91a8a4f');
+    var VERSION$3 = new Version$1('7.2.0+78.sha-e1e4887');
 
     /**
      * @license
