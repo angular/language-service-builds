@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.2.0+100.sha-feebe03
+ * @license Angular v7.2.0+102.sha-b05baa5
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -15508,7 +15508,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.2.0+100.sha-feebe03');
+    var VERSION$1 = new Version('7.2.0+102.sha-b05baa5');
 
     /**
      * @license
@@ -32249,50 +32249,24 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         lView[TAIL] = state;
         return state;
     }
-    /** Marks current view and all ancestors dirty */
+    /**
+     * Marks current view and all ancestors dirty.
+     *
+     * Returns the root view because it is found as a byproduct of marking the view tree
+     * dirty, and can be used by methods that consume markViewDirty() to easily schedule
+     * change detection. Otherwise, such methods would need to traverse up the view tree
+     * an additional time to get the root view and schedule a tick on it.
+     *
+     * @param lView The starting LView to mark dirty
+     * @returns the root LView
+     */
     function markViewDirty(lView) {
         while (lView && !(lView[FLAGS] & 128 /* IsRoot */)) {
             lView[FLAGS] |= 8 /* Dirty */;
             lView = lView[PARENT];
         }
         lView[FLAGS] |= 8 /* Dirty */;
-        ngDevMode && assertDefined(lView[CONTEXT], 'rootContext should be defined');
-        var rootContext = lView[CONTEXT];
-        scheduleTick(rootContext, 1 /* DetectChanges */);
-    }
-    /**
-     * Used to schedule change detection on the whole application.
-     *
-     * Unlike `tick`, `scheduleTick` coalesces multiple calls into one change detection run.
-     * It is usually called indirectly by calling `markDirty` when the view needs to be
-     * re-rendered.
-     *
-     * Typically `scheduleTick` uses `requestAnimationFrame` to coalesce multiple
-     * `scheduleTick` requests. The scheduling function can be overridden in
-     * `renderComponent`'s `scheduler` option.
-     */
-    function scheduleTick(rootContext, flags) {
-        var nothingScheduled = rootContext.flags === 0 /* Empty */;
-        rootContext.flags |= flags;
-        if (nothingScheduled && rootContext.clean == _CLEAN_PROMISE) {
-            var res_1;
-            rootContext.clean = new Promise(function (r) { return res_1 = r; });
-            rootContext.scheduler(function () {
-                if (rootContext.flags & 1 /* DetectChanges */) {
-                    rootContext.flags &= ~1 /* DetectChanges */;
-                    tickRootContext(rootContext);
-                }
-                if (rootContext.flags & 2 /* FlushPlayers */) {
-                    rootContext.flags &= ~2 /* FlushPlayers */;
-                    var playerHandler = rootContext.playerHandler;
-                    if (playerHandler) {
-                        playerHandler.flushPlayers();
-                    }
-                }
-                rootContext.clean = _CLEAN_PROMISE;
-                res_1(null);
-            });
-        }
+        return lView;
     }
     function tickRootContext(rootContext) {
         for (var i = 0; i < rootContext.components.length; i++) {
@@ -33900,7 +33874,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.2.0+100.sha-feebe03');
+    var VERSION$2 = new Version$1('7.2.0+102.sha-b05baa5');
 
     /**
      * @license
@@ -51082,7 +51056,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.2.0+100.sha-feebe03');
+    var VERSION$3 = new Version$1('7.2.0+102.sha-b05baa5');
 
     /**
      * @license
