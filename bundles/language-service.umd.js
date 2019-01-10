@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.2.0+80.sha-11325ba
+ * @license Angular v7.2.0+81.sha-8934b73
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -15470,7 +15470,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.2.0+80.sha-11325ba');
+    var VERSION$1 = new Version('7.2.0+81.sha-8934b73');
 
     /**
      * @license
@@ -32173,12 +32173,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             // We've got a parent which is an element in the current view. We just need to verify if the
             // parent element is not a component. Component's content nodes are not inserted immediately
             // because they will be projected, and so doing insert at this point would be wasteful.
-            // Since the projection would than move it to its final destination.
-            if (!(parent.flags & 1 /* isComponent */)) {
-                return getNativeByTNode(parent, currentView);
+            // Since the projection would then move it to its final destination.
+            if (parent.flags & 1 /* isComponent */) {
+                return null;
             }
             else {
-                return null;
+                return getNativeByTNode(parent, currentView);
             }
         }
     }
@@ -38445,7 +38445,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.2.0+80.sha-11325ba');
+    var VERSION$2 = new Version$1('7.2.0+81.sha-8934b73');
 
     /**
      * @license
@@ -58821,7 +58821,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.2.0+80.sha-11325ba');
+    var VERSION$3 = new Version$1('7.2.0+81.sha-8934b73');
 
     /**
      * @license
