@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.2.0+87.sha-6003145
+ * @license Angular v7.2.0+88.sha-142553a
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -14748,7 +14748,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         // e.g 'outputs: {a: 'a'}`
         definitionMap.set('outputs', conditionallyCreateMapObjectLiteral(meta.outputs));
         if (meta.exportAs !== null) {
-            definitionMap.set('exportAs', literal(meta.exportAs));
+            // TODO: handle multiple exportAs values (currently only the first is taken).
+            var _a = __read(meta.exportAs, 1), exportAs = _a[0];
+            definitionMap.set('exportAs', literal(exportAs));
         }
         return { definitionMap: definitionMap, statements: result.statements };
     }
@@ -15004,7 +15006,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return expressionType(importExpr(typeBase, [
             typeWithParameters(meta.type, meta.typeArgumentCount),
             stringAsType(selectorForType),
-            meta.exportAs !== null ? stringAsType(meta.exportAs) : NONE_TYPE,
+            // TODO: handle multiple exportAs values (currently only the first is taken).
+            meta.exportAs !== null ? stringArrayAsType(meta.exportAs) : NONE_TYPE,
             stringMapAsType(meta.inputs),
             stringMapAsType(meta.outputs),
             stringArrayAsType(meta.queries.map(function (q) { return q.propertyName; })),
@@ -15479,7 +15482,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.2.0+87.sha-6003145');
+    var VERSION$1 = new Version('7.2.0+88.sha-142553a');
 
     /**
      * @license
@@ -38454,7 +38457,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.2.0+87.sha-6003145');
+    var VERSION$2 = new Version$1('7.2.0+88.sha-142553a');
 
     /**
      * @license
@@ -46104,7 +46107,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             },
             typeSourceSpan: null,
             usesInheritance: !extendsDirectlyFromObject(type),
-            exportAs: metadata.exportAs || null,
+            exportAs: extractExportAs(metadata.exportAs),
             providers: metadata.providers || null,
         };
     }
@@ -46139,6 +46142,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             _loop_1(field);
         }
         return queriesMeta;
+    }
+    function extractExportAs(exportAs) {
+        if (exportAs === undefined) {
+            return null;
+        }
+        return exportAs.split(',').map(function (part) { return part.trim(); });
     }
     function isContentQuery(value) {
         var name = value.ngMetadataName;
@@ -58833,7 +58842,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.2.0+87.sha-6003145');
+    var VERSION$3 = new Version$1('7.2.0+88.sha-142553a');
 
     /**
      * @license
