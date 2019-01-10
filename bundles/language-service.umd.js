@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.2.0+100.sha-feebe03
+ * @license Angular v7.2.0+102.sha-b05baa5
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -15493,7 +15493,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.2.0+100.sha-feebe03');
+    var VERSION$1 = new Version('7.2.0+102.sha-b05baa5');
 
     /**
      * @license
@@ -35876,16 +35876,24 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
         };
     }
-    /** Marks current view and all ancestors dirty */
+    /**
+     * Marks current view and all ancestors dirty.
+     *
+     * Returns the root view because it is found as a byproduct of marking the view tree
+     * dirty, and can be used by methods that consume markViewDirty() to easily schedule
+     * change detection. Otherwise, such methods would need to traverse up the view tree
+     * an additional time to get the root view and schedule a tick on it.
+     *
+     * @param lView The starting LView to mark dirty
+     * @returns the root LView
+     */
     function markViewDirty(lView) {
         while (lView && !(lView[FLAGS] & 128 /* IsRoot */)) {
             lView[FLAGS] |= 8 /* Dirty */;
             lView = lView[PARENT];
         }
         lView[FLAGS] |= 8 /* Dirty */;
-        ngDevMode && assertDefined(lView[CONTEXT], 'rootContext should be defined');
-        var rootContext = lView[CONTEXT];
-        scheduleTick(rootContext, 1 /* DetectChanges */);
+        return lView;
     }
     /**
      * Used to schedule change detection on the whole application.
@@ -38473,7 +38481,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.2.0+100.sha-feebe03');
+    var VERSION$2 = new Version$1('7.2.0+102.sha-b05baa5');
 
     /**
      * @license
@@ -58865,7 +58873,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.2.0+100.sha-feebe03');
+    var VERSION$3 = new Version$1('7.2.0+102.sha-b05baa5');
 
     /**
      * @license
