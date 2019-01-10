@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.2.0+74.sha-9b2b9b3
+ * @license Angular v7.2.0+101.sha-ad6569c
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -13934,10 +13934,19 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 var instruction = mapBindingToInstruction(input.type);
                 if (input.type === 4 /* Animation */) {
                     var value_1 = input.value.visit(_this._valueConverter);
-                    // setProperty without a value doesn't make any sense
-                    if (value_1.name || value_1.value) {
-                        var bindingName_1 = prepareSyntheticPropertyName(input.name);
+                    // animation bindings can be presented in the following formats:
+                    // 1j [@binding]="fooExp"
+                    // 2. [@binding]="{value:fooExp, params:{...}}"
+                    // 3. [@binding]
+                    // 4. @binding
+                    // only formats 1. and 2. include the actual binding of a value to
+                    // an expression and therefore only those should be the only two that
+                    // are allowed. The check below ensures that a binding with no expression
+                    // does not get an empty `elementProperty` instruction created for it.
+                    var hasValue = value_1 && (value_1 instanceof LiteralPrimitive) ? !!value_1.value : true;
+                    if (hasValue) {
                         _this.allocateBindingSlots(value_1);
+                        var bindingName_1 = prepareSyntheticPropertyName(input.name);
                         _this.updateInstruction(input.sourceSpan, Identifiers$1.elementProperty, function () {
                             return [
                                 literal(elementIndex), literal(bindingName_1),
@@ -14107,6 +14116,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         TemplateDefinitionBuilder.prototype.allocateDataSlot = function () { return this._dataIndex++; };
         TemplateDefinitionBuilder.prototype.getConstCount = function () { return this._dataIndex; };
         TemplateDefinitionBuilder.prototype.getVarCount = function () { return this._pureFunctionSlots; };
+        TemplateDefinitionBuilder.prototype.getNgContentSelectors = function () {
+            return this._hasNgContent ?
+                this.constantPool.getConstLiteral(asLiteral(this._ngContentSelectors), true) :
+                null;
+        };
         TemplateDefinitionBuilder.prototype.bindingContext = function () { return "" + this._bindingContext++; };
         // Bindings must only be resolved after all local refs have been visited, so all
         // instructions are queued in callbacks that execute once the initial pass has completed.
@@ -14754,7 +14768,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         // e.g 'outputs: {a: 'a'}`
         definitionMap.set('outputs', conditionallyCreateMapObjectLiteral(meta.outputs));
         if (meta.exportAs !== null) {
-            definitionMap.set('exportAs', literal(meta.exportAs));
+            // TODO: handle multiple exportAs values (currently only the first is taken).
+            var _a = __read(meta.exportAs, 1), exportAs = _a[0];
+            definitionMap.set('exportAs', literal(exportAs));
         }
         return { definitionMap: definitionMap, statements: result.statements };
     }
@@ -14790,9 +14806,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var _a = baseDirectiveFields(meta, constantPool, bindingParser), definitionMap = _a.definitionMap, statements = _a.statements;
         addFeatures(definitionMap, meta);
         var expression = importExpr(Identifiers$1.defineDirective).callFn([definitionMap.toLiteralMap()]);
-        // On the type side, remove newlines from the selector as it will need to fit into a TypeScript
-        // string literal, which must be on one line.
-        var selectorForType = (meta.selector || '').replace(/\n/g, '');
+        if (!meta.selector) {
+            throw new Error("Directive " + meta.name + " has no selector, please add it!");
+        }
         var type = createTypeForDef(meta, Identifiers$1.DirectiveDefWithMeta);
         return { expression: expression, type: type, statements: statements };
     }
@@ -14845,6 +14861,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var template = meta.template;
         var templateBuilder = new TemplateDefinitionBuilder(constantPool, BindingScope.ROOT_SCOPE, 0, templateTypeName, null, null, templateName, meta.viewQueries, directiveMatcher, directivesUsed, meta.pipes, pipesUsed, Identifiers$1.namespaceHTML, meta.relativeContextFilePath, meta.i18nUseExternalIds);
         var templateFunctionExpression = templateBuilder.buildTemplateFunction(template.nodes, []);
+        // We need to provide this so that dynamically generated components know what
+        // projected content blocks to pass through to the component when it is instantiated.
+        var ngContentSelectors = templateBuilder.getNgContentSelectors();
+        if (ngContentSelectors) {
+            definitionMap.set('ngContentSelectors', ngContentSelectors);
+        }
         // e.g. `consts: 2`
         definitionMap.set('consts', literal(templateBuilder.getConstCount()));
         // e.g. `vars: 2`
@@ -15010,7 +15032,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return expressionType(importExpr(typeBase, [
             typeWithParameters(meta.type, meta.typeArgumentCount),
             stringAsType(selectorForType),
-            meta.exportAs !== null ? stringAsType(meta.exportAs) : NONE_TYPE,
+            // TODO: handle multiple exportAs values (currently only the first is taken).
+            meta.exportAs !== null ? stringArrayAsType(meta.exportAs) : NONE_TYPE,
             stringMapAsType(meta.inputs),
             stringMapAsType(meta.outputs),
             stringArrayAsType(meta.queries.map(function (q) { return q.propertyName; })),
@@ -15485,7 +15508,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.2.0+74.sha-9b2b9b3');
+    var VERSION$1 = new Version('7.2.0+101.sha-ad6569c');
 
     /**
      * @license
@@ -29178,7 +29201,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     // PARENT, NEXT, QUERIES, and HOST are indices 2, 3, 4, and 5.
     // As we already have these constants in LView, we don't need to re-create them.
     var NATIVE = 6;
-    var RENDER_PARENT = 7;
     // Because interfaces in TS/JS cannot be instanceof-checked this means that we
     // need to rely on predictable characteristics of data-structures to check if they
     // are what we expect for them to be. The `LContainer` interface code below has a
@@ -29186,7 +29208,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     // below we can predictably gaurantee that we are dealing with an `LContainer` array.
     // This value MUST be kept up to date with the length of the `LContainer` array
     // interface below so that runtime type checking can work.
-    var LCONTAINER_LENGTH = 8;
+    var LCONTAINER_LENGTH = 7;
 
     /**
      * @license
@@ -29940,11 +29962,15 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             lView[FLAGS] &= ~1 /* CreationMode */;
         }
         else {
-            executeHooks(lView, tView.viewHooks, tView.viewCheckHooks, checkNoChangesMode);
-            // Views are clean and in update mode after being checked, so these bits are cleared
-            lView[FLAGS] &= ~(8 /* Dirty */ | 2 /* FirstLViewPass */);
-            lView[FLAGS] |= 32 /* RunInit */;
-            lView[BINDING_INDEX] = tView.bindingStartIndex;
+            try {
+                executeHooks(lView, tView.viewHooks, tView.viewCheckHooks, checkNoChangesMode);
+            }
+            finally {
+                // Views are clean and in update mode after being checked, so these bits are cleared
+                lView[FLAGS] &= ~(8 /* Dirty */ | 2 /* FirstLViewPass */);
+                lView[FLAGS] |= 32 /* RunInit */;
+                lView[BINDING_INDEX] = tView.bindingStartIndex;
+            }
         }
         enterView(newView, null);
     }
@@ -31160,8 +31186,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             else if (tNode.type === 0 /* Container */) {
                 var lContainer = currentView[tNode.index];
                 executeNodeAction(action, renderer, renderParent, lContainer[NATIVE], beforeNode);
-                if (renderParent)
-                    lContainer[RENDER_PARENT] = renderParent;
                 if (lContainer[VIEWS].length) {
                     currentView = lContainer[VIEWS][0];
                     nextTNode = currentView[TVIEW].node;
@@ -32225,50 +32249,24 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         lView[TAIL] = state;
         return state;
     }
-    /** Marks current view and all ancestors dirty */
+    /**
+     * Marks current view and all ancestors dirty.
+     *
+     * Returns the root view because it is found as a byproduct of marking the view tree
+     * dirty, and can be used by methods that consume markViewDirty() to easily schedule
+     * change detection. Otherwise, such methods would need to traverse up the view tree
+     * an additional time to get the root view and schedule a tick on it.
+     *
+     * @param lView The starting LView to mark dirty
+     * @returns the root LView
+     */
     function markViewDirty(lView) {
         while (lView && !(lView[FLAGS] & 128 /* IsRoot */)) {
             lView[FLAGS] |= 8 /* Dirty */;
             lView = lView[PARENT];
         }
         lView[FLAGS] |= 8 /* Dirty */;
-        ngDevMode && assertDefined(lView[CONTEXT], 'rootContext should be defined');
-        var rootContext = lView[CONTEXT];
-        scheduleTick(rootContext, 1 /* DetectChanges */);
-    }
-    /**
-     * Used to schedule change detection on the whole application.
-     *
-     * Unlike `tick`, `scheduleTick` coalesces multiple calls into one change detection run.
-     * It is usually called indirectly by calling `markDirty` when the view needs to be
-     * re-rendered.
-     *
-     * Typically `scheduleTick` uses `requestAnimationFrame` to coalesce multiple
-     * `scheduleTick` requests. The scheduling function can be overridden in
-     * `renderComponent`'s `scheduler` option.
-     */
-    function scheduleTick(rootContext, flags) {
-        var nothingScheduled = rootContext.flags === 0 /* Empty */;
-        rootContext.flags |= flags;
-        if (nothingScheduled && rootContext.clean == _CLEAN_PROMISE) {
-            var res_1;
-            rootContext.clean = new Promise(function (r) { return res_1 = r; });
-            rootContext.scheduler(function () {
-                if (rootContext.flags & 1 /* DetectChanges */) {
-                    rootContext.flags &= ~1 /* DetectChanges */;
-                    tickRootContext(rootContext);
-                }
-                if (rootContext.flags & 2 /* FlushPlayers */) {
-                    rootContext.flags &= ~2 /* FlushPlayers */;
-                    var playerHandler = rootContext.playerHandler;
-                    if (playerHandler) {
-                        playerHandler.flushPlayers();
-                    }
-                }
-                rootContext.clean = _CLEAN_PROMISE;
-                res_1(null);
-            });
-        }
+        return lView;
     }
     function tickRootContext(rootContext) {
         for (var i = 0; i < rootContext.components.length; i++) {
@@ -33876,7 +33874,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.2.0+74.sha-9b2b9b3');
+    var VERSION$2 = new Version$1('7.2.0+101.sha-ad6569c');
 
     /**
      * @license
@@ -33957,7 +33955,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             _this.ngModule = ngModule;
             _this.componentType = componentDef.type;
             _this.selector = componentDef.selectors[0][0];
-            _this.ngContentSelectors = [];
+            // The component definition does not include the wildcard ('*') selector in its list.
+            // It is implicitly expected as the first item in the projectable nodes array.
+            _this.ngContentSelectors =
+                componentDef.ngContentSelectors ? __spread(['*'], componentDef.ngContentSelectors) : [];
             return _this;
         }
         Object.defineProperty(ComponentFactory$$1.prototype, "inputs", {
@@ -51055,7 +51056,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.2.0+74.sha-9b2b9b3');
+    var VERSION$3 = new Version$1('7.2.0+101.sha-ad6569c');
 
     /**
      * @license
