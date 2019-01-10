@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.2.0+98.sha-a6ba789
+ * @license Angular v7.2.0+100.sha-feebe03
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -14101,6 +14101,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         TemplateDefinitionBuilder.prototype.allocateDataSlot = function () { return this._dataIndex++; };
         TemplateDefinitionBuilder.prototype.getConstCount = function () { return this._dataIndex; };
         TemplateDefinitionBuilder.prototype.getVarCount = function () { return this._pureFunctionSlots; };
+        TemplateDefinitionBuilder.prototype.getNgContentSelectors = function () {
+            return this._hasNgContent ?
+                this.constantPool.getConstLiteral(asLiteral(this._ngContentSelectors), true) :
+                null;
+        };
         TemplateDefinitionBuilder.prototype.bindingContext = function () { return "" + this._bindingContext++; };
         // Bindings must only be resolved after all local refs have been visited, so all
         // instructions are queued in callbacks that execute once the initial pass has completed.
@@ -14841,6 +14846,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var template = meta.template;
         var templateBuilder = new TemplateDefinitionBuilder(constantPool, BindingScope.ROOT_SCOPE, 0, templateTypeName, null, null, templateName, meta.viewQueries, directiveMatcher, directivesUsed, meta.pipes, pipesUsed, Identifiers$1.namespaceHTML, meta.relativeContextFilePath, meta.i18nUseExternalIds);
         var templateFunctionExpression = templateBuilder.buildTemplateFunction(template.nodes, []);
+        // We need to provide this so that dynamically generated components know what
+        // projected content blocks to pass through to the component when it is instantiated.
+        var ngContentSelectors = templateBuilder.getNgContentSelectors();
+        if (ngContentSelectors) {
+            definitionMap.set('ngContentSelectors', ngContentSelectors);
+        }
         // e.g. `consts: 2`
         definitionMap.set('consts', literal(templateBuilder.getConstCount()));
         // e.g. `vars: 2`
@@ -15482,7 +15493,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.2.0+98.sha-a6ba789');
+    var VERSION$1 = new Version('7.2.0+100.sha-feebe03');
 
     /**
      * @license
@@ -29107,6 +29118,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             vars: componentDefinition.vars,
             factory: componentDefinition.factory,
             template: componentDefinition.template || null,
+            ngContentSelectors: componentDefinition.ngContentSelectors,
             hostBindings: componentDefinition.hostBindings || null,
             contentQueries: componentDefinition.contentQueries || null,
             contentQueriesRefresh: componentDefinition.contentQueriesRefresh || null,
@@ -38461,7 +38473,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.2.0+98.sha-a6ba789');
+    var VERSION$2 = new Version$1('7.2.0+100.sha-feebe03');
 
     /**
      * @license
@@ -38542,7 +38554,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             _this.ngModule = ngModule;
             _this.componentType = componentDef.type;
             _this.selector = componentDef.selectors[0][0];
-            _this.ngContentSelectors = [];
+            // The component definition does not include the wildcard ('*') selector in its list.
+            // It is implicitly expected as the first item in the projectable nodes array.
+            _this.ngContentSelectors =
+                componentDef.ngContentSelectors ? __spread(['*'], componentDef.ngContentSelectors) : [];
             return _this;
         }
         Object.defineProperty(ComponentFactory$$1.prototype, "inputs", {
@@ -58850,7 +58865,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.2.0+98.sha-a6ba789');
+    var VERSION$3 = new Version$1('7.2.0+100.sha-feebe03');
 
     /**
      * @license
