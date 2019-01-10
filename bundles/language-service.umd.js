@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.2.0+94.sha-ee60c76
+ * @license Angular v7.2.0+97.sha-3bafc00
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -15482,7 +15482,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.2.0+94.sha-ee60c76');
+    var VERSION$1 = new Version('7.2.0+97.sha-3bafc00');
 
     /**
      * @license
@@ -38457,7 +38457,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.2.0+94.sha-ee60c76');
+    var VERSION$2 = new Version$1('7.2.0+97.sha-3bafc00');
 
     /**
      * @license
@@ -41098,7 +41098,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function unwrapValue(newValue) {
         if (WrappedValue.isWrapped(newValue)) {
             newValue = WrappedValue.unwrap(newValue);
-            getLView()[getBindingRoot()] = NO_CHANGE;
+            var lView = getLView();
+            // The NO_CHANGE value needs to be written at the index where the impacted binding value is
+            // stored
+            var bindingToInvalidateIdx = lView[BINDING_INDEX];
+            lView[bindingToInvalidateIdx] = NO_CHANGE;
         }
         return newValue;
     }
@@ -58842,7 +58846,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.2.0+94.sha-ee60c76');
+    var VERSION$3 = new Version$1('7.2.0+97.sha-3bafc00');
 
     /**
      * @license
