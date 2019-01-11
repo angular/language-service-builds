@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.2.0+122.sha-8c3f98f
+ * @license Angular v7.2.0+128.sha-091a8a6
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -15490,7 +15490,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.2.0+122.sha-8c3f98f');
+    var VERSION$1 = new Version('7.2.0+128.sha-091a8a6');
 
     /**
      * @license
@@ -36785,6 +36785,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             factory: function () { return inject(INJECTOR$1); },
         });
         /** @internal */
+        /** @nocollapse */
         Injector.__NG_ELEMENT_ID__ = function () { return SWITCH_INJECTOR_FACTORY(); };
         return Injector;
     }());
@@ -38386,6 +38387,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             this.nativeElement = nativeElement;
         }
         /** @internal */
+        /** @nocollapse */
         ElementRef.__NG_ELEMENT_ID__ = function () { return SWITCH_ELEMENT_REF_FACTORY(ElementRef); };
         return ElementRef;
     }());
@@ -38453,6 +38455,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         function Renderer2() {
         }
         /** @internal */
+        /** @nocollapse */
         Renderer2.__NG_ELEMENT_ID__ = function () { return SWITCH_RENDERER2_FACTORY(); };
         return Renderer2;
     }());
@@ -38519,7 +38522,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.2.0+122.sha-8c3f98f');
+    var VERSION$2 = new Version$1('7.2.0+128.sha-091a8a6');
 
     /**
      * @license
@@ -44631,6 +44634,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         function TemplateRef() {
         }
         /** @internal */
+        /** @nocollapse */
         TemplateRef.__NG_ELEMENT_ID__ = function () { return SWITCH_TEMPLATE_REF_FACTORY(TemplateRef, ElementRef); };
         return TemplateRef;
     }());
@@ -45333,14 +45337,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * - In post Ivy we track the NgModuleType
      */
     var modules = new Map();
-    function assertNotExisting(id, type) {
-        if (type) {
+    function assertSameOrNotExisting(id, type, incoming) {
+        if (type && type !== incoming) {
             throw new Error("Duplicate module registered for " + id + " - " + stringify$1(type) + " vs " + stringify$1(type.name));
         }
     }
     function registerNgModuleType(id, ngModuleType) {
         var existing = modules.get(id);
-        assertNotExisting(id, existing);
+        assertSameOrNotExisting(id, existing, ngModuleType);
         modules.set(id, ngModuleType);
     }
 
@@ -52578,6 +52582,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         function ViewContainerRef() {
         }
         /** @internal */
+        /** @nocollapse */
         ViewContainerRef.__NG_ELEMENT_ID__ = function () { return SWITCH_VIEW_CONTAINER_REF_FACTORY(ViewContainerRef, ElementRef); };
         return ViewContainerRef;
     }());
@@ -52637,6 +52642,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         function ChangeDetectorRef() {
         }
         /** @internal */
+        /** @nocollapse */
         ChangeDetectorRef.__NG_ELEMENT_ID__ = function () { return SWITCH_CHANGE_DETECTOR_REF_FACTORY(); };
         return ChangeDetectorRef;
     }());
@@ -58923,7 +58929,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.2.0+122.sha-8c3f98f');
+    var VERSION$3 = new Version$1('7.2.0+128.sha-091a8a6');
 
     /**
      * @license
