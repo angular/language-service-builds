@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.2.0+169.sha-d12db4e
+ * @license Angular v7.2.0+170.sha-f1fb62d
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -15452,7 +15452,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.2.0+169.sha-d12db4e');
+    var VERSION$1 = new Version('7.2.0+170.sha-f1fb62d');
 
     /**
      * @license
@@ -35343,8 +35343,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         function ElementRef(nativeElement) {
             this.nativeElement = nativeElement;
         }
-        /** @internal */
-        /** @nocollapse */
+        /**
+         * @internal
+         * @nocollapse
+         */
         ElementRef.__NG_ELEMENT_ID__ = function () { return SWITCH_ELEMENT_REF_FACTORY(ElementRef); };
         return ElementRef;
     }());
@@ -35411,8 +35413,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     var Renderer2 = /** @class */ (function () {
         function Renderer2() {
         }
-        /** @internal */
-        /** @nocollapse */
+        /**
+         * @internal
+         * @nocollapse
+         */
         Renderer2.__NG_ELEMENT_ID__ = function () { return SWITCH_RENDERER2_FACTORY(); };
         return Renderer2;
     }());
@@ -35443,7 +35447,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.2.0+169.sha-d12db4e');
+    var VERSION$2 = new Version$1('7.2.0+170.sha-f1fb62d');
 
     /**
      * @license
@@ -39245,8 +39249,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     var TemplateRef = /** @class */ (function () {
         function TemplateRef() {
         }
-        /** @internal */
-        /** @nocollapse */
+        /**
+         * @internal
+         * @nocollapse
+         */
         TemplateRef.__NG_ELEMENT_ID__ = function () { return SWITCH_TEMPLATE_REF_FACTORY(TemplateRef, ElementRef); };
         return TemplateRef;
     }());
@@ -44925,8 +44931,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     var ViewContainerRef = /** @class */ (function () {
         function ViewContainerRef() {
         }
-        /** @internal */
-        /** @nocollapse */
+        /**
+         * @internal
+         * @nocollapse
+         */
         ViewContainerRef.__NG_ELEMENT_ID__ = function () { return SWITCH_VIEW_CONTAINER_REF_FACTORY(ViewContainerRef, ElementRef); };
         return ViewContainerRef;
     }());
@@ -44985,8 +44993,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     var ChangeDetectorRef = /** @class */ (function () {
         function ChangeDetectorRef() {
         }
-        /** @internal */
-        /** @nocollapse */
+        /**
+         * @internal
+         * @nocollapse
+         */
         ChangeDetectorRef.__NG_ELEMENT_ID__ = function () { return SWITCH_CHANGE_DETECTOR_REF_FACTORY(); };
         return ChangeDetectorRef;
     }());
@@ -51284,7 +51294,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.2.0+169.sha-d12db4e');
+    var VERSION$3 = new Version$1('7.2.0+170.sha-f1fb62d');
 
     /**
      * @license
