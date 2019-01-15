@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.2.0+178.sha-e62eeed
+ * @license Angular v7.2.0+179.sha-6930451
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -8732,17 +8732,16 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
          * Builds an instruction with all the expressions and parameters for `elementHostAttrs`.
          *
          * The instruction generation code below is used for producing the AOT statement code which is
-         * responsible for registering initial styles (within a directive hostBindings' creation block)
-         * to the directive host element.
+         * responsible for registering initial styles (within a directive hostBindings' creation block),
+         * as well as any of the provided attribute values, to the directive host element.
          */
-        StylingBuilder.prototype.buildDirectiveHostAttrsInstruction = function (sourceSpan, constantPool) {
+        StylingBuilder.prototype.buildHostAttrsInstruction = function (sourceSpan, attrs, constantPool) {
             var _this = this;
-            if (this._hasInitialValues && this._directiveExpr) {
+            if (this._directiveExpr && (attrs.length || this._hasInitialValues)) {
                 return {
                     sourceSpan: sourceSpan,
                     reference: Identifiers$1.elementHostAttrs,
                     buildParams: function () {
-                        var attrs = [];
                         _this.populateInitialStylingAttrs(attrs);
                         return [_this._directiveExpr, getConstantLiteralFromArray(constantPool, attrs)];
                     }
@@ -13870,7 +13869,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 if (input.type === 4 /* Animation */) {
                     var value_1 = input.value.visit(_this._valueConverter);
                     // animation bindings can be presented in the following formats:
-                    // 1j [@binding]="fooExp"
+                    // 1. [@binding]="fooExp"
                     // 2. [@binding]="{value:fooExp, params:{...}}"
                     // 3. [@binding]
                     // 4. @binding
@@ -14695,10 +14694,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     break;
             }
         }
-        // e.g. `attributes: ['role', 'listbox']`
-        definitionMap.set('attributes', createHostAttributesArray(allOtherAttributes));
         // e.g. `hostBindings: (rf, ctx, elIndex) => { ... }
-        definitionMap.set('hostBindings', createHostBindingsFunction(meta, elVarExp, contextVarExp, styleBuilder, bindingParser, constantPool, hostVarsCount));
+        definitionMap.set('hostBindings', createHostBindingsFunction(meta, elVarExp, contextVarExp, allOtherAttributes, styleBuilder, bindingParser, constantPool, hostVarsCount));
         // e.g 'inputs: {a: 'a'}`
         definitionMap.set('inputs', conditionallyCreateMapObjectLiteral(meta.inputs, true));
         // e.g 'outputs: {a: 'a'}`
@@ -14869,7 +14866,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function createDirectiveSelector(selector) {
         return asLiteral(parseSelectorToR3Selector(selector));
     }
-    function createHostAttributesArray(attributes) {
+    function convertAttributesToExpressions(attributes) {
         var e_2, _a;
         var values = [];
         try {
@@ -14886,10 +14883,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
             finally { if (e_2) throw e_2.error; }
         }
-        if (values.length > 0) {
-            return literalArr(values);
-        }
-        return null;
+        return values;
     }
     // Return a contentQueries function or null if one is not necessary.
     function createContentQueriesFunction(meta, constantPool) {
@@ -14994,7 +14988,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         ], INFERRED_TYPE, null, viewQueryFnName);
     }
     // Return a host binding function or null if one is not necessary.
-    function createHostBindingsFunction(meta, elVarExp, bindingContext, styleBuilder, bindingParser, constantPool, hostVarsCount) {
+    function createHostBindingsFunction(meta, elVarExp, bindingContext, staticAttributesAndValues, styleBuilder, bindingParser, constantPool, hostVarsCount) {
         var e_3, _a;
         var createStatements = [];
         var updateStatements = [];
@@ -15082,16 +15076,19 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 }
                 finally { if (e_3) throw e_3.error; }
             }
+            // since we're dealing with directives/components and both have hostBinding
+            // functions, we need to generate a special hostAttrs instruction that deals
+            // with both the assignment of styling as well as static attributes to the host
+            // element. The instruction below will instruct all initial styling (styling
+            // that is inside of a host binding within a directive/component) to be attached
+            // to the host element alongside any of the provided host attributes that were
+            // collected earlier.
+            var hostAttrs = convertAttributesToExpressions(staticAttributesAndValues);
+            var hostInstruction = styleBuilder.buildHostAttrsInstruction(null, hostAttrs, constantPool);
+            if (hostInstruction) {
+                createStatements.push(createStylingStmt(hostInstruction, bindingContext, bindingFn));
+            }
             if (styleBuilder.hasBindingsOrInitialValues()) {
-                // since we're dealing with directives here and directives have a hostBinding
-                // function, we need to generate special instructions that deal with styling
-                // (both bindings and initial values). The instruction below will instruct
-                // all initial styling (styling that is inside of a host binding within a
-                // directive) to be attached to the host element of the directive.
-                var hostAttrsInstruction = styleBuilder.buildDirectiveHostAttrsInstruction(null, constantPool);
-                if (hostAttrsInstruction) {
-                    createStatements.push(createStylingStmt(hostAttrsInstruction, bindingContext, bindingFn));
-                }
                 // singular style/class bindings (things like `[style.prop]` and `[class.name]`)
                 // MUST be registered on a given element within the component/directive
                 // templateFn/hostBindingsFn functions. The instruction below will figure out
@@ -15437,7 +15434,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.2.0+178.sha-e62eeed');
+    var VERSION$1 = new Version('7.2.0+179.sha-6930451');
 
     /**
      * @license
@@ -31971,7 +31968,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             hostBindings: componentDefinition.hostBindings || null,
             contentQueries: componentDefinition.contentQueries || null,
             contentQueriesRefresh: componentDefinition.contentQueriesRefresh || null,
-            attributes: componentDefinition.attributes || null,
             declaredInputs: declaredInputs,
             inputs: null,
             outputs: null,
@@ -35660,7 +35656,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      *              assigned to the context
      * @param directive the directive instance with which static data is associated with.
      */
-    function patchContextWithStaticAttrs(context, attrs, directive) {
+    function patchContextWithStaticAttrs(context, attrs, startingIndex, directive) {
         // If the styling context has already been patched with the given directive's bindings,
         // then there is no point in doing it again. The reason why this may happen (the directive
         // styling being patched twice) is because the `stylingBinding` function is called each time
@@ -35672,7 +35668,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var initialClasses = null;
             var initialStyles = null;
             var mode = -1;
-            for (var i = 0; i < attrs.length; i++) {
+            for (var i = startingIndex; i < attrs.length; i++) {
                 var attr = attrs[i];
                 if (typeof attr == 'number') {
                     mode = attr;
@@ -37553,32 +37549,60 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         blueprint[BINDING_INDEX] = bindingStartIndex;
         return blueprint;
     }
+    /**
+     * Assigns all attribute values to the provided element via the inferred renderer.
+     *
+     * This function accepts two forms of attribute entries:
+     *
+     * default: (key, value):
+     *  attrs = [key1, value1, key2, value2]
+     *
+     * namespaced: (NAMESPACE_MARKER, uri, name, value)
+     *  attrs = [NAMESPACE_MARKER, uri, name, value, NAMESPACE_MARKER, uri, name, value]
+     *
+     * The `attrs` array can contain a mix of both the default and namespaced entries.
+     * The "default" values are set without a marker, but if the function comes across
+     * a marker value then it will attempt to set a namespaced value. If the marker is
+     * not of a namespaced value then the function will quit and return the index value
+     * where it stopped during the iteration of the attrs array.
+     *
+     * See [AttributeMarker] to understand what the namespace marker value is.
+     *
+     * Note that this instruction does not support assigning style and class values to
+     * an element. See `elementStart` and `elementHostAttrs` to learn how styling values
+     * are applied to an element.
+     *
+     * @param native The element that the attributes will be assigned to
+     * @param attrs The attribute array of values that will be assigned to the element
+     * @returns the index value that was last accessed in the attributes array
+     */
     function setUpAttributes(native, attrs) {
         var renderer = getLView()[RENDERER];
         var isProc = isProceduralRenderer(renderer);
         var i = 0;
         while (i < attrs.length) {
-            var attrName = attrs[i++];
-            if (typeof attrName == 'number') {
-                if (attrName === 0 /* NamespaceURI */) {
-                    // Namespaced attributes
-                    var namespaceURI = attrs[i++];
-                    var attrName_1 = attrs[i++];
-                    var attrVal = attrs[i++];
-                    ngDevMode && ngDevMode.rendererSetAttribute++;
-                    isProc ?
-                        renderer
-                            .setAttribute(native, attrName_1, attrVal, namespaceURI) :
-                        native.setAttributeNS(namespaceURI, attrName_1, attrVal);
-                }
-                else {
-                    // All other `AttributeMarker`s are ignored here.
+            var value = attrs[i];
+            if (typeof value === 'number') {
+                // only namespaces are supported. Other value types (such as style/class
+                // entries) are not supported in this function.
+                if (value !== 0 /* NamespaceURI */) {
                     break;
                 }
+                // we just landed on the marker value ... therefore
+                // we should skip to the next entry
+                i++;
+                var namespaceURI = attrs[i++];
+                var attrName = attrs[i++];
+                var attrVal = attrs[i++];
+                ngDevMode && ngDevMode.rendererSetAttribute++;
+                isProc ?
+                    renderer.setAttribute(native, attrName, attrVal, namespaceURI) :
+                    native.setAttributeNS(namespaceURI, attrName, attrVal);
             }
             else {
                 /// attrName is string;
-                var attrVal = attrs[i++];
+                var attrName = value;
+                var attrVal = attrs[++i];
                 if (attrName !== NG_PROJECT_AS_ATTR_NAME) {
                     // Standard attributes
                     ngDevMode && ngDevMode.rendererSetAttribute++;
@@ -37594,8 +37618,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                             native.setAttribute(attrName, attrVal);
                     }
                 }
+                i++;
             }
         }
+        // another piece of code may iterate over the same attributes array. Therefore
+        // it may be helpful to return the exact spot where the attributes array exited
+        // whether by running into an unsupported marker or if all the static values were
+        // iterated over.
+        return i;
     }
     function createError(text, token) {
         return new Error("Renderer: " + text + " [" + renderStringify(token) + "]");
@@ -38014,19 +38044,41 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         updateContextWithBindings(tNode.stylingTemplate, directive || null, classBindingNames, styleBindingNames, styleSanitizer, hasClassInput(tNode));
     }
     /**
-     * Assign static styling values to a host element.
+     * Assign static attribute values to a host element.
+     *
+     * This instruction will assign static attribute values as well as class and style
+     * values to an element within the host bindings function. Since attribute values
+     * can consist of different types of values, the `attrs` array must include the values in
+     * the following format:
+     *
+     * attrs = [
+     *   // static attributes (like `title`, `name`, `id`...)
+     *   attr1, value1, attr2, value,
+     *
+     *   // a single namespace value (like `x:id`)
+     *   NAMESPACE_MARKER, namespaceUri1, name1, value1,
+     *
+     *   // another single namespace value (like `x:name`)
+     *   NAMESPACE_MARKER, namespaceUri2, name2, value2,
+     *
+     *   // a series of CSS classes that will be applied to the element (no spaces)
+     *   CLASSES_MARKER, class1, class2, class3,
+     *
+     *   // a series of CSS styles (property + value) that will be applied to the element
+     *   STYLES_MARKER, prop1, value1, prop2, value2
+     * ]
+     *
+     * All non-class and non-style attributes must be defined at the start of the list
+     * first before all class and style values are set. When there is a change in value
+     * type (like when classes and styles are introduced) a marker must be used to separate
+     * the entries. The marker values themselves are set via entries found in the
+     * [AttributeMarker] enum.
      *
      * NOTE: This instruction is meant to used from `hostBindings` function only.
      *
      * @param directive A directive instance the styling is associated with.
-     * @param attrs An array containing class and styling information. The values must be marked with
-     *              `AttributeMarker`.
-     *
-     *        ```
-     *        var attrs = [AttributeMarker.Classes, 'foo', 'bar',
-     *                     AttributeMarker.Styles, 'width', '100px', 'height, '200px']
-     *        elementHostAttrs(directive, attrs);
-     *        ```
+     * @param attrs An array of static values (attributes, classes and styles) with the correct marker
+     * values.
      *
      * @publicApi
      */
@@ -38035,7 +38087,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         if (!tNode.stylingTemplate) {
             tNode.stylingTemplate = initializeStaticContext(attrs);
         }
-        patchContextWithStaticAttrs(tNode.stylingTemplate, attrs, directive);
+        var lView = getLView();
+        var native = getNativeByTNode(tNode, lView);
+        var i = setUpAttributes(native, attrs);
+        patchContextWithStaticAttrs(tNode.stylingTemplate, attrs, i, directive);
     }
     /**
      * Apply styling binding to the element.
@@ -38362,10 +38417,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         attachPatchData(directive, lView);
         if (native) {
             attachPatchData(native, lView);
-        }
-        // TODO(misko): setUpAttributes should be a feature for better treeshakability.
-        if (def.attributes != null && previousOrParentTNode.type == 3 /* Element */) {
-            setUpAttributes(native, def.attributes);
         }
     }
     /**
@@ -40793,7 +40844,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.2.0+178.sha-e62eeed');
+    var VERSION$2 = new Version$1('7.2.0+179.sha-6930451');
 
     /**
      * @license
@@ -59144,7 +59195,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.2.0+178.sha-e62eeed');
+    var VERSION$3 = new Version$1('7.2.0+179.sha-6930451');
 
     /**
      * @license
