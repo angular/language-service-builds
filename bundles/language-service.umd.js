@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.2.0+178.sha-e62eeed
+ * @license Angular v7.2.0+179.sha-6930451
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -8747,17 +8747,16 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
          * Builds an instruction with all the expressions and parameters for `elementHostAttrs`.
          *
          * The instruction generation code below is used for producing the AOT statement code which is
-         * responsible for registering initial styles (within a directive hostBindings' creation block)
-         * to the directive host element.
+         * responsible for registering initial styles (within a directive hostBindings' creation block),
+         * as well as any of the provided attribute values, to the directive host element.
          */
-        StylingBuilder.prototype.buildDirectiveHostAttrsInstruction = function (sourceSpan, constantPool) {
+        StylingBuilder.prototype.buildHostAttrsInstruction = function (sourceSpan, attrs, constantPool) {
             var _this = this;
-            if (this._hasInitialValues && this._directiveExpr) {
+            if (this._directiveExpr && (attrs.length || this._hasInitialValues)) {
                 return {
                     sourceSpan: sourceSpan,
                     reference: Identifiers$1.elementHostAttrs,
                     buildParams: function () {
-                        var attrs = [];
                         _this.populateInitialStylingAttrs(attrs);
                         return [_this._directiveExpr, getConstantLiteralFromArray(constantPool, attrs)];
                     }
@@ -13885,7 +13884,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 if (input.type === 4 /* Animation */) {
                     var value_1 = input.value.visit(_this._valueConverter);
                     // animation bindings can be presented in the following formats:
-                    // 1j [@binding]="fooExp"
+                    // 1. [@binding]="fooExp"
                     // 2. [@binding]="{value:fooExp, params:{...}}"
                     // 3. [@binding]
                     // 4. @binding
@@ -14710,10 +14709,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     break;
             }
         }
-        // e.g. `attributes: ['role', 'listbox']`
-        definitionMap.set('attributes', createHostAttributesArray(allOtherAttributes));
         // e.g. `hostBindings: (rf, ctx, elIndex) => { ... }
-        definitionMap.set('hostBindings', createHostBindingsFunction(meta, elVarExp, contextVarExp, styleBuilder, bindingParser, constantPool, hostVarsCount));
+        definitionMap.set('hostBindings', createHostBindingsFunction(meta, elVarExp, contextVarExp, allOtherAttributes, styleBuilder, bindingParser, constantPool, hostVarsCount));
         // e.g 'inputs: {a: 'a'}`
         definitionMap.set('inputs', conditionallyCreateMapObjectLiteral(meta.inputs, true));
         // e.g 'outputs: {a: 'a'}`
@@ -14884,7 +14881,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function createDirectiveSelector(selector) {
         return asLiteral(parseSelectorToR3Selector(selector));
     }
-    function createHostAttributesArray(attributes) {
+    function convertAttributesToExpressions(attributes) {
         var e_2, _a;
         var values = [];
         try {
@@ -14901,10 +14898,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
             finally { if (e_2) throw e_2.error; }
         }
-        if (values.length > 0) {
-            return literalArr(values);
-        }
-        return null;
+        return values;
     }
     // Return a contentQueries function or null if one is not necessary.
     function createContentQueriesFunction(meta, constantPool) {
@@ -15009,7 +15003,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         ], INFERRED_TYPE, null, viewQueryFnName);
     }
     // Return a host binding function or null if one is not necessary.
-    function createHostBindingsFunction(meta, elVarExp, bindingContext, styleBuilder, bindingParser, constantPool, hostVarsCount) {
+    function createHostBindingsFunction(meta, elVarExp, bindingContext, staticAttributesAndValues, styleBuilder, bindingParser, constantPool, hostVarsCount) {
         var e_3, _a;
         var createStatements = [];
         var updateStatements = [];
@@ -15097,16 +15091,19 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 }
                 finally { if (e_3) throw e_3.error; }
             }
+            // since we're dealing with directives/components and both have hostBinding
+            // functions, we need to generate a special hostAttrs instruction that deals
+            // with both the assignment of styling as well as static attributes to the host
+            // element. The instruction below will instruct all initial styling (styling
+            // that is inside of a host binding within a directive/component) to be attached
+            // to the host element alongside any of the provided host attributes that were
+            // collected earlier.
+            var hostAttrs = convertAttributesToExpressions(staticAttributesAndValues);
+            var hostInstruction = styleBuilder.buildHostAttrsInstruction(null, hostAttrs, constantPool);
+            if (hostInstruction) {
+                createStatements.push(createStylingStmt(hostInstruction, bindingContext, bindingFn));
+            }
             if (styleBuilder.hasBindingsOrInitialValues()) {
-                // since we're dealing with directives here and directives have a hostBinding
-                // function, we need to generate special instructions that deal with styling
-                // (both bindings and initial values). The instruction below will instruct
-                // all initial styling (styling that is inside of a host binding within a
-                // directive) to be attached to the host element of the directive.
-                var hostAttrsInstruction = styleBuilder.buildDirectiveHostAttrsInstruction(null, constantPool);
-                if (hostAttrsInstruction) {
-                    createStatements.push(createStylingStmt(hostAttrsInstruction, bindingContext, bindingFn));
-                }
                 // singular style/class bindings (things like `[style.prop]` and `[class.name]`)
                 // MUST be registered on a given element within the component/directive
                 // templateFn/hostBindingsFn functions. The instruction below will figure out
@@ -15452,7 +15449,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.2.0+178.sha-e62eeed');
+    var VERSION$1 = new Version('7.2.0+179.sha-6930451');
 
     /**
      * @license
@@ -33435,7 +33432,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var NG_PROJECT_AS_ATTR_NAME = 'ngProjectAs';
 
     /**
      * @license
@@ -33849,7 +33845,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var ANIMATION_PROP_PREFIX = '@';
     function createEmptyStylingContext(element, sanitizer, initialStyles, initialClasses) {
         return [
             0,
@@ -33914,9 +33909,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         // Not an LView or an LContainer
         return Array.isArray(value) && typeof value[0 /* MasterFlagPosition */] === 'number' &&
             Array.isArray(value[2 /* InitialStyleValuesPosition */]);
-    }
-    function isAnimationProp(name) {
-        return name[0] === ANIMATION_PROP_PREFIX;
     }
 
     function isClassBasedValue(context, index) {
@@ -34291,50 +34283,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         blueprint[BINDING_INDEX] = bindingStartIndex;
         return blueprint;
     }
-    function setUpAttributes(native, attrs) {
-        var renderer = getLView()[RENDERER];
-        var isProc = isProceduralRenderer(renderer);
-        var i = 0;
-        while (i < attrs.length) {
-            var attrName = attrs[i++];
-            if (typeof attrName == 'number') {
-                if (attrName === 0 /* NamespaceURI */) {
-                    // Namespaced attributes
-                    var namespaceURI = attrs[i++];
-                    var attrName_1 = attrs[i++];
-                    var attrVal = attrs[i++];
-                    ngDevMode && ngDevMode.rendererSetAttribute++;
-                    isProc ?
-                        renderer
-                            .setAttribute(native, attrName_1, attrVal, namespaceURI) :
-                        native.setAttributeNS(namespaceURI, attrName_1, attrVal);
-                }
-                else {
-                    // All other `AttributeMarker`s are ignored here.
-                    break;
-                }
-            }
-            else {
-                /// attrName is string;
-                var attrVal = attrs[i++];
-                if (attrName !== NG_PROJECT_AS_ATTR_NAME) {
-                    // Standard attributes
-                    ngDevMode && ngDevMode.rendererSetAttribute++;
-                    if (isAnimationProp(attrName)) {
-                        if (isProc) {
-                            renderer.setProperty(native, attrName, attrVal);
-                        }
-                    }
-                    else {
-                        isProc ?
-                            renderer
-                                .setAttribute(native, attrName, attrVal) :
-                            native.setAttribute(attrName, attrVal);
-                    }
-                }
-            }
-        }
-    }
     function createError(text, token) {
         return new Error("Renderer: " + text + " [" + renderStringify(token) + "]");
     }
@@ -34456,10 +34404,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         attachPatchData(directive, lView);
         if (native) {
             attachPatchData(native, lView);
-        }
-        // TODO(misko): setUpAttributes should be a feature for better treeshakability.
-        if (def.attributes != null && previousOrParentTNode.type == 3 /* Element */) {
-            setUpAttributes(native, def.attributes);
         }
     }
     /** Stores index of component's host element so it will be queued for view refresh during CD. */
@@ -35446,7 +35390,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.2.0+178.sha-e62eeed');
+    var VERSION$2 = new Version$1('7.2.0+179.sha-6930451');
 
     /**
      * @license
@@ -51293,7 +51237,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.2.0+178.sha-e62eeed');
+    var VERSION$3 = new Version$1('7.2.0+179.sha-6930451');
 
     /**
      * @license
