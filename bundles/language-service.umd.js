@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.2.0+188.sha-ce3a746
+ * @license Angular v7.2.0+189.sha-3a31a27
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -15434,7 +15434,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.2.0+188.sha-ce3a746');
+    var VERSION$1 = new Version('7.2.0+189.sha-3a31a27');
 
     /**
      * @license
@@ -40872,7 +40872,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.2.0+188.sha-ce3a746');
+    var VERSION$2 = new Version$1('7.2.0+189.sha-3a31a27');
 
     /**
      * @license
@@ -58914,152 +58914,56 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             return host.getTemplateReferences();
         }
     }
-    function create(info /* ts.server.PluginCreateInfo */) {
-        // Create the proxy
-        var proxy = Object.create(null);
-        var oldLS = info.languageService;
-        function tryCall(fileName, callback) {
-            if (fileName && !oldLS.getProgram().getSourceFile(fileName)) {
-                return undefined;
-            }
-            try {
-                return callback();
-            }
-            catch (_a) {
-                return undefined;
-            }
-        }
-        function tryFilenameCall(m) {
-            return function (fileName) { return tryCall(fileName, function () { return (m.call(ls, fileName)); }); };
-        }
-        function tryFilenameOneCall(m) {
-            return function (fileName, p) { return tryCall(fileName, function () { return (m.call(ls, fileName, p)); }); };
-        }
-        function tryFilenameTwoCall(m) {
-            return function (fileName, p1, p2) { return tryCall(fileName, function () { return (m.call(ls, fileName, p1, p2)); }); };
-        }
-        function tryFilenameThreeCall(m) {
-            return function (fileName, p1, p2, p3) { return tryCall(fileName, function () { return (m.call(ls, fileName, p1, p2, p3)); }); };
-        }
-        function tryFilenameFiveCall(m) {
-            return function (fileName, p1, p2, p3, p4, p5) {
-                return tryCall(fileName, function () { return (m.call(ls, fileName, p1, p2, p3, p4, p5)); });
-            };
-        }
-        function typescriptOnly(ls) {
-            var languageService = {
-                cleanupSemanticCache: function () { return ls.cleanupSemanticCache(); },
-                getSyntacticDiagnostics: tryFilenameCall(ls.getSyntacticDiagnostics),
-                getSemanticDiagnostics: tryFilenameCall(ls.getSemanticDiagnostics),
-                getCompilerOptionsDiagnostics: function () { return ls.getCompilerOptionsDiagnostics(); },
-                getSyntacticClassifications: tryFilenameOneCall(ls.getSemanticClassifications),
-                getSemanticClassifications: tryFilenameOneCall(ls.getSemanticClassifications),
-                getEncodedSyntacticClassifications: tryFilenameOneCall(ls.getEncodedSyntacticClassifications),
-                getEncodedSemanticClassifications: tryFilenameOneCall(ls.getEncodedSemanticClassifications),
-                getCompletionsAtPosition: tryFilenameTwoCall(ls.getCompletionsAtPosition),
-                getCompletionEntryDetails: tryFilenameFiveCall(ls.getCompletionEntryDetails),
-                getCompletionEntrySymbol: tryFilenameThreeCall(ls.getCompletionEntrySymbol),
-                getJsxClosingTagAtPosition: tryFilenameOneCall(ls.getJsxClosingTagAtPosition),
-                getQuickInfoAtPosition: tryFilenameOneCall(ls.getQuickInfoAtPosition),
-                getNameOrDottedNameSpan: tryFilenameTwoCall(ls.getNameOrDottedNameSpan),
-                getBreakpointStatementAtPosition: tryFilenameOneCall(ls.getBreakpointStatementAtPosition),
-                getSignatureHelpItems: tryFilenameTwoCall(ls.getSignatureHelpItems),
-                getRenameInfo: tryFilenameOneCall(ls.getRenameInfo),
-                findRenameLocations: tryFilenameThreeCall(ls.findRenameLocations),
-                getDefinitionAtPosition: tryFilenameOneCall(ls.getDefinitionAtPosition),
-                getTypeDefinitionAtPosition: tryFilenameOneCall(ls.getTypeDefinitionAtPosition),
-                getImplementationAtPosition: tryFilenameOneCall(ls.getImplementationAtPosition),
-                getReferencesAtPosition: tryFilenameOneCall(ls.getReferencesAtPosition),
-                findReferences: tryFilenameOneCall(ls.findReferences),
-                getDocumentHighlights: tryFilenameTwoCall(ls.getDocumentHighlights),
-                /** @deprecated */
-                getOccurrencesAtPosition: tryFilenameOneCall(ls.getOccurrencesAtPosition),
-                getNavigateToItems: function (searchValue, maxResultCount, fileName, excludeDtsFiles) { return tryCall(fileName, function () { return ls.getNavigateToItems(searchValue, maxResultCount, fileName, excludeDtsFiles); }); },
-                getNavigationBarItems: tryFilenameCall(ls.getNavigationBarItems),
-                getNavigationTree: tryFilenameCall(ls.getNavigationTree),
-                getOutliningSpans: tryFilenameCall(ls.getOutliningSpans),
-                getTodoComments: tryFilenameOneCall(ls.getTodoComments),
-                getBraceMatchingAtPosition: tryFilenameOneCall(ls.getBraceMatchingAtPosition),
-                getIndentationAtPosition: tryFilenameTwoCall(ls.getIndentationAtPosition),
-                getFormattingEditsForRange: tryFilenameThreeCall(ls.getFormattingEditsForRange),
-                getFormattingEditsForDocument: tryFilenameOneCall(ls.getFormattingEditsForDocument),
-                getFormattingEditsAfterKeystroke: tryFilenameThreeCall(ls.getFormattingEditsAfterKeystroke),
-                getDocCommentTemplateAtPosition: tryFilenameOneCall(ls.getDocCommentTemplateAtPosition),
-                isValidBraceCompletionAtPosition: tryFilenameTwoCall(ls.isValidBraceCompletionAtPosition),
-                getSpanOfEnclosingComment: tryFilenameTwoCall(ls.getSpanOfEnclosingComment),
-                getCodeFixesAtPosition: tryFilenameFiveCall(ls.getCodeFixesAtPosition),
-                applyCodeActionCommand: (function (action) { return tryCall(undefined, function () { return ls.applyCodeActionCommand(action); }); }),
-                getEmitOutput: tryFilenameCall(ls.getEmitOutput),
-                getProgram: function () { return ls.getProgram(); },
-                dispose: function () { return ls.dispose(); },
-                getApplicableRefactors: tryFilenameTwoCall(ls.getApplicableRefactors),
-                getEditsForRefactor: tryFilenameFiveCall(ls.getEditsForRefactor),
-                getDefinitionAndBoundSpan: tryFilenameOneCall(ls.getDefinitionAndBoundSpan),
-                getCombinedCodeFix: function (scope, fixId, formatOptions, preferences) {
-                    return tryCall(undefined, function () { return ls.getCombinedCodeFix(scope, fixId, formatOptions, preferences); });
-                },
-                // TODO(kyliau): dummy implementation to compile with ts 2.8, create real one
-                getSuggestionDiagnostics: function (fileName) { return []; },
-                // TODO(kyliau): dummy implementation to compile with ts 2.8, create real one
-                organizeImports: function (scope, formatOptions) { return []; },
-                // TODO: dummy implementation to compile with ts 2.9, create a real one
-                getEditsForFileRename: function (oldFilePath, newFilePath, formatOptions, preferences) { return []; }
-            };
-            return languageService;
-        }
-        oldLS = typescriptOnly(oldLS);
-        var _loop_1 = function (k) {
-            proxy[k] = function () { return oldLS[k].apply(oldLS, arguments); };
+    function completionToEntry(c) {
+        return {
+            // TODO: remove any and fix type error.
+            kind: c.kind,
+            name: c.name,
+            sortText: c.sort,
+            kindModifiers: ''
         };
-        for (var k in oldLS) {
-            _loop_1(k);
+    }
+    function diagnosticChainToDiagnosticChain(chain) {
+        return {
+            messageText: chain.message,
+            category: ts.DiagnosticCategory.Error,
+            code: 0,
+            next: chain.next ? diagnosticChainToDiagnosticChain(chain.next) : undefined
+        };
+    }
+    function diagnosticMessageToDiagnosticMessageText(message) {
+        if (typeof message === 'string') {
+            return message;
         }
-        function completionToEntry(c) {
-            return {
-                // TODO: remove any and fix type error.
-                kind: c.kind,
-                name: c.name,
-                sortText: c.sort,
-                kindModifiers: ''
-            };
-        }
-        function diagnosticChainToDiagnosticChain(chain) {
-            return {
-                messageText: chain.message,
-                category: ts.DiagnosticCategory.Error,
-                code: 0,
-                next: chain.next ? diagnosticChainToDiagnosticChain(chain.next) : undefined
-            };
-        }
-        function diagnosticMessageToDiagnosticMessageText(message) {
-            if (typeof message === 'string') {
-                return message;
-            }
-            return diagnosticChainToDiagnosticChain(message);
-        }
-        function diagnosticToDiagnostic(d, file) {
-            var result = {
-                file: file,
-                start: d.span.start,
-                length: d.span.end - d.span.start,
-                messageText: diagnosticMessageToDiagnosticMessageText(d.message),
-                category: ts.DiagnosticCategory.Error,
-                code: 0,
-                source: 'ng'
-            };
-            return result;
-        }
+        return diagnosticChainToDiagnosticChain(message);
+    }
+    function diagnosticToDiagnostic(d, file) {
+        var result = {
+            file: file,
+            start: d.span.start,
+            length: d.span.end - d.span.start,
+            messageText: diagnosticMessageToDiagnosticMessageText(d.message),
+            category: ts.DiagnosticCategory.Error,
+            code: 0,
+            source: 'ng'
+        };
+        return result;
+    }
+    function create(info /* ts.server.PluginCreateInfo */) {
+        var oldLS = info.languageService;
+        var proxy = Object.assign({}, oldLS);
+        var logger = info.project.projectService.logger;
         function tryOperation(attempting, callback) {
             try {
                 return callback();
             }
             catch (e) {
-                info.project.projectService.logger.info("Failed to " + attempting + ": " + e.toString());
-                info.project.projectService.logger.info("Stack trace: " + e.stack);
+                logger.info("Failed to " + attempting + ": " + e.toString());
+                logger.info("Stack trace: " + e.stack);
                 return null;
             }
         }
-        var serviceHost = new TypeScriptServiceHost(info.languageServiceHost, info.languageService);
+        var serviceHost = new TypeScriptServiceHost(info.languageServiceHost, oldLS);
         var ls = createLanguageService(serviceHost);
         serviceHost.setSite(ls);
         projectHostMap.set(info.project, serviceHost);
@@ -59139,7 +59043,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var result = oldLS.getSemanticDiagnostics(fileName);
             var base = result || [];
             tryOperation('get diagnostics', function () {
-                info.project.projectService.logger.info("Computing Angular semantic diagnostics...");
+                logger.info("Computing Angular semantic diagnostics...");
                 var ours = ls.getDiagnostics(fileName);
                 if (ours && ours.length) {
                     var file_1 = oldLS.getProgram().getSourceFile(fileName);
@@ -59199,7 +59103,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.2.0+188.sha-ce3a746');
+    var VERSION$3 = new Version$1('7.2.0+189.sha-3a31a27');
 
     /**
      * @license
