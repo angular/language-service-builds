@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.2.0+179.sha-6930451
+ * @license Angular v7.2.0+180.sha-da8ee29
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -15434,7 +15434,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.2.0+179.sha-6930451');
+    var VERSION$1 = new Version('7.2.0+180.sha-da8ee29');
 
     /**
      * @license
@@ -34536,6 +34536,30 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * Determine if the argument is shaped like a Promise
+     */
+    function isPromise$1(obj) {
+        // allow any Promise/A+ compliant thenable.
+        // It's up to the caller to ensure that obj.then conforms to the spec
+        return !!obj && typeof obj.then === 'function';
+    }
+    /**
+     * Determine if the argument is an Observable
+     */
+    function isObservable(obj) {
+        // TODO: use isObservable once we update pass rxjs 6.1
+        // https://github.com/ReactiveX/rxjs/blob/master/CHANGELOG.md#610-2018-05-03
+        return !!obj && typeof obj.subscribe === 'function';
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     function normalizeDebugBindingName(name) {
         // Attribute names with `$` (eg `x-y$`) are valid per spec, but unsupported by some browsers
         name = camelCaseToDashCase(name.replace(/[$@]/g, '_'));
@@ -37721,7 +37745,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     var declaredName = props[i++];
                     ngDevMode && assertDataInRange(lView, directiveIndex);
                     var directive = unwrapOnChangesDirectiveWrapper(lView[directiveIndex]);
-                    var subscription = directive[minifiedName].subscribe(listenerFn);
+                    var output = directive[minifiedName];
+                    if (ngDevMode && !isObservable(output)) {
+                        throw new Error("@Output " + minifiedName + " not initialized in '" + directive.constructor.name + "'.");
+                    }
+                    var subscription = output.subscribe(listenerFn);
                     var idx = lCleanup.length;
                     lCleanup.push(listenerFn, subscription);
                     tCleanup && tCleanup.push(eventName, tNode.index, idx, -(idx + 1));
@@ -40844,7 +40872,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.2.0+179.sha-6930451');
+    var VERSION$2 = new Version$1('7.2.0+180.sha-da8ee29');
 
     /**
      * @license
@@ -45406,7 +45434,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
 
     var isArrayLike = (function (x) { return x && typeof x.length === 'number' && typeof x !== 'function'; });
 
-    function isPromise$1(value) {
+    function isPromise$2(value) {
         return value && typeof value.subscribe !== 'function' && typeof value.then === 'function';
     }
 
@@ -45429,7 +45457,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         else if (isArrayLike(result)) {
             return subscribeToArray(result);
         }
-        else if (isPromise$1(result)) {
+        else if (isPromise$2(result)) {
             return subscribeToPromise(result);
         }
         else if (result && typeof result[iterator] === 'function') {
@@ -45635,7 +45663,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             if (isInteropObservable(input)) {
                 return fromObservable(input, scheduler);
             }
-            else if (isPromise$1(input)) {
+            else if (isPromise$2(input)) {
                 return fromPromise(input, scheduler);
             }
             else if (isArrayLike(input)) {
@@ -51253,30 +51281,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    /**
-     * Determine if the argument is shaped like a Promise
-     */
-    function isPromise$2(obj) {
-        // allow any Promise/A+ compliant thenable.
-        // It's up to the caller to ensure that obj.then conforms to the spec
-        return !!obj && typeof obj.then === 'function';
-    }
-    /**
-     * Determine if the argument is an Observable
-     */
-    function isObservable$1(obj) {
-        // TODO: use isObservable once we update pass rxjs 6.1
-        // https://github.com/ReactiveX/rxjs/blob/master/CHANGELOG.md#610-2018-05-03
-        return !!obj && typeof obj.subscribe === 'function';
-    }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
 
     /**
      * @license
@@ -51321,7 +51325,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             if (this.appInits) {
                 for (var i = 0; i < this.appInits.length; i++) {
                     var initResult = this.appInits[i]();
-                    if (isPromise$2(initResult)) {
+                    if (isPromise$1(initResult)) {
                         asyncInitPromises.push(initResult);
                     }
                 }
@@ -52491,7 +52495,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function _callAndReportToErrorHandler(errorHandler, ngZone, callback) {
         try {
             var result = callback();
-            if (isPromise$2(result)) {
+            if (isPromise$1(result)) {
                 return result.catch(function (e) {
                     ngZone.runOutsideAngular(function () { return errorHandler.handleError(e); });
                     // rethrow as the exception handler might not do it
@@ -56096,7 +56100,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             for (var i = 0; i < def.outputs.length; i++) {
                 var output = def.outputs[i];
                 var outputObservable = instance[output.propName];
-                if (isObservable$1(outputObservable)) {
+                if (isObservable(outputObservable)) {
                     var subscription = outputObservable.subscribe(eventHandlerClosure(view, def.parent.nodeIndex, output.eventName));
                     view.disposables[def.outputIndex + i] = subscription.unsubscribe.bind(subscription);
                 }
@@ -59195,7 +59199,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.2.0+179.sha-6930451');
+    var VERSION$3 = new Version$1('7.2.0+180.sha-da8ee29');
 
     /**
      * @license
