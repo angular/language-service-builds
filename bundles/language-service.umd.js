@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.2.0+177.sha-06e5bf1
+ * @license Angular v7.2.0+178.sha-e62eeed
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -15452,7 +15452,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.2.0+177.sha-06e5bf1');
+    var VERSION$1 = new Version('7.2.0+178.sha-e62eeed');
 
     /**
      * @license
@@ -33826,14 +33826,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
 
     /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-
-    /**
      * Combines the binding value and a factory for an animation player.
      *
      * Used to bind a player to an element template binding (currently only
@@ -33937,6 +33929,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function getProp(context, index) {
         return context[index + 1 /* PropertyOffset */];
     }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
 
     /**
      * @license
@@ -35446,7 +35446,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.2.0+177.sha-06e5bf1');
+    var VERSION$2 = new Version$1('7.2.0+178.sha-e62eeed');
 
     /**
      * @license
@@ -51293,7 +51293,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.2.0+177.sha-06e5bf1');
+    var VERSION$3 = new Version$1('7.2.0+178.sha-e62eeed');
 
     /**
      * @license
