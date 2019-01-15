@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.2.0+174.sha-fa53150
+ * @license Angular v7.2.0+176.sha-60fecc1
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -15452,7 +15452,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.2.0+174.sha-fa53150');
+    var VERSION$1 = new Version('7.2.0+176.sha-60fecc1');
 
     /**
      * @license
@@ -32831,11 +32831,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var tNode = lView[TVIEW].data[nodeIndex];
         if (tNode && tNode.localNames) {
             var result = {};
+            var localIndex = tNode.index + 1;
             for (var i = 0; i < tNode.localNames.length; i += 2) {
-                var localRefName = tNode.localNames[i];
-                var directiveIndex = tNode.localNames[i + 1];
-                result[localRefName] =
-                    directiveIndex === -1 ? getNativeByTNode(tNode, lView) : lView[directiveIndex];
+                result[tNode.localNames[i]] = lView[localIndex];
+                localIndex++;
             }
             return result;
         }
@@ -35447,7 +35446,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.2.0+174.sha-fa53150');
+    var VERSION$2 = new Version$1('7.2.0+176.sha-60fecc1');
 
     /**
      * @license
@@ -51294,7 +51293,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.2.0+174.sha-fa53150');
+    var VERSION$3 = new Version$1('7.2.0+176.sha-60fecc1');
 
     /**
      * @license
