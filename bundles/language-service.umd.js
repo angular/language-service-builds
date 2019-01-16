@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.2.0+193.sha-3b7a571
+ * @license Angular v7.2.0+196.sha-9a81f0d
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -13823,9 +13823,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 if (isNonBindableMode) {
                     this.creationInstruction(element.sourceSpan, Identifiers$1.disableBindings);
                 }
-                if (isI18nRootElement) {
-                    this.i18nStart(element.sourceSpan, element.i18n, createSelfClosingI18nInstruction);
-                }
                 // process i18n element attributes
                 if (i18nAttrs.length) {
                     var hasBindings_1 = false;
@@ -13858,6 +13855,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                             this.updateInstruction(element.sourceSpan, Identifiers$1.i18nApply, [index]);
                         }
                     }
+                }
+                // Note: it's important to keep i18n/i18nStart instructions after i18nAttributes ones,
+                // to make sure i18nAttributes instruction targets current element at runtime.
+                if (isI18nRootElement) {
+                    this.i18nStart(element.sourceSpan, element.i18n, createSelfClosingI18nInstruction);
                 }
                 // The style bindings code is placed into two distinct blocks within the template function AOT
                 // code: creation and update. The creation code contains the `elementStyling` instructions
@@ -15449,7 +15451,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.2.0+193.sha-3b7a571');
+    var VERSION$1 = new Version('7.2.0+196.sha-9a81f0d');
 
     /**
      * @license
@@ -35412,7 +35414,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.2.0+193.sha-3b7a571');
+    var VERSION$2 = new Version$1('7.2.0+196.sha-9a81f0d');
 
     /**
      * @license
@@ -51139,7 +51141,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.2.0+193.sha-3b7a571');
+    var VERSION$3 = new Version$1('7.2.0+196.sha-9a81f0d');
 
     /**
      * @license
