@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.2.0+196.sha-9a81f0d
+ * @license Angular v7.2.0+198.sha-bac71ef
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -15436,7 +15436,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.2.0+196.sha-9a81f0d');
+    var VERSION$1 = new Version('7.2.0+198.sha-bac71ef');
 
     /**
      * @license
@@ -40872,7 +40872,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.2.0+196.sha-9a81f0d');
+    var VERSION$2 = new Version$1('7.2.0+198.sha-bac71ef');
 
     /**
      * @license
@@ -51563,7 +51563,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     };
     var Compiler_compileModuleAsync = Compiler_compileModuleAsync__POST_R3__;
     var Compiler_compileModuleAndAllComponentsSync__POST_R3__ = function (moduleType) {
-        return new ModuleWithComponentFactories(Compiler_compileModuleSync__POST_R3__(moduleType), []);
+        var ngModuleFactory = Compiler_compileModuleSync__POST_R3__(moduleType);
+        var moduleDef = getNgModuleDef(moduleType);
+        var componentFactories = moduleDef.declarations.reduce(function (factories, declaration) {
+            var componentDef = getComponentDef(declaration);
+            componentDef && factories.push(new ComponentFactory$1(componentDef));
+            return factories;
+        }, []);
+        return new ModuleWithComponentFactories(ngModuleFactory, componentFactories);
     };
     var Compiler_compileModuleAndAllComponentsSync = Compiler_compileModuleAndAllComponentsSync__POST_R3__;
     var Compiler_compileModuleAndAllComponentsAsync__POST_R3__ = function (moduleType) {
@@ -59107,7 +59114,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.2.0+196.sha-9a81f0d');
+    var VERSION$3 = new Version$1('7.2.0+198.sha-bac71ef');
 
     /**
      * @license
