@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.0+7.sha-8a08ff1
+ * @license Angular v8.0.0-beta.0+8.sha-1f7d3b9
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -15436,7 +15436,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.0+7.sha-8a08ff1');
+    var VERSION$1 = new Version('8.0.0-beta.0+8.sha-1f7d3b9');
 
     /**
      * @license
@@ -40872,7 +40872,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.0+7.sha-8a08ff1');
+    var VERSION$2 = new Version$1('8.0.0-beta.0+8.sha-1f7d3b9');
 
     /**
      * @license
@@ -42602,7 +42602,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var _a;
         var clazz = type;
         if (decorators !== null) {
-            if (clazz.decorators !== undefined) {
+            if (clazz.hasOwnProperty('decorators') && clazz.decorators !== undefined) {
                 (_a = clazz.decorators).push.apply(_a, __spread(decorators));
             }
             else {
@@ -59114,7 +59114,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.0+7.sha-8a08ff1');
+    var VERSION$3 = new Version$1('8.0.0-beta.0+8.sha-1f7d3b9');
 
     /**
      * @license
