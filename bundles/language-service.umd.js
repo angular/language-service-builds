@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.0+12.sha-5a582a8
+ * @license Angular v8.0.0-beta.0+11.sha-e172e97
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -15445,7 +15445,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.0+12.sha-5a582a8');
+    var VERSION$1 = new Version('8.0.0-beta.0+11.sha-e172e97');
 
     /**
      * @license
@@ -33529,16 +33529,16 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         while (tNode) {
             var nextTNode = null;
             if (tNode.type === 3 /* Element */) {
-                executeNodeAction(action, renderer, renderParent, getNativeByTNode(tNode, currentView), tNode, beforeNode);
+                executeNodeAction(action, renderer, renderParent, getNativeByTNode(tNode, currentView), beforeNode);
                 var nodeOrContainer = currentView[tNode.index];
                 if (isLContainer(nodeOrContainer)) {
                     // This element has an LContainer, and its comment needs to be handled
-                    executeNodeAction(action, renderer, renderParent, nodeOrContainer[NATIVE], tNode, beforeNode);
+                    executeNodeAction(action, renderer, renderParent, nodeOrContainer[NATIVE], beforeNode);
                 }
             }
             else if (tNode.type === 0 /* Container */) {
                 var lContainer = currentView[tNode.index];
-                executeNodeAction(action, renderer, renderParent, lContainer[NATIVE], tNode, beforeNode);
+                executeNodeAction(action, renderer, renderParent, lContainer[NATIVE], beforeNode);
                 if (lContainer[VIEWS].length) {
                     currentView = lContainer[VIEWS][0];
                     nextTNode = currentView[TVIEW].node;
@@ -33604,12 +33604,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * NOTE: for performance reasons, the possible actions are inlined within the function instead of
      * being passed as an argument.
      */
-    function executeNodeAction(action, renderer, parent, node, tNode, beforeNode) {
+    function executeNodeAction(action, renderer, parent, node, beforeNode) {
         if (action === 0 /* Insert */) {
             nativeInsertBefore(renderer, parent, node, beforeNode || null);
         }
         else if (action === 1 /* Detach */) {
-            nativeRemoveChild(renderer, parent, node, isComponent(tNode));
+            nativeRemoveChild(renderer, parent, node);
         }
         else if (action === 2 /* Destroy */) {
             ngDevMode && ngDevMode.rendererDestroyNode++;
@@ -33836,8 +33836,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * Removes a native child node from a given native parent node.
      */
-    function nativeRemoveChild(renderer, parent, child, isHostElement) {
-        isProceduralRenderer(renderer) ? renderer.removeChild(parent, child, isHostElement) :
+    function nativeRemoveChild(renderer, parent, child) {
+        isProceduralRenderer(renderer) ? renderer.removeChild(parent, child) :
             parent.removeChild(child);
     }
 
@@ -35409,7 +35409,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.0+12.sha-5a582a8');
+    var VERSION$2 = new Version$1('8.0.0-beta.0+11.sha-e172e97');
 
     /**
      * @license
@@ -51132,7 +51132,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.0+12.sha-5a582a8');
+    var VERSION$3 = new Version$1('8.0.0-beta.0+11.sha-e172e97');
 
     /**
      * @license
