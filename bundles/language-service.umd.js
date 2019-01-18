@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.0+15.sha-73616ab
+ * @license Angular v8.0.0-beta.0+18.sha-a58fd21
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -3365,6 +3365,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         Identifiers.elementEnd = { name: 'ɵelementEnd', moduleName: CORE$1 };
         Identifiers.elementProperty = { name: 'ɵelementProperty', moduleName: CORE$1 };
         Identifiers.componentHostSyntheticProperty = { name: 'ɵcomponentHostSyntheticProperty', moduleName: CORE$1 };
+        Identifiers.componentHostSyntheticListener = { name: 'ɵcomponentHostSyntheticListener', moduleName: CORE$1 };
         Identifiers.elementAttribute = { name: 'ɵelementAttribute', moduleName: CORE$1 };
         Identifiers.elementClassProp = { name: 'ɵelementClassProp', moduleName: CORE$1 };
         Identifiers.elementContainerStart = { name: 'ɵelementContainerStart', moduleName: CORE$1 };
@@ -15158,7 +15159,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 bindingName;
             var handlerName = meta.name && bindingName ? meta.name + "_" + bindingFnName + "_HostBindingHandler" : null;
             var params = prepareEventListenerParameters(BoundEvent.fromParsedEvent(binding), bindingContext, handlerName);
-            return importExpr(Identifiers$1.listener).callFn(params).toStmt();
+            var instruction = binding.type == 1 /* Animation */ ? Identifiers$1.componentHostSyntheticListener : Identifiers$1.listener;
+            return importExpr(instruction).callFn(params).toStmt();
         });
     }
     function metadataAsSummary(meta) {
@@ -15430,7 +15432,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.0+15.sha-73616ab');
+    var VERSION$1 = new Version('8.0.0-beta.0+18.sha-a58fd21');
 
     /**
      * @license
@@ -37685,6 +37687,33 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     function listener(eventName, listenerFn, useCapture, eventTargetResolver) {
         if (useCapture === void 0) { useCapture = false; }
+        listenerInternal(eventName, listenerFn, useCapture, eventTargetResolver);
+    }
+    /**
+     * Registers a synthetic host listener (e.g. `(@foo.start)`) on a component.
+     *
+     * This instruction is for compatibility purposes and is designed to ensure that a
+     * synthetic host listener (e.g. `@HostListener('@foo.start')`) properly gets rendered
+     * in the component's renderer. Normally all host listeners are evaluated with the
+     * parent component's renderer, but, in the case of animation @triggers, they need
+     * to be evaluated with the sub component's renderer (because that's where the
+     * animation triggers are defined).
+     *
+     * Do not use this instruction as a replacement for `listener`. This instruction
+     * only exists to ensure compatibility with the ViewEngine's host binding behavior.
+     *
+     * @param eventName Name of the event
+     * @param listenerFn The function to be called when event emits
+     * @param useCapture Whether or not to use capture in event listener
+     * @param eventTargetResolver Function that returns global target information in case this listener
+     * should be attached to a global object like window, document or body
+     */
+    function componentHostSyntheticListener(eventName, listenerFn, useCapture, eventTargetResolver) {
+        if (useCapture === void 0) { useCapture = false; }
+        listenerInternal(eventName, listenerFn, useCapture, eventTargetResolver, loadComponentRenderer);
+    }
+    function listenerInternal(eventName, listenerFn, useCapture, eventTargetResolver, loadRendererFn) {
+        if (useCapture === void 0) { useCapture = false; }
         var lView = getLView();
         var tNode = getPreviousOrParentTNode();
         var tView = lView[TVIEW];
@@ -37697,7 +37726,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var resolved = eventTargetResolver ? eventTargetResolver(native) : {};
             var target = resolved.target || native;
             ngDevMode && ngDevMode.rendererAddEventListener++;
-            var renderer = lView[RENDERER];
+            var renderer = loadRendererFn ? loadRendererFn(tNode, lView) : lView[RENDERER];
             var lCleanup = getCleanup(lView);
             var lCleanupIndex = lCleanup.length;
             var useCaptureOrSubIdx = useCapture;
@@ -37861,7 +37890,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * synthetic host binding (e.g. `@HostBinding('@foo')`) properly gets rendered in
      * the component's renderer. Normally all host bindings are evaluated with the parent
      * component's renderer, but, in the case of animation @triggers, they need to be
-     * evaluated with the sub components renderer (because that's where the animation
+     * evaluated with the sub component's renderer (because that's where the animation
      * triggers are defined).
      *
      * Do not use this instruction as a replacement for `elementProperty`. This instruction
@@ -37877,10 +37906,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     function componentHostSyntheticProperty(index, propName, value, sanitizer, nativeOnly) {
         elementPropertyInternal(index, propName, value, sanitizer, nativeOnly, loadComponentRenderer);
-    }
-    function loadComponentRenderer(tNode, lView) {
-        var componentLView = lView[tNode.index];
-        return componentLView[RENDERER];
     }
     function elementPropertyInternal(index, propName, value, sanitizer, nativeOnly, loadRendererFn) {
         if (value === NO_CHANGE)
@@ -39514,6 +39539,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function getTViewCleanup(view) {
         return view[TVIEW].cleanup || (view[TVIEW].cleanup = []);
     }
+    /**
+     * There are cases where the sub component's renderer needs to be included
+     * instead of the current renderer (see the componentSyntheticHost* instructions).
+     */
+    function loadComponentRenderer(tNode, lView) {
+        var componentLView = lView[tNode.index];
+        return componentLView[RENDERER];
+    }
 
     /**
      * @license
@@ -40867,7 +40900,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.0+15.sha-73616ab');
+    var VERSION$2 = new Version$1('8.0.0-beta.0+18.sha-a58fd21');
 
     /**
      * @license
@@ -46873,6 +46906,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         'ɵprojection': projection,
         'ɵelementProperty': elementProperty,
         'ɵcomponentHostSyntheticProperty': componentHostSyntheticProperty,
+        'ɵcomponentHostSyntheticListener': componentHostSyntheticListener,
         'ɵpipeBind1': pipeBind1,
         'ɵpipeBind2': pipeBind2,
         'ɵpipeBind3': pipeBind3,
@@ -59105,7 +59139,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.0+15.sha-73616ab');
+    var VERSION$3 = new Version$1('8.0.0-beta.0+18.sha-a58fd21');
 
     /**
      * @license
