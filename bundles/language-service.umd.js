@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.0+3.sha-808898d
+ * @license Angular v8.0.0-beta.0+21.sha-45bf911
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -3380,6 +3380,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         Identifiers.elementEnd = { name: 'ɵelementEnd', moduleName: CORE$1 };
         Identifiers.elementProperty = { name: 'ɵelementProperty', moduleName: CORE$1 };
         Identifiers.componentHostSyntheticProperty = { name: 'ɵcomponentHostSyntheticProperty', moduleName: CORE$1 };
+        Identifiers.componentHostSyntheticListener = { name: 'ɵcomponentHostSyntheticListener', moduleName: CORE$1 };
         Identifiers.elementAttribute = { name: 'ɵelementAttribute', moduleName: CORE$1 };
         Identifiers.elementClassProp = { name: 'ɵelementClassProp', moduleName: CORE$1 };
         Identifiers.elementContainerStart = { name: 'ɵelementContainerStart', moduleName: CORE$1 };
@@ -4831,16 +4832,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
     function prepareSyntheticListenerName(name, phase) {
         return "" + ANIMATE_SYMBOL_PREFIX + name + "." + phase;
-    }
-    function getSyntheticPropertyName(name) {
-        // this will strip out listener phase values...
-        // @foo.start => @foo
-        var i = name.indexOf('.');
-        name = i > 0 ? name.substring(0, i) : name;
-        if (name.charAt(0) !== ANIMATE_SYMBOL_PREFIX) {
-            name = ANIMATE_SYMBOL_PREFIX + name;
-        }
-        return name;
     }
     function prepareSyntheticListenerFunctionName(name, phase) {
         return "animation_" + name + "_" + phase;
@@ -8611,7 +8602,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
              *  Whether or not there are any styling bindings present
              *  (i.e. `[style]`, `[class]`, `[style.prop]` or `[class.name]`)
              */
-            this._hasBindings = false;
+            this.hasBindings = false;
             /** the input for [class] (if it exists) */
             this._classMapInput = null;
             /** the input for [style] (if it exists) */
@@ -8641,7 +8632,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             // this is checked each time new styles are encountered
             this._useDefaultSanitizer = false;
         }
-        StylingBuilder.prototype.hasBindingsOrInitialValues = function () { return this._hasBindings || this._hasInitialValues; };
         /**
          * Registers a given input to the styling builder to be later used when producing AOT code.
          *
@@ -8687,7 +8677,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 this._styleMapInput = entry;
             }
             this._lastStylingInput = entry;
-            this._hasBindings = true;
+            this.hasBindings = true;
             return entry;
         };
         StylingBuilder.prototype.registerClassInput = function (className, value, sourceSpan) {
@@ -8700,7 +8690,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 this._classMapInput = entry;
             }
             this._lastStylingInput = entry;
-            this._hasBindings = true;
+            this.hasBindings = true;
             return entry;
         };
         /**
@@ -8756,6 +8746,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 return {
                     sourceSpan: sourceSpan,
                     reference: Identifiers$1.elementHostAttrs,
+                    allocateBindingSlots: 0,
                     buildParams: function () {
                         _this.populateInitialStylingAttrs(attrs);
                         return [_this._directiveExpr, getConstantLiteralFromArray(constantPool, attrs)];
@@ -8772,9 +8763,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
          */
         StylingBuilder.prototype.buildElementStylingInstruction = function (sourceSpan, constantPool) {
             var _this = this;
-            if (this._hasBindings) {
+            if (this.hasBindings) {
                 return {
                     sourceSpan: sourceSpan,
+                    allocateBindingSlots: 0,
                     reference: Identifiers$1.elementStyling,
                     buildParams: function () {
                         // a string array of every style-based binding
@@ -8826,14 +8818,22 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var _this = this;
             if (this._classMapInput || this._styleMapInput) {
                 var stylingInput = this._classMapInput || this._styleMapInput;
+                var totalBindingSlotsRequired = 0;
                 // these values must be outside of the update block so that they can
                 // be evaluted (the AST visit call) during creation time so that any
                 // pipes can be picked up in time before the template is built
                 var mapBasedClassValue_1 = this._classMapInput ? this._classMapInput.value.visit(valueConverter) : null;
+                if (mapBasedClassValue_1 instanceof Interpolation) {
+                    totalBindingSlotsRequired += mapBasedClassValue_1.expressions.length;
+                }
                 var mapBasedStyleValue_1 = this._styleMapInput ? this._styleMapInput.value.visit(valueConverter) : null;
+                if (mapBasedStyleValue_1 instanceof Interpolation) {
+                    totalBindingSlotsRequired += mapBasedStyleValue_1.expressions.length;
+                }
                 return {
                     sourceSpan: stylingInput.sourceSpan,
                     reference: Identifiers$1.elementStylingMap,
+                    allocateBindingSlots: totalBindingSlotsRequired,
                     buildParams: function (convertFn) {
                         var params = [_this._elementIndexExpr];
                         if (mapBasedClassValue_1) {
@@ -8859,12 +8859,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         StylingBuilder.prototype._buildSingleInputs = function (reference, inputs, mapIndex, allowUnits, valueConverter) {
             var _this = this;
+            var totalBindingSlotsRequired = 0;
             return inputs.map(function (input) {
                 var bindingIndex = mapIndex.get(input.name);
                 var value = input.value.visit(valueConverter);
+                totalBindingSlotsRequired += (value instanceof Interpolation) ? value.expressions.length : 0;
                 return {
                     sourceSpan: input.sourceSpan,
-                    reference: reference,
+                    allocateBindingSlots: totalBindingSlotsRequired, reference: reference,
                     buildParams: function (convertFn) {
                         var params = [_this._elementIndexExpr, literal(bindingIndex), convertFn(value)];
                         if (allowUnits) {
@@ -8900,6 +8902,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             return {
                 sourceSpan: this._lastStylingInput ? this._lastStylingInput.sourceSpan : null,
                 reference: Identifiers$1.elementStylingApply,
+                allocateBindingSlots: 0,
                 buildParams: function () {
                     var params = [_this._elementIndexExpr];
                     if (_this._directiveExpr) {
@@ -8915,7 +8918,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
          */
         StylingBuilder.prototype.buildUpdateLevelInstructions = function (valueConverter) {
             var instructions = [];
-            if (this._hasBindings) {
+            if (this.hasBindings) {
                 var mapInstruction = this.buildElementStylingMapInstruction(valueConverter);
                 if (mapInstruction) {
                     instructions.push(mapInstruction);
@@ -13788,7 +13791,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             outputAttrs.forEach(function (attr) { return attributes.push(literal(attr.name), literal(attr.value)); });
             // this will build the instructions so that they fall into the following syntax
             // add attributes for directive matching purposes
-            attributes.push.apply(attributes, __spread(this.prepareSyntheticAndSelectOnlyAttrs(allOtherInputs, element.outputs, stylingBuilder)));
+            attributes.push.apply(attributes, __spread(this.prepareSelectOnlyAttrs(allOtherInputs, element.outputs, stylingBuilder)));
             parameters.push(this.toAttrsParam(attributes));
             // local refs (ex.: <div #foo #bar="baz">)
             parameters.push(this.prepareRefsParameter(element.references));
@@ -13811,10 +13814,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 }
                 return element.children.length > 0;
             };
-            var createSelfClosingInstruction = !stylingBuilder.hasBindingsOrInitialValues() &&
-                !isNgContainer$$1 && element.outputs.length === 0 && i18nAttrs.length === 0 && !hasChildren();
+            var createSelfClosingInstruction = !stylingBuilder.hasBindings && !isNgContainer$$1 &&
+                element.outputs.length === 0 && i18nAttrs.length === 0 && !hasChildren();
             var createSelfClosingI18nInstruction = !createSelfClosingInstruction &&
-                !stylingBuilder.hasBindingsOrInitialValues() && hasTextChildrenOnly(element.children);
+                !stylingBuilder.hasBindings && hasTextChildrenOnly(element.children);
             if (createSelfClosingInstruction) {
                 this.creationInstruction(element.sourceSpan, Identifiers$1.element, trimTrailingNulls(parameters));
             }
@@ -13878,8 +13881,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             // `elementStylingMap`, `elementClassProp` and `elementStylingApply` are all generated
             // and assign in the code below.
             stylingBuilder.buildUpdateLevelInstructions(this._valueConverter).forEach(function (instruction) {
+                _this._bindingSlots += instruction.allocateBindingSlots;
                 _this.processStylingInstruction(implicit, instruction, false);
             });
+            // the reason why `undefined` is used is because the renderer understands this as a
+            // special value to symbolize that there is no RHS to this binding
+            // TODO (matsko): revisit this once FW-959 is approached
+            var emptyValueBindInstruction = importExpr(Identifiers$1.bind).callFn([literal(undefined)]);
             // Generate element input bindings
             allOtherInputs.forEach(function (input) {
                 var instruction = mapBindingToInstruction(input.type);
@@ -13890,21 +13898,19 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     // 2. [@binding]="{value:fooExp, params:{...}}"
                     // 3. [@binding]
                     // 4. @binding
-                    // only formats 1. and 2. include the actual binding of a value to
-                    // an expression and therefore only those should be the only two that
-                    // are allowed. The check below ensures that a binding with no expression
-                    // does not get an empty `elementProperty` instruction created for it.
-                    var hasValue = value_1 && (value_1 instanceof LiteralPrimitive) ? !!value_1.value : true;
-                    if (hasValue) {
-                        _this.allocateBindingSlots(value_1);
-                        var bindingName_1 = prepareSyntheticPropertyName(input.name);
-                        _this.updateInstruction(input.sourceSpan, Identifiers$1.elementProperty, function () {
-                            return [
-                                literal(elementIndex), literal(bindingName_1),
-                                _this.convertPropertyBinding(implicit, value_1)
-                            ];
-                        });
-                    }
+                    // All formats will be valid for when a synthetic binding is created.
+                    // The reasoning for this is because the renderer should get each
+                    // synthetic binding value in the order of the array that they are
+                    // defined in...
+                    var hasValue_1 = value_1 instanceof LiteralPrimitive ? !!value_1.value : true;
+                    _this.allocateBindingSlots(value_1);
+                    var bindingName_1 = prepareSyntheticPropertyName(input.name);
+                    _this.updateInstruction(input.sourceSpan, Identifiers$1.elementProperty, function () {
+                        return [
+                            literal(elementIndex), literal(bindingName_1),
+                            (hasValue_1 ? _this.convertPropertyBinding(implicit, value_1) : emptyValueBindInstruction)
+                        ];
+                    });
                 }
                 else if (instruction) {
                     var value_2 = input.value.visit(_this._valueConverter);
@@ -13963,7 +13969,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             // prepare attributes parameter (including attributes used for directive matching)
             var attrsExprs = [];
             template.attributes.forEach(function (a) { attrsExprs.push(asLiteral(a.name), asLiteral(a.value)); });
-            attrsExprs.push.apply(attrsExprs, __spread(this.prepareSyntheticAndSelectOnlyAttrs(template.inputs, template.outputs)));
+            attrsExprs.push.apply(attrsExprs, __spread(this.prepareSelectOnlyAttrs(template.inputs, template.outputs)));
             parameters.push(this.toAttrsParam(attrsExprs));
             // local refs (ex.: <ng-template #foo>)
             if (template.references && template.references.length) {
@@ -14150,17 +14156,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
          *   STYLES, style1, value1, style2, value2,
          *   SELECT_ONLY, name1, name2, name2, ...]
          * ```
+         *
+         * Note that this function will fully ignore all synthetic (@foo) attribute values
+         * because those values are intended to always be generated as property instructions.
          */
-        TemplateDefinitionBuilder.prototype.prepareSyntheticAndSelectOnlyAttrs = function (inputs, outputs, styles) {
-            var attrExprs = [];
-            var nonSyntheticInputs = [];
+        TemplateDefinitionBuilder.prototype.prepareSelectOnlyAttrs = function (inputs, outputs, styles) {
             var alreadySeen = new Set();
-            function isASTWithSource(ast) {
-                return ast instanceof ASTWithSource;
-            }
-            function isLiteralPrimitive(ast) {
-                return ast instanceof LiteralPrimitive;
-            }
+            var attrExprs = [];
             function addAttrExpr(key, value) {
                 if (typeof key === 'string') {
                     if (!alreadySeen.has(key)) {
@@ -14175,40 +14177,33 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     attrExprs.push(literal(key));
                 }
             }
-            if (inputs.length) {
-                var EMPTY_STRING_EXPR_1 = asLiteral('');
-                inputs.forEach(function (input) {
-                    if (input.type === 4 /* Animation */) {
-                        // @attributes are for Renderer2 animation @triggers, but this feature
-                        // may be supported differently in future versions of angular. However,
-                        // @triggers should always just be treated as regular attributes (it's up
-                        // to the renderer to detect and use them in a special way).
-                        var valueExp = input.value;
-                        if (isASTWithSource(valueExp)) {
-                            var literal$$1 = valueExp.ast;
-                            if (isLiteralPrimitive(literal$$1) && literal$$1.value === undefined) {
-                                addAttrExpr(prepareSyntheticPropertyName(input.name), EMPTY_STRING_EXPR_1);
-                            }
-                        }
-                    }
-                    else {
-                        nonSyntheticInputs.push(input);
-                    }
-                });
-            }
             // it's important that this occurs before SelectOnly because once `elementStart`
             // comes across the SelectOnly marker then it will continue reading each value as
             // as single property value cell by cell.
             if (styles) {
                 styles.populateInitialStylingAttrs(attrExprs);
             }
-            if (nonSyntheticInputs.length || outputs.length) {
-                addAttrExpr(3 /* SelectOnly */);
-                nonSyntheticInputs.forEach(function (i) { return addAttrExpr(i.name); });
-                outputs.forEach(function (o) {
-                    var name = o.type === 1 /* Animation */ ? getSyntheticPropertyName(o.name) : o.name;
-                    addAttrExpr(name);
-                });
+            if (inputs.length || outputs.length) {
+                var attrsStartIndex = attrExprs.length;
+                for (var i = 0; i < inputs.length; i++) {
+                    var input = inputs[i];
+                    if (input.type !== 4 /* Animation */) {
+                        addAttrExpr(input.name);
+                    }
+                }
+                for (var i = 0; i < outputs.length; i++) {
+                    var output = outputs[i];
+                    if (output.type !== 1 /* Animation */) {
+                        addAttrExpr(output.name);
+                    }
+                }
+                // this is a cheap way of adding the marker only after all the input/output
+                // values have been filtered (by not including the animation ones) and added
+                // to the expressions. The marker is important because it tells the runtime
+                // code that this is where attributes without values start...
+                if (attrExprs.length) {
+                    attrExprs.splice(attrsStartIndex, 0, literal(3 /* SelectOnly */));
+                }
             }
             return attrExprs;
         };
@@ -15105,7 +15100,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             if (hostInstruction) {
                 createStatements.push(createStylingStmt(hostInstruction, bindingContext, bindingFn));
             }
-            if (styleBuilder.hasBindingsOrInitialValues()) {
+            if (styleBuilder.hasBindings) {
                 // singular style/class bindings (things like `[style.prop]` and `[class.name]`)
                 // MUST be registered on a given element within the component/directive
                 // templateFn/hostBindingsFn functions. The instruction below will figure out
@@ -15179,7 +15174,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 bindingName;
             var handlerName = meta.name && bindingName ? meta.name + "_" + bindingFnName + "_HostBindingHandler" : null;
             var params = prepareEventListenerParameters(BoundEvent.fromParsedEvent(binding), bindingContext, handlerName);
-            return importExpr(Identifiers$1.listener).callFn(params).toStmt();
+            var instruction = binding.type == 1 /* Animation */ ? Identifiers$1.componentHostSyntheticListener : Identifiers$1.listener;
+            return importExpr(instruction).callFn(params).toStmt();
         });
     }
     function metadataAsSummary(meta) {
@@ -15451,7 +15447,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.0+3.sha-808898d');
+    var VERSION$1 = new Version('8.0.0-beta.0+21.sha-45bf911');
 
     /**
      * @license
@@ -30582,10 +30578,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
              * Set of values instantiated by this injector which contain `ngOnDestroy` lifecycle hooks.
              */
             this.onDestroy = new Set();
-            /**
-             * Flag indicating that this injector was previously destroyed.
-             */
-            this.destroyed = false;
+            this._destroyed = false;
             // Start off by creating Records for every provider declared in every InjectorType
             // included transitively in `def`.
             var dedupStack = [];
@@ -30599,6 +30592,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             // Eagerly instantiate the InjectorType classes themselves.
             this.injectorDefTypes.forEach(function (defType) { return _this.get(defType); });
         }
+        Object.defineProperty(R3Injector.prototype, "destroyed", {
+            /**
+             * Flag indicating that this injector was previously destroyed.
+             */
+            get: function () { return this._destroyed; },
+            enumerable: true,
+            configurable: true
+        });
         /**
          * Destroy the injector and release references to every instance or provider associated with it.
          *
@@ -30608,7 +30609,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         R3Injector.prototype.destroy = function () {
             this.assertNotDestroyed();
             // Set destroyed = true first, in case lifecycle hooks re-enter destroy().
-            this.destroyed = true;
+            this._destroyed = true;
             try {
                 // Call all the lifecycle hooks.
                 this.onDestroy.forEach(function (service) { return service.ngOnDestroy(); });
@@ -30658,7 +30659,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
         };
         R3Injector.prototype.assertNotDestroyed = function () {
-            if (this.destroyed) {
+            if (this._destroyed) {
                 throw new Error('Injector has already been destroyed.');
             }
         };
@@ -33535,16 +33536,16 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         while (tNode) {
             var nextTNode = null;
             if (tNode.type === 3 /* Element */) {
-                executeNodeAction(action, renderer, renderParent, getNativeByTNode(tNode, currentView), beforeNode);
+                executeNodeAction(action, renderer, renderParent, getNativeByTNode(tNode, currentView), tNode, beforeNode);
                 var nodeOrContainer = currentView[tNode.index];
                 if (isLContainer(nodeOrContainer)) {
                     // This element has an LContainer, and its comment needs to be handled
-                    executeNodeAction(action, renderer, renderParent, nodeOrContainer[NATIVE], beforeNode);
+                    executeNodeAction(action, renderer, renderParent, nodeOrContainer[NATIVE], tNode, beforeNode);
                 }
             }
             else if (tNode.type === 0 /* Container */) {
                 var lContainer = currentView[tNode.index];
-                executeNodeAction(action, renderer, renderParent, lContainer[NATIVE], beforeNode);
+                executeNodeAction(action, renderer, renderParent, lContainer[NATIVE], tNode, beforeNode);
                 if (lContainer[VIEWS].length) {
                     currentView = lContainer[VIEWS][0];
                     nextTNode = currentView[TVIEW].node;
@@ -33610,12 +33611,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * NOTE: for performance reasons, the possible actions are inlined within the function instead of
      * being passed as an argument.
      */
-    function executeNodeAction(action, renderer, parent, node, beforeNode) {
+    function executeNodeAction(action, renderer, parent, node, tNode, beforeNode) {
         if (action === 0 /* Insert */) {
             nativeInsertBefore(renderer, parent, node, beforeNode || null);
         }
         else if (action === 1 /* Detach */) {
-            nativeRemoveChild(renderer, parent, node);
+            nativeRemoveChild(renderer, parent, node, isComponent(tNode));
         }
         else if (action === 2 /* Destroy */) {
             ngDevMode && ngDevMode.rendererDestroyNode++;
@@ -33842,8 +33843,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * Removes a native child node from a given native parent node.
      */
-    function nativeRemoveChild(renderer, parent, child) {
-        isProceduralRenderer(renderer) ? renderer.removeChild(parent, child) :
+    function nativeRemoveChild(renderer, parent, child, isHostElement) {
+        isProceduralRenderer(renderer) ? renderer.removeChild(parent, child, isHostElement) :
             parent.removeChild(child);
     }
 
@@ -34171,11 +34172,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var rendererFactory = hostView[RENDERER_FACTORY];
         var oldView = enterView(hostView, hostView[HOST_NODE]);
         var normalExecutionPath = !getCheckNoChangesMode();
+        var creationModeIsActive = isCreationMode(hostView);
         try {
-            if (normalExecutionPath && rendererFactory.begin) {
+            if (normalExecutionPath && !creationModeIsActive && rendererFactory.begin) {
                 rendererFactory.begin();
             }
-            if (isCreationMode(hostView)) {
+            if (creationModeIsActive) {
                 // creation mode pass
                 if (templateFn) {
                     namespaceHTML();
@@ -34189,7 +34191,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             refreshDescendantViews(hostView);
         }
         finally {
-            if (normalExecutionPath && rendererFactory.end) {
+            if (normalExecutionPath && !creationModeIsActive && rendererFactory.end) {
                 rendererFactory.end();
             }
             leaveView(oldView);
@@ -35414,7 +35416,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.0+3.sha-808898d');
+    var VERSION$2 = new Version$1('8.0.0-beta.0+21.sha-45bf911');
 
     /**
      * @license
@@ -35541,8 +35543,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var component;
             var tElementNode;
             try {
-                if (rendererFactory.begin)
-                    rendererFactory.begin();
                 var componentView = createRootComponentView(hostRNode, this.componentDef, rootLView, rendererFactory, renderer);
                 tElementNode = getTNode(0, rootLView);
                 // Transform the arrays of native nodes into a structure that can be consumed by the
@@ -35582,8 +35582,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
             finally {
                 leaveView(oldLView);
-                if (rendererFactory.end)
-                    rendererFactory.end();
             }
             var componentRef = new ComponentRef$1(this.componentType, component, createElementRef(ElementRef, tElementNode, rootLView), rootLView, tElementNode);
             if (isInternalRootView) {
@@ -35626,7 +35624,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             ngDevMode && assertDefined(this.destroyCbs, 'NgModule already destroyed');
             this.destroyCbs.forEach(function (fn) { return fn(); });
             this.destroyCbs = null;
-            this.hostView.destroy();
+            !this.hostView.destroyed && this.hostView.destroy();
         };
         ComponentRef$$1.prototype.onDestroy = function (callback) {
             ngDevMode && assertDefined(this.destroyCbs, 'NgModule already destroyed');
@@ -35712,6 +35710,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         });
         NgModuleRef$$1.prototype.destroy = function () {
             ngDevMode && assertDefined(this.destroyCbs, 'NgModule already destroyed');
+            var injector = this._r3Injector;
+            !injector.destroyed && injector.destroy();
             this.destroyCbs.forEach(function (fn) { return fn(); });
             this.destroyCbs = null;
         };
@@ -51141,7 +51141,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.0+3.sha-808898d');
+    var VERSION$3 = new Version$1('8.0.0-beta.0+21.sha-45bf911');
 
     /**
      * @license
