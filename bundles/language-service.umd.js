@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.0+19.sha-2b9cc85
+ * @license Angular v8.0.0-beta.0+20.sha-ab2bf83
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -15447,7 +15447,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.0+19.sha-2b9cc85');
+    var VERSION$1 = new Version('8.0.0-beta.0+20.sha-ab2bf83');
 
     /**
      * @license
@@ -30578,10 +30578,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
              * Set of values instantiated by this injector which contain `ngOnDestroy` lifecycle hooks.
              */
             this.onDestroy = new Set();
-            /**
-             * Flag indicating that this injector was previously destroyed.
-             */
-            this.destroyed = false;
+            this._destroyed = false;
             // Start off by creating Records for every provider declared in every InjectorType
             // included transitively in `def`.
             var dedupStack = [];
@@ -30595,6 +30592,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             // Eagerly instantiate the InjectorType classes themselves.
             this.injectorDefTypes.forEach(function (defType) { return _this.get(defType); });
         }
+        Object.defineProperty(R3Injector.prototype, "destroyed", {
+            /**
+             * Flag indicating that this injector was previously destroyed.
+             */
+            get: function () { return this._destroyed; },
+            enumerable: true,
+            configurable: true
+        });
         /**
          * Destroy the injector and release references to every instance or provider associated with it.
          *
@@ -30604,7 +30609,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         R3Injector.prototype.destroy = function () {
             this.assertNotDestroyed();
             // Set destroyed = true first, in case lifecycle hooks re-enter destroy().
-            this.destroyed = true;
+            this._destroyed = true;
             try {
                 // Call all the lifecycle hooks.
                 this.onDestroy.forEach(function (service) { return service.ngOnDestroy(); });
@@ -30654,7 +30659,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
         };
         R3Injector.prototype.assertNotDestroyed = function () {
-            if (this.destroyed) {
+            if (this._destroyed) {
                 throw new Error('Injector has already been destroyed.');
             }
         };
@@ -35411,7 +35416,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.0+19.sha-2b9cc85');
+    var VERSION$2 = new Version$1('8.0.0-beta.0+20.sha-ab2bf83');
 
     /**
      * @license
@@ -35619,7 +35624,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             ngDevMode && assertDefined(this.destroyCbs, 'NgModule already destroyed');
             this.destroyCbs.forEach(function (fn) { return fn(); });
             this.destroyCbs = null;
-            this.hostView.destroy();
+            !this.hostView.destroyed && this.hostView.destroy();
         };
         ComponentRef$$1.prototype.onDestroy = function (callback) {
             ngDevMode && assertDefined(this.destroyCbs, 'NgModule already destroyed');
@@ -35705,6 +35710,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         });
         NgModuleRef$$1.prototype.destroy = function () {
             ngDevMode && assertDefined(this.destroyCbs, 'NgModule already destroyed');
+            var injector = this._r3Injector;
+            !injector.destroyed && injector.destroy();
             this.destroyCbs.forEach(function (fn) { return fn(); });
             this.destroyCbs = null;
         };
@@ -51134,7 +51141,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.0+19.sha-2b9cc85');
+    var VERSION$3 = new Version$1('8.0.0-beta.0+20.sha-ab2bf83');
 
     /**
      * @license
