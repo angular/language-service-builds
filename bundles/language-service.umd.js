@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.0+15.sha-73616ab
+ * @license Angular v8.0.0-beta.0+18.sha-a58fd21
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -3380,6 +3380,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         Identifiers.elementEnd = { name: 'ɵelementEnd', moduleName: CORE$1 };
         Identifiers.elementProperty = { name: 'ɵelementProperty', moduleName: CORE$1 };
         Identifiers.componentHostSyntheticProperty = { name: 'ɵcomponentHostSyntheticProperty', moduleName: CORE$1 };
+        Identifiers.componentHostSyntheticListener = { name: 'ɵcomponentHostSyntheticListener', moduleName: CORE$1 };
         Identifiers.elementAttribute = { name: 'ɵelementAttribute', moduleName: CORE$1 };
         Identifiers.elementClassProp = { name: 'ɵelementClassProp', moduleName: CORE$1 };
         Identifiers.elementContainerStart = { name: 'ɵelementContainerStart', moduleName: CORE$1 };
@@ -15173,7 +15174,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 bindingName;
             var handlerName = meta.name && bindingName ? meta.name + "_" + bindingFnName + "_HostBindingHandler" : null;
             var params = prepareEventListenerParameters(BoundEvent.fromParsedEvent(binding), bindingContext, handlerName);
-            return importExpr(Identifiers$1.listener).callFn(params).toStmt();
+            var instruction = binding.type == 1 /* Animation */ ? Identifiers$1.componentHostSyntheticListener : Identifiers$1.listener;
+            return importExpr(instruction).callFn(params).toStmt();
         });
     }
     function metadataAsSummary(meta) {
@@ -15445,7 +15447,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.0+15.sha-73616ab');
+    var VERSION$1 = new Version('8.0.0-beta.0+18.sha-a58fd21');
 
     /**
      * @license
@@ -35409,7 +35411,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.0+15.sha-73616ab');
+    var VERSION$2 = new Version$1('8.0.0-beta.0+18.sha-a58fd21');
 
     /**
      * @license
@@ -51132,7 +51134,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.0+15.sha-73616ab');
+    var VERSION$3 = new Version$1('8.0.0-beta.0+18.sha-a58fd21');
 
     /**
      * @license
