@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.2.0+170.sha-f1fb62d
+ * @license Angular v8.0.0-beta.0+3.sha-808898d
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -8747,17 +8747,16 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
          * Builds an instruction with all the expressions and parameters for `elementHostAttrs`.
          *
          * The instruction generation code below is used for producing the AOT statement code which is
-         * responsible for registering initial styles (within a directive hostBindings' creation block)
-         * to the directive host element.
+         * responsible for registering initial styles (within a directive hostBindings' creation block),
+         * as well as any of the provided attribute values, to the directive host element.
          */
-        StylingBuilder.prototype.buildDirectiveHostAttrsInstruction = function (sourceSpan, constantPool) {
+        StylingBuilder.prototype.buildHostAttrsInstruction = function (sourceSpan, attrs, constantPool) {
             var _this = this;
-            if (this._hasInitialValues && this._directiveExpr) {
+            if (this._directiveExpr && (attrs.length || this._hasInitialValues)) {
                 return {
                     sourceSpan: sourceSpan,
                     reference: Identifiers$1.elementHostAttrs,
                     buildParams: function () {
-                        var attrs = [];
                         _this.populateInitialStylingAttrs(attrs);
                         return [_this._directiveExpr, getConstantLiteralFromArray(constantPool, attrs)];
                     }
@@ -13824,9 +13823,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 if (isNonBindableMode) {
                     this.creationInstruction(element.sourceSpan, Identifiers$1.disableBindings);
                 }
-                if (isI18nRootElement) {
-                    this.i18nStart(element.sourceSpan, element.i18n, createSelfClosingI18nInstruction);
-                }
                 // process i18n element attributes
                 if (i18nAttrs.length) {
                     var hasBindings_1 = false;
@@ -13860,6 +13856,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                         }
                     }
                 }
+                // Note: it's important to keep i18n/i18nStart instructions after i18nAttributes ones,
+                // to make sure i18nAttributes instruction targets current element at runtime.
+                if (isI18nRootElement) {
+                    this.i18nStart(element.sourceSpan, element.i18n, createSelfClosingI18nInstruction);
+                }
                 // The style bindings code is placed into two distinct blocks within the template function AOT
                 // code: creation and update. The creation code contains the `elementStyling` instructions
                 // which will apply the collected binding values to the element. `elementStyling` is
@@ -13885,7 +13886,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 if (input.type === 4 /* Animation */) {
                     var value_1 = input.value.visit(_this._valueConverter);
                     // animation bindings can be presented in the following formats:
-                    // 1j [@binding]="fooExp"
+                    // 1. [@binding]="fooExp"
                     // 2. [@binding]="{value:fooExp, params:{...}}"
                     // 3. [@binding]
                     // 4. @binding
@@ -14710,10 +14711,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     break;
             }
         }
-        // e.g. `attributes: ['role', 'listbox']`
-        definitionMap.set('attributes', createHostAttributesArray(allOtherAttributes));
         // e.g. `hostBindings: (rf, ctx, elIndex) => { ... }
-        definitionMap.set('hostBindings', createHostBindingsFunction(meta, elVarExp, contextVarExp, styleBuilder, bindingParser, constantPool, hostVarsCount));
+        definitionMap.set('hostBindings', createHostBindingsFunction(meta, elVarExp, contextVarExp, allOtherAttributes, styleBuilder, bindingParser, constantPool, hostVarsCount));
         // e.g 'inputs: {a: 'a'}`
         definitionMap.set('inputs', conditionallyCreateMapObjectLiteral(meta.inputs, true));
         // e.g 'outputs: {a: 'a'}`
@@ -14884,7 +14883,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function createDirectiveSelector(selector) {
         return asLiteral(parseSelectorToR3Selector(selector));
     }
-    function createHostAttributesArray(attributes) {
+    function convertAttributesToExpressions(attributes) {
         var e_2, _a;
         var values = [];
         try {
@@ -14901,10 +14900,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
             finally { if (e_2) throw e_2.error; }
         }
-        if (values.length > 0) {
-            return literalArr(values);
-        }
-        return null;
+        return values;
     }
     // Return a contentQueries function or null if one is not necessary.
     function createContentQueriesFunction(meta, constantPool) {
@@ -15009,7 +15005,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         ], INFERRED_TYPE, null, viewQueryFnName);
     }
     // Return a host binding function or null if one is not necessary.
-    function createHostBindingsFunction(meta, elVarExp, bindingContext, styleBuilder, bindingParser, constantPool, hostVarsCount) {
+    function createHostBindingsFunction(meta, elVarExp, bindingContext, staticAttributesAndValues, styleBuilder, bindingParser, constantPool, hostVarsCount) {
         var e_3, _a;
         var createStatements = [];
         var updateStatements = [];
@@ -15097,16 +15093,19 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 }
                 finally { if (e_3) throw e_3.error; }
             }
+            // since we're dealing with directives/components and both have hostBinding
+            // functions, we need to generate a special hostAttrs instruction that deals
+            // with both the assignment of styling as well as static attributes to the host
+            // element. The instruction below will instruct all initial styling (styling
+            // that is inside of a host binding within a directive/component) to be attached
+            // to the host element alongside any of the provided host attributes that were
+            // collected earlier.
+            var hostAttrs = convertAttributesToExpressions(staticAttributesAndValues);
+            var hostInstruction = styleBuilder.buildHostAttrsInstruction(null, hostAttrs, constantPool);
+            if (hostInstruction) {
+                createStatements.push(createStylingStmt(hostInstruction, bindingContext, bindingFn));
+            }
             if (styleBuilder.hasBindingsOrInitialValues()) {
-                // since we're dealing with directives here and directives have a hostBinding
-                // function, we need to generate special instructions that deal with styling
-                // (both bindings and initial values). The instruction below will instruct
-                // all initial styling (styling that is inside of a host binding within a
-                // directive) to be attached to the host element of the directive.
-                var hostAttrsInstruction = styleBuilder.buildDirectiveHostAttrsInstruction(null, constantPool);
-                if (hostAttrsInstruction) {
-                    createStatements.push(createStylingStmt(hostAttrsInstruction, bindingContext, bindingFn));
-                }
                 // singular style/class bindings (things like `[style.prop]` and `[class.name]`)
                 // MUST be registered on a given element within the component/directive
                 // templateFn/hostBindingsFn functions. The instruction below will figure out
@@ -15452,7 +15451,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.2.0+170.sha-f1fb62d');
+    var VERSION$1 = new Version('8.0.0-beta.0+3.sha-808898d');
 
     /**
      * @license
@@ -29236,7 +29235,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      *
      * Use an `InjectionToken` whenever the type you are injecting is not reified (does not have a
      * runtime representation) such as when injecting an interface, callable type, array or
-     * parametrized type.
+     * parameterized type.
      *
      * `InjectionToken` is parameterized on `T` which is the type of object which will be returned by
      * the `Injector`. This provides additional level of type safety.
@@ -32831,11 +32830,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var tNode = lView[TVIEW].data[nodeIndex];
         if (tNode && tNode.localNames) {
             var result = {};
+            var localIndex = tNode.index + 1;
             for (var i = 0; i < tNode.localNames.length; i += 2) {
-                var localRefName = tNode.localNames[i];
-                var directiveIndex = tNode.localNames[i + 1];
-                result[localRefName] =
-                    directiveIndex === -1 ? getNativeByTNode(tNode, lView) : lView[directiveIndex];
+                result[tNode.localNames[i]] = lView[localIndex];
+                localIndex++;
             }
             return result;
         }
@@ -33237,6 +33235,30 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * Determine if the argument is shaped like a Promise
+     */
+    function isPromise$1(obj) {
+        // allow any Promise/A+ compliant thenable.
+        // It's up to the caller to ensure that obj.then conforms to the spec
+        return !!obj && typeof obj.then === 'function';
+    }
+    /**
+     * Determine if the argument is an Observable
+     */
+    function isObservable(obj) {
+        // TODO: use isObservable once we update pass rxjs 6.1
+        // https://github.com/ReactiveX/rxjs/blob/master/CHANGELOG.md#610-2018-05-03
+        return !!obj && typeof obj.subscribe === 'function';
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     function normalizeDebugBindingName(name) {
         // Attribute names with `$` (eg `x-y$`) are valid per spec, but unsupported by some browsers
         name = camelCaseToDashCase(name.replace(/[$@]/g, '_'));
@@ -33436,7 +33458,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var NG_PROJECT_AS_ATTR_NAME = 'ngProjectAs';
 
     /**
      * @license
@@ -33827,14 +33848,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
 
     /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-
-    /**
      * Combines the binding value and a factory for an animation player.
      *
      * Used to bind a player to an element template binding (currently only
@@ -33858,7 +33871,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var ANIMATION_PROP_PREFIX = '@';
     function createEmptyStylingContext(element, sanitizer, initialStyles, initialClasses) {
         return [
             0,
@@ -33924,9 +33936,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return Array.isArray(value) && typeof value[0 /* MasterFlagPosition */] === 'number' &&
             Array.isArray(value[2 /* InitialStyleValuesPosition */]);
     }
-    function isAnimationProp(name) {
-        return name[0] === ANIMATION_PROP_PREFIX;
-    }
 
     function isClassBasedValue(context, index) {
         var adjustedIndex = index >= 9 /* SingleStylesStartPosition */ ? (index + 0 /* FlagsOffset */) : index;
@@ -33938,6 +33947,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function getProp(context, index) {
         return context[index + 1 /* PropertyOffset */];
     }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
 
     /**
      * @license
@@ -34123,8 +34140,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function renderEmbeddedTemplate(viewToRender, tView, context) {
         var _isParent = getIsParent();
         var _previousOrParentTNode = getPreviousOrParentTNode();
-        setIsParent(true);
-        setPreviousOrParentTNode(null);
         var oldView;
         if (viewToRender[FLAGS] & 128 /* IsRoot */) {
             // This is a root view inside the view tree
@@ -34292,50 +34307,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         blueprint[BINDING_INDEX] = bindingStartIndex;
         return blueprint;
     }
-    function setUpAttributes(native, attrs) {
-        var renderer = getLView()[RENDERER];
-        var isProc = isProceduralRenderer(renderer);
-        var i = 0;
-        while (i < attrs.length) {
-            var attrName = attrs[i++];
-            if (typeof attrName == 'number') {
-                if (attrName === 0 /* NamespaceURI */) {
-                    // Namespaced attributes
-                    var namespaceURI = attrs[i++];
-                    var attrName_1 = attrs[i++];
-                    var attrVal = attrs[i++];
-                    ngDevMode && ngDevMode.rendererSetAttribute++;
-                    isProc ?
-                        renderer
-                            .setAttribute(native, attrName_1, attrVal, namespaceURI) :
-                        native.setAttributeNS(namespaceURI, attrName_1, attrVal);
-                }
-                else {
-                    // All other `AttributeMarker`s are ignored here.
-                    break;
-                }
-            }
-            else {
-                /// attrName is string;
-                var attrVal = attrs[i++];
-                if (attrName !== NG_PROJECT_AS_ATTR_NAME) {
-                    // Standard attributes
-                    ngDevMode && ngDevMode.rendererSetAttribute++;
-                    if (isAnimationProp(attrName)) {
-                        if (isProc) {
-                            renderer.setProperty(native, attrName, attrVal);
-                        }
-                    }
-                    else {
-                        isProc ?
-                            renderer
-                                .setAttribute(native, attrName, attrVal) :
-                            native.setAttribute(attrName, attrVal);
-                    }
-                }
-            }
-        }
-    }
     function createError(text, token) {
         return new Error("Renderer: " + text + " [" + renderStringify(token) + "]");
     }
@@ -34457,10 +34428,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         attachPatchData(directive, lView);
         if (native) {
             attachPatchData(native, lView);
-        }
-        // TODO(misko): setUpAttributes should be a feature for better treeshakability.
-        if (def.attributes != null && previousOrParentTNode.type == 3 /* Element */) {
-            setUpAttributes(native, def.attributes);
         }
     }
     /** Stores index of component's host element so it will be queued for view refresh during CD. */
@@ -35447,7 +35414,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.2.0+170.sha-f1fb62d');
+    var VERSION$2 = new Version$1('8.0.0-beta.0+3.sha-808898d');
 
     /**
      * @license
@@ -38196,7 +38163,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
 
     var isArrayLike = (function (x) { return x && typeof x.length === 'number' && typeof x !== 'function'; });
 
-    function isPromise$1(value) {
+    function isPromise$2(value) {
         return value && typeof value.subscribe !== 'function' && typeof value.then === 'function';
     }
 
@@ -38219,7 +38186,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         else if (isArrayLike(result)) {
             return subscribeToArray(result);
         }
-        else if (isPromise$1(result)) {
+        else if (isPromise$2(result)) {
             return subscribeToPromise(result);
         }
         else if (result && typeof result[iterator] === 'function') {
@@ -38425,7 +38392,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             if (isInteropObservable(input)) {
                 return fromObservable(input, scheduler);
             }
-            else if (isPromise$1(input)) {
+            else if (isPromise$2(input)) {
                 return fromPromise(input, scheduler);
             }
             else if (isArrayLike(input)) {
@@ -43361,30 +43328,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * found in the LICENSE file at https://angular.io/license
      */
     /**
-     * Determine if the argument is shaped like a Promise
-     */
-    function isPromise$2(obj) {
-        // allow any Promise/A+ compliant thenable.
-        // It's up to the caller to ensure that obj.then conforms to the spec
-        return !!obj && typeof obj.then === 'function';
-    }
-    /**
-     * Determine if the argument is an Observable
-     */
-    function isObservable$1(obj) {
-        // TODO: use isObservable once we update pass rxjs 6.1
-        // https://github.com/ReactiveX/rxjs/blob/master/CHANGELOG.md#610-2018-05-03
-        return !!obj && typeof obj.subscribe === 'function';
-    }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
      * A function that will be executed when an application is initialized.
      *
      * @publicApi
@@ -43420,7 +43363,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             if (this.appInits) {
                 for (var i = 0; i < this.appInits.length; i++) {
                     var initResult = this.appInits[i]();
-                    if (isPromise$2(initResult)) {
+                    if (isPromise$1(initResult)) {
                         asyncInitPromises.push(initResult);
                     }
                 }
@@ -44578,7 +44521,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function _callAndReportToErrorHandler(errorHandler, ngZone, callback) {
         try {
             var result = callback();
-            if (isPromise$2(result)) {
+            if (isPromise$1(result)) {
                 return result.catch(function (e) {
                     ngZone.runOutsideAngular(function () { return errorHandler.handleError(e); });
                     // rethrow as the exception handler might not do it
@@ -48195,7 +48138,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             for (var i = 0; i < def.outputs.length; i++) {
                 var output = def.outputs[i];
                 var outputObservable = instance[output.propName];
-                if (isObservable$1(outputObservable)) {
+                if (isObservable(outputObservable)) {
                     var subscription = outputObservable.subscribe(eventHandlerClosure(view, def.parent.nodeIndex, output.eventName));
                     view.disposables[def.outputIndex + i] = subscription.unsubscribe.bind(subscription);
                 }
@@ -51009,152 +50952,56 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             return host.getTemplateReferences();
         }
     }
-    function create(info /* ts.server.PluginCreateInfo */) {
-        // Create the proxy
-        var proxy = Object.create(null);
-        var oldLS = info.languageService;
-        function tryCall(fileName, callback) {
-            if (fileName && !oldLS.getProgram().getSourceFile(fileName)) {
-                return undefined;
-            }
-            try {
-                return callback();
-            }
-            catch (_a) {
-                return undefined;
-            }
-        }
-        function tryFilenameCall(m) {
-            return function (fileName) { return tryCall(fileName, function () { return (m.call(ls, fileName)); }); };
-        }
-        function tryFilenameOneCall(m) {
-            return function (fileName, p) { return tryCall(fileName, function () { return (m.call(ls, fileName, p)); }); };
-        }
-        function tryFilenameTwoCall(m) {
-            return function (fileName, p1, p2) { return tryCall(fileName, function () { return (m.call(ls, fileName, p1, p2)); }); };
-        }
-        function tryFilenameThreeCall(m) {
-            return function (fileName, p1, p2, p3) { return tryCall(fileName, function () { return (m.call(ls, fileName, p1, p2, p3)); }); };
-        }
-        function tryFilenameFiveCall(m) {
-            return function (fileName, p1, p2, p3, p4, p5) {
-                return tryCall(fileName, function () { return (m.call(ls, fileName, p1, p2, p3, p4, p5)); });
-            };
-        }
-        function typescriptOnly(ls) {
-            var languageService = {
-                cleanupSemanticCache: function () { return ls.cleanupSemanticCache(); },
-                getSyntacticDiagnostics: tryFilenameCall(ls.getSyntacticDiagnostics),
-                getSemanticDiagnostics: tryFilenameCall(ls.getSemanticDiagnostics),
-                getCompilerOptionsDiagnostics: function () { return ls.getCompilerOptionsDiagnostics(); },
-                getSyntacticClassifications: tryFilenameOneCall(ls.getSemanticClassifications),
-                getSemanticClassifications: tryFilenameOneCall(ls.getSemanticClassifications),
-                getEncodedSyntacticClassifications: tryFilenameOneCall(ls.getEncodedSyntacticClassifications),
-                getEncodedSemanticClassifications: tryFilenameOneCall(ls.getEncodedSemanticClassifications),
-                getCompletionsAtPosition: tryFilenameTwoCall(ls.getCompletionsAtPosition),
-                getCompletionEntryDetails: tryFilenameFiveCall(ls.getCompletionEntryDetails),
-                getCompletionEntrySymbol: tryFilenameThreeCall(ls.getCompletionEntrySymbol),
-                getJsxClosingTagAtPosition: tryFilenameOneCall(ls.getJsxClosingTagAtPosition),
-                getQuickInfoAtPosition: tryFilenameOneCall(ls.getQuickInfoAtPosition),
-                getNameOrDottedNameSpan: tryFilenameTwoCall(ls.getNameOrDottedNameSpan),
-                getBreakpointStatementAtPosition: tryFilenameOneCall(ls.getBreakpointStatementAtPosition),
-                getSignatureHelpItems: tryFilenameTwoCall(ls.getSignatureHelpItems),
-                getRenameInfo: tryFilenameOneCall(ls.getRenameInfo),
-                findRenameLocations: tryFilenameThreeCall(ls.findRenameLocations),
-                getDefinitionAtPosition: tryFilenameOneCall(ls.getDefinitionAtPosition),
-                getTypeDefinitionAtPosition: tryFilenameOneCall(ls.getTypeDefinitionAtPosition),
-                getImplementationAtPosition: tryFilenameOneCall(ls.getImplementationAtPosition),
-                getReferencesAtPosition: tryFilenameOneCall(ls.getReferencesAtPosition),
-                findReferences: tryFilenameOneCall(ls.findReferences),
-                getDocumentHighlights: tryFilenameTwoCall(ls.getDocumentHighlights),
-                /** @deprecated */
-                getOccurrencesAtPosition: tryFilenameOneCall(ls.getOccurrencesAtPosition),
-                getNavigateToItems: function (searchValue, maxResultCount, fileName, excludeDtsFiles) { return tryCall(fileName, function () { return ls.getNavigateToItems(searchValue, maxResultCount, fileName, excludeDtsFiles); }); },
-                getNavigationBarItems: tryFilenameCall(ls.getNavigationBarItems),
-                getNavigationTree: tryFilenameCall(ls.getNavigationTree),
-                getOutliningSpans: tryFilenameCall(ls.getOutliningSpans),
-                getTodoComments: tryFilenameOneCall(ls.getTodoComments),
-                getBraceMatchingAtPosition: tryFilenameOneCall(ls.getBraceMatchingAtPosition),
-                getIndentationAtPosition: tryFilenameTwoCall(ls.getIndentationAtPosition),
-                getFormattingEditsForRange: tryFilenameThreeCall(ls.getFormattingEditsForRange),
-                getFormattingEditsForDocument: tryFilenameOneCall(ls.getFormattingEditsForDocument),
-                getFormattingEditsAfterKeystroke: tryFilenameThreeCall(ls.getFormattingEditsAfterKeystroke),
-                getDocCommentTemplateAtPosition: tryFilenameOneCall(ls.getDocCommentTemplateAtPosition),
-                isValidBraceCompletionAtPosition: tryFilenameTwoCall(ls.isValidBraceCompletionAtPosition),
-                getSpanOfEnclosingComment: tryFilenameTwoCall(ls.getSpanOfEnclosingComment),
-                getCodeFixesAtPosition: tryFilenameFiveCall(ls.getCodeFixesAtPosition),
-                applyCodeActionCommand: (function (action) { return tryCall(undefined, function () { return ls.applyCodeActionCommand(action); }); }),
-                getEmitOutput: tryFilenameCall(ls.getEmitOutput),
-                getProgram: function () { return ls.getProgram(); },
-                dispose: function () { return ls.dispose(); },
-                getApplicableRefactors: tryFilenameTwoCall(ls.getApplicableRefactors),
-                getEditsForRefactor: tryFilenameFiveCall(ls.getEditsForRefactor),
-                getDefinitionAndBoundSpan: tryFilenameOneCall(ls.getDefinitionAndBoundSpan),
-                getCombinedCodeFix: function (scope, fixId, formatOptions, preferences) {
-                    return tryCall(undefined, function () { return ls.getCombinedCodeFix(scope, fixId, formatOptions, preferences); });
-                },
-                // TODO(kyliau): dummy implementation to compile with ts 2.8, create real one
-                getSuggestionDiagnostics: function (fileName) { return []; },
-                // TODO(kyliau): dummy implementation to compile with ts 2.8, create real one
-                organizeImports: function (scope, formatOptions) { return []; },
-                // TODO: dummy implementation to compile with ts 2.9, create a real one
-                getEditsForFileRename: function (oldFilePath, newFilePath, formatOptions, preferences) { return []; }
-            };
-            return languageService;
-        }
-        oldLS = typescriptOnly(oldLS);
-        var _loop_1 = function (k) {
-            proxy[k] = function () { return oldLS[k].apply(oldLS, arguments); };
+    function completionToEntry(c) {
+        return {
+            // TODO: remove any and fix type error.
+            kind: c.kind,
+            name: c.name,
+            sortText: c.sort,
+            kindModifiers: ''
         };
-        for (var k in oldLS) {
-            _loop_1(k);
+    }
+    function diagnosticChainToDiagnosticChain(chain) {
+        return {
+            messageText: chain.message,
+            category: ts.DiagnosticCategory.Error,
+            code: 0,
+            next: chain.next ? diagnosticChainToDiagnosticChain(chain.next) : undefined
+        };
+    }
+    function diagnosticMessageToDiagnosticMessageText(message) {
+        if (typeof message === 'string') {
+            return message;
         }
-        function completionToEntry(c) {
-            return {
-                // TODO: remove any and fix type error.
-                kind: c.kind,
-                name: c.name,
-                sortText: c.sort,
-                kindModifiers: ''
-            };
-        }
-        function diagnosticChainToDiagnosticChain(chain) {
-            return {
-                messageText: chain.message,
-                category: ts.DiagnosticCategory.Error,
-                code: 0,
-                next: chain.next ? diagnosticChainToDiagnosticChain(chain.next) : undefined
-            };
-        }
-        function diagnosticMessageToDiagnosticMessageText(message) {
-            if (typeof message === 'string') {
-                return message;
-            }
-            return diagnosticChainToDiagnosticChain(message);
-        }
-        function diagnosticToDiagnostic(d, file) {
-            var result = {
-                file: file,
-                start: d.span.start,
-                length: d.span.end - d.span.start,
-                messageText: diagnosticMessageToDiagnosticMessageText(d.message),
-                category: ts.DiagnosticCategory.Error,
-                code: 0,
-                source: 'ng'
-            };
-            return result;
-        }
+        return diagnosticChainToDiagnosticChain(message);
+    }
+    function diagnosticToDiagnostic(d, file) {
+        var result = {
+            file: file,
+            start: d.span.start,
+            length: d.span.end - d.span.start,
+            messageText: diagnosticMessageToDiagnosticMessageText(d.message),
+            category: ts.DiagnosticCategory.Error,
+            code: 0,
+            source: 'ng'
+        };
+        return result;
+    }
+    function create(info /* ts.server.PluginCreateInfo */) {
+        var oldLS = info.languageService;
+        var proxy = Object.assign({}, oldLS);
+        var logger = info.project.projectService.logger;
         function tryOperation(attempting, callback) {
             try {
                 return callback();
             }
             catch (e) {
-                info.project.projectService.logger.info("Failed to " + attempting + ": " + e.toString());
-                info.project.projectService.logger.info("Stack trace: " + e.stack);
+                logger.info("Failed to " + attempting + ": " + e.toString());
+                logger.info("Stack trace: " + e.stack);
                 return null;
             }
         }
-        var serviceHost = new TypeScriptServiceHost(info.languageServiceHost, info.languageService);
+        var serviceHost = new TypeScriptServiceHost(info.languageServiceHost, oldLS);
         var ls = createLanguageService(serviceHost);
         serviceHost.setSite(ls);
         projectHostMap.set(info.project, serviceHost);
@@ -51234,7 +51081,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var result = oldLS.getSemanticDiagnostics(fileName);
             var base = result || [];
             tryOperation('get diagnostics', function () {
-                info.project.projectService.logger.info("Computing Angular semantic diagnostics...");
+                logger.info("Computing Angular semantic diagnostics...");
                 var ours = ls.getDiagnostics(fileName);
                 if (ours && ours.length) {
                     var file_1 = oldLS.getProgram().getSourceFile(fileName);
@@ -51294,7 +51141,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.2.0+170.sha-f1fb62d');
+    var VERSION$3 = new Version$1('8.0.0-beta.0+3.sha-808898d');
 
     /**
      * @license
