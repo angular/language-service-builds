@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.0+15.sha-7220bfd
+ * @license Angular v8.0.0-beta.0+25.sha-218110a
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -3380,6 +3380,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         Identifiers.elementEnd = { name: 'ɵelementEnd', moduleName: CORE$1 };
         Identifiers.elementProperty = { name: 'ɵelementProperty', moduleName: CORE$1 };
         Identifiers.componentHostSyntheticProperty = { name: 'ɵcomponentHostSyntheticProperty', moduleName: CORE$1 };
+        Identifiers.componentHostSyntheticListener = { name: 'ɵcomponentHostSyntheticListener', moduleName: CORE$1 };
         Identifiers.elementAttribute = { name: 'ɵelementAttribute', moduleName: CORE$1 };
         Identifiers.elementClassProp = { name: 'ɵelementClassProp', moduleName: CORE$1 };
         Identifiers.elementContainerStart = { name: 'ɵelementContainerStart', moduleName: CORE$1 };
@@ -15173,7 +15174,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 bindingName;
             var handlerName = meta.name && bindingName ? meta.name + "_" + bindingFnName + "_HostBindingHandler" : null;
             var params = prepareEventListenerParameters(BoundEvent.fromParsedEvent(binding), bindingContext, handlerName);
-            return importExpr(Identifiers$1.listener).callFn(params).toStmt();
+            var instruction = binding.type == 1 /* Animation */ ? Identifiers$1.componentHostSyntheticListener : Identifiers$1.listener;
+            return importExpr(instruction).callFn(params).toStmt();
         });
     }
     function metadataAsSummary(meta) {
@@ -15445,7 +15447,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.0+15.sha-7220bfd');
+    var VERSION$1 = new Version('8.0.0-beta.0+25.sha-218110a');
 
     /**
      * @license
@@ -30576,10 +30578,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
              * Set of values instantiated by this injector which contain `ngOnDestroy` lifecycle hooks.
              */
             this.onDestroy = new Set();
-            /**
-             * Flag indicating that this injector was previously destroyed.
-             */
-            this.destroyed = false;
+            this._destroyed = false;
             // Start off by creating Records for every provider declared in every InjectorType
             // included transitively in `def`.
             var dedupStack = [];
@@ -30593,6 +30592,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             // Eagerly instantiate the InjectorType classes themselves.
             this.injectorDefTypes.forEach(function (defType) { return _this.get(defType); });
         }
+        Object.defineProperty(R3Injector.prototype, "destroyed", {
+            /**
+             * Flag indicating that this injector was previously destroyed.
+             */
+            get: function () { return this._destroyed; },
+            enumerable: true,
+            configurable: true
+        });
         /**
          * Destroy the injector and release references to every instance or provider associated with it.
          *
@@ -30602,7 +30609,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         R3Injector.prototype.destroy = function () {
             this.assertNotDestroyed();
             // Set destroyed = true first, in case lifecycle hooks re-enter destroy().
-            this.destroyed = true;
+            this._destroyed = true;
             try {
                 // Call all the lifecycle hooks.
                 this.onDestroy.forEach(function (service) { return service.ngOnDestroy(); });
@@ -30652,7 +30659,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
         };
         R3Injector.prototype.assertNotDestroyed = function () {
-            if (this.destroyed) {
+            if (this._destroyed) {
                 throw new Error('Injector has already been destroyed.');
             }
         };
@@ -35409,7 +35416,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.0+15.sha-7220bfd');
+    var VERSION$2 = new Version$1('8.0.0-beta.0+25.sha-218110a');
 
     /**
      * @license
@@ -35617,7 +35624,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             ngDevMode && assertDefined(this.destroyCbs, 'NgModule already destroyed');
             this.destroyCbs.forEach(function (fn) { return fn(); });
             this.destroyCbs = null;
-            this.hostView.destroy();
+            !this.hostView.destroyed && this.hostView.destroy();
         };
         ComponentRef$$1.prototype.onDestroy = function (callback) {
             ngDevMode && assertDefined(this.destroyCbs, 'NgModule already destroyed');
@@ -35703,6 +35710,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         });
         NgModuleRef$$1.prototype.destroy = function () {
             ngDevMode && assertDefined(this.destroyCbs, 'NgModule already destroyed');
+            var injector = this._r3Injector;
+            !injector.destroyed && injector.destroy();
             this.destroyCbs.forEach(function (fn) { return fn(); });
             this.destroyCbs = null;
         };
@@ -51132,7 +51141,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.0+15.sha-7220bfd');
+    var VERSION$3 = new Version$1('8.0.0-beta.0+25.sha-218110a');
 
     /**
      * @license
