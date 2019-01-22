@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.0+29.sha-6bd20e8
+ * @license Angular v8.0.0-beta.0+31.sha-058aafc
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -15432,7 +15432,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.0+29.sha-6bd20e8');
+    var VERSION$1 = new Version('8.0.0-beta.0+31.sha-058aafc');
 
     /**
      * @license
@@ -35577,7 +35577,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function isStylingContext(value) {
         // Not an LView or an LContainer
         return Array.isArray(value) && typeof value[0 /* MasterFlagPosition */] === 'number' &&
-            Array.isArray(value[2 /* InitialStyleValuesPosition */]);
+            value.length !== LCONTAINER_LENGTH;
     }
     function isAnimationProp(name) {
         return name[0] === ANIMATION_PROP_PREFIX;
@@ -40905,7 +40905,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.0+29.sha-6bd20e8');
+    var VERSION$2 = new Version$1('8.0.0-beta.0+31.sha-058aafc');
 
     /**
      * @license
@@ -59146,7 +59146,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.0+29.sha-6bd20e8');
+    var VERSION$3 = new Version$1('8.0.0-beta.0+31.sha-058aafc');
 
     /**
      * @license
