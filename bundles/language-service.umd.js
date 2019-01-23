@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.1+6.sha-583061d
+ * @license Angular v8.0.0-beta.1+1.sha-1fd6735
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -13962,9 +13962,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var parameters = [
                 literal(templateIndex),
                 variable(templateName),
-                // We don't care about the tag's namespace here, because we infer
-                // it based on the parent nodes inside the template instruction.
-                literal(template.tagName ? splitNsName(template.tagName)[1] : template.tagName),
+                literal(template.tagName),
             ];
             // find directives matching on a given <ng-template> node
             this.matchDirectives('ng-template', template);
@@ -15449,7 +15447,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.1+6.sha-583061d');
+    var VERSION$1 = new Version('8.0.0-beta.1+1.sha-1fd6735');
 
     /**
      * @license
@@ -33531,7 +33529,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Insert.
      */
     function walkTNodeTree(viewToWalk, action, renderer, renderParent, beforeNode) {
-        var e_1, _a;
         var rootTNode = viewToWalk[TVIEW].node;
         var projectionNodeIndex = -1;
         var currentView = viewToWalk;
@@ -33561,31 +33558,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 var componentView = findComponentView(currentView);
                 var componentHost = componentView[HOST_NODE];
                 var head = componentHost.projection[tNode.projection];
-                if (Array.isArray(head)) {
-                    try {
-                        for (var head_1 = __values(head), head_1_1 = head_1.next(); !head_1_1.done; head_1_1 = head_1.next()) {
-                            var nativeNode = head_1_1.value;
-                            executeNodeAction(action, renderer, renderParent, nativeNode, tNode, beforeNode);
-                        }
-                    }
-                    catch (e_1_1) { e_1 = { error: e_1_1 }; }
-                    finally {
-                        try {
-                            if (head_1_1 && !head_1_1.done && (_a = head_1.return)) _a.call(head_1);
-                        }
-                        finally { if (e_1) throw e_1.error; }
-                    }
-                }
-                else {
-                    // Must store both the TNode and the view because this projection node could be nested
-                    // deeply inside embedded views, and we need to get back down to this particular nested
-                    // view.
-                    projectionNodeStack[++projectionNodeIndex] = tNode;
-                    projectionNodeStack[++projectionNodeIndex] = currentView;
-                    if (head) {
-                        currentView = componentView[PARENT];
-                        nextTNode = currentView[TVIEW].data[head.index];
-                    }
+                // Must store both the TNode and the view because this projection node could be nested
+                // deeply inside embedded views, and we need to get back down to this particular nested view.
+                projectionNodeStack[++projectionNodeIndex] = tNode;
+                projectionNodeStack[++projectionNodeIndex] = currentView;
+                if (head) {
+                    currentView = componentView[PARENT];
+                    nextTNode = currentView[TVIEW].data[head.index];
                 }
             }
             else {
@@ -35437,7 +35416,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.1+6.sha-583061d');
+    var VERSION$2 = new Version$1('8.0.0-beta.1+1.sha-1fd6735');
 
     /**
      * @license
@@ -35566,12 +35545,33 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             try {
                 var componentView = createRootComponentView(hostRNode, this.componentDef, rootLView, rendererFactory, renderer);
                 tElementNode = getTNode(0, rootLView);
+                // Transform the arrays of native nodes into a structure that can be consumed by the
+                // projection instruction. This is needed to support the reprojection of these nodes.
                 if (projectableNodes) {
-                    // projectable nodes can be passed as array of arrays or an array of iterables (ngUpgrade
-                    // case). Here we do normalize passed data structure to be an array of arrays to avoid
-                    // complex checks down the line.
-                    tElementNode.projection =
-                        projectableNodes.map(function (nodesforSlot) { return Array.from(nodesforSlot); });
+                    var index = 0;
+                    var tView = rootLView[TVIEW];
+                    var projection$$1 = tElementNode.projection = [];
+                    for (var i = 0; i < projectableNodes.length; i++) {
+                        var nodeList = projectableNodes[i];
+                        var firstTNode = null;
+                        var previousTNode = null;
+                        for (var j = 0; j < nodeList.length; j++) {
+                            if (tView.firstTemplatePass) {
+                                // For dynamically created components such as ComponentRef, we create a new TView for
+                                // each insert. This is not ideal since we should be sharing the TViews.
+                                // Also the logic here should be shared with `component.ts`'s `renderComponent`
+                                // method.
+                                tView.expandoStartIndex++;
+                                tView.blueprint.splice(++index + HEADER_OFFSET, 0, null);
+                                tView.data.splice(index + HEADER_OFFSET, 0, null);
+                                rootLView.splice(index + HEADER_OFFSET, 0, null);
+                            }
+                            var tNode = createNodeAtIndex(index, 3 /* Element */, nodeList[j], null, null);
+                            previousTNode ? (previousTNode.next = tNode) : (firstTNode = tNode);
+                            previousTNode = tNode;
+                        }
+                        projection$$1.push(firstTNode);
+                    }
                 }
                 // TODO: should LifecycleHooksFeature and other host features be generated by the compiler and
                 // executed here?
@@ -51141,7 +51141,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.1+6.sha-583061d');
+    var VERSION$3 = new Version$1('8.0.0-beta.1+1.sha-1fd6735');
 
     /**
      * @license
