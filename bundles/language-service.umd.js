@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.1+13.sha-9098225
+ * @license Angular v8.0.0-beta.1+14.sha-22a43cf
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -15523,7 +15523,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.1+13.sha-9098225');
+    var VERSION$1 = new Version('8.0.0-beta.1+14.sha-22a43cf');
 
     /**
      * @license
@@ -36427,16 +36427,19 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             if (playerBuilder) {
                 playerBuilder.setValue(className, add);
             }
+            // DOMTokenList will throw if we try to add or remove an empty string.
         }
-        else if (add) {
-            ngDevMode && ngDevMode.rendererAddClass++;
-            isProceduralRenderer(renderer) ? renderer.addClass(native, className) :
-                native['classList'].add(className);
-        }
-        else {
-            ngDevMode && ngDevMode.rendererRemoveClass++;
-            isProceduralRenderer(renderer) ? renderer.removeClass(native, className) :
-                native['classList'].remove(className);
+        else if (className !== '') {
+            if (add) {
+                ngDevMode && ngDevMode.rendererAddClass++;
+                isProceduralRenderer(renderer) ? renderer.addClass(native, className) :
+                    native['classList'].add(className);
+            }
+            else {
+                ngDevMode && ngDevMode.rendererRemoveClass++;
+                isProceduralRenderer(renderer) ? renderer.removeClass(native, className) :
+                    native['classList'].remove(className);
+            }
         }
     }
     function setSanitizeFlag(context, index, sanitizeYes) {
@@ -40978,7 +40981,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.1+13.sha-9098225');
+    var VERSION$2 = new Version$1('8.0.0-beta.1+14.sha-22a43cf');
 
     /**
      * @license
@@ -59208,7 +59211,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.1+13.sha-9098225');
+    var VERSION$3 = new Version$1('8.0.0-beta.1+14.sha-22a43cf');
 
     /**
      * @license
