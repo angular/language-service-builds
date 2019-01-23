@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.1+1.sha-1fd6735
+ * @license Angular v8.0.0-beta.1+2.sha-d8f2318
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -13947,7 +13947,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var parameters = [
                 literal(templateIndex),
                 variable(templateName),
-                literal(template.tagName),
+                // We don't care about the tag's namespace here, because we infer
+                // it based on the parent nodes inside the template instruction.
+                literal(template.tagName ? splitNsName(template.tagName)[1] : template.tagName),
             ];
             // find directives matching on a given <ng-template> node
             this.matchDirectives('ng-template', template);
@@ -15432,7 +15434,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.1+1.sha-1fd6735');
+    var VERSION$1 = new Version('8.0.0-beta.1+2.sha-d8f2318');
 
     /**
      * @license
@@ -40905,7 +40907,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.1+1.sha-1fd6735');
+    var VERSION$2 = new Version$1('8.0.0-beta.1+2.sha-d8f2318');
 
     /**
      * @license
@@ -59146,7 +59148,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.1+1.sha-1fd6735');
+    var VERSION$3 = new Version$1('8.0.0-beta.1+2.sha-d8f2318');
 
     /**
      * @license
