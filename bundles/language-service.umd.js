@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.1+10.sha-5430d2b
+ * @license Angular v8.0.0-beta.1+6.sha-583061d
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -3481,7 +3481,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         Identifiers.query = { name: 'ɵquery', moduleName: CORE$1 };
         Identifiers.queryRefresh = { name: 'ɵqueryRefresh', moduleName: CORE$1 };
         Identifiers.registerContentQuery = { name: 'ɵregisterContentQuery', moduleName: CORE$1 };
-        Identifiers.NgOnChangesFeature = { name: 'ɵNgOnChangesFeature', moduleName: CORE$1 };
         Identifiers.InheritDefinitionFeature = { name: 'ɵInheritDefinitionFeature', moduleName: CORE$1 };
         Identifiers.ProvidersFeature = { name: 'ɵProvidersFeature', moduleName: CORE$1 };
         Identifiers.listener = { name: 'ɵlistener', moduleName: CORE$1 };
@@ -7465,63 +7464,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return BuiltinFunctionCall;
     }(FunctionCall));
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    var LifecycleHooks;
-    (function (LifecycleHooks) {
-        LifecycleHooks[LifecycleHooks["OnInit"] = 0] = "OnInit";
-        LifecycleHooks[LifecycleHooks["OnDestroy"] = 1] = "OnDestroy";
-        LifecycleHooks[LifecycleHooks["DoCheck"] = 2] = "DoCheck";
-        LifecycleHooks[LifecycleHooks["OnChanges"] = 3] = "OnChanges";
-        LifecycleHooks[LifecycleHooks["AfterContentInit"] = 4] = "AfterContentInit";
-        LifecycleHooks[LifecycleHooks["AfterContentChecked"] = 5] = "AfterContentChecked";
-        LifecycleHooks[LifecycleHooks["AfterViewInit"] = 6] = "AfterViewInit";
-        LifecycleHooks[LifecycleHooks["AfterViewChecked"] = 7] = "AfterViewChecked";
-    })(LifecycleHooks || (LifecycleHooks = {}));
-    var LIFECYCLE_HOOKS_VALUES = [
-        LifecycleHooks.OnInit, LifecycleHooks.OnDestroy, LifecycleHooks.DoCheck, LifecycleHooks.OnChanges,
-        LifecycleHooks.AfterContentInit, LifecycleHooks.AfterContentChecked, LifecycleHooks.AfterViewInit,
-        LifecycleHooks.AfterViewChecked
-    ];
-    function hasLifecycleHook(reflector, hook, token) {
-        return reflector.hasLifecycleHook(token, getHookName(hook));
-    }
-    function getAllLifecycleHooks(reflector, token) {
-        return LIFECYCLE_HOOKS_VALUES.filter(function (hook) { return hasLifecycleHook(reflector, hook, token); });
-    }
-    function getHookName(hook) {
-        switch (hook) {
-            case LifecycleHooks.OnInit:
-                return 'ngOnInit';
-            case LifecycleHooks.OnDestroy:
-                return 'ngOnDestroy';
-            case LifecycleHooks.DoCheck:
-                return 'ngDoCheck';
-            case LifecycleHooks.OnChanges:
-                return 'ngOnChanges';
-            case LifecycleHooks.AfterContentInit:
-                return 'ngAfterContentInit';
-            case LifecycleHooks.AfterContentChecked:
-                return 'ngAfterContentChecked';
-            case LifecycleHooks.AfterViewInit:
-                return 'ngAfterViewInit';
-            case LifecycleHooks.AfterViewChecked:
-                return 'ngAfterViewChecked';
-            default:
-                // This default case is not needed by TypeScript compiler, as the switch is exhaustive.
-                // However Closure Compiler does not understand that and reports an error in typed mode.
-                // The `throw new Error` below works around the problem, and the unexpected: never variable
-                // makes sure tsc still checks this code is unreachable.
-                var unexpected = hook;
-                throw new Error("unexpected " + unexpected);
-        }
-    }
 
     /**
      * @license
@@ -14714,7 +14656,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var EMPTY_ARRAY = [];
     // This regex matches any binding names that contain the "attr." prefix, e.g. "attr.required"
     // If there is a match, the first matching group will contain the attribute name to bind.
     var ATTR_REGEX = /attr\.([^\]]+)/;
@@ -14782,7 +14723,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Add features to the definition map.
      */
     function addFeatures(definitionMap, meta) {
-        // e.g. `features: [NgOnChangesFeature()]`
         var features = [];
         var providers = meta.providers;
         var viewProviders = meta.viewProviders;
@@ -14795,9 +14735,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         if (meta.usesInheritance) {
             features.push(importExpr(Identifiers$1.InheritDefinitionFeature));
-        }
-        if (meta.lifecycle.usesOnChanges) {
-            features.push(importExpr(Identifiers$1.NgOnChangesFeature).callFn(EMPTY_ARRAY));
         }
         if (features.length) {
             definitionMap.set('features', literalArr(features));
@@ -15512,7 +15449,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.1+10.sha-5430d2b');
+    var VERSION$1 = new Version('8.0.0-beta.1+6.sha-583061d');
 
     /**
      * @license
@@ -17760,6 +17697,63 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     var LOWERED_SYMBOL = /\u0275\d+/;
     function isLoweredSymbol(name) {
         return LOWERED_SYMBOL.test(name);
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    var LifecycleHooks;
+    (function (LifecycleHooks) {
+        LifecycleHooks[LifecycleHooks["OnInit"] = 0] = "OnInit";
+        LifecycleHooks[LifecycleHooks["OnDestroy"] = 1] = "OnDestroy";
+        LifecycleHooks[LifecycleHooks["DoCheck"] = 2] = "DoCheck";
+        LifecycleHooks[LifecycleHooks["OnChanges"] = 3] = "OnChanges";
+        LifecycleHooks[LifecycleHooks["AfterContentInit"] = 4] = "AfterContentInit";
+        LifecycleHooks[LifecycleHooks["AfterContentChecked"] = 5] = "AfterContentChecked";
+        LifecycleHooks[LifecycleHooks["AfterViewInit"] = 6] = "AfterViewInit";
+        LifecycleHooks[LifecycleHooks["AfterViewChecked"] = 7] = "AfterViewChecked";
+    })(LifecycleHooks || (LifecycleHooks = {}));
+    var LIFECYCLE_HOOKS_VALUES = [
+        LifecycleHooks.OnInit, LifecycleHooks.OnDestroy, LifecycleHooks.DoCheck, LifecycleHooks.OnChanges,
+        LifecycleHooks.AfterContentInit, LifecycleHooks.AfterContentChecked, LifecycleHooks.AfterViewInit,
+        LifecycleHooks.AfterViewChecked
+    ];
+    function hasLifecycleHook(reflector, hook, token) {
+        return reflector.hasLifecycleHook(token, getHookName(hook));
+    }
+    function getAllLifecycleHooks(reflector, token) {
+        return LIFECYCLE_HOOKS_VALUES.filter(function (hook) { return hasLifecycleHook(reflector, hook, token); });
+    }
+    function getHookName(hook) {
+        switch (hook) {
+            case LifecycleHooks.OnInit:
+                return 'ngOnInit';
+            case LifecycleHooks.OnDestroy:
+                return 'ngOnDestroy';
+            case LifecycleHooks.DoCheck:
+                return 'ngDoCheck';
+            case LifecycleHooks.OnChanges:
+                return 'ngOnChanges';
+            case LifecycleHooks.AfterContentInit:
+                return 'ngAfterContentInit';
+            case LifecycleHooks.AfterContentChecked:
+                return 'ngAfterContentChecked';
+            case LifecycleHooks.AfterViewInit:
+                return 'ngAfterViewInit';
+            case LifecycleHooks.AfterViewChecked:
+                return 'ngAfterViewChecked';
+            default:
+                // This default case is not needed by TypeScript compiler, as the switch is exhaustive.
+                // However Closure Compiler does not understand that and reports an error in typed mode.
+                // The `throw new Error` below works around the problem, and the unexpected: never variable
+                // makes sure tsc still checks this code is unreachable.
+                var unexpected = hook;
+                throw new Error("unexpected " + unexpected);
+        }
     }
 
     /**
@@ -31509,6 +31503,80 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * found in the LICENSE file at https://angular.io/license
      */
     /**
+     * Represents a basic change from a previous to a new value for a single
+     * property on a directive instance. Passed as a value in a
+     * {@link SimpleChanges} object to the `ngOnChanges` hook.
+     *
+     * @see `OnChanges`
+     *
+     * @publicApi
+     */
+    var SimpleChange = /** @class */ (function () {
+        function SimpleChange(previousValue, currentValue, firstChange) {
+            this.previousValue = previousValue;
+            this.currentValue = currentValue;
+            this.firstChange = firstChange;
+        }
+        /**
+         * Check whether the new value is the first value assigned.
+         */
+        SimpleChange.prototype.isFirstChange = function () { return this.firstChange; };
+        return SimpleChange;
+    }());
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * Checks an object to see if it's an exact instance of a particular type
+     * without traversing the inheritance hierarchy like `instanceof` does.
+     * @param obj The object to check
+     * @param type The type to check the object against
+     */
+    function isExactInstanceOf(obj, type) {
+        return obj != null && typeof obj == 'object' && Object.getPrototypeOf(obj) == type.prototype;
+    }
+    /**
+     * Checks to see if an object is an instance of {@link OnChangesDirectiveWrapper}
+     * @param obj the object to check (generally from `LView`)
+     */
+    function isOnChangesDirectiveWrapper(obj) {
+        return isExactInstanceOf(obj, OnChangesDirectiveWrapper);
+    }
+    /**
+     * Removes the `OnChangesDirectiveWrapper` if present.
+     *
+     * @param obj to unwrap.
+     */
+    function unwrapOnChangesDirectiveWrapper(obj) {
+        return isOnChangesDirectiveWrapper(obj) ? obj.instance : obj;
+    }
+    /**
+     * A class that wraps directive instances for storage in LView when directives
+     * have onChanges hooks to deal with.
+     */
+    var OnChangesDirectiveWrapper = /** @class */ (function () {
+        function OnChangesDirectiveWrapper(instance) {
+            this.instance = instance;
+            this.seenProps = new Set();
+            this.previous = {};
+            this.changes = null;
+        }
+        return OnChangesDirectiveWrapper;
+    }());
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
      * Used for stringify render output in Ivy.
      */
     function renderStringify(value) {
@@ -31747,7 +31815,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function registerPreOrderHooks(directiveIndex, directiveDef, tView) {
         ngDevMode &&
             assertEqual(tView.firstTemplatePass, true, 'Should only be called on first template pass');
-        var onInit = directiveDef.onInit, doCheck = directiveDef.doCheck;
+        var onChanges = directiveDef.onChanges, onInit = directiveDef.onInit, doCheck = directiveDef.doCheck;
+        if (onChanges) {
+            (tView.initHooks || (tView.initHooks = [])).push(-directiveIndex, onChanges);
+            (tView.checkHooks || (tView.checkHooks = [])).push(-directiveIndex, onChanges);
+        }
         if (onInit) {
             (tView.initHooks || (tView.initHooks = [])).push(directiveIndex, onInit);
         }
@@ -31840,14 +31912,31 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
     /**
      * Calls lifecycle hooks with their contexts, skipping init hooks if it's not
-     * the first LView pass
+     * the first LView pass, and skipping onChanges hooks if there are no changes present.
      *
      * @param currentView The current view
      * @param arr The array in which the hooks are found
      */
     function callHooks(currentView, arr) {
         for (var i = 0; i < arr.length; i += 2) {
-            arr[i + 1].call(currentView[arr[i]]);
+            var directiveIndex = arr[i];
+            var hook = arr[i + 1];
+            // Negative indices signal that we're dealing with an `onChanges` hook.
+            var isOnChangesHook = directiveIndex < 0;
+            var directiveOrWrappedDirective = currentView[isOnChangesHook ? -directiveIndex : directiveIndex];
+            var directive = unwrapOnChangesDirectiveWrapper(directiveOrWrappedDirective);
+            if (isOnChangesHook) {
+                var onChanges = directiveOrWrappedDirective;
+                var changes = onChanges.changes;
+                if (changes) {
+                    onChanges.previous = changes;
+                    onChanges.changes = null;
+                    hook.call(onChanges.instance, changes);
+                }
+            }
+            else {
+                hook.call(directive);
+            }
         }
     }
 
@@ -32403,6 +32492,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 setTNodeAndViewData(savePreviousOrParentTNode, saveLView);
             }
         }
+        else {
+            value = unwrapOnChangesDirectiveWrapper(value);
+        }
         return value;
     }
     /**
@@ -32702,7 +32794,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var directiveIndexStart = tNode.directiveStart;
             var directiveIndexEnd = tNode.directiveEnd;
             for (var i = directiveIndexStart; i < directiveIndexEnd; i++) {
-                if (lView[i] === directiveInstance) {
+                if (unwrapOnChangesDirectiveWrapper(lView[i]) === directiveInstance) {
                     return tNode.index;
                 }
             }
@@ -33953,7 +34045,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     // If it's not a number, it's a host binding function that needs to be executed.
                     if (instruction !== null) {
                         viewData[BINDING_INDEX] = bindingRootIndex;
-                        instruction(2 /* Update */, readElementValue(viewData[currentDirectiveIndex]), currentElementIndex);
+                        instruction(2 /* Update */, unwrapOnChangesDirectiveWrapper(viewData[currentDirectiveIndex]), currentElementIndex);
                     }
                     currentDirectiveIndex++;
                 }
@@ -34214,6 +34306,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             expandoStartIndex: initialViewLength,
             expandoInstructions: null,
             firstTemplatePass: true,
+            changesHooks: null,
             initHooks: null,
             checkHooks: null,
             contentHooks: null,
@@ -34736,43 +34829,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    /**
-     * Represents a basic change from a previous to a new value for a single
-     * property on a directive instance. Passed as a value in a
-     * {@link SimpleChanges} object to the `ngOnChanges` hook.
-     *
-     * @see `OnChanges`
-     *
-     * @publicApi
-     */
-    var SimpleChange = /** @class */ (function () {
-        function SimpleChange(previousValue, currentValue, firstChange) {
-            this.previousValue = previousValue;
-            this.currentValue = currentValue;
-            this.firstChange = firstChange;
-        }
-        /**
-         * Check whether the new value is the first value assigned.
-         */
-        SimpleChange.prototype.isFirstChange = function () { return this.firstChange; };
-        return SimpleChange;
-    }());
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
 
     /**
      * @license
@@ -35125,7 +35181,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             this._appRef = appRef;
         };
         ViewRef.prototype._lookUpContext = function () {
-            return this._context = this._lView[PARENT][this._componentIndex];
+            return this._context =
+                unwrapOnChangesDirectiveWrapper(this._lView[PARENT][this._componentIndex]);
         };
         return ViewRef;
     }());
@@ -35380,7 +35437,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.1+10.sha-5430d2b');
+    var VERSION$2 = new Version$1('8.0.0-beta.1+6.sha-583061d');
 
     /**
      * @license
@@ -39518,34 +39575,55 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
     };
     /**
-     * Does the work of creating the `ngBaseDef` property for the @Input and @Output decorators.
-     * @param key "inputs" or "outputs"
+     * Returns a function that will update the static definition on a class to have the
+     * appropriate input or output mapping.
+     *
+     * Will also add an {@link ngBaseDef} property to a directive if no `ngDirectiveDef`
+     * or `ngComponentDef` is present. This is done because a class may have {@link InputDecorator}s and
+     * {@link OutputDecorator}s without having a {@link ComponentDecorator} or {@link DirectiveDecorator},
+     * and those inputs and outputs should still be inheritable, we need to add an
+     * `ngBaseDef` property if there are no existing `ngComponentDef` or `ngDirectiveDef`
+     * properties, so that we can track the inputs and outputs for inheritance purposes.
+     *
+     * @param getPropertyToUpdate A function that maps to either the `inputs` property or the
+     * `outputs` property of a definition.
+     * @returns A function that, the called, will add a `ngBaseDef` if no other definition is present,
+     * then update the `inputs` or `outputs` on it, depending on what was selected by `getPropertyToUpdate`
+     *
+     *
+     * @see InputDecorator
+     * @see OutputDecorator
+     * @see InheritenceFeature
      */
-    var updateBaseDefFromIOProp = function (getProp) {
-        return function (target, name) {
+    function getOrCreateDefinitionAndUpdateMappingFor(getPropertyToUpdate) {
+        return function updateIOProp(target, name) {
             var args = [];
             for (var _i = 2; _i < arguments.length; _i++) {
                 args[_i - 2] = arguments[_i];
             }
             var constructor = target.constructor;
-            if (!constructor.hasOwnProperty(NG_BASE_DEF)) {
+            var def = constructor[NG_COMPONENT_DEF] || constructor[NG_DIRECTIVE_DEF] || constructor[NG_BASE_DEF];
+            if (!def) {
                 initializeBaseDef(target);
+                def = constructor[NG_BASE_DEF];
             }
-            var baseDef = constructor.ngBaseDef;
-            var defProp = getProp(baseDef);
-            defProp[name] = args[0];
+            var defProp = getPropertyToUpdate(def);
+            // Use of `in` because we *do* want to check the prototype chain here.
+            if (!(name in defProp)) {
+                defProp[name] = args[0];
+            }
         };
-    };
+    }
     /**
      * @Annotation
      * @publicApi
      */
-    var Input = makePropDecorator('Input', function (bindingPropertyName) { return ({ bindingPropertyName: bindingPropertyName }); }, undefined, updateBaseDefFromIOProp(function (baseDef) { return baseDef.inputs || {}; }));
+    var Input = makePropDecorator('Input', function (bindingPropertyName) { return ({ bindingPropertyName: bindingPropertyName }); }, undefined, getOrCreateDefinitionAndUpdateMappingFor(function (def) { return def.inputs || {}; }));
     /**
      * @Annotation
      * @publicApi
      */
-    var Output = makePropDecorator('Output', function (bindingPropertyName) { return ({ bindingPropertyName: bindingPropertyName }); }, undefined, updateBaseDefFromIOProp(function (baseDef) { return baseDef.outputs || {}; }));
+    var Output = makePropDecorator('Output', function (bindingPropertyName) { return ({ bindingPropertyName: bindingPropertyName }); }, undefined, getOrCreateDefinitionAndUpdateMappingFor(function (def) { return def.outputs || {}; }));
     /**
      * @Annotation
      * @publicApi
@@ -51063,7 +51141,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.1+10.sha-5430d2b');
+    var VERSION$3 = new Version$1('8.0.0-beta.1+6.sha-583061d');
 
     /**
      * @license
