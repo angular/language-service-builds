@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.1+12.sha-9f9024b
+ * @license Angular v8.0.0-beta.1+13.sha-9098225
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -3465,6 +3465,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         Identifiers.definePipe = { name: 'ɵdefinePipe', moduleName: CORE$1 };
         Identifiers.query = { name: 'ɵquery', moduleName: CORE$1 };
         Identifiers.queryRefresh = { name: 'ɵqueryRefresh', moduleName: CORE$1 };
+        Identifiers.viewQuery = { name: 'ɵviewQuery', moduleName: CORE$1 };
+        Identifiers.loadViewQuery = { name: 'ɵloadViewQuery', moduleName: CORE$1 };
         Identifiers.registerContentQuery = { name: 'ɵregisterContentQuery', moduleName: CORE$1 };
         Identifiers.NgOnChangesFeature = { name: 'ɵNgOnChangesFeature', moduleName: CORE$1 };
         Identifiers.InheritDefinitionFeature = { name: 'ɵInheritDefinitionFeature', moduleName: CORE$1 };
@@ -13411,7 +13413,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return params;
     }
     var TemplateDefinitionBuilder = /** @class */ (function () {
-        function TemplateDefinitionBuilder(constantPool, parentBindingScope, level, contextName, i18nContext, templateIndex, templateName, viewQueries, directiveMatcher, directives, pipeTypeByName, pipes, _namespace, relativeContextFilePath, i18nUseExternalIds) {
+        function TemplateDefinitionBuilder(constantPool, parentBindingScope, level, contextName, i18nContext, templateIndex, templateName, directiveMatcher, directives, pipeTypeByName, pipes, _namespace, relativeContextFilePath, i18nUseExternalIds) {
             if (level === void 0) { level = 0; }
             var _this = this;
             this.constantPool = constantPool;
@@ -13420,7 +13422,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             this.i18nContext = i18nContext;
             this.templateIndex = templateIndex;
             this.templateName = templateName;
-            this.viewQueries = viewQueries;
             this.directiveMatcher = directiveMatcher;
             this.directives = directives;
             this.pipeTypeByName = pipeTypeByName;
@@ -13472,9 +13473,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             this.visitTextAttribute = invalid$1;
             this.visitBoundAttribute = invalid$1;
             this.visitBoundEvent = invalid$1;
-            // view queries can take up space in data and allocation happens earlier (in the "viewQuery"
-            // function)
-            this._dataIndex = viewQueries.length;
             this._bindingScope = parentBindingScope.nestedScope(level);
             // Turn the relative context file path into an identifier by replacing non-alphanumeric
             // characters with underscores.
@@ -14048,7 +14046,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 });
             });
             // Create the template function
-            var templateVisitor = new TemplateDefinitionBuilder(this.constantPool, this._bindingScope, this.level + 1, contextName, this.i18n, templateIndex, templateName, [], this.directiveMatcher, this.directives, this.pipeTypeByName, this.pipes, this._namespace, this.fileBasedI18nSuffix, this.i18nUseExternalIds);
+            var templateVisitor = new TemplateDefinitionBuilder(this.constantPool, this._bindingScope, this.level + 1, contextName, this.i18n, templateIndex, templateName, this.directiveMatcher, this.directives, this.pipeTypeByName, this.pipes, this._namespace, this.fileBasedI18nSuffix, this.i18nUseExternalIds);
             // Nested templates must not be visited until after their parent templates have completed
             // processing, so they are queued here until after the initial pass. Otherwise, we wouldn't
             // be able to support bindings in nested templates to local refs that occur after the
@@ -14877,7 +14875,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var pipesUsed = new Set();
         var changeDetection = meta.changeDetection;
         var template = meta.template;
-        var templateBuilder = new TemplateDefinitionBuilder(constantPool, BindingScope.ROOT_SCOPE, 0, templateTypeName, null, null, templateName, meta.viewQueries, directiveMatcher, directivesUsed, meta.pipes, pipesUsed, Identifiers$1.namespaceHTML, meta.relativeContextFilePath, meta.i18nUseExternalIds);
+        var templateBuilder = new TemplateDefinitionBuilder(constantPool, BindingScope.ROOT_SCOPE, 0, templateTypeName, null, null, templateName, directiveMatcher, directivesUsed, meta.pipes, pipesUsed, Identifiers$1.namespaceHTML, meta.relativeContextFilePath, meta.i18nUseExternalIds);
         var templateFunctionExpression = templateBuilder.buildTemplateFunction(template.nodes, []);
         // We need to provide this so that dynamically generated components know what
         // projected content blocks to pass through to the component when it is instantiated.
@@ -14940,18 +14938,18 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var type = createTypeForDef(meta, Identifiers$1.ComponentDefWithMeta);
         return { expression: expression, type: type, statements: statements };
     }
-    function createQueryDefinition(query, constantPool, idx) {
-        var predicate = getQueryPredicate(query, constantPool);
-        // e.g. r3.query(null, somePredicate, false) or r3.query(0, ['div'], false)
+    function prepareQueryParams(query, constantPool) {
         var parameters = [
-            literal(idx, INFERRED_TYPE),
-            predicate,
+            getQueryPredicate(query, constantPool),
             literal(query.descendants),
         ];
         if (query.read) {
             parameters.push(query.read);
         }
-        return importExpr(Identifiers$1.query).callFn(parameters);
+        return parameters;
+    }
+    function createQueryDefinition(query, constantPool) {
+        return importExpr(Identifiers$1.query).callFn(prepareQueryParams(query, constantPool));
     }
     // Turn a directive selector into an R3-compatible selector for directive def
     function createDirectiveSelector(selector) {
@@ -14980,7 +14978,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function createContentQueriesFunction(meta, constantPool) {
         if (meta.queries.length) {
             var statements = meta.queries.map(function (query) {
-                var queryDefinition = createQueryDefinition(query, constantPool, null);
+                var queryDefinition = createQueryDefinition(query, constantPool);
                 return importExpr(Identifiers$1.registerContentQuery)
                     .callFn([queryDefinition, variable('dirIndex')])
                     .toStmt();
@@ -15058,20 +15056,19 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var createStatements = [];
         var updateStatements = [];
         var tempAllocator = temporaryAllocator(updateStatements, TEMPORARY_NAME);
-        for (var i = 0; i < meta.viewQueries.length; i++) {
-            var query = meta.viewQueries[i];
-            // creation, e.g. r3.Q(0, somePredicate, true);
-            var queryDefinition = createQueryDefinition(query, constantPool, i);
+        meta.viewQueries.forEach(function (query) {
+            // creation, e.g. r3.viewQuery(somePredicate, true);
+            var queryDefinition = importExpr(Identifiers$1.viewQuery).callFn(prepareQueryParams(query, constantPool));
             createStatements.push(queryDefinition.toStmt());
-            // update, e.g. (r3.qR(tmp = r3.ɵload(0)) && (ctx.someDir = tmp));
+            // update, e.g. (r3.queryRefresh(tmp = r3.loadViewQuery()) && (ctx.someDir = tmp));
             var temporary = tempAllocator();
-            var getQueryList = importExpr(Identifiers$1.load).callFn([literal(i)]);
+            var getQueryList = importExpr(Identifiers$1.loadViewQuery).callFn([]);
             var refresh = importExpr(Identifiers$1.queryRefresh).callFn([temporary.set(getQueryList)]);
             var updateDirective = variable(CONTEXT_NAME)
                 .prop(query.propertyName)
                 .set(query.first ? temporary.prop('first') : temporary);
             updateStatements.push(refresh.and(updateDirective).toStmt());
-        }
+        });
         var viewQueryFnName = meta.name ? meta.name + "_Query" : null;
         return fn([new FnParam(RENDER_FLAGS, NUMBER_TYPE), new FnParam(CONTEXT_NAME, null)], [
             renderFlagCheckIfStmt(1 /* Create */, createStatements),
@@ -15526,7 +15523,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.1+12.sha-9f9024b');
+    var VERSION$1 = new Version('8.0.0-beta.1+13.sha-9098225');
 
     /**
      * @license
@@ -32537,6 +32534,18 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         bindingRootIndex = value;
     }
     /**
+     * Current index of a View Query which needs to be processed next.
+     * We iterate over the list of View Queries stored in LView and increment current query index.
+     */
+    var viewQueryIndex = 0;
+    function getCurrentViewQueryIndex() {
+        // top level variables should not be exported for performance reasons (PERF_NOTES.md)
+        return viewQueryIndex;
+    }
+    function setCurrentViewQueryIndex(value) {
+        viewQueryIndex = value;
+    }
+    /**
      * Swap the current state with a new state.
      *
      * For performance reasons we store the state in the top level of the module.
@@ -37526,6 +37535,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             data: blueprint.slice(),
             childIndex: -1,
             bindingStartIndex: bindingStartIndex,
+            viewQueryStartIndex: initialViewLength,
             expandoStartIndex: initialViewLength,
             expandoInstructions: null,
             firstTemplatePass: true,
@@ -39250,26 +39260,23 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var hostTView = hostView[TVIEW];
         var oldView = enterView(hostView, hostView[HOST_NODE]);
         var templateFn = hostTView.template;
-        var viewQuery = hostTView.viewQuery;
+        var creationMode = isCreationMode(hostView);
         try {
             namespaceHTML();
-            createViewQuery(viewQuery, hostView, component);
+            creationMode && executeViewQueryFn(hostView, hostTView, component);
             templateFn(getRenderFlags(hostView), component);
             refreshDescendantViews(hostView);
-            updateViewQuery(viewQuery, hostView, component);
+            !creationMode && executeViewQueryFn(hostView, hostTView, component);
         }
         finally {
             leaveView(oldView);
         }
     }
-    function createViewQuery(viewQuery, view, component) {
-        if (viewQuery && isCreationMode(view)) {
-            viewQuery(1 /* Create */, component);
-        }
-    }
-    function updateViewQuery(viewQuery, view, component) {
-        if (viewQuery && !isCreationMode(view)) {
-            viewQuery(2 /* Update */, component);
+    function executeViewQueryFn(lView, tView, component) {
+        var viewQuery = tView.viewQuery;
+        if (viewQuery) {
+            setCurrentViewQueryIndex(tView.viewQueryStartIndex);
+            viewQuery(getRenderFlags(lView), component);
         }
     }
     ///////////////////////////////
@@ -40971,7 +40978,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.1+12.sha-9f9024b');
+    var VERSION$2 = new Version$1('8.0.0-beta.1+13.sha-9098225');
 
     /**
      * @license
@@ -46826,25 +46833,20 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * Creates and returns a QueryList.
      *
-     * @param memoryIndex The index in memory where the QueryList should be saved. If null,
-     * this is is a content query and the QueryList will be saved later through directiveCreate.
      * @param predicate The type for which the query will search
      * @param descend Whether or not to descend into children
      * @param read What to save in the query
      * @returns QueryList<T>
      */
-    function query(memoryIndex, predicate, descend, 
+    function query(
     // TODO: "read" should be an AbstractType (FW-486)
-    read) {
+    predicate, descend, read) {
         ngDevMode && assertPreviousIsParent(getIsParent());
         var queryList = new QueryList();
         var queries = getOrCreateCurrentQueries(LQueries_);
         queryList._valuesTree = [];
         queries.track(queryList, predicate, descend, read);
         storeCleanupWithContext(getLView(), queryList, queryList.destroy);
-        if (memoryIndex != null) {
-            store(memoryIndex, queryList);
-        }
         return queryList;
     }
     /**
@@ -46860,6 +46862,36 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             return true;
         }
         return false;
+    }
+    /**
+     * Creates new QueryList, stores the reference in LView and returns QueryList.
+     *
+     * @param predicate The type for which the query will search
+     * @param descend Whether or not to descend into children
+     * @param read What to save in the query
+     * @returns QueryList<T>
+     */
+    function viewQuery(
+    // TODO: "read" should be an AbstractType (FW-486)
+    predicate, descend, read) {
+        var lView = getLView();
+        var tView = lView[TVIEW];
+        if (tView.firstTemplatePass) {
+            tView.expandoStartIndex++;
+        }
+        var index = getCurrentViewQueryIndex();
+        var viewQuery = query(predicate, descend, read);
+        store(index, viewQuery);
+        setCurrentViewQueryIndex(index + 1);
+        return viewQuery;
+    }
+    /**
+    * Loads current View Query and moves the pointer/index to the next View Query in LView.
+    */
+    function loadViewQuery() {
+        var index = getCurrentViewQueryIndex();
+        setCurrentViewQueryIndex(index + 1);
+        return load(index);
     }
 
     /**
@@ -46969,6 +47001,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         'ɵpipe': pipe,
         'ɵquery': query,
         'ɵqueryRefresh': queryRefresh,
+        'ɵviewQuery': viewQuery,
+        'ɵloadViewQuery': loadViewQuery,
         'ɵregisterContentQuery': registerContentQuery,
         'ɵreference': reference,
         'ɵelementStyling': elementStyling,
@@ -59174,7 +59208,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.1+12.sha-9f9024b');
+    var VERSION$3 = new Version$1('8.0.0-beta.1+13.sha-9098225');
 
     /**
      * @license
