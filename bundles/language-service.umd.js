@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.1+18.sha-cbd6264
+ * @license Angular v8.0.0-beta.1+20.sha-d4ecffe
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -15538,7 +15538,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.1+18.sha-cbd6264');
+    var VERSION$1 = new Version('8.0.0-beta.1+20.sha-d4ecffe');
 
     /**
      * @license
@@ -33609,9 +33609,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
             else {
                 // If container, traverse down to its first LView.
-                var container$$1 = viewOrContainer;
-                if (container$$1[VIEWS].length)
-                    next = container$$1[VIEWS][0];
+                var container = viewOrContainer;
+                if (container[VIEWS].length)
+                    next = container[VIEWS][0];
             }
             if (next == null) {
                 // Only clean up view when moving to the side or up, as destroy hooks
@@ -33744,11 +33744,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     var target = typeof idxOrTargetGetter === 'function' ?
                         idxOrTargetGetter(lView) :
                         readElementValue(lView[idxOrTargetGetter]);
-                    var listener$$1 = lCleanup[tCleanup[i + 2]];
+                    var listener = lCleanup[tCleanup[i + 2]];
                     var useCaptureOrSubIdx = tCleanup[i + 3];
                     if (typeof useCaptureOrSubIdx === 'boolean') {
                         // DOM listener
-                        target.removeEventListener(tCleanup[i], listener$$1, useCaptureOrSubIdx);
+                        target.removeEventListener(tCleanup[i], listener, useCaptureOrSubIdx);
                     }
                     else {
                         if (useCaptureOrSubIdx >= 0) {
@@ -35406,7 +35406,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.1+18.sha-cbd6264');
+    var VERSION$2 = new Version$1('8.0.0-beta.1+20.sha-d4ecffe');
 
     /**
      * @license
@@ -51091,7 +51091,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.1+18.sha-cbd6264');
+    var VERSION$3 = new Version$1('8.0.0-beta.1+20.sha-d4ecffe');
 
     /**
      * @license
