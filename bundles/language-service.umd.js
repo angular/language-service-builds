@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.1+17.sha-317cc92
+ * @license Angular v8.0.0-beta.1+18.sha-cbd6264
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -15523,7 +15523,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.1+17.sha-317cc92');
+    var VERSION$1 = new Version('8.0.0-beta.1+18.sha-cbd6264');
 
     /**
      * @license
@@ -40987,7 +40987,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.1+17.sha-317cc92');
+    var VERSION$2 = new Version$1('8.0.0-beta.1+18.sha-cbd6264');
 
     /**
      * @license
@@ -43908,6 +43908,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             // It is implicitly expected as the first item in the projectable nodes array.
             _this.ngContentSelectors =
                 componentDef.ngContentSelectors ? __spread(['*'], componentDef.ngContentSelectors) : [];
+            _this.isBoundToModule = !!ngModule;
             return _this;
         }
         Object.defineProperty(ComponentFactory$$1.prototype, "inputs", {
@@ -55160,6 +55161,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         ngDevMode && assertNgModuleType(moduleType);
         return Promise.resolve(new NgModuleFactory$1(moduleType));
     }
+    var isBoundToModule = isBoundToModule__POST_R3__;
+    function isBoundToModule__POST_R3__(cf) {
+        return cf.isBoundToModule;
+    }
     var ALLOW_MULTIPLE_PLATFORMS = new InjectionToken('AllowMultipleToken');
     /**
      * Creates a platform.
@@ -55510,9 +55515,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
             this.componentTypes.push(componentFactory.componentType);
             // Create a factory associated with the current module if it's not bound to some other
-            var ngModule = componentFactory instanceof ComponentFactoryBoundToModule ?
-                null :
-                this._injector.get(NgModuleRef);
+            var ngModule = isBoundToModule(componentFactory) ? null : this._injector.get(NgModuleRef);
             var selectorOrNode = rootSelectorOrNode || componentFactory.selector;
             var compRef = componentFactory.create(Injector.NULL, [], selectorOrNode, ngModule);
             compRef.onDestroy(function () { _this._unloadComponent(compRef); });
@@ -59216,7 +59219,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.1+17.sha-317cc92');
+    var VERSION$3 = new Version$1('8.0.0-beta.1+18.sha-cbd6264');
 
     /**
      * @license
