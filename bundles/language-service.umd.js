@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.1+29.sha-b2811e5
+ * @license Angular v8.0.0-beta.1+39.sha-7496630
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -15538,7 +15538,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.1+29.sha-b2811e5');
+    var VERSION$1 = new Version('8.0.0-beta.1+39.sha-7496630');
 
     /**
      * @license
@@ -31675,6 +31675,28 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return lView;
     }
+    /**
+     * The special delimiter we use to separate property names, prefixes, and suffixes
+     * in property binding metadata. See storeBindingMetadata().
+     *
+     * We intentionally use the Unicode "REPLACEMENT CHARACTER" (U+FFFD) as a delimiter
+     * because it is a very uncommon character that is unlikely to be part of a user's
+     * property names or interpolation strings. If it is in fact used in a property
+     * binding, DebugElement.properties will not return the correct value for that
+     * binding. However, there should be no runtime effect for real applications.
+     *
+     * This character is typically rendered as a question mark inside of a diamond.
+     * See https://en.wikipedia.org/wiki/Specials_(Unicode_block)
+     *
+     */
+    var INTERPOLATION_DELIMITER = "\uFFFD";
+    /**
+     * Determines whether or not the given string is a property metadata string.
+     * See storeBindingMetadata().
+     */
+    function isPropMetadataString(str) {
+        return str.indexOf(INTERPOLATION_DELIMITER) >= 0;
+    }
 
     /**
      * @license
@@ -34236,7 +34258,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             template: templateFn,
             viewQuery: viewQuery,
             node: null,
-            data: blueprint.slice(),
+            data: blueprint.slice().fill(null, bindingStartIndex),
             childIndex: -1,
             bindingStartIndex: bindingStartIndex,
             viewQueryStartIndex: initialViewLength,
@@ -34329,6 +34351,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             injectorIndex: tParent ? tParent.injectorIndex : -1,
             directiveStart: -1,
             directiveEnd: -1,
+            propertyMetadataStartIndex: -1,
+            propertyMetadataEndIndex: -1,
             flags: 0,
             providerIndexes: 0,
             tagName: tagName,
@@ -35406,7 +35430,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.1+29.sha-b2811e5');
+    var VERSION$2 = new Version$1('8.0.0-beta.1+39.sha-7496630');
 
     /**
      * @license
@@ -47906,15 +47930,26 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             configurable: true
         });
         Object.defineProperty(DebugElement__POST_R3__.prototype, "properties", {
+            /**
+             *  Gets a map of property names to property values for an element.
+             *
+             *  This map includes:
+             *  - Regular property bindings (e.g. `[id]="id"`)
+             *  - Host property bindings (e.g. `host: { '[id]': "id" }`)
+             *  - Interpolated property bindings (e.g. `id="{{ value }}")
+             *
+             *  It does not include:
+             *  - input property bindings (e.g. `[myCustomInput]="value"`)
+             *  - attribute bindings (e.g. `[attr.role]="menu"`)
+             */
             get: function () {
                 var context = loadLContext(this.nativeNode);
                 var lView = context.lView;
-                var tView = lView[TVIEW];
-                var tNode = tView.data[context.nodeIndex];
-                var properties = {};
-                // TODO: https://angular-team.atlassian.net/browse/FW-681
-                // Missing implementation here...
-                return properties;
+                var tData = lView[TVIEW].data;
+                var tNode = tData[context.nodeIndex];
+                var properties = collectPropertyBindings(tNode, lView, tData);
+                var hostProperties = collectHostPropertyBindings(tNode, lView, tData);
+                return __assign({}, properties, hostProperties);
             },
             enumerable: true,
             configurable: true
@@ -48067,6 +48102,79 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 }
             });
         }
+    }
+    /**
+     * Iterates through the property bindings for a given node and generates
+     * a map of property names to values. This map only contains property bindings
+     * defined in templates, not in host bindings.
+     */
+    function collectPropertyBindings(tNode, lView, tData) {
+        var properties = {};
+        var bindingIndex = getFirstBindingIndex(tNode.propertyMetadataStartIndex, tData);
+        while (bindingIndex < tNode.propertyMetadataEndIndex) {
+            var value = '';
+            var propMetadata = tData[bindingIndex];
+            while (!isPropMetadataString(propMetadata)) {
+                // This is the first value for an interpolation. We need to build up
+                // the full interpolation by combining runtime values in LView with
+                // the static interstitial values stored in TData.
+                value += renderStringify(lView[bindingIndex]) + tData[bindingIndex];
+                propMetadata = tData[++bindingIndex];
+            }
+            value += lView[bindingIndex];
+            // Property metadata string has 3 parts: property name, prefix, and suffix
+            var metadataParts = propMetadata.split(INTERPOLATION_DELIMITER);
+            var propertyName = metadataParts[0];
+            // Attr bindings don't have property names and should be skipped
+            if (propertyName) {
+                // Wrap value with prefix and suffix (will be '' for normal bindings)
+                properties[propertyName] = metadataParts[1] + value + metadataParts[2];
+            }
+            bindingIndex++;
+        }
+        return properties;
+    }
+    /**
+     * Retrieves the first binding index that holds values for this property
+     * binding.
+     *
+     * For normal bindings (e.g. `[id]="id"`), the binding index is the
+     * same as the metadata index. For interpolations (e.g. `id="{{id}}-{{name}}"`),
+     * there can be multiple binding values, so we might have to loop backwards
+     * from the metadata index until we find the first one.
+     *
+     * @param metadataIndex The index of the first property metadata string for
+     * this node.
+     * @param tData The data array for the current TView
+     * @returns The first binding index for this binding
+     */
+    function getFirstBindingIndex(metadataIndex, tData) {
+        var currentBindingIndex = metadataIndex - 1;
+        // If the slot before the metadata holds a string, we know that this
+        // metadata applies to an interpolation with at least 2 bindings, and
+        // we need to search further to access the first binding value.
+        var currentValue = tData[currentBindingIndex];
+        // We need to iterate until we hit either a:
+        // - TNode (it is an element slot marking the end of `consts` section), OR a
+        // - metadata string (slot is attribute metadata or a previous node's property metadata)
+        while (typeof currentValue === 'string' && !isPropMetadataString(currentValue)) {
+            currentValue = tData[--currentBindingIndex];
+        }
+        return currentBindingIndex + 1;
+    }
+    function collectHostPropertyBindings(tNode, lView, tData) {
+        var properties = {};
+        // Host binding values for a node are stored after directives on that node
+        var hostPropIndex = tNode.directiveEnd;
+        var propMetadata = tData[hostPropIndex];
+        // When we reach a value in TView.data that is not a string, we know we've
+        // hit the next node's providers and directives and should stop copying data.
+        while (typeof propMetadata === 'string') {
+            var propertyName = propMetadata.split(INTERPOLATION_DELIMITER)[0];
+            properties[propertyName] = lView[hostPropIndex];
+            propMetadata = tData[++hostPropIndex];
+        }
+        return properties;
     }
     // Need to keep the nodes in a global Map so that multiple angular apps are supported.
     var _nativeNodeToDebugNode = new Map();
@@ -51091,7 +51199,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.1+29.sha-b2811e5');
+    var VERSION$3 = new Version$1('8.0.0-beta.1+39.sha-7496630');
 
     /**
      * @license
