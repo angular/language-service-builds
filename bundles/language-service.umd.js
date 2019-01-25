@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.1+41.sha-2da82db
+ * @license Angular v8.0.0-beta.1+43.sha-3d5a919
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -15523,7 +15523,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.1+41.sha-2da82db');
+    var VERSION$1 = new Version('8.0.0-beta.1+43.sha-3d5a919');
 
     /**
      * @license
@@ -37157,16 +37157,20 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         ngDevMode &&
             assertLessThan(adjustedIndex, lView.length, "Slot should have been initialized with null");
         lView[adjustedIndex] = native;
+        var previousOrParentTNode = getPreviousOrParentTNode();
+        var isParent = getIsParent();
         var tNode = tView.data[adjustedIndex];
         if (tNode == null) {
-            // TODO(misko): Refactor createTNode so that it does not depend on LView.
-            tNode = tView.data[adjustedIndex] = createTNode(lView, type, adjustedIndex, name, attrs, null);
+            var parent_1 = isParent ? previousOrParentTNode : previousOrParentTNode && previousOrParentTNode.parent;
+            // Parents cannot cross component boundaries because components will be used in multiple places,
+            // so it's only set if the view is the same.
+            var parentInSameView = parent_1 && parent_1 !== lView[HOST_NODE];
+            var tParentNode = parentInSameView ? parent_1 : null;
+            tNode = tView.data[adjustedIndex] = createTNode(tParentNode, type, adjustedIndex, name, attrs);
         }
         // Now link ourselves into the tree.
         // We need this even if tNode exists, otherwise we might end up pointing to unexisting tNodes when
         // we use i18n (especially with ICU expressions that update the DOM during the update phase).
-        var previousOrParentTNode = getPreviousOrParentTNode();
-        var isParent = getIsParent();
         if (previousOrParentTNode) {
             if (isParent && previousOrParentTNode.child == null &&
                 (tNode.parent !== null || previousOrParentTNode.type === 2 /* View */)) {
@@ -37184,13 +37188,17 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         setIsParent(true);
         return tNode;
     }
-    function createViewNode(index, view) {
+    function assignTViewNodeToLView(tView, tParentNode, index, lView) {
         // View nodes are not stored in data because they can be added / removed at runtime (which
         // would cause indices to change). Their TNodes are instead stored in tView.node.
-        if (view[TVIEW].node == null) {
-            view[TVIEW].node = createTNode(view, 2 /* View */, index, null, null, null);
+        var tNode = tView.node;
+        if (tNode == null) {
+            ngDevMode && tParentNode &&
+                assertNodeOfPossibleTypes(tParentNode, 3 /* Element */, 0 /* Container */);
+            tView.node = tNode = createTNode(tParentNode, //
+            2 /* View */, index, null, null);
         }
-        return view[HOST_NODE] = view[TVIEW].node;
+        return lView[HOST_NODE] = tNode;
     }
     /**
      * When elements are created dynamically after a view blueprint is created (e.g. through
@@ -37221,7 +37229,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         if (queries) {
             lView[QUERIES] = queries.createView();
         }
-        createViewNode(-1, lView);
+        assignTViewNodeToLView(tView, null, -1, lView);
         if (tView.firstTemplatePass) {
             tView.node.injectorIndex = injectorIndex;
         }
@@ -38015,14 +38023,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * @param tViews Any TViews attached to this node
      * @returns the TNode object
      */
-    function createTNode(lView, type, adjustedIndex, tagName, attrs, tViews) {
-        var previousOrParentTNode = getPreviousOrParentTNode();
+    function createTNode(tParent, type, adjustedIndex, tagName, attrs) {
         ngDevMode && ngDevMode.tNode++;
-        var parent = getIsParent() ? previousOrParentTNode : previousOrParentTNode && previousOrParentTNode.parent;
-        // Parents cannot cross component boundaries because components will be used in multiple places,
-        // so it's only set if the view is the same.
-        var parentInSameView = parent && lView && parent !== lView[HOST_NODE];
-        var tParent = parentInSameView ? parent : null;
         return {
             type: type,
             index: adjustedIndex,
@@ -38039,7 +38041,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             initialInputs: undefined,
             inputs: undefined,
             outputs: undefined,
-            tViews: tViews,
+            tViews: null,
             next: null,
             child: null,
             parent: tParent,
@@ -38933,7 +38935,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             if (lContainer[QUERIES]) {
                 viewToRender[QUERIES] = lContainer[QUERIES].createView();
             }
-            createViewNode(viewBlockId, viewToRender);
+            var tParentNode = getIsParent() ? previousOrParentTNode :
+                previousOrParentTNode && previousOrParentTNode.parent;
+            assignTViewNodeToLView(viewToRender[TVIEW], tParentNode, viewBlockId, viewToRender);
             enterView(viewToRender, viewToRender[TVIEW].node);
         }
         if (lContainer) {
@@ -41146,7 +41150,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.1+41.sha-2da82db');
+    var VERSION$2 = new Version$1('8.0.0-beta.1+43.sha-3d5a919');
 
     /**
      * @license
@@ -44157,7 +44161,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             _this.destroyCbs = [];
             _this.instance = instance;
             _this.hostView = _this.changeDetectorRef = new RootViewRef(_rootLView);
-            _this.hostView._tViewNode = createViewNode(-1, _rootLView);
+            _this.hostView._tViewNode = assignTViewNodeToLView(_rootLView[TVIEW], null, -1, _rootLView);
             _this.componentType = componentType;
             return _this;
         }
@@ -59505,7 +59509,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.1+41.sha-2da82db');
+    var VERSION$3 = new Version$1('8.0.0-beta.1+43.sha-3d5a919');
 
     /**
      * @license
