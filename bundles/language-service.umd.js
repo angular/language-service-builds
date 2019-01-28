@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.1+56.sha-fd8dbd5
+ * @license Angular v8.0.0-beta.1+68.sha-6e16338
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -3436,6 +3436,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             moduleName: CORE$1,
         };
         Identifiers.defineComponent = { name: 'ɵdefineComponent', moduleName: CORE$1 };
+        Identifiers.setComponentScope = { name: 'ɵsetComponentScope', moduleName: CORE$1 };
         Identifiers.ComponentDefWithMeta = {
             name: 'ɵComponentDefWithMeta',
             moduleName: CORE$1,
@@ -15523,7 +15524,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.1+56.sha-fd8dbd5');
+    var VERSION$1 = new Version('8.0.0-beta.1+68.sha-6e16338');
 
     /**
      * @license
@@ -31978,6 +31979,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         });
         return def;
     }
+    function setComponentScope(type, directives, pipes) {
+        var def = type.ngComponentDef;
+        def.directiveDefs = function () { return directives.map(extractDirectiveDef); };
+        def.pipeDefs = function () { return pipes.map(extractPipeDef); };
+    }
     function extractDirectiveDef(type) {
         var def = getComponentDef(type) || getDirectiveDef(type);
         if (ngDevMode && !def) {
@@ -34484,8 +34490,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     var defaultStyleSanitizer = function (prop, value) {
         if (value === undefined) {
             return prop === 'background-image' || prop === 'background' || prop === 'border-image' ||
-                prop === 'filter' || prop === 'filter' || prop === 'list-style' ||
-                prop === 'list-style-image';
+                prop === 'filter' || prop === 'list-style' || prop === 'list-style-image';
         }
         return sanitizeStyle(value);
     };
@@ -41173,7 +41178,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.1+56.sha-fd8dbd5');
+    var VERSION$2 = new Version$1('8.0.0-beta.1+68.sha-6e16338');
 
     /**
      * @license
@@ -50062,6 +50067,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         'ɵresolveWindow': resolveWindow,
         'ɵresolveDocument': resolveDocument,
         'ɵresolveBody': resolveBody,
+        'ɵsetComponentScope': setComponentScope,
         'ɵsanitizeHtml': sanitizeHtml,
         'ɵsanitizeStyle': sanitizeStyle,
         'ɵdefaultStyleSanitizer': defaultStyleSanitizer,
@@ -59532,7 +59538,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.1+56.sha-fd8dbd5');
+    var VERSION$3 = new Version$1('8.0.0-beta.1+68.sha-6e16338');
 
     /**
      * @license
