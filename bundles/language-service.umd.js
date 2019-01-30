@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.1+43.sha-3d5a919
+ * @license Angular v8.0.0-beta.1+109.sha-a227c52
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -3433,7 +3433,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         Identifiers.i18nApply = { name: 'ɵi18nApply', moduleName: CORE$1 };
         Identifiers.i18nPostprocess = { name: 'ɵi18nPostprocess', moduleName: CORE$1 };
         Identifiers.load = { name: 'ɵload', moduleName: CORE$1 };
-        Identifiers.loadQueryList = { name: 'ɵloadQueryList', moduleName: CORE$1 };
         Identifiers.pipe = { name: 'ɵpipe', moduleName: CORE$1 };
         Identifiers.projection = { name: 'ɵprojection', moduleName: CORE$1 };
         Identifiers.projectionDef = { name: 'ɵprojectionDef', moduleName: CORE$1 };
@@ -3451,6 +3450,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             moduleName: CORE$1,
         };
         Identifiers.defineComponent = { name: 'ɵdefineComponent', moduleName: CORE$1 };
+        Identifiers.setComponentScope = { name: 'ɵsetComponentScope', moduleName: CORE$1 };
         Identifiers.ComponentDefWithMeta = {
             name: 'ɵComponentDefWithMeta',
             moduleName: CORE$1,
@@ -3478,11 +3478,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         Identifiers.defineNgModule = { name: 'ɵdefineNgModule', moduleName: CORE$1 };
         Identifiers.PipeDefWithMeta = { name: 'ɵPipeDefWithMeta', moduleName: CORE$1 };
         Identifiers.definePipe = { name: 'ɵdefinePipe', moduleName: CORE$1 };
-        Identifiers.query = { name: 'ɵquery', moduleName: CORE$1 };
         Identifiers.queryRefresh = { name: 'ɵqueryRefresh', moduleName: CORE$1 };
         Identifiers.viewQuery = { name: 'ɵviewQuery', moduleName: CORE$1 };
         Identifiers.loadViewQuery = { name: 'ɵloadViewQuery', moduleName: CORE$1 };
-        Identifiers.registerContentQuery = { name: 'ɵregisterContentQuery', moduleName: CORE$1 };
+        Identifiers.contentQuery = { name: 'ɵcontentQuery', moduleName: CORE$1 };
+        Identifiers.loadContentQuery = { name: 'ɵloadContentQuery', moduleName: CORE$1 };
         Identifiers.NgOnChangesFeature = { name: 'ɵNgOnChangesFeature', moduleName: CORE$1 };
         Identifiers.InheritDefinitionFeature = { name: 'ɵInheritDefinitionFeature', moduleName: CORE$1 };
         Identifiers.ProvidersFeature = { name: 'ɵProvidersFeature', moduleName: CORE$1 };
@@ -4972,6 +4972,228 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    var $EOF = 0;
+    var $TAB = 9;
+    var $LF = 10;
+    var $VTAB = 11;
+    var $FF = 12;
+    var $CR = 13;
+    var $SPACE = 32;
+    var $BANG = 33;
+    var $DQ = 34;
+    var $HASH = 35;
+    var $$ = 36;
+    var $PERCENT = 37;
+    var $AMPERSAND = 38;
+    var $SQ = 39;
+    var $LPAREN = 40;
+    var $RPAREN = 41;
+    var $STAR = 42;
+    var $PLUS = 43;
+    var $COMMA = 44;
+    var $MINUS = 45;
+    var $PERIOD = 46;
+    var $SLASH = 47;
+    var $COLON = 58;
+    var $SEMICOLON = 59;
+    var $LT = 60;
+    var $EQ = 61;
+    var $GT = 62;
+    var $QUESTION = 63;
+    var $0 = 48;
+    var $9 = 57;
+    var $A = 65;
+    var $E = 69;
+    var $F = 70;
+    var $X = 88;
+    var $Z = 90;
+    var $LBRACKET = 91;
+    var $BACKSLASH = 92;
+    var $RBRACKET = 93;
+    var $CARET = 94;
+    var $_ = 95;
+    var $a = 97;
+    var $e = 101;
+    var $f = 102;
+    var $n = 110;
+    var $r = 114;
+    var $t = 116;
+    var $u = 117;
+    var $v = 118;
+    var $x = 120;
+    var $z = 122;
+    var $LBRACE = 123;
+    var $BAR = 124;
+    var $RBRACE = 125;
+    var $NBSP = 160;
+    var $BT = 96;
+    function isWhitespace(code) {
+        return (code >= $TAB && code <= $SPACE) || (code == $NBSP);
+    }
+    function isDigit(code) {
+        return $0 <= code && code <= $9;
+    }
+    function isAsciiLetter(code) {
+        return code >= $a && code <= $z || code >= $A && code <= $Z;
+    }
+    function isAsciiHexDigit(code) {
+        return code >= $a && code <= $f || code >= $A && code <= $F || isDigit(code);
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    var ParseLocation = /** @class */ (function () {
+        function ParseLocation(file, offset, line, col) {
+            this.file = file;
+            this.offset = offset;
+            this.line = line;
+            this.col = col;
+        }
+        ParseLocation.prototype.toString = function () {
+            return this.offset != null ? this.file.url + "@" + this.line + ":" + this.col : this.file.url;
+        };
+        ParseLocation.prototype.moveBy = function (delta) {
+            var source = this.file.content;
+            var len = source.length;
+            var offset = this.offset;
+            var line = this.line;
+            var col = this.col;
+            while (offset > 0 && delta < 0) {
+                offset--;
+                delta++;
+                var ch = source.charCodeAt(offset);
+                if (ch == $LF) {
+                    line--;
+                    var priorLine = source.substr(0, offset - 1).lastIndexOf(String.fromCharCode($LF));
+                    col = priorLine > 0 ? offset - priorLine : offset;
+                }
+                else {
+                    col--;
+                }
+            }
+            while (offset < len && delta > 0) {
+                var ch = source.charCodeAt(offset);
+                offset++;
+                delta--;
+                if (ch == $LF) {
+                    line++;
+                    col = 0;
+                }
+                else {
+                    col++;
+                }
+            }
+            return new ParseLocation(this.file, offset, line, col);
+        };
+        // Return the source around the location
+        // Up to `maxChars` or `maxLines` on each side of the location
+        ParseLocation.prototype.getContext = function (maxChars, maxLines) {
+            var content = this.file.content;
+            var startOffset = this.offset;
+            if (startOffset != null) {
+                if (startOffset > content.length - 1) {
+                    startOffset = content.length - 1;
+                }
+                var endOffset = startOffset;
+                var ctxChars = 0;
+                var ctxLines = 0;
+                while (ctxChars < maxChars && startOffset > 0) {
+                    startOffset--;
+                    ctxChars++;
+                    if (content[startOffset] == '\n') {
+                        if (++ctxLines == maxLines) {
+                            break;
+                        }
+                    }
+                }
+                ctxChars = 0;
+                ctxLines = 0;
+                while (ctxChars < maxChars && endOffset < content.length - 1) {
+                    endOffset++;
+                    ctxChars++;
+                    if (content[endOffset] == '\n') {
+                        if (++ctxLines == maxLines) {
+                            break;
+                        }
+                    }
+                }
+                return {
+                    before: content.substring(startOffset, this.offset),
+                    after: content.substring(this.offset, endOffset + 1),
+                };
+            }
+            return null;
+        };
+        return ParseLocation;
+    }());
+    var ParseSourceFile = /** @class */ (function () {
+        function ParseSourceFile(content, url) {
+            this.content = content;
+            this.url = url;
+        }
+        return ParseSourceFile;
+    }());
+    var ParseSourceSpan = /** @class */ (function () {
+        function ParseSourceSpan(start, end, details) {
+            if (details === void 0) { details = null; }
+            this.start = start;
+            this.end = end;
+            this.details = details;
+        }
+        ParseSourceSpan.prototype.toString = function () {
+            return this.start.file.content.substring(this.start.offset, this.end.offset);
+        };
+        return ParseSourceSpan;
+    }());
+    var ParseErrorLevel;
+    (function (ParseErrorLevel) {
+        ParseErrorLevel[ParseErrorLevel["WARNING"] = 0] = "WARNING";
+        ParseErrorLevel[ParseErrorLevel["ERROR"] = 1] = "ERROR";
+    })(ParseErrorLevel || (ParseErrorLevel = {}));
+    var ParseError = /** @class */ (function () {
+        function ParseError(span, msg, level) {
+            if (level === void 0) { level = ParseErrorLevel.ERROR; }
+            this.span = span;
+            this.msg = msg;
+            this.level = level;
+        }
+        ParseError.prototype.contextualMessage = function () {
+            var ctx = this.span.start.getContext(100, 3);
+            return ctx ? this.msg + " (\"" + ctx.before + "[" + ParseErrorLevel[this.level] + " ->]" + ctx.after + "\")" :
+                this.msg;
+        };
+        ParseError.prototype.toString = function () {
+            var details = this.span.details ? ", " + this.span.details : '';
+            return this.contextualMessage() + ": " + this.span.start + details;
+        };
+        return ParseError;
+    }());
+    /**
+     * Generates Source Span object for a given R3 Type for JIT mode.
+     *
+     * @param kind Component or Directive.
+     * @param typeName name of the Component or Directive.
+     * @param sourceUrl reference to Component or Directive source.
+     * @returns instance of ParseSourceSpan that represent a given Component or Directive.
+     */
+    function r3JitTypeSourceSpan(kind, typeName, sourceUrl) {
+        var sourceFileName = "in " + kind + " " + typeName + " in " + sourceUrl;
+        var sourceFile = new ParseSourceFile('', sourceFileName);
+        return new ParseSourceSpan(new ParseLocation(sourceFile, -1, -1, -1), new ParseLocation(sourceFile, -1, -1, -1));
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     // https://docs.google.com/document/d/1U1RGAehQwRypUTovF1KRlpiOFze0b-_2gc6fAH0KY0k/edit
     var VERSION = 3;
     var JS_B64_PREFIX = '# sourceMappingURL=data:application/json;base64,';
@@ -5964,13 +6186,23 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     function compileNgModule(meta) {
         var moduleType = meta.type, bootstrap = meta.bootstrap, declarations = meta.declarations, imports = meta.imports, exports = meta.exports;
-        var expression = importExpr(Identifiers$1.defineNgModule).callFn([mapToMapExpression({
-                type: moduleType,
-                bootstrap: literalArr(bootstrap.map(function (ref) { return ref.value; })),
-                declarations: literalArr(declarations.map(function (ref) { return ref.value; })),
-                imports: literalArr(imports.map(function (ref) { return ref.value; })),
-                exports: literalArr(exports.map(function (ref) { return ref.value; })),
-            })]);
+        var definitionMap = {
+            type: moduleType
+        };
+        // Only generate the keys in the metadata if the arrays have values.
+        if (bootstrap.length) {
+            definitionMap.bootstrap = literalArr(bootstrap.map(function (ref) { return ref.value; }));
+        }
+        if (declarations.length) {
+            definitionMap.declarations = literalArr(declarations.map(function (ref) { return ref.value; }));
+        }
+        if (imports.length) {
+            definitionMap.imports = literalArr(imports.map(function (ref) { return ref.value; }));
+        }
+        if (exports.length) {
+            definitionMap.exports = literalArr(exports.map(function (ref) { return ref.value; }));
+        }
+        var expression = importExpr(Identifiers$1.defineNgModule).callFn([mapToMapExpression(definitionMap)]);
         var type = new ExpressionType(importExpr(Identifiers$1.NgModuleDefWithMeta, [
             new ExpressionType(moduleType), tupleTypeOf(declarations), tupleTypeOf(imports),
             tupleTypeOf(exports)
@@ -7524,215 +7756,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 throw new Error("unexpected " + unexpected);
         }
     }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    var $EOF = 0;
-    var $TAB = 9;
-    var $LF = 10;
-    var $VTAB = 11;
-    var $FF = 12;
-    var $CR = 13;
-    var $SPACE = 32;
-    var $BANG = 33;
-    var $DQ = 34;
-    var $HASH = 35;
-    var $$ = 36;
-    var $PERCENT = 37;
-    var $AMPERSAND = 38;
-    var $SQ = 39;
-    var $LPAREN = 40;
-    var $RPAREN = 41;
-    var $STAR = 42;
-    var $PLUS = 43;
-    var $COMMA = 44;
-    var $MINUS = 45;
-    var $PERIOD = 46;
-    var $SLASH = 47;
-    var $COLON = 58;
-    var $SEMICOLON = 59;
-    var $LT = 60;
-    var $EQ = 61;
-    var $GT = 62;
-    var $QUESTION = 63;
-    var $0 = 48;
-    var $9 = 57;
-    var $A = 65;
-    var $E = 69;
-    var $F = 70;
-    var $X = 88;
-    var $Z = 90;
-    var $LBRACKET = 91;
-    var $BACKSLASH = 92;
-    var $RBRACKET = 93;
-    var $CARET = 94;
-    var $_ = 95;
-    var $a = 97;
-    var $e = 101;
-    var $f = 102;
-    var $n = 110;
-    var $r = 114;
-    var $t = 116;
-    var $u = 117;
-    var $v = 118;
-    var $x = 120;
-    var $z = 122;
-    var $LBRACE = 123;
-    var $BAR = 124;
-    var $RBRACE = 125;
-    var $NBSP = 160;
-    var $BT = 96;
-    function isWhitespace(code) {
-        return (code >= $TAB && code <= $SPACE) || (code == $NBSP);
-    }
-    function isDigit(code) {
-        return $0 <= code && code <= $9;
-    }
-    function isAsciiLetter(code) {
-        return code >= $a && code <= $z || code >= $A && code <= $Z;
-    }
-    function isAsciiHexDigit(code) {
-        return code >= $a && code <= $f || code >= $A && code <= $F || isDigit(code);
-    }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    var ParseLocation = /** @class */ (function () {
-        function ParseLocation(file, offset, line, col) {
-            this.file = file;
-            this.offset = offset;
-            this.line = line;
-            this.col = col;
-        }
-        ParseLocation.prototype.toString = function () {
-            return this.offset != null ? this.file.url + "@" + this.line + ":" + this.col : this.file.url;
-        };
-        ParseLocation.prototype.moveBy = function (delta) {
-            var source = this.file.content;
-            var len = source.length;
-            var offset = this.offset;
-            var line = this.line;
-            var col = this.col;
-            while (offset > 0 && delta < 0) {
-                offset--;
-                delta++;
-                var ch = source.charCodeAt(offset);
-                if (ch == $LF) {
-                    line--;
-                    var priorLine = source.substr(0, offset - 1).lastIndexOf(String.fromCharCode($LF));
-                    col = priorLine > 0 ? offset - priorLine : offset;
-                }
-                else {
-                    col--;
-                }
-            }
-            while (offset < len && delta > 0) {
-                var ch = source.charCodeAt(offset);
-                offset++;
-                delta--;
-                if (ch == $LF) {
-                    line++;
-                    col = 0;
-                }
-                else {
-                    col++;
-                }
-            }
-            return new ParseLocation(this.file, offset, line, col);
-        };
-        // Return the source around the location
-        // Up to `maxChars` or `maxLines` on each side of the location
-        ParseLocation.prototype.getContext = function (maxChars, maxLines) {
-            var content = this.file.content;
-            var startOffset = this.offset;
-            if (startOffset != null) {
-                if (startOffset > content.length - 1) {
-                    startOffset = content.length - 1;
-                }
-                var endOffset = startOffset;
-                var ctxChars = 0;
-                var ctxLines = 0;
-                while (ctxChars < maxChars && startOffset > 0) {
-                    startOffset--;
-                    ctxChars++;
-                    if (content[startOffset] == '\n') {
-                        if (++ctxLines == maxLines) {
-                            break;
-                        }
-                    }
-                }
-                ctxChars = 0;
-                ctxLines = 0;
-                while (ctxChars < maxChars && endOffset < content.length - 1) {
-                    endOffset++;
-                    ctxChars++;
-                    if (content[endOffset] == '\n') {
-                        if (++ctxLines == maxLines) {
-                            break;
-                        }
-                    }
-                }
-                return {
-                    before: content.substring(startOffset, this.offset),
-                    after: content.substring(this.offset, endOffset + 1),
-                };
-            }
-            return null;
-        };
-        return ParseLocation;
-    }());
-    var ParseSourceFile = /** @class */ (function () {
-        function ParseSourceFile(content, url) {
-            this.content = content;
-            this.url = url;
-        }
-        return ParseSourceFile;
-    }());
-    var ParseSourceSpan = /** @class */ (function () {
-        function ParseSourceSpan(start, end, details) {
-            if (details === void 0) { details = null; }
-            this.start = start;
-            this.end = end;
-            this.details = details;
-        }
-        ParseSourceSpan.prototype.toString = function () {
-            return this.start.file.content.substring(this.start.offset, this.end.offset);
-        };
-        return ParseSourceSpan;
-    }());
-    var ParseErrorLevel;
-    (function (ParseErrorLevel) {
-        ParseErrorLevel[ParseErrorLevel["WARNING"] = 0] = "WARNING";
-        ParseErrorLevel[ParseErrorLevel["ERROR"] = 1] = "ERROR";
-    })(ParseErrorLevel || (ParseErrorLevel = {}));
-    var ParseError = /** @class */ (function () {
-        function ParseError(span, msg, level) {
-            if (level === void 0) { level = ParseErrorLevel.ERROR; }
-            this.span = span;
-            this.msg = msg;
-            this.level = level;
-        }
-        ParseError.prototype.contextualMessage = function () {
-            var ctx = this.span.start.getContext(100, 3);
-            return ctx ? this.msg + " (\"" + ctx.before + "[" + ParseErrorLevel[this.level] + " ->]" + ctx.after + "\")" :
-                this.msg;
-        };
-        ParseError.prototype.toString = function () {
-            var details = this.span.details ? ", " + this.span.details : '';
-            return this.contextualMessage() + ": " + this.span.start + details;
-        };
-        return ParseError;
-    }());
 
     /**
      * @license
@@ -14963,9 +14986,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return parameters;
     }
-    function createQueryDefinition(query, constantPool) {
-        return importExpr(Identifiers$1.query).callFn(prepareQueryParams(query, constantPool));
-    }
     // Turn a directive selector into an R3-compatible selector for directive def
     function createDirectiveSelector(selector) {
         return asLiteral(parseSelectorToR3Selector(selector));
@@ -14993,10 +15013,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function createContentQueriesFunction(meta, constantPool) {
         if (meta.queries.length) {
             var statements = meta.queries.map(function (query) {
-                var queryDefinition = createQueryDefinition(query, constantPool);
-                return importExpr(Identifiers$1.registerContentQuery)
-                    .callFn([queryDefinition, variable('dirIndex')])
-                    .toStmt();
+                var args = __spread([variable('dirIndex')], prepareQueryParams(query, constantPool));
+                return importExpr(Identifiers$1.contentQuery).callFn(args).toStmt();
             });
             var typeName = meta.name;
             var parameters = [new FnParam('dirIndex', NUMBER_TYPE)];
@@ -15009,21 +15027,15 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         if (meta.queries.length > 0) {
             var statements_1 = [];
             var typeName = meta.name;
-            var parameters = [
-                new FnParam('dirIndex', NUMBER_TYPE),
-                new FnParam('queryStartIndex', NUMBER_TYPE),
-            ];
+            var parameters = [new FnParam('dirIndex', NUMBER_TYPE)];
             var directiveInstanceVar_1 = variable('instance');
             // var $tmp$: any;
             var temporary_1 = temporaryAllocator(statements_1, TEMPORARY_NAME);
             // const $instance$ = $r3$.ɵload(dirIndex);
             statements_1.push(directiveInstanceVar_1.set(importExpr(Identifiers$1.load).callFn([variable('dirIndex')]))
                 .toDeclStmt(INFERRED_TYPE, [StmtModifier.Final]));
-            meta.queries.forEach(function (query, idx) {
-                var loadQLArg = variable('queryStartIndex');
-                var getQueryList = importExpr(Identifiers$1.loadQueryList).callFn([
-                    idx > 0 ? loadQLArg.plus(literal(idx)) : loadQLArg
-                ]);
+            meta.queries.forEach(function (query) {
+                var getQueryList = importExpr(Identifiers$1.loadContentQuery).callFn([]);
                 var assignToTemporary = temporary_1().set(getQueryList);
                 var callQueryRefresh = importExpr(Identifiers$1.queryRefresh).callFn([assignToTemporary]);
                 var updateDirective = directiveInstanceVar_1.prop(query.propertyName)
@@ -15092,12 +15104,24 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
     // Return a host binding function or null if one is not necessary.
     function createHostBindingsFunction(meta, elVarExp, bindingContext, staticAttributesAndValues, styleBuilder, bindingParser, constantPool, hostVarsCount) {
-        var e_3, _a;
         var createStatements = [];
         var updateStatements = [];
         var totalHostVarsCount = hostVarsCount;
         var hostBindingSourceSpan = meta.typeSourceSpan;
         var directiveSummary = metadataAsSummary(meta);
+        var valueConverter;
+        var getValueConverter = function () {
+            if (!valueConverter) {
+                var hostVarsCountFn = function (numSlots) {
+                    var originalVarsCount = totalHostVarsCount;
+                    totalHostVarsCount += numSlots;
+                    return originalVarsCount;
+                };
+                valueConverter = new ValueConverter(constantPool, function () { return error('Unexpected node'); }, // new nodes are illegal here
+                hostVarsCountFn, function () { return error('Unexpected pipe'); }); // pipes are illegal here
+            }
+            return valueConverter;
+        };
         // Calculate host event bindings
         var eventBindings = bindingParser.createDirectiveHostEventAsts(directiveSummary, hostBindingSourceSpan);
         if (eventBindings && eventBindings.length) {
@@ -15106,108 +15130,84 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         // Calculate the host property bindings
         var bindings = bindingParser.createBoundHostProperties(directiveSummary, hostBindingSourceSpan);
-        var bindingFn = function (implicit, value) {
-            return convertPropertyBinding(null, implicit, value, 'b', BindingForm.TrySimple, function () { return error('Unexpected interpolation'); });
-        };
-        if (bindings) {
-            var hostVarsCountFn = function (numSlots) {
-                var originalVarsCount = totalHostVarsCount;
-                totalHostVarsCount += numSlots;
-                return originalVarsCount;
-            };
-            var valueConverter = new ValueConverter(constantPool, 
-            /* new nodes are illegal here */ function () { return error('Unexpected node'); }, hostVarsCountFn, 
-            /* pipes are illegal here */ function () { return error('Unexpected pipe'); });
-            try {
-                for (var bindings_1 = __values(bindings), bindings_1_1 = bindings_1.next(); !bindings_1_1.done; bindings_1_1 = bindings_1.next()) {
-                    var binding = bindings_1_1.value;
-                    var name_1 = binding.name;
-                    var stylePrefix = getStylingPrefix(name_1);
-                    if (stylePrefix === 'style') {
-                        var _b = parseNamedProperty(name_1), propertyName = _b.propertyName, unit = _b.unit;
-                        styleBuilder.registerStyleInput(propertyName, binding.expression, unit, binding.sourceSpan);
-                    }
-                    else if (stylePrefix === 'class') {
-                        styleBuilder.registerClassInput(parseNamedProperty(name_1).propertyName, binding.expression, binding.sourceSpan);
+        (bindings || []).forEach(function (binding) {
+            var name = binding.name;
+            var stylePrefix = getStylingPrefix(name);
+            if (stylePrefix === 'style') {
+                var _a = parseNamedProperty(name), propertyName = _a.propertyName, unit = _a.unit;
+                styleBuilder.registerStyleInput(propertyName, binding.expression, unit, binding.sourceSpan);
+            }
+            else if (stylePrefix === 'class') {
+                styleBuilder.registerClassInput(parseNamedProperty(name).propertyName, binding.expression, binding.sourceSpan);
+            }
+            else {
+                // resolve literal arrays and literal objects
+                var value = binding.expression.visit(getValueConverter());
+                var bindingExpr = bindingFn(bindingContext, value);
+                var _b = getBindingNameAndInstruction(binding), bindingName = _b.bindingName, instruction = _b.instruction, isAttribute = _b.isAttribute;
+                var securityContexts = bindingParser.calcPossibleSecurityContexts(meta.selector || '', bindingName, isAttribute)
+                    .filter(function (context) { return context !== SecurityContext.NONE; });
+                var sanitizerFn = null;
+                if (securityContexts.length) {
+                    if (securityContexts.length === 2 &&
+                        securityContexts.indexOf(SecurityContext.URL) > -1 &&
+                        securityContexts.indexOf(SecurityContext.RESOURCE_URL) > -1) {
+                        // Special case for some URL attributes (such as "src" and "href") that may be a part
+                        // of different security contexts. In this case we use special santitization function and
+                        // select the actual sanitizer at runtime based on a tag name that is provided while
+                        // invoking sanitization function.
+                        sanitizerFn = importExpr(Identifiers$1.sanitizeUrlOrResourceUrl);
                     }
                     else {
-                        // resolve literal arrays and literal objects
-                        var value = binding.expression.visit(valueConverter);
-                        var bindingExpr = bindingFn(bindingContext, value);
-                        var _c = getBindingNameAndInstruction(binding), bindingName = _c.bindingName, instruction = _c.instruction, isAttribute = _c.isAttribute;
-                        var securityContexts = bindingParser
-                            .calcPossibleSecurityContexts(meta.selector || '', bindingName, isAttribute)
-                            .filter(function (context) { return context !== SecurityContext.NONE; });
-                        var sanitizerFn = null;
-                        if (securityContexts.length) {
-                            if (securityContexts.length === 2 &&
-                                securityContexts.indexOf(SecurityContext.URL) > -1 &&
-                                securityContexts.indexOf(SecurityContext.RESOURCE_URL) > -1) {
-                                // Special case for some URL attributes (such as "src" and "href") that may be a part of
-                                // different security contexts. In this case we use special santitization function and
-                                // select the actual sanitizer at runtime based on a tag name that is provided while
-                                // invoking sanitization function.
-                                sanitizerFn = importExpr(Identifiers$1.sanitizeUrlOrResourceUrl);
-                            }
-                            else {
-                                sanitizerFn = resolveSanitizationFn(securityContexts[0], isAttribute);
-                            }
-                        }
-                        var instructionParams = [
-                            elVarExp, literal(bindingName), importExpr(Identifiers$1.bind).callFn([bindingExpr.currValExpr])
-                        ];
-                        if (sanitizerFn) {
-                            instructionParams.push(sanitizerFn);
-                        }
-                        if (!isAttribute) {
-                            if (!sanitizerFn) {
-                                // append `null` in front of `nativeOnly` flag if no sanitizer fn defined
-                                instructionParams.push(literal(null));
-                            }
-                            // host bindings must have nativeOnly prop set to true
-                            instructionParams.push(literal(true));
-                        }
-                        updateStatements.push.apply(updateStatements, __spread(bindingExpr.stmts));
-                        updateStatements.push(importExpr(instruction).callFn(instructionParams).toStmt());
+                        sanitizerFn = resolveSanitizationFn(securityContexts[0], isAttribute);
                     }
                 }
-            }
-            catch (e_3_1) { e_3 = { error: e_3_1 }; }
-            finally {
-                try {
-                    if (bindings_1_1 && !bindings_1_1.done && (_a = bindings_1.return)) _a.call(bindings_1);
+                var instructionParams = [
+                    elVarExp, literal(bindingName), importExpr(Identifiers$1.bind).callFn([bindingExpr.currValExpr])
+                ];
+                if (sanitizerFn) {
+                    instructionParams.push(sanitizerFn);
                 }
-                finally { if (e_3) throw e_3.error; }
-            }
-            // since we're dealing with directives/components and both have hostBinding
-            // functions, we need to generate a special hostAttrs instruction that deals
-            // with both the assignment of styling as well as static attributes to the host
-            // element. The instruction below will instruct all initial styling (styling
-            // that is inside of a host binding within a directive/component) to be attached
-            // to the host element alongside any of the provided host attributes that were
-            // collected earlier.
-            var hostAttrs = convertAttributesToExpressions(staticAttributesAndValues);
-            var hostInstruction = styleBuilder.buildHostAttrsInstruction(null, hostAttrs, constantPool);
-            if (hostInstruction) {
-                createStatements.push(createStylingStmt(hostInstruction, bindingContext, bindingFn));
-            }
-            if (styleBuilder.hasBindings) {
-                // singular style/class bindings (things like `[style.prop]` and `[class.name]`)
-                // MUST be registered on a given element within the component/directive
-                // templateFn/hostBindingsFn functions. The instruction below will figure out
-                // what all the bindings are and then generate the statements required to register
-                // those bindings to the element via `elementStyling`.
-                var elementStylingInstruction = styleBuilder.buildElementStylingInstruction(null, constantPool);
-                if (elementStylingInstruction) {
-                    createStatements.push(createStylingStmt(elementStylingInstruction, bindingContext, bindingFn));
+                if (!isAttribute) {
+                    if (!sanitizerFn) {
+                        // append `null` in front of `nativeOnly` flag if no sanitizer fn defined
+                        instructionParams.push(literal(null));
+                    }
+                    // host bindings must have nativeOnly prop set to true
+                    instructionParams.push(literal(true));
                 }
-                // finally each binding that was registered in the statement above will need to be added to
-                // the update block of a component/directive templateFn/hostBindingsFn so that the bindings
-                // are evaluated and updated for the element.
-                styleBuilder.buildUpdateLevelInstructions(valueConverter).forEach(function (instruction) {
-                    updateStatements.push(createStylingStmt(instruction, bindingContext, bindingFn));
-                });
+                updateStatements.push.apply(updateStatements, __spread(bindingExpr.stmts));
+                updateStatements.push(importExpr(instruction).callFn(instructionParams).toStmt());
             }
+        });
+        // since we're dealing with directives/components and both have hostBinding
+        // functions, we need to generate a special hostAttrs instruction that deals
+        // with both the assignment of styling as well as static attributes to the host
+        // element. The instruction below will instruct all initial styling (styling
+        // that is inside of a host binding within a directive/component) to be attached
+        // to the host element alongside any of the provided host attributes that were
+        // collected earlier.
+        var hostAttrs = convertAttributesToExpressions(staticAttributesAndValues);
+        var hostInstruction = styleBuilder.buildHostAttrsInstruction(null, hostAttrs, constantPool);
+        if (hostInstruction) {
+            createStatements.push(createStylingStmt(hostInstruction, bindingContext, bindingFn));
+        }
+        if (styleBuilder.hasBindings) {
+            // singular style/class bindings (things like `[style.prop]` and `[class.name]`)
+            // MUST be registered on a given element within the component/directive
+            // templateFn/hostBindingsFn functions. The instruction below will figure out
+            // what all the bindings are and then generate the statements required to register
+            // those bindings to the element via `elementStyling`.
+            var elementStylingInstruction = styleBuilder.buildElementStylingInstruction(null, constantPool);
+            if (elementStylingInstruction) {
+                createStatements.push(createStylingStmt(elementStylingInstruction, bindingContext, bindingFn));
+            }
+            // finally each binding that was registered in the statement above will need to be added to
+            // the update block of a component/directive templateFn/hostBindingsFn so that the bindings
+            // are evaluated and updated for the element.
+            styleBuilder.buildUpdateLevelInstructions(getValueConverter()).forEach(function (instruction) {
+                updateStatements.push(createStylingStmt(instruction, bindingContext, bindingFn));
+            });
         }
         if (totalHostVarsCount) {
             createStatements.unshift(importExpr(Identifiers$1.allocHostVars).callFn([literal(totalHostVarsCount)]).toStmt());
@@ -15227,6 +15227,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             ], statements, INFERRED_TYPE, null, hostBindingsFnName);
         }
         return null;
+    }
+    function bindingFn(implicit, value) {
+        return convertPropertyBinding(null, implicit, value, 'b', BindingForm.TrySimple, function () { return error('Unexpected interpolation'); });
     }
     function createStylingStmt(instruction, bindingContext, bindingFn) {
         var params = instruction.buildParams(function (value) { return bindingFn(bindingContext, value).currValExpr; });
@@ -15300,6 +15303,23 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
         });
         return { attributes: attributes, listeners: listeners, properties: properties };
+    }
+    /**
+     * Verifies host bindings and returns the list of errors (if any). Empty array indicates that a
+     * given set of host bindings has no errors.
+     *
+     * @param bindings set of host bindings to verify.
+     * @param sourceSpan source span where host bindings were defined.
+     * @returns array of errors associated with a given set of host bindings.
+     */
+    function verifyHostBindings(bindings, sourceSpan) {
+        var summary = metadataAsSummary({ host: bindings });
+        // TODO: abstract out host bindings verification logic and use it instead of
+        // creating events and properties ASTs to detect errors (FW-996)
+        var bindingParser = makeBindingParser();
+        bindingParser.createDirectiveHostEventAsts(summary, sourceSpan);
+        bindingParser.createBoundHostProperties(summary, sourceSpan);
+        return bindingParser.errors;
     }
     function compileStyles(styles, selector, hostSelector) {
         var shadowCss = new ShadowCss();
@@ -15409,6 +15429,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var preStatements = __spread(constantPool.statements, res.statements);
             return jitExpression(res.expression, angularCoreEnv, sourceMapUrl, preStatements);
         };
+        CompilerFacadeImpl.prototype.createParseSourceSpan = function (kind, typeName, sourceUrl) {
+            return r3JitTypeSourceSpan(kind, typeName, sourceUrl);
+        };
         return CompilerFacadeImpl;
     }());
     var USE_CLASS = Object.keys({ useClass: null })[0];
@@ -15445,7 +15468,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         for (var field in propMetadata) {
             _loop_1(field);
         }
-        return __assign({}, facade, { typeSourceSpan: null, type: new WrappedNodeExpr(facade.type), deps: convertR3DependencyMetadataArray(facade.deps), host: extractHostBindings(facade.host, facade.propMetadata), inputs: __assign({}, inputsFromMetadata, inputsFromType), outputs: __assign({}, outputsFromMetadata, outputsFromType), queries: facade.queries.map(convertToR3QueryMetadata), providers: facade.providers != null ? new WrappedNodeExpr(facade.providers) : null });
+        return __assign({}, facade, { typeSourceSpan: facade.typeSourceSpan, type: new WrappedNodeExpr(facade.type), deps: convertR3DependencyMetadataArray(facade.deps), host: extractHostBindings(facade.host, facade.propMetadata, facade.typeSourceSpan), inputs: __assign({}, inputsFromMetadata, inputsFromType), outputs: __assign({}, outputsFromMetadata, outputsFromType), queries: facade.queries.map(convertToR3QueryMetadata), providers: facade.providers != null ? new WrappedNodeExpr(facade.providers) : null });
     }
     function wrapExpression(obj, property) {
         if (obj.hasOwnProperty(property)) {
@@ -15486,17 +15509,22 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function convertR3DependencyMetadataArray(facades) {
         return facades == null ? null : facades.map(convertR3DependencyMetadata);
     }
-    function extractHostBindings(host, propMetadata) {
+    function extractHostBindings(host, propMetadata, sourceSpan) {
         // First parse the declarations from the metadata.
-        var _a = parseHostBindings(host || {}), attributes = _a.attributes, listeners = _a.listeners, properties = _a.properties;
+        var bindings = parseHostBindings(host || {});
+        // After that check host bindings for errors
+        var errors = verifyHostBindings(bindings, sourceSpan);
+        if (errors.length) {
+            throw new Error(errors.map(function (error) { return error.msg; }).join('\n'));
+        }
         var _loop_2 = function (field) {
             if (propMetadata.hasOwnProperty(field)) {
                 propMetadata[field].forEach(function (ann) {
                     if (isHostBinding(ann)) {
-                        properties[ann.hostPropertyName || field] = field;
+                        bindings.properties[ann.hostPropertyName || field] = field;
                     }
                     else if (isHostListener(ann)) {
-                        listeners[ann.eventName || field] = field + "(" + (ann.args || []).join(',') + ")";
+                        bindings.listeners[ann.eventName || field] = field + "(" + (ann.args || []).join(',') + ")";
                     }
                 });
             }
@@ -15505,7 +15533,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         for (var field in propMetadata) {
             _loop_2(field);
         }
-        return { attributes: attributes, listeners: listeners, properties: properties };
+        return bindings;
     }
     function isHostBinding(value) {
         return value.ngMetadataName === 'HostBinding';
@@ -15538,7 +15566,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.1+43.sha-3d5a919');
+    var VERSION$1 = new Version('8.0.0-beta.1+109.sha-a227c52');
 
     /**
      * @license
@@ -30913,7 +30941,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         input.forEach(function (value) { return Array.isArray(value) ? deepForEach(value, fn) : fn(value); });
     }
     function isValueProvider(value) {
-        return value && typeof value == 'object' && USE_VALUE$4 in value;
+        return value !== null && typeof value == 'object' && USE_VALUE$4 in value;
     }
     function isExistingProvider(value) {
         return !!(value && value.useExisting);
@@ -30928,7 +30956,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return !!value.deps;
     }
     function hasOnDestroy(value) {
-        return typeof value === 'object' && value != null && value.ngOnDestroy &&
+        return value !== null && typeof value === 'object' &&
             typeof value.ngOnDestroy === 'function';
     }
     function couldBeInjectableType(value) {
@@ -31524,7 +31552,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     var FactoryPrototype = NodeInjectorFactory.prototype;
     function isFactory(obj) {
         // See: https://jsperf.com/instanceof-vs-getprototypeof
-        return obj != null && typeof obj == 'object' && Object.getPrototypeOf(obj) == FactoryPrototype;
+        return obj !== null && typeof obj == 'object' && Object.getPrototypeOf(obj) == FactoryPrototype;
     }
 
     /**
@@ -31600,7 +31628,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function getRootView(target) {
         ngDevMode && assertDefined(target, 'component');
         var lView = Array.isArray(target) ? target : readPatchedLView(target);
-        while (lView && !(lView[FLAGS] & 128 /* IsRoot */)) {
+        while (lView && !(lView[FLAGS] & 256 /* IsRoot */)) {
             lView = lView[PARENT];
         }
         return lView;
@@ -31804,9 +31832,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function registerPreOrderHooks(directiveIndex, directiveDef, tView) {
         ngDevMode &&
             assertEqual(tView.firstTemplatePass, true, 'Should only be called on first template pass');
-        var onInit = directiveDef.onInit, doCheck = directiveDef.doCheck;
+        var onChanges = directiveDef.onChanges, onInit = directiveDef.onInit, doCheck = directiveDef.doCheck;
+        if (onChanges) {
+            (tView.initHooks || (tView.initHooks = [])).push(directiveIndex, onChanges);
+            (tView.checkHooks || (tView.checkHooks = [])).push(directiveIndex, onChanges);
+        }
         if (onInit) {
-            (tView.initHooks || (tView.initHooks = [])).push(directiveIndex, onInit);
+            (tView.initHooks || (tView.initHooks = [])).push(-directiveIndex, onInit);
         }
         if (doCheck) {
             (tView.initHooks || (tView.initHooks = [])).push(directiveIndex, doCheck);
@@ -31840,14 +31872,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             for (var i = tNode.directiveStart, end = tNode.directiveEnd; i < end; i++) {
                 var directiveDef = tView.data[i];
                 if (directiveDef.afterContentInit) {
-                    (tView.contentHooks || (tView.contentHooks = [])).push(i, directiveDef.afterContentInit);
+                    (tView.contentHooks || (tView.contentHooks = [])).push(-i, directiveDef.afterContentInit);
                 }
                 if (directiveDef.afterContentChecked) {
                     (tView.contentHooks || (tView.contentHooks = [])).push(i, directiveDef.afterContentChecked);
                     (tView.contentCheckHooks || (tView.contentCheckHooks = [])).push(i, directiveDef.afterContentChecked);
                 }
                 if (directiveDef.afterViewInit) {
-                    (tView.viewHooks || (tView.viewHooks = [])).push(i, directiveDef.afterViewInit);
+                    (tView.viewHooks || (tView.viewHooks = [])).push(-i, directiveDef.afterViewInit);
                 }
                 if (directiveDef.afterViewChecked) {
                     (tView.viewHooks || (tView.viewHooks = [])).push(i, directiveDef.afterViewChecked);
@@ -31873,9 +31905,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * @param checkNoChangesMode Whether or not we're in checkNoChanges mode.
      */
     function executeInitHooks(currentView, tView, checkNoChangesMode) {
-        if (!checkNoChangesMode && currentView[FLAGS] & 32 /* RunInit */) {
-            executeHooks(currentView, tView.initHooks, tView.checkHooks, checkNoChangesMode);
-            currentView[FLAGS] &= ~32 /* RunInit */;
+        if (!checkNoChangesMode) {
+            executeHooks(currentView, tView.initHooks, tView.checkHooks, checkNoChangesMode, 0 /* OnInitHooksToBeRun */);
         }
     }
     /**
@@ -31887,12 +31918,20 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * @param checkHooks An Array of hooks to run if we're not in the first view pass.
      * @param checkNoChangesMode Whether or not we're in no changes mode.
      */
-    function executeHooks(currentView, firstPassHooks, checkHooks, checkNoChangesMode) {
+    function executeHooks(currentView, firstPassHooks, checkHooks, checkNoChangesMode, initPhase) {
         if (checkNoChangesMode)
             return;
-        var hooksToCall = currentView[FLAGS] & 2 /* FirstLViewPass */ ? firstPassHooks : checkHooks;
+        var hooksToCall = (currentView[FLAGS] & 3 /* InitPhaseStateMask */) === initPhase ?
+            firstPassHooks :
+            checkHooks;
         if (hooksToCall) {
-            callHooks(currentView, hooksToCall);
+            callHooks(currentView, hooksToCall, initPhase);
+        }
+        // The init phase state must be always checked here as it may have been recursively updated
+        if ((currentView[FLAGS] & 3 /* InitPhaseStateMask */) === initPhase &&
+            initPhase !== 3 /* InitPhaseCompleted */) {
+            currentView[FLAGS] &= 511 /* IndexWithinInitPhaseReset */;
+            currentView[FLAGS] += 1 /* InitPhaseStateIncrementer */;
         }
     }
     /**
@@ -31902,9 +31941,26 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * @param currentView The current view
      * @param arr The array in which the hooks are found
      */
-    function callHooks(currentView, arr) {
+    function callHooks(currentView, arr, initPhase) {
+        var initHooksCount = 0;
         for (var i = 0; i < arr.length; i += 2) {
-            arr[i + 1].call(currentView[arr[i]]);
+            var isInitHook = arr[i] < 0;
+            var directiveIndex = isInitHook ? -arr[i] : arr[i];
+            var directive = currentView[directiveIndex];
+            var hook = arr[i + 1];
+            if (isInitHook) {
+                initHooksCount++;
+                var indexWithintInitPhase = currentView[FLAGS] >> 9 /* IndexWithinInitPhaseShift */;
+                // The init phase state must be always checked here as it may have been recursively updated
+                if (indexWithintInitPhase < initHooksCount &&
+                    (currentView[FLAGS] & 3 /* InitPhaseStateMask */) === initPhase) {
+                    currentView[FLAGS] += 512 /* IndexWithinInitPhaseIncrementer */;
+                    hook.call(directive);
+                }
+            }
+            else {
+                hook.call(directive);
+            }
         }
     }
 
@@ -31947,7 +32003,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /** Checks whether a given view is in creation mode */
     function isCreationMode(view) {
         if (view === void 0) { view = lView; }
-        return (view[FLAGS] & 1 /* CreationMode */) === 1 /* CreationMode */;
+        return (view[FLAGS] & 4 /* CreationMode */) === 4 /* CreationMode */;
     }
     /**
      * State of the current view being processed.
@@ -31993,7 +32049,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function setBindingRoot(value) {
         bindingRootIndex = value;
     }
-    function setCurrentViewQueryIndex(value) {
+    function setCurrentQueryIndex(value) {
     }
     /**
      * Swap the current state with a new state.
@@ -32035,16 +32091,15 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function leaveView(newView) {
         var tView = lView[TVIEW];
         if (isCreationMode(lView)) {
-            lView[FLAGS] &= ~1 /* CreationMode */;
+            lView[FLAGS] &= ~4 /* CreationMode */;
         }
         else {
             try {
-                executeHooks(lView, tView.viewHooks, tView.viewCheckHooks, checkNoChangesMode);
+                executeHooks(lView, tView.viewHooks, tView.viewCheckHooks, checkNoChangesMode, 2 /* AfterViewInitHooksToBeRun */);
             }
             finally {
                 // Views are clean and in update mode after being checked, so these bits are cleared
-                lView[FLAGS] &= ~(8 /* Dirty */ | 2 /* FirstLViewPass */);
-                lView[FLAGS] |= 32 /* RunInit */;
+                lView[FLAGS] &= ~(32 /* Dirty */ | 8 /* FirstLViewPass */);
                 lView[BINDING_INDEX] = tView.bindingStartIndex;
             }
         }
@@ -33696,7 +33751,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             lView[QUERIES].insertView(index);
         }
         // Sets the attached flag
-        lView[FLAGS] |= 16 /* Attached */;
+        lView[FLAGS] |= 64 /* Attached */;
     }
     /** Gets the child of the given LView */
     function getLViewChild(lView) {
@@ -33716,7 +33771,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         destroyViewTree(view);
         // Sets the destroyed flag
-        view[FLAGS] |= 64 /* Destroyed */;
+        view[FLAGS] |= 128 /* Destroyed */;
     }
     /**
      * Determines which LViewOrLContainer to jump to when traversing back up the
@@ -33968,6 +34023,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         // This needs to be set before children are processed to support recursive components
         tView.firstTemplatePass = false;
         setFirstTemplatePass(false);
+        // Resetting the bindingIndex of the current LView as the next steps may trigger change detection.
+        lView[BINDING_INDEX] = tView.bindingStartIndex;
         // If this is a creation pass, we should not call lifecycle hooks or evaluate bindings.
         // This will be done in the update pass.
         if (!isCreationMode(lView)) {
@@ -33976,7 +34033,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             refreshDynamicEmbeddedViews(lView);
             // Content query results must be refreshed before content hooks are called.
             refreshContentQueries(tView);
-            executeHooks(lView, tView.contentHooks, tView.contentCheckHooks, checkNoChangesMode);
+            executeHooks(lView, tView.contentHooks, tView.contentCheckHooks, checkNoChangesMode, 1 /* AfterContentInitHooksToBeRun */);
             setHostBindings(tView, lView);
         }
         refreshChildComponents(tView.components);
@@ -34022,10 +34079,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /** Refreshes content queries for all directives in the given view. */
     function refreshContentQueries(tView) {
         if (tView.contentQueries != null) {
-            for (var i = 0; i < tView.contentQueries.length; i += 2) {
+            for (var i = 0; i < tView.contentQueries.length; i++) {
                 var directiveDefIdx = tView.contentQueries[i];
                 var directiveDef = tView.data[directiveDefIdx];
-                directiveDef.contentQueriesRefresh(directiveDefIdx - HEADER_OFFSET, tView.contentQueries[i + 1]);
+                directiveDef.contentQueriesRefresh(directiveDefIdx - HEADER_OFFSET);
             }
         }
     }
@@ -34039,8 +34096,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
     function createLView(parentLView, tView, context, flags, rendererFactory, renderer, sanitizer, injector) {
         var lView = tView.blueprint.slice();
-        lView[FLAGS] = flags | 1 /* CreationMode */ | 16 /* Attached */ | 32 /* RunInit */ |
-            2 /* FirstLViewPass */;
+        lView[FLAGS] = flags | 4 /* CreationMode */ | 64 /* Attached */ | 8 /* FirstLViewPass */;
         lView[PARENT] = lView[DECLARATION_VIEW] = parentLView;
         lView[CONTEXT] = context;
         lView[RENDERER_FACTORY] = (rendererFactory || parentLView && parentLView[RENDERER_FACTORY]);
@@ -34111,7 +34167,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var _previousOrParentTNode = getPreviousOrParentTNode();
         setIsParent(true);
         setPreviousOrParentTNode(null);
-        var lView = createLView(declarationView, tView, context, 4 /* CheckAlways */);
+        var lView = createLView(declarationView, tView, context, 16 /* CheckAlways */);
         lView[DECLARATION_VIEW] = declarationView;
         if (queries) {
             lView[QUERIES] = queries.createView();
@@ -34138,7 +34194,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var _isParent = getIsParent();
         var _previousOrParentTNode = getPreviousOrParentTNode();
         var oldView;
-        if (viewToRender[FLAGS] & 128 /* IsRoot */) {
+        if (viewToRender[FLAGS] & 256 /* IsRoot */) {
             // This is a root view inside the view tree
             tickRootContext(getRootContext(viewToRender));
         }
@@ -34180,7 +34236,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     templateFn(1 /* Create */, context);
                 }
                 refreshDescendantViews(hostView);
-                hostView[FLAGS] &= ~1 /* CreationMode */;
+                hostView[FLAGS] &= ~4 /* CreationMode */;
             }
             // update mode pass
             templateFn && templateFn(2 /* Update */, context);
@@ -34485,7 +34541,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var hostView = getComponentViewByIndex(adjustedElementIndex, lView);
         ngDevMode && assertNodeType(lView[TVIEW].data[adjustedElementIndex], 3 /* Element */);
         // Only attached CheckAlways components or attached, dirty OnPush components should be checked
-        if (viewAttached(hostView) && hostView[FLAGS] & (4 /* CheckAlways */ | 8 /* Dirty */)) {
+        if (viewAttached(hostView) && hostView[FLAGS] & (16 /* CheckAlways */ | 32 /* Dirty */)) {
             syncViewWithBlueprint(hostView);
             checkView(hostView, hostView[CONTEXT]);
         }
@@ -34524,7 +34580,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
     /** Returns a boolean for whether the view is attached */
     function viewAttached(view) {
-        return (view[FLAGS] & 16 /* Attached */) === 16 /* Attached */;
+        return (view[FLAGS] & 64 /* Attached */) === 64 /* Attached */;
     }
     /**
      * Adds LView or LContainer to the end of the current view tree.
@@ -34561,11 +34617,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * @returns the root LView
      */
     function markViewDirty(lView) {
-        while (lView && !(lView[FLAGS] & 128 /* IsRoot */)) {
-            lView[FLAGS] |= 8 /* Dirty */;
+        while (lView && !(lView[FLAGS] & 256 /* IsRoot */)) {
+            lView[FLAGS] |= 32 /* Dirty */;
             lView = lView[PARENT];
         }
-        lView[FLAGS] |= 8 /* Dirty */;
+        lView[FLAGS] |= 32 /* Dirty */;
         return lView;
     }
     function tickRootContext(rootContext) {
@@ -34663,7 +34719,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function executeViewQueryFn(lView, tView, component) {
         var viewQuery = tView.viewQuery;
         if (viewQuery) {
-            setCurrentViewQueryIndex(tView.viewQueryStartIndex);
+            setCurrentQueryIndex(tView.viewQueryStartIndex);
             viewQuery(getRenderFlags(lView), component);
         }
     }
@@ -34721,7 +34777,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function createRootComponentView(rNode, def, rootView, rendererFactory, renderer, sanitizer) {
         resetComponentState();
         var tView = rootView[TVIEW];
-        var componentView = createLView(rootView, getOrCreateTView(def.template, def.consts, def.vars, def.directiveDefs, def.pipeDefs, def.viewQuery), null, def.onPush ? 8 /* Dirty */ : 4 /* CheckAlways */, rendererFactory, renderer, sanitizer);
+        var componentView = createLView(rootView, getOrCreateTView(def.template, def.consts, def.vars, def.directiveDefs, def.pipeDefs, def.viewQuery), null, def.onPush ? 32 /* Dirty */ : 16 /* CheckAlways */, rendererFactory, renderer, sanitizer);
         var tNode = createNodeAtIndex(0, 3 /* Element */, rNode, null, null);
         if (tView.firstTemplatePass) {
             diPublicInInjector(getOrCreateNodeInjectorForNode(tNode, rootView), rootView, def.type);
@@ -34978,7 +35034,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         });
         Object.defineProperty(ViewRef.prototype, "destroyed", {
             get: function () {
-                return (this._lView[FLAGS] & 64 /* Destroyed */) === 64 /* Destroyed */;
+                return (this._lView[FLAGS] & 128 /* Destroyed */) === 128 /* Destroyed */;
             },
             enumerable: true,
             configurable: true
@@ -35085,7 +35141,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
          * }
          * ```
          */
-        ViewRef.prototype.detach = function () { this._lView[FLAGS] &= ~16 /* Attached */; };
+        ViewRef.prototype.detach = function () { this._lView[FLAGS] &= ~64 /* Attached */; };
         /**
          * Re-attaches a view to the change detection tree.
          *
@@ -35142,7 +35198,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
          * }
          * ```
          */
-        ViewRef.prototype.reattach = function () { this._lView[FLAGS] |= 16 /* Attached */; };
+        ViewRef.prototype.reattach = function () { this._lView[FLAGS] |= 64 /* Attached */; };
         /**
          * Checks the view and its children.
          *
@@ -35441,7 +35497,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.1+43.sha-3d5a919');
+    var VERSION$2 = new Version$1('8.0.0-beta.1+109.sha-a227c52');
 
     /**
      * @license
@@ -37201,7 +37257,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         // avoided if possible. The sequence of checks here determines whether ngOnDestroy needs to be
         // checked. It might not if the `injectable` isn't an object or if NodeFlags.OnDestroy is already
         // set (ngOnDestroy was detected statically).
-        if (injectable !== UNDEFINED_VALUE && injectable != null && typeof injectable === 'object' &&
+        if (injectable !== UNDEFINED_VALUE && injectable !== null && typeof injectable === 'object' &&
             !(providerDef.flags & 131072 /* OnDestroy */) && typeof injectable.ngOnDestroy === 'function') {
             providerDef.flags |= 131072 /* OnDestroy */;
         }
@@ -38400,8 +38456,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var hostRNode = isInternalRootView ?
                 elementCreate(this.selector, rendererFactory.createRenderer(null, this.componentDef)) :
                 locateHostElement(rendererFactory, rootSelectorOrNode);
-            var rootFlags = this.componentDef.onPush ? 8 /* Dirty */ | 128 /* IsRoot */ :
-                4 /* CheckAlways */ | 128 /* IsRoot */;
+            var rootFlags = this.componentDef.onPush ? 32 /* Dirty */ | 256 /* IsRoot */ :
+                16 /* CheckAlways */ | 256 /* IsRoot */;
             var rootContext = !isInternalRootView ? rootViewInjector.get(ROOT_CONTEXT) : createRootContext();
             var renderer = rendererFactory.createRenderer(hostRNode, this.componentDef);
             if (rootSelectorOrNode && hostRNode) {
@@ -42150,16 +42206,18 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
     function insertView$1(index, query) {
         while (query) {
-            ngDevMode &&
-                assertDefined(query.containerValues, 'View queries need to have a pointer to container values.');
+            ngDevMode && assertViewQueryhasPointerToDeclarationContainer(query);
             query.containerValues.splice(index, 0, query.values);
+            // mark a query as dirty only when inserted view had matching modes
+            if (query.values.length) {
+                query.list.setDirty();
+            }
             query = query.next;
         }
     }
     function removeView$1(query) {
         while (query) {
-            ngDevMode &&
-                assertDefined(query.containerValues, 'View queries need to have a pointer to container values.');
+            ngDevMode && assertViewQueryhasPointerToDeclarationContainer(query);
             var containerValues = query.containerValues;
             var viewValuesIdx = containerValues.indexOf(query.values);
             var removed = containerValues.splice(viewValuesIdx, 1);
@@ -42170,6 +42228,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
             query = query.next;
         }
+    }
+    function assertViewQueryhasPointerToDeclarationContainer(query) {
+        assertDefined(query.containerValues, 'View queries need to have a pointer to container values.');
     }
     /**
      * Iterates over local names for a given node and returns directive index
@@ -51210,7 +51271,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.1+43.sha-3d5a919');
+    var VERSION$3 = new Version$1('8.0.0-beta.1+109.sha-a227c52');
 
     /**
      * @license
