@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.1+109.sha-a227c52
+ * @license Angular v8.0.0-beta.2+3.sha-35e45dc
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -15566,7 +15566,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.1+109.sha-a227c52');
+    var VERSION$1 = new Version('8.0.0-beta.2+3.sha-35e45dc');
 
     /**
      * @license
@@ -32032,14 +32032,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function setCheckNoChangesMode(mode) {
         checkNoChangesMode = mode;
     }
-    /** Whether or not this is the first time the current view has been processed. */
-    var firstTemplatePass = true;
-    function getFirstTemplatePass() {
-        return firstTemplatePass;
-    }
-    function setFirstTemplatePass(value) {
-        firstTemplatePass = value;
-    }
     /**
      * The root index from which pure function instructions should calculate their binding
      * indices. In component views, this is TView.bindingStartIndex. In a host binding
@@ -32067,7 +32059,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var oldView = lView;
         if (newView) {
             var tView = newView[TVIEW];
-            firstTemplatePass = tView.firstTemplatePass;
             bindingRootIndex = tView.bindingStartIndex;
         }
         previousOrParentTNode = hostTNode;
@@ -33765,13 +33756,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * @param view The view to be destroyed.
      */
     function destroyLView(view) {
-        var renderer = view[RENDERER];
-        if (isProceduralRenderer(renderer) && renderer.destroyNode) {
-            walkTNodeTree(view, 2 /* Destroy */, renderer, null);
+        if (!(view[FLAGS] & 128 /* Destroyed */)) {
+            var renderer = view[RENDERER];
+            if (isProceduralRenderer(renderer) && renderer.destroyNode) {
+                walkTNodeTree(view, 2 /* Destroy */, renderer, null);
+            }
+            destroyViewTree(view);
         }
-        destroyViewTree(view);
-        // Sets the destroyed flag
-        view[FLAGS] |= 128 /* Destroyed */;
     }
     /**
      * Determines which LViewOrLContainer to jump to when traversing back up the
@@ -33808,6 +33799,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function cleanUpView(viewOrContainer) {
         if (viewOrContainer.length >= HEADER_OFFSET) {
             var view = viewOrContainer;
+            // Mark the LView as destroyed *before* executing the onDestroy hooks. An onDestroy hook
+            // runs arbitrary user code, which could include its own `viewRef.destroy()` (or similar). If
+            // We don't flag the view as destroyed before the hooks, this could lead to an infinite loop.
+            // This also aligns with the ViewEngine behavior. It also means that the onDestroy hook is
+            // really more of an "afterDestroy" hook if you think about it.
+            view[FLAGS] |= 128 /* Destroyed */;
             executeOnDestroys(view);
             removeListeners(view);
             var hostTNode = view[HOST_NODE];
@@ -34022,7 +34019,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var tView = lView[TVIEW];
         // This needs to be set before children are processed to support recursive components
         tView.firstTemplatePass = false;
-        setFirstTemplatePass(false);
         // Resetting the bindingIndex of the current LView as the next steps may trigger change detection.
         lView[BINDING_INDEX] = tView.bindingStartIndex;
         // If this is a creation pass, we should not call lifecycle hooks or evaluate bindings.
@@ -34210,7 +34206,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 // off firstTemplatePass. If we don't set it here, instances will perform directive
                 // matching, etc again and again.
                 viewToRender[TVIEW].firstTemplatePass = false;
-                setFirstTemplatePass(false);
                 refreshDescendantViews(viewToRender);
             }
             finally {
@@ -34482,9 +34477,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
     /** Stores index of component's host element so it will be queued for view refresh during CD. */
     function queueComponentIndexForCheck(previousOrParentTNode) {
-        ngDevMode &&
-            assertEqual(getFirstTemplatePass(), true, 'Should only be called in first template pass.');
         var tView = getLView()[TVIEW];
+        ngDevMode &&
+            assertEqual(tView.firstTemplatePass, true, 'Should only be called in first template pass.');
         (tView.components || (tView.components = [])).push(previousOrParentTNode.index);
     }
     /**
@@ -34493,7 +34488,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * @param index the initial index
      */
     function initNodeFlags(tNode, index, numberOfDirectives) {
-        ngDevMode && assertEqual(getFirstTemplatePass(), true, 'expected firstTemplatePass to be true');
         var flags = tNode.flags;
         ngDevMode && assertEqual(flags === 0 || flags === 1 /* isComponent */, true, 'expected node flags to not be initialized');
         ngDevMode && assertNotEqual(numberOfDirectives, tNode.directiveEnd - tNode.directiveStart, 'Reached the max number of directives');
@@ -34595,11 +34589,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     function addToViewTree(lView, adjustedHostIndex, state) {
         var tView = lView[TVIEW];
-        var firstTemplatePass = getFirstTemplatePass();
         if (lView[TAIL]) {
             lView[TAIL][NEXT] = state;
         }
-        else if (firstTemplatePass) {
+        else if (tView.firstTemplatePass) {
             tView.childIndex = adjustedHostIndex;
         }
         lView[TAIL] = state;
@@ -35497,7 +35490,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.1+109.sha-a227c52');
+    var VERSION$2 = new Version$1('8.0.0-beta.2+3.sha-35e45dc');
 
     /**
      * @license
@@ -51271,7 +51264,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.1+109.sha-a227c52');
+    var VERSION$3 = new Version$1('8.0.0-beta.2+3.sha-35e45dc');
 
     /**
      * @license
