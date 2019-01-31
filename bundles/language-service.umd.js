@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.2+6.sha-9efb39c
+ * @license Angular v8.0.0-beta.2+8.sha-1b6d8a7
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -15566,7 +15566,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.2+6.sha-9efb39c');
+    var VERSION$1 = new Version('8.0.0-beta.2+8.sha-1b6d8a7');
 
     /**
      * @license
@@ -34158,7 +34158,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * either through ViewContainerRef.createEmbeddedView() or TemplateRef.createEmbeddedView().
      * Such lViewNode will then be renderer with renderEmbeddedTemplate() (see below).
      */
-    function createEmbeddedViewAndNode(tView, context, declarationView, renderer, queries, injectorIndex) {
+    function createEmbeddedViewAndNode(tView, context, declarationView, queries, injectorIndex) {
         var _isParent = getIsParent();
         var _previousOrParentTNode = getPreviousOrParentTNode();
         setIsParent(true);
@@ -35312,18 +35312,18 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             // TODO: Fix class name, should be TemplateRef, but there appears to be a rollup bug
             R3TemplateRef = /** @class */ (function (_super) {
                 __extends(TemplateRef_, _super);
-                function TemplateRef_(_declarationParentView, elementRef, _tView, _renderer, _queries, _injectorIndex) {
+                function TemplateRef_(_declarationParentView, elementRef, _tView, _renderer, _hostLContainer, _injectorIndex) {
                     var _this = _super.call(this) || this;
                     _this._declarationParentView = _declarationParentView;
                     _this.elementRef = elementRef;
                     _this._tView = _tView;
                     _this._renderer = _renderer;
-                    _this._queries = _queries;
+                    _this._hostLContainer = _hostLContainer;
                     _this._injectorIndex = _injectorIndex;
                     return _this;
                 }
                 TemplateRef_.prototype.createEmbeddedView = function (context, container$$1, hostTNode, hostView, index) {
-                    var lView = createEmbeddedViewAndNode(this._tView, context, this._declarationParentView, this._renderer, this._queries, this._injectorIndex);
+                    var lView = createEmbeddedViewAndNode(this._tView, context, this._declarationParentView, this._hostLContainer[QUERIES], this._injectorIndex);
                     if (container$$1) {
                         insertView(lView, container$$1, hostView, index, hostTNode.index);
                     }
@@ -35338,7 +35338,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         if (hostTNode.type === 0 /* Container */) {
             var hostContainer = hostView[hostTNode.index];
             ngDevMode && assertDefined(hostTNode.tViews, 'TView must be allocated');
-            return new R3TemplateRef(hostView, createElementRef(ElementRefToken, hostTNode, hostView), hostTNode.tViews, getLView()[RENDERER], hostContainer[QUERIES], hostTNode.injectorIndex);
+            return new R3TemplateRef(hostView, createElementRef(ElementRefToken, hostTNode, hostView), hostTNode.tViews, getLView()[RENDERER], hostContainer, hostTNode.injectorIndex);
         }
         else {
             return null;
@@ -35490,7 +35490,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.2+6.sha-9efb39c');
+    var VERSION$2 = new Version$1('8.0.0-beta.2+8.sha-1b6d8a7');
 
     /**
      * @license
@@ -51264,7 +51264,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.2+6.sha-9efb39c');
+    var VERSION$3 = new Version$1('8.0.0-beta.2+8.sha-1b6d8a7');
 
     /**
      * @license
