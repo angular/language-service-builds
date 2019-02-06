@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.3+1.sha-ed0cf7e
+ * @license Angular v8.0.0-beta.3+2.sha-5a2c3ff
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -15551,7 +15551,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.3+1.sha-ed0cf7e');
+    var VERSION$1 = new Version('8.0.0-beta.3+2.sha-5a2c3ff');
 
     /**
      * @license
@@ -41352,7 +41352,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.3+1.sha-ed0cf7e');
+    var VERSION$2 = new Version$1('8.0.0-beta.3+2.sha-5a2c3ff');
 
     /**
      * @license
@@ -50567,9 +50567,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * a given module.
      */
     function patchComponentDefWithScope(componentDef, transitiveScopes) {
-        componentDef.directiveDefs = function () { return Array.from(transitiveScopes.compilation.directives)
-            .map(function (dir) { return getDirectiveDef(dir) || getComponentDef(dir); })
-            .filter(function (def) { return !!def; }); };
+        componentDef.directiveDefs = function () {
+            return Array.from(transitiveScopes.compilation.directives)
+                .map(function (dir) { return dir.hasOwnProperty(NG_COMPONENT_DEF) ? getComponentDef(dir) :
+                getDirectiveDef(dir); })
+                .filter(function (def) { return !!def; });
+        };
         componentDef.pipeDefs = function () {
             return Array.from(transitiveScopes.compilation.pipes).map(function (pipe) { return getPipeDef(pipe); });
         };
@@ -59675,7 +59678,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.3+1.sha-ed0cf7e');
+    var VERSION$3 = new Version$1('8.0.0-beta.3+2.sha-5a2c3ff');
 
     /**
      * @license
