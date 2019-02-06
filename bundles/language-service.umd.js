@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.3+2.sha-5a2c3ff
+ * @license Angular v8.0.0-beta.3+5.sha-3f73dfa
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -13656,7 +13656,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             if (this.i18nUseExternalIds) {
                 var prefix = getTranslationConstPrefix("EXTERNAL_");
                 var uniqueSuffix = this.constantPool.uniqueName(suffix);
-                name = "" + prefix + messageId + "$$" + uniqueSuffix;
+                name = "" + prefix + sanitizeIdentifier(messageId) + "$$" + uniqueSuffix;
             }
             else {
                 var prefix = getTranslationConstPrefix(suffix);
@@ -15551,7 +15551,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.3+2.sha-5a2c3ff');
+    var VERSION$1 = new Version('8.0.0-beta.3+5.sha-3f73dfa');
 
     /**
      * @license
@@ -34717,7 +34717,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             nativeInsertBefore(renderer, parent, node, beforeNode || null);
         }
         else if (action === 1 /* Detach */) {
-            nativeRemoveChild(renderer, parent, node, isComponent(tNode));
+            nativeRemoveNode(renderer, node, isComponent(tNode));
         }
         else if (action === 2 /* Destroy */) {
             ngDevMode && ngDevMode.rendererDestroyNode++;
@@ -35087,12 +35087,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             nativeAppendChild(renderer, parent, child);
         }
     }
-    /**
-     * Removes a native child node from a given native parent node.
-     */
+    /** Removes a node from the DOM given its native parent. */
     function nativeRemoveChild(renderer, parent, child, isHostElement) {
-        isProceduralRenderer(renderer) ? renderer.removeChild(parent, child, isHostElement) :
+        if (isProceduralRenderer(renderer)) {
+            renderer.removeChild(parent, child, isHostElement);
+        }
+        else {
             parent.removeChild(child);
+        }
     }
     /**
      * Returns a native parent of a given native node.
@@ -35186,18 +35188,18 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
     }
     /**
-     * Removes the `child` element from the DOM if not in view and not projected.
+     * Removes a native node itself using a given renderer. To remove the node we are looking up its
+     * parent from the native tree as not all platforms / browsers support the equivalent of
+     * node.remove().
      *
-     * @param childTNode The TNode of the child to remove
-     * @param childEl The child that should be removed
-     * @param currentView The current LView
-     * @returns Whether or not the child was removed
+     * @param renderer A renderer to be used
+     * @param rNode The native node that should be removed
+     * @param isHostElement A flag indicating if a node to be removed is a host of a component.
      */
-    function removeChild(childTNode, childEl, currentView) {
-        var parentNative = getRenderParent(childTNode, currentView);
-        // We only remove the element if it already has a render parent.
-        if (parentNative) {
-            nativeRemoveChild(currentView[RENDERER], parentNative, childEl);
+    function nativeRemoveNode(renderer, rNode, isHostElement) {
+        var nativeParent = nativeParentNode(renderer, rNode);
+        if (nativeParent) {
+            nativeRemoveChild(renderer, nativeParent, rNode, isHostElement);
         }
     }
     /**
@@ -41352,7 +41354,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.3+2.sha-5a2c3ff');
+    var VERSION$2 = new Version$1('8.0.0-beta.3+5.sha-3f73dfa');
 
     /**
      * @license
@@ -45088,7 +45090,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var removedPhTNode = getTNode(index, viewData);
         var removedPhRNode = getNativeByIndex(index, viewData);
         if (removedPhRNode) {
-            removeChild(removedPhTNode, removedPhRNode, viewData);
+            nativeRemoveNode(viewData[RENDERER], removedPhRNode);
         }
         removedPhTNode.detached = true;
         ngDevMode && ngDevMode.rendererRemoveNode++;
@@ -45096,7 +45098,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         if (isLContainer(slotValue)) {
             var lContainer = slotValue;
             if (removedPhTNode.type !== 0 /* Container */) {
-                removeChild(removedPhTNode, lContainer[NATIVE], viewData);
+                nativeRemoveNode(viewData[RENDERER], lContainer[NATIVE]);
             }
         }
     }
@@ -59678,7 +59680,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.3+2.sha-5a2c3ff');
+    var VERSION$3 = new Version$1('8.0.0-beta.3+5.sha-3f73dfa');
 
     /**
      * @license
