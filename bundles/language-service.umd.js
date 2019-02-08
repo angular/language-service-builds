@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.3+35.sha-50732e1
+ * @license Angular v8.0.0-beta.3+53.sha-94f042b
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -15566,7 +15566,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.3+35.sha-50732e1');
+    var VERSION$1 = new Version('8.0.0-beta.3+53.sha-94f042b');
 
     /**
      * @license
@@ -33328,7 +33328,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                  */
                 while (!nextTNode) {
                     // If parent is null, we're crossing the view boundary, so we should get the host TNode.
-                    tNode = tNode.parent || currentView[TVIEW].node;
+                    tNode = tNode.parent || currentView[T_HOST];
                     if (tNode === null || tNode === rootTNode)
                         return null;
                     // When exiting a container, the beforeNode must be restored to the previous value
@@ -33336,9 +33336,28 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                         currentView = currentView[PARENT];
                         beforeNode = currentView[tNode.index][NATIVE];
                     }
-                    if (tNode.type === 2 /* View */ && currentView[NEXT]) {
-                        currentView = currentView[NEXT];
-                        nextTNode = currentView[TVIEW].node;
+                    if (tNode.type === 2 /* View */) {
+                        /**
+                         * If current lView doesn't have next pointer, we try to find it by going up parents
+                         * chain until:
+                         * - we find an lView with a next pointer
+                         * - or find a tNode with a parent that has a next pointer
+                         * - or reach root TNode (in which case we exit, since we traversed all nodes)
+                         */
+                        while (!currentView[NEXT] && currentView[PARENT] &&
+                            !(tNode.parent && tNode.parent.next)) {
+                            if (tNode === rootTNode)
+                                return null;
+                            currentView = currentView[PARENT];
+                            tNode = currentView[T_HOST];
+                        }
+                        if (currentView[NEXT]) {
+                            currentView = currentView[NEXT];
+                            nextTNode = currentView[T_HOST];
+                        }
+                        else {
+                            nextTNode = tNode.next;
+                        }
                     }
                     else {
                         nextTNode = tNode.next;
@@ -34159,7 +34178,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             next: null,
             child: null,
             parent: tParent,
-            detached: null,
             stylingTemplate: null,
             projection: null
         };
@@ -35652,7 +35670,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.3+35.sha-50732e1');
+    var VERSION$2 = new Version$1('8.0.0-beta.3+53.sha-94f042b');
 
     /**
      * @license
@@ -51418,7 +51436,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.3+35.sha-50732e1');
+    var VERSION$3 = new Version$1('8.0.0-beta.3+53.sha-94f042b');
 
     /**
      * @license
