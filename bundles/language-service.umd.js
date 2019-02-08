@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.2.4+38.sha-6477c9e.with-local-changes
+ * @license Angular v7.2.4+39.sha-e4b1bdb.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -15436,7 +15436,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.2.4+38.sha-6477c9e.with-local-changes');
+    var VERSION$1 = new Version('7.2.4+39.sha-e4b1bdb.with-local-changes');
 
     /**
      * @license
@@ -33833,7 +33833,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.2.4+38.sha-6477c9e.with-local-changes');
+    var VERSION$2 = new Version$1('7.2.4+39.sha-e4b1bdb.with-local-changes');
 
     /**
      * @license
@@ -51163,7 +51163,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.2.4+38.sha-6477c9e.with-local-changes');
+    var VERSION$3 = new Version$1('7.2.4+39.sha-e4b1bdb.with-local-changes');
 
     /**
      * @license
