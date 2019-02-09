@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.3+63.sha-f7591f1
+ * @license Angular v8.0.0-beta.3+71.sha-81329c8
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -15566,7 +15566,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.3+63.sha-f7591f1');
+    var VERSION$1 = new Version('8.0.0-beta.3+71.sha-81329c8');
 
     /**
      * @license
@@ -30975,7 +30975,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     var FLAGS = 1;
     var PARENT = 2;
     var NEXT = 3;
-    var QUERIES = 4;
     var HOST = 5;
     var T_HOST = 6;
     var BINDING_INDEX = 7;
@@ -31216,9 +31215,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         // Could be an LView or an LContainer. If LContainer, unwrap to find LView.
         var slotValue = hostView[nodeIndex];
         return slotValue.length >= HEADER_OFFSET ? slotValue : slotValue[HOST];
-    }
-    function isContentQueryHost(tNode) {
-        return (tNode.flags & 4 /* hasContentQuery */) !== 0;
     }
     function isComponent(tNode) {
         return (tNode.flags & 1 /* isComponent */) === 1 /* isComponent */;
@@ -33429,47 +33425,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             viewOrContainer = next;
         }
     }
-    /**
-     * Inserts a view into a container.
-     *
-     * This adds the view to the container's array of active views in the correct
-     * position. It also adds the view's elements to the DOM if the container isn't a
-     * root node of another view (in that case, the view's elements will be added when
-     * the container's parent view is added later).
-     *
-     * @param lView The view to insert
-     * @param lContainer The container into which the view should be inserted
-     * @param parentView The new parent of the inserted view
-     * @param index The index at which to insert the view
-     * @param containerIndex The index of the container node, if dynamic
-     */
-    function insertView(lView, lContainer, parentView, index, containerIndex) {
-        var views = lContainer[VIEWS];
-        if (index > 0) {
-            // This is a new view, we need to add it to the children.
-            views[index - 1][NEXT] = lView;
-        }
-        if (index < views.length) {
-            lView[NEXT] = views[index];
-            views.splice(index, 0, lView);
-        }
-        else {
-            views.push(lView);
-            lView[NEXT] = null;
-        }
-        // Dynamically inserted views need a reference to their parent container's host so it's
-        // possible to jump from a view to its container's next when walking the node tree.
-        if (containerIndex > -1) {
-            lView[CONTAINER_INDEX] = containerIndex;
-            lView[PARENT] = parentView;
-        }
-        // Notify query that a new view has been added
-        if (lView[QUERIES]) {
-            lView[QUERIES].insertView(index);
-        }
-        // Sets the attached flag
-        lView[FLAGS] |= 128 /* Attached */;
-    }
     /** Gets the child of the given LView */
     function getLViewChild(lView) {
         var childIndex = lView[TVIEW].childIndex;
@@ -33903,29 +33858,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             2 /* View */, index, null, null);
         }
         return lView[T_HOST] = tNode;
-    }
-    /**
-     * Used for creating the LViewNode of a dynamic embedded view,
-     * either through ViewContainerRef.createEmbeddedView() or TemplateRef.createEmbeddedView().
-     * Such lViewNode will then be renderer with renderEmbeddedTemplate() (see below).
-     */
-    function createEmbeddedViewAndNode(tView, context, declarationView, queries, injectorIndex) {
-        var _isParent = getIsParent();
-        var _previousOrParentTNode = getPreviousOrParentTNode();
-        setIsParent(true);
-        setPreviousOrParentTNode(null);
-        var lView = createLView(declarationView, tView, context, 16 /* CheckAlways */, null, null);
-        lView[DECLARATION_VIEW] = declarationView;
-        if (queries) {
-            lView[QUERIES] = queries.createView();
-        }
-        assignTViewNodeToLView(tView, null, -1, lView);
-        if (tView.firstTemplatePass) {
-            tView.node.injectorIndex = injectorIndex;
-        }
-        setIsParent(_isParent);
-        setPreviousOrParentTNode(_previousOrParentTNode);
-        return lView;
     }
     /**
      * Used for rendering embedded views (e.g. dynamically created views)
@@ -35477,53 +35409,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return new R3ElementRef(getNativeByTNode(tNode, view));
     }
-    var R3TemplateRef;
-    /**
-     * Creates a TemplateRef and stores it on the injector.
-     *
-     * @param TemplateRefToken The TemplateRef type
-     * @param ElementRefToken The ElementRef type
-     * @param hostTNode The node that is requesting a TemplateRef
-     * @param hostView The view to which the node belongs
-     * @returns The TemplateRef instance to use
-     */
-    function createTemplateRef(TemplateRefToken, ElementRefToken, hostTNode, hostView) {
-        if (!R3TemplateRef) {
-            // TODO: Fix class name, should be TemplateRef, but there appears to be a rollup bug
-            R3TemplateRef = /** @class */ (function (_super) {
-                __extends(TemplateRef_, _super);
-                function TemplateRef_(_declarationParentView, elementRef, _tView, _renderer, _hostLContainer, _injectorIndex) {
-                    var _this = _super.call(this) || this;
-                    _this._declarationParentView = _declarationParentView;
-                    _this.elementRef = elementRef;
-                    _this._tView = _tView;
-                    _this._renderer = _renderer;
-                    _this._hostLContainer = _hostLContainer;
-                    _this._injectorIndex = _injectorIndex;
-                    return _this;
-                }
-                TemplateRef_.prototype.createEmbeddedView = function (context, container$$1, hostTNode, hostView, index) {
-                    var lView = createEmbeddedViewAndNode(this._tView, context, this._declarationParentView, this._hostLContainer[QUERIES], this._injectorIndex);
-                    if (container$$1) {
-                        insertView(lView, container$$1, hostView, index, hostTNode.index);
-                    }
-                    renderEmbeddedTemplate(lView, this._tView, context);
-                    var viewRef = new ViewRef(lView, context, -1);
-                    viewRef._tViewNode = lView[T_HOST];
-                    return viewRef;
-                };
-                return TemplateRef_;
-            }(TemplateRefToken));
-        }
-        if (hostTNode.type === 0 /* Container */) {
-            var hostContainer = hostView[hostTNode.index];
-            ngDevMode && assertDefined(hostTNode.tViews, 'TView must be allocated');
-            return new R3TemplateRef(hostView, createElementRef(ElementRefToken, hostTNode, hostView), hostTNode.tViews, getLView()[RENDERER], hostContainer, hostTNode.injectorIndex);
-        }
-        else {
-            return null;
-        }
-    }
 
     /**
      * @license
@@ -35670,7 +35555,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.3+63.sha-f7591f1');
+    var VERSION$2 = new Version$1('8.0.0-beta.3+71.sha-81329c8');
 
     /**
      * @license
@@ -42269,234 +42154,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var LQueries_ = /** @class */ (function () {
-        function LQueries_(parent, shallow, deep) {
-            this.parent = parent;
-            this.shallow = shallow;
-            this.deep = deep;
-        }
-        LQueries_.prototype.track = function (queryList, predicate, descend, read) {
-            if (descend) {
-                this.deep = createQuery(this.deep, queryList, predicate, read != null ? read : null);
-            }
-            else {
-                this.shallow = createQuery(this.shallow, queryList, predicate, read != null ? read : null);
-            }
-        };
-        LQueries_.prototype.clone = function () { return new LQueries_(this, null, this.deep); };
-        LQueries_.prototype.container = function () {
-            var shallowResults = copyQueriesToContainer(this.shallow);
-            var deepResults = copyQueriesToContainer(this.deep);
-            return shallowResults || deepResults ? new LQueries_(this, shallowResults, deepResults) : null;
-        };
-        LQueries_.prototype.createView = function () {
-            var shallowResults = copyQueriesToView(this.shallow);
-            var deepResults = copyQueriesToView(this.deep);
-            return shallowResults || deepResults ? new LQueries_(this, shallowResults, deepResults) : null;
-        };
-        LQueries_.prototype.insertView = function (index) {
-            insertView$1(index, this.shallow);
-            insertView$1(index, this.deep);
-        };
-        LQueries_.prototype.addNode = function (tNode) {
-            add(this.deep, tNode);
-            if (isContentQueryHost(tNode)) {
-                add(this.shallow, tNode);
-                if (tNode.parent && isContentQueryHost(tNode.parent)) {
-                    // if node has a content query and parent also has a content query
-                    // both queries need to check this node for shallow matches
-                    add(this.parent.shallow, tNode);
-                }
-                return this.parent;
-            }
-            isRootNodeOfQuery(tNode) && add(this.shallow, tNode);
-            return this;
-        };
-        LQueries_.prototype.removeView = function () {
-            removeView$1(this.shallow);
-            removeView$1(this.deep);
-        };
-        return LQueries_;
-    }());
-    function isRootNodeOfQuery(tNode) {
-        return tNode.parent === null || isContentQueryHost(tNode.parent);
-    }
-    function copyQueriesToContainer(query) {
-        var result = null;
-        while (query) {
-            var containerValues = []; // prepare room for views
-            query.values.push(containerValues);
-            var clonedQuery = {
-                next: result,
-                list: query.list,
-                predicate: query.predicate,
-                values: containerValues,
-                containerValues: null
-            };
-            result = clonedQuery;
-            query = query.next;
-        }
-        return result;
-    }
-    function copyQueriesToView(query) {
-        var result = null;
-        while (query) {
-            var clonedQuery = {
-                next: result,
-                list: query.list,
-                predicate: query.predicate,
-                values: [],
-                containerValues: query.values
-            };
-            result = clonedQuery;
-            query = query.next;
-        }
-        return result;
-    }
-    function insertView$1(index, query) {
-        while (query) {
-            ngDevMode && assertViewQueryhasPointerToDeclarationContainer(query);
-            query.containerValues.splice(index, 0, query.values);
-            // mark a query as dirty only when inserted view had matching modes
-            if (query.values.length) {
-                query.list.setDirty();
-            }
-            query = query.next;
-        }
-    }
-    function removeView$1(query) {
-        while (query) {
-            ngDevMode && assertViewQueryhasPointerToDeclarationContainer(query);
-            var containerValues = query.containerValues;
-            var viewValuesIdx = containerValues.indexOf(query.values);
-            var removed = containerValues.splice(viewValuesIdx, 1);
-            // mark a query as dirty only when removed view had matching modes
-            ngDevMode && assertEqual(removed.length, 1, 'removed.length');
-            if (removed[0].length) {
-                query.list.setDirty();
-            }
-            query = query.next;
-        }
-    }
-    function assertViewQueryhasPointerToDeclarationContainer(query) {
-        assertDefined(query.containerValues, 'View queries need to have a pointer to container values.');
-    }
-    /**
-     * Iterates over local names for a given node and returns directive index
-     * (or -1 if a local name points to an element).
-     *
-     * @param tNode static data of a node to check
-     * @param selector selector to match
-     * @returns directive index, -1 or null if a selector didn't match any of the local names
-     */
-    function getIdxOfMatchingSelector(tNode, selector) {
-        var localNames = tNode.localNames;
-        if (localNames) {
-            for (var i = 0; i < localNames.length; i += 2) {
-                if (localNames[i] === selector) {
-                    return localNames[i + 1];
-                }
-            }
-        }
-        return null;
-    }
-    // TODO: "read" should be an AbstractType (FW-486)
-    function queryByReadToken(read, tNode, currentView) {
-        var factoryFn = read[NG_ELEMENT_ID];
-        if (typeof factoryFn === 'function') {
-            return factoryFn();
-        }
-        else {
-            var matchingIdx = locateDirectiveOrProvider(tNode, currentView, read, false, false);
-            if (matchingIdx !== null) {
-                return getNodeInjectable(currentView[TVIEW].data, currentView, matchingIdx, tNode);
-            }
-        }
-        return null;
-    }
-    function queryByTNodeType(tNode, currentView) {
-        if (tNode.type === 3 /* Element */ || tNode.type === 4 /* ElementContainer */) {
-            return createElementRef(ElementRef, tNode, currentView);
-        }
-        if (tNode.type === 0 /* Container */) {
-            return createTemplateRef(TemplateRef, ElementRef, tNode, currentView);
-        }
-        return null;
-    }
-    function queryByTemplateRef(templateRefToken, tNode, currentView, read) {
-        var templateRefResult = templateRefToken[NG_ELEMENT_ID]();
-        if (read) {
-            return templateRefResult ? queryByReadToken(read, tNode, currentView) : null;
-        }
-        return templateRefResult;
-    }
-    function queryRead(tNode, currentView, read, matchingIdx) {
-        if (read) {
-            return queryByReadToken(read, tNode, currentView);
-        }
-        if (matchingIdx > -1) {
-            return getNodeInjectable(currentView[TVIEW].data, currentView, matchingIdx, tNode);
-        }
-        // if read token and / or strategy is not specified,
-        // detect it using appropriate tNode type
-        return queryByTNodeType(tNode, currentView);
-    }
-    function add(query, tNode) {
-        var currentView = getLView();
-        while (query) {
-            var predicate = query.predicate;
-            var type = predicate.type;
-            if (type) {
-                var result = null;
-                if (type === TemplateRef) {
-                    result = queryByTemplateRef(type, tNode, currentView, predicate.read);
-                }
-                else {
-                    var matchingIdx = locateDirectiveOrProvider(tNode, currentView, type, false, false);
-                    if (matchingIdx !== null) {
-                        result = queryRead(tNode, currentView, predicate.read, matchingIdx);
-                    }
-                }
-                if (result !== null) {
-                    addMatch(query, result);
-                }
-            }
-            else {
-                var selector = predicate.selector;
-                for (var i = 0; i < selector.length; i++) {
-                    var matchingIdx = getIdxOfMatchingSelector(tNode, selector[i]);
-                    if (matchingIdx !== null) {
-                        var result = queryRead(tNode, currentView, predicate.read, matchingIdx);
-                        if (result !== null) {
-                            addMatch(query, result);
-                        }
-                    }
-                }
-            }
-            query = query.next;
-        }
-    }
-    function addMatch(query, matchingValue) {
-        query.values.push(matchingValue);
-        query.list.setDirty();
-    }
-    function createPredicate(predicate, read) {
-        var isArray = Array.isArray(predicate);
-        return {
-            type: isArray ? null : predicate,
-            selector: isArray ? predicate : null,
-            read: read
-        };
-    }
-    function createQuery(previous, queryList, predicate, read) {
-        return {
-            next: previous,
-            list: queryList,
-            predicate: createPredicate(predicate, read),
-            values: queryList._valuesTree,
-            containerValues: null
-        };
-    }
 
     /**
      * @license
@@ -51436,7 +51093,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.3+63.sha-f7591f1');
+    var VERSION$3 = new Version$1('8.0.0-beta.3+71.sha-81329c8');
 
     /**
      * @license
