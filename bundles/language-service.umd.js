@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.3+126.sha-ac58d01
+ * @license Angular v8.0.0-beta.3+128.sha-fc8f4f8
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -14335,18 +14335,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 parameters.push(this.prepareRefsParameter(template.references));
                 parameters.push(importExpr(Identifiers$1.templateRefExtractor));
             }
-            // handle property bindings e.g. p(1, 'ngForOf', ɵbind(ctx.items));
-            var context = variable(CONTEXT_NAME);
-            template.inputs.forEach(function (input) {
-                var value = input.value.visit(_this._valueConverter);
-                _this.allocateBindingSlots(value);
-                _this.updateInstruction(template.sourceSpan, Identifiers$1.elementProperty, function () {
-                    return [
-                        literal(templateIndex), literal(input.name),
-                        _this.convertPropertyBinding(context, value)
-                    ];
-                });
-            });
             // Create the template function
             var templateVisitor = new TemplateDefinitionBuilder(this.constantPool, this._bindingScope, this.level + 1, contextName, this.i18n, templateIndex, templateName, this.directiveMatcher, this.directives, this.pipeTypeByName, this.pipes, this._namespace, this.fileBasedI18nSuffix, this.i18nUseExternalIds);
             // Nested templates must not be visited until after their parent templates have completed
@@ -14366,6 +14354,18 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             this.creationInstruction(template.sourceSpan, Identifiers$1.templateCreate, function () {
                 parameters.splice(2, 0, literal(templateVisitor.getConstCount()), literal(templateVisitor.getVarCount()));
                 return trimTrailingNulls(parameters);
+            });
+            // handle property bindings e.g. ɵelementProperty(1, 'ngForOf', ɵbind(ctx.items));
+            var context = variable(CONTEXT_NAME);
+            template.inputs.forEach(function (input) {
+                var value = input.value.visit(_this._valueConverter);
+                _this.allocateBindingSlots(value);
+                _this.updateInstruction(template.sourceSpan, Identifiers$1.elementProperty, function () {
+                    return [
+                        literal(templateIndex), literal(input.name),
+                        _this.convertPropertyBinding(context, value)
+                    ];
+                });
             });
             // Generate listeners for directive output
             template.outputs.forEach(function (outputAst) {
@@ -15835,7 +15835,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.3+126.sha-ac58d01');
+    var VERSION$1 = new Version('8.0.0-beta.3+128.sha-fc8f4f8');
 
     /**
      * @license
@@ -38869,7 +38869,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             baseResolveDirective(tView, viewData, def, def.factory);
         }
         var directive = getNodeInjectable(tView.data, viewData, viewData.length - 1, rootTNode);
-        postProcessBaseDirective(viewData, rootTNode, directive, def);
+        postProcessBaseDirective(viewData, rootTNode, directive);
         return directive;
     }
     /**
@@ -38982,7 +38982,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     function postProcessDirective(viewData, directive, def, directiveDefIdx) {
         var previousOrParentTNode = getPreviousOrParentTNode();
-        postProcessBaseDirective(viewData, previousOrParentTNode, directive, def);
+        postProcessBaseDirective(viewData, previousOrParentTNode, directive);
         ngDevMode && assertDefined(previousOrParentTNode, 'previousOrParentTNode');
         if (previousOrParentTNode && previousOrParentTNode.attrs) {
             setInputsFromAttrs(directiveDefIdx, directive, def, previousOrParentTNode);
@@ -38998,7 +38998,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * A lighter version of postProcessDirective() that is used for the root component.
      */
-    function postProcessBaseDirective(lView, previousOrParentTNode, directive, def) {
+    function postProcessBaseDirective(lView, previousOrParentTNode, directive) {
         var native = getNativeByTNode(previousOrParentTNode, lView);
         ngDevMode && assertEqual(lView[BINDING_INDEX], lView[TVIEW].bindingStartIndex, 'directives should be created before any bindings');
         ngDevMode && assertPreviousIsParent(getIsParent());
@@ -41885,7 +41885,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var componentView = getComponentViewByIndex(hostTNode.index, hostView);
             return new ViewRef(componentView, context, componentIndex);
         }
-        else if (hostTNode.type === 3 /* Element */) {
+        else if (hostTNode.type === 3 /* Element */ || hostTNode.type === 0 /* Container */) {
             var hostComponentView = findComponentView(hostView);
             return new ViewRef(hostComponentView, hostComponentView[CONTEXT], -1);
         }
@@ -42043,7 +42043,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.3+126.sha-ac58d01');
+    var VERSION$2 = new Version$1('8.0.0-beta.3+128.sha-fc8f4f8');
 
     /**
      * @license
@@ -60452,7 +60452,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.3+126.sha-ac58d01');
+    var VERSION$3 = new Version$1('8.0.0-beta.3+128.sha-fc8f4f8');
 
     /**
      * @license
