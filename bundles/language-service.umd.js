@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.3+89.sha-872a365
+ * @license Angular v8.0.0-beta.3+124.sha-08de52b
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -4972,228 +4972,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var $EOF = 0;
-    var $TAB = 9;
-    var $LF = 10;
-    var $VTAB = 11;
-    var $FF = 12;
-    var $CR = 13;
-    var $SPACE = 32;
-    var $BANG = 33;
-    var $DQ = 34;
-    var $HASH = 35;
-    var $$ = 36;
-    var $PERCENT = 37;
-    var $AMPERSAND = 38;
-    var $SQ = 39;
-    var $LPAREN = 40;
-    var $RPAREN = 41;
-    var $STAR = 42;
-    var $PLUS = 43;
-    var $COMMA = 44;
-    var $MINUS = 45;
-    var $PERIOD = 46;
-    var $SLASH = 47;
-    var $COLON = 58;
-    var $SEMICOLON = 59;
-    var $LT = 60;
-    var $EQ = 61;
-    var $GT = 62;
-    var $QUESTION = 63;
-    var $0 = 48;
-    var $9 = 57;
-    var $A = 65;
-    var $E = 69;
-    var $F = 70;
-    var $X = 88;
-    var $Z = 90;
-    var $LBRACKET = 91;
-    var $BACKSLASH = 92;
-    var $RBRACKET = 93;
-    var $CARET = 94;
-    var $_ = 95;
-    var $a = 97;
-    var $e = 101;
-    var $f = 102;
-    var $n = 110;
-    var $r = 114;
-    var $t = 116;
-    var $u = 117;
-    var $v = 118;
-    var $x = 120;
-    var $z = 122;
-    var $LBRACE = 123;
-    var $BAR = 124;
-    var $RBRACE = 125;
-    var $NBSP = 160;
-    var $BT = 96;
-    function isWhitespace(code) {
-        return (code >= $TAB && code <= $SPACE) || (code == $NBSP);
-    }
-    function isDigit(code) {
-        return $0 <= code && code <= $9;
-    }
-    function isAsciiLetter(code) {
-        return code >= $a && code <= $z || code >= $A && code <= $Z;
-    }
-    function isAsciiHexDigit(code) {
-        return code >= $a && code <= $f || code >= $A && code <= $F || isDigit(code);
-    }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    var ParseLocation = /** @class */ (function () {
-        function ParseLocation(file, offset, line, col) {
-            this.file = file;
-            this.offset = offset;
-            this.line = line;
-            this.col = col;
-        }
-        ParseLocation.prototype.toString = function () {
-            return this.offset != null ? this.file.url + "@" + this.line + ":" + this.col : this.file.url;
-        };
-        ParseLocation.prototype.moveBy = function (delta) {
-            var source = this.file.content;
-            var len = source.length;
-            var offset = this.offset;
-            var line = this.line;
-            var col = this.col;
-            while (offset > 0 && delta < 0) {
-                offset--;
-                delta++;
-                var ch = source.charCodeAt(offset);
-                if (ch == $LF) {
-                    line--;
-                    var priorLine = source.substr(0, offset - 1).lastIndexOf(String.fromCharCode($LF));
-                    col = priorLine > 0 ? offset - priorLine : offset;
-                }
-                else {
-                    col--;
-                }
-            }
-            while (offset < len && delta > 0) {
-                var ch = source.charCodeAt(offset);
-                offset++;
-                delta--;
-                if (ch == $LF) {
-                    line++;
-                    col = 0;
-                }
-                else {
-                    col++;
-                }
-            }
-            return new ParseLocation(this.file, offset, line, col);
-        };
-        // Return the source around the location
-        // Up to `maxChars` or `maxLines` on each side of the location
-        ParseLocation.prototype.getContext = function (maxChars, maxLines) {
-            var content = this.file.content;
-            var startOffset = this.offset;
-            if (startOffset != null) {
-                if (startOffset > content.length - 1) {
-                    startOffset = content.length - 1;
-                }
-                var endOffset = startOffset;
-                var ctxChars = 0;
-                var ctxLines = 0;
-                while (ctxChars < maxChars && startOffset > 0) {
-                    startOffset--;
-                    ctxChars++;
-                    if (content[startOffset] == '\n') {
-                        if (++ctxLines == maxLines) {
-                            break;
-                        }
-                    }
-                }
-                ctxChars = 0;
-                ctxLines = 0;
-                while (ctxChars < maxChars && endOffset < content.length - 1) {
-                    endOffset++;
-                    ctxChars++;
-                    if (content[endOffset] == '\n') {
-                        if (++ctxLines == maxLines) {
-                            break;
-                        }
-                    }
-                }
-                return {
-                    before: content.substring(startOffset, this.offset),
-                    after: content.substring(this.offset, endOffset + 1),
-                };
-            }
-            return null;
-        };
-        return ParseLocation;
-    }());
-    var ParseSourceFile = /** @class */ (function () {
-        function ParseSourceFile(content, url) {
-            this.content = content;
-            this.url = url;
-        }
-        return ParseSourceFile;
-    }());
-    var ParseSourceSpan = /** @class */ (function () {
-        function ParseSourceSpan(start, end, details) {
-            if (details === void 0) { details = null; }
-            this.start = start;
-            this.end = end;
-            this.details = details;
-        }
-        ParseSourceSpan.prototype.toString = function () {
-            return this.start.file.content.substring(this.start.offset, this.end.offset);
-        };
-        return ParseSourceSpan;
-    }());
-    var ParseErrorLevel;
-    (function (ParseErrorLevel) {
-        ParseErrorLevel[ParseErrorLevel["WARNING"] = 0] = "WARNING";
-        ParseErrorLevel[ParseErrorLevel["ERROR"] = 1] = "ERROR";
-    })(ParseErrorLevel || (ParseErrorLevel = {}));
-    var ParseError = /** @class */ (function () {
-        function ParseError(span, msg, level) {
-            if (level === void 0) { level = ParseErrorLevel.ERROR; }
-            this.span = span;
-            this.msg = msg;
-            this.level = level;
-        }
-        ParseError.prototype.contextualMessage = function () {
-            var ctx = this.span.start.getContext(100, 3);
-            return ctx ? this.msg + " (\"" + ctx.before + "[" + ParseErrorLevel[this.level] + " ->]" + ctx.after + "\")" :
-                this.msg;
-        };
-        ParseError.prototype.toString = function () {
-            var details = this.span.details ? ", " + this.span.details : '';
-            return this.contextualMessage() + ": " + this.span.start + details;
-        };
-        return ParseError;
-    }());
-    /**
-     * Generates Source Span object for a given R3 Type for JIT mode.
-     *
-     * @param kind Component or Directive.
-     * @param typeName name of the Component or Directive.
-     * @param sourceUrl reference to Component or Directive source.
-     * @returns instance of ParseSourceSpan that represent a given Component or Directive.
-     */
-    function r3JitTypeSourceSpan(kind, typeName, sourceUrl) {
-        var sourceFileName = "in " + kind + " " + typeName + " in " + sourceUrl;
-        var sourceFile = new ParseSourceFile('', sourceFileName);
-        return new ParseSourceSpan(new ParseLocation(sourceFile, -1, -1, -1), new ParseLocation(sourceFile, -1, -1, -1));
-    }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     // https://docs.google.com/document/d/1U1RGAehQwRypUTovF1KRlpiOFze0b-_2gc6fAH0KY0k/edit
     var VERSION = 3;
     var JS_B64_PREFIX = '# sourceMappingURL=data:application/json;base64,';
@@ -6030,33 +5808,75 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    function evalExpression(sourceUrl, ctx, vars, createSourceMap) {
-        var fnBody = ctx.toSource() + "\n//# sourceURL=" + sourceUrl;
-        var fnArgNames = [];
-        var fnArgValues = [];
-        for (var argName in vars) {
-            fnArgNames.push(argName);
-            fnArgValues.push(vars[argName]);
+    /**
+     * A helper class to manage the evaluation of JIT generated code.
+     */
+    var JitEvaluator = /** @class */ (function () {
+        function JitEvaluator() {
         }
-        if (createSourceMap) {
-            // using `new Function(...)` generates a header, 1 line of no arguments, 2 lines otherwise
-            // E.g. ```
-            // function anonymous(a,b,c
-            // /**/) { ... }```
-            // We don't want to hard code this fact, so we auto detect it via an empty function first.
-            var emptyFn = new (Function.bind.apply(Function, __spread([void 0], fnArgNames.concat('return null;'))))().toString();
-            var headerLines = emptyFn.slice(0, emptyFn.indexOf('return null;')).split('\n').length - 1;
-            fnBody += "\n" + ctx.toSourceMapGenerator(sourceUrl, headerLines).toJsComment();
-        }
-        return new (Function.bind.apply(Function, __spread([void 0], fnArgNames.concat(fnBody))))().apply(void 0, __spread(fnArgValues));
-    }
-    function jitStatements(sourceUrl, statements, reflector, createSourceMaps) {
-        var converter = new JitEmitterVisitor(reflector);
-        var ctx = EmitterVisitorContext.createRoot();
-        converter.visitAllStatements(statements, ctx);
-        converter.createReturnStmt(ctx);
-        return evalExpression(sourceUrl, ctx, converter.getArgs(), createSourceMaps);
-    }
+        /**
+         *
+         * @param sourceUrl The URL of the generated code.
+         * @param statements An array of Angular statement AST nodes to be evaluated.
+         * @param reflector A helper used when converting the statements to executable code.
+         * @param createSourceMaps If true then create a source-map for the generated code and include it
+         * inline as a source-map comment.
+         * @returns A map of all the variables in the generated code.
+         */
+        JitEvaluator.prototype.evaluateStatements = function (sourceUrl, statements, reflector, createSourceMaps) {
+            var converter = new JitEmitterVisitor(reflector);
+            var ctx = EmitterVisitorContext.createRoot();
+            converter.visitAllStatements(statements, ctx);
+            converter.createReturnStmt(ctx);
+            return this.evaluateCode(sourceUrl, ctx, converter.getArgs(), createSourceMaps);
+        };
+        /**
+         * Evaluate a piece of JIT generated code.
+         * @param sourceUrl The URL of this generated code.
+         * @param ctx A context object that contains an AST of the code to be evaluated.
+         * @param vars A map containing the names and values of variables that the evaluated code might
+         * reference.
+         * @param createSourceMap If true then create a source-map for the generated code and include it
+         * inline as a source-map comment.
+         * @returns The result of evaluating the code.
+         */
+        JitEvaluator.prototype.evaluateCode = function (sourceUrl, ctx, vars, createSourceMap) {
+            var fnBody = ctx.toSource() + "\n//# sourceURL=" + sourceUrl;
+            var fnArgNames = [];
+            var fnArgValues = [];
+            for (var argName in vars) {
+                fnArgValues.push(vars[argName]);
+                fnArgNames.push(argName);
+            }
+            if (createSourceMap) {
+                // using `new Function(...)` generates a header, 1 line of no arguments, 2 lines otherwise
+                // E.g. ```
+                // function anonymous(a,b,c
+                // /**/) { ... }```
+                // We don't want to hard code this fact, so we auto detect it via an empty function first.
+                var emptyFn = new (Function.bind.apply(Function, __spread([void 0], fnArgNames.concat('return null;'))))().toString();
+                var headerLines = emptyFn.slice(0, emptyFn.indexOf('return null;')).split('\n').length - 1;
+                fnBody += "\n" + ctx.toSourceMapGenerator(sourceUrl, headerLines).toJsComment();
+            }
+            var fn$$1 = new (Function.bind.apply(Function, __spread([void 0], fnArgNames.concat(fnBody))))();
+            return this.executeFunction(fn$$1, fnArgValues);
+        };
+        /**
+         * Execute a JIT generated function by calling it.
+         *
+         * This method can be overridden in tests to capture the functions that are generated
+         * by this `JitEvaluator` class.
+         *
+         * @param fn A function to execute.
+         * @param args The arguments to pass to the function being executed.
+         * @returns The return value of the executed function.
+         */
+        JitEvaluator.prototype.executeFunction = function (fn$$1, args) { return fn$$1.apply(void 0, __spread(args)); };
+        return JitEvaluator;
+    }());
+    /**
+     * An Angular AST visitor that converts AST nodes into executable JavaScript code.
+     */
     var JitEmitterVisitor = /** @class */ (function (_super) {
         __extends(JitEmitterVisitor, _super);
         function JitEmitterVisitor(reflector) {
@@ -6124,6 +5944,237 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    var $EOF = 0;
+    var $BSPACE = 8;
+    var $TAB = 9;
+    var $LF = 10;
+    var $VTAB = 11;
+    var $FF = 12;
+    var $CR = 13;
+    var $SPACE = 32;
+    var $BANG = 33;
+    var $DQ = 34;
+    var $HASH = 35;
+    var $$ = 36;
+    var $PERCENT = 37;
+    var $AMPERSAND = 38;
+    var $SQ = 39;
+    var $LPAREN = 40;
+    var $RPAREN = 41;
+    var $STAR = 42;
+    var $PLUS = 43;
+    var $COMMA = 44;
+    var $MINUS = 45;
+    var $PERIOD = 46;
+    var $SLASH = 47;
+    var $COLON = 58;
+    var $SEMICOLON = 59;
+    var $LT = 60;
+    var $EQ = 61;
+    var $GT = 62;
+    var $QUESTION = 63;
+    var $0 = 48;
+    var $7 = 55;
+    var $9 = 57;
+    var $A = 65;
+    var $E = 69;
+    var $F = 70;
+    var $X = 88;
+    var $Z = 90;
+    var $LBRACKET = 91;
+    var $BACKSLASH = 92;
+    var $RBRACKET = 93;
+    var $CARET = 94;
+    var $_ = 95;
+    var $a = 97;
+    var $b = 98;
+    var $e = 101;
+    var $f = 102;
+    var $n = 110;
+    var $r = 114;
+    var $t = 116;
+    var $u = 117;
+    var $v = 118;
+    var $x = 120;
+    var $z = 122;
+    var $LBRACE = 123;
+    var $BAR = 124;
+    var $RBRACE = 125;
+    var $NBSP = 160;
+    var $BT = 96;
+    function isWhitespace(code) {
+        return (code >= $TAB && code <= $SPACE) || (code == $NBSP);
+    }
+    function isDigit(code) {
+        return $0 <= code && code <= $9;
+    }
+    function isAsciiLetter(code) {
+        return code >= $a && code <= $z || code >= $A && code <= $Z;
+    }
+    function isAsciiHexDigit(code) {
+        return code >= $a && code <= $f || code >= $A && code <= $F || isDigit(code);
+    }
+    function isNewLine(code) {
+        return code === $LF || code === $CR;
+    }
+    function isOctalDigit(code) {
+        return $0 <= code && code <= $7;
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    var ParseLocation = /** @class */ (function () {
+        function ParseLocation(file, offset, line, col) {
+            this.file = file;
+            this.offset = offset;
+            this.line = line;
+            this.col = col;
+        }
+        ParseLocation.prototype.toString = function () {
+            return this.offset != null ? this.file.url + "@" + this.line + ":" + this.col : this.file.url;
+        };
+        ParseLocation.prototype.moveBy = function (delta) {
+            var source = this.file.content;
+            var len = source.length;
+            var offset = this.offset;
+            var line = this.line;
+            var col = this.col;
+            while (offset > 0 && delta < 0) {
+                offset--;
+                delta++;
+                var ch = source.charCodeAt(offset);
+                if (ch == $LF) {
+                    line--;
+                    var priorLine = source.substr(0, offset - 1).lastIndexOf(String.fromCharCode($LF));
+                    col = priorLine > 0 ? offset - priorLine : offset;
+                }
+                else {
+                    col--;
+                }
+            }
+            while (offset < len && delta > 0) {
+                var ch = source.charCodeAt(offset);
+                offset++;
+                delta--;
+                if (ch == $LF) {
+                    line++;
+                    col = 0;
+                }
+                else {
+                    col++;
+                }
+            }
+            return new ParseLocation(this.file, offset, line, col);
+        };
+        // Return the source around the location
+        // Up to `maxChars` or `maxLines` on each side of the location
+        ParseLocation.prototype.getContext = function (maxChars, maxLines) {
+            var content = this.file.content;
+            var startOffset = this.offset;
+            if (startOffset != null) {
+                if (startOffset > content.length - 1) {
+                    startOffset = content.length - 1;
+                }
+                var endOffset = startOffset;
+                var ctxChars = 0;
+                var ctxLines = 0;
+                while (ctxChars < maxChars && startOffset > 0) {
+                    startOffset--;
+                    ctxChars++;
+                    if (content[startOffset] == '\n') {
+                        if (++ctxLines == maxLines) {
+                            break;
+                        }
+                    }
+                }
+                ctxChars = 0;
+                ctxLines = 0;
+                while (ctxChars < maxChars && endOffset < content.length - 1) {
+                    endOffset++;
+                    ctxChars++;
+                    if (content[endOffset] == '\n') {
+                        if (++ctxLines == maxLines) {
+                            break;
+                        }
+                    }
+                }
+                return {
+                    before: content.substring(startOffset, this.offset),
+                    after: content.substring(this.offset, endOffset + 1),
+                };
+            }
+            return null;
+        };
+        return ParseLocation;
+    }());
+    var ParseSourceFile = /** @class */ (function () {
+        function ParseSourceFile(content, url) {
+            this.content = content;
+            this.url = url;
+        }
+        return ParseSourceFile;
+    }());
+    var ParseSourceSpan = /** @class */ (function () {
+        function ParseSourceSpan(start, end, details) {
+            if (details === void 0) { details = null; }
+            this.start = start;
+            this.end = end;
+            this.details = details;
+        }
+        ParseSourceSpan.prototype.toString = function () {
+            return this.start.file.content.substring(this.start.offset, this.end.offset);
+        };
+        return ParseSourceSpan;
+    }());
+    var ParseErrorLevel;
+    (function (ParseErrorLevel) {
+        ParseErrorLevel[ParseErrorLevel["WARNING"] = 0] = "WARNING";
+        ParseErrorLevel[ParseErrorLevel["ERROR"] = 1] = "ERROR";
+    })(ParseErrorLevel || (ParseErrorLevel = {}));
+    var ParseError = /** @class */ (function () {
+        function ParseError(span, msg, level) {
+            if (level === void 0) { level = ParseErrorLevel.ERROR; }
+            this.span = span;
+            this.msg = msg;
+            this.level = level;
+        }
+        ParseError.prototype.contextualMessage = function () {
+            var ctx = this.span.start.getContext(100, 3);
+            return ctx ? this.msg + " (\"" + ctx.before + "[" + ParseErrorLevel[this.level] + " ->]" + ctx.after + "\")" :
+                this.msg;
+        };
+        ParseError.prototype.toString = function () {
+            var details = this.span.details ? ", " + this.span.details : '';
+            return this.contextualMessage() + ": " + this.span.start + details;
+        };
+        return ParseError;
+    }());
+    /**
+     * Generates Source Span object for a given R3 Type for JIT mode.
+     *
+     * @param kind Component or Directive.
+     * @param typeName name of the Component or Directive.
+     * @param sourceUrl reference to Component or Directive source.
+     * @returns instance of ParseSourceSpan that represent a given Component or Directive.
+     */
+    function r3JitTypeSourceSpan(kind, typeName, sourceUrl) {
+        var sourceFileName = "in " + kind + " " + typeName + " in " + sourceUrl;
+        var sourceFile = new ParseSourceFile('', sourceFileName);
+        return new ParseSourceSpan(new ParseLocation(sourceFile, -1, -1, -1), new ParseLocation(sourceFile, -1, -1, -1));
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     /**
      * Implementation of `CompileReflector` which resolves references to @angular/core
      * symbols at runtime, according to a consumer-provided mapping.
@@ -6154,25 +6205,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         R3JitReflector.prototype.componentModuleUrl = function (type, cmpMetadata) { throw new Error('Not implemented.'); };
         return R3JitReflector;
     }());
-    /**
-     * JIT compiles an expression and returns the result of executing that expression.
-     *
-     * @param def the definition which will be compiled and executed to get the value to patch
-     * @param context an object map of @angular/core symbol names to symbols which will be available in
-     * the context of the compiled expression
-     * @param sourceUrl a URL to use for the source map of the compiled expression
-     * @param constantPool an optional `ConstantPool` which contains constants used in the expression
-     */
-    function jitExpression(def, context, sourceUrl, preStatements) {
-        // The ConstantPool may contain Statements which declare variables used in the final expression.
-        // Therefore, its statements need to precede the actual JIT operation. The final statement is a
-        // declaration of $def which is set to the expression being compiled.
-        var statements = __spread(preStatements, [
-            new DeclareVarStmt('$def', def, undefined, [StmtModifier.Exported]),
-        ]);
-        var res = jitStatements(sourceUrl, statements, new R3JitReflector(context), false);
-        return res['$def'];
-    }
 
     /**
      * @license
@@ -6904,7 +6936,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var condition = ast.condition.visit(this);
             var trueExp = ast.trueExp.visit(this);
             var falseExp = ast.falseExp.visit(this);
-            if (condition !== ast.condition || trueExp !== ast.trueExp || falseExp !== falseExp) {
+            if (condition !== ast.condition || trueExp !== ast.trueExp || falseExp !== ast.falseExp) {
                 return new Conditional(ast.span, condition, trueExp, falseExp);
             }
             return ast;
@@ -7035,12 +7067,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     var ParsedEvent = /** @class */ (function () {
         // Regular events have a target
         // Animation events have a phase
-        function ParsedEvent(name, targetOrPhase, type, handler, sourceSpan) {
+        function ParsedEvent(name, targetOrPhase, type, handler, sourceSpan, handlerSpan) {
             this.name = name;
             this.targetOrPhase = targetOrPhase;
             this.type = type;
             this.handler = handler;
             this.sourceSpan = sourceSpan;
+            this.handlerSpan = handlerSpan;
         }
         return ParsedEvent;
     }());
@@ -7122,7 +7155,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Converts the given expression AST into an executable output AST, assuming the expression is
      * used in an action binding (e.g. an event handler).
      */
-    function convertActionBinding(localResolver, implicitReceiver, action, bindingId, interpolationFunction) {
+    function convertActionBinding(localResolver, implicitReceiver, action, bindingId, interpolationFunction, baseSourceSpan) {
         if (!localResolver) {
             localResolver = new DefaultLocalResolver();
         }
@@ -7146,7 +7179,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 throw new Error("Illegal State: Actions are not allowed to contain pipes. Pipe: " + name);
             }
         }, action);
-        var visitor = new _AstToIrVisitor(localResolver, implicitReceiver, bindingId, interpolationFunction);
+        var visitor = new _AstToIrVisitor(localResolver, implicitReceiver, bindingId, interpolationFunction, baseSourceSpan);
         var actionStmts = [];
         flattenStatements(actionWithoutBuiltins.visit(visitor, _Mode.Statement), actionStmts);
         prependTemporaryDecls(visitor.temporaryCount, bindingId, actionStmts);
@@ -7271,11 +7304,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return _BuiltinAstConverter;
     }(AstTransformer$1));
     var _AstToIrVisitor = /** @class */ (function () {
-        function _AstToIrVisitor(_localResolver, _implicitReceiver, bindingId, interpolationFunction) {
+        function _AstToIrVisitor(_localResolver, _implicitReceiver, bindingId, interpolationFunction, baseSourceSpan) {
             this._localResolver = _localResolver;
             this._implicitReceiver = _implicitReceiver;
             this.bindingId = bindingId;
             this.interpolationFunction = interpolationFunction;
+            this.baseSourceSpan = baseSourceSpan;
             this._nodeMap = new Map();
             this._resultMap = new Map();
             this._currentTemporary = 0;
@@ -7332,7 +7366,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 default:
                     throw new Error("Unsupported operation " + ast.operation);
             }
-            return convertToStatementIfNeeded(mode, new BinaryOperatorExpr(op, this._visit(ast.left, _Mode.Expression), this._visit(ast.right, _Mode.Expression)));
+            return convertToStatementIfNeeded(mode, new BinaryOperatorExpr(op, this._visit(ast.left, _Mode.Expression), this._visit(ast.right, _Mode.Expression), undefined, this.convertSourceSpan(ast.span)));
         };
         _AstToIrVisitor.prototype.visitChain = function (ast, mode) {
             ensureStatementMode(mode, ast);
@@ -7340,7 +7374,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         _AstToIrVisitor.prototype.visitConditional = function (ast, mode) {
             var value = this._visit(ast.condition, _Mode.Expression);
-            return convertToStatementIfNeeded(mode, value.conditional(this._visit(ast.trueExp, _Mode.Expression), this._visit(ast.falseExp, _Mode.Expression)));
+            return convertToStatementIfNeeded(mode, value.conditional(this._visit(ast.trueExp, _Mode.Expression), this._visit(ast.falseExp, _Mode.Expression), this.convertSourceSpan(ast.span)));
         };
         _AstToIrVisitor.prototype.visitPipe = function (ast, mode) {
             throw new Error("Illegal state: Pipes should have been converted into functions. Pipe: " + ast.name);
@@ -7352,7 +7386,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 fnResult = ast.converter(convertedArgs);
             }
             else {
-                fnResult = this._visit(ast.target, _Mode.Expression).callFn(convertedArgs);
+                fnResult = this._visit(ast.target, _Mode.Expression)
+                    .callFn(convertedArgs, this.convertSourceSpan(ast.span));
             }
             return convertToStatementIfNeeded(mode, fnResult);
         };
@@ -7373,7 +7408,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
             return ast.expressions.length <= 9 ?
                 importExpr(Identifiers.inlineInterpolate).callFn(args) :
-                importExpr(Identifiers.interpolate).callFn([args[0], literalArr(args.slice(1))]);
+                importExpr(Identifiers.interpolate).callFn([
+                    args[0], literalArr(args.slice(1), undefined, this.convertSourceSpan(ast.span))
+                ]);
         };
         _AstToIrVisitor.prototype.visitKeyedRead = function (ast, mode) {
             var leftMostSafe = this.leftMostSafeNode(ast);
@@ -7402,7 +7439,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var type = ast.value === null || ast.value === undefined || ast.value === true || ast.value === true ?
                 INFERRED_TYPE :
                 undefined;
-            return convertToStatementIfNeeded(mode, literal(ast.value, type));
+            return convertToStatementIfNeeded(mode, literal(ast.value, type, this.convertSourceSpan(ast.span)));
         };
         _AstToIrVisitor.prototype._getLocal = function (name) { return this._localResolver.getLocal(name); };
         _AstToIrVisitor.prototype.visitMethodCall = function (ast, mode) {
@@ -7411,7 +7448,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 if (args.length != 1) {
                     throw new Error("Invalid call to $any, expected 1 argument but received " + (args.length || 'none'));
                 }
-                return args[0].cast(DYNAMIC_TYPE);
+                return args[0].cast(DYNAMIC_TYPE, this.convertSourceSpan(ast.span));
             }
             var leftMostSafe = this.leftMostSafeNode(ast);
             if (leftMostSafe) {
@@ -7428,7 +7465,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     }
                 }
                 if (result == null) {
-                    result = receiver.callMethod(ast.name, args);
+                    result = receiver.callMethod(ast.name, args, this.convertSourceSpan(ast.span));
                 }
                 return convertToStatementIfNeeded(mode, result);
             }
@@ -7651,6 +7688,27 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             this._currentTemporary--;
             if (temporary.name != temporaryName(this.bindingId, this._currentTemporary)) {
                 throw new Error("Temporary " + temporary.name + " released out of order");
+            }
+        };
+        /**
+         * Creates an absolute `ParseSourceSpan` from the relative `ParseSpan`.
+         *
+         * `ParseSpan` objects are relative to the start of the expression.
+         * This method converts these to full `ParseSourceSpan` objects that
+         * show where the span is within the overall source file.
+         *
+         * @param span the relative span to convert.
+         * @returns a `ParseSourceSpan` for the the given span or null if no
+         * `baseSourceSpan` was provided to this class.
+         */
+        _AstToIrVisitor.prototype.convertSourceSpan = function (span) {
+            if (this.baseSourceSpan) {
+                var start = this.baseSourceSpan.start.moveBy(span.start);
+                var end = this.baseSourceSpan.start.moveBy(span.end);
+                return new ParseSourceSpan(start, end);
+            }
+            else {
+                return null;
             }
         };
         return _AstToIrVisitor;
@@ -8419,18 +8477,19 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return BoundAttribute;
     }());
     var BoundEvent = /** @class */ (function () {
-        function BoundEvent(name, type, handler, target, phase, sourceSpan) {
+        function BoundEvent(name, type, handler, target, phase, sourceSpan, handlerSpan) {
             this.name = name;
             this.type = type;
             this.handler = handler;
             this.target = target;
             this.phase = phase;
             this.sourceSpan = sourceSpan;
+            this.handlerSpan = handlerSpan;
         }
         BoundEvent.fromParsedEvent = function (event) {
             var target = event.type === 0 /* Regular */ ? event.targetOrPhase : null;
             var phase = event.type === 1 /* Animation */ ? event.targetOrPhase : null;
-            return new BoundEvent(event.name, event.type, event.handler, target, phase, event.sourceSpan);
+            return new BoundEvent(event.name, event.type, event.handler, target, phase, event.sourceSpan, event.handlerSpan);
         };
         BoundEvent.prototype.visit = function (visitor) { return visitor.visitBoundEvent(this); };
         return BoundEvent;
@@ -8447,6 +8506,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             this.startSourceSpan = startSourceSpan;
             this.endSourceSpan = endSourceSpan;
             this.i18n = i18n;
+            // If the element is empty then the source span should include any closing tag
+            if (children.length === 0 && startSourceSpan && endSourceSpan) {
+                this.sourceSpan = __assign({}, sourceSpan, { end: endSourceSpan.end });
+            }
         }
         Element.prototype.visit = function (visitor) { return visitor.visitElement(this); };
         return Element;
@@ -8646,6 +8709,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }).toLowerCase();
     }
 
+    var IMPORTANT_FLAG = '!important';
     /**
      * Produces creation/update instructions for all styling bindings (class and style)
      *
@@ -8728,49 +8792,66 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             // will therefore skip all style/class resolution that is present
             // with style="", [style]="" and [style.prop]="", class="",
             // [class.prop]="". [class]="" assignments
-            var name = input.name;
             var binding = null;
+            var name = input.name;
             switch (input.type) {
                 case 0 /* Property */:
-                    if (name == 'style') {
-                        binding = this.registerStyleInput(null, input.value, '', input.sourceSpan);
-                    }
-                    else if (isClassBinding(input.name)) {
-                        binding = this.registerClassInput(null, input.value, input.sourceSpan);
-                    }
+                    binding = this.registerInputBasedOnName(name, input.value, input.sourceSpan);
                     break;
                 case 3 /* Style */:
-                    binding = this.registerStyleInput(input.name, input.value, input.unit, input.sourceSpan);
+                    binding = this.registerStyleInput(name, false, input.value, input.sourceSpan, input.unit);
                     break;
                 case 2 /* Class */:
-                    binding = this.registerClassInput(input.name, input.value, input.sourceSpan);
+                    binding = this.registerClassInput(name, false, input.value, input.sourceSpan);
                     break;
             }
             return binding ? true : false;
         };
-        StylingBuilder.prototype.registerStyleInput = function (propertyName, value, unit, sourceSpan) {
-            var entry = { name: propertyName, unit: unit, value: value, sourceSpan: sourceSpan };
-            if (propertyName) {
-                (this._singleStyleInputs = this._singleStyleInputs || []).push(entry);
-                this._useDefaultSanitizer = this._useDefaultSanitizer || isStyleSanitizable(propertyName);
-                registerIntoMap(this._stylesIndex, propertyName);
+        StylingBuilder.prototype.registerInputBasedOnName = function (name, expression, sourceSpan) {
+            var binding = null;
+            var nameToMatch = name.substring(0, 5); // class | style
+            var isStyle = nameToMatch === 'style';
+            var isClass = isStyle ? false : (nameToMatch === 'class');
+            if (isStyle || isClass) {
+                var isMapBased = name.charAt(5) !== '.'; // style.prop or class.prop makes this a no
+                var property = name.substr(isMapBased ? 5 : 6); // the dot explains why there's a +1
+                if (isStyle) {
+                    binding = this.registerStyleInput(property, isMapBased, expression, sourceSpan);
+                }
+                else {
+                    binding = this.registerClassInput(property, isMapBased, expression, sourceSpan);
+                }
             }
-            else {
+            return binding;
+        };
+        StylingBuilder.prototype.registerStyleInput = function (name, isMapBased, value, sourceSpan, unit) {
+            var _a = parseProperty(name), property = _a.property, hasOverrideFlag = _a.hasOverrideFlag, bindingUnit = _a.unit;
+            var entry = {
+                name: property,
+                unit: unit || bindingUnit, value: value, sourceSpan: sourceSpan, hasOverrideFlag: hasOverrideFlag
+            };
+            if (isMapBased) {
                 this._useDefaultSanitizer = true;
                 this._styleMapInput = entry;
+            }
+            else {
+                (this._singleStyleInputs = this._singleStyleInputs || []).push(entry);
+                this._useDefaultSanitizer = this._useDefaultSanitizer || isStyleSanitizable(name);
+                registerIntoMap(this._stylesIndex, property);
             }
             this._lastStylingInput = entry;
             this.hasBindings = true;
             return entry;
         };
-        StylingBuilder.prototype.registerClassInput = function (className, value, sourceSpan) {
-            var entry = { name: className, value: value, sourceSpan: sourceSpan };
-            if (className) {
-                (this._singleClassInputs = this._singleClassInputs || []).push(entry);
-                registerIntoMap(this._classesIndex, className);
+        StylingBuilder.prototype.registerClassInput = function (name, isMapBased, value, sourceSpan) {
+            var _a = parseProperty(name), property = _a.property, hasOverrideFlag = _a.hasOverrideFlag;
+            var entry = { name: property, value: value, sourceSpan: sourceSpan, hasOverrideFlag: hasOverrideFlag, unit: null };
+            if (isMapBased) {
+                this._classMapInput = entry;
             }
             else {
-                this._classMapInput = entry;
+                (this._singleClassInputs = this._singleClassInputs || []).push(entry);
+                registerIntoMap(this._classesIndex, property);
             }
             this._lastStylingInput = entry;
             this.hasBindings = true;
@@ -8831,6 +8912,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     reference: Identifiers$1.elementHostAttrs,
                     allocateBindingSlots: 0,
                     buildParams: function () {
+                        // params => elementHostAttrs(directive, attrs)
                         _this.populateInitialStylingAttrs(attrs);
                         return [_this._directiveExpr, getConstantLiteralFromArray(constantPool, attrs)];
                     }
@@ -8918,22 +9000,23 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     reference: Identifiers$1.elementStylingMap,
                     allocateBindingSlots: totalBindingSlotsRequired,
                     buildParams: function (convertFn) {
-                        var params = [_this._elementIndexExpr];
-                        if (mapBasedClassValue_1) {
-                            params.push(convertFn(mapBasedClassValue_1));
-                        }
-                        else if (_this._styleMapInput) {
-                            params.push(NULL_EXPR);
-                        }
-                        if (mapBasedStyleValue_1) {
-                            params.push(convertFn(mapBasedStyleValue_1));
-                        }
-                        else if (_this._directiveExpr) {
-                            params.push(NULL_EXPR);
-                        }
+                        // min params => elementStylingMap(index, classMap)
+                        // max params => elementStylingMap(index, classMap, styleMap, directive)
+                        var expectedNumberOfArgs = 0;
                         if (_this._directiveExpr) {
-                            params.push(_this._directiveExpr);
+                            expectedNumberOfArgs = 4;
                         }
+                        else if (mapBasedStyleValue_1) {
+                            expectedNumberOfArgs = 3;
+                        }
+                        else if (mapBasedClassValue_1) {
+                            // index and class = 2
+                            expectedNumberOfArgs = 2;
+                        }
+                        var params = [_this._elementIndexExpr];
+                        addParam(params, mapBasedClassValue_1, mapBasedClassValue_1 ? convertFn(mapBasedClassValue_1) : null, 2, expectedNumberOfArgs);
+                        addParam(params, mapBasedStyleValue_1, mapBasedStyleValue_1 ? convertFn(mapBasedStyleValue_1) : null, 3, expectedNumberOfArgs);
+                        addParam(params, _this._directiveExpr, _this._directiveExpr, 4, expectedNumberOfArgs);
                         return params;
                     }
                 };
@@ -8951,6 +9034,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     sourceSpan: input.sourceSpan,
                     allocateBindingSlots: totalBindingSlotsRequired, reference: reference,
                     buildParams: function (convertFn) {
+                        // min params => elementStlyingProp(elmIndex, bindingIndex, value)
+                        // max params => elementStlyingProp(elmIndex, bindingIndex, value, overrideFlag)
                         var params = [_this._elementIndexExpr, literal(bindingIndex), convertFn(value)];
                         if (allowUnits) {
                             if (input.unit) {
@@ -8962,6 +9047,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                         }
                         if (_this._directiveExpr) {
                             params.push(_this._directiveExpr);
+                        }
+                        else if (input.hasOverrideFlag) {
+                            params.push(NULL_EXPR);
+                        }
+                        if (input.hasOverrideFlag) {
+                            params.push(literal(true));
                         }
                         return params;
                     }
@@ -8987,6 +9078,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 reference: Identifiers$1.elementStylingApply,
                 allocateBindingSlots: 0,
                 buildParams: function () {
+                    // min params => elementStylingApply(elmIndex)
+                    // max params => elementStylingApply(elmIndex, directive)
                     var params = [_this._elementIndexExpr];
                     if (_this._directiveExpr) {
                         params.push(_this._directiveExpr);
@@ -9014,9 +9107,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         return StylingBuilder;
     }());
-    function isClassBinding(name) {
-        return name == 'className' || name == 'class';
-    }
     function registerIntoMap(map, key) {
         if (!map.has(key)) {
             map.set(key, map.size);
@@ -9038,12 +9128,28 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * predicate and totalExpectedArgs values
      */
     function addParam(params, predicate, value, argNumber, totalExpectedArgs) {
-        if (predicate) {
+        if (predicate && value) {
             params.push(value);
         }
         else if (argNumber < totalExpectedArgs) {
             params.push(NULL_EXPR);
         }
+    }
+    function parseProperty(name) {
+        var hasOverrideFlag = false;
+        var overrideIndex = name.indexOf(IMPORTANT_FLAG);
+        if (overrideIndex !== -1) {
+            name = overrideIndex > 0 ? name.substring(0, overrideIndex) : '';
+            hasOverrideFlag = true;
+        }
+        var unit = '';
+        var property = name;
+        var unitIndex = name.lastIndexOf('.');
+        if (unitIndex > 0) {
+            unit = name.substr(unitIndex + 1);
+            property = name.substring(0, unitIndex);
+        }
+        return { property: property, unit: unit, hasOverrideFlag: hasOverrideFlag };
     }
 
     /**
@@ -10384,14 +10490,15 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         TokenType[TokenType["CDATA_START"] = 9] = "CDATA_START";
         TokenType[TokenType["CDATA_END"] = 10] = "CDATA_END";
         TokenType[TokenType["ATTR_NAME"] = 11] = "ATTR_NAME";
-        TokenType[TokenType["ATTR_VALUE"] = 12] = "ATTR_VALUE";
-        TokenType[TokenType["DOC_TYPE"] = 13] = "DOC_TYPE";
-        TokenType[TokenType["EXPANSION_FORM_START"] = 14] = "EXPANSION_FORM_START";
-        TokenType[TokenType["EXPANSION_CASE_VALUE"] = 15] = "EXPANSION_CASE_VALUE";
-        TokenType[TokenType["EXPANSION_CASE_EXP_START"] = 16] = "EXPANSION_CASE_EXP_START";
-        TokenType[TokenType["EXPANSION_CASE_EXP_END"] = 17] = "EXPANSION_CASE_EXP_END";
-        TokenType[TokenType["EXPANSION_FORM_END"] = 18] = "EXPANSION_FORM_END";
-        TokenType[TokenType["EOF"] = 19] = "EOF";
+        TokenType[TokenType["ATTR_QUOTE"] = 12] = "ATTR_QUOTE";
+        TokenType[TokenType["ATTR_VALUE"] = 13] = "ATTR_VALUE";
+        TokenType[TokenType["DOC_TYPE"] = 14] = "DOC_TYPE";
+        TokenType[TokenType["EXPANSION_FORM_START"] = 15] = "EXPANSION_FORM_START";
+        TokenType[TokenType["EXPANSION_CASE_VALUE"] = 16] = "EXPANSION_CASE_VALUE";
+        TokenType[TokenType["EXPANSION_CASE_EXP_START"] = 17] = "EXPANSION_CASE_EXP_START";
+        TokenType[TokenType["EXPANSION_CASE_EXP_END"] = 18] = "EXPANSION_CASE_EXP_END";
+        TokenType[TokenType["EXPANSION_FORM_END"] = 19] = "EXPANSION_FORM_END";
+        TokenType[TokenType["EOF"] = 20] = "EOF";
     })(TokenType$1 || (TokenType$1 = {}));
     var Token$1 = /** @class */ (function () {
         function Token(type, parts, sourceSpan) {
@@ -10417,11 +10524,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return TokenizeResult;
     }());
-    function tokenize(source, url, getTagDefinition, tokenizeExpansionForms, interpolationConfig) {
-        if (tokenizeExpansionForms === void 0) { tokenizeExpansionForms = false; }
-        if (interpolationConfig === void 0) { interpolationConfig = DEFAULT_INTERPOLATION_CONFIG; }
-        return new _Tokenizer(new ParseSourceFile(source, url), getTagDefinition, tokenizeExpansionForms, interpolationConfig)
-            .tokenize();
+    function tokenize(source, url, getTagDefinition, options) {
+        if (options === void 0) { options = {}; }
+        return new _Tokenizer(new ParseSourceFile(source, url), getTagDefinition, options).tokenize();
     }
     var _CR_OR_CRLF_REGEXP = /\r\n?/g;
     function _unexpectedCharacterErrorMsg(charCode) {
@@ -10445,25 +10550,44 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
          * @param _tokenizeIcu Whether to tokenize ICU messages (considered as text nodes when false)
          * @param _interpolationConfig
          */
-        function _Tokenizer(_file, _getTagDefinition, _tokenizeIcu, _interpolationConfig) {
-            if (_interpolationConfig === void 0) { _interpolationConfig = DEFAULT_INTERPOLATION_CONFIG; }
+        function _Tokenizer(_file, _getTagDefinition, options) {
             this._file = _file;
             this._getTagDefinition = _getTagDefinition;
-            this._tokenizeIcu = _tokenizeIcu;
-            this._interpolationConfig = _interpolationConfig;
-            // Note: this is always lowercase!
             this._peek = -1;
             this._nextPeek = -1;
-            this._index = -1;
-            this._line = 0;
-            this._column = -1;
+            this._currentTokenStart = null;
+            this._currentTokenType = null;
             this._expansionCaseStack = [];
             this._inInterpolation = false;
             this.tokens = [];
             this.errors = [];
+            this._tokenizeIcu = options.tokenizeExpansionForms || false;
+            this._interpolationConfig = options.interpolationConfig || DEFAULT_INTERPOLATION_CONFIG;
+            this._escapedString = options.escapedString || false;
             this._input = _file.content;
-            this._length = _file.content.length;
-            this._advance();
+            if (options.range) {
+                this._end = options.range.endPos;
+                this._index = options.range.startPos;
+                this._line = options.range.startLine;
+                this._column = options.range.startCol;
+            }
+            else {
+                this._end = this._input.length;
+                this._index = 0;
+                this._line = 0;
+                this._column = 0;
+            }
+            try {
+                this._initPeek();
+            }
+            catch (e) {
+                if (e instanceof _ControlFlowError) {
+                    this.errors.push(e.error);
+                }
+                else {
+                    throw e;
+                }
+            }
         }
         _Tokenizer.prototype._processCarriageReturns = function (content) {
             // http://www.w3.org/TR/html5/syntax.html#preprocessing-the-input-stream
@@ -10552,6 +10676,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         _Tokenizer.prototype._endToken = function (parts, end) {
             if (end === void 0) { end = this._getLocation(); }
+            if (this._currentTokenStart === null) {
+                throw new TokenError('Programming error - attempted to end a token when there was no start to the token', this._currentTokenType, this._getSpan(end, end));
+            }
+            if (this._currentTokenType === null) {
+                throw new TokenError('Programming error - attempted to end a token which has no token type', null, this._getSpan(this._currentTokenStart, end));
+            }
             var token = new Token$1(this._currentTokenType, parts, new ParseSourceSpan(this._currentTokenStart, end));
             this.tokens.push(token);
             this._currentTokenStart = null;
@@ -10567,21 +10697,46 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             this._currentTokenType = null;
             return new _ControlFlowError(error);
         };
-        _Tokenizer.prototype._advance = function () {
-            if (this._index >= this._length) {
+        _Tokenizer.prototype._advance = function (processingEscapeSequence) {
+            if (this._index >= this._end) {
                 throw this._createError(_unexpectedCharacterErrorMsg($EOF), this._getSpan());
             }
-            if (this._peek === $LF) {
+            // The actual character in the input might be different to the _peek if we are processing
+            // escape characters. We only want to track "real" new lines.
+            var actualChar = this._input.charCodeAt(this._index);
+            if (actualChar === $LF) {
                 this._line++;
                 this._column = 0;
             }
-            else if (this._peek !== $LF && this._peek !== $CR) {
+            else if (!isNewLine(actualChar)) {
                 this._column++;
             }
             this._index++;
-            this._peek = this._index >= this._length ? $EOF : this._input.charCodeAt(this._index);
+            this._initPeek(processingEscapeSequence);
+        };
+        /**
+         * Initialize the _peek and _nextPeek properties based on the current _index.
+         * @param processingEscapeSequence whether we are in the middle of processing an escape sequence.
+         */
+        _Tokenizer.prototype._initPeek = function (processingEscapeSequence) {
+            this._peek = this._index >= this._end ? $EOF : this._input.charCodeAt(this._index);
             this._nextPeek =
-                this._index + 1 >= this._length ? $EOF : this._input.charCodeAt(this._index + 1);
+                this._index + 1 >= this._end ? $EOF : this._input.charCodeAt(this._index + 1);
+            if (this._peek === $BACKSLASH && processingEscapeSequence !== true &&
+                this._escapedString) {
+                this._processEscapeSequence();
+            }
+        };
+        /**
+         * Advance the specific number of characters.
+         * @param count The number of characters to advance.
+         * @param processingEscapeSequence Whether we want `advance()` to process escape sequences.
+         */
+        _Tokenizer.prototype._advanceN = function (count, processingEscapeSequence) {
+            while (count) {
+                this._advance(processingEscapeSequence);
+                count--;
+            }
         };
         _Tokenizer.prototype._attemptCharCode = function (charCode) {
             if (this._peek === charCode) {
@@ -10605,7 +10760,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         _Tokenizer.prototype._attemptStr = function (chars) {
             var len = chars.length;
-            if (this._index + len > this._length) {
+            if (this._index + len > this._end) {
                 return false;
             }
             var initialPosition = this._savePosition();
@@ -10655,9 +10810,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 return this._decodeEntity();
             }
             else {
-                var index = this._index;
+                // Don't rely upon reading directly from `_input` as the actual char value
+                // may have been generated from an escape sequence.
+                var char = String.fromCodePoint(this._peek);
                 this._advance();
-                return this._input[index];
+                return char;
             }
         };
         _Tokenizer.prototype._decodeEntity = function () {
@@ -10697,6 +10854,117 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 return char;
             }
         };
+        /**
+         * Process the escape sequence that starts at the current position in the text.
+         *
+         * This method is called from `_advance()` to ensure that escape sequences are
+         * always processed correctly however tokens are being consumed.
+         *
+         * But note that this method also calls `_advance()` (re-entering) to move through
+         * the characters within an escape sequence. In that case it tells `_advance()` not
+         * to attempt to process further escape sequences by passing `true` as its first
+         * argument.
+         */
+        _Tokenizer.prototype._processEscapeSequence = function () {
+            this._advance(true); // advance past the backslash
+            // First check for standard control char sequences
+            if (this._peekChar() === $n) {
+                this._peek = $LF;
+            }
+            else if (this._peekChar() === $r) {
+                this._peek = $CR;
+            }
+            else if (this._peekChar() === $v) {
+                this._peek = $VTAB;
+            }
+            else if (this._peekChar() === $t) {
+                this._peek = $TAB;
+            }
+            else if (this._peekChar() === $b) {
+                this._peek = $BSPACE;
+            }
+            else if (this._peekChar() === $f) {
+                this._peek = $FF;
+            }
+            // Now consider more complex sequences
+            else if (this._peekChar() === $u) {
+                // Unicode code-point sequence
+                this._advance(true); // advance past the `u` char
+                if (this._peekChar() === $LBRACE) {
+                    // Variable length Unicode, e.g. `\x{123}`
+                    this._advance(true); // advance past the `{` char
+                    // Advance past the variable number of hex digits until we hit a `}` char
+                    var start = this._getLocation();
+                    while (this._peekChar() !== $RBRACE) {
+                        this._advance(true);
+                    }
+                    this._decodeHexDigits(start, this._index - start.offset);
+                }
+                else {
+                    // Fixed length Unicode, e.g. `\u1234`
+                    this._parseFixedHexSequence(4);
+                }
+            }
+            else if (this._peekChar() === $x) {
+                // Hex char code, e.g. `\x2F`
+                this._advance(true); // advance past the `x` char
+                this._parseFixedHexSequence(2);
+            }
+            else if (isOctalDigit(this._peekChar())) {
+                // Octal char code, e.g. `\012`,
+                var start = this._index;
+                var length_1 = 1;
+                // Note that we work with `_nextPeek` because, although we check the next character
+                // after the sequence to find the end of the sequence,
+                // we do not want to advance that far to check the character, otherwise we will
+                // have to back up.
+                while (isOctalDigit(this._nextPeek) && length_1 < 3) {
+                    this._advance(true);
+                    length_1++;
+                }
+                var octal = this._input.substr(start, length_1);
+                this._peek = parseInt(octal, 8);
+            }
+            else if (isNewLine(this._peekChar())) {
+                // Line continuation `\` followed by a new line
+                this._advance(true); // advance over the newline
+            }
+            // If none of the `if` blocks were executed then we just have an escaped normal character.
+            // In that case we just, effectively, skip the backslash from the character.
+        };
+        _Tokenizer.prototype._parseFixedHexSequence = function (length) {
+            var start = this._getLocation();
+            this._advanceN(length - 1, true);
+            this._decodeHexDigits(start, length);
+        };
+        _Tokenizer.prototype._decodeHexDigits = function (start, length) {
+            var hex = this._input.substr(start.offset, length);
+            var charCode = parseInt(hex, 16);
+            if (!isNaN(charCode)) {
+                this._peek = charCode;
+            }
+            else {
+                throw this._createError('Invalid hexadecimal escape sequence', this._getSpan(start, this._getLocation()));
+            }
+        };
+        /**
+         * This little helper is to solve a problem where the TS compiler will narrow
+         * the type of `_peek` after an `if` statment, even if there is a call to a
+         * method that might mutate the `_peek`.
+         *
+         * For example:
+         *
+         * ```
+         * if (this._peek === 10) {
+         *   this._advance(); // mutates _peek
+         *   if (this._peek === 20) {
+         *     ...
+         * ```
+         *
+         * The second if statement fails TS compilation because the compiler has determined
+         * that `_peek` is `10` and so can never be equal to `20`.
+         */
+        _Tokenizer.prototype._peekChar = function () { return this._peek; };
         _Tokenizer.prototype._consumeRawText = function (decodeEntities, firstCharOfEnd, attemptEndRest) {
             var tagCloseStart;
             var textStart = this._getLocation();
@@ -10828,24 +11096,30 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             this._endToken(prefixAndName);
         };
         _Tokenizer.prototype._consumeAttributeValue = function () {
-            this._beginToken(TokenType$1.ATTR_VALUE);
             var value;
             if (this._peek === $SQ || this._peek === $DQ) {
+                this._beginToken(TokenType$1.ATTR_QUOTE);
                 var quoteChar = this._peek;
                 this._advance();
+                this._endToken([String.fromCodePoint(quoteChar)]);
+                this._beginToken(TokenType$1.ATTR_VALUE);
                 var parts = [];
                 while (this._peek !== quoteChar) {
                     parts.push(this._readChar(true));
                 }
                 value = parts.join('');
+                this._endToken([this._processCarriageReturns(value)]);
+                this._beginToken(TokenType$1.ATTR_QUOTE);
                 this._advance();
+                this._endToken([String.fromCodePoint(quoteChar)]);
             }
             else {
+                this._beginToken(TokenType$1.ATTR_VALUE);
                 var valueStart = this._index;
                 this._requireCharCodeUntilFn(isNameEnd, 1);
                 value = this._input.substring(valueStart, this._index);
+                this._endToken([this._processCarriageReturns(value)]);
             }
-            this._endToken([this._processCarriageReturns(value)]);
         };
         _Tokenizer.prototype._consumeTagOpenEnd = function () {
             var tokenType = this._attemptCharCode($SLASH) ? TokenType$1.TAG_OPEN_END_VOID : TokenType$1.TAG_OPEN_END;
@@ -11045,10 +11319,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         function Parser(getTagDefinition) {
             this.getTagDefinition = getTagDefinition;
         }
-        Parser.prototype.parse = function (source, url, parseExpansionForms, interpolationConfig) {
-            if (parseExpansionForms === void 0) { parseExpansionForms = false; }
-            if (interpolationConfig === void 0) { interpolationConfig = DEFAULT_INTERPOLATION_CONFIG; }
-            var tokensAndErrors = tokenize(source, url, this.getTagDefinition, parseExpansionForms, interpolationConfig);
+        Parser.prototype.parse = function (source, url, options) {
+            var tokensAndErrors = tokenize(source, url, this.getTagDefinition, options);
             var treeAndErrors = new _TreeBuilder(tokensAndErrors.tokens, this.getTagDefinition).build();
             return new ParseTreeResult(treeAndErrors.rootNodes, tokensAndErrors.errors.concat(treeAndErrors.errors));
         };
@@ -11295,11 +11567,18 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var end = attrName.sourceSpan.end;
             var value = '';
             var valueSpan = undefined;
+            if (this._peek.type === TokenType$1.ATTR_QUOTE) {
+                this._advance();
+            }
             if (this._peek.type === TokenType$1.ATTR_VALUE) {
                 var valueToken = this._advance();
                 value = valueToken.parts[0];
                 end = valueToken.sourceSpan.end;
                 valueSpan = valueToken.sourceSpan;
+            }
+            if (this._peek.type === TokenType$1.ATTR_QUOTE) {
+                var quoteToken = this._advance();
+                end = quoteToken.sourceSpan.end;
             }
             return new Attribute(fullName, value, new ParseSourceSpan(attrName.sourceSpan.start, end), valueSpan);
         };
@@ -11382,10 +11661,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         function HtmlParser() {
             return _super.call(this, getHtmlTagDefinition) || this;
         }
-        HtmlParser.prototype.parse = function (source, url, parseExpansionForms, interpolationConfig) {
-            if (parseExpansionForms === void 0) { parseExpansionForms = false; }
-            if (interpolationConfig === void 0) { interpolationConfig = DEFAULT_INTERPOLATION_CONFIG; }
-            return _super.prototype.parse.call(this, source, url, parseExpansionForms, interpolationConfig);
+        HtmlParser.prototype.parse = function (source, url, options) {
+            return _super.prototype.parse.call(this, source, url, options);
         };
         return HtmlParser;
     }(Parser$1));
@@ -12023,7 +12300,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 Object.keys(dirMeta.hostListeners).forEach(function (propName) {
                     var expression = dirMeta.hostListeners[propName];
                     if (typeof expression === 'string') {
-                        _this.parseEvent(propName, expression, sourceSpan, [], targetEvents_1);
+                        // TODO: pass a more accurate handlerSpan for this event.
+                        _this.parseEvent(propName, expression, sourceSpan, sourceSpan, [], targetEvents_1);
                     }
                     else {
                         _this._reportError("Value of the host listener \"" + propName + "\" needs to be a string representing an expression but got \"" + expression + "\" (" + typeof expression + ")", sourceSpan);
@@ -12198,20 +12476,20 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
             return new BoundElementProperty(boundPropertyName, bindingType, securityContexts[0], boundProp.expression, unit, boundProp.sourceSpan);
         };
-        BindingParser.prototype.parseEvent = function (name, expression, sourceSpan, targetMatchableAttrs, targetEvents) {
+        BindingParser.prototype.parseEvent = function (name, expression, sourceSpan, handlerSpan, targetMatchableAttrs, targetEvents) {
             if (isAnimationLabel(name)) {
                 name = name.substr(1);
-                this._parseAnimationEvent(name, expression, sourceSpan, targetEvents);
+                this._parseAnimationEvent(name, expression, sourceSpan, handlerSpan, targetEvents);
             }
             else {
-                this._parseRegularEvent(name, expression, sourceSpan, targetMatchableAttrs, targetEvents);
+                this._parseRegularEvent(name, expression, sourceSpan, handlerSpan, targetMatchableAttrs, targetEvents);
             }
         };
         BindingParser.prototype.calcPossibleSecurityContexts = function (selector, propName, isAttribute) {
             var prop = this._schemaRegistry.getMappedPropName(propName);
             return calcPossibleSecurityContexts(this._schemaRegistry, selector, prop, isAttribute);
         };
-        BindingParser.prototype._parseAnimationEvent = function (name, expression, sourceSpan, targetEvents) {
+        BindingParser.prototype._parseAnimationEvent = function (name, expression, sourceSpan, handlerSpan, targetEvents) {
             var matches = splitAtPeriod(name, [name, '']);
             var eventName = matches[0];
             var phase = matches[1].toLowerCase();
@@ -12219,8 +12497,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 switch (phase) {
                     case 'start':
                     case 'done':
-                        var ast = this._parseAction(expression, sourceSpan);
-                        targetEvents.push(new ParsedEvent(eventName, phase, 1 /* Animation */, ast, sourceSpan));
+                        var ast = this._parseAction(expression, handlerSpan);
+                        targetEvents.push(new ParsedEvent(eventName, phase, 1 /* Animation */, ast, sourceSpan, handlerSpan));
                         break;
                     default:
                         this._reportError("The provided animation output phase value \"" + phase + "\" for \"@" + eventName + "\" is not supported (use start or done)", sourceSpan);
@@ -12231,12 +12509,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 this._reportError("The animation trigger output event (@" + eventName + ") is missing its phase value name (start or done are currently supported)", sourceSpan);
             }
         };
-        BindingParser.prototype._parseRegularEvent = function (name, expression, sourceSpan, targetMatchableAttrs, targetEvents) {
+        BindingParser.prototype._parseRegularEvent = function (name, expression, sourceSpan, handlerSpan, targetMatchableAttrs, targetEvents) {
             // long format: 'target: eventName'
             var _a = __read(splitAtColon(name, [null, name]), 2), target = _a[0], eventName = _a[1];
-            var ast = this._parseAction(expression, sourceSpan);
+            var ast = this._parseAction(expression, handlerSpan);
             targetMatchableAttrs.push([name, ast.source]);
-            targetEvents.push(new ParsedEvent(eventName, target, 0 /* Regular */, ast, sourceSpan));
+            targetEvents.push(new ParsedEvent(eventName, target, 0 /* Regular */, ast, sourceSpan, handlerSpan));
             // Don't detect directives for event names for now,
             // so don't add the event name to the matchableAttrs
         };
@@ -12699,26 +12977,26 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 }
                 else if (bindParts[KW_ON_IDX]) {
                     var events = [];
-                    this.bindingParser.parseEvent(bindParts[IDENT_KW_IDX], value, srcSpan, matchableAttributes, events);
+                    this.bindingParser.parseEvent(bindParts[IDENT_KW_IDX], value, srcSpan, attribute.valueSpan || srcSpan, matchableAttributes, events);
                     addEvents(events, boundEvents);
                 }
                 else if (bindParts[KW_BINDON_IDX]) {
                     this.bindingParser.parsePropertyBinding(bindParts[IDENT_KW_IDX], value, false, srcSpan, matchableAttributes, parsedProperties);
-                    this.parseAssignmentEvent(bindParts[IDENT_KW_IDX], value, srcSpan, matchableAttributes, boundEvents);
+                    this.parseAssignmentEvent(bindParts[IDENT_KW_IDX], value, srcSpan, attribute.valueSpan, matchableAttributes, boundEvents);
                 }
                 else if (bindParts[KW_AT_IDX]) {
                     this.bindingParser.parseLiteralAttr(name, value, srcSpan, matchableAttributes, parsedProperties);
                 }
                 else if (bindParts[IDENT_BANANA_BOX_IDX]) {
                     this.bindingParser.parsePropertyBinding(bindParts[IDENT_BANANA_BOX_IDX], value, false, srcSpan, matchableAttributes, parsedProperties);
-                    this.parseAssignmentEvent(bindParts[IDENT_BANANA_BOX_IDX], value, srcSpan, matchableAttributes, boundEvents);
+                    this.parseAssignmentEvent(bindParts[IDENT_BANANA_BOX_IDX], value, srcSpan, attribute.valueSpan, matchableAttributes, boundEvents);
                 }
                 else if (bindParts[IDENT_PROPERTY_IDX]) {
                     this.bindingParser.parsePropertyBinding(bindParts[IDENT_PROPERTY_IDX], value, false, srcSpan, matchableAttributes, parsedProperties);
                 }
                 else if (bindParts[IDENT_EVENT_IDX]) {
                     var events = [];
-                    this.bindingParser.parseEvent(bindParts[IDENT_EVENT_IDX], value, srcSpan, matchableAttributes, events);
+                    this.bindingParser.parseEvent(bindParts[IDENT_EVENT_IDX], value, srcSpan, attribute.valueSpan || srcSpan, matchableAttributes, events);
                     addEvents(events, boundEvents);
                 }
             }
@@ -12744,9 +13022,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
             references.push(new Reference(identifier, value, sourceSpan));
         };
-        HtmlAstToIvyAst.prototype.parseAssignmentEvent = function (name, expression, sourceSpan, targetMatchableAttrs, boundEvents) {
+        HtmlAstToIvyAst.prototype.parseAssignmentEvent = function (name, expression, sourceSpan, valueSpan, targetMatchableAttrs, boundEvents) {
             var events = [];
-            this.bindingParser.parseEvent(name + "Change", expression + "=$event", sourceSpan, targetMatchableAttrs, events);
+            this.bindingParser.parseEvent(name + "Change", expression + "=$event", sourceSpan, valueSpan || sourceSpan, targetMatchableAttrs, events);
             addEvents(events, boundEvents);
         };
         HtmlAstToIvyAst.prototype.reportError = function (message, sourceSpan, level) {
@@ -13432,7 +13710,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         if (target && !GLOBAL_TARGET_RESOLVERS.has(target)) {
             throw new Error("Unexpected global target '" + target + "' defined for '" + name + "' event.\n        Supported list of global targets: " + Array.from(GLOBAL_TARGET_RESOLVERS.keys()) + ".");
         }
-        var bindingExpr = convertActionBinding(scope, bindingContext, handler, 'b', function () { return error('Unexpected interpolation'); });
+        var bindingExpr = convertActionBinding(scope, bindingContext, handler, 'b', function () { return error('Unexpected interpolation'); }, eventAst.handlerSpan);
         var statements = [];
         if (scope) {
             statements.push.apply(statements, __spread(scope.restoreViewStatement()));
@@ -13853,7 +14131,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var attributes = [];
             var allOtherInputs = [];
             element.inputs.forEach(function (input) {
-                if (!stylingBuilder.registerBoundInput(input)) {
+                var stylingInputWasSet = stylingBuilder.registerBoundInput(input);
+                if (!stylingInputWasSet) {
                     if (input.type === 0 /* Property */) {
                         if (input.i18n) {
                             i18nAttrs.push(input);
@@ -14540,8 +14819,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
          */
         BindingScope.prototype.set = function (retrievalLevel, name, lhs, priority, declareLocalCallback, localRef) {
             if (priority === void 0) { priority = 0 /* DEFAULT */; }
-            !this.map.has(name) ||
+            if (this.map.has(name)) {
+                if (localRef) {
+                    // Do not throw an error if it's a local ref and do not update existing value,
+                    // so the first defined ref is always returned.
+                    return this;
+                }
                 error("The name " + name + " is already defined in scope to be " + this.map.get(name));
+            }
             this.map.set(name, {
                 retrievalLevel: retrievalLevel,
                 lhs: lhs,
@@ -14690,13 +14975,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      *
      * @param template text of the template to parse
      * @param templateUrl URL to use for source mapping of the parsed template
+     * @param options options to modify how the template is parsed
      */
     function parseTemplate(template, templateUrl, options) {
         if (options === void 0) { options = {}; }
         var interpolationConfig = options.interpolationConfig, preserveWhitespaces = options.preserveWhitespaces;
         var bindingParser = makeBindingParser(interpolationConfig);
         var htmlParser = new HtmlParser();
-        var parseResult = htmlParser.parse(template, templateUrl, true, interpolationConfig);
+        var parseResult = htmlParser.parse(template, templateUrl, __assign({}, options, { tokenizeExpansionForms: true }));
         if (parseResult.errors && parseResult.errors.length > 0) {
             return { errors: parseResult.errors, nodes: [] };
         }
@@ -14768,8 +15054,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     // This regex matches any binding names that contain the "attr." prefix, e.g. "attr.required"
     // If there is a match, the first matching group will contain the attribute name to bind.
     var ATTR_REGEX = /attr\.([^\]]+)/;
-    function getStylingPrefix(propName) {
-        return propName.substring(0, 5).toLowerCase();
+    function getStylingPrefix(name) {
+        return name.substring(0, 5); // style or class
     }
     function baseDirectiveFields(meta, constantPool, bindingParser) {
         var definitionMap = new DefinitionMap();
@@ -15132,19 +15418,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var bindings = bindingParser.createBoundHostProperties(directiveSummary, hostBindingSourceSpan);
         (bindings || []).forEach(function (binding) {
             var name = binding.name;
-            var stylePrefix = getStylingPrefix(name);
-            if (stylePrefix === 'style') {
-                var _a = parseNamedProperty(name), propertyName = _a.propertyName, unit = _a.unit;
-                styleBuilder.registerStyleInput(propertyName, binding.expression, unit, binding.sourceSpan);
-            }
-            else if (stylePrefix === 'class') {
-                styleBuilder.registerClassInput(parseNamedProperty(name).propertyName, binding.expression, binding.sourceSpan);
-            }
-            else {
+            var stylingInputWasSet = styleBuilder.registerInputBasedOnName(name, binding.expression, binding.sourceSpan);
+            if (!stylingInputWasSet) {
                 // resolve literal arrays and literal objects
                 var value = binding.expression.visit(getValueConverter());
                 var bindingExpr = bindingFn(bindingContext, value);
-                var _b = getBindingNameAndInstruction(binding), bindingName = _b.bindingName, instruction = _b.instruction, isAttribute = _b.isAttribute;
+                var _a = getBindingNameAndInstruction(binding), bindingName = _a.bindingName, instruction = _a.instruction, isAttribute = _a.isAttribute;
                 var securityContexts = bindingParser.calcPossibleSecurityContexts(meta.selector || '', bindingName, isAttribute)
                     .filter(function (context) { return context !== SecurityContext.NONE; });
                 var sanitizerFn = null;
@@ -15325,22 +15604,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var shadowCss = new ShadowCss();
         return styles.map(function (style) { return shadowCss.shimCssText(style, selector, hostSelector); });
     }
-    function parseNamedProperty(name) {
-        var unit = '';
-        var propertyName = '';
-        var index = name.indexOf('.');
-        if (index > 0) {
-            var unitIndex = name.lastIndexOf('.');
-            if (unitIndex !== index) {
-                unit = name.substring(unitIndex + 1, name.length);
-                propertyName = name.substring(index + 1, unitIndex);
-            }
-            else {
-                propertyName = name.substring(index + 1, name.length);
-            }
-        }
-        return { propertyName: propertyName, unit: unit };
-    }
 
     /**
      * @license
@@ -15350,7 +15613,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * found in the LICENSE file at https://angular.io/license
      */
     var CompilerFacadeImpl = /** @class */ (function () {
-        function CompilerFacadeImpl() {
+        function CompilerFacadeImpl(jitEvaluator) {
+            if (jitEvaluator === void 0) { jitEvaluator = new JitEvaluator(); }
+            this.jitEvaluator = jitEvaluator;
             this.R3ResolvedDependencyType = R3ResolvedDependencyType;
             this.elementSchemaRegistry = new DomElementSchemaRegistry();
         }
@@ -15362,7 +15627,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 pipeName: facade.pipeName,
                 pure: facade.pure,
             });
-            return jitExpression(res.expression, angularCoreEnv, sourceMapUrl, res.statements);
+            return this.jitExpression(res.expression, angularCoreEnv, sourceMapUrl, res.statements);
         };
         CompilerFacadeImpl.prototype.compileInjectable = function (angularCoreEnv, sourceMapUrl, facade) {
             var _a = compileInjectable({
@@ -15377,7 +15642,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 ctorDeps: convertR3DependencyMetadataArray(facade.ctorDeps),
                 userDeps: convertR3DependencyMetadataArray(facade.userDeps) || undefined,
             }), expression = _a.expression, statements = _a.statements;
-            return jitExpression(expression, angularCoreEnv, sourceMapUrl, statements);
+            return this.jitExpression(expression, angularCoreEnv, sourceMapUrl, statements);
         };
         CompilerFacadeImpl.prototype.compileInjector = function (angularCoreEnv, sourceMapUrl, facade) {
             var meta = {
@@ -15388,7 +15653,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 imports: new WrappedNodeExpr(facade.imports),
             };
             var res = compileInjector(meta);
-            return jitExpression(res.expression, angularCoreEnv, sourceMapUrl, res.statements);
+            return this.jitExpression(res.expression, angularCoreEnv, sourceMapUrl, res.statements);
         };
         CompilerFacadeImpl.prototype.compileNgModule = function (angularCoreEnv, sourceMapUrl, facade) {
             var meta = {
@@ -15400,7 +15665,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 emitInline: true,
             };
             var res = compileNgModule(meta);
-            return jitExpression(res.expression, angularCoreEnv, sourceMapUrl, []);
+            return this.jitExpression(res.expression, angularCoreEnv, sourceMapUrl, []);
         };
         CompilerFacadeImpl.prototype.compileDirective = function (angularCoreEnv, sourceMapUrl, facade) {
             var constantPool = new ConstantPool();
@@ -15408,7 +15673,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var meta = convertDirectiveFacadeToMetadata(facade);
             var res = compileDirectiveFromMetadata(meta, constantPool, bindingParser);
             var preStatements = __spread(constantPool.statements, res.statements);
-            return jitExpression(res.expression, angularCoreEnv, sourceMapUrl, preStatements);
+            return this.jitExpression(res.expression, angularCoreEnv, sourceMapUrl, preStatements);
         };
         CompilerFacadeImpl.prototype.compileComponent = function (angularCoreEnv, sourceMapUrl, facade) {
             // The ConstantPool is a requirement of the JIT'er.
@@ -15417,7 +15682,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 InterpolationConfig.fromArray(facade.interpolation) :
                 DEFAULT_INTERPOLATION_CONFIG;
             // Parse the template and check for errors.
-            var template = parseTemplate(facade.template, sourceMapUrl, { preserveWhitespaces: facade.preserveWhitespaces || false, interpolationConfig: interpolationConfig });
+            var template = parseTemplate(facade.template, sourceMapUrl, { preserveWhitespaces: facade.preserveWhitespaces, interpolationConfig: interpolationConfig });
             if (template.errors !== undefined) {
                 var errors = template.errors.map(function (err) { return err.toString(); }).join(', ');
                 throw new Error("Errors during JIT compilation of template for " + facade.name + ": " + errors);
@@ -15427,10 +15692,29 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var res = compileComponentFromMetadata(__assign({}, facade, convertDirectiveFacadeToMetadata(facade), { selector: facade.selector || this.elementSchemaRegistry.getDefaultComponentElementName(), template: template, viewQueries: facade.viewQueries.map(convertToR3QueryMetadata), wrapDirectivesAndPipesInClosure: false, styles: facade.styles || [], encapsulation: facade.encapsulation, interpolation: interpolationConfig, changeDetection: facade.changeDetection, animations: facade.animations != null ? new WrappedNodeExpr(facade.animations) : null, viewProviders: facade.viewProviders != null ? new WrappedNodeExpr(facade.viewProviders) :
                     null, relativeContextFilePath: '', i18nUseExternalIds: true }), constantPool, makeBindingParser(interpolationConfig));
             var preStatements = __spread(constantPool.statements, res.statements);
-            return jitExpression(res.expression, angularCoreEnv, sourceMapUrl, preStatements);
+            return this.jitExpression(res.expression, angularCoreEnv, "ng:///" + facade.name + ".js", preStatements);
         };
         CompilerFacadeImpl.prototype.createParseSourceSpan = function (kind, typeName, sourceUrl) {
             return r3JitTypeSourceSpan(kind, typeName, sourceUrl);
+        };
+        /**
+         * JIT compiles an expression and returns the result of executing that expression.
+         *
+         * @param def the definition which will be compiled and executed to get the value to patch
+         * @param context an object map of @angular/core symbol names to symbols which will be available
+         * in the context of the compiled expression
+         * @param sourceUrl a URL to use for the source map of the compiled expression
+         * @param preStatements a collection of statements that should be evaluated before the expression.
+         */
+        CompilerFacadeImpl.prototype.jitExpression = function (def, context, sourceUrl, preStatements) {
+            // The ConstantPool may contain Statements which declare variables used in the final expression.
+            // Therefore, its statements need to precede the actual JIT operation. The final statement is a
+            // declaration of $def which is set to the expression being compiled.
+            var statements = __spread(preStatements, [
+                new DeclareVarStmt('$def', def, undefined, [StmtModifier.Exported]),
+            ]);
+            var res = this.jitEvaluator.evaluateStatements(sourceUrl, statements, new R3JitReflector(context), /* enableSourceMaps */ true);
+            return res['$def'];
         };
         return CompilerFacadeImpl;
     }());
@@ -15566,7 +15850,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.3+89.sha-872a365');
+    var VERSION$1 = new Version('8.0.0-beta.3+124.sha-08de52b');
 
     /**
      * @license
@@ -15649,12 +15933,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * `(@trigger.phase)="callback($event)"`).
      */
     var BoundEventAst = /** @class */ (function () {
-        function BoundEventAst(name, target, phase, handler, sourceSpan) {
+        function BoundEventAst(name, target, phase, handler, sourceSpan, handlerSpan) {
             this.name = name;
             this.target = target;
             this.phase = phase;
             this.handler = handler;
             this.sourceSpan = sourceSpan;
+            this.handlerSpan = handlerSpan;
             this.fullName = BoundEventAst.calcFullName(this.name, this.target, this.phase);
             this.isAnimation = !!this.phase;
         }
@@ -15670,7 +15955,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         BoundEventAst.fromParsedEvent = function (event) {
             var target = event.type === 0 /* Regular */ ? event.targetOrPhase : null;
             var phase = event.type === 1 /* Animation */ ? event.targetOrPhase : null;
-            return new BoundEventAst(event.name, target, phase, event.handler, event.sourceSpan);
+            return new BoundEventAst(event.name, target, phase, event.handler, event.sourceSpan, event.handlerSpan);
         };
         BoundEventAst.prototype.visit = function (visitor, context) {
             return visitor.visitEvent(this, context);
@@ -16016,7 +16301,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         DirectiveNormalizer.prototype._preparseLoadedTemplate = function (prenormData, template, templateAbsUrl) {
             var isInline = !!prenormData.template;
             var interpolationConfig = InterpolationConfig.fromArray(prenormData.interpolation);
-            var rootNodesAndErrors = this._htmlParser.parse(template, templateSourceUrl({ reference: prenormData.ngModuleType }, { type: { reference: prenormData.componentType } }, { isInline: isInline, templateUrl: templateAbsUrl }), true, interpolationConfig);
+            var templateUrl = templateSourceUrl({ reference: prenormData.ngModuleType }, { type: { reference: prenormData.componentType } }, { isInline: isInline, templateUrl: templateAbsUrl });
+            var rootNodesAndErrors = this._htmlParser.parse(template, templateUrl, { tokenizeExpansionForms: true, interpolationConfig: interpolationConfig });
             if (rootNodesAndErrors.errors.length > 0) {
                 var errorString = rootNodesAndErrors.errors.join('\n');
                 throw syntaxError("Template parse errors:\n" + errorString);
@@ -16782,9 +17068,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         function XmlParser() {
             return _super.call(this, getXmlTagDefinition) || this;
         }
-        XmlParser.prototype.parse = function (source, url, parseExpansionForms) {
-            if (parseExpansionForms === void 0) { parseExpansionForms = false; }
-            return _super.prototype.parse.call(this, source, url, parseExpansionForms);
+        XmlParser.prototype.parse = function (source, url, options) {
+            return _super.prototype.parse.call(this, source, url, options);
         };
         return XmlParser;
     }(Parser$1));
@@ -16920,7 +17205,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         XliffParser.prototype.parse = function (xliff, url) {
             this._unitMlString = null;
             this._msgIdToHtml = {};
-            var xml = new XmlParser().parse(xliff, url, false);
+            var xml = new XmlParser().parse(xliff, url);
             this._errors = xml.errors;
             visitAll$1(this, xml.rootNodes, null);
             return {
@@ -16992,7 +17277,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         function XmlToI18n() {
         }
         XmlToI18n.prototype.convert = function (message, url) {
-            var xmlIcu = new XmlParser().parse(message, url, true);
+            var xmlIcu = new XmlParser().parse(message, url, { tokenizeExpansionForms: true });
             this._errors = xmlIcu.errors;
             var i18nNodes = this._errors.length > 0 || xmlIcu.rootNodes.length == 0 ?
                 [] : [].concat.apply([], __spread(visitAll$1(this, xmlIcu.rootNodes)));
@@ -17200,7 +17485,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         Xliff2Parser.prototype.parse = function (xliff, url) {
             this._unitMlString = null;
             this._msgIdToHtml = {};
-            var xml = new XmlParser().parse(xliff, url, false);
+            var xml = new XmlParser().parse(xliff, url);
             this._errors = xml.errors;
             visitAll$1(this, xml.rootNodes, null);
             return {
@@ -17278,7 +17563,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         function XmlToI18n() {
         }
         XmlToI18n.prototype.convert = function (message, url) {
-            var xmlIcu = new XmlParser().parse(message, url, true);
+            var xmlIcu = new XmlParser().parse(message, url, { tokenizeExpansionForms: true });
             this._errors = xmlIcu.errors;
             var i18nNodes = this._errors.length > 0 || xmlIcu.rootNodes.length == 0 ?
                 [] : [].concat.apply([], __spread(visitAll$1(this, xmlIcu.rootNodes)));
@@ -17426,7 +17711,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             this._msgIdToHtml = {};
             // We can not parse the ICU messages at this point as some messages might not originate
             // from Angular that could not be lex'd.
-            var xml = new XmlParser().parse(xtb, url, false);
+            var xml = new XmlParser().parse(xtb, url);
             this._errors = xml.errors;
             visitAll$1(this, xml.rootNodes);
             return {
@@ -17487,7 +17772,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         function XmlToI18n() {
         }
         XmlToI18n.prototype.convert = function (message, url) {
-            var xmlIcu = new XmlParser().parse(message, url, true);
+            var xmlIcu = new XmlParser().parse(message, url, { tokenizeExpansionForms: true });
             this._errors = xmlIcu.errors;
             var i18nNodes = this._errors.length > 0 || xmlIcu.rootNodes.length == 0 ?
                 [] :
@@ -17588,7 +17873,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var text = this._convertToText(srcMsg);
             // text to html
             var url = srcMsg.nodes[0].sourceSpan.start.file.url;
-            var html = new HtmlParser().parse(text, url, true);
+            var html = new HtmlParser().parse(text, url, { tokenizeExpansionForms: true });
             return {
                 nodes: html.rootNodes,
                 errors: __spread(this._errors, html.errors),
@@ -17713,10 +17998,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     new TranslationBundle({}, null, digest, undefined, missingTranslation, console);
             }
         }
-        I18NHtmlParser.prototype.parse = function (source, url, parseExpansionForms, interpolationConfig) {
-            if (parseExpansionForms === void 0) { parseExpansionForms = false; }
-            if (interpolationConfig === void 0) { interpolationConfig = DEFAULT_INTERPOLATION_CONFIG; }
-            var parseResult = this._htmlParser.parse(source, url, parseExpansionForms, interpolationConfig);
+        I18NHtmlParser.prototype.parse = function (source, url, options) {
+            if (options === void 0) { options = {}; }
+            var interpolationConfig = options.interpolationConfig || DEFAULT_INTERPOLATION_CONFIG;
+            var parseResult = this._htmlParser.parse(source, url, __assign({ interpolationConfig: interpolationConfig }, options));
             if (parseResult.errors.length) {
                 return new ParseTreeResult(parseResult.rootNodes, parseResult.errors);
             }
@@ -19874,7 +20159,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         TemplateParser.prototype.tryParse = function (component, template, directives, pipes, schemas, templateUrl, preserveWhitespaces) {
             var htmlParseResult = typeof template === 'string' ?
-                this._htmlParser.parse(template, templateUrl, true, this.getInterpolationConfig(component)) :
+                this._htmlParser.parse(template, templateUrl, {
+                    tokenizeExpansionForms: true,
+                    interpolationConfig: this.getInterpolationConfig(component)
+                }) :
                 template;
             if (!preserveWhitespaces) {
                 htmlParseResult = removeWhitespaces(htmlParseResult);
@@ -20115,24 +20403,24 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     this._parseReference(identifier, value, srcSpan, targetRefs);
                 }
                 else if (bindParts[KW_ON_IDX$1]) {
-                    this._bindingParser.parseEvent(bindParts[IDENT_KW_IDX$1], value, srcSpan, targetMatchableAttrs, boundEvents);
+                    this._bindingParser.parseEvent(bindParts[IDENT_KW_IDX$1], value, srcSpan, attr.valueSpan || srcSpan, targetMatchableAttrs, boundEvents);
                 }
                 else if (bindParts[KW_BINDON_IDX$1]) {
                     this._bindingParser.parsePropertyBinding(bindParts[IDENT_KW_IDX$1], value, false, srcSpan, targetMatchableAttrs, targetProps);
-                    this._parseAssignmentEvent(bindParts[IDENT_KW_IDX$1], value, srcSpan, targetMatchableAttrs, boundEvents);
+                    this._parseAssignmentEvent(bindParts[IDENT_KW_IDX$1], value, srcSpan, attr.valueSpan || srcSpan, targetMatchableAttrs, boundEvents);
                 }
                 else if (bindParts[KW_AT_IDX$1]) {
                     this._bindingParser.parseLiteralAttr(name, value, srcSpan, targetMatchableAttrs, targetProps);
                 }
                 else if (bindParts[IDENT_BANANA_BOX_IDX$1]) {
                     this._bindingParser.parsePropertyBinding(bindParts[IDENT_BANANA_BOX_IDX$1], value, false, srcSpan, targetMatchableAttrs, targetProps);
-                    this._parseAssignmentEvent(bindParts[IDENT_BANANA_BOX_IDX$1], value, srcSpan, targetMatchableAttrs, boundEvents);
+                    this._parseAssignmentEvent(bindParts[IDENT_BANANA_BOX_IDX$1], value, srcSpan, attr.valueSpan || srcSpan, targetMatchableAttrs, boundEvents);
                 }
                 else if (bindParts[IDENT_PROPERTY_IDX$1]) {
                     this._bindingParser.parsePropertyBinding(bindParts[IDENT_PROPERTY_IDX$1], value, false, srcSpan, targetMatchableAttrs, targetProps);
                 }
                 else if (bindParts[IDENT_EVENT_IDX$1]) {
-                    this._bindingParser.parseEvent(bindParts[IDENT_EVENT_IDX$1], value, srcSpan, targetMatchableAttrs, boundEvents);
+                    this._bindingParser.parseEvent(bindParts[IDENT_EVENT_IDX$1], value, srcSpan, attr.valueSpan || srcSpan, targetMatchableAttrs, boundEvents);
                 }
             }
             else {
@@ -20159,8 +20447,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
             targetRefs.push(new ElementOrDirectiveRef(identifier, value, sourceSpan));
         };
-        TemplateParseVisitor.prototype._parseAssignmentEvent = function (name, expression, sourceSpan, targetMatchableAttrs, targetEvents) {
-            this._bindingParser.parseEvent(name + "Change", expression + "=$event", sourceSpan, targetMatchableAttrs, targetEvents);
+        TemplateParseVisitor.prototype._parseAssignmentEvent = function (name, expression, sourceSpan, valueSpan, targetMatchableAttrs, targetEvents) {
+            this._bindingParser.parseEvent(name + "Change", expression + "=$event", sourceSpan, valueSpan, targetMatchableAttrs, targetEvents);
         };
         TemplateParseVisitor.prototype._parseDirectives = function (selectorMatcher, elementCssSelector) {
             var _this = this;
@@ -23811,8 +24099,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var path$$1 = findNode(this.info.htmlAst, ast.sourceSpan.start.offset);
             var last = path$$1.tail;
             if (last instanceof Attribute && last.valueSpan) {
-                // Add 1 for the quote.
-                return last.valueSpan.start.offset + 1;
+                return last.valueSpan.start.offset;
             }
             return ast.sourceSpan.start.offset;
         };
@@ -27646,7 +27933,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 // find the template binding that contains the position
                 if (!this.attr.valueSpan)
                     return;
-                var valueRelativePosition_1 = this.position - this.attr.valueSpan.start.offset - 1;
+                var valueRelativePosition_1 = this.position - this.attr.valueSpan.start.offset;
                 var bindings = templateBindingResult.templateBindings;
                 var binding = bindings.find(function (binding) { return inSpan(valueRelativePosition_1, binding.span, /* exclusive */ true); }) ||
                     bindings.find(function (binding) { return inSpan(valueRelativePosition_1, binding.span); });
@@ -27722,7 +28009,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         Object.defineProperty(ExpressionVisitor.prototype, "attributeValuePosition", {
             get: function () {
                 if (this.attr && this.attr.valueSpan) {
-                    return this.position - this.attr.valueSpan.start.offset - 1;
+                    return this.position - this.attr.valueSpan.start.offset;
                 }
                 return 0;
             },
@@ -27852,7 +28139,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                         var dinfo = diagnosticInfoFromTemplateInfo(info);
                         var scope = getExpressionScope(dinfo, path$$1, inEvent);
                         if (attribute.valueSpan) {
-                            var expressionOffset = attribute.valueSpan.start.offset + 1;
+                            var expressionOffset = attribute.valueSpan.start.offset;
                             var result = getExpressionSymbol(scope, ast, templatePosition - expressionOffset, info.template.query);
                             if (result) {
                                 symbol_1 = result.symbol;
@@ -28307,7 +28594,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     var expressionParser = new Parser(new Lexer());
                     var config = new CompilerConfig();
                     var parser = new TemplateParser(config, this.host.resolver.getReflector(), expressionParser, new DomElementSchemaRegistry(), htmlParser, null, []);
-                    var htmlResult = htmlParser.parse(template.source, '', true);
+                    var htmlResult = htmlParser.parse(template.source, '', { tokenizeExpansionForms: true });
                     var analyzedModules = this.host.getAnalyzedModules();
                     var errors = undefined;
                     var ngModule = analyzedModules.ngModuleByPipeOrDirective.get(template.type);
@@ -32322,29 +32609,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
     }
     /**
-     * Takes a component instance and returns the view for that component.
-     *
-     * @param componentInstance
-     * @returns The component's view
-     */
-    function getComponentViewByInstance(componentInstance) {
-        var lView = readPatchedData(componentInstance);
-        var view;
-        if (Array.isArray(lView)) {
-            var nodeIndex = findViaComponent(lView, componentInstance);
-            view = getComponentViewByIndex(nodeIndex, lView);
-            var context = createLContext(lView, nodeIndex, view[HOST]);
-            context.component = componentInstance;
-            attachPatchData(componentInstance, context);
-            attachPatchData(context.native, context);
-        }
-        else {
-            var context = lView;
-            view = getComponentViewByIndex(context.nodeIndex, context.lView);
-        }
-        return view;
-    }
-    /**
      * Assigns the given data to the given target (which could be a component,
      * directive or DOM node instance) using monkey-patching.
      */
@@ -33633,17 +33897,23 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * found in the LICENSE file at https://angular.io/license
      */
     function createEmptyStylingContext(element, sanitizer, initialStyles, initialClasses) {
-        return [
+        var context = [
             0,
-            [null, -1, false, sanitizer || null],
-            initialStyles || [null],
-            initialClasses || [null],
+            [],
+            initialStyles || [null, null],
+            initialClasses || [null, null],
             [0, 0],
             element || null,
-            null,
-            null,
+            [0],
+            [0],
             null,
         ];
+        allocateDirectiveIntoContext(context, null);
+        return context;
+    }
+    function allocateDirectiveIntoContext(context, directiveRef) {
+        // this is a new directive which we have not seen yet.
+        context[1 /* DirectiveRegistryPosition */].push(directiveRef, -1, false, null);
     }
     /**
      * Used clone a copy of a pre-computed template of a styling context.
@@ -33656,7 +33926,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var context = templateStyleContext.slice();
         context[5 /* ElementPosition */] = element;
         // this will prevent any other directives from extending the context
-        context[0 /* MasterFlagPosition */] |= 32 /* BindingAllocationLocked */;
+        context[0 /* MasterFlagPosition */] |= 16 /* BindingAllocationLocked */;
         return context;
     }
     /**
@@ -34127,7 +34397,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             child: null,
             parent: tParent,
             stylingTemplate: null,
-            projection: null
+            projection: null,
+            onElementCreationFns: null,
         };
     }
     //////////////////////////
@@ -34324,23 +34595,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             renderComponentOrTemplate(readPatchedLView(rootComponent), rootComponent);
         }
     }
-    /**
-     * Synchronously perform change detection on a component (and possibly its sub-components).
-     *
-     * This function triggers change detection in a synchronous way on a component. There should
-     * be very little reason to call this function directly since a preferred way to do change
-     * detection is to {@link markDirty} the component and wait for the scheduler to call this method
-     * at some future point in time. This is because a single user action often results in many
-     * components being invalidated and calling change detection on each component synchronously
-     * would be inefficient. It is better to wait until all components are marked as dirty and
-     * then perform single change detection across all of the components
-     *
-     * @param component The component which the change detection should be performed on.
-     */
-    function detectChanges(component) {
-        var view = getComponentViewByInstance(component);
-        detectChangesInternal(view, component);
-    }
     function detectChangesInternal(view, context) {
         var rendererFactory = view[RENDERER_FACTORY];
         if (rendererFactory.begin)
@@ -34368,16 +34622,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function detectChangesInRootView(lView) {
         tickRootContext(lView[CONTEXT]);
     }
-    /**
-     * Checks the change detector and its children, and throws if any changes are detected.
-     *
-     * This is used in development mode to verify that running change detection doesn't
-     * introduce other changes.
-     */
-    function checkNoChanges(component) {
+    function checkNoChangesInternal(view, context) {
         setCheckNoChangesMode(true);
         try {
-            detectChanges(component);
+            detectChangesInternal(view, context);
         }
         finally {
             setCheckNoChangesMode(false);
@@ -34551,14 +34799,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     /**
      * Represents a basic change from a previous to a new value for a single
      * property on a directive instance. Passed as a value in a
@@ -34580,6 +34820,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         SimpleChange.prototype.isFirstChange = function () { return this.firstChange; };
         return SimpleChange;
     }());
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
 
     /**
      * @license
@@ -35348,7 +35596,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
          * This is used in development mode to verify that running change detection doesn't
          * introduce other changes.
          */
-        ViewRef.prototype.checkNoChanges = function () { checkNoChanges(this.context); };
+        ViewRef.prototype.checkNoChanges = function () { checkNoChangesInternal(this._lView, this.context); };
         ViewRef.prototype.attachToViewContainerRef = function (vcRef) {
             if (this._appRef) {
                 throw new Error('This view is already attached directly to the ApplicationRef!');
@@ -35571,7 +35819,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.3+89.sha-872a365');
+    var VERSION$2 = new Version$1('8.0.0-beta.3+124.sha-08de52b');
 
     /**
      * @license
@@ -50313,11 +50561,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         function DummyHtmlParser() {
             return _super !== null && _super.apply(this, arguments) || this;
         }
-        DummyHtmlParser.prototype.parse = function (source, url, parseExpansionForms, interpolationConfig) {
-            if (parseExpansionForms === void 0) { parseExpansionForms = false; }
-            if (interpolationConfig === void 0) { interpolationConfig = DEFAULT_INTERPOLATION_CONFIG; }
-            return new ParseTreeResult([], []);
-        };
+        DummyHtmlParser.prototype.parse = function () { return new ParseTreeResult([], []); };
         return DummyHtmlParser;
     }(HtmlParser));
     /**
@@ -51109,7 +51353,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.3+89.sha-872a365');
+    var VERSION$3 = new Version$1('8.0.0-beta.3+124.sha-08de52b');
 
     /**
      * @license
