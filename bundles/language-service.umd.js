@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.3+144.sha-2f27a80
+ * @license Angular v8.0.0-beta.3+152.sha-dba2a40
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -15852,7 +15852,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.3+144.sha-2f27a80');
+    var VERSION$1 = new Version('8.0.0-beta.3+152.sha-dba2a40');
 
     /**
      * @license
@@ -31537,6 +31537,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         // Styling contexts are also arrays, but their first index contains an element node
         return Array.isArray(value) && value.length === LCONTAINER_LENGTH;
     }
+    function isRootView(target) {
+        return (target[FLAGS] & 512 /* IsRoot */) !== 0;
+    }
     /**
      * Retrieve the root view from any component by walking the parent `LView` until
      * reaching the root `LView`.
@@ -34598,15 +34601,16 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * @returns the root LView
      */
     function markViewDirty(lView) {
-        while (lView && !(lView[FLAGS] & 512 /* IsRoot */)) {
+        while (lView) {
             lView[FLAGS] |= 64 /* Dirty */;
+            // Stop traversing up as soon as you find a root view that wasn't attached to any container
+            if (isRootView(lView) && lView[CONTAINER_INDEX] === -1) {
+                return lView;
+            }
+            // continue otherwise
             lView = lView[PARENT];
         }
-        // Detached views do not have a PARENT and also aren't root views
-        if (lView) {
-            lView[FLAGS] |= 64 /* Dirty */;
-        }
-        return lView;
+        return null;
     }
     function tickRootContext(rootContext) {
         for (var i = 0; i < rootContext.components.length; i++) {
@@ -35838,7 +35842,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.3+144.sha-2f27a80');
+    var VERSION$2 = new Version$1('8.0.0-beta.3+152.sha-dba2a40');
 
     /**
      * @license
@@ -51372,7 +51376,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.3+144.sha-2f27a80');
+    var VERSION$3 = new Version$1('8.0.0-beta.3+152.sha-dba2a40');
 
     /**
      * @license
