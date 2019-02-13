@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.3+135.sha-644e7a2
+ * @license Angular v8.0.0-beta.3+136.sha-39d0311
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -15071,8 +15071,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             injectFn: Identifiers$1.directiveInject,
         });
         definitionMap.set('factory', result.factory);
-        definitionMap.set('contentQueries', createContentQueriesFunction(meta, constantPool));
-        definitionMap.set('contentQueriesRefresh', createContentQueriesRefreshFunction(meta));
+        if (meta.queries.length > 0) {
+            // e.g. `contentQueries: (rf, ctx, dirIndex) => { ... }
+            definitionMap.set('contentQueries', createContentQueriesFunction(meta, constantPool));
+        }
         // Initialize hostVarsCount to number of bound host properties (interpolations illegal),
         // except 'style' and 'class' properties, since they should *not* allocate host var slots
         var hostVarsCount = Object.keys(meta.host.properties)
@@ -15295,43 +15297,43 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return values;
     }
-    // Return a contentQueries function or null if one is not necessary.
+    // Define and update any content queries
     function createContentQueriesFunction(meta, constantPool) {
-        if (meta.queries.length) {
-            var statements = meta.queries.map(function (query) {
+        var e_3, _a;
+        var createStatements = [];
+        var updateStatements = [];
+        var tempAllocator = temporaryAllocator(updateStatements, TEMPORARY_NAME);
+        try {
+            for (var _b = __values(meta.queries), _c = _b.next(); !_c.done; _c = _b.next()) {
+                var query = _c.value;
+                // creation, e.g. r3.contentQuery(dirIndex, somePredicate, true);
                 var args = __spread([variable('dirIndex')], prepareQueryParams(query, constantPool));
-                return importExpr(Identifiers$1.contentQuery).callFn(args).toStmt();
-            });
-            var typeName = meta.name;
-            var parameters = [new FnParam('dirIndex', NUMBER_TYPE)];
-            return fn(parameters, statements, INFERRED_TYPE, null, typeName ? typeName + "_ContentQueries" : null);
-        }
-        return null;
-    }
-    // Return a contentQueriesRefresh function or null if one is not necessary.
-    function createContentQueriesRefreshFunction(meta) {
-        if (meta.queries.length > 0) {
-            var statements_1 = [];
-            var typeName = meta.name;
-            var parameters = [new FnParam('dirIndex', NUMBER_TYPE)];
-            var directiveInstanceVar_1 = variable('instance');
-            // var $tmp$: any;
-            var temporary_1 = temporaryAllocator(statements_1, TEMPORARY_NAME);
-            // const $instance$ = $r3$.ɵload(dirIndex);
-            statements_1.push(directiveInstanceVar_1.set(importExpr(Identifiers$1.load).callFn([variable('dirIndex')]))
-                .toDeclStmt(INFERRED_TYPE, [StmtModifier.Final]));
-            meta.queries.forEach(function (query) {
+                createStatements.push(importExpr(Identifiers$1.contentQuery).callFn(args).toStmt());
+                // update, e.g. (r3.queryRefresh(tmp = r3.loadContentQuery()) && (ctx.someDir = tmp));
+                var temporary = tempAllocator();
                 var getQueryList = importExpr(Identifiers$1.loadContentQuery).callFn([]);
-                var assignToTemporary = temporary_1().set(getQueryList);
-                var callQueryRefresh = importExpr(Identifiers$1.queryRefresh).callFn([assignToTemporary]);
-                var updateDirective = directiveInstanceVar_1.prop(query.propertyName)
-                    .set(query.first ? temporary_1().prop('first') : temporary_1());
-                var refreshQueryAndUpdateDirective = callQueryRefresh.and(updateDirective);
-                statements_1.push(refreshQueryAndUpdateDirective.toStmt());
-            });
-            return fn(parameters, statements_1, INFERRED_TYPE, null, typeName ? typeName + "_ContentQueriesRefresh" : null);
+                var refresh = importExpr(Identifiers$1.queryRefresh).callFn([temporary.set(getQueryList)]);
+                var updateDirective = variable(CONTEXT_NAME)
+                    .prop(query.propertyName)
+                    .set(query.first ? temporary.prop('first') : temporary);
+                updateStatements.push(refresh.and(updateDirective).toStmt());
+            }
         }
-        return null;
+        catch (e_3_1) { e_3 = { error: e_3_1 }; }
+        finally {
+            try {
+                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+            }
+            finally { if (e_3) throw e_3.error; }
+        }
+        var contentQueriesFnName = meta.name ? meta.name + "_ContentQueries" : null;
+        return fn([
+            new FnParam(RENDER_FLAGS, NUMBER_TYPE), new FnParam(CONTEXT_NAME, null),
+            new FnParam('dirIndex', null)
+        ], [
+            renderFlagCheckIfStmt(1 /* Create */, createStatements),
+            renderFlagCheckIfStmt(2 /* Update */, updateStatements)
+        ], INFERRED_TYPE, null, contentQueriesFnName);
     }
     function stringAsType(str) {
         return expressionType(literal(str));
@@ -15850,7 +15852,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.3+135.sha-644e7a2');
+    var VERSION$1 = new Version('8.0.0-beta.3+136.sha-39d0311');
 
     /**
      * @license
@@ -34019,7 +34021,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             executeInitHooks(lView, tView, checkNoChangesMode);
             refreshDynamicEmbeddedViews(lView);
             // Content query results must be refreshed before content hooks are called.
-            refreshContentQueries(tView);
+            refreshContentQueries(tView, lView);
             executeHooks(lView, tView.contentHooks, tView.contentCheckHooks, checkNoChangesMode, 1 /* AfterContentInitHooksToBeRun */);
             setHostBindings(tView, lView);
         }
@@ -34064,12 +34066,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
     }
     /** Refreshes content queries for all directives in the given view. */
-    function refreshContentQueries(tView) {
+    function refreshContentQueries(tView, lView) {
         if (tView.contentQueries != null) {
             for (var i = 0; i < tView.contentQueries.length; i++) {
                 var directiveDefIdx = tView.contentQueries[i];
                 var directiveDef = tView.data[directiveDefIdx];
-                directiveDef.contentQueriesRefresh(directiveDefIdx - HEADER_OFFSET);
+                ngDevMode &&
+                    assertDefined(directiveDef.contentQueries, 'contentQueries function should be defined');
+                directiveDef.contentQueries(2 /* Update */, lView[directiveDefIdx], directiveDefIdx);
             }
         }
     }
@@ -35820,7 +35824,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.3+135.sha-644e7a2');
+    var VERSION$2 = new Version$1('8.0.0-beta.3+136.sha-39d0311');
 
     /**
      * @license
@@ -51354,7 +51358,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.3+135.sha-644e7a2');
+    var VERSION$3 = new Version$1('8.0.0-beta.3+136.sha-39d0311');
 
     /**
      * @license
