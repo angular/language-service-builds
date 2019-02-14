@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.2.4+48.sha-73f9db5
+ * @license Angular v7.2.4+71.sha-ecef0dd
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -15436,7 +15436,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.2.4+48.sha-73f9db5');
+    var VERSION$1 = new Version('7.2.4+71.sha-ecef0dd');
 
     /**
      * @license
@@ -28595,15 +28595,16 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * found in the LICENSE file at https://angular.io/license
      */
     /**
-     * This token can be used to create a virtual provider that will populate the
-     * `entryComponents` fields of components and ng modules based on its `useValue`.
+     * A DI token that you can use to create a virtual [provider](guide/glossary#provider)
+     * that will populate the `entryComponents` field of components and NgModules
+     * based on its `useValue` property value.
      * All components that are referenced in the `useValue` value (either directly
-     * or in a nested array or map) will be added to the `entryComponents` property.
+     * or in a nested array or map) are added to the `entryComponents` property.
      *
      * @usageNotes
-     * ### Example
+     *
      * The following example shows how the router can populate the `entryComponents`
-     * field of an NgModule based on the router configuration which refers
+     * field of an NgModule based on a router configuration that refers
      * to components.
      *
      * ```typescript
@@ -33849,7 +33850,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.2.4+48.sha-73f9db5');
+    var VERSION$2 = new Version$1('7.2.4+71.sha-ecef0dd');
 
     /**
      * @license
@@ -51179,7 +51180,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.2.4+48.sha-73f9db5');
+    var VERSION$3 = new Version$1('7.2.4+71.sha-ecef0dd');
 
     /**
      * @license
