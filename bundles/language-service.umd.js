@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.3+172.sha-841a1d3
+ * @license Angular v8.0.0-beta.3+162.sha-3842dd6
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -15864,7 +15864,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.3+172.sha-841a1d3');
+    var VERSION$1 = new Version('8.0.0-beta.3+162.sha-3842dd6');
 
     /**
      * @license
@@ -41712,11 +41712,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             // TODO: Fix class name, should be TemplateRef, but there appears to be a rollup bug
             R3TemplateRef = /** @class */ (function (_super) {
                 __extends(TemplateRef_, _super);
-                function TemplateRef_(_declarationParentView, elementRef, _tView, _hostLContainer, _injectorIndex) {
+                function TemplateRef_(_declarationParentView, elementRef, _tView, _renderer, _hostLContainer, _injectorIndex) {
                     var _this = _super.call(this) || this;
                     _this._declarationParentView = _declarationParentView;
                     _this.elementRef = elementRef;
                     _this._tView = _tView;
+                    _this._renderer = _renderer;
                     _this._hostLContainer = _hostLContainer;
                     _this._injectorIndex = _injectorIndex;
                     return _this;
@@ -41737,7 +41738,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         if (hostTNode.type === 0 /* Container */) {
             var hostContainer = hostView[hostTNode.index];
             ngDevMode && assertDefined(hostTNode.tViews, 'TView must be allocated');
-            return new R3TemplateRef(hostView, createElementRef(ElementRefToken, hostTNode, hostView), hostTNode.tViews, hostContainer, hostTNode.injectorIndex);
+            return new R3TemplateRef(hostView, createElementRef(ElementRefToken, hostTNode, hostView), hostTNode.tViews, getLView()[RENDERER], hostContainer, hostTNode.injectorIndex);
         }
         else {
             return null;
@@ -42084,7 +42085,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.3+172.sha-841a1d3');
+    var VERSION$2 = new Version$1('8.0.0-beta.3+162.sha-3842dd6');
 
     /**
      * @license
@@ -60493,7 +60494,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.3+172.sha-841a1d3');
+    var VERSION$3 = new Version$1('8.0.0-beta.3+162.sha-3842dd6');
 
     /**
      * @license
