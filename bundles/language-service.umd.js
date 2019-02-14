@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.3+174.sha-b41da03
+ * @license Angular v8.0.0-beta.3+175.sha-627cecd
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -15879,7 +15879,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.3+174.sha-b41da03');
+    var VERSION$1 = new Version('8.0.0-beta.3+175.sha-627cecd');
 
     /**
      * @license
@@ -31673,6 +31673,20 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function isPropMetadataString(str) {
         return str.indexOf(INTERPOLATION_DELIMITER) >= 0;
     }
+    function applyOnCreateInstructions(tNode) {
+        // there may be some instructions that need to run in a specific
+        // order because the CREATE block in a directive runs before the
+        // CREATE block in a template. To work around this instructions
+        // can get access to the function array below and defer any code
+        // to run after the element is created.
+        var fns;
+        if (fns = tNode.onElementCreationFns) {
+            for (var i = 0; i < fns.length; i++) {
+                fns[i]();
+            }
+            tNode.onElementCreationFns = null;
+        }
+    }
 
     /**
      * @license
@@ -34011,8 +34025,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
     function isStylingContext(value) {
         // Not an LView or an LContainer
-        return Array.isArray(value) && typeof value[0 /* MasterFlagPosition */] === 'number' &&
-            value.length !== LCONTAINER_LENGTH;
+        if (Array.isArray(value) && value.length >= 9 /* SingleStylesStartPosition */) {
+            return typeof value[0 /* MasterFlagPosition */] === 'number' &&
+                value[3 /* InitialClassValuesPosition */][0 /* DefaultNullValuePosition */] === null;
+        }
+        return false;
     }
 
     function isClassBasedValue(context, index) {
@@ -34468,6 +34485,17 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         postProcessBaseDirective(viewData, rootTNode, directive);
         return directive;
     }
+    function invokeHostBindingsInCreationMode(def, expando, directive, tNode, firstTemplatePass) {
+        var previousExpandoLength = expando.length;
+        def.hostBindings(1 /* Create */, directive, tNode.index - HEADER_OFFSET);
+        // `hostBindings` function may or may not contain `allocHostVars` call
+        // (e.g. it may not if it only contains host listeners), so we need to check whether
+        // `expandoInstructions` has changed and if not - we still push `hostBindings` to
+        // expando block, to make sure we execute it for DI cycle
+        if (previousExpandoLength === expando.length && firstTemplatePass) {
+            expando.push(def.hostBindings);
+        }
+    }
     /**
     * Generates a new block in TView.expandoInstructions for this node.
     *
@@ -34807,7 +34835,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         hostFeatures && hostFeatures.forEach(function (feature) { return feature(component, componentDef); });
         if (tView.firstTemplatePass && componentDef.hostBindings) {
             var rootTNode = getPreviousOrParentTNode();
-            componentDef.hostBindings(1 /* Create */, component, rootTNode.index - HEADER_OFFSET);
+            var expando = tView.expandoInstructions;
+            invokeHostBindingsInCreationMode(componentDef, expando, component, rootTNode, tView.firstTemplatePass);
+            rootTNode.onElementCreationFns && applyOnCreateInstructions(rootTNode);
         }
         return component;
     }
@@ -35869,7 +35899,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.3+174.sha-b41da03');
+    var VERSION$2 = new Version$1('8.0.0-beta.3+175.sha-627cecd');
 
     /**
      * @license
@@ -51403,7 +51433,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.3+174.sha-b41da03');
+    var VERSION$3 = new Version$1('8.0.0-beta.3+175.sha-627cecd');
 
     /**
      * @license
