@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.3+175.sha-627cecd
+ * @license Angular v8.0.0-beta.3+178.sha-7cbc36f
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -15864,7 +15864,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.3+175.sha-627cecd');
+    var VERSION$1 = new Version('8.0.0-beta.3+178.sha-7cbc36f');
 
     /**
      * @license
@@ -42095,7 +42095,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.3+175.sha-627cecd');
+    var VERSION$2 = new Version$1('8.0.0-beta.3+178.sha-7cbc36f');
 
     /**
      * @license
@@ -57284,13 +57284,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 var element = this.nativeElement;
                 if (element) {
                     var lContext = loadLContextFromNode(element);
-                    var lNode = lContext.lView[lContext.nodeIndex];
                     var stylingContext = getStylingContext(lContext.nodeIndex, lContext.lView);
                     if (stylingContext) {
-                        for (var i = 9 /* SingleStylesStartPosition */; i < lNode.length; i += 4 /* Size */) {
-                            if (isClassBasedValue(lNode, i)) {
-                                var className = getProp(lNode, i);
-                                var value = getValue(lNode, i);
+                        for (var i = 9 /* SingleStylesStartPosition */; i < stylingContext.length; i += 4 /* Size */) {
+                            if (isClassBasedValue(stylingContext, i)) {
+                                var className = getProp(stylingContext, i);
+                                var value = getValue(stylingContext, i);
                                 if (typeof value == 'boolean') {
                                     // we want to ignore `null` since those don't overwrite the values.
                                     classes[className] = value;
@@ -57317,13 +57316,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 var element = this.nativeElement;
                 if (element) {
                     var lContext = loadLContextFromNode(element);
-                    var lNode = lContext.lView[lContext.nodeIndex];
                     var stylingContext = getStylingContext(lContext.nodeIndex, lContext.lView);
                     if (stylingContext) {
-                        for (var i = 9 /* SingleStylesStartPosition */; i < lNode.length; i += 4 /* Size */) {
-                            if (!isClassBasedValue(lNode, i)) {
-                                var styleName = getProp(lNode, i);
-                                var value = getValue(lNode, i);
+                        for (var i = 9 /* SingleStylesStartPosition */; i < stylingContext.length; i += 4 /* Size */) {
+                            if (!isClassBasedValue(stylingContext, i)) {
+                                var styleName = getProp(stylingContext, i);
+                                var value = getValue(stylingContext, i);
                                 if (value !== null) {
                                     // we want to ignore `null` since those don't overwrite the values.
                                     styles[styleName] = value;
@@ -60504,7 +60502,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.3+175.sha-627cecd');
+    var VERSION$3 = new Version$1('8.0.0-beta.3+178.sha-7cbc36f');
 
     /**
      * @license
