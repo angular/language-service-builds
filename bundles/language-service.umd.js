@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.3+168.sha-b0afc4c
+ * @license Angular v8.0.0-beta.3+181.sha-8accc98
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -6243,7 +6243,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Construct an `R3NgModuleDef` for the given `R3NgModuleMetadata`.
      */
     function compileNgModule(meta) {
-        var moduleType = meta.type, bootstrap = meta.bootstrap, declarations = meta.declarations, imports = meta.imports, exports = meta.exports;
+        var moduleType = meta.type, bootstrap = meta.bootstrap, declarations = meta.declarations, imports = meta.imports, exports = meta.exports, schemas = meta.schemas;
         var definitionMap = {
             type: moduleType
         };
@@ -6259,6 +6259,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         if (exports.length) {
             definitionMap.exports = literalArr(exports.map(function (ref) { return ref.value; }));
+        }
+        if (schemas && schemas.length) {
+            definitionMap.schemas = literalArr(schemas.map(function (ref) { return ref.value; }));
         }
         var expression = importExpr(Identifiers$1.defineNgModule).callFn([mapToMapExpression(definitionMap)]);
         var type = new ExpressionType(importExpr(Identifiers$1.NgModuleDefWithMeta, [
@@ -15692,6 +15695,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 imports: facade.imports.map(wrapReference),
                 exports: facade.exports.map(wrapReference),
                 emitInline: true,
+                schemas: facade.schemas ? facade.schemas.map(wrapReference) : null,
             };
             var res = compileNgModule(meta);
             return this.jitExpression(res.expression, angularCoreEnv, sourceMapUrl, []);
@@ -15879,7 +15883,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.3+168.sha-b0afc4c');
+    var VERSION$1 = new Version('8.0.0-beta.3+181.sha-8accc98');
 
     /**
      * @license
@@ -31673,6 +31677,20 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function isPropMetadataString(str) {
         return str.indexOf(INTERPOLATION_DELIMITER) >= 0;
     }
+    function applyOnCreateInstructions(tNode) {
+        // there may be some instructions that need to run in a specific
+        // order because the CREATE block in a directive runs before the
+        // CREATE block in a template. To work around this instructions
+        // can get access to the function array below and defer any code
+        // to run after the element is created.
+        var fns;
+        if (fns = tNode.onElementCreationFns) {
+            for (var i = 0; i < fns.length; i++) {
+                fns[i]();
+            }
+            tNode.onElementCreationFns = null;
+        }
+    }
 
     /**
      * @license
@@ -33100,6 +33118,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     /**
      * This file is used to control if the default rendering pipeline should be `ViewEngine` or `Ivy`.
      *
@@ -34011,8 +34037,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
     function isStylingContext(value) {
         // Not an LView or an LContainer
-        return Array.isArray(value) && typeof value[0 /* MasterFlagPosition */] === 'number' &&
-            value.length !== LCONTAINER_LENGTH;
+        if (Array.isArray(value) && value.length >= 9 /* SingleStylesStartPosition */) {
+            return typeof value[0 /* MasterFlagPosition */] === 'number' &&
+                value[3 /* InitialClassValuesPosition */][0 /* DefaultNullValuePosition */] === null;
+        }
+        return false;
     }
 
     function isClassBasedValue(context, index) {
@@ -34308,9 +34337,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * @param vars The number of bindings and pure function bindings in this view
      * @param directives Directive defs that should be saved on TView
      * @param pipes Pipe defs that should be saved on TView
+     * @param viewQuery View query that should be saved on TView
+     * @param schemas Schemas that should be saved on TView
      * @returns TView
      */
-    function getOrCreateTView(templateFn, consts, vars, directives, pipes, viewQuery) {
+    function getOrCreateTView(templateFn, consts, vars, directives, pipes, viewQuery, schemas) {
         // TODO(misko): reading `ngPrivateData` here is problematic for two reasons
         // 1. It is a megamorphic call on each invocation.
         // 2. For nested embedded views (ngFor inside ngFor) the template instance is per
@@ -34318,8 +34349,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         // Correct solution is to only put `ngPrivateData` on the Component template
         // and not on embedded templates.
         return templateFn.ngPrivateData ||
-            (templateFn.ngPrivateData =
-                createTView(-1, templateFn, consts, vars, directives, pipes, viewQuery));
+            (templateFn.ngPrivateData = createTView(-1, templateFn, consts, vars, directives, pipes, viewQuery, schemas));
     }
     /**
      * Creates a TView instance
@@ -34329,8 +34359,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * @param consts The number of nodes, local refs, and pipes in this template
      * @param directives Registry of directives for this view
      * @param pipes Registry of pipes for this view
+     * @param viewQuery View queries for this view
+     * @param schemas Schemas for this view
      */
-    function createTView(viewIndex, templateFn, consts, vars, directives, pipes, viewQuery) {
+    function createTView(viewIndex, templateFn, consts, vars, directives, pipes, viewQuery, schemas) {
         ngDevMode && ngDevMode.tView++;
         var bindingStartIndex = HEADER_OFFSET + consts;
         // This length does not yet contain host bindings from child directives because at this point,
@@ -34364,6 +34396,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             directiveRegistry: typeof directives === 'function' ? directives() : directives,
             pipeRegistry: typeof pipes === 'function' ? pipes() : pipes,
             firstChild: null,
+            schemas: schemas,
         };
     }
     function createViewBlueprint(bindingStartIndex, initialViewLength) {
@@ -34467,6 +34500,17 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var directive = getNodeInjectable(tView.data, viewData, viewData.length - 1, rootTNode);
         postProcessBaseDirective(viewData, rootTNode, directive);
         return directive;
+    }
+    function invokeHostBindingsInCreationMode(def, expando, directive, tNode, firstTemplatePass) {
+        var previousExpandoLength = expando.length;
+        def.hostBindings(1 /* Create */, directive, tNode.index - HEADER_OFFSET);
+        // `hostBindings` function may or may not contain `allocHostVars` call
+        // (e.g. it may not if it only contains host listeners), so we need to check whether
+        // `expandoInstructions` has changed and if not - we still push `hostBindings` to
+        // expando block, to make sure we execute it for DI cycle
+        if (previousExpandoLength === expando.length && firstTemplatePass) {
+            expando.push(def.hostBindings);
+        }
     }
     /**
     * Generates a new block in TView.expandoInstructions for this node.
@@ -34784,7 +34828,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         resetComponentState();
         var tView = rootView[TVIEW];
         var tNode = createNodeAtIndex(0, 3 /* Element */, rNode, null, null);
-        var componentView = createLView(rootView, getOrCreateTView(def.template, def.consts, def.vars, def.directiveDefs, def.pipeDefs, def.viewQuery), null, def.onPush ? 64 /* Dirty */ : 16 /* CheckAlways */, rootView[HEADER_OFFSET], tNode, rendererFactory, renderer, sanitizer);
+        var componentView = createLView(rootView, getOrCreateTView(def.template, def.consts, def.vars, def.directiveDefs, def.pipeDefs, def.viewQuery, def.schemas), null, def.onPush ? 64 /* Dirty */ : 16 /* CheckAlways */, rootView[HEADER_OFFSET], tNode, rendererFactory, renderer, sanitizer);
         if (tView.firstTemplatePass) {
             diPublicInInjector(getOrCreateNodeInjectorForNode(tNode, rootView), rootView, def.type);
             tNode.flags = 1 /* isComponent */;
@@ -34807,7 +34851,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         hostFeatures && hostFeatures.forEach(function (feature) { return feature(component, componentDef); });
         if (tView.firstTemplatePass && componentDef.hostBindings) {
             var rootTNode = getPreviousOrParentTNode();
-            componentDef.hostBindings(1 /* Create */, component, rootTNode.index - HEADER_OFFSET);
+            var expando = tView.expandoInstructions;
+            invokeHostBindingsInCreationMode(componentDef, expando, component, rootTNode, tView.firstTemplatePass);
+            rootTNode.onElementCreationFns && applyOnCreateInstructions(rootTNode);
         }
         return component;
     }
@@ -35869,7 +35915,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.3+168.sha-b0afc4c');
+    var VERSION$2 = new Version$1('8.0.0-beta.3+181.sha-8accc98');
 
     /**
      * @license
@@ -38815,7 +38861,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     hostRNode.setAttribute('ng-version', VERSION$2.full);
             }
             // Create the root view. Uses empty TView and ContentTemplate.
-            var rootLView = createLView(null, createTView(-1, null, 1, 0, null, null, null), rootContext, rootFlags, null, null, rendererFactory, renderer, sanitizer, rootViewInjector);
+            var rootLView = createLView(null, createTView(-1, null, 1, 0, null, null, null, null), rootContext, rootFlags, null, null, rendererFactory, renderer, sanitizer, rootViewInjector);
             // rootView is the parent when bootstrapping
             var oldLView = enterView(rootLView, null);
             var component;
@@ -48184,13 +48230,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 var element = this.nativeElement;
                 if (element) {
                     var lContext = loadLContextFromNode(element);
-                    var lNode = lContext.lView[lContext.nodeIndex];
                     var stylingContext = getStylingContext(lContext.nodeIndex, lContext.lView);
                     if (stylingContext) {
-                        for (var i = 9 /* SingleStylesStartPosition */; i < lNode.length; i += 4 /* Size */) {
-                            if (isClassBasedValue(lNode, i)) {
-                                var className = getProp(lNode, i);
-                                var value = getValue(lNode, i);
+                        for (var i = 9 /* SingleStylesStartPosition */; i < stylingContext.length; i += 4 /* Size */) {
+                            if (isClassBasedValue(stylingContext, i)) {
+                                var className = getProp(stylingContext, i);
+                                var value = getValue(stylingContext, i);
                                 if (typeof value == 'boolean') {
                                     // we want to ignore `null` since those don't overwrite the values.
                                     classes[className] = value;
@@ -48217,13 +48262,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 var element = this.nativeElement;
                 if (element) {
                     var lContext = loadLContextFromNode(element);
-                    var lNode = lContext.lView[lContext.nodeIndex];
                     var stylingContext = getStylingContext(lContext.nodeIndex, lContext.lView);
                     if (stylingContext) {
-                        for (var i = 9 /* SingleStylesStartPosition */; i < lNode.length; i += 4 /* Size */) {
-                            if (!isClassBasedValue(lNode, i)) {
-                                var styleName = getProp(lNode, i);
-                                var value = getValue(lNode, i);
+                        for (var i = 9 /* SingleStylesStartPosition */; i < stylingContext.length; i += 4 /* Size */) {
+                            if (!isClassBasedValue(stylingContext, i)) {
+                                var styleName = getProp(stylingContext, i);
+                                var value = getValue(stylingContext, i);
                                 if (value !== null) {
                                     // we want to ignore `null` since those don't overwrite the values.
                                     styles[styleName] = value;
@@ -51403,7 +51447,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.3+168.sha-b0afc4c');
+    var VERSION$3 = new Version$1('8.0.0-beta.3+181.sha-8accc98');
 
     /**
      * @license
