@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.4+32.sha-ae16378
+ * @license Angular v8.0.0-beta.4+34.sha-3c1a162
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -3465,6 +3465,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         Identifiers.definePipe = { name: 'ɵdefinePipe', moduleName: CORE$1 };
         Identifiers.queryRefresh = { name: 'ɵqueryRefresh', moduleName: CORE$1 };
         Identifiers.viewQuery = { name: 'ɵviewQuery', moduleName: CORE$1 };
+        Identifiers.staticViewQuery = { name: 'ɵstaticViewQuery', moduleName: CORE$1 };
+        Identifiers.staticContentQuery = { name: 'ɵstaticContentQuery', moduleName: CORE$1 };
         Identifiers.loadViewQuery = { name: 'ɵloadViewQuery', moduleName: CORE$1 };
         Identifiers.contentQuery = { name: 'ɵcontentQuery', moduleName: CORE$1 };
         Identifiers.loadContentQuery = { name: 'ɵloadContentQuery', moduleName: CORE$1 };
@@ -15283,10 +15285,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var parameters = [
             getQueryPredicate(query, constantPool),
             literal(query.descendants),
+            query.read || literal(null),
         ];
-        if (query.read) {
-            parameters.push(query.read);
-        }
         return parameters;
     }
     // Turn a directive selector into an R3-compatible selector for directive def
@@ -15321,9 +15321,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         try {
             for (var _b = __values(meta.queries), _c = _b.next(); !_c.done; _c = _b.next()) {
                 var query = _c.value;
-                // creation, e.g. r3.contentQuery(dirIndex, somePredicate, true);
+                // creation, e.g. r3.contentQuery(dirIndex, somePredicate, true, null);
                 var args = __spread([variable('dirIndex')], prepareQueryParams(query, constantPool));
-                createStatements.push(importExpr(Identifiers$1.contentQuery).callFn(args).toStmt());
+                var queryInstruction = query.static ? Identifiers$1.staticContentQuery : Identifiers$1.contentQuery;
+                createStatements.push(importExpr(queryInstruction).callFn(args).toStmt());
                 // update, e.g. (r3.queryRefresh(tmp = r3.loadContentQuery()) && (ctx.someDir = tmp));
                 var temporary = tempAllocator();
                 var getQueryList = importExpr(Identifiers$1.loadContentQuery).callFn([]);
@@ -15387,8 +15388,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var updateStatements = [];
         var tempAllocator = temporaryAllocator(updateStatements, TEMPORARY_NAME);
         meta.viewQueries.forEach(function (query) {
+            var queryInstruction = query.static ? Identifiers$1.staticViewQuery : Identifiers$1.viewQuery;
             // creation, e.g. r3.viewQuery(somePredicate, true);
-            var queryDefinition = importExpr(Identifiers$1.viewQuery).callFn(prepareQueryParams(query, constantPool));
+            var queryDefinition = importExpr(queryInstruction).callFn(prepareQueryParams(query, constantPool));
             createStatements.push(queryDefinition.toStmt());
             // update, e.g. (r3.queryRefresh(tmp = r3.loadViewQuery()) && (ctx.someDir = tmp));
             var temporary = tempAllocator();
@@ -15746,7 +15748,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     };
     function convertToR3QueryMetadata(facade) {
         return __assign({}, facade, { predicate: Array.isArray(facade.predicate) ? facade.predicate :
-                new WrappedNodeExpr(facade.predicate), read: facade.read ? new WrappedNodeExpr(facade.read) : null });
+                new WrappedNodeExpr(facade.predicate), read: facade.read ? new WrappedNodeExpr(facade.read) : null, static: facade.static });
     }
     function convertDirectiveFacadeToMetadata(facade) {
         var inputsFromMetadata = parseInputOutputs(facade.inputs || []);
@@ -15868,7 +15870,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.4+32.sha-ae16378');
+    var VERSION$1 = new Version('8.0.0-beta.4+34.sha-3c1a162');
 
     /**
      * @license
@@ -37582,13 +37584,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     function refreshDescendantViews(lView) {
         var tView = lView[TVIEW];
+        var creationMode = isCreationMode(lView);
         // This needs to be set before children are processed to support recursive components
         tView.firstTemplatePass = false;
         // Resetting the bindingIndex of the current LView as the next steps may trigger change detection.
         lView[BINDING_INDEX] = tView.bindingStartIndex;
         // If this is a creation pass, we should not call lifecycle hooks or evaluate bindings.
         // This will be done in the update pass.
-        if (!isCreationMode(lView)) {
+        if (!creationMode) {
             var checkNoChangesMode = getCheckNoChangesMode();
             executeInitHooks(lView, tView, checkNoChangesMode);
             refreshDynamicEmbeddedViews(lView);
@@ -37596,6 +37599,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             refreshContentQueries(tView, lView);
             executeHooks(lView, tView.contentHooks, tView.contentCheckHooks, checkNoChangesMode, 1 /* AfterContentInitHooksToBeRun */);
             setHostBindings(tView, lView);
+        }
+        // We resolve content queries specifically marked as `static` in creation mode. Dynamic
+        // content queries are resolved during change detection (i.e. update mode), after embedded
+        // views are refreshed (see block above).
+        if (creationMode && tView.staticContentQueries) {
+            refreshContentQueries(tView, lView);
         }
         refreshChildComponents(tView.components);
     }
@@ -38134,6 +38143,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             expandoStartIndex: initialViewLength,
             expandoInstructions: null,
             firstTemplatePass: true,
+            staticViewQueries: false,
+            staticContentQueries: false,
             initHooks: null,
             checkHooks: null,
             contentHooks: null,
@@ -39973,20 +39984,23 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var creationMode = isCreationMode(hostView);
         try {
             namespaceHTML();
-            creationMode && executeViewQueryFn(hostView, hostTView, component);
+            creationMode && executeViewQueryFn(1 /* Create */, hostTView, component);
             templateFn(getRenderFlags(hostView), component);
             refreshDescendantViews(hostView);
-            !creationMode && executeViewQueryFn(hostView, hostTView, component);
+            // Only check view queries again in creation mode if there are static view queries
+            if (!creationMode || hostTView.staticViewQueries) {
+                executeViewQueryFn(2 /* Update */, hostTView, component);
+            }
         }
         finally {
             leaveView(oldView);
         }
     }
-    function executeViewQueryFn(lView, tView, component) {
+    function executeViewQueryFn(flags, tView, component) {
         var viewQuery = tView.viewQuery;
         if (viewQuery) {
             setCurrentQueryIndex(tView.viewQueryStartIndex);
-            viewQuery(getRenderFlags(lView), component);
+            viewQuery(flags, component);
         }
     }
     ///////////////////////////////
@@ -42179,7 +42193,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.4+32.sha-ae16378');
+    var VERSION$2 = new Version$1('8.0.0-beta.4+34.sha-3c1a162');
 
     /**
      * @license
@@ -50870,6 +50884,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var queryList = new QueryList();
         var queries = lView[QUERIES] || (lView[QUERIES] = new LQueries_(null, null, null));
         queryList._valuesTree = [];
+        queryList._static = false;
         queries.track(queryList, predicate, descend, read);
         storeCleanupWithContext(lView, queryList, queryList.destroy);
         return queryList;
@@ -50881,12 +50896,31 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      */
     function queryRefresh(queryList) {
         var queryListImpl = queryList;
-        if (queryList.dirty) {
+        var creationMode = isCreationMode();
+        // if creation mode and static or update mode and not static
+        if (queryList.dirty && creationMode === queryListImpl._static) {
             queryList.reset(queryListImpl._valuesTree || []);
             queryList.notifyOnChanges();
             return true;
         }
         return false;
+    }
+    /**
+     * Creates new QueryList for a static view query.
+     *
+     * @param predicate The type for which the query will search
+     * @param descend Whether or not to descend into children
+     * @param read What to save in the query
+     */
+    function staticViewQuery(
+    // TODO(FW-486): "read" should be an AbstractType
+    predicate, descend, read) {
+        var queryList = viewQuery(predicate, descend, read);
+        var tView = getLView()[TVIEW];
+        queryList._static = true;
+        if (!tView.staticViewQueries) {
+            tView.staticViewQueries = true;
+        }
     }
     /**
      * Creates new QueryList, stores the reference in LView and returns QueryList.
@@ -50897,7 +50931,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * @returns QueryList<T>
      */
     function viewQuery(
-    // TODO: "read" should be an AbstractType (FW-486)
+    // TODO(FW-486): "read" should be an AbstractType
     predicate, descend, read) {
         var lView = getLView();
         var tView = lView[TVIEW];
@@ -50929,7 +50963,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * @returns QueryList<T>
      */
     function contentQuery(directiveIndex, predicate, descend, 
-    // TODO: "read" should be an AbstractType (FW-486)
+    // TODO(FW-486): "read" should be an AbstractType
     read) {
         var lView = getLView();
         var tView = lView[TVIEW];
@@ -50943,6 +50977,26 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
         }
         return contentQuery;
+    }
+    /**
+     * Registers a QueryList, associated with a static content query, for later refresh
+     * (part of a view refresh).
+     *
+     * @param directiveIndex Current directive index
+     * @param predicate The type for which the query will search
+     * @param descend Whether or not to descend into children
+     * @param read What to save in the query
+     * @returns QueryList<T>
+     */
+    function staticContentQuery(directiveIndex, predicate, descend, 
+    // TODO(FW-486): "read" should be an AbstractType
+    read) {
+        var queryList = contentQuery(directiveIndex, predicate, descend, read);
+        var tView = getLView()[TVIEW];
+        queryList._static = true;
+        if (!tView.staticContentQueries) {
+            tView.staticContentQueries = true;
+        }
     }
     function loadContentQuery() {
         var lView = getLView();
@@ -51060,6 +51114,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         'ɵpipe': pipe,
         'ɵqueryRefresh': queryRefresh,
         'ɵviewQuery': viewQuery,
+        'ɵstaticViewQuery': staticViewQuery,
+        'ɵstaticContentQuery': staticContentQuery,
         'ɵloadViewQuery': loadViewQuery,
         'ɵcontentQuery': contentQuery,
         'ɵloadContentQuery': loadContentQuery,
@@ -51636,7 +51692,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             predicate: convertToR3QueryPredicate(ann.selector),
             descendants: ann.descendants,
             first: ann.first,
-            read: ann.read ? ann.read : null
+            read: ann.read ? ann.read : null,
+            static: !!ann.static
         };
     }
     function extractQueriesMetadata(type, propMetadata, isQueryAnn) {
@@ -60590,7 +60647,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.4+32.sha-ae16378');
+    var VERSION$3 = new Version$1('8.0.0-beta.4+34.sha-3c1a162');
 
     /**
      * @license
