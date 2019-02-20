@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.4+8.sha-6b511a3
+ * @license Angular v8.0.0-beta.4+28.sha-19afb79
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -15883,7 +15883,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.4+8.sha-6b511a3');
+    var VERSION$1 = new Version('8.0.0-beta.4+28.sha-19afb79');
 
     /**
      * @license
@@ -19122,7 +19122,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 selectors: selectors,
                 first: q.first,
                 descendants: q.descendants, propertyName: propertyName,
-                read: q.read ? this._getTokenMetadata(q.read) : null
+                read: q.read ? this._getTokenMetadata(q.read) : null,
+                static: q.static
             };
         };
         CompileMetadataResolver.prototype._reportError = function (error$$1, type, otherType) {
@@ -32867,6 +32868,35 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return context.lView[CONTEXT];
     }
     /**
+     * Returns the component instance associated with view which owns the DOM element (`null`
+     * otherwise).
+     *
+     * @param element DOM element which is owned by an existing component's view.
+     *
+     * ```
+     * <my-app>
+     *   #VIEW
+     *     <div>
+     *       <child-comp></child-comp>
+     *     </div>
+     * </mp-app>
+     *
+     * expect(getViewComponent(<child-comp>) instanceof MyApp).toBeTruthy();
+     * expect(getViewComponent(<my-app>)).toEqual(null);
+     * ```
+     *
+     * @publicApi
+     */
+    function getViewComponent(element) {
+        var context = loadLContext(element);
+        var lView = context.lView;
+        while (lView[PARENT] && lView[HOST] === null) {
+            // As long as lView[HOST] is null we know we are part of sub-template such as `*ngIf`
+            lView = lView[PARENT];
+        }
+        return lView[FLAGS] & 512 /* IsRoot */ ? null : lView[CONTEXT];
+    }
+    /**
      * Retrieves an `Injector` associated with the element, component or directive.
      *
      * @param target A DOM element, component or directive instance.
@@ -35915,7 +35945,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.4+8.sha-6b511a3');
+    var VERSION$2 = new Version$1('8.0.0-beta.4+28.sha-19afb79');
 
     /**
      * @license
@@ -48134,7 +48164,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         Object.defineProperty(DebugNode__POST_R3__.prototype, "componentInstance", {
             get: function () {
                 var nativeElement = this.nativeNode;
-                return nativeElement && getComponent(nativeElement);
+                return nativeElement &&
+                    (getComponent(nativeElement) || getViewComponent(nativeElement));
             },
             enumerable: true,
             configurable: true
@@ -51447,7 +51478,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.4+8.sha-6b511a3');
+    var VERSION$3 = new Version$1('8.0.0-beta.4+28.sha-19afb79');
 
     /**
      * @license
