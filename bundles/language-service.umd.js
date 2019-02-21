@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.5+13.sha-95d9aa2
+ * @license Angular v8.0.0-beta.5+11.sha-72d043f
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -12889,8 +12889,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var parsedElement;
             if (preparsedElement.type === PreparsedElementType.NG_CONTENT) {
                 // `<ng-content>`
-                if (element.children &&
-                    !element.children.every(function (node) { return isEmptyTextNode(node) || isCommentNode(node); })) {
+                if (element.children && !element.children.every(isEmptyTextNode)) {
                     this.reportError("<ng-content> element cannot have content.", element.sourceSpan);
                 }
                 var selector = preparsedElement.selectAttr;
@@ -13086,9 +13085,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
     function isEmptyTextNode(node) {
         return node instanceof Text$3 && node.value.trim().length == 0;
-    }
-    function isCommentNode(node) {
-        return node instanceof Comment;
     }
 
     /**
@@ -15874,7 +15870,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.5+13.sha-95d9aa2');
+    var VERSION$1 = new Version('8.0.0-beta.5+11.sha-72d043f');
 
     /**
      * @license
@@ -42224,7 +42220,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.5+13.sha-95d9aa2');
+    var VERSION$2 = new Version$1('8.0.0-beta.5+11.sha-72d043f');
 
     /**
      * @license
@@ -55540,7 +55536,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.5+13.sha-95d9aa2');
+    var VERSION$3 = new Version$1('8.0.0-beta.5+11.sha-72d043f');
 
     /**
      * @license
