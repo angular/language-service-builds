@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.5+11.sha-72d043f
+ * @license Angular v8.0.0-beta.5+16.sha-0ea216b
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -949,14 +949,18 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         MissingTranslationStrategy[MissingTranslationStrategy["Ignore"] = 2] = "Ignore";
     })(MissingTranslationStrategy || (MissingTranslationStrategy = {}));
     function makeMetadataFactory(name, props) {
-        var factory = function () {
+        // This must be declared as a function, not a fat arrow, so that ES2015 devmode produces code
+        // that works with the static_reflector.ts in the ViewEngine compiler.
+        // In particular, `_registerDecoratorOrConstructor` assumes that the value returned here can be
+        // new'ed.
+        function factory() {
             var args = [];
             for (var _i = 0; _i < arguments.length; _i++) {
                 args[_i] = arguments[_i];
             }
             var values = props ? props.apply(void 0, __spread(args)) : {};
             return __assign({ ngMetadataName: name }, values);
-        };
+        }
         factory.isTypeOf = function (obj) { return obj && obj.ngMetadataName === name; };
         factory.ngMetadataName = name;
         return factory;
@@ -12889,7 +12893,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var parsedElement;
             if (preparsedElement.type === PreparsedElementType.NG_CONTENT) {
                 // `<ng-content>`
-                if (element.children && !element.children.every(isEmptyTextNode)) {
+                if (element.children &&
+                    !element.children.every(function (node) { return isEmptyTextNode(node) || isCommentNode(node); })) {
                     this.reportError("<ng-content> element cannot have content.", element.sourceSpan);
                 }
                 var selector = preparsedElement.selectAttr;
@@ -13085,6 +13090,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
     function isEmptyTextNode(node) {
         return node instanceof Text$3 && node.value.trim().length == 0;
+    }
+    function isCommentNode(node) {
+        return node instanceof Comment;
     }
 
     /**
@@ -15870,7 +15878,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.5+11.sha-72d043f');
+    var VERSION$1 = new Version('8.0.0-beta.5+16.sha-0ea216b');
 
     /**
      * @license
@@ -42220,7 +42228,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.5+11.sha-72d043f');
+    var VERSION$2 = new Version$1('8.0.0-beta.5+16.sha-0ea216b');
 
     /**
      * @license
@@ -45933,6 +45941,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                         }
                         else {
                             var nodeIndex = opCode >>> 2 /* SHIFT_REF */;
+                            var tIcuIndex = void 0;
+                            var tIcu = void 0;
+                            var icuTNode = void 0;
                             switch (opCode & 3 /* MASK_OPCODE */) {
                                 case 1 /* Attr */:
                                     var attrName = updateOpCodes[++j];
@@ -45943,9 +45954,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                                     textBinding(nodeIndex, value);
                                     break;
                                 case 2 /* IcuSwitch */:
-                                    var tIcuIndex = updateOpCodes[++j];
-                                    var tIcu = icus[tIcuIndex];
-                                    var icuTNode = getTNode(nodeIndex, viewData);
+                                    tIcuIndex = updateOpCodes[++j];
+                                    tIcu = icus[tIcuIndex];
+                                    icuTNode = getTNode(nodeIndex, viewData);
                                     // If there is an active case, delete the old nodes
                                     if (icuTNode.activeCaseIndex !== null) {
                                         var removeCodes = tIcu.remove[icuTNode.activeCaseIndex];
@@ -55536,7 +55547,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.5+11.sha-72d043f');
+    var VERSION$3 = new Version$1('8.0.0-beta.5+16.sha-0ea216b');
 
     /**
      * @license
