@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.5+44.sha-9dac04f.with-local-changes
+ * @license Angular v8.0.0-beta.5+45.sha-43181ea.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -15880,7 +15880,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.5+44.sha-9dac04f.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-beta.5+45.sha-43181ea.with-local-changes');
 
     /**
      * @license
@@ -29506,6 +29506,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             }
             return propMetadata;
         };
+        ReflectionCapabilities.prototype.ownPropMetadata = function (typeOrFunc) {
+            if (!isType(typeOrFunc)) {
+                return {};
+            }
+            return this._ownPropMetadata(typeOrFunc, Object) || {};
+        };
         ReflectionCapabilities.prototype.hasLifecycleHook = function (type, lcProperty) {
             return type instanceof Type$2 && lcProperty in type.prototype;
         };
@@ -42239,7 +42245,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.5+44.sha-9dac04f.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-beta.5+45.sha-43181ea.with-local-changes');
 
     /**
      * @license
@@ -50078,7 +50084,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                         throw new Error(error.join('\n'));
                     }
                     var templateUrl = metadata.templateUrl || "ng:///" + renderStringify(type) + "/template.html";
-                    var meta = __assign({}, directiveMetadata(type, metadata), { typeSourceSpan: compiler.createParseSourceSpan('Component', renderStringify(type), templateUrl), template: metadata.template || '', preserveWhitespaces: metadata.preserveWhitespaces || false, styles: metadata.styles || EMPTY_ARRAY$2, animations: metadata.animations, viewQueries: extractQueriesMetadata(type, getReflect().propMetadata(type), isViewQuery), directives: [], changeDetection: metadata.changeDetection, pipes: new Map(), encapsulation: metadata.encapsulation || ViewEncapsulation$1.Emulated, interpolation: metadata.interpolation, viewProviders: metadata.viewProviders || null });
+                    var meta = __assign({}, directiveMetadata(type, metadata), { typeSourceSpan: compiler.createParseSourceSpan('Component', renderStringify(type), templateUrl), template: metadata.template || '', preserveWhitespaces: metadata.preserveWhitespaces || false, styles: metadata.styles || EMPTY_ARRAY$2, animations: metadata.animations, viewQueries: extractQueriesMetadata(type, getReflect().ownPropMetadata(type), isViewQuery), directives: [], changeDetection: metadata.changeDetection, pipes: new Map(), encapsulation: metadata.encapsulation || ViewEncapsulation$1.Emulated, interpolation: metadata.interpolation, viewProviders: metadata.viewProviders || null });
                     ngComponentDef = compiler.compileComponent(angularCoreEnv, templateUrl, meta);
                     // When NgModule decorator executed, we enqueued the module definition such that
                     // it would only dequeue and add itself as module scope to all of its declarations,
@@ -50139,7 +50145,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      */
     function directiveMetadata(type, metadata) {
         // Reflect inputs and outputs.
-        var propMetadata = getReflect().propMetadata(type);
+        var propMetadata = getReflect().ownPropMetadata(type);
         return {
             name: type.name,
             type: type,
@@ -50297,7 +50303,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             }
             var baseDef = constructor.ngBaseDef;
             var defProp = getProp(baseDef);
-            defProp[name] = args[0];
+            defProp[name] = args[0] || name;
         };
     };
     /**
@@ -55558,7 +55564,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.5+44.sha-9dac04f.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-beta.5+45.sha-43181ea.with-local-changes');
 
     /**
      * @license
