@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.2.6+23.sha-d0018e6.with-local-changes
+ * @license Angular v7.2.6+26.sha-b686449.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -964,14 +964,18 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         MissingTranslationStrategy[MissingTranslationStrategy["Ignore"] = 2] = "Ignore";
     })(MissingTranslationStrategy || (MissingTranslationStrategy = {}));
     function makeMetadataFactory(name, props) {
-        var factory = function () {
+        // This must be declared as a function, not a fat arrow, so that ES2015 devmode produces code
+        // that works with the static_reflector.ts in the ViewEngine compiler.
+        // In particular, `_registerDecoratorOrConstructor` assumes that the value returned here can be
+        // new'ed.
+        function factory() {
             var args = [];
             for (var _i = 0; _i < arguments.length; _i++) {
                 args[_i] = arguments[_i];
             }
             var values = props ? props.apply(void 0, __spread(args)) : {};
             return __assign({ ngMetadataName: name }, values);
-        };
+        }
         factory.isTypeOf = function (obj) { return obj && obj.ngMetadataName === name; };
         factory.ngMetadataName = name;
         return factory;
@@ -15436,7 +15440,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.2.6+23.sha-d0018e6.with-local-changes');
+    var VERSION$1 = new Version('7.2.6+26.sha-b686449.with-local-changes');
 
     /**
      * @license
@@ -33851,7 +33855,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.2.6+23.sha-d0018e6.with-local-changes');
+    var VERSION$2 = new Version$1('7.2.6+26.sha-b686449.with-local-changes');
 
     /**
      * @license
@@ -46022,7 +46026,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.2.6+23.sha-d0018e6.with-local-changes');
+    var VERSION$3 = new Version$1('7.2.6+26.sha-b686449.with-local-changes');
 
     /**
      * @license
