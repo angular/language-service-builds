@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.4+56.sha-a7e1c0c
+ * @license Angular v8.0.0-beta.5+17.sha-e1aaa7e
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -964,14 +964,18 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         MissingTranslationStrategy[MissingTranslationStrategy["Ignore"] = 2] = "Ignore";
     })(MissingTranslationStrategy || (MissingTranslationStrategy = {}));
     function makeMetadataFactory(name, props) {
-        var factory = function () {
+        // This must be declared as a function, not a fat arrow, so that ES2015 devmode produces code
+        // that works with the static_reflector.ts in the ViewEngine compiler.
+        // In particular, `_registerDecoratorOrConstructor` assumes that the value returned here can be
+        // new'ed.
+        function factory() {
             var args = [];
             for (var _i = 0; _i < arguments.length; _i++) {
                 args[_i] = arguments[_i];
             }
             var values = props ? props.apply(void 0, __spread(args)) : {};
             return __assign({ ngMetadataName: name }, values);
-        };
+        }
         factory.isTypeOf = function (obj) { return obj && obj.ngMetadataName === name; };
         factory.ngMetadataName = name;
         return factory;
@@ -12904,7 +12908,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var parsedElement;
             if (preparsedElement.type === PreparsedElementType.NG_CONTENT) {
                 // `<ng-content>`
-                if (element.children && !element.children.every(isEmptyTextNode)) {
+                if (element.children &&
+                    !element.children.every(function (node) { return isEmptyTextNode(node) || isCommentNode(node); })) {
                     this.reportError("<ng-content> element cannot have content.", element.sourceSpan);
                 }
                 var selector = preparsedElement.selectAttr;
@@ -13100,6 +13105,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
     function isEmptyTextNode(node) {
         return node instanceof Text$3 && node.value.trim().length == 0;
+    }
+    function isCommentNode(node) {
+        return node instanceof Comment;
     }
 
     /**
@@ -15885,7 +15893,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.4+56.sha-a7e1c0c');
+    var VERSION$1 = new Version('8.0.0-beta.5+17.sha-e1aaa7e');
 
     /**
      * @license
@@ -31487,13 +31495,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         /**
          * Set to `true` if the token is declared in `viewProviders` (or if it is component).
          */
-        isViewProvider, 
-        /**
-         * Set to `true` if the token is a provider, and not a directive.
-         */
-        isProvider, injectImplementation) {
+        isViewProvider, injectImplementation) {
             this.factory = factory;
-            this.isProvider = isProvider;
             /**
              * Marker set to true during factory invocation to see if we get into recursive loop.
              * Recursive loop causes an error to be displayed.
@@ -32473,10 +32476,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             setTNodeAndViewData(tNode, lData);
             try {
                 value = lData[index] = factory.factory(null, tData, lData, tNode);
-                var tView = lData[TVIEW];
-                if (value && factory.isProvider && value.ngOnDestroy) {
-                    (tView.destroyHooks || (tView.destroyHooks = [])).push(index, value.ngOnDestroy);
-                }
             }
             finally {
                 if (factory.injectImpl)
@@ -33930,7 +33929,13 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var tView = view[TVIEW];
         var destroyHooks;
         if (tView != null && (destroyHooks = tView.destroyHooks) != null) {
-            callHooks(view, destroyHooks);
+            for (var i = 0; i < destroyHooks.length; i += 2) {
+                var context = view[destroyHooks[i]];
+                // Only call the destroy hook if the context has been requested.
+                if (!(context instanceof NodeInjectorFactory)) {
+                    destroyHooks[i + 1].call(context);
+                }
+            }
         }
     }
     /**
@@ -34610,7 +34615,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
     function baseResolveDirective(tView, viewData, def, directiveFactory) {
         tView.data.push(def);
-        var nodeInjectorFactory = new NodeInjectorFactory(directiveFactory, isComponentDef(def), false, null);
+        var nodeInjectorFactory = new NodeInjectorFactory(directiveFactory, isComponentDef(def), null);
         tView.blueprint.push(nodeInjectorFactory);
         viewData.push(nodeInjectorFactory);
     }
@@ -35967,7 +35972,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.4+56.sha-a7e1c0c');
+    var VERSION$2 = new Version$1('8.0.0-beta.5+17.sha-e1aaa7e');
 
     /**
      * @license
@@ -46341,7 +46346,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.4+56.sha-a7e1c0c');
+    var VERSION$3 = new Version$1('8.0.0-beta.5+17.sha-e1aaa7e');
 
     /**
      * @license
