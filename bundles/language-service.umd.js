@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.5+43.sha-7f3e3a8.with-local-changes
+ * @license Angular v8.0.0-beta.5+44.sha-9dac04f.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -15880,7 +15880,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.5+43.sha-7f3e3a8.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-beta.5+44.sha-9dac04f.with-local-changes');
 
     /**
      * @license
@@ -40717,7 +40717,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                         finally { if (e_1) throw e_1.error; }
                     }
                 }
-                return "break";
             }
             else {
                 // Even if we don't have a definition, check the type for the hooks and use those if need be
@@ -40741,9 +40740,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             superType = Object.getPrototypeOf(superType);
         };
         while (superType) {
-            var state_1 = _loop_1();
-            if (state_1 === "break")
-                break;
+            _loop_1();
         }
     }
     function maybeUnwrapEmpty(value) {
@@ -42242,7 +42239,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.5+43.sha-7f3e3a8.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-beta.5+44.sha-9dac04f.with-local-changes');
 
     /**
      * @license
@@ -55561,7 +55558,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.5+43.sha-7f3e3a8.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-beta.5+44.sha-9dac04f.with-local-changes');
 
     /**
      * @license
