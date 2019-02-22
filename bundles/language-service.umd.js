@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.2.6+22.sha-587ca85.with-local-changes
+ * @license Angular v7.2.6+23.sha-d0018e6.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -15436,7 +15436,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.2.6+22.sha-587ca85.with-local-changes');
+    var VERSION$1 = new Version('7.2.6+23.sha-d0018e6.with-local-changes');
 
     /**
      * @license
@@ -27399,8 +27399,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             matcher.match(elementSelector, function (selector) {
                 var directive = selectorMap.get(selector);
                 if (directive) {
-                    attrs_1.push.apply(attrs_1, __spread(Object.keys(directive.inputs).map(function (name) { return ({ name: name, input: true }); })));
-                    attrs_1.push.apply(attrs_1, __spread(Object.keys(directive.outputs).map(function (name) { return ({ name: name, output: true }); })));
+                    var inputs_1 = directive.inputs, outputs_1 = directive.outputs;
+                    attrs_1.push.apply(attrs_1, __spread(Object.keys(inputs_1).map(function (name) { return ({ name: inputs_1[name], input: true }); })));
+                    attrs_1.push.apply(attrs_1, __spread(Object.keys(outputs_1).map(function (name) { return ({ name: outputs_1[name], output: true }); })));
                 }
             });
             // If a name shows up twice, fold it into a single value.
@@ -33850,7 +33851,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.2.6+22.sha-587ca85.with-local-changes');
+    var VERSION$2 = new Version$1('7.2.6+23.sha-d0018e6.with-local-changes');
 
     /**
      * @license
@@ -46021,7 +46022,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.2.6+22.sha-587ca85.with-local-changes');
+    var VERSION$3 = new Version$1('7.2.6+23.sha-d0018e6.with-local-changes');
 
     /**
      * @license
