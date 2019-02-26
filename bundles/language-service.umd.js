@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.5+84.sha-dc9f0af.with-local-changes
+ * @license Angular v8.0.0-beta.5+85.sha-262ba67.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -15881,7 +15881,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.5+84.sha-dc9f0af.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-beta.5+85.sha-262ba67.with-local-changes');
 
     /**
      * @license
@@ -33694,6 +33694,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     // can be sanitized, but they increase security surface area without a legitimate use case, so they
     // are left out here.
     var VALID_ATTRS = merge(URI_ATTRS, SRCSET_ATTRS, HTML_ATTRS);
+    // Elements whose content should not be traversed/preserved, if the elements themselves are invalid.
+    //
+    // Typically, `<invalid>Some content</invalid>` would traverse (and in this case preserve)
+    // `Some content`, but strip `invalid-element` opening/closing tags. For some elements, though, we
+    // don't want to preserve the content, if the elements themselves are going to be removed.
+    var SKIP_TRAVERSING_CONTENT_IF_INVALID_ELEMENTS = tagSet('script,style,template');
     /**
      * SanitizingHtmlSerializer serializes a DOM fragment, stripping out any unsafe elements and unsafe
      * attributes.
@@ -33710,10 +33716,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             // However this code never accesses properties off of `document` before deleting its contents
             // again, so it shouldn't be vulnerable to DOM clobbering.
             var current = el.firstChild;
-            var elementValid = true;
+            var traverseContent = true;
             while (current) {
                 if (current.nodeType === Node.ELEMENT_NODE) {
-                    elementValid = this.startElement(current);
+                    traverseContent = this.startElement(current);
                 }
                 else if (current.nodeType === Node.TEXT_NODE) {
                     this.chars(current.nodeValue);
@@ -33722,7 +33728,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     // Strip non-element, non-text nodes.
                     this.sanitizedSomething = true;
                 }
-                if (elementValid && current.firstChild) {
+                if (traverseContent && current.firstChild) {
                     current = current.firstChild;
                     continue;
                 }
@@ -33742,18 +33748,18 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             return this.buf.join('');
         };
         /**
-         * Outputs only valid Elements.
+         * Sanitizes an opening element tag (if valid) and returns whether the element's contents should
+         * be traversed. Element content must always be traversed (even if the element itself is not
+         * valid/safe), unless the element is one of `SKIP_TRAVERSING_CONTENT_IF_INVALID_ELEMENTS`.
          *
-         * Invalid elements are skipped.
-         *
-         * @param element element to sanitize
-         * Returns true if the element is valid.
+         * @param element The element to sanitize.
+         * @return True if the element's contents should be traversed.
          */
         SanitizingHtmlSerializer.prototype.startElement = function (element) {
             var tagName = element.nodeName.toLowerCase();
             if (!VALID_ELEMENTS.hasOwnProperty(tagName)) {
                 this.sanitizedSomething = true;
-                return false;
+                return !SKIP_TRAVERSING_CONTENT_IF_INVALID_ELEMENTS.hasOwnProperty(tagName);
             }
             this.buf.push('<');
             this.buf.push(tagName);
@@ -42616,7 +42622,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.5+84.sha-dc9f0af.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-beta.5+85.sha-262ba67.with-local-changes');
 
     /**
      * @license
@@ -55954,7 +55960,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.5+84.sha-dc9f0af.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-beta.5+85.sha-262ba67.with-local-changes');
 
     /**
      * @license
