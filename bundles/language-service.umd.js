@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.5+81.sha-dbd9ecf.with-local-changes
+ * @license Angular v8.0.0-beta.5+82.sha-25a2fef.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -15895,7 +15895,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.5+81.sha-dbd9ecf.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-beta.5+82.sha-25a2fef.with-local-changes');
 
     /**
      * @license
@@ -36152,9 +36152,20 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function collectNativeNodes(lView, parentTNode, result) {
         var tNodeChild = parentTNode.child;
         while (tNodeChild) {
-            result.push(getNativeByTNode(tNodeChild, lView));
+            var nativeNode = getNativeByTNode(tNodeChild, lView);
+            nativeNode && result.push(nativeNode);
             if (tNodeChild.type === 4 /* ElementContainer */) {
                 collectNativeNodes(lView, tNodeChild, result);
+            }
+            else if (tNodeChild.type === 1 /* Projection */) {
+                var componentView = findComponentView(lView);
+                var componentHost = componentView[T_HOST];
+                var parentView = getLViewParent(componentView);
+                var currentProjectedNode = componentHost.projection[tNodeChild.projection];
+                while (currentProjectedNode && parentView) {
+                    result.push(getNativeByTNode(currentProjectedNode, parentView));
+                    currentProjectedNode = currentProjectedNode.next;
+                }
             }
             tNodeChild = tNodeChild.next;
         }
@@ -36336,7 +36347,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.5+81.sha-dbd9ecf.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-beta.5+82.sha-25a2fef.with-local-changes');
 
     /**
      * @license
@@ -46718,7 +46729,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.5+81.sha-dbd9ecf.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-beta.5+82.sha-25a2fef.with-local-changes');
 
     /**
      * @license
