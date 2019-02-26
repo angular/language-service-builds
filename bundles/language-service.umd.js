@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.5+84.sha-dc9f0af.with-local-changes
+ * @license Angular v8.0.0-beta.5+85.sha-262ba67.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -15896,7 +15896,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.5+84.sha-dc9f0af.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-beta.5+85.sha-262ba67.with-local-changes');
 
     /**
      * @license
@@ -32872,6 +32872,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     // can be sanitized, but they increase security surface area without a legitimate use case, so they
     // are left out here.
     var VALID_ATTRS = merge(URI_ATTRS, SRCSET_ATTRS, HTML_ATTRS);
+    // Elements whose content should not be traversed/preserved, if the elements themselves are invalid.
+    //
+    // Typically, `<invalid>Some content</invalid>` would traverse (and in this case preserve)
+    // `Some content`, but strip `invalid-element` opening/closing tags. For some elements, though, we
+    // don't want to preserve the content, if the elements themselves are going to be removed.
+    var SKIP_TRAVERSING_CONTENT_IF_INVALID_ELEMENTS = tagSet('script,style,template');
 
     /**
      * @license
@@ -36462,7 +36468,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.5+84.sha-dc9f0af.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-beta.5+85.sha-262ba67.with-local-changes');
 
     /**
      * @license
@@ -46844,7 +46850,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.5+84.sha-dc9f0af.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-beta.5+85.sha-262ba67.with-local-changes');
 
     /**
      * @license
