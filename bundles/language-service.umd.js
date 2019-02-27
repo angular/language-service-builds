@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.6+12.sha-34bdebc.with-local-changes
+ * @license Angular v8.0.0-beta.6+13.sha-40833ba.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -13941,13 +13941,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         TemplateDefinitionBuilder.prototype.i18nAppendBindings = function (expressions) {
             var _this = this;
-            if (!this.i18n || !expressions.length)
-                return;
-            var implicit = variable(CONTEXT_NAME);
-            expressions.forEach(function (expression) {
-                var binding = _this.convertExpressionBinding(implicit, expression);
-                _this.i18n.appendBinding(binding);
-            });
+            if (expressions.length > 0) {
+                expressions.forEach(function (expression) { return _this.i18n.appendBinding(expression); });
+            }
         };
         TemplateDefinitionBuilder.prototype.i18nBindProps = function (props) {
             var _this = this;
@@ -14062,7 +14058,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             // setup accumulated bindings
             var _a = this.i18n, index = _a.index, bindings = _a.bindings;
             if (bindings.size) {
-                bindings.forEach(function (binding) { return _this.updateInstruction(span, Identifiers$1.i18nExp, [binding]); });
+                bindings.forEach(function (binding) {
+                    _this.updateInstruction(span, Identifiers$1.i18nExp, function () { return [_this.convertPropertyBinding(variable(CONTEXT_NAME), binding)]; });
+                });
                 this.updateInstruction(span, Identifiers$1.i18nApply, [literal(index)]);
             }
             if (!selfClosing) {
@@ -15883,7 +15881,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.6+12.sha-34bdebc.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-beta.6+13.sha-40833ba.with-local-changes');
 
     /**
      * @license
@@ -42624,7 +42622,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.6+12.sha-34bdebc.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-beta.6+13.sha-40833ba.with-local-changes');
 
     /**
      * @license
@@ -55962,7 +55960,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.6+12.sha-34bdebc.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-beta.6+13.sha-40833ba.with-local-changes');
 
     /**
      * @license
