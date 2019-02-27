@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.5+82.sha-25a2fef.with-local-changes
+ * @license Angular v8.0.0-beta.6+7.sha-d127d05.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -14891,7 +14891,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             return sharedCtxObj && sharedCtxObj.declare ? sharedCtxObj.lhs : null;
         };
         BindingScope.prototype.maybeGenerateSharedContextVar = function (value) {
-            if (value.priority === 1 /* CONTEXT */) {
+            if (value.priority === 1 /* CONTEXT */ &&
+                value.retrievalLevel < this.bindingLevel) {
                 var sharedCtxObj = this.map.get(SHARED_CONTEXT_KEY + value.retrievalLevel);
                 if (sharedCtxObj) {
                     sharedCtxObj.declare = true;
@@ -15895,7 +15896,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.5+82.sha-25a2fef.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-beta.6+7.sha-d127d05.with-local-changes');
 
     /**
      * @license
@@ -32871,6 +32872,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     // can be sanitized, but they increase security surface area without a legitimate use case, so they
     // are left out here.
     var VALID_ATTRS = merge(URI_ATTRS, SRCSET_ATTRS, HTML_ATTRS);
+    // Elements whose content should not be traversed/preserved, if the elements themselves are invalid.
+    //
+    // Typically, `<invalid>Some content</invalid>` would traverse (and in this case preserve)
+    // `Some content`, but strip `invalid-element` opening/closing tags. For some elements, though, we
+    // don't want to preserve the content, if the elements themselves are going to be removed.
+    var SKIP_TRAVERSING_CONTENT_IF_INVALID_ELEMENTS = tagSet('script,style,template');
 
     /**
      * @license
@@ -34198,6 +34205,115 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
     }
 
+    /**
+     * Runs through the initial style data present in the context and renders
+     * them via the renderer on the element.
+     */
+    function renderInitialStyles(element, context, renderer) {
+        var initialStyles = context[3 /* InitialStyleValuesPosition */];
+        renderInitialStylingValues(element, renderer, initialStyles, false);
+    }
+    /**
+     * Runs through the initial class data present in the context and renders
+     * them via the renderer on the element.
+     */
+    function renderInitialClasses(element, context, renderer) {
+        var initialClasses = context[4 /* InitialClassValuesPosition */];
+        renderInitialStylingValues(element, renderer, initialClasses, true);
+    }
+    /**
+     * This is a helper function designed to render each entry present within the
+     * provided list of initialStylingValues.
+     */
+    function renderInitialStylingValues(element, renderer, initialStylingValues, isEntryClassBased) {
+        for (var i = 2 /* KeyValueStartPosition */; i < initialStylingValues.length; i += 2 /* Size */) {
+            var value = initialStylingValues[i + 1 /* ValueOffset */];
+            if (value) {
+                if (isEntryClassBased) {
+                    setClass(element, initialStylingValues[i + 0 /* PropOffset */], true, renderer, null);
+                }
+                else {
+                    setStyle(element, initialStylingValues[i + 0 /* PropOffset */], value, renderer, null);
+                }
+            }
+        }
+    }
+    /**
+     * Assigns a style value to a style property for the given element.
+     *
+     * This function renders a given CSS prop/value entry using the
+     * provided renderer. If a `store` value is provided then
+     * that will be used a render context instead of the provided
+     * renderer.
+     *
+     * @param native the DOM Element
+     * @param prop the CSS style property that will be rendered
+     * @param value the CSS style value that will be rendered
+     * @param renderer
+     * @param store an optional key/value map that will be used as a context to render styles on
+     */
+    function setStyle(native, prop, value, renderer, sanitizer, store, playerBuilder) {
+        value = sanitizer && value ? sanitizer(prop, value) : value;
+        if (store || playerBuilder) {
+            if (store) {
+                store.setValue(prop, value);
+            }
+            if (playerBuilder) {
+                playerBuilder.setValue(prop, value);
+            }
+        }
+        else if (value) {
+            value = value.toString(); // opacity, z-index and flexbox all have number values which may not
+            // assign as numbers
+            ngDevMode && ngDevMode.rendererSetStyle++;
+            isProceduralRenderer(renderer) ?
+                renderer.setStyle(native, prop, value, RendererStyleFlags3.DashCase) :
+                native.style.setProperty(prop, value);
+        }
+        else {
+            ngDevMode && ngDevMode.rendererRemoveStyle++;
+            isProceduralRenderer(renderer) ?
+                renderer.removeStyle(native, prop, RendererStyleFlags3.DashCase) :
+                native.style.removeProperty(prop);
+        }
+    }
+    /**
+     * Adds/removes the provided className value to the provided element.
+     *
+     * This function renders a given CSS class value using the provided
+     * renderer (by adding or removing it from the provided element).
+     * If a `store` value is provided then that will be used a render
+     * context instead of the provided renderer.
+     *
+     * @param native the DOM Element
+     * @param prop the CSS style property that will be rendered
+     * @param value the CSS style value that will be rendered
+     * @param renderer
+     * @param store an optional key/value map that will be used as a context to render styles on
+     */
+    function setClass(native, className, add, renderer, store, playerBuilder) {
+        if (store || playerBuilder) {
+            if (store) {
+                store.setValue(className, add);
+            }
+            if (playerBuilder) {
+                playerBuilder.setValue(className, add);
+            }
+            // DOMTokenList will throw if we try to add or remove an empty string.
+        }
+        else if (className !== '') {
+            if (add) {
+                ngDevMode && ngDevMode.rendererAddClass++;
+                isProceduralRenderer(renderer) ? renderer.addClass(native, className) :
+                    native['classList'].add(className);
+            }
+            else {
+                ngDevMode && ngDevMode.rendererRemoveClass++;
+                isProceduralRenderer(renderer) ? renderer.removeClass(native, className) :
+                    native['classList'].remove(className);
+            }
+        }
+    }
     function isClassBasedValue(context, index) {
         var adjustedIndex = index >= 9 /* SingleStylesStartPosition */ ? (index + 0 /* FlagsOffset */) : index;
         return (context[adjustedIndex] & 2 /* Class */) == 2 /* Class */;
@@ -35270,11 +35386,16 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         rootContext.components.push(component);
         componentView[CONTEXT] = component;
         hostFeatures && hostFeatures.forEach(function (feature) { return feature(component, componentDef); });
+        var rootTNode = getPreviousOrParentTNode();
         if (tView.firstTemplatePass && componentDef.hostBindings) {
-            var rootTNode = getPreviousOrParentTNode();
             var expando = tView.expandoInstructions;
             invokeHostBindingsInCreationMode(componentDef, expando, component, rootTNode, tView.firstTemplatePass);
             rootTNode.onElementCreationFns && applyOnCreateInstructions(rootTNode);
+        }
+        if (rootTNode.stylingTemplate) {
+            var native = componentView[HOST];
+            renderInitialClasses(native, rootTNode.stylingTemplate, componentView[RENDERER]);
+            renderInitialStyles(native, rootTNode.stylingTemplate, componentView[RENDERER]);
         }
         return component;
     }
@@ -36347,7 +36468,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.5+82.sha-25a2fef.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-beta.6+7.sha-d127d05.with-local-changes');
 
     /**
      * @license
@@ -46729,7 +46850,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.5+82.sha-25a2fef.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-beta.6+7.sha-d127d05.with-local-changes');
 
     /**
      * @license
