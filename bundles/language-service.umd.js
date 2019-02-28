@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.6+12.sha-34bdebc.with-local-changes
+ * @license Angular v8.0.0-beta.6+19.sha-772b24c.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -12829,29 +12829,35 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         return {
             nodes: ivyNodes,
             errors: allErrors,
+            styleUrls: transformer.styleUrls,
+            styles: transformer.styles,
         };
     }
     var HtmlAstToIvyAst = /** @class */ (function () {
         function HtmlAstToIvyAst(bindingParser) {
             this.bindingParser = bindingParser;
             this.errors = [];
+            this.styles = [];
+            this.styleUrls = [];
         }
         // HTML visitor
         HtmlAstToIvyAst.prototype.visitElement = function (element) {
             var _this = this;
             var e_1, _a;
             var preparsedElement = preparseElement(element);
-            if (preparsedElement.type === PreparsedElementType.SCRIPT ||
-                preparsedElement.type === PreparsedElementType.STYLE) {
-                // Skipping <script> for security reasons
-                // Skipping <style> as we already processed them
-                // in the StyleCompiler
+            if (preparsedElement.type === PreparsedElementType.SCRIPT) {
                 return null;
             }
-            if (preparsedElement.type === PreparsedElementType.STYLESHEET &&
+            else if (preparsedElement.type === PreparsedElementType.STYLE) {
+                var contents = textContents(element);
+                if (contents !== null) {
+                    this.styles.push(contents);
+                }
+                return null;
+            }
+            else if (preparsedElement.type === PreparsedElementType.STYLESHEET &&
                 isStyleUrlResolvable(preparsedElement.hrefAttr)) {
-                // Skipping stylesheets with either relative urls or package scheme as we already processed
-                // them in the StyleCompiler
+                this.styleUrls.push(preparsedElement.hrefAttr);
                 return null;
             }
             // Whether the element is a `<ng-template>`
@@ -13110,6 +13116,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     }
     function isCommentNode(node) {
         return node instanceof Comment;
+    }
+    function textContents(node) {
+        if (node.children.length !== 1 || !(node.children[0] instanceof Text$3)) {
+            return null;
+        }
+        else {
+            return node.children[0].value;
+        }
     }
 
     /**
@@ -13956,13 +13970,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         TemplateDefinitionBuilder.prototype.i18nAppendBindings = function (expressions) {
             var _this = this;
-            if (!this.i18n || !expressions.length)
-                return;
-            var implicit = variable(CONTEXT_NAME);
-            expressions.forEach(function (expression) {
-                var binding = _this.convertExpressionBinding(implicit, expression);
-                _this.i18n.appendBinding(binding);
-            });
+            if (expressions.length > 0) {
+                expressions.forEach(function (expression) { return _this.i18n.appendBinding(expression); });
+            }
         };
         TemplateDefinitionBuilder.prototype.i18nBindProps = function (props) {
             var _this = this;
@@ -14077,7 +14087,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             // setup accumulated bindings
             var _a = this.i18n, index = _a.index, bindings = _a.bindings;
             if (bindings.size) {
-                bindings.forEach(function (binding) { return _this.updateInstruction(span, Identifiers$1.i18nExp, [binding]); });
+                bindings.forEach(function (binding) {
+                    _this.updateInstruction(span, Identifiers$1.i18nExp, function () { return [_this.convertPropertyBinding(variable(CONTEXT_NAME), binding)]; });
+                });
                 this.updateInstruction(span, Identifiers$1.i18nApply, [literal(index)]);
             }
             if (!selfClosing) {
@@ -15029,7 +15041,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var htmlParser = new HtmlParser();
         var parseResult = htmlParser.parse(template, templateUrl, __assign({}, options, { tokenizeExpansionForms: true }));
         if (parseResult.errors && parseResult.errors.length > 0) {
-            return { errors: parseResult.errors, nodes: [] };
+            return { errors: parseResult.errors, nodes: [], styleUrls: [], styles: [] };
         }
         var rootNodes = parseResult.rootNodes;
         // process i18n meta information (scan attributes, generate ids)
@@ -15046,11 +15058,11 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             // existing extraction process (ng xi18n)
             rootNodes = visitAll$1(new I18nMetaVisitor(interpolationConfig, /* keepI18nAttrs */ false), rootNodes);
         }
-        var _a = htmlAstToRender3Ast(rootNodes, bindingParser), nodes = _a.nodes, errors = _a.errors;
+        var _a = htmlAstToRender3Ast(rootNodes, bindingParser), nodes = _a.nodes, errors = _a.errors, styleUrls = _a.styleUrls, styles = _a.styles;
         if (errors && errors.length > 0) {
-            return { errors: errors, nodes: [] };
+            return { errors: errors, nodes: [], styleUrls: [], styles: [] };
         }
-        return { nodes: nodes };
+        return { nodes: nodes, styleUrls: styleUrls, styles: styles };
     }
     /**
      * Construct a `BindingParser` with a default configuration.
@@ -15898,7 +15910,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.6+12.sha-34bdebc.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-beta.6+19.sha-772b24c.with-local-changes');
 
     /**
      * @license
@@ -36470,7 +36482,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.6+12.sha-34bdebc.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-beta.6+19.sha-772b24c.with-local-changes');
 
     /**
      * @license
@@ -46852,7 +46864,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.6+12.sha-34bdebc.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-beta.6+19.sha-772b24c.with-local-changes');
 
     /**
      * @license
