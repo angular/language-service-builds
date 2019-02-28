@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.6+22.sha-cb20b3b.with-local-changes
+ * @license Angular v8.0.0-beta.6+25.sha-03d2e5c.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -15938,7 +15938,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.6+22.sha-cb20b3b.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-beta.6+25.sha-03d2e5c.with-local-changes');
 
     /**
      * @license
@@ -21326,16 +21326,16 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                                 return {
                                     __symbolic: 'error',
                                     message: "Could not resolve " + module + " relative to " + self.host.getMetadataFor(sourceSymbol.filePath) + ".",
-                                    line: map.line,
-                                    character: map.character,
+                                    line: map['line'],
+                                    character: map['character'],
                                     fileName: getOriginalName()
                                 };
                             }
                             return {
                                 __symbolic: 'resolved',
                                 symbol: self.getStaticSymbol(filePath, name_1),
-                                line: map.line,
-                                character: map.character,
+                                line: map['line'],
+                                character: map['character'],
                                 fileName: getOriginalName()
                             };
                         }
@@ -21619,7 +21619,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
          */
         ToJsonSerializer.prototype.visitStringMap = function (map, context) {
             if (map['__symbolic'] === 'resolved') {
-                return visitValue(map.symbol, this, context);
+                return visitValue(map['symbol'], this, context);
             }
             if (map['__symbolic'] === 'error') {
                 delete map['line'];
@@ -36510,7 +36510,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.6+22.sha-cb20b3b.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-beta.6+25.sha-03d2e5c.with-local-changes');
 
     /**
      * @license
@@ -46892,7 +46892,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.6+22.sha-cb20b3b.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-beta.6+25.sha-03d2e5c.with-local-changes');
 
     /**
      * @license
