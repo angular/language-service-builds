@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.6+43.sha-7ac58be.with-local-changes
+ * @license Angular v8.0.0-beta.6+42.sha-ff8e4dd.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -15923,7 +15923,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.6+43.sha-7ac58be.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-beta.6+42.sha-ff8e4dd.with-local-changes');
 
     /**
      * @license
@@ -32000,19 +32000,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return null;
     }
-    /**
-     * Returns a boolean for whether the view is attached to the change detection tree.
-     *
-     * Note: This determines whether a view should be checked, not whether it's inserted
-     * into a container. For that, you'll want `viewAttachedToContainer` below.
-     */
-    function viewAttachedToChangeDetector(view) {
-        return (view[FLAGS] & 128 /* Attached */) === 128 /* Attached */;
-    }
-    /** Returns a boolean for whether the view is attached to a container. */
-    function viewAttachedToContainer(view) {
-        return isLContainer(view[PARENT]);
-    }
 
     /**
      * @license
@@ -35388,7 +35375,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             viewToDetach[QUERIES].removeView();
         }
         viewToDetach[PARENT] = null;
-        viewToDetach[NEXT] = null;
         // Unsets the attached flag
         viewToDetach[FLAGS] &= ~128 /* Attached */;
         return viewToDetach;
@@ -39900,8 +39886,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         var hostView = getComponentViewByIndex(adjustedElementIndex, lView);
         ngDevMode && assertNodeType(lView[TVIEW].data[adjustedElementIndex], 3 /* Element */);
         // Only attached CheckAlways components or attached, dirty OnPush components should be checked
-        if (viewAttachedToChangeDetector(hostView) &&
-            hostView[FLAGS] & (16 /* CheckAlways */ | 64 /* Dirty */)) {
+        if (viewAttached(hostView) && hostView[FLAGS] & (16 /* CheckAlways */ | 64 /* Dirty */)) {
             syncViewWithBlueprint(hostView);
             checkView(hostView, hostView[CONTEXT]);
         }
@@ -39937,6 +39922,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         for (var i = componentView.length; i < componentTView.blueprint.length; i++) {
             componentView[i] = componentTView.blueprint[i];
         }
+    }
+    /** Returns a boolean for whether the view is attached */
+    function viewAttached(view) {
+        return (view[FLAGS] & 128 /* Attached */) === 128 /* Attached */;
     }
     /**
      * Instruction to distribute projectable nodes among <ng-content> occurrences in a given template.
@@ -42406,11 +42395,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     }
                     var lView = viewRef._lView;
                     var adjustedIdx = this._adjustIndex(index);
-                    if (viewAttachedToContainer(lView)) {
-                        // If view is already attached, fall back to move() so we clean up
-                        // references appropriately.
-                        return this.move(viewRef, adjustedIdx);
-                    }
                     insertView(lView, this._lContainer, adjustedIdx);
                     var beforeNode = getBeforeNodeForView(adjustedIdx, this._lContainer[VIEWS], this._lContainer[NATIVE]);
                     addRemoveViewFromContainer(lView, true, beforeNode);
@@ -42423,9 +42407,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                         throw new Error('Cannot move a destroyed View in a ViewContainer!');
                     }
                     var index = this.indexOf(viewRef);
-                    if (index !== -1)
-                        this.detach(index);
-                    this.insert(viewRef, newIndex);
+                    this.detach(index);
+                    this.insert(viewRef, this._adjustIndex(newIndex));
                     return viewRef;
                 };
                 ViewContainerRef_.prototype.indexOf = function (viewRef) { return this._viewRefs.indexOf(viewRef); };
@@ -42661,7 +42644,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.6+43.sha-7ac58be.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-beta.6+42.sha-ff8e4dd.with-local-changes');
 
     /**
      * @license
@@ -55999,7 +55982,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.6+43.sha-7ac58be.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-beta.6+42.sha-ff8e4dd.with-local-changes');
 
     /**
      * @license
