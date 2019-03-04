@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.6+63.sha-95989a1.with-local-changes
+ * @license Angular v8.0.0-beta.6+65.sha-78adcfe.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -15916,7 +15916,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.6+63.sha-95989a1.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-beta.6+65.sha-78adcfe.with-local-changes');
 
     /**
      * @license
@@ -33786,14 +33786,6 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     // TODO: cleanup once the code is merged in angular/angular
     var RendererStyleFlags3;
     (function (RendererStyleFlags3) {
@@ -33807,6 +33799,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     var domRendererFactory3 = {
         createRenderer: function (hostElement, rendererType) { return document; }
     };
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
 
     /**
      * @license
@@ -34245,12 +34245,42 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             [0],
             null,
         ];
+        // whenever a context is created there is always a `null` directive
+        // that is registered (which is a placeholder for the "template").
         allocateDirectiveIntoContext(context, null);
         return context;
     }
+    /**
+     * Allocates (registers) a directive into the directive registry within the provided styling
+     * context.
+     *
+     * For each and every `[style]`, `[style.prop]`, `[class]`, `[class.name]` binding
+     * (as well as static style and class attributes) a directive, component or template
+     * is marked as the owner. When an owner is determined (this happens when the template
+     * is first passed over) the directive owner is allocated into the styling context. When
+     * this happens, each owner gets its own index value. This then ensures that once any
+     * style and/or class binding are assigned into the context then they are marked to
+     * that directive's index value.
+     *
+     * @param context the target StylingContext
+     * @param directiveRef the directive that will be allocated into the context
+     * @returns the index where the directive was inserted into
+     */
     function allocateDirectiveIntoContext(context, directiveRef) {
         // this is a new directive which we have not seen yet.
-        context[2 /* DirectiveRegistryPosition */].push(directiveRef, -1, false, null);
+        var dirs = context[2 /* DirectiveRegistryPosition */];
+        var i = dirs.length;
+        // we preemptively make space into the directives array and then
+        // assign values slot-by-slot to ensure that if the directive ordering
+        // changes then it will still function
+        dirs.push(null, null, null, null);
+        dirs[i + 0 /* DirectiveValueOffset */] = directiveRef;
+        dirs[i + 2 /* DirtyFlagOffset */] = false;
+        dirs[i + 3 /* StyleSanitizerOffset */] = null;
+        // -1 is used to signal that the directive has been allocated, but
+        // no actual style or class bindings have been registered yet...
+        dirs[i + 1 /* SinglePropValuesIndexOffset */] = -1;
+        return i;
     }
     /**
      * Used clone a copy of a pre-computed template of a styling context.
@@ -34329,7 +34359,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * provided list of initialStylingValues.
      */
     function renderInitialStylingValues(element, renderer, initialStylingValues, isEntryClassBased) {
-        for (var i = 2 /* KeyValueStartPosition */; i < initialStylingValues.length; i += 2 /* Size */) {
+        for (var i = 2 /* KeyValueStartPosition */; i < initialStylingValues.length; i += 3 /* Size */) {
             var value = initialStylingValues[i + 1 /* ValueOffset */];
             if (value) {
                 if (isEntryClassBased) {
@@ -36568,7 +36598,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.6+63.sha-95989a1.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-beta.6+65.sha-78adcfe.with-local-changes');
 
     /**
      * @license
@@ -46950,7 +46980,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.6+63.sha-95989a1.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-beta.6+65.sha-78adcfe.with-local-changes');
 
     /**
      * @license
