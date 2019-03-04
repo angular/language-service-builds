@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.2.7+20.sha-dfb331c.with-local-changes
+ * @license Angular v7.2.7+23.sha-cf916a0.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -10212,11 +10212,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         }
         return TokenizeResult;
     }());
-    function tokenize(source, url, getTagDefinition, tokenizeExpansionForms, interpolationConfig) {
-        if (tokenizeExpansionForms === void 0) { tokenizeExpansionForms = false; }
-        if (interpolationConfig === void 0) { interpolationConfig = DEFAULT_INTERPOLATION_CONFIG; }
-        return new _Tokenizer(new ParseSourceFile(source, url), getTagDefinition, tokenizeExpansionForms, interpolationConfig)
-            .tokenize();
+    function tokenize(source, url, getTagDefinition, options) {
+        if (options === void 0) { options = {}; }
+        return new _Tokenizer(new ParseSourceFile(source, url), getTagDefinition, options).tokenize();
     }
     var _CR_OR_CRLF_REGEXP = /\r\n?/g;
     function _unexpectedCharacterErrorMsg(charCode) {
@@ -10240,22 +10238,22 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
          * @param _tokenizeIcu Whether to tokenize ICU messages (considered as text nodes when false)
          * @param _interpolationConfig
          */
-        function _Tokenizer(_file, _getTagDefinition, _tokenizeIcu, _interpolationConfig) {
-            if (_interpolationConfig === void 0) { _interpolationConfig = DEFAULT_INTERPOLATION_CONFIG; }
+        function _Tokenizer(_file, _getTagDefinition, options) {
             this._file = _file;
             this._getTagDefinition = _getTagDefinition;
-            this._tokenizeIcu = _tokenizeIcu;
-            this._interpolationConfig = _interpolationConfig;
-            // Note: this is always lowercase!
             this._peek = -1;
             this._nextPeek = -1;
             this._index = -1;
             this._line = 0;
             this._column = -1;
+            this._currentTokenStart = null;
+            this._currentTokenType = null;
             this._expansionCaseStack = [];
             this._inInterpolation = false;
             this.tokens = [];
             this.errors = [];
+            this._tokenizeIcu = options.tokenizeExpansionForms || false;
+            this._interpolationConfig = options.interpolationConfig || DEFAULT_INTERPOLATION_CONFIG;
             this._input = _file.content;
             this._length = _file.content.length;
             this._advance();
@@ -10347,6 +10345,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         _Tokenizer.prototype._endToken = function (parts, end) {
             if (end === void 0) { end = this._getLocation(); }
+            if (this._currentTokenStart === null) {
+                throw new TokenError('Programming error - attempted to end a token when there was no start to the token', this._currentTokenType, this._getSpan(end, end));
+            }
+            if (this._currentTokenType === null) {
+                throw new TokenError('Programming error - attempted to end a token which has no token type', null, this._getSpan(this._currentTokenStart, end));
+            }
             var token = new Token$1(this._currentTokenType, parts, new ParseSourceSpan(this._currentTokenStart, end));
             this.tokens.push(token);
             this._currentTokenStart = null;
@@ -10840,10 +10844,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         function Parser(getTagDefinition) {
             this.getTagDefinition = getTagDefinition;
         }
-        Parser.prototype.parse = function (source, url, parseExpansionForms, interpolationConfig) {
-            if (parseExpansionForms === void 0) { parseExpansionForms = false; }
-            if (interpolationConfig === void 0) { interpolationConfig = DEFAULT_INTERPOLATION_CONFIG; }
-            var tokensAndErrors = tokenize(source, url, this.getTagDefinition, parseExpansionForms, interpolationConfig);
+        Parser.prototype.parse = function (source, url, options) {
+            var tokensAndErrors = tokenize(source, url, this.getTagDefinition, options);
             var treeAndErrors = new _TreeBuilder(tokensAndErrors.tokens, this.getTagDefinition).build();
             return new ParseTreeResult(treeAndErrors.rootNodes, tokensAndErrors.errors.concat(treeAndErrors.errors));
         };
@@ -11177,10 +11179,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         function HtmlParser() {
             return _super.call(this, getHtmlTagDefinition) || this;
         }
-        HtmlParser.prototype.parse = function (source, url, parseExpansionForms, interpolationConfig) {
-            if (parseExpansionForms === void 0) { parseExpansionForms = false; }
-            if (interpolationConfig === void 0) { interpolationConfig = DEFAULT_INTERPOLATION_CONFIG; }
-            return _super.prototype.parse.call(this, source, url, parseExpansionForms, interpolationConfig);
+        HtmlParser.prototype.parse = function (source, url, options) {
+            return _super.prototype.parse.call(this, source, url, options);
         };
         return HtmlParser;
     }(Parser$1));
@@ -14595,13 +14595,14 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      *
      * @param template text of the template to parse
      * @param templateUrl URL to use for source mapping of the parsed template
+     * @param options options to modify how the template is parsed
      */
     function parseTemplate(template, templateUrl, options) {
         if (options === void 0) { options = {}; }
         var interpolationConfig = options.interpolationConfig, preserveWhitespaces = options.preserveWhitespaces;
         var bindingParser = makeBindingParser(interpolationConfig);
         var htmlParser = new HtmlParser();
-        var parseResult = htmlParser.parse(template, templateUrl, true, interpolationConfig);
+        var parseResult = htmlParser.parse(template, templateUrl, __assign({}, options, { tokenizeExpansionForms: true }));
         if (parseResult.errors && parseResult.errors.length > 0) {
             return { errors: parseResult.errors, nodes: [] };
         }
@@ -15299,7 +15300,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 InterpolationConfig.fromArray(facade.interpolation) :
                 DEFAULT_INTERPOLATION_CONFIG;
             // Parse the template and check for errors.
-            var template = parseTemplate(facade.template, sourceMapUrl, { preserveWhitespaces: facade.preserveWhitespaces || false, interpolationConfig: interpolationConfig });
+            var template = parseTemplate(facade.template, sourceMapUrl, { preserveWhitespaces: facade.preserveWhitespaces, interpolationConfig: interpolationConfig });
             if (template.errors !== undefined) {
                 var errors = template.errors.map(function (err) { return err.toString(); }).join(', ');
                 throw new Error("Errors during JIT compilation of template for " + facade.name + ": " + errors);
@@ -15440,7 +15441,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.2.7+20.sha-dfb331c.with-local-changes');
+    var VERSION$1 = new Version('7.2.7+23.sha-cf916a0.with-local-changes');
 
     /**
      * @license
@@ -15890,7 +15891,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         DirectiveNormalizer.prototype._preparseLoadedTemplate = function (prenormData, template, templateAbsUrl) {
             var isInline = !!prenormData.template;
             var interpolationConfig = InterpolationConfig.fromArray(prenormData.interpolation);
-            var rootNodesAndErrors = this._htmlParser.parse(template, templateSourceUrl({ reference: prenormData.ngModuleType }, { type: { reference: prenormData.componentType } }, { isInline: isInline, templateUrl: templateAbsUrl }), true, interpolationConfig);
+            var templateUrl = templateSourceUrl({ reference: prenormData.ngModuleType }, { type: { reference: prenormData.componentType } }, { isInline: isInline, templateUrl: templateAbsUrl });
+            var rootNodesAndErrors = this._htmlParser.parse(template, templateUrl, { tokenizeExpansionForms: true, interpolationConfig: interpolationConfig });
             if (rootNodesAndErrors.errors.length > 0) {
                 var errorString = rootNodesAndErrors.errors.join('\n');
                 throw syntaxError("Template parse errors:\n" + errorString);
@@ -16656,9 +16658,8 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         function XmlParser() {
             return _super.call(this, getXmlTagDefinition) || this;
         }
-        XmlParser.prototype.parse = function (source, url, parseExpansionForms) {
-            if (parseExpansionForms === void 0) { parseExpansionForms = false; }
-            return _super.prototype.parse.call(this, source, url, parseExpansionForms);
+        XmlParser.prototype.parse = function (source, url, options) {
+            return _super.prototype.parse.call(this, source, url, options);
         };
         return XmlParser;
     }(Parser$1));
@@ -16794,7 +16795,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         XliffParser.prototype.parse = function (xliff, url) {
             this._unitMlString = null;
             this._msgIdToHtml = {};
-            var xml = new XmlParser().parse(xliff, url, false);
+            var xml = new XmlParser().parse(xliff, url);
             this._errors = xml.errors;
             visitAll(this, xml.rootNodes, null);
             return {
@@ -16866,7 +16867,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         function XmlToI18n() {
         }
         XmlToI18n.prototype.convert = function (message, url) {
-            var xmlIcu = new XmlParser().parse(message, url, true);
+            var xmlIcu = new XmlParser().parse(message, url, { tokenizeExpansionForms: true });
             this._errors = xmlIcu.errors;
             var i18nNodes = this._errors.length > 0 || xmlIcu.rootNodes.length == 0 ?
                 [] : [].concat.apply([], __spread(visitAll(this, xmlIcu.rootNodes)));
@@ -17074,7 +17075,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         Xliff2Parser.prototype.parse = function (xliff, url) {
             this._unitMlString = null;
             this._msgIdToHtml = {};
-            var xml = new XmlParser().parse(xliff, url, false);
+            var xml = new XmlParser().parse(xliff, url);
             this._errors = xml.errors;
             visitAll(this, xml.rootNodes, null);
             return {
@@ -17152,7 +17153,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         function XmlToI18n() {
         }
         XmlToI18n.prototype.convert = function (message, url) {
-            var xmlIcu = new XmlParser().parse(message, url, true);
+            var xmlIcu = new XmlParser().parse(message, url, { tokenizeExpansionForms: true });
             this._errors = xmlIcu.errors;
             var i18nNodes = this._errors.length > 0 || xmlIcu.rootNodes.length == 0 ?
                 [] : [].concat.apply([], __spread(visitAll(this, xmlIcu.rootNodes)));
@@ -17300,7 +17301,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             this._msgIdToHtml = {};
             // We can not parse the ICU messages at this point as some messages might not originate
             // from Angular that could not be lex'd.
-            var xml = new XmlParser().parse(xtb, url, false);
+            var xml = new XmlParser().parse(xtb, url);
             this._errors = xml.errors;
             visitAll(this, xml.rootNodes);
             return {
@@ -17361,7 +17362,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         function XmlToI18n() {
         }
         XmlToI18n.prototype.convert = function (message, url) {
-            var xmlIcu = new XmlParser().parse(message, url, true);
+            var xmlIcu = new XmlParser().parse(message, url, { tokenizeExpansionForms: true });
             this._errors = xmlIcu.errors;
             var i18nNodes = this._errors.length > 0 || xmlIcu.rootNodes.length == 0 ?
                 [] :
@@ -17462,7 +17463,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             var text = this._convertToText(srcMsg);
             // text to html
             var url = srcMsg.nodes[0].sourceSpan.start.file.url;
-            var html = new HtmlParser().parse(text, url, true);
+            var html = new HtmlParser().parse(text, url, { tokenizeExpansionForms: true });
             return {
                 nodes: html.rootNodes,
                 errors: __spread(this._errors, html.errors),
@@ -17587,10 +17588,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     new TranslationBundle({}, null, digest, undefined, missingTranslation, console);
             }
         }
-        I18NHtmlParser.prototype.parse = function (source, url, parseExpansionForms, interpolationConfig) {
-            if (parseExpansionForms === void 0) { parseExpansionForms = false; }
-            if (interpolationConfig === void 0) { interpolationConfig = DEFAULT_INTERPOLATION_CONFIG; }
-            var parseResult = this._htmlParser.parse(source, url, parseExpansionForms, interpolationConfig);
+        I18NHtmlParser.prototype.parse = function (source, url, options) {
+            if (options === void 0) { options = {}; }
+            var interpolationConfig = options.interpolationConfig || DEFAULT_INTERPOLATION_CONFIG;
+            var parseResult = this._htmlParser.parse(source, url, __assign({ interpolationConfig: interpolationConfig }, options));
             if (parseResult.errors.length) {
                 return new ParseTreeResult(parseResult.rootNodes, parseResult.errors);
             }
@@ -19748,7 +19749,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
         };
         TemplateParser.prototype.tryParse = function (component, template, directives, pipes, schemas, templateUrl, preserveWhitespaces) {
             var htmlParseResult = typeof template === 'string' ?
-                this._htmlParser.parse(template, templateUrl, true, this.getInterpolationConfig(component)) :
+                this._htmlParser.parse(template, templateUrl, {
+                    tokenizeExpansionForms: true,
+                    interpolationConfig: this.getInterpolationConfig(component)
+                }) :
                 template;
             if (!preserveWhitespaces) {
                 htmlParseResult = removeWhitespaces(htmlParseResult);
@@ -28182,7 +28186,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     var expressionParser = new Parser(new Lexer());
                     var config = new CompilerConfig();
                     var parser = new TemplateParser(config, this.host.resolver.getReflector(), expressionParser, new DomElementSchemaRegistry(), htmlParser, null, []);
-                    var htmlResult = htmlParser.parse(template.source, '', true);
+                    var htmlResult = htmlParser.parse(template.source, '', { tokenizeExpansionForms: true });
                     var analyzedModules = this.host.getAnalyzedModules();
                     var errors = undefined;
                     var ngModule = analyzedModules.ngModuleByPipeOrDirective.get(template.type);
@@ -33855,7 +33859,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.2.7+20.sha-dfb331c.with-local-changes');
+    var VERSION$2 = new Version$1('7.2.7+23.sha-cf916a0.with-local-changes');
 
     /**
      * @license
@@ -45140,11 +45144,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         function DummyHtmlParser() {
             return _super !== null && _super.apply(this, arguments) || this;
         }
-        DummyHtmlParser.prototype.parse = function (source, url, parseExpansionForms, interpolationConfig) {
-            if (parseExpansionForms === void 0) { parseExpansionForms = false; }
-            if (interpolationConfig === void 0) { interpolationConfig = DEFAULT_INTERPOLATION_CONFIG; }
-            return new ParseTreeResult([], []);
-        };
+        DummyHtmlParser.prototype.parse = function () { return new ParseTreeResult([], []); };
         return DummyHtmlParser;
     }(HtmlParser));
     /**
@@ -46032,7 +46032,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.2.7+20.sha-dfb331c.with-local-changes');
+    var VERSION$3 = new Version$1('7.2.7+23.sha-cf916a0.with-local-changes');
 
     /**
      * @license
