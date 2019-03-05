@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.6+79.sha-1efad37.with-local-changes
+ * @license Angular v8.0.0-beta.6+80.sha-b446095.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -19,7 +19,7 @@ module.exports = function(provided) {
   return result;
 }
 
-define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts) { 'use strict';
+define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs) { 'use strict';
 
     /*! *****************************************************************************
     Copyright (c) Microsoft Corporation. All rights reserved.
@@ -15911,7 +15911,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.6+79.sha-1efad37.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-beta.6+80.sha-b446095.with-local-changes');
 
     /**
      * @license
@@ -27039,7 +27039,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     function isParseSourceSpan(value) {
         return value && !!value.start;
     }
-    function spanOf$3(span) {
+    function spanOf$2(span) {
         if (!span)
             return undefined;
         if (isParseSourceSpan(span)) {
@@ -27052,7 +27052,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
             else if (span.children && span.children.length) {
                 return {
                     start: span.sourceSpan.start.offset,
-                    end: spanOf$3(span.children[span.children.length - 1]).end
+                    end: spanOf$2(span.children[span.children.length - 1]).end
                 };
             }
             return { start: span.sourceSpan.start.offset, end: span.sourceSpan.end.offset };
@@ -27150,10 +27150,10 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 return _super !== null && _super.apply(this, arguments) || this;
             }
             class_1.prototype.visit = function (ast, context) {
-                var span = spanOf$3(ast);
+                var span = spanOf$2(ast);
                 if (inSpan(position, span)) {
                     var len = path$$1.length;
-                    if (!len || allowWidening || isNarrower(span, spanOf$3(path$$1[len - 1]))) {
+                    if (!len || allowWidening || isNarrower(span, spanOf$2(path$$1[len - 1]))) {
                         path$$1.push(ast);
                     }
                 }
@@ -27824,7 +27824,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 var astPosition_1 = templatePosition_1 - mostSpecific.sourceSpan.start.offset;
                 mostSpecific.visit({
                     visitElement: function (ast) {
-                        var startTagSpan = spanOf$3(ast.sourceSpan);
+                        var startTagSpan = spanOf$2(ast.sourceSpan);
                         var tagLen = ast.name.length;
                         if (templatePosition_1 <=
                             startTagSpan.start + tagLen + 1 /* 1 for the opening angle bracked */) {
@@ -27838,17 +27838,17 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                         }
                     },
                     visitAttribute: function (ast) {
-                        if (!ast.valueSpan || !inSpan(templatePosition_1, spanOf$3(ast.valueSpan))) {
+                        if (!ast.valueSpan || !inSpan(templatePosition_1, spanOf$2(ast.valueSpan))) {
                             // We are in the name of an attribute. Show attribute completions.
                             result = attributeCompletions(templateInfo, path_1);
                         }
-                        else if (ast.valueSpan && inSpan(templatePosition_1, spanOf$3(ast.valueSpan))) {
+                        else if (ast.valueSpan && inSpan(templatePosition_1, spanOf$2(ast.valueSpan))) {
                             result = attributeValueCompletions(templateInfo, templatePosition_1, ast);
                         }
                     },
                     visitText: function (ast) {
                         // Check if we are in a entity.
-                        result = entityCompletions(getSourceText(template, spanOf$3(ast)), astPosition_1);
+                        result = entityCompletions(getSourceText(template, spanOf$2(ast)), astPosition_1);
                         if (result)
                             return result;
                         result = interpolationCompletions(templateInfo, templatePosition_1);
@@ -28262,7 +28262,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 if (inEvent === void 0) { inEvent = false; }
                 var attribute = findAttribute(info);
                 if (attribute) {
-                    if (inSpan(templatePosition, spanOf$3(attribute.valueSpan))) {
+                    if (inSpan(templatePosition, spanOf$2(attribute.valueSpan))) {
                         var dinfo = diagnosticInfoFromTemplateInfo(info);
                         var scope = getExpressionScope(dinfo, path$$1, inEvent);
                         if (attribute.valueSpan) {
@@ -28286,7 +28286,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                     if (component) {
                         symbol_1 = info.template.query.getTypeSymbol(component.directive.type.reference);
                         symbol_1 = symbol_1 && new OverrideKindSymbol(symbol_1, 'component');
-                        span_1 = spanOf$3(ast);
+                        span_1 = spanOf$2(ast);
                     }
                     else {
                         // Find a directive that matches the element name
@@ -28294,20 +28294,20 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                         if (directive) {
                             symbol_1 = info.template.query.getTypeSymbol(directive.directive.type.reference);
                             symbol_1 = symbol_1 && new OverrideKindSymbol(symbol_1, 'directive');
-                            span_1 = spanOf$3(ast);
+                            span_1 = spanOf$2(ast);
                         }
                     }
                 },
                 visitReference: function (ast) {
                     symbol_1 = ast.value && info.template.query.getTypeSymbol(tokenReference(ast.value));
-                    span_1 = spanOf$3(ast);
+                    span_1 = spanOf$2(ast);
                 },
                 visitVariable: function (ast) { },
                 visitEvent: function (ast) {
                     if (!attributeValueSymbol_1(ast.handler, /* inEvent */ true)) {
                         symbol_1 = findOutputBinding(info, path$$1, ast);
                         symbol_1 = symbol_1 && new OverrideKindSymbol(symbol_1, 'event');
-                        span_1 = spanOf$3(ast);
+                        span_1 = spanOf$2(ast);
                     }
                 },
                 visitElementProperty: function (ast) { attributeValueSymbol_1(ast.value); },
@@ -28327,12 +28327,12 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 visitText: function (ast) { },
                 visitDirective: function (ast) {
                     symbol_1 = info.template.query.getTypeSymbol(ast.directive.type.reference);
-                    span_1 = spanOf$3(ast);
+                    span_1 = spanOf$2(ast);
                 },
                 visitDirectiveProperty: function (ast) {
                     if (!attributeValueSymbol_1(ast.value)) {
                         symbol_1 = findInputBinding(info, path$$1, ast);
-                        span_1 = spanOf$3(ast);
+                        span_1 = spanOf$2(ast);
                     }
                 }
             }, null);
@@ -28502,7 +28502,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
                 if (ast.parseErrors && ast.parseErrors.length) {
                     results.push.apply(results, __spread(ast.parseErrors.map(function (e) { return ({
                         kind: DiagnosticKind$1.Error,
-                        span: offsetSpan$1(spanOf$3(e.span), template.span.start),
+                        span: offsetSpan$1(spanOf$2(e.span), template.span.start),
                         message: e.msg
                     }); })));
                 }
@@ -42784,7 +42784,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.6+79.sha-1efad37.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-beta.6+80.sha-b446095.with-local-changes');
 
     /**
      * @license
@@ -55636,7 +55636,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                     if (declaration && declaration.name) {
                         var sourceFile = this.getSourceFile(fileName);
                         if (sourceFile) {
-                            return this.getSourceFromDeclaration(fileName, version, this.stringOf(node) || '', shrink$1(spanOf$4(node)), this.reflector.getStaticSymbol(sourceFile.fileName, declaration.name.text), declaration, node, sourceFile);
+                            return this.getSourceFromDeclaration(fileName, version, this.stringOf(node) || '', shrink(spanOf$3(node)), this.reflector.getStaticSymbol(sourceFile.fileName, declaration.name.text), declaration, node, sourceFile);
                         }
                     }
                     break;
@@ -55676,7 +55676,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                     if (!source) {
                         throw new Error('Internal error: no context could be determined');
                     }
-                    var tsConfigPath = findTsConfig$1(source.fileName);
+                    var tsConfigPath = findTsConfig(source.fileName);
                     var basePath = path.dirname(tsConfigPath || this.context);
                     var options = { basePath: basePath, genDir: basePath };
                     var compilerOptions = this.host.getCompilationSettings();
@@ -55824,7 +55824,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                                     try {
                                         if (this.resolver.isDirective(staticSymbol)) {
                                             var metadata = this.resolver.getNonNormalizedDirectiveMetadata(staticSymbol).metadata;
-                                            var declarationSpan = spanOf$4(target);
+                                            var declarationSpan = spanOf$3(target);
                                             return {
                                                 type: staticSymbol,
                                                 declarationSpan: declarationSpan,
@@ -55836,7 +55836,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                                     catch (e) {
                                         if (e.message) {
                                             this.collectError(e, sourceFile.fileName);
-                                            var declarationSpan = spanOf$4(target);
+                                            var declarationSpan = spanOf$3(target);
                                             return {
                                                 type: staticSymbol,
                                                 declarationSpan: declarationSpan,
@@ -55877,7 +55877,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         TypeScriptServiceHost.missingTemplate = [undefined, undefined];
         return TypeScriptServiceHost;
     }());
-    function findTsConfig$1(fileName) {
+    function findTsConfig(fileName) {
         var dir = path.dirname(fileName);
         while (fs.existsSync(dir)) {
             var candidate = path.join(dir, 'tsconfig.json');
@@ -55889,10 +55889,10 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             dir = parentDir;
         }
     }
-    function spanOf$4(node) {
+    function spanOf$3(node) {
         return { start: node.getStart(), end: node.getEnd() };
     }
-    function shrink$1(span, offset) {
+    function shrink(span, offset) {
         if (offset == null)
             offset = 1;
         return { start: span.start + offset, end: span.end - offset };
@@ -56122,7 +56122,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.6+79.sha-1efad37.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-beta.6+80.sha-b446095.with-local-changes');
 
     /**
      * @license
