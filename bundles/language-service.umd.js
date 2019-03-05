@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.6+83.sha-6215799.with-local-changes
+ * @license Angular v8.0.0-beta.6+84.sha-25166d4.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -3383,6 +3383,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         Identifiers.elementStart = { name: 'ɵelementStart', moduleName: CORE$1 };
         Identifiers.elementEnd = { name: 'ɵelementEnd', moduleName: CORE$1 };
         Identifiers.elementProperty = { name: 'ɵelementProperty', moduleName: CORE$1 };
+        Identifiers.flushHooksUpTo = { name: 'ɵflushHooksUpTo', moduleName: CORE$1 };
         Identifiers.componentHostSyntheticProperty = { name: 'ɵcomponentHostSyntheticProperty', moduleName: CORE$1 };
         Identifiers.componentHostSyntheticListener = { name: 'ɵcomponentHostSyntheticListener', moduleName: CORE$1 };
         Identifiers.elementAttribute = { name: 'ɵelementAttribute', moduleName: CORE$1 };
@@ -13801,6 +13802,11 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
              * all local refs and context variables are available for matching.
              */
             this._updateCodeFns = [];
+            /**
+             * Memorizes the last node index for which a flushHooksUpTo instruction has been generated.
+             * Initialized to 0 to avoid generating a useless flushHooksUpTo(0).
+             */
+            this._lastNodeIndexWithFlush = 0;
             /** Temporary variable declarations generated from visiting pipes, literals, etc. */
             this._tempVariables = [];
             /**
@@ -14072,9 +14078,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             var _a = this.i18n, index = _a.index, bindings = _a.bindings;
             if (bindings.size) {
                 bindings.forEach(function (binding) {
-                    _this.updateInstruction(span, Identifiers$1.i18nExp, function () { return [_this.convertPropertyBinding(variable(CONTEXT_NAME), binding)]; });
+                    _this.updateInstruction(index, span, Identifiers$1.i18nExp, function () { return [_this.convertPropertyBinding(variable(CONTEXT_NAME), binding)]; });
                 });
-                this.updateInstruction(span, Identifiers$1.i18nApply, [literal(index)]);
+                this.updateInstruction(index, span, Identifiers$1.i18nApply, [literal(index)]);
             }
             if (!selfClosing) {
                 this.creationInstruction(span, Identifiers$1.i18nEnd);
@@ -14245,7 +14251,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                                 converted.expressions.forEach(function (expression) {
                                     hasBindings_1 = true;
                                     var binding = _this.convertExpressionBinding(implicit, expression);
-                                    _this.updateInstruction(element.sourceSpan, Identifiers$1.i18nExp, [binding]);
+                                    _this.updateInstruction(elementIndex, element.sourceSpan, Identifiers$1.i18nExp, [binding]);
                                 });
                             }
                         }
@@ -14255,7 +14261,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                         var args = this.constantPool.getConstLiteral(literalArr(i18nAttrArgs_1), true);
                         this.creationInstruction(element.sourceSpan, Identifiers$1.i18nAttributes, [index, args]);
                         if (hasBindings_1) {
-                            this.updateInstruction(element.sourceSpan, Identifiers$1.i18nApply, [index]);
+                            this.updateInstruction(elementIndex, element.sourceSpan, Identifiers$1.i18nApply, [index]);
                         }
                     }
                 }
@@ -14305,7 +14311,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                     var hasValue_1 = value_1 instanceof LiteralPrimitive ? !!value_1.value : true;
                     _this.allocateBindingSlots(value_1);
                     var bindingName_1 = prepareSyntheticPropertyName(input.name);
-                    _this.updateInstruction(input.sourceSpan, Identifiers$1.elementProperty, function () {
+                    _this.updateInstruction(elementIndex, input.sourceSpan, Identifiers$1.elementProperty, function () {
                         return [
                             literal(elementIndex), literal(bindingName_1),
                             (hasValue_1 ? _this.convertPropertyBinding(implicit, value_1) : emptyValueBindInstruction)
@@ -14333,7 +14339,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                             }
                         }
                         _this.allocateBindingSlots(value_2);
-                        _this.updateInstruction(input.sourceSpan, instruction, function () {
+                        _this.updateInstruction(elementIndex, input.sourceSpan, instruction, function () {
                             return __spread([
                                 literal(elementIndex), literal(attrName_1),
                                 _this.convertPropertyBinding(implicit, value_2)
@@ -14415,7 +14421,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             template.inputs.forEach(function (input) {
                 var value = input.value.visit(_this._valueConverter);
                 _this.allocateBindingSlots(value);
-                _this.updateInstruction(template.sourceSpan, Identifiers$1.elementProperty, function () {
+                _this.updateInstruction(templateIndex, template.sourceSpan, Identifiers$1.elementProperty, function () {
                     return [
                         literal(templateIndex), literal(input.name),
                         _this.convertPropertyBinding(context, value)
@@ -14442,7 +14448,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             this.creationInstruction(text.sourceSpan, Identifiers$1.text, [literal(nodeIndex)]);
             var value = text.value.visit(this._valueConverter);
             this.allocateBindingSlots(value);
-            this.updateInstruction(text.sourceSpan, Identifiers$1.textBinding, function () { return [literal(nodeIndex), _this.convertPropertyBinding(variable(CONTEXT_NAME), value)]; });
+            this.updateInstruction(nodeIndex, text.sourceSpan, Identifiers$1.textBinding, function () { return [literal(nodeIndex), _this.convertPropertyBinding(variable(CONTEXT_NAME), value)]; });
         };
         TemplateDefinitionBuilder.prototype.visitText = function (text) {
             // when a text element is located within a translatable
@@ -14515,14 +14521,18 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                     this.creationInstruction(instruction.sourceSpan, instruction.reference, paramsFn);
                 }
                 else {
-                    this.updateInstruction(instruction.sourceSpan, instruction.reference, paramsFn);
+                    this.updateInstruction(-1, instruction.sourceSpan, instruction.reference, paramsFn);
                 }
             }
         };
         TemplateDefinitionBuilder.prototype.creationInstruction = function (span, reference, paramsOrFn, prepend) {
             this.instructionFn(this._creationCodeFns, span, reference, paramsOrFn || [], prepend);
         };
-        TemplateDefinitionBuilder.prototype.updateInstruction = function (span, reference, paramsOrFn) {
+        TemplateDefinitionBuilder.prototype.updateInstruction = function (nodeIndex, span, reference, paramsOrFn) {
+            if (this._lastNodeIndexWithFlush < nodeIndex) {
+                this.instructionFn(this._updateCodeFns, span, Identifiers$1.flushHooksUpTo, [literal(nodeIndex)]);
+                this._lastNodeIndexWithFlush = nodeIndex;
+            }
             this.instructionFn(this._updateCodeFns, span, reference, paramsOrFn || []);
         };
         TemplateDefinitionBuilder.prototype.allocatePureFunctionSlots = function (numSlots) {
@@ -15926,7 +15936,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.6+83.sha-6215799.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-beta.6+84.sha-25166d4.with-local-changes');
 
     /**
      * @license
@@ -31526,8 +31536,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     var CHILD_TAIL = 15;
     var CONTENT_QUERIES = 16;
     var DECLARATION_VIEW = 17;
+    var PREORDER_HOOK_FLAGS = 18;
     /** Size of LView's header. Necessary to adjust for it when setting slots.  */
-    var HEADER_OFFSET = 19;
+    var HEADER_OFFSET = 20;
 
     /**
      * @license
@@ -31672,6 +31683,13 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /** Returns a boolean for whether the view is attached to a container. */
     function viewAttachedToContainer(view) {
         return isLContainer(view[PARENT]);
+    }
+    /**
+     * Resets the pre-order hook flags of the view.
+     * @param lView the LView on which the flags are reset
+     */
+    function resetPreOrderHookFlags(lView) {
+        lView[PREORDER_HOOK_FLAGS] = 0;
     }
 
     /**
@@ -31880,29 +31898,43 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * Must be run *only* on the first template pass.
      *
-     * The TView's hooks arrays are arranged in alternating pairs of directiveIndex and hookFunction,
-     * i.e.: `[directiveIndexA, hookFunctionA, directiveIndexB, hookFunctionB, ...]`. For `OnChanges`
-     * hooks, the `directiveIndex` will be *negative*, signaling {@link callHooks} that the
-     * `hookFunction` must be passed the the appropriate {@link SimpleChanges} object.
+     * Sets up the pre-order hooks on the provided `tView`,
+     * see {@link HookData} for details about the data structure.
      *
      * @param directiveIndex The index of the directive in LView
      * @param directiveDef The definition containing the hooks to setup in tView
      * @param tView The current TView
+     * @param nodeIndex The index of the node to which the directive is attached
+     * @param initialPreOrderHooksLength the number of pre-order hooks already registered before the
+     * current process, used to know if the node index has to be added to the array. If it is -1,
+     * the node index is never added.
+     * @param initialPreOrderCheckHooksLength same as previous for pre-order check hooks
      */
-    function registerPreOrderHooks(directiveIndex, directiveDef, tView) {
+    function registerPreOrderHooks(directiveIndex, directiveDef, tView, nodeIndex, initialPreOrderHooksLength, initialPreOrderCheckHooksLength) {
         ngDevMode &&
             assertEqual(tView.firstTemplatePass, true, 'Should only be called on first template pass');
         var onChanges = directiveDef.onChanges, onInit = directiveDef.onInit, doCheck = directiveDef.doCheck;
+        if (initialPreOrderHooksLength >= 0 &&
+            (!tView.preOrderHooks || initialPreOrderHooksLength === tView.preOrderHooks.length) &&
+            (onChanges || onInit || doCheck)) {
+            (tView.preOrderHooks || (tView.preOrderHooks = [])).push(nodeIndex);
+        }
+        if (initialPreOrderCheckHooksLength >= 0 &&
+            (!tView.preOrderCheckHooks ||
+                initialPreOrderCheckHooksLength === tView.preOrderCheckHooks.length) &&
+            (onChanges || doCheck)) {
+            (tView.preOrderCheckHooks || (tView.preOrderCheckHooks = [])).push(nodeIndex);
+        }
         if (onChanges) {
-            (tView.initHooks || (tView.initHooks = [])).push(directiveIndex, onChanges);
-            (tView.checkHooks || (tView.checkHooks = [])).push(directiveIndex, onChanges);
+            (tView.preOrderHooks || (tView.preOrderHooks = [])).push(directiveIndex, onChanges);
+            (tView.preOrderCheckHooks || (tView.preOrderCheckHooks = [])).push(directiveIndex, onChanges);
         }
         if (onInit) {
-            (tView.initHooks || (tView.initHooks = [])).push(-directiveIndex, onInit);
+            (tView.preOrderHooks || (tView.preOrderHooks = [])).push(-directiveIndex, onInit);
         }
         if (doCheck) {
-            (tView.initHooks || (tView.initHooks = [])).push(directiveIndex, doCheck);
-            (tView.checkHooks || (tView.checkHooks = [])).push(directiveIndex, doCheck);
+            (tView.preOrderHooks || (tView.preOrderHooks = [])).push(directiveIndex, doCheck);
+            (tView.preOrderCheckHooks || (tView.preOrderCheckHooks = [])).push(directiveIndex, doCheck);
         }
     }
     /**
@@ -31914,9 +31946,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * preserve hook execution order. Content, view, and destroy hooks for projected
      * components and directives must be called *before* their hosts.
      *
-     * Sets up the content, view, and destroy hooks on the provided `tView` such that
-     * they're added in alternating pairs of directiveIndex and hookFunction,
-     * i.e.: `[directiveIndexA, hookFunctionA, directiveIndexB, hookFunctionB, ...]`
+     * Sets up the content, view, and destroy hooks on the provided `tView`,
+     * see {@link HookData} for details about the data structure.
      *
      * NOTE: This does not set up `onChanges`, `onInit` or `doCheck`, those are set up
      * separately at `elementStart`.
@@ -31952,44 +31983,73 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         }
     }
     /**
+     * Executing hooks requires complex logic as we need to deal with 2 constraints.
+     *
+     * 1. Init hooks (ngOnInit, ngAfterContentInit, ngAfterViewInit) must all be executed once and only
+     * once, across many change detection cycles. This must be true even if some hooks throw, or if
+     * some recursively trigger a change detection cycle.
+     * To solve that, it is required to track the state of the execution of these init hooks.
+     * This is done by storing and maintaining flags in the view: the {@link InitPhaseState},
+     * and the index within that phase. They can be seen as a cursor in the following structure:
+     * [[onInit1, onInit2], [afterContentInit1], [afterViewInit1, afterViewInit2, afterViewInit3]]
+     * They are are stored as flags in LView[FLAGS].
+     *
+     * 2. Pre-order hooks can be executed in batches, because of the flushHooksUpTo instruction.
+     * To be able to pause and resume their execution, we also need some state about the hook's array
+     * that is being processed:
+     * - the index of the next hook to be executed
+     * - the number of init hooks already found in the processed part of the  array
+     * They are are stored as flags in LView[PREORDER_HOOK_FLAGS].
+     */
+    /**
      * Executes necessary hooks at the start of executing a template.
      *
      * Executes hooks that are to be run during the initialization of a directive such
      * as `onChanges`, `onInit`, and `doCheck`.
      *
-     * Has the side effect of updating the RunInit flag in `lView` to be `0`, so that
-     * this isn't run a second time.
-     *
      * @param lView The current view
      * @param tView Static data for the view containing the hooks to be executed
      * @param checkNoChangesMode Whether or not we're in checkNoChanges mode.
+     * @param @param currentNodeIndex 2 cases depending the the value:
+     * - undefined: execute hooks only from the saved index until the end of the array (pre-order case,
+     * when flushing the remaining hooks)
+     * - number: execute hooks only from the saved index until that node index exclusive (pre-order
+     * case, when executing flushHooksUpTo(number))
      */
-    function executeInitHooks(currentView, tView, checkNoChangesMode) {
+    function executePreOrderHooks(currentView, tView, checkNoChangesMode, currentNodeIndex) {
         if (!checkNoChangesMode) {
-            executeHooks(currentView, tView.initHooks, tView.checkHooks, checkNoChangesMode, 0 /* OnInitHooksToBeRun */);
+            executeHooks(currentView, tView.preOrderHooks, tView.preOrderCheckHooks, checkNoChangesMode, 0 /* OnInitHooksToBeRun */, currentNodeIndex !== undefined ? currentNodeIndex : null);
         }
     }
     /**
      * Executes hooks against the given `LView` based off of whether or not
      * This is the first pass.
      *
-     * @param lView The view instance data to run the hooks against
+     * @param currentView The view instance data to run the hooks against
      * @param firstPassHooks An array of hooks to run if we're in the first view pass
      * @param checkHooks An Array of hooks to run if we're not in the first view pass.
      * @param checkNoChangesMode Whether or not we're in no changes mode.
+     * @param initPhaseState the current state of the init phase
+     * @param currentNodeIndex 3 cases depending the the value:
+     * - undefined: all hooks from the array should be executed (post-order case)
+     * - null: execute hooks only from the saved index until the end of the array (pre-order case, when
+     * flushing the remaining hooks)
+     * - number: execute hooks only from the saved index until that node index exclusive (pre-order
+     * case, when executing flushHooksUpTo(number))
      */
-    function executeHooks(currentView, firstPassHooks, checkHooks, checkNoChangesMode, initPhase) {
+    function executeHooks(currentView, firstPassHooks, checkHooks, checkNoChangesMode, initPhaseState, currentNodeIndex) {
         if (checkNoChangesMode)
             return;
-        var hooksToCall = (currentView[FLAGS] & 3 /* InitPhaseStateMask */) === initPhase ?
+        var hooksToCall = (currentView[FLAGS] & 3 /* InitPhaseStateMask */) === initPhaseState ?
             firstPassHooks :
             checkHooks;
         if (hooksToCall) {
-            callHooks(currentView, hooksToCall, initPhase);
+            callHooks(currentView, hooksToCall, initPhaseState, currentNodeIndex);
         }
         // The init phase state must be always checked here as it may have been recursively updated
-        if ((currentView[FLAGS] & 3 /* InitPhaseStateMask */) === initPhase &&
-            initPhase !== 3 /* InitPhaseCompleted */) {
+        if (currentNodeIndex == null &&
+            (currentView[FLAGS] & 3 /* InitPhaseStateMask */) === initPhaseState &&
+            initPhaseState !== 3 /* InitPhaseCompleted */) {
             currentView[FLAGS] &= 1023 /* IndexWithinInitPhaseReset */;
             currentView[FLAGS] += 1 /* InitPhaseStateIncrementer */;
         }
@@ -32000,27 +32060,68 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @param currentView The current view
      * @param arr The array in which the hooks are found
+     * @param initPhaseState the current state of the init phase
+     * @param currentNodeIndex 3 cases depending the the value:
+     * - undefined: all hooks from the array should be executed (post-order case)
+     * - null: execute hooks only from the saved index until the end of the array (pre-order case, when
+     * flushing the remaining hooks)
+     * - number: execute hooks only from the saved index until that node index exclusive (pre-order
+     * case, when executing flushHooksUpTo(number))
      */
-    function callHooks(currentView, arr, initPhase) {
-        var initHooksCount = 0;
-        for (var i = 0; i < arr.length; i += 2) {
-            var isInitHook = arr[i] < 0;
-            var directiveIndex = isInitHook ? -arr[i] : arr[i];
-            var directive = currentView[directiveIndex];
+    function callHooks(currentView, arr, initPhase, currentNodeIndex) {
+        var startIndex = currentNodeIndex !== undefined ?
+            (currentView[PREORDER_HOOK_FLAGS] & 65535 /* IndexOfTheNextPreOrderHookMaskMask */) :
+            0;
+        var nodeIndexLimit = currentNodeIndex != null ? currentNodeIndex : -1;
+        var lastNodeIndexFound = 0;
+        for (var i = startIndex; i < arr.length; i++) {
             var hook = arr[i + 1];
-            if (isInitHook) {
-                initHooksCount++;
-                var indexWithintInitPhase = currentView[FLAGS] >> 10 /* IndexWithinInitPhaseShift */;
-                // The init phase state must be always checked here as it may have been recursively updated
-                if (indexWithintInitPhase < initHooksCount &&
-                    (currentView[FLAGS] & 3 /* InitPhaseStateMask */) === initPhase) {
-                    currentView[FLAGS] += 1024 /* IndexWithinInitPhaseIncrementer */;
-                    hook.call(directive);
+            if (typeof hook === 'number') {
+                lastNodeIndexFound = arr[i];
+                if (currentNodeIndex != null && lastNodeIndexFound >= currentNodeIndex) {
+                    break;
                 }
             }
             else {
+                var isInitHook = arr[i] < 0;
+                if (isInitHook)
+                    currentView[PREORDER_HOOK_FLAGS] += 65536 /* NumberOfInitHooksCalledIncrementer */;
+                if (lastNodeIndexFound < nodeIndexLimit || nodeIndexLimit == -1) {
+                    callHook(currentView, initPhase, arr, i);
+                    currentView[PREORDER_HOOK_FLAGS] =
+                        (currentView[PREORDER_HOOK_FLAGS] & 4294901760 /* NumberOfInitHooksCalledMask */) + i +
+                            2;
+                }
+                i++;
+            }
+        }
+    }
+    /**
+     * Execute one hook against the current `LView`.
+     *
+     * @param currentView The current view
+     * @param initPhaseState the current state of the init phase
+     * @param arr The array in which the hooks are found
+     * @param i The current index within the hook data array
+     */
+    function callHook(currentView, initPhase, arr, i) {
+        var isInitHook = arr[i] < 0;
+        var hook = arr[i + 1];
+        var directiveIndex = isInitHook ? -arr[i] : arr[i];
+        var directive = currentView[directiveIndex];
+        if (isInitHook) {
+            var indexWithintInitPhase = currentView[FLAGS] >> 10 /* IndexWithinInitPhaseShift */;
+            // The init phase state must be always checked here as it may have been recursively
+            // updated
+            if (indexWithintInitPhase <
+                (currentView[PREORDER_HOOK_FLAGS] >> 16 /* NumberOfInitHooksCalledShift */) &&
+                (currentView[FLAGS] & 3 /* InitPhaseStateMask */) === initPhase) {
+                currentView[FLAGS] += 1024 /* IndexWithinInitPhaseIncrementer */;
                 hook.call(directive);
             }
+        }
+        else {
+            hook.call(directive);
         }
     }
 
@@ -32148,7 +32249,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         }
         else {
             try {
-                executeHooks(lView, tView.viewHooks, tView.viewCheckHooks, checkNoChangesMode, 2 /* AfterViewInitHooksToBeRun */);
+                resetPreOrderHookFlags(lView);
+                executeHooks(lView, tView.viewHooks, tView.viewCheckHooks, checkNoChangesMode, 2 /* AfterViewInitHooksToBeRun */, undefined);
             }
             finally {
                 // Views are clean and in update mode after being checked, so these bits are cleared
@@ -34527,11 +34629,12 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         // This will be done in the update pass.
         if (!creationMode) {
             var checkNoChangesMode = getCheckNoChangesMode();
-            executeInitHooks(lView, tView, checkNoChangesMode);
+            executePreOrderHooks(lView, tView, checkNoChangesMode, undefined);
             refreshDynamicEmbeddedViews(lView);
             // Content query results must be refreshed before content hooks are called.
             refreshContentQueries(tView, lView);
-            executeHooks(lView, tView.contentHooks, tView.contentCheckHooks, checkNoChangesMode, 1 /* AfterContentInitHooksToBeRun */);
+            resetPreOrderHookFlags(lView);
+            executeHooks(lView, tView.contentHooks, tView.contentCheckHooks, checkNoChangesMode, 1 /* AfterContentInitHooksToBeRun */, undefined);
             setHostBindings(tView, lView);
         }
         // We resolve content queries specifically marked as `static` in creation mode. Dynamic
@@ -34604,6 +34707,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         var lView = tView.blueprint.slice();
         lView[HOST] = host;
         lView[FLAGS] = flags | 4 /* CreationMode */ | 128 /* Attached */ | 8 /* FirstLViewPass */;
+        resetPreOrderHookFlags(lView);
         lView[PARENT] = lView[DECLARATION_VIEW] = parentLView;
         lView[CONTEXT] = context;
         lView[RENDERER_FACTORY] = (rendererFactory || parentLView && parentLView[RENDERER_FACTORY]);
@@ -34689,6 +34793,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 setIsParent(true);
                 setPreviousOrParentTNode(null);
                 oldView = enterView(viewToRender, viewToRender[T_HOST]);
+                resetPreOrderHookFlags(viewToRender);
                 namespaceHTML();
                 tView.template(getRenderFlags(viewToRender), context);
                 // This must be set to false immediately after the first creation run because in an
@@ -34724,6 +34829,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 hostView[FLAGS] &= ~4 /* CreationMode */;
             }
             // update mode pass
+            resetPreOrderHookFlags(hostView);
             templateFn && templateFn(2 /* Update */, context);
             refreshDescendantViews(hostView);
         }
@@ -34827,8 +34933,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             firstTemplatePass: true,
             staticViewQueries: false,
             staticContentQueries: false,
-            initHooks: null,
-            checkHooks: null,
+            preOrderHooks: null,
+            preOrderCheckHooks: null,
             contentHooks: null,
             contentCheckHooks: null,
             viewHooks: null,
@@ -35194,6 +35300,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         var templateFn = hostTView.template;
         var creationMode = isCreationMode(hostView);
         try {
+            resetPreOrderHookFlags(hostView);
             namespaceHTML();
             creationMode && executeViewQueryFn(1 /* Create */, hostTView, component);
             templateFn(getRenderFlags(hostView), component);
@@ -35564,7 +35671,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     function LifecycleHooksFeature(component, def) {
         var rootTView = readPatchedLView(component)[TVIEW];
         var dirIndex = rootTView.data.length - 1;
-        registerPreOrderHooks(dirIndex, def, rootTView);
+        registerPreOrderHooks(dirIndex, def, rootTView, -1, -1, -1);
         // TODO(misko): replace `as TNode` with createTNode call. (needs refactoring to lose dep on
         // LNode).
         registerPostOrderHooks(rootTView, { directiveStart: dirIndex, directiveEnd: dirIndex + 1 });
@@ -36608,7 +36715,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.6+83.sha-6215799.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-beta.6+84.sha-25166d4.with-local-changes');
 
     /**
      * @license
@@ -46990,7 +47097,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.6+83.sha-6215799.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-beta.6+84.sha-25166d4.with-local-changes');
 
     /**
      * @license
