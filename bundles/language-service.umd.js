@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.2.7+25.sha-3e08794.with-local-changes
+ * @license Angular v7.2.7+26.sha-c976b88.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -15441,7 +15441,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.2.7+25.sha-3e08794.with-local-changes');
+    var VERSION$1 = new Version('7.2.7+26.sha-c976b88.with-local-changes');
 
     /**
      * @license
@@ -33859,7 +33859,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.2.7+25.sha-3e08794.with-local-changes');
+    var VERSION$2 = new Version$1('7.2.7+26.sha-c976b88.with-local-changes');
 
     /**
      * @license
@@ -36819,7 +36819,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         }
     };
     /**
-     * Does the work of creating the `ngBaseDef` property for the @Input and @Output decorators.
+     * Does the work of creating the `ngBaseDef` property for the `Input` and `Output` decorators.
      * @param key "inputs" or "outputs"
      */
     var updateBaseDefFromIOProp = function (getProp) {
@@ -46032,7 +46032,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.2.7+25.sha-3e08794.with-local-changes');
+    var VERSION$3 = new Version$1('7.2.7+26.sha-c976b88.with-local-changes');
 
     /**
      * @license
