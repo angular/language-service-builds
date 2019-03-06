@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.7+5.sha-dc6192c.with-local-changes
+ * @license Angular v8.0.0-beta.7+8.sha-f96efd1.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -15936,7 +15936,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.7+5.sha-dc6192c.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-beta.7+8.sha-f96efd1.with-local-changes');
 
     /**
      * @license
@@ -34033,11 +34033,11 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             }
             if (nextTNode === null) {
                 // this last node was projected, we need to get back down to its projection node
-                if (tNode.next === null && (tNode.flags & 2 /* isProjected */)) {
+                if (tNode.projectionNext === null && (tNode.flags & 2 /* isProjected */)) {
                     currentView = projectionNodeStack[projectionNodeIndex--];
                     tNode = projectionNodeStack[projectionNodeIndex--];
                 }
-                nextTNode = tNode.next;
+                nextTNode = (tNode.flags & 2 /* isProjected */) ? tNode.projectionNext : tNode.next;
                 /**
                  * Find the next node in the TNode tree, taking into account the place where a node is
                  * projected (in the shadow DOM) rather than where it comes from (in the light DOM).
@@ -34049,7 +34049,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                     // If parent is null, we're crossing the view boundary, so we should get the host TNode.
                     tNode = tNode.parent || currentView[T_HOST];
                     if (tNode === null || tNode === rootTNode)
-                        return null;
+                        return;
                     // When exiting a container, the beforeNode must be restored to the previous value
                     if (tNode.type === 0 /* Container */) {
                         currentView = getLViewParent(currentView);
@@ -34066,7 +34066,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                         while (!currentView[NEXT] && currentView[PARENT] &&
                             !(tNode.parent && tNode.parent.next)) {
                             if (tNode === rootTNode)
-                                return null;
+                                return;
                             currentView = currentView[PARENT];
                             tNode = currentView[T_HOST];
                         }
@@ -35025,6 +35025,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             outputs: undefined,
             tViews: null,
             next: null,
+            projectionNext: null,
             child: null,
             parent: tParent,
             stylingTemplate: null,
@@ -36715,7 +36716,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.7+5.sha-dc6192c.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-beta.7+8.sha-f96efd1.with-local-changes');
 
     /**
      * @license
@@ -47097,7 +47098,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.7+5.sha-dc6192c.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-beta.7+8.sha-f96efd1.with-local-changes');
 
     /**
      * @license
