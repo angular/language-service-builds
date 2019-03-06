@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.7+4.sha-7102ea8.with-local-changes
+ * @license Angular v8.0.0-beta.7+9.sha-0bd4261.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -4535,7 +4535,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * TODO(FW-1136): this is a temporary solution, we need to come up with a better way of working with
      * inputs that contain potentially unsafe chars.
      */
-    var UNSAFE_OBJECT_KEY_NAME_REGEXP = /-/g;
+    var UNSAFE_OBJECT_KEY_NAME_REGEXP = /-/;
     /** Name of the temporary to use during data binding */
     var TEMPORARY_NAME = '_t';
     /** Name of the context parameter passed into a template function */
@@ -15921,7 +15921,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.7+4.sha-7102ea8.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-beta.7+9.sha-0bd4261.with-local-changes');
 
     /**
      * @license
@@ -35357,11 +35357,11 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             }
             if (nextTNode === null) {
                 // this last node was projected, we need to get back down to its projection node
-                if (tNode.next === null && (tNode.flags & 2 /* isProjected */)) {
+                if (tNode.projectionNext === null && (tNode.flags & 2 /* isProjected */)) {
                     currentView = projectionNodeStack[projectionNodeIndex--];
                     tNode = projectionNodeStack[projectionNodeIndex--];
                 }
-                nextTNode = tNode.next;
+                nextTNode = (tNode.flags & 2 /* isProjected */) ? tNode.projectionNext : tNode.next;
                 /**
                  * Find the next node in the TNode tree, taking into account the place where a node is
                  * projected (in the shadow DOM) rather than where it comes from (in the light DOM).
@@ -35373,7 +35373,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                     // If parent is null, we're crossing the view boundary, so we should get the host TNode.
                     tNode = tNode.parent || currentView[T_HOST];
                     if (tNode === null || tNode === rootTNode)
-                        return null;
+                        return;
                     // When exiting a container, the beforeNode must be restored to the previous value
                     if (tNode.type === 0 /* Container */) {
                         currentView = getLViewParent(currentView);
@@ -35390,7 +35390,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                         while (!currentView[NEXT] && currentView[PARENT] &&
                             !(tNode.parent && tNode.parent.next)) {
                             if (tNode === rootTNode)
-                                return null;
+                                return;
                             currentView = currentView[PARENT];
                             tNode = currentView[T_HOST];
                         }
@@ -35931,7 +35931,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                     nodeToProject.flags |= 2 /* isProjected */;
                     appendProjectedNode(nodeToProject, tProjectionNode, lView, projectedView);
                 }
-                nodeToProject = nodeToProject.next;
+                nodeToProject = nodeToProject.projectionNext;
             }
         }
     }
@@ -39127,6 +39127,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             outputs: undefined,
             tViews: null,
             next: null,
+            projectionNext: null,
             child: null,
             parent: tParent,
             stylingTemplate: null,
@@ -40205,22 +40206,20 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         var componentNode = findComponentView(getLView())[T_HOST];
         if (!componentNode.projection) {
             var noOfNodeBuckets = selectors ? selectors.length + 1 : 1;
-            var pData = componentNode.projection =
+            var projectionHeads = componentNode.projection =
                 new Array(noOfNodeBuckets).fill(null);
-            var tails = pData.slice();
+            var tails = projectionHeads.slice();
             var componentChild = componentNode.child;
             while (componentChild !== null) {
                 var bucketIndex = selectors ? matchingSelectorIndex(componentChild, selectors, textSelectors) : 0;
-                var nextNode = componentChild.next;
                 if (tails[bucketIndex]) {
-                    tails[bucketIndex].next = componentChild;
+                    tails[bucketIndex].projectionNext = componentChild;
                 }
                 else {
-                    pData[bucketIndex] = componentChild;
+                    projectionHeads[bucketIndex] = componentChild;
                 }
-                componentChild.next = null;
                 tails[bucketIndex] = componentChild;
-                componentChild = nextNode;
+                componentChild = componentChild.next;
             }
         }
     }
@@ -42904,7 +42903,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.7+4.sha-7102ea8.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-beta.7+9.sha-0bd4261.with-local-changes');
 
     /**
      * @license
@@ -56217,7 +56216,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.7+4.sha-7102ea8.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-beta.7+9.sha-0bd4261.with-local-changes');
 
     /**
      * @license
