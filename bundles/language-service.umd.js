@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.7+3.sha-6b98b53.with-local-changes
+ * @license Angular v8.0.0-beta.7+5.sha-dc6192c.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -4535,7 +4535,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * TODO(FW-1136): this is a temporary solution, we need to come up with a better way of working with
      * inputs that contain potentially unsafe chars.
      */
-    var UNSAFE_OBJECT_KEY_NAME_REGEXP = /-/g;
+    var UNSAFE_OBJECT_KEY_NAME_REGEXP = /-/;
     /** Name of the temporary to use during data binding */
     var TEMPORARY_NAME = '_t';
     /** Name of the context parameter passed into a template function */
@@ -15921,7 +15921,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.7+3.sha-6b98b53.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-beta.7+5.sha-dc6192c.with-local-changes');
 
     /**
      * @license
@@ -42904,7 +42904,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.7+3.sha-6b98b53.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-beta.7+5.sha-dc6192c.with-local-changes');
 
     /**
      * @license
@@ -56217,7 +56217,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.7+3.sha-6b98b53.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-beta.7+5.sha-dc6192c.with-local-changes');
 
     /**
      * @license
