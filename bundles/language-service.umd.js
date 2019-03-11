@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.7+55.sha-ca20f57.with-local-changes
+ * @license Angular v8.0.0-beta.7+56.sha-4b9eb61.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -15956,7 +15956,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.7+55.sha-ca20f57.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-beta.7+56.sha-4b9eb61.with-local-changes');
 
     /**
      * @license
@@ -43019,7 +43019,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.7+55.sha-ca20f57.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-beta.7+56.sha-4b9eb61.with-local-changes');
 
     /**
      * @license
@@ -56332,7 +56332,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.7+55.sha-ca20f57.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-beta.7+56.sha-4b9eb61.with-local-changes');
 
     /**
      * @license
