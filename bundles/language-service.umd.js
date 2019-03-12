@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.7+74.sha-7315a68.with-local-changes
+ * @license Angular v8.0.0-beta.7+79.sha-c09d0ed.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -15717,11 +15717,30 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * An interface for retrieving documents by URL that the compiler uses
+     * to load templates.
+     */
+    var ResourceLoader = /** @class */ (function () {
+        function ResourceLoader() {
+        }
+        ResourceLoader.prototype.get = function (url) { return ''; };
+        return ResourceLoader;
+    }());
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     var CompilerFacadeImpl = /** @class */ (function () {
         function CompilerFacadeImpl(jitEvaluator) {
             if (jitEvaluator === void 0) { jitEvaluator = new JitEvaluator(); }
             this.jitEvaluator = jitEvaluator;
             this.R3ResolvedDependencyType = R3ResolvedDependencyType;
+            this.ResourceLoader = ResourceLoader;
             this.elementSchemaRegistry = new DomElementSchemaRegistry();
         }
         CompilerFacadeImpl.prototype.compilePipe = function (angularCoreEnv, sourceMapUrl, facade) {
@@ -15956,7 +15975,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.7+74.sha-7315a68.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-beta.7+79.sha-c09d0ed.with-local-changes');
 
     /**
      * @license
@@ -23352,24 +23371,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         parts[_ComponentIndex.Path] = path$$1;
         return _joinAndCanonicalizePath(parts);
     }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * An interface for retrieving documents by URL that the compiler uses
-     * to load templates.
-     */
-    var ResourceLoader = /** @class */ (function () {
-        function ResourceLoader() {
-        }
-        ResourceLoader.prototype.get = function (url) { return ''; };
-        return ResourceLoader;
-    }());
 
     /**
      * @license
@@ -31380,6 +31381,75 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * Used to resolve resource URLs on `@Component` when used with JIT compilation.
+     *
+     * Example:
+     * ```
+     * @Component({
+     *   selector: 'my-comp',
+     *   templateUrl: 'my-comp.html', // This requires asynchronous resolution
+     * })
+     * class MyComponent{
+     * }
+     *
+     * // Calling `renderComponent` will fail because `renderComponent` is a synchronous process
+     * // and `MyComponent`'s `@Component.templateUrl` needs to be resolved asynchronously.
+     *
+     * // Calling `resolveComponentResources()` will resolve `@Component.templateUrl` into
+     * // `@Component.template`, which allows `renderComponent` to proceed in a synchronous manner.
+     *
+     * // Use browser's `fetch()` function as the default resource resolution strategy.
+     * resolveComponentResources(fetch).then(() => {
+     *   // After resolution all URLs have been converted into `template` strings.
+     *   renderComponent(MyComponent);
+     * });
+     *
+     * ```
+     *
+     * NOTE: In AOT the resolution happens during compilation, and so there should be no need
+     * to call this method outside JIT mode.
+     *
+     * @param resourceResolver a function which is responsible for returning a `Promise` to the
+     * contents of the resolved URL. Browser's `fetch()` method is a good default implementation.
+     */
+    function resolveComponentResources(resourceResolver) {
+        // Store all promises which are fetching the resources.
+        var urlFetches = [];
+        // Cache so that we don't fetch the same resource more than once.
+        var urlMap = new Map();
+        function cachedResourceResolve(url) {
+            var promise = urlMap.get(url);
+            if (!promise) {
+                var resp = resourceResolver(url);
+                urlMap.set(url, promise = resp.then(unwrapResponse));
+                urlFetches.push(promise);
+            }
+            return promise;
+        }
+        componentResourceResolutionQueue.forEach(function (component) {
+            if (component.templateUrl) {
+                cachedResourceResolve(component.templateUrl).then(function (template) {
+                    component.template = template;
+                });
+            }
+            var styleUrls = component.styleUrls;
+            var styles = component.styles || (component.styles = []);
+            var styleOffset = component.styles.length;
+            styleUrls && styleUrls.forEach(function (styleUrl, index) {
+                styles.push(''); // pre-allocate array.
+                cachedResourceResolve(styleUrl).then(function (style) {
+                    styles[styleOffset + index] = style;
+                    styleUrls.splice(styleUrls.indexOf(styleUrl), 1);
+                    if (styleUrls.length == 0) {
+                        component.styleUrls = undefined;
+                    }
+                });
+            });
+        });
+        clearResolutionOfComponentResourcesQueue();
+        return Promise.all(urlFetches).then(function () { return null; });
+    }
     var componentResourceResolutionQueue = new Set();
     function maybeQueueResolutionOfComponentResources(metadata) {
         if (componentNeedsResolution(metadata)) {
@@ -31389,6 +31459,15 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     function componentNeedsResolution(component) {
         return !!((component.templateUrl && !component.template) ||
             component.styleUrls && component.styleUrls.length);
+    }
+    function clearResolutionOfComponentResourcesQueue() {
+        componentResourceResolutionQueue.clear();
+    }
+    function isComponentResourceResolutionQueueEmpty() {
+        return componentResourceResolutionQueue.size === 0;
+    }
+    function unwrapResponse(response) {
+        return typeof response == 'string' ? response : response.text();
     }
 
     /**
@@ -43019,7 +43098,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.7+74.sha-7315a68.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-beta.7+79.sha-c09d0ed.with-local-changes');
 
     /**
      * @license
@@ -52123,7 +52202,26 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
     var compileNgModuleFactory = compileNgModuleFactory__POST_R3__;
     function compileNgModuleFactory__POST_R3__(injector, options, moduleType) {
         ngDevMode && assertNgModuleType(moduleType);
-        return Promise.resolve(new NgModuleFactory$1(moduleType));
+        var moduleFactory = new NgModuleFactory$1(moduleType);
+        if (isComponentResourceResolutionQueueEmpty()) {
+            return Promise.resolve(moduleFactory);
+        }
+        var compilerOptions = injector.get(COMPILER_OPTIONS, []).concat(options);
+        var compilerProviders = _mergeArrays(compilerOptions.map(function (o) { return o.providers; }));
+        // In case there are no compiler providers, we just return the module factory as
+        // there won't be any resource loader. This can happen with Ivy, because AOT compiled
+        // modules can be still passed through "bootstrapModule". In that case we shouldn't
+        // unnecessarily require the JIT compiler.
+        if (compilerProviders.length === 0) {
+            return Promise.resolve(moduleFactory);
+        }
+        var compiler = getCompilerFacade();
+        var compilerInjector = Injector.create({ providers: compilerProviders });
+        var resourceLoader = compilerInjector.get(compiler.ResourceLoader);
+        // The resource loader can also return a string while the "resolveComponentResources"
+        // always expects a promise. Therefore we need to wrap the returned value in a promise.
+        return resolveComponentResources(function (url) { return Promise.resolve(resourceLoader.get(url)); })
+            .then(function () { return moduleFactory; });
     }
     var isBoundToModule = isBoundToModule__POST_R3__;
     function isBoundToModule__POST_R3__(cf) {
@@ -52668,6 +52766,11 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         if (index > -1) {
             list.splice(index, 1);
         }
+    }
+    function _mergeArrays(parts) {
+        var result = [];
+        parts.forEach(function (part) { return part && result.push.apply(result, __spread(part)); });
+        return result;
     }
 
     /**
@@ -56329,7 +56432,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.7+74.sha-7315a68.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-beta.7+79.sha-c09d0ed.with-local-changes');
 
     /**
      * @license
