@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.7+60.sha-1d88c2b.with-local-changes
+ * @license Angular v8.0.0-beta.7+83.sha-c5daaa9.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -15732,11 +15732,30 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * An interface for retrieving documents by URL that the compiler uses
+     * to load templates.
+     */
+    var ResourceLoader = /** @class */ (function () {
+        function ResourceLoader() {
+        }
+        ResourceLoader.prototype.get = function (url) { return ''; };
+        return ResourceLoader;
+    }());
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     var CompilerFacadeImpl = /** @class */ (function () {
         function CompilerFacadeImpl(jitEvaluator) {
             if (jitEvaluator === void 0) { jitEvaluator = new JitEvaluator(); }
             this.jitEvaluator = jitEvaluator;
             this.R3ResolvedDependencyType = R3ResolvedDependencyType;
+            this.ResourceLoader = ResourceLoader;
             this.elementSchemaRegistry = new DomElementSchemaRegistry();
         }
         CompilerFacadeImpl.prototype.compilePipe = function (angularCoreEnv, sourceMapUrl, facade) {
@@ -15971,7 +15990,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.7+60.sha-1d88c2b.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-beta.7+83.sha-c5daaa9.with-local-changes');
 
     /**
      * @license
@@ -23367,24 +23386,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         parts[_ComponentIndex.Path] = path$$1;
         return _joinAndCanonicalizePath(parts);
     }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * An interface for retrieving documents by URL that the compiler uses
-     * to load templates.
-     */
-    var ResourceLoader = /** @class */ (function () {
-        function ResourceLoader() {
-        }
-        ResourceLoader.prototype.get = function (url) { return ''; };
-        return ResourceLoader;
-    }());
 
     /**
      * @license
@@ -36765,7 +36766,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.7+60.sha-1d88c2b.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-beta.7+83.sha-c5daaa9.with-local-changes');
 
     /**
      * @license
@@ -47147,7 +47148,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.7+60.sha-1d88c2b.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-beta.7+83.sha-c5daaa9.with-local-changes');
 
     /**
      * @license
