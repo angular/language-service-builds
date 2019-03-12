@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.7+68.sha-4227126.with-local-changes
+ * @license Angular v8.0.0-beta.7+74.sha-7315a68.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -15956,7 +15956,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.7+68.sha-4227126.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-beta.7+74.sha-7315a68.with-local-changes');
 
     /**
      * @license
@@ -43019,7 +43019,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.7+68.sha-4227126.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-beta.7+74.sha-7315a68.with-local-changes');
 
     /**
      * @license
@@ -46604,14 +46604,12 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         var rootIndex = i18nIndexStack[i18nIndexStackPointer--];
         var tI18n = tView.data[rootIndex + HEADER_OFFSET];
         ngDevMode && assertDefined(tI18n, "You should call i18nStart before i18nEnd");
-        // The last placeholder that was added before `i18nEnd`
-        var previousOrParentTNode = getPreviousOrParentTNode();
-        var visitedNodes = readCreateOpCodes(rootIndex, tI18n.create, tI18n.icus, viewData);
         // Find the last node that was added before `i18nEnd`
-        var lastCreatedNode = previousOrParentTNode;
+        var lastCreatedNode = getPreviousOrParentTNode();
         if (lastCreatedNode.child) {
             lastCreatedNode = findLastNode(lastCreatedNode.child);
         }
+        var visitedNodes = readCreateOpCodes(rootIndex, tI18n.create, tI18n.icus, viewData);
         // Remove deleted nodes
         for (var i = rootIndex + 1; i <= lastCreatedNode.index - HEADER_OFFSET; i++) {
             if (visitedNodes.indexOf(i) === -1) {
@@ -46664,7 +46662,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                         ngDevMode &&
                             assertDefined(currentTNode, "You need to create or select a node before you can insert it into the DOM");
                         previousTNode = appendI18nNode(currentTNode, destinationTNode, previousTNode);
-                        destinationTNode.next = null;
                         break;
                     case 0 /* Select */:
                         var nodeIndex = opCode >>> 3 /* SHIFT_REF */;
@@ -56332,7 +56329,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.7+68.sha-4227126.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-beta.7+74.sha-7315a68.with-local-changes');
 
     /**
      * @license
