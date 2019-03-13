@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.8+1.sha-940fbf7.with-local-changes
+ * @license Angular v8.0.0-beta.8+9.sha-75748d6.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -6447,22 +6447,22 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Construct an `R3NgModuleDef` for the given `R3NgModuleMetadata`.
      */
     function compileNgModule(meta) {
-        var moduleType = meta.type, bootstrap = meta.bootstrap, declarations = meta.declarations, imports = meta.imports, exports = meta.exports, schemas = meta.schemas;
+        var moduleType = meta.type, bootstrap = meta.bootstrap, declarations = meta.declarations, imports = meta.imports, exports = meta.exports, schemas = meta.schemas, containsForwardDecls = meta.containsForwardDecls;
         var definitionMap = {
             type: moduleType
         };
         // Only generate the keys in the metadata if the arrays have values.
         if (bootstrap.length) {
-            definitionMap.bootstrap = literalArr(bootstrap.map(function (ref) { return ref.value; }));
+            definitionMap.bootstrap = refsToArray(bootstrap, containsForwardDecls);
         }
         if (declarations.length) {
-            definitionMap.declarations = literalArr(declarations.map(function (ref) { return ref.value; }));
+            definitionMap.declarations = refsToArray(declarations, containsForwardDecls);
         }
         if (imports.length) {
-            definitionMap.imports = literalArr(imports.map(function (ref) { return ref.value; }));
+            definitionMap.imports = refsToArray(imports, containsForwardDecls);
         }
         if (exports.length) {
-            definitionMap.exports = literalArr(exports.map(function (ref) { return ref.value; }));
+            definitionMap.exports = refsToArray(exports, containsForwardDecls);
         }
         if (schemas && schemas.length) {
             definitionMap.schemas = literalArr(schemas.map(function (ref) { return ref.value; }));
@@ -6493,6 +6493,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     function tupleTypeOf(exp) {
         var types = exp.map(function (ref) { return typeofExpr(ref.type); });
         return exp.length > 0 ? expressionType(literalArr(types)) : NONE_TYPE;
+    }
+    function refsToArray(refs, shouldForwardDeclare) {
+        var values = literalArr(refs.map(function (ref) { return ref.value; }));
+        return shouldForwardDeclare ? fn([], [new ReturnStatement(values)]) : values;
     }
 
     /**
@@ -15802,6 +15806,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 imports: facade.imports.map(wrapReference),
                 exports: facade.exports.map(wrapReference),
                 emitInline: true,
+                containsForwardDecls: false,
                 schemas: facade.schemas ? facade.schemas.map(wrapReference) : null,
             };
             var res = compileNgModule(meta);
@@ -15990,7 +15995,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.8+1.sha-940fbf7.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-beta.8+9.sha-75748d6.with-local-changes');
 
     /**
      * @license
@@ -31469,6 +31474,17 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     function isPropMetadataString(str) {
         return str.indexOf(INTERPOLATION_DELIMITER) >= 0;
     }
+    /**
+     * Unwrap a value which might be behind a closure (for forward declaration reasons).
+     */
+    function maybeUnwrapFn(value) {
+        if (value instanceof Function) {
+            return value();
+        }
+        else {
+            return value;
+        }
+    }
 
     /**
      * @license
@@ -36766,7 +36782,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.8+1.sha-940fbf7.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-beta.8+9.sha-75748d6.with-local-changes');
 
     /**
      * @license
@@ -39843,7 +39859,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             _this.destroyCbs = [];
             var ngModuleDef = getNgModuleDef(ngModuleType);
             ngDevMode && assertDefined(ngModuleDef, "NgModule '" + stringify$1(ngModuleType) + "' is not a subtype of 'NgModuleType'.");
-            _this._bootstrapComponents = ngModuleDef.bootstrap;
+            _this._bootstrapComponents = maybeUnwrapFn(ngModuleDef.bootstrap);
             var additionalProviders = [
                 {
                     provide: NgModuleRef,
@@ -47148,7 +47164,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.8+1.sha-940fbf7.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-beta.8+9.sha-75748d6.with-local-changes');
 
     /**
      * @license
