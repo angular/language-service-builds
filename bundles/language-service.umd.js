@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.8+5.sha-1625d86.with-local-changes
+ * @license Angular v8.0.0-beta.8+6.sha-73da279.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -6432,22 +6432,22 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Construct an `R3NgModuleDef` for the given `R3NgModuleMetadata`.
      */
     function compileNgModule(meta) {
-        var moduleType = meta.type, bootstrap = meta.bootstrap, declarations = meta.declarations, imports = meta.imports, exports = meta.exports, schemas = meta.schemas;
+        var moduleType = meta.type, bootstrap = meta.bootstrap, declarations = meta.declarations, imports = meta.imports, exports = meta.exports, schemas = meta.schemas, containsForwardDecls = meta.containsForwardDecls;
         var definitionMap = {
             type: moduleType
         };
         // Only generate the keys in the metadata if the arrays have values.
         if (bootstrap.length) {
-            definitionMap.bootstrap = literalArr(bootstrap.map(function (ref) { return ref.value; }));
+            definitionMap.bootstrap = refsToArray(bootstrap, containsForwardDecls);
         }
         if (declarations.length) {
-            definitionMap.declarations = literalArr(declarations.map(function (ref) { return ref.value; }));
+            definitionMap.declarations = refsToArray(declarations, containsForwardDecls);
         }
         if (imports.length) {
-            definitionMap.imports = literalArr(imports.map(function (ref) { return ref.value; }));
+            definitionMap.imports = refsToArray(imports, containsForwardDecls);
         }
         if (exports.length) {
-            definitionMap.exports = literalArr(exports.map(function (ref) { return ref.value; }));
+            definitionMap.exports = refsToArray(exports, containsForwardDecls);
         }
         if (schemas && schemas.length) {
             definitionMap.schemas = literalArr(schemas.map(function (ref) { return ref.value; }));
@@ -6478,6 +6478,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     function tupleTypeOf(exp) {
         var types = exp.map(function (ref) { return typeofExpr(ref.type); });
         return exp.length > 0 ? expressionType(literalArr(types)) : NONE_TYPE;
+    }
+    function refsToArray(refs, shouldForwardDeclare) {
+        var values = literalArr(refs.map(function (ref) { return ref.value; }));
+        return shouldForwardDeclare ? fn([], [new ReturnStatement(values)]) : values;
     }
 
     /**
@@ -15787,6 +15791,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 imports: facade.imports.map(wrapReference),
                 exports: facade.exports.map(wrapReference),
                 emitInline: true,
+                containsForwardDecls: false,
                 schemas: facade.schemas ? facade.schemas.map(wrapReference) : null,
             };
             var res = compileNgModule(meta);
@@ -15975,7 +15980,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.8+5.sha-1625d86.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-beta.8+6.sha-73da279.with-local-changes');
 
     /**
      * @license
@@ -31667,6 +31672,17 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     function isPropMetadataString(str) {
         return str.indexOf(INTERPOLATION_DELIMITER) >= 0;
     }
+    /**
+     * Unwrap a value which might be behind a closure (for forward declaration reasons).
+     */
+    function maybeUnwrapFn(value) {
+        if (value instanceof Function) {
+            return value();
+        }
+        else {
+            return value;
+        }
+    }
 
     /**
      * @license
@@ -43126,7 +43142,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.8+5.sha-1625d86.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-beta.8+6.sha-73da279.with-local-changes');
 
     /**
      * @license
@@ -47669,7 +47685,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             _this.destroyCbs = [];
             var ngModuleDef = getNgModuleDef(ngModuleType);
             ngDevMode && assertDefined(ngModuleDef, "NgModule '" + stringify$1(ngModuleType) + "' is not a subtype of 'NgModuleType'.");
-            _this._bootstrapComponents = ngModuleDef.bootstrap;
+            _this._bootstrapComponents = maybeUnwrapFn(ngModuleDef.bootstrap);
             var additionalProviders = [
                 {
                     provide: NgModuleRef,
@@ -50671,11 +50687,14 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         moduleType = resolveForwardRef$1(moduleType);
         var ngModuleDef = getNgModuleDef(moduleType, true);
         var errors = [];
-        ngModuleDef.declarations.forEach(verifyDeclarationsHaveDefinitions);
-        var combinedDeclarations = __spread(ngModuleDef.declarations.map(resolveForwardRef$1), flatten$4(ngModuleDef.imports.map(computeCombinedExports), resolveForwardRef$1));
-        ngModuleDef.exports.forEach(verifyExportsAreDeclaredOrReExported);
-        ngModuleDef.declarations.forEach(verifyDeclarationIsUnique);
-        ngModuleDef.declarations.forEach(verifyComponentEntryComponentsIsPartOfNgModule);
+        var declarations = maybeUnwrapFn(ngModuleDef.declarations);
+        var imports = maybeUnwrapFn(ngModuleDef.imports);
+        var exports = maybeUnwrapFn(ngModuleDef.exports);
+        declarations.forEach(verifyDeclarationsHaveDefinitions);
+        var combinedDeclarations = __spread(declarations.map(resolveForwardRef$1), flatten$4(imports.map(computeCombinedExports), resolveForwardRef$1));
+        exports.forEach(verifyExportsAreDeclaredOrReExported);
+        declarations.forEach(verifyDeclarationIsUnique);
+        declarations.forEach(verifyComponentEntryComponentsIsPartOfNgModule);
         var ngModule = getAnnotation(moduleType, 'NgModule');
         if (ngModule) {
             ngModule.imports &&
@@ -50786,15 +50805,14 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
     var ownerNgModule = new Map();
     var verifiedNgModule = new Map();
     /**
-     * Computes the combined declarations of explicit declarations, as well as declarations inherited
-     * by
+     * Computes the combined declarations of explicit declarations, as well as declarations inherited by
      * traversing the exports of imported modules.
      * @param type
      */
     function computeCombinedExports(type) {
         type = resolveForwardRef$1(type);
         var ngModuleDef = getNgModuleDef(type, true);
-        return __spread(flatten$4(ngModuleDef.exports.map(function (type) {
+        return __spread(flatten$4(maybeUnwrapFn(ngModuleDef.exports).map(function (type) {
             var ngModuleDef = getNgModuleDef(type);
             if (ngModuleDef) {
                 verifySemanticsOfNgModuleDef(type);
@@ -50868,7 +50886,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 pipes: new Set(),
             },
         };
-        def.declarations.forEach(function (declared) {
+        maybeUnwrapFn(def.declarations).forEach(function (declared) {
             var declaredWithDefs = declared;
             if (getPipeDef(declaredWithDefs)) {
                 scopes.compilation.pipes.add(declared);
@@ -50880,7 +50898,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 scopes.compilation.directives.add(declared);
             }
         });
-        def.imports.forEach(function (imported) {
+        maybeUnwrapFn(def.imports).forEach(function (imported) {
             var importedType = imported;
             if (!isNgModule(importedType)) {
                 throw new Error("Importing " + importedType.name + " which does not have an ngModuleDef");
@@ -50894,7 +50912,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             importedScope.exported.directives.forEach(function (entry) { return scopes.compilation.directives.add(entry); });
             importedScope.exported.pipes.forEach(function (entry) { return scopes.compilation.pipes.add(entry); });
         });
-        def.exports.forEach(function (exported) {
+        maybeUnwrapFn(def.exports).forEach(function (exported) {
             var exportedType = exported;
             // Either the type is a module, a pipe, or a component/directive (which may not have an
             // ngComponentDef as it might be compiled asynchronously).
@@ -51516,7 +51534,8 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
     var Compiler_compileModuleAndAllComponentsSync__POST_R3__ = function (moduleType) {
         var ngModuleFactory = Compiler_compileModuleSync__POST_R3__(moduleType);
         var moduleDef = getNgModuleDef(moduleType);
-        var componentFactories = moduleDef.declarations.reduce(function (factories, declaration) {
+        var componentFactories = maybeUnwrapFn(moduleDef.declarations)
+            .reduce(function (factories, declaration) {
             var componentDef = getComponentDef(declaration);
             componentDef && factories.push(new ComponentFactory$1(componentDef));
             return factories;
@@ -56460,7 +56479,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.8+5.sha-1625d86.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-beta.8+6.sha-73da279.with-local-changes');
 
     /**
      * @license
