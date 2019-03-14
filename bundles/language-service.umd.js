@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.8+10.sha-eb00a37.with-local-changes
+ * @license Angular v8.0.0-beta.8+13.sha-0ffa2f2.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -15165,6 +15165,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             // e.g. `contentQueries: (rf, ctx, dirIndex) => { ... }
             definitionMap.set('contentQueries', createContentQueriesFunction(meta, constantPool));
         }
+        if (meta.viewQueries.length) {
+            definitionMap.set('viewQuery', createViewQueriesFunction(meta, constantPool));
+        }
         // Initialize hostVarsCount to number of bound host properties (interpolations illegal),
         // except 'style' and 'class' properties, since they should *not* allocate host var slots
         var hostVarsCount = Object.keys(meta.host.properties)
@@ -15268,9 +15271,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 finally { if (e_1) throw e_1.error; }
             }
             directiveMatcher = matcher;
-        }
-        if (meta.viewQueries.length) {
-            definitionMap.set('viewQuery', createViewQueriesFunction(meta, constantPool));
         }
         // e.g. `template: function MyComponent_Template(_ctx, _cm) {...}`
         var templateTypeName = meta.name;
@@ -15834,7 +15834,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             }
             // Compile the component metadata, including template, into an expression.
             // TODO(alxhub): implement inputs, outputs, queries, etc.
-            var res = compileComponentFromMetadata(__assign({}, facade, convertDirectiveFacadeToMetadata(facade), { selector: facade.selector || this.elementSchemaRegistry.getDefaultComponentElementName(), template: template, viewQueries: facade.viewQueries.map(convertToR3QueryMetadata), wrapDirectivesAndPipesInClosure: false, styles: facade.styles || [], encapsulation: facade.encapsulation, interpolation: interpolationConfig, changeDetection: facade.changeDetection, animations: facade.animations != null ? new WrappedNodeExpr(facade.animations) : null, viewProviders: facade.viewProviders != null ? new WrappedNodeExpr(facade.viewProviders) :
+            var res = compileComponentFromMetadata(__assign({}, facade, convertDirectiveFacadeToMetadata(facade), { selector: facade.selector || this.elementSchemaRegistry.getDefaultComponentElementName(), template: template, wrapDirectivesAndPipesInClosure: false, styles: facade.styles || [], encapsulation: facade.encapsulation, interpolation: interpolationConfig, changeDetection: facade.changeDetection, animations: facade.animations != null ? new WrappedNodeExpr(facade.animations) : null, viewProviders: facade.viewProviders != null ? new WrappedNodeExpr(facade.viewProviders) :
                     null, relativeContextFilePath: '', i18nUseExternalIds: true }), constantPool, makeBindingParser(interpolationConfig));
             var preStatements = __spread(constantPool.statements, res.statements);
             return this.jitExpression(res.expression, angularCoreEnv, "ng:///" + facade.name + ".js", preStatements);
@@ -15897,7 +15897,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         for (var field in propMetadata) {
             _loop_1(field);
         }
-        return __assign({}, facade, { typeSourceSpan: facade.typeSourceSpan, type: new WrappedNodeExpr(facade.type), deps: convertR3DependencyMetadataArray(facade.deps), host: extractHostBindings(facade.host, facade.propMetadata, facade.typeSourceSpan), inputs: __assign({}, inputsFromMetadata, inputsFromType), outputs: __assign({}, outputsFromMetadata, outputsFromType), queries: facade.queries.map(convertToR3QueryMetadata), providers: facade.providers != null ? new WrappedNodeExpr(facade.providers) : null });
+        return __assign({}, facade, { typeSourceSpan: facade.typeSourceSpan, type: new WrappedNodeExpr(facade.type), deps: convertR3DependencyMetadataArray(facade.deps), host: extractHostBindings(facade.host, facade.propMetadata, facade.typeSourceSpan), inputs: __assign({}, inputsFromMetadata, inputsFromType), outputs: __assign({}, outputsFromMetadata, outputsFromType), queries: facade.queries.map(convertToR3QueryMetadata), providers: facade.providers != null ? new WrappedNodeExpr(facade.providers) : null, viewQueries: facade.viewQueries.map(convertToR3QueryMetadata) });
     }
     function wrapExpression(obj, property) {
         if (obj.hasOwnProperty(property)) {
@@ -15995,7 +15995,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.8+10.sha-eb00a37.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-beta.8+13.sha-0ffa2f2.with-local-changes');
 
     /**
      * @license
@@ -36782,7 +36782,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.8+10.sha-eb00a37.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-beta.8+13.sha-0ffa2f2.with-local-changes');
 
     /**
      * @license
@@ -47164,7 +47164,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.8+10.sha-eb00a37.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-beta.8+13.sha-0ffa2f2.with-local-changes');
 
     /**
      * @license
