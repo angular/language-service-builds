@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.8+32.sha-487d415.with-local-changes
+ * @license Angular v8.0.0-beta.8+33.sha-7c297e0.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -15953,7 +15953,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.8+32.sha-487d415.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-beta.8+33.sha-7c297e0.with-local-changes');
 
     /**
      * @license
@@ -43120,7 +43120,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.8+32.sha-487d415.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-beta.8+33.sha-7c297e0.with-local-changes');
 
     /**
      * @license
@@ -46687,15 +46687,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         ngDevMode && assertDefined(tView, "tView should be defined");
         i18nEndFirstPass(tView);
     }
-    function findLastNode(node) {
-        while (node.next) {
-            node = node.next;
-        }
-        if (node.child) {
-            return findLastNode(node.child);
-        }
-        return node;
-    }
     /**
      * See `i18nEnd` above.
      */
@@ -46707,9 +46698,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         ngDevMode && assertDefined(tI18n, "You should call i18nStart before i18nEnd");
         // Find the last node that was added before `i18nEnd`
         var lastCreatedNode = getPreviousOrParentTNode();
-        if (lastCreatedNode.child) {
-            lastCreatedNode = findLastNode(lastCreatedNode.child);
-        }
+        // Read the instructions to insert/move/remove DOM elements
         var visitedNodes = readCreateOpCodes(rootIndex, tI18n.create, tI18n.icus, viewData);
         // Remove deleted nodes
         for (var i = rootIndex + 1; i <= lastCreatedNode.index - HEADER_OFFSET; i++) {
@@ -56384,7 +56373,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.8+32.sha-487d415.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-beta.8+33.sha-7c297e0.with-local-changes');
 
     /**
      * @license
