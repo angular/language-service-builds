@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.8+20.sha-a3e1054.with-local-changes
+ * @license Angular v8.0.0-beta.8+25.sha-410ccac.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -2600,24 +2600,24 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             this.pipeDefinitions = new Map();
             this.nextNameIndex = 0;
         }
-        ConstantPool.prototype.getConstLiteral = function (literal$$1, forceShared) {
-            if (literal$$1 instanceof LiteralExpr || literal$$1 instanceof FixupExpression) {
+        ConstantPool.prototype.getConstLiteral = function (literal, forceShared) {
+            if (literal instanceof LiteralExpr || literal instanceof FixupExpression) {
                 // Do no put simple literals into the constant pool or try to produce a constant for a
                 // reference to a constant.
-                return literal$$1;
+                return literal;
             }
-            var key = this.keyOf(literal$$1);
+            var key = this.keyOf(literal);
             var fixup = this.literals.get(key);
             var newValue = false;
             if (!fixup) {
-                fixup = new FixupExpression(literal$$1);
+                fixup = new FixupExpression(literal);
                 this.literals.set(key, fixup);
                 newValue = true;
             }
             if ((!newValue && !fixup.shared) || (newValue && forceShared)) {
                 // Replace the expression with a variable
                 var name_1 = this.freshName();
-                this.statements.push(variable(name_1).set(literal$$1).toDeclStmt(INFERRED_TYPE, [StmtModifier.Final]));
+                this.statements.push(variable(name_1).set(literal).toDeclStmt(INFERRED_TYPE, [StmtModifier.Final]));
                 fixup.fixup(variable(name_1));
             }
             return fixup;
@@ -2640,24 +2640,24 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             }
             return fixup;
         };
-        ConstantPool.prototype.getLiteralFactory = function (literal$$1) {
+        ConstantPool.prototype.getLiteralFactory = function (literal$1) {
             // Create a pure function that builds an array of a mix of constant  and variable expressions
-            if (literal$$1 instanceof LiteralArrayExpr) {
-                var argumentsForKey = literal$$1.entries.map(function (e) { return e.isConstant() ? e : literal(null); });
+            if (literal$1 instanceof LiteralArrayExpr) {
+                var argumentsForKey = literal$1.entries.map(function (e) { return e.isConstant() ? e : literal(null); });
                 var key = this.keyOf(literalArr(argumentsForKey));
-                return this._getLiteralFactory(key, literal$$1.entries, function (entries) { return literalArr(entries); });
+                return this._getLiteralFactory(key, literal$1.entries, function (entries) { return literalArr(entries); });
             }
             else {
-                var expressionForKey = literalMap(literal$$1.entries.map(function (e) { return ({
+                var expressionForKey = literalMap(literal$1.entries.map(function (e) { return ({
                     key: e.key,
                     value: e.value.isConstant() ? e.value : literal(null),
                     quoted: e.quoted
                 }); }));
                 var key = this.keyOf(expressionForKey);
-                return this._getLiteralFactory(key, literal$$1.entries.map(function (e) { return e.value; }), function (entries) { return literalMap(entries.map(function (value, index) { return ({
-                    key: literal$$1.entries[index].key,
+                return this._getLiteralFactory(key, literal$1.entries.map(function (e) { return e.value; }), function (entries) { return literalMap(entries.map(function (value, index) { return ({
+                    key: literal$1.entries[index].key,
                     value: value,
-                    quoted: literal$$1.entries[index].quoted
+                    quoted: literal$1.entries[index].quoted
                 }); })); });
             }
         };
@@ -4485,13 +4485,13 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     var I18N_ICU_MAPPING_PREFIX = 'I18N_EXP_';
     /** Placeholder wrapper for i18n expressions **/
     var I18N_PLACEHOLDER_SYMBOL = '�';
-    function i18nTranslationToDeclStmt(variable$$1, message, params) {
+    function i18nTranslationToDeclStmt(variable$1, message, params) {
         var args = [literal(message)];
         if (params && Object.keys(params).length) {
             args.push(mapLiteral(params, true));
         }
         var fnCall = variable(GOOG_GET_MSG).callFn(args);
-        return variable$$1.set(fnCall).toDeclStmt(INFERRED_TYPE, [StmtModifier.Final]);
+        return variable$1.set(fnCall).toDeclStmt(INFERRED_TYPE, [StmtModifier.Final]);
     }
     // Converts i18n meta informations for a message (id, description, meaning)
     // to a JsDoc statement formatted as expected by the Closure compiler.
@@ -4661,7 +4661,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @param transformFn Optional transformation (post processing) function reference
      * @returns Array of Statements that represent a given translation
      */
-    function getTranslationDeclStmts(variable$$1, message, meta, params, transformFn) {
+    function getTranslationDeclStmts(variable$1, message, meta, params, transformFn) {
         if (params === void 0) { params = {}; }
         var statements = [];
         var docStatements = i18nMetaToDocStmt(meta);
@@ -4669,16 +4669,16 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             statements.push(docStatements);
         }
         if (transformFn) {
-            statements.push(i18nTranslationToDeclStmt(variable$$1, message, params));
+            statements.push(i18nTranslationToDeclStmt(variable$1, message, params));
             // Closure Compiler doesn't allow non-goo.getMsg const names to start with `MSG_`,
             // so we update variable name prefix in case post processing is required, so we can
             // assign the result of post-processing function to the var that starts with `I18N_`
-            var raw = variable(variable$$1.name);
-            variable$$1.name = variable$$1.name.replace(CLOSURE_TRANSLATION_MATCHER_REGEXP, TRANSLATION_PREFIX);
-            statements.push(variable$$1.set(transformFn(raw)).toDeclStmt(INFERRED_TYPE, [StmtModifier.Final]));
+            var raw = variable(variable$1.name);
+            variable$1.name = variable$1.name.replace(CLOSURE_TRANSLATION_MATCHER_REGEXP, TRANSLATION_PREFIX);
+            statements.push(variable$1.set(transformFn(raw)).toDeclStmt(INFERRED_TYPE, [StmtModifier.Final]));
         }
         else {
-            statements.push(i18nTranslationToDeclStmt(variable$$1, message, params));
+            statements.push(i18nTranslationToDeclStmt(variable$1, message, params));
         }
         return statements;
     }
@@ -6052,8 +6052,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 var headerLines = emptyFn.slice(0, emptyFn.indexOf('return null;')).split('\n').length - 1;
                 fnBody += "\n" + ctx.toSourceMapGenerator(sourceUrl, headerLines).toJsComment();
             }
-            var fn$$1 = new (Function.bind.apply(Function, __spread([void 0], fnArgNames.concat(fnBody))))();
-            return this.executeFunction(fn$$1, fnArgValues);
+            var fn = new (Function.bind.apply(Function, __spread([void 0], fnArgNames.concat(fnBody))))();
+            return this.executeFunction(fn, fnArgValues);
         };
         /**
          * Execute a JIT generated function by calling it.
@@ -6065,7 +6065,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
          * @param args The arguments to pass to the function being executed.
          * @returns The return value of the executed function.
          */
-        JitEvaluator.prototype.executeFunction = function (fn$$1, args) { return fn$$1.apply(void 0, __spread(args)); };
+        JitEvaluator.prototype.executeFunction = function (fn, args) { return fn.apply(void 0, __spread(args)); };
         return JitEvaluator;
     }());
     /**
@@ -10247,9 +10247,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * `['+' at 1-10, 'a' at 1-2]`.
      */
     var AstPath = /** @class */ (function () {
-        function AstPath(path$$1, position) {
+        function AstPath(path, position) {
             if (position === void 0) { position = -1; }
-            this.path = path$$1;
+            this.path = path;
             this.position = position;
         }
         Object.defineProperty(AstPath.prototype, "empty", {
@@ -10370,7 +10370,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         });
         return result;
     }
-    var RecursiveVisitor$1 = /** @class */ (function () {
+    var RecursiveVisitor = /** @class */ (function () {
         function RecursiveVisitor() {
         }
         RecursiveVisitor.prototype.visitElement = function (ast, context) {
@@ -10412,7 +10412,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         return { start: start, end: end };
     }
     function findNode(nodes, position) {
-        var path$$1 = [];
+        var path = [];
         var visitor = new /** @class */ (function (_super) {
             __extends(class_1, _super);
             function class_1() {
@@ -10421,7 +10421,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             class_1.prototype.visit = function (ast, context) {
                 var span = spanOf(ast);
                 if (span.start <= position && position < span.end) {
-                    path$$1.push(ast);
+                    path.push(ast);
                 }
                 else {
                     // Returning a value here will result in the children being skipped.
@@ -10429,9 +10429,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 }
             };
             return class_1;
-        }(RecursiveVisitor$1));
+        }(RecursiveVisitor));
         visitAll$1(visitor, nodes);
-        return new AstPath(path$$1, position);
+        return new AstPath(path, position);
     }
 
     /**
@@ -12534,8 +12534,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             var e_1, _a;
             try {
                 for (var errors_1 = __values(errors), errors_1_1 = errors_1.next(); !errors_1_1.done; errors_1_1 = errors_1.next()) {
-                    var error$$1 = errors_1_1.value;
-                    this._reportError(error$$1.message, sourceSpan);
+                    var error = errors_1_1.value;
+                    this._reportError(error.message, sourceSpan);
                 }
             }
             catch (e_1_1) { e_1 = { error: e_1_1 }; }
@@ -13829,11 +13829,11 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 _this.creationInstruction(null, Identifiers$1.pipe, [literal(slot), literal(name)]);
             });
         }
-        TemplateDefinitionBuilder.prototype.registerContextVariables = function (variable$$1) {
+        TemplateDefinitionBuilder.prototype.registerContextVariables = function (variable$1) {
             var scopedName = this._bindingScope.freshReferenceName();
             var retrievalLevel = this.level;
-            var lhs = variable(variable$$1.name + scopedName);
-            this._bindingScope.set(retrievalLevel, variable$$1.name, lhs, 1 /* CONTEXT */, function (scope, relativeLevel) {
+            var lhs = variable(variable$1.name + scopedName);
+            this._bindingScope.set(retrievalLevel, variable$1.name, lhs, 1 /* CONTEXT */, function (scope, relativeLevel) {
                 var rhs;
                 if (scope.bindingLevel === retrievalLevel) {
                     // e.g. ctx
@@ -13845,7 +13845,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                     rhs = sharedCtxVar ? sharedCtxVar : generateNextContextExpr(relativeLevel);
                 }
                 // e.g. const $item$ = x(2).$implicit;
-                return [lhs.set(rhs.prop(variable$$1.value || IMPLICIT_REFERENCE)).toConstDecl()];
+                return [lhs.set(rhs.prop(variable$1.value || IMPLICIT_REFERENCE)).toConstDecl()];
             });
         };
         TemplateDefinitionBuilder.prototype.buildTemplateFunction = function (nodes, variables, ngContentSelectorsOffset, i18n) {
@@ -13904,9 +13904,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 this.i18nEnd(null, selfClosingI18nInstruction);
             }
             // Generate all the creation mode instructions (e.g. resolve bindings in listeners)
-            var creationStatements = this._creationCodeFns.map(function (fn$$1) { return fn$$1(); });
+            var creationStatements = this._creationCodeFns.map(function (fn) { return fn(); });
             // Generate all the update mode instructions (e.g. resolve property or text bindings)
-            var updateStatements = this._updateCodeFns.map(function (fn$$1) { return fn$$1(); });
+            var updateStatements = this._updateCodeFns.map(function (fn) { return fn(); });
             //  Variable declaration must occur after binding resolution so we can generate context
             //  instructions that build on each other.
             // e.g. const b = nextContext().$implicit(); const b = nextContext();
@@ -14116,7 +14116,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             var i18nAttrs = [];
             var outputAttrs = [];
             var _b = __read(splitNsName(element.name), 2), namespaceKey = _b[0], elementName = _b[1];
-            var isNgContainer$$1 = isNgContainer(element.name);
+            var isNgContainer$1 = isNgContainer(element.name);
             try {
                 // Handle styling, i18n, ngNonBindable attributes
                 for (var _c = __values(element.attributes), _d = _c.next(); !_d.done; _d = _c.next()) {
@@ -14150,7 +14150,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             this.matchDirectives(element.name, element);
             // Regular element or ng-container creation mode
             var parameters = [literal(elementIndex)];
-            if (!isNgContainer$$1) {
+            if (!isNgContainer$1) {
                 parameters.push(literal(elementName));
             }
             // Add the attributes
@@ -14199,7 +14199,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 }
                 return element.children.length > 0;
             };
-            var createSelfClosingInstruction = !stylingBuilder.hasBindings && !isNgContainer$$1 &&
+            var createSelfClosingInstruction = !stylingBuilder.hasBindings && !isNgContainer$1 &&
                 element.outputs.length === 0 && i18nAttrs.length === 0 && !hasChildren();
             var createSelfClosingI18nInstruction = !createSelfClosingInstruction &&
                 !stylingBuilder.hasBindings && hasTextChildrenOnly(element.children);
@@ -14207,7 +14207,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 this.creationInstruction(element.sourceSpan, Identifiers$1.element, trimTrailingNulls(parameters));
             }
             else {
-                this.creationInstruction(element.sourceSpan, isNgContainer$$1 ? Identifiers$1.elementContainerStart : Identifiers$1.elementStart, trimTrailingNulls(parameters));
+                this.creationInstruction(element.sourceSpan, isNgContainer$1 ? Identifiers$1.elementContainerStart : Identifiers$1.elementStart, trimTrailingNulls(parameters));
                 if (isNonBindableMode) {
                     this.creationInstruction(element.sourceSpan, Identifiers$1.disableBindings);
                 }
@@ -14344,7 +14344,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 if (isNonBindableMode) {
                     this.creationInstruction(span, Identifiers$1.enableBindings);
                 }
-                this.creationInstruction(span, isNgContainer$$1 ? Identifiers$1.elementContainerEnd : Identifiers$1.elementEnd);
+                this.creationInstruction(span, isNgContainer$1 ? Identifiers$1.elementContainerEnd : Identifiers$1.elementEnd);
             }
         };
         TemplateDefinitionBuilder.prototype.visitTemplate = function (template) {
@@ -14712,10 +14712,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 // If the literal has calculated (non-literal) elements transform it into
                 // calls to literal factories that compose the literal and will cache intermediate
                 // values. Otherwise, just return an literal array that contains the values.
-                var literal$$1 = literalArr(values);
+                var literal = literalArr(values);
                 return values.every(function (a) { return a.isConstant(); }) ?
-                    _this.constantPool.getConstLiteral(literal$$1, true) :
-                    getLiteralFactory(_this.constantPool, literal$$1, _this.allocatePureFunctionSlots);
+                    _this.constantPool.getConstLiteral(literal, true) :
+                    getLiteralFactory(_this.constantPool, literal, _this.allocatePureFunctionSlots);
             });
         };
         ValueConverter.prototype.visitLiteralMap = function (map, context) {
@@ -14724,10 +14724,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 // If the literal has calculated (non-literal) elements  transform it into
                 // calls to literal factories that compose the literal and will cache intermediate
                 // values. Otherwise, just return an literal array that contains the values.
-                var literal$$1 = literalMap(values.map(function (value, index) { return ({ key: map.keys[index].key, value: value, quoted: map.keys[index].quoted }); }));
+                var literal = literalMap(values.map(function (value, index) { return ({ key: map.keys[index].key, value: value, quoted: map.keys[index].quoted }); }));
                 return values.every(function (a) { return a.isConstant(); }) ?
-                    _this.constantPool.getConstLiteral(literal$$1, true) :
-                    getLiteralFactory(_this.constantPool, literal$$1, _this.allocatePureFunctionSlots);
+                    _this.constantPool.getConstLiteral(literal, true) :
+                    getLiteralFactory(_this.constantPool, literal, _this.allocatePureFunctionSlots);
             });
         };
         return ValueConverter;
@@ -14760,8 +14760,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         return importExpr(Identifiers$1.nextContext)
             .callFn(relativeLevelDiff > 1 ? [literal(relativeLevelDiff)] : []);
     }
-    function getLiteralFactory(constantPool, literal$$1, allocateSlots) {
-        var _a = constantPool.getLiteralFactory(literal$$1), literalFactory = _a.literalFactory, literalFactoryArguments = _a.literalFactoryArguments;
+    function getLiteralFactory(constantPool, literal$1, allocateSlots) {
+        var _a = constantPool.getLiteralFactory(literal$1), literalFactory = _a.literalFactory, literalFactoryArguments = _a.literalFactoryArguments;
         // Allocate 1 slot for the result plus 1 per argument
         var startSlot = allocateSlots(1 + literalFactoryArguments.length);
         literalFactoryArguments.length > 0 || error("Expected arguments to a literal factory function");
@@ -15953,7 +15953,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.8+20.sha-a3e1054.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-beta.8+25.sha-410ccac.with-local-changes');
 
     /**
      * @license
@@ -18167,16 +18167,16 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     function isGeneratedFile(filePath) {
         return GENERATED_FILE.test(filePath);
     }
-    function splitTypescriptSuffix(path$$1, forceSourceFile) {
+    function splitTypescriptSuffix(path, forceSourceFile) {
         if (forceSourceFile === void 0) { forceSourceFile = false; }
-        if (path$$1.endsWith('.d.ts')) {
-            return [path$$1.slice(0, -5), forceSourceFile ? '.ts' : '.d.ts'];
+        if (path.endsWith('.d.ts')) {
+            return [path.slice(0, -5), forceSourceFile ? '.ts' : '.d.ts'];
         }
-        var lastDot = path$$1.lastIndexOf('.');
+        var lastDot = path.lastIndexOf('.');
         if (lastDot !== -1) {
-            return [path$$1.substring(0, lastDot), path$$1.substring(lastDot)];
+            return [path.substring(0, lastDot), path.substring(lastDot)];
         }
-        return [path$$1, ''];
+        return [path, ''];
     }
     function normalizeGenFileSuffix(srcFileSuffix) {
         return srcFileSuffix === '.tsx' ? '.ts' : srcFileSuffix;
@@ -19253,15 +19253,15 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 static: q.static
             };
         };
-        CompileMetadataResolver.prototype._reportError = function (error$$1, type, otherType) {
+        CompileMetadataResolver.prototype._reportError = function (error, type, otherType) {
             if (this._errorCollector) {
-                this._errorCollector(error$$1, type);
+                this._errorCollector(error, type);
                 if (otherType) {
-                    this._errorCollector(error$$1, otherType);
+                    this._errorCollector(error, otherType);
                 }
             }
             else {
-                throw error$$1;
+                throw error;
             }
         };
         return CompileMetadataResolver;
@@ -19318,9 +19318,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Indicates that a component is still being loaded in a synchronous compile.
      */
     function componentStillLoadingError(compType) {
-        var error$$1 = Error("Can't compile synchronously as " + stringify(compType) + " is still being loaded!");
-        error$$1[ERROR_COMPONENT_TYPE] = compType;
-        return error$$1;
+        var error = Error("Can't compile synchronously as " + stringify(compType) + " is still being loaded!");
+        error[ERROR_COMPONENT_TYPE] = compType;
+        return error;
     }
 
     /**
@@ -20307,8 +20307,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         });
         TemplateParser.prototype.parse = function (component, template, directives, pipes, schemas, templateUrl, preserveWhitespaces) {
             var result = this.tryParse(component, template, directives, pipes, schemas, templateUrl, preserveWhitespaces);
-            var warnings = result.errors.filter(function (error$$1) { return error$$1.level === ParseErrorLevel.WARNING; });
-            var errors = result.errors.filter(function (error$$1) { return error$$1.level === ParseErrorLevel.ERROR; });
+            var warnings = result.errors.filter(function (error) { return error.level === ParseErrorLevel.WARNING; });
+            var errors = result.errors.filter(function (error) { return error.level === ParseErrorLevel.ERROR; });
             if (warnings.length > 0) {
                 this._console.warn("Template parse warnings:\n" + warnings.join('\n'));
             }
@@ -20390,8 +20390,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                     existingReferences.push(name);
                 }
                 else {
-                    var error$$1 = new TemplateParseError("Reference \"#" + name + "\" is defined several times", reference.sourceSpan, ParseErrorLevel.ERROR);
-                    errors.push(error$$1);
+                    var error = new TemplateParseError("Reference \"#" + name + "\" is defined several times", reference.sourceSpan, ParseErrorLevel.ERROR);
+                    errors.push(error);
                 }
             }); });
         };
@@ -21450,12 +21450,12 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             }
             return new ResolvedStaticSymbol(sourceSymbol, targetSymbol);
         };
-        StaticSymbolResolver.prototype.reportError = function (error$$1, context, path$$1) {
+        StaticSymbolResolver.prototype.reportError = function (error, context, path) {
             if (this.errorRecorder) {
-                this.errorRecorder(error$$1, (context && context.filePath) || path$$1);
+                this.errorRecorder(error, (context && context.filePath) || path);
             }
             else {
-                throw error$$1;
+                throw error;
             }
         };
         /**
@@ -21968,14 +21968,14 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     }
     function formattedError(chain) {
         var message = formatChain(chain) + '.';
-        var error$$1 = syntaxError(message);
-        error$$1[FORMATTED_MESSAGE] = true;
-        error$$1.chain = chain;
-        error$$1.position = chain.position;
-        return error$$1;
+        var error = syntaxError(message);
+        error[FORMATTED_MESSAGE] = true;
+        error.chain = chain;
+        error.position = chain.position;
+        return error;
     }
-    function isFormattedError(error$$1) {
-        return !!error$$1[FORMATTED_MESSAGE];
+    function isFormattedError(error) {
+        return !!error[FORMATTED_MESSAGE];
     }
 
     /**
@@ -22073,7 +22073,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         };
         StaticReflector.prototype.tryAnnotations = function (type) {
             var originalRecorder = this.errorRecorder;
-            this.errorRecorder = function (error$$1, fileName) { };
+            this.errorRecorder = function (error, fileName) { };
             try {
                 return this.annotations(type);
             }
@@ -22334,7 +22334,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
          */
         StaticReflector.prototype.trySimplify = function (context, value) {
             var originalRecorder = this.errorRecorder;
-            this.errorRecorder = function (error$$1, fileName) { };
+            this.errorRecorder = function (error, fileName) { };
             var result = this.simplify(context, value);
             this.errorRecorder = originalRecorder;
             return result;
@@ -22734,12 +22734,12 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             return resolvedSymbol && resolvedSymbol.metadata ? resolvedSymbol.metadata :
                 { __symbolic: 'class' };
         };
-        StaticReflector.prototype.reportError = function (error$$1, context, path$$1) {
+        StaticReflector.prototype.reportError = function (error, context, path) {
             if (this.errorRecorder) {
-                this.errorRecorder(formatMetadataError(error$$1, context), (context && context.filePath) || path$$1);
+                this.errorRecorder(formatMetadataError(error, context), (context && context.filePath) || path);
             }
             else {
-                throw error$$1;
+                throw error;
             }
         };
         StaticReflector.prototype.error = function (_a, reportingContext) {
@@ -22750,24 +22750,24 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     }());
     var METADATA_ERROR = 'ngMetadataError';
     function metadataError(message, summary, advise, position, symbol, context, chain) {
-        var error$$1 = syntaxError(message);
-        error$$1[METADATA_ERROR] = true;
+        var error = syntaxError(message);
+        error[METADATA_ERROR] = true;
         if (advise)
-            error$$1.advise = advise;
+            error.advise = advise;
         if (position)
-            error$$1.position = position;
+            error.position = position;
         if (summary)
-            error$$1.summary = summary;
+            error.summary = summary;
         if (context)
-            error$$1.context = context;
+            error.context = context;
         if (chain)
-            error$$1.chain = chain;
+            error.chain = chain;
         if (symbol)
-            error$$1.symbol = symbol;
-        return error$$1;
+            error.symbol = symbol;
+        return error;
     }
-    function isMetadataError(error$$1) {
-        return !!error$$1[METADATA_ERROR];
+    function isMetadataError(error) {
+        return !!error[METADATA_ERROR];
     }
     var REFERENCE_TO_NONEXPORTED_CLASS = 'Reference to non-exported class';
     var VARIABLE_NOT_INITIALIZED = 'Variable not initialized';
@@ -22826,14 +22826,14 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         }
         return undefined;
     }
-    function errorSummary(error$$1) {
-        if (error$$1.summary) {
-            return error$$1.summary;
+    function errorSummary(error) {
+        if (error.summary) {
+            return error.summary;
         }
-        switch (error$$1.message) {
+        switch (error.message) {
             case REFERENCE_TO_NONEXPORTED_CLASS:
-                if (error$$1.context && error$$1.context.className) {
-                    return "references non-exported class " + error$$1.context.className;
+                if (error.context && error.context.className) {
+                    return "references non-exported class " + error.context.className;
                 }
                 break;
             case VARIABLE_NOT_INITIALIZED:
@@ -22843,13 +22843,13 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             case COULD_NOT_RESOLVE_TYPE:
                 return 'could not be resolved';
             case FUNCTION_CALL_NOT_SUPPORTED:
-                if (error$$1.context && error$$1.context.name) {
-                    return "calls '" + error$$1.context.name + "'";
+                if (error.context && error.context.name) {
+                    return "calls '" + error.context.name + "'";
                 }
                 return "calls a function";
             case REFERENCE_TO_LOCAL_SYMBOL:
-                if (error$$1.context && error$$1.context.name) {
-                    return "references local variable " + error$$1.context.name;
+                if (error.context && error.context.name) {
+                    return "references local variable " + error.context.name;
                 }
                 return "references a local variable";
         }
@@ -23103,10 +23103,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             var prefix = this._packagePrefix;
             if (prefix != null && resolvedParts != null &&
                 resolvedParts[_ComponentIndex.Scheme] == 'package') {
-                var path$$1 = resolvedParts[_ComponentIndex.Path];
+                var path = resolvedParts[_ComponentIndex.Path];
                 prefix = prefix.replace(/\/+$/, '');
-                path$$1 = path$$1.replace(/^\/+/, '');
-                return prefix + "/" + path$$1;
+                path = path.replace(/^\/+/, '');
+                return prefix + "/" + path;
             }
             return resolvedUrl;
         };
@@ -23274,12 +23274,12 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
       * @param path A non-empty path component.
       * @return Path component with removed dot segments.
       */
-    function _removeDotSegments(path$$1) {
-        if (path$$1 == '/')
+    function _removeDotSegments(path) {
+        if (path == '/')
             return '/';
-        var leadingSlash = path$$1[0] == '/' ? '/' : '';
-        var trailingSlash = path$$1[path$$1.length - 1] === '/' ? '/' : '';
-        var segments = path$$1.split('/');
+        var leadingSlash = path[0] == '/' ? '/' : '';
+        var trailingSlash = path[path.length - 1] === '/' ? '/' : '';
+        var segments = path.split('/');
         var out = [];
         var up = 0;
         for (var pos = 0; pos < segments.length; pos++) {
@@ -23314,10 +23314,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * and then joins all the parts.
      */
     function _joinAndCanonicalizePath(parts) {
-        var path$$1 = parts[_ComponentIndex.Path];
-        path$$1 = path$$1 == null ? '' : _removeDotSegments(path$$1);
-        parts[_ComponentIndex.Path] = path$$1;
-        return _buildFromEncodedParts(parts[_ComponentIndex.Scheme], parts[_ComponentIndex.UserInfo], parts[_ComponentIndex.Domain], parts[_ComponentIndex.Port], path$$1, parts[_ComponentIndex.QueryData], parts[_ComponentIndex.Fragment]);
+        var path = parts[_ComponentIndex.Path];
+        path = path == null ? '' : _removeDotSegments(path);
+        parts[_ComponentIndex.Path] = path;
+        return _buildFromEncodedParts(parts[_ComponentIndex.Scheme], parts[_ComponentIndex.UserInfo], parts[_ComponentIndex.Domain], parts[_ComponentIndex.Port], path, parts[_ComponentIndex.QueryData], parts[_ComponentIndex.Fragment]);
     }
     /**
      * Resolves a URL.
@@ -23341,12 +23341,12 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         if (parts[_ComponentIndex.Path][0] == '/') {
             return _joinAndCanonicalizePath(parts);
         }
-        var path$$1 = baseParts[_ComponentIndex.Path];
-        if (path$$1 == null)
-            path$$1 = '/';
-        var index = path$$1.lastIndexOf('/');
-        path$$1 = path$$1.substring(0, index + 1) + parts[_ComponentIndex.Path];
-        parts[_ComponentIndex.Path] = path$$1;
+        var path = baseParts[_ComponentIndex.Path];
+        if (path == null)
+            path = '/';
+        var index = path.lastIndexOf('/');
+        path = path.substring(0, index + 1) + parts[_ComponentIndex.Path];
+        parts[_ComponentIndex.Path] = path;
         return _joinAndCanonicalizePath(parts);
     }
 
@@ -24016,8 +24016,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * found in the LICENSE file at https://angular.io/license
      */
     function getTemplateExpressionDiagnostics(info) {
-        var visitor = new ExpressionDiagnosticsVisitor(info, function (path$$1, includeEvent) {
-            return getExpressionScope(info, path$$1, includeEvent);
+        var visitor = new ExpressionDiagnosticsVisitor(info, function (path, includeEvent) {
+            return getExpressionScope(info, path, includeEvent);
         });
         templateVisitAll(visitor, info.templateAst);
         return visitor.diagnostics;
@@ -24088,10 +24088,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 }];
         }
     }
-    function getVarDeclarations(info, path$$1) {
+    function getVarDeclarations(info, path) {
         var e_2, _a;
         var result = [];
-        var current = path$$1.tail;
+        var current = path.tail;
         while (current) {
             if (current instanceof EmbeddedTemplateAst) {
                 var _loop_2 = function (variable) {
@@ -24135,7 +24135,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                     finally { if (e_2) throw e_2.error; }
                 }
             }
-            current = path$$1.parentOf(current);
+            current = path.parentOf(current);
         }
         return result;
     }
@@ -24169,10 +24169,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         }
         return result;
     }
-    function getExpressionScope(info, path$$1, includeEvent) {
+    function getExpressionScope(info, path, includeEvent) {
         var result = info.members;
         var references = getReferences(info);
-        var variables = getVarDeclarations(info, path$$1);
+        var variables = getVarDeclarations(info, path);
         var events = getEventDeclaration(info, includeEvent);
         if (references.length || variables.length || events.length) {
             var referenceTable = info.query.createSymbolTable(references);
@@ -24249,8 +24249,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             this.directiveSummary = previousDirectiveSummary;
         };
         ExpressionDiagnosticsVisitor.prototype.attributeValueLocation = function (ast) {
-            var path$$1 = findNode(this.info.htmlAst, ast.sourceSpan.start.offset);
-            var last = path$$1.tail;
+            var path = findNode(this.info.htmlAst, ast.sourceSpan.start.offset);
+            var last = path.tail;
             if (last instanceof Attribute && last.valueSpan) {
                 return last.valueSpan.start.offset;
             }
@@ -26926,7 +26926,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var DTS$1 = /\.d\.ts$/;
+    var DTS = /\.d\.ts$/;
 
     /**
      * @license
@@ -26948,7 +26948,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             // If the file doesn't exists then we cannot return metadata for the file.
             // This will occur if the user referenced a declared module for which no file
             // exists for the module (i.e. jQuery or angularjs).
-            if (DTS$1.test(filePath)) {
+            if (DTS.test(filePath)) {
                 metadatas = readMetadataFile(host, filePath);
                 if (!metadatas) {
                     // If there is a .d.ts file but no metadata file we need to produce a
@@ -26968,7 +26968,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         return metadatas;
     }
     function readMetadataFile(host, dtsFilePath) {
-        var metadataPath = dtsFilePath.replace(DTS$1, '.metadata.json');
+        var metadataPath = dtsFilePath.replace(DTS, '.metadata.json');
         if (!host.fileExists(metadataPath)) {
             return undefined;
         }
@@ -27051,9 +27051,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @publicApi
      */
     var DiagnosticKind$1;
-    (function (DiagnosticKind$$1) {
-        DiagnosticKind$$1[DiagnosticKind$$1["Error"] = 0] = "Error";
-        DiagnosticKind$$1[DiagnosticKind$$1["Warning"] = 1] = "Warning";
+    (function (DiagnosticKind) {
+        DiagnosticKind[DiagnosticKind["Error"] = 0] = "Error";
+        DiagnosticKind[DiagnosticKind["Warning"] = 1] = "Warning";
     })(DiagnosticKind$1 || (DiagnosticKind$1 = {}));
 
     /**
@@ -27170,7 +27170,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     }
     function findTemplateAstAt(ast, position, allowWidening) {
         if (allowWidening === void 0) { allowWidening = false; }
-        var path$$1 = [];
+        var path = [];
         var visitor = new /** @class */ (function (_super) {
             __extends(class_1, _super);
             function class_1() {
@@ -27179,9 +27179,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             class_1.prototype.visit = function (ast, context) {
                 var span = spanOf$2(ast);
                 if (inSpan(position, span)) {
-                    var len = path$$1.length;
-                    if (!len || allowWidening || isNarrower(span, spanOf$2(path$$1[len - 1]))) {
-                        path$$1.push(ast);
+                    var len = path.length;
+                    if (!len || allowWidening || isNarrower(span, spanOf$2(path[len - 1]))) {
+                        path.push(ast);
                     }
                 }
                 else {
@@ -27212,15 +27212,15 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 // Ignore the host properties of a directive
                 var result = this.visitChildren(context, function (visit) { visit(ast.inputs); });
                 // We never care about the diretive itself, just its inputs.
-                if (path$$1[path$$1.length - 1] == ast) {
-                    path$$1.pop();
+                if (path[path.length - 1] == ast) {
+                    path.pop();
                 }
                 return result;
             };
             return class_1;
         }(RecursiveTemplateAstVisitor));
         templateVisitAll(visitor, ast);
-        return new AstPath(path$$1, position);
+        return new AstPath(path, position);
     }
 
     /**
@@ -27232,7 +27232,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      */
     function findAstAt(ast, position, excludeEmpty) {
         if (excludeEmpty === void 0) { excludeEmpty = false; }
-        var path$$1 = [];
+        var path = [];
         var visitor = new /** @class */ (function (_super) {
             __extends(class_1, _super);
             function class_1() {
@@ -27240,7 +27240,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             }
             class_1.prototype.visit = function (ast) {
                 if ((!excludeEmpty || ast.span.start < ast.span.end) && inSpan(position, ast.span)) {
-                    path$$1.push(ast);
+                    path.push(ast);
                     visitAstChildren(ast, this);
                 }
             };
@@ -27252,13 +27252,13 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             ast = ast.ast;
         }
         visitor.visit(ast);
-        return new AstPath(path$$1, position);
+        return new AstPath(path, position);
     }
     function getExpressionCompletions(scope, ast, position, query) {
-        var path$$1 = findAstAt(ast, position);
-        if (path$$1.empty)
+        var path = findAstAt(ast, position);
+        if (path.empty)
             return undefined;
-        var tail = path$$1.tail;
+        var tail = path.tail;
         var result = scope;
         function getType(ast) { return new AstType(scope, query, {}).getType(ast); }
         // If the completion request is in a not in a pipe or property access then the global scope
@@ -27310,10 +27310,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         return result && result.values();
     }
     function getExpressionSymbol(scope, ast, position, query) {
-        var path$$1 = findAstAt(ast, position, /* excludeEmpty */ true);
-        if (path$$1.empty)
+        var path = findAstAt(ast, position, /* excludeEmpty */ true);
+        if (path.empty)
             return undefined;
-        var tail = path$$1.tail;
+        var tail = path.tail;
         function getType(ast) { return new AstType(scope, query, {}).getType(ast); }
         var symbol = undefined;
         var span = undefined;
@@ -27908,8 +27908,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         }
         return result;
     }
-    function attributeCompletions(info, path$$1) {
-        var item = path$$1.tail instanceof Element$1 ? path$$1.tail : path$$1.parentOf(path$$1.tail);
+    function attributeCompletions(info, path) {
+        var item = path.tail instanceof Element$1 ? path.tail : path.parentOf(path.tail);
         if (item instanceof Element$1) {
             return attributeCompletionsForElement(info, item.name, item);
         }
@@ -27983,11 +27983,11 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         return attributes;
     }
     function attributeValueCompletions(info, position, attr) {
-        var path$$1 = findTemplateAstAt(info.templateAst, position);
-        var mostSpecific = path$$1.tail;
+        var path = findTemplateAstAt(info.templateAst, position);
+        var mostSpecific = path.tail;
         var dinfo = diagnosticInfoFromTemplateInfo(info);
         if (mostSpecific) {
-            var visitor = new ExpressionVisitor(info, position, attr, function () { return getExpressionScope(dinfo, path$$1, false); });
+            var visitor = new ExpressionVisitor(info, position, attr, function () { return getExpressionScope(dinfo, path, false); });
             mostSpecific.visit(visitor, null);
             if (!visitor.result || !visitor.result.length) {
                 // Try allwoing widening the path
@@ -28001,7 +28001,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             return visitor.result;
         }
     }
-    function elementCompletions(info, path$$1) {
+    function elementCompletions(info, path) {
         var htmlNames = elementNames().filter(function (name) { return !(name in hiddenHtmlElements); });
         // Collect the elements referenced by the selectors
         var directiveElements = getSelectors(info)
@@ -28043,26 +28043,26 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     // the attributes of an "a" element, not requesting completion in the a text element. This
     // code checks for this case and returns element completions if it is detected or undefined
     // if it is not.
-    function voidElementAttributeCompletions(info, path$$1) {
-        var tail = path$$1.tail;
+    function voidElementAttributeCompletions(info, path) {
+        var tail = path.tail;
         if (tail instanceof Text$3) {
             var match = tail.value.match(/<(\w(\w|\d|-)*:)?(\w(\w|\d|-)*)\s/);
             // The position must be after the match, otherwise we are still in a place where elements
             // are expected (such as `<|a` or `<a|`; we only want attributes for `<a |` or after).
             if (match &&
-                path$$1.position >= (match.index || 0) + match[0].length + tail.sourceSpan.start.offset) {
+                path.position >= (match.index || 0) + match[0].length + tail.sourceSpan.start.offset) {
                 return attributeCompletionsForElement(info, match[3]);
             }
         }
     }
     var ExpressionVisitor = /** @class */ (function (_super) {
         __extends(ExpressionVisitor, _super);
-        function ExpressionVisitor(info, position, attr, getExpressionScope$$1) {
+        function ExpressionVisitor(info, position, attr, getExpressionScope) {
             var _this = _super.call(this) || this;
             _this.info = info;
             _this.position = position;
             _this.attr = attr;
-            _this.getExpressionScope = getExpressionScope$$1 || (function () { return info.template.members; });
+            _this.getExpressionScope = getExpressionScope || (function () { return info.template.members; });
             return _this;
         }
         ExpressionVisitor.prototype.visitDirectiveProperty = function (ast) {
@@ -28281,8 +28281,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         if (!info.position)
             return undefined;
         var templatePosition = info.position - info.template.span.start;
-        var path$$1 = findTemplateAstAt(info.templateAst, templatePosition);
-        if (path$$1.tail) {
+        var path = findTemplateAstAt(info.templateAst, templatePosition);
+        if (path.tail) {
             var symbol_1 = undefined;
             var span_1 = undefined;
             var attributeValueSymbol_1 = function (ast, inEvent) {
@@ -28291,7 +28291,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 if (attribute) {
                     if (inSpan(templatePosition, spanOf$2(attribute.valueSpan))) {
                         var dinfo = diagnosticInfoFromTemplateInfo(info);
-                        var scope = getExpressionScope(dinfo, path$$1, inEvent);
+                        var scope = getExpressionScope(dinfo, path, inEvent);
                         if (attribute.valueSpan) {
                             var expressionOffset = attribute.valueSpan.start.offset;
                             var result = getExpressionSymbol(scope, ast, templatePosition - expressionOffset, info.template.query);
@@ -28305,7 +28305,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 }
                 return false;
             };
-            path$$1.tail.visit({
+            path.tail.visit({
                 visitNgContent: function (ast) { },
                 visitEmbeddedTemplate: function (ast) { },
                 visitElement: function (ast) {
@@ -28332,7 +28332,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 visitVariable: function (ast) { },
                 visitEvent: function (ast) {
                     if (!attributeValueSymbol_1(ast.handler, /* inEvent */ true)) {
-                        symbol_1 = findOutputBinding(info, path$$1, ast);
+                        symbol_1 = findOutputBinding(info, path, ast);
                         symbol_1 = symbol_1 && new OverrideKindSymbol(symbol_1, 'event');
                         span_1 = spanOf$2(ast);
                     }
@@ -28343,7 +28343,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                     var expressionPosition = templatePosition - ast.sourceSpan.start.offset;
                     if (inSpan(expressionPosition, ast.value.span)) {
                         var dinfo = diagnosticInfoFromTemplateInfo(info);
-                        var scope = getExpressionScope(dinfo, path$$1, /* includeEvent */ false);
+                        var scope = getExpressionScope(dinfo, path, /* includeEvent */ false);
                         var result = getExpressionSymbol(scope, ast.value, expressionPosition, info.template.query);
                         if (result) {
                             symbol_1 = result.symbol;
@@ -28358,7 +28358,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 },
                 visitDirectiveProperty: function (ast) {
                     if (!attributeValueSymbol_1(ast.value)) {
-                        symbol_1 = findInputBinding(info, path$$1, ast);
+                        symbol_1 = findInputBinding(info, path, ast);
                         span_1 = spanOf$2(ast);
                     }
                 }
@@ -28371,13 +28371,13 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     function findAttribute(info) {
         if (info.position) {
             var templatePosition = info.position - info.template.span.start;
-            var path$$1 = findNode(info.htmlAst, templatePosition);
-            return path$$1.first(Attribute);
+            var path = findNode(info.htmlAst, templatePosition);
+            return path.first(Attribute);
         }
     }
-    function findInputBinding(info, path$$1, binding) {
+    function findInputBinding(info, path, binding) {
         var e_1, _a;
-        var element = path$$1.first(ElementAst);
+        var element = path.first(ElementAst);
         if (element) {
             try {
                 for (var _b = __values(element.directives), _c = _b.next(); !_c.done; _c = _b.next()) {
@@ -28401,9 +28401,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             }
         }
     }
-    function findOutputBinding(info, path$$1, binding) {
+    function findOutputBinding(info, path, binding) {
         var e_2, _a;
-        var element = path$$1.first(ElementAst);
+        var element = path.first(ElementAst);
         if (element) {
             try {
                 for (var _b = __values(element.directives), _c = _b.next(); !_c.done; _c = _b.next()) {
@@ -29933,7 +29933,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var SOURCE$1 = '__source';
+    var SOURCE = '__source';
     var _THROW_IF_NOT_FOUND = new Object();
     var THROW_IF_NOT_FOUND = _THROW_IF_NOT_FOUND;
     /**
@@ -30145,8 +30145,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             if (!(e instanceof Error)) {
                 e = new Error(e);
             }
-            var path$$1 = e[NG_TEMP_TOKEN_PATH] = e[NG_TEMP_TOKEN_PATH] || [];
-            path$$1.unshift(token);
+            var path = e[NG_TEMP_TOKEN_PATH] = e[NG_TEMP_TOKEN_PATH] || [];
+            path.unshift(token);
             if (record && record.value == CIRCULAR) {
                 // Reset the Circular flag.
                 record.value = EMPTY;
@@ -30241,8 +30241,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     }
     function catchInjectorError(e, token, injectorErrorName, source) {
         var tokenPath = e[NG_TEMP_TOKEN_PATH];
-        if (token[SOURCE$1]) {
-            tokenPath.unshift(token[SOURCE$1]);
+        if (token[SOURCE]) {
+            tokenPath.unshift(token[SOURCE]);
         }
         e.message = formatError('\n' + e.message, tokenPath, injectorErrorName, source);
         e[NG_TOKEN_PATH] = tokenPath;
@@ -31043,13 +31043,13 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 return this._instantiate(provider, provider.resolvedFactories[0]);
             }
         };
-        ReflectiveInjector_.prototype._instantiate = function (provider, ResolvedReflectiveFactory$$1) {
+        ReflectiveInjector_.prototype._instantiate = function (provider, ResolvedReflectiveFactory) {
             var _this = this;
-            var factory = ResolvedReflectiveFactory$$1.factory;
+            var factory = ResolvedReflectiveFactory.factory;
             var deps;
             try {
                 deps =
-                    ResolvedReflectiveFactory$$1.dependencies.map(function (dep) { return _this._getByReflectiveDependency(dep); });
+                    ResolvedReflectiveFactory.dependencies.map(function (dep) { return _this._getByReflectiveDependency(dep); });
             }
             catch (e) {
                 if (e.addKey) {
@@ -31573,11 +31573,11 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * code.
      */
     var EMPTY_OBJ = {};
-    var EMPTY_ARRAY$2 = [];
+    var EMPTY_ARRAY$1 = [];
     // freezing the values prevents any code from accidentally inserting new values in
     if (typeof ngDevMode !== 'undefined' && ngDevMode) {
         Object.freeze(EMPTY_OBJ);
-        Object.freeze(EMPTY_ARRAY$2);
+        Object.freeze(EMPTY_ARRAY$1);
     }
 
     /**
@@ -31783,7 +31783,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             // next line. Also `None` should be 0 not 2.
             encapsulation: componentDefinition.encapsulation || ViewEncapsulation$1.Emulated,
             id: 'c',
-            styles: componentDefinition.styles || EMPTY_ARRAY$2,
+            styles: componentDefinition.styles || EMPTY_ARRAY$1,
             _: null,
             setInput: null,
             schemas: componentDefinition.schemas || null,
@@ -31828,10 +31828,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     function defineNgModule(def) {
         var res = {
             type: def.type,
-            bootstrap: def.bootstrap || EMPTY_ARRAY$2,
-            declarations: def.declarations || EMPTY_ARRAY$2,
-            imports: def.imports || EMPTY_ARRAY$2,
-            exports: def.exports || EMPTY_ARRAY$2,
+            bootstrap: def.bootstrap || EMPTY_ARRAY$1,
+            declarations: def.declarations || EMPTY_ARRAY$1,
+            imports: def.imports || EMPTY_ARRAY$1,
+            exports: def.exports || EMPTY_ARRAY$1,
             transitiveCompileScopes: null,
             schemas: def.schemas || null,
         };
@@ -33166,7 +33166,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         var tNode = lView[TVIEW].data[nodeIndex];
         var directiveStartIndex = tNode.directiveStart;
         if (directiveStartIndex == 0)
-            return EMPTY_ARRAY$2;
+            return EMPTY_ARRAY$1;
         var directiveEndIndex = tNode.directiveEnd;
         if (!includeComponents && tNode.flags & 1 /* isComponent */)
             directiveStartIndex++;
@@ -35231,11 +35231,11 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    function devModeEqual$1(a, b) {
-        var isListLikeIterableA = isListLikeIterable$1(a);
-        var isListLikeIterableB = isListLikeIterable$1(b);
+    function devModeEqual(a, b) {
+        var isListLikeIterableA = isListLikeIterable(a);
+        var isListLikeIterableB = isListLikeIterable(b);
         if (isListLikeIterableA && isListLikeIterableB) {
-            return areIterablesEqual$1(a, b, devModeEqual$1);
+            return areIterablesEqual(a, b, devModeEqual);
         }
         else {
             var isAObject = a && (typeof a === 'object' || typeof a === 'function');
@@ -35283,14 +35283,14 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         WrappedValue.isWrapped = function (value) { return value instanceof WrappedValue; };
         return WrappedValue;
     }());
-    function isListLikeIterable$1(obj) {
-        if (!isJsObject$1(obj))
+    function isListLikeIterable(obj) {
+        if (!isJsObject(obj))
             return false;
         return Array.isArray(obj) ||
             (!(obj instanceof Map) && // JS Map are iterables but return entries as [k, v]
                 getSymbolIterator() in obj); // JS Iterable have a Symbol.iterator prop
     }
-    function areIterablesEqual$1(a, b, comparator) {
+    function areIterablesEqual(a, b, comparator) {
         var iterator1 = a[getSymbolIterator()]();
         var iterator2 = b[getSymbolIterator()]();
         while (true) {
@@ -35304,7 +35304,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 return false;
         }
     }
-    function iterateListLike$1(obj, fn) {
+    function iterateListLike(obj, fn) {
         if (Array.isArray(obj)) {
             for (var i = 0; i < obj.length; i++) {
                 fn(obj[i]);
@@ -35318,7 +35318,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             }
         }
     }
-    function isJsObject$1(o) {
+    function isJsObject(o) {
         return o !== null && (typeof o === 'function' || typeof o === 'object');
     }
 
@@ -35379,7 +35379,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 // View engine didn't report undefined values as changed on the first checkNoChanges pass
                 // (before the change detection was run).
                 var oldValueToCompare = oldValue !== NO_CHANGE ? oldValue : undefined;
-                if (!devModeEqual$1(oldValueToCompare, value)) {
+                if (!devModeEqual(oldValueToCompare, value)) {
                     throwErrorIfNoChangesMode(oldValue === NO_CHANGE, oldValueToCompare, value);
                 }
             }
@@ -36905,7 +36905,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             classesInput.value :
             classesInput;
         var stylesValue = stylesPlayerBuilder ? stylesInput['value'] : stylesInput;
-        var classNames = EMPTY_ARRAY$2;
+        var classNames = EMPTY_ARRAY$1;
         var applyAllClasses = false;
         var playerBuildersAreDirty = false;
         var classesPlayerBuilderIndex = classesPlayerBuilder ? 1 /* ClassMapPlayerBuilderPosition */ : 0;
@@ -36928,14 +36928,14 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 applyAllClasses = true;
             }
             else {
-                classNames = classesValue ? Object.keys(classesValue) : EMPTY_ARRAY$2;
+                classNames = classesValue ? Object.keys(classesValue) : EMPTY_ARRAY$1;
             }
         }
         var multiStylesStartIndex = getMultiStylesStartIndex(context);
         var multiClassesStartIndex = getMultiClassesStartIndex(context);
         var multiClassesEndIndex = context.length;
         if (!ignoreAllStyleUpdates) {
-            var styleProps = stylesValue ? Object.keys(stylesValue) : EMPTY_ARRAY$2;
+            var styleProps = stylesValue ? Object.keys(stylesValue) : EMPTY_ARRAY$1;
             var styles = stylesValue || EMPTY_OBJ;
             var totalNewEntries = patchStylingMapIntoContext(context, directiveIndex, stylesPlayerBuilderIndex, multiStylesStartIndex, multiClassesStartIndex, styleProps, styles, stylesInput, false);
             if (totalNewEntries) {
@@ -41608,7 +41608,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         if (value === EMPTY_OBJ) {
             return {};
         }
-        else if (value === EMPTY_ARRAY$2) {
+        else if (value === EMPTY_ARRAY$1) {
             return [];
         }
         else {
@@ -41649,16 +41649,16 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * a circular dependency among the providers.
      */
     var CIRCULAR$1 = {};
-    var EMPTY_ARRAY$3 = [];
+    var EMPTY_ARRAY$2 = [];
     /**
      * A lazily initialized NullInjector.
      */
-    var NULL_INJECTOR$2 = undefined;
+    var NULL_INJECTOR$1 = undefined;
     function getNullInjector() {
-        if (NULL_INJECTOR$2 === undefined) {
-            NULL_INJECTOR$2 = new NullInjector();
+        if (NULL_INJECTOR$1 === undefined) {
+            NULL_INJECTOR$1 = new NullInjector();
         }
-        return NULL_INJECTOR$2;
+        return NULL_INJECTOR$1;
     }
     /**
      * Create a new `Injector` which is configured using a `defType` of `InjectorType<any>`s.
@@ -41767,8 +41767,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             }
             catch (e) {
                 if (e.name === 'NullInjectorError') {
-                    var path$$1 = e[NG_TEMP_TOKEN_PATH] = e[NG_TEMP_TOKEN_PATH] || [];
-                    path$$1.unshift(stringify$1(token));
+                    var path = e[NG_TEMP_TOKEN_PATH] = e[NG_TEMP_TOKEN_PATH] || [];
+                    path.unshift(stringify$1(token));
                     if (previousInjector) {
                         // We still have a parent injector, keep throwing
                         throw e;
@@ -41822,7 +41822,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             // If defOrWrappedType was an InjectorDefTypeWithProviders, then .providers may hold some
             // extra providers.
             var providers = (ngModule !== undefined) && defOrWrappedDef.providers ||
-                EMPTY_ARRAY$3;
+                EMPTY_ARRAY$2;
             // Finally, if defOrWrappedType was an `InjectorDefTypeWithProviders`, then the actual
             // `InjectorDef` is on its `ngModule`.
             if (ngModule !== undefined) {
@@ -42063,24 +42063,24 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         var lView = getLView();
         var tView = lView[TVIEW];
         if (tView.firstTemplatePass) {
-            var isComponent$$1 = isComponentDef(def);
+            var isComponent = isComponentDef(def);
             // The list of view providers is processed first, and the flags are updated
-            resolveProvider$1(viewProviders, tView.data, tView.blueprint, isComponent$$1, true);
+            resolveProvider$1(viewProviders, tView.data, tView.blueprint, isComponent, true);
             // Then, the list of providers is processed, and the flags are updated
-            resolveProvider$1(providers, tView.data, tView.blueprint, isComponent$$1, false);
+            resolveProvider$1(providers, tView.data, tView.blueprint, isComponent, false);
         }
     }
     /**
      * Resolves a provider and publishes it to the DI system.
      */
-    function resolveProvider$1(provider, tInjectables, lInjectablesBlueprint, isComponent$$1, isViewProvider) {
+    function resolveProvider$1(provider, tInjectables, lInjectablesBlueprint, isComponent, isViewProvider) {
         provider = resolveForwardRef$1(provider);
         if (Array.isArray(provider)) {
             // Recursively call `resolveProvider`
             // Recursion is OK in this case because this code will not be in hot-path once we implement
             // cloning of the initial state.
             for (var i = 0; i < provider.length; i++) {
-                resolveProvider$1(provider[i], tInjectables, lInjectablesBlueprint, isComponent$$1, isViewProvider);
+                resolveProvider$1(provider[i], tInjectables, lInjectablesBlueprint, isComponent, isViewProvider);
             }
         }
         else {
@@ -42150,7 +42150,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                     !isViewProvider && !doesProvidersFactoryExist) {
                     // Cases 1.a and 2.a
                     diPublicInInjector(getOrCreateNodeInjectorForNode(tNode, lView), lView, token);
-                    var factory = multiFactory(isViewProvider ? multiViewProvidersFactoryResolver : multiProvidersFactoryResolver, lInjectablesBlueprint.length, isViewProvider, isComponent$$1, providerFactory);
+                    var factory = multiFactory(isViewProvider ? multiViewProvidersFactoryResolver : multiProvidersFactoryResolver, lInjectablesBlueprint.length, isViewProvider, isComponent, providerFactory);
                     if (!isViewProvider && doesViewProvidersFactoryExist) {
                         lInjectablesBlueprint[existingViewProvidersFactoryIndex].providerFactory = factory;
                     }
@@ -42165,9 +42165,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 }
                 else {
                     // Cases 1.b and 2.b
-                    multiFactoryAdd(lInjectablesBlueprint[isViewProvider ? existingViewProvidersFactoryIndex : existingProvidersFactoryIndex], providerFactory, !isViewProvider && isComponent$$1);
+                    multiFactoryAdd(lInjectablesBlueprint[isViewProvider ? existingViewProvidersFactoryIndex : existingProvidersFactoryIndex], providerFactory, !isViewProvider && isComponent);
                 }
-                if (!isViewProvider && isComponent$$1 && doesViewProvidersFactoryExist) {
+                if (!isViewProvider && isComponent && doesViewProvidersFactoryExist) {
                     lInjectablesBlueprint[existingViewProvidersFactoryIndex].componentProviders++;
                 }
             }
@@ -42238,12 +42238,12 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * Creates a multi factory.
      */
-    function multiFactory(factoryFn, index, isViewProvider, isComponent$$1, f) {
+    function multiFactory(factoryFn, index, isViewProvider, isComponent, f) {
         var factory = new NodeInjectorFactory(factoryFn, isViewProvider, directiveInject);
         factory.multi = [];
         factory.index = index;
         factory.componentProviders = 0;
-        multiFactoryAdd(factory, f, isComponent$$1 && !isViewProvider);
+        multiFactoryAdd(factory, f, isComponent && !isViewProvider);
         return factory;
     }
 
@@ -42751,10 +42751,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                     _this._injectorIndex = _injectorIndex;
                     return _this;
                 }
-                TemplateRef_.prototype.createEmbeddedView = function (context, container$$1, index) {
+                TemplateRef_.prototype.createEmbeddedView = function (context, container, index) {
                     var lView = createEmbeddedViewAndNode(this._tView, context, this._declarationParentView, this._hostLContainer[QUERIES], this._injectorIndex);
-                    if (container$$1) {
-                        insertView(lView, container$$1, index);
+                    if (container) {
+                        insertView(lView, container, index);
                     }
                     renderEmbeddedTemplate(lView, this._tView, context);
                     var viewRef = new ViewRef(lView, context, -1);
@@ -43120,7 +43120,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.8+20.sha-a3e1054.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-beta.8+25.sha-410ccac.with-local-changes');
 
     /**
      * @license
@@ -43132,7 +43132,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     var DefaultIterableDifferFactory = /** @class */ (function () {
         function DefaultIterableDifferFactory() {
         }
-        DefaultIterableDifferFactory.prototype.supports = function (obj) { return isListLikeIterable$1(obj); };
+        DefaultIterableDifferFactory.prototype.supports = function (obj) { return isListLikeIterable(obj); };
         DefaultIterableDifferFactory.prototype.create = function (trackByFn) {
             return new DefaultIterableDiffer(trackByFn);
         };
@@ -43253,7 +43253,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         DefaultIterableDiffer.prototype.diff = function (collection) {
             if (collection == null)
                 collection = [];
-            if (!isListLikeIterable$1(collection)) {
+            if (!isListLikeIterable(collection)) {
                 throw new Error("Error trying to diff '" + stringify$1(collection) + "'. Only arrays and iterables are allowed");
             }
             if (this.check(collection)) {
@@ -43294,7 +43294,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             }
             else {
                 index = 0;
-                iterateListLike$1(collection, function (item) {
+                iterateListLike(collection, function (item) {
                     itemTrackBy = _this._trackByFn(index, item);
                     if (record === null || !looseIdentical(record.trackById, itemTrackBy)) {
                         record = _this._mismatch(record, item, itemTrackBy, index);
@@ -43806,7 +43806,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     var DefaultKeyValueDifferFactory = /** @class */ (function () {
         function DefaultKeyValueDifferFactory() {
         }
-        DefaultKeyValueDifferFactory.prototype.supports = function (obj) { return obj instanceof Map || isJsObject$1(obj); };
+        DefaultKeyValueDifferFactory.prototype.supports = function (obj) { return obj instanceof Map || isJsObject(obj); };
         DefaultKeyValueDifferFactory.prototype.create = function () { return new DefaultKeyValueDiffer(); };
         return DefaultKeyValueDifferFactory;
     }());
@@ -43866,7 +43866,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             if (!map) {
                 map = new Map();
             }
-            else if (!(map instanceof Map || isJsObject$1(map))) {
+            else if (!(map instanceof Map || isJsObject(map))) {
                 throw new Error("Error trying to diff '" + stringify$1(map) + "'. Only maps and objects are allowed");
             }
             return this.check(map) ? this : null;
@@ -44518,7 +44518,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     }
     function checkBindingNoChanges(view, def, bindingIdx, value) {
         var oldValue = view.oldValues[def.bindingIndex + bindingIdx];
-        if ((view.state & 1 /* BeforeFirstCheck */) || !devModeEqual$1(oldValue, value)) {
+        if ((view.state & 1 /* BeforeFirstCheck */) || !devModeEqual(oldValue, value)) {
             var bindingName = def.bindings[bindingIdx].name;
             throw expressionChangedAfterItHasBeenCheckedError(Services.createDebugContext(view, def.nodeIndex), bindingName + ": " + oldValue, bindingName + ": " + value, (view.state & 1 /* BeforeFirstCheck */) !== 0);
         }
@@ -44582,7 +44582,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 return asTextData(view, def.nodeIndex).renderText;
         }
     }
-    function elementEventFullName$1(target, name) {
+    function elementEventFullName(target, name) {
         return target ? target + ":" + name : name;
     }
     function isComponentView(view) {
@@ -44604,7 +44604,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 token = value;
             }
             if (token && (typeof token === 'function' || typeof token === 'object') && sourceName) {
-                Object.defineProperty(token, SOURCE$1, { value: sourceName, configurable: true });
+                Object.defineProperty(token, SOURCE, { value: sourceName, configurable: true });
             }
             return { flags: flags, token: token, tokenKey: tokenKey(token) };
         });
@@ -45271,16 +45271,16 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         ViewRef_.prototype.markForCheck = function () { markParentViewsForCheck(this._view); };
         ViewRef_.prototype.detach = function () { this._view.state &= ~4 /* Attached */; };
         ViewRef_.prototype.detectChanges = function () {
-            var fs$$1 = this._view.root.rendererFactory;
-            if (fs$$1.begin) {
-                fs$$1.begin();
+            var fs = this._view.root.rendererFactory;
+            if (fs.begin) {
+                fs.begin();
             }
             try {
                 Services.checkAndUpdateView(this._view);
             }
             finally {
-                if (fs$$1.end) {
-                    fs$$1.end();
+                if (fs.end) {
+                    fs.end();
                 }
             }
         };
@@ -45453,7 +45453,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         RendererAdapter.prototype.invokeElementMethod = function (renderElement, methodName, args) {
             renderElement[methodName].apply(renderElement, args);
         };
-        RendererAdapter.prototype.setText = function (renderNode$$1, text) { this.delegate.setValue(renderNode$$1, text); };
+        RendererAdapter.prototype.setText = function (renderNode, text) { this.delegate.setValue(renderNode, text); };
         RendererAdapter.prototype.animate = function () { throw new Error('Renderer.animate is no longer supported!'); };
         return RendererAdapter;
     }());
@@ -45718,8 +45718,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         if (depDef.flags & 2 /* Optional */) {
             notFoundValue = null;
         }
-        var tokenKey$$1 = depDef.tokenKey;
-        if (tokenKey$$1 === ChangeDetectorRefTokenKey) {
+        var tokenKey = depDef.tokenKey;
+        if (tokenKey === ChangeDetectorRefTokenKey) {
             // directives on the same element as a component should be able to control the change detector
             // of that component as well.
             allowPrivateServices = !!(elDef && elDef.element.componentView);
@@ -45731,7 +45731,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         var searchView = view;
         while (searchView) {
             if (elDef) {
-                switch (tokenKey$$1) {
+                switch (tokenKey) {
                     case RendererV1TokenKey: {
                         var compView = findCompView(searchView, elDef, allowPrivateServices);
                         return createRendererV1(compView);
@@ -45759,7 +45759,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                         return createInjector$1(searchView, elDef);
                     default:
                         var providerDef_1 = (allowPrivateServices ? elDef.element.allProviders :
-                            elDef.element.publicProviders)[tokenKey$$1];
+                            elDef.element.publicProviders)[tokenKey];
                         if (providerDef_1) {
                             var providerData = asProviderData(searchView, providerDef_1.nodeIndex);
                             if (!providerData) {
@@ -45943,21 +45943,21 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * found in the LICENSE file at https://angular.io/license
      */
     var ComponentFactoryResolver$1 = /** @class */ (function (_super) {
-        __extends(ComponentFactoryResolver$$1, _super);
+        __extends(ComponentFactoryResolver, _super);
         /**
          * @param ngModule The NgModuleRef to which all resolved factories are bound.
          */
-        function ComponentFactoryResolver$$1(ngModule) {
+        function ComponentFactoryResolver(ngModule) {
             var _this = _super.call(this) || this;
             _this.ngModule = ngModule;
             return _this;
         }
-        ComponentFactoryResolver$$1.prototype.resolveComponentFactory = function (component) {
+        ComponentFactoryResolver.prototype.resolveComponentFactory = function (component) {
             ngDevMode && assertComponentType(component);
             var componentDef = getComponentDef(component);
             return new ComponentFactory$1(componentDef, this.ngModule);
         };
-        return ComponentFactoryResolver$$1;
+        return ComponentFactoryResolver;
     }(ComponentFactoryResolver));
     function toRefArray(map) {
         var array = [];
@@ -46002,12 +46002,12 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Render3 implementation of {@link viewEngine_ComponentFactory}.
      */
     var ComponentFactory$1 = /** @class */ (function (_super) {
-        __extends(ComponentFactory$$1, _super);
+        __extends(ComponentFactory, _super);
         /**
          * @param componentDef The component definition.
          * @param ngModule The NgModuleRef to which the factory is bound.
          */
-        function ComponentFactory$$1(componentDef, ngModule) {
+        function ComponentFactory(componentDef, ngModule) {
             var _this = _super.call(this) || this;
             _this.componentDef = componentDef;
             _this.ngModule = ngModule;
@@ -46020,21 +46020,21 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             _this.isBoundToModule = !!ngModule;
             return _this;
         }
-        Object.defineProperty(ComponentFactory$$1.prototype, "inputs", {
+        Object.defineProperty(ComponentFactory.prototype, "inputs", {
             get: function () {
                 return toRefArray(this.componentDef.inputs);
             },
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(ComponentFactory$$1.prototype, "outputs", {
+        Object.defineProperty(ComponentFactory.prototype, "outputs", {
             get: function () {
                 return toRefArray(this.componentDef.outputs);
             },
             enumerable: true,
             configurable: true
         });
-        ComponentFactory$$1.prototype.create = function (injector, projectableNodes, rootSelectorOrNode, ngModule) {
+        ComponentFactory.prototype.create = function (injector, projectableNodes, rootSelectorOrNode, ngModule) {
             var isInternalRootView = rootSelectorOrNode === undefined;
             ngModule = ngModule || this.ngModule;
             var rootViewInjector = ngModule ? createChainedInjector(injector, ngModule.injector) : injector;
@@ -46086,7 +46086,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             }
             return componentRef;
         };
-        return ComponentFactory$$1;
+        return ComponentFactory;
     }(ComponentFactory));
     var componentFactoryResolver = new ComponentFactoryResolver$1();
     /**
@@ -46098,8 +46098,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      */
     var ComponentRef$1 = /** @class */ (function (_super) {
-        __extends(ComponentRef$$1, _super);
-        function ComponentRef$$1(componentType, instance, location, _rootLView, _tNode) {
+        __extends(ComponentRef, _super);
+        function ComponentRef(componentType, instance, location, _rootLView, _tNode) {
             var _this = _super.call(this) || this;
             _this.location = location;
             _this._rootLView = _rootLView;
@@ -46111,22 +46111,22 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             _this.componentType = componentType;
             return _this;
         }
-        Object.defineProperty(ComponentRef$$1.prototype, "injector", {
+        Object.defineProperty(ComponentRef.prototype, "injector", {
             get: function () { return new NodeInjector(this._tNode, this._rootLView); },
             enumerable: true,
             configurable: true
         });
-        ComponentRef$$1.prototype.destroy = function () {
+        ComponentRef.prototype.destroy = function () {
             ngDevMode && assertDefined(this.destroyCbs, 'NgModule already destroyed');
             this.destroyCbs.forEach(function (fn) { return fn(); });
             this.destroyCbs = null;
             !this.hostView.destroyed && this.hostView.destroy();
         };
-        ComponentRef$$1.prototype.onDestroy = function (callback) {
+        ComponentRef.prototype.onDestroy = function (callback) {
             ngDevMode && assertDefined(this.destroyCbs, 'NgModule already destroyed');
             this.destroyCbs.push(callback);
         };
-        return ComponentRef$$1;
+        return ComponentRef;
     }(ComponentRef));
 
     /**
@@ -46511,16 +46511,16 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                         icuNodeIndex << 2 /* SHIFT_REF */ | 3 /* IcuUpdate */, tIcuIndex);
                     }
                     else if (parts[j] !== '') {
-                        var text$$1 = parts[j];
+                        var text = parts[j];
                         // Even indexes are text (including bindings)
-                        var hasBinding = text$$1.match(BINDING_REGEXP);
+                        var hasBinding = text.match(BINDING_REGEXP);
                         // Create text nodes
                         var textNodeIndex = startIndex + i18nVarsCount++;
                         createOpCodes.push(
                         // If there is a binding, the value will be set during update
-                        hasBinding ? '' : text$$1, textNodeIndex, parentIndex << 17 /* SHIFT_PARENT */ | 1 /* AppendChild */);
+                        hasBinding ? '' : text, textNodeIndex, parentIndex << 17 /* SHIFT_PARENT */ | 1 /* AppendChild */);
                         if (hasBinding) {
-                            addAllToArray(generateBindingUpdateOpCodes(text$$1, textNodeIndex), updateOpCodes);
+                            addAllToArray(generateBindingUpdateOpCodes(text, textNodeIndex), updateOpCodes);
                         }
                     }
                 }
@@ -47549,15 +47549,15 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 var newIndex = expandoStartIndex + ++icuCase.vars;
                 switch (currentNode.nodeType) {
                     case Node.ELEMENT_NODE:
-                        var element$$1 = currentNode;
-                        var tagName = element$$1.tagName.toLowerCase();
+                        var element = currentNode;
+                        var tagName = element.tagName.toLowerCase();
                         if (!VALID_ELEMENTS.hasOwnProperty(tagName)) {
                             // This isn't a valid element, we won't create an element for it
                             icuCase.vars--;
                         }
                         else {
                             icuCase.create.push(ELEMENT_MARKER, tagName, newIndex, parentIndex << 17 /* SHIFT_PARENT */ | 1 /* AppendChild */);
-                            var elAttrs = element$$1.attributes;
+                            var elAttrs = element.attributes;
                             for (var i = 0; i < elAttrs.length; i++) {
                                 var attr = elAttrs.item(i);
                                 var lowerAttrName = attr.name.toLowerCase();
@@ -47653,8 +47653,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         deps: [NgModuleRef],
     };
     var NgModuleRef$1 = /** @class */ (function (_super) {
-        __extends(NgModuleRef$$1, _super);
-        function NgModuleRef$$1(ngModuleType, _parent) {
+        __extends(NgModuleRef$1, _super);
+        function NgModuleRef$1(ngModuleType, _parent) {
             var _this = _super.call(this) || this;
             _this._parent = _parent;
             // tslint:disable-next-line:require-internal-with-underscore
@@ -47675,7 +47675,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             _this.instance = _this.get(ngModuleType);
             return _this;
         }
-        NgModuleRef$$1.prototype.get = function (token, notFoundValue, injectFlags) {
+        NgModuleRef$1.prototype.get = function (token, notFoundValue, injectFlags) {
             if (notFoundValue === void 0) { notFoundValue = Injector.THROW_IF_NOT_FOUND; }
             if (injectFlags === void 0) { injectFlags = InjectFlags.Default; }
             if (token === Injector || token === NgModuleRef || token === INJECTOR) {
@@ -47683,37 +47683,37 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             }
             return this._r3Injector.get(token, notFoundValue, injectFlags);
         };
-        Object.defineProperty(NgModuleRef$$1.prototype, "componentFactoryResolver", {
+        Object.defineProperty(NgModuleRef$1.prototype, "componentFactoryResolver", {
             get: function () {
                 return this.get(ComponentFactoryResolver);
             },
             enumerable: true,
             configurable: true
         });
-        NgModuleRef$$1.prototype.destroy = function () {
+        NgModuleRef$1.prototype.destroy = function () {
             ngDevMode && assertDefined(this.destroyCbs, 'NgModule already destroyed');
             var injector = this._r3Injector;
             !injector.destroyed && injector.destroy();
             this.destroyCbs.forEach(function (fn) { return fn(); });
             this.destroyCbs = null;
         };
-        NgModuleRef$$1.prototype.onDestroy = function (callback) {
+        NgModuleRef$1.prototype.onDestroy = function (callback) {
             ngDevMode && assertDefined(this.destroyCbs, 'NgModule already destroyed');
             this.destroyCbs.push(callback);
         };
-        return NgModuleRef$$1;
+        return NgModuleRef$1;
     }(NgModuleRef));
     var NgModuleFactory$1 = /** @class */ (function (_super) {
-        __extends(NgModuleFactory$$1, _super);
-        function NgModuleFactory$$1(moduleType) {
+        __extends(NgModuleFactory, _super);
+        function NgModuleFactory(moduleType) {
             var _this = _super.call(this) || this;
             _this.moduleType = moduleType;
             return _this;
         }
-        NgModuleFactory$$1.prototype.create = function (parentInjector) {
+        NgModuleFactory.prototype.create = function (parentInjector) {
             return new NgModuleRef$1(this.moduleType, parentInjector);
         };
-        return NgModuleFactory$$1;
+        return NgModuleFactory;
     }(NgModuleFactory));
 
     /**
@@ -47723,45 +47723,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    /**
-     * Adds decorator, constructor, and property metadata to a given type via static metadata fields
-     * on the type.
-     *
-     * These metadata fields can later be read with Angular's `ReflectionCapabilities` API.
-     *
-     * Calls to `setClassMetadata` can be marked as pure, resulting in the metadata assignments being
-     * tree-shaken away during production builds.
-     */
-    function setClassMetadata(type, decorators, ctorParameters, propDecorators) {
-        var _a;
-        var clazz = type;
-        if (decorators !== null) {
-            if (clazz.hasOwnProperty('decorators') && clazz.decorators !== undefined) {
-                (_a = clazz.decorators).push.apply(_a, __spread(decorators));
-            }
-            else {
-                clazz.decorators = decorators;
-            }
-        }
-        if (ctorParameters !== null) {
-            // Rather than merging, clobber the existing parameters. If other projects exist which use
-            // tsickle-style annotations and reflect over them in the same way, this could cause issues,
-            // but that is vanishingly unlikely.
-            clazz.ctorParameters = ctorParameters;
-        }
-        if (propDecorators !== null) {
-            // The property decorator objects are merged as it is possible different fields have different
-            // decorator types. Decorators on individual fields are not merged, as it's also incredibly
-            // unlikely that a field will be decorated both with an Angular decorator and a non-Angular
-            // decorator that's also been downleveled.
-            if (clazz.propDecorators !== undefined) {
-                clazz.propDecorators = __assign({}, clazz.propDecorators, propDecorators);
-            }
-            else {
-                clazz.propDecorators = propDecorators;
-            }
-        }
-    }
 
     /**
      * @license
@@ -48075,7 +48036,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      */
     function pipeBind1(index, slotOffset, v1) {
         var pipeInstance = load(index);
-        return unwrapValue$1(isPure(index) ? pureFunction1(slotOffset, pipeInstance.transform, v1, pipeInstance) :
+        return unwrapValue(isPure(index) ? pureFunction1(slotOffset, pipeInstance.transform, v1, pipeInstance) :
             pipeInstance.transform(v1));
     }
     /**
@@ -48091,7 +48052,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      */
     function pipeBind2(index, slotOffset, v1, v2) {
         var pipeInstance = load(index);
-        return unwrapValue$1(isPure(index) ? pureFunction2(slotOffset, pipeInstance.transform, v1, v2, pipeInstance) :
+        return unwrapValue(isPure(index) ? pureFunction2(slotOffset, pipeInstance.transform, v1, v2, pipeInstance) :
             pipeInstance.transform(v1, v2));
     }
     /**
@@ -48108,7 +48069,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      */
     function pipeBind3(index, slotOffset, v1, v2, v3) {
         var pipeInstance = load(index);
-        return unwrapValue$1(isPure(index) ? pureFunction3(slotOffset, pipeInstance.transform, v1, v2, v3, pipeInstance) :
+        return unwrapValue(isPure(index) ? pureFunction3(slotOffset, pipeInstance.transform, v1, v2, v3, pipeInstance) :
             pipeInstance.transform(v1, v2, v3));
     }
     /**
@@ -48126,7 +48087,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      */
     function pipeBind4(index, slotOffset, v1, v2, v3, v4) {
         var pipeInstance = load(index);
-        return unwrapValue$1(isPure(index) ?
+        return unwrapValue(isPure(index) ?
             pureFunction4(slotOffset, pipeInstance.transform, v1, v2, v3, v4, pipeInstance) :
             pipeInstance.transform(v1, v2, v3, v4));
     }
@@ -48142,7 +48103,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      */
     function pipeBindV(index, slotOffset, values) {
         var pipeInstance = load(index);
-        return unwrapValue$1(isPure(index) ? pureFunctionV(slotOffset, pipeInstance.transform, values, pipeInstance) :
+        return unwrapValue(isPure(index) ? pureFunctionV(slotOffset, pipeInstance.transform, values, pipeInstance) :
             pipeInstance.transform.apply(pipeInstance, values));
     }
     function isPure(index) {
@@ -48155,7 +48116,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @param newValue the pipe transformation output.
      */
-    function unwrapValue$1(newValue) {
+    function unwrapValue(newValue) {
         if (WrappedValue.isWrapped(newValue)) {
             newValue = WrappedValue.unwrap(newValue);
             var lView = getLView();
@@ -48616,11 +48577,11 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
 
     const observable = typeof Symbol === 'function' && Symbol.observable || '@@observable';
 
-    function noop$2() { }
+    function noop() { }
 
     function pipeFromArray(fns) {
         if (!fns) {
-            return noop$2;
+            return noop;
         }
         if (fns.length === 1) {
             return fns[0];
@@ -48638,10 +48599,10 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             }
         }
         lift(operator) {
-            const observable$$1 = new Observable();
-            observable$$1.source = this;
-            observable$$1.operator = operator;
-            return observable$$1;
+            const observable = new Observable();
+            observable.source = this;
+            observable.operator = operator;
+            return observable;
         }
         subscribe(observerOrNext, error, complete) {
             const { operator } = this;
@@ -49473,9 +49434,9 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
     const iterator = getSymbolIterator$1();
 
     const subscribeToIterable = (iterable) => (subscriber) => {
-        const iterator$$1 = iterable[iterator]();
+        const iterator$1 = iterable[iterator]();
         do {
-            const item = iterator$$1.next();
+            const item = iterator$1.next();
             if (item.done) {
                 subscriber.complete();
                 break;
@@ -49485,10 +49446,10 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 break;
             }
         } while (true);
-        if (typeof iterator$$1.return === 'function') {
+        if (typeof iterator$1.return === 'function') {
             subscriber.add(() => {
-                if (iterator$$1.return) {
-                    iterator$$1.return();
+                if (iterator$1.return) {
+                    iterator$1.return();
                 }
             });
         }
@@ -49589,14 +49550,14 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         else {
             return new Observable(subscriber => {
                 const sub = new Subscription();
-                let iterator$$1;
+                let iterator$1;
                 sub.add(() => {
-                    if (iterator$$1 && typeof iterator$$1.return === 'function') {
-                        iterator$$1.return();
+                    if (iterator$1 && typeof iterator$1.return === 'function') {
+                        iterator$1.return();
                     }
                 });
                 sub.add(scheduler.schedule(() => {
-                    iterator$$1 = input[iterator]();
+                    iterator$1 = input[iterator]();
                     sub.add(scheduler.schedule(function () {
                         if (subscriber.closed) {
                             return;
@@ -49604,7 +49565,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                         let value;
                         let done;
                         try {
-                            const result = iterator$$1.next();
+                            const result = iterator$1.next();
                             value = result.value;
                             done = result.done;
                         }
@@ -49634,8 +49595,8 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             return new Observable(subscriber => {
                 const sub = new Subscription();
                 sub.add(scheduler.schedule(() => {
-                    const observable$$1 = input[observable]();
-                    sub.add(observable$$1.subscribe({
+                    const observable$1 = input[observable]();
+                    sub.add(observable$1.subscribe({
                         next(value) { sub.add(scheduler.schedule(() => subscriber.next(value))); },
                         error(err) { sub.add(scheduler.schedule(() => subscriber.error(err))); },
                         complete() { sub.add(scheduler.schedule(() => subscriber.complete())); },
@@ -49979,7 +49940,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         QueryList.prototype[getSymbolIterator()] = function () { return this._results[getSymbolIterator()](); };
         QueryList.prototype.toString = function () { return this._results.toString(); };
         QueryList.prototype.reset = function (res) {
-            this._results = flatten$3(res);
+            this._results = flatten$2(res);
             this.dirty = false;
             this.length = this._results.length;
             this.last = this._results[this.length - 1];
@@ -49995,9 +49956,9 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         };
         return QueryList;
     }());
-    function flatten$3(list) {
+    function flatten$2(list) {
         return list.reduce(function (flat, item) {
-            var flatItem = Array.isArray(item) ? flatten$3(item) : item;
+            var flatItem = Array.isArray(item) ? flatten$2(item) : item;
             return flat.concat(flatItem);
         }, []);
     }
@@ -50547,7 +50508,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var EMPTY_ARRAY$5 = [];
+    var EMPTY_ARRAY$3 = [];
     var moduleQueue = [];
     /**
      * Enqueues moduleDef to be checked later to see if scope can be set on its
@@ -50611,7 +50572,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
     function compileNgModuleDefs(moduleType, ngModule) {
         ngDevMode && assertDefined(moduleType, 'Required value moduleType');
         ngDevMode && assertDefined(ngModule, 'Required value ngModule');
-        var declarations = flatten$4(ngModule.declarations || EMPTY_ARRAY$5);
+        var declarations = flatten$3(ngModule.declarations || EMPTY_ARRAY$3);
         var ngModuleDef = null;
         Object.defineProperty(moduleType, NG_MODULE_DEF, {
             configurable: true,
@@ -50619,14 +50580,14 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 if (ngModuleDef === null) {
                     ngModuleDef = getCompilerFacade().compileNgModule(angularCoreEnv, "ng://" + moduleType.name + "/ngModuleDef.js", {
                         type: moduleType,
-                        bootstrap: flatten$4(ngModule.bootstrap || EMPTY_ARRAY$5, resolveForwardRef$1),
+                        bootstrap: flatten$3(ngModule.bootstrap || EMPTY_ARRAY$3, resolveForwardRef$1),
                         declarations: declarations.map(resolveForwardRef$1),
-                        imports: flatten$4(ngModule.imports || EMPTY_ARRAY$5, resolveForwardRef$1)
+                        imports: flatten$3(ngModule.imports || EMPTY_ARRAY$3, resolveForwardRef$1)
                             .map(expandModuleWithProviders),
-                        exports: flatten$4(ngModule.exports || EMPTY_ARRAY$5, resolveForwardRef$1)
+                        exports: flatten$3(ngModule.exports || EMPTY_ARRAY$3, resolveForwardRef$1)
                             .map(expandModuleWithProviders),
                         emitInline: true,
-                        schemas: ngModule.schemas ? flatten$4(ngModule.schemas) : null,
+                        schemas: ngModule.schemas ? flatten$3(ngModule.schemas) : null,
                     });
                 }
                 return ngModuleDef;
@@ -50644,10 +50605,10 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                         name: moduleType.name,
                         type: moduleType,
                         deps: reflectDependencies(moduleType),
-                        providers: ngModule.providers || EMPTY_ARRAY$5,
+                        providers: ngModule.providers || EMPTY_ARRAY$3,
                         imports: [
-                            (ngModule.imports || EMPTY_ARRAY$5).map(resolveForwardRef$1),
-                            (ngModule.exports || EMPTY_ARRAY$5).map(resolveForwardRef$1),
+                            (ngModule.imports || EMPTY_ARRAY$3).map(resolveForwardRef$1),
+                            (ngModule.exports || EMPTY_ARRAY$3).map(resolveForwardRef$1),
                         ],
                     };
                     ngInjectorDef = getCompilerFacade().compileInjector(angularCoreEnv, "ng://" + moduleType.name + "/ngInjectorDef.js", meta);
@@ -50669,14 +50630,14 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         var imports = maybeUnwrapFn(ngModuleDef.imports);
         var exports = maybeUnwrapFn(ngModuleDef.exports);
         declarations.forEach(verifyDeclarationsHaveDefinitions);
-        var combinedDeclarations = __spread(declarations.map(resolveForwardRef$1), flatten$4(imports.map(computeCombinedExports), resolveForwardRef$1));
+        var combinedDeclarations = __spread(declarations.map(resolveForwardRef$1), flatten$3(imports.map(computeCombinedExports), resolveForwardRef$1));
         exports.forEach(verifyExportsAreDeclaredOrReExported);
         declarations.forEach(verifyDeclarationIsUnique);
         declarations.forEach(verifyComponentEntryComponentsIsPartOfNgModule);
         var ngModule = getAnnotation(moduleType, 'NgModule');
         if (ngModule) {
             ngModule.imports &&
-                flatten$4(ngModule.imports, unwrapModuleWithProvidersImports)
+                flatten$3(ngModule.imports, unwrapModuleWithProvidersImports)
                     .forEach(verifySemanticsOfNgModuleDef);
             ngModule.bootstrap && ngModule.bootstrap.forEach(verifyCorrectBootstrapType);
             ngModule.bootstrap && ngModule.bootstrap.forEach(verifyComponentIsPartOfNgModule);
@@ -50790,7 +50751,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
     function computeCombinedExports(type) {
         type = resolveForwardRef$1(type);
         var ngModuleDef = getNgModuleDef(type, true);
-        return __spread(flatten$4(maybeUnwrapFn(ngModuleDef.exports).map(function (type) {
+        return __spread(flatten$3(maybeUnwrapFn(ngModuleDef.exports).map(function (type) {
             var ngModuleDef = getNgModuleDef(type);
             if (ngModuleDef) {
                 verifySemanticsOfNgModuleDef(type);
@@ -50807,7 +50768,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * the `ngSelectorScope` property of the declared type.
      */
     function setScopeOnDeclaredComponents(moduleType, ngModule) {
-        var declarations = flatten$4(ngModule.declarations || EMPTY_ARRAY$5);
+        var declarations = flatten$3(ngModule.declarations || EMPTY_ARRAY$3);
         var transitiveScopes = transitiveScopesFor(moduleType);
         declarations.forEach(function (declaration) {
             if (declaration.hasOwnProperty(NG_COMPONENT_DEF)) {
@@ -50917,11 +50878,11 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         def.transitiveCompileScopes = scopes;
         return scopes;
     }
-    function flatten$4(values, mapFn) {
+    function flatten$3(values, mapFn) {
         var out = [];
         values.forEach(function (value) {
             if (Array.isArray(value)) {
-                out.push.apply(out, __spread(flatten$4(value, mapFn)));
+                out.push.apply(out, __spread(flatten$3(value, mapFn)));
             }
             else {
                 out.push(mapFn ? mapFn(value) : value);
@@ -50978,7 +50939,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                         throw new Error(error.join('\n'));
                     }
                     var templateUrl = metadata.templateUrl || "ng:///" + renderStringify(type) + "/template.html";
-                    var meta = __assign({}, directiveMetadata(type, metadata), { typeSourceSpan: compiler.createParseSourceSpan('Component', renderStringify(type), templateUrl), template: metadata.template || '', preserveWhitespaces: metadata.preserveWhitespaces || false, styles: metadata.styles || EMPTY_ARRAY$2, animations: metadata.animations, directives: [], changeDetection: metadata.changeDetection, pipes: new Map(), encapsulation: metadata.encapsulation || ViewEncapsulation$1.Emulated, interpolation: metadata.interpolation, viewProviders: metadata.viewProviders || null });
+                    var meta = __assign({}, directiveMetadata(type, metadata), { typeSourceSpan: compiler.createParseSourceSpan('Component', renderStringify(type), templateUrl), template: metadata.template || '', preserveWhitespaces: metadata.preserveWhitespaces || false, styles: metadata.styles || EMPTY_ARRAY$1, animations: metadata.animations, directives: [], changeDetection: metadata.changeDetection, pipes: new Map(), encapsulation: metadata.encapsulation || ViewEncapsulation$1.Emulated, interpolation: metadata.interpolation, viewProviders: metadata.viewProviders || null });
                     ngComponentDef = compiler.compileComponent(angularCoreEnv, templateUrl, meta);
                     // When NgModule decorator executed, we enqueued the module definition such that
                     // it would only dequeue and add itself as module scope to all of its declarations,
@@ -51048,8 +51009,8 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             deps: reflectDependencies(type),
             host: metadata.host || EMPTY_OBJ,
             propMetadata: propMetadata,
-            inputs: metadata.inputs || EMPTY_ARRAY$2,
-            outputs: metadata.outputs || EMPTY_ARRAY$2,
+            inputs: metadata.inputs || EMPTY_ARRAY$1,
+            outputs: metadata.outputs || EMPTY_ARRAY$1,
             queries: extractQueriesMetadata(type, propMetadata, isContentQuery),
             lifecycle: { usesOnChanges: type.prototype.hasOwnProperty('ngOnChanges') },
             typeSourceSpan: null,
@@ -51390,14 +51351,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         ApplicationInitStatus.ngInjectableDef = defineInjectable({ token: ApplicationInitStatus, factory: function ApplicationInitStatus_Factory(t) { return new (t || ApplicationInitStatus)(inject(APP_INITIALIZER, 8)); }, providedIn: null });
         return ApplicationInitStatus;
     }());
-    /*@__PURE__*/ setClassMetadata(ApplicationInitStatus, [{
-            type: Injectable
-        }], function () { return [{ type: undefined, decorators: [{
-                    type: Inject,
-                    args: [APP_INITIALIZER]
-                }, {
-                    type: Optional
-                }] }]; }, null);
 
     /**
      * @license
@@ -51479,9 +51432,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         Console.ngInjectableDef = defineInjectable({ token: Console, factory: function Console_Factory(t) { return new (t || Console)(); }, providedIn: null });
         return Console;
     }());
-    /*@__PURE__*/ setClassMetadata(Console, [{
-            type: Injectable
-        }], null, null);
 
     /**
      * @license
@@ -51572,9 +51522,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         Compiler.ngInjectableDef = defineInjectable({ token: Compiler, factory: function Compiler_Factory(t) { return new (t || Compiler)(); }, providedIn: null });
         return Compiler;
     }());
-    /*@__PURE__*/ setClassMetadata(Compiler, [{
-            type: Injectable
-        }], null, null);
     /**
      * Token to provide CompilerOptions in the platform injector.
      *
@@ -51853,7 +51800,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
          */
         NgZone.prototype.runTask = function (fn, applyThis, applyArgs, name) {
             var zone = this._inner;
-            var task = zone.scheduleEventTask('NgZoneEvent: ' + name, fn, EMPTY_PAYLOAD, noop$3, noop$3);
+            var task = zone.scheduleEventTask('NgZoneEvent: ' + name, fn, EMPTY_PAYLOAD, noop$1, noop$1);
             try {
                 return zone.runTask(task, applyThis, applyArgs);
             }
@@ -51886,7 +51833,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         };
         return NgZone;
     }());
-    function noop$3() { }
+    function noop$1() { }
     var EMPTY_PAYLOAD = {};
     function checkStable(zone) {
         if (zone._nesting == 0 && !zone.hasPendingMicrotasks && !zone.isStable) {
@@ -52154,9 +52101,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         Testability.ngInjectableDef = defineInjectable({ token: Testability, factory: function Testability_Factory(t) { return new (t || Testability)(inject(NgZone)); }, providedIn: null });
         return Testability;
     }());
-    /*@__PURE__*/ setClassMetadata(Testability, [{
-            type: Injectable
-        }], function () { return [{ type: NgZone }]; }, null);
     /**
      * A global registry of {@link Testability} instances for specific elements.
      * @publicApi
@@ -52210,9 +52154,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         TestabilityRegistry.ngInjectableDef = defineInjectable({ token: TestabilityRegistry, factory: function TestabilityRegistry_Factory(t) { return new (t || TestabilityRegistry)(); }, providedIn: null });
         return TestabilityRegistry;
     }());
-    /*@__PURE__*/ setClassMetadata(TestabilityRegistry, [{
-            type: Injectable
-        }], function () { return []; }, null);
     var _NoopGetTestability = /** @class */ (function () {
         function _NoopGetTestability() {
         }
@@ -52457,9 +52398,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         PlatformRef.ngInjectableDef = defineInjectable({ token: PlatformRef, factory: function PlatformRef_Factory(t) { return new (t || PlatformRef)(inject(Injector)); }, providedIn: null });
         return PlatformRef;
     }());
-    /*@__PURE__*/ setClassMetadata(PlatformRef, [{
-            type: Injectable
-        }], function () { return [{ type: Injector }]; }, null);
     function getNgZone(ngZoneOption) {
         var ngZone;
         if (ngZoneOption === 'noop') {
@@ -52784,9 +52722,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         ApplicationRef.ngInjectableDef = defineInjectable({ token: ApplicationRef, factory: function ApplicationRef_Factory(t) { return new (t || ApplicationRef)(inject(NgZone), inject(Console), inject(Injector), inject(ErrorHandler), inject(ComponentFactoryResolver), inject(ApplicationInitStatus)); }, providedIn: null });
         return ApplicationRef;
     }());
-    /*@__PURE__*/ setClassMetadata(ApplicationRef, [{
-            type: Injectable
-        }], function () { return [{ type: NgZone }, { type: Console }, { type: Injector }, { type: ErrorHandler }, { type: ComponentFactoryResolver }, { type: ApplicationInitStatus }]; }, null);
     function remove(list, el) {
         var index = list.indexOf(el);
         if (index > -1) {
@@ -52841,13 +52776,13 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this._compiler = _compiler;
             this._config = config || DEFAULT_CONFIG;
         }
-        SystemJsNgModuleLoader.prototype.load = function (path$$1) {
+        SystemJsNgModuleLoader.prototype.load = function (path) {
             var offlineMode = this._compiler instanceof Compiler;
-            return offlineMode ? this.loadFactory(path$$1) : this.loadAndCompile(path$$1);
+            return offlineMode ? this.loadFactory(path) : this.loadAndCompile(path);
         };
-        SystemJsNgModuleLoader.prototype.loadAndCompile = function (path$$1) {
+        SystemJsNgModuleLoader.prototype.loadAndCompile = function (path) {
             var _this = this;
-            var _a = __read(path$$1.split(_SEPARATOR), 2), module = _a[0], exportName = _a[1];
+            var _a = __read(path.split(_SEPARATOR), 2), module = _a[0], exportName = _a[1];
             if (exportName === undefined) {
                 exportName = 'default';
             }
@@ -52856,8 +52791,8 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 .then(function (type) { return checkNotEmpty(type, module, exportName); })
                 .then(function (type) { return _this._compiler.compileModuleAsync(type); });
         };
-        SystemJsNgModuleLoader.prototype.loadFactory = function (path$$1) {
-            var _a = __read(path$$1.split(_SEPARATOR), 2), module = _a[0], exportName = _a[1];
+        SystemJsNgModuleLoader.prototype.loadFactory = function (path) {
+            var _a = __read(path.split(_SEPARATOR), 2), module = _a[0], exportName = _a[1];
             var factoryClassSuffix = FACTORY_CLASS_SUFFIX;
             if (exportName === undefined) {
                 exportName = 'default';
@@ -52870,11 +52805,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         SystemJsNgModuleLoader.ngInjectableDef = defineInjectable({ token: SystemJsNgModuleLoader, factory: function SystemJsNgModuleLoader_Factory(t) { return new (t || SystemJsNgModuleLoader)(inject(Compiler), inject(SystemJsNgModuleLoaderConfig, 8)); }, providedIn: null });
         return SystemJsNgModuleLoader;
     }());
-    /*@__PURE__*/ setClassMetadata(SystemJsNgModuleLoader, [{
-            type: Injectable
-        }], function () { return [{ type: Compiler }, { type: SystemJsNgModuleLoaderConfig, decorators: [{
-                    type: Optional
-                }] }]; }, null);
     function checkNotEmpty(value, modulePath, exportName) {
         if (!value) {
             throw new Error("Cannot find '" + exportName + "' in '" + modulePath + "'");
@@ -53675,10 +53605,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         ApplicationModule.ngInjectorDef = defineInjector({ factory: function ApplicationModule_Factory(t) { return new (t || ApplicationModule)(inject(ApplicationRef)); }, providers: APPLICATION_MODULE_PROVIDERS, imports: [] });
         return ApplicationModule;
     }());
-    /*@__PURE__*/ setClassMetadata(ApplicationModule, [{
-            type: NgModule,
-            args: [{ providers: APPLICATION_MODULE_PROVIDERS }]
-        }], function () { return [{ type: ApplicationRef }]; }, null);
 
     /**
      * @license
@@ -53729,7 +53655,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
     function listenToElementOutputs(view, compView, def, el) {
         for (var i = 0; i < def.outputs.length; i++) {
             var output = def.outputs[i];
-            var handleEventClosure = renderEventHandlerClosure(view, def.nodeIndex, elementEventFullName$1(output.target, output.eventName));
+            var handleEventClosure = renderEventHandlerClosure(view, def.nodeIndex, elementEventFullName(output.target, output.eventName));
             var listenTarget = output.target;
             var listenerView = view;
             if (output.target === 'component') {
@@ -53782,50 +53708,50 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         }
         var binding = def.bindings[bindingIdx];
         var elData = asElementData(view, def.nodeIndex);
-        var renderNode$$1 = elData.renderElement;
+        var renderNode = elData.renderElement;
         var name = binding.name;
         switch (binding.flags & 15 /* Types */) {
             case 1 /* TypeElementAttribute */:
-                setElementAttribute(view, binding, renderNode$$1, binding.ns, name, value);
+                setElementAttribute(view, binding, renderNode, binding.ns, name, value);
                 break;
             case 2 /* TypeElementClass */:
-                setElementClass(view, renderNode$$1, name, value);
+                setElementClass(view, renderNode, name, value);
                 break;
             case 4 /* TypeElementStyle */:
-                setElementStyle(view, binding, renderNode$$1, name, value);
+                setElementStyle(view, binding, renderNode, name, value);
                 break;
             case 8 /* TypeProperty */:
                 var bindView = (def.flags & 33554432 /* ComponentView */ &&
                     binding.flags & 32 /* SyntheticHostProperty */) ?
                     elData.componentView :
                     view;
-                setElementProperty(bindView, binding, renderNode$$1, name, value);
+                setElementProperty(bindView, binding, renderNode, name, value);
                 break;
         }
         return true;
     }
-    function setElementAttribute(view, binding, renderNode$$1, ns, name, value) {
+    function setElementAttribute(view, binding, renderNode, ns, name, value) {
         var securityContext = binding.securityContext;
         var renderValue = securityContext ? view.root.sanitizer.sanitize(securityContext, value) : value;
         renderValue = renderValue != null ? renderValue.toString() : null;
         var renderer = view.renderer;
         if (value != null) {
-            renderer.setAttribute(renderNode$$1, name, renderValue, ns);
+            renderer.setAttribute(renderNode, name, renderValue, ns);
         }
         else {
-            renderer.removeAttribute(renderNode$$1, name, ns);
+            renderer.removeAttribute(renderNode, name, ns);
         }
     }
-    function setElementClass(view, renderNode$$1, name, value) {
+    function setElementClass(view, renderNode, name, value) {
         var renderer = view.renderer;
         if (value) {
-            renderer.addClass(renderNode$$1, name);
+            renderer.addClass(renderNode, name);
         }
         else {
-            renderer.removeClass(renderNode$$1, name);
+            renderer.removeClass(renderNode, name);
         }
     }
-    function setElementStyle(view, binding, renderNode$$1, name, value) {
+    function setElementStyle(view, binding, renderNode, name, value) {
         var renderValue = view.root.sanitizer.sanitize(SecurityContext$1.STYLE, value);
         if (renderValue != null) {
             renderValue = renderValue.toString();
@@ -53839,16 +53765,16 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         }
         var renderer = view.renderer;
         if (renderValue != null) {
-            renderer.setStyle(renderNode$$1, name, renderValue);
+            renderer.setStyle(renderNode, name, renderValue);
         }
         else {
-            renderer.removeStyle(renderNode$$1, name);
+            renderer.removeStyle(renderNode, name);
         }
     }
-    function setElementProperty(view, binding, renderNode$$1, name, value) {
+    function setElementProperty(view, binding, renderNode, name, value) {
         var securityContext = binding.securityContext;
         var renderValue = securityContext ? view.root.sanitizer.sanitize(securityContext, value) : value;
-        view.renderer.setProperty(renderNode$$1, name, renderValue);
+        view.renderer.setProperty(renderNode, name, renderValue);
     }
 
     /**
@@ -54175,14 +54101,14 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * found in the LICENSE file at https://angular.io/license
      */
     function createText(view, renderHost, def) {
-        var renderNode$$1;
+        var renderNode;
         var renderer = view.renderer;
-        renderNode$$1 = renderer.createText(def.text.prefix);
+        renderNode = renderer.createText(def.text.prefix);
         var parentEl = getParentRenderElement(view, renderHost, def);
         if (parentEl) {
-            renderer.appendChild(parentEl, renderNode$$1);
+            renderer.appendChild(parentEl, renderNode);
         }
-        return { renderText: renderNode$$1 };
+        return { renderText: renderNode };
     }
     function checkAndUpdateTextInline(view, def, v0, v1, v2, v3, v4, v5, v6, v7, v8, v9) {
         var changed = false;
@@ -54230,8 +54156,8 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 value += _addInterpolationPart(v8, bindings[8]);
             if (bindLen > 9)
                 value += _addInterpolationPart(v9, bindings[9]);
-            var renderNode$$1 = asTextData(view, def.nodeIndex).renderText;
-            view.renderer.setValue(renderNode$$1, value);
+            var renderNode = asTextData(view, def.nodeIndex).renderText;
+            view.renderer.setValue(renderNode, value);
         }
         return changed;
     }
@@ -54251,8 +54177,8 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 value = value + _addInterpolationPart(values[i], bindings[i]);
             }
             value = def.text.prefix + value;
-            var renderNode$$1 = asTextData(view, def.nodeIndex).renderText;
-            view.renderer.setValue(renderNode$$1, value);
+            var renderNode = asTextData(view, def.nodeIndex).renderText;
+            view.renderer.setValue(renderNode, value);
         }
         return changed;
     }
@@ -54268,10 +54194,10 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    function createEmbeddedView(parent, anchorDef$$1, viewDef, context) {
+    function createEmbeddedView(parent, anchorDef, viewDef, context) {
         // embedded views are seen as siblings to the anchor, so we need
         // to get the parent of the anchor and use it as parentIndex.
-        var view = createView(parent.root, parent.renderer, parent, anchorDef$$1, viewDef);
+        var view = createView(parent.root, parent.renderer, parent, anchorDef, viewDef);
         initView(view, parent.component, context);
         createViewNodes(view);
         return view;
@@ -54809,19 +54735,19 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             selectorOrNode: rootSelectorOrNode, sanitizer: sanitizer, rendererFactory: rendererFactory, renderer: renderer, errorHandler: errorHandler
         };
     }
-    function debugCreateEmbeddedView(parentView, anchorDef, viewDef$$1, context) {
-        var defWithOverride = applyProviderOverridesToView(viewDef$$1);
+    function debugCreateEmbeddedView(parentView, anchorDef, viewDef, context) {
+        var defWithOverride = applyProviderOverridesToView(viewDef);
         return callWithDebugContext(DebugAction.create, createEmbeddedView, null, [parentView, anchorDef, defWithOverride, context]);
     }
-    function debugCreateComponentView(parentView, nodeDef, viewDef$$1, hostElement) {
+    function debugCreateComponentView(parentView, nodeDef, viewDef, hostElement) {
         var overrideComponentView = viewDefOverrides.get(nodeDef.element.componentProvider.provider.token);
         if (overrideComponentView) {
-            viewDef$$1 = overrideComponentView;
+            viewDef = overrideComponentView;
         }
         else {
-            viewDef$$1 = applyProviderOverridesToView(viewDef$$1);
+            viewDef = applyProviderOverridesToView(viewDef);
         }
-        return callWithDebugContext(DebugAction.create, createComponentView, null, [parentView, nodeDef, viewDef$$1, hostElement]);
+        return callWithDebugContext(DebugAction.create, createComponentView, null, [parentView, nodeDef, viewDef, hostElement]);
     }
     function debugCreateNgModuleRef(moduleType, parentInjector, bootstrapComponents, def) {
         var defWithOverride = applyProviderOverridesToNgModule(def);
@@ -54885,9 +54811,9 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             }
             return elIndicesWithOverwrittenProviders;
         }
-        function applyProviderOverridesToElement(viewDef$$1, elIndex) {
-            for (var i = elIndex + 1; i < viewDef$$1.nodes.length; i++) {
-                var nodeDef = viewDef$$1.nodes[i];
+        function applyProviderOverridesToElement(viewDef, elIndex) {
+            for (var i = elIndex + 1; i < viewDef.nodes.length; i++) {
+                var nodeDef = viewDef.nodes[i];
                 if (nodeDef.flags & 1 /* TypeElement */) {
                     // stop at the next element
                     return;
@@ -55257,10 +55183,10 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         };
         return DebugContext_;
     }());
-    function getRenderNodeIndex(viewDef$$1, nodeIndex) {
+    function getRenderNodeIndex(viewDef, nodeIndex) {
         var renderNodeIndex = -1;
         for (var i = 0; i <= nodeIndex; i++) {
-            var nodeDef = viewDef$$1.nodes[i];
+            var nodeDef = viewDef.nodes[i];
             if (nodeDef.flags & 3 /* CatRenderNode */) {
                 renderNodeIndex++;
             }
@@ -56458,7 +56384,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.8+20.sha-a3e1054.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-beta.8+25.sha-410ccac.with-local-changes');
 
     /**
      * @license
