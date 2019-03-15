@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.8+33.sha-7c297e0.with-local-changes
+ * @license Angular v8.0.0-beta.8+42.sha-fc8048d.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -15968,7 +15968,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.8+33.sha-7c297e0.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-beta.8+42.sha-fc8048d.with-local-changes');
 
     /**
      * @license
@@ -34487,37 +34487,46 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      */
 
     /**
-     * Runs through the initial style data present in the context and renders
-     * them via the renderer on the element.
+     * Runs through the initial class values present in the provided
+     * context and renders them via the provided renderer on the element.
+     *
+     * @param element the element the styling will be applied to
+     * @param context the source styling context which contains the initial class values
+     * @param renderer the renderer instance that will be used to apply the class
+     * @returns the index that the classes were applied up until
      */
-    function renderInitialStyles(element, context, renderer) {
-        var initialStyles = context[3 /* InitialStyleValuesPosition */];
-        renderInitialStylingValues(element, renderer, initialStyles, false);
-    }
-    /**
-     * Runs through the initial class data present in the context and renders
-     * them via the renderer on the element.
-     */
-    function renderInitialClasses(element, context, renderer) {
+    function renderInitialClasses(element, context, renderer, startIndex) {
         var initialClasses = context[4 /* InitialClassValuesPosition */];
-        renderInitialStylingValues(element, renderer, initialClasses, true);
+        var i = startIndex || 2 /* KeyValueStartPosition */;
+        while (i < initialClasses.length) {
+            var value = initialClasses[i + 1 /* ValueOffset */];
+            if (value) {
+                setClass(element, initialClasses[i + 0 /* PropOffset */], true, renderer, null);
+            }
+            i += 3 /* Size */;
+        }
+        return i;
     }
     /**
-     * This is a helper function designed to render each entry present within the
-     * provided list of initialStylingValues.
+     * Runs through the initial styles values present in the provided
+     * context and renders them via the provided renderer on the element.
+     *
+     * @param element the element the styling will be applied to
+     * @param context the source styling context which contains the initial class values
+     * @param renderer the renderer instance that will be used to apply the class
+     * @returns the index that the styles were applied up until
      */
-    function renderInitialStylingValues(element, renderer, initialStylingValues, isEntryClassBased) {
-        for (var i = 2 /* KeyValueStartPosition */; i < initialStylingValues.length; i += 3 /* Size */) {
-            var value = initialStylingValues[i + 1 /* ValueOffset */];
+    function renderInitialStyles(element, context, renderer, startIndex) {
+        var initialStyles = context[3 /* InitialStyleValuesPosition */];
+        var i = startIndex || 2 /* KeyValueStartPosition */;
+        while (i < initialStyles.length) {
+            var value = initialStyles[i + 1 /* ValueOffset */];
             if (value) {
-                if (isEntryClassBased) {
-                    setClass(element, initialStylingValues[i + 0 /* PropOffset */], true, renderer, null);
-                }
-                else {
-                    setStyle(element, initialStylingValues[i + 0 /* PropOffset */], value, renderer, null);
-                }
+                setStyle(element, initialStyles[i + 0 /* PropOffset */], value, renderer, null);
             }
+            i += 3 /* Size */;
         }
+        return i;
     }
     /**
      * Assigns a style value to a style property for the given element.
@@ -36755,7 +36764,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.8+33.sha-7c297e0.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-beta.8+42.sha-fc8048d.with-local-changes');
 
     /**
      * @license
@@ -47137,7 +47146,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.8+33.sha-7c297e0.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-beta.8+42.sha-fc8048d.with-local-changes');
 
     /**
      * @license
