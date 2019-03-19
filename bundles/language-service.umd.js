@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.8+70.sha-86aba1e.with-local-changes
+ * @license Angular v8.0.0-beta.8+71.sha-0244a24.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -15953,7 +15953,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.8+70.sha-86aba1e.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-beta.8+71.sha-0244a24.with-local-changes');
 
     /**
      * @license
@@ -31393,7 +31393,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      */
     function resolveComponentResources(resourceResolver) {
         // Store all promises which are fetching the resources.
-        var urlFetches = [];
+        var componentResolved = [];
         // Cache so that we don't fetch the same resource more than once.
         var urlMap = new Map();
         function cachedResourceResolve(url) {
@@ -31401,37 +31401,42 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             if (!promise) {
                 var resp = resourceResolver(url);
                 urlMap.set(url, promise = resp.then(unwrapResponse));
-                urlFetches.push(promise);
             }
             return promise;
         }
-        componentResourceResolutionQueue.forEach(function (component) {
+        componentResourceResolutionQueue.forEach(function (component, type) {
+            var promises = [];
             if (component.templateUrl) {
-                cachedResourceResolve(component.templateUrl).then(function (template) {
+                promises.push(cachedResourceResolve(component.templateUrl).then(function (template) {
                     component.template = template;
-                });
+                }));
             }
             var styleUrls = component.styleUrls;
             var styles = component.styles || (component.styles = []);
             var styleOffset = component.styles.length;
             styleUrls && styleUrls.forEach(function (styleUrl, index) {
                 styles.push(''); // pre-allocate array.
-                cachedResourceResolve(styleUrl).then(function (style) {
+                promises.push(cachedResourceResolve(styleUrl).then(function (style) {
                     styles[styleOffset + index] = style;
                     styleUrls.splice(styleUrls.indexOf(styleUrl), 1);
                     if (styleUrls.length == 0) {
                         component.styleUrls = undefined;
                     }
-                });
+                }));
             });
+            var fullyResolved = Promise.all(promises).then(function () { return componentDefResolved(type); });
+            componentResolved.push(fullyResolved);
         });
         clearResolutionOfComponentResourcesQueue();
-        return Promise.all(urlFetches).then(function () { return null; });
+        return Promise.all(componentResolved).then(function () { return undefined; });
     }
-    var componentResourceResolutionQueue = new Set();
-    function maybeQueueResolutionOfComponentResources(metadata) {
+    var componentResourceResolutionQueue = new Map();
+    // Track when existing ngComponentDef for a Type is waiting on resources.
+    var componentDefPendingResolution = new Set();
+    function maybeQueueResolutionOfComponentResources(type, metadata) {
         if (componentNeedsResolution(metadata)) {
-            componentResourceResolutionQueue.add(metadata);
+            componentResourceResolutionQueue.set(type, metadata);
+            componentDefPendingResolution.add(type);
         }
     }
     function componentNeedsResolution(component) {
@@ -31439,13 +31444,18 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             component.styleUrls && component.styleUrls.length);
     }
     function clearResolutionOfComponentResourcesQueue() {
-        componentResourceResolutionQueue.clear();
+        var old = componentResourceResolutionQueue;
+        componentResourceResolutionQueue = new Map();
+        return old;
     }
     function isComponentResourceResolutionQueueEmpty() {
         return componentResourceResolutionQueue.size === 0;
     }
     function unwrapResponse(response) {
         return typeof response == 'string' ? response : response.text();
+    }
+    function componentDefResolved(type) {
+        componentDefPendingResolution.delete(type);
     }
 
     /**
@@ -42297,9 +42307,12 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     function ProvidersFeature(providers, viewProviders) {
         if (viewProviders === void 0) { viewProviders = []; }
         return function (definition) {
-            definition.providersResolver = function (def) {
-                return providersResolver(def, providers, viewProviders);
-            };
+            definition.providersResolver =
+                function (def, processProvidersFn) {
+                    return providersResolver(def, //
+                    processProvidersFn ? processProvidersFn(providers) : providers, //
+                    viewProviders);
+                };
         };
     }
 
@@ -43139,7 +43152,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.8+70.sha-86aba1e.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-beta.8+71.sha-0244a24.with-local-changes');
 
     /**
      * @license
@@ -50821,6 +50834,11 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             return Array.from(transitiveScopes.compilation.pipes).map(function (pipe) { return getPipeDef(pipe); });
         };
         componentDef.schemas = transitiveScopes.schemas;
+        // Since we avoid Components/Directives/Pipes recompiling in case there are no overrides, we
+        // may face a problem where previously compiled defs available to a given Component/Directive
+        // are cached in TView and may become stale (in case any of these defs gets recompiled). In
+        // order to avoid this problem, we force fresh TView to be created.
+        componentDef.template.ngPrivateData = undefined;
     }
     /**
      * Compute the pair of transitive scopes (compilation scope and exported scope) for a given module.
@@ -50945,7 +50963,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
     function compileComponent(type, metadata) {
         var ngComponentDef = null;
         // Metadata may have resources which need to be resolved.
-        maybeQueueResolutionOfComponentResources(metadata);
+        maybeQueueResolutionOfComponentResources(type, metadata);
         Object.defineProperty(type, NG_COMPONENT_DEF, {
             get: function () {
                 var compiler = getCompilerFacade();
@@ -56407,7 +56425,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.8+70.sha-86aba1e.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-beta.8+71.sha-0244a24.with-local-changes');
 
     /**
      * @license
