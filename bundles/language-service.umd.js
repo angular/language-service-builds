@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.8+56.sha-8e70ca3.with-local-changes
+ * @license Angular v8.0.0-beta.8+79.sha-a3ec058.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -15968,7 +15968,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.8+56.sha-8e70ca3.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-beta.8+79.sha-a3ec058.with-local-changes');
 
     /**
      * @license
@@ -36764,7 +36764,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.8+56.sha-8e70ca3.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-beta.8+79.sha-a3ec058.with-local-changes');
 
     /**
      * @license
@@ -41726,16 +41726,29 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         QueryList.prototype.some = function (fn) {
             return this._results.some(fn);
         };
+        /**
+         * Returns a copy of the internal results list as an Array.
+         */
         QueryList.prototype.toArray = function () { return this._results.slice(); };
         QueryList.prototype[getSymbolIterator()] = function () { return this._results[getSymbolIterator()](); };
         QueryList.prototype.toString = function () { return this._results.toString(); };
-        QueryList.prototype.reset = function (res) {
-            this._results = flatten$2(res);
+        /**
+         * Updates the stored data of the query list, and resets the `dirty` flag to `false`, so that
+         * on change detection, it will not notify of changes to the queries, unless a new change
+         * occurs.
+         *
+         * @param resultsTree The results tree to store
+         */
+        QueryList.prototype.reset = function (resultsTree) {
+            this._results = depthFirstFlatten(resultsTree);
             this.dirty = false;
             this.length = this._results.length;
             this.last = this._results[this.length - 1];
             this.first = this._results[0];
         };
+        /**
+         * Triggers a change event by emitting on the `changes` {@link EventEmitter}.
+         */
         QueryList.prototype.notifyOnChanges = function () { this.changes.emit(this); };
         /** internal */
         QueryList.prototype.setDirty = function () { this.dirty = true; };
@@ -41746,9 +41759,9 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         };
         return QueryList;
     }());
-    function flatten$2(list) {
+    function depthFirstFlatten(list) {
         return list.reduce(function (flat, item) {
-            var flatItem = Array.isArray(item) ? flatten$2(item) : item;
+            var flatItem = Array.isArray(item) ? depthFirstFlatten(item) : item;
             return flat.concat(flatItem);
         }, []);
     }
@@ -47146,7 +47159,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.8+56.sha-8e70ca3.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-beta.8+79.sha-a3ec058.with-local-changes');
 
     /**
      * @license
