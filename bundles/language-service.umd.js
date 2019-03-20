@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.9+43.sha-17b3f11.with-local-changes
+ * @license Angular v8.0.0-beta.9+44.sha-9eb8274.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -6492,7 +6492,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         definitionMapValues.push({ key: 'pure', value: literal(metadata.pure), quoted: false });
         var expression = importExpr(Identifiers$1.definePipe).callFn([literalMap(definitionMapValues)]);
         var type = new ExpressionType(importExpr(Identifiers$1.PipeDefWithMeta, [
-            new ExpressionType(metadata.type),
+            typeWithParameters(metadata.type, metadata.typeArgumentCount),
             new ExpressionType(new LiteralExpr(metadata.pipeName)),
         ]));
         return { expression: expression, type: type, statements: templateFactory.statements };
@@ -15746,6 +15746,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             var res = compilePipeFromMetadata({
                 name: facade.name,
                 type: new WrappedNodeExpr(facade.type),
+                typeArgumentCount: facade.typeArgumentCount,
                 deps: convertR3DependencyMetadataArray(facade.deps),
                 pipeName: facade.pipeName,
                 pure: facade.pure,
@@ -15975,7 +15976,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.9+43.sha-17b3f11.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-beta.9+44.sha-9eb8274.with-local-changes');
 
     /**
      * @license
@@ -43373,7 +43374,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.9+43.sha-17b3f11.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-beta.9+44.sha-9eb8274.with-local-changes');
 
     /**
      * @license
@@ -48927,7 +48928,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
     };
     function getPromiseCtor(promiseCtor) {
         if (!promiseCtor) {
-            promiseCtor = config.Promise || Promise;
+            promiseCtor = Promise;
         }
         if (!promiseCtor) {
             throw new Error('no Promise impl found');
@@ -51359,6 +51360,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 if (ngPipeDef === null) {
                     ngPipeDef = getCompilerFacade().compilePipe(angularCoreEnv, "ng://" + renderStringify(type) + "/ngPipeDef.js", {
                         type: type,
+                        typeArgumentCount: 0,
                         name: type.name,
                         deps: reflectDependencies(type),
                         pipeName: meta.name,
@@ -56651,7 +56653,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.9+43.sha-17b3f11.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-beta.9+44.sha-9eb8274.with-local-changes');
 
     /**
      * @license
