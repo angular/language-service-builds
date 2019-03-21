@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.2.10+7.sha-c75e16a.with-local-changes
+ * @license Angular v7.2.10+10.sha-a677d8b.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -15441,7 +15441,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.2.10+7.sha-c75e16a.with-local-changes');
+    var VERSION$1 = new Version('7.2.10+10.sha-a677d8b.with-local-changes');
 
     /**
      * @license
@@ -28724,6 +28724,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
          * Use the `CheckOnce` strategy, meaning that automatic change detection is deactivated
          * until reactivated by setting the strategy to `Default` (`CheckAlways`).
          * Change detection can still be explicitly invoked.
+         * This strategy applies to all child directives and cannot be overridden.
          */
         ChangeDetectionStrategy[ChangeDetectionStrategy["OnPush"] = 0] = "OnPush";
         /**
@@ -33859,7 +33860,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.2.10+7.sha-c75e16a.with-local-changes');
+    var VERSION$2 = new Version$1('7.2.10+10.sha-a677d8b.with-local-changes');
 
     /**
      * @license
@@ -46032,7 +46033,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.2.10+7.sha-c75e16a.with-local-changes');
+    var VERSION$3 = new Version$1('7.2.10+10.sha-a677d8b.with-local-changes');
 
     /**
      * @license
