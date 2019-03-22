@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.9+73.sha-f3e0cc8.with-local-changes
+ * @license Angular v8.0.0-beta.9+77.sha-66b72bf.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -15976,7 +15976,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.9+73.sha-f3e0cc8.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-beta.9+77.sha-66b72bf.with-local-changes');
 
     /**
      * @license
@@ -29478,6 +29478,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     var DELEGATE_CTOR = /^function\s+\S+\(\)\s*{[\s\S]+\.apply\(this,\s*arguments\)/;
     var INHERITED_CLASS = /^class\s+[A-Za-z\d$_]*\s*extends\s+[^{]+{/;
     var INHERITED_CLASS_WITH_CTOR = /^class\s+[A-Za-z\d$_]*\s*extends\s+[^{]+{[\s\S]*constructor\s*\(/;
+    var INHERITED_CLASS_WITH_DELEGATE_CTOR = /^class\s+[A-Za-z\d$_]*\s*extends\s+[^{]+{[\s\S]*constructor\s*\(\)\s*{\s+super\(\.\.\.arguments\)/;
     var ReflectionCapabilities = /** @class */ (function () {
         function ReflectionCapabilities(reflect) {
             this._reflect = reflect || _global$1['Reflect'];
@@ -29527,7 +29528,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             // This also helps to work around for https://github.com/Microsoft/TypeScript/issues/12439
             // that sets 'design:paramtypes' to []
             // if a class inherits from another class but has no ctor declared itself.
-            if (DELEGATE_CTOR.exec(typeStr) ||
+            if (DELEGATE_CTOR.exec(typeStr) || INHERITED_CLASS_WITH_DELEGATE_CTOR.exec(typeStr) ||
                 (INHERITED_CLASS.exec(typeStr) && !INHERITED_CLASS_WITH_CTOR.exec(typeStr))) {
                 return null;
             }
@@ -32076,10 +32077,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Uglify will inline these when minifying so there shouldn't be a cost.
      */
     var ACTIVE_INDEX = 2;
-    // PARENT, NEXT, and QUERIES are indices 3, 4, and 5.
+    // PARENT, NEXT, QUERIES and T_HOST are indices 3, 4, 5 and 6.
     // As we already have these constants in LView, we don't need to re-create them.
-    var VIEWS = 6;
     var NATIVE = 7;
+    var VIEWS = 8;
 
     /**
      * @license
@@ -35791,12 +35792,19 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         var tNode = rootTNode.child;
         while (tNode) {
             var nextTNode = null;
-            if (tNode.type === 3 /* Element */) {
+            if (tNode.type === 3 /* Element */ || tNode.type === 4 /* ElementContainer */) {
                 executeNodeAction(action, renderer, renderParent, getNativeByTNode(tNode, currentView), tNode, beforeNode);
                 var nodeOrContainer = currentView[tNode.index];
                 if (isLContainer(nodeOrContainer)) {
                     // This element has an LContainer, and its comment needs to be handled
                     executeNodeAction(action, renderer, renderParent, nodeOrContainer[NATIVE], tNode, beforeNode);
+                    if (nodeOrContainer[VIEWS].length) {
+                        currentView = nodeOrContainer[VIEWS][0];
+                        nextTNode = currentView[TVIEW].node;
+                        // When the walker enters a container, then the beforeNode has to become the local native
+                        // comment node.
+                        beforeNode = nodeOrContainer[NATIVE];
+                    }
                 }
             }
             else if (tNode.type === 0 /* Container */) {
@@ -35842,7 +35850,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 }
             }
             else {
-                // Otherwise, this is a View or an ElementContainer
+                // Otherwise, this is a View
                 nextTNode = tNode.child;
             }
             if (nextTNode === null) {
@@ -35851,7 +35859,15 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                     currentView = projectionNodeStack[projectionNodeIndex--];
                     tNode = projectionNodeStack[projectionNodeIndex--];
                 }
-                nextTNode = (tNode.flags & 2 /* isProjected */) ? tNode.projectionNext : tNode.next;
+                if (tNode.flags & 2 /* isProjected */) {
+                    nextTNode = tNode.projectionNext;
+                }
+                else if (tNode.type === 4 /* ElementContainer */) {
+                    nextTNode = tNode.child || tNode.next;
+                }
+                else {
+                    nextTNode = tNode.next;
+                }
                 /**
                  * Find the next node in the TNode tree, taking into account the place where a node is
                  * projected (in the shadow DOM) rather than where it comes from (in the light DOM).
@@ -35875,6 +35891,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                          * chain until:
                          * - we find an lView with a next pointer
                          * - or find a tNode with a parent that has a next pointer
+                         * - or find a lContainer
                          * - or reach root TNode (in which case we exit, since we traversed all nodes)
                          */
                         while (!currentView[NEXT] && currentView[PARENT] &&
@@ -35882,6 +35899,12 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                             if (tNode === rootTNode)
                                 return;
                             currentView = currentView[PARENT];
+                            if (isLContainer(currentView)) {
+                                tNode = currentView[T_HOST];
+                                currentView = currentView[PARENT];
+                                beforeNode = currentView[tNode.index][NATIVE];
+                                break;
+                            }
                             tNode = currentView[T_HOST];
                         }
                         if (currentView[NEXT]) {
@@ -35889,7 +35912,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                             nextTNode = currentView[T_HOST];
                         }
                         else {
-                            nextTNode = tNode.next;
+                            nextTNode = tNode.type === 4 /* ElementContainer */ && tNode.child || tNode.next;
                         }
                     }
                     else {
@@ -39991,7 +40014,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @param isForViewContainerRef Optional a flag indicating the ViewContainerRef case
      * @returns LContainer
      */
-    function createLContainer(hostNative, currentView, native, isForViewContainerRef) {
+    function createLContainer(hostNative, currentView, native, tNode, isForViewContainerRef) {
         ngDevMode && assertDomNode(native);
         ngDevMode && assertLView(currentView);
         var lContainer = [
@@ -40001,8 +40024,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             currentView,
             null,
             null,
-            [],
+            tNode,
             native,
+            [],
         ];
         ngDevMode && attachLContainerDebug(lContainer);
         return lContainer;
@@ -40063,7 +40087,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         var comment = lView[RENDERER].createComment(ngDevMode ? 'container' : '');
         ngDevMode && ngDevMode.rendererCreateComment++;
         var tNode = createNodeAtIndex(index, 0 /* Container */, comment, tagName, attrs);
-        var lContainer = lView[adjustedIndex] = createLContainer(lView[adjustedIndex], lView, comment);
+        var lContainer = lView[adjustedIndex] =
+            createLContainer(lView[adjustedIndex], lView, comment, tNode);
         appendChild(comment, tNode, lView);
         // Containers are added to the current view tree instead of their embedded views
         // because views can be removed and re-inserted.
@@ -43193,7 +43218,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 appendChild(commentNode, hostTNode, hostView);
             }
             hostView[hostTNode.index] = lContainer =
-                createLContainer(slotValue, hostView, commentNode, true);
+                createLContainer(slotValue, hostView, commentNode, hostTNode, true);
             addToViewTree(hostView, lContainer);
         }
         return new R3ViewContainerRef(lContainer, hostTNode, hostView);
@@ -43375,7 +43400,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.9+73.sha-f3e0cc8.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-beta.9+77.sha-66b72bf.with-local-changes');
 
     /**
      * @license
@@ -56654,7 +56679,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.9+73.sha-f3e0cc8.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-beta.9+77.sha-66b72bf.with-local-changes');
 
     /**
      * @license
