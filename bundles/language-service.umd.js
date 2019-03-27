@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.10+19.sha-401b8ee.with-local-changes
+ * @license Angular v8.0.0-beta.10+21.sha-96b800c.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -13821,9 +13821,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             this._updateCodeFns = [];
             /**
              * Memorizes the last node index for which a select instruction has been generated.
-             * Initialized to 0 to avoid generating a useless select(0).
+             * We're initializing this to -1 to ensure the `select(0)` instruction is generated before any
+             * relevant update instructions.
              */
-            this._lastNodeIndexWithFlush = 0;
+            this._lastNodeIndexWithFlush = -1;
             /** Temporary variable declarations generated from visiting pipes, literals, etc. */
             this._tempVariables = [];
             /**
@@ -15991,7 +15992,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.10+19.sha-401b8ee.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-beta.10+21.sha-96b800c.with-local-changes');
 
     /**
      * @license
@@ -36834,7 +36835,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.10+19.sha-401b8ee.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-beta.10+21.sha-96b800c.with-local-changes');
 
     /**
      * @license
@@ -39862,6 +39863,30 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * Flattens an array in non-recursive way. Input arrays are not modified.
+     */
+    function flatten$2(list) {
+        var result = [];
+        var i = 0;
+        while (i < list.length) {
+            var item = list[i];
+            if (Array.isArray(item)) {
+                if (item.length > 0) {
+                    list = item.concat(list.slice(i + 1));
+                    i = 0;
+                }
+                else {
+                    i++;
+                }
+            }
+            else {
+                result.push(item);
+                i++;
+            }
+        }
+        return result;
+    }
 
     /**
      * @license
@@ -41810,7 +41835,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
          * @param resultsTree The results tree to store
          */
         QueryList.prototype.reset = function (resultsTree) {
-            this._results = depthFirstFlatten(resultsTree);
+            this._results = flatten$2(resultsTree);
             this.dirty = false;
             this.length = this._results.length;
             this.last = this._results[this.length - 1];
@@ -41829,12 +41854,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         };
         return QueryList;
     }());
-    function depthFirstFlatten(list) {
-        return list.reduce(function (flat, item) {
-            var flatItem = Array.isArray(item) ? depthFirstFlatten(item) : item;
-            return flat.concat(flatItem);
-        }, []);
-    }
 
     /**
      * @license
@@ -47371,7 +47390,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.10+19.sha-401b8ee.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-beta.10+21.sha-96b800c.with-local-changes');
 
     /**
      * @license
