@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.9+99.sha-17f7bdb.with-local-changes
+ * @license Angular v8.0.0-beta.10+9.sha-309ffe7.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -3362,7 +3362,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         Identifiers.elementStart = { name: 'ɵelementStart', moduleName: CORE$1 };
         Identifiers.elementEnd = { name: 'ɵelementEnd', moduleName: CORE$1 };
         Identifiers.elementProperty = { name: 'ɵelementProperty', moduleName: CORE$1 };
-        Identifiers.flushHooksUpTo = { name: 'ɵflushHooksUpTo', moduleName: CORE$1 };
+        Identifiers.select = { name: 'ɵselect', moduleName: CORE$1 };
         Identifiers.componentHostSyntheticProperty = { name: 'ɵcomponentHostSyntheticProperty', moduleName: CORE$1 };
         Identifiers.componentHostSyntheticListener = { name: 'ɵcomponentHostSyntheticListener', moduleName: CORE$1 };
         Identifiers.elementAttribute = { name: 'ɵelementAttribute', moduleName: CORE$1 };
@@ -13820,8 +13820,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
              */
             this._updateCodeFns = [];
             /**
-             * Memorizes the last node index for which a flushHooksUpTo instruction has been generated.
-             * Initialized to 0 to avoid generating a useless flushHooksUpTo(0).
+             * Memorizes the last node index for which a select instruction has been generated.
+             * Initialized to 0 to avoid generating a useless select(0).
              */
             this._lastNodeIndexWithFlush = 0;
             /** Temporary variable declarations generated from visiting pipes, literals, etc. */
@@ -14558,7 +14558,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         };
         TemplateDefinitionBuilder.prototype.updateInstruction = function (nodeIndex, span, reference, paramsOrFn) {
             if (this._lastNodeIndexWithFlush < nodeIndex) {
-                this.instructionFn(this._updateCodeFns, span, Identifiers$1.flushHooksUpTo, [literal(nodeIndex)]);
+                this.instructionFn(this._updateCodeFns, span, Identifiers$1.select, [literal(nodeIndex)]);
                 this._lastNodeIndexWithFlush = nodeIndex;
             }
             this.instructionFn(this._updateCodeFns, span, reference, paramsOrFn || []);
@@ -15991,7 +15991,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.9+99.sha-17f7bdb.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-beta.10+9.sha-309ffe7.with-local-changes');
 
     /**
      * @license
@@ -32047,7 +32047,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * [[onInit1, onInit2], [afterContentInit1], [afterViewInit1, afterViewInit2, afterViewInit3]]
      * They are are stored as flags in LView[FLAGS].
      *
-     * 2. Pre-order hooks can be executed in batches, because of the flushHooksUpTo instruction.
+     * 2. Pre-order hooks can be executed in batches, because of the select instruction.
      * To be able to pause and resume their execution, we also need some state about the hook's array
      * that is being processed:
      * - the index of the next hook to be executed
@@ -32067,7 +32067,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * - undefined: execute hooks only from the saved index until the end of the array (pre-order case,
      * when flushing the remaining hooks)
      * - number: execute hooks only from the saved index until that node index exclusive (pre-order
-     * case, when executing flushHooksUpTo(number))
+     * case, when executing select(number))
      */
     function executePreOrderHooks(currentView, tView, checkNoChangesMode, currentNodeIndex) {
         if (!checkNoChangesMode) {
@@ -32088,7 +32088,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * - null: execute hooks only from the saved index until the end of the array (pre-order case, when
      * flushing the remaining hooks)
      * - number: execute hooks only from the saved index until that node index exclusive (pre-order
-     * case, when executing flushHooksUpTo(number))
+     * case, when executing select(number))
      */
     function executeHooks(currentView, firstPassHooks, checkHooks, checkNoChangesMode, initPhaseState, currentNodeIndex) {
         if (checkNoChangesMode)
@@ -32119,7 +32119,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * - null: execute hooks only from the saved index until the end of the array (pre-order case, when
      * flushing the remaining hooks)
      * - number: execute hooks only from the saved index until that node index exclusive (pre-order
-     * case, when executing flushHooksUpTo(number))
+     * case, when executing select(number))
      */
     function callHooks(currentView, arr, initPhase, currentNodeIndex) {
         var startIndex = currentNodeIndex !== undefined ?
@@ -36834,7 +36834,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.9+99.sha-17f7bdb.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-beta.10+9.sha-309ffe7.with-local-changes');
 
     /**
      * @license
@@ -47371,7 +47371,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.9+99.sha-17f7bdb.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-beta.10+9.sha-309ffe7.with-local-changes');
 
     /**
      * @license
