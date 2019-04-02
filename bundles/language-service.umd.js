@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.10+117.sha-6b39c9c.with-local-changes
+ * @license Angular v8.0.0-beta.10+120.sha-60afe88.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -3450,6 +3450,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             moduleName: CORE$1,
         };
         Identifiers.defineNgModule = { name: 'ɵdefineNgModule', moduleName: CORE$1 };
+        Identifiers.setNgModuleScope = { name: 'ɵsetNgModuleScope', moduleName: CORE$1 };
         Identifiers.PipeDefWithMeta = { name: 'ɵPipeDefWithMeta', moduleName: CORE$1 };
         Identifiers.definePipe = { name: 'ɵdefinePipe', moduleName: CORE$1 };
         Identifiers.queryRefresh = { name: 'ɵqueryRefresh', moduleName: CORE$1 };
@@ -6416,7 +6417,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Construct an `R3NgModuleDef` for the given `R3NgModuleMetadata`.
      */
     function compileNgModule(meta) {
-        var moduleType = meta.type, bootstrap = meta.bootstrap, declarations = meta.declarations, imports = meta.imports, exports = meta.exports, schemas = meta.schemas, containsForwardDecls = meta.containsForwardDecls;
+        var moduleType = meta.type, bootstrap = meta.bootstrap, declarations = meta.declarations, imports = meta.imports, exports = meta.exports, schemas = meta.schemas, containsForwardDecls = meta.containsForwardDecls, emitInline = meta.emitInline;
+        var additionalStatements = [];
         var definitionMap = {
             type: moduleType
         };
@@ -6424,14 +6426,26 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         if (bootstrap.length) {
             definitionMap.bootstrap = refsToArray(bootstrap, containsForwardDecls);
         }
-        if (declarations.length) {
-            definitionMap.declarations = refsToArray(declarations, containsForwardDecls);
+        // If requested to emit scope information inline, pass the declarations, imports and exports to
+        // the `defineNgModule` call. The JIT compilation uses this.
+        if (emitInline) {
+            if (declarations.length) {
+                definitionMap.declarations = refsToArray(declarations, containsForwardDecls);
+            }
+            if (imports.length) {
+                definitionMap.imports = refsToArray(imports, containsForwardDecls);
+            }
+            if (exports.length) {
+                definitionMap.exports = refsToArray(exports, containsForwardDecls);
+            }
         }
-        if (imports.length) {
-            definitionMap.imports = refsToArray(imports, containsForwardDecls);
-        }
-        if (exports.length) {
-            definitionMap.exports = refsToArray(exports, containsForwardDecls);
+        // If not emitting inline, the scope information is not passed into `defineNgModule` as it would
+        // prevent tree-shaking of the declarations, imports and exports references.
+        else {
+            var setNgModuleScopeCall = generateSetNgModuleScopeCall(meta);
+            if (setNgModuleScopeCall !== null) {
+                additionalStatements.push(setNgModuleScopeCall);
+            }
         }
         if (schemas && schemas.length) {
             definitionMap.schemas = literalArr(schemas.map(function (ref) { return ref.value; }));
@@ -6441,8 +6455,36 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             new ExpressionType(moduleType), tupleTypeOf(declarations), tupleTypeOf(imports),
             tupleTypeOf(exports)
         ]));
-        var additionalStatements = [];
         return { expression: expression, type: type, additionalStatements: additionalStatements };
+    }
+    /**
+     * Generates a function call to `setNgModuleScope` with all necessary information so that the
+     * transitive module scope can be computed during runtime in JIT mode. This call is marked pure
+     * such that the references to declarations, imports and exports may be elided causing these
+     * symbols to become tree-shakeable.
+     */
+    function generateSetNgModuleScopeCall(meta) {
+        var moduleType = meta.type, declarations = meta.declarations, imports = meta.imports, exports = meta.exports, containsForwardDecls = meta.containsForwardDecls;
+        var scopeMap = {};
+        if (declarations.length) {
+            scopeMap.declarations = refsToArray(declarations, containsForwardDecls);
+        }
+        if (imports.length) {
+            scopeMap.imports = refsToArray(imports, containsForwardDecls);
+        }
+        if (exports.length) {
+            scopeMap.exports = refsToArray(exports, containsForwardDecls);
+        }
+        if (Object.keys(scopeMap).length === 0) {
+            return null;
+        }
+        var fnCall = new InvokeFunctionExpr(
+        /* fn */ importExpr(Identifiers$1.setNgModuleScope), 
+        /* args */ [moduleType, mapToMapExpression(scopeMap)], 
+        /* type */ undefined, 
+        /* sourceSpan */ undefined, 
+        /* pure */ true);
+        return fnCall.toStmt();
     }
     function compileInjector(meta) {
         var result = compileFactoryFunction({
@@ -6451,11 +6493,16 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             deps: meta.deps,
             injectFn: Identifiers$1.inject,
         });
-        var expression = importExpr(Identifiers$1.defineInjector).callFn([mapToMapExpression({
-                factory: result.factory,
-                providers: meta.providers,
-                imports: meta.imports,
-            })]);
+        var definitionMap = {
+            factory: result.factory,
+        };
+        if (meta.providers !== null) {
+            definitionMap.providers = meta.providers;
+        }
+        if (meta.imports.length > 0) {
+            definitionMap.imports = literalArr(meta.imports);
+        }
+        var expression = importExpr(Identifiers$1.defineInjector).callFn([mapToMapExpression(definitionMap)]);
         var type = new ExpressionType(importExpr(Identifiers$1.InjectorDef, [new ExpressionType(meta.type)]));
         return { expression: expression, type: type, statements: result.statements };
     }
@@ -15775,7 +15822,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 type: new WrappedNodeExpr(facade.type),
                 deps: convertR3DependencyMetadataArray(facade.deps),
                 providers: new WrappedNodeExpr(facade.providers),
-                imports: new WrappedNodeExpr(facade.imports),
+                imports: facade.imports.map(function (i) { return new WrappedNodeExpr(i); }),
             };
             var res = compileInjector(meta);
             return this.jitExpression(res.expression, angularCoreEnv, sourceMapUrl, res.statements);
@@ -15977,7 +16024,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.10+117.sha-6b39c9c.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-beta.10+120.sha-60afe88.with-local-changes');
 
     /**
      * @license
@@ -31879,6 +31926,20 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         return res;
     }
     /**
+     * Adds the module metadata that is necessary to compute the module's transitive scope to an
+     * existing module definition.
+     *
+     * Scope metadata of modules is not used in production builds, so calls to this function can be
+     * marked pure to tree-shake it from the bundle, allowing for all referenced declarations
+     * to become eligible for tree-shaking as well.
+     */
+    function setNgModuleScope(type, scope) {
+        var ngModuleDef = getNgModuleDef(type, true);
+        ngModuleDef.declarations = scope.declarations || EMPTY_ARRAY$1;
+        ngModuleDef.imports = scope.imports || EMPTY_ARRAY$1;
+        ngModuleDef.exports = scope.exports || EMPTY_ARRAY$1;
+    }
+    /**
      * Inverts an inputs or outputs lookup such that the keys, which were the
      * minified keys, are part of the values, and the values are parsed so that
      * the publicName of the property is the new key
@@ -43546,7 +43607,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.10+117.sha-6b39c9c.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-beta.10+120.sha-60afe88.with-local-changes');
 
     /**
      * @license
@@ -50928,6 +50989,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         'ɵresolveDocument': resolveDocument,
         'ɵresolveBody': resolveBody,
         'ɵsetComponentScope': setComponentScope,
+        'ɵsetNgModuleScope': setNgModuleScope,
         'ɵsanitizeHtml': sanitizeHtml,
         'ɵsanitizeStyle': sanitizeStyle,
         'ɵdefaultStyleSanitizer': defaultStyleSanitizer,
@@ -54230,7 +54292,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         function ApplicationModule(appRef) {
         }
         ApplicationModule.ngModuleDef = defineNgModule({ type: ApplicationModule });
-        ApplicationModule.ngInjectorDef = defineInjector({ factory: function ApplicationModule_Factory(t) { return new (t || ApplicationModule)(inject(ApplicationRef)); }, providers: APPLICATION_MODULE_PROVIDERS, imports: [] });
+        ApplicationModule.ngInjectorDef = defineInjector({ factory: function ApplicationModule_Factory(t) { return new (t || ApplicationModule)(inject(ApplicationRef)); }, providers: APPLICATION_MODULE_PROVIDERS });
         return ApplicationModule;
     }());
 
@@ -57012,7 +57074,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.10+117.sha-6b39c9c.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-beta.10+120.sha-60afe88.with-local-changes');
 
     /**
      * @license
