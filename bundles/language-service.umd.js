@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.10+99.sha-7c1f73a.with-local-changes
+ * @license Angular v8.0.0-beta.10+102.sha-1c07061.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -12139,9 +12139,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
          * Tag and property name are statically known and cannot change at runtime, i.e. it is not
          * possible to bind a value into a changing attribute or tag name.
          *
-         * The filtering is white list based. All attributes in the schema above are assumed to have the
-         * 'NONE' security context, i.e. that they are safe inert string values. Only specific well known
-         * attack vectors are assigned their appropriate context.
+         * The filtering is based on a list of allowed tags|attributes. All attributes in the schema
+         * above are assumed to have the 'NONE' security context, i.e. that they are safe inert
+         * string values. Only specific well known attack vectors are assigned their appropriate context.
          */
         DomElementSchemaRegistry.prototype.securityContext = function (tagName, propName, isAttribute) {
             if (isAttribute) {
@@ -15977,7 +15977,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.10+99.sha-7c1f73a.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-beta.10+102.sha-1c07061.with-local-changes');
 
     /**
      * @license
@@ -34571,7 +34571,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * execution if used in URL context within a HTML document. Specifically, this
      * regular expression matches if (comment from here on and regex copied from
      * Soy's EscapingConventions):
-     * (1) Either a protocol in a whitelist (http, https, mailto or ftp).
+     * (1) Either an allowed protocol (http, https, mailto or ftp).
      * (2) or no protocol.  A protocol must be followed by a colon. The below
      *     allows that by allowing colons only after one of the characters [/?#].
      *     A colon after a hash (#) must be in the fragment.
@@ -43429,7 +43429,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.10+99.sha-7c1f73a.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-beta.10+102.sha-1c07061.with-local-changes');
 
     /**
      * @license
@@ -56895,7 +56895,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.10+99.sha-7c1f73a.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-beta.10+102.sha-1c07061.with-local-changes');
 
     /**
      * @license
