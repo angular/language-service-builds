@@ -1,5 +1,5 @@
 /**
- * @license Angular v7.2.11+52.sha-ef038e8.with-local-changes
+ * @license Angular v7.2.11+53.sha-f6864cc.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -11648,9 +11648,9 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
          * Tag and property name are statically known and cannot change at runtime, i.e. it is not
          * possible to bind a value into a changing attribute or tag name.
          *
-         * The filtering is white list based. All attributes in the schema above are assumed to have the
-         * 'NONE' security context, i.e. that they are safe inert string values. Only specific well known
-         * attack vectors are assigned their appropriate context.
+         * The filtering is based on a list of allowed tags|attributes. All attributes in the schema
+         * above are assumed to have the 'NONE' security context, i.e. that they are safe inert
+         * string values. Only specific well known attack vectors are assigned their appropriate context.
          */
         DomElementSchemaRegistry.prototype.securityContext = function (tagName, propName, isAttribute) {
             if (isAttribute) {
@@ -15441,7 +15441,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('7.2.11+52.sha-ef038e8.with-local-changes');
+    var VERSION$1 = new Version('7.2.11+53.sha-f6864cc.with-local-changes');
 
     /**
      * @license
@@ -33860,7 +33860,7 @@ define(['exports', 'fs', 'path', 'typescript'], function (exports, fs, path, ts)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('7.2.11+52.sha-ef038e8.with-local-changes');
+    var VERSION$2 = new Version$1('7.2.11+53.sha-f6864cc.with-local-changes');
 
     /**
      * @license
@@ -46033,7 +46033,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('7.2.11+52.sha-ef038e8.with-local-changes');
+    var VERSION$3 = new Version$1('7.2.11+53.sha-f6864cc.with-local-changes');
 
     /**
      * @license
