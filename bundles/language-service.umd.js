@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.11+24.sha-609024f.with-local-changes
+ * @license Angular v8.0.0-beta.11+29.sha-ec56354.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -16039,7 +16039,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.11+24.sha-609024f.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-beta.11+29.sha-ec56354.with-local-changes');
 
     /**
      * @license
@@ -32672,6 +32672,23 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * The default directive styling index value for template-based bindings.
+     *
+     * All host-level bindings (e.g. `hostStyleProp` and `hostStylingMap`) are
+     * assigned a directive styling index value based on the current directive
+     * uniqueId and the directive super-class inheritance depth. But for template
+     * bindings they always have the same directive styling index value.
+     */
+    var DEFAULT_TEMPLATE_DIRECTIVE_INDEX = 0;
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     function createEmptyStylingContext(wrappedElement, sanitizer, initialStyles, initialClasses) {
         var context = [
             wrappedElement || null,
@@ -32683,10 +32700,11 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             [0],
             [0],
             null,
+            null,
         ];
         // whenever a context is created there is always a `null` directive
         // that is registered (which is a placeholder for the "template").
-        allocateDirectiveIntoContext(context, null);
+        allocateOrUpdateDirectiveIntoContext(context, DEFAULT_TEMPLATE_DIRECTIVE_INDEX);
         return context;
     }
     /**
@@ -32705,21 +32723,25 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @param directiveRef the directive that will be allocated into the context
      * @returns the index where the directive was inserted into
      */
-    function allocateDirectiveIntoContext(context, directiveRef) {
-        // this is a new directive which we have not seen yet.
-        var dirs = context[2 /* DirectiveRegistryPosition */];
-        var i = dirs.length;
+    function allocateOrUpdateDirectiveIntoContext(context, directiveIndex, singlePropValuesIndex, styleSanitizer) {
+        if (singlePropValuesIndex === void 0) { singlePropValuesIndex = -1; }
+        var directiveRegistry = context[2 /* DirectiveRegistryPosition */];
+        var index = directiveIndex * 2 /* Size */;
         // we preemptively make space into the directives array and then
         // assign values slot-by-slot to ensure that if the directive ordering
         // changes then it will still function
-        dirs.push(null, null, null, null);
-        dirs[i + 0 /* DirectiveValueOffset */] = directiveRef;
-        dirs[i + 2 /* DirtyFlagOffset */] = false;
-        dirs[i + 3 /* StyleSanitizerOffset */] = null;
-        // -1 is used to signal that the directive has been allocated, but
-        // no actual style or class bindings have been registered yet...
-        dirs[i + 1 /* SinglePropValuesIndexOffset */] = -1;
-        return i;
+        var limit = index + 2 /* Size */;
+        for (var i = directiveRegistry.length; i < limit; i += 2 /* Size */) {
+            // -1 is used to signal that the directive has been allocated, but
+            // no actual style or class bindings have been registered yet...
+            directiveRegistry.push(-1, null);
+        }
+        var propValuesStartPosition = index + 0 /* SinglePropValuesIndexOffset */;
+        if (singlePropValuesIndex >= 0 && directiveRegistry[propValuesStartPosition] === -1) {
+            directiveRegistry[propValuesStartPosition] = singlePropValuesIndex;
+            directiveRegistry[index + 1 /* StyleSanitizerOffset */] =
+                styleSanitizer || null;
+        }
     }
     /**
      * Used clone a copy of a pre-computed template of a styling context.
@@ -32732,7 +32754,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         var context = templateStyleContext.slice();
         // the HEADER values contain arrays which also need
         // to be copied over into the new context
-        for (var i = 0; i < 9 /* SingleStylesStartPosition */; i++) {
+        for (var i = 0; i < 10 /* SingleStylesStartPosition */; i++) {
             var value = templateStyleContext[i];
             if (Array.isArray(value)) {
                 context[i] = value.slice();
@@ -34079,7 +34101,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         }
     }
     function isClassBasedValue(context, index) {
-        var adjustedIndex = index >= 9 /* SingleStylesStartPosition */ ? (index + 0 /* FlagsOffset */) : index;
+        var adjustedIndex = index >= 10 /* SingleStylesStartPosition */ ? (index + 0 /* FlagsOffset */) : index;
         return (context[adjustedIndex] & 2 /* Class */) == 2 /* Class */;
     }
     function getValue(context, index) {
@@ -36120,6 +36142,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         }
         var rootTNode = getPreviousOrParentTNode();
         if (tView.firstTemplatePass && componentDef.hostBindings) {
+            var elementIndex = rootTNode.index - HEADER_OFFSET;
             var expando = tView.expandoInstructions;
             invokeHostBindingsInCreationMode(componentDef, expando, component, rootTNode, tView.firstTemplatePass);
             rootTNode.onElementCreationFns && applyOnCreateInstructions(rootTNode);
@@ -37203,7 +37226,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.11+24.sha-609024f.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-beta.11+29.sha-ec56354.with-local-changes');
 
     /**
      * @license
@@ -38893,7 +38916,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             }
             else if ((injectableDef = getInjectableDef(depDef.token)) && targetsModule(data, injectableDef)) {
                 var index = data._providers.length;
-                data._def.providersByKey[depDef.tokenKey] = {
+                data._def.providers[index] = data._def.providersByKey[depDef.tokenKey] = {
                     flags: 1024 /* TypeFactoryProvider */ | 4096 /* LazyProvider */,
                     value: injectableDef.factory,
                     deps: [], index: index,
@@ -44423,7 +44446,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                     var lContext = loadLContextFromNode(element);
                     var stylingContext = getStylingContext(lContext.nodeIndex, lContext.lView);
                     if (stylingContext) {
-                        for (var i = 9 /* SingleStylesStartPosition */; i < stylingContext.length; i += 4 /* Size */) {
+                        for (var i = 10 /* SingleStylesStartPosition */; i < stylingContext.length; i += 4 /* Size */) {
                             if (isClassBasedValue(stylingContext, i)) {
                                 var className = getProp(stylingContext, i);
                                 var value = getValue(stylingContext, i);
@@ -44455,7 +44478,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                     var lContext = loadLContextFromNode(element);
                     var stylingContext = getStylingContext(lContext.nodeIndex, lContext.lView);
                     if (stylingContext) {
-                        for (var i = 9 /* SingleStylesStartPosition */; i < stylingContext.length; i += 4 /* Size */) {
+                        for (var i = 10 /* SingleStylesStartPosition */; i < stylingContext.length; i += 4 /* Size */) {
                             if (!isClassBasedValue(stylingContext, i)) {
                                 var styleName = getProp(stylingContext, i);
                                 var value = getValue(stylingContext, i);
@@ -47777,7 +47800,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.11+24.sha-609024f.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-beta.11+29.sha-ec56354.with-local-changes');
 
     /**
      * @license
