@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.11+38.sha-cf40105.with-local-changes
+ * @license Angular v8.0.0-beta.11+41.sha-66b87ce.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -16024,7 +16024,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.11+38.sha-cf40105.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-beta.11+41.sha-66b87ce.with-local-changes');
 
     /**
      * @license
@@ -31613,6 +31613,12 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             rendererMoveNode: 0,
             rendererRemoveNode: 0,
             rendererCreateComment: 0,
+            stylingMap: 0,
+            stylingMapCacheMiss: 0,
+            stylingProp: 0,
+            stylingPropCacheMiss: 0,
+            stylingApply: 0,
+            stylingApplyCacheMiss: 0,
         };
         // NOTE: Under Ivy we may have both window & global defined in the Node
         //    environment since ensureDocument() in render3.ts sets global.window.
@@ -35600,6 +35606,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      */
     function updateStylingMap(context, classesInput, stylesInput, directiveIndex) {
         if (directiveIndex === void 0) { directiveIndex = 0; }
+        ngDevMode && ngDevMode.stylingMap++;
         ngDevMode && assertValidDirectiveIndex(context, directiveIndex);
         classesInput = classesInput || null;
         stylesInput = stylesInput || null;
@@ -35668,6 +35675,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         if (playerBuildersAreDirty) {
             setContextPlayersDirty(context, true);
         }
+        ngDevMode && ngDevMode.stylingMapCacheMiss++;
     }
     /**
      * Applies the given multi styling (styles or classes) values to the context.
@@ -35922,6 +35930,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         var currFlag = getPointers(context, singleIndex);
         var currDirective = getDirectiveIndexFromEntry(context, singleIndex);
         var value = (input instanceof BoundPlayerFactory) ? input.value : input;
+        ngDevMode && ngDevMode.stylingProp++;
         if (hasValueChanged(currFlag, currValue, value) &&
             (forceOverride || allowValueChange(currValue, value, currDirective, directiveIndex))) {
             var isClassBased_1 = (currFlag & 2 /* Class */) === 2 /* Class */;
@@ -35966,6 +35975,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             if (playerBuildersAreDirty) {
                 setContextPlayersDirty(context, true);
             }
+            ngDevMode && ngDevMode.stylingPropCacheMiss++;
         }
     }
     /**
@@ -35990,6 +36000,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     function renderStyling(context, renderer, rootOrView, isFirstRender, classesStore, stylesStore, directiveIndex) {
         if (directiveIndex === void 0) { directiveIndex = 0; }
         var totalPlayersQueued = 0;
+        ngDevMode && ngDevMode.stylingApply++;
         // this prevents multiple attempts to render style/class values on
         // the same element...
         if (allowFlush(context, directiveIndex)) {
@@ -36002,6 +36013,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             // (see `interfaces/styling.ts` for more information).
             flushQueue(context);
             if (isContextDirty(context)) {
+                ngDevMode && ngDevMode.stylingApplyCacheMiss++;
                 // this is here to prevent things like <ng-container [style] [class]>...</ng-container>
                 // or if there are any host style or class bindings present in a directive set on
                 // a container node
@@ -44059,7 +44071,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.11+38.sha-cf40105.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-beta.11+41.sha-66b87ce.with-local-changes');
 
     /**
      * @license
@@ -57504,7 +57516,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.11+38.sha-cf40105.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-beta.11+41.sha-66b87ce.with-local-changes');
 
     /**
      * @license
