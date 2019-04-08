@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.11+41.sha-66b87ce.with-local-changes
+ * @license Angular v8.0.0-beta.11+45.sha-84be7c5.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -16039,7 +16039,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.11+41.sha-66b87ce.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-beta.11+45.sha-84be7c5.with-local-changes');
 
     /**
      * @license
@@ -34663,8 +34663,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         ngDevMode && assertDataInRange(lView, adjustedElementIndex);
         var hostView = getComponentViewByIndex(adjustedElementIndex, lView);
         ngDevMode && assertNodeType(lView[TVIEW].data[adjustedElementIndex], 3 /* Element */);
-        // Only attached CheckAlways components or attached, dirty OnPush components should be checked
-        if (viewAttachedToChangeDetector(hostView) &&
+        // Only components in creation mode, attached CheckAlways
+        // components or attached, dirty OnPush components should be checked
+        if ((viewAttachedToChangeDetector(hostView) || isCreationMode(lView)) &&
             hostView[FLAGS] & (16 /* CheckAlways */ | 64 /* Dirty */)) {
             syncViewWithBlueprint(hostView);
             checkView(hostView, hostView[CONTEXT]);
@@ -37227,7 +37228,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.11+41.sha-66b87ce.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-beta.11+45.sha-84be7c5.with-local-changes');
 
     /**
      * @license
@@ -47801,7 +47802,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.11+41.sha-66b87ce.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-beta.11+45.sha-84be7c5.with-local-changes');
 
     /**
      * @license
