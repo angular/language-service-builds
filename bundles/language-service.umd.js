@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.11+38.sha-cf40105.with-local-changes
+ * @license Angular v8.0.0-beta.11+41.sha-66b87ce.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -16039,7 +16039,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.11+38.sha-cf40105.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-beta.11+41.sha-66b87ce.with-local-changes');
 
     /**
      * @license
@@ -31424,6 +31424,12 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             rendererMoveNode: 0,
             rendererRemoveNode: 0,
             rendererCreateComment: 0,
+            stylingMap: 0,
+            stylingMapCacheMiss: 0,
+            stylingProp: 0,
+            stylingPropCacheMiss: 0,
+            stylingApply: 0,
+            stylingApplyCacheMiss: 0,
         };
         // NOTE: Under Ivy we may have both window & global defined in the Node
         //    environment since ensureDocument() in render3.ts sets global.window.
@@ -37221,7 +37227,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.11+38.sha-cf40105.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-beta.11+41.sha-66b87ce.with-local-changes');
 
     /**
      * @license
@@ -47795,7 +47801,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.11+38.sha-cf40105.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-beta.11+41.sha-66b87ce.with-local-changes');
 
     /**
      * @license
