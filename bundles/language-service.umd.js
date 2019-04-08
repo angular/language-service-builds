@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.11+36.sha-902a53a.with-local-changes
+ * @license Angular v8.0.0-beta.11+40.sha-c65ac7f.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -16039,7 +16039,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.11+36.sha-902a53a.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-beta.11+40.sha-c65ac7f.with-local-changes');
 
     /**
      * @license
@@ -35217,7 +35217,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             var lCleanup = lView[CLEANUP];
             for (var i = 0; i < tCleanup.length - 1; i += 2) {
                 if (typeof tCleanup[i] === 'string') {
-                    // This is a listener with the native renderer
+                    // This is a native DOM listener
                     var idxOrTargetGetter = tCleanup[i + 1];
                     var target = typeof idxOrTargetGetter === 'function' ?
                         idxOrTargetGetter(lView) :
@@ -35225,7 +35225,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                     var listener = lCleanup[tCleanup[i + 2]];
                     var useCaptureOrSubIdx = tCleanup[i + 3];
                     if (typeof useCaptureOrSubIdx === 'boolean') {
-                        // DOM listener
+                        // native DOM listener registered with Renderer3
                         target.removeEventListener(tCleanup[i], listener, useCaptureOrSubIdx);
                     }
                     else {
@@ -35239,11 +35239,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                         }
                     }
                     i += 2;
-                }
-                else if (typeof tCleanup[i] === 'number') {
-                    // This is a listener with renderer2 (cleanup fn can be found by index)
-                    var cleanupFn = lCleanup[tCleanup[i]];
-                    cleanupFn();
                 }
                 else {
                     // This is a cleanup function that is grouped with the index of its context
@@ -37226,7 +37221,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.11+36.sha-902a53a.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-beta.11+40.sha-c65ac7f.with-local-changes');
 
     /**
      * @license
@@ -47800,7 +47795,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.11+36.sha-902a53a.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-beta.11+40.sha-c65ac7f.with-local-changes');
 
     /**
      * @license
