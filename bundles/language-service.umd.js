@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.11+57.sha-ef85336.with-local-changes
+ * @license Angular v8.0.0-beta.11+56.sha-138ca5a.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -409,8 +409,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      */
     var HtmlTagDefinition = /** @class */ (function () {
         function HtmlTagDefinition(_a) {
-            var _this = this;
             var _b = _a === void 0 ? {} : _a, closedByChildren = _b.closedByChildren, implicitNamespacePrefix = _b.implicitNamespacePrefix, _c = _b.contentType, contentType = _c === void 0 ? TagContentType.PARSABLE_DATA : _c, _d = _b.closedByParent, closedByParent = _d === void 0 ? false : _d, _e = _b.isVoid, isVoid = _e === void 0 ? false : _e, _f = _b.ignoreFirstLf, ignoreFirstLf = _f === void 0 ? false : _f;
+            var _this = this;
             this.closedByChildren = {};
             this.closedByParent = false;
             this.canSelfClose = false;
@@ -4259,9 +4259,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     }());
     var Tag = /** @class */ (function () {
         function Tag(name, unescapedAttrs, children) {
-            var _this = this;
             if (unescapedAttrs === void 0) { unescapedAttrs = {}; }
             if (children === void 0) { children = []; }
+            var _this = this;
             this.name = name;
             this.children = children;
             this.attrs = {};
@@ -13821,8 +13821,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     }
     var TemplateDefinitionBuilder = /** @class */ (function () {
         function TemplateDefinitionBuilder(constantPool, parentBindingScope, level, contextName, i18nContext, templateIndex, templateName, directiveMatcher, directives, pipeTypeByName, pipes, _namespace, relativeContextFilePath, i18nUseExternalIds) {
-            var _this = this;
             if (level === void 0) { level = 0; }
+            var _this = this;
             this.constantPool = constantPool;
             this.level = level;
             this.contextName = contextName;
@@ -13995,8 +13995,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         // LocalResolver
         TemplateDefinitionBuilder.prototype.getLocal = function (name) { return this._bindingScope.get(name); };
         TemplateDefinitionBuilder.prototype.i18nTranslate = function (message, params, ref, transformFn) {
-            var _a;
             if (params === void 0) { params = {}; }
+            var _a;
             var _ref = ref || this.i18nAllocateRef(message.id);
             var _params = {};
             if (params && Object.keys(params).length) {
@@ -16024,7 +16024,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.11+57.sha-ef85336.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-beta.11+56.sha-138ca5a.with-local-changes');
 
     /**
      * @license
@@ -22076,9 +22076,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      */
     var StaticReflector = /** @class */ (function () {
         function StaticReflector(summaryResolver, symbolResolver, knownMetadataClasses, knownMetadataFunctions, errorRecorder) {
-            var _this = this;
             if (knownMetadataClasses === void 0) { knownMetadataClasses = []; }
             if (knownMetadataFunctions === void 0) { knownMetadataFunctions = []; }
+            var _this = this;
             this.summaryResolver = summaryResolver;
             this.symbolResolver = symbolResolver;
             this.errorRecorder = errorRecorder;
@@ -28926,11 +28926,11 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     function makeDecorator(name, props, parentClass, additionalProcessing, typeFn) {
         var metaCtor = makeMetadataCtor(props);
         function DecoratorFactory() {
-            var _a;
             var args = [];
             for (var _i = 0; _i < arguments.length; _i++) {
                 args[_i] = arguments[_i];
             }
+            var _a;
             if (this instanceof DecoratorFactory) {
                 metaCtor.call.apply(metaCtor, __spread([this], args));
                 return this;
@@ -28974,11 +28974,11 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     function makeParamDecorator(name, props, parentClass) {
         var metaCtor = makeMetadataCtor(props);
         function ParamDecoratorFactory() {
-            var _a;
             var args = [];
             for (var _i = 0; _i < arguments.length; _i++) {
                 args[_i] = arguments[_i];
             }
+            var _a;
             if (this instanceof ParamDecoratorFactory) {
                 metaCtor.apply(this, args);
                 return this;
@@ -29011,11 +29011,11 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     function makePropDecorator(name, props, parentClass, additionalProcessing) {
         var metaCtor = makeMetadataCtor(props);
         function PropDecoratorFactory() {
-            var _a;
             var args = [];
             for (var _i = 0; _i < arguments.length; _i++) {
                 args[_i] = arguments[_i];
             }
+            var _a;
             if (this instanceof PropDecoratorFactory) {
                 metaCtor.apply(this, args);
                 return this;
@@ -39650,11 +39650,11 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         return res;
     }
     function merge() {
-        var e_2, _a;
         var sets = [];
         for (var _i = 0; _i < arguments.length; _i++) {
             sets[_i] = arguments[_i];
         }
+        var e_2, _a;
         var res = {};
         try {
             for (var sets_1 = __values(sets), sets_1_1 = sets_1.next(); !sets_1_1.done; sets_1_1 = sets_1.next()) {
@@ -42797,8 +42797,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     }
     var R3Injector = /** @class */ (function () {
         function R3Injector(def, additionalProviders, parent, source) {
-            var _this = this;
             if (source === void 0) { source = null; }
+            var _this = this;
             this.parent = parent;
             /**
              * Map of tokens to records which contain the instances of those tokens.
@@ -44250,7 +44250,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.11+57.sha-ef85336.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-beta.11+56.sha-138ca5a.with-local-changes');
 
     /**
      * @license
@@ -57759,7 +57759,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.11+57.sha-ef85336.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-beta.11+56.sha-138ca5a.with-local-changes');
 
     /**
      * @license
