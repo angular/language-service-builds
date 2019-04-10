@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.11+55.sha-db62ccf.with-local-changes
+ * @license Angular v8.0.0-beta.11+57.sha-ef85336.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -409,8 +409,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      */
     var HtmlTagDefinition = /** @class */ (function () {
         function HtmlTagDefinition(_a) {
-            var _b = _a === void 0 ? {} : _a, closedByChildren = _b.closedByChildren, implicitNamespacePrefix = _b.implicitNamespacePrefix, _c = _b.contentType, contentType = _c === void 0 ? TagContentType.PARSABLE_DATA : _c, _d = _b.closedByParent, closedByParent = _d === void 0 ? false : _d, _e = _b.isVoid, isVoid = _e === void 0 ? false : _e, _f = _b.ignoreFirstLf, ignoreFirstLf = _f === void 0 ? false : _f;
             var _this = this;
+            var _b = _a === void 0 ? {} : _a, closedByChildren = _b.closedByChildren, implicitNamespacePrefix = _b.implicitNamespacePrefix, _c = _b.contentType, contentType = _c === void 0 ? TagContentType.PARSABLE_DATA : _c, _d = _b.closedByParent, closedByParent = _d === void 0 ? false : _d, _e = _b.isVoid, isVoid = _e === void 0 ? false : _e, _f = _b.ignoreFirstLf, ignoreFirstLf = _f === void 0 ? false : _f;
             this.closedByChildren = {};
             this.closedByParent = false;
             this.canSelfClose = false;
@@ -2832,11 +2832,11 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             name: 'ɵregisterModuleFactory',
             moduleName: CORE,
         };
-        Identifiers.inject = { name: 'inject', moduleName: CORE };
+        Identifiers.inject = { name: 'Δinject', moduleName: CORE };
         Identifiers.INJECTOR = { name: 'INJECTOR', moduleName: CORE };
         Identifiers.Injector = { name: 'Injector', moduleName: CORE };
-        Identifiers.defineInjectable = { name: 'defineInjectable', moduleName: CORE };
-        Identifiers.InjectableDef = { name: 'ɵInjectableDef', moduleName: CORE };
+        Identifiers.ΔdefineInjectable = { name: 'ΔdefineInjectable', moduleName: CORE };
+        Identifiers.InjectableDef = { name: 'ΔInjectableDef', moduleName: CORE };
         Identifiers.ViewEncapsulation = {
             name: 'ViewEncapsulation',
             moduleName: CORE,
@@ -2858,7 +2858,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             name: 'ɵinlineInterpolate',
             moduleName: CORE,
         };
-        Identifiers.interpolate = { name: 'ɵinterpolate', moduleName: CORE };
+        Identifiers.interpolate = { name: 'Δinterpolate', moduleName: CORE };
         Identifiers.EMPTY_ARRAY = { name: 'ɵEMPTY_ARRAY', moduleName: CORE };
         Identifiers.EMPTY_MAP = { name: 'ɵEMPTY_MAP', moduleName: CORE };
         Identifiers.Renderer = { name: 'Renderer', moduleName: CORE };
@@ -3340,146 +3340,146 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         Identifiers.TRANSFORM_METHOD = 'transform';
         Identifiers.PATCH_DEPS = 'patchedDeps';
         /* Instructions */
-        Identifiers.namespaceHTML = { name: 'ɵnamespaceHTML', moduleName: CORE$1 };
-        Identifiers.namespaceMathML = { name: 'ɵnamespaceMathML', moduleName: CORE$1 };
-        Identifiers.namespaceSVG = { name: 'ɵnamespaceSVG', moduleName: CORE$1 };
-        Identifiers.element = { name: 'ɵelement', moduleName: CORE$1 };
-        Identifiers.elementStart = { name: 'ɵelementStart', moduleName: CORE$1 };
-        Identifiers.elementEnd = { name: 'ɵelementEnd', moduleName: CORE$1 };
-        Identifiers.elementProperty = { name: 'ɵelementProperty', moduleName: CORE$1 };
-        Identifiers.select = { name: 'ɵselect', moduleName: CORE$1 };
-        Identifiers.componentHostSyntheticProperty = { name: 'ɵcomponentHostSyntheticProperty', moduleName: CORE$1 };
-        Identifiers.componentHostSyntheticListener = { name: 'ɵcomponentHostSyntheticListener', moduleName: CORE$1 };
-        Identifiers.elementAttribute = { name: 'ɵelementAttribute', moduleName: CORE$1 };
-        Identifiers.elementClassProp = { name: 'ɵelementClassProp', moduleName: CORE$1 };
-        Identifiers.elementContainerStart = { name: 'ɵelementContainerStart', moduleName: CORE$1 };
-        Identifiers.elementContainerEnd = { name: 'ɵelementContainerEnd', moduleName: CORE$1 };
-        Identifiers.elementStyling = { name: 'ɵelementStyling', moduleName: CORE$1 };
-        Identifiers.elementStylingMap = { name: 'ɵelementStylingMap', moduleName: CORE$1 };
-        Identifiers.elementStyleProp = { name: 'ɵelementStyleProp', moduleName: CORE$1 };
-        Identifiers.elementStylingApply = { name: 'ɵelementStylingApply', moduleName: CORE$1 };
-        Identifiers.elementHostAttrs = { name: 'ɵelementHostAttrs', moduleName: CORE$1 };
-        Identifiers.elementHostStyling = { name: 'ɵelementHostStyling', moduleName: CORE$1 };
-        Identifiers.elementHostStylingMap = { name: 'ɵelementHostStylingMap', moduleName: CORE$1 };
-        Identifiers.elementHostStyleProp = { name: 'ɵelementHostStyleProp', moduleName: CORE$1 };
-        Identifiers.elementHostClassProp = { name: 'ɵelementHostClassProp', moduleName: CORE$1 };
-        Identifiers.elementHostStylingApply = { name: 'ɵelementHostStylingApply', moduleName: CORE$1 };
-        Identifiers.containerCreate = { name: 'ɵcontainer', moduleName: CORE$1 };
-        Identifiers.nextContext = { name: 'ɵnextContext', moduleName: CORE$1 };
-        Identifiers.templateCreate = { name: 'ɵtemplate', moduleName: CORE$1 };
-        Identifiers.text = { name: 'ɵtext', moduleName: CORE$1 };
-        Identifiers.textBinding = { name: 'ɵtextBinding', moduleName: CORE$1 };
-        Identifiers.bind = { name: 'ɵbind', moduleName: CORE$1 };
-        Identifiers.enableBindings = { name: 'ɵenableBindings', moduleName: CORE$1 };
-        Identifiers.disableBindings = { name: 'ɵdisableBindings', moduleName: CORE$1 };
-        Identifiers.allocHostVars = { name: 'ɵallocHostVars', moduleName: CORE$1 };
-        Identifiers.getCurrentView = { name: 'ɵgetCurrentView', moduleName: CORE$1 };
-        Identifiers.restoreView = { name: 'ɵrestoreView', moduleName: CORE$1 };
-        Identifiers.interpolation1 = { name: 'ɵinterpolation1', moduleName: CORE$1 };
-        Identifiers.interpolation2 = { name: 'ɵinterpolation2', moduleName: CORE$1 };
-        Identifiers.interpolation3 = { name: 'ɵinterpolation3', moduleName: CORE$1 };
-        Identifiers.interpolation4 = { name: 'ɵinterpolation4', moduleName: CORE$1 };
-        Identifiers.interpolation5 = { name: 'ɵinterpolation5', moduleName: CORE$1 };
-        Identifiers.interpolation6 = { name: 'ɵinterpolation6', moduleName: CORE$1 };
-        Identifiers.interpolation7 = { name: 'ɵinterpolation7', moduleName: CORE$1 };
-        Identifiers.interpolation8 = { name: 'ɵinterpolation8', moduleName: CORE$1 };
-        Identifiers.interpolationV = { name: 'ɵinterpolationV', moduleName: CORE$1 };
-        Identifiers.pureFunction0 = { name: 'ɵpureFunction0', moduleName: CORE$1 };
-        Identifiers.pureFunction1 = { name: 'ɵpureFunction1', moduleName: CORE$1 };
-        Identifiers.pureFunction2 = { name: 'ɵpureFunction2', moduleName: CORE$1 };
-        Identifiers.pureFunction3 = { name: 'ɵpureFunction3', moduleName: CORE$1 };
-        Identifiers.pureFunction4 = { name: 'ɵpureFunction4', moduleName: CORE$1 };
-        Identifiers.pureFunction5 = { name: 'ɵpureFunction5', moduleName: CORE$1 };
-        Identifiers.pureFunction6 = { name: 'ɵpureFunction6', moduleName: CORE$1 };
-        Identifiers.pureFunction7 = { name: 'ɵpureFunction7', moduleName: CORE$1 };
-        Identifiers.pureFunction8 = { name: 'ɵpureFunction8', moduleName: CORE$1 };
-        Identifiers.pureFunctionV = { name: 'ɵpureFunctionV', moduleName: CORE$1 };
-        Identifiers.pipeBind1 = { name: 'ɵpipeBind1', moduleName: CORE$1 };
-        Identifiers.pipeBind2 = { name: 'ɵpipeBind2', moduleName: CORE$1 };
-        Identifiers.pipeBind3 = { name: 'ɵpipeBind3', moduleName: CORE$1 };
-        Identifiers.pipeBind4 = { name: 'ɵpipeBind4', moduleName: CORE$1 };
-        Identifiers.pipeBindV = { name: 'ɵpipeBindV', moduleName: CORE$1 };
-        Identifiers.i18n = { name: 'ɵi18n', moduleName: CORE$1 };
-        Identifiers.i18nAttributes = { name: 'ɵi18nAttributes', moduleName: CORE$1 };
-        Identifiers.i18nExp = { name: 'ɵi18nExp', moduleName: CORE$1 };
-        Identifiers.i18nStart = { name: 'ɵi18nStart', moduleName: CORE$1 };
-        Identifiers.i18nEnd = { name: 'ɵi18nEnd', moduleName: CORE$1 };
-        Identifiers.i18nApply = { name: 'ɵi18nApply', moduleName: CORE$1 };
-        Identifiers.i18nPostprocess = { name: 'ɵi18nPostprocess', moduleName: CORE$1 };
-        Identifiers.load = { name: 'ɵload', moduleName: CORE$1 };
-        Identifiers.pipe = { name: 'ɵpipe', moduleName: CORE$1 };
-        Identifiers.projection = { name: 'ɵprojection', moduleName: CORE$1 };
-        Identifiers.projectionDef = { name: 'ɵprojectionDef', moduleName: CORE$1 };
-        Identifiers.reference = { name: 'ɵreference', moduleName: CORE$1 };
-        Identifiers.inject = { name: 'inject', moduleName: CORE$1 };
-        Identifiers.injectAttribute = { name: 'ɵinjectAttribute', moduleName: CORE$1 };
-        Identifiers.directiveInject = { name: 'ɵdirectiveInject', moduleName: CORE$1 };
-        Identifiers.templateRefExtractor = { name: 'ɵtemplateRefExtractor', moduleName: CORE$1 };
-        Identifiers.resolveWindow = { name: 'ɵresolveWindow', moduleName: CORE$1 };
-        Identifiers.resolveDocument = { name: 'ɵresolveDocument', moduleName: CORE$1 };
-        Identifiers.resolveBody = { name: 'ɵresolveBody', moduleName: CORE$1 };
-        Identifiers.defineBase = { name: 'ɵdefineBase', moduleName: CORE$1 };
+        Identifiers.namespaceHTML = { name: 'ΔnamespaceHTML', moduleName: CORE$1 };
+        Identifiers.namespaceMathML = { name: 'ΔnamespaceMathML', moduleName: CORE$1 };
+        Identifiers.namespaceSVG = { name: 'ΔnamespaceSVG', moduleName: CORE$1 };
+        Identifiers.element = { name: 'Δelement', moduleName: CORE$1 };
+        Identifiers.elementStart = { name: 'ΔelementStart', moduleName: CORE$1 };
+        Identifiers.elementEnd = { name: 'ΔelementEnd', moduleName: CORE$1 };
+        Identifiers.elementProperty = { name: 'ΔelementProperty', moduleName: CORE$1 };
+        Identifiers.select = { name: 'Δselect', moduleName: CORE$1 };
+        Identifiers.componentHostSyntheticProperty = { name: 'ΔcomponentHostSyntheticProperty', moduleName: CORE$1 };
+        Identifiers.componentHostSyntheticListener = { name: 'ΔcomponentHostSyntheticListener', moduleName: CORE$1 };
+        Identifiers.elementAttribute = { name: 'ΔelementAttribute', moduleName: CORE$1 };
+        Identifiers.elementClassProp = { name: 'ΔelementClassProp', moduleName: CORE$1 };
+        Identifiers.elementContainerStart = { name: 'ΔelementContainerStart', moduleName: CORE$1 };
+        Identifiers.elementContainerEnd = { name: 'ΔelementContainerEnd', moduleName: CORE$1 };
+        Identifiers.elementStyling = { name: 'ΔelementStyling', moduleName: CORE$1 };
+        Identifiers.elementStylingMap = { name: 'ΔelementStylingMap', moduleName: CORE$1 };
+        Identifiers.elementStyleProp = { name: 'ΔelementStyleProp', moduleName: CORE$1 };
+        Identifiers.elementStylingApply = { name: 'ΔelementStylingApply', moduleName: CORE$1 };
+        Identifiers.elementHostAttrs = { name: 'ΔelementHostAttrs', moduleName: CORE$1 };
+        Identifiers.elementHostStyling = { name: 'ΔelementHostStyling', moduleName: CORE$1 };
+        Identifiers.elementHostStylingMap = { name: 'ΔelementHostStylingMap', moduleName: CORE$1 };
+        Identifiers.elementHostStyleProp = { name: 'ΔelementHostStyleProp', moduleName: CORE$1 };
+        Identifiers.elementHostClassProp = { name: 'ΔelementHostClassProp', moduleName: CORE$1 };
+        Identifiers.elementHostStylingApply = { name: 'ΔelementHostStylingApply', moduleName: CORE$1 };
+        Identifiers.containerCreate = { name: 'Δcontainer', moduleName: CORE$1 };
+        Identifiers.nextContext = { name: 'ΔnextContext', moduleName: CORE$1 };
+        Identifiers.templateCreate = { name: 'Δtemplate', moduleName: CORE$1 };
+        Identifiers.text = { name: 'Δtext', moduleName: CORE$1 };
+        Identifiers.textBinding = { name: 'ΔtextBinding', moduleName: CORE$1 };
+        Identifiers.bind = { name: 'Δbind', moduleName: CORE$1 };
+        Identifiers.enableBindings = { name: 'ΔenableBindings', moduleName: CORE$1 };
+        Identifiers.disableBindings = { name: 'ΔdisableBindings', moduleName: CORE$1 };
+        Identifiers.allocHostVars = { name: 'ΔallocHostVars', moduleName: CORE$1 };
+        Identifiers.getCurrentView = { name: 'ΔgetCurrentView', moduleName: CORE$1 };
+        Identifiers.restoreView = { name: 'ΔrestoreView', moduleName: CORE$1 };
+        Identifiers.interpolation1 = { name: 'Δinterpolation1', moduleName: CORE$1 };
+        Identifiers.interpolation2 = { name: 'Δinterpolation2', moduleName: CORE$1 };
+        Identifiers.interpolation3 = { name: 'Δinterpolation3', moduleName: CORE$1 };
+        Identifiers.interpolation4 = { name: 'Δinterpolation4', moduleName: CORE$1 };
+        Identifiers.interpolation5 = { name: 'Δinterpolation5', moduleName: CORE$1 };
+        Identifiers.interpolation6 = { name: 'Δinterpolation6', moduleName: CORE$1 };
+        Identifiers.interpolation7 = { name: 'Δinterpolation7', moduleName: CORE$1 };
+        Identifiers.interpolation8 = { name: 'Δinterpolation8', moduleName: CORE$1 };
+        Identifiers.interpolationV = { name: 'ΔinterpolationV', moduleName: CORE$1 };
+        Identifiers.pureFunction0 = { name: 'ΔpureFunction0', moduleName: CORE$1 };
+        Identifiers.pureFunction1 = { name: 'ΔpureFunction1', moduleName: CORE$1 };
+        Identifiers.pureFunction2 = { name: 'ΔpureFunction2', moduleName: CORE$1 };
+        Identifiers.pureFunction3 = { name: 'ΔpureFunction3', moduleName: CORE$1 };
+        Identifiers.pureFunction4 = { name: 'ΔpureFunction4', moduleName: CORE$1 };
+        Identifiers.pureFunction5 = { name: 'ΔpureFunction5', moduleName: CORE$1 };
+        Identifiers.pureFunction6 = { name: 'ΔpureFunction6', moduleName: CORE$1 };
+        Identifiers.pureFunction7 = { name: 'ΔpureFunction7', moduleName: CORE$1 };
+        Identifiers.pureFunction8 = { name: 'ΔpureFunction8', moduleName: CORE$1 };
+        Identifiers.pureFunctionV = { name: 'ΔpureFunctionV', moduleName: CORE$1 };
+        Identifiers.pipeBind1 = { name: 'ΔpipeBind1', moduleName: CORE$1 };
+        Identifiers.pipeBind2 = { name: 'ΔpipeBind2', moduleName: CORE$1 };
+        Identifiers.pipeBind3 = { name: 'ΔpipeBind3', moduleName: CORE$1 };
+        Identifiers.pipeBind4 = { name: 'ΔpipeBind4', moduleName: CORE$1 };
+        Identifiers.pipeBindV = { name: 'ΔpipeBindV', moduleName: CORE$1 };
+        Identifiers.i18n = { name: 'Δi18n', moduleName: CORE$1 };
+        Identifiers.i18nAttributes = { name: 'Δi18nAttributes', moduleName: CORE$1 };
+        Identifiers.i18nExp = { name: 'Δi18nExp', moduleName: CORE$1 };
+        Identifiers.i18nStart = { name: 'Δi18nStart', moduleName: CORE$1 };
+        Identifiers.i18nEnd = { name: 'Δi18nEnd', moduleName: CORE$1 };
+        Identifiers.i18nApply = { name: 'Δi18nApply', moduleName: CORE$1 };
+        Identifiers.i18nPostprocess = { name: 'Δi18nPostprocess', moduleName: CORE$1 };
+        Identifiers.load = { name: 'Δload', moduleName: CORE$1 };
+        Identifiers.pipe = { name: 'Δpipe', moduleName: CORE$1 };
+        Identifiers.projection = { name: 'Δprojection', moduleName: CORE$1 };
+        Identifiers.projectionDef = { name: 'ΔprojectionDef', moduleName: CORE$1 };
+        Identifiers.reference = { name: 'Δreference', moduleName: CORE$1 };
+        Identifiers.inject = { name: 'Δinject', moduleName: CORE$1 };
+        Identifiers.injectAttribute = { name: 'ΔinjectAttribute', moduleName: CORE$1 };
+        Identifiers.directiveInject = { name: 'ΔdirectiveInject', moduleName: CORE$1 };
+        Identifiers.templateRefExtractor = { name: 'ΔtemplateRefExtractor', moduleName: CORE$1 };
+        Identifiers.resolveWindow = { name: 'ΔresolveWindow', moduleName: CORE$1 };
+        Identifiers.resolveDocument = { name: 'ΔresolveDocument', moduleName: CORE$1 };
+        Identifiers.resolveBody = { name: 'ΔresolveBody', moduleName: CORE$1 };
+        Identifiers.defineBase = { name: 'ΔdefineBase', moduleName: CORE$1 };
         Identifiers.BaseDef = {
-            name: 'ɵBaseDef',
+            name: 'ΔBaseDef',
             moduleName: CORE$1,
         };
-        Identifiers.defineComponent = { name: 'ɵdefineComponent', moduleName: CORE$1 };
-        Identifiers.setComponentScope = { name: 'ɵsetComponentScope', moduleName: CORE$1 };
+        Identifiers.defineComponent = { name: 'ΔdefineComponent', moduleName: CORE$1 };
+        Identifiers.setComponentScope = { name: 'ΔsetComponentScope', moduleName: CORE$1 };
         Identifiers.ComponentDefWithMeta = {
-            name: 'ɵComponentDefWithMeta',
+            name: 'ΔComponentDefWithMeta',
             moduleName: CORE$1,
         };
         Identifiers.defineDirective = {
-            name: 'ɵdefineDirective',
+            name: 'ΔdefineDirective',
             moduleName: CORE$1,
         };
         Identifiers.DirectiveDefWithMeta = {
-            name: 'ɵDirectiveDefWithMeta',
+            name: 'ΔDirectiveDefWithMeta',
             moduleName: CORE$1,
         };
         Identifiers.InjectorDef = {
-            name: 'ɵInjectorDef',
+            name: 'ΔInjectorDef',
             moduleName: CORE$1,
         };
         Identifiers.defineInjector = {
-            name: 'defineInjector',
+            name: 'ΔdefineInjector',
             moduleName: CORE$1,
         };
         Identifiers.NgModuleDefWithMeta = {
-            name: 'ɵNgModuleDefWithMeta',
+            name: 'ΔNgModuleDefWithMeta',
             moduleName: CORE$1,
         };
-        Identifiers.defineNgModule = { name: 'ɵdefineNgModule', moduleName: CORE$1 };
-        Identifiers.setNgModuleScope = { name: 'ɵsetNgModuleScope', moduleName: CORE$1 };
-        Identifiers.PipeDefWithMeta = { name: 'ɵPipeDefWithMeta', moduleName: CORE$1 };
-        Identifiers.definePipe = { name: 'ɵdefinePipe', moduleName: CORE$1 };
-        Identifiers.queryRefresh = { name: 'ɵqueryRefresh', moduleName: CORE$1 };
-        Identifiers.viewQuery = { name: 'ɵviewQuery', moduleName: CORE$1 };
-        Identifiers.staticViewQuery = { name: 'ɵstaticViewQuery', moduleName: CORE$1 };
-        Identifiers.staticContentQuery = { name: 'ɵstaticContentQuery', moduleName: CORE$1 };
-        Identifiers.loadViewQuery = { name: 'ɵloadViewQuery', moduleName: CORE$1 };
-        Identifiers.contentQuery = { name: 'ɵcontentQuery', moduleName: CORE$1 };
-        Identifiers.loadContentQuery = { name: 'ɵloadContentQuery', moduleName: CORE$1 };
-        Identifiers.NgOnChangesFeature = { name: 'ɵNgOnChangesFeature', moduleName: CORE$1 };
-        Identifiers.InheritDefinitionFeature = { name: 'ɵInheritDefinitionFeature', moduleName: CORE$1 };
-        Identifiers.ProvidersFeature = { name: 'ɵProvidersFeature', moduleName: CORE$1 };
-        Identifiers.listener = { name: 'ɵlistener', moduleName: CORE$1 };
+        Identifiers.defineNgModule = { name: 'ΔdefineNgModule', moduleName: CORE$1 };
+        Identifiers.setNgModuleScope = { name: 'ΔsetNgModuleScope', moduleName: CORE$1 };
+        Identifiers.PipeDefWithMeta = { name: 'ΔPipeDefWithMeta', moduleName: CORE$1 };
+        Identifiers.definePipe = { name: 'ΔdefinePipe', moduleName: CORE$1 };
+        Identifiers.queryRefresh = { name: 'ΔqueryRefresh', moduleName: CORE$1 };
+        Identifiers.viewQuery = { name: 'ΔviewQuery', moduleName: CORE$1 };
+        Identifiers.staticViewQuery = { name: 'ΔstaticViewQuery', moduleName: CORE$1 };
+        Identifiers.staticContentQuery = { name: 'ΔstaticContentQuery', moduleName: CORE$1 };
+        Identifiers.loadViewQuery = { name: 'ΔloadViewQuery', moduleName: CORE$1 };
+        Identifiers.contentQuery = { name: 'ΔcontentQuery', moduleName: CORE$1 };
+        Identifiers.loadContentQuery = { name: 'ΔloadContentQuery', moduleName: CORE$1 };
+        Identifiers.NgOnChangesFeature = { name: 'ΔNgOnChangesFeature', moduleName: CORE$1 };
+        Identifiers.InheritDefinitionFeature = { name: 'ΔInheritDefinitionFeature', moduleName: CORE$1 };
+        Identifiers.ProvidersFeature = { name: 'ΔProvidersFeature', moduleName: CORE$1 };
+        Identifiers.listener = { name: 'Δlistener', moduleName: CORE$1 };
         Identifiers.getFactoryOf = {
-            name: 'ɵgetFactoryOf',
+            name: 'ΔgetFactoryOf',
             moduleName: CORE$1,
         };
         Identifiers.getInheritedFactory = {
-            name: 'ɵgetInheritedFactory',
+            name: 'ΔgetInheritedFactory',
             moduleName: CORE$1,
         };
         // sanitization-related functions
-        Identifiers.sanitizeHtml = { name: 'ɵsanitizeHtml', moduleName: CORE$1 };
-        Identifiers.sanitizeStyle = { name: 'ɵsanitizeStyle', moduleName: CORE$1 };
-        Identifiers.defaultStyleSanitizer = { name: 'ɵdefaultStyleSanitizer', moduleName: CORE$1 };
-        Identifiers.sanitizeResourceUrl = { name: 'ɵsanitizeResourceUrl', moduleName: CORE$1 };
-        Identifiers.sanitizeScript = { name: 'ɵsanitizeScript', moduleName: CORE$1 };
-        Identifiers.sanitizeUrl = { name: 'ɵsanitizeUrl', moduleName: CORE$1 };
-        Identifiers.sanitizeUrlOrResourceUrl = { name: 'ɵsanitizeUrlOrResourceUrl', moduleName: CORE$1 };
+        Identifiers.sanitizeHtml = { name: 'ΔsanitizeHtml', moduleName: CORE$1 };
+        Identifiers.sanitizeStyle = { name: 'ΔsanitizeStyle', moduleName: CORE$1 };
+        Identifiers.defaultStyleSanitizer = { name: 'ΔdefaultStyleSanitizer', moduleName: CORE$1 };
+        Identifiers.sanitizeResourceUrl = { name: 'ΔsanitizeResourceUrl', moduleName: CORE$1 };
+        Identifiers.sanitizeScript = { name: 'ΔsanitizeScript', moduleName: CORE$1 };
+        Identifiers.sanitizeUrl = { name: 'ΔsanitizeUrl', moduleName: CORE$1 };
+        Identifiers.sanitizeUrlOrResourceUrl = { name: 'ΔsanitizeUrlOrResourceUrl', moduleName: CORE$1 };
         return Identifiers;
     }());
 
@@ -4259,9 +4259,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     }());
     var Tag = /** @class */ (function () {
         function Tag(name, unescapedAttrs, children) {
+            var _this = this;
             if (unescapedAttrs === void 0) { unescapedAttrs = {}; }
             if (children === void 0) { children = []; }
-            var _this = this;
             this.name = name;
             this.children = children;
             this.attrs = {};
@@ -5090,7 +5090,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         }
         var token = meta.type;
         var providedIn = meta.providedIn;
-        var expression = importExpr(Identifiers.defineInjectable).callFn([mapToMapExpression({ token: token, factory: result.factory, providedIn: providedIn })]);
+        var expression = importExpr(Identifiers.ΔdefineInjectable).callFn([mapToMapExpression({ token: token, factory: result.factory, providedIn: providedIn })]);
         var type = new ExpressionType(importExpr(Identifiers.InjectableDef, [typeWithParameters(meta.type, meta.typeArgumentCount)]));
         return {
             expression: expression,
@@ -6427,7 +6427,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             definitionMap.bootstrap = refsToArray(bootstrap, containsForwardDecls);
         }
         // If requested to emit scope information inline, pass the declarations, imports and exports to
-        // the `defineNgModule` call. The JIT compilation uses this.
+        // the `ΔdefineNgModule` call. The JIT compilation uses this.
         if (emitInline) {
             if (declarations.length) {
                 definitionMap.declarations = refsToArray(declarations, containsForwardDecls);
@@ -6439,7 +6439,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 definitionMap.exports = refsToArray(exports, containsForwardDecls);
             }
         }
-        // If not emitting inline, the scope information is not passed into `defineNgModule` as it would
+        // If not emitting inline, the scope information is not passed into `ΔdefineNgModule` as it would
         // prevent tree-shaking of the declarations, imports and exports references.
         else {
             var setNgModuleScopeCall = generateSetNgModuleScopeCall(meta);
@@ -6458,7 +6458,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         return { expression: expression, type: type, additionalStatements: additionalStatements };
     }
     /**
-     * Generates a function call to `setNgModuleScope` with all necessary information so that the
+     * Generates a function call to `ΔsetNgModuleScope` with all necessary information so that the
      * transitive module scope can be computed during runtime in JIT mode. This call is marked pure
      * such that the references to declarations, imports and exports may be elided causing these
      * symbols to become tree-shakeable.
@@ -13821,8 +13821,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     }
     var TemplateDefinitionBuilder = /** @class */ (function () {
         function TemplateDefinitionBuilder(constantPool, parentBindingScope, level, contextName, i18nContext, templateIndex, templateName, directiveMatcher, directives, pipeTypeByName, pipes, _namespace, relativeContextFilePath, i18nUseExternalIds) {
-            if (level === void 0) { level = 0; }
             var _this = this;
+            if (level === void 0) { level = 0; }
             this.constantPool = constantPool;
             this.level = level;
             this.contextName = contextName;
@@ -13995,8 +13995,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         // LocalResolver
         TemplateDefinitionBuilder.prototype.getLocal = function (name) { return this._bindingScope.get(name); };
         TemplateDefinitionBuilder.prototype.i18nTranslate = function (message, params, ref, transformFn) {
-            if (params === void 0) { params = {}; }
             var _a;
+            if (params === void 0) { params = {}; }
             var _ref = ref || this.i18nAllocateRef(message.id);
             var _params = {};
             if (params && Object.keys(params).length) {
@@ -14466,7 +14466,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 parameters.splice(2, 0, literal(templateVisitor.getConstCount()), literal(templateVisitor.getVarCount()));
                 return trimTrailingNulls(parameters);
             });
-            // handle property bindings e.g. ɵelementProperty(1, 'ngForOf', ɵbind(ctx.items));
+            // handle property bindings e.g. ΔelementProperty(1, 'ngForOf', Δbind(ctx.items));
             var context = variable(CONTEXT_NAME);
             this.templatePropertyBindings(template, templateIndex, context, template.templateAttrs);
             // Only add normal input/output binding instructions on explicit ng-template elements.
@@ -16024,7 +16024,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.11+55.sha-db62ccf.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-beta.11+57.sha-ef85336.with-local-changes');
 
     /**
      * @license
@@ -22076,9 +22076,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      */
     var StaticReflector = /** @class */ (function () {
         function StaticReflector(summaryResolver, symbolResolver, knownMetadataClasses, knownMetadataFunctions, errorRecorder) {
+            var _this = this;
             if (knownMetadataClasses === void 0) { knownMetadataClasses = []; }
             if (knownMetadataFunctions === void 0) { knownMetadataFunctions = []; }
-            var _this = this;
             this.summaryResolver = summaryResolver;
             this.symbolResolver = symbolResolver;
             this.errorRecorder = errorRecorder;
@@ -28926,11 +28926,11 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     function makeDecorator(name, props, parentClass, additionalProcessing, typeFn) {
         var metaCtor = makeMetadataCtor(props);
         function DecoratorFactory() {
+            var _a;
             var args = [];
             for (var _i = 0; _i < arguments.length; _i++) {
                 args[_i] = arguments[_i];
             }
-            var _a;
             if (this instanceof DecoratorFactory) {
                 metaCtor.call.apply(metaCtor, __spread([this], args));
                 return this;
@@ -28974,11 +28974,11 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     function makeParamDecorator(name, props, parentClass) {
         var metaCtor = makeMetadataCtor(props);
         function ParamDecoratorFactory() {
+            var _a;
             var args = [];
             for (var _i = 0; _i < arguments.length; _i++) {
                 args[_i] = arguments[_i];
             }
-            var _a;
             if (this instanceof ParamDecoratorFactory) {
                 metaCtor.apply(this, args);
                 return this;
@@ -29011,11 +29011,11 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     function makePropDecorator(name, props, parentClass, additionalProcessing) {
         var metaCtor = makeMetadataCtor(props);
         function PropDecoratorFactory() {
+            var _a;
             var args = [];
             for (var _i = 0; _i < arguments.length; _i++) {
                 args[_i] = arguments[_i];
             }
-            var _a;
             if (this instanceof PropDecoratorFactory) {
                 metaCtor.apply(this, args);
                 return this;
@@ -29175,7 +29175,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @publicApi
      */
-    function defineInjectable(opts) {
+    function ΔdefineInjectable(opts) {
         return {
             providedIn: opts.providedIn || null, factory: opts.factory, value: undefined,
         };
@@ -29200,7 +29200,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @publicApi
      */
-    function defineInjector(options) {
+    function ΔdefineInjector(options) {
         return {
             factory: options.factory, providers: options.providers || [], imports: options.imports || [],
         };
@@ -29404,7 +29404,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             return _currentInjector.get(token, flags & InjectFlags.Optional ? null : undefined, flags);
         }
     }
-    function inject(token, flags) {
+    function Δinject(token, flags) {
         if (flags === void 0) { flags = InjectFlags.Default; }
         return (_injectImplementation || injectInjectorOnly)(token, flags);
     }
@@ -29455,10 +29455,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                         type = meta;
                     }
                 }
-                args.push(inject(type, flags));
+                args.push(Δinject(type, flags));
             }
             else {
-                args.push(inject(arg));
+                args.push(Δinject(arg));
             }
         }
         return args;
@@ -29477,10 +29477,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * This should be kept up to date with the public exports of @angular/core.
      */
     var angularCoreDiEnv = {
-        'defineInjectable': defineInjectable,
-        'defineInjector': defineInjector,
-        'inject': inject,
-        'ɵgetFactoryOf': getFactoryOf,
+        'ΔdefineInjectable': ΔdefineInjectable,
+        'ΔdefineInjector': ΔdefineInjector,
+        'Δinject': Δinject,
+        'ΔgetFactoryOf': getFactoryOf,
     };
     function getFactoryOf(type) {
         var typeAny = type;
@@ -29988,7 +29988,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 this.__NG_ELEMENT_ID__ = options;
             }
             else if (options !== undefined) {
-                this.ngInjectableDef = defineInjectable({
+                this.ngInjectableDef = ΔdefineInjectable({
                     providedIn: options.providedIn || 'root',
                     factory: options.factory,
                 });
@@ -30074,9 +30074,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         Injector.THROW_IF_NOT_FOUND = _THROW_IF_NOT_FOUND;
         Injector.NULL = new NullInjector();
         /** @nocollapse */
-        Injector.ngInjectableDef = defineInjectable({
+        Injector.ngInjectableDef = ΔdefineInjectable({
             providedIn: 'any',
-            factory: function () { return inject(INJECTOR); },
+            factory: function () { return Δinject(INJECTOR); },
         });
         /**
          * @internal
@@ -31703,13 +31703,25 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     var defaultScheduler = (typeof requestAnimationFrame !== 'undefined' && requestAnimationFrame || // browser only
         setTimeout // everything else
     ).bind(_global$1);
-    function resolveWindow(element) {
+    /**
+     *
+     * @publicApi
+     */
+    function ΔresolveWindow(element) {
         return { name: 'window', target: element.ownerDocument.defaultView };
     }
-    function resolveDocument(element) {
+    /**
+     *
+     * @publicApi
+     */
+    function ΔresolveDocument(element) {
         return { name: 'document', target: element.ownerDocument };
     }
-    function resolveBody(element) {
+    /**
+     *
+     * @publicApi
+     */
+    function ΔresolveBody(element) {
         return { name: 'body', target: element.ownerDocument.body };
     }
     /**
@@ -31839,8 +31851,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *   });
      * }
      * ```
+     * @publicApi
      */
-    function defineComponent(componentDefinition) {
+    function ΔdefineComponent(componentDefinition) {
         var type = componentDefinition.type;
         var typePrototype = type.prototype;
         var declaredInputs = {};
@@ -31900,7 +31913,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         });
         return def;
     }
-    function setComponentScope(type, directives, pipes) {
+    /**
+     * @publicApi
+     */
+    function ΔsetComponentScope(type, directives, pipes) {
         var def = type.ngComponentDef;
         def.directiveDefs = function () { return directives.map(extractDirectiveDef); };
         def.pipeDefs = function () { return pipes.map(extractPipeDef); };
@@ -31919,7 +31935,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         }
         return def;
     }
-    function defineNgModule(def) {
+    /**
+     * @publicApi
+     */
+    function ΔdefineNgModule(def) {
         var res = {
             type: def.type,
             bootstrap: def.bootstrap || EMPTY_ARRAY$1,
@@ -31938,8 +31957,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Scope metadata of modules is not used in production builds, so calls to this function can be
      * marked pure to tree-shake it from the bundle, allowing for all referenced declarations
      * to become eligible for tree-shaking as well.
+     *
+     * @publicApi
      */
-    function setNgModuleScope(type, scope) {
+    function ΔsetNgModuleScope(type, scope) {
         var ngModuleDef = getNgModuleDef(type, true);
         ngModuleDef.declarations = scope.declarations || EMPTY_ARRAY$1;
         ngModuleDef.imports = scope.imports || EMPTY_ARRAY$1;
@@ -32024,15 +32045,19 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Create a base definition
      *
      * # Example
-     * ```
+     * ```ts
      * class ShouldBeInherited {
-     *   static ngBaseDef = defineBase({
+     *   static ngBaseDef = ΔdefineBase({
      *      ...
      *   })
      * }
+     * ```
+     *
      * @param baseDefinition The base definition parameters
+     *
+     * @publicApi
      */
-    function defineBase(baseDefinition) {
+    function ΔdefineBase(baseDefinition) {
         var declaredInputs = {};
         return {
             inputs: invertObject(baseDefinition.inputs, declaredInputs),
@@ -32044,17 +32069,19 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Create a directive definition object.
      *
      * # Example
-     * ```
+     * ```ts
      * class MyDirective {
      *   // Generated by Angular Template Compiler
      *   // [Symbol] syntax will not be supported by TypeScript until v2.7
-     *   static ngDirectiveDef = defineDirective({
+     *   static ngDirectiveDef = ΔdefineDirective({
      *     ...
      *   });
      * }
      * ```
+     *
+     * @publicApi
      */
-    var defineDirective = defineComponent;
+    var ΔdefineDirective = ΔdefineComponent;
     /**
      * Create a pipe definition object.
      *
@@ -32068,8 +32095,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * }
      * ```
      * @param pipeDef Pipe definition generated by the compiler
+     *
+     * @publicApi
      */
-    function definePipe(pipeDef) {
+    function ΔdefinePipe(pipeDef) {
         return {
             name: pipeDef.name,
             factory: pipeDef.factory,
@@ -32805,15 +32834,17 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *   Should match component / directive.
      * </my-comp>
      * <div ngNonBindable>
-     *   <!-- disabledBindings() -->
+     *   <!-- ΔdisableBindings() -->
      *   <my-comp my-directive>
      *     Should not match component / directive because we are in ngNonBindable.
      *   </my-comp>
-     *   <!-- enableBindings() -->
+     *   <!-- ΔenableBindings() -->
      * </div>
      * ```
+     *
+     * @publicApi
      */
-    function enableBindings() {
+    function ΔenableBindings() {
         bindingsEnabled = true;
     }
     /**
@@ -32825,15 +32856,17 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *   Should match component / directive.
      * </my-comp>
      * <div ngNonBindable>
-     *   <!-- disabledBindings() -->
+     *   <!-- ΔdisableBindings() -->
      *   <my-comp my-directive>
      *     Should not match component / directive because we are in ngNonBindable.
      *   </my-comp>
-     *   <!-- enableBindings() -->
+     *   <!-- ΔenableBindings() -->
      * </div>
      * ```
+     *
+     * @publicApi
      */
-    function disableBindings() {
+    function ΔdisableBindings() {
         bindingsEnabled = false;
     }
     function getLView() {
@@ -32972,8 +33005,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * walking the declaration view tree in listeners to get vars from parent views.
      *
      * @param viewToRestore The OpaqueViewState instance to restore.
+     *
+     * @publicApi
      */
-    function restoreView(viewToRestore) {
+    function ΔrestoreView(viewToRestore) {
         contextLView = viewToRestore;
     }
     /** Used to set the parent property when nodes are created and track query results. */
@@ -33158,21 +33193,27 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     var _currentNamespace = null;
     /**
      * Sets the namespace used to create elements to `'http://www.w3.org/2000/svg'` in global state.
+     *
+     * @publicApi
      */
-    function namespaceSVG() {
+    function ΔnamespaceSVG() {
         _currentNamespace = 'http://www.w3.org/2000/svg';
     }
     /**
      * Sets the namespace used to create elements to `'http://www.w3.org/1998/MathML/'` in global state.
+     *
+     * @publicApi
      */
-    function namespaceMathML() {
+    function ΔnamespaceMathML() {
         _currentNamespace = 'http://www.w3.org/1998/MathML/';
     }
     /**
      * Sets the namespace used to create elements no `null`, which forces element creation to use
      * `createElement` rather than `createElementNS`.
+     *
+     * @publicApi
      */
-    function namespaceHTML() {
+    function ΔnamespaceHTML() {
         _currentNamespace = null;
     }
     function getNamespace() {
@@ -34450,7 +34491,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         };
         return NodeInjector;
     }());
-    function getFactoryOf$1(type) {
+    /**
+     * @publicApi
+     */
+    function ΔgetFactoryOf(type) {
         var typeAny = type;
         var def = getComponentDef(typeAny) || getDirectiveDef(typeAny) ||
             getPipeDef(typeAny) || getInjectableDef(typeAny) || getInjectorDef(typeAny);
@@ -34459,9 +34503,12 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         }
         return def.factory;
     }
-    function getInheritedFactory(type) {
+    /**
+     * @publicApi
+     */
+    function ΔgetInheritedFactory(type) {
         var proto = Object.getPrototypeOf(type.prototype).constructor;
-        var factory = getFactoryOf$1(proto);
+        var factory = ΔgetFactoryOf(proto);
         if (factory !== null) {
             return factory;
         }
@@ -37228,7 +37275,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 setPreviousOrParentTNode(null);
                 oldView = enterView(viewToRender, viewToRender[T_HOST]);
                 resetPreOrderHookFlags(viewToRender);
-                namespaceHTML();
+                ΔnamespaceHTML();
                 // Reset the selected index so we can assert that `select` was called later
                 ngDevMode && setSelectedIndex(-1);
                 tView.template(getRenderFlags(viewToRender), context);
@@ -37258,7 +37305,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             if (creationModeIsActive) {
                 // creation mode pass
                 if (templateFn) {
-                    namespaceHTML();
+                    ΔnamespaceHTML();
                     // Reset the selected index so we can assert that `select` was called later
                     ngDevMode && setSelectedIndex(-1);
                     templateFn(1 /* Create */, context);
@@ -38139,7 +38186,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         var creationMode = isCreationMode(hostView);
         try {
             resetPreOrderHookFlags(hostView);
-            namespaceHTML();
+            ΔnamespaceHTML();
             creationMode && executeViewQueryFn(1 /* Create */, hostTView, component);
             // Reset the selected index so we can assert that `select` was called later
             ngDevMode && setSelectedIndex(-1);
@@ -38313,8 +38360,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Allocates the necessary amount of slots for host vars.
      *
      * @param count Amount of vars to be allocated
+     *
+     * @publicApi
      */
-    function allocHostVars(count) {
+    function ΔallocHostVars(count) {
         var lView = getLView();
         var tView = lView[TVIEW];
         if (!tView.firstTemplatePass)
@@ -39139,8 +39188,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * % }
      *
      * @param index The index of the container in the data array
+     *
+     * @publicApi
      */
-    function container(index) {
+    function Δcontainer(index) {
         var tNode = containerInternal(index, null, null);
         var lView = getLView();
         if (lView[TVIEW].firstTemplatePass) {
@@ -39165,8 +39216,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @param localRefs A set of local reference bindings on the element.
      * @param localRefExtractor A function which extracts local-refs values from the template.
      *        Defaults to the current element associated with the local-ref.
+     *
+     * @publicApi
      */
-    function template(index, templateFn, consts, vars, tagName, attrs, localRefs, localRefExtractor) {
+    function Δtemplate(index, templateFn, consts, vars, tagName, attrs, localRefs, localRefExtractor) {
         var lView = getLView();
         var tView = lView[TVIEW];
         // TODO: consider a separate node type for templates
@@ -39184,8 +39237,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Sets a container up to receive views.
      *
      * @param index The index of the container in the data array
+     *
+     * @publicApi
      */
-    function containerRefreshStart(index) {
+    function ΔcontainerRefreshStart(index) {
         var lView = getLView();
         var tView = lView[TVIEW];
         var previousOrParentTNode = loadInternal(tView.data, index);
@@ -39201,8 +39256,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Marks the end of the LContainer.
      *
      * Marking the end of LContainer is the time when to child views get inserted or removed.
+     *
+     * @publicApi
      */
-    function containerRefreshEnd() {
+    function ΔcontainerRefreshEnd() {
         var previousOrParentTNode = getPreviousOrParentTNode();
         if (getIsParent()) {
             setIsParent(false);
@@ -39282,13 +39339,19 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * with a nextContext() call, which walks up the tree and updates the contextViewData instance.
      *
      * @param index The index of the local ref in contextViewData.
+     *
+     * @publicApi
      */
-    function reference(index) {
+    function Δreference(index) {
         var contextLView = getContextLView();
         return loadInternal(contextLView, index);
     }
-    /** Retrieves a value from current `viewData`. */
-    function load(index) {
+    /**
+     * Retrieves a value from current `viewData`.
+     *
+     * @publicApi
+     */
+    function Δload(index) {
         return loadInternal(getLView(), index);
     }
 
@@ -39299,15 +39362,17 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    function directiveInject(token, flags) {
+    function ΔdirectiveInject(token, flags) {
         if (flags === void 0) { flags = InjectFlags.Default; }
         token = resolveForwardRef$1(token);
         return getOrCreateInjectable(getPreviousOrParentTNode(), getLView(), token, flags);
     }
     /**
      * Facade for the attribute injection from DI.
+     *
+     * @publicApi
      */
-    function injectAttribute(attrNameToInject) {
+    function ΔinjectAttribute(attrNameToInject) {
         return injectAttributeImpl(getPreviousOrParentTNode(), attrNameToInject);
     }
 
@@ -39585,11 +39650,11 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         return res;
     }
     function merge() {
+        var e_2, _a;
         var sets = [];
         for (var _i = 0; _i < arguments.length; _i++) {
             sets[_i] = arguments[_i];
         }
-        var e_2, _a;
         var res = {};
         try {
             for (var sets_1 = __values(sets), sets_1_1 = sets_1.next(); !sets_1_1.done; sets_1_1 = sets_1.next()) {
@@ -39972,8 +40037,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @param unsafeHtml untrusted `html`, typically from the user.
      * @returns `html` string which is safe to display to user, because all of the dangerous javascript
      * and urls have been removed.
+     *
+     * @publicApi
      */
-    function sanitizeHtml(unsafeHtml) {
+    function ΔsanitizeHtml(unsafeHtml) {
         var sanitizer = getSanitizer();
         if (sanitizer) {
             return sanitizer.sanitize(SecurityContext$1.HTML, unsafeHtml) || '';
@@ -39995,8 +40062,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @param unsafeStyle untrusted `style`, typically from the user.
      * @returns `style` string which is safe to bind to the `style` properties, because all of the
      * dangerous javascript and urls have been removed.
+     *
+     * @publicApi
      */
-    function sanitizeStyle(unsafeStyle) {
+    function ΔsanitizeStyle(unsafeStyle) {
         var sanitizer = getSanitizer();
         if (sanitizer) {
             return sanitizer.sanitize(SecurityContext$1.STYLE, unsafeStyle) || '';
@@ -40019,8 +40088,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @param unsafeUrl untrusted `url`, typically from the user.
      * @returns `url` string which is safe to bind to the `src` properties such as `<img src>`, because
      * all of the dangerous javascript has been removed.
+     *
+     * @publicApi
      */
-    function sanitizeUrl(unsafeUrl) {
+    function ΔsanitizeUrl(unsafeUrl) {
         var sanitizer = getSanitizer();
         if (sanitizer) {
             return sanitizer.sanitize(SecurityContext$1.URL, unsafeUrl) || '';
@@ -40038,8 +40109,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @param unsafeResourceUrl untrusted `url`, typically from the user.
      * @returns `url` string which is safe to bind to the `src` properties such as `<img src>`, because
      * only trusted `url`s have been allowed to pass.
+     *
+     * @publicApi
      */
-    function sanitizeResourceUrl(unsafeResourceUrl) {
+    function ΔsanitizeResourceUrl(unsafeResourceUrl) {
         var sanitizer = getSanitizer();
         if (sanitizer) {
             return sanitizer.sanitize(SecurityContext$1.RESOURCE_URL, unsafeResourceUrl) || '';
@@ -40058,8 +40131,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @param unsafeScript untrusted `script`, typically from the user.
      * @returns `url` string which is safe to bind to the `<script>` element such as `<img src>`,
      * because only trusted `scripts` have been allowed to pass.
+     *
+     * @publicApi
      */
-    function sanitizeScript(unsafeScript) {
+    function ΔsanitizeScript(unsafeScript) {
         var sanitizer = getSanitizer();
         if (sanitizer) {
             return sanitizer.sanitize(SecurityContext$1.SCRIPT, unsafeScript) || '';
@@ -40080,9 +40155,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         if ((prop === 'src' && (tag === 'embed' || tag === 'frame' || tag === 'iframe' ||
             tag === 'media' || tag === 'script')) ||
             (prop === 'href' && (tag === 'base' || tag === 'link'))) {
-            return sanitizeResourceUrl;
+            return ΔsanitizeResourceUrl;
         }
-        return sanitizeUrl;
+        return ΔsanitizeUrl;
     }
     /**
      * Sanitizes URL, selecting sanitizer function based on tag and property names.
@@ -40096,20 +40171,24 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @param tag target element tag name.
      * @param prop name of the property that contains the value.
      * @returns `url` string which is safe to bind.
+     *
+     * @publicApi
      */
-    function sanitizeUrlOrResourceUrl(unsafeUrl, tag, prop) {
+    function ΔsanitizeUrlOrResourceUrl(unsafeUrl, tag, prop) {
         return getUrlSanitizer(tag, prop)(unsafeUrl);
     }
     /**
      * The default style sanitizer will handle sanitization for style properties by
      * sanitizing any CSS property that can include a `url` value (usually image-based properties)
+     *
+     * @publicApi
      */
-    var defaultStyleSanitizer = function (prop, value) {
+    var ΔdefaultStyleSanitizer = function (prop, value) {
         if (value === undefined) {
             return prop === 'background-image' || prop === 'background' || prop === 'border-image' ||
                 prop === 'filter' || prop === 'list-style' || prop === 'list-style-image';
         }
-        return sanitizeStyle(value);
+        return ΔsanitizeStyle(value);
     };
     function validateAgainstEventProperties(name) {
         if (name.toLowerCase().startsWith('on')) {
@@ -40171,7 +40250,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @publicApi
      */
-    function elementStyling(classBindingNames, styleBindingNames, styleSanitizer) {
+    function ΔelementStyling(classBindingNames, styleBindingNames, styleSanitizer) {
         var tNode = getPreviousOrParentTNode();
         if (!tNode.stylingTemplate) {
             tNode.stylingTemplate = createEmptyStylingContext();
@@ -40207,7 +40286,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @publicApi
      */
-    function elementHostStyling(classBindingNames, styleBindingNames, styleSanitizer) {
+    function ΔelementHostStyling(classBindingNames, styleBindingNames, styleSanitizer) {
         var tNode = getPreviousOrParentTNode();
         if (!tNode.stylingTemplate) {
             tNode.stylingTemplate = createEmptyStylingContext();
@@ -40253,7 +40332,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @publicApi
      */
-    function elementStyleProp(index, styleIndex, value, suffix, forceOverride) {
+    function ΔelementStyleProp(index, styleIndex, value, suffix, forceOverride) {
         var valueToAdd = resolveStylePropValue(value, suffix);
         updateStyleProp(getStylingContext(index + HEADER_OFFSET, getLView()), styleIndex, valueToAdd, DEFAULT_TEMPLATE_DIRECTIVE_INDEX, forceOverride);
     }
@@ -40282,7 +40361,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @publicApi
      */
-    function elementHostStyleProp(styleIndex, value, suffix, forceOverride) {
+    function ΔelementHostStyleProp(styleIndex, value, suffix, forceOverride) {
         var directiveStylingIndex = getActiveDirectiveStylingIndex();
         var hostElementIndex = getSelectedIndex();
         var lView = getLView();
@@ -40327,7 +40406,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @publicApi
      */
-    function elementClassProp(index, classIndex, value, forceOverride) {
+    function ΔelementClassProp(index, classIndex, value, forceOverride) {
         var input = (value instanceof BoundPlayerFactory) ?
             value :
             booleanOrNull(value);
@@ -40351,7 +40430,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @publicApi
      */
-    function elementHostClassProp(classIndex, value, forceOverride) {
+    function ΔelementHostClassProp(classIndex, value, forceOverride) {
         var directiveStylingIndex = getActiveDirectiveStylingIndex();
         var hostElementIndex = getSelectedIndex();
         var lView = getLView();
@@ -40387,7 +40466,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @publicApi
      */
-    function elementStylingMap(index, classes, styles) {
+    function ΔelementStylingMap(index, classes, styles) {
         var lView = getLView();
         var tNode = getTNode(index, lView);
         var stylingContext = getStylingContext(index + HEADER_OFFSET, lView);
@@ -40431,7 +40510,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @publicApi
      */
-    function elementHostStylingMap(classes, styles) {
+    function ΔelementHostStylingMap(classes, styles) {
         var directiveStylingIndex = getActiveDirectiveStylingIndex();
         var hostElementIndex = getSelectedIndex();
         var lView = getLView();
@@ -40450,7 +40529,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @publicApi
      */
-    function elementStylingApply(index) {
+    function ΔelementStylingApply(index) {
         elementStylingApplyInternal(DEFAULT_TEMPLATE_DIRECTIVE_INDEX, index);
     }
     /**
@@ -40463,7 +40542,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @publicApi
      */
-    function elementHostStylingApply() {
+    function ΔelementHostStylingApply() {
         elementStylingApplyInternal(getActiveDirectiveStylingIndex(), getSelectedIndex());
     }
     function elementStylingApplyInternal(directiveStylingIndex, index) {
@@ -40510,8 +40589,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Attributes and localRefs are passed as an array of strings where elements with an even index
      * hold an attribute name and elements with an odd index hold an attribute value, ex.:
      * ['id', 'warning5', 'class', 'alert']
+     *
+     * @publicApi
      */
-    function elementStart(index, name, attrs, localRefs) {
+    function ΔelementStart(index, name, attrs, localRefs) {
         var lView = getLView();
         var tView = lView[TVIEW];
         ngDevMode && assertEqual(lView[BINDING_INDEX], tView.bindingStartIndex, 'elements should be created before any bindings ');
@@ -40575,8 +40656,12 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         }
         executeContentQueries(tView, tNode, lView);
     }
-    /** Mark the end of the element. */
-    function elementEnd() {
+    /**
+     * Mark the end of the element.
+     *
+     * @publicApi
+     */
+    function ΔelementEnd() {
         var previousOrParentTNode = getPreviousOrParentTNode();
         if (getIsParent()) {
             setIsParent(false);
@@ -40617,10 +40702,12 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @param attrs Statically bound set of attributes, classes, and styles to be written into the DOM
      *              element on creation. Use [AttributeMarker] to denote the meaning of this array.
      * @param localRefs A set of local reference bindings on the element.
+     *
+     * @publicApi
      */
-    function element(index, name, attrs, localRefs) {
-        elementStart(index, name, attrs, localRefs);
-        elementEnd();
+    function Δelement(index, name, attrs, localRefs) {
+        ΔelementStart(index, name, attrs, localRefs);
+        ΔelementEnd();
     }
     /**
      * Updates the value of removes an attribute on an Element.
@@ -40631,28 +40718,30 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *                  Otherwise the attribute value is set to the stringified value.
      * @param sanitizer An optional function used to sanitize the value.
      * @param namespace Optional namespace to use when setting the attribute.
+     *
+     * @publicApi
      */
-    function elementAttribute(index, name, value, sanitizer, namespace) {
+    function ΔelementAttribute(index, name, value, sanitizer, namespace) {
         if (value !== NO_CHANGE) {
             ngDevMode && validateAgainstEventAttributes(name);
             var lView = getLView();
             var renderer = lView[RENDERER];
-            var element_1 = getNativeByIndex(index, lView);
+            var element = getNativeByIndex(index, lView);
             if (value == null) {
                 ngDevMode && ngDevMode.rendererRemoveAttribute++;
-                isProceduralRenderer(renderer) ? renderer.removeAttribute(element_1, name, namespace) :
-                    element_1.removeAttribute(name);
+                isProceduralRenderer(renderer) ? renderer.removeAttribute(element, name, namespace) :
+                    element.removeAttribute(name);
             }
             else {
                 ngDevMode && ngDevMode.rendererSetAttribute++;
                 var tNode = getTNode(index, lView);
                 var strValue = sanitizer == null ? renderStringify(value) : sanitizer(value, tNode.tagName || '', name);
                 if (isProceduralRenderer(renderer)) {
-                    renderer.setAttribute(element_1, name, strValue, namespace);
+                    renderer.setAttribute(element, name, strValue, namespace);
                 }
                 else {
-                    namespace ? element_1.setAttributeNS(namespace, name, strValue) :
-                        element_1.setAttribute(name, strValue);
+                    namespace ? element.setAttributeNS(namespace, name, strValue) :
+                        element.setAttribute(name, strValue);
                 }
             }
         }
@@ -40696,7 +40785,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @publicApi
      */
-    function elementHostAttrs(attrs) {
+    function ΔelementHostAttrs(attrs) {
         var hostElementIndex = getSelectedIndex();
         var lView = getLView();
         var tNode = getTNode(hostElementIndex, lView);
@@ -40738,8 +40827,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Even if this instruction accepts a set of attributes no actual attribute values are propagated to
      * the DOM (as a comment node can't have attributes). Attributes are here only for directive
      * matching purposes and setting initial inputs of directives.
+     *
+     * @publicApi
      */
-    function elementContainerStart(index, attrs, localRefs) {
+    function ΔelementContainerStart(index, attrs, localRefs) {
         var lView = getLView();
         var tView = lView[TVIEW];
         var renderer = lView[RENDERER];
@@ -40764,8 +40855,12 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         }
         executeContentQueries(tView, tNode, lView);
     }
-    /** Mark the end of the <ng-container>. */
-    function elementContainerEnd() {
+    /**
+     * Mark the end of the <ng-container>.
+     *
+     * @publicApi
+     */
+    function ΔelementContainerEnd() {
         var previousOrParentTNode = getPreviousOrParentTNode();
         var lView = getLView();
         var tView = lView[TVIEW];
@@ -40800,8 +40895,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @param viewBlockId The ID of this view
      * @return boolean Whether or not this view is in creation mode
+     *
+     * @publicApi
      */
-    function embeddedViewStart(viewBlockId, consts, vars) {
+    function ΔembeddedViewStart(viewBlockId, consts, vars) {
         var lView = getLView();
         var previousOrParentTNode = getPreviousOrParentTNode();
         // The previous node can be a view node if we are processing an inline for loop
@@ -40889,8 +40986,12 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         }
         return null;
     }
-    /** Marks the end of an embedded view. */
-    function embeddedViewEnd() {
+    /**
+     * Marks the end of an embedded view.
+     *
+     * @publicApi
+     */
+    function ΔembeddedViewEnd() {
         var lView = getLView();
         var viewHost = lView[T_HOST];
         if (isCreationMode(lView)) {
@@ -40912,8 +41013,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Used in conjunction with the restoreView() instruction to save a snapshot
      * of the current view and restore it when listeners are invoked. This allows
      * walking the declaration view tree in listeners to get vars from parent views.
+     *
+     * @publicApi
      */
-    function getCurrentView() {
+    function ΔgetCurrentView() {
         return getLView();
     }
 
@@ -40959,8 +41062,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @param useCapture Whether or not to use capture in event listener
      * @param eventTargetResolver Function that returns global target information in case this listener
      * should be attached to a global object like window, document or body
+     *
+     * @publicApi
      */
-    function listener(eventName, listenerFn, useCapture, eventTargetResolver) {
+    function Δlistener(eventName, listenerFn, useCapture, eventTargetResolver) {
         if (useCapture === void 0) { useCapture = false; }
         listenerInternal(eventName, listenerFn, useCapture, eventTargetResolver);
     }
@@ -40982,8 +41087,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     * @param useCapture Whether or not to use capture in event listener
     * @param eventTargetResolver Function that returns global target information in case this listener
     * should be attached to a global object like window, document or body
+     *
+     * @publicApi
     */
-    function componentHostSyntheticListener(eventName, listenerFn, useCapture, eventTargetResolver) {
+    function ΔcomponentHostSyntheticListener(eventName, listenerFn, useCapture, eventTargetResolver) {
         if (useCapture === void 0) { useCapture = false; }
         listenerInternal(eventName, listenerFn, useCapture, eventTargetResolver, loadComponentRenderer);
     }
@@ -41115,8 +41222,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @param level The relative level of the view from which to grab context compared to contextVewData
      * @returns context
+     *
+     * @publicApi
      */
-    function nextContext(level) {
+    function ΔnextContext(level) {
         if (level === void 0) { level = 1; }
         return nextContextImpl(level);
     }
@@ -41141,8 +41250,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @param selectors A collection of parsed CSS selectors
      * @param rawSelectors A collection of CSS selectors in the raw, un-parsed form
+     *
+     * @publicApi
      */
-    function projectionDef(selectors, textSelectors) {
+    function ΔprojectionDef(selectors, textSelectors) {
         var componentNode = findComponentView(getLView())[T_HOST];
         if (!componentNode.projection) {
             var noOfNodeBuckets = selectors ? selectors.length + 1 : 1;
@@ -41173,8 +41284,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @param selectorIndex:
      *        - 0 when the selector is `*` (or unspecified as this is the default value),
      *        - 1 based index of the selector from the {@link projectionDef}
-     */
-    function projection(nodeIndex, selectorIndex, attrs) {
+      *
+     * @publicApi
+    */
+    function Δprojection(nodeIndex, selectorIndex, attrs) {
         if (selectorIndex === void 0) { selectorIndex = 0; }
         var lView = getLView();
         var tProjectionNode = createNodeAtIndex(nodeIndex, 1 /* Projection */, null, null, attrs || null);
@@ -41459,8 +41572,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Creates a single value binding.
      *
      * @param value Value to diff
+     *
+     * @publicApi
      */
-    function bind(value) {
+    function Δbind(value) {
         var lView = getLView();
         var bindingIndex = lView[BINDING_INDEX]++;
         storeBindingMetadata(lView);
@@ -41481,8 +41596,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     * @param sanitizer An optional function used to sanitize the value.
     * @param nativeOnly Whether or not we should only set native properties and skip input check
     * (this is necessary for host property bindings)
+     *
+     * @publicApi
     */
-    function elementProperty(index, propName, value, sanitizer, nativeOnly) {
+    function ΔelementProperty(index, propName, value, sanitizer, nativeOnly) {
         elementPropertyInternal(index, propName, value, sanitizer, nativeOnly);
     }
     /**
@@ -41505,8 +41622,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @param sanitizer An optional function used to sanitize the value.
      * @param nativeOnly Whether or not we should only set native properties and skip input check
      * (this is necessary for host property bindings)
+     *
+     * @publicApi
      */
-    function componentHostSyntheticProperty(index, propName, value, sanitizer, nativeOnly) {
+    function ΔcomponentHostSyntheticProperty(index, propName, value, sanitizer, nativeOnly) {
         elementPropertyInternal(index, propName, value, sanitizer, nativeOnly, loadComponentRenderer);
     }
     /**
@@ -41675,8 +41794,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * - has evaluated expressions at odd indexes.
      *
      * Returns the concatenated string when any of the arguments changes, `NO_CHANGE` otherwise.
+     *
+     * @publicApi
      */
-    function interpolationV(values) {
+    function ΔinterpolationV(values) {
         ngDevMode && assertLessThan(2, values.length, 'should have at least 3 values');
         ngDevMode && assertEqual(values.length % 2, 1, 'should have an odd number of values');
         var different = false;
@@ -41712,15 +41833,21 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @param prefix static value used for concatenation only.
      * @param v0 value checked for change.
      * @param suffix static value used for concatenation only.
+     *
+     * @publicApi
      */
-    function interpolation1(prefix, v0, suffix) {
+    function Δinterpolation1(prefix, v0, suffix) {
         var lView = getLView();
         var different = bindingUpdated(lView, lView[BINDING_INDEX]++, v0);
         storeBindingMetadata(lView, prefix, suffix);
         return different ? prefix + renderStringify(v0) + suffix : NO_CHANGE;
     }
-    /** Creates an interpolation binding with 2 expressions. */
-    function interpolation2(prefix, v0, i0, v1, suffix) {
+    /**
+     * Creates an interpolation binding with 2 expressions.
+     *
+     * @publicApi
+     */
+    function Δinterpolation2(prefix, v0, i0, v1, suffix) {
         var lView = getLView();
         var bindingIndex = lView[BINDING_INDEX];
         var different = bindingUpdated2(lView, bindingIndex, v0, v1);
@@ -41732,8 +41859,12 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         }
         return different ? prefix + renderStringify(v0) + i0 + renderStringify(v1) + suffix : NO_CHANGE;
     }
-    /** Creates an interpolation binding with 3 expressions. */
-    function interpolation3(prefix, v0, i0, v1, i1, v2, suffix) {
+    /**
+     * Creates an interpolation binding with 3 expressions.
+     *
+     * @publicApi
+     */
+    function Δinterpolation3(prefix, v0, i0, v1, i1, v2, suffix) {
         var lView = getLView();
         var bindingIndex = lView[BINDING_INDEX];
         var different = bindingUpdated3(lView, bindingIndex, v0, v1, v2);
@@ -41749,8 +41880,12 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             prefix + renderStringify(v0) + i0 + renderStringify(v1) + i1 + renderStringify(v2) + suffix :
             NO_CHANGE;
     }
-    /** Create an interpolation binding with 4 expressions. */
-    function interpolation4(prefix, v0, i0, v1, i1, v2, i2, v3, suffix) {
+    /**
+     * Create an interpolation binding with 4 expressions.
+     *
+     * @publicApi
+     */
+    function Δinterpolation4(prefix, v0, i0, v1, i1, v2, i2, v3, suffix) {
         var lView = getLView();
         var bindingIndex = lView[BINDING_INDEX];
         var different = bindingUpdated4(lView, bindingIndex, v0, v1, v2, v3);
@@ -41768,8 +41903,12 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 renderStringify(v3) + suffix :
             NO_CHANGE;
     }
-    /** Creates an interpolation binding with 5 expressions. */
-    function interpolation5(prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, suffix) {
+    /**
+     * Creates an interpolation binding with 5 expressions.
+     *
+     * @publicApi
+     */
+    function Δinterpolation5(prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, suffix) {
         var lView = getLView();
         var bindingIndex = lView[BINDING_INDEX];
         var different = bindingUpdated4(lView, bindingIndex, v0, v1, v2, v3);
@@ -41789,8 +41928,12 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 renderStringify(v3) + i3 + renderStringify(v4) + suffix :
             NO_CHANGE;
     }
-    /** Creates an interpolation binding with 6 expressions. */
-    function interpolation6(prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, i4, v5, suffix) {
+    /**
+     * Creates an interpolation binding with 6 expressions.
+     *
+     * @publicApi
+     */
+    function Δinterpolation6(prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, i4, v5, suffix) {
         var lView = getLView();
         var bindingIndex = lView[BINDING_INDEX];
         var different = bindingUpdated4(lView, bindingIndex, v0, v1, v2, v3);
@@ -41811,8 +41954,12 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 renderStringify(v3) + i3 + renderStringify(v4) + i4 + renderStringify(v5) + suffix :
             NO_CHANGE;
     }
-    /** Creates an interpolation binding with 7 expressions. */
-    function interpolation7(prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, i4, v5, i5, v6, suffix) {
+    /**
+     * Creates an interpolation binding with 7 expressions.
+     *
+     * @publicApi
+     */
+    function Δinterpolation7(prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, i4, v5, i5, v6, suffix) {
         var lView = getLView();
         var bindingIndex = lView[BINDING_INDEX];
         var different = bindingUpdated4(lView, bindingIndex, v0, v1, v2, v3);
@@ -41835,8 +41982,12 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 renderStringify(v6) + suffix :
             NO_CHANGE;
     }
-    /** Creates an interpolation binding with 8 expressions. */
-    function interpolation8(prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, i4, v5, i5, v6, i6, v7, suffix) {
+    /**
+     * Creates an interpolation binding with 8 expressions.
+     *
+     * @publicApi
+     */
+    function Δinterpolation8(prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, i4, v5, i5, v6, i6, v7, suffix) {
         var lView = getLView();
         var bindingIndex = lView[BINDING_INDEX];
         var different = bindingUpdated4(lView, bindingIndex, v0, v1, v2, v3);
@@ -41876,18 +42027,20 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * ```ts
      * (rf: RenderFlags, ctx: any) => {
-      *  if (rf & 1) {
-      *    element(0, 'div');
-      *  }
-      *  if (rf & 2) {
-      *    select(0); // Select the <div/> created above.
-      *    property('title', 'test');
-      *  }
-      * }
-      * ```
-      * @param index the index of the item to act on with the following instructions
-      */
-    function select(index) {
+     *   if (rf & 1) {
+     *     element(0, 'div');
+     *   }
+     *   if (rf & 2) {
+     *     select(0); // Select the <div/> created above.
+     *     property('title', 'test');
+     *   }
+     *  }
+     * ```
+     * @param index the index of the item to act on with the following instructions
+     *
+     * @publicApi
+     */
+    function Δselect(index) {
         ngDevMode && assertGreaterThan(index, -1, 'Invalid index');
         ngDevMode &&
             assertLessThan(index, getLView().length - HEADER_OFFSET, 'Should be within range for the view data');
@@ -41908,8 +42061,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @param index Index of the node in the data array
      * @param value Value to write. This value will be stringified.
+     *
+     * @publicApi
      */
-    function text(index, value) {
+    function Δtext(index, value) {
         var lView = getLView();
         ngDevMode && assertEqual(lView[BINDING_INDEX], lView[TVIEW].bindingStartIndex, 'text nodes should be created before any bindings');
         ngDevMode && ngDevMode.rendererCreateTextNode++;
@@ -41925,8 +42080,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @param index Index of the node in the data array.
      * @param value Stringified value to write.
+     *
+     * @publicApi
      */
-    function textBinding(index, value) {
+    function ΔtextBinding(index, value) {
         if (value !== NO_CHANGE) {
             var lView = getLView();
             ngDevMode && assertDataInRange(lView, index + HEADER_OFFSET);
@@ -42351,8 +42508,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *   features: [NgOnChangesFeature()]
      * });
      * ```
+     *
+     * @publicApi
      */
-    function NgOnChangesFeature() {
+    function ΔNgOnChangesFeature() {
         // This option ensures that the ngOnChanges lifecycle hook will be inherited
         // from superclasses (in InheritDefinitionFeature).
         NgOnChangesFeatureImpl.ngInherit = true;
@@ -42416,8 +42575,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * Merges the definition from a super class to a sub class.
      * @param definition The definition that is a SubClass of another directive of component
+     *
+     * @publicApi
      */
-    function InheritDefinitionFeature(definition) {
+    function ΔInheritDefinitionFeature(definition) {
         var superType = getSuperType(definition.type);
         var _loop_1 = function () {
             var e_1, _a;
@@ -42557,7 +42718,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                     definition.onDestroy = definition.onDestroy || superPrototype.ngOnDestroy;
                     definition.onInit = definition.onInit || superPrototype.ngOnInit;
                     if (superPrototype.ngOnChanges) {
-                        NgOnChangesFeature()(definition);
+                        ΔNgOnChangesFeature()(definition);
                     }
                 }
             }
@@ -42636,8 +42797,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     }
     var R3Injector = /** @class */ (function () {
         function R3Injector(def, additionalProviders, parent, source) {
-            if (source === void 0) { source = null; }
             var _this = this;
+            if (source === void 0) { source = null; }
             this.parent = parent;
             /**
              * Map of tokens to records which contain the instances of those tokens.
@@ -42932,7 +43093,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 factory = function () { return resolveForwardRef$1(provider.useValue); };
             }
             else if (isExistingProvider(provider)) {
-                factory = function () { return inject(resolveForwardRef$1(provider.useExisting)); };
+                factory = function () { return Δinject(resolveForwardRef$1(provider.useExisting)); };
             }
             else if (isFactoryProvider(provider)) {
                 factory = function () { return provider.useFactory.apply(provider, __spread(injectArgs(provider.deps || []))); };
@@ -43064,7 +43225,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             }
             if (isTypeProvider(provider) || !provider.multi) {
                 // Single provider case: the factory is created and pushed immediately
-                var factory = new NodeInjectorFactory(providerFactory, isViewProvider, directiveInject);
+                var factory = new NodeInjectorFactory(providerFactory, isViewProvider, ΔdirectiveInject);
                 var existingFactoryIndex = indexOf(token, tInjectables, isViewProvider ? beginIndex : beginIndex + cptViewProvidersCount, endIndex);
                 if (existingFactoryIndex == -1) {
                     diPublicInInjector(getOrCreateNodeInjectorForNode(tNode, lView), lView, token);
@@ -43202,7 +43363,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Creates a multi factory.
      */
     function multiFactory(factoryFn, index, isViewProvider, isComponent, f) {
-        var factory = new NodeInjectorFactory(factoryFn, isViewProvider, directiveInject);
+        var factory = new NodeInjectorFactory(factoryFn, isViewProvider, ΔdirectiveInject);
         factory.multi = [];
         factory.index = index;
         factory.componentProviders = 0;
@@ -43237,8 +43398,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * }
      *
      * @param definition
+     *
+     * @publicApi
      */
-    function ProvidersFeature(providers, viewProviders) {
+    function ΔProvidersFeature(providers, viewProviders) {
         if (viewProviders === void 0) { viewProviders = []; }
         return function (definition) {
             definition.providersResolver =
@@ -44087,7 +44250,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.11+55.sha-db62ccf.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-beta.11+57.sha-ef85336.with-local-changes');
 
     /**
      * @license
@@ -45088,7 +45251,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             }
         };
         /** @nocollapse */
-        IterableDiffers.ngInjectableDef = defineInjectable({
+        IterableDiffers.ngInjectableDef = ΔdefineInjectable({
             providedIn: 'root',
             factory: function () { return new IterableDiffers([new DefaultIterableDifferFactory()]); }
         });
@@ -45164,7 +45327,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             throw new Error("Cannot find a differ supporting object '" + kv + "'");
         };
         /** @nocollapse */
-        KeyValueDiffers.ngInjectableDef = defineInjectable({
+        KeyValueDiffers.ngInjectableDef = ΔdefineInjectable({
             providedIn: 'root',
             factory: function () { return new KeyValueDiffers([new DefaultKeyValueDifferFactory()]); }
         });
@@ -46939,7 +47102,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * Default {@link RootContext} for all components rendered with {@link renderComponent}.
      */
-    var ROOT_CONTEXT = new InjectionToken('ROOT_CONTEXT_TOKEN', { providedIn: 'root', factory: function () { return createRootContext(inject(SCHEDULER)); } });
+    var ROOT_CONTEXT = new InjectionToken('ROOT_CONTEXT_TOKEN', { providedIn: 'root', factory: function () { return createRootContext(Δinject(SCHEDULER)); } });
     /**
      * A change detection scheduler token for {@link RootContext}. This token is the default value used
      * for the default `RootContext` found in the {@link ROOT_CONTEXT} token.
@@ -47398,8 +47561,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @param index A unique index of the translation in the static block.
      * @param message The translation message.
      * @param subTemplateIndex Optional sub-template index in the `message`.
+     *
+     * @publicApi
      */
-    function i18nStart(index, message, subTemplateIndex) {
+    function Δi18nStart(index, message, subTemplateIndex) {
         var tView = getLView()[TVIEW];
         ngDevMode && assertDefined(tView, "tView should be defined");
         i18nIndexStack[++i18nIndexStackPointer] = index;
@@ -47560,9 +47725,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @returns Transformed string that can be consumed by i18nStart instruction
      *
-     * @publicAPI
+     * @publicApi
      */
-    function i18nPostprocess(message, replacements) {
+    function Δi18nPostprocess(message, replacements) {
         if (replacements === void 0) { replacements = {}; }
         /**
          * Step 1: resolve all multi-value placeholders like [�#5�|�*1:1��#2:1�|�#4:1�]
@@ -47650,8 +47815,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * Translates a translation block marked by `i18nStart` and `i18nEnd`. It inserts the text/ICU nodes
      * into the render tree, moves the placeholder nodes and removes the deleted nodes.
+     *
+     * @publicApi
      */
-    function i18nEnd() {
+    function Δi18nEnd() {
         var tView = getLView()[TVIEW];
         ngDevMode && assertDefined(tView, "tView should be defined");
         i18nEndFirstPass(tView);
@@ -47744,7 +47911,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                         var elementNodeIndex = opCode >>> 3 /* SHIFT_REF */;
                         var attrName = createOpCodes[++i];
                         var attrValue = createOpCodes[++i];
-                        elementAttribute(elementNodeIndex, attrName, attrValue);
+                        ΔelementAttribute(elementNodeIndex, attrName, attrValue);
                         break;
                     default:
                         throw new Error("Unable to determine the type of mutate operation for \"" + opCode + "\"");
@@ -47814,10 +47981,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                                 case 1 /* Attr */:
                                     var attrName = updateOpCodes[++j];
                                     var sanitizeFn = updateOpCodes[++j];
-                                    elementAttribute(nodeIndex, attrName, value, sanitizeFn);
+                                    ΔelementAttribute(nodeIndex, attrName, value, sanitizeFn);
                                     break;
                                 case 0 /* Text */:
-                                    textBinding(nodeIndex, value);
+                                    ΔtextBinding(nodeIndex, value);
                                     break;
                                 case 2 /* IcuSwitch */:
                                     tIcuIndex = updateOpCodes[++j];
@@ -47873,7 +48040,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         if (removedPhRNode) {
             nativeRemoveNode(viewData[RENDERER], removedPhRNode);
         }
-        var slotValue = load(index);
+        var slotValue = Δload(index);
         if (isLContainer(slotValue)) {
             var lContainer = slotValue;
             if (removedPhTNode.type !== 0 /* Container */) {
@@ -47905,18 +48072,22 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @param index A unique index of the translation in the static block.
      * @param message The translation message.
      * @param subTemplateIndex Optional sub-template index in the `message`.
+     *
+     * @publicApi
      */
-    function i18n(index, message, subTemplateIndex) {
-        i18nStart(index, message, subTemplateIndex);
-        i18nEnd();
+    function Δi18n(index, message, subTemplateIndex) {
+        Δi18nStart(index, message, subTemplateIndex);
+        Δi18nEnd();
     }
     /**
      * Marks a list of attributes as translatable.
      *
      * @param index A unique index in the static block
      * @param values
+     *
+     * @publicApi
      */
-    function i18nAttributes(index, values) {
+    function Δi18nAttributes(index, values) {
         var tView = getLView()[TVIEW];
         ngDevMode && assertDefined(tView, "tView should be defined");
         if (tView.firstTemplatePass && tView.data[index + HEADER_OFFSET] === null) {
@@ -47944,7 +48115,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                         addAllToArray(generateBindingUpdateOpCodes(value, previousElementIndex, attrName), updateOpCodes);
                     }
                     else {
-                        elementAttribute(previousElementIndex, attrName, value);
+                        ΔelementAttribute(previousElementIndex, attrName, value);
                     }
                 }
             }
@@ -47958,8 +48129,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * update the translated nodes.
      *
      * @param expression The binding's new value or NO_CHANGE
+     *
+     * @publicApi
      */
-    function i18nExp(expression) {
+    function Δi18nExp(expression) {
         if (expression !== NO_CHANGE) {
             changeMask = changeMask | (1 << shiftsCounter);
         }
@@ -47970,8 +48143,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @param index Index of either {@link i18nStart} (translation block) or {@link i18nAttributes}
      * (i18n attribute) on which it should update the content.
+     *
+     * @publicApi
      */
-    function i18nApply(index) {
+    function Δi18nApply(index) {
         if (shiftsCounter) {
             var lView = getLView();
             var tView = lView[TVIEW];
@@ -48714,8 +48889,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @param pureFn Function that returns a value
      * @param thisArg Optional calling context of pureFn
      * @returns value
+     *
+     * @publicApi
      */
-    function pureFunction0(slotOffset, pureFn, thisArg) {
+    function ΔpureFunction0(slotOffset, pureFn, thisArg) {
         // TODO(kara): use bindingRoot instead of bindingStartIndex when implementing host bindings
         var bindingIndex = getBindingRoot() + slotOffset;
         var lView = getLView();
@@ -48732,8 +48909,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @param exp Updated expression value
      * @param thisArg Optional calling context of pureFn
      * @returns Updated or cached value
+     *
+     * @publicApi
      */
-    function pureFunction1(slotOffset, pureFn, exp, thisArg) {
+    function ΔpureFunction1(slotOffset, pureFn, exp, thisArg) {
         // TODO(kara): use bindingRoot instead of bindingStartIndex when implementing host bindings
         var lView = getLView();
         var bindingIndex = getBindingRoot() + slotOffset;
@@ -48751,8 +48930,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @param exp2
      * @param thisArg Optional calling context of pureFn
      * @returns Updated or cached value
+     *
+     * @publicApi
      */
-    function pureFunction2(slotOffset, pureFn, exp1, exp2, thisArg) {
+    function ΔpureFunction2(slotOffset, pureFn, exp1, exp2, thisArg) {
         // TODO(kara): use bindingRoot instead of bindingStartIndex when implementing host bindings
         var bindingIndex = getBindingRoot() + slotOffset;
         var lView = getLView();
@@ -48771,8 +48952,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @param exp3
      * @param thisArg Optional calling context of pureFn
      * @returns Updated or cached value
+     *
+     * @publicApi
      */
-    function pureFunction3(slotOffset, pureFn, exp1, exp2, exp3, thisArg) {
+    function ΔpureFunction3(slotOffset, pureFn, exp1, exp2, exp3, thisArg) {
         // TODO(kara): use bindingRoot instead of bindingStartIndex when implementing host bindings
         var bindingIndex = getBindingRoot() + slotOffset;
         var lView = getLView();
@@ -48792,8 +48975,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @param exp4
      * @param thisArg Optional calling context of pureFn
      * @returns Updated or cached value
+     *
+     * @publicApi
      */
-    function pureFunction4(slotOffset, pureFn, exp1, exp2, exp3, exp4, thisArg) {
+    function ΔpureFunction4(slotOffset, pureFn, exp1, exp2, exp3, exp4, thisArg) {
         // TODO(kara): use bindingRoot instead of bindingStartIndex when implementing host bindings
         var bindingIndex = getBindingRoot() + slotOffset;
         var lView = getLView();
@@ -48814,8 +48999,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @param exp5
      * @param thisArg Optional calling context of pureFn
      * @returns Updated or cached value
+     *
+     * @publicApi
      */
-    function pureFunction5(slotOffset, pureFn, exp1, exp2, exp3, exp4, exp5, thisArg) {
+    function ΔpureFunction5(slotOffset, pureFn, exp1, exp2, exp3, exp4, exp5, thisArg) {
         // TODO(kara): use bindingRoot instead of bindingStartIndex when implementing host bindings
         var bindingIndex = getBindingRoot() + slotOffset;
         var lView = getLView();
@@ -48839,8 +49026,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @param exp6
      * @param thisArg Optional calling context of pureFn
      * @returns Updated or cached value
+     *
+     * @publicApi
      */
-    function pureFunction6(slotOffset, pureFn, exp1, exp2, exp3, exp4, exp5, exp6, thisArg) {
+    function ΔpureFunction6(slotOffset, pureFn, exp1, exp2, exp3, exp4, exp5, exp6, thisArg) {
         // TODO(kara): use bindingRoot instead of bindingStartIndex when implementing host bindings
         var bindingIndex = getBindingRoot() + slotOffset;
         var lView = getLView();
@@ -48866,8 +49055,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @param exp7
      * @param thisArg Optional calling context of pureFn
      * @returns Updated or cached value
+     *
+     * @publicApi
      */
-    function pureFunction7(slotOffset, pureFn, exp1, exp2, exp3, exp4, exp5, exp6, exp7, thisArg) {
+    function ΔpureFunction7(slotOffset, pureFn, exp1, exp2, exp3, exp4, exp5, exp6, exp7, thisArg) {
         // TODO(kara): use bindingRoot instead of bindingStartIndex when implementing host bindings
         var bindingIndex = getBindingRoot() + slotOffset;
         var lView = getLView();
@@ -48894,8 +49085,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @param exp8
      * @param thisArg Optional calling context of pureFn
      * @returns Updated or cached value
+     *
+     * @publicApi
      */
-    function pureFunction8(slotOffset, pureFn, exp1, exp2, exp3, exp4, exp5, exp6, exp7, exp8, thisArg) {
+    function ΔpureFunction8(slotOffset, pureFn, exp1, exp2, exp3, exp4, exp5, exp6, exp7, exp8, thisArg) {
         // TODO(kara): use bindingRoot instead of bindingStartIndex when implementing host bindings
         var bindingIndex = getBindingRoot() + slotOffset;
         var lView = getLView();
@@ -48918,8 +49111,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @param exps An array of binding values
      * @param thisArg Optional calling context of pureFn
      * @returns Updated or cached value
+     *
+     * @publicApi
      */
-    function pureFunctionV(slotOffset, pureFn, exps, thisArg) {
+    function ΔpureFunctionV(slotOffset, pureFn, exps, thisArg) {
         // TODO(kara): use bindingRoot instead of bindingStartIndex when implementing host bindings
         var bindingIndex = getBindingRoot() + slotOffset;
         var different = false;
@@ -48944,8 +49139,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @param index Pipe index where the pipe will be stored.
      * @param pipeName The name of the pipe
      * @returns T the instance of the pipe.
+     *
+     * @publicApi
      */
-    function pipe(index, pipeName) {
+    function Δpipe(index, pipeName) {
         var tView = getLView()[TVIEW];
         var pipeDef;
         var adjustedIndex = index + HEADER_OFFSET;
@@ -48970,6 +49167,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @param name Name of pipe to resolve
      * @param registry Full list of available pipes
      * @returns Matching PipeDef
+     *
+     * @publicApi
      */
     function getPipeDef$1(name, registry) {
         if (registry) {
@@ -48991,10 +49190,12 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @param index Pipe index where the pipe was stored on creation.
      * @param slotOffset the offset in the reserved slot space
      * @param v1 1st argument to {@link PipeTransform#transform}.
+     *
+     * @publicApi
      */
-    function pipeBind1(index, slotOffset, v1) {
-        var pipeInstance = load(index);
-        return unwrapValue(isPure(index) ? pureFunction1(slotOffset, pipeInstance.transform, v1, pipeInstance) :
+    function ΔpipeBind1(index, slotOffset, v1) {
+        var pipeInstance = Δload(index);
+        return unwrapValue(isPure(index) ? ΔpureFunction1(slotOffset, pipeInstance.transform, v1, pipeInstance) :
             pipeInstance.transform(v1));
     }
     /**
@@ -49007,10 +49208,12 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @param slotOffset the offset in the reserved slot space
      * @param v1 1st argument to {@link PipeTransform#transform}.
      * @param v2 2nd argument to {@link PipeTransform#transform}.
+     *
+     * @publicApi
      */
-    function pipeBind2(index, slotOffset, v1, v2) {
-        var pipeInstance = load(index);
-        return unwrapValue(isPure(index) ? pureFunction2(slotOffset, pipeInstance.transform, v1, v2, pipeInstance) :
+    function ΔpipeBind2(index, slotOffset, v1, v2) {
+        var pipeInstance = Δload(index);
+        return unwrapValue(isPure(index) ? ΔpureFunction2(slotOffset, pipeInstance.transform, v1, v2, pipeInstance) :
             pipeInstance.transform(v1, v2));
     }
     /**
@@ -49024,10 +49227,12 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @param v1 1st argument to {@link PipeTransform#transform}.
      * @param v2 2nd argument to {@link PipeTransform#transform}.
      * @param v3 4rd argument to {@link PipeTransform#transform}.
+     *
+     * @publicApi
      */
-    function pipeBind3(index, slotOffset, v1, v2, v3) {
-        var pipeInstance = load(index);
-        return unwrapValue(isPure(index) ? pureFunction3(slotOffset, pipeInstance.transform, v1, v2, v3, pipeInstance) :
+    function ΔpipeBind3(index, slotOffset, v1, v2, v3) {
+        var pipeInstance = Δload(index);
+        return unwrapValue(isPure(index) ? ΔpureFunction3(slotOffset, pipeInstance.transform, v1, v2, v3, pipeInstance) :
             pipeInstance.transform(v1, v2, v3));
     }
     /**
@@ -49042,11 +49247,13 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @param v2 2nd argument to {@link PipeTransform#transform}.
      * @param v3 3rd argument to {@link PipeTransform#transform}.
      * @param v4 4th argument to {@link PipeTransform#transform}.
+     *
+     * @publicApi
      */
-    function pipeBind4(index, slotOffset, v1, v2, v3, v4) {
-        var pipeInstance = load(index);
+    function ΔpipeBind4(index, slotOffset, v1, v2, v3, v4) {
+        var pipeInstance = Δload(index);
         return unwrapValue(isPure(index) ?
-            pureFunction4(slotOffset, pipeInstance.transform, v1, v2, v3, v4, pipeInstance) :
+            ΔpureFunction4(slotOffset, pipeInstance.transform, v1, v2, v3, v4, pipeInstance) :
             pipeInstance.transform(v1, v2, v3, v4));
     }
     /**
@@ -49058,10 +49265,12 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @param index Pipe index where the pipe was stored on creation.
      * @param slotOffset the offset in the reserved slot space
      * @param values Array of arguments to pass to {@link PipeTransform#transform} method.
+     *
+     * @publicApi
      */
-    function pipeBindV(index, slotOffset, values) {
-        var pipeInstance = load(index);
-        return unwrapValue(isPure(index) ? pureFunctionV(slotOffset, pipeInstance.transform, values, pipeInstance) :
+    function ΔpipeBindV(index, slotOffset, values) {
+        var pipeInstance = Δload(index);
+        return unwrapValue(isPure(index) ? ΔpureFunctionV(slotOffset, pipeInstance.transform, values, pipeInstance) :
             pipeInstance.transform.apply(pipeInstance, values));
     }
     function isPure(index) {
@@ -51193,8 +51402,10 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      *
      * @returns `true` if a query got dirty during change detection or if this is a static query
      * resolving in creation mode, `false` otherwise.
+     *
+     * @publicApi
      */
-    function queryRefresh(queryList) {
+    function ΔqueryRefresh(queryList) {
         var queryListImpl = queryList;
         var creationMode = isCreationMode();
         // if creation mode and static or update mode and not static
@@ -51211,11 +51422,13 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * @param predicate The type for which the query will search
      * @param descend Whether or not to descend into children
      * @param read What to save in the query
+     *
+     * @publicApi
      */
-    function staticViewQuery(
+    function ΔstaticViewQuery(
     // TODO(FW-486): "read" should be an AbstractType
     predicate, descend, read) {
-        var queryList = viewQuery(predicate, descend, read);
+        var queryList = ΔviewQuery(predicate, descend, read);
         var tView = getLView()[TVIEW];
         queryList._static = true;
         if (!tView.staticViewQueries) {
@@ -51229,8 +51442,10 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * @param descend Whether or not to descend into children
      * @param read What to save in the query
      * @returns QueryList<T>
+     *
+     * @publicApi
      */
-    function viewQuery(
+    function ΔviewQuery(
     // TODO(FW-486): "read" should be an AbstractType
     predicate, descend, read) {
         var lView = getLView();
@@ -51245,12 +51460,14 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         return viewQuery;
     }
     /**
-    * Loads current View Query and moves the pointer/index to the next View Query in LView.
-    */
-    function loadViewQuery() {
+     * Loads current View Query and moves the pointer/index to the next View Query in LView.
+     *
+     * @publicApi
+     */
+    function ΔloadViewQuery() {
         var index = getCurrentQueryIndex();
         setCurrentQueryIndex(index + 1);
-        return load(index - HEADER_OFFSET);
+        return Δload(index - HEADER_OFFSET);
     }
     /**
      * Registers a QueryList, associated with a content query, for later refresh (part of a view
@@ -51261,8 +51478,10 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * @param descend Whether or not to descend into children
      * @param read What to save in the query
      * @returns QueryList<T>
+     *
+     * @publicApi
      */
-    function contentQuery(directiveIndex, predicate, descend, 
+    function ΔcontentQuery(directiveIndex, predicate, descend, 
     // TODO(FW-486): "read" should be an AbstractType
     read) {
         var lView = getLView();
@@ -51287,18 +51506,24 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * @param descend Whether or not to descend into children
      * @param read What to save in the query
      * @returns QueryList<T>
+     *
+     * @publicApi
      */
-    function staticContentQuery(directiveIndex, predicate, descend, 
+    function ΔstaticContentQuery(directiveIndex, predicate, descend, 
     // TODO(FW-486): "read" should be an AbstractType
     read) {
-        var queryList = contentQuery(directiveIndex, predicate, descend, read);
+        var queryList = ΔcontentQuery(directiveIndex, predicate, descend, read);
         var tView = getLView()[TVIEW];
         queryList._static = true;
         if (!tView.staticContentQueries) {
             tView.staticContentQueries = true;
         }
     }
-    function loadContentQuery() {
+    /**
+     *
+     * @publicApi
+     */
+    function ΔloadContentQuery() {
         var lView = getLView();
         ngDevMode &&
             assertDefined(lView[CONTENT_QUERIES], 'Content QueryList array should be defined if reading a query.');
@@ -51318,8 +51543,10 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
     /**
      * Retrieves `TemplateRef` instance from `Injector` when a local reference is placed on the
      * `<ng-template>` element.
+     *
+     * @publicApi
      */
-    function templateRefExtractor(tNode, currentView) {
+    function ΔtemplateRefExtractor(tNode, currentView) {
         return createTemplateRef(TemplateRef, ElementRef, tNode, currentView);
     }
 
@@ -51344,117 +51571,117 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * This should be kept up to date with the public exports of @angular/core.
      */
     var angularCoreEnv = {
-        'ɵdefineBase': defineBase,
-        'ɵdefineComponent': defineComponent,
-        'ɵdefineDirective': defineDirective,
-        'defineInjectable': defineInjectable,
-        'defineInjector': defineInjector,
-        'ɵdefineNgModule': defineNgModule,
-        'ɵdefinePipe': definePipe,
-        'ɵdirectiveInject': directiveInject,
-        'ɵgetFactoryOf': getFactoryOf$1,
-        'ɵgetInheritedFactory': getInheritedFactory,
-        'inject': inject,
-        'ɵinjectAttribute': injectAttribute,
-        'ɵtemplateRefExtractor': templateRefExtractor,
-        'ɵNgOnChangesFeature': NgOnChangesFeature,
-        'ɵProvidersFeature': ProvidersFeature,
-        'ɵInheritDefinitionFeature': InheritDefinitionFeature,
-        'ɵelementAttribute': elementAttribute,
-        'ɵbind': bind,
-        'ɵcontainer': container,
-        'ɵnextContext': nextContext,
-        'ɵcontainerRefreshStart': containerRefreshStart,
-        'ɵcontainerRefreshEnd': containerRefreshEnd,
-        'ɵnamespaceHTML': namespaceHTML,
-        'ɵnamespaceMathML': namespaceMathML,
-        'ɵnamespaceSVG': namespaceSVG,
-        'ɵenableBindings': enableBindings,
-        'ɵdisableBindings': disableBindings,
-        'ɵallocHostVars': allocHostVars,
-        'ɵelementStart': elementStart,
-        'ɵelementEnd': elementEnd,
-        'ɵelement': element,
-        'ɵelementContainerStart': elementContainerStart,
-        'ɵelementContainerEnd': elementContainerEnd,
-        'ɵpureFunction0': pureFunction0,
-        'ɵpureFunction1': pureFunction1,
-        'ɵpureFunction2': pureFunction2,
-        'ɵpureFunction3': pureFunction3,
-        'ɵpureFunction4': pureFunction4,
-        'ɵpureFunction5': pureFunction5,
-        'ɵpureFunction6': pureFunction6,
-        'ɵpureFunction7': pureFunction7,
-        'ɵpureFunction8': pureFunction8,
-        'ɵpureFunctionV': pureFunctionV,
-        'ɵgetCurrentView': getCurrentView,
-        'ɵrestoreView': restoreView,
-        'ɵinterpolation1': interpolation1,
-        'ɵinterpolation2': interpolation2,
-        'ɵinterpolation3': interpolation3,
-        'ɵinterpolation4': interpolation4,
-        'ɵinterpolation5': interpolation5,
-        'ɵinterpolation6': interpolation6,
-        'ɵinterpolation7': interpolation7,
-        'ɵinterpolation8': interpolation8,
-        'ɵinterpolationV': interpolationV,
-        'ɵlistener': listener,
-        'ɵload': load,
-        'ɵprojection': projection,
-        'ɵelementProperty': elementProperty,
-        'ɵcomponentHostSyntheticProperty': componentHostSyntheticProperty,
-        'ɵcomponentHostSyntheticListener': componentHostSyntheticListener,
-        'ɵpipeBind1': pipeBind1,
-        'ɵpipeBind2': pipeBind2,
-        'ɵpipeBind3': pipeBind3,
-        'ɵpipeBind4': pipeBind4,
-        'ɵpipeBindV': pipeBindV,
-        'ɵprojectionDef': projectionDef,
-        'ɵpipe': pipe,
-        'ɵqueryRefresh': queryRefresh,
-        'ɵviewQuery': viewQuery,
-        'ɵstaticViewQuery': staticViewQuery,
-        'ɵstaticContentQuery': staticContentQuery,
-        'ɵloadViewQuery': loadViewQuery,
-        'ɵcontentQuery': contentQuery,
-        'ɵloadContentQuery': loadContentQuery,
-        'ɵreference': reference,
-        'ɵelementHostAttrs': elementHostAttrs,
-        'ɵelementStyling': elementStyling,
-        'ɵelementStylingMap': elementStylingMap,
-        'ɵelementStyleProp': elementStyleProp,
-        'ɵelementStylingApply': elementStylingApply,
-        'ɵelementClassProp': elementClassProp,
-        'ɵelementHostStyling': elementHostStyling,
-        'ɵelementHostStylingMap': elementHostStylingMap,
-        'ɵelementHostStyleProp': elementHostStyleProp,
-        'ɵelementHostStylingApply': elementHostStylingApply,
-        'ɵelementHostClassProp': elementHostClassProp,
-        'ɵselect': select,
-        'ɵtemplate': template,
-        'ɵtext': text,
-        'ɵtextBinding': textBinding,
-        'ɵembeddedViewStart': embeddedViewStart,
-        'ɵembeddedViewEnd': embeddedViewEnd,
-        'ɵi18n': i18n,
-        'ɵi18nAttributes': i18nAttributes,
-        'ɵi18nExp': i18nExp,
-        'ɵi18nStart': i18nStart,
-        'ɵi18nEnd': i18nEnd,
-        'ɵi18nApply': i18nApply,
-        'ɵi18nPostprocess': i18nPostprocess,
-        'ɵresolveWindow': resolveWindow,
-        'ɵresolveDocument': resolveDocument,
-        'ɵresolveBody': resolveBody,
-        'ɵsetComponentScope': setComponentScope,
-        'ɵsetNgModuleScope': setNgModuleScope,
-        'ɵsanitizeHtml': sanitizeHtml,
-        'ɵsanitizeStyle': sanitizeStyle,
-        'ɵdefaultStyleSanitizer': defaultStyleSanitizer,
-        'ɵsanitizeResourceUrl': sanitizeResourceUrl,
-        'ɵsanitizeScript': sanitizeScript,
-        'ɵsanitizeUrl': sanitizeUrl,
-        'ɵsanitizeUrlOrResourceUrl': sanitizeUrlOrResourceUrl
+        'ΔdefineBase': ΔdefineBase,
+        'ΔdefineComponent': ΔdefineComponent,
+        'ΔdefineDirective': ΔdefineDirective,
+        'ΔdefineInjectable': ΔdefineInjectable,
+        'ΔdefineInjector': ΔdefineInjector,
+        'ΔdefineNgModule': ΔdefineNgModule,
+        'ΔdefinePipe': ΔdefinePipe,
+        'ΔdirectiveInject': ΔdirectiveInject,
+        'ΔgetFactoryOf': ΔgetFactoryOf,
+        'ΔgetInheritedFactory': ΔgetInheritedFactory,
+        'Δinject': Δinject,
+        'ΔinjectAttribute': ΔinjectAttribute,
+        'ΔtemplateRefExtractor': ΔtemplateRefExtractor,
+        'ΔNgOnChangesFeature': ΔNgOnChangesFeature,
+        'ΔProvidersFeature': ΔProvidersFeature,
+        'ΔInheritDefinitionFeature': ΔInheritDefinitionFeature,
+        'ΔelementAttribute': ΔelementAttribute,
+        'Δbind': Δbind,
+        'Δcontainer': Δcontainer,
+        'ΔnextContext': ΔnextContext,
+        'ΔcontainerRefreshStart': ΔcontainerRefreshStart,
+        'ΔcontainerRefreshEnd': ΔcontainerRefreshEnd,
+        'ΔnamespaceHTML': ΔnamespaceHTML,
+        'ΔnamespaceMathML': ΔnamespaceMathML,
+        'ΔnamespaceSVG': ΔnamespaceSVG,
+        'ΔenableBindings': ΔenableBindings,
+        'ΔdisableBindings': ΔdisableBindings,
+        'ΔallocHostVars': ΔallocHostVars,
+        'ΔelementStart': ΔelementStart,
+        'ΔelementEnd': ΔelementEnd,
+        'Δelement': Δelement,
+        'ΔelementContainerStart': ΔelementContainerStart,
+        'ΔelementContainerEnd': ΔelementContainerEnd,
+        'ΔpureFunction0': ΔpureFunction0,
+        'ΔpureFunction1': ΔpureFunction1,
+        'ΔpureFunction2': ΔpureFunction2,
+        'ΔpureFunction3': ΔpureFunction3,
+        'ΔpureFunction4': ΔpureFunction4,
+        'ΔpureFunction5': ΔpureFunction5,
+        'ΔpureFunction6': ΔpureFunction6,
+        'ΔpureFunction7': ΔpureFunction7,
+        'ΔpureFunction8': ΔpureFunction8,
+        'ΔpureFunctionV': ΔpureFunctionV,
+        'ΔgetCurrentView': ΔgetCurrentView,
+        'ΔrestoreView': ΔrestoreView,
+        'Δinterpolation1': Δinterpolation1,
+        'Δinterpolation2': Δinterpolation2,
+        'Δinterpolation3': Δinterpolation3,
+        'Δinterpolation4': Δinterpolation4,
+        'Δinterpolation5': Δinterpolation5,
+        'Δinterpolation6': Δinterpolation6,
+        'Δinterpolation7': Δinterpolation7,
+        'Δinterpolation8': Δinterpolation8,
+        'ΔinterpolationV': ΔinterpolationV,
+        'Δlistener': Δlistener,
+        'Δload': Δload,
+        'Δprojection': Δprojection,
+        'ΔelementProperty': ΔelementProperty,
+        'ΔcomponentHostSyntheticProperty': ΔcomponentHostSyntheticProperty,
+        'ΔcomponentHostSyntheticListener': ΔcomponentHostSyntheticListener,
+        'ΔpipeBind1': ΔpipeBind1,
+        'ΔpipeBind2': ΔpipeBind2,
+        'ΔpipeBind3': ΔpipeBind3,
+        'ΔpipeBind4': ΔpipeBind4,
+        'ΔpipeBindV': ΔpipeBindV,
+        'ΔprojectionDef': ΔprojectionDef,
+        'Δpipe': Δpipe,
+        'ΔqueryRefresh': ΔqueryRefresh,
+        'ΔviewQuery': ΔviewQuery,
+        'ΔstaticViewQuery': ΔstaticViewQuery,
+        'ΔstaticContentQuery': ΔstaticContentQuery,
+        'ΔloadViewQuery': ΔloadViewQuery,
+        'ΔcontentQuery': ΔcontentQuery,
+        'ΔloadContentQuery': ΔloadContentQuery,
+        'Δreference': Δreference,
+        'ΔelementHostAttrs': ΔelementHostAttrs,
+        'ΔelementStyling': ΔelementStyling,
+        'ΔelementStylingMap': ΔelementStylingMap,
+        'ΔelementStyleProp': ΔelementStyleProp,
+        'ΔelementStylingApply': ΔelementStylingApply,
+        'ΔelementClassProp': ΔelementClassProp,
+        'ΔelementHostStyling': ΔelementHostStyling,
+        'ΔelementHostStylingMap': ΔelementHostStylingMap,
+        'ΔelementHostStyleProp': ΔelementHostStyleProp,
+        'ΔelementHostStylingApply': ΔelementHostStylingApply,
+        'ΔelementHostClassProp': ΔelementHostClassProp,
+        'Δselect': Δselect,
+        'Δtemplate': Δtemplate,
+        'Δtext': Δtext,
+        'ΔtextBinding': ΔtextBinding,
+        'ΔembeddedViewStart': ΔembeddedViewStart,
+        'ΔembeddedViewEnd': ΔembeddedViewEnd,
+        'Δi18n': Δi18n,
+        'Δi18nAttributes': Δi18nAttributes,
+        'Δi18nExp': Δi18nExp,
+        'Δi18nStart': Δi18nStart,
+        'Δi18nEnd': Δi18nEnd,
+        'Δi18nApply': Δi18nApply,
+        'Δi18nPostprocess': Δi18nPostprocess,
+        'ΔresolveWindow': ΔresolveWindow,
+        'ΔresolveDocument': ΔresolveDocument,
+        'ΔresolveBody': ΔresolveBody,
+        'ΔsetComponentScope': ΔsetComponentScope,
+        'ΔsetNgModuleScope': ΔsetNgModuleScope,
+        'ΔsanitizeHtml': ΔsanitizeHtml,
+        'ΔsanitizeStyle': ΔsanitizeStyle,
+        'ΔdefaultStyleSanitizer': ΔdefaultStyleSanitizer,
+        'ΔsanitizeResourceUrl': ΔsanitizeResourceUrl,
+        'ΔsanitizeScript': ΔsanitizeScript,
+        'ΔsanitizeUrl': ΔsanitizeUrl,
+        'ΔsanitizeUrlOrResourceUrl': ΔsanitizeUrlOrResourceUrl
     };
 
     /**
@@ -52327,7 +52554,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             }
             this.initialized = true;
         };
-        ApplicationInitStatus.ngInjectableDef = defineInjectable({ token: ApplicationInitStatus, factory: function ApplicationInitStatus_Factory(t) { return new (t || ApplicationInitStatus)(inject(APP_INITIALIZER, 8)); }, providedIn: null });
+        ApplicationInitStatus.ngInjectableDef = ΔdefineInjectable({ token: ApplicationInitStatus, factory: function ApplicationInitStatus_Factory(t) { return new (t || ApplicationInitStatus)(Δinject(APP_INITIALIZER, 8)); }, providedIn: null });
         return ApplicationInitStatus;
     }());
 
@@ -52408,7 +52635,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             // tslint:disable-next-line:no-console
             console.warn(message);
         };
-        Console.ngInjectableDef = defineInjectable({ token: Console, factory: function Console_Factory(t) { return new (t || Console)(); }, providedIn: null });
+        Console.ngInjectableDef = ΔdefineInjectable({ token: Console, factory: function Console_Factory(t) { return new (t || Console)(); }, providedIn: null });
         return Console;
     }());
 
@@ -52498,7 +52725,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
          * Returns the id for a given NgModule, if one is defined and known to the compiler.
          */
         Compiler.prototype.getModuleId = function (moduleType) { return undefined; };
-        Compiler.ngInjectableDef = defineInjectable({ token: Compiler, factory: function Compiler_Factory(t) { return new (t || Compiler)(); }, providedIn: null });
+        Compiler.ngInjectableDef = ΔdefineInjectable({ token: Compiler, factory: function Compiler_Factory(t) { return new (t || Compiler)(); }, providedIn: null });
         return Compiler;
     }());
     /**
@@ -53077,7 +53304,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             // TODO(juliemr): implement.
             return [];
         };
-        Testability.ngInjectableDef = defineInjectable({ token: Testability, factory: function Testability_Factory(t) { return new (t || Testability)(inject(NgZone)); }, providedIn: null });
+        Testability.ngInjectableDef = ΔdefineInjectable({ token: Testability, factory: function Testability_Factory(t) { return new (t || Testability)(Δinject(NgZone)); }, providedIn: null });
         return Testability;
     }());
     /**
@@ -53130,7 +53357,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             if (findInAncestors === void 0) { findInAncestors = true; }
             return _testabilityGetter.findTestabilityInTree(this, elem, findInAncestors);
         };
-        TestabilityRegistry.ngInjectableDef = defineInjectable({ token: TestabilityRegistry, factory: function TestabilityRegistry_Factory(t) { return new (t || TestabilityRegistry)(); }, providedIn: null });
+        TestabilityRegistry.ngInjectableDef = ΔdefineInjectable({ token: TestabilityRegistry, factory: function TestabilityRegistry_Factory(t) { return new (t || TestabilityRegistry)(); }, providedIn: null });
         return TestabilityRegistry;
     }());
     var _NoopGetTestability = /** @class */ (function () {
@@ -53374,7 +53601,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             enumerable: true,
             configurable: true
         });
-        PlatformRef.ngInjectableDef = defineInjectable({ token: PlatformRef, factory: function PlatformRef_Factory(t) { return new (t || PlatformRef)(inject(Injector)); }, providedIn: null });
+        PlatformRef.ngInjectableDef = ΔdefineInjectable({ token: PlatformRef, factory: function PlatformRef_Factory(t) { return new (t || PlatformRef)(Δinject(Injector)); }, providedIn: null });
         return PlatformRef;
     }());
     function getNgZone(ngZoneOption) {
@@ -53723,7 +53950,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         });
         /** @internal */
         ApplicationRef._tickScope = wtfCreateScope('ApplicationRef#tick()');
-        ApplicationRef.ngInjectableDef = defineInjectable({ token: ApplicationRef, factory: function ApplicationRef_Factory(t) { return new (t || ApplicationRef)(inject(NgZone), inject(Console), inject(Injector), inject(ErrorHandler), inject(ComponentFactoryResolver), inject(ApplicationInitStatus)); }, providedIn: null });
+        ApplicationRef.ngInjectableDef = ΔdefineInjectable({ token: ApplicationRef, factory: function ApplicationRef_Factory(t) { return new (t || ApplicationRef)(Δinject(NgZone), Δinject(Console), Δinject(Injector), Δinject(ErrorHandler), Δinject(ComponentFactoryResolver), Δinject(ApplicationInitStatus)); }, providedIn: null });
         return ApplicationRef;
     }());
     function remove(list, el) {
@@ -53806,7 +54033,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 .then(function (module) { return module[exportName + factoryClassSuffix]; })
                 .then(function (factory) { return checkNotEmpty(factory, module, exportName); });
         };
-        SystemJsNgModuleLoader.ngInjectableDef = defineInjectable({ token: SystemJsNgModuleLoader, factory: function SystemJsNgModuleLoader_Factory(t) { return new (t || SystemJsNgModuleLoader)(inject(Compiler), inject(SystemJsNgModuleLoaderConfig, 8)); }, providedIn: null });
+        SystemJsNgModuleLoader.ngInjectableDef = ΔdefineInjectable({ token: SystemJsNgModuleLoader, factory: function SystemJsNgModuleLoader_Factory(t) { return new (t || SystemJsNgModuleLoader)(Δinject(Compiler), Δinject(SystemJsNgModuleLoaderConfig, 8)); }, providedIn: null });
         return SystemJsNgModuleLoader;
     }());
     function checkNotEmpty(value, modulePath, exportName) {
@@ -54749,8 +54976,8 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         // Inject ApplicationRef to make it eager...
         function ApplicationModule(appRef) {
         }
-        ApplicationModule.ngModuleDef = defineNgModule({ type: ApplicationModule });
-        ApplicationModule.ngInjectorDef = defineInjector({ factory: function ApplicationModule_Factory(t) { return new (t || ApplicationModule)(inject(ApplicationRef)); }, providers: APPLICATION_MODULE_PROVIDERS });
+        ApplicationModule.ngModuleDef = ΔdefineNgModule({ type: ApplicationModule });
+        ApplicationModule.ngInjectorDef = ΔdefineInjector({ factory: function ApplicationModule_Factory(t) { return new (t || ApplicationModule)(Δinject(ApplicationRef)); }, providers: APPLICATION_MODULE_PROVIDERS });
         return ApplicationModule;
     }());
 
@@ -57532,7 +57759,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.11+55.sha-db62ccf.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-beta.11+57.sha-ef85336.with-local-changes');
 
     /**
      * @license
