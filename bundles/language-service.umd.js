@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.11+75.sha-f98093a.with-local-changes
+ * @license Angular v8.0.0-beta.11+76.sha-def73a6.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -13775,6 +13775,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     var DEFAULT_NG_CONTENT_SELECTOR = '*';
     // Selector attribute name of `<ng-content>`
     var NG_CONTENT_SELECT_ATTR$1 = 'select';
+    // Attribute name of `ngProjectAs`.
+    var NG_PROJECT_AS_ATTR_NAME = 'ngProjectAs';
     // List of supported global targets for event listeners
     var GLOBAL_TARGET_RESOLVERS = new Map([['window', Identifiers$1.resolveWindow], ['document', Identifiers$1.resolveDocument], ['body', Identifiers$1.resolveBody]]);
     function mapBindingToInstruction(type) {
@@ -13960,10 +13962,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 // Only selectors with a non-default value are generated
                 if (this._ngContentSelectors.length) {
                     var r3Selectors = this._ngContentSelectors.map(function (s) { return parseSelectorToR3Selector(s); });
-                    // `projectionDef` needs both the parsed and raw value of the selectors
-                    var parsed = this.constantPool.getConstLiteral(asLiteral(r3Selectors), true);
-                    var unParsed = this.constantPool.getConstLiteral(asLiteral(this._ngContentSelectors), true);
-                    parameters.push(parsed, unParsed);
+                    parameters.push(this.constantPool.getConstLiteral(asLiteral(r3Selectors), true));
                 }
                 // Since we accumulate ngContent selectors while processing template elements,
                 // we *prepend* `projectionDef` to creation instructions block, to put it before
@@ -14144,15 +14143,18 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 0 :
                 this._ngContentSelectors.push(ngContent.selector) + this._ngContentSelectorsOffset;
             var parameters = [literal(slot)];
-            var attributeAsList = [];
+            var attributes = [];
             ngContent.attributes.forEach(function (attribute) {
                 var name = attribute.name, value = attribute.value;
-                if (name.toLowerCase() !== NG_CONTENT_SELECT_ATTR$1) {
-                    attributeAsList.push(name, value);
+                if (name === NG_PROJECT_AS_ATTR_NAME) {
+                    attributes.push.apply(attributes, __spread(getNgProjectAsLiteral(attribute)));
+                }
+                else if (name.toLowerCase() !== NG_CONTENT_SELECT_ATTR$1) {
+                    attributes.push(literal(name), literal(value));
                 }
             });
-            if (attributeAsList.length > 0) {
-                parameters.push(literal(selectorIndex), asLiteral(attributeAsList));
+            if (attributes.length > 0) {
+                parameters.push(literal(selectorIndex), literalArr(attributes));
             }
             else if (selectorIndex !== 0) {
                 parameters.push(literal(selectorIndex));
@@ -14243,7 +14245,12 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 }
             });
             outputAttrs.forEach(function (attr) {
-                attributes.push.apply(attributes, __spread(getAttributeNameLiterals(attr.name), [literal(attr.value)]));
+                if (attr.name === NG_PROJECT_AS_ATTR_NAME) {
+                    attributes.push.apply(attributes, __spread(getNgProjectAsLiteral(attr)));
+                }
+                else {
+                    attributes.push.apply(attributes, __spread(getAttributeNameLiterals(attr.name), [literal(attr.value)]));
+                }
             });
             // add attributes for directive and projection matching purposes
             attributes.push.apply(attributes, __spread(this.prepareNonRenderAttrs(allOtherInputs, element.outputs, stylingBuilder)));
@@ -15063,6 +15070,16 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             }
         });
         return cssSelector;
+    }
+    /**
+     * Creates an array of expressions out of an `ngProjectAs` attributes
+     * which can be added to the instruction parameters.
+     */
+    function getNgProjectAsLiteral(attribute) {
+        // Parse the attribute value into a CssSelectorList. Note that we only take the
+        // first selector, because we don't support multiple selectors in ngProjectAs.
+        var parsedR3Selector = parseSelectorToR3Selector(attribute.value)[0];
+        return [literal(5 /* ProjectAs */), asLiteral(parsedR3Selector)];
     }
     function interpolate(args) {
         args = args.slice(1); // Ignore the length prefix added for render2
@@ -16024,7 +16041,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.11+75.sha-f98093a.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-beta.11+76.sha-def73a6.with-local-changes');
 
     /**
      * @license
@@ -33227,15 +33244,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var NG_PROJECT_AS_ATTR_NAME = 'ngProjectAs';
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     // TODO: cleanup once the code is merged in angular/angular
     var RendererStyleFlags3;
     (function (RendererStyleFlags3) {
@@ -33784,20 +33792,18 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 /// attrName is string;
                 var attrName = value;
                 var attrVal = attrs[++i];
-                if (attrName !== NG_PROJECT_AS_ATTR_NAME) {
-                    // Standard attributes
-                    ngDevMode && ngDevMode.rendererSetAttribute++;
-                    if (isAnimationProp(attrName)) {
-                        if (isProc) {
-                            renderer.setProperty(native, attrName, attrVal);
-                        }
+                // Standard attributes
+                ngDevMode && ngDevMode.rendererSetAttribute++;
+                if (isAnimationProp(attrName)) {
+                    if (isProc) {
+                        renderer.setProperty(native, attrName, attrVal);
                     }
-                    else {
-                        isProc ?
-                            renderer
-                                .setAttribute(native, attrName, attrVal) :
-                            native.setAttribute(attrName, attrVal);
-                    }
+                }
+                else {
+                    isProc ?
+                        renderer
+                            .setAttribute(native, attrName, attrVal) :
+                        native.setAttribute(attrName, attrVal);
                 }
                 i++;
             }
@@ -36036,6 +36042,14 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     /** A special value which designates that a value has not changed. */
     var NO_CHANGE = {};
 
@@ -37850,7 +37864,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     function getProjectAsAttrValue(tNode) {
         var nodeAttrs = tNode.attrs;
         if (nodeAttrs != null) {
-            var ngProjectAsAttrIdx = nodeAttrs.indexOf(NG_PROJECT_AS_ATTR_NAME);
+            var ngProjectAsAttrIdx = nodeAttrs.indexOf(5 /* ProjectAs */);
             // only check for ngProjectAs in attribute names, don't accidentally match attribute's value
             // (attribute names are stored at even indexes)
             if ((ngProjectAsAttrIdx & 1) === 0) {
@@ -37863,17 +37877,18 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Checks a given node against matching projection selectors and returns
      * selector index (or 0 if none matched).
      *
-     * This function takes into account the ngProjectAs attribute: if present its value will be
-     * compared to the raw (un-parsed) CSS selector instead of using standard selector matching logic.
+     * This function takes into account the parsed ngProjectAs selector from the node's attributes.
+     * If present, it will check whether the ngProjectAs selector matches any of the projection
+     * selectors.
      */
-    function matchingProjectionSelectorIndex(tNode, selectors, textSelectors) {
+    function matchingProjectionSelectorIndex(tNode, selectors) {
         var ngProjectAsAttrVal = getProjectAsAttrValue(tNode);
         for (var i = 0; i < selectors.length; i++) {
-            // if a node has the ngProjectAs attribute match it against unparsed selector
-            // match a node against a parsed selector only if ngProjectAs attribute is not present
-            if (ngProjectAsAttrVal === textSelectors[i] ||
-                ngProjectAsAttrVal === null &&
-                    isNodeMatchingSelectorList(tNode, selectors[i], /* isProjectionMode */ true)) {
+            // If we ran into an `ngProjectAs` attribute, we should match its parsed selector
+            // to the list of selectors, otherwise we fall back to matching against the node.
+            if (ngProjectAsAttrVal === null ?
+                isNodeMatchingSelectorList(tNode, selectors[i], /* isProjectionMode */ true) :
+                isSelectorInSelectorList(ngProjectAsAttrVal, selectors[i])) {
                 return i + 1; // first matching selector "captures" a given node
             }
         }
@@ -37899,6 +37914,26 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             }
         }
         return -1;
+    }
+    /**
+     * Checks whether a selector is inside a CssSelectorList
+     * @param selector Selector to be checked.
+     * @param list List in which to look for the selector.
+     */
+    function isSelectorInSelectorList(selector, list) {
+        selectorListLoop: for (var i = 0; i < list.length; i++) {
+            var currentSelectorInList = list[i];
+            if (selector.length !== currentSelectorInList.length) {
+                continue;
+            }
+            for (var j = 0; j < selector.length; j++) {
+                if (selector[j] !== currentSelectorInList[j]) {
+                    continue selectorListLoop;
+                }
+            }
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -38951,6 +38986,11 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             if (attrName === 0 /* NamespaceURI */) {
                 // We do not allow inputs on namespaced attributes.
                 i += 4;
+                continue;
+            }
+            else if (attrName === 5 /* ProjectAs */) {
+                // Skip over the `ngProjectAs` value.
+                i += 2;
                 continue;
             }
             // If we hit any other attribute markers, we're done anyway. None of those are valid inputs.
@@ -41514,7 +41554,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @publicApi
      */
-    function ΔprojectionDef(selectors, textSelectors) {
+    function ΔprojectionDef(selectors) {
         var componentNode = findComponentView(getLView())[T_HOST];
         if (!componentNode.projection) {
             var noOfNodeBuckets = selectors ? selectors.length + 1 : 1;
@@ -41523,9 +41563,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             var tails = projectionHeads.slice();
             var componentChild = componentNode.child;
             while (componentChild !== null) {
-                var bucketIndex = selectors ?
-                    matchingProjectionSelectorIndex(componentChild, selectors, textSelectors) :
-                    0;
+                var bucketIndex = selectors ? matchingProjectionSelectorIndex(componentChild, selectors) : 0;
                 if (tails[bucketIndex]) {
                     tails[bucketIndex].projectionNext = componentChild;
                 }
@@ -44305,7 +44343,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.11+75.sha-f98093a.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-beta.11+76.sha-def73a6.with-local-changes');
 
     /**
      * @license
@@ -57814,7 +57852,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.11+75.sha-f98093a.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-beta.11+76.sha-def73a6.with-local-changes');
 
     /**
      * @license
