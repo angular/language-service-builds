@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.11+87.sha-ac3dc3c.with-local-changes
+ * @license Angular v8.0.0-beta.11+90.sha-0aa0f11.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -16050,7 +16050,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.11+87.sha-ac3dc3c.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-beta.11+90.sha-0aa0f11.with-local-changes');
 
     /**
      * @license
@@ -44340,7 +44340,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.11+87.sha-ac3dc3c.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-beta.11+90.sha-0aa0f11.with-local-changes');
 
     /**
      * @license
@@ -47359,7 +47359,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     if (typeof _global$1['ngI18nClosureMode'] === 'undefined') {
         // Make sure to refer to ngI18nClosureMode as ['ngI18nClosureMode'] for closure.
         _global$1['ngI18nClosureMode'] =
-            typeof _global$1['goog'] !== 'undefined' && typeof _global$1['goog'].getMsg === 'function';
+            // TODO(FW-1250): validate that this actually, you know, works.
+            typeof goog !== 'undefined' && typeof goog.getMsg === 'function';
     }
 
     /**
@@ -57887,7 +57888,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.11+87.sha-ac3dc3c.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-beta.11+90.sha-0aa0f11.with-local-changes');
 
     /**
      * @license
