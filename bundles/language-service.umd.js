@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.11+85.sha-b057806.with-local-changes
+ * @license Angular v8.0.0-beta.12+17.sha-9147092.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -14227,10 +14227,14 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                     else if (name_1 === 'class') {
                         stylingBuilder.registerClassAttr(value);
                     }
-                    else if (attr.i18n) {
-                        i18nAttrs.push(attr);
-                    }
                     else {
+                        if (attr.i18n) {
+                            // Place attributes into a separate array for i18n processing, but also keep such
+                            // attributes in the main list to make them available for directive matching at runtime.
+                            // TODO(FW-1248): prevent attributes duplication in `i18nAttributes` and `elementStart`
+                            // arguments
+                            i18nAttrs.push(attr);
+                        }
                         outputAttrs.push(attr);
                     }
                 }
@@ -14255,17 +14259,14 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             element.inputs.forEach(function (input) {
                 var stylingInputWasSet = stylingBuilder.registerBoundInput(input);
                 if (!stylingInputWasSet) {
-                    if (input.type === 0 /* Property */) {
-                        if (input.i18n) {
-                            i18nAttrs.push(input);
-                        }
-                        else {
-                            allOtherInputs.push(input);
-                        }
+                    if (input.type === 0 /* Property */ && input.i18n) {
+                        // Place attributes into a separate array for i18n processing, but also keep such
+                        // attributes in the main list to make them available for directive matching at runtime.
+                        // TODO(FW-1248): prevent attributes duplication in `i18nAttributes` and `elementStart`
+                        // arguments
+                        i18nAttrs.push(input);
                     }
-                    else {
-                        allOtherInputs.push(input);
-                    }
+                    allOtherInputs.push(input);
                 }
             });
             outputAttrs.forEach(function (attr) {
@@ -14399,6 +14400,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                     });
                 }
                 else if (instruction) {
+                    // we must skip attributes with associated i18n context, since these attributes are handled
+                    // separately and corresponding `i18nExp` and `i18nApply` instructions will be generated
+                    if (input.i18n)
+                        return;
                     var value_2 = input.value.visit(_this._valueConverter);
                     if (value_2 !== undefined) {
                         var params_2 = [];
@@ -16065,7 +16070,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.11+85.sha-b057806.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-beta.12+17.sha-9147092.with-local-changes');
 
     /**
      * @license
@@ -37238,7 +37243,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.11+85.sha-b057806.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-beta.12+17.sha-9147092.with-local-changes');
 
     /**
      * @license
@@ -40269,7 +40274,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     if (typeof _global$1['ngI18nClosureMode'] === 'undefined') {
         // Make sure to refer to ngI18nClosureMode as ['ngI18nClosureMode'] for closure.
         _global$1['ngI18nClosureMode'] =
-            typeof _global$1['goog'] !== 'undefined' && typeof _global$1['goog'].getMsg === 'function';
+            // TODO(FW-1250): validate that this actually, you know, works.
+            typeof goog !== 'undefined' && typeof goog.getMsg === 'function';
     }
 
     /**
@@ -40978,7 +40984,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
     };
     function getPromiseCtor(promiseCtor) {
         if (!promiseCtor) {
-            promiseCtor = Promise;
+            promiseCtor = config.Promise || Promise;
         }
         if (!promiseCtor) {
             throw new Error('no Promise impl found');
@@ -44031,6 +44037,16 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    var SWITCH_IVY_ENABLED__PRE_R3__ = false;
+    var ivyEnabled = SWITCH_IVY_ENABLED__PRE_R3__;
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     var _SEPARATOR = '#';
     var FACTORY_CLASS_SUFFIX = 'NgFactory';
     /**
@@ -44058,8 +44074,8 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this._config = config || DEFAULT_CONFIG;
         }
         SystemJsNgModuleLoader.prototype.load = function (path) {
-            var offlineMode = this._compiler instanceof Compiler;
-            return offlineMode ? this.loadFactory(path) : this.loadAndCompile(path);
+            var legacyOfflineMode = !ivyEnabled && this._compiler instanceof Compiler;
+            return legacyOfflineMode ? this.loadFactory(path) : this.loadAndCompile(path);
         };
         SystemJsNgModuleLoader.prototype.loadAndCompile = function (path) {
             var _this = this;
@@ -45046,14 +45062,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         ], ApplicationModule);
         return ApplicationModule;
     }());
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
 
     /**
      * @license
@@ -47825,7 +47833,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.11+85.sha-b057806.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-beta.12+17.sha-9147092.with-local-changes');
 
     /**
      * @license
