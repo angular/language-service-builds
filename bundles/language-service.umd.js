@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.12+26.sha-1794a8e.with-local-changes
+ * @license Angular v8.0.0-beta.12+25.sha-86a3f90.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -16055,7 +16055,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.12+26.sha-1794a8e.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-beta.12+25.sha-86a3f90.with-local-changes');
 
     /**
      * @license
@@ -41512,8 +41512,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     }
     function executeListenerWithErrorHandling(lView, listenerFn, e) {
         try {
-            // Only explicitly returning false from a listener should preventDefault
-            return listenerFn(e) !== false;
+            return listenerFn(e);
         }
         catch (error) {
             handleError(lView, error);
@@ -41546,8 +41545,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             // their presence and invoke as needed.
             var nextListenerFn = wrapListenerIn_markDirtyAndPreventDefault.__ngNextListenerFn__;
             while (nextListenerFn) {
-                // We should prevent default if any of the listeners explicitly return false
-                result = executeListenerWithErrorHandling(lView, nextListenerFn, e) && result;
+                result = executeListenerWithErrorHandling(lView, nextListenerFn, e);
                 nextListenerFn = nextListenerFn.__ngNextListenerFn__;
             }
             if (wrapWithPreventDefault && result === false) {
@@ -44403,7 +44401,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.12+26.sha-1794a8e.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-beta.12+25.sha-86a3f90.with-local-changes');
 
     /**
      * @license
@@ -57954,7 +57952,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.12+26.sha-1794a8e.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-beta.12+25.sha-86a3f90.with-local-changes');
 
     /**
      * @license
