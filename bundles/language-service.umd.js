@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.12+17.sha-9147092.with-local-changes
+ * @license Angular v8.0.0-beta.12+24.sha-2bfb6a0.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -16070,7 +16070,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.12+17.sha-9147092.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-beta.12+24.sha-2bfb6a0.with-local-changes');
 
     /**
      * @license
@@ -32795,7 +32795,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @param index Index of the style allocation. See: `elementStyling`.
      * @param viewData The view to search for the styling context
      */
-    function getStylingContext(index, viewData) {
+    function getStylingContextFromLView(index, viewData) {
         var storageIndex = index;
         var slotValue = viewData[storageIndex];
         var wrapper = viewData;
@@ -37243,7 +37243,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.12+17.sha-9147092.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-beta.12+24.sha-2bfb6a0.with-local-changes');
 
     /**
      * @license
@@ -44485,7 +44485,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 var element = this.nativeElement;
                 if (element) {
                     var lContext = loadLContextFromNode(element);
-                    var stylingContext = getStylingContext(lContext.nodeIndex, lContext.lView);
+                    var stylingContext = getStylingContextFromLView(lContext.nodeIndex, lContext.lView);
                     if (stylingContext) {
                         for (var i = 10 /* SingleStylesStartPosition */; i < stylingContext.length; i += 4 /* Size */) {
                             if (isClassBasedValue(stylingContext, i)) {
@@ -44517,7 +44517,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 var element = this.nativeElement;
                 if (element) {
                     var lContext = loadLContextFromNode(element);
-                    var stylingContext = getStylingContext(lContext.nodeIndex, lContext.lView);
+                    var stylingContext = getStylingContextFromLView(lContext.nodeIndex, lContext.lView);
                     if (stylingContext) {
                         for (var i = 10 /* SingleStylesStartPosition */; i < stylingContext.length; i += 4 /* Size */) {
                             if (!isClassBasedValue(stylingContext, i)) {
@@ -44737,23 +44737,26 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         var properties = {};
         var bindingIndex = getFirstBindingIndex(tNode.propertyMetadataStartIndex, tData);
         while (bindingIndex < tNode.propertyMetadataEndIndex) {
-            var value = '';
+            var value = void 0;
             var propMetadata = tData[bindingIndex];
             while (!isPropMetadataString(propMetadata)) {
                 // This is the first value for an interpolation. We need to build up
                 // the full interpolation by combining runtime values in LView with
                 // the static interstitial values stored in TData.
-                value += renderStringify(lView[bindingIndex]) + tData[bindingIndex];
+                value = (value || '') + renderStringify(lView[bindingIndex]) + tData[bindingIndex];
                 propMetadata = tData[++bindingIndex];
             }
-            value += lView[bindingIndex];
+            value = value === undefined ? lView[bindingIndex] : value += lView[bindingIndex];
             // Property metadata string has 3 parts: property name, prefix, and suffix
             var metadataParts = propMetadata.split(INTERPOLATION_DELIMITER);
             var propertyName = metadataParts[0];
             // Attr bindings don't have property names and should be skipped
             if (propertyName) {
-                // Wrap value with prefix and suffix (will be '' for normal bindings)
-                properties[propertyName] = metadataParts[1] + value + metadataParts[2];
+                // Wrap value with prefix and suffix (will be '' for normal bindings), if they're defined.
+                // Avoid wrapping for normal bindings so that the value doesn't get cast to a string.
+                properties[propertyName] = (metadataParts[1] && metadataParts[2]) ?
+                    metadataParts[1] + value + metadataParts[2] :
+                    value;
             }
             bindingIndex++;
         }
@@ -47833,7 +47836,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.12+17.sha-9147092.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-beta.12+24.sha-2bfb6a0.with-local-changes');
 
     /**
      * @license
