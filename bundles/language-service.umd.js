@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.13+1.sha-ca2462c.with-local-changes
+ * @license Angular v8.0.0-beta.13+2.sha-d9c39dc.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -16055,7 +16055,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.13+1.sha-ca2462c.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-beta.13+2.sha-d9c39dc.with-local-changes');
 
     /**
      * @license
@@ -40480,7 +40480,12 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     function ɵɵdirectiveInject(token, flags) {
         if (flags === void 0) { flags = InjectFlags.Default; }
         token = resolveForwardRef$1(token);
-        return getOrCreateInjectable(getPreviousOrParentTNode(), getLView(), token, flags);
+        var lView = getLView();
+        // Fall back to inject() if view hasn't been created. This situation can happen in tests
+        // if inject utilities are used before bootstrapping.
+        if (lView == null)
+            return ɵɵinject(token, flags);
+        return getOrCreateInjectable(getPreviousOrParentTNode(), lView, token, flags);
     }
     /**
      * Facade for the attribute injection from DI.
@@ -44411,7 +44416,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.13+1.sha-ca2462c.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-beta.13+2.sha-d9c39dc.with-local-changes');
 
     /**
      * @license
@@ -57970,7 +57975,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.13+1.sha-ca2462c.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-beta.13+2.sha-d9c39dc.with-local-changes');
 
     /**
      * @license
