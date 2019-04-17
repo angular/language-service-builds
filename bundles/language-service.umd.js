@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.13+7.sha-5fee9da.with-local-changes
+ * @license Angular v8.0.0-beta.13+8.sha-696e520.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -16055,7 +16055,7 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.13+7.sha-5fee9da.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-beta.13+8.sha-696e520.with-local-changes');
 
     /**
      * @license
@@ -31988,10 +31988,12 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
      * @codeGenApi
      */
     function ɵɵsetNgModuleScope(type, scope) {
-        var ngModuleDef = getNgModuleDef(type, true);
-        ngModuleDef.declarations = scope.declarations || EMPTY_ARRAY$1;
-        ngModuleDef.imports = scope.imports || EMPTY_ARRAY$1;
-        ngModuleDef.exports = scope.exports || EMPTY_ARRAY$1;
+        return noSideEffects(function () {
+            var ngModuleDef = getNgModuleDef(type, true);
+            ngModuleDef.declarations = scope.declarations || EMPTY_ARRAY$1;
+            ngModuleDef.imports = scope.imports || EMPTY_ARRAY$1;
+            ngModuleDef.exports = scope.exports || EMPTY_ARRAY$1;
+        });
     }
     /**
      * Inverts an inputs or outputs lookup such that the keys, which were the
@@ -44419,7 +44421,7 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.13+7.sha-5fee9da.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-beta.13+8.sha-696e520.with-local-changes');
 
     /**
      * @license
@@ -57979,7 +57981,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.13+7.sha-5fee9da.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-beta.13+8.sha-696e520.with-local-changes');
 
     /**
      * @license
