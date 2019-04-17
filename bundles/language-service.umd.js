@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.13+2.sha-d9c39dc.with-local-changes
+ * @license Angular v8.0.0-beta.13+10.sha-83291f0.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -19,7 +19,7 @@ module.exports = function(provided) {
   return result;
 }
 
-define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs) { 'use strict';
+define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs'], function (exports, path, ts, ts$1, fs) { 'use strict';
 
     /*! *****************************************************************************
     Copyright (c) Microsoft Corporation. All rights reserved.
@@ -16070,7 +16070,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.13+2.sha-d9c39dc.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-beta.13+10.sha-83291f0.with-local-changes');
 
     /**
      * @license
@@ -37243,7 +37243,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.13+2.sha-d9c39dc.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-beta.13+10.sha-83291f0.with-local-changes');
 
     /**
      * @license
@@ -47644,7 +47644,8 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
     function getExternalFiles(project) {
         var host = projectHostMap.get(project);
         if (host) {
-            return host.getTemplateReferences();
+            var externalFiles = host.getTemplateReferences();
+            return externalFiles;
         }
     }
     function completionToEntry(c) {
@@ -47659,7 +47660,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
     function diagnosticChainToDiagnosticChain(chain) {
         return {
             messageText: chain.message,
-            category: ts.DiagnosticCategory.Error,
+            category: ts$1.DiagnosticCategory.Error,
             code: 0,
             next: chain.next ? diagnosticChainToDiagnosticChain(chain.next) : undefined
         };
@@ -47676,13 +47677,13 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             start: d.span.start,
             length: d.span.end - d.span.start,
             messageText: diagnosticMessageToDiagnosticMessageText(d.message),
-            category: ts.DiagnosticCategory.Error,
+            category: ts$1.DiagnosticCategory.Error,
             code: 0,
             source: 'ng'
         };
         return result;
     }
-    function create(info /* ts.server.PluginCreateInfo */) {
+    function create(info) {
         var oldLS = info.languageService;
         var proxy = Object.assign({}, oldLS);
         var logger = info.project.projectService.logger;
@@ -47836,7 +47837,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.13+2.sha-d9c39dc.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-beta.13+10.sha-83291f0.with-local-changes');
 
     /**
      * @license
