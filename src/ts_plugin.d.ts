@@ -6,6 +6,6 @@
  * found in the LICENSE file at https://angular.io/license
  */
 /// <amd-module name="@angular/language-service/src/ts_plugin" />
-import * as ts from 'typescript';
-export declare function getExternalFiles(project: any): string[] | undefined;
-export declare function create(info: any): ts.LanguageService;
+import * as ts from 'typescript/lib/tsserverlibrary';
+export declare function getExternalFiles(project: ts.server.Project): string[] | undefined;
+export declare function create(info: ts.server.PluginCreateInfo): ts.LanguageService;
