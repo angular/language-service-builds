@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.13+55.sha-a181e8e.with-local-changes
+ * @license Angular v8.0.0-beta.13+57.sha-f348dea.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -3414,6 +3414,7 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
         Identifiers.pipeBind3 = { name: 'ɵɵpipeBind3', moduleName: CORE$1 };
         Identifiers.pipeBind4 = { name: 'ɵɵpipeBind4', moduleName: CORE$1 };
         Identifiers.pipeBindV = { name: 'ɵɵpipeBindV', moduleName: CORE$1 };
+        Identifiers.property = { name: 'ɵɵproperty', moduleName: CORE$1 };
         Identifiers.i18n = { name: 'ɵɵi18n', moduleName: CORE$1 };
         Identifiers.i18nAttributes = { name: 'ɵɵi18nAttributes', moduleName: CORE$1 };
         Identifiers.i18nExp = { name: 'ɵɵi18nExp', moduleName: CORE$1 };
@@ -13803,19 +13804,6 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
     var NG_PROJECT_AS_ATTR_NAME = 'ngProjectAs';
     // List of supported global targets for event listeners
     var GLOBAL_TARGET_RESOLVERS = new Map([['window', Identifiers$1.resolveWindow], ['document', Identifiers$1.resolveDocument], ['body', Identifiers$1.resolveBody]]);
-    function mapBindingToInstruction(type) {
-        switch (type) {
-            case 0 /* Property */:
-            case 4 /* Animation */:
-                return Identifiers$1.elementProperty;
-            case 2 /* Class */:
-                return Identifiers$1.elementClassProp;
-            case 1 /* Attribute */:
-                return Identifiers$1.elementAttribute;
-            default:
-                return undefined;
-        }
-    }
     //  if (rf & flags) { .. }
     function renderFlagCheckIfStmt(flags, statements) {
         return ifStmt(variable(RENDER_FLAGS).bitwiseAnd(literal(flags), null, false), statements);
@@ -14377,11 +14365,11 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
             // the reason why `undefined` is used is because the renderer understands this as a
             // special value to symbolize that there is no RHS to this binding
             // TODO (matsko): revisit this once FW-959 is approached
-            var emptyValueBindInstruction = importExpr(Identifiers$1.bind).callFn([literal(undefined)]);
+            var emptyValueBindInstruction = literal(undefined);
             // Generate element input bindings
             allOtherInputs.forEach(function (input) {
-                var instruction = mapBindingToInstruction(input.type);
-                if (input.type === 4 /* Animation */) {
+                var inputType = input.type;
+                if (inputType === 4 /* Animation */) {
                     var value_1 = input.value.visit(_this._valueConverter);
                     // animation bindings can be presented in the following formats:
                     // 1. [@binding]="fooExp"
@@ -14395,14 +14383,15 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
                     var hasValue_1 = value_1 instanceof LiteralPrimitive ? !!value_1.value : true;
                     _this.allocateBindingSlots(value_1);
                     var bindingName_1 = prepareSyntheticPropertyName(input.name);
-                    _this.updateInstruction(elementIndex, input.sourceSpan, Identifiers$1.elementProperty, function () {
+                    _this.updateInstruction(elementIndex, input.sourceSpan, Identifiers$1.property, function () {
                         return [
-                            literal(elementIndex), literal(bindingName_1),
-                            (hasValue_1 ? _this.convertPropertyBinding(implicit, value_1) : emptyValueBindInstruction)
+                            literal(bindingName_1),
+                            (hasValue_1 ? _this.convertPropertyBinding(implicit, value_1, /* skipBindFn */ true) :
+                                emptyValueBindInstruction),
                         ];
                     });
                 }
-                else if (instruction) {
+                else {
                     // we must skip attributes with associated i18n context, since these attributes are handled
                     // separately and corresponding `i18nExp` and `i18nApply` instructions will be generated
                     if (input.i18n)
@@ -14411,7 +14400,7 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
                     if (value_2 !== undefined) {
                         var params_2 = [];
                         var _a = __read(splitNsName(input.name), 2), attrNamespace = _a[0], attrName_1 = _a[1];
-                        var isAttributeBinding = input.type === 1 /* Attribute */;
+                        var isAttributeBinding = inputType === 1 /* Attribute */;
                         var sanitizationRef = resolveSanitizationFn(input.securityContext, isAttributeBinding);
                         if (sanitizationRef)
                             params_2.push(sanitizationRef);
@@ -14427,16 +14416,34 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
                             }
                         }
                         _this.allocateBindingSlots(value_2);
-                        _this.updateInstruction(elementIndex, input.sourceSpan, instruction, function () {
-                            return __spread([
-                                literal(elementIndex), literal(attrName_1),
-                                _this.convertPropertyBinding(implicit, value_2)
-                            ], params_2);
-                        });
+                        if (inputType === 0 /* Property */ && !(value_2 instanceof Interpolation)) {
+                            // Bound, un-interpolated properties
+                            _this.updateInstruction(elementIndex, input.sourceSpan, Identifiers$1.property, function () {
+                                return __spread([
+                                    literal(attrName_1), _this.convertPropertyBinding(implicit, value_2, true)
+                                ], params_2);
+                            });
+                        }
+                        else {
+                            var instruction_1;
+                            if (inputType === 0 /* Property */) {
+                                // Interpolated properties
+                                instruction_1 = Identifiers$1.elementProperty;
+                            }
+                            else if (inputType === 2 /* Class */) {
+                                instruction_1 = Identifiers$1.elementClassProp;
+                            }
+                            else {
+                                instruction_1 = Identifiers$1.elementAttribute;
+                            }
+                            _this.updateInstruction(elementIndex, input.sourceSpan, instruction_1, function () {
+                                return __spread([
+                                    literal(elementIndex), literal(attrName_1),
+                                    _this.convertPropertyBinding(implicit, value_2)
+                                ], params_2);
+                            });
+                        }
                     }
-                }
-                else {
-                    _this._unsupported("binding type " + input.type);
                 }
             });
             // Traverse element child nodes
@@ -14505,7 +14512,7 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
                 parameters.splice(2, 0, literal(templateVisitor.getConstCount()), literal(templateVisitor.getVarCount()));
                 return trimTrailingNulls(parameters);
             });
-            // handle property bindings e.g. ɵɵelementProperty(1, 'ngForOf', ɵɵbind(ctx.items));
+            // handle property bindings e.g. ɵɵproperty('ngForOf', ctx.items), et al;
             var context = variable(CONTEXT_NAME);
             this.templatePropertyBindings(template, templateIndex, context, template.templateAttrs);
             // Only add normal input/output binding instructions on explicit ng-template elements.
@@ -14591,12 +14598,7 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
                 if (input instanceof BoundAttribute) {
                     var value_4 = input.value.visit(_this._valueConverter);
                     _this.allocateBindingSlots(value_4);
-                    _this.updateInstruction(templateIndex, template.sourceSpan, Identifiers$1.elementProperty, function () {
-                        return [
-                            literal(templateIndex), literal(input.name),
-                            _this.convertPropertyBinding(context, value_4)
-                        ];
-                    });
+                    _this.updateInstruction(templateIndex, template.sourceSpan, Identifiers$1.property, function () { return [literal(input.name), _this.convertPropertyBinding(context, value_4, true)]; });
                 }
             });
         };
@@ -16073,7 +16075,7 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.13+55.sha-a181e8e.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-beta.13+57.sha-f348dea.with-local-changes');
 
     /**
      * @license
@@ -34426,41 +34428,45 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
     }
     /** Sets the host bindings for the current view. */
     function setHostBindings(tView, viewData) {
-        if (tView.expandoInstructions) {
-            var bindingRootIndex = viewData[BINDING_INDEX] = tView.expandoStartIndex;
-            setBindingRoot(bindingRootIndex);
-            var currentDirectiveIndex = -1;
-            var currentElementIndex = -1;
-            for (var i = 0; i < tView.expandoInstructions.length; i++) {
-                var instruction = tView.expandoInstructions[i];
-                if (typeof instruction === 'number') {
-                    if (instruction <= 0) {
-                        // Negative numbers mean that we are starting new EXPANDO block and need to update
-                        // the current element and directive index.
-                        currentElementIndex = -instruction;
-                        // Injector block and providers are taken into account.
-                        var providerCount = tView.expandoInstructions[++i];
-                        bindingRootIndex += INJECTOR_BLOOM_PARENT_SIZE + providerCount;
-                        currentDirectiveIndex = bindingRootIndex;
+        try {
+            if (tView.expandoInstructions) {
+                var bindingRootIndex = viewData[BINDING_INDEX] = tView.expandoStartIndex;
+                setBindingRoot(bindingRootIndex);
+                var currentDirectiveIndex = -1;
+                var currentElementIndex = -1;
+                for (var i = 0; i < tView.expandoInstructions.length; i++) {
+                    var instruction = tView.expandoInstructions[i];
+                    if (typeof instruction === 'number') {
+                        if (instruction <= 0) {
+                            // Negative numbers mean that we are starting new EXPANDO block and need to update
+                            // the current element and directive index.
+                            currentElementIndex = -instruction;
+                            // Injector block and providers are taken into account.
+                            var providerCount = tView.expandoInstructions[++i];
+                            bindingRootIndex += INJECTOR_BLOOM_PARENT_SIZE + providerCount;
+                            currentDirectiveIndex = bindingRootIndex;
+                        }
+                        else {
+                            // This is either the injector size (so the binding root can skip over directives
+                            // and get to the first set of host bindings on this node) or the host var count
+                            // (to get to the next set of host bindings on this node).
+                            bindingRootIndex += instruction;
+                        }
+                        setBindingRoot(bindingRootIndex);
                     }
                     else {
-                        // This is either the injector size (so the binding root can skip over directives
-                        // and get to the first set of host bindings on this node) or the host var count
-                        // (to get to the next set of host bindings on this node).
-                        bindingRootIndex += instruction;
+                        // If it's not a number, it's a host binding function that needs to be executed.
+                        if (instruction !== null) {
+                            viewData[BINDING_INDEX] = bindingRootIndex;
+                            var hostCtx = unwrapRNode(viewData[currentDirectiveIndex]);
+                            instruction(2 /* Update */, hostCtx, currentElementIndex);
+                        }
+                        currentDirectiveIndex++;
                     }
-                    setBindingRoot(bindingRootIndex);
-                }
-                else {
-                    // If it's not a number, it's a host binding function that needs to be executed.
-                    if (instruction !== null) {
-                        viewData[BINDING_INDEX] = bindingRootIndex;
-                        var hostCtx = unwrapRNode(viewData[currentDirectiveIndex]);
-                        instruction(2 /* Update */, hostCtx, currentElementIndex);
-                    }
-                    currentDirectiveIndex++;
                 }
             }
+        }
+        finally {
         }
     }
     /** Refreshes content queries for all directives in the given view. */
@@ -34597,8 +34603,7 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
                 setPreviousOrParentTNode(null);
                 oldView = enterView(viewToRender, viewToRender[T_HOST]);
                 resetPreOrderHookFlags(viewToRender);
-                ɵɵnamespaceHTML();
-                tView.template(getRenderFlags(viewToRender), context);
+                executeTemplate(tView.template, getRenderFlags(viewToRender), context);
                 // This must be set to false immediately after the first creation run because in an
                 // ngFor loop, all the views will be created together before update mode runs and turns
                 // off firstTemplatePass. If we don't set it here, instances will perform directive
@@ -34624,16 +34629,13 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
             }
             if (creationModeIsActive) {
                 // creation mode pass
-                if (templateFn) {
-                    ɵɵnamespaceHTML();
-                    templateFn(1 /* Create */, context);
-                }
+                templateFn && executeTemplate(templateFn, 1 /* Create */, context);
                 refreshDescendantViews(hostView);
                 hostView[FLAGS] &= ~4 /* CreationMode */;
             }
             // update mode pass
             resetPreOrderHookFlags(hostView);
-            templateFn && templateFn(2 /* Update */, context);
+            templateFn && executeTemplate(templateFn, 2 /* Update */, context);
             refreshDescendantViews(hostView);
         }
         finally {
@@ -34641,6 +34643,14 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
                 rendererFactory.end();
             }
             leaveView(oldView);
+        }
+    }
+    function executeTemplate(templateFn, rf, context) {
+        ɵɵnamespaceHTML();
+        try {
+            templateFn(rf, context);
+        }
+        finally {
         }
     }
     /**
@@ -35078,9 +35088,8 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
         var creationMode = isCreationMode(hostView);
         try {
             resetPreOrderHookFlags(hostView);
-            ɵɵnamespaceHTML();
             creationMode && executeViewQueryFn(1 /* Create */, hostTView, component);
-            templateFn(getRenderFlags(hostView), component);
+            executeTemplate(templateFn, getRenderFlags(hostView), component);
             refreshDescendantViews(hostView);
             // Only check view queries again in creation mode if there are static view queries
             if (!creationMode || hostTView.staticViewQueries) {
@@ -37248,7 +37257,7 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.13+55.sha-a181e8e.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-beta.13+57.sha-f348dea.with-local-changes');
 
     /**
      * @license
@@ -47856,7 +47865,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.13+55.sha-a181e8e.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-beta.13+57.sha-f348dea.with-local-changes');
 
     /**
      * @license
