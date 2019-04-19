@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.13+53.sha-2271f20.with-local-changes
+ * @license Angular v8.0.0-beta.13+54.sha-6ae0084.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -16058,7 +16058,7 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.13+53.sha-2271f20.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-beta.13+54.sha-6ae0084.with-local-changes');
 
     /**
      * @license
@@ -39870,19 +39870,21 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
     function detachView(lContainer, removeIndex) {
         var views = lContainer[VIEWS];
         var viewToDetach = views[removeIndex];
-        if (removeIndex > 0) {
-            views[removeIndex - 1][NEXT] = viewToDetach[NEXT];
+        if (viewToDetach) {
+            if (removeIndex > 0) {
+                views[removeIndex - 1][NEXT] = viewToDetach[NEXT];
+            }
+            views.splice(removeIndex, 1);
+            addRemoveViewFromContainer(viewToDetach, false);
+            if ((viewToDetach[FLAGS] & 128 /* Attached */) &&
+                !(viewToDetach[FLAGS] & 256 /* Destroyed */) && viewToDetach[QUERIES]) {
+                viewToDetach[QUERIES].removeView();
+            }
+            viewToDetach[PARENT] = null;
+            viewToDetach[NEXT] = null;
+            // Unsets the attached flag
+            viewToDetach[FLAGS] &= ~128 /* Attached */;
         }
-        views.splice(removeIndex, 1);
-        addRemoveViewFromContainer(viewToDetach, false);
-        if ((viewToDetach[FLAGS] & 128 /* Attached */) &&
-            !(viewToDetach[FLAGS] & 256 /* Destroyed */) && viewToDetach[QUERIES]) {
-            viewToDetach[QUERIES].removeView();
-        }
-        viewToDetach[PARENT] = null;
-        viewToDetach[NEXT] = null;
-        // Unsets the attached flag
-        viewToDetach[FLAGS] &= ~128 /* Attached */;
         return viewToDetach;
     }
     /**
@@ -39893,8 +39895,10 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
      */
     function removeView(lContainer, removeIndex) {
         var view = lContainer[VIEWS][removeIndex];
-        detachView(lContainer, removeIndex);
-        destroyLView(view);
+        if (view) {
+            detachView(lContainer, removeIndex);
+            destroyLView(view);
+        }
     }
     /**
      * A standalone function which destroys an LView,
@@ -44230,7 +44234,7 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
                 ViewContainerRef_.prototype.detach = function (index) {
                     var adjustedIdx = this._adjustIndex(index, -1);
                     var view = detachView(this._lContainer, adjustedIdx);
-                    var wasDetached = this._viewRefs.splice(adjustedIdx, 1)[0] != null;
+                    var wasDetached = view && this._viewRefs.splice(adjustedIdx, 1)[0] != null;
                     return wasDetached ? new ViewRef(view, view[CONTEXT], -1) : null;
                 };
                 ViewContainerRef_.prototype._adjustIndex = function (index, shift) {
@@ -44455,7 +44459,7 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.13+53.sha-2271f20.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-beta.13+54.sha-6ae0084.with-local-changes');
 
     /**
      * @license
@@ -58047,7 +58051,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.13+53.sha-2271f20.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-beta.13+54.sha-6ae0084.with-local-changes');
 
     /**
      * @license
