@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.13+21.sha-78146c1.with-local-changes
+ * @license Angular v8.0.0-beta.13+51.sha-d9ce8a4.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -3488,6 +3488,7 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
             name: 'ɵɵgetInheritedFactory',
             moduleName: CORE$1,
         };
+        Identifiers.registerNgModuleType = { name: 'ɵregisterNgModuleType', moduleName: CORE$1 };
         // sanitization-related functions
         Identifiers.sanitizeHtml = { name: 'ɵɵsanitizeHtml', moduleName: CORE$1 };
         Identifiers.sanitizeStyle = { name: 'ɵɵsanitizeStyle', moduleName: CORE$1 };
@@ -4848,15 +4849,17 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
      */
     function getAttrsForDirectiveMatching(elOrTpl) {
         var attributesMap = {};
-        elOrTpl.attributes.forEach(function (a) {
-            if (!isI18nAttribute(a.name)) {
-                attributesMap[a.name] = a.value;
-            }
-        });
-        elOrTpl.inputs.forEach(function (i) { attributesMap[i.name] = ''; });
-        elOrTpl.outputs.forEach(function (o) { attributesMap[o.name] = ''; });
-        if (elOrTpl instanceof Template) {
+        if (elOrTpl instanceof Template && elOrTpl.tagName !== 'ng-template') {
             elOrTpl.templateAttrs.forEach(function (a) { return attributesMap[a.name] = ''; });
+        }
+        else {
+            elOrTpl.attributes.forEach(function (a) {
+                if (!isI18nAttribute(a.name)) {
+                    attributesMap[a.name] = a.value;
+                }
+            });
+            elOrTpl.inputs.forEach(function (i) { attributesMap[i.name] = ''; });
+            elOrTpl.outputs.forEach(function (o) { attributesMap[o.name] = ''; });
         }
         return attributesMap;
     }
@@ -16070,7 +16073,7 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.13+21.sha-78146c1.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-beta.13+51.sha-d9ce8a4.with-local-changes');
 
     /**
      * @license
@@ -37245,7 +37248,7 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.13+21.sha-78146c1.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-beta.13+51.sha-d9ce8a4.with-local-changes');
 
     /**
      * @license
@@ -40182,7 +40185,15 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
                 locateHostElement(rendererFactory, rootSelectorOrNode);
             var rootFlags = this.componentDef.onPush ? 64 /* Dirty */ | 512 /* IsRoot */ :
                 16 /* CheckAlways */ | 512 /* IsRoot */;
-            var rootContext = !isInternalRootView ? rootViewInjector.get(ROOT_CONTEXT) : createRootContext();
+            // Check whether this Component needs to be isolated from other components, i.e. whether it
+            // should be placed into its own (empty) root context or existing root context should be used.
+            // Note: this is internal-only convention and might change in the future, so it should not be
+            // relied upon externally.
+            var isIsolated = typeof rootSelectorOrNode === 'string' &&
+                /^#root-ng-internal-isolated-\d+/.test(rootSelectorOrNode);
+            var rootContext = (isInternalRootView || isIsolated) ?
+                createRootContext() :
+                rootViewInjector.get(ROOT_CONTEXT);
             var renderer = rendererFactory.createRenderer(hostRNode, this.componentDef);
             if (rootSelectorOrNode && hostRNode) {
                 ngDevMode && ngDevMode.rendererSetAttribute++;
@@ -47845,7 +47856,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.13+21.sha-78146c1.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-beta.13+51.sha-d9ce8a4.with-local-changes');
 
     /**
      * @license
