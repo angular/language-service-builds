@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.13+36.sha-d7f7826.with-local-changes
+ * @license Angular v8.0.0-beta.13+38.sha-0df719a.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -3473,6 +3473,7 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
             name: 'ɵɵgetInheritedFactory',
             moduleName: CORE$1,
         };
+        Identifiers.registerNgModuleType = { name: 'ɵregisterNgModuleType', moduleName: CORE$1 };
         // sanitization-related functions
         Identifiers.sanitizeHtml = { name: 'ɵɵsanitizeHtml', moduleName: CORE$1 };
         Identifiers.sanitizeStyle = { name: 'ɵɵsanitizeStyle', moduleName: CORE$1 };
@@ -16055,7 +16056,7 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.13+36.sha-d7f7826.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-beta.13+38.sha-0df719a.with-local-changes');
 
     /**
      * @license
@@ -44438,7 +44439,7 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.13+36.sha-d7f7826.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-beta.13+38.sha-0df719a.with-local-changes');
 
     /**
      * @license
@@ -51811,6 +51812,23 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      */
 
     /**
+     * Map of module-id to the corresponding NgModule.
+     * - In pre Ivy we track NgModuleFactory,
+     * - In post Ivy we track the NgModuleType
+     */
+    var modules = new Map();
+    function assertSameOrNotExisting(id, type, incoming) {
+        if (type && type !== incoming) {
+            throw new Error("Duplicate module registered for " + id + " - " + stringify$1(type) + " vs " + stringify$1(type.name));
+        }
+    }
+    function registerNgModuleType(id, ngModuleType) {
+        var existing = modules.get(id);
+        assertSameOrNotExisting(id, existing, ngModuleType);
+        modules.set(id, ngModuleType);
+    }
+
+    /**
      * @license
      * Copyright Google Inc. All Rights Reserved.
      *
@@ -51934,25 +51952,9 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         'ɵɵsanitizeResourceUrl': ɵɵsanitizeResourceUrl,
         'ɵɵsanitizeScript': ɵɵsanitizeScript,
         'ɵɵsanitizeUrl': ɵɵsanitizeUrl,
-        'ɵɵsanitizeUrlOrResourceUrl': ɵɵsanitizeUrlOrResourceUrl
+        'ɵɵsanitizeUrlOrResourceUrl': ɵɵsanitizeUrlOrResourceUrl,
+        'ɵregisterNgModuleType': registerNgModuleType,
     };
-
-    /**
-     * Map of module-id to the corresponding NgModule.
-     * - In pre Ivy we track NgModuleFactory,
-     * - In post Ivy we track the NgModuleType
-     */
-    var modules = new Map();
-    function assertSameOrNotExisting(id, type, incoming) {
-        if (type && type !== incoming) {
-            throw new Error("Duplicate module registered for " + id + " - " + stringify$1(type) + " vs " + stringify$1(type.name));
-        }
-    }
-    function registerNgModuleType(id, ngModuleType) {
-        var existing = modules.get(id);
-        assertSameOrNotExisting(id, existing, ngModuleType);
-        modules.set(id, ngModuleType);
-    }
 
     /**
      * @license
@@ -58029,7 +58031,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.13+36.sha-d7f7826.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-beta.13+38.sha-0df719a.with-local-changes');
 
     /**
      * @license
