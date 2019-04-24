@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.14+3.sha-d92fb25.with-local-changes
+ * @license Angular v8.0.0-beta.14+19.sha-3938563.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -16817,10 +16817,10 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
         definitionMap.set('factory', result.factory);
         if (meta.queries.length > 0) {
             // e.g. `contentQueries: (rf, ctx, dirIndex) => { ... }
-            definitionMap.set('contentQueries', createContentQueriesFunction(meta, constantPool));
+            definitionMap.set('contentQueries', createContentQueriesFunction(meta.queries, constantPool, meta.name));
         }
         if (meta.viewQueries.length) {
-            definitionMap.set('viewQuery', createViewQueriesFunction(meta, constantPool));
+            definitionMap.set('viewQuery', createViewQueriesFunction(meta.viewQueries, constantPool, meta.name));
         }
         // Initialize hostVarsCount to number of bound host properties (interpolations illegal),
         // except 'style' and 'class' properties, since they should *not* allocate host var slots
@@ -16888,6 +16888,39 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
         }
         var type = createTypeForDef(meta, Identifiers$1.DirectiveDefWithMeta);
         return { expression: expression, type: type, statements: statements };
+    }
+    /**
+     * Compile a base definition for the render3 runtime as defined by {@link R3BaseRefMetadata}
+     * @param meta the metadata used for compilation.
+     */
+    function compileBaseDefFromMetadata(meta, constantPool) {
+        var definitionMap = new DefinitionMap();
+        if (meta.inputs) {
+            var inputs_1 = meta.inputs;
+            var inputsMap = Object.keys(inputs_1).map(function (key) {
+                var v = inputs_1[key];
+                var value = Array.isArray(v) ? literalArr(v.map(function (vx) { return literal(vx); })) : literal(v);
+                return { key: key, value: value, quoted: false };
+            });
+            definitionMap.set('inputs', literalMap(inputsMap));
+        }
+        if (meta.outputs) {
+            var outputs_1 = meta.outputs;
+            var outputsMap = Object.keys(outputs_1).map(function (key) {
+                var value = literal(outputs_1[key]);
+                return { key: key, value: value, quoted: false };
+            });
+            definitionMap.set('outputs', literalMap(outputsMap));
+        }
+        if (meta.viewQueries && meta.viewQueries.length > 0) {
+            definitionMap.set('viewQuery', createViewQueriesFunction(meta.viewQueries, constantPool));
+        }
+        if (meta.queries && meta.queries.length > 0) {
+            definitionMap.set('contentQueries', createContentQueriesFunction(meta.queries, constantPool));
+        }
+        var expression = importExpr(Identifiers$1.defineBase).callFn([definitionMap.toLiteralMap()]);
+        var type = new ExpressionType(importExpr(Identifiers$1.BaseDef));
+        return { expression: expression, type: type };
     }
     /**
      * Compile a component for the render3 runtime as defined by the `R3ComponentMetadata`.
@@ -17028,14 +17061,14 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
         return values;
     }
     // Define and update any content queries
-    function createContentQueriesFunction(meta, constantPool) {
+    function createContentQueriesFunction(queries, constantPool, name) {
         var e_3, _a;
         var createStatements = [];
         var updateStatements = [];
         var tempAllocator = temporaryAllocator(updateStatements, TEMPORARY_NAME);
         try {
-            for (var _b = __values(meta.queries), _c = _b.next(); !_c.done; _c = _b.next()) {
-                var query = _c.value;
+            for (var queries_1 = __values(queries), queries_1_1 = queries_1.next(); !queries_1_1.done; queries_1_1 = queries_1.next()) {
+                var query = queries_1_1.value;
                 // creation, e.g. r3.contentQuery(dirIndex, somePredicate, true, null);
                 var args = __spread([variable('dirIndex')], prepareQueryParams(query, constantPool));
                 var queryInstruction = query.static ? Identifiers$1.staticContentQuery : Identifiers$1.contentQuery;
@@ -17053,11 +17086,11 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
         catch (e_3_1) { e_3 = { error: e_3_1 }; }
         finally {
             try {
-                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                if (queries_1_1 && !queries_1_1.done && (_a = queries_1.return)) _a.call(queries_1);
             }
             finally { if (e_3) throw e_3.error; }
         }
-        var contentQueriesFnName = meta.name ? meta.name + "_ContentQueries" : null;
+        var contentQueriesFnName = name ? name + "_ContentQueries" : null;
         return fn([
             new FnParam(RENDER_FLAGS, NUMBER_TYPE), new FnParam(CONTEXT_NAME, null),
             new FnParam('dirIndex', null)
@@ -17098,11 +17131,11 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
         ]));
     }
     // Define and update any view queries
-    function createViewQueriesFunction(meta, constantPool) {
+    function createViewQueriesFunction(viewQueries, constantPool, name) {
         var createStatements = [];
         var updateStatements = [];
         var tempAllocator = temporaryAllocator(updateStatements, TEMPORARY_NAME);
-        meta.viewQueries.forEach(function (query) {
+        viewQueries.forEach(function (query) {
             var queryInstruction = query.static ? Identifiers$1.staticViewQuery : Identifiers$1.viewQuery;
             // creation, e.g. r3.viewQuery(somePredicate, true);
             var queryDefinition = importExpr(queryInstruction).callFn(prepareQueryParams(query, constantPool));
@@ -17116,7 +17149,7 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
                 .set(query.first ? temporary.prop('first') : temporary);
             updateStatements.push(refresh.and(updateDirective).toStmt());
         });
-        var viewQueryFnName = meta.name ? meta.name + "_Query" : null;
+        var viewQueryFnName = name ? name + "_Query" : null;
         return fn([new FnParam(RENDER_FLAGS, NUMBER_TYPE), new FnParam(CONTEXT_NAME, null)], [
             renderFlagCheckIfStmt(1 /* Create */, createStatements),
             renderFlagCheckIfStmt(2 /* Update */, updateStatements)
@@ -17502,6 +17535,13 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
             var preStatements = __spread(constantPool.statements, res.statements);
             return this.jitExpression(res.expression, angularCoreEnv, "ng:///" + facade.name + ".js", preStatements);
         };
+        CompilerFacadeImpl.prototype.compileBase = function (angularCoreEnv, sourceMapUrl, facade) {
+            var constantPool = new ConstantPool();
+            var meta = __assign({}, facade, { viewQueries: facade.viewQueries ? facade.viewQueries.map(convertToR3QueryMetadata) :
+                    facade.viewQueries, queries: facade.queries ? facade.queries.map(convertToR3QueryMetadata) : facade.queries });
+            var res = compileBaseDefFromMetadata(meta, constantPool);
+            return this.jitExpression(res.expression, angularCoreEnv, sourceMapUrl, constantPool.statements);
+        };
         CompilerFacadeImpl.prototype.createParseSourceSpan = function (kind, typeName, sourceUrl) {
             return r3JitTypeSourceSpan(kind, typeName, sourceUrl);
         };
@@ -17658,7 +17698,7 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.14+3.sha-d92fb25.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-beta.14+19.sha-3938563.with-local-changes');
 
     /**
      * @license
@@ -29257,19 +29297,6 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
         }
         throw Error('Could not find renamed property on target object.');
     }
-    /**
-     * Sets properties on a target object from a source object, but only if
-     * the property doesn't already exist on the target object.
-     * @param target The target to set properties on
-     * @param source The source of the property keys and values to set
-     */
-    function fillProperties(target, source) {
-        for (var key in source) {
-            if (source.hasOwnProperty(key) && !target.hasOwnProperty(key)) {
-                target[key] = source[key];
-            }
-        }
-    }
 
     /**
      * @license
@@ -31431,26 +31458,6 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var NG_COMPONENT_DEF = getClosureSafeProperty({ ngComponentDef: getClosureSafeProperty });
-    var NG_DIRECTIVE_DEF = getClosureSafeProperty({ ngDirectiveDef: getClosureSafeProperty });
-    var NG_PIPE_DEF = getClosureSafeProperty({ ngPipeDef: getClosureSafeProperty });
-    var NG_MODULE_DEF = getClosureSafeProperty({ ngModuleDef: getClosureSafeProperty });
-    var NG_BASE_DEF = getClosureSafeProperty({ ngBaseDef: getClosureSafeProperty });
-    /**
-     * If a directive is diPublic, bloomAdd sets a property on the type with this constant as
-     * the key and the directive's unique ID as the value. This allows us to map directives to their
-     * bloom filter bit for DI.
-     */
-    // TODO(misko): This is wrong. The NG_ELEMENT_ID should never be minified.
-    var NG_ELEMENT_ID = getClosureSafeProperty({ __NG_ELEMENT_ID__: getClosureSafeProperty });
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
 
     /**
      * @license
@@ -31560,6 +31567,14 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
     }
 
     /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+
+    /**
     * @license
     * Copyright Google Inc. All Rights Reserved.
     *
@@ -31587,19 +31602,73 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    var NG_COMPONENT_DEF = getClosureSafeProperty({ ngComponentDef: getClosureSafeProperty });
+    var NG_DIRECTIVE_DEF = getClosureSafeProperty({ ngDirectiveDef: getClosureSafeProperty });
+    var NG_PIPE_DEF = getClosureSafeProperty({ ngPipeDef: getClosureSafeProperty });
+    var NG_MODULE_DEF = getClosureSafeProperty({ ngModuleDef: getClosureSafeProperty });
+    var NG_BASE_DEF = getClosureSafeProperty({ ngBaseDef: getClosureSafeProperty });
+    /**
+     * If a directive is diPublic, bloomAdd sets a property on the type with this constant as
+     * the key and the directive's unique ID as the value. This allows us to map directives to their
+     * bloom filter bit for DI.
+     */
+    // TODO(misko): This is wrong. The NG_ELEMENT_ID should never be minified.
+    var NG_ELEMENT_ID = getClosureSafeProperty({ __NG_ELEMENT_ID__: getClosureSafeProperty });
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * The following getter methods retrieve the definition form the type. Currently the retrieval
+     * honors inheritance, but in the future we may change the rule to require that definitions are
+     * explicit. This would require some sort of migration strategy.
+     */
+    function getComponentDef(type) {
+        return type[NG_COMPONENT_DEF] || null;
+    }
+    function getNgModuleDef(type, throwNotFound) {
+        var ngModuleDef = type[NG_MODULE_DEF] || null;
+        if (!ngModuleDef && throwNotFound === true) {
+            throw new Error("Type " + stringify$1(type) + " does not have 'ngModuleDef' property.");
+        }
+        return ngModuleDef;
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     /**
      * Used for stringify render output in Ivy.
+     * Important! This function is very performance-sensitive and we should
+     * be extra careful not to introduce megamorphic reads in it.
      */
     function renderStringify(value) {
-        if (typeof value == 'function')
+        if (typeof value === 'function')
             return value.name || value;
-        if (typeof value == 'string')
+        if (typeof value === 'string')
             return value;
         if (value == null)
             return '';
-        if (typeof value == 'object' && typeof value.type == 'function')
-            return value.type.name || value.type;
         return '' + value;
+    }
+    /**
+     * Used to stringify a value so that it can be displayed in an error message.
+     * Important! This function contains a megamorphic read and should only be
+     * used for error messages.
+     */
+    function stringifyForError(value) {
+        if (typeof value === 'object' && value != null && typeof value.type === 'function') {
+            return value.type.name || value.type;
+        }
+        return renderStringify(value);
     }
     var defaultScheduler = (typeof requestAnimationFrame !== 'undefined' && requestAnimationFrame || // browser only
         setTimeout // everything else
@@ -31682,37 +31751,6 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
     }
     function assertDataInRange(arr, index) {
         assertLessThan(index, arr ? arr.length : 0, 'index expected to be a valid data index');
-    }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * The following getter methods retrieve the definition form the type. Currently the retrieval
-     * honors inheritance, but in the future we may change the rule to require that definitions are
-     * explicit. This would require some sort of migration strategy.
-     */
-    function getComponentDef(type) {
-        return type[NG_COMPONENT_DEF] || null;
-    }
-    function getNgModuleDef(type, throwNotFound) {
-        var ngModuleDef = type[NG_MODULE_DEF] || null;
-        if (!ngModuleDef && throwNotFound === true) {
-            throw new Error("Type " + stringify$1(type) + " does not have 'ngModuleDef' property.");
-        }
-        return ngModuleDef;
     }
 
     /**
@@ -33216,7 +33254,7 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
                 try {
                     var value = bloomHash();
                     if (value == null && !(flags & InjectFlags.Optional)) {
-                        throw new Error("No provider for " + renderStringify(token) + "!");
+                        throw new Error("No provider for " + stringifyForError(token) + "!");
                     }
                     else {
                         return value;
@@ -33312,7 +33350,7 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
             return notFoundValue;
         }
         else {
-            throw new Error("NodeInjector: NOT_FOUND [" + renderStringify(token) + "]");
+            throw new Error("NodeInjector: NOT_FOUND [" + stringifyForError(token) + "]");
         }
     }
     var NOT_FOUND = {};
@@ -33396,7 +33434,7 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
         if (isFactory(value)) {
             var factory = value;
             if (factory.resolving) {
-                throw new Error("Circular dep for " + renderStringify(tData[index]));
+                throw new Error("Circular dep for " + stringifyForError(tData[index]));
             }
             var previousIncludeViewProviders = setIncludeViewProviders(factory.canSeeViewProviders);
             factory.resolving = true;
@@ -34816,7 +34854,7 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
         return blueprint;
     }
     function createError(text, token) {
-        return new Error("Renderer: " + text + " [" + renderStringify(token) + "]");
+        return new Error("Renderer: " + text + " [" + stringifyForError(token) + "]");
     }
     /**
      * Locates the host native element, used for bootstrapping existing nodes into rendering pipeline.
@@ -36086,7 +36124,7 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
         if (throwOnNotFound === void 0) { throwOnNotFound = true; }
         var context = getLContext(target);
         if (!context && throwOnNotFound) {
-            throw new Error(ngDevMode ? "Unable to find context associated with " + renderStringify(target) :
+            throw new Error(ngDevMode ? "Unable to find context associated with " + stringifyForError(target) :
                 'Invalid ng target');
         }
         return context;
@@ -37332,7 +37370,7 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.14+3.sha-d92fb25.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-beta.14+19.sha-3938563.with-local-changes');
 
     /**
      * @license
@@ -42483,58 +42521,25 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * @publicApi
      */
     var Pipe = makeDecorator('Pipe', ɵ4, undefined, undefined, ɵ5);
-    var initializeBaseDef = function (target) {
-        var constructor = target.constructor;
-        var inheritedBaseDef = constructor.ngBaseDef;
-        var baseDef = constructor.ngBaseDef = {
-            inputs: {},
-            outputs: {},
-            declaredInputs: {},
-        };
-        if (inheritedBaseDef) {
-            fillProperties(baseDef.inputs, inheritedBaseDef.inputs);
-            fillProperties(baseDef.outputs, inheritedBaseDef.outputs);
-            fillProperties(baseDef.declaredInputs, inheritedBaseDef.declaredInputs);
-        }
-    };
-    /**
-     * Does the work of creating the `ngBaseDef` property for the `Input` and `Output` decorators.
-     * @param key "inputs" or "outputs"
-     */
-    var updateBaseDefFromIOProp = function (getProp) {
-        return function (target, name) {
-            var args = [];
-            for (var _i = 2; _i < arguments.length; _i++) {
-                args[_i - 2] = arguments[_i];
-            }
-            var constructor = target.constructor;
-            if (!constructor.hasOwnProperty(NG_BASE_DEF)) {
-                initializeBaseDef(target);
-            }
-            var baseDef = constructor.ngBaseDef;
-            var defProp = getProp(baseDef);
-            defProp[name] = args[0] || name;
-        };
-    };
-    var ɵ8 = function (bindingPropertyName) { return ({ bindingPropertyName: bindingPropertyName }); }, ɵ9 = function (baseDef) { return baseDef.inputs || {}; };
+    var ɵ6 = function (bindingPropertyName) { return ({ bindingPropertyName: bindingPropertyName }); };
     /**
      * @Annotation
      * @publicApi
      */
-    var Input = makePropDecorator('Input', ɵ8, undefined, updateBaseDefFromIOProp(ɵ9));
-    var ɵ10 = function (bindingPropertyName) { return ({ bindingPropertyName: bindingPropertyName }); }, ɵ11 = function (baseDef) { return baseDef.outputs || {}; };
+    var Input = makePropDecorator('Input', ɵ6);
+    var ɵ7 = function (bindingPropertyName) { return ({ bindingPropertyName: bindingPropertyName }); };
     /**
      * @Annotation
      * @publicApi
      */
-    var Output = makePropDecorator('Output', ɵ10, undefined, updateBaseDefFromIOProp(ɵ11));
-    var ɵ12 = function (hostPropertyName) { return ({ hostPropertyName: hostPropertyName }); };
+    var Output = makePropDecorator('Output', ɵ7);
+    var ɵ8 = function (hostPropertyName) { return ({ hostPropertyName: hostPropertyName }); };
     /**
      * @Annotation
      * @publicApi
      */
-    var HostBinding = makePropDecorator('HostBinding', ɵ12);
-    var ɵ13 = function (eventName, args) { return ({ eventName: eventName, args: args }); };
+    var HostBinding = makePropDecorator('HostBinding', ɵ8);
+    var ɵ9 = function (eventName, args) { return ({ eventName: eventName, args: args }); };
     /**
      * Binds a CSS event to a host listener and supplies configuration metadata.
      * Angular invokes the supplied handler method when the host element emits the specified event,
@@ -42567,7 +42572,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * @Annotation
      * @publicApi
      */
-    var HostListener = makePropDecorator('HostListener', ɵ13);
+    var HostListener = makePropDecorator('HostListener', ɵ9);
     var SWITCH_COMPILE_COMPONENT__PRE_R3__ = noop;
     var SWITCH_COMPILE_DIRECTIVE__PRE_R3__ = noop;
     var SWITCH_COMPILE_PIPE__PRE_R3__ = noop;
@@ -47948,7 +47953,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.14+3.sha-d92fb25.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-beta.14+19.sha-3938563.with-local-changes');
 
     /**
      * @license
