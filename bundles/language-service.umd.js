@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.14+5.sha-8ca208f.with-local-changes
+ * @license Angular v8.0.0-beta.14+6.sha-c7f1b0a.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -16802,10 +16802,10 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
         definitionMap.set('factory', result.factory);
         if (meta.queries.length > 0) {
             // e.g. `contentQueries: (rf, ctx, dirIndex) => { ... }
-            definitionMap.set('contentQueries', createContentQueriesFunction(meta, constantPool));
+            definitionMap.set('contentQueries', createContentQueriesFunction(meta.queries, constantPool, meta.name));
         }
         if (meta.viewQueries.length) {
-            definitionMap.set('viewQuery', createViewQueriesFunction(meta, constantPool));
+            definitionMap.set('viewQuery', createViewQueriesFunction(meta.viewQueries, constantPool, meta.name));
         }
         // Initialize hostVarsCount to number of bound host properties (interpolations illegal),
         // except 'style' and 'class' properties, since they should *not* allocate host var slots
@@ -16873,6 +16873,39 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
         }
         var type = createTypeForDef(meta, Identifiers$1.DirectiveDefWithMeta);
         return { expression: expression, type: type, statements: statements };
+    }
+    /**
+     * Compile a base definition for the render3 runtime as defined by {@link R3BaseRefMetadata}
+     * @param meta the metadata used for compilation.
+     */
+    function compileBaseDefFromMetadata(meta, constantPool) {
+        var definitionMap = new DefinitionMap();
+        if (meta.inputs) {
+            var inputs_1 = meta.inputs;
+            var inputsMap = Object.keys(inputs_1).map(function (key) {
+                var v = inputs_1[key];
+                var value = Array.isArray(v) ? literalArr(v.map(function (vx) { return literal(vx); })) : literal(v);
+                return { key: key, value: value, quoted: false };
+            });
+            definitionMap.set('inputs', literalMap(inputsMap));
+        }
+        if (meta.outputs) {
+            var outputs_1 = meta.outputs;
+            var outputsMap = Object.keys(outputs_1).map(function (key) {
+                var value = literal(outputs_1[key]);
+                return { key: key, value: value, quoted: false };
+            });
+            definitionMap.set('outputs', literalMap(outputsMap));
+        }
+        if (meta.viewQueries && meta.viewQueries.length > 0) {
+            definitionMap.set('viewQuery', createViewQueriesFunction(meta.viewQueries, constantPool));
+        }
+        if (meta.queries && meta.queries.length > 0) {
+            definitionMap.set('contentQueries', createContentQueriesFunction(meta.queries, constantPool));
+        }
+        var expression = importExpr(Identifiers$1.defineBase).callFn([definitionMap.toLiteralMap()]);
+        var type = new ExpressionType(importExpr(Identifiers$1.BaseDef));
+        return { expression: expression, type: type };
     }
     /**
      * Compile a component for the render3 runtime as defined by the `R3ComponentMetadata`.
@@ -17013,14 +17046,14 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
         return values;
     }
     // Define and update any content queries
-    function createContentQueriesFunction(meta, constantPool) {
+    function createContentQueriesFunction(queries, constantPool, name) {
         var e_3, _a;
         var createStatements = [];
         var updateStatements = [];
         var tempAllocator = temporaryAllocator(updateStatements, TEMPORARY_NAME);
         try {
-            for (var _b = __values(meta.queries), _c = _b.next(); !_c.done; _c = _b.next()) {
-                var query = _c.value;
+            for (var queries_1 = __values(queries), queries_1_1 = queries_1.next(); !queries_1_1.done; queries_1_1 = queries_1.next()) {
+                var query = queries_1_1.value;
                 // creation, e.g. r3.contentQuery(dirIndex, somePredicate, true, null);
                 var args = __spread([variable('dirIndex')], prepareQueryParams(query, constantPool));
                 var queryInstruction = query.static ? Identifiers$1.staticContentQuery : Identifiers$1.contentQuery;
@@ -17038,11 +17071,11 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
         catch (e_3_1) { e_3 = { error: e_3_1 }; }
         finally {
             try {
-                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                if (queries_1_1 && !queries_1_1.done && (_a = queries_1.return)) _a.call(queries_1);
             }
             finally { if (e_3) throw e_3.error; }
         }
-        var contentQueriesFnName = meta.name ? meta.name + "_ContentQueries" : null;
+        var contentQueriesFnName = name ? name + "_ContentQueries" : null;
         return fn([
             new FnParam(RENDER_FLAGS, NUMBER_TYPE), new FnParam(CONTEXT_NAME, null),
             new FnParam('dirIndex', null)
@@ -17083,11 +17116,11 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
         ]));
     }
     // Define and update any view queries
-    function createViewQueriesFunction(meta, constantPool) {
+    function createViewQueriesFunction(viewQueries, constantPool, name) {
         var createStatements = [];
         var updateStatements = [];
         var tempAllocator = temporaryAllocator(updateStatements, TEMPORARY_NAME);
-        meta.viewQueries.forEach(function (query) {
+        viewQueries.forEach(function (query) {
             var queryInstruction = query.static ? Identifiers$1.staticViewQuery : Identifiers$1.viewQuery;
             // creation, e.g. r3.viewQuery(somePredicate, true);
             var queryDefinition = importExpr(queryInstruction).callFn(prepareQueryParams(query, constantPool));
@@ -17101,7 +17134,7 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
                 .set(query.first ? temporary.prop('first') : temporary);
             updateStatements.push(refresh.and(updateDirective).toStmt());
         });
-        var viewQueryFnName = meta.name ? meta.name + "_Query" : null;
+        var viewQueryFnName = name ? name + "_Query" : null;
         return fn([new FnParam(RENDER_FLAGS, NUMBER_TYPE), new FnParam(CONTEXT_NAME, null)], [
             renderFlagCheckIfStmt(1 /* Create */, createStatements),
             renderFlagCheckIfStmt(2 /* Update */, updateStatements)
@@ -17487,6 +17520,13 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
             var preStatements = __spread(constantPool.statements, res.statements);
             return this.jitExpression(res.expression, angularCoreEnv, "ng:///" + facade.name + ".js", preStatements);
         };
+        CompilerFacadeImpl.prototype.compileBase = function (angularCoreEnv, sourceMapUrl, facade) {
+            var constantPool = new ConstantPool();
+            var meta = __assign({}, facade, { viewQueries: facade.viewQueries ? facade.viewQueries.map(convertToR3QueryMetadata) :
+                    facade.viewQueries, queries: facade.queries ? facade.queries.map(convertToR3QueryMetadata) : facade.queries });
+            var res = compileBaseDefFromMetadata(meta, constantPool);
+            return this.jitExpression(res.expression, angularCoreEnv, sourceMapUrl, constantPool.statements);
+        };
         CompilerFacadeImpl.prototype.createParseSourceSpan = function (kind, typeName, sourceUrl) {
             return r3JitTypeSourceSpan(kind, typeName, sourceUrl);
         };
@@ -17643,7 +17683,7 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.14+5.sha-8ca208f.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-beta.14+6.sha-c7f1b0a.with-local-changes');
 
     /**
      * @license
@@ -31514,26 +31554,6 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var NG_COMPONENT_DEF = getClosureSafeProperty({ ngComponentDef: getClosureSafeProperty });
-    var NG_DIRECTIVE_DEF = getClosureSafeProperty({ ngDirectiveDef: getClosureSafeProperty });
-    var NG_PIPE_DEF = getClosureSafeProperty({ ngPipeDef: getClosureSafeProperty });
-    var NG_MODULE_DEF = getClosureSafeProperty({ ngModuleDef: getClosureSafeProperty });
-    var NG_BASE_DEF = getClosureSafeProperty({ ngBaseDef: getClosureSafeProperty });
-    /**
-     * If a directive is diPublic, bloomAdd sets a property on the type with this constant as
-     * the key and the directive's unique ID as the value. This allows us to map directives to their
-     * bloom filter bit for DI.
-     */
-    // TODO(misko): This is wrong. The NG_ELEMENT_ID should never be minified.
-    var NG_ELEMENT_ID = getClosureSafeProperty({ __NG_ELEMENT_ID__: getClosureSafeProperty });
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     /**
      * Used to resolve resource URLs on `@Component` when used with JIT compilation.
      *
@@ -31741,6 +31761,26 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
     }
 
     /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * Convince closure compiler that the wrapped function has no side-effects.
+     *
+     * Closure compiler always assumes that `toString` has no side-effects. We use this quirk to
+     * allow us to execute a function but have closure compiler mark the call as no-side-effects.
+     * It is important that the return value for the `noSideEffects` function be assigned
+     * to something which is retained otherwise the call to `noSideEffects` will be removed by closure
+     * compiler.
+     */
+    function noSideEffects(fn) {
+        return '' + { toString: fn };
+    }
+
+    /**
     * @license
     * Copyright Google Inc. All Rights Reserved.
     *
@@ -31768,158 +31808,18 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    var NG_COMPONENT_DEF = getClosureSafeProperty({ ngComponentDef: getClosureSafeProperty });
+    var NG_DIRECTIVE_DEF = getClosureSafeProperty({ ngDirectiveDef: getClosureSafeProperty });
+    var NG_PIPE_DEF = getClosureSafeProperty({ ngPipeDef: getClosureSafeProperty });
+    var NG_MODULE_DEF = getClosureSafeProperty({ ngModuleDef: getClosureSafeProperty });
+    var NG_BASE_DEF = getClosureSafeProperty({ ngBaseDef: getClosureSafeProperty });
     /**
-     * Returns whether the values are different from a change detection stand point.
-     *
-     * Constraints are relaxed in checkNoChanges mode. See `devModeEqual` for details.
+     * If a directive is diPublic, bloomAdd sets a property on the type with this constant as
+     * the key and the directive's unique ID as the value. This allows us to map directives to their
+     * bloom filter bit for DI.
      */
-    function isDifferent(a, b) {
-        // NaN is the only value that is not equal to itself so the first
-        // test checks if both a and b are not NaN
-        return !(a !== a && b !== b) && a !== b;
-    }
-    /**
-     * Used for stringify render output in Ivy.
-     */
-    function renderStringify(value) {
-        if (typeof value == 'function')
-            return value.name || value;
-        if (typeof value == 'string')
-            return value;
-        if (value == null)
-            return '';
-        if (typeof value == 'object' && typeof value.type == 'function')
-            return value.type.name || value.type;
-        return '' + value;
-    }
-    var defaultScheduler = (typeof requestAnimationFrame !== 'undefined' && requestAnimationFrame || // browser only
-        setTimeout // everything else
-    ).bind(_global$1);
-    /**
-     *
-     * @codeGenApi
-     */
-    function ɵɵresolveWindow(element) {
-        return { name: 'window', target: element.ownerDocument.defaultView };
-    }
-    /**
-     *
-     * @codeGenApi
-     */
-    function ɵɵresolveDocument(element) {
-        return { name: 'document', target: element.ownerDocument };
-    }
-    /**
-     *
-     * @codeGenApi
-     */
-    function ɵɵresolveBody(element) {
-        return { name: 'body', target: element.ownerDocument.body };
-    }
-    /**
-     * The special delimiter we use to separate property names, prefixes, and suffixes
-     * in property binding metadata. See storeBindingMetadata().
-     *
-     * We intentionally use the Unicode "REPLACEMENT CHARACTER" (U+FFFD) as a delimiter
-     * because it is a very uncommon character that is unlikely to be part of a user's
-     * property names or interpolation strings. If it is in fact used in a property
-     * binding, DebugElement.properties will not return the correct value for that
-     * binding. However, there should be no runtime effect for real applications.
-     *
-     * This character is typically rendered as a question mark inside of a diamond.
-     * See https://en.wikipedia.org/wiki/Specials_(Unicode_block)
-     *
-     */
-    var INTERPOLATION_DELIMITER = "\uFFFD";
-    /**
-     * Determines whether or not the given string is a property metadata string.
-     * See storeBindingMetadata().
-     */
-    function isPropMetadataString(str) {
-        return str.indexOf(INTERPOLATION_DELIMITER) >= 0;
-    }
-    /**
-     * Unwrap a value which might be behind a closure (for forward declaration reasons).
-     */
-    function maybeUnwrapFn(value) {
-        if (value instanceof Function) {
-            return value();
-        }
-        else {
-            return value;
-        }
-    }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    function assertEqual(actual, expected, msg) {
-        if (actual != expected) {
-            throwError(msg);
-        }
-    }
-    function assertNotEqual(actual, expected, msg) {
-        if (actual == expected) {
-            throwError(msg);
-        }
-    }
-    function assertNotSame(actual, expected, msg) {
-        if (actual === expected) {
-            throwError(msg);
-        }
-    }
-    function assertLessThan(actual, expected, msg) {
-        if (actual >= expected) {
-            throwError(msg);
-        }
-    }
-    function assertGreaterThan(actual, expected, msg) {
-        if (actual <= expected) {
-            throwError(msg);
-        }
-    }
-    function assertDefined(actual, msg) {
-        if (actual == null) {
-            throwError(msg);
-        }
-    }
-    function throwError(msg) {
-        // tslint:disable-next-line
-        debugger; // Left intentionally for better debugger experience.
-        throw new Error("ASSERTION ERROR: " + msg);
-    }
-    function assertDomNode(node) {
-        // If we're in a worker, `Node` will not be defined.
-        assertEqual((typeof Node !== 'undefined' && node instanceof Node) ||
-            (typeof node === 'object' && node.constructor.name === 'WebWorkerRenderNode'), true, 'The provided value must be an instance of a DOM Node');
-    }
-    function assertDataInRange(arr, index) {
-        assertLessThan(index, arr ? arr.length : 0, 'index expected to be a valid data index');
-    }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * Convince closure compiler that the wrapped function has no side-effects.
-     *
-     * Closure compiler always assumes that `toString` has no side-effects. We use this quirk to
-     * allow us to execute a function but have closure compiler mark the call as no-side-effects.
-     * It is important that the return value for the `noSideEffects` function be assigned
-     * to something which is retained otherwise the call to `noSideEffects` will be removed by closure
-     * compiler.
-     */
-    function noSideEffects(fn) {
-        return '' + { toString: fn };
-    }
+    // TODO(misko): This is wrong. The NG_ELEMENT_ID should never be minified.
+    var NG_ELEMENT_ID = getClosureSafeProperty({ __NG_ELEMENT_ID__: getClosureSafeProperty });
 
     /**
      * @license
@@ -32165,6 +32065,8 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
             inputs: invertObject(baseDefinition.inputs, declaredInputs),
             declaredInputs: declaredInputs,
             outputs: invertObject(baseDefinition.outputs),
+            viewQuery: baseDefinition.viewQuery || null,
+            contentQueries: baseDefinition.contentQueries || null,
         };
     }
     /**
@@ -32222,12 +32124,155 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
     function getPipeDef(type) {
         return type[NG_PIPE_DEF] || null;
     }
+    function getBaseDef(type) {
+        return type[NG_BASE_DEF] || null;
+    }
     function getNgModuleDef(type, throwNotFound) {
         var ngModuleDef = type[NG_MODULE_DEF] || null;
         if (!ngModuleDef && throwNotFound === true) {
             throw new Error("Type " + stringify$1(type) + " does not have 'ngModuleDef' property.");
         }
         return ngModuleDef;
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * Returns whether the values are different from a change detection stand point.
+     *
+     * Constraints are relaxed in checkNoChanges mode. See `devModeEqual` for details.
+     */
+    function isDifferent(a, b) {
+        // NaN is the only value that is not equal to itself so the first
+        // test checks if both a and b are not NaN
+        return !(a !== a && b !== b) && a !== b;
+    }
+    /**
+     * Used for stringify render output in Ivy.
+     */
+    function renderStringify(value) {
+        if (typeof value == 'function')
+            return value.name || value;
+        if (typeof value == 'string')
+            return value;
+        if (value == null)
+            return '';
+        if (typeof value == 'object' && typeof value.type == 'function')
+            return value.type.name || value.type;
+        return '' + value;
+    }
+    var defaultScheduler = (typeof requestAnimationFrame !== 'undefined' && requestAnimationFrame || // browser only
+        setTimeout // everything else
+    ).bind(_global$1);
+    /**
+     *
+     * @codeGenApi
+     */
+    function ɵɵresolveWindow(element) {
+        return { name: 'window', target: element.ownerDocument.defaultView };
+    }
+    /**
+     *
+     * @codeGenApi
+     */
+    function ɵɵresolveDocument(element) {
+        return { name: 'document', target: element.ownerDocument };
+    }
+    /**
+     *
+     * @codeGenApi
+     */
+    function ɵɵresolveBody(element) {
+        return { name: 'body', target: element.ownerDocument.body };
+    }
+    /**
+     * The special delimiter we use to separate property names, prefixes, and suffixes
+     * in property binding metadata. See storeBindingMetadata().
+     *
+     * We intentionally use the Unicode "REPLACEMENT CHARACTER" (U+FFFD) as a delimiter
+     * because it is a very uncommon character that is unlikely to be part of a user's
+     * property names or interpolation strings. If it is in fact used in a property
+     * binding, DebugElement.properties will not return the correct value for that
+     * binding. However, there should be no runtime effect for real applications.
+     *
+     * This character is typically rendered as a question mark inside of a diamond.
+     * See https://en.wikipedia.org/wiki/Specials_(Unicode_block)
+     *
+     */
+    var INTERPOLATION_DELIMITER = "\uFFFD";
+    /**
+     * Determines whether or not the given string is a property metadata string.
+     * See storeBindingMetadata().
+     */
+    function isPropMetadataString(str) {
+        return str.indexOf(INTERPOLATION_DELIMITER) >= 0;
+    }
+    /**
+     * Unwrap a value which might be behind a closure (for forward declaration reasons).
+     */
+    function maybeUnwrapFn(value) {
+        if (value instanceof Function) {
+            return value();
+        }
+        else {
+            return value;
+        }
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    function assertEqual(actual, expected, msg) {
+        if (actual != expected) {
+            throwError(msg);
+        }
+    }
+    function assertNotEqual(actual, expected, msg) {
+        if (actual == expected) {
+            throwError(msg);
+        }
+    }
+    function assertNotSame(actual, expected, msg) {
+        if (actual === expected) {
+            throwError(msg);
+        }
+    }
+    function assertLessThan(actual, expected, msg) {
+        if (actual >= expected) {
+            throwError(msg);
+        }
+    }
+    function assertGreaterThan(actual, expected, msg) {
+        if (actual <= expected) {
+            throwError(msg);
+        }
+    }
+    function assertDefined(actual, msg) {
+        if (actual == null) {
+            throwError(msg);
+        }
+    }
+    function throwError(msg) {
+        // tslint:disable-next-line
+        debugger; // Left intentionally for better debugger experience.
+        throw new Error("ASSERTION ERROR: " + msg);
+    }
+    function assertDomNode(node) {
+        // If we're in a worker, `Node` will not be defined.
+        assertEqual((typeof Node !== 'undefined' && node instanceof Node) ||
+            (typeof node === 'object' && node.constructor.name === 'WebWorkerRenderNode'), true, 'The provided value must be an instance of a DOM Node');
+    }
+    function assertDataInRange(arr, index) {
+        assertLessThan(index, arr ? arr.length : 0, 'index expected to be a valid data index');
     }
 
     /**
@@ -43315,7 +43360,10 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
                 writeableDef.outputs = maybeUnwrapEmpty(definition.outputs);
             }
             if (baseDef) {
-                // Merge inputs and outputs
+                var baseViewQuery = baseDef.viewQuery;
+                var baseContentQueries = baseDef.contentQueries;
+                baseViewQuery && inheritViewQuery(definition, baseViewQuery);
+                baseContentQueries && inheritContentQueries(definition, baseContentQueries);
                 fillProperties(definition.inputs, baseDef.inputs);
                 fillProperties(definition.declaredInputs, baseDef.declaredInputs);
                 fillProperties(definition.outputs, baseDef.outputs);
@@ -43352,34 +43400,11 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
                         definition.hostBindings = superHostBindings_1;
                     }
                 }
-                // Merge View Queries
-                var prevViewQuery_1 = definition.viewQuery;
-                var superViewQuery_1 = superDef.viewQuery;
-                if (superViewQuery_1) {
-                    if (prevViewQuery_1) {
-                        definition.viewQuery = function (rf, ctx) {
-                            superViewQuery_1(rf, ctx);
-                            prevViewQuery_1(rf, ctx);
-                        };
-                    }
-                    else {
-                        definition.viewQuery = superViewQuery_1;
-                    }
-                }
-                // Merge Content Queries
-                var prevContentQueries_1 = definition.contentQueries;
-                var superContentQueries_1 = superDef.contentQueries;
-                if (superContentQueries_1) {
-                    if (prevContentQueries_1) {
-                        definition.contentQueries = function (rf, ctx, directiveIndex) {
-                            superContentQueries_1(rf, ctx, directiveIndex);
-                            prevContentQueries_1(rf, ctx, directiveIndex);
-                        };
-                    }
-                    else {
-                        definition.contentQueries = superContentQueries_1;
-                    }
-                }
+                // Merge queries
+                var superViewQuery = superDef.viewQuery;
+                var superContentQueries = superDef.contentQueries;
+                superViewQuery && inheritViewQuery(definition, superViewQuery);
+                superContentQueries && inheritContentQueries(definition, superContentQueries);
                 // Merge inputs and outputs
                 fillProperties(definition.inputs, superDef.inputs);
                 fillProperties(definition.declaredInputs, superDef.declaredInputs);
@@ -43448,6 +43473,30 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
         }
         else {
             return value;
+        }
+    }
+    function inheritViewQuery(definition, superViewQuery) {
+        var prevViewQuery = definition.viewQuery;
+        if (prevViewQuery) {
+            definition.viewQuery = function (rf, ctx) {
+                superViewQuery(rf, ctx);
+                prevViewQuery(rf, ctx);
+            };
+        }
+        else {
+            definition.viewQuery = superViewQuery;
+        }
+    }
+    function inheritContentQueries(definition, superContentQueries) {
+        var prevContentQueries = definition.contentQueries;
+        if (prevContentQueries) {
+            definition.contentQueries = function (rf, ctx, directiveIndex) {
+                superContentQueries(rf, ctx, directiveIndex);
+                prevContentQueries(rf, ctx, directiveIndex);
+            };
+        }
+        else {
+            definition.contentQueries = superContentQueries;
         }
     }
 
@@ -44967,7 +45016,7 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.14+5.sha-8ca208f.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-beta.14+6.sha-c7f1b0a.with-local-changes');
 
     /**
      * @license
@@ -52939,6 +52988,9 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                     }
                     var templateUrl = metadata.templateUrl || "ng:///" + renderStringify(type) + "/template.html";
                     var meta = __assign({}, directiveMetadata(type, metadata), { typeSourceSpan: compiler.createParseSourceSpan('Component', renderStringify(type), templateUrl), template: metadata.template || '', preserveWhitespaces: metadata.preserveWhitespaces || false, styles: metadata.styles || EMPTY_ARRAY$1, animations: metadata.animations, directives: [], changeDetection: metadata.changeDetection, pipes: new Map(), encapsulation: metadata.encapsulation || ViewEncapsulation$1.Emulated, interpolation: metadata.interpolation, viewProviders: metadata.viewProviders || null });
+                    if (meta.usesInheritance) {
+                        addBaseDefToUndecoratedParents(type);
+                    }
                     ngComponentDef = compiler.compileComponent(angularCoreEnv, templateUrl, meta);
                     // When NgModule decorator executed, we enqueued the module definition such that
                     // it would only dequeue and add itself as module scope to all of its declarations,
@@ -52986,6 +53038,9 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                     var facade = directiveMetadata(type, directive);
                     facade.typeSourceSpan =
                         compiler.createParseSourceSpan('Directive', renderStringify(type), sourceMapUrl);
+                    if (facade.usesInheritance) {
+                        addBaseDefToUndecoratedParents(type);
+                    }
                     ngDirectiveDef = compiler.compileDirective(angularCoreEnv, sourceMapUrl, facade);
                 }
                 return ngDirectiveDef;
@@ -53027,6 +53082,68 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             viewQueries: extractQueriesMetadata(type, propMetadata, isViewQuery),
         };
     }
+    /**
+     * Adds an `ngBaseDef` to all parent classes of a type that don't have an Angular decorator.
+     */
+    function addBaseDefToUndecoratedParents(type) {
+        var objPrototype = Object.prototype;
+        var parent = Object.getPrototypeOf(type);
+        // Go up the prototype until we hit `Object`.
+        while (parent && parent !== objPrototype) {
+            // Since inheritance works if the class was annotated already, we only need to add
+            // the base def if there are no annotations and the base def hasn't been created already.
+            if (!getDirectiveDef(parent) && !getComponentDef(parent) && !getBaseDef(parent)) {
+                var facade = extractBaseDefMetadata(parent);
+                facade && compileBase(parent, facade);
+            }
+            parent = Object.getPrototypeOf(parent);
+        }
+    }
+    /** Compiles the base metadata into a base definition. */
+    function compileBase(type, facade) {
+        var ngBaseDef = null;
+        Object.defineProperty(type, NG_BASE_DEF, {
+            get: function () {
+                if (ngBaseDef === null) {
+                    var name_2 = type && type.name;
+                    var sourceMapUrl = "ng://" + name_2 + "/ngBaseDef.js";
+                    var compiler = getCompilerFacade();
+                    ngBaseDef = compiler.compileBase(angularCoreEnv, sourceMapUrl, facade);
+                }
+                return ngBaseDef;
+            },
+            // Make the property configurable in dev mode to allow overriding in tests
+            configurable: !!ngDevMode,
+        });
+    }
+    /** Extracts the metadata necessary to construct an `ngBaseDef` from a class. */
+    function extractBaseDefMetadata(type) {
+        var propMetadata = getReflect().ownPropMetadata(type);
+        var viewQueries = extractQueriesMetadata(type, propMetadata, isViewQuery);
+        var queries = extractQueriesMetadata(type, propMetadata, isContentQuery);
+        var inputs;
+        var outputs;
+        var _loop_1 = function (field) {
+            propMetadata[field].forEach(function (ann) {
+                if (ann.ngMetadataName === 'Input') {
+                    inputs = inputs || {};
+                    inputs[field] = ann.bindingPropertyName ? [ann.bindingPropertyName, field] : field;
+                }
+                else if (ann.ngMetadataName === 'Output') {
+                    outputs = outputs || {};
+                    outputs[field] = ann.bindingPropertyName || field;
+                }
+            });
+        };
+        for (var field in propMetadata) {
+            _loop_1(field);
+        }
+        // Only generate the base def if there's any info inside it.
+        if (inputs || outputs || viewQueries.length || queries.length) {
+            return { inputs: inputs, outputs: outputs, viewQueries: viewQueries, queries: queries };
+        }
+        return null;
+    }
     function convertToR3QueryPredicate(selector) {
         return typeof selector === 'string' ? splitByComma(selector) : resolveForwardRef$1(selector);
     }
@@ -53042,7 +53159,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
     }
     function extractQueriesMetadata(type, propMetadata, isQueryAnn) {
         var queriesMeta = [];
-        var _loop_1 = function (field) {
+        var _loop_2 = function (field) {
             if (propMetadata.hasOwnProperty(field)) {
                 var annotations_1 = propMetadata[field];
                 annotations_1.forEach(function (ann) {
@@ -53060,7 +53177,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             }
         };
         for (var field in propMetadata) {
-            _loop_1(field);
+            _loop_2(field);
         }
         return queriesMeta;
     }
@@ -53137,49 +53254,16 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * @publicApi
      */
     var Pipe = makeDecorator('Pipe', function (p) { return (__assign({ pure: true }, p)); }, undefined, undefined, function (type, meta) { return SWITCH_COMPILE_PIPE(type, meta); });
-    var initializeBaseDef = function (target) {
-        var constructor = target.constructor;
-        var inheritedBaseDef = constructor.ngBaseDef;
-        var baseDef = constructor.ngBaseDef = {
-            inputs: {},
-            outputs: {},
-            declaredInputs: {},
-        };
-        if (inheritedBaseDef) {
-            fillProperties(baseDef.inputs, inheritedBaseDef.inputs);
-            fillProperties(baseDef.outputs, inheritedBaseDef.outputs);
-            fillProperties(baseDef.declaredInputs, inheritedBaseDef.declaredInputs);
-        }
-    };
-    /**
-     * Does the work of creating the `ngBaseDef` property for the `Input` and `Output` decorators.
-     * @param key "inputs" or "outputs"
-     */
-    var updateBaseDefFromIOProp = function (getProp) {
-        return function (target, name) {
-            var args = [];
-            for (var _i = 2; _i < arguments.length; _i++) {
-                args[_i - 2] = arguments[_i];
-            }
-            var constructor = target.constructor;
-            if (!constructor.hasOwnProperty(NG_BASE_DEF)) {
-                initializeBaseDef(target);
-            }
-            var baseDef = constructor.ngBaseDef;
-            var defProp = getProp(baseDef);
-            defProp[name] = args[0] || name;
-        };
-    };
     /**
      * @Annotation
      * @publicApi
      */
-    var Input = makePropDecorator('Input', function (bindingPropertyName) { return ({ bindingPropertyName: bindingPropertyName }); }, undefined, updateBaseDefFromIOProp(function (baseDef) { return baseDef.inputs || {}; }));
+    var Input = makePropDecorator('Input', function (bindingPropertyName) { return ({ bindingPropertyName: bindingPropertyName }); });
     /**
      * @Annotation
      * @publicApi
      */
-    var Output = makePropDecorator('Output', function (bindingPropertyName) { return ({ bindingPropertyName: bindingPropertyName }); }, undefined, updateBaseDefFromIOProp(function (baseDef) { return baseDef.outputs || {}; }));
+    var Output = makePropDecorator('Output', function (bindingPropertyName) { return ({ bindingPropertyName: bindingPropertyName }); });
     /**
      * @Annotation
      * @publicApi
@@ -58570,7 +58654,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.14+5.sha-8ca208f.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-beta.14+6.sha-c7f1b0a.with-local-changes');
 
     /**
      * @license
