@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.14+15.sha-24c61cb.with-local-changes
+ * @license Angular v8.0.0-beta.14+16.sha-2e21997.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -17698,7 +17698,7 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.14+15.sha-24c61cb.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-beta.14+16.sha-2e21997.with-local-changes');
 
     /**
      * @license
@@ -31647,17 +31647,28 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
      */
     /**
      * Used for stringify render output in Ivy.
+     * Important! This function is very performance-sensitive and we should
+     * be extra careful not to introduce megamorphic reads in it.
      */
     function renderStringify(value) {
-        if (typeof value == 'function')
+        if (typeof value === 'function')
             return value.name || value;
-        if (typeof value == 'string')
+        if (typeof value === 'string')
             return value;
         if (value == null)
             return '';
-        if (typeof value == 'object' && typeof value.type == 'function')
-            return value.type.name || value.type;
         return '' + value;
+    }
+    /**
+     * Used to stringify a value so that it can be displayed in an error message.
+     * Important! This function contains a megamorphic read and should only be
+     * used for error messages.
+     */
+    function stringifyForError(value) {
+        if (typeof value === 'object' && value != null && typeof value.type === 'function') {
+            return value.type.name || value.type;
+        }
+        return renderStringify(value);
     }
     var defaultScheduler = (typeof requestAnimationFrame !== 'undefined' && requestAnimationFrame || // browser only
         setTimeout // everything else
@@ -33243,7 +33254,7 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
                 try {
                     var value = bloomHash();
                     if (value == null && !(flags & InjectFlags.Optional)) {
-                        throw new Error("No provider for " + renderStringify(token) + "!");
+                        throw new Error("No provider for " + stringifyForError(token) + "!");
                     }
                     else {
                         return value;
@@ -33339,7 +33350,7 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
             return notFoundValue;
         }
         else {
-            throw new Error("NodeInjector: NOT_FOUND [" + renderStringify(token) + "]");
+            throw new Error("NodeInjector: NOT_FOUND [" + stringifyForError(token) + "]");
         }
     }
     var NOT_FOUND = {};
@@ -33423,7 +33434,7 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
         if (isFactory(value)) {
             var factory = value;
             if (factory.resolving) {
-                throw new Error("Circular dep for " + renderStringify(tData[index]));
+                throw new Error("Circular dep for " + stringifyForError(tData[index]));
             }
             var previousIncludeViewProviders = setIncludeViewProviders(factory.canSeeViewProviders);
             factory.resolving = true;
@@ -34843,7 +34854,7 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
         return blueprint;
     }
     function createError(text, token) {
-        return new Error("Renderer: " + text + " [" + renderStringify(token) + "]");
+        return new Error("Renderer: " + text + " [" + stringifyForError(token) + "]");
     }
     /**
      * Locates the host native element, used for bootstrapping existing nodes into rendering pipeline.
@@ -36113,7 +36124,7 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
         if (throwOnNotFound === void 0) { throwOnNotFound = true; }
         var context = getLContext(target);
         if (!context && throwOnNotFound) {
-            throw new Error(ngDevMode ? "Unable to find context associated with " + renderStringify(target) :
+            throw new Error(ngDevMode ? "Unable to find context associated with " + stringifyForError(target) :
                 'Invalid ng target');
         }
         return context;
@@ -37359,7 +37370,7 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.14+15.sha-24c61cb.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-beta.14+16.sha-2e21997.with-local-changes');
 
     /**
      * @license
@@ -47942,7 +47953,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.14+15.sha-24c61cb.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-beta.14+16.sha-2e21997.with-local-changes');
 
     /**
      * @license
