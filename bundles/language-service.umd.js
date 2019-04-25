@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-beta.14+38.sha-abcb2cf.with-local-changes
+ * @license Angular v8.0.0-beta.14+39.sha-c61df39.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -17698,7 +17698,7 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-beta.14+38.sha-abcb2cf.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-beta.14+39.sha-c61df39.with-local-changes');
 
     /**
      * @license
@@ -37370,7 +37370,7 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-beta.14+38.sha-abcb2cf.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-beta.14+39.sha-c61df39.with-local-changes');
 
     /**
      * @license
@@ -44167,6 +44167,8 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * token.
      *
      * @publicApi
+     * @deprecated the `string` form of `loadChildren` is deprecated, and `SystemJsNgModuleLoaderConfig`
+     * is part of its implementation. See `LoadChildren` for more details.
      */
     var SystemJsNgModuleLoaderConfig = /** @class */ (function () {
         function SystemJsNgModuleLoaderConfig() {
@@ -44180,6 +44182,8 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
     /**
      * NgModuleFactoryLoader that uses SystemJS to load NgModuleFactory
      * @publicApi
+     * @deprecated the `string` form of `loadChildren` is deprecated, and `SystemJsNgModuleLoader` is
+     * part of its implementation. See `LoadChildren` for more details.
      */
     var SystemJsNgModuleLoader = /** @class */ (function () {
         function SystemJsNgModuleLoader(_compiler, config) {
@@ -47953,7 +47957,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-beta.14+38.sha-abcb2cf.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-beta.14+39.sha-c61df39.with-local-changes');
 
     /**
      * @license
