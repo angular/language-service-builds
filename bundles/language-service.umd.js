@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-rc.0+9.sha-876ceb3.with-local-changes
+ * @license Angular v8.0.0-rc.0+10.sha-f3ce8ee.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -7501,19 +7501,59 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
             localResolver = new DefaultLocalResolver();
         }
         var currValExpr = createCurrValueExpr(bindingId);
-        var stmts = [];
         var visitor = new _AstToIrVisitor(localResolver, implicitReceiver, bindingId, interpolationFunction);
         var outputExpr = expressionWithoutBuiltins.visit(visitor, _Mode.Expression);
-        if (visitor.temporaryCount) {
-            for (var i = 0; i < visitor.temporaryCount; i++) {
-                stmts.push(temporaryDeclaration(bindingId, i));
-            }
-        }
-        else if (form == BindingForm.TrySimple) {
+        var stmts = getStatementsFromVisitor(visitor, bindingId);
+        if (visitor.temporaryCount === 0 && form == BindingForm.TrySimple) {
             return new ConvertPropertyBindingResult([], outputExpr);
         }
         stmts.push(currValExpr.set(outputExpr).toDeclStmt(DYNAMIC_TYPE, [StmtModifier.Final]));
         return new ConvertPropertyBindingResult(stmts, currValExpr);
+    }
+    /**
+     * Given some expression, such as a binding or interpolation expression, and a context expression to
+     * look values up on, visit each facet of the given expression resolving values from the context
+     * expression such that a list of arguments can be derived from the found values that can be used as
+     * arguments to an external update instruction.
+     *
+     * @param localResolver The resolver to use to look up expressions by name appropriately
+     * @param contextVariableExpression The expression representing the context variable used to create
+     * the final argument expressions
+     * @param expressionWithArgumentsToExtract The expression to visit to figure out what values need to
+     * be resolved and what arguments list to build.
+     * @param bindingId A name prefix used to create temporary variable names if they're needed for the
+     * arguments generated
+     * @returns An array of expressions that can be passed as arguments to instruction expressions like
+     * `o.importExpr(R3.propertyInterpolate).callFn(result)`
+     */
+    function convertUpdateArguments(localResolver, contextVariableExpression, expressionWithArgumentsToExtract, bindingId) {
+        var visitor = new _AstToIrVisitor(localResolver, contextVariableExpression, bindingId, undefined);
+        var outputExpr = expressionWithArgumentsToExtract.visit(visitor, _Mode.Expression);
+        var stmts = getStatementsFromVisitor(visitor, bindingId);
+        // Removing the first argument, because it was a length for ViewEngine, not Ivy.
+        var args = outputExpr.args.slice(1);
+        if (expressionWithArgumentsToExtract instanceof Interpolation) {
+            // If we're dealing with an interpolation of 1 value with an empty prefix and suffix, reduce the
+            // args returned to just the value, because we're going to pass it to a special instruction.
+            var strings = expressionWithArgumentsToExtract.strings;
+            if (args.length === 3 && strings[0] === '' && strings[1] === '') {
+                // Single argument interpolate instructions.
+                args = [args[1]];
+            }
+            else if (args.length >= 19) {
+                // 19 or more arguments must be passed to the `interpolateV`-style instructions, which accept
+                // an array of arguments
+                args = [literalArr(args)];
+            }
+        }
+        return { stmts: stmts, args: args };
+    }
+    function getStatementsFromVisitor(visitor, bindingId) {
+        var stmts = [];
+        for (var i = 0; i < visitor.temporaryCount; i++) {
+            stmts.push(temporaryDeclaration(bindingId, i));
+        }
+        return stmts;
     }
     function convertBuiltins(converterFactory, ast) {
         var visitor = new _BuiltinAstConverter(converterFactory);
@@ -15945,17 +15985,8 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
                         _this.allocateBindingSlots(value_2);
                         if (inputType === 0 /* Property */) {
                             if (value_2 instanceof Interpolation) {
-                                // Interpolated properties
-                                var currValExpr = convertPropertyBinding(_this, implicit, value_2, _this.bindingContext(), BindingForm.TrySimple).currValExpr;
-                                var args_1 = currValExpr.args;
-                                args_1.shift(); // ViewEngine required a count, we don't need that.
-                                // For interpolations like attr="{{foo}}", we don't need ["", foo, ""], just [foo].
-                                if (args_1.length === 3 && isEmptyStringExpression(args_1[0]) &&
-                                    isEmptyStringExpression(args_1[2])) {
-                                    args_1 = [args_1[1]];
-                                }
-                                _this.updateInstruction(elementIndex, input.sourceSpan, propertyInterpolate(args_1.length), function () {
-                                    return __spread([literal(attrName_1)], args_1, params_2);
+                                _this.updateInstruction(elementIndex, input.sourceSpan, getPropertyInterpolationExpression(value_2), function () {
+                                    return __spread([literal(attrName_1)], _this.getUpdateInstructionArguments(variable(CONTEXT_NAME), value_2), params_2);
                                 });
                             }
                             else {
@@ -16197,6 +16228,19 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
             var valExpr = convertedPropertyBinding.currValExpr;
             return value instanceof Interpolation || skipBindFn ? valExpr :
                 importExpr(Identifiers$1.bind).callFn([valExpr]);
+        };
+        /**
+         * Gets a list of argument expressions to pass to an update instruction expression. Also updates
+         * the temp variables state with temp variables that were identified as needing to be created
+         * while visiting the arguments.
+         * @param contextExpression The expression for the context variable used to create arguments
+         * @param value The original expression we will be resolving an arguments list from.
+         */
+        TemplateDefinitionBuilder.prototype.getUpdateInstructionArguments = function (contextExpression, value) {
+            var _a;
+            var _b = convertUpdateArguments(this, contextExpression, value, this.bindingContext()), args = _b.args, stmts = _b.stmts;
+            (_a = this._tempVariables).push.apply(_a, __spread(stmts));
+            return args;
         };
         TemplateDefinitionBuilder.prototype.matchDirectives = function (tagName, elOrTpl) {
             var _this = this;
@@ -16678,14 +16722,12 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
             error("Invalid interpolation argument length " + args.length);
         return importExpr(Identifiers$1.interpolationV).callFn([literalArr(args)]);
     }
-    function isEmptyStringExpression(exp) {
-        return exp instanceof LiteralExpr && exp.value === '';
-    }
-    function propertyInterpolate(argsLength) {
-        if (argsLength % 2 !== 1) {
-            error("Invalid propertyInterpolate argument length " + argsLength);
-        }
-        switch (argsLength) {
+    /**
+     * Gets the instruction to generate for an interpolated property
+     * @param interpolation An Interpolation AST
+     */
+    function getPropertyInterpolationExpression(interpolation) {
+        switch (getInterpolationArgsLength(interpolation)) {
             case 1:
                 return Identifiers$1.propertyInterpolate;
             case 3:
@@ -16706,6 +16748,23 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
                 return Identifiers$1.propertyInterpolate8;
             default:
                 return Identifiers$1.propertyInterpolateV;
+        }
+    }
+    /**
+     * Gets the number of arguments expected to be passed to a generated instruction in the case of
+     * interpolation instructions.
+     * @param interpolation An interpolation ast
+     */
+    function getInterpolationArgsLength(interpolation) {
+        var expressions = interpolation.expressions, strings = interpolation.strings;
+        if (expressions.length === 1 && strings.length === 2 && strings[0] === '' && strings[1] === '') {
+            // If the interpolation has one interpolated value, but the prefix and suffix are both empty
+            // strings, we only pass one argument, to a special instruction like `propertyInterpolate` or
+            // `textInterpolate`.
+            return 1;
+        }
+        else {
+            return expressions.length + strings.length;
         }
     }
     /**
@@ -17692,7 +17751,7 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-rc.0+9.sha-876ceb3.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-rc.0+10.sha-f3ce8ee.with-local-changes');
 
     /**
      * @license
@@ -42403,10 +42462,6 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
     /// NEW INSTRUCTIONS
     /////////////////////////////////////////////////////////////////////
     /**
-     * Shared reference to a string, used in `ɵɵpropertyInterpolate`.
-     */
-    var EMPTY_STRING = '';
-    /**
      *
      * Update an interpolated property on an element with a lone bound value
      *
@@ -42431,11 +42486,12 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
      * @param prefix Static value used for concatenation only.
      * @param v0 Value checked for change.
      * @param suffix Static value used for concatenation only.
+     * @param sanitizer An optional sanitizer function
      * @returns itself, so that it may be chained.
      * @codeGenApi
      */
-    function ɵɵpropertyInterpolate(propName, v0) {
-        ɵɵpropertyInterpolate1(propName, EMPTY_STRING, v0, EMPTY_STRING);
+    function ɵɵpropertyInterpolate(propName, v0, sanitizer) {
+        ɵɵpropertyInterpolate1(propName, '', v0, '', sanitizer);
         return ɵɵpropertyInterpolate;
     }
     /**
@@ -42462,12 +42518,13 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
      * @param prefix Static value used for concatenation only.
      * @param v0 Value checked for change.
      * @param suffix Static value used for concatenation only.
+     * @param sanitizer An optional sanitizer function
      * @returns itself, so that it may be chained.
      * @codeGenApi
      */
-    function ɵɵpropertyInterpolate1(propName, prefix, v0, suffix) {
+    function ɵɵpropertyInterpolate1(propName, prefix, v0, suffix, sanitizer) {
         var index = getSelectedIndex();
-        elementPropertyInternal(index, propName, ɵɵinterpolation1(prefix, v0, suffix));
+        elementPropertyInternal(index, propName, ɵɵinterpolation1(prefix, v0, suffix), sanitizer);
         return ɵɵpropertyInterpolate1;
     }
     /**
@@ -42496,12 +42553,13 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
      * @param i0 Static value used for concatenation only.
      * @param v1 Value checked for change.
      * @param suffix Static value used for concatenation only.
+     * @param sanitizer An optional sanitizer function
      * @returns itself, so that it may be chained.
      * @codeGenApi
      */
-    function ɵɵpropertyInterpolate2(propName, prefix, v0, i0, v1, suffix) {
+    function ɵɵpropertyInterpolate2(propName, prefix, v0, i0, v1, suffix, sanitizer) {
         var index = getSelectedIndex();
-        elementPropertyInternal(index, propName, ɵɵinterpolation2(prefix, v0, i0, v1, suffix));
+        elementPropertyInternal(index, propName, ɵɵinterpolation2(prefix, v0, i0, v1, suffix), sanitizer);
         return ɵɵpropertyInterpolate2;
     }
     /**
@@ -42533,12 +42591,13 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
      * @param i1 Static value used for concatenation only.
      * @param v2 Value checked for change.
      * @param suffix Static value used for concatenation only.
+     * @param sanitizer An optional sanitizer function
      * @returns itself, so that it may be chained.
      * @codeGenApi
      */
-    function ɵɵpropertyInterpolate3(propName, prefix, v0, i0, v1, i1, v2, suffix) {
+    function ɵɵpropertyInterpolate3(propName, prefix, v0, i0, v1, i1, v2, suffix, sanitizer) {
         var index = getSelectedIndex();
-        elementPropertyInternal(index, propName, ɵɵinterpolation3(prefix, v0, i0, v1, i1, v2, suffix));
+        elementPropertyInternal(index, propName, ɵɵinterpolation3(prefix, v0, i0, v1, i1, v2, suffix), sanitizer);
         return ɵɵpropertyInterpolate3;
     }
     /**
@@ -42572,12 +42631,13 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
      * @param i2 Static value used for concatenation only.
      * @param v3 Value checked for change.
      * @param suffix Static value used for concatenation only.
+     * @param sanitizer An optional sanitizer function
      * @returns itself, so that it may be chained.
      * @codeGenApi
      */
-    function ɵɵpropertyInterpolate4(propName, prefix, v0, i0, v1, i1, v2, i2, v3, suffix) {
+    function ɵɵpropertyInterpolate4(propName, prefix, v0, i0, v1, i1, v2, i2, v3, suffix, sanitizer) {
         var index = getSelectedIndex();
-        elementPropertyInternal(index, propName, ɵɵinterpolation4(prefix, v0, i0, v1, i1, v2, i2, v3, suffix));
+        elementPropertyInternal(index, propName, ɵɵinterpolation4(prefix, v0, i0, v1, i1, v2, i2, v3, suffix), sanitizer);
         return ɵɵpropertyInterpolate4;
     }
     /**
@@ -42613,12 +42673,13 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
      * @param i3 Static value used for concatenation only.
      * @param v4 Value checked for change.
      * @param suffix Static value used for concatenation only.
+     * @param sanitizer An optional sanitizer function
      * @returns itself, so that it may be chained.
      * @codeGenApi
      */
-    function ɵɵpropertyInterpolate5(propName, prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, suffix) {
+    function ɵɵpropertyInterpolate5(propName, prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, suffix, sanitizer) {
         var index = getSelectedIndex();
-        elementPropertyInternal(index, propName, ɵɵinterpolation5(prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, suffix));
+        elementPropertyInternal(index, propName, ɵɵinterpolation5(prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, suffix), sanitizer);
         return ɵɵpropertyInterpolate5;
     }
     /**
@@ -42656,12 +42717,13 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
      * @param i4 Static value used for concatenation only.
      * @param v5 Value checked for change.
      * @param suffix Static value used for concatenation only.
+     * @param sanitizer An optional sanitizer function
      * @returns itself, so that it may be chained.
      * @codeGenApi
      */
-    function ɵɵpropertyInterpolate6(propName, prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, i4, v5, suffix) {
+    function ɵɵpropertyInterpolate6(propName, prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, i4, v5, suffix, sanitizer) {
         var index = getSelectedIndex();
-        elementPropertyInternal(index, propName, ɵɵinterpolation6(prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, i4, v5, suffix));
+        elementPropertyInternal(index, propName, ɵɵinterpolation6(prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, i4, v5, suffix), sanitizer);
         return ɵɵpropertyInterpolate6;
     }
     /**
@@ -42701,12 +42763,13 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
      * @param i5 Static value used for concatenation only.
      * @param v6 Value checked for change.
      * @param suffix Static value used for concatenation only.
+     * @param sanitizer An optional sanitizer function
      * @returns itself, so that it may be chained.
      * @codeGenApi
      */
-    function ɵɵpropertyInterpolate7(propName, prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, i4, v5, i5, v6, suffix) {
+    function ɵɵpropertyInterpolate7(propName, prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, i4, v5, i5, v6, suffix, sanitizer) {
         var index = getSelectedIndex();
-        elementPropertyInternal(index, propName, ɵɵinterpolation7(prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, i4, v5, i5, v6, suffix));
+        elementPropertyInternal(index, propName, ɵɵinterpolation7(prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, i4, v5, i5, v6, suffix), sanitizer);
         return ɵɵpropertyInterpolate7;
     }
     /**
@@ -42748,12 +42811,13 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
      * @param i6 Static value used for concatenation only.
      * @param v7 Value checked for change.
      * @param suffix Static value used for concatenation only.
+     * @param sanitizer An optional sanitizer function
      * @returns itself, so that it may be chained.
      * @codeGenApi
      */
-    function ɵɵpropertyInterpolate8(propName, prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, i4, v5, i5, v6, i6, v7, suffix) {
+    function ɵɵpropertyInterpolate8(propName, prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, i4, v5, i5, v6, i6, v7, suffix, sanitizer) {
         var index = getSelectedIndex();
-        elementPropertyInternal(index, propName, ɵɵinterpolation8(prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, i4, v5, i5, v6, i6, v7, suffix));
+        elementPropertyInternal(index, propName, ɵɵinterpolation8(prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, i4, v5, i5, v6, i6, v7, suffix), sanitizer);
         return ɵɵpropertyInterpolate8;
     }
     /**
@@ -42782,12 +42846,13 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
      * @param values The a collection of values and the strings inbetween those values, beginning with a
      * string prefix and ending with a string suffix.
      * (e.g. `['prefix', value0, '-', value1, '-', value2, ..., value99, 'suffix']`)
+     * @param sanitizer An optional sanitizer function
      * @returns itself, so that it may be chained.
      * @codeGenApi
      */
-    function ɵɵpropertyInterpolateV(propName, values) {
+    function ɵɵpropertyInterpolateV(propName, values, sanitizer) {
         var index = getSelectedIndex();
-        elementPropertyInternal(index, propName, ɵɵinterpolationV(values));
+        elementPropertyInternal(index, propName, ɵɵinterpolationV(values), sanitizer);
         return ɵɵpropertyInterpolateV;
     }
 
@@ -45044,7 +45109,7 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-rc.0+9.sha-876ceb3.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-rc.0+10.sha-f3ce8ee.with-local-changes');
 
     /**
      * @license
@@ -58687,7 +58752,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-rc.0+9.sha-876ceb3.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-rc.0+10.sha-f3ce8ee.with-local-changes');
 
     /**
      * @license
