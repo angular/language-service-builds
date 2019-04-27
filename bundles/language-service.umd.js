@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-rc.0+18.sha-c99d379.with-local-changes
+ * @license Angular v8.0.0-rc.0+38.sha-e5c3695.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -19,7 +19,7 @@ module.exports = function(provided) {
   return result;
 }
 
-define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs'], function (exports, path, ts, ts$1, fs) { 'use strict';
+define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs) { 'use strict';
 
     /*! *****************************************************************************
     Copyright (c) Microsoft Corporation. All rights reserved.
@@ -17766,7 +17766,7 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-rc.0+18.sha-c99d379.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-rc.0+38.sha-e5c3695.with-local-changes');
 
     /**
      * @license
@@ -37446,7 +37446,7 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-rc.0+18.sha-c99d379.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-rc.0+38.sha-e5c3695.with-local-changes');
 
     /**
      * @license
@@ -40502,7 +40502,7 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
     /**
      * Flattens an array in non-recursive way. Input arrays are not modified.
      */
-    function flatten$2(list) {
+    function flatten$2(list, mapFn) {
         var result = [];
         var i = 0;
         while (i < list.length) {
@@ -40517,7 +40517,7 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
                 }
             }
             else {
-                result.push(item);
+                result.push(mapFn ? mapFn(item) : item);
                 i++;
             }
         }
@@ -47856,7 +47856,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
     function diagnosticChainToDiagnosticChain(chain) {
         return {
             messageText: chain.message,
-            category: ts$1.DiagnosticCategory.Error,
+            category: ts.DiagnosticCategory.Error,
             code: 0,
             next: chain.next ? diagnosticChainToDiagnosticChain(chain.next) : undefined
         };
@@ -47873,7 +47873,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             start: d.span.start,
             length: d.span.end - d.span.start,
             messageText: diagnosticMessageToDiagnosticMessageText(d.message),
-            category: ts$1.DiagnosticCategory.Error,
+            category: ts.DiagnosticCategory.Error,
             code: 0,
             source: 'ng'
         };
@@ -48033,7 +48033,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-rc.0+18.sha-c99d379.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-rc.0+38.sha-e5c3695.with-local-changes');
 
     /**
      * @license
