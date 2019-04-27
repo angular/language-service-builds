@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-rc.0+18.sha-c99d379.with-local-changes
+ * @license Angular v8.0.0-rc.0+38.sha-e5c3695.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -19,7 +19,7 @@ module.exports = function(provided) {
   return result;
 }
 
-define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs'], function (exports, path, ts, ts$1, fs) { 'use strict';
+define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs) { 'use strict';
 
     /*! *****************************************************************************
     Copyright (c) Microsoft Corporation. All rights reserved.
@@ -17751,7 +17751,7 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-rc.0+18.sha-c99d379.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-rc.0+38.sha-e5c3695.with-local-changes');
 
     /**
      * @license
@@ -38876,17 +38876,23 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
         attrName = normalizeDebugBindingName(attrName);
         var debugValue = normalizeDebugBindingValue(value);
         if (type === 3 /* Element */) {
-            isProceduralRenderer(renderer) ?
-                renderer.setAttribute(element, attrName, debugValue) :
-                element.setAttribute(attrName, debugValue);
-        }
-        else if (value !== undefined) {
-            var value_1 = "bindings=" + JSON.stringify((_a = {}, _a[attrName] = debugValue, _a), null, 2);
-            if (isProceduralRenderer(renderer)) {
-                renderer.setValue(element, value_1);
+            if (value == null) {
+                isProceduralRenderer(renderer) ? renderer.removeAttribute(element, attrName) :
+                    element.removeAttribute(attrName);
             }
             else {
-                element.textContent = value_1;
+                isProceduralRenderer(renderer) ?
+                    renderer.setAttribute(element, attrName, debugValue) :
+                    element.setAttribute(attrName, debugValue);
+            }
+        }
+        else {
+            var textContent = "bindings=" + JSON.stringify((_a = {}, _a[attrName] = debugValue, _a), null, 2);
+            if (isProceduralRenderer(renderer)) {
+                renderer.setValue(element, textContent);
+            }
+            else {
+                element.textContent = textContent;
             }
         }
     }
@@ -45111,7 +45117,7 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-rc.0+18.sha-c99d379.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-rc.0+38.sha-e5c3695.with-local-changes');
 
     /**
      * @license
@@ -48166,7 +48172,7 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
     /**
      * Flattens an array in non-recursive way. Input arrays are not modified.
      */
-    function flatten$2(list) {
+    function flatten$2(list, mapFn) {
         var result = [];
         var i = 0;
         while (i < list.length) {
@@ -48181,7 +48187,7 @@ define(['exports', 'path', 'typescript', 'typescript/lib/tsserverlibrary', 'fs']
                 }
             }
             else {
-                result.push(item);
+                result.push(mapFn ? mapFn(item) : item);
                 i++;
             }
         }
@@ -52710,7 +52716,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
     function compileNgModuleDefs(moduleType, ngModule) {
         ngDevMode && assertDefined(moduleType, 'Required value moduleType');
         ngDevMode && assertDefined(ngModule, 'Required value ngModule');
-        var declarations = flatten$3(ngModule.declarations || EMPTY_ARRAY$3);
+        var declarations = flatten$2(ngModule.declarations || EMPTY_ARRAY$3);
         var ngModuleDef = null;
         Object.defineProperty(moduleType, NG_MODULE_DEF, {
             configurable: true,
@@ -52718,14 +52724,14 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 if (ngModuleDef === null) {
                     ngModuleDef = getCompilerFacade().compileNgModule(angularCoreEnv, "ng://" + moduleType.name + "/ngModuleDef.js", {
                         type: moduleType,
-                        bootstrap: flatten$3(ngModule.bootstrap || EMPTY_ARRAY$3, resolveForwardRef$1),
+                        bootstrap: flatten$2(ngModule.bootstrap || EMPTY_ARRAY$3, resolveForwardRef$1),
                         declarations: declarations.map(resolveForwardRef$1),
-                        imports: flatten$3(ngModule.imports || EMPTY_ARRAY$3, resolveForwardRef$1)
+                        imports: flatten$2(ngModule.imports || EMPTY_ARRAY$3, resolveForwardRef$1)
                             .map(expandModuleWithProviders),
-                        exports: flatten$3(ngModule.exports || EMPTY_ARRAY$3, resolveForwardRef$1)
+                        exports: flatten$2(ngModule.exports || EMPTY_ARRAY$3, resolveForwardRef$1)
                             .map(expandModuleWithProviders),
                         emitInline: true,
-                        schemas: ngModule.schemas ? flatten$3(ngModule.schemas) : null,
+                        schemas: ngModule.schemas ? flatten$2(ngModule.schemas) : null,
                     });
                 }
                 return ngModuleDef;
@@ -52766,16 +52772,17 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         var errors = [];
         var declarations = maybeUnwrapFn(ngModuleDef.declarations);
         var imports = maybeUnwrapFn(ngModuleDef.imports);
+        flatten$2(imports, unwrapModuleWithProvidersImports).forEach(verifySemanticsOfNgModuleDef);
         var exports = maybeUnwrapFn(ngModuleDef.exports);
         declarations.forEach(verifyDeclarationsHaveDefinitions);
-        var combinedDeclarations = __spread(declarations.map(resolveForwardRef$1), flatten$3(imports.map(computeCombinedExports), resolveForwardRef$1));
+        var combinedDeclarations = __spread(declarations.map(resolveForwardRef$1), flatten$2(imports.map(computeCombinedExports), resolveForwardRef$1));
         exports.forEach(verifyExportsAreDeclaredOrReExported);
         declarations.forEach(verifyDeclarationIsUnique);
         declarations.forEach(verifyComponentEntryComponentsIsPartOfNgModule);
         var ngModule = getAnnotation(moduleType, 'NgModule');
         if (ngModule) {
             ngModule.imports &&
-                flatten$3(ngModule.imports, unwrapModuleWithProvidersImports)
+                flatten$2(ngModule.imports, unwrapModuleWithProvidersImports)
                     .forEach(verifySemanticsOfNgModuleDef);
             ngModule.bootstrap && ngModule.bootstrap.forEach(verifyCorrectBootstrapType);
             ngModule.bootstrap && ngModule.bootstrap.forEach(verifyComponentIsPartOfNgModule);
@@ -52889,7 +52896,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
     function computeCombinedExports(type) {
         type = resolveForwardRef$1(type);
         var ngModuleDef = getNgModuleDef(type, true);
-        return __spread(flatten$3(maybeUnwrapFn(ngModuleDef.exports).map(function (type) {
+        return __spread(flatten$2(maybeUnwrapFn(ngModuleDef.exports).map(function (type) {
             var ngModuleDef = getNgModuleDef(type);
             if (ngModuleDef) {
                 verifySemanticsOfNgModuleDef(type);
@@ -52906,7 +52913,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * the `ngSelectorScope` property of the declared type.
      */
     function setScopeOnDeclaredComponents(moduleType, ngModule) {
-        var declarations = flatten$3(ngModule.declarations || EMPTY_ARRAY$3);
+        var declarations = flatten$2(ngModule.declarations || EMPTY_ARRAY$3);
         var transitiveScopes = transitiveScopesFor(moduleType);
         declarations.forEach(function (declaration) {
             if (declaration.hasOwnProperty(NG_COMPONENT_DEF)) {
@@ -53020,18 +53027,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         });
         def.transitiveCompileScopes = scopes;
         return scopes;
-    }
-    function flatten$3(values, mapFn) {
-        var out = [];
-        values.forEach(function (value) {
-            if (Array.isArray(value)) {
-                out.push.apply(out, __spread(flatten$3(value, mapFn)));
-            }
-            else {
-                out.push(mapFn ? mapFn(value) : value);
-            }
-        });
-        return out;
     }
     function expandModuleWithProviders(value) {
         if (isModuleWithProviders(value)) {
@@ -58577,7 +58572,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
     function diagnosticChainToDiagnosticChain(chain) {
         return {
             messageText: chain.message,
-            category: ts$1.DiagnosticCategory.Error,
+            category: ts.DiagnosticCategory.Error,
             code: 0,
             next: chain.next ? diagnosticChainToDiagnosticChain(chain.next) : undefined
         };
@@ -58594,7 +58589,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             start: d.span.start,
             length: d.span.end - d.span.start,
             messageText: diagnosticMessageToDiagnosticMessageText(d.message),
-            category: ts$1.DiagnosticCategory.Error,
+            category: ts.DiagnosticCategory.Error,
             code: 0,
             source: 'ng'
         };
@@ -58754,7 +58749,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-rc.0+18.sha-c99d379.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-rc.0+38.sha-e5c3695.with-local-changes');
 
     /**
      * @license
