@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-rc.0+60.sha-6701250.with-local-changes
+ * @license Angular v8.0.0-rc.0+62.sha-05eabb1.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -17751,7 +17751,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-rc.0+60.sha-6701250.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-rc.0+62.sha-05eabb1.with-local-changes');
 
     /**
      * @license
@@ -45117,7 +45117,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-rc.0+60.sha-6701250.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-rc.0+62.sha-05eabb1.with-local-changes');
 
     /**
      * @license
@@ -58705,39 +58705,50 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             if (base && base.length) {
                 return base;
             }
-            return tryOperation('get definition', function () {
-                var e_3, _a;
-                var ours = ls.getDefinitionAt(fileName, position);
-                var combined;
-                if (ours && ours.length) {
-                    combined = base && base.concat([]) || [];
-                    try {
-                        for (var ours_1 = __values(ours), ours_1_1 = ours_1.next(); !ours_1_1.done; ours_1_1 = ours_1.next()) {
-                            var loc = ours_1_1.value;
-                            combined.push({
-                                fileName: loc.fileName,
-                                textSpan: { start: loc.span.start, length: loc.span.end - loc.span.start },
-                                name: '',
-                                // TODO: remove any and fix type error.
-                                kind: 'definition',
-                                containerName: loc.fileName,
-                                containerKind: 'file',
-                            });
-                        }
-                    }
-                    catch (e_3_1) { e_3 = { error: e_3_1 }; }
-                    finally {
-                        try {
-                            if (ours_1_1 && !ours_1_1.done && (_a = ours_1.return)) _a.call(ours_1);
-                        }
-                        finally { if (e_3) throw e_3.error; }
-                    }
-                }
-                else {
-                    combined = base;
-                }
-                return combined;
-            }) || [];
+            var ours = ls.getDefinitionAt(fileName, position);
+            if (ours && ours.length) {
+                return ours.map(function (loc) {
+                    return {
+                        fileName: loc.fileName,
+                        textSpan: {
+                            start: loc.span.start,
+                            length: loc.span.end - loc.span.start,
+                        },
+                        name: '',
+                        kind: ts.ScriptElementKind.unknown,
+                        containerName: loc.fileName,
+                        containerKind: ts.ScriptElementKind.unknown,
+                    };
+                });
+            }
+        };
+        proxy.getDefinitionAndBoundSpan = function (fileName, position) {
+            var base = oldLS.getDefinitionAndBoundSpan(fileName, position);
+            if (base && base.definitions && base.definitions.length) {
+                return base;
+            }
+            var ours = ls.getDefinitionAt(fileName, position);
+            if (ours && ours.length) {
+                return {
+                    definitions: ours.map(function (loc) {
+                        return {
+                            fileName: loc.fileName,
+                            textSpan: {
+                                start: loc.span.start,
+                                length: loc.span.end - loc.span.start,
+                            },
+                            name: '',
+                            kind: ts.ScriptElementKind.unknown,
+                            containerName: loc.fileName,
+                            containerKind: ts.ScriptElementKind.unknown,
+                        };
+                    }),
+                    textSpan: {
+                        start: ours[0].span.start,
+                        length: ours[0].span.end - ours[0].span.start,
+                    },
+                };
+            }
         };
         return proxy;
     }
@@ -58749,7 +58760,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-rc.0+60.sha-6701250.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-rc.0+62.sha-05eabb1.with-local-changes');
 
     /**
      * @license
