@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-rc.0+69.sha-00ffc03.with-local-changes
+ * @license Angular v8.0.0-rc.0+70.sha-ad94e02.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -17755,7 +17755,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-rc.0+69.sha-00ffc03.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-rc.0+70.sha-ad94e02.with-local-changes');
 
     /**
      * @license
@@ -32413,7 +32413,13 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     // PARENT, NEXT, QUERIES and T_HOST are indices 3, 4, 5 and 6.
     // As we already have these constants in LView, we don't need to re-create them.
     var NATIVE = 7;
-    var VIEWS = 8;
+    /**
+     * Size of LContainer's header. Represents the index after which all views in the
+     * container will be inserted. We need to keep a record of current views so we know
+     * which views are already in the DOM (and don't need to be re-added) and so we can
+     * remove views from the DOM when they are no longer required.
+     */
+    var CONTAINER_HEADER_OFFSET = 8;
 
     /**
      * @license
@@ -36010,7 +36016,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         });
         Object.defineProperty(LContainerDebug.prototype, "views", {
             get: function () {
-                return this._raw_lContainer[VIEWS].map(toDebug);
+                return this._raw_lContainer.slice(CONTAINER_HEADER_OFFSET)
+                    .map(toDebug);
             },
             enumerable: true,
             configurable: true
@@ -39323,7 +39330,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             null,
             tNode,
             native,
-            [],
         ];
         ngDevMode && attachLContainerDebug(lContainer);
         return lContainer;
@@ -39337,10 +39343,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             // Note: current can be an LView or an LContainer instance, but here we are only interested
             // in LContainer. We can tell it's an LContainer because its length is less than the LView
             // header.
-            if (current.length < HEADER_OFFSET && current[ACTIVE_INDEX] === -1) {
-                var container = current;
-                for (var i = 0; i < container[VIEWS].length; i++) {
-                    var dynamicViewData = container[VIEWS][i];
+            if (current[ACTIVE_INDEX] === -1 && isLContainer(current)) {
+                for (var i = CONTAINER_HEADER_OFFSET; i < current.length; i++) {
+                    var dynamicViewData = current[i];
                     // The directives and pipes are not needed here as an existing view is only being refreshed.
                     ngDevMode && assertDefined(dynamicViewData[TVIEW], 'TView must be allocated');
                     renderEmbeddedTemplate(dynamicViewData, dynamicViewData[TVIEW], dynamicViewData[CONTEXT]);
@@ -39842,8 +39847,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 if (isLContainer(nodeOrContainer)) {
                     // This element has an LContainer, and its comment needs to be handled
                     executeNodeAction(action, renderer, renderParent, nodeOrContainer[NATIVE], tNode, beforeNode);
-                    if (nodeOrContainer[VIEWS].length) {
-                        currentView = nodeOrContainer[VIEWS][0];
+                    var firstView = nodeOrContainer[CONTAINER_HEADER_OFFSET];
+                    if (firstView) {
+                        currentView = firstView;
                         nextTNode = currentView[TVIEW].node;
                         // When the walker enters a container, then the beforeNode has to become the local native
                         // comment node.
@@ -39854,8 +39860,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             else if (tNode.type === 0 /* Container */) {
                 var lContainer = currentView[tNode.index];
                 executeNodeAction(action, renderer, renderParent, lContainer[NATIVE], tNode, beforeNode);
-                if (lContainer[VIEWS].length) {
-                    currentView = lContainer[VIEWS][0];
+                var firstView = lContainer[CONTAINER_HEADER_OFFSET];
+                if (firstView) {
+                    currentView = firstView;
                     nextTNode = currentView[TVIEW].node;
                     // When the walker enters a container, then the beforeNode has to become the local native
                     // comment node.
@@ -40031,9 +40038,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             else {
                 ngDevMode && assertLContainer(lViewOrLContainer);
                 // If container, traverse down to its first LView.
-                var views = lViewOrLContainer[VIEWS];
-                if (views.length > 0)
-                    next = views[0];
+                var firstView = lViewOrLContainer[CONTAINER_HEADER_OFFSET];
+                if (firstView)
+                    next = firstView;
             }
             if (!next) {
                 // Only clean up view when moving to the side or up, as destroy hooks
@@ -40063,18 +40070,18 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     function insertView(lView, lContainer, index) {
         ngDevMode && assertLView(lView);
         ngDevMode && assertLContainer(lContainer);
-        var views = lContainer[VIEWS];
-        ngDevMode && assertDefined(views, 'Container must have views');
+        var indexInContainer = CONTAINER_HEADER_OFFSET + index;
+        var containerLength = lContainer.length;
         if (index > 0) {
             // This is a new view, we need to add it to the children.
-            views[index - 1][NEXT] = lView;
+            lContainer[indexInContainer - 1][NEXT] = lView;
         }
-        if (index < views.length) {
-            lView[NEXT] = views[index];
-            views.splice(index, 0, lView);
+        if (index < containerLength - CONTAINER_HEADER_OFFSET) {
+            lView[NEXT] = lContainer[indexInContainer];
+            lContainer.splice(CONTAINER_HEADER_OFFSET + index, 0, lView);
         }
         else {
-            views.push(lView);
+            lContainer.push(lView);
             lView[NEXT] = null;
         }
         lView[PARENT] = lContainer;
@@ -40096,13 +40103,15 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @returns Detached LView instance.
      */
     function detachView(lContainer, removeIndex) {
-        var views = lContainer[VIEWS];
-        var viewToDetach = views[removeIndex];
+        if (lContainer.length <= CONTAINER_HEADER_OFFSET)
+            return;
+        var indexInContainer = CONTAINER_HEADER_OFFSET + removeIndex;
+        var viewToDetach = lContainer[indexInContainer];
         if (viewToDetach) {
             if (removeIndex > 0) {
-                views[removeIndex - 1][NEXT] = viewToDetach[NEXT];
+                lContainer[indexInContainer - 1][NEXT] = viewToDetach[NEXT];
             }
-            views.splice(removeIndex, 1);
+            lContainer.splice(CONTAINER_HEADER_OFFSET + removeIndex, 1);
             addRemoveViewFromContainer(viewToDetach, false);
             if ((viewToDetach[FLAGS] & 128 /* Attached */) &&
                 !(viewToDetach[FLAGS] & 256 /* Destroyed */) && viewToDetach[QUERIES]) {
@@ -40122,11 +40131,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @param removeIndex The index of the view to remove
      */
     function removeView(lContainer, removeIndex) {
-        var view = lContainer[VIEWS][removeIndex];
-        if (view) {
-            detachView(lContainer, removeIndex);
-            destroyLView(view);
-        }
+        var detachedView = detachView(lContainer, removeIndex);
+        detachedView && destroyLView(detachedView);
     }
     /**
      * A standalone function which destroys an LView,
@@ -40383,9 +40389,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     function getNativeAnchorNode(parentTNode, lView) {
         if (parentTNode.type === 2 /* View */) {
             var lContainer = getLContainer(parentTNode, lView);
-            var views = lContainer[VIEWS];
-            var index = views.indexOf(lView);
-            return getBeforeNodeForView(index, views, lContainer[NATIVE]);
+            var index = lContainer.indexOf(lView, CONTAINER_HEADER_OFFSET) - CONTAINER_HEADER_OFFSET;
+            return getBeforeNodeForView(index, lContainer);
         }
         else if (parentTNode.type === 4 /* ElementContainer */ ||
             parentTNode.type === 5 /* IcuContainer */) {
@@ -40443,9 +40448,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         }
         return tNode;
     }
-    function getBeforeNodeForView(index, views, containerNative) {
-        if (index + 1 < views.length) {
-            var view = views[index + 1];
+    function getBeforeNodeForView(index, lContainer) {
+        var containerNative = lContainer[NATIVE];
+        if (index + 1 < lContainer.length - CONTAINER_HEADER_OFFSET) {
+            var view = lContainer[CONTAINER_HEADER_OFFSET + index + 1];
             var viewTNode = view[T_HOST];
             return viewTNode.child ? getNativeByTNode(viewTNode.child, view) : containerNative;
         }
@@ -40522,9 +40528,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             // Alternatively a container is projected at the root of a component's template
             // and can't be re-projected (as not content of any component).
             // Assign the final projection location in those cases.
-            var views = nodeOrContainer[VIEWS];
-            for (var i = 0; i < views.length; i++) {
-                addRemoveViewFromContainer(views[i], true, nodeOrContainer[NATIVE]);
+            for (var i = CONTAINER_HEADER_OFFSET; i < nodeOrContainer.length; i++) {
+                addRemoveViewFromContainer(nodeOrContainer[i], true, nodeOrContainer[NATIVE]);
             }
         }
         else {
@@ -40642,7 +40647,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         var lContainer = getLView()[previousOrParentTNode.index];
         var nextIndex = lContainer[ACTIVE_INDEX];
         // remove extra views at the end of the container
-        while (nextIndex < lContainer[VIEWS].length) {
+        while (nextIndex < lContainer.length - CONTAINER_HEADER_OFFSET) {
             removeView(lContainer, nextIndex);
         }
     }
@@ -41532,18 +41537,16 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @param lContainer to search for views
      * @param startIdx starting index in the views array to search from
      * @param viewBlockId exact view block id to look for
-     * @returns index of a found view or -1 if not found
      */
     function scanForView(lContainer, startIdx, viewBlockId) {
-        var views = lContainer[VIEWS];
-        for (var i = startIdx; i < views.length; i++) {
-            var viewAtPositionId = views[i][TVIEW].id;
+        for (var i = startIdx + CONTAINER_HEADER_OFFSET; i < lContainer.length; i++) {
+            var viewAtPositionId = lContainer[i][TVIEW].id;
             if (viewAtPositionId === viewBlockId) {
-                return views[i];
+                return lContainer[i];
             }
             else if (viewAtPositionId < viewBlockId) {
                 // found a view that should not be at this position - remove
-                removeView(lContainer, i);
+                removeView(lContainer, i - CONTAINER_HEADER_OFFSET);
             }
             else {
                 // found a view with id greater than the one we are searching for
@@ -44833,13 +44836,18 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                     configurable: true
                 });
                 ViewContainerRef_.prototype.clear = function () {
-                    while (this._lContainer[VIEWS].length) {
+                    while (this.length) {
                         this.remove(0);
                     }
                 };
                 ViewContainerRef_.prototype.get = function (index) { return this._viewRefs[index] || null; };
                 Object.defineProperty(ViewContainerRef_.prototype, "length", {
-                    get: function () { return this._lContainer[VIEWS].length; },
+                    get: function () {
+                        // Note that if there are no views, the container
+                        // length will be smaller than the header offset.
+                        var viewAmount = this._lContainer.length - CONTAINER_HEADER_OFFSET;
+                        return viewAmount > 0 ? viewAmount : 0;
+                    },
                     enumerable: true,
                     configurable: true
                 });
@@ -44872,7 +44880,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                         return this.move(viewRef, adjustedIdx);
                     }
                     insertView(lView, this._lContainer, adjustedIdx);
-                    var beforeNode = getBeforeNodeForView(adjustedIdx, this._lContainer[VIEWS], this._lContainer[NATIVE]);
+                    var beforeNode = getBeforeNodeForView(adjustedIdx, this._lContainer);
                     addRemoveViewFromContainer(lView, true, beforeNode);
                     viewRef.attachToViewContainerRef(this);
                     this._viewRefs.splice(adjustedIdx, 0, viewRef);
@@ -44903,12 +44911,12 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 ViewContainerRef_.prototype._adjustIndex = function (index, shift) {
                     if (shift === void 0) { shift = 0; }
                     if (index == null) {
-                        return this._lContainer[VIEWS].length + shift;
+                        return this.length + shift;
                     }
                     if (ngDevMode) {
                         assertGreaterThan(index, -1, 'index must be positive');
                         // +1 because it's legal to insert at the end.
-                        assertLessThan(index, this._lContainer[VIEWS].length + 1 + shift, 'index');
+                        assertLessThan(index, this.length + 1 + shift, 'index');
                     }
                     return index;
                 };
@@ -45122,7 +45130,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-rc.0+69.sha-00ffc03.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-rc.0+70.sha-ad94e02.with-local-changes');
 
     /**
      * @license
@@ -55634,8 +55642,8 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * @param rootNativeNode the root native node on which prediccate shouold not be matched
      */
     function _queryNodeChildrenInContainerR3(lContainer, predicate, matches, elementsOnly, rootNativeNode) {
-        for (var i = 0; i < lContainer[VIEWS].length; i++) {
-            var childView = lContainer[VIEWS][i];
+        for (var i = CONTAINER_HEADER_OFFSET; i < lContainer.length; i++) {
+            var childView = lContainer[i];
             _queryNodeChildrenR3(childView[TVIEW].node, childView, predicate, matches, elementsOnly, rootNativeNode);
         }
     }
@@ -58772,7 +58780,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-rc.0+69.sha-00ffc03.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-rc.0+70.sha-ad94e02.with-local-changes');
 
     /**
      * @license
