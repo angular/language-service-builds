@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-rc.0+72.sha-b15a403.with-local-changes
+ * @license Angular v8.0.0-rc.0+73.sha-b1506a3.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -17770,7 +17770,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-rc.0+72.sha-b15a403.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-rc.0+73.sha-b1506a3.with-local-changes');
 
     /**
      * @license
@@ -29647,16 +29647,16 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 var flags = InjectFlags.Default;
                 for (var j = 0; j < arg.length; j++) {
                     var meta = arg[j];
-                    if (meta instanceof Optional || meta.ngMetadataName === 'Optional') {
+                    if (meta instanceof Optional || meta.ngMetadataName === 'Optional' || meta === Optional) {
                         flags |= InjectFlags.Optional;
                     }
-                    else if (meta instanceof SkipSelf || meta.ngMetadataName === 'SkipSelf') {
+                    else if (meta instanceof SkipSelf || meta.ngMetadataName === 'SkipSelf' || meta === SkipSelf) {
                         flags |= InjectFlags.SkipSelf;
                     }
-                    else if (meta instanceof Self || meta.ngMetadataName === 'Self') {
+                    else if (meta instanceof Self || meta.ngMetadataName === 'Self' || meta === Self) {
                         flags |= InjectFlags.Self;
                     }
-                    else if (meta instanceof Inject) {
+                    else if (meta instanceof Inject || meta === Inject) {
                         type = meta.token;
                     }
                     else {
@@ -37458,7 +37458,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-rc.0+72.sha-b15a403.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-rc.0+73.sha-b1506a3.with-local-changes');
 
     /**
      * @license
@@ -48056,7 +48056,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-rc.0+72.sha-b15a403.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-rc.0+73.sha-b1506a3.with-local-changes');
 
     /**
      * @license
