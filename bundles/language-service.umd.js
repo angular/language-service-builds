@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-rc.0+66.sha-68ff2cc.with-local-changes
+ * @license Angular v8.0.0-rc.0+73.sha-b1506a3.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -17770,7 +17770,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-rc.0+66.sha-68ff2cc.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-rc.0+73.sha-b1506a3.with-local-changes');
 
     /**
      * @license
@@ -29638,7 +29638,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     function injectArgs(types) {
         var args = [];
         for (var i = 0; i < types.length; i++) {
-            var arg = types[i];
+            var arg = resolveForwardRef$1(types[i]);
             if (Array.isArray(arg)) {
                 if (arg.length === 0) {
                     throw new Error('Arguments array must have arguments.');
@@ -29647,16 +29647,16 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 var flags = InjectFlags.Default;
                 for (var j = 0; j < arg.length; j++) {
                     var meta = arg[j];
-                    if (meta instanceof Optional || meta.ngMetadataName === 'Optional') {
+                    if (meta instanceof Optional || meta.ngMetadataName === 'Optional' || meta === Optional) {
                         flags |= InjectFlags.Optional;
                     }
-                    else if (meta instanceof SkipSelf || meta.ngMetadataName === 'SkipSelf') {
+                    else if (meta instanceof SkipSelf || meta.ngMetadataName === 'SkipSelf' || meta === SkipSelf) {
                         flags |= InjectFlags.SkipSelf;
                     }
-                    else if (meta instanceof Self || meta.ngMetadataName === 'Self') {
+                    else if (meta instanceof Self || meta.ngMetadataName === 'Self' || meta === Self) {
                         flags |= InjectFlags.Self;
                     }
-                    else if (meta instanceof Inject) {
+                    else if (meta instanceof Inject || meta === Inject) {
                         type = meta.token;
                     }
                     else {
@@ -31879,7 +31879,13 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     // PARENT, NEXT, QUERIES and T_HOST are indices 3, 4, 5 and 6.
     // As we already have these constants in LView, we don't need to re-create them.
     var NATIVE = 7;
-    var VIEWS = 8;
+    /**
+     * Size of LContainer's header. Represents the index after which all views in the
+     * container will be inserted. We need to keep a record of current views so we know
+     * which views are already in the DOM (and don't need to be re-added) and so we can
+     * remove views from the DOM when they are no longer required.
+     */
+    var CONTAINER_HEADER_OFFSET = 8;
 
     /**
      * @license
@@ -34169,7 +34175,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         });
         Object.defineProperty(LContainerDebug.prototype, "views", {
             get: function () {
-                return this._raw_lContainer[VIEWS].map(toDebug);
+                return this._raw_lContainer.slice(CONTAINER_HEADER_OFFSET)
+                    .map(toDebug);
             },
             enumerable: true,
             configurable: true
@@ -35099,10 +35106,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             // Note: current can be an LView or an LContainer instance, but here we are only interested
             // in LContainer. We can tell it's an LContainer because its length is less than the LView
             // header.
-            if (current.length < HEADER_OFFSET && current[ACTIVE_INDEX] === -1) {
-                var container = current;
-                for (var i = 0; i < container[VIEWS].length; i++) {
-                    var dynamicViewData = container[VIEWS][i];
+            if (current[ACTIVE_INDEX] === -1 && isLContainer(current)) {
+                for (var i = CONTAINER_HEADER_OFFSET; i < current.length; i++) {
+                    var dynamicViewData = current[i];
                     // The directives and pipes are not needed here as an existing view is only being refreshed.
                     ngDevMode && assertDefined(dynamicViewData[TVIEW], 'TView must be allocated');
                     renderEmbeddedTemplate(dynamicViewData, dynamicViewData[TVIEW], dynamicViewData[CONTEXT]);
@@ -35408,8 +35414,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 if (isLContainer(nodeOrContainer)) {
                     // This element has an LContainer, and its comment needs to be handled
                     executeNodeAction(action, renderer, renderParent, nodeOrContainer[NATIVE], tNode, beforeNode);
-                    if (nodeOrContainer[VIEWS].length) {
-                        currentView = nodeOrContainer[VIEWS][0];
+                    var firstView = nodeOrContainer[CONTAINER_HEADER_OFFSET];
+                    if (firstView) {
+                        currentView = firstView;
                         nextTNode = currentView[TVIEW].node;
                         // When the walker enters a container, then the beforeNode has to become the local native
                         // comment node.
@@ -35420,8 +35427,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             else if (tNode.type === 0 /* Container */) {
                 var lContainer = currentView[tNode.index];
                 executeNodeAction(action, renderer, renderParent, lContainer[NATIVE], tNode, beforeNode);
-                if (lContainer[VIEWS].length) {
-                    currentView = lContainer[VIEWS][0];
+                var firstView = lContainer[CONTAINER_HEADER_OFFSET];
+                if (firstView) {
+                    currentView = firstView;
                     nextTNode = currentView[TVIEW].node;
                     // When the walker enters a container, then the beforeNode has to become the local native
                     // comment node.
@@ -35585,9 +35593,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             else {
                 ngDevMode && assertLContainer(lViewOrLContainer);
                 // If container, traverse down to its first LView.
-                var views = lViewOrLContainer[VIEWS];
-                if (views.length > 0)
-                    next = views[0];
+                var firstView = lViewOrLContainer[CONTAINER_HEADER_OFFSET];
+                if (firstView)
+                    next = firstView;
             }
             if (!next) {
                 // Only clean up view when moving to the side or up, as destroy hooks
@@ -37450,7 +37458,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-rc.0+66.sha-68ff2cc.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-rc.0+73.sha-b1506a3.with-local-changes');
 
     /**
      * @license
@@ -44905,8 +44913,8 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * @param rootNativeNode the root native node on which prediccate shouold not be matched
      */
     function _queryNodeChildrenInContainerR3(lContainer, predicate, matches, elementsOnly, rootNativeNode) {
-        for (var i = 0; i < lContainer[VIEWS].length; i++) {
-            var childView = lContainer[VIEWS][i];
+        for (var i = CONTAINER_HEADER_OFFSET; i < lContainer.length; i++) {
+            var childView = lContainer[i];
             _queryNodeChildrenR3(childView[TVIEW].node, childView, predicate, matches, elementsOnly, rootNativeNode);
         }
     }
@@ -48048,7 +48056,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-rc.0+66.sha-68ff2cc.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-rc.0+73.sha-b1506a3.with-local-changes');
 
     /**
      * @license
