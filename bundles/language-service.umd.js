@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-rc.0+101.sha-345a3cd.with-local-changes
+ * @license Angular v8.0.0-rc.0+102.sha-392473e.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -17765,7 +17765,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-rc.0+101.sha-345a3cd.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-rc.0+102.sha-392473e.with-local-changes');
 
     /**
      * @license
@@ -30248,7 +30248,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                         // Can't happen - either hasAProvider will be false, or one of the providers will be set.
                         throw new Error("Unreachable state.");
                     }
-                    def = getCompilerFacade().compileInjectable(angularCoreDiEnv, "ng://" + type.name + "/ngInjectableDef.js", compilerMeta);
+                    def = getCompilerFacade().compileInjectable(angularCoreDiEnv, "ng:///" + type.name + "/ngInjectableDef.js", compilerMeta);
                 }
                 return def;
             },
@@ -45027,7 +45027,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-rc.0+101.sha-345a3cd.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-rc.0+102.sha-392473e.with-local-changes');
 
     /**
      * @license
@@ -52634,7 +52634,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             configurable: true,
             get: function () {
                 if (ngModuleDef === null) {
-                    ngModuleDef = getCompilerFacade().compileNgModule(angularCoreEnv, "ng://" + moduleType.name + "/ngModuleDef.js", {
+                    ngModuleDef = getCompilerFacade().compileNgModule(angularCoreEnv, "ng:///" + moduleType.name + "/ngModuleDef.js", {
                         type: moduleType,
                         bootstrap: flatten$2(ngModule.bootstrap || EMPTY_ARRAY$3, resolveForwardRef$1),
                         declarations: declarations.map(resolveForwardRef$1),
@@ -52667,7 +52667,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                             (ngModule.exports || EMPTY_ARRAY$3).map(resolveForwardRef$1),
                         ],
                     };
-                    ngInjectorDef = getCompilerFacade().compileInjector(angularCoreEnv, "ng://" + moduleType.name + "/ngInjectorDef.js", meta);
+                    ngInjectorDef = getCompilerFacade().compileInjector(angularCoreEnv, "ng:///" + moduleType.name + "/ngInjectorDef.js", meta);
                 }
                 return ngInjectorDef;
             },
@@ -53035,7 +53035,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             get: function () {
                 if (ngDirectiveDef === null) {
                     var name_1 = type && type.name;
-                    var sourceMapUrl = "ng://" + name_1 + "/ngDirectiveDef.js";
+                    var sourceMapUrl = "ng:///" + name_1 + "/ngDirectiveDef.js";
                     var compiler = getCompilerFacade();
                     var facade = directiveMetadata(type, directive);
                     facade.typeSourceSpan = compiler.createParseSourceSpan('Directive', name_1, sourceMapUrl);
@@ -53224,7 +53224,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 if (ngPipeDef === null) {
                     var typeName = type.name;
                     ngPipeDef =
-                        getCompilerFacade().compilePipe(angularCoreEnv, "ng://" + typeName + "/ngPipeDef.js", {
+                        getCompilerFacade().compilePipe(angularCoreEnv, "ng:///" + typeName + "/ngPipeDef.js", {
                             type: type,
                             typeArgumentCount: 0,
                             name: typeName,
@@ -54884,8 +54884,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var SWITCH_IVY_ENABLED__POST_R3__ = true;
-    var ivyEnabled = SWITCH_IVY_ENABLED__POST_R3__;
 
     var _SEPARATOR = '#';
     var FACTORY_CLASS_SUFFIX = 'NgFactory';
@@ -54918,8 +54916,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this._config = config || DEFAULT_CONFIG;
         }
         SystemJsNgModuleLoader.prototype.load = function (path) {
-            var legacyOfflineMode = !ivyEnabled && this._compiler instanceof Compiler;
-            return legacyOfflineMode ? this.loadFactory(path) : this.loadAndCompile(path);
+            return this.loadAndCompile(path);
         };
         SystemJsNgModuleLoader.prototype.loadAndCompile = function (path) {
             var _this = this;
@@ -58679,7 +58676,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-rc.0+101.sha-345a3cd.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-rc.0+102.sha-392473e.with-local-changes');
 
     /**
      * @license
