@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-rc.0+105.sha-4a96ddf.with-local-changes
+ * @license Angular v8.0.0-rc.0+106.sha-de65112.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -17765,7 +17765,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-rc.0+105.sha-4a96ddf.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-rc.0+106.sha-de65112.with-local-changes');
 
     /**
      * @license
@@ -32041,6 +32041,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             rendererDestroyNode: 0,
             rendererMoveNode: 0,
             rendererRemoveNode: 0,
+            rendererAppendChild: 0,
+            rendererInsertBefore: 0,
             rendererCreateComment: 0,
             styleMap: 0,
             styleMapCacheMiss: 0,
@@ -40566,6 +40568,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * actual renderer being used.
      */
     function nativeInsertBefore(renderer, parent, child, beforeNode) {
+        ngDevMode && ngDevMode.rendererInsertBefore++;
         if (isProceduralRenderer(renderer)) {
             renderer.insertBefore(parent, child, beforeNode);
         }
@@ -40574,6 +40577,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         }
     }
     function nativeAppendChild(renderer, parent, child) {
+        ngDevMode && ngDevMode.rendererAppendChild++;
         if (isProceduralRenderer(renderer)) {
             renderer.appendChild(parent, child);
         }
@@ -45027,7 +45031,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-rc.0+105.sha-4a96ddf.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-rc.0+106.sha-de65112.with-local-changes');
 
     /**
      * @license
@@ -58679,7 +58683,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-rc.0+105.sha-4a96ddf.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-rc.0+106.sha-de65112.with-local-changes');
 
     /**
      * @license
