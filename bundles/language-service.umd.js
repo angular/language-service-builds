@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-rc.0+112.sha-bf6bedd.with-local-changes
+ * @license Angular v8.0.0-rc.0+113.sha-29786e8.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -12762,8 +12762,12 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         }
     }
     function isStyleSanitizable(prop) {
-        return prop === 'background-image' || prop === 'background' || prop === 'border-image' ||
-            prop === 'filter' || prop === 'list-style' || prop === 'list-style-image';
+        // Note that browsers support both the dash case and
+        // camel case property names when setting through JS.
+        return prop === 'background-image' || prop === 'backgroundImage' || prop === 'background' ||
+            prop === 'border-image' || prop === 'borderImage' || prop === 'filter' ||
+            prop === 'list-style' || prop === 'listStyle' || prop === 'list-style-image' ||
+            prop === 'listStyleImage';
     }
     /**
      * Simple helper function to either provide the constant literal that will house the value
@@ -17761,7 +17765,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-rc.0+112.sha-bf6bedd.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-rc.0+113.sha-29786e8.with-local-changes');
 
     /**
      * @license
@@ -37476,7 +37480,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-rc.0+112.sha-bf6bedd.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-rc.0+113.sha-29786e8.with-local-changes');
 
     /**
      * @license
@@ -48074,7 +48078,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-rc.0+112.sha-bf6bedd.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-rc.0+113.sha-29786e8.with-local-changes');
 
     /**
      * @license
