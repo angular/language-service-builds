@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-rc.0+106.sha-de65112.with-local-changes
+ * @license Angular v8.0.0-rc.0+107.sha-7c8a62d.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -12634,7 +12634,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             return null;
         };
         StylingBuilder.prototype._buildMapBasedInstruction = function (valueConverter, isClassBased, stylingInput) {
-            var _this = this;
             var totalBindingSlotsRequired = 0;
             // these values must be outside of the update block so that they can
             // be evaluated (the AST visit call) during creation time so that any
@@ -12655,18 +12654,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 sourceSpan: stylingInput.sourceSpan,
                 reference: reference,
                 allocateBindingSlots: totalBindingSlotsRequired,
-                buildParams: function (convertFn) {
-                    var params = [];
-                    if (!isHostBinding) {
-                        params.push(_this._elementIndexExpr);
-                    }
-                    params.push(convertFn(mapValue));
-                    return params;
-                }
+                buildParams: function (convertFn) { return [convertFn(mapValue)]; }
             };
         };
-        StylingBuilder.prototype._buildSingleInputs = function (reference, isHostBinding, inputs, mapIndex, allowUnits, valueConverter) {
-            var _this = this;
+        StylingBuilder.prototype._buildSingleInputs = function (reference, inputs, mapIndex, allowUnits, valueConverter) {
             var totalBindingSlotsRequired = 0;
             return inputs.map(function (input) {
                 var bindingIndex = mapIndex.get(input.name);
@@ -12683,9 +12674,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                         //   min params => elementStylingProp(elmIndex, bindingIndex, value)
                         //   max params => elementStylingProp(elmIndex, bindingIndex, value, overrideFlag)
                         var params = [];
-                        if (!isHostBinding) {
-                            params.push(_this._elementIndexExpr);
-                        }
                         params.push(literal(bindingIndex));
                         params.push(convertFn(value));
                         if (allowUnits) {
@@ -12708,7 +12696,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             if (this._singleClassInputs) {
                 var isHostBinding = !!this._directiveExpr;
                 var reference = isHostBinding ? Identifiers$1.elementHostClassProp : Identifiers$1.elementClassProp;
-                return this._buildSingleInputs(reference, isHostBinding, this._singleClassInputs, this._classesIndex, false, valueConverter);
+                return this._buildSingleInputs(reference, this._singleClassInputs, this._classesIndex, false, valueConverter);
             }
             return [];
         };
@@ -12716,25 +12704,18 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             if (this._singleStyleInputs) {
                 var isHostBinding = !!this._directiveExpr;
                 var reference = isHostBinding ? Identifiers$1.elementHostStyleProp : Identifiers$1.elementStyleProp;
-                return this._buildSingleInputs(reference, isHostBinding, this._singleStyleInputs, this._stylesIndex, true, valueConverter);
+                return this._buildSingleInputs(reference, this._singleStyleInputs, this._stylesIndex, true, valueConverter);
             }
             return [];
         };
         StylingBuilder.prototype._buildApplyFn = function () {
-            var _this = this;
             var isHostBinding = this._directiveExpr;
             var reference = isHostBinding ? Identifiers$1.elementHostStylingApply : Identifiers$1.elementStylingApply;
             return {
                 sourceSpan: this._lastStylingInput ? this._lastStylingInput.sourceSpan : null,
                 reference: reference,
                 allocateBindingSlots: 0,
-                buildParams: function () {
-                    // HOST:
-                    //   params => elementHostStylingApply()
-                    // Template:
-                    //   params => elementStylingApply(elmIndex)
-                    return isHostBinding ? [] : [_this._elementIndexExpr];
-                }
+                buildParams: function () { return []; }
             };
         };
         /**
@@ -17765,7 +17746,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-rc.0+106.sha-de65112.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-rc.0+107.sha-7c8a62d.with-local-changes');
 
     /**
      * @license
@@ -41104,7 +41085,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * Note that the styling element is updated as part of `elementStylingApply`.
      *
-     * @param index Index of the element's with which styling is associated.
      * @param styleIndex Index of style to update. This index value refers to the
      *        index of the style in the style bindings array that was passed into
      *        `elementStyling`.
@@ -41120,7 +41100,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵelementStyleProp(index, styleIndex, value, suffix, forceOverride) {
+    function ɵɵelementStyleProp(styleIndex, value, suffix, forceOverride) {
+        var index = getSelectedIndex();
         var valueToAdd = resolveStylePropValue(value, suffix);
         var stylingContext = getStylingContext(index, getLView());
         updateStyleProp(stylingContext, styleIndex, valueToAdd, DEFAULT_TEMPLATE_DIRECTIVE_INDEX, forceOverride);
@@ -41183,7 +41164,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * therefore, the class binding itself must already be allocated using
      * `elementStyling` within the creation block.
      *
-     * @param index Index of the element's with which styling is associated.
      * @param classIndex Index of class to toggle. This index value refers to the
      *        index of the class in the class bindings array that was passed into
      *        `elementStyling` (which is meant to be called before this
@@ -41194,7 +41174,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵelementClassProp(index, classIndex, value, forceOverride) {
+    function ɵɵelementClassProp(classIndex, value, forceOverride) {
+        var index = getSelectedIndex();
         var input = (value instanceof BoundPlayerFactory) ?
             value :
             booleanOrNull(value);
@@ -41244,14 +41225,14 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * Note that the styling instruction will not be applied until `elementStylingApply` is called.
      *
-     * @param index Index of the element's with which styling is associated.
      * @param styles A key/value style map of the styles that will be applied to the given element.
      *        Any missing styles (that have already been applied to the element beforehand) will be
      *        removed (unset) from the element's styling.
      *
      * @codeGenApi
      */
-    function ɵɵelementStyleMap(index, styles) {
+    function ɵɵelementStyleMap(styles) {
+        var index = getSelectedIndex();
         var lView = getLView();
         var stylingContext = getStylingContext(index, lView);
         var tNode = getTNode(index, lView);
@@ -41276,14 +41257,14 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * Note that the styling instruction will not be applied until `elementStylingApply` is called.
      *
-     * @param index Index of the element's with which styling is associated.
      * @param classes A key/value map or string of CSS classes that will be added to the
      *        given element. Any missing classes (that have already been applied to the element
      *        beforehand) will be removed (unset) from the element's list of CSS classes.
      *
      * @codeGenApi
      */
-    function ɵɵelementClassMap(index, classes) {
+    function ɵɵelementClassMap(classes) {
+        var index = getSelectedIndex();
         var lView = getLView();
         var stylingContext = getStylingContext(index, lView);
         var tNode = getTNode(index, lView);
@@ -41357,11 +41338,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * `elementStyleProp` or `elementClassProp` instructions have been run and will
      * only apply styling to the element if any styling bindings have been updated.
      *
-     * @param index Index of the element's with which styling is associated.
-     *
      * @codeGenApi
      */
-    function ɵɵelementStylingApply(index) {
+    function ɵɵelementStylingApply() {
+        var index = getSelectedIndex();
         elementStylingApplyInternal(DEFAULT_TEMPLATE_DIRECTIVE_INDEX, index);
     }
     /**
@@ -45031,7 +45011,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-rc.0+106.sha-de65112.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-rc.0+107.sha-7c8a62d.with-local-changes');
 
     /**
      * @license
@@ -58683,7 +58663,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-rc.0+106.sha-de65112.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-rc.0+107.sha-7c8a62d.with-local-changes');
 
     /**
      * @license
