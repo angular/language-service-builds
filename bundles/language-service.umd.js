@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-rc.0+104.sha-8ced321.with-local-changes
+ * @license Angular v8.0.0-rc.0+113.sha-29786e8.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -12649,7 +12649,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             return null;
         };
         StylingBuilder.prototype._buildMapBasedInstruction = function (valueConverter, isClassBased, stylingInput) {
-            var _this = this;
             var totalBindingSlotsRequired = 0;
             // these values must be outside of the update block so that they can
             // be evaluated (the AST visit call) during creation time so that any
@@ -12670,18 +12669,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 sourceSpan: stylingInput.sourceSpan,
                 reference: reference,
                 allocateBindingSlots: totalBindingSlotsRequired,
-                buildParams: function (convertFn) {
-                    var params = [];
-                    if (!isHostBinding) {
-                        params.push(_this._elementIndexExpr);
-                    }
-                    params.push(convertFn(mapValue));
-                    return params;
-                }
+                buildParams: function (convertFn) { return [convertFn(mapValue)]; }
             };
         };
-        StylingBuilder.prototype._buildSingleInputs = function (reference, isHostBinding, inputs, mapIndex, allowUnits, valueConverter) {
-            var _this = this;
+        StylingBuilder.prototype._buildSingleInputs = function (reference, inputs, mapIndex, allowUnits, valueConverter) {
             var totalBindingSlotsRequired = 0;
             return inputs.map(function (input) {
                 var bindingIndex = mapIndex.get(input.name);
@@ -12698,9 +12689,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                         //   min params => elementStylingProp(elmIndex, bindingIndex, value)
                         //   max params => elementStylingProp(elmIndex, bindingIndex, value, overrideFlag)
                         var params = [];
-                        if (!isHostBinding) {
-                            params.push(_this._elementIndexExpr);
-                        }
                         params.push(literal(bindingIndex));
                         params.push(convertFn(value));
                         if (allowUnits) {
@@ -12723,7 +12711,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             if (this._singleClassInputs) {
                 var isHostBinding = !!this._directiveExpr;
                 var reference = isHostBinding ? Identifiers$1.elementHostClassProp : Identifiers$1.elementClassProp;
-                return this._buildSingleInputs(reference, isHostBinding, this._singleClassInputs, this._classesIndex, false, valueConverter);
+                return this._buildSingleInputs(reference, this._singleClassInputs, this._classesIndex, false, valueConverter);
             }
             return [];
         };
@@ -12731,25 +12719,18 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             if (this._singleStyleInputs) {
                 var isHostBinding = !!this._directiveExpr;
                 var reference = isHostBinding ? Identifiers$1.elementHostStyleProp : Identifiers$1.elementStyleProp;
-                return this._buildSingleInputs(reference, isHostBinding, this._singleStyleInputs, this._stylesIndex, true, valueConverter);
+                return this._buildSingleInputs(reference, this._singleStyleInputs, this._stylesIndex, true, valueConverter);
             }
             return [];
         };
         StylingBuilder.prototype._buildApplyFn = function () {
-            var _this = this;
             var isHostBinding = this._directiveExpr;
             var reference = isHostBinding ? Identifiers$1.elementHostStylingApply : Identifiers$1.elementStylingApply;
             return {
                 sourceSpan: this._lastStylingInput ? this._lastStylingInput.sourceSpan : null,
                 reference: reference,
                 allocateBindingSlots: 0,
-                buildParams: function () {
-                    // HOST:
-                    //   params => elementHostStylingApply()
-                    // Template:
-                    //   params => elementStylingApply(elmIndex)
-                    return isHostBinding ? [] : [_this._elementIndexExpr];
-                }
+                buildParams: function () { return []; }
             };
         };
         /**
@@ -12781,8 +12762,12 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         }
     }
     function isStyleSanitizable(prop) {
-        return prop === 'background-image' || prop === 'background' || prop === 'border-image' ||
-            prop === 'filter' || prop === 'list-style' || prop === 'list-style-image';
+        // Note that browsers support both the dash case and
+        // camel case property names when setting through JS.
+        return prop === 'background-image' || prop === 'backgroundImage' || prop === 'background' ||
+            prop === 'border-image' || prop === 'borderImage' || prop === 'filter' ||
+            prop === 'list-style' || prop === 'listStyle' || prop === 'list-style-image' ||
+            prop === 'listStyleImage';
     }
     /**
      * Simple helper function to either provide the constant literal that will house the value
@@ -17780,7 +17765,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-rc.0+104.sha-8ced321.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-rc.0+113.sha-29786e8.with-local-changes');
 
     /**
      * @license
@@ -32061,6 +32046,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             rendererDestroyNode: 0,
             rendererMoveNode: 0,
             rendererRemoveNode: 0,
+            rendererAppendChild: 0,
+            rendererInsertBefore: 0,
             rendererCreateComment: 0,
             styleMap: 0,
             styleMapCacheMiss: 0,
@@ -36190,6 +36177,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * actual renderer being used.
      */
     function nativeInsertBefore(renderer, parent, child, beforeNode) {
+        ngDevMode && ngDevMode.rendererInsertBefore++;
         if (isProceduralRenderer(renderer)) {
             renderer.insertBefore(parent, child, beforeNode);
         }
@@ -37492,7 +37480,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-rc.0+104.sha-8ced321.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-rc.0+113.sha-29786e8.with-local-changes');
 
     /**
      * @license
@@ -48090,7 +48078,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-rc.0+104.sha-8ced321.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-rc.0+113.sha-29786e8.with-local-changes');
 
     /**
      * @license
