@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-rc.0+153.sha-7dad328.with-local-changes
+ * @license Angular v8.0.0-rc.0+156.sha-2f35dbf.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -17731,7 +17731,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-rc.0+153.sha-7dad328.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-rc.0+156.sha-2f35dbf.with-local-changes');
 
     /**
      * @license
@@ -44886,7 +44886,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-rc.0+153.sha-7dad328.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-rc.0+156.sha-2f35dbf.with-local-changes');
 
     /**
      * @license
@@ -54737,8 +54737,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var SWITCH_IVY_ENABLED__POST_R3__ = true;
-    var ivyEnabled = SWITCH_IVY_ENABLED__POST_R3__;
 
     var _SEPARATOR = '#';
     var FACTORY_CLASS_SUFFIX = 'NgFactory';
@@ -54771,8 +54769,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this._config = config || DEFAULT_CONFIG;
         }
         SystemJsNgModuleLoader.prototype.load = function (path) {
-            var legacyOfflineMode = !ivyEnabled && this._compiler instanceof Compiler;
-            return legacyOfflineMode ? this.loadFactory(path) : this.loadAndCompile(path);
+            return this.loadAndCompile(path);
         };
         SystemJsNgModuleLoader.prototype.loadAndCompile = function (path) {
             var _this = this;
@@ -58532,7 +58529,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-rc.0+153.sha-7dad328.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-rc.0+156.sha-2f35dbf.with-local-changes');
 
     /**
      * @license
