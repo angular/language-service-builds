@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-rc.0+156.sha-2f35dbf.with-local-changes
+ * @license Angular v8.0.0-rc.0+157.sha-f74373f.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -3495,7 +3495,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             name: 'ɵɵgetInheritedFactory',
             moduleName: CORE$1,
         };
-        Identifiers.registerNgModuleType = { name: 'ɵregisterNgModuleType', moduleName: CORE$1 };
         // sanitization-related functions
         Identifiers.sanitizeHtml = { name: 'ɵɵsanitizeHtml', moduleName: CORE$1 };
         Identifiers.sanitizeStyle = { name: 'ɵɵsanitizeStyle', moduleName: CORE$1 };
@@ -6457,7 +6456,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Construct an `R3NgModuleDef` for the given `R3NgModuleMetadata`.
      */
     function compileNgModule(meta) {
-        var moduleType = meta.type, bootstrap = meta.bootstrap, declarations = meta.declarations, imports = meta.imports, exports = meta.exports, schemas = meta.schemas, containsForwardDecls = meta.containsForwardDecls, emitInline = meta.emitInline;
+        var moduleType = meta.type, bootstrap = meta.bootstrap, declarations = meta.declarations, imports = meta.imports, exports = meta.exports, schemas = meta.schemas, containsForwardDecls = meta.containsForwardDecls, emitInline = meta.emitInline, id = meta.id;
         var additionalStatements = [];
         var definitionMap = {
             type: moduleType
@@ -6489,6 +6488,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         }
         if (schemas && schemas.length) {
             definitionMap.schemas = literalArr(schemas.map(function (ref) { return ref.value; }));
+        }
+        if (id) {
+            definitionMap.id = id;
         }
         var expression = importExpr(Identifiers$1.defineNgModule).callFn([mapToMapExpression(definitionMap)]);
         var type = new ExpressionType(importExpr(Identifiers$1.NgModuleDefWithMeta, [
@@ -17551,6 +17553,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 emitInline: true,
                 containsForwardDecls: false,
                 schemas: facade.schemas ? facade.schemas.map(wrapReference) : null,
+                id: facade.id ? new WrappedNodeExpr(facade.id) : null,
             };
             var res = compileNgModule(meta);
             return this.jitExpression(res.expression, angularCoreEnv, sourceMapUrl, []);
@@ -17746,7 +17749,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-rc.0+156.sha-2f35dbf.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-rc.0+157.sha-f74373f.with-local-changes');
 
     /**
      * @license
@@ -37472,7 +37475,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-rc.0+156.sha-2f35dbf.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-rc.0+157.sha-f74373f.with-local-changes');
 
     /**
      * @license
@@ -40574,6 +40577,30 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * Map of module-id to the corresponding NgModule.
+     * - In pre Ivy we track NgModuleFactory,
+     * - In post Ivy we track the NgModuleType
+     */
+    var modules = new Map();
+    function assertSameOrNotExisting(id, type, incoming) {
+        if (type && type !== incoming) {
+            throw new Error("Duplicate module registered for " + id + " - " + stringify$1(type) + " vs " + stringify$1(type.name));
+        }
+    }
+    function registerNgModuleType(id, ngModuleType) {
+        var existing = modules.get(id);
+        assertSameOrNotExisting(id, existing, ngModuleType);
+        modules.set(id, ngModuleType);
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     var COMPONENT_FACTORY_RESOLVER = {
         provide: ComponentFactoryResolver,
         useClass: ComponentFactoryResolver$1,
@@ -40638,7 +40665,12 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             return _this;
         }
         NgModuleFactory.prototype.create = function (parentInjector) {
-            return new NgModuleRef$1(this.moduleType, parentInjector);
+            var moduleType = this.moduleType;
+            var moduleRef = new NgModuleRef$1(moduleType, parentInjector);
+            var ngModuleDef = getNgModuleDef(moduleType);
+            ngModuleDef && ngModuleDef.id &&
+                registerNgModuleType(ngModuleDef.id, moduleType);
+            return moduleRef;
         };
         return NgModuleFactory;
     }(NgModuleFactory));
@@ -42588,14 +42620,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     var ɵ0$7 = function (dir) {
         if (dir === void 0) { dir = {}; }
         return dir;
@@ -44228,6 +44252,14 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             list.splice(index, 1);
         }
     }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
 
     /**
      * @license
@@ -48070,7 +48102,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-rc.0+156.sha-2f35dbf.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-rc.0+157.sha-f74373f.with-local-changes');
 
     /**
      * @license
