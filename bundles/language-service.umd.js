@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-rc.0+176.sha-9e5377a.with-local-changes
+ * @license Angular v8.0.0-rc.0+177.sha-dbb150a.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -17734,7 +17734,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-rc.0+176.sha-9e5377a.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-rc.0+177.sha-dbb150a.with-local-changes');
 
     /**
      * @license
@@ -35724,7 +35724,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Given the common use case, low likelihood of attack vector, and low impact of an attack, this
      * code is permissive and allows URLs that sanitize otherwise.
      */
-    var URL_RE = /^url\(([\w\W]*)\)$/;
+    var URL_RE = /^url\(([^)]+)\)$/;
     /**
      * Checks that quotes (" and ') are properly balanced inside a string. Assumes
      * that neither escape (\) nor any other character that could result in
@@ -44890,7 +44890,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-rc.0+176.sha-9e5377a.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-rc.0+177.sha-dbb150a.with-local-changes');
 
     /**
      * @license
@@ -58553,7 +58553,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-rc.0+176.sha-9e5377a.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-rc.0+177.sha-dbb150a.with-local-changes');
 
     /**
      * @license
