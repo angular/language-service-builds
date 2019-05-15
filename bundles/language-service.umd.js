@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-rc.0+177.sha-dbb150a.with-local-changes
+ * @license Angular v8.0.0-rc.0+180.sha-4f9b167.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -2832,11 +2832,11 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             name: 'ɵregisterModuleFactory',
             moduleName: CORE,
         };
-        Identifiers.inject = { name: 'ɵɵinject', moduleName: CORE };
+        Identifiers.inject = { name: 'Δinject', moduleName: CORE };
         Identifiers.INJECTOR = { name: 'INJECTOR', moduleName: CORE };
         Identifiers.Injector = { name: 'Injector', moduleName: CORE };
-        Identifiers.ɵɵdefineInjectable = { name: 'ɵɵdefineInjectable', moduleName: CORE };
-        Identifiers.InjectableDef = { name: 'ɵɵInjectableDef', moduleName: CORE };
+        Identifiers.ΔdefineInjectable = { name: 'ΔdefineInjectable', moduleName: CORE };
+        Identifiers.InjectableDef = { name: 'ΔInjectableDef', moduleName: CORE };
         Identifiers.ViewEncapsulation = {
             name: 'ViewEncapsulation',
             moduleName: CORE,
@@ -3340,154 +3340,154 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         Identifiers.TRANSFORM_METHOD = 'transform';
         Identifiers.PATCH_DEPS = 'patchedDeps';
         /* Instructions */
-        Identifiers.namespaceHTML = { name: 'ɵɵnamespaceHTML', moduleName: CORE$1 };
-        Identifiers.namespaceMathML = { name: 'ɵɵnamespaceMathML', moduleName: CORE$1 };
-        Identifiers.namespaceSVG = { name: 'ɵɵnamespaceSVG', moduleName: CORE$1 };
-        Identifiers.element = { name: 'ɵɵelement', moduleName: CORE$1 };
-        Identifiers.elementStart = { name: 'ɵɵelementStart', moduleName: CORE$1 };
-        Identifiers.elementEnd = { name: 'ɵɵelementEnd', moduleName: CORE$1 };
-        Identifiers.elementProperty = { name: 'ɵɵelementProperty', moduleName: CORE$1 };
-        Identifiers.select = { name: 'ɵɵselect', moduleName: CORE$1 };
-        Identifiers.componentHostSyntheticProperty = { name: 'ɵɵcomponentHostSyntheticProperty', moduleName: CORE$1 };
-        Identifiers.componentHostSyntheticListener = { name: 'ɵɵcomponentHostSyntheticListener', moduleName: CORE$1 };
-        Identifiers.elementAttribute = { name: 'ɵɵelementAttribute', moduleName: CORE$1 };
-        Identifiers.classProp = { name: 'ɵɵclassProp', moduleName: CORE$1 };
-        Identifiers.elementContainerStart = { name: 'ɵɵelementContainerStart', moduleName: CORE$1 };
-        Identifiers.elementContainerEnd = { name: 'ɵɵelementContainerEnd', moduleName: CORE$1 };
-        Identifiers.styling = { name: 'ɵɵstyling', moduleName: CORE$1 };
-        Identifiers.styleMap = { name: 'ɵɵstyleMap', moduleName: CORE$1 };
-        Identifiers.classMap = { name: 'ɵɵclassMap', moduleName: CORE$1 };
-        Identifiers.styleProp = { name: 'ɵɵstyleProp', moduleName: CORE$1 };
-        Identifiers.stylingApply = { name: 'ɵɵstylingApply', moduleName: CORE$1 };
-        Identifiers.elementHostAttrs = { name: 'ɵɵelementHostAttrs', moduleName: CORE$1 };
-        Identifiers.containerCreate = { name: 'ɵɵcontainer', moduleName: CORE$1 };
-        Identifiers.nextContext = { name: 'ɵɵnextContext', moduleName: CORE$1 };
-        Identifiers.templateCreate = { name: 'ɵɵtemplate', moduleName: CORE$1 };
-        Identifiers.text = { name: 'ɵɵtext', moduleName: CORE$1 };
-        Identifiers.textBinding = { name: 'ɵɵtextBinding', moduleName: CORE$1 };
-        Identifiers.bind = { name: 'ɵɵbind', moduleName: CORE$1 };
-        Identifiers.enableBindings = { name: 'ɵɵenableBindings', moduleName: CORE$1 };
-        Identifiers.disableBindings = { name: 'ɵɵdisableBindings', moduleName: CORE$1 };
-        Identifiers.allocHostVars = { name: 'ɵɵallocHostVars', moduleName: CORE$1 };
-        Identifiers.getCurrentView = { name: 'ɵɵgetCurrentView', moduleName: CORE$1 };
-        Identifiers.restoreView = { name: 'ɵɵrestoreView', moduleName: CORE$1 };
-        Identifiers.interpolation1 = { name: 'ɵɵinterpolation1', moduleName: CORE$1 };
-        Identifiers.interpolation2 = { name: 'ɵɵinterpolation2', moduleName: CORE$1 };
-        Identifiers.interpolation3 = { name: 'ɵɵinterpolation3', moduleName: CORE$1 };
-        Identifiers.interpolation4 = { name: 'ɵɵinterpolation4', moduleName: CORE$1 };
-        Identifiers.interpolation5 = { name: 'ɵɵinterpolation5', moduleName: CORE$1 };
-        Identifiers.interpolation6 = { name: 'ɵɵinterpolation6', moduleName: CORE$1 };
-        Identifiers.interpolation7 = { name: 'ɵɵinterpolation7', moduleName: CORE$1 };
-        Identifiers.interpolation8 = { name: 'ɵɵinterpolation8', moduleName: CORE$1 };
-        Identifiers.interpolationV = { name: 'ɵɵinterpolationV', moduleName: CORE$1 };
-        Identifiers.pureFunction0 = { name: 'ɵɵpureFunction0', moduleName: CORE$1 };
-        Identifiers.pureFunction1 = { name: 'ɵɵpureFunction1', moduleName: CORE$1 };
-        Identifiers.pureFunction2 = { name: 'ɵɵpureFunction2', moduleName: CORE$1 };
-        Identifiers.pureFunction3 = { name: 'ɵɵpureFunction3', moduleName: CORE$1 };
-        Identifiers.pureFunction4 = { name: 'ɵɵpureFunction4', moduleName: CORE$1 };
-        Identifiers.pureFunction5 = { name: 'ɵɵpureFunction5', moduleName: CORE$1 };
-        Identifiers.pureFunction6 = { name: 'ɵɵpureFunction6', moduleName: CORE$1 };
-        Identifiers.pureFunction7 = { name: 'ɵɵpureFunction7', moduleName: CORE$1 };
-        Identifiers.pureFunction8 = { name: 'ɵɵpureFunction8', moduleName: CORE$1 };
-        Identifiers.pureFunctionV = { name: 'ɵɵpureFunctionV', moduleName: CORE$1 };
-        Identifiers.pipeBind1 = { name: 'ɵɵpipeBind1', moduleName: CORE$1 };
-        Identifiers.pipeBind2 = { name: 'ɵɵpipeBind2', moduleName: CORE$1 };
-        Identifiers.pipeBind3 = { name: 'ɵɵpipeBind3', moduleName: CORE$1 };
-        Identifiers.pipeBind4 = { name: 'ɵɵpipeBind4', moduleName: CORE$1 };
-        Identifiers.pipeBindV = { name: 'ɵɵpipeBindV', moduleName: CORE$1 };
-        Identifiers.property = { name: 'ɵɵproperty', moduleName: CORE$1 };
-        Identifiers.propertyInterpolate = { name: 'ɵɵpropertyInterpolate', moduleName: CORE$1 };
-        Identifiers.propertyInterpolate1 = { name: 'ɵɵpropertyInterpolate1', moduleName: CORE$1 };
-        Identifiers.propertyInterpolate2 = { name: 'ɵɵpropertyInterpolate2', moduleName: CORE$1 };
-        Identifiers.propertyInterpolate3 = { name: 'ɵɵpropertyInterpolate3', moduleName: CORE$1 };
-        Identifiers.propertyInterpolate4 = { name: 'ɵɵpropertyInterpolate4', moduleName: CORE$1 };
-        Identifiers.propertyInterpolate5 = { name: 'ɵɵpropertyInterpolate5', moduleName: CORE$1 };
-        Identifiers.propertyInterpolate6 = { name: 'ɵɵpropertyInterpolate6', moduleName: CORE$1 };
-        Identifiers.propertyInterpolate7 = { name: 'ɵɵpropertyInterpolate7', moduleName: CORE$1 };
-        Identifiers.propertyInterpolate8 = { name: 'ɵɵpropertyInterpolate8', moduleName: CORE$1 };
-        Identifiers.propertyInterpolateV = { name: 'ɵɵpropertyInterpolateV', moduleName: CORE$1 };
-        Identifiers.i18n = { name: 'ɵɵi18n', moduleName: CORE$1 };
-        Identifiers.i18nAttributes = { name: 'ɵɵi18nAttributes', moduleName: CORE$1 };
-        Identifiers.i18nExp = { name: 'ɵɵi18nExp', moduleName: CORE$1 };
-        Identifiers.i18nStart = { name: 'ɵɵi18nStart', moduleName: CORE$1 };
-        Identifiers.i18nEnd = { name: 'ɵɵi18nEnd', moduleName: CORE$1 };
-        Identifiers.i18nApply = { name: 'ɵɵi18nApply', moduleName: CORE$1 };
-        Identifiers.i18nPostprocess = { name: 'ɵɵi18nPostprocess', moduleName: CORE$1 };
-        Identifiers.i18nLocalize = { name: 'ɵɵi18nLocalize', moduleName: CORE$1 };
-        Identifiers.load = { name: 'ɵɵload', moduleName: CORE$1 };
-        Identifiers.pipe = { name: 'ɵɵpipe', moduleName: CORE$1 };
-        Identifiers.projection = { name: 'ɵɵprojection', moduleName: CORE$1 };
-        Identifiers.projectionDef = { name: 'ɵɵprojectionDef', moduleName: CORE$1 };
-        Identifiers.reference = { name: 'ɵɵreference', moduleName: CORE$1 };
-        Identifiers.inject = { name: 'ɵɵinject', moduleName: CORE$1 };
-        Identifiers.injectAttribute = { name: 'ɵɵinjectAttribute', moduleName: CORE$1 };
-        Identifiers.directiveInject = { name: 'ɵɵdirectiveInject', moduleName: CORE$1 };
-        Identifiers.templateRefExtractor = { name: 'ɵɵtemplateRefExtractor', moduleName: CORE$1 };
-        Identifiers.resolveWindow = { name: 'ɵɵresolveWindow', moduleName: CORE$1 };
-        Identifiers.resolveDocument = { name: 'ɵɵresolveDocument', moduleName: CORE$1 };
-        Identifiers.resolveBody = { name: 'ɵɵresolveBody', moduleName: CORE$1 };
-        Identifiers.defineBase = { name: 'ɵɵdefineBase', moduleName: CORE$1 };
+        Identifiers.namespaceHTML = { name: 'ΔnamespaceHTML', moduleName: CORE$1 };
+        Identifiers.namespaceMathML = { name: 'ΔnamespaceMathML', moduleName: CORE$1 };
+        Identifiers.namespaceSVG = { name: 'ΔnamespaceSVG', moduleName: CORE$1 };
+        Identifiers.element = { name: 'Δelement', moduleName: CORE$1 };
+        Identifiers.elementStart = { name: 'ΔelementStart', moduleName: CORE$1 };
+        Identifiers.elementEnd = { name: 'ΔelementEnd', moduleName: CORE$1 };
+        Identifiers.elementProperty = { name: 'ΔelementProperty', moduleName: CORE$1 };
+        Identifiers.select = { name: 'Δselect', moduleName: CORE$1 };
+        Identifiers.componentHostSyntheticProperty = { name: 'ΔcomponentHostSyntheticProperty', moduleName: CORE$1 };
+        Identifiers.componentHostSyntheticListener = { name: 'ΔcomponentHostSyntheticListener', moduleName: CORE$1 };
+        Identifiers.elementAttribute = { name: 'ΔelementAttribute', moduleName: CORE$1 };
+        Identifiers.classProp = { name: 'ΔclassProp', moduleName: CORE$1 };
+        Identifiers.elementContainerStart = { name: 'ΔelementContainerStart', moduleName: CORE$1 };
+        Identifiers.elementContainerEnd = { name: 'ΔelementContainerEnd', moduleName: CORE$1 };
+        Identifiers.styling = { name: 'Δstyling', moduleName: CORE$1 };
+        Identifiers.styleMap = { name: 'ΔstyleMap', moduleName: CORE$1 };
+        Identifiers.classMap = { name: 'ΔclassMap', moduleName: CORE$1 };
+        Identifiers.styleProp = { name: 'ΔstyleProp', moduleName: CORE$1 };
+        Identifiers.stylingApply = { name: 'ΔstylingApply', moduleName: CORE$1 };
+        Identifiers.elementHostAttrs = { name: 'ΔelementHostAttrs', moduleName: CORE$1 };
+        Identifiers.containerCreate = { name: 'Δcontainer', moduleName: CORE$1 };
+        Identifiers.nextContext = { name: 'ΔnextContext', moduleName: CORE$1 };
+        Identifiers.templateCreate = { name: 'Δtemplate', moduleName: CORE$1 };
+        Identifiers.text = { name: 'Δtext', moduleName: CORE$1 };
+        Identifiers.textBinding = { name: 'ΔtextBinding', moduleName: CORE$1 };
+        Identifiers.bind = { name: 'Δbind', moduleName: CORE$1 };
+        Identifiers.enableBindings = { name: 'ΔenableBindings', moduleName: CORE$1 };
+        Identifiers.disableBindings = { name: 'ΔdisableBindings', moduleName: CORE$1 };
+        Identifiers.allocHostVars = { name: 'ΔallocHostVars', moduleName: CORE$1 };
+        Identifiers.getCurrentView = { name: 'ΔgetCurrentView', moduleName: CORE$1 };
+        Identifiers.restoreView = { name: 'ΔrestoreView', moduleName: CORE$1 };
+        Identifiers.interpolation1 = { name: 'Δinterpolation1', moduleName: CORE$1 };
+        Identifiers.interpolation2 = { name: 'Δinterpolation2', moduleName: CORE$1 };
+        Identifiers.interpolation3 = { name: 'Δinterpolation3', moduleName: CORE$1 };
+        Identifiers.interpolation4 = { name: 'Δinterpolation4', moduleName: CORE$1 };
+        Identifiers.interpolation5 = { name: 'Δinterpolation5', moduleName: CORE$1 };
+        Identifiers.interpolation6 = { name: 'Δinterpolation6', moduleName: CORE$1 };
+        Identifiers.interpolation7 = { name: 'Δinterpolation7', moduleName: CORE$1 };
+        Identifiers.interpolation8 = { name: 'Δinterpolation8', moduleName: CORE$1 };
+        Identifiers.interpolationV = { name: 'ΔinterpolationV', moduleName: CORE$1 };
+        Identifiers.pureFunction0 = { name: 'ΔpureFunction0', moduleName: CORE$1 };
+        Identifiers.pureFunction1 = { name: 'ΔpureFunction1', moduleName: CORE$1 };
+        Identifiers.pureFunction2 = { name: 'ΔpureFunction2', moduleName: CORE$1 };
+        Identifiers.pureFunction3 = { name: 'ΔpureFunction3', moduleName: CORE$1 };
+        Identifiers.pureFunction4 = { name: 'ΔpureFunction4', moduleName: CORE$1 };
+        Identifiers.pureFunction5 = { name: 'ΔpureFunction5', moduleName: CORE$1 };
+        Identifiers.pureFunction6 = { name: 'ΔpureFunction6', moduleName: CORE$1 };
+        Identifiers.pureFunction7 = { name: 'ΔpureFunction7', moduleName: CORE$1 };
+        Identifiers.pureFunction8 = { name: 'ΔpureFunction8', moduleName: CORE$1 };
+        Identifiers.pureFunctionV = { name: 'ΔpureFunctionV', moduleName: CORE$1 };
+        Identifiers.pipeBind1 = { name: 'ΔpipeBind1', moduleName: CORE$1 };
+        Identifiers.pipeBind2 = { name: 'ΔpipeBind2', moduleName: CORE$1 };
+        Identifiers.pipeBind3 = { name: 'ΔpipeBind3', moduleName: CORE$1 };
+        Identifiers.pipeBind4 = { name: 'ΔpipeBind4', moduleName: CORE$1 };
+        Identifiers.pipeBindV = { name: 'ΔpipeBindV', moduleName: CORE$1 };
+        Identifiers.property = { name: 'Δproperty', moduleName: CORE$1 };
+        Identifiers.propertyInterpolate = { name: 'ΔpropertyInterpolate', moduleName: CORE$1 };
+        Identifiers.propertyInterpolate1 = { name: 'ΔpropertyInterpolate1', moduleName: CORE$1 };
+        Identifiers.propertyInterpolate2 = { name: 'ΔpropertyInterpolate2', moduleName: CORE$1 };
+        Identifiers.propertyInterpolate3 = { name: 'ΔpropertyInterpolate3', moduleName: CORE$1 };
+        Identifiers.propertyInterpolate4 = { name: 'ΔpropertyInterpolate4', moduleName: CORE$1 };
+        Identifiers.propertyInterpolate5 = { name: 'ΔpropertyInterpolate5', moduleName: CORE$1 };
+        Identifiers.propertyInterpolate6 = { name: 'ΔpropertyInterpolate6', moduleName: CORE$1 };
+        Identifiers.propertyInterpolate7 = { name: 'ΔpropertyInterpolate7', moduleName: CORE$1 };
+        Identifiers.propertyInterpolate8 = { name: 'ΔpropertyInterpolate8', moduleName: CORE$1 };
+        Identifiers.propertyInterpolateV = { name: 'ΔpropertyInterpolateV', moduleName: CORE$1 };
+        Identifiers.i18n = { name: 'Δi18n', moduleName: CORE$1 };
+        Identifiers.i18nAttributes = { name: 'Δi18nAttributes', moduleName: CORE$1 };
+        Identifiers.i18nExp = { name: 'Δi18nExp', moduleName: CORE$1 };
+        Identifiers.i18nStart = { name: 'Δi18nStart', moduleName: CORE$1 };
+        Identifiers.i18nEnd = { name: 'Δi18nEnd', moduleName: CORE$1 };
+        Identifiers.i18nApply = { name: 'Δi18nApply', moduleName: CORE$1 };
+        Identifiers.i18nPostprocess = { name: 'Δi18nPostprocess', moduleName: CORE$1 };
+        Identifiers.i18nLocalize = { name: 'Δi18nLocalize', moduleName: CORE$1 };
+        Identifiers.load = { name: 'Δload', moduleName: CORE$1 };
+        Identifiers.pipe = { name: 'Δpipe', moduleName: CORE$1 };
+        Identifiers.projection = { name: 'Δprojection', moduleName: CORE$1 };
+        Identifiers.projectionDef = { name: 'ΔprojectionDef', moduleName: CORE$1 };
+        Identifiers.reference = { name: 'Δreference', moduleName: CORE$1 };
+        Identifiers.inject = { name: 'Δinject', moduleName: CORE$1 };
+        Identifiers.injectAttribute = { name: 'ΔinjectAttribute', moduleName: CORE$1 };
+        Identifiers.directiveInject = { name: 'ΔdirectiveInject', moduleName: CORE$1 };
+        Identifiers.templateRefExtractor = { name: 'ΔtemplateRefExtractor', moduleName: CORE$1 };
+        Identifiers.resolveWindow = { name: 'ΔresolveWindow', moduleName: CORE$1 };
+        Identifiers.resolveDocument = { name: 'ΔresolveDocument', moduleName: CORE$1 };
+        Identifiers.resolveBody = { name: 'ΔresolveBody', moduleName: CORE$1 };
+        Identifiers.defineBase = { name: 'ΔdefineBase', moduleName: CORE$1 };
         Identifiers.BaseDef = {
-            name: 'ɵɵBaseDef',
+            name: 'ΔBaseDef',
             moduleName: CORE$1,
         };
-        Identifiers.defineComponent = { name: 'ɵɵdefineComponent', moduleName: CORE$1 };
-        Identifiers.setComponentScope = { name: 'ɵɵsetComponentScope', moduleName: CORE$1 };
+        Identifiers.defineComponent = { name: 'ΔdefineComponent', moduleName: CORE$1 };
+        Identifiers.setComponentScope = { name: 'ΔsetComponentScope', moduleName: CORE$1 };
         Identifiers.ComponentDefWithMeta = {
-            name: 'ɵɵComponentDefWithMeta',
+            name: 'ΔComponentDefWithMeta',
             moduleName: CORE$1,
         };
         Identifiers.defineDirective = {
-            name: 'ɵɵdefineDirective',
+            name: 'ΔdefineDirective',
             moduleName: CORE$1,
         };
         Identifiers.DirectiveDefWithMeta = {
-            name: 'ɵɵDirectiveDefWithMeta',
+            name: 'ΔDirectiveDefWithMeta',
             moduleName: CORE$1,
         };
         Identifiers.InjectorDef = {
-            name: 'ɵɵInjectorDef',
+            name: 'ΔInjectorDef',
             moduleName: CORE$1,
         };
         Identifiers.defineInjector = {
-            name: 'ɵɵdefineInjector',
+            name: 'ΔdefineInjector',
             moduleName: CORE$1,
         };
         Identifiers.NgModuleDefWithMeta = {
-            name: 'ɵɵNgModuleDefWithMeta',
+            name: 'ΔNgModuleDefWithMeta',
             moduleName: CORE$1,
         };
-        Identifiers.defineNgModule = { name: 'ɵɵdefineNgModule', moduleName: CORE$1 };
-        Identifiers.setNgModuleScope = { name: 'ɵɵsetNgModuleScope', moduleName: CORE$1 };
-        Identifiers.PipeDefWithMeta = { name: 'ɵɵPipeDefWithMeta', moduleName: CORE$1 };
-        Identifiers.definePipe = { name: 'ɵɵdefinePipe', moduleName: CORE$1 };
-        Identifiers.queryRefresh = { name: 'ɵɵqueryRefresh', moduleName: CORE$1 };
-        Identifiers.viewQuery = { name: 'ɵɵviewQuery', moduleName: CORE$1 };
-        Identifiers.staticViewQuery = { name: 'ɵɵstaticViewQuery', moduleName: CORE$1 };
-        Identifiers.staticContentQuery = { name: 'ɵɵstaticContentQuery', moduleName: CORE$1 };
-        Identifiers.loadViewQuery = { name: 'ɵɵloadViewQuery', moduleName: CORE$1 };
-        Identifiers.contentQuery = { name: 'ɵɵcontentQuery', moduleName: CORE$1 };
-        Identifiers.loadContentQuery = { name: 'ɵɵloadContentQuery', moduleName: CORE$1 };
-        Identifiers.NgOnChangesFeature = { name: 'ɵɵNgOnChangesFeature', moduleName: CORE$1 };
-        Identifiers.InheritDefinitionFeature = { name: 'ɵɵInheritDefinitionFeature', moduleName: CORE$1 };
-        Identifiers.ProvidersFeature = { name: 'ɵɵProvidersFeature', moduleName: CORE$1 };
-        Identifiers.listener = { name: 'ɵɵlistener', moduleName: CORE$1 };
+        Identifiers.defineNgModule = { name: 'ΔdefineNgModule', moduleName: CORE$1 };
+        Identifiers.setNgModuleScope = { name: 'ΔsetNgModuleScope', moduleName: CORE$1 };
+        Identifiers.PipeDefWithMeta = { name: 'ΔPipeDefWithMeta', moduleName: CORE$1 };
+        Identifiers.definePipe = { name: 'ΔdefinePipe', moduleName: CORE$1 };
+        Identifiers.queryRefresh = { name: 'ΔqueryRefresh', moduleName: CORE$1 };
+        Identifiers.viewQuery = { name: 'ΔviewQuery', moduleName: CORE$1 };
+        Identifiers.staticViewQuery = { name: 'ΔstaticViewQuery', moduleName: CORE$1 };
+        Identifiers.staticContentQuery = { name: 'ΔstaticContentQuery', moduleName: CORE$1 };
+        Identifiers.loadViewQuery = { name: 'ΔloadViewQuery', moduleName: CORE$1 };
+        Identifiers.contentQuery = { name: 'ΔcontentQuery', moduleName: CORE$1 };
+        Identifiers.loadContentQuery = { name: 'ΔloadContentQuery', moduleName: CORE$1 };
+        Identifiers.NgOnChangesFeature = { name: 'ΔNgOnChangesFeature', moduleName: CORE$1 };
+        Identifiers.InheritDefinitionFeature = { name: 'ΔInheritDefinitionFeature', moduleName: CORE$1 };
+        Identifiers.ProvidersFeature = { name: 'ΔProvidersFeature', moduleName: CORE$1 };
+        Identifiers.listener = { name: 'Δlistener', moduleName: CORE$1 };
         Identifiers.getFactoryOf = {
-            name: 'ɵɵgetFactoryOf',
+            name: 'ΔgetFactoryOf',
             moduleName: CORE$1,
         };
         Identifiers.getInheritedFactory = {
-            name: 'ɵɵgetInheritedFactory',
+            name: 'ΔgetInheritedFactory',
             moduleName: CORE$1,
         };
         // sanitization-related functions
-        Identifiers.sanitizeHtml = { name: 'ɵɵsanitizeHtml', moduleName: CORE$1 };
-        Identifiers.sanitizeStyle = { name: 'ɵɵsanitizeStyle', moduleName: CORE$1 };
-        Identifiers.defaultStyleSanitizer = { name: 'ɵɵdefaultStyleSanitizer', moduleName: CORE$1 };
-        Identifiers.sanitizeResourceUrl = { name: 'ɵɵsanitizeResourceUrl', moduleName: CORE$1 };
-        Identifiers.sanitizeScript = { name: 'ɵɵsanitizeScript', moduleName: CORE$1 };
-        Identifiers.sanitizeUrl = { name: 'ɵɵsanitizeUrl', moduleName: CORE$1 };
-        Identifiers.sanitizeUrlOrResourceUrl = { name: 'ɵɵsanitizeUrlOrResourceUrl', moduleName: CORE$1 };
+        Identifiers.sanitizeHtml = { name: 'ΔsanitizeHtml', moduleName: CORE$1 };
+        Identifiers.sanitizeStyle = { name: 'ΔsanitizeStyle', moduleName: CORE$1 };
+        Identifiers.defaultStyleSanitizer = { name: 'ΔdefaultStyleSanitizer', moduleName: CORE$1 };
+        Identifiers.sanitizeResourceUrl = { name: 'ΔsanitizeResourceUrl', moduleName: CORE$1 };
+        Identifiers.sanitizeScript = { name: 'ΔsanitizeScript', moduleName: CORE$1 };
+        Identifiers.sanitizeUrl = { name: 'ΔsanitizeUrl', moduleName: CORE$1 };
+        Identifiers.sanitizeUrlOrResourceUrl = { name: 'ΔsanitizeUrlOrResourceUrl', moduleName: CORE$1 };
         return Identifiers;
     }());
 
@@ -5105,7 +5105,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         }
         var token = meta.type;
         var providedIn = meta.providedIn;
-        var expression = importExpr(Identifiers.ɵɵdefineInjectable).callFn([mapToMapExpression({ token: token, factory: result.factory, providedIn: providedIn })]);
+        var expression = importExpr(Identifiers.ΔdefineInjectable).callFn([mapToMapExpression({ token: token, factory: result.factory, providedIn: providedIn })]);
         var type = new ExpressionType(importExpr(Identifiers.InjectableDef, [typeWithParameters(meta.type, meta.typeArgumentCount)]));
         return {
             expression: expression,
@@ -6451,7 +6451,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             definitionMap.bootstrap = refsToArray(bootstrap, containsForwardDecls);
         }
         // If requested to emit scope information inline, pass the declarations, imports and exports to
-        // the `ɵɵdefineNgModule` call. The JIT compilation uses this.
+        // the `ΔdefineNgModule` call. The JIT compilation uses this.
         if (emitInline) {
             if (declarations.length) {
                 definitionMap.declarations = refsToArray(declarations, containsForwardDecls);
@@ -6463,7 +6463,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 definitionMap.exports = refsToArray(exports, containsForwardDecls);
             }
         }
-        // If not emitting inline, the scope information is not passed into `ɵɵdefineNgModule` as it would
+        // If not emitting inline, the scope information is not passed into `ΔdefineNgModule` as it would
         // prevent tree-shaking of the declarations, imports and exports references.
         else {
             var setNgModuleScopeCall = generateSetNgModuleScopeCall(meta);
@@ -6485,7 +6485,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         return { expression: expression, type: type, additionalStatements: additionalStatements };
     }
     /**
-     * Generates a function call to `ɵɵsetNgModuleScope` with all necessary information so that the
+     * Generates a function call to `ΔsetNgModuleScope` with all necessary information so that the
      * transitive module scope can be computed during runtime in JIT mode. This call is marked pure
      * such that the references to declarations, imports and exports may be elided causing these
      * symbols to become tree-shakeable.
@@ -16060,7 +16060,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 parameters.splice(2, 0, literal(templateVisitor.getConstCount()), literal(templateVisitor.getVarCount()));
                 return trimTrailingNulls(parameters);
             });
-            // handle property bindings e.g. ɵɵproperty('ngForOf', ctx.items), et al;
+            // handle property bindings e.g. Δproperty('ngForOf', ctx.items), et al;
             var context = variable(CONTEXT_NAME);
             this.templatePropertyBindings(template, templateIndex, context, template.templateAttrs);
             // Only add normal input/output binding instructions on explicit ng-template elements.
@@ -17734,7 +17734,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-rc.0+177.sha-dbb150a.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-rc.0+180.sha-4f9b167.with-local-changes');
 
     /**
      * @license
@@ -29366,9 +29366,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * * `factory` gives the zero argument function which will create an instance of the injectable.
      *   The factory can call `inject` to access the `Injector` and request injection of dependencies.
      *
-     * @publicApi
+     * @codeGenApi
      */
-    function ɵɵdefineInjectable(opts) {
+    function ΔdefineInjectable(opts) {
         return {
             providedIn: opts.providedIn || null, factory: opts.factory, value: undefined,
         };
@@ -29393,7 +29393,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @publicApi
      */
-    function ɵɵdefineInjector(options) {
+    function ΔdefineInjector(options) {
         return {
             factory: options.factory, providers: options.providers || [], imports: options.imports || [],
         };
@@ -29608,7 +29608,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 this.__NG_ELEMENT_ID__ = options;
             }
             else if (options !== undefined) {
-                this.ngInjectableDef = ɵɵdefineInjectable({
+                this.ngInjectableDef = ΔdefineInjectable({
                     providedIn: options.providedIn || 'root',
                     factory: options.factory,
                 });
@@ -29685,7 +29685,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             return _currentInjector.get(token, flags & InjectFlags.Optional ? null : undefined, flags);
         }
     }
-    function ɵɵinject(token, flags) {
+    function Δinject(token, flags) {
         if (flags === void 0) { flags = InjectFlags.Default; }
         return (_injectImplementation || injectInjectorOnly)(token, flags);
     }
@@ -29736,10 +29736,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                         type = meta;
                     }
                 }
-                args.push(ɵɵinject(type, flags));
+                args.push(Δinject(type, flags));
             }
             else {
-                args.push(ɵɵinject(arg));
+                args.push(Δinject(arg));
             }
         }
         return args;
@@ -29805,10 +29805,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * This should be kept up to date with the public exports of @angular/core.
      */
     var angularCoreDiEnv = {
-        'ɵɵdefineInjectable': ɵɵdefineInjectable,
-        'ɵɵdefineInjector': ɵɵdefineInjector,
-        'ɵɵinject': ɵɵinject,
-        'ɵɵgetFactoryOf': getFactoryOf,
+        'ΔdefineInjectable': ΔdefineInjectable,
+        'ΔdefineInjector': ΔdefineInjector,
+        'Δinject': Δinject,
+        'ΔgetFactoryOf': getFactoryOf,
     };
     function getFactoryOf(type) {
         var typeAny = type;
@@ -30660,7 +30660,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 factory = function () { return resolveForwardRef$1(provider.useValue); };
             }
             else if (isExistingProvider(provider)) {
-                factory = function () { return ɵɵinject(resolveForwardRef$1(provider.useExisting)); };
+                factory = function () { return Δinject(resolveForwardRef$1(provider.useExisting)); };
             }
             else if (isFactoryProvider(provider)) {
                 factory = function () { return provider.useFactory.apply(provider, __spread(injectArgs(provider.deps || []))); };
@@ -30761,9 +30761,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         Injector.THROW_IF_NOT_FOUND = THROW_IF_NOT_FOUND;
         Injector.NULL = new NullInjector();
         /** @nocollapse */
-        Injector.ngInjectableDef = ɵɵdefineInjectable({
+        Injector.ngInjectableDef = ΔdefineInjectable({
             providedIn: 'any',
-            factory: function () { return ɵɵinject(INJECTOR); },
+            factory: function () { return Δinject(INJECTOR); },
         });
         /**
          * @internal
@@ -32136,7 +32136,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * ```
      * @codeGenApi
      */
-    function ɵɵdefineComponent(componentDefinition) {
+    function ΔdefineComponent(componentDefinition) {
         var type = componentDefinition.type;
         var typePrototype = type.prototype;
         var declaredInputs = {};
@@ -32199,7 +32199,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             // be retrieved through the node injector, so this isn't a problem.
             if (!type.hasOwnProperty(NG_INJECTABLE_DEF)) {
                 type[NG_INJECTABLE_DEF] =
-                    ɵɵdefineInjectable({ factory: componentDefinition.factory });
+                    ΔdefineInjectable({ factory: componentDefinition.factory });
             }
         });
         return def;
@@ -32207,7 +32207,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @codeGenApi
      */
-    function ɵɵsetComponentScope(type, directives, pipes) {
+    function ΔsetComponentScope(type, directives, pipes) {
         var def = type.ngComponentDef;
         def.directiveDefs = function () { return directives.map(extractDirectiveDef); };
         def.pipeDefs = function () { return pipes.map(extractPipeDef); };
@@ -32229,7 +32229,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @codeGenApi
      */
-    function ɵɵdefineNgModule(def) {
+    function ΔdefineNgModule(def) {
         var res = {
             type: def.type,
             bootstrap: def.bootstrap || EMPTY_ARRAY$2,
@@ -32252,7 +32252,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵsetNgModuleScope(type, scope) {
+    function ΔsetNgModuleScope(type, scope) {
         return noSideEffects(function () {
             var ngModuleDef = getNgModuleDef(type, true);
             ngModuleDef.declarations = scope.declarations || EMPTY_ARRAY$2;
@@ -32341,7 +32341,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * # Example
      * ```ts
      * class ShouldBeInherited {
-     *   static ngBaseDef = ɵɵdefineBase({
+     *   static ngBaseDef = ΔdefineBase({
      *      ...
      *   })
      * }
@@ -32351,7 +32351,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵdefineBase(baseDefinition) {
+    function ΔdefineBase(baseDefinition) {
         var declaredInputs = {};
         return {
             inputs: invertObject(baseDefinition.inputs, declaredInputs),
@@ -32370,7 +32370,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * class MyDirective {
      *   // Generated by Angular Template Compiler
      *   // [Symbol] syntax will not be supported by TypeScript until v2.7
-     *   static ngDirectiveDef = ɵɵdefineDirective({
+     *   static ngDirectiveDef = ΔdefineDirective({
      *     ...
      *   });
      * }
@@ -32378,7 +32378,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    var ɵɵdefineDirective = ɵɵdefineComponent;
+    var ΔdefineDirective = ΔdefineComponent;
     /**
      * Create a pipe definition object.
      *
@@ -32395,7 +32395,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵdefinePipe(pipeDef) {
+    function ΔdefinePipe(pipeDef) {
         return {
             name: pipeDef.name,
             factory: pipeDef.factory,
@@ -32477,21 +32477,21 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵresolveWindow(element) {
+    function ΔresolveWindow(element) {
         return { name: 'window', target: element.ownerDocument.defaultView };
     }
     /**
      *
      * @codeGenApi
      */
-    function ɵɵresolveDocument(element) {
+    function ΔresolveDocument(element) {
         return { name: 'document', target: element.ownerDocument };
     }
     /**
      *
      * @codeGenApi
      */
-    function ɵɵresolveBody(element) {
+    function ΔresolveBody(element) {
         return { name: 'body', target: element.ownerDocument.body };
     }
     /**
@@ -33317,17 +33317,17 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *   Should match component / directive.
      * </my-comp>
      * <div ngNonBindable>
-     *   <!-- ɵɵdisableBindings() -->
+     *   <!-- ΔdisableBindings() -->
      *   <my-comp my-directive>
      *     Should not match component / directive because we are in ngNonBindable.
      *   </my-comp>
-     *   <!-- ɵɵenableBindings() -->
+     *   <!-- ΔenableBindings() -->
      * </div>
      * ```
      *
      * @codeGenApi
      */
-    function ɵɵenableBindings() {
+    function ΔenableBindings() {
         bindingsEnabled = true;
     }
     /**
@@ -33339,17 +33339,17 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *   Should match component / directive.
      * </my-comp>
      * <div ngNonBindable>
-     *   <!-- ɵɵdisableBindings() -->
+     *   <!-- ΔdisableBindings() -->
      *   <my-comp my-directive>
      *     Should not match component / directive because we are in ngNonBindable.
      *   </my-comp>
-     *   <!-- ɵɵenableBindings() -->
+     *   <!-- ΔenableBindings() -->
      * </div>
      * ```
      *
      * @codeGenApi
      */
-    function ɵɵdisableBindings() {
+    function ΔdisableBindings() {
         bindingsEnabled = false;
     }
     function getLView() {
@@ -33491,7 +33491,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵrestoreView(viewToRestore) {
+    function ΔrestoreView(viewToRestore) {
         contextLView = viewToRestore;
     }
     /** Used to set the parent property when nodes are created and track query results. */
@@ -33681,7 +33681,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵnamespaceSVG() {
+    function ΔnamespaceSVG() {
         _currentNamespace = 'http://www.w3.org/2000/svg';
     }
     /**
@@ -33689,7 +33689,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵnamespaceMathML() {
+    function ΔnamespaceMathML() {
         _currentNamespace = 'http://www.w3.org/1998/MathML/';
     }
     /**
@@ -33698,7 +33698,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵnamespaceHTML() {
+    function ΔnamespaceHTML() {
         _currentNamespace = null;
     }
     function getNamespace() {
@@ -34968,7 +34968,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @codeGenApi
      */
-    function ɵɵgetFactoryOf(type) {
+    function ΔgetFactoryOf(type) {
         var typeAny = type;
         var def = getComponentDef(typeAny) || getDirectiveDef(typeAny) ||
             getPipeDef(typeAny) || getInjectableDef(typeAny) || getInjectorDef(typeAny);
@@ -34980,9 +34980,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @codeGenApi
      */
-    function ɵɵgetInheritedFactory(type) {
+    function ΔgetInheritedFactory(type) {
         var proto = Object.getPrototypeOf(type.prototype).constructor;
-        var factory = ɵɵgetFactoryOf(proto);
+        var factory = ΔgetFactoryOf(proto);
         if (factory !== null) {
             return factory;
         }
@@ -35790,7 +35790,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @publicApi
      */
-    function ɵɵsanitizeHtml(unsafeHtml) {
+    function ΔsanitizeHtml(unsafeHtml) {
         var sanitizer = getSanitizer();
         if (sanitizer) {
             return sanitizer.sanitize(SecurityContext$1.HTML, unsafeHtml) || '';
@@ -35815,7 +35815,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @publicApi
      */
-    function ɵɵsanitizeStyle(unsafeStyle) {
+    function ΔsanitizeStyle(unsafeStyle) {
         var sanitizer = getSanitizer();
         if (sanitizer) {
             return sanitizer.sanitize(SecurityContext$1.STYLE, unsafeStyle) || '';
@@ -35841,7 +35841,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @publicApi
      */
-    function ɵɵsanitizeUrl(unsafeUrl) {
+    function ΔsanitizeUrl(unsafeUrl) {
         var sanitizer = getSanitizer();
         if (sanitizer) {
             return sanitizer.sanitize(SecurityContext$1.URL, unsafeUrl) || '';
@@ -35862,7 +35862,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @publicApi
      */
-    function ɵɵsanitizeResourceUrl(unsafeResourceUrl) {
+    function ΔsanitizeResourceUrl(unsafeResourceUrl) {
         var sanitizer = getSanitizer();
         if (sanitizer) {
             return sanitizer.sanitize(SecurityContext$1.RESOURCE_URL, unsafeResourceUrl) || '';
@@ -35884,7 +35884,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @publicApi
      */
-    function ɵɵsanitizeScript(unsafeScript) {
+    function ΔsanitizeScript(unsafeScript) {
         var sanitizer = getSanitizer();
         if (sanitizer) {
             return sanitizer.sanitize(SecurityContext$1.SCRIPT, unsafeScript) || '';
@@ -35905,9 +35905,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         if ((prop === 'src' && (tag === 'embed' || tag === 'frame' || tag === 'iframe' ||
             tag === 'media' || tag === 'script')) ||
             (prop === 'href' && (tag === 'base' || tag === 'link'))) {
-            return ɵɵsanitizeResourceUrl;
+            return ΔsanitizeResourceUrl;
         }
-        return ɵɵsanitizeUrl;
+        return ΔsanitizeUrl;
     }
     /**
      * Sanitizes URL, selecting sanitizer function based on tag and property names.
@@ -35924,7 +35924,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @publicApi
      */
-    function ɵɵsanitizeUrlOrResourceUrl(unsafeUrl, tag, prop) {
+    function ΔsanitizeUrlOrResourceUrl(unsafeUrl, tag, prop) {
         return getUrlSanitizer(tag, prop)(unsafeUrl);
     }
     /**
@@ -35933,12 +35933,12 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @publicApi
      */
-    var ɵɵdefaultStyleSanitizer = function (prop, value) {
+    var ΔdefaultStyleSanitizer = function (prop, value) {
         if (value === undefined) {
             return prop === 'background-image' || prop === 'background' || prop === 'border-image' ||
                 prop === 'filter' || prop === 'list-style' || prop === 'list-style-image';
         }
-        return ɵɵsanitizeStyle(value);
+        return ΔsanitizeStyle(value);
     };
     function validateAgainstEventProperties(name) {
         if (name.toLowerCase().startsWith('on')) {
@@ -38732,7 +38732,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         }
     }
     function executeTemplate(templateFn, rf, context) {
-        ɵɵnamespaceHTML();
+        ΔnamespaceHTML();
         var prevSelectedIndex = getSelectedIndex();
         try {
             setActiveHostElement(null);
@@ -39946,7 +39946,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵallocHostVars(count) {
+    function ΔallocHostVars(count) {
         var lView = getLView();
         var tView = lView[TVIEW];
         if (!tView.firstTemplatePass)
@@ -40780,7 +40780,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵcontainer(index) {
+    function Δcontainer(index) {
         var tNode = containerInternal(index, null, null);
         var lView = getLView();
         if (lView[TVIEW].firstTemplatePass) {
@@ -40808,7 +40808,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵtemplate(index, templateFn, consts, vars, tagName, attrs, localRefs, localRefExtractor) {
+    function Δtemplate(index, templateFn, consts, vars, tagName, attrs, localRefs, localRefExtractor) {
         var lView = getLView();
         var tView = lView[TVIEW];
         // TODO: consider a separate node type for templates
@@ -40829,7 +40829,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵcontainerRefreshStart(index) {
+    function ΔcontainerRefreshStart(index) {
         var lView = getLView();
         var tView = lView[TVIEW];
         var previousOrParentTNode = loadInternal(tView.data, index);
@@ -40848,7 +40848,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵcontainerRefreshEnd() {
+    function ΔcontainerRefreshEnd() {
         var previousOrParentTNode = getPreviousOrParentTNode();
         if (getIsParent()) {
             setIsParent(false);
@@ -40940,7 +40940,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵreference(index) {
+    function Δreference(index) {
         var contextLView = getContextLView();
         return loadInternal(contextLView, index);
     }
@@ -40949,7 +40949,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵload(index) {
+    function Δload(index) {
         return loadInternal(getLView(), index);
     }
 
@@ -40960,14 +40960,14 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    function ɵɵdirectiveInject(token, flags) {
+    function ΔdirectiveInject(token, flags) {
         if (flags === void 0) { flags = InjectFlags.Default; }
         token = resolveForwardRef$1(token);
         var lView = getLView();
         // Fall back to inject() if view hasn't been created. This situation can happen in tests
         // if inject utilities are used before bootstrapping.
         if (lView == null)
-            return ɵɵinject(token, flags);
+            return Δinject(token, flags);
         return getOrCreateInjectable(getPreviousOrParentTNode(), lView, token, flags);
     }
     /**
@@ -40975,7 +40975,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵinjectAttribute(attrNameToInject) {
+    function ΔinjectAttribute(attrNameToInject) {
         return injectAttributeImpl(getPreviousOrParentTNode(), attrNameToInject);
     }
 
@@ -41015,7 +41015,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵstyling(classBindingNames, styleBindingNames, styleSanitizer) {
+    function Δstyling(classBindingNames, styleBindingNames, styleSanitizer) {
         var tNode = getPreviousOrParentTNode();
         if (!tNode.stylingTemplate) {
             tNode.stylingTemplate = createEmptyStylingContext();
@@ -41071,7 +41071,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵstyleProp(styleIndex, value, suffix, forceOverride) {
+    function ΔstyleProp(styleIndex, value, suffix, forceOverride) {
         var index = getSelectedIndex();
         var valueToAdd = resolveStylePropValue(value, suffix);
         var stylingContext = getStylingContext(index, getLView());
@@ -41122,7 +41122,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵclassProp(classIndex, value, forceOverride) {
+    function ΔclassProp(classIndex, value, forceOverride) {
         var index = getSelectedIndex();
         var input = (value instanceof BoundPlayerFactory) ?
             value :
@@ -41161,7 +41161,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵstyleMap(styles) {
+    function ΔstyleMap(styles) {
         var index = getSelectedIndex();
         var lView = getLView();
         var stylingContext = getStylingContext(index, lView);
@@ -41202,7 +41202,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵclassMap(classes) {
+    function ΔclassMap(classes) {
         var index = getSelectedIndex();
         var lView = getLView();
         var stylingContext = getStylingContext(index, lView);
@@ -41234,7 +41234,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵstylingApply() {
+    function ΔstylingApply() {
         var index = getSelectedIndex();
         var directiveStylingIndex = getActiveDirectiveStylingIndex() || DEFAULT_TEMPLATE_DIRECTIVE_INDEX;
         var lView = getLView();
@@ -41303,7 +41303,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵelementStart(index, name, attrs, localRefs) {
+    function ΔelementStart(index, name, attrs, localRefs) {
         var lView = getLView();
         var tView = lView[TVIEW];
         ngDevMode && assertEqual(lView[BINDING_INDEX], tView.bindingStartIndex, 'elements should be created before any bindings ');
@@ -41372,7 +41372,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵelementEnd() {
+    function ΔelementEnd() {
         var previousOrParentTNode = getPreviousOrParentTNode();
         if (getIsParent()) {
             setIsParent(false);
@@ -41418,9 +41418,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵelement(index, name, attrs, localRefs) {
-        ɵɵelementStart(index, name, attrs, localRefs);
-        ɵɵelementEnd();
+    function Δelement(index, name, attrs, localRefs) {
+        ΔelementStart(index, name, attrs, localRefs);
+        ΔelementEnd();
     }
     /**
      * Updates the value of removes an attribute on an Element.
@@ -41434,7 +41434,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵelementAttribute(index, name, value, sanitizer, namespace) {
+    function ΔelementAttribute(index, name, value, sanitizer, namespace) {
         if (value !== NO_CHANGE) {
             ngDevMode && validateAgainstEventAttributes(name);
             var lView = getLView();
@@ -41498,7 +41498,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵelementHostAttrs(attrs) {
+    function ΔelementHostAttrs(attrs) {
         var hostElementIndex = getSelectedIndex();
         var lView = getLView();
         var tNode = getTNode(hostElementIndex, lView);
@@ -41543,7 +41543,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵelementContainerStart(index, attrs, localRefs) {
+    function ΔelementContainerStart(index, attrs, localRefs) {
         var lView = getLView();
         var tView = lView[TVIEW];
         var renderer = lView[RENDERER];
@@ -41573,7 +41573,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵelementContainerEnd() {
+    function ΔelementContainerEnd() {
         var previousOrParentTNode = getPreviousOrParentTNode();
         var lView = getLView();
         var tView = lView[TVIEW];
@@ -41611,7 +41611,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵembeddedViewStart(viewBlockId, consts, vars) {
+    function ΔembeddedViewStart(viewBlockId, consts, vars) {
         var lView = getLView();
         var previousOrParentTNode = getPreviousOrParentTNode();
         // The previous node can be a view node if we are processing an inline for loop
@@ -41702,7 +41702,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵembeddedViewEnd() {
+    function ΔembeddedViewEnd() {
         var lView = getLView();
         var viewHost = lView[T_HOST];
         if (isCreationMode(lView)) {
@@ -41727,7 +41727,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵgetCurrentView() {
+    function ΔgetCurrentView() {
         return getLView();
     }
 
@@ -41776,7 +41776,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵlistener(eventName, listenerFn, useCapture, eventTargetResolver) {
+    function Δlistener(eventName, listenerFn, useCapture, eventTargetResolver) {
         if (useCapture === void 0) { useCapture = false; }
         listenerInternal(eventName, listenerFn, useCapture, eventTargetResolver);
     }
@@ -41801,7 +41801,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
     */
-    function ɵɵcomponentHostSyntheticListener(eventName, listenerFn, useCapture, eventTargetResolver) {
+    function ΔcomponentHostSyntheticListener(eventName, listenerFn, useCapture, eventTargetResolver) {
         if (useCapture === void 0) { useCapture = false; }
         listenerInternal(eventName, listenerFn, useCapture, eventTargetResolver, loadComponentRenderer);
     }
@@ -42009,7 +42009,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵnextContext(level) {
+    function ΔnextContext(level) {
         if (level === void 0) { level = 1; }
         return nextContextImpl(level);
     }
@@ -42037,7 +42037,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵprojectionDef(selectors) {
+    function ΔprojectionDef(selectors) {
         var componentNode = findComponentView(getLView())[T_HOST];
         if (!componentNode.projection) {
             var noOfNodeBuckets = selectors ? selectors.length + 1 : 1;
@@ -42069,7 +42069,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
     */
-    function ɵɵprojection(nodeIndex, selectorIndex, attrs) {
+    function Δprojection(nodeIndex, selectorIndex, attrs) {
         if (selectorIndex === void 0) { selectorIndex = 0; }
         var lView = getLView();
         var tProjectionNode = createNodeAtIndex(nodeIndex, 1 /* Projection */, null, null, attrs || null);
@@ -42311,14 +42311,14 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵproperty(propName, value, sanitizer, nativeOnly) {
+    function Δproperty(propName, value, sanitizer, nativeOnly) {
         var index = getSelectedIndex();
         ngDevMode && assertNotEqual(index, -1, 'selected index cannot be -1');
-        var bindReconciledValue = ɵɵbind(value);
+        var bindReconciledValue = Δbind(value);
         if (bindReconciledValue !== NO_CHANGE) {
             elementPropertyInternal(index, propName, bindReconciledValue, sanitizer, nativeOnly);
         }
-        return ɵɵproperty;
+        return Δproperty;
     }
     /**
      * Creates a single value binding.
@@ -42327,7 +42327,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵbind(value) {
+    function Δbind(value) {
         var lView = getLView();
         var bindingIndex = lView[BINDING_INDEX]++;
         storeBindingMetadata(lView);
@@ -42351,7 +42351,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
     */
-    function ɵɵelementProperty(index, propName, value, sanitizer, nativeOnly) {
+    function ΔelementProperty(index, propName, value, sanitizer, nativeOnly) {
         if (value !== NO_CHANGE) {
             elementPropertyInternal(index, propName, value, sanitizer, nativeOnly);
         }
@@ -42379,7 +42379,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵcomponentHostSyntheticProperty(index, propName, value, sanitizer, nativeOnly) {
+    function ΔcomponentHostSyntheticProperty(index, propName, value, sanitizer, nativeOnly) {
         if (value !== NO_CHANGE) {
             elementPropertyInternal(index, propName, value, sanitizer, nativeOnly, loadComponentRenderer);
         }
@@ -42406,7 +42406,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵinterpolationV(values) {
+    function ΔinterpolationV(values) {
         ngDevMode && assertLessThan(2, values.length, 'should have at least 3 values');
         ngDevMode && assertEqual(values.length % 2, 1, 'should have an odd number of values');
         var different = false;
@@ -42445,7 +42445,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵinterpolation1(prefix, v0, suffix) {
+    function Δinterpolation1(prefix, v0, suffix) {
         var lView = getLView();
         var different = bindingUpdated(lView, lView[BINDING_INDEX]++, v0);
         storeBindingMetadata(lView, prefix, suffix);
@@ -42456,7 +42456,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵinterpolation2(prefix, v0, i0, v1, suffix) {
+    function Δinterpolation2(prefix, v0, i0, v1, suffix) {
         var lView = getLView();
         var bindingIndex = lView[BINDING_INDEX];
         var different = bindingUpdated2(lView, bindingIndex, v0, v1);
@@ -42473,7 +42473,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵinterpolation3(prefix, v0, i0, v1, i1, v2, suffix) {
+    function Δinterpolation3(prefix, v0, i0, v1, i1, v2, suffix) {
         var lView = getLView();
         var bindingIndex = lView[BINDING_INDEX];
         var different = bindingUpdated3(lView, bindingIndex, v0, v1, v2);
@@ -42494,7 +42494,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵinterpolation4(prefix, v0, i0, v1, i1, v2, i2, v3, suffix) {
+    function Δinterpolation4(prefix, v0, i0, v1, i1, v2, i2, v3, suffix) {
         var lView = getLView();
         var bindingIndex = lView[BINDING_INDEX];
         var different = bindingUpdated4(lView, bindingIndex, v0, v1, v2, v3);
@@ -42517,7 +42517,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵinterpolation5(prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, suffix) {
+    function Δinterpolation5(prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, suffix) {
         var lView = getLView();
         var bindingIndex = lView[BINDING_INDEX];
         var different = bindingUpdated4(lView, bindingIndex, v0, v1, v2, v3);
@@ -42542,7 +42542,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵinterpolation6(prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, i4, v5, suffix) {
+    function Δinterpolation6(prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, i4, v5, suffix) {
         var lView = getLView();
         var bindingIndex = lView[BINDING_INDEX];
         var different = bindingUpdated4(lView, bindingIndex, v0, v1, v2, v3);
@@ -42568,7 +42568,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵinterpolation7(prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, i4, v5, i5, v6, suffix) {
+    function Δinterpolation7(prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, i4, v5, i5, v6, suffix) {
         var lView = getLView();
         var bindingIndex = lView[BINDING_INDEX];
         var different = bindingUpdated4(lView, bindingIndex, v0, v1, v2, v3);
@@ -42596,7 +42596,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵinterpolation8(prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, i4, v5, i5, v6, i6, v7, suffix) {
+    function Δinterpolation8(prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, i4, v5, i5, v6, i6, v7, suffix) {
         var lView = getLView();
         var bindingIndex = lView[BINDING_INDEX];
         var different = bindingUpdated4(lView, bindingIndex, v0, v1, v2, v3);
@@ -42637,7 +42637,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Its compiled representation is::
      *
      * ```ts
-     * ɵɵpropertyInterpolate('title', v0);
+     * ΔpropertyInterpolate('title', v0);
      * ```
      *
      * If the property name also exists as an input property on one of the element's directives,
@@ -42652,9 +42652,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @returns itself, so that it may be chained.
      * @codeGenApi
      */
-    function ɵɵpropertyInterpolate(propName, v0, sanitizer) {
-        ɵɵpropertyInterpolate1(propName, '', v0, '', sanitizer);
-        return ɵɵpropertyInterpolate;
+    function ΔpropertyInterpolate(propName, v0, sanitizer) {
+        ΔpropertyInterpolate1(propName, '', v0, '', sanitizer);
+        return ΔpropertyInterpolate;
     }
     /**
      *
@@ -42669,7 +42669,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Its compiled representation is::
      *
      * ```ts
-     * ɵɵpropertyInterpolate1('title', 'prefix', v0, 'suffix');
+     * ΔpropertyInterpolate1('title', 'prefix', v0, 'suffix');
      * ```
      *
      * If the property name also exists as an input property on one of the element's directives,
@@ -42684,13 +42684,13 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @returns itself, so that it may be chained.
      * @codeGenApi
      */
-    function ɵɵpropertyInterpolate1(propName, prefix, v0, suffix, sanitizer) {
+    function ΔpropertyInterpolate1(propName, prefix, v0, suffix, sanitizer) {
         var index = getSelectedIndex();
-        var interpolatedValue = ɵɵinterpolation1(prefix, v0, suffix);
+        var interpolatedValue = Δinterpolation1(prefix, v0, suffix);
         if (interpolatedValue !== NO_CHANGE) {
             elementPropertyInternal(index, propName, interpolatedValue, sanitizer);
         }
-        return ɵɵpropertyInterpolate1;
+        return ΔpropertyInterpolate1;
     }
     /**
      *
@@ -42705,7 +42705,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Its compiled representation is::
      *
      * ```ts
-     * ɵɵpropertyInterpolate2('title', 'prefix', v0, '-', v1, 'suffix');
+     * ΔpropertyInterpolate2('title', 'prefix', v0, '-', v1, 'suffix');
      * ```
      *
      * If the property name also exists as an input property on one of the element's directives,
@@ -42722,13 +42722,13 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @returns itself, so that it may be chained.
      * @codeGenApi
      */
-    function ɵɵpropertyInterpolate2(propName, prefix, v0, i0, v1, suffix, sanitizer) {
+    function ΔpropertyInterpolate2(propName, prefix, v0, i0, v1, suffix, sanitizer) {
         var index = getSelectedIndex();
-        var interpolatedValue = ɵɵinterpolation2(prefix, v0, i0, v1, suffix);
+        var interpolatedValue = Δinterpolation2(prefix, v0, i0, v1, suffix);
         if (interpolatedValue !== NO_CHANGE) {
             elementPropertyInternal(index, propName, interpolatedValue, sanitizer);
         }
-        return ɵɵpropertyInterpolate2;
+        return ΔpropertyInterpolate2;
     }
     /**
      *
@@ -42743,7 +42743,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Its compiled representation is::
      *
      * ```ts
-     * ɵɵpropertyInterpolate3(
+     * ΔpropertyInterpolate3(
      * 'title', 'prefix', v0, '-', v1, '-', v2, 'suffix');
      * ```
      *
@@ -42763,13 +42763,13 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @returns itself, so that it may be chained.
      * @codeGenApi
      */
-    function ɵɵpropertyInterpolate3(propName, prefix, v0, i0, v1, i1, v2, suffix, sanitizer) {
+    function ΔpropertyInterpolate3(propName, prefix, v0, i0, v1, i1, v2, suffix, sanitizer) {
         var index = getSelectedIndex();
-        var interpolatedValue = ɵɵinterpolation3(prefix, v0, i0, v1, i1, v2, suffix);
+        var interpolatedValue = Δinterpolation3(prefix, v0, i0, v1, i1, v2, suffix);
         if (interpolatedValue !== NO_CHANGE) {
             elementPropertyInternal(index, propName, interpolatedValue, sanitizer);
         }
-        return ɵɵpropertyInterpolate3;
+        return ΔpropertyInterpolate3;
     }
     /**
      *
@@ -42784,7 +42784,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Its compiled representation is::
      *
      * ```ts
-     * ɵɵpropertyInterpolate4(
+     * ΔpropertyInterpolate4(
      * 'title', 'prefix', v0, '-', v1, '-', v2, '-', v3, 'suffix');
      * ```
      *
@@ -42806,13 +42806,13 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @returns itself, so that it may be chained.
      * @codeGenApi
      */
-    function ɵɵpropertyInterpolate4(propName, prefix, v0, i0, v1, i1, v2, i2, v3, suffix, sanitizer) {
+    function ΔpropertyInterpolate4(propName, prefix, v0, i0, v1, i1, v2, i2, v3, suffix, sanitizer) {
         var index = getSelectedIndex();
-        var interpolatedValue = ɵɵinterpolation4(prefix, v0, i0, v1, i1, v2, i2, v3, suffix);
+        var interpolatedValue = Δinterpolation4(prefix, v0, i0, v1, i1, v2, i2, v3, suffix);
         if (interpolatedValue !== NO_CHANGE) {
             elementPropertyInternal(index, propName, interpolatedValue, sanitizer);
         }
-        return ɵɵpropertyInterpolate4;
+        return ΔpropertyInterpolate4;
     }
     /**
      *
@@ -42827,7 +42827,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Its compiled representation is::
      *
      * ```ts
-     * ɵɵpropertyInterpolate5(
+     * ΔpropertyInterpolate5(
      * 'title', 'prefix', v0, '-', v1, '-', v2, '-', v3, '-', v4, 'suffix');
      * ```
      *
@@ -42851,13 +42851,13 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @returns itself, so that it may be chained.
      * @codeGenApi
      */
-    function ɵɵpropertyInterpolate5(propName, prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, suffix, sanitizer) {
+    function ΔpropertyInterpolate5(propName, prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, suffix, sanitizer) {
         var index = getSelectedIndex();
-        var interpolatedValue = ɵɵinterpolation5(prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, suffix);
+        var interpolatedValue = Δinterpolation5(prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, suffix);
         if (interpolatedValue !== NO_CHANGE) {
             elementPropertyInternal(index, propName, interpolatedValue, sanitizer);
         }
-        return ɵɵpropertyInterpolate5;
+        return ΔpropertyInterpolate5;
     }
     /**
      *
@@ -42872,7 +42872,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Its compiled representation is::
      *
      * ```ts
-     * ɵɵpropertyInterpolate6(
+     * ΔpropertyInterpolate6(
      *    'title', 'prefix', v0, '-', v1, '-', v2, '-', v3, '-', v4, '-', v5, 'suffix');
      * ```
      *
@@ -42898,13 +42898,13 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @returns itself, so that it may be chained.
      * @codeGenApi
      */
-    function ɵɵpropertyInterpolate6(propName, prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, i4, v5, suffix, sanitizer) {
+    function ΔpropertyInterpolate6(propName, prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, i4, v5, suffix, sanitizer) {
         var index = getSelectedIndex();
-        var interpolatedValue = ɵɵinterpolation6(prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, i4, v5, suffix);
+        var interpolatedValue = Δinterpolation6(prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, i4, v5, suffix);
         if (interpolatedValue !== NO_CHANGE) {
             elementPropertyInternal(index, propName, interpolatedValue, sanitizer);
         }
-        return ɵɵpropertyInterpolate6;
+        return ΔpropertyInterpolate6;
     }
     /**
      *
@@ -42919,7 +42919,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Its compiled representation is::
      *
      * ```ts
-     * ɵɵpropertyInterpolate7(
+     * ΔpropertyInterpolate7(
      *    'title', 'prefix', v0, '-', v1, '-', v2, '-', v3, '-', v4, '-', v5, '-', v6, 'suffix');
      * ```
      *
@@ -42947,13 +42947,13 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @returns itself, so that it may be chained.
      * @codeGenApi
      */
-    function ɵɵpropertyInterpolate7(propName, prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, i4, v5, i5, v6, suffix, sanitizer) {
+    function ΔpropertyInterpolate7(propName, prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, i4, v5, i5, v6, suffix, sanitizer) {
         var index = getSelectedIndex();
-        var interpolatedValue = ɵɵinterpolation7(prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, i4, v5, i5, v6, suffix);
+        var interpolatedValue = Δinterpolation7(prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, i4, v5, i5, v6, suffix);
         if (interpolatedValue !== NO_CHANGE) {
             elementPropertyInternal(index, propName, interpolatedValue, sanitizer);
         }
-        return ɵɵpropertyInterpolate7;
+        return ΔpropertyInterpolate7;
     }
     /**
      *
@@ -42968,7 +42968,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Its compiled representation is::
      *
      * ```ts
-     * ɵɵpropertyInterpolate8(
+     * ΔpropertyInterpolate8(
      *  'title', 'prefix', v0, '-', v1, '-', v2, '-', v3, '-', v4, '-', v5, '-', v6, '-', v7, 'suffix');
      * ```
      *
@@ -42998,13 +42998,13 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @returns itself, so that it may be chained.
      * @codeGenApi
      */
-    function ɵɵpropertyInterpolate8(propName, prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, i4, v5, i5, v6, i6, v7, suffix, sanitizer) {
+    function ΔpropertyInterpolate8(propName, prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, i4, v5, i5, v6, i6, v7, suffix, sanitizer) {
         var index = getSelectedIndex();
-        var interpolatedValue = ɵɵinterpolation8(prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, i4, v5, i5, v6, i6, v7, suffix);
+        var interpolatedValue = Δinterpolation8(prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, i4, v5, i5, v6, i6, v7, suffix);
         if (interpolatedValue !== NO_CHANGE) {
             elementPropertyInternal(index, propName, interpolatedValue, sanitizer);
         }
-        return ɵɵpropertyInterpolate8;
+        return ΔpropertyInterpolate8;
     }
     /**
      * Update an interpolated property on an element with 8 or more bound values surrounded by text.
@@ -43019,7 +43019,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Its compiled representation is::
      *
      * ```ts
-     * ɵɵpropertyInterpolateV(
+     * ΔpropertyInterpolateV(
      *  'title', ['prefix', v0, '-', v1, '-', v2, '-', v3, '-', v4, '-', v5, '-', v6, '-', v7, '-', v9,
      *  'suffix']);
      * ```
@@ -43036,13 +43036,13 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @returns itself, so that it may be chained.
      * @codeGenApi
      */
-    function ɵɵpropertyInterpolateV(propName, values, sanitizer) {
+    function ΔpropertyInterpolateV(propName, values, sanitizer) {
         var index = getSelectedIndex();
-        var interpolatedValue = ɵɵinterpolationV(values);
+        var interpolatedValue = ΔinterpolationV(values);
         if (interpolatedValue !== NO_CHANGE) {
             elementPropertyInternal(index, propName, interpolatedValue, sanitizer);
         }
-        return ɵɵpropertyInterpolateV;
+        return ΔpropertyInterpolateV;
     }
 
     /**
@@ -43073,7 +43073,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵselect(index) {
+    function Δselect(index) {
         ngDevMode && assertGreaterThan(index, -1, 'Invalid index');
         ngDevMode &&
             assertLessThan(index, getLView().length - HEADER_OFFSET, 'Should be within range for the view data');
@@ -43083,7 +43083,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         // We must set the selected index *after* running the hooks, because hooks may have side-effects
         // that cause other template functions to run, thus updating the selected index, which is global
         // state. If we run `setSelectedIndex` *before* we run the hooks, in some cases the selected index
-        // will be altered by the time we leave the `ɵɵselect` instruction.
+        // will be altered by the time we leave the `Δselect` instruction.
         setSelectedIndex(index);
     }
 
@@ -43102,7 +43102,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵtext(index, value) {
+    function Δtext(index, value) {
         var lView = getLView();
         ngDevMode && assertEqual(lView[BINDING_INDEX], lView[TVIEW].bindingStartIndex, 'text nodes should be created before any bindings');
         ngDevMode && ngDevMode.rendererCreateTextNode++;
@@ -43121,7 +43121,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵtextBinding(index, value) {
+    function ΔtextBinding(index, value) {
         if (value !== NO_CHANGE) {
             var lView = getLView();
             ngDevMode && assertDataInRange(lView, index + HEADER_OFFSET);
@@ -43549,7 +43549,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵNgOnChangesFeature() {
+    function ΔNgOnChangesFeature() {
         // This option ensures that the ngOnChanges lifecycle hook will be inherited
         // from superclasses (in InheritDefinitionFeature).
         NgOnChangesFeatureImpl.ngInherit = true;
@@ -43616,7 +43616,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵInheritDefinitionFeature(definition) {
+    function ΔInheritDefinitionFeature(definition) {
         var e_1, _a;
         var superType = getSuperType(definition.type);
         while (superType) {
@@ -43710,7 +43710,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                     definition.onDestroy = definition.onDestroy || superPrototype.ngOnDestroy;
                     definition.onInit = definition.onInit || superPrototype.ngOnInit;
                     if (superPrototype.ngOnChanges) {
-                        ɵɵNgOnChangesFeature()(definition);
+                        ΔNgOnChangesFeature()(definition);
                     }
                 }
             }
@@ -43854,7 +43854,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             }
             if (isTypeProvider(provider) || !provider.multi) {
                 // Single provider case: the factory is created and pushed immediately
-                var factory = new NodeInjectorFactory(providerFactory, isViewProvider, ɵɵdirectiveInject);
+                var factory = new NodeInjectorFactory(providerFactory, isViewProvider, ΔdirectiveInject);
                 var existingFactoryIndex = indexOf(token, tInjectables, isViewProvider ? beginIndex : beginIndex + cptViewProvidersCount, endIndex);
                 if (existingFactoryIndex == -1) {
                     diPublicInInjector(getOrCreateNodeInjectorForNode(tNode, lView), lView, token);
@@ -43992,7 +43992,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Creates a multi factory.
      */
     function multiFactory(factoryFn, index, isViewProvider, isComponent, f) {
-        var factory = new NodeInjectorFactory(factoryFn, isViewProvider, ɵɵdirectiveInject);
+        var factory = new NodeInjectorFactory(factoryFn, isViewProvider, ΔdirectiveInject);
         factory.multi = [];
         factory.index = index;
         factory.componentProviders = 0;
@@ -44030,7 +44030,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵProvidersFeature(providers, viewProviders) {
+    function ΔProvidersFeature(providers, viewProviders) {
         if (viewProviders === void 0) { viewProviders = []; }
         return function (definition) {
             definition.providersResolver =
@@ -44890,7 +44890,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-rc.0+177.sha-dbb150a.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-rc.0+180.sha-4f9b167.with-local-changes');
 
     /**
      * @license
@@ -45891,7 +45891,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             }
         };
         /** @nocollapse */
-        IterableDiffers.ngInjectableDef = ɵɵdefineInjectable({
+        IterableDiffers.ngInjectableDef = ΔdefineInjectable({
             providedIn: 'root',
             factory: function () { return new IterableDiffers([new DefaultIterableDifferFactory()]); }
         });
@@ -45967,7 +45967,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             throw new Error("Cannot find a differ supporting object '" + kv + "'");
         };
         /** @nocollapse */
-        KeyValueDiffers.ngInjectableDef = ɵɵdefineInjectable({
+        KeyValueDiffers.ngInjectableDef = ΔdefineInjectable({
             providedIn: 'root',
             factory: function () { return new KeyValueDiffers([new DefaultKeyValueDifferFactory()]); }
         });
@@ -47742,7 +47742,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * Default {@link RootContext} for all components rendered with {@link renderComponent}.
      */
-    var ROOT_CONTEXT = new InjectionToken('ROOT_CONTEXT_TOKEN', { providedIn: 'root', factory: function () { return createRootContext(ɵɵinject(SCHEDULER)); } });
+    var ROOT_CONTEXT = new InjectionToken('ROOT_CONTEXT_TOKEN', { providedIn: 'root', factory: function () { return createRootContext(Δinject(SCHEDULER)); } });
     /**
      * A change detection scheduler token for {@link RootContext}. This token is the default value used
      * for the default `RootContext` found in the {@link ROOT_CONTEXT} token.
@@ -48229,7 +48229,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵi18nStart(index, message, subTemplateIndex) {
+    function Δi18nStart(index, message, subTemplateIndex) {
         var tView = getLView()[TVIEW];
         ngDevMode && assertDefined(tView, "tView should be defined");
         i18nIndexStack[++i18nIndexStackPointer] = index;
@@ -48392,7 +48392,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵi18nPostprocess(message, replacements) {
+    function Δi18nPostprocess(message, replacements) {
         if (replacements === void 0) { replacements = {}; }
         /**
          * Step 1: resolve all multi-value placeholders like [�#5�|�*1:1��#2:1�|�#4:1�]
@@ -48483,7 +48483,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵi18nEnd() {
+    function Δi18nEnd() {
         var tView = getLView()[TVIEW];
         ngDevMode && assertDefined(tView, "tView should be defined");
         i18nEndFirstPass(tView);
@@ -48576,7 +48576,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                         var elementNodeIndex = opCode >>> 3 /* SHIFT_REF */;
                         var attrName = createOpCodes[++i];
                         var attrValue = createOpCodes[++i];
-                        ɵɵelementAttribute(elementNodeIndex, attrName, attrValue);
+                        ΔelementAttribute(elementNodeIndex, attrName, attrValue);
                         break;
                     default:
                         throw new Error("Unable to determine the type of mutate operation for \"" + opCode + "\"");
@@ -48646,10 +48646,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                                 case 1 /* Attr */:
                                     var attrName = updateOpCodes[++j];
                                     var sanitizeFn = updateOpCodes[++j];
-                                    ɵɵelementAttribute(nodeIndex, attrName, value, sanitizeFn);
+                                    ΔelementAttribute(nodeIndex, attrName, value, sanitizeFn);
                                     break;
                                 case 0 /* Text */:
-                                    ɵɵtextBinding(nodeIndex, value);
+                                    ΔtextBinding(nodeIndex, value);
                                     break;
                                 case 2 /* IcuSwitch */:
                                     tIcuIndex = updateOpCodes[++j];
@@ -48705,7 +48705,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         if (removedPhRNode) {
             nativeRemoveNode(viewData[RENDERER], removedPhRNode);
         }
-        var slotValue = ɵɵload(index);
+        var slotValue = Δload(index);
         if (isLContainer(slotValue)) {
             var lContainer = slotValue;
             if (removedPhTNode.type !== 0 /* Container */) {
@@ -48740,9 +48740,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵi18n(index, message, subTemplateIndex) {
-        ɵɵi18nStart(index, message, subTemplateIndex);
-        ɵɵi18nEnd();
+    function Δi18n(index, message, subTemplateIndex) {
+        Δi18nStart(index, message, subTemplateIndex);
+        Δi18nEnd();
     }
     /**
      * Marks a list of attributes as translatable.
@@ -48752,7 +48752,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵi18nAttributes(index, values) {
+    function Δi18nAttributes(index, values) {
         var tView = getLView()[TVIEW];
         ngDevMode && assertDefined(tView, "tView should be defined");
         if (tView.firstTemplatePass && tView.data[index + HEADER_OFFSET] === null) {
@@ -48780,7 +48780,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                         addAllToArray(generateBindingUpdateOpCodes(value, previousElementIndex, attrName), updateOpCodes);
                     }
                     else {
-                        ɵɵelementAttribute(previousElementIndex, attrName, value);
+                        ΔelementAttribute(previousElementIndex, attrName, value);
                     }
                 }
             }
@@ -48797,7 +48797,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵi18nExp(expression) {
+    function Δi18nExp(expression) {
         if (expression !== NO_CHANGE) {
             changeMask = changeMask | (1 << shiftsCounter);
         }
@@ -48811,7 +48811,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵi18nApply(index) {
+    function Δi18nApply(index) {
         if (shiftsCounter) {
             var lView = getLView();
             var tView = lView[TVIEW];
@@ -49449,7 +49449,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @publicApi
      * @deprecated this method is temporary & should not be used as it will be removed soon
      */
-    function ɵɵi18nLocalize(input, placeholders) {
+    function Δi18nLocalize(input, placeholders) {
         if (placeholders === void 0) { placeholders = {}; }
         if (typeof TRANSLATIONS[input] !== 'undefined') { // to account for empty string
             input = TRANSLATIONS[input];
@@ -49607,7 +49607,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵpureFunction0(slotOffset, pureFn, thisArg) {
+    function ΔpureFunction0(slotOffset, pureFn, thisArg) {
         // TODO(kara): use bindingRoot instead of bindingStartIndex when implementing host bindings
         var bindingIndex = getBindingRoot() + slotOffset;
         var lView = getLView();
@@ -49627,7 +49627,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵpureFunction1(slotOffset, pureFn, exp, thisArg) {
+    function ΔpureFunction1(slotOffset, pureFn, exp, thisArg) {
         // TODO(kara): use bindingRoot instead of bindingStartIndex when implementing host bindings
         var lView = getLView();
         var bindingIndex = getBindingRoot() + slotOffset;
@@ -49648,7 +49648,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵpureFunction2(slotOffset, pureFn, exp1, exp2, thisArg) {
+    function ΔpureFunction2(slotOffset, pureFn, exp1, exp2, thisArg) {
         // TODO(kara): use bindingRoot instead of bindingStartIndex when implementing host bindings
         var bindingIndex = getBindingRoot() + slotOffset;
         var lView = getLView();
@@ -49670,7 +49670,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵpureFunction3(slotOffset, pureFn, exp1, exp2, exp3, thisArg) {
+    function ΔpureFunction3(slotOffset, pureFn, exp1, exp2, exp3, thisArg) {
         // TODO(kara): use bindingRoot instead of bindingStartIndex when implementing host bindings
         var bindingIndex = getBindingRoot() + slotOffset;
         var lView = getLView();
@@ -49693,7 +49693,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵpureFunction4(slotOffset, pureFn, exp1, exp2, exp3, exp4, thisArg) {
+    function ΔpureFunction4(slotOffset, pureFn, exp1, exp2, exp3, exp4, thisArg) {
         // TODO(kara): use bindingRoot instead of bindingStartIndex when implementing host bindings
         var bindingIndex = getBindingRoot() + slotOffset;
         var lView = getLView();
@@ -49717,7 +49717,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵpureFunction5(slotOffset, pureFn, exp1, exp2, exp3, exp4, exp5, thisArg) {
+    function ΔpureFunction5(slotOffset, pureFn, exp1, exp2, exp3, exp4, exp5, thisArg) {
         // TODO(kara): use bindingRoot instead of bindingStartIndex when implementing host bindings
         var bindingIndex = getBindingRoot() + slotOffset;
         var lView = getLView();
@@ -49744,7 +49744,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵpureFunction6(slotOffset, pureFn, exp1, exp2, exp3, exp4, exp5, exp6, thisArg) {
+    function ΔpureFunction6(slotOffset, pureFn, exp1, exp2, exp3, exp4, exp5, exp6, thisArg) {
         // TODO(kara): use bindingRoot instead of bindingStartIndex when implementing host bindings
         var bindingIndex = getBindingRoot() + slotOffset;
         var lView = getLView();
@@ -49773,7 +49773,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵpureFunction7(slotOffset, pureFn, exp1, exp2, exp3, exp4, exp5, exp6, exp7, thisArg) {
+    function ΔpureFunction7(slotOffset, pureFn, exp1, exp2, exp3, exp4, exp5, exp6, exp7, thisArg) {
         // TODO(kara): use bindingRoot instead of bindingStartIndex when implementing host bindings
         var bindingIndex = getBindingRoot() + slotOffset;
         var lView = getLView();
@@ -49803,7 +49803,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵpureFunction8(slotOffset, pureFn, exp1, exp2, exp3, exp4, exp5, exp6, exp7, exp8, thisArg) {
+    function ΔpureFunction8(slotOffset, pureFn, exp1, exp2, exp3, exp4, exp5, exp6, exp7, exp8, thisArg) {
         // TODO(kara): use bindingRoot instead of bindingStartIndex when implementing host bindings
         var bindingIndex = getBindingRoot() + slotOffset;
         var lView = getLView();
@@ -49829,7 +49829,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵpureFunctionV(slotOffset, pureFn, exps, thisArg) {
+    function ΔpureFunctionV(slotOffset, pureFn, exps, thisArg) {
         // TODO(kara): use bindingRoot instead of bindingStartIndex when implementing host bindings
         var bindingIndex = getBindingRoot() + slotOffset;
         var different = false;
@@ -49857,7 +49857,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵpipe(index, pipeName) {
+    function Δpipe(index, pipeName) {
         var tView = getLView()[TVIEW];
         var pipeDef;
         var adjustedIndex = index + HEADER_OFFSET;
@@ -49908,9 +49908,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵpipeBind1(index, slotOffset, v1) {
-        var pipeInstance = ɵɵload(index);
-        return unwrapValue(isPure(index) ? ɵɵpureFunction1(slotOffset, pipeInstance.transform, v1, pipeInstance) :
+    function ΔpipeBind1(index, slotOffset, v1) {
+        var pipeInstance = Δload(index);
+        return unwrapValue(isPure(index) ? ΔpureFunction1(slotOffset, pipeInstance.transform, v1, pipeInstance) :
             pipeInstance.transform(v1));
     }
     /**
@@ -49926,9 +49926,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵpipeBind2(index, slotOffset, v1, v2) {
-        var pipeInstance = ɵɵload(index);
-        return unwrapValue(isPure(index) ? ɵɵpureFunction2(slotOffset, pipeInstance.transform, v1, v2, pipeInstance) :
+    function ΔpipeBind2(index, slotOffset, v1, v2) {
+        var pipeInstance = Δload(index);
+        return unwrapValue(isPure(index) ? ΔpureFunction2(slotOffset, pipeInstance.transform, v1, v2, pipeInstance) :
             pipeInstance.transform(v1, v2));
     }
     /**
@@ -49945,10 +49945,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵpipeBind3(index, slotOffset, v1, v2, v3) {
-        var pipeInstance = ɵɵload(index);
-        return unwrapValue(isPure(index) ?
-            ɵɵpureFunction3(slotOffset, pipeInstance.transform, v1, v2, v3, pipeInstance) :
+    function ΔpipeBind3(index, slotOffset, v1, v2, v3) {
+        var pipeInstance = Δload(index);
+        return unwrapValue(isPure(index) ? ΔpureFunction3(slotOffset, pipeInstance.transform, v1, v2, v3, pipeInstance) :
             pipeInstance.transform(v1, v2, v3));
     }
     /**
@@ -49966,10 +49965,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵpipeBind4(index, slotOffset, v1, v2, v3, v4) {
-        var pipeInstance = ɵɵload(index);
+    function ΔpipeBind4(index, slotOffset, v1, v2, v3, v4) {
+        var pipeInstance = Δload(index);
         return unwrapValue(isPure(index) ?
-            ɵɵpureFunction4(slotOffset, pipeInstance.transform, v1, v2, v3, v4, pipeInstance) :
+            ΔpureFunction4(slotOffset, pipeInstance.transform, v1, v2, v3, v4, pipeInstance) :
             pipeInstance.transform(v1, v2, v3, v4));
     }
     /**
@@ -49984,9 +49983,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * @codeGenApi
      */
-    function ɵɵpipeBindV(index, slotOffset, values) {
-        var pipeInstance = ɵɵload(index);
-        return unwrapValue(isPure(index) ? ɵɵpureFunctionV(slotOffset, pipeInstance.transform, values, pipeInstance) :
+    function ΔpipeBindV(index, slotOffset, values) {
+        var pipeInstance = Δload(index);
+        return unwrapValue(isPure(index) ? ΔpureFunctionV(slotOffset, pipeInstance.transform, values, pipeInstance) :
             pipeInstance.transform.apply(pipeInstance, values));
     }
     function isPure(index) {
@@ -52138,7 +52137,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      *
      * @codeGenApi
      */
-    function ɵɵqueryRefresh(queryList) {
+    function ΔqueryRefresh(queryList) {
         var queryListImpl = queryList;
         var creationMode = isCreationMode();
         // if creation mode and static or update mode and not static
@@ -52158,10 +52157,10 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      *
      * @codeGenApi
      */
-    function ɵɵstaticViewQuery(
+    function ΔstaticViewQuery(
     // TODO(FW-486): "read" should be an AbstractType
     predicate, descend, read) {
-        var queryList = ɵɵviewQuery(predicate, descend, read);
+        var queryList = ΔviewQuery(predicate, descend, read);
         var tView = getLView()[TVIEW];
         queryList._static = true;
         if (!tView.staticViewQueries) {
@@ -52178,7 +52177,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      *
      * @codeGenApi
      */
-    function ɵɵviewQuery(
+    function ΔviewQuery(
     // TODO(FW-486): "read" should be an AbstractType
     predicate, descend, read) {
         var lView = getLView();
@@ -52197,10 +52196,10 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      *
      * @codeGenApi
      */
-    function ɵɵloadViewQuery() {
+    function ΔloadViewQuery() {
         var index = getCurrentQueryIndex();
         setCurrentQueryIndex(index + 1);
-        return ɵɵload(index - HEADER_OFFSET);
+        return Δload(index - HEADER_OFFSET);
     }
     /**
      * Registers a QueryList, associated with a content query, for later refresh (part of a view
@@ -52214,7 +52213,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      *
      * @codeGenApi
      */
-    function ɵɵcontentQuery(directiveIndex, predicate, descend, 
+    function ΔcontentQuery(directiveIndex, predicate, descend, 
     // TODO(FW-486): "read" should be an AbstractType
     read) {
         var lView = getLView();
@@ -52242,10 +52241,10 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      *
      * @codeGenApi
      */
-    function ɵɵstaticContentQuery(directiveIndex, predicate, descend, 
+    function ΔstaticContentQuery(directiveIndex, predicate, descend, 
     // TODO(FW-486): "read" should be an AbstractType
     read) {
-        var queryList = ɵɵcontentQuery(directiveIndex, predicate, descend, read);
+        var queryList = ΔcontentQuery(directiveIndex, predicate, descend, read);
         var tView = getLView()[TVIEW];
         queryList._static = true;
         if (!tView.staticContentQueries) {
@@ -52256,7 +52255,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      *
      * @codeGenApi
      */
-    function ɵɵloadContentQuery() {
+    function ΔloadContentQuery() {
         var lView = getLView();
         ngDevMode &&
             assertDefined(lView[CONTENT_QUERIES], 'Content QueryList array should be defined if reading a query.');
@@ -52279,7 +52278,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      *
      * @codeGenApi
      */
-    function ɵɵtemplateRefExtractor(tNode, currentView) {
+    function ΔtemplateRefExtractor(tNode, currentView) {
         return createTemplateRef(TemplateRef, ElementRef, tNode, currentView);
     }
 
@@ -52304,125 +52303,125 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * This should be kept up to date with the public exports of @angular/core.
      */
     var angularCoreEnv = {
-        'ɵɵdefineBase': ɵɵdefineBase,
-        'ɵɵdefineComponent': ɵɵdefineComponent,
-        'ɵɵdefineDirective': ɵɵdefineDirective,
-        'ɵɵdefineInjectable': ɵɵdefineInjectable,
-        'ɵɵdefineInjector': ɵɵdefineInjector,
-        'ɵɵdefineNgModule': ɵɵdefineNgModule,
-        'ɵɵdefinePipe': ɵɵdefinePipe,
-        'ɵɵdirectiveInject': ɵɵdirectiveInject,
-        'ɵɵgetFactoryOf': ɵɵgetFactoryOf,
-        'ɵɵgetInheritedFactory': ɵɵgetInheritedFactory,
-        'ɵɵinject': ɵɵinject,
-        'ɵɵinjectAttribute': ɵɵinjectAttribute,
-        'ɵɵtemplateRefExtractor': ɵɵtemplateRefExtractor,
-        'ɵɵNgOnChangesFeature': ɵɵNgOnChangesFeature,
-        'ɵɵProvidersFeature': ɵɵProvidersFeature,
-        'ɵɵInheritDefinitionFeature': ɵɵInheritDefinitionFeature,
-        'ɵɵelementAttribute': ɵɵelementAttribute,
-        'ɵɵbind': ɵɵbind,
-        'ɵɵcontainer': ɵɵcontainer,
-        'ɵɵnextContext': ɵɵnextContext,
-        'ɵɵcontainerRefreshStart': ɵɵcontainerRefreshStart,
-        'ɵɵcontainerRefreshEnd': ɵɵcontainerRefreshEnd,
-        'ɵɵnamespaceHTML': ɵɵnamespaceHTML,
-        'ɵɵnamespaceMathML': ɵɵnamespaceMathML,
-        'ɵɵnamespaceSVG': ɵɵnamespaceSVG,
-        'ɵɵenableBindings': ɵɵenableBindings,
-        'ɵɵdisableBindings': ɵɵdisableBindings,
-        'ɵɵallocHostVars': ɵɵallocHostVars,
-        'ɵɵelementStart': ɵɵelementStart,
-        'ɵɵelementEnd': ɵɵelementEnd,
-        'ɵɵelement': ɵɵelement,
-        'ɵɵelementContainerStart': ɵɵelementContainerStart,
-        'ɵɵelementContainerEnd': ɵɵelementContainerEnd,
-        'ɵɵpureFunction0': ɵɵpureFunction0,
-        'ɵɵpureFunction1': ɵɵpureFunction1,
-        'ɵɵpureFunction2': ɵɵpureFunction2,
-        'ɵɵpureFunction3': ɵɵpureFunction3,
-        'ɵɵpureFunction4': ɵɵpureFunction4,
-        'ɵɵpureFunction5': ɵɵpureFunction5,
-        'ɵɵpureFunction6': ɵɵpureFunction6,
-        'ɵɵpureFunction7': ɵɵpureFunction7,
-        'ɵɵpureFunction8': ɵɵpureFunction8,
-        'ɵɵpureFunctionV': ɵɵpureFunctionV,
-        'ɵɵgetCurrentView': ɵɵgetCurrentView,
-        'ɵɵrestoreView': ɵɵrestoreView,
-        'ɵɵinterpolation1': ɵɵinterpolation1,
-        'ɵɵinterpolation2': ɵɵinterpolation2,
-        'ɵɵinterpolation3': ɵɵinterpolation3,
-        'ɵɵinterpolation4': ɵɵinterpolation4,
-        'ɵɵinterpolation5': ɵɵinterpolation5,
-        'ɵɵinterpolation6': ɵɵinterpolation6,
-        'ɵɵinterpolation7': ɵɵinterpolation7,
-        'ɵɵinterpolation8': ɵɵinterpolation8,
-        'ɵɵinterpolationV': ɵɵinterpolationV,
-        'ɵɵlistener': ɵɵlistener,
-        'ɵɵload': ɵɵload,
-        'ɵɵprojection': ɵɵprojection,
-        'ɵɵelementProperty': ɵɵelementProperty,
-        'ɵɵcomponentHostSyntheticProperty': ɵɵcomponentHostSyntheticProperty,
-        'ɵɵcomponentHostSyntheticListener': ɵɵcomponentHostSyntheticListener,
-        'ɵɵpipeBind1': ɵɵpipeBind1,
-        'ɵɵpipeBind2': ɵɵpipeBind2,
-        'ɵɵpipeBind3': ɵɵpipeBind3,
-        'ɵɵpipeBind4': ɵɵpipeBind4,
-        'ɵɵpipeBindV': ɵɵpipeBindV,
-        'ɵɵprojectionDef': ɵɵprojectionDef,
-        'ɵɵproperty': ɵɵproperty,
-        'ɵɵpropertyInterpolate': ɵɵpropertyInterpolate,
-        'ɵɵpropertyInterpolate1': ɵɵpropertyInterpolate1,
-        'ɵɵpropertyInterpolate2': ɵɵpropertyInterpolate2,
-        'ɵɵpropertyInterpolate3': ɵɵpropertyInterpolate3,
-        'ɵɵpropertyInterpolate4': ɵɵpropertyInterpolate4,
-        'ɵɵpropertyInterpolate5': ɵɵpropertyInterpolate5,
-        'ɵɵpropertyInterpolate6': ɵɵpropertyInterpolate6,
-        'ɵɵpropertyInterpolate7': ɵɵpropertyInterpolate7,
-        'ɵɵpropertyInterpolate8': ɵɵpropertyInterpolate8,
-        'ɵɵpropertyInterpolateV': ɵɵpropertyInterpolateV,
-        'ɵɵpipe': ɵɵpipe,
-        'ɵɵqueryRefresh': ɵɵqueryRefresh,
-        'ɵɵviewQuery': ɵɵviewQuery,
-        'ɵɵstaticViewQuery': ɵɵstaticViewQuery,
-        'ɵɵstaticContentQuery': ɵɵstaticContentQuery,
-        'ɵɵloadViewQuery': ɵɵloadViewQuery,
-        'ɵɵcontentQuery': ɵɵcontentQuery,
-        'ɵɵloadContentQuery': ɵɵloadContentQuery,
-        'ɵɵreference': ɵɵreference,
-        'ɵɵelementHostAttrs': ɵɵelementHostAttrs,
-        'ɵɵclassMap': ɵɵclassMap,
-        'ɵɵstyling': ɵɵstyling,
-        'ɵɵstyleMap': ɵɵstyleMap,
-        'ɵɵstyleProp': ɵɵstyleProp,
-        'ɵɵstylingApply': ɵɵstylingApply,
-        'ɵɵclassProp': ɵɵclassProp,
-        'ɵɵselect': ɵɵselect,
-        'ɵɵtemplate': ɵɵtemplate,
-        'ɵɵtext': ɵɵtext,
-        'ɵɵtextBinding': ɵɵtextBinding,
-        'ɵɵembeddedViewStart': ɵɵembeddedViewStart,
-        'ɵɵembeddedViewEnd': ɵɵembeddedViewEnd,
-        'ɵɵi18n': ɵɵi18n,
-        'ɵɵi18nAttributes': ɵɵi18nAttributes,
-        'ɵɵi18nExp': ɵɵi18nExp,
-        'ɵɵi18nStart': ɵɵi18nStart,
-        'ɵɵi18nEnd': ɵɵi18nEnd,
-        'ɵɵi18nApply': ɵɵi18nApply,
-        'ɵɵi18nPostprocess': ɵɵi18nPostprocess,
-        'ɵɵi18nLocalize': ɵɵi18nLocalize,
-        'ɵɵresolveWindow': ɵɵresolveWindow,
-        'ɵɵresolveDocument': ɵɵresolveDocument,
-        'ɵɵresolveBody': ɵɵresolveBody,
-        'ɵɵsetComponentScope': ɵɵsetComponentScope,
-        'ɵɵsetNgModuleScope': ɵɵsetNgModuleScope,
-        'ɵɵsanitizeHtml': ɵɵsanitizeHtml,
-        'ɵɵsanitizeStyle': ɵɵsanitizeStyle,
-        'ɵɵdefaultStyleSanitizer': ɵɵdefaultStyleSanitizer,
-        'ɵɵsanitizeResourceUrl': ɵɵsanitizeResourceUrl,
-        'ɵɵsanitizeScript': ɵɵsanitizeScript,
-        'ɵɵsanitizeUrl': ɵɵsanitizeUrl,
-        'ɵɵsanitizeUrlOrResourceUrl': ɵɵsanitizeUrlOrResourceUrl,
+        'ΔdefineBase': ΔdefineBase,
+        'ΔdefineComponent': ΔdefineComponent,
+        'ΔdefineDirective': ΔdefineDirective,
+        'ΔdefineInjectable': ΔdefineInjectable,
+        'ΔdefineInjector': ΔdefineInjector,
+        'ΔdefineNgModule': ΔdefineNgModule,
+        'ΔdefinePipe': ΔdefinePipe,
+        'ΔdirectiveInject': ΔdirectiveInject,
+        'ΔgetFactoryOf': ΔgetFactoryOf,
+        'ΔgetInheritedFactory': ΔgetInheritedFactory,
+        'Δinject': Δinject,
+        'ΔinjectAttribute': ΔinjectAttribute,
+        'ΔtemplateRefExtractor': ΔtemplateRefExtractor,
+        'ΔNgOnChangesFeature': ΔNgOnChangesFeature,
+        'ΔProvidersFeature': ΔProvidersFeature,
+        'ΔInheritDefinitionFeature': ΔInheritDefinitionFeature,
+        'ΔelementAttribute': ΔelementAttribute,
+        'Δbind': Δbind,
+        'Δcontainer': Δcontainer,
+        'ΔnextContext': ΔnextContext,
+        'ΔcontainerRefreshStart': ΔcontainerRefreshStart,
+        'ΔcontainerRefreshEnd': ΔcontainerRefreshEnd,
+        'ΔnamespaceHTML': ΔnamespaceHTML,
+        'ΔnamespaceMathML': ΔnamespaceMathML,
+        'ΔnamespaceSVG': ΔnamespaceSVG,
+        'ΔenableBindings': ΔenableBindings,
+        'ΔdisableBindings': ΔdisableBindings,
+        'ΔallocHostVars': ΔallocHostVars,
+        'ΔelementStart': ΔelementStart,
+        'ΔelementEnd': ΔelementEnd,
+        'Δelement': Δelement,
+        'ΔelementContainerStart': ΔelementContainerStart,
+        'ΔelementContainerEnd': ΔelementContainerEnd,
+        'ΔpureFunction0': ΔpureFunction0,
+        'ΔpureFunction1': ΔpureFunction1,
+        'ΔpureFunction2': ΔpureFunction2,
+        'ΔpureFunction3': ΔpureFunction3,
+        'ΔpureFunction4': ΔpureFunction4,
+        'ΔpureFunction5': ΔpureFunction5,
+        'ΔpureFunction6': ΔpureFunction6,
+        'ΔpureFunction7': ΔpureFunction7,
+        'ΔpureFunction8': ΔpureFunction8,
+        'ΔpureFunctionV': ΔpureFunctionV,
+        'ΔgetCurrentView': ΔgetCurrentView,
+        'ΔrestoreView': ΔrestoreView,
+        'Δinterpolation1': Δinterpolation1,
+        'Δinterpolation2': Δinterpolation2,
+        'Δinterpolation3': Δinterpolation3,
+        'Δinterpolation4': Δinterpolation4,
+        'Δinterpolation5': Δinterpolation5,
+        'Δinterpolation6': Δinterpolation6,
+        'Δinterpolation7': Δinterpolation7,
+        'Δinterpolation8': Δinterpolation8,
+        'ΔinterpolationV': ΔinterpolationV,
+        'Δlistener': Δlistener,
+        'Δload': Δload,
+        'Δprojection': Δprojection,
+        'ΔelementProperty': ΔelementProperty,
+        'ΔcomponentHostSyntheticProperty': ΔcomponentHostSyntheticProperty,
+        'ΔcomponentHostSyntheticListener': ΔcomponentHostSyntheticListener,
+        'ΔpipeBind1': ΔpipeBind1,
+        'ΔpipeBind2': ΔpipeBind2,
+        'ΔpipeBind3': ΔpipeBind3,
+        'ΔpipeBind4': ΔpipeBind4,
+        'ΔpipeBindV': ΔpipeBindV,
+        'ΔprojectionDef': ΔprojectionDef,
+        'Δproperty': Δproperty,
+        'ΔpropertyInterpolate': ΔpropertyInterpolate,
+        'ΔpropertyInterpolate1': ΔpropertyInterpolate1,
+        'ΔpropertyInterpolate2': ΔpropertyInterpolate2,
+        'ΔpropertyInterpolate3': ΔpropertyInterpolate3,
+        'ΔpropertyInterpolate4': ΔpropertyInterpolate4,
+        'ΔpropertyInterpolate5': ΔpropertyInterpolate5,
+        'ΔpropertyInterpolate6': ΔpropertyInterpolate6,
+        'ΔpropertyInterpolate7': ΔpropertyInterpolate7,
+        'ΔpropertyInterpolate8': ΔpropertyInterpolate8,
+        'ΔpropertyInterpolateV': ΔpropertyInterpolateV,
+        'Δpipe': Δpipe,
+        'ΔqueryRefresh': ΔqueryRefresh,
+        'ΔviewQuery': ΔviewQuery,
+        'ΔstaticViewQuery': ΔstaticViewQuery,
+        'ΔstaticContentQuery': ΔstaticContentQuery,
+        'ΔloadViewQuery': ΔloadViewQuery,
+        'ΔcontentQuery': ΔcontentQuery,
+        'ΔloadContentQuery': ΔloadContentQuery,
+        'Δreference': Δreference,
+        'ΔelementHostAttrs': ΔelementHostAttrs,
+        'ΔclassMap': ΔclassMap,
+        'Δstyling': Δstyling,
+        'ΔstyleMap': ΔstyleMap,
+        'ΔstyleProp': ΔstyleProp,
+        'ΔstylingApply': ΔstylingApply,
+        'ΔclassProp': ΔclassProp,
+        'Δselect': Δselect,
+        'Δtemplate': Δtemplate,
+        'Δtext': Δtext,
+        'ΔtextBinding': ΔtextBinding,
+        'ΔembeddedViewStart': ΔembeddedViewStart,
+        'ΔembeddedViewEnd': ΔembeddedViewEnd,
+        'Δi18n': Δi18n,
+        'Δi18nAttributes': Δi18nAttributes,
+        'Δi18nExp': Δi18nExp,
+        'Δi18nStart': Δi18nStart,
+        'Δi18nEnd': Δi18nEnd,
+        'Δi18nApply': Δi18nApply,
+        'Δi18nPostprocess': Δi18nPostprocess,
+        'Δi18nLocalize': Δi18nLocalize,
+        'ΔresolveWindow': ΔresolveWindow,
+        'ΔresolveDocument': ΔresolveDocument,
+        'ΔresolveBody': ΔresolveBody,
+        'ΔsetComponentScope': ΔsetComponentScope,
+        'ΔsetNgModuleScope': ΔsetNgModuleScope,
+        'ΔsanitizeHtml': ΔsanitizeHtml,
+        'ΔsanitizeStyle': ΔsanitizeStyle,
+        'ΔdefaultStyleSanitizer': ΔdefaultStyleSanitizer,
+        'ΔsanitizeResourceUrl': ΔsanitizeResourceUrl,
+        'ΔsanitizeScript': ΔsanitizeScript,
+        'ΔsanitizeUrl': ΔsanitizeUrl,
+        'ΔsanitizeUrlOrResourceUrl': ΔsanitizeUrlOrResourceUrl,
     };
 
     /**
@@ -53316,7 +53315,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             }
             this.initialized = true;
         };
-        ApplicationInitStatus.ngInjectableDef = ɵɵdefineInjectable({ token: ApplicationInitStatus, factory: function ApplicationInitStatus_Factory(t) { return new (t || ApplicationInitStatus)(ɵɵinject(APP_INITIALIZER, 8)); }, providedIn: null });
+        ApplicationInitStatus.ngInjectableDef = ΔdefineInjectable({ token: ApplicationInitStatus, factory: function ApplicationInitStatus_Factory(t) { return new (t || ApplicationInitStatus)(Δinject(APP_INITIALIZER, 8)); }, providedIn: null });
         return ApplicationInitStatus;
     }());
 
@@ -53397,7 +53396,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             // tslint:disable-next-line:no-console
             console.warn(message);
         };
-        Console.ngInjectableDef = ɵɵdefineInjectable({ token: Console, factory: function Console_Factory(t) { return new (t || Console)(); }, providedIn: null });
+        Console.ngInjectableDef = ΔdefineInjectable({ token: Console, factory: function Console_Factory(t) { return new (t || Console)(); }, providedIn: null });
         return Console;
     }());
 
@@ -53487,7 +53486,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
          * Returns the id for a given NgModule, if one is defined and known to the compiler.
          */
         Compiler.prototype.getModuleId = function (moduleType) { return undefined; };
-        Compiler.ngInjectableDef = ɵɵdefineInjectable({ token: Compiler, factory: function Compiler_Factory(t) { return new (t || Compiler)(); }, providedIn: null });
+        Compiler.ngInjectableDef = ΔdefineInjectable({ token: Compiler, factory: function Compiler_Factory(t) { return new (t || Compiler)(); }, providedIn: null });
         return Compiler;
     }());
     /**
@@ -54066,7 +54065,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             // TODO(juliemr): implement.
             return [];
         };
-        Testability.ngInjectableDef = ɵɵdefineInjectable({ token: Testability, factory: function Testability_Factory(t) { return new (t || Testability)(ɵɵinject(NgZone)); }, providedIn: null });
+        Testability.ngInjectableDef = ΔdefineInjectable({ token: Testability, factory: function Testability_Factory(t) { return new (t || Testability)(Δinject(NgZone)); }, providedIn: null });
         return Testability;
     }());
     /**
@@ -54119,7 +54118,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             if (findInAncestors === void 0) { findInAncestors = true; }
             return _testabilityGetter.findTestabilityInTree(this, elem, findInAncestors);
         };
-        TestabilityRegistry.ngInjectableDef = ɵɵdefineInjectable({ token: TestabilityRegistry, factory: function TestabilityRegistry_Factory(t) { return new (t || TestabilityRegistry)(); }, providedIn: null });
+        TestabilityRegistry.ngInjectableDef = ΔdefineInjectable({ token: TestabilityRegistry, factory: function TestabilityRegistry_Factory(t) { return new (t || TestabilityRegistry)(); }, providedIn: null });
         return TestabilityRegistry;
     }());
     var _NoopGetTestability = /** @class */ (function () {
@@ -54363,7 +54362,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             enumerable: true,
             configurable: true
         });
-        PlatformRef.ngInjectableDef = ɵɵdefineInjectable({ token: PlatformRef, factory: function PlatformRef_Factory(t) { return new (t || PlatformRef)(ɵɵinject(Injector)); }, providedIn: null });
+        PlatformRef.ngInjectableDef = ΔdefineInjectable({ token: PlatformRef, factory: function PlatformRef_Factory(t) { return new (t || PlatformRef)(Δinject(Injector)); }, providedIn: null });
         return PlatformRef;
     }());
     function getNgZone(ngZoneOption) {
@@ -54712,7 +54711,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         });
         /** @internal */
         ApplicationRef._tickScope = wtfCreateScope('ApplicationRef#tick()');
-        ApplicationRef.ngInjectableDef = ɵɵdefineInjectable({ token: ApplicationRef, factory: function ApplicationRef_Factory(t) { return new (t || ApplicationRef)(ɵɵinject(NgZone), ɵɵinject(Console), ɵɵinject(Injector), ɵɵinject(ErrorHandler), ɵɵinject(ComponentFactoryResolver), ɵɵinject(ApplicationInitStatus)); }, providedIn: null });
+        ApplicationRef.ngInjectableDef = ΔdefineInjectable({ token: ApplicationRef, factory: function ApplicationRef_Factory(t) { return new (t || ApplicationRef)(Δinject(NgZone), Δinject(Console), Δinject(Injector), Δinject(ErrorHandler), Δinject(ComponentFactoryResolver), Δinject(ApplicationInitStatus)); }, providedIn: null });
         return ApplicationRef;
     }());
     function remove(list, el) {
@@ -54817,7 +54816,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 .then(function (module) { return module[exportName + factoryClassSuffix]; })
                 .then(function (factory) { return checkNotEmpty(factory, module, exportName); });
         };
-        SystemJsNgModuleLoader.ngInjectableDef = ɵɵdefineInjectable({ token: SystemJsNgModuleLoader, factory: function SystemJsNgModuleLoader_Factory(t) { return new (t || SystemJsNgModuleLoader)(ɵɵinject(Compiler), ɵɵinject(SystemJsNgModuleLoaderConfig, 8)); }, providedIn: null });
+        SystemJsNgModuleLoader.ngInjectableDef = ΔdefineInjectable({ token: SystemJsNgModuleLoader, factory: function SystemJsNgModuleLoader_Factory(t) { return new (t || SystemJsNgModuleLoader)(Δinject(Compiler), Δinject(SystemJsNgModuleLoaderConfig, 8)); }, providedIn: null });
         return SystemJsNgModuleLoader;
     }());
     function checkNotEmpty(value, modulePath, exportName) {
@@ -55766,8 +55765,8 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         // Inject ApplicationRef to make it eager...
         function ApplicationModule(appRef) {
         }
-        ApplicationModule.ngModuleDef = ɵɵdefineNgModule({ type: ApplicationModule });
-        ApplicationModule.ngInjectorDef = ɵɵdefineInjector({ factory: function ApplicationModule_Factory(t) { return new (t || ApplicationModule)(ɵɵinject(ApplicationRef)); }, providers: APPLICATION_MODULE_PROVIDERS });
+        ApplicationModule.ngModuleDef = ΔdefineNgModule({ type: ApplicationModule });
+        ApplicationModule.ngInjectorDef = ΔdefineInjector({ factory: function ApplicationModule_Factory(t) { return new (t || ApplicationModule)(Δinject(ApplicationRef)); }, providers: APPLICATION_MODULE_PROVIDERS });
         return ApplicationModule;
     }());
 
@@ -58553,7 +58552,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-rc.0+177.sha-dbb150a.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-rc.0+180.sha-4f9b167.with-local-changes');
 
     /**
      * @license
