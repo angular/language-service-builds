@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-rc.0+190.sha-0051ddf.with-local-changes
+ * @license Angular v8.0.0-rc.0+193.sha-c62c5e2.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -17734,7 +17734,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-rc.0+190.sha-0051ddf.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-rc.0+193.sha-c62c5e2.with-local-changes');
 
     /**
      * @license
@@ -36580,8 +36580,11 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      */
     function enqueueHostInstruction(context, priority, instructionFn, instructionFnArgs) {
         var buffer = context[8 /* HostInstructionsQueue */];
-        var index = findNextInsertionIndex(buffer, priority);
-        buffer.splice(index, 0, priority, instructionFn, instructionFnArgs);
+        // Buffer may be null if host element is a template node. In this case, just ignore the style.
+        if (buffer != null) {
+            var index = findNextInsertionIndex(buffer, priority);
+            buffer.splice(index, 0, priority, instructionFn, instructionFnArgs);
+        }
     }
     /**
      * Figures out where exactly to to insert the next host instruction queue entry.
@@ -38626,18 +38629,16 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             var parentInSameView = parent_1 && parent_1 !== lView[T_HOST];
             var tParentNode = parentInSameView ? parent_1 : null;
             tNode = tView.data[adjustedIndex] = createTNode(tParentNode, type, adjustedIndex, name, attrs);
-        }
-        // Now link ourselves into the tree.
-        // We need this even if tNode exists, otherwise we might end up pointing to unexisting tNodes when
-        // we use i18n (especially with ICU expressions that update the DOM during the update phase).
-        if (previousOrParentTNode) {
-            if (isParent && previousOrParentTNode.child == null &&
-                (tNode.parent !== null || previousOrParentTNode.type === 2 /* View */)) {
-                // We are in the same view, which means we are adding content node to the parent view.
-                previousOrParentTNode.child = tNode;
-            }
-            else if (!isParent) {
-                previousOrParentTNode.next = tNode;
+            // Now link ourselves into the tree.
+            if (previousOrParentTNode) {
+                if (isParent && previousOrParentTNode.child == null &&
+                    (tNode.parent !== null || previousOrParentTNode.type === 2 /* View */)) {
+                    // We are in the same view, which means we are adding content node to the parent view.
+                    previousOrParentTNode.child = tNode;
+                }
+                else if (!isParent) {
+                    previousOrParentTNode.next = tNode;
+                }
             }
         }
         if (tView.firstChild == null) {
@@ -44932,7 +44933,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-rc.0+190.sha-0051ddf.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-rc.0+193.sha-c62c5e2.with-local-changes');
 
     /**
      * @license
@@ -58594,7 +58595,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-rc.0+190.sha-0051ddf.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-rc.0+193.sha-c62c5e2.with-local-changes');
 
     /**
      * @license
