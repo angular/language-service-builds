@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-rc.0+200.sha-3f7e823.with-local-changes
+ * @license Angular v8.0.0-rc.0+222.sha-757d4c3.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -17749,7 +17749,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-rc.0+200.sha-3f7e823.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-rc.0+222.sha-757d4c3.with-local-changes');
 
     /**
      * @license
@@ -30711,11 +30711,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     var MULTI_PROVIDER_FN = function () {
         return Array.prototype.slice.call(arguments);
     };
-    var NULL_INJECTOR$1 = Injector.NULL;
     var NO_NEW_LINE$1 = 'ɵ';
     var StaticInjector = /** @class */ (function () {
         function StaticInjector(providers, parent, source) {
-            if (parent === void 0) { parent = NULL_INJECTOR$1; }
+            if (parent === void 0) { parent = Injector.NULL; }
             if (source === void 0) { source = null; }
             this.parent = parent;
             this.source = source;
@@ -30873,7 +30872,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                         records, 
                         // If we don't know how to resolve dependency and we should not check parent for it,
                         // than pass in Null injector.
-                        !childRecord && !(options & 4 /* CheckParent */) ? NULL_INJECTOR$1 : parent, options & 1 /* Optional */ ? null : Injector.THROW_IF_NOT_FOUND, InjectFlags.Default));
+                        !childRecord && !(options & 4 /* CheckParent */) ? Injector.NULL : parent, options & 1 /* Optional */ ? null : Injector.THROW_IF_NOT_FOUND, InjectFlags.Default));
                     }
                 }
                 record.value = value = useNew ? new ((_a = fn).bind.apply(_a, __spread([void 0], deps)))() : fn.apply(obj, deps);
@@ -32138,7 +32137,11 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     var EMPTY_ARRAY$3 = [];
     // freezing the values prevents any code from accidentally inserting new values in
     if (typeof ngDevMode !== 'undefined' && ngDevMode) {
+        // These property accesses can be ignored because ngDevMode will be set to false
+        // when optimizing code and the whole if statement will be dropped.
+        // tslint:disable-next-line:no-toplevel-property-access
         Object.freeze(EMPTY_OBJ);
+        // tslint:disable-next-line:no-toplevel-property-access
         Object.freeze(EMPTY_ARRAY$3);
     }
 
@@ -32217,9 +32220,12 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         }
         return renderStringify(value);
     }
-    var defaultScheduler = (typeof requestAnimationFrame !== 'undefined' && requestAnimationFrame || // browser only
-        setTimeout // everything else
-    ).bind(_global$1);
+    var ɵ0$6 = function () {
+        return (typeof requestAnimationFrame !== 'undefined' && requestAnimationFrame || // browser only
+            setTimeout // everything else
+        ).bind(_global$1);
+    };
+    var defaultScheduler = (ɵ0$6)();
     /**
      * The special delimiter we use to separate property names, prefixes, and suffixes
      * in property binding metadata. See storeBindingMetadata().
@@ -32644,10 +32650,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         }
         return NodeInjectorFactory;
     }());
-    var FactoryPrototype = NodeInjectorFactory.prototype;
     function isFactory(obj) {
         // See: https://jsperf.com/instanceof-vs-getprototypeof
-        return obj !== null && typeof obj == 'object' && Object.getPrototypeOf(obj) == FactoryPrototype;
+        return obj !== null && typeof obj == 'object' &&
+            Object.getPrototypeOf(obj) == NodeInjectorFactory.prototype;
     }
 
     /**
@@ -33089,9 +33095,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     function isProceduralRenderer(renderer) {
         return !!(renderer.listen);
     }
-    var ɵ0$6 = function (hostElement, rendererType) { return document; };
+    var ɵ0$7 = function (hostElement, rendererType) { return document; };
     var domRendererFactory3 = {
-        createRenderer: ɵ0$6
+        createRenderer: ɵ0$7
     };
 
     /**
@@ -35061,11 +35067,12 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * found in the LICENSE file at https://angular.io/license
      */
 
+    var ɵ0$8 = function () { return Promise.resolve(null); };
     /**
      * A permanent marker promise which signifies that the current CD tree is
      * clean.
      */
-    var _CLEAN_PROMISE = Promise.resolve(null);
+    var _CLEAN_PROMISE = (ɵ0$8)();
     /**
      * Refreshes the view, executing the following steps in that order:
      * triggers init hooks, refreshes dynamic embedded views, triggers content hooks, sets host
@@ -37515,7 +37522,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-rc.0+200.sha-3f7e823.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-rc.0+222.sha-757d4c3.with-local-changes');
 
     /**
      * @license
@@ -40555,9 +40562,13 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * NOTE: changes to the `ngI18nClosureMode` name must be synced with `compiler-cli/src/tooling.ts`.
      */
     if (typeof ngI18nClosureMode === 'undefined') {
+        // These property accesses can be ignored because ngI18nClosureMode will be set to false
+        // when optimizing code and the whole if statement will be dropped.
         // Make sure to refer to ngI18nClosureMode as ['ngI18nClosureMode'] for closure.
+        // tslint:disable-next-line:no-toplevel-property-access
         _global$1['ngI18nClosureMode'] =
             // TODO(FW-1250): validate that this actually, you know, works.
+            // tslint:disable-next-line:no-toplevel-property-access
             typeof goog !== 'undefined' && typeof goog.getMsg === 'function';
     }
 
@@ -42660,7 +42671,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var ɵ0$7 = function (dir) {
+    var ɵ0$9 = function (dir) {
         if (dir === void 0) { dir = {}; }
         return dir;
     }, ɵ1$2 = function (type, meta) { return SWITCH_COMPILE_DIRECTIVE(type, meta); };
@@ -42669,7 +42680,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      *
      * @publicApi
      */
-    var Directive = makeDecorator('Directive', ɵ0$7, undefined, undefined, ɵ1$2);
+    var Directive = makeDecorator('Directive', ɵ0$9, undefined, undefined, ɵ1$2);
     var ɵ2$1 = function (c) {
         if (c === void 0) { c = {}; }
         return (__assign({ changeDetection: ChangeDetectionStrategy$1.Default }, c));
@@ -42753,7 +42764,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var ɵ0$8 = function (ngModule) { return ngModule; }, ɵ1$3 = 
+    var ɵ0$a = function (ngModule) { return ngModule; }, ɵ1$3 = 
     /**
      * Decorator that marks the following class as an NgModule, and supplies
      * configuration metadata for it.
@@ -42770,7 +42781,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * @Annotation
      * @publicApi
      */
-    var NgModule = makeDecorator('NgModule', ɵ0$8, undefined, undefined, ɵ1$3);
+    var NgModule = makeDecorator('NgModule', ɵ0$a, undefined, undefined, ɵ1$3);
     function preR3NgModuleCompile(moduleType, metadata) {
         var imports = (metadata && metadata.imports) || [];
         if (metadata && metadata.exports) {
@@ -43154,7 +43165,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var promise = Promise.resolve(0);
+    var promise = (function () { return Promise.resolve(0); })();
     function scheduleMicroTask(fn) {
         if (typeof Zone === 'undefined') {
             // use promise to schedule microTask instead of use Zone
@@ -48142,7 +48153,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-rc.0+200.sha-3f7e823.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-rc.0+222.sha-757d4c3.with-local-changes');
 
     /**
      * @license
