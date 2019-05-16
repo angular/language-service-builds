@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-rc.0+200.sha-3f7e823.with-local-changes
+ * @license Angular v8.0.0-rc.0+222.sha-757d4c3.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -17734,7 +17734,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-rc.0+200.sha-3f7e823.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-rc.0+222.sha-757d4c3.with-local-changes');
 
     /**
      * @license
@@ -32130,7 +32130,11 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     var EMPTY_ARRAY$2 = [];
     // freezing the values prevents any code from accidentally inserting new values in
     if (typeof ngDevMode !== 'undefined' && ngDevMode) {
+        // These property accesses can be ignored because ngDevMode will be set to false
+        // when optimizing code and the whole if statement will be dropped.
+        // tslint:disable-next-line:no-toplevel-property-access
         Object.freeze(EMPTY_OBJ);
+        // tslint:disable-next-line:no-toplevel-property-access
         Object.freeze(EMPTY_ARRAY$2);
     }
 
@@ -32512,9 +32516,11 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         }
         return renderStringify(value);
     }
-    var defaultScheduler = (typeof requestAnimationFrame !== 'undefined' && requestAnimationFrame || // browser only
-        setTimeout // everything else
-    ).bind(_global$1);
+    var defaultScheduler = (function () {
+        return (typeof requestAnimationFrame !== 'undefined' && requestAnimationFrame || // browser only
+            setTimeout // everything else
+        ).bind(_global$1);
+    })();
     /**
      *
      * @codeGenApi
@@ -32998,10 +33004,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         }
         return NodeInjectorFactory;
     }());
-    var FactoryPrototype = NodeInjectorFactory.prototype;
     function isFactory(obj) {
         // See: https://jsperf.com/instanceof-vs-getprototypeof
-        return obj !== null && typeof obj == 'object' && Object.getPrototypeOf(obj) == FactoryPrototype;
+        return obj !== null && typeof obj == 'object' &&
+            Object.getPrototypeOf(obj) == NodeInjectorFactory.prototype;
     }
 
     /**
@@ -38465,7 +38471,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * A permanent marker promise which signifies that the current CD tree is
      * clean.
      */
-    var _CLEAN_PROMISE = Promise.resolve(null);
+    var _CLEAN_PROMISE = (function () { return Promise.resolve(null); })();
     /**
      * Refreshes the view, executing the following steps in that order:
      * triggers init hooks, refreshes dynamic embedded views, triggers content hooks, sets host
@@ -44933,7 +44939,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-rc.0+200.sha-3f7e823.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-rc.0+222.sha-757d4c3.with-local-changes');
 
     /**
      * @license
@@ -47961,9 +47967,13 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * NOTE: changes to the `ngI18nClosureMode` name must be synced with `compiler-cli/src/tooling.ts`.
      */
     if (typeof ngI18nClosureMode === 'undefined') {
+        // These property accesses can be ignored because ngI18nClosureMode will be set to false
+        // when optimizing code and the whole if statement will be dropped.
         // Make sure to refer to ngI18nClosureMode as ['ngI18nClosureMode'] for closure.
+        // tslint:disable-next-line:no-toplevel-property-access
         _global$1['ngI18nClosureMode'] =
             // TODO(FW-1250): validate that this actually, you know, works.
+            // tslint:disable-next-line:no-toplevel-property-access
             typeof goog !== 'undefined' && typeof goog.getMsg === 'function';
     }
 
@@ -52345,7 +52355,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      *
      * This should be kept up to date with the public exports of @angular/core.
      */
-    var angularCoreEnv = {
+    var angularCoreEnv = (function () { return ({
         'ΔdefineBase': ΔdefineBase,
         'ΔdefineComponent': ΔdefineComponent,
         'ΔdefineDirective': ΔdefineDirective,
@@ -52465,7 +52475,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         'ΔsanitizeScript': ΔsanitizeScript,
         'ΔsanitizeUrl': ΔsanitizeUrl,
         'ΔsanitizeUrlOrResourceUrl': ΔsanitizeUrlOrResourceUrl,
-    };
+    }); })();
 
     /**
      * @license
@@ -53631,7 +53641,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var promise = Promise.resolve(0);
+    var promise = (function () { return Promise.resolve(0); })();
     function scheduleMicroTask(fn) {
         if (typeof Zone === 'undefined') {
             // use promise to schedule microTask instead of use Zone
@@ -58595,7 +58605,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-rc.0+200.sha-3f7e823.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-rc.0+222.sha-757d4c3.with-local-changes');
 
     /**
      * @license
