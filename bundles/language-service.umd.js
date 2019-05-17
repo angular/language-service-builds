@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-rc.0+238.sha-98ded94.with-local-changes
+ * @license Angular v8.0.0-rc.0+244.sha-eda09e6.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -12356,6 +12356,18 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         }).toLowerCase();
     }
 
+    /**
+    * @license
+    * Copyright Google Inc. All Rights Reserved.
+    *
+    * Use of this source code is governed by an MIT-style license that can be
+    * found in the LICENSE file at https://angular.io/license
+    */
+    var _stylingMode = 0;
+    function compilerIsNewStylingInUse() {
+        return _stylingMode > 0 /* UseOld */;
+    }
+
     var IMPORTANT_FLAG = '!important';
     /**
      * Produces creation/update instructions for all styling bindings (class and style)
@@ -12671,6 +12683,11 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 var bindingIndex = mapIndex.get(input.name);
                 var value = input.value.visit(valueConverter);
                 totalBindingSlotsRequired += (value instanceof Interpolation) ? value.expressions.length : 0;
+                if (compilerIsNewStylingInUse()) {
+                    // the old implementation does not reserve slot values for
+                    // binding entries. The new one does.
+                    totalBindingSlotsRequired++;
+                }
                 return {
                     sourceSpan: input.sourceSpan,
                     allocateBindingSlots: totalBindingSlotsRequired, reference: reference,
@@ -17309,6 +17326,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             // the update block of a component/directive templateFn/hostBindingsFn so that the bindings
             // are evaluated and updated for the element.
             styleBuilder.buildUpdateLevelInstructions(getValueConverter()).forEach(function (instruction) {
+                totalHostVarsCount += instruction.allocateBindingSlots;
                 updateStatements.push(createStylingStmt(instruction, bindingContext, bindingFn));
             });
         }
@@ -17749,7 +17767,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-rc.0+238.sha-98ded94.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-rc.0+244.sha-eda09e6.with-local-changes');
 
     /**
      * @license
@@ -32267,6 +32285,38 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    // Below are constants for LView indices to help us look up LView members
+    // without having to remember the specific indices.
+    // Uglify will inline these when minifying so there shouldn't be a cost.
+    var HOST = 0;
+    var TVIEW = 1;
+    var FLAGS = 2;
+    var PARENT = 3;
+    var NEXT = 4;
+    var QUERIES = 5;
+    var T_HOST = 6;
+    var BINDING_INDEX = 7;
+    var CLEANUP = 8;
+    var CONTEXT = 9;
+    var INJECTOR$1 = 10;
+    var RENDERER_FACTORY = 11;
+    var RENDERER = 12;
+    var SANITIZER = 13;
+    var CHILD_HEAD = 14;
+    var CHILD_TAIL = 15;
+    var CONTENT_QUERIES = 16;
+    var DECLARATION_VIEW = 17;
+    var PREORDER_HOOK_FLAGS = 18;
+    /** Size of LView's header. Necessary to adjust for it when setting slots.  */
+    var HEADER_OFFSET = 20;
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     function assertEqual(actual, expected, msg) {
         if (actual != expected) {
             throwError(msg);
@@ -32305,38 +32355,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     function assertDataInRange(arr, index) {
         assertLessThan(index, arr ? arr.length : 0, 'index expected to be a valid data index');
     }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    // Below are constants for LView indices to help us look up LView members
-    // without having to remember the specific indices.
-    // Uglify will inline these when minifying so there shouldn't be a cost.
-    var HOST = 0;
-    var TVIEW = 1;
-    var FLAGS = 2;
-    var PARENT = 3;
-    var NEXT = 4;
-    var QUERIES = 5;
-    var T_HOST = 6;
-    var BINDING_INDEX = 7;
-    var CLEANUP = 8;
-    var CONTEXT = 9;
-    var INJECTOR$1 = 10;
-    var RENDERER_FACTORY = 11;
-    var RENDERER = 12;
-    var SANITIZER = 13;
-    var CHILD_HEAD = 14;
-    var CHILD_TAIL = 15;
-    var CONTENT_QUERIES = 16;
-    var DECLARATION_VIEW = 17;
-    var PREORDER_HOOK_FLAGS = 18;
-    /** Size of LView's header. Necessary to adjust for it when setting slots.  */
-    var HEADER_OFFSET = 20;
 
     /**
      * @license
@@ -32522,172 +32540,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     function assertLView(value) {
         assertDefined(value, 'LView must be defined');
         assertEqual(isLView(value), true, 'Expecting LView');
-    }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    var TNODE = 8;
-    var PARENT_INJECTOR = 8;
-    var INJECTOR_BLOOM_PARENT_SIZE = 9;
-    var NO_PARENT_INJECTOR = -1;
-    /**
-     * Each injector is saved in 9 contiguous slots in `LView` and 9 contiguous slots in
-     * `TView.data`. This allows us to store information about the current node's tokens (which
-     * can be shared in `TView`) as well as the tokens of its ancestor nodes (which cannot be
-     * shared, so they live in `LView`).
-     *
-     * Each of these slots (aside from the last slot) contains a bloom filter. This bloom filter
-     * determines whether a directive is available on the associated node or not. This prevents us
-     * from searching the directives array at this level unless it's probable the directive is in it.
-     *
-     * See: https://en.wikipedia.org/wiki/Bloom_filter for more about bloom filters.
-     *
-     * Because all injectors have been flattened into `LView` and `TViewData`, they cannot typed
-     * using interfaces as they were previously. The start index of each `LInjector` and `TInjector`
-     * will differ based on where it is flattened into the main array, so it's not possible to know
-     * the indices ahead of time and save their types here. The interfaces are still included here
-     * for documentation purposes.
-     *
-     * export interface LInjector extends Array<any> {
-     *
-     *    // Cumulative bloom for directive IDs 0-31  (IDs are % BLOOM_SIZE)
-     *    [0]: number;
-     *
-     *    // Cumulative bloom for directive IDs 32-63
-     *    [1]: number;
-     *
-     *    // Cumulative bloom for directive IDs 64-95
-     *    [2]: number;
-     *
-     *    // Cumulative bloom for directive IDs 96-127
-     *    [3]: number;
-     *
-     *    // Cumulative bloom for directive IDs 128-159
-     *    [4]: number;
-     *
-     *    // Cumulative bloom for directive IDs 160 - 191
-     *    [5]: number;
-     *
-     *    // Cumulative bloom for directive IDs 192 - 223
-     *    [6]: number;
-     *
-     *    // Cumulative bloom for directive IDs 224 - 255
-     *    [7]: number;
-     *
-     *    // We need to store a reference to the injector's parent so DI can keep looking up
-     *    // the injector tree until it finds the dependency it's looking for.
-     *    [PARENT_INJECTOR]: number;
-     * }
-     *
-     * export interface TInjector extends Array<any> {
-     *
-     *    // Shared node bloom for directive IDs 0-31  (IDs are % BLOOM_SIZE)
-     *    [0]: number;
-     *
-     *    // Shared node bloom for directive IDs 32-63
-     *    [1]: number;
-     *
-     *    // Shared node bloom for directive IDs 64-95
-     *    [2]: number;
-     *
-     *    // Shared node bloom for directive IDs 96-127
-     *    [3]: number;
-     *
-     *    // Shared node bloom for directive IDs 128-159
-     *    [4]: number;
-     *
-     *    // Shared node bloom for directive IDs 160 - 191
-     *    [5]: number;
-     *
-     *    // Shared node bloom for directive IDs 192 - 223
-     *    [6]: number;
-     *
-     *    // Shared node bloom for directive IDs 224 - 255
-     *    [7]: number;
-     *
-     *    // Necessary to find directive indices for a particular node.
-     *    [TNODE]: TElementNode|TElementContainerNode|TContainerNode;
-     *  }
-     */
-    /**
-    * Factory for creating instances of injectors in the NodeInjector.
-    *
-    * This factory is complicated by the fact that it can resolve `multi` factories as well.
-    *
-    * NOTE: Some of the fields are optional which means that this class has two hidden classes.
-    * - One without `multi` support (most common)
-    * - One with `multi` values, (rare).
-    *
-    * Since VMs can cache up to 4 inline hidden classes this is OK.
-    *
-    * - Single factory: Only `resolving` and `factory` is defined.
-    * - `providers` factory: `componentProviders` is a number and `index = -1`.
-    * - `viewProviders` factory: `componentProviders` is a number and `index` points to `providers`.
-    */
-    var NodeInjectorFactory = /** @class */ (function () {
-        function NodeInjectorFactory(
-        /**
-         * Factory to invoke in order to create a new instance.
-         */
-        factory, 
-        /**
-         * Set to `true` if the token is declared in `viewProviders` (or if it is component).
-         */
-        isViewProvider, injectImplementation) {
-            this.factory = factory;
-            /**
-             * Marker set to true during factory invocation to see if we get into recursive loop.
-             * Recursive loop causes an error to be displayed.
-             */
-            this.resolving = false;
-            this.canSeeViewProviders = isViewProvider;
-            this.injectImpl = injectImplementation;
-        }
-        return NodeInjectorFactory;
-    }());
-    function isFactory(obj) {
-        // See: https://jsperf.com/instanceof-vs-getprototypeof
-        return obj !== null && typeof obj == 'object' &&
-            Object.getPrototypeOf(obj) == NodeInjectorFactory.prototype;
-    }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    function assertNodeType(tNode, type) {
-        assertDefined(tNode, 'should be called with a TNode');
-        assertEqual(tNode.type, type, "should be a " + typeName(type));
-    }
-    function assertNodeOfPossibleTypes(tNode) {
-        var types = [];
-        for (var _i = 1; _i < arguments.length; _i++) {
-            types[_i - 1] = arguments[_i];
-        }
-        assertDefined(tNode, 'should be called with a TNode');
-        var found = types.some(function (type) { return tNode.type === type; });
-        assertEqual(found, true, "Should be one of " + types.map(typeName).join(', ') + " but got " + typeName(tNode.type));
-    }
-    function typeName(type) {
-        if (type == 1 /* Projection */)
-            return 'Projection';
-        if (type == 0 /* Container */)
-            return 'Container';
-        if (type == 2 /* View */)
-            return 'View';
-        if (type == 3 /* Element */)
-            return 'Element';
-        if (type == 4 /* ElementContainer */)
-            return 'ElementContainer';
-        return '<unknown>';
     }
 
     /**
@@ -33076,6 +32928,375 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     }
     function getNamespace() {
         return _currentNamespace;
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * This file is used to control if the default rendering pipeline should be `ViewEngine` or `Ivy`.
+     *
+     * For more information on how to run and debug tests with either Ivy or View Engine (legacy),
+     * please see [BAZEL.md](./docs/BAZEL.md).
+     */
+    var _devMode = true;
+    /**
+     * Returns whether Angular is in development mode. After called once,
+     * the value is locked and won't change any more.
+     *
+     * By default, this is true, unless a user calls `enableProdMode` before calling this.
+     *
+     * @publicApi
+     */
+    function isDevMode() {
+        return _devMode;
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    function tagSet(tags) {
+        var e_1, _a;
+        var res = {};
+        try {
+            for (var _b = __values(tags.split(',')), _c = _b.next(); !_c.done; _c = _b.next()) {
+                var t = _c.value;
+                res[t] = true;
+            }
+        }
+        catch (e_1_1) { e_1 = { error: e_1_1 }; }
+        finally {
+            try {
+                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+            }
+            finally { if (e_1) throw e_1.error; }
+        }
+        return res;
+    }
+    function merge() {
+        var e_2, _a;
+        var sets = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            sets[_i] = arguments[_i];
+        }
+        var res = {};
+        try {
+            for (var sets_1 = __values(sets), sets_1_1 = sets_1.next(); !sets_1_1.done; sets_1_1 = sets_1.next()) {
+                var s = sets_1_1.value;
+                for (var v in s) {
+                    if (s.hasOwnProperty(v))
+                        res[v] = true;
+                }
+            }
+        }
+        catch (e_2_1) { e_2 = { error: e_2_1 }; }
+        finally {
+            try {
+                if (sets_1_1 && !sets_1_1.done && (_a = sets_1.return)) _a.call(sets_1);
+            }
+            finally { if (e_2) throw e_2.error; }
+        }
+        return res;
+    }
+    // Good source of info about elements and attributes
+    // http://dev.w3.org/html5/spec/Overview.html#semantics
+    // http://simon.html5.org/html-elements
+    // Safe Void Elements - HTML5
+    // http://dev.w3.org/html5/spec/Overview.html#void-elements
+    var VOID_ELEMENTS = tagSet('area,br,col,hr,img,wbr');
+    // Elements that you can, intentionally, leave open (and which close themselves)
+    // http://dev.w3.org/html5/spec/Overview.html#optional-tags
+    var OPTIONAL_END_TAG_BLOCK_ELEMENTS = tagSet('colgroup,dd,dt,li,p,tbody,td,tfoot,th,thead,tr');
+    var OPTIONAL_END_TAG_INLINE_ELEMENTS = tagSet('rp,rt');
+    var OPTIONAL_END_TAG_ELEMENTS = merge(OPTIONAL_END_TAG_INLINE_ELEMENTS, OPTIONAL_END_TAG_BLOCK_ELEMENTS);
+    // Safe Block Elements - HTML5
+    var BLOCK_ELEMENTS = merge(OPTIONAL_END_TAG_BLOCK_ELEMENTS, tagSet('address,article,' +
+        'aside,blockquote,caption,center,del,details,dialog,dir,div,dl,figure,figcaption,footer,h1,h2,h3,h4,h5,' +
+        'h6,header,hgroup,hr,ins,main,map,menu,nav,ol,pre,section,summary,table,ul'));
+    // Inline Elements - HTML5
+    var INLINE_ELEMENTS = merge(OPTIONAL_END_TAG_INLINE_ELEMENTS, tagSet('a,abbr,acronym,audio,b,' +
+        'bdi,bdo,big,br,cite,code,del,dfn,em,font,i,img,ins,kbd,label,map,mark,picture,q,ruby,rp,rt,s,' +
+        'samp,small,source,span,strike,strong,sub,sup,time,track,tt,u,var,video'));
+    var VALID_ELEMENTS = merge(VOID_ELEMENTS, BLOCK_ELEMENTS, INLINE_ELEMENTS, OPTIONAL_END_TAG_ELEMENTS);
+    // Attributes that have href and hence need to be sanitized
+    var URI_ATTRS = tagSet('background,cite,href,itemtype,longdesc,poster,src,xlink:href');
+    // Attributes that have special href set hence need to be sanitized
+    var SRCSET_ATTRS = tagSet('srcset');
+    var HTML_ATTRS = tagSet('abbr,accesskey,align,alt,autoplay,axis,bgcolor,border,cellpadding,cellspacing,class,clear,color,cols,colspan,' +
+        'compact,controls,coords,datetime,default,dir,download,face,headers,height,hidden,hreflang,hspace,' +
+        'ismap,itemscope,itemprop,kind,label,lang,language,loop,media,muted,nohref,nowrap,open,preload,rel,rev,role,rows,rowspan,rules,' +
+        'scope,scrolling,shape,size,sizes,span,srclang,start,summary,tabindex,target,title,translate,type,usemap,' +
+        'valign,value,vspace,width');
+    // Accessibility attributes as per WAI-ARIA 1.1 (W3C Working Draft 14 December 2018)
+    var ARIA_ATTRS = tagSet('aria-activedescendant,aria-atomic,aria-autocomplete,aria-busy,aria-checked,aria-colcount,aria-colindex,' +
+        'aria-colspan,aria-controls,aria-current,aria-describedby,aria-details,aria-disabled,aria-dropeffect,' +
+        'aria-errormessage,aria-expanded,aria-flowto,aria-grabbed,aria-haspopup,aria-hidden,aria-invalid,' +
+        'aria-keyshortcuts,aria-label,aria-labelledby,aria-level,aria-live,aria-modal,aria-multiline,' +
+        'aria-multiselectable,aria-orientation,aria-owns,aria-placeholder,aria-posinset,aria-pressed,aria-readonly,' +
+        'aria-relevant,aria-required,aria-roledescription,aria-rowcount,aria-rowindex,aria-rowspan,aria-selected,' +
+        'aria-setsize,aria-sort,aria-valuemax,aria-valuemin,aria-valuenow,aria-valuetext');
+    // NB: This currently consciously doesn't support SVG. SVG sanitization has had several security
+    // issues in the past, so it seems safer to leave it out if possible. If support for binding SVG via
+    // innerHTML is required, SVG attributes should be added here.
+    // NB: Sanitization does not allow <form> elements or other active elements (<button> etc). Those
+    // can be sanitized, but they increase security surface area without a legitimate use case, so they
+    // are left out here.
+    var VALID_ATTRS = merge(URI_ATTRS, SRCSET_ATTRS, HTML_ATTRS, ARIA_ATTRS);
+    // Elements whose content should not be traversed/preserved, if the elements themselves are invalid.
+    //
+    // Typically, `<invalid>Some content</invalid>` would traverse (and in this case preserve)
+    // `Some content`, but strip `invalid-element` opening/closing tags. For some elements, though, we
+    // don't want to preserve the content, if the elements themselves are going to be removed.
+    var SKIP_TRAVERSING_CONTENT_IF_INVALID_ELEMENTS = tagSet('script,style,template');
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * A SecurityContext marks a location that has dangerous security implications, e.g. a DOM property
+     * like `innerHTML` that could cause Cross Site Scripting (XSS) security bugs when improperly
+     * handled.
+     *
+     * See DomSanitizer for more details on security in Angular applications.
+     *
+     * @publicApi
+     */
+    var SecurityContext$1;
+    (function (SecurityContext) {
+        SecurityContext[SecurityContext["NONE"] = 0] = "NONE";
+        SecurityContext[SecurityContext["HTML"] = 1] = "HTML";
+        SecurityContext[SecurityContext["STYLE"] = 2] = "STYLE";
+        SecurityContext[SecurityContext["SCRIPT"] = 3] = "SCRIPT";
+        SecurityContext[SecurityContext["URL"] = 4] = "URL";
+        SecurityContext[SecurityContext["RESOURCE_URL"] = 5] = "RESOURCE_URL";
+    })(SecurityContext$1 || (SecurityContext$1 = {}));
+    /**
+     * Sanitizer is used by the views to sanitize potentially dangerous values.
+     *
+     * @publicApi
+     */
+    var Sanitizer = /** @class */ (function () {
+        function Sanitizer() {
+        }
+        return Sanitizer;
+    }());
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    var TNODE = 8;
+    var PARENT_INJECTOR = 8;
+    var INJECTOR_BLOOM_PARENT_SIZE = 9;
+    var NO_PARENT_INJECTOR = -1;
+    /**
+     * Each injector is saved in 9 contiguous slots in `LView` and 9 contiguous slots in
+     * `TView.data`. This allows us to store information about the current node's tokens (which
+     * can be shared in `TView`) as well as the tokens of its ancestor nodes (which cannot be
+     * shared, so they live in `LView`).
+     *
+     * Each of these slots (aside from the last slot) contains a bloom filter. This bloom filter
+     * determines whether a directive is available on the associated node or not. This prevents us
+     * from searching the directives array at this level unless it's probable the directive is in it.
+     *
+     * See: https://en.wikipedia.org/wiki/Bloom_filter for more about bloom filters.
+     *
+     * Because all injectors have been flattened into `LView` and `TViewData`, they cannot typed
+     * using interfaces as they were previously. The start index of each `LInjector` and `TInjector`
+     * will differ based on where it is flattened into the main array, so it's not possible to know
+     * the indices ahead of time and save their types here. The interfaces are still included here
+     * for documentation purposes.
+     *
+     * export interface LInjector extends Array<any> {
+     *
+     *    // Cumulative bloom for directive IDs 0-31  (IDs are % BLOOM_SIZE)
+     *    [0]: number;
+     *
+     *    // Cumulative bloom for directive IDs 32-63
+     *    [1]: number;
+     *
+     *    // Cumulative bloom for directive IDs 64-95
+     *    [2]: number;
+     *
+     *    // Cumulative bloom for directive IDs 96-127
+     *    [3]: number;
+     *
+     *    // Cumulative bloom for directive IDs 128-159
+     *    [4]: number;
+     *
+     *    // Cumulative bloom for directive IDs 160 - 191
+     *    [5]: number;
+     *
+     *    // Cumulative bloom for directive IDs 192 - 223
+     *    [6]: number;
+     *
+     *    // Cumulative bloom for directive IDs 224 - 255
+     *    [7]: number;
+     *
+     *    // We need to store a reference to the injector's parent so DI can keep looking up
+     *    // the injector tree until it finds the dependency it's looking for.
+     *    [PARENT_INJECTOR]: number;
+     * }
+     *
+     * export interface TInjector extends Array<any> {
+     *
+     *    // Shared node bloom for directive IDs 0-31  (IDs are % BLOOM_SIZE)
+     *    [0]: number;
+     *
+     *    // Shared node bloom for directive IDs 32-63
+     *    [1]: number;
+     *
+     *    // Shared node bloom for directive IDs 64-95
+     *    [2]: number;
+     *
+     *    // Shared node bloom for directive IDs 96-127
+     *    [3]: number;
+     *
+     *    // Shared node bloom for directive IDs 128-159
+     *    [4]: number;
+     *
+     *    // Shared node bloom for directive IDs 160 - 191
+     *    [5]: number;
+     *
+     *    // Shared node bloom for directive IDs 192 - 223
+     *    [6]: number;
+     *
+     *    // Shared node bloom for directive IDs 224 - 255
+     *    [7]: number;
+     *
+     *    // Necessary to find directive indices for a particular node.
+     *    [TNODE]: TElementNode|TElementContainerNode|TContainerNode;
+     *  }
+     */
+    /**
+    * Factory for creating instances of injectors in the NodeInjector.
+    *
+    * This factory is complicated by the fact that it can resolve `multi` factories as well.
+    *
+    * NOTE: Some of the fields are optional which means that this class has two hidden classes.
+    * - One without `multi` support (most common)
+    * - One with `multi` values, (rare).
+    *
+    * Since VMs can cache up to 4 inline hidden classes this is OK.
+    *
+    * - Single factory: Only `resolving` and `factory` is defined.
+    * - `providers` factory: `componentProviders` is a number and `index = -1`.
+    * - `viewProviders` factory: `componentProviders` is a number and `index` points to `providers`.
+    */
+    var NodeInjectorFactory = /** @class */ (function () {
+        function NodeInjectorFactory(
+        /**
+         * Factory to invoke in order to create a new instance.
+         */
+        factory, 
+        /**
+         * Set to `true` if the token is declared in `viewProviders` (or if it is component).
+         */
+        isViewProvider, injectImplementation) {
+            this.factory = factory;
+            /**
+             * Marker set to true during factory invocation to see if we get into recursive loop.
+             * Recursive loop causes an error to be displayed.
+             */
+            this.resolving = false;
+            this.canSeeViewProviders = isViewProvider;
+            this.injectImpl = injectImplementation;
+        }
+        return NodeInjectorFactory;
+    }());
+    function isFactory(obj) {
+        // See: https://jsperf.com/instanceof-vs-getprototypeof
+        return obj !== null && typeof obj == 'object' &&
+            Object.getPrototypeOf(obj) == NodeInjectorFactory.prototype;
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    function assertNodeType(tNode, type) {
+        assertDefined(tNode, 'should be called with a TNode');
+        assertEqual(tNode.type, type, "should be a " + typeName(type));
+    }
+    function assertNodeOfPossibleTypes(tNode) {
+        var types = [];
+        for (var _i = 1; _i < arguments.length; _i++) {
+            types[_i - 1] = arguments[_i];
+        }
+        assertDefined(tNode, 'should be called with a TNode');
+        var found = types.some(function (type) { return tNode.type === type; });
+        assertEqual(found, true, "Should be one of " + types.map(typeName).join(', ') + " but got " + typeName(tNode.type));
+    }
+    function typeName(type) {
+        if (type == 1 /* Projection */)
+            return 'Projection';
+        if (type == 0 /* Container */)
+            return 'Container';
+        if (type == 2 /* View */)
+            return 'View';
+        if (type == 3 /* Element */)
+            return 'Element';
+        if (type == 4 /* ElementContainer */)
+            return 'ElementContainer';
+        return '<unknown>';
     }
 
     /**
@@ -34188,209 +34409,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * This file is used to control if the default rendering pipeline should be `ViewEngine` or `Ivy`.
-     *
-     * For more information on how to run and debug tests with either Ivy or View Engine (legacy),
-     * please see [BAZEL.md](./docs/BAZEL.md).
-     */
-    var _devMode = true;
-    /**
-     * Returns whether Angular is in development mode. After called once,
-     * the value is locked and won't change any more.
-     *
-     * By default, this is true, unless a user calls `enableProdMode` before calling this.
-     *
-     * @publicApi
-     */
-    function isDevMode() {
-        return _devMode;
-    }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    function tagSet(tags) {
-        var e_1, _a;
-        var res = {};
-        try {
-            for (var _b = __values(tags.split(',')), _c = _b.next(); !_c.done; _c = _b.next()) {
-                var t = _c.value;
-                res[t] = true;
-            }
-        }
-        catch (e_1_1) { e_1 = { error: e_1_1 }; }
-        finally {
-            try {
-                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-            }
-            finally { if (e_1) throw e_1.error; }
-        }
-        return res;
-    }
-    function merge() {
-        var e_2, _a;
-        var sets = [];
-        for (var _i = 0; _i < arguments.length; _i++) {
-            sets[_i] = arguments[_i];
-        }
-        var res = {};
-        try {
-            for (var sets_1 = __values(sets), sets_1_1 = sets_1.next(); !sets_1_1.done; sets_1_1 = sets_1.next()) {
-                var s = sets_1_1.value;
-                for (var v in s) {
-                    if (s.hasOwnProperty(v))
-                        res[v] = true;
-                }
-            }
-        }
-        catch (e_2_1) { e_2 = { error: e_2_1 }; }
-        finally {
-            try {
-                if (sets_1_1 && !sets_1_1.done && (_a = sets_1.return)) _a.call(sets_1);
-            }
-            finally { if (e_2) throw e_2.error; }
-        }
-        return res;
-    }
-    // Good source of info about elements and attributes
-    // http://dev.w3.org/html5/spec/Overview.html#semantics
-    // http://simon.html5.org/html-elements
-    // Safe Void Elements - HTML5
-    // http://dev.w3.org/html5/spec/Overview.html#void-elements
-    var VOID_ELEMENTS = tagSet('area,br,col,hr,img,wbr');
-    // Elements that you can, intentionally, leave open (and which close themselves)
-    // http://dev.w3.org/html5/spec/Overview.html#optional-tags
-    var OPTIONAL_END_TAG_BLOCK_ELEMENTS = tagSet('colgroup,dd,dt,li,p,tbody,td,tfoot,th,thead,tr');
-    var OPTIONAL_END_TAG_INLINE_ELEMENTS = tagSet('rp,rt');
-    var OPTIONAL_END_TAG_ELEMENTS = merge(OPTIONAL_END_TAG_INLINE_ELEMENTS, OPTIONAL_END_TAG_BLOCK_ELEMENTS);
-    // Safe Block Elements - HTML5
-    var BLOCK_ELEMENTS = merge(OPTIONAL_END_TAG_BLOCK_ELEMENTS, tagSet('address,article,' +
-        'aside,blockquote,caption,center,del,details,dialog,dir,div,dl,figure,figcaption,footer,h1,h2,h3,h4,h5,' +
-        'h6,header,hgroup,hr,ins,main,map,menu,nav,ol,pre,section,summary,table,ul'));
-    // Inline Elements - HTML5
-    var INLINE_ELEMENTS = merge(OPTIONAL_END_TAG_INLINE_ELEMENTS, tagSet('a,abbr,acronym,audio,b,' +
-        'bdi,bdo,big,br,cite,code,del,dfn,em,font,i,img,ins,kbd,label,map,mark,picture,q,ruby,rp,rt,s,' +
-        'samp,small,source,span,strike,strong,sub,sup,time,track,tt,u,var,video'));
-    var VALID_ELEMENTS = merge(VOID_ELEMENTS, BLOCK_ELEMENTS, INLINE_ELEMENTS, OPTIONAL_END_TAG_ELEMENTS);
-    // Attributes that have href and hence need to be sanitized
-    var URI_ATTRS = tagSet('background,cite,href,itemtype,longdesc,poster,src,xlink:href');
-    // Attributes that have special href set hence need to be sanitized
-    var SRCSET_ATTRS = tagSet('srcset');
-    var HTML_ATTRS = tagSet('abbr,accesskey,align,alt,autoplay,axis,bgcolor,border,cellpadding,cellspacing,class,clear,color,cols,colspan,' +
-        'compact,controls,coords,datetime,default,dir,download,face,headers,height,hidden,hreflang,hspace,' +
-        'ismap,itemscope,itemprop,kind,label,lang,language,loop,media,muted,nohref,nowrap,open,preload,rel,rev,role,rows,rowspan,rules,' +
-        'scope,scrolling,shape,size,sizes,span,srclang,start,summary,tabindex,target,title,translate,type,usemap,' +
-        'valign,value,vspace,width');
-    // Accessibility attributes as per WAI-ARIA 1.1 (W3C Working Draft 14 December 2018)
-    var ARIA_ATTRS = tagSet('aria-activedescendant,aria-atomic,aria-autocomplete,aria-busy,aria-checked,aria-colcount,aria-colindex,' +
-        'aria-colspan,aria-controls,aria-current,aria-describedby,aria-details,aria-disabled,aria-dropeffect,' +
-        'aria-errormessage,aria-expanded,aria-flowto,aria-grabbed,aria-haspopup,aria-hidden,aria-invalid,' +
-        'aria-keyshortcuts,aria-label,aria-labelledby,aria-level,aria-live,aria-modal,aria-multiline,' +
-        'aria-multiselectable,aria-orientation,aria-owns,aria-placeholder,aria-posinset,aria-pressed,aria-readonly,' +
-        'aria-relevant,aria-required,aria-roledescription,aria-rowcount,aria-rowindex,aria-rowspan,aria-selected,' +
-        'aria-setsize,aria-sort,aria-valuemax,aria-valuemin,aria-valuenow,aria-valuetext');
-    // NB: This currently consciously doesn't support SVG. SVG sanitization has had several security
-    // issues in the past, so it seems safer to leave it out if possible. If support for binding SVG via
-    // innerHTML is required, SVG attributes should be added here.
-    // NB: Sanitization does not allow <form> elements or other active elements (<button> etc). Those
-    // can be sanitized, but they increase security surface area without a legitimate use case, so they
-    // are left out here.
-    var VALID_ATTRS = merge(URI_ATTRS, SRCSET_ATTRS, HTML_ATTRS, ARIA_ATTRS);
-    // Elements whose content should not be traversed/preserved, if the elements themselves are invalid.
-    //
-    // Typically, `<invalid>Some content</invalid>` would traverse (and in this case preserve)
-    // `Some content`, but strip `invalid-element` opening/closing tags. For some elements, though, we
-    // don't want to preserve the content, if the elements themselves are going to be removed.
-    var SKIP_TRAVERSING_CONTENT_IF_INVALID_ELEMENTS = tagSet('script,style,template');
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * A SecurityContext marks a location that has dangerous security implications, e.g. a DOM property
-     * like `innerHTML` that could cause Cross Site Scripting (XSS) security bugs when improperly
-     * handled.
-     *
-     * See DomSanitizer for more details on security in Angular applications.
-     *
-     * @publicApi
-     */
-    var SecurityContext$1;
-    (function (SecurityContext) {
-        SecurityContext[SecurityContext["NONE"] = 0] = "NONE";
-        SecurityContext[SecurityContext["HTML"] = 1] = "HTML";
-        SecurityContext[SecurityContext["STYLE"] = 2] = "STYLE";
-        SecurityContext[SecurityContext["SCRIPT"] = 3] = "SCRIPT";
-        SecurityContext[SecurityContext["URL"] = 4] = "URL";
-        SecurityContext[SecurityContext["RESOURCE_URL"] = 5] = "RESOURCE_URL";
-    })(SecurityContext$1 || (SecurityContext$1 = {}));
-    /**
-     * Sanitizer is used by the views to sanitize potentially dangerous values.
-     *
-     * @publicApi
-     */
-    var Sanitizer = /** @class */ (function () {
-        function Sanitizer() {
-        }
-        return Sanitizer;
-    }());
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     function normalizeDebugBindingName(name) {
         // Attribute names with `$` (eg `x-y$`) are valid per spec, but unsupported by some browsers
         name = camelCaseToDashCase(name.replace(/[$@]/g, '_'));
@@ -34441,6 +34459,18 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     };
 
     /**
+    * @license
+    * Copyright Google Inc. All Rights Reserved.
+    *
+    * Use of this source code is governed by an MIT-style license that can be
+    * found in the LICENSE file at https://angular.io/license
+    */
+    var _stylingMode$1 = 0;
+    function runtimeIsNewStylingInUse() {
+        return _stylingMode$1 > 0 /* UseOld */;
+    }
+
+    /**
      * @license
      * Copyright Google Inc. All Rights Reserved.
      *
@@ -34450,6 +34480,477 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     function attachDebugObject(obj, debug) {
         Object.defineProperty(obj, 'debug', { value: debug, enumerable: false });
     }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /** A special value which designates that a value has not changed. */
+    var NO_CHANGE = {};
+
+    /**
+     * Combines the binding value and a factory for an animation player.
+     *
+     * Used to bind a player to an element template binding (currently only
+     * `[style]`, `[style.prop]`, `[class]` and `[class.name]` bindings
+     * supported). The provided `factoryFn` function will be run once all
+     * the associated bindings have been evaluated on the element and is
+     * designed to return a player which will then be placed on the element.
+     *
+     * @param factoryFn The function that is used to create a player
+     *   once all the rendering-related (styling values) have been
+     *   processed for the element binding.
+     * @param value The raw value that will be exposed to the binding
+     *   so that the binding can update its internal values when
+     *   any changes are evaluated.
+     */
+
+    /**
+     * Runs through the initial class values present in the provided
+     * context and renders them via the provided renderer on the element.
+     *
+     * @param element the element the styling will be applied to
+     * @param context the source styling context which contains the initial class values
+     * @param renderer the renderer instance that will be used to apply the class
+     * @returns the index that the classes were applied up until
+     */
+    function renderInitialClasses(element, context, renderer, startIndex) {
+        var initialClasses = context[4 /* InitialClassValuesPosition */];
+        var i = startIndex || 2 /* KeyValueStartPosition */;
+        while (i < initialClasses.length) {
+            var value = initialClasses[i + 1 /* ValueOffset */];
+            if (value) {
+                setClass(element, initialClasses[i + 0 /* PropOffset */], true, renderer, null);
+            }
+            i += 3 /* Size */;
+        }
+        return i;
+    }
+    /**
+     * Runs through the initial styles values present in the provided
+     * context and renders them via the provided renderer on the element.
+     *
+     * @param element the element the styling will be applied to
+     * @param context the source styling context which contains the initial class values
+     * @param renderer the renderer instance that will be used to apply the class
+     * @returns the index that the styles were applied up until
+     */
+    function renderInitialStyles(element, context, renderer, startIndex) {
+        var initialStyles = context[3 /* InitialStyleValuesPosition */];
+        var i = startIndex || 2 /* KeyValueStartPosition */;
+        while (i < initialStyles.length) {
+            var value = initialStyles[i + 1 /* ValueOffset */];
+            if (value) {
+                setStyle(element, initialStyles[i + 0 /* PropOffset */], value, renderer, null);
+            }
+            i += 3 /* Size */;
+        }
+        return i;
+    }
+    /**
+     * Assigns a style value to a style property for the given element.
+     *
+     * This function renders a given CSS prop/value entry using the
+     * provided renderer. If a `store` value is provided then
+     * that will be used a render context instead of the provided
+     * renderer.
+     *
+     * @param native the DOM Element
+     * @param prop the CSS style property that will be rendered
+     * @param value the CSS style value that will be rendered
+     * @param renderer
+     * @param store an optional key/value map that will be used as a context to render styles on
+     */
+    function setStyle(native, prop, value, renderer, sanitizer, store, playerBuilder) {
+        value = sanitizer && value ? sanitizer(prop, value) : value;
+        if (store || playerBuilder) {
+            if (store) {
+                store.setValue(prop, value);
+            }
+            if (playerBuilder) {
+                playerBuilder.setValue(prop, value);
+            }
+        }
+        else if (value) {
+            value = value.toString(); // opacity, z-index and flexbox all have number values which may not
+            // assign as numbers
+            ngDevMode && ngDevMode.rendererSetStyle++;
+            isProceduralRenderer(renderer) ?
+                renderer.setStyle(native, prop, value, RendererStyleFlags3.DashCase) :
+                native.style.setProperty(prop, value);
+        }
+        else {
+            ngDevMode && ngDevMode.rendererRemoveStyle++;
+            isProceduralRenderer(renderer) ?
+                renderer.removeStyle(native, prop, RendererStyleFlags3.DashCase) :
+                native.style.removeProperty(prop);
+        }
+    }
+    /**
+     * Adds/removes the provided className value to the provided element.
+     *
+     * This function renders a given CSS class value using the provided
+     * renderer (by adding or removing it from the provided element).
+     * If a `store` value is provided then that will be used a render
+     * context instead of the provided renderer.
+     *
+     * @param native the DOM Element
+     * @param prop the CSS style property that will be rendered
+     * @param value the CSS style value that will be rendered
+     * @param renderer
+     * @param store an optional key/value map that will be used as a context to render styles on
+     */
+    function setClass(native, className, add, renderer, store, playerBuilder) {
+        if (store || playerBuilder) {
+            if (store) {
+                store.setValue(className, add);
+            }
+            if (playerBuilder) {
+                playerBuilder.setValue(className, add);
+            }
+            // DOMTokenList will throw if we try to add or remove an empty string.
+        }
+        else if (className !== '') {
+            if (add) {
+                ngDevMode && ngDevMode.rendererAddClass++;
+                isProceduralRenderer(renderer) ? renderer.addClass(native, className) :
+                    native['classList'].add(className);
+            }
+            else {
+                ngDevMode && ngDevMode.rendererRemoveClass++;
+                isProceduralRenderer(renderer) ? renderer.removeClass(native, className) :
+                    native['classList'].remove(className);
+            }
+        }
+    }
+    function isClassBasedValue(context, index) {
+        var adjustedIndex = index >= 10 /* SingleStylesStartPosition */ ? (index + 0 /* FlagsOffset */) : index;
+        return (context[adjustedIndex] & 2 /* Class */) == 2 /* Class */;
+    }
+    function getValue(context, index) {
+        return context[index + 2 /* ValueOffset */];
+    }
+    function getProp(context, index) {
+        return context[index + 1 /* PropertyOffset */];
+    }
+
+    function getConfig(context) {
+        return context[0 /* ConfigPosition */];
+    }
+    function getProp$1(context, index) {
+        return context[index + 2 /* PropOffset */];
+    }
+    function getGuardMask(context, index) {
+        return context[index + 0 /* MaskOffset */];
+    }
+    function getValuesCount(context, index) {
+        return context[index + 1 /* ValuesCountOffset */];
+    }
+    function getValue$1(context, index, offset) {
+        return context[index + 3 /* BindingsStartOffset */ + offset];
+    }
+    function getDefaultValue(context, index) {
+        var valuesCount = getValuesCount(context, index);
+        return context[index + 3 /* BindingsStartOffset */ + valuesCount - 1];
+    }
+    function isContextLocked(context) {
+        return (getConfig(context) & 1 /* Locked */) > 0;
+    }
+
+    /**
+    * @license
+    * Copyright Google Inc. All Rights Reserved.
+    *
+    * Use of this source code is governed by an MIT-style license that can be
+    * found in the LICENSE file at https://angular.io/license
+    */
+    var deferredBindingQueue = [];
+    var DEFAULT_BINDING_VALUE = null;
+    var DEFAULT_SIZE_VALUE = 1;
+    var DEFAULT_MASK_VALUE = 0;
+    var DEFAULT_BINDING_INDEX_VALUE = -1;
+    var BIT_MASK_APPLY_ALL = -1;
+    /**
+     * Flushes the collection of deferred bindings and causes each entry
+     * to be registered into the context.
+     */
+    function flushDeferredBindings() {
+        var i = 0;
+        while (i < deferredBindingQueue.length) {
+            var context = deferredBindingQueue[i++];
+            var count = deferredBindingQueue[i++];
+            var prop = deferredBindingQueue[i++];
+            var bindingIndex = deferredBindingQueue[i++];
+            registerBinding(context, count, prop, bindingIndex);
+        }
+        deferredBindingQueue.length = 0;
+    }
+    /**
+     * Registers the provided binding (prop + bindingIndex) into the context.
+     *
+     * This function is shared between bindings that are assigned immediately
+     * (via `updateBindingData`) and at a deferred stage. When called, it will
+     * figure out exactly where to place the binding data in the context.
+     *
+     * It is needed because it will either update or insert a styling property
+     * into the context at the correct spot.
+     *
+     * When called, one of two things will happen:
+     *
+     * 1) If the property already exists in the context then it will just add
+     *    the provided `bindingValue` to the end of the binding sources region
+     *    for that particular property.
+     *
+     *    - If the binding value is a number then it will be added as a new
+     *      binding index source next to the other binding sources for the property.
+     *
+     *    - Otherwise, if the binding value is a string/boolean/null type then it will
+     *      replace the default value for the property if the default value is `null`.
+     *
+     * 2) If the property does not exist then it will be inserted into the context.
+     *    The styling context relies on all properties being stored in alphabetical
+     *    order, so it knows exactly where to store it.
+     *
+     *    When inserted, a default `null` value is created for the property which exists
+     *    as the default value for the binding. If the bindingValue property is inserted
+     *    and it is either a string, number or null value then that will replace the default
+     *    value.
+     */
+    function registerBinding(context, countId, prop, bindingValue) {
+        var i = 2 /* ValuesStartPosition */;
+        var found = false;
+        while (i < context.length) {
+            var valuesCount = getValuesCount(context, i);
+            var p = getProp$1(context, i);
+            found = prop <= p;
+            if (found) {
+                // all style/class bindings are sorted by property name
+                if (prop < p) {
+                    allocateNewContextEntry(context, i, prop);
+                }
+                addBindingIntoContext(context, i, bindingValue, countId);
+                break;
+            }
+            i += 3 /* BindingsStartOffset */ + valuesCount;
+        }
+        if (!found) {
+            allocateNewContextEntry(context, context.length, prop);
+            addBindingIntoContext(context, i, bindingValue, countId);
+        }
+    }
+    function allocateNewContextEntry(context, index, prop) {
+        context.splice(index, 0, DEFAULT_MASK_VALUE, DEFAULT_SIZE_VALUE, prop, DEFAULT_BINDING_VALUE);
+    }
+    /**
+     * Inserts a new binding value into a styling property tuple in the `TStylingContext`.
+     *
+     * A bindingValue is inserted into a context during the first update pass
+     * of a template or host bindings function. When this occurs, two things
+     * happen:
+     *
+     * - If the bindingValue value is a number then it is treated as a bindingIndex
+     *   value (a index in the `LView`) and it will be inserted next to the other
+     *   binding index entries.
+     *
+     * - Otherwise the binding value will update the default value for the property
+     *   and this will only happen if the default value is `null`.
+     */
+    function addBindingIntoContext(context, index, bindingValue, countId) {
+        var valuesCount = getValuesCount(context, index);
+        // -1 is used because we want the last value that's in the list (not the next slot)
+        var lastValueIndex = index + 3 /* BindingsStartOffset */ + valuesCount - 1;
+        if (typeof bindingValue === 'number') {
+            context.splice(lastValueIndex, 0, bindingValue);
+            context[index + 1 /* ValuesCountOffset */]++;
+            context[index + 0 /* MaskOffset */] |= 1 << countId;
+        }
+        else if (typeof bindingValue === 'string' && context[lastValueIndex] == null) {
+            context[lastValueIndex] = bindingValue;
+        }
+    }
+    /**
+     * Runs through the provided styling context and applies each value to
+     * the provided element (via the renderer) if one or more values are present.
+     *
+     * Note that this function is not designed to be called in isolation (use
+     * `applyClasses` and `applyStyles` to actually apply styling values).
+     */
+    function applyStyling(context, renderer, element, bindingData, bitMask, applyStylingFn, forceApplyDefaultValues) {
+        deferredBindingQueue.length && flushDeferredBindings();
+        if (bitMask) {
+            var processAllEntries = bitMask === BIT_MASK_APPLY_ALL;
+            var i = 2 /* ValuesStartPosition */;
+            while (i < context.length) {
+                var valuesCount = getValuesCount(context, i);
+                var guardMask = getGuardMask(context, i);
+                // the guard mask value is non-zero if and when
+                // there are binding values present for the property.
+                // If there are ONLY static values (i.e. `style="prop:val")
+                // then the guard value will stay as zero.
+                var processEntry = processAllEntries || (guardMask ? (bitMask & guardMask) : forceApplyDefaultValues);
+                if (processEntry) {
+                    var prop = getProp$1(context, i);
+                    var limit = valuesCount - 1;
+                    for (var j = 0; j <= limit; j++) {
+                        var isFinalValue = j === limit;
+                        var bindingValue = getValue$1(context, i, j);
+                        var bindingIndex = isFinalValue ? DEFAULT_BINDING_INDEX_VALUE : bindingValue;
+                        var valueToApply = isFinalValue ? bindingValue : bindingData[bindingIndex];
+                        if (isValueDefined(valueToApply) || isFinalValue) {
+                            applyStylingFn(renderer, element, prop, valueToApply, bindingIndex);
+                            break;
+                        }
+                    }
+                }
+                i += 3 /* BindingsStartOffset */ + valuesCount;
+            }
+        }
+    }
+    function isValueDefined(value) {
+        // the reason why null is compared against is because
+        // a CSS class value that is set to `false` must be
+        // respected (otherwise it would be treated as falsy).
+        // Empty string values are because developers usually
+        // set a value to an empty string to remove it.
+        return value != null && value !== '';
+    }
+
+    /**
+     * A human-readable debug summary of the styling data present within `TStylingContext`.
+     *
+     * This class is designed to be used within testing code or when an
+     * application has `ngDevMode` activated.
+     */
+    var TStylingContextDebug = /** @class */ (function () {
+        function TStylingContextDebug(context) {
+            this.context = context;
+        }
+        Object.defineProperty(TStylingContextDebug.prototype, "isLocked", {
+            get: function () { return isContextLocked(this.context); },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(TStylingContextDebug.prototype, "entries", {
+            /**
+             * Returns a detailed summary of each styling entry in the context.
+             *
+             * See `TStylingTupleSummary`.
+             */
+            get: function () {
+                var context = this.context;
+                var entries = {};
+                var start = 2 /* ValuesStartPosition */;
+                var i = start;
+                while (i < context.length) {
+                    var prop = getProp$1(context, i);
+                    var guardMask = getGuardMask(context, i);
+                    var valuesCount = getValuesCount(context, i);
+                    var defaultValue = getDefaultValue(context, i);
+                    var bindingsStartPosition = i + 3 /* BindingsStartOffset */;
+                    var sources = [];
+                    for (var j = 0; j < valuesCount; j++) {
+                        sources.push(context[bindingsStartPosition + j]);
+                    }
+                    entries[prop] = { prop: prop, guardMask: guardMask, valuesCount: valuesCount, defaultValue: defaultValue, sources: sources };
+                    i += 3 /* BindingsStartOffset */ + valuesCount;
+                }
+                return entries;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        return TStylingContextDebug;
+    }());
+    /**
+     * A human-readable debug summary of the styling data present for a `DebugNode` instance.
+     *
+     * This class is designed to be used within testing code or when an
+     * application has `ngDevMode` activated.
+     */
+    var NodeStylingDebug = /** @class */ (function () {
+        function NodeStylingDebug(context, _data) {
+            this.context = context;
+            this._data = _data;
+            this._contextDebug = this.context.debug;
+        }
+        Object.defineProperty(NodeStylingDebug.prototype, "summary", {
+            /**
+             * Returns a detailed summary of each styling entry in the context and
+             * what their runtime representation is.
+             *
+             * See `StylingSummary`.
+             */
+            get: function () {
+                var _this = this;
+                var contextEntries = this._contextDebug.entries;
+                var finalValues = {};
+                this._mapValues(function (prop, value, bindingIndex) {
+                    finalValues[prop] = { value: value, bindingIndex: bindingIndex };
+                });
+                var entries = {};
+                var values = this.values;
+                var props = Object.keys(values);
+                for (var i = 0; i < props.length; i++) {
+                    var prop = props[i];
+                    var contextEntry = contextEntries[prop];
+                    var sourceValues = contextEntry.sources.map(function (v) {
+                        var value;
+                        var bindingIndex;
+                        if (typeof v === 'number') {
+                            value = _this._data[v];
+                            bindingIndex = v;
+                        }
+                        else {
+                            value = v;
+                            bindingIndex = null;
+                        }
+                        return { bindingIndex: bindingIndex, value: value };
+                    });
+                    var finalValue = finalValues[prop];
+                    var bindingIndex = finalValue.bindingIndex;
+                    bindingIndex = bindingIndex === DEFAULT_BINDING_INDEX_VALUE ? null : bindingIndex;
+                    entries[prop] = { prop: prop, value: finalValue.value, bindingIndex: bindingIndex, sourceValues: sourceValues };
+                }
+                return entries;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(NodeStylingDebug.prototype, "values", {
+            /**
+             * Returns a key/value map of all the styles/classes that were last applied to the element.
+             */
+            get: function () {
+                var entries = {};
+                this._mapValues(function (prop, value) { entries[prop] = value; });
+                return entries;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        NodeStylingDebug.prototype._mapValues = function (fn) {
+            // there is no need to store/track an element instance. The
+            // element is only used when the styling algorithm attempts to
+            // style the value (and we mock out the stylingApplyFn anyway).
+            var mockElement = {};
+            var mapFn = function (renderer, element, prop, value, bindingIndex) {
+                fn(prop, value, bindingIndex);
+            };
+            applyStyling(this.context, null, mockElement, this._data, BIT_MASK_APPLY_ALL, mapFn);
+        };
+        return NodeStylingDebug;
+    }());
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     /*
      * This file contains conditionally attached classes which provide human readable (debug) level
      * information for `LView`, `LContainer` and other internal data structures. These data structures
@@ -34630,12 +35131,18 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             while (tNodeCursor) {
                 var rawValue = lView[tNode.index];
                 var native = unwrapRNode(rawValue);
-                var componentLViewDebug = toDebug(readLViewValue(rawValue));
+                var componentLViewDebug = isStylingContext(rawValue) ? null : toDebug(readLViewValue(rawValue));
+                var styles = null;
+                var classes = null;
+                if (runtimeIsNewStylingInUse()) {
+                    styles = tNode.newStyles ? new NodeStylingDebug(tNode.newStyles, lView) : null;
+                    classes = tNode.newClasses ? new NodeStylingDebug(tNode.newClasses, lView) : null;
+                }
                 debugNodes.push({
                     html: toHtml(native),
-                    native: native,
+                    native: native, styles: styles, classes: classes,
                     nodes: toDebugNodes(tNode.child, lView),
-                    component: componentLViewDebug
+                    component: componentLViewDebug,
                 });
                 tNodeCursor = tNodeCursor.next;
             }
@@ -34887,13 +35394,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         return I18nUpdateOpCodesDebug;
     }());
 
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
+    // Note: This hack is necessary so we don't erroneously get a circular dependency
 
     /**
      * @license
@@ -34902,162 +35403,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /** A special value which designates that a value has not changed. */
-    var NO_CHANGE = {};
-
-    /**
-     * Combines the binding value and a factory for an animation player.
-     *
-     * Used to bind a player to an element template binding (currently only
-     * `[style]`, `[style.prop]`, `[class]` and `[class.name]` bindings
-     * supported). The provided `factoryFn` function will be run once all
-     * the associated bindings have been evaluated on the element and is
-     * designed to return a player which will then be placed on the element.
-     *
-     * @param factoryFn The function that is used to create a player
-     *   once all the rendering-related (styling values) have been
-     *   processed for the element binding.
-     * @param value The raw value that will be exposed to the binding
-     *   so that the binding can update its internal values when
-     *   any changes are evaluated.
-     */
-
-    /**
-     * Runs through the initial class values present in the provided
-     * context and renders them via the provided renderer on the element.
-     *
-     * @param element the element the styling will be applied to
-     * @param context the source styling context which contains the initial class values
-     * @param renderer the renderer instance that will be used to apply the class
-     * @returns the index that the classes were applied up until
-     */
-    function renderInitialClasses(element, context, renderer, startIndex) {
-        var initialClasses = context[4 /* InitialClassValuesPosition */];
-        var i = startIndex || 2 /* KeyValueStartPosition */;
-        while (i < initialClasses.length) {
-            var value = initialClasses[i + 1 /* ValueOffset */];
-            if (value) {
-                setClass(element, initialClasses[i + 0 /* PropOffset */], true, renderer, null);
-            }
-            i += 3 /* Size */;
-        }
-        return i;
-    }
-    /**
-     * Runs through the initial styles values present in the provided
-     * context and renders them via the provided renderer on the element.
-     *
-     * @param element the element the styling will be applied to
-     * @param context the source styling context which contains the initial class values
-     * @param renderer the renderer instance that will be used to apply the class
-     * @returns the index that the styles were applied up until
-     */
-    function renderInitialStyles(element, context, renderer, startIndex) {
-        var initialStyles = context[3 /* InitialStyleValuesPosition */];
-        var i = startIndex || 2 /* KeyValueStartPosition */;
-        while (i < initialStyles.length) {
-            var value = initialStyles[i + 1 /* ValueOffset */];
-            if (value) {
-                setStyle(element, initialStyles[i + 0 /* PropOffset */], value, renderer, null);
-            }
-            i += 3 /* Size */;
-        }
-        return i;
-    }
-    /**
-     * Assigns a style value to a style property for the given element.
-     *
-     * This function renders a given CSS prop/value entry using the
-     * provided renderer. If a `store` value is provided then
-     * that will be used a render context instead of the provided
-     * renderer.
-     *
-     * @param native the DOM Element
-     * @param prop the CSS style property that will be rendered
-     * @param value the CSS style value that will be rendered
-     * @param renderer
-     * @param store an optional key/value map that will be used as a context to render styles on
-     */
-    function setStyle(native, prop, value, renderer, sanitizer, store, playerBuilder) {
-        value = sanitizer && value ? sanitizer(prop, value) : value;
-        if (store || playerBuilder) {
-            if (store) {
-                store.setValue(prop, value);
-            }
-            if (playerBuilder) {
-                playerBuilder.setValue(prop, value);
-            }
-        }
-        else if (value) {
-            value = value.toString(); // opacity, z-index and flexbox all have number values which may not
-            // assign as numbers
-            ngDevMode && ngDevMode.rendererSetStyle++;
-            isProceduralRenderer(renderer) ?
-                renderer.setStyle(native, prop, value, RendererStyleFlags3.DashCase) :
-                native.style.setProperty(prop, value);
-        }
-        else {
-            ngDevMode && ngDevMode.rendererRemoveStyle++;
-            isProceduralRenderer(renderer) ?
-                renderer.removeStyle(native, prop, RendererStyleFlags3.DashCase) :
-                native.style.removeProperty(prop);
-        }
-    }
-    /**
-     * Adds/removes the provided className value to the provided element.
-     *
-     * This function renders a given CSS class value using the provided
-     * renderer (by adding or removing it from the provided element).
-     * If a `store` value is provided then that will be used a render
-     * context instead of the provided renderer.
-     *
-     * @param native the DOM Element
-     * @param prop the CSS style property that will be rendered
-     * @param value the CSS style value that will be rendered
-     * @param renderer
-     * @param store an optional key/value map that will be used as a context to render styles on
-     */
-    function setClass(native, className, add, renderer, store, playerBuilder) {
-        if (store || playerBuilder) {
-            if (store) {
-                store.setValue(className, add);
-            }
-            if (playerBuilder) {
-                playerBuilder.setValue(className, add);
-            }
-            // DOMTokenList will throw if we try to add or remove an empty string.
-        }
-        else if (className !== '') {
-            if (add) {
-                ngDevMode && ngDevMode.rendererAddClass++;
-                isProceduralRenderer(renderer) ? renderer.addClass(native, className) :
-                    native['classList'].add(className);
-            }
-            else {
-                ngDevMode && ngDevMode.rendererRemoveClass++;
-                isProceduralRenderer(renderer) ? renderer.removeClass(native, className) :
-                    native['classList'].remove(className);
-            }
-        }
-    }
-    function isClassBasedValue(context, index) {
-        var adjustedIndex = index >= 10 /* SingleStylesStartPosition */ ? (index + 0 /* FlagsOffset */) : index;
-        return (context[adjustedIndex] & 2 /* Class */) == 2 /* Class */;
-    }
-    function getValue(context, index) {
-        return context[index + 2 /* ValueOffset */];
-    }
-    function getProp(context, index) {
-        return context[index + 1 /* PropertyOffset */];
-    }
 
     /**
      * @license
@@ -35493,6 +35838,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             stylingTemplate: null,
             projection: null,
             onElementCreationFns: null,
+            // TODO (matsko): rename this to `styles` once the old styling impl is gone
+            newStyles: null,
+            // TODO (matsko): rename this to `classes` once the old styling impl is gone
+            newClasses: null,
         };
     }
     /**
@@ -37522,7 +37871,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-rc.0+238.sha-98ded94.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-rc.0+244.sha-eda09e6.with-local-changes');
 
     /**
      * @license
@@ -48153,7 +48502,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-rc.0+238.sha-98ded94.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-rc.0+244.sha-eda09e6.with-local-changes');
 
     /**
      * @license
