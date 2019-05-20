@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-rc.0+257.sha-c1135ee.with-local-changes
+ * @license Angular v8.0.0-rc.0+259.sha-6454f76.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -17767,7 +17767,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-rc.0+257.sha-c1135ee.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-rc.0+259.sha-6454f76.with-local-changes');
 
     /**
      * @license
@@ -35688,24 +35688,11 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Gets TView from a template function or creates a new TView
      * if it doesn't already exist.
      *
-     * @param templateFn The template from which to get static data
-     * @param consts The number of nodes, local refs, and pipes in this view
-     * @param vars The number of bindings and pure function bindings in this view
-     * @param directives Directive defs that should be saved on TView
-     * @param pipes Pipe defs that should be saved on TView
-     * @param viewQuery View query that should be saved on TView
-     * @param schemas Schemas that should be saved on TView
+     * @param def ComponentDef
      * @returns TView
      */
-    function getOrCreateTView(templateFn, consts, vars, directives, pipes, viewQuery, schemas) {
-        // TODO(misko): reading `ngPrivateData` here is problematic for two reasons
-        // 1. It is a megamorphic call on each invocation.
-        // 2. For nested embedded views (ngFor inside ngFor) the template instance is per
-        //    outer template invocation, which means that no such property will exist
-        // Correct solution is to only put `ngPrivateData` on the Component template
-        // and not on embedded templates.
-        return templateFn.ngPrivateData ||
-            (templateFn.ngPrivateData = createTView(-1, templateFn, consts, vars, directives, pipes, viewQuery, schemas));
+    function getOrCreateTView(def) {
+        return def.tView || (def.tView = createTView(-1, def.template, def.consts, def.vars, def.directiveDefs, def.pipeDefs, def.viewQuery, def.schemas));
     }
     /**
      * Creates a TView instance
@@ -37174,7 +37161,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         resetComponentState();
         var tView = rootView[TVIEW];
         var tNode = createNodeAtIndex(0, 3 /* Element */, rNode, null, null);
-        var componentView = createLView(rootView, getOrCreateTView(def.template, def.consts, def.vars, def.directiveDefs, def.pipeDefs, def.viewQuery, def.schemas), null, def.onPush ? 64 /* Dirty */ : 16 /* CheckAlways */, rootView[HEADER_OFFSET], tNode, rendererFactory, renderer, sanitizer);
+        var componentView = createLView(rootView, getOrCreateTView(def), null, def.onPush ? 64 /* Dirty */ : 16 /* CheckAlways */, rootView[HEADER_OFFSET], tNode, rendererFactory, renderer, sanitizer);
         if (tView.firstTemplatePass) {
             diPublicInInjector(getOrCreateNodeInjectorForNode(tNode, rootView), rootView, def.type);
             tNode.flags = 1 /* isComponent */;
@@ -37871,7 +37858,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-rc.0+257.sha-c1135ee.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-rc.0+259.sha-6454f76.with-local-changes');
 
     /**
      * @license
@@ -48500,7 +48487,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-rc.0+257.sha-c1135ee.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-rc.0+259.sha-6454f76.with-local-changes');
 
     /**
      * @license
