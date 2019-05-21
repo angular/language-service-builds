@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-rc.0+274.sha-c9f5f3d.with-local-changes
+ * @license Angular v8.0.0-rc.0+275.sha-f3c69e7.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -17767,7 +17767,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-rc.0+274.sha-c9f5f3d.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-rc.0+275.sha-f3c69e7.with-local-changes');
 
     /**
      * @license
@@ -37858,7 +37858,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-rc.0+274.sha-c9f5f3d.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-rc.0+275.sha-f3c69e7.with-local-changes');
 
     /**
      * @license
@@ -40916,28 +40916,27 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * found in the LICENSE file at https://angular.io/license
      */
     /**
-     * Flattens an array in non-recursive way. Input arrays are not modified.
+     * Flattens an array.
      */
-    function flatten$2(list, mapFn) {
-        var result = [];
-        var i = 0;
-        while (i < list.length) {
+    function flatten$2(list, dst) {
+        if (dst === undefined)
+            dst = list;
+        for (var i = 0; i < list.length; i++) {
             var item = list[i];
             if (Array.isArray(item)) {
-                if (item.length > 0) {
-                    list = item.concat(list.slice(i + 1));
-                    i = 0;
+                // we need to inline it.
+                if (dst === list) {
+                    // Our assumption that the list was already flat was wrong and
+                    // we need to clone flat since we need to write to it.
+                    dst = list.slice(0, i);
                 }
-                else {
-                    i++;
-                }
+                flatten$2(item, dst);
             }
-            else {
-                result.push(mapFn ? mapFn(item) : item);
-                i++;
+            else if (dst !== list) {
+                dst.push(item);
             }
         }
-        return result;
+        return dst;
     }
 
     /**
@@ -48487,7 +48486,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-rc.0+274.sha-c9f5f3d.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-rc.0+275.sha-f3c69e7.with-local-changes');
 
     /**
      * @license
