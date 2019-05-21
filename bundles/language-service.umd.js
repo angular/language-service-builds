@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-rc.0+274.sha-c9f5f3d.with-local-changes
+ * @license Angular v8.0.0-rc.0+275.sha-f3c69e7.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -17752,7 +17752,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-rc.0+274.sha-c9f5f3d.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-rc.0+275.sha-f3c69e7.with-local-changes');
 
     /**
      * @license
@@ -45709,7 +45709,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-rc.0+274.sha-c9f5f3d.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-rc.0+275.sha-f3c69e7.with-local-changes');
 
     /**
      * @license
@@ -48766,28 +48766,27 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         }
     }
     /**
-     * Flattens an array in non-recursive way. Input arrays are not modified.
+     * Flattens an array.
      */
-    function flatten$2(list, mapFn) {
-        var result = [];
-        var i = 0;
-        while (i < list.length) {
+    function flatten$2(list, dst) {
+        if (dst === undefined)
+            dst = list;
+        for (var i = 0; i < list.length; i++) {
             var item = list[i];
             if (Array.isArray(item)) {
-                if (item.length > 0) {
-                    list = item.concat(list.slice(i + 1));
-                    i = 0;
+                // we need to inline it.
+                if (dst === list) {
+                    // Our assumption that the list was already flat was wrong and
+                    // we need to clone flat since we need to write to it.
+                    dst = list.slice(0, i);
                 }
-                else {
-                    i++;
-                }
+                flatten$2(item, dst);
             }
-            else {
-                result.push(mapFn ? mapFn(item) : item);
-                i++;
+            else if (dst !== list) {
+                dst.push(item);
             }
         }
-        return result;
+        return dst;
     }
 
     /**
@@ -53326,11 +53325,13 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 if (ngModuleDef === null) {
                     ngModuleDef = getCompilerFacade().compileNgModule(angularCoreEnv, "ng:///" + moduleType.name + "/ngModuleDef.js", {
                         type: moduleType,
-                        bootstrap: flatten$2(ngModule.bootstrap || EMPTY_ARRAY$3, resolveForwardRef$1),
+                        bootstrap: flatten$2(ngModule.bootstrap || EMPTY_ARRAY$3).map(resolveForwardRef$1),
                         declarations: declarations.map(resolveForwardRef$1),
-                        imports: flatten$2(ngModule.imports || EMPTY_ARRAY$3, resolveForwardRef$1)
+                        imports: flatten$2(ngModule.imports || EMPTY_ARRAY$3)
+                            .map(resolveForwardRef$1)
                             .map(expandModuleWithProviders),
-                        exports: flatten$2(ngModule.exports || EMPTY_ARRAY$3, resolveForwardRef$1)
+                        exports: flatten$2(ngModule.exports || EMPTY_ARRAY$3)
+                            .map(resolveForwardRef$1)
                             .map(expandModuleWithProviders),
                         emitInline: true,
                         schemas: ngModule.schemas ? flatten$2(ngModule.schemas) : null,
@@ -53372,17 +53373,18 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         var errors = [];
         var declarations = maybeUnwrapFn(ngModuleDef.declarations);
         var imports = maybeUnwrapFn(ngModuleDef.imports);
-        flatten$2(imports, unwrapModuleWithProvidersImports).forEach(verifySemanticsOfNgModuleDef);
+        flatten$2(imports).map(unwrapModuleWithProvidersImports).forEach(verifySemanticsOfNgModuleDef);
         var exports = maybeUnwrapFn(ngModuleDef.exports);
         declarations.forEach(verifyDeclarationsHaveDefinitions);
-        var combinedDeclarations = __spread(declarations.map(resolveForwardRef$1), flatten$2(imports.map(computeCombinedExports), resolveForwardRef$1));
+        var combinedDeclarations = __spread(declarations.map(resolveForwardRef$1), flatten$2(imports.map(computeCombinedExports)).map(resolveForwardRef$1));
         exports.forEach(verifyExportsAreDeclaredOrReExported);
         declarations.forEach(verifyDeclarationIsUnique);
         declarations.forEach(verifyComponentEntryComponentsIsPartOfNgModule);
         var ngModule = getAnnotation(moduleType, 'NgModule');
         if (ngModule) {
             ngModule.imports &&
-                flatten$2(ngModule.imports, unwrapModuleWithProvidersImports)
+                flatten$2(ngModule.imports)
+                    .map(unwrapModuleWithProvidersImports)
                     .forEach(verifySemanticsOfNgModuleDef);
             ngModule.bootstrap && ngModule.bootstrap.forEach(verifyCorrectBootstrapType);
             ngModule.bootstrap && ngModule.bootstrap.forEach(verifyComponentIsPartOfNgModule);
@@ -59373,7 +59375,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-rc.0+274.sha-c9f5f3d.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-rc.0+275.sha-f3c69e7.with-local-changes');
 
     /**
      * @license
