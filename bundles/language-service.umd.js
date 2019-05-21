@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-rc.0+281.sha-6debe9d.with-local-changes
+ * @license Angular v8.0.0-rc.0+287.sha-66f269c.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -17752,7 +17752,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-rc.0+281.sha-6debe9d.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-rc.0+287.sha-66f269c.with-local-changes');
 
     /**
      * @license
@@ -45709,7 +45709,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-rc.0+281.sha-6debe9d.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-rc.0+287.sha-66f269c.with-local-changes');
 
     /**
      * @license
@@ -52706,10 +52706,10 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         }
         LQueries_.prototype.track = function (queryList, predicate, descend, read) {
             if (descend) {
-                this.deep = createQuery(this.deep, queryList, predicate, read != null ? read : null);
+                this.deep = createLQuery(this.deep, queryList, predicate, read != null ? read : null);
             }
             else {
-                this.shallow = createQuery(this.shallow, queryList, predicate, read != null ? read : null);
+                this.shallow = createLQuery(this.shallow, queryList, predicate, read != null ? read : null);
             }
         };
         LQueries_.prototype.clone = function () { return new LQueries_(this, null, this.deep); };
@@ -52920,7 +52920,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             read: read
         };
     }
-    function createQuery(previous, queryList, predicate, read) {
+    function createLQuery(previous, queryList, predicate, read) {
         return {
             next: previous,
             list: queryList,
@@ -52930,22 +52930,21 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         };
     }
     /**
-     * Creates and returns a QueryList.
+     * Creates a QueryList and stores it in LView's collection of active queries (LQueries).
      *
      * @param predicate The type for which the query will search
      * @param descend Whether or not to descend into children
      * @param read What to save in the query
      * @returns QueryList<T>
      */
-    function query(
+    function createQueryListInLView(
     // TODO: "read" should be an AbstractType (FW-486)
-    predicate, descend, read) {
+    lView, predicate, descend, read, isStatic) {
         ngDevMode && assertPreviousIsParent(getIsParent());
-        var lView = getLView();
         var queryList = new QueryList();
         var queries = lView[QUERIES] || (lView[QUERIES] = new LQueries_(null, null, null));
         queryList._valuesTree = [];
-        queryList._static = false;
+        queryList._static = isStatic;
         queries.track(queryList, predicate, descend, read);
         storeCleanupWithContext(lView, queryList, queryList.destroy);
         return queryList;
@@ -52982,12 +52981,10 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
     function ɵɵstaticViewQuery(
     // TODO(FW-486): "read" should be an AbstractType
     predicate, descend, read) {
-        var queryList = ɵɵviewQuery(predicate, descend, read);
-        var tView = getLView()[TVIEW];
-        queryList._static = true;
-        if (!tView.staticViewQueries) {
-            tView.staticViewQueries = true;
-        }
+        var lView = getLView();
+        var tView = lView[TVIEW];
+        viewQueryInternal(lView, tView, predicate, descend, read, true);
+        tView.staticViewQueries = true;
     }
     /**
      * Creates new QueryList, stores the reference in LView and returns QueryList.
@@ -53004,14 +53001,17 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
     predicate, descend, read) {
         var lView = getLView();
         var tView = lView[TVIEW];
+        return viewQueryInternal(lView, tView, predicate, descend, read, false);
+    }
+    function viewQueryInternal(lView, tView, predicate, descend, read, isStatic) {
         if (tView.firstTemplatePass) {
             tView.expandoStartIndex++;
         }
         var index = getCurrentQueryIndex();
-        var viewQuery = query(predicate, descend, read);
-        store(index - HEADER_OFFSET, viewQuery);
+        var queryList = createQueryListInLView(lView, predicate, descend, read, isStatic);
+        store(index - HEADER_OFFSET, queryList);
         setCurrentQueryIndex(index + 1);
-        return viewQuery;
+        return queryList;
     }
     /**
      * Loads current View Query and moves the pointer/index to the next View Query in LView.
@@ -53021,7 +53021,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
     function ɵɵloadViewQuery() {
         var index = getCurrentQueryIndex();
         setCurrentQueryIndex(index + 1);
-        return ɵɵload(index - HEADER_OFFSET);
+        return loadInternal(getLView(), index - HEADER_OFFSET);
     }
     /**
      * Registers a QueryList, associated with a content query, for later refresh (part of a view
@@ -53040,7 +53040,12 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
     read) {
         var lView = getLView();
         var tView = lView[TVIEW];
-        var contentQuery = query(predicate, descend, read);
+        return contentQueryInternal(lView, tView, directiveIndex, predicate, descend, read, false);
+    }
+    function contentQueryInternal(lView, tView, directiveIndex, predicate, descend, 
+    // TODO(FW-486): "read" should be an AbstractType
+    read, isStatic) {
+        var contentQuery = createQueryListInLView(lView, predicate, descend, read, isStatic);
         (lView[CONTENT_QUERIES] || (lView[CONTENT_QUERIES] = [])).push(contentQuery);
         if (tView.firstTemplatePass) {
             var tViewContentQueries = tView.contentQueries || (tView.contentQueries = []);
@@ -53066,12 +53071,10 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
     function ɵɵstaticContentQuery(directiveIndex, predicate, descend, 
     // TODO(FW-486): "read" should be an AbstractType
     read) {
-        var queryList = ɵɵcontentQuery(directiveIndex, predicate, descend, read);
-        var tView = getLView()[TVIEW];
-        queryList._static = true;
-        if (!tView.staticContentQueries) {
-            tView.staticContentQueries = true;
-        }
+        var lView = getLView();
+        var tView = lView[TVIEW];
+        contentQueryInternal(lView, tView, directiveIndex, predicate, descend, read, true);
+        tView.staticContentQueries = true;
     }
     /**
      *
@@ -56765,7 +56768,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    function createQuery$1() {
+    function createQuery() {
         return new QueryList();
     }
     function dirtyParentQueries(view) {
@@ -57288,7 +57291,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                     break;
                 case 67108864 /* TypeContentQuery */:
                 case 134217728 /* TypeViewQuery */:
-                    nodeData = createQuery$1();
+                    nodeData = createQuery();
                     break;
                 case 8 /* TypeNgContent */:
                     appendNgContent(view, renderHost, nodeDef);
@@ -59375,7 +59378,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-rc.0+281.sha-6debe9d.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-rc.0+287.sha-66f269c.with-local-changes');
 
     /**
      * @license
