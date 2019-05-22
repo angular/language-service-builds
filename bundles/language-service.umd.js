@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-rc.0+296.sha-70fd430.with-local-changes
+ * @license Angular v8.0.0-rc.0+304.sha-86c4690.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -15881,8 +15881,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                                 i18nAttrArgs_1.push(literal(attr.name), _this.i18nTranslate(message, params));
                                 converted.expressions.forEach(function (expression) {
                                     hasBindings_1 = true;
-                                    var binding = _this.convertExpressionBinding(implicit, expression);
-                                    _this.updateInstruction(elementIndex, element.sourceSpan, Identifiers$1.i18nExp, [binding]);
+                                    _this.updateInstruction(elementIndex, element.sourceSpan, Identifiers$1.i18nExp, function () { return [_this.convertExpressionBinding(implicit, expression)]; });
                                 });
                             }
                         }
@@ -17752,7 +17751,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-rc.0+296.sha-70fd430.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-rc.0+304.sha-86c4690.with-local-changes');
 
     /**
      * @license
@@ -31982,7 +31981,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         }
     }
     function componentNeedsResolution(component) {
-        return !!((component.templateUrl && !component.template) ||
+        return !!((component.templateUrl && !component.hasOwnProperty('template')) ||
             component.styleUrls && component.styleUrls.length);
     }
     function clearResolutionOfComponentResourcesQueue() {
@@ -45511,8 +45510,16 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             lContainer[ACTIVE_INDEX] = -1;
         }
         else {
-            var commentNode = hostView[RENDERER].createComment(ngDevMode ? 'container' : '');
-            ngDevMode && ngDevMode.rendererCreateComment++;
+            var commentNode = void 0;
+            // If the host is an element container, the native host element is guaranteed to be a
+            // comment and we can reuse that comment as anchor element for the new LContainer.
+            if (hostTNode.type === 4 /* ElementContainer */) {
+                commentNode = unwrapRNode(slotValue);
+            }
+            else {
+                ngDevMode && ngDevMode.rendererCreateComment++;
+                commentNode = hostView[RENDERER].createComment(ngDevMode ? 'container' : '');
+            }
             // A container can be created on the root (topmost / bootstrapped) component and in this case we
             // can't use LTree to insert container's marker node (both parent of a comment node and the
             // commend node itself is located outside of elements hold by LTree). In this specific case we
@@ -45709,7 +45716,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-rc.0+296.sha-70fd430.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-rc.0+304.sha-86c4690.with-local-changes');
 
     /**
      * @license
@@ -51390,7 +51397,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
     };
     function getPromiseCtor(promiseCtor) {
         if (!promiseCtor) {
-            promiseCtor = config.Promise || Promise;
+            promiseCtor = Promise;
         }
         if (!promiseCtor) {
             throw new Error('no Promise impl found');
@@ -59378,7 +59385,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-rc.0+296.sha-70fd430.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-rc.0+304.sha-86c4690.with-local-changes');
 
     /**
      * @license
