@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-rc.0+297.sha-02523de.with-local-changes
+ * @license Angular v8.0.0-rc.0+326.sha-132c61d.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -3366,6 +3366,16 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         Identifiers.componentHostSyntheticProperty = { name: 'ɵɵcomponentHostSyntheticProperty', moduleName: CORE$1 };
         Identifiers.componentHostSyntheticListener = { name: 'ɵɵcomponentHostSyntheticListener', moduleName: CORE$1 };
         Identifiers.elementAttribute = { name: 'ɵɵelementAttribute', moduleName: CORE$1 };
+        Identifiers.attribute = { name: 'ɵɵattribute', moduleName: CORE$1 };
+        Identifiers.attributeInterpolate1 = { name: 'ɵɵattributeInterpolate1', moduleName: CORE$1 };
+        Identifiers.attributeInterpolate2 = { name: 'ɵɵattributeInterpolate2', moduleName: CORE$1 };
+        Identifiers.attributeInterpolate3 = { name: 'ɵɵattributeInterpolate3', moduleName: CORE$1 };
+        Identifiers.attributeInterpolate4 = { name: 'ɵɵattributeInterpolate4', moduleName: CORE$1 };
+        Identifiers.attributeInterpolate5 = { name: 'ɵɵattributeInterpolate5', moduleName: CORE$1 };
+        Identifiers.attributeInterpolate6 = { name: 'ɵɵattributeInterpolate6', moduleName: CORE$1 };
+        Identifiers.attributeInterpolate7 = { name: 'ɵɵattributeInterpolate7', moduleName: CORE$1 };
+        Identifiers.attributeInterpolate8 = { name: 'ɵɵattributeInterpolate8', moduleName: CORE$1 };
+        Identifiers.attributeInterpolateV = { name: 'ɵɵattributeInterpolateV', moduleName: CORE$1 };
         Identifiers.classProp = { name: 'ɵɵclassProp', moduleName: CORE$1 };
         Identifiers.elementContainerStart = { name: 'ɵɵelementContainerStart', moduleName: CORE$1 };
         Identifiers.elementContainerEnd = { name: 'ɵɵelementContainerEnd', moduleName: CORE$1 };
@@ -15994,28 +16004,28 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                         _this.allocateBindingSlots(value_2);
                         if (inputType === 0 /* Property */) {
                             if (value_2 instanceof Interpolation) {
-                                _this.updateInstruction(elementIndex, input.sourceSpan, getPropertyInterpolationExpression(value_2), function () {
-                                    return __spread([literal(attrName_1)], _this.getUpdateInstructionArguments(variable(CONTEXT_NAME), value_2), params_2);
-                                });
+                                // prop="{{value}}" and friends
+                                _this.interpolatedUpdateInstruction(getPropertyInterpolationExpression(value_2), elementIndex, attrName_1, input, value_2, params_2);
                             }
                             else {
-                                // Bound, un-interpolated properties
-                                _this.updateInstruction(elementIndex, input.sourceSpan, Identifiers$1.property, function () {
-                                    return __spread([
-                                        literal(attrName_1), _this.convertPropertyBinding(implicit, value_2, true)
-                                    ], params_2);
-                                });
+                                // [prop]="value"
+                                _this.boundUpdateInstruction(Identifiers$1.property, elementIndex, attrName_1, input, implicit, value_2, params_2);
+                            }
+                        }
+                        else if (inputType === 1 /* Attribute */) {
+                            if (value_2 instanceof Interpolation && getInterpolationArgsLength(value_2) > 1) {
+                                // attr.name="text{{value}}" and friends
+                                _this.interpolatedUpdateInstruction(getAttributeInterpolationExpression(value_2), elementIndex, attrName_1, input, value_2, params_2);
+                            }
+                            else {
+                                var boundValue = value_2 instanceof Interpolation ? value_2.expressions[0] : value_2;
+                                // [attr.name]="value" or attr.name="{{value}}"
+                                _this.boundUpdateInstruction(Identifiers$1.attribute, elementIndex, attrName_1, input, implicit, boundValue, params_2);
                             }
                         }
                         else {
-                            var instruction_2;
-                            if (inputType === 2 /* Class */) {
-                                instruction_2 = Identifiers$1.classProp;
-                            }
-                            else {
-                                instruction_2 = Identifiers$1.elementAttribute;
-                            }
-                            _this.updateInstruction(elementIndex, input.sourceSpan, instruction_2, function () {
+                            // class prop
+                            _this.updateInstruction(elementIndex, input.sourceSpan, Identifiers$1.classProp, function () {
                                 return __spread([
                                     literal(elementIndex), literal(attrName_1),
                                     _this.convertPropertyBinding(implicit, value_2)
@@ -16041,6 +16051,26 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 }
                 this.creationInstruction(span, isNgContainer$1 ? Identifiers$1.elementContainerEnd : Identifiers$1.elementEnd);
             }
+        };
+        /**
+         * Adds an update instruction for a bound property or attribute, such as `[prop]="value"` or
+         * `[attr.title]="value"`
+         */
+        TemplateDefinitionBuilder.prototype.boundUpdateInstruction = function (instruction, elementIndex, attrName, input, implicit, value, params) {
+            var _this = this;
+            this.updateInstruction(elementIndex, input.sourceSpan, instruction, function () {
+                return __spread([literal(attrName), _this.convertPropertyBinding(implicit, value, true)], params);
+            });
+        };
+        /**
+         * Adds an update instruction for an interpolated property or attribute, such as
+         * `prop="{{value}}"` or `attr.title="{{value}}"`
+         */
+        TemplateDefinitionBuilder.prototype.interpolatedUpdateInstruction = function (instruction, elementIndex, attrName, input, value, params) {
+            var _this = this;
+            this.updateInstruction(elementIndex, input.sourceSpan, instruction, function () {
+                return __spread([literal(attrName)], _this.getUpdateInstructionArguments(variable(CONTEXT_NAME), value), params);
+            });
         };
         TemplateDefinitionBuilder.prototype.visitTemplate = function (template) {
             var _this = this;
@@ -16760,6 +16790,32 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         }
     }
     /**
+     * Gets the instruction to generate for an interpolated attribute
+     * @param interpolation An Interpolation AST
+     */
+    function getAttributeInterpolationExpression(interpolation) {
+        switch (getInterpolationArgsLength(interpolation)) {
+            case 3:
+                return Identifiers$1.attributeInterpolate1;
+            case 5:
+                return Identifiers$1.attributeInterpolate2;
+            case 7:
+                return Identifiers$1.attributeInterpolate3;
+            case 9:
+                return Identifiers$1.attributeInterpolate4;
+            case 11:
+                return Identifiers$1.attributeInterpolate5;
+            case 13:
+                return Identifiers$1.attributeInterpolate6;
+            case 15:
+                return Identifiers$1.attributeInterpolate7;
+            case 17:
+                return Identifiers$1.attributeInterpolate8;
+            default:
+                return Identifiers$1.attributeInterpolateV;
+        }
+    }
+    /**
      * Gets the number of arguments expected to be passed to a generated instruction in the case of
      * interpolation instructions.
      * @param interpolation An interpolation ast
@@ -17273,8 +17329,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                         sanitizerFn = resolveSanitizationFn(securityContexts[0], isAttribute);
                     }
                 }
-                var isPropertyInstruction = instruction === Identifiers$1.property;
-                var instructionParams = isPropertyInstruction ?
+                var isInstructionWithoutElementIndex = instruction === Identifiers$1.property || instruction === Identifiers$1.attribute;
+                var instructionParams = isInstructionWithoutElementIndex ?
                     [
                         literal(bindingName),
                         bindingExpr.currValExpr,
@@ -17364,7 +17420,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         var attrMatches = bindingName.match(ATTR_REGEX);
         if (attrMatches) {
             bindingName = attrMatches[1];
-            instruction = Identifiers$1.elementAttribute;
+            instruction = Identifiers$1.attribute;
         }
         else {
             if (binding.isAnimation) {
@@ -17766,7 +17822,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-rc.0+297.sha-02523de.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-rc.0+326.sha-132c61d.with-local-changes');
 
     /**
      * @license
@@ -32796,8 +32852,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         // top level variables should not be exported for performance reasons (PERF_NOTES.md)
         return previousOrParentTNode;
     }
-    function setPreviousOrParentTNode(tNode) {
+    function setPreviousOrParentTNode(tNode, _isParent) {
         previousOrParentTNode = tNode;
+        isParent = _isParent;
     }
     function setTNodeAndViewData(tNode, view) {
         ngDevMode && assertLViewOrUndefined(view);
@@ -32813,9 +32870,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     function getIsParent() {
         // top level variables should not be exported for performance reasons (PERF_NOTES.md)
         return isParent;
-    }
-    function setIsParent(value) {
-        isParent = value;
     }
     /** Checks whether a given view is in creation mode */
     function isCreationMode(view) {
@@ -33797,7 +33851,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      */
     function findComponentView(lView) {
         var rootTNode = lView[T_HOST];
-        while (rootTNode && rootTNode.type === 2 /* View */) {
+        while (rootTNode !== null && rootTNode.type === 2 /* View */) {
             ngDevMode && assertDefined(lView[DECLARATION_VIEW], 'lView[DECLARATION_VIEW]');
             lView = lView[DECLARATION_VIEW];
             rootTNode = lView[T_HOST];
@@ -35553,40 +35607,38 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         ngDevMode && attachLViewDebug(lView);
         return lView;
     }
-    function createNodeAtIndex(index, type, native, name, attrs) {
-        var lView = getLView();
-        var tView = lView[TVIEW];
+    function getOrCreateTNode(tView, tHostNode, index, type, name, attrs) {
+        // Keep this function short, so that the VM will inline it.
         var adjustedIndex = index + HEADER_OFFSET;
-        ngDevMode &&
-            assertLessThan(adjustedIndex, lView.length, "Slot should have been initialized with null");
-        lView[adjustedIndex] = native;
+        var tNode = tView.data[adjustedIndex] ||
+            createTNodeAtIndex(tView, tHostNode, adjustedIndex, type, name, attrs, index);
+        setPreviousOrParentTNode(tNode, true);
+        return tNode;
+    }
+    function createTNodeAtIndex(tView, tHostNode, adjustedIndex, type, name, attrs, index) {
         var previousOrParentTNode = getPreviousOrParentTNode();
         var isParent = getIsParent();
-        var tNode = tView.data[adjustedIndex];
-        if (tNode == null) {
-            var parent_1 = isParent ? previousOrParentTNode : previousOrParentTNode && previousOrParentTNode.parent;
-            // Parents cannot cross component boundaries because components will be used in multiple places,
-            // so it's only set if the view is the same.
-            var parentInSameView = parent_1 && parent_1 !== lView[T_HOST];
-            var tParentNode = parentInSameView ? parent_1 : null;
-            tNode = tView.data[adjustedIndex] = createTNode(tParentNode, type, adjustedIndex, name, attrs);
-            // Now link ourselves into the tree.
-            if (previousOrParentTNode) {
-                if (isParent && previousOrParentTNode.child == null &&
-                    (tNode.parent !== null || previousOrParentTNode.type === 2 /* View */)) {
-                    // We are in the same view, which means we are adding content node to the parent view.
-                    previousOrParentTNode.child = tNode;
-                }
-                else if (!isParent) {
-                    previousOrParentTNode.next = tNode;
-                }
-            }
-        }
-        if (tView.firstChild == null) {
+        var parent = isParent ? previousOrParentTNode : previousOrParentTNode && previousOrParentTNode.parent;
+        // Parents cannot cross component boundaries because components will be used in multiple places,
+        // so it's only set if the view is the same.
+        var parentInSameView = parent && parent !== tHostNode;
+        var tParentNode = parentInSameView ? parent : null;
+        var tNode = tView.data[adjustedIndex] =
+            createTNode(tParentNode, type, adjustedIndex, name, attrs);
+        if (index === 0) {
             tView.firstChild = tNode;
         }
-        setPreviousOrParentTNode(tNode);
-        setIsParent(true);
+        // Now link ourselves into the tree.
+        if (previousOrParentTNode) {
+            if (isParent && previousOrParentTNode.child == null &&
+                (tNode.parent !== null || previousOrParentTNode.type === 2 /* View */)) {
+                // We are in the same view, which means we are adding content node to the parent view.
+                previousOrParentTNode.child = tNode;
+            }
+            else if (!isParent) {
+                previousOrParentTNode.next = tNode;
+            }
+        }
         return tNode;
     }
     function assignTViewNodeToLView(tView, tParentNode, index, lView) {
@@ -35606,7 +35658,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * Dynamically created views must store/retrieve their TViews differently from component views
      * because their template functions are nested in the template functions of their hosts, creating
-     * closures. If their host template happens to be an embedded template in a loop (e.g. ngFor inside
+     * closures. If their host template happens to be an embedded template in a loop (e.g. ngFor
+     * inside
      * an ngFor), the nesting would mean we'd have multiple instances of the template function, so we
      * can't store TViews in the template function itself (as we do for comps). Instead, we store the
      * TView for dynamically created views on their host TNode, which only has one instance.
@@ -35621,8 +35674,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         }
         else {
             try {
-                setIsParent(true);
-                setPreviousOrParentTNode(null);
+                setPreviousOrParentTNode(null, true);
                 oldView = enterView(viewToRender, viewToRender[T_HOST]);
                 resetPreOrderHookFlags(viewToRender);
                 executeTemplate(tView.template, getRenderFlags(viewToRender), context);
@@ -35635,8 +35687,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             }
             finally {
                 leaveView(oldView);
-                setIsParent(_isParent);
-                setPreviousOrParentTNode(_previousOrParentTNode);
+                setPreviousOrParentTNode(_previousOrParentTNode, _isParent);
             }
         }
     }
@@ -35911,7 +35962,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         viewData.push(nodeInjectorFactory);
     }
     /**
-     * Goes over dynamic embedded views (ones created through ViewContainerRef APIs) and refreshes them
+     * Goes over dynamic embedded views (ones created through ViewContainerRef APIs) and refreshes
+     * them
      * by executing an associated template function.
      */
     function refreshDynamicEmbeddedViews(lView) {
@@ -35922,7 +35974,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             if (current[ACTIVE_INDEX] === -1 && isLContainer(current)) {
                 for (var i = CONTAINER_HEADER_OFFSET; i < current.length; i++) {
                     var dynamicViewData = current[i];
-                    // The directives and pipes are not needed here as an existing view is only being refreshed.
+                    // The directives and pipes are not needed here as an existing view is only being
+                    // refreshed.
                     ngDevMode && assertDefined(dynamicViewData[TVIEW], 'TView must be allocated');
                     renderEmbeddedTemplate(dynamicViewData, dynamicViewData[TVIEW], dynamicViewData[CONTEXT]);
                 }
@@ -35992,9 +36045,12 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @returns The state passed in
      */
     function addToViewTree(lView, lViewOrLContainer) {
-        // TODO(benlesh/misko): This implementation is incorrect, because it always adds the LContainer to
-        // the end of the queue, which means if the developer retrieves the LContainers from RNodes out of
-        // order, the change detection will run out of order, as the act of retrieving the the LContainer
+        // TODO(benlesh/misko): This implementation is incorrect, because it always adds the LContainer
+        // to
+        // the end of the queue, which means if the developer retrieves the LContainers from RNodes out
+        // of
+        // order, the change detection will run out of order, as the act of retrieving the the
+        // LContainer
         // from the RNode is what adds it to the queue.
         if (lView[CHILD_HEAD]) {
             lView[CHILD_TAIL][NEXT] = lViewOrLContainer;
@@ -36022,13 +36078,13 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     function markViewDirty(lView) {
         while (lView) {
             lView[FLAGS] |= 64 /* Dirty */;
-            var parent_2 = getLViewParent(lView);
+            var parent_1 = getLViewParent(lView);
             // Stop traversing up as soon as you find a root view that wasn't attached to any container
-            if (isRootView(lView) && !parent_2) {
+            if (isRootView(lView) && !parent_1) {
                 return lView;
             }
             // continue otherwise
-            lView = parent_2;
+            lView = parent_1;
         }
         return null;
     }
@@ -36092,7 +36148,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             setCheckNoChangesMode(false);
         }
     }
-    /** Checks the view of the component provided. Does not gate on dirty checks or execute doCheck. */
+    /** Checks the view of the component provided. Does not gate on dirty checks or execute doCheck.
+     */
     function checkView(hostView, component) {
         var hostTView = hostView[TVIEW];
         var oldView = enterView(hostView, hostView[T_HOST]);
@@ -36155,14 +36212,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             tNode.onElementCreationFns = null;
         }
     }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
 
     /**
      * @license
@@ -36608,94 +36657,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * Determine if the argument is shaped like a Promise
-     */
-    function isPromise$1(obj) {
-        // allow any Promise/A+ compliant thenable.
-        // It's up to the caller to ensure that obj.then conforms to the spec
-        return !!obj && typeof obj.then === 'function';
-    }
-    /**
-     * Determine if the argument is an Observable
-     */
-    function isObservable(obj) {
-        // TODO: use isObservable once we update pass rxjs 6.1
-        // https://github.com/ReactiveX/rxjs/blob/master/CHANGELOG.md#610-2018-05-03
-        return !!obj && typeof obj.subscribe === 'function';
-    }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     var _symbolIterator = null;
     function getSymbolIterator() {
         if (!_symbolIterator) {
@@ -36834,6 +36795,102 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     }
     function isJsObject(o) {
         return o !== null && (typeof o === 'function' || typeof o === 'object');
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * Determine if the argument is shaped like a Promise
+     */
+    function isPromise$1(obj) {
+        // allow any Promise/A+ compliant thenable.
+        // It's up to the caller to ensure that obj.then conforms to the spec
+        return !!obj && typeof obj.then === 'function';
+    }
+    /**
+     * Determine if the argument is an Observable
+     */
+    function isObservable(obj) {
+        // TODO: use isObservable once we update pass rxjs 6.1
+        // https://github.com/ReactiveX/rxjs/blob/master/CHANGELOG.md#610-2018-05-03
+        return !!obj && typeof obj.subscribe === 'function';
     }
 
     /**
@@ -37159,7 +37216,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     function createRootComponentView(rNode, def, rootView, rendererFactory, renderer, sanitizer) {
         resetComponentState();
         var tView = rootView[TVIEW];
-        var tNode = createNodeAtIndex(0, 3 /* Element */, rNode, null, null);
+        ngDevMode && assertDataInRange(rootView, 0 + HEADER_OFFSET);
+        rootView[0 + HEADER_OFFSET] = rNode;
+        var tNode = getOrCreateTNode(tView, null, 0, 3 /* Element */, null, null);
         var componentView = createLView(rootView, getOrCreateTView(def), null, def.onPush ? 64 /* Dirty */ : 16 /* CheckAlways */, rootView[HEADER_OFFSET], tNode, rendererFactory, renderer, sanitizer);
         if (tView.firstTemplatePass) {
             diPublicInInjector(getOrCreateNodeInjectorForNode(tNode, rootView), rootView, def.type);
@@ -37857,7 +37916,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-rc.0+297.sha-02523de.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-rc.0+326.sha-132c61d.with-local-changes');
 
     /**
      * @license
@@ -48485,7 +48544,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-rc.0+297.sha-02523de.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-rc.0+326.sha-132c61d.with-local-changes');
 
     /**
      * @license
