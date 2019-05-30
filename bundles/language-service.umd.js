@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-rc.0+383.sha-41f372f.with-local-changes
+ * @license Angular v8.0.0-rc.0+385.sha-53c6b78.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -15825,7 +15825,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                             // arguments
                             i18nAttrs.push(attr);
                         }
-                        outputAttrs.push(attr);
+                        else {
+                            outputAttrs.push(attr);
+                        }
                     }
                 }
             }
@@ -15856,7 +15858,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                         // arguments
                         i18nAttrs.push(input);
                     }
-                    allOtherInputs.push(input);
+                    else {
+                        allOtherInputs.push(input);
+                    }
                 }
             });
             outputAttrs.forEach(function (attr) {
@@ -15868,7 +15872,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 }
             });
             // add attributes for directive and projection matching purposes
-            attributes.push.apply(attributes, __spread(this.prepareNonRenderAttrs(allOtherInputs, element.outputs, stylingBuilder)));
+            attributes.push.apply(attributes, __spread(this.prepareNonRenderAttrs(allOtherInputs, element.outputs, stylingBuilder, [], i18nAttrs)));
             parameters.push(this.toAttrsParam(attributes));
             // local refs (ex.: <div #foo #bar="baz">)
             parameters.push(this.prepareRefsParameter(element.references));
@@ -16325,14 +16329,16 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
          *   CLASSES, class1, class2,
          *   STYLES, style1, value1, style2, value2,
          *   BINDINGS, name1, name2, name3,
-         *   TEMPLATE, name4, name5, ...]
+         *   TEMPLATE, name4, name5, name6,
+         *   I18N, name7, name8, ...]
          * ```
          *
          * Note that this function will fully ignore all synthetic (@foo) attribute values
          * because those values are intended to always be generated as property instructions.
          */
-        TemplateDefinitionBuilder.prototype.prepareNonRenderAttrs = function (inputs, outputs, styles, templateAttrs) {
+        TemplateDefinitionBuilder.prototype.prepareNonRenderAttrs = function (inputs, outputs, styles, templateAttrs, i18nAttrs) {
             if (templateAttrs === void 0) { templateAttrs = []; }
+            if (i18nAttrs === void 0) { i18nAttrs = []; }
             var alreadySeen = new Set();
             var attrExprs = [];
             function addAttrExpr(key, value) {
@@ -16378,6 +16384,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             if (templateAttrs.length) {
                 attrExprs.push(literal(4 /* Template */));
                 templateAttrs.forEach(function (attr) { return addAttrExpr(attr.name); });
+            }
+            if (i18nAttrs.length) {
+                attrExprs.push(literal(6 /* I18n */));
+                i18nAttrs.forEach(function (attr) { return addAttrExpr(attr.name); });
             }
             return attrExprs;
         };
@@ -17872,7 +17882,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-rc.0+383.sha-41f372f.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-rc.0+385.sha-53c6b78.with-local-changes');
 
     /**
      * @license
@@ -35359,10 +35369,11 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * attribute values in a `TAttributes` array are only the names of attributes,
      * and not name-value pairs.
      * @param marker The attribute marker to test.
-     * @returns true if the marker is a "name-only" marker (e.g. `Bindings` or `Template`).
+     * @returns true if the marker is a "name-only" marker (e.g. `Bindings`, `Template` or `I18n`).
      */
     function isNameOnlyAttributeMarker(marker) {
-        return marker === 3 /* Bindings */ || marker === 4 /* Template */;
+        return marker === 3 /* Bindings */ || marker === 4 /* Template */ ||
+            marker === 6 /* I18n */;
     }
 
     /**
@@ -39546,17 +39557,18 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Attribute matching depends upon `isInlineTemplate` and `isProjectionMode`.
      * The following table summarizes which types of attributes we attempt to match:
      *
-     * =========================================================================================
-     * Modes                   | Normal Attributes | Bindings Attributes | Template Attributes
-     * =========================================================================================
-     * Inline + Projection     | YES               | YES                 | NO
-     * -----------------------------------------------------------------------------------------
-     * Inline + Directive      | NO                | NO                  | YES
-     * -----------------------------------------------------------------------------------------
-     * Non-inline + Projection | YES               | YES                 | NO
-     * -----------------------------------------------------------------------------------------
-     * Non-inline + Directive  | YES               | YES                 | NO
-     * =========================================================================================
+     * ===========================================================================================================
+     * Modes                   | Normal Attributes | Bindings Attributes | Template Attributes | I18n
+     * Attributes
+     * ===========================================================================================================
+     * Inline + Projection     | YES               | YES                 | NO                  | YES
+     * -----------------------------------------------------------------------------------------------------------
+     * Inline + Directive      | NO                | NO                  | YES                 | NO
+     * -----------------------------------------------------------------------------------------------------------
+     * Non-inline + Projection | YES               | YES                 | NO                  | YES
+     * -----------------------------------------------------------------------------------------------------------
+     * Non-inline + Directive  | YES               | YES                 | NO                  | YES
+     * ===========================================================================================================
      *
      * @param name the name of the attribute to find
      * @param attrs the attribute array to examine
@@ -39576,7 +39588,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 if (maybeAttrName === name) {
                     return i;
                 }
-                else if (maybeAttrName === 3 /* Bindings */) {
+                else if (maybeAttrName === 3 /* Bindings */ || maybeAttrName === 6 /* I18n */) {
                     bindingsMode = true;
                 }
                 else if (maybeAttrName === 1 /* Classes */) {
@@ -42774,7 +42786,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * Updates the value or removes an attribute on an Element.
      *
-     * @param number index The index of the element in the data array
+     * @param index The index of the element in the data array
      * @param name name The name of the attribute.
      * @param value value The attribute is removed when value is `null` or `undefined`.
      *                  Otherwise the attribute value is set to the stringified value.
@@ -42785,26 +42797,29 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      */
     function ɵɵelementAttribute(index, name, value, sanitizer, namespace) {
         if (value !== NO_CHANGE) {
-            ngDevMode && validateAgainstEventAttributes(name);
             var lView = getLView();
             var renderer = lView[RENDERER];
-            var element = getNativeByIndex(index, lView);
-            if (value == null) {
-                ngDevMode && ngDevMode.rendererRemoveAttribute++;
-                isProceduralRenderer(renderer) ? renderer.removeAttribute(element, name, namespace) :
-                    element.removeAttribute(name);
+            elementAttributeInternal(index, name, value, lView, renderer, sanitizer, namespace);
+        }
+    }
+    function elementAttributeInternal(index, name, value, lView, renderer, sanitizer, namespace) {
+        ngDevMode && validateAgainstEventAttributes(name);
+        var element = getNativeByIndex(index, lView);
+        if (value == null) {
+            ngDevMode && ngDevMode.rendererRemoveAttribute++;
+            isProceduralRenderer(renderer) ? renderer.removeAttribute(element, name, namespace) :
+                element.removeAttribute(name);
+        }
+        else {
+            ngDevMode && ngDevMode.rendererSetAttribute++;
+            var tNode = getTNode(index, lView);
+            var strValue = sanitizer == null ? renderStringify(value) : sanitizer(value, tNode.tagName || '', name);
+            if (isProceduralRenderer(renderer)) {
+                renderer.setAttribute(element, name, strValue, namespace);
             }
             else {
-                ngDevMode && ngDevMode.rendererSetAttribute++;
-                var tNode = getTNode(index, lView);
-                var strValue = sanitizer == null ? renderStringify(value) : sanitizer(value, tNode.tagName || '', name);
-                if (isProceduralRenderer(renderer)) {
-                    renderer.setAttribute(element, name, strValue, namespace);
-                }
-                else {
-                    namespace ? element.setAttributeNS(namespace, name, strValue) :
-                        element.setAttribute(name, strValue);
-                }
+                namespace ? element.setAttributeNS(namespace, name, strValue) :
+                    element.setAttribute(name, strValue);
             }
         }
     }
@@ -47097,7 +47112,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-rc.0+383.sha-41f372f.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-rc.0+385.sha-53c6b78.with-local-changes');
 
     /**
      * @license
@@ -50928,7 +50943,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                         var elementNodeIndex = opCode >>> 3 /* SHIFT_REF */;
                         var attrName = createOpCodes[++i];
                         var attrValue = createOpCodes[++i];
-                        ɵɵelementAttribute(elementNodeIndex, attrName, attrValue);
+                        var renderer_1 = viewData[RENDERER];
+                        // This code is used for ICU expressions only, since we don't support
+                        // directives/components in ICUs, we don't need to worry about inputs here
+                        elementAttributeInternal(elementNodeIndex, attrName, attrValue, viewData, renderer_1);
                         break;
                     default:
                         throw new Error("Unable to determine the type of mutate operation for \"" + opCode + "\"");
@@ -50996,9 +51014,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                             var icuTNode = void 0;
                             switch (opCode & 3 /* MASK_OPCODE */) {
                                 case 1 /* Attr */:
-                                    var attrName = updateOpCodes[++j];
+                                    var propName = updateOpCodes[++j];
                                     var sanitizeFn = updateOpCodes[++j];
-                                    ɵɵelementAttribute(nodeIndex, attrName, value, sanitizeFn);
+                                    elementPropertyInternal(nodeIndex, propName, value, sanitizeFn);
                                     break;
                                 case 0 /* Text */:
                                     ɵɵtextBinding(nodeIndex, value);
@@ -51124,7 +51142,11 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             var parts = message.split(ICU_REGEXP);
             for (var j = 0; j < parts.length; j++) {
                 var value = parts[j];
-                if (j & 1) ;
+                if (j & 1) {
+                    // Odd indexes are ICU expressions
+                    // TODO(ocombe): support ICU expressions in attributes
+                    throw new Error('ICU expressions are not yet supported in attributes');
+                }
                 else if (value !== '') {
                     // Even indexes are text (including bindings)
                     var hasBinding = !!value.match(BINDING_REGEXP);
@@ -51132,7 +51154,15 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                         addAllToArray(generateBindingUpdateOpCodes(value, previousElementIndex, attrName), updateOpCodes);
                     }
                     else {
-                        ɵɵelementAttribute(previousElementIndex, attrName, value);
+                        var lView = getLView();
+                        var renderer = lView[RENDERER];
+                        elementAttributeInternal(previousElementIndex, attrName, value, lView, renderer);
+                        // Check if that attribute is a directive input
+                        var tNode = getTNode(previousElementIndex, lView);
+                        var dataValue = tNode.inputs && tNode.inputs[attrName];
+                        if (dataValue) {
+                            setInputsForProperty(lView, dataValue, value);
+                        }
                     }
                 }
             }
@@ -60621,7 +60651,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-rc.0+383.sha-41f372f.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-rc.0+385.sha-53c6b78.with-local-changes');
 
     /**
      * @license
