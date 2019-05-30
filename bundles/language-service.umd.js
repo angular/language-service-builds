@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.0-rc.0+377.sha-f5b0c8a.with-local-changes
+ * @license Angular v8.0.0-rc.0+378.sha-5e0f982.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -17887,7 +17887,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.0-rc.0+377.sha-f5b0c8a.with-local-changes');
+    var VERSION$1 = new Version('8.0.0-rc.0+378.sha-5e0f982.with-local-changes');
 
     /**
      * @license
@@ -32294,6 +32294,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     var NG_DIRECTIVE_DEF = getClosureSafeProperty({ ngDirectiveDef: getClosureSafeProperty });
     var NG_PIPE_DEF = getClosureSafeProperty({ ngPipeDef: getClosureSafeProperty });
     var NG_MODULE_DEF = getClosureSafeProperty({ ngModuleDef: getClosureSafeProperty });
+    var NG_LOCALE_ID_DEF = getClosureSafeProperty({ ngLocaleIdDef: getClosureSafeProperty });
     var NG_BASE_DEF = getClosureSafeProperty({ ngBaseDef: getClosureSafeProperty });
     /**
      * If a directive is diPublic, bloomAdd sets a property on the type with this constant as
@@ -32324,6 +32325,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             throw new Error("Type " + stringify$1(type) + " does not have 'ngModuleDef' property.");
         }
         return ngModuleDef;
+    }
+    function getNgLocaleIdDef(type) {
+        return type[NG_LOCALE_ID_DEF] || null;
     }
 
     /**
@@ -38413,7 +38417,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.0-rc.0+377.sha-f5b0c8a.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.0-rc.0+378.sha-5e0f982.with-local-changes');
 
     /**
      * @license
@@ -41471,6 +41475,64 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * found in the LICENSE file at https://angular.io/license
      */
     /**
+     * Index of each type of locale data from the locale data array
+     */
+    var LocaleDataIndex;
+    (function (LocaleDataIndex) {
+        LocaleDataIndex[LocaleDataIndex["LocaleId"] = 0] = "LocaleId";
+        LocaleDataIndex[LocaleDataIndex["DayPeriodsFormat"] = 1] = "DayPeriodsFormat";
+        LocaleDataIndex[LocaleDataIndex["DayPeriodsStandalone"] = 2] = "DayPeriodsStandalone";
+        LocaleDataIndex[LocaleDataIndex["DaysFormat"] = 3] = "DaysFormat";
+        LocaleDataIndex[LocaleDataIndex["DaysStandalone"] = 4] = "DaysStandalone";
+        LocaleDataIndex[LocaleDataIndex["MonthsFormat"] = 5] = "MonthsFormat";
+        LocaleDataIndex[LocaleDataIndex["MonthsStandalone"] = 6] = "MonthsStandalone";
+        LocaleDataIndex[LocaleDataIndex["Eras"] = 7] = "Eras";
+        LocaleDataIndex[LocaleDataIndex["FirstDayOfWeek"] = 8] = "FirstDayOfWeek";
+        LocaleDataIndex[LocaleDataIndex["WeekendRange"] = 9] = "WeekendRange";
+        LocaleDataIndex[LocaleDataIndex["DateFormat"] = 10] = "DateFormat";
+        LocaleDataIndex[LocaleDataIndex["TimeFormat"] = 11] = "TimeFormat";
+        LocaleDataIndex[LocaleDataIndex["DateTimeFormat"] = 12] = "DateTimeFormat";
+        LocaleDataIndex[LocaleDataIndex["NumberSymbols"] = 13] = "NumberSymbols";
+        LocaleDataIndex[LocaleDataIndex["NumberFormats"] = 14] = "NumberFormats";
+        LocaleDataIndex[LocaleDataIndex["CurrencySymbol"] = 15] = "CurrencySymbol";
+        LocaleDataIndex[LocaleDataIndex["CurrencyName"] = 16] = "CurrencyName";
+        LocaleDataIndex[LocaleDataIndex["Currencies"] = 17] = "Currencies";
+        LocaleDataIndex[LocaleDataIndex["PluralCase"] = 18] = "PluralCase";
+        LocaleDataIndex[LocaleDataIndex["ExtraData"] = 19] = "ExtraData";
+    })(LocaleDataIndex || (LocaleDataIndex = {}));
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
      * Flattens an array.
      */
     function flatten$2(list, dst) {
@@ -41501,15 +41563,23 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var Plural;
-    (function (Plural) {
-        Plural[Plural["Zero"] = 0] = "Zero";
-        Plural[Plural["One"] = 1] = "One";
-        Plural[Plural["Two"] = 2] = "Two";
-        Plural[Plural["Few"] = 3] = "Few";
-        Plural[Plural["Many"] = 4] = "Many";
-        Plural[Plural["Other"] = 5] = "Other";
-    })(Plural || (Plural = {}));
+    /**
+     * The locale id that the application is currently using (for translations and ICU expressions).
+     * This is the ivy version of `LOCALE_ID` that was defined as an injection token for the view engine
+     * but is now defined as a global value.
+     */
+    var DEFAULT_LOCALE_ID = 'en-US';
+    var LOCALE_ID = DEFAULT_LOCALE_ID;
+    /**
+     * Sets the locale id that will be used for translations and ICU expressions.
+     * This is the ivy version of `LOCALE_ID` that was defined as an injection token for the view engine
+     * but is now defined as a global value.
+     *
+     * @param localeId
+     */
+    function setLocaleId(localeId) {
+        LOCALE_ID = localeId.toLowerCase().replace(/_/g, '-');
+    }
 
     /**
      * @license
@@ -41558,6 +41628,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             _this.destroyCbs = [];
             var ngModuleDef = getNgModuleDef(ngModuleType);
             ngDevMode && assertDefined(ngModuleDef, "NgModule '" + stringify$1(ngModuleType) + "' is not a subtype of 'NgModuleType'.");
+            var ngLocaleIdDef = getNgLocaleIdDef(ngModuleType);
+            if (ngLocaleIdDef) {
+                setLocaleId(ngLocaleIdDef);
+            }
             _this._bootstrapComponents = maybeUnwrapFn(ngModuleDef.bootstrap);
             var additionalProviders = [
                 {
@@ -43887,6 +43961,113 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * Provide this token to set the locale of your application.
+     * It is used for i18n extraction, by i18n pipes (DatePipe, I18nPluralPipe, CurrencyPipe,
+     * DecimalPipe and PercentPipe) and by ICU expressions.
+     *
+     * See the [i18n guide](guide/i18n#setting-up-locale) for more information.
+     *
+     * @usageNotes
+     * ### Example
+     *
+     * ```typescript
+     * import { LOCALE_ID } from '@angular/core';
+     * import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+     * import { AppModule } from './app/app.module';
+     *
+     * platformBrowserDynamic().bootstrapModule(AppModule, {
+     *   providers: [{provide: LOCALE_ID, useValue: 'en-US' }]
+     * });
+     * ```
+     *
+     * @publicApi
+     */
+    var LOCALE_ID$1 = new InjectionToken('LocaleId');
+    /**
+     * Use this token at bootstrap to provide the content of your translation file (`xtb`,
+     * `xlf` or `xlf2`) when you want to translate your application in another language.
+     *
+     * See the [i18n guide](guide/i18n#merge) for more information.
+     *
+     * @usageNotes
+     * ### Example
+     *
+     * ```typescript
+     * import { TRANSLATIONS } from '@angular/core';
+     * import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+     * import { AppModule } from './app/app.module';
+     *
+     * // content of your translation file
+     * const translations = '....';
+     *
+     * platformBrowserDynamic().bootstrapModule(AppModule, {
+     *   providers: [{provide: TRANSLATIONS, useValue: translations }]
+     * });
+     * ```
+     *
+     * @publicApi
+     */
+    var TRANSLATIONS = new InjectionToken('Translations');
+    /**
+     * Provide this token at bootstrap to set the format of your {@link TRANSLATIONS}: `xtb`,
+     * `xlf` or `xlf2`.
+     *
+     * See the [i18n guide](guide/i18n#merge) for more information.
+     *
+     * @usageNotes
+     * ### Example
+     *
+     * ```typescript
+     * import { TRANSLATIONS_FORMAT } from '@angular/core';
+     * import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+     * import { AppModule } from './app/app.module';
+     *
+     * platformBrowserDynamic().bootstrapModule(AppModule, {
+     *   providers: [{provide: TRANSLATIONS_FORMAT, useValue: 'xlf' }]
+     * });
+     * ```
+     *
+     * @publicApi
+     */
+    var TRANSLATIONS_FORMAT = new InjectionToken('TranslationsFormat');
+    /**
+     * Use this enum at bootstrap as an option of `bootstrapModule` to define the strategy
+     * that the compiler should use in case of missing translations:
+     * - Error: throw if you have missing translations.
+     * - Warning (default): show a warning in the console and/or shell.
+     * - Ignore: do nothing.
+     *
+     * See the [i18n guide](guide/i18n#missing-translation) for more information.
+     *
+     * @usageNotes
+     * ### Example
+     * ```typescript
+     * import { MissingTranslationStrategy } from '@angular/core';
+     * import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+     * import { AppModule } from './app/app.module';
+     *
+     * platformBrowserDynamic().bootstrapModule(AppModule, {
+     *   missingTranslation: MissingTranslationStrategy.Error
+     * });
+     * ```
+     *
+     * @publicApi
+     */
+    var MissingTranslationStrategy$1;
+    (function (MissingTranslationStrategy) {
+        MissingTranslationStrategy[MissingTranslationStrategy["Error"] = 0] = "Error";
+        MissingTranslationStrategy[MissingTranslationStrategy["Warning"] = 1] = "Warning";
+        MissingTranslationStrategy[MissingTranslationStrategy["Ignore"] = 2] = "Ignore";
+    })(MissingTranslationStrategy$1 || (MissingTranslationStrategy$1 = {}));
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     function _throwError() {
         throw new Error("Runtime compiler is not loaded");
     }
@@ -44748,6 +44929,9 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 if (!exceptionHandler) {
                     throw new Error('No ErrorHandler. Is platform module (BrowserModule) included?');
                 }
+                // If the `LOCALE_ID` provider is defined at bootstrap we set the value for runtime i18n (ivy)
+                var localeId = moduleRef.injector.get(LOCALE_ID$1, DEFAULT_LOCALE_ID);
+                setLocaleId(localeId);
                 moduleRef.onDestroy(function () { return remove(_this._modules, moduleRef); });
                 ngZone.runOutsideAngular(function () { return ngZone.onError.subscribe({ next: function (error) { exceptionHandler.handleError(error); } }); });
                 return _callAndReportToErrorHandler(exceptionHandler, ngZone, function () {
@@ -46082,113 +46266,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    /**
-     * Provide this token to set the locale of your application.
-     * It is used for i18n extraction, by i18n pipes (DatePipe, I18nPluralPipe, CurrencyPipe,
-     * DecimalPipe and PercentPipe) and by ICU expressions.
-     *
-     * See the [i18n guide](guide/i18n#setting-up-locale) for more information.
-     *
-     * @usageNotes
-     * ### Example
-     *
-     * ```typescript
-     * import { LOCALE_ID } from '@angular/core';
-     * import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
-     * import { AppModule } from './app/app.module';
-     *
-     * platformBrowserDynamic().bootstrapModule(AppModule, {
-     *   providers: [{provide: LOCALE_ID, useValue: 'en-US' }]
-     * });
-     * ```
-     *
-     * @publicApi
-     */
-    var LOCALE_ID = new InjectionToken('LocaleId');
-    /**
-     * Use this token at bootstrap to provide the content of your translation file (`xtb`,
-     * `xlf` or `xlf2`) when you want to translate your application in another language.
-     *
-     * See the [i18n guide](guide/i18n#merge) for more information.
-     *
-     * @usageNotes
-     * ### Example
-     *
-     * ```typescript
-     * import { TRANSLATIONS } from '@angular/core';
-     * import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
-     * import { AppModule } from './app/app.module';
-     *
-     * // content of your translation file
-     * const translations = '....';
-     *
-     * platformBrowserDynamic().bootstrapModule(AppModule, {
-     *   providers: [{provide: TRANSLATIONS, useValue: translations }]
-     * });
-     * ```
-     *
-     * @publicApi
-     */
-    var TRANSLATIONS = new InjectionToken('Translations');
-    /**
-     * Provide this token at bootstrap to set the format of your {@link TRANSLATIONS}: `xtb`,
-     * `xlf` or `xlf2`.
-     *
-     * See the [i18n guide](guide/i18n#merge) for more information.
-     *
-     * @usageNotes
-     * ### Example
-     *
-     * ```typescript
-     * import { TRANSLATIONS_FORMAT } from '@angular/core';
-     * import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
-     * import { AppModule } from './app/app.module';
-     *
-     * platformBrowserDynamic().bootstrapModule(AppModule, {
-     *   providers: [{provide: TRANSLATIONS_FORMAT, useValue: 'xlf' }]
-     * });
-     * ```
-     *
-     * @publicApi
-     */
-    var TRANSLATIONS_FORMAT = new InjectionToken('TranslationsFormat');
-    /**
-     * Use this enum at bootstrap as an option of `bootstrapModule` to define the strategy
-     * that the compiler should use in case of missing translations:
-     * - Error: throw if you have missing translations.
-     * - Warning (default): show a warning in the console and/or shell.
-     * - Ignore: do nothing.
-     *
-     * See the [i18n guide](guide/i18n#missing-translation) for more information.
-     *
-     * @usageNotes
-     * ### Example
-     * ```typescript
-     * import { MissingTranslationStrategy } from '@angular/core';
-     * import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
-     * import { AppModule } from './app/app.module';
-     *
-     * platformBrowserDynamic().bootstrapModule(AppModule, {
-     *   missingTranslation: MissingTranslationStrategy.Error
-     * });
-     * ```
-     *
-     * @publicApi
-     */
-    var MissingTranslationStrategy$1;
-    (function (MissingTranslationStrategy) {
-        MissingTranslationStrategy[MissingTranslationStrategy["Error"] = 0] = "Error";
-        MissingTranslationStrategy[MissingTranslationStrategy["Warning"] = 1] = "Warning";
-        MissingTranslationStrategy[MissingTranslationStrategy["Ignore"] = 2] = "Ignore";
-    })(MissingTranslationStrategy$1 || (MissingTranslationStrategy$1 = {}));
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     function _iterableDiffersFactory() {
         return defaultIterableDiffers;
     }
@@ -46219,9 +46296,9 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         { provide: IterableDiffers, useFactory: _iterableDiffersFactory, deps: [] },
         { provide: KeyValueDiffers, useFactory: _keyValueDiffersFactory, deps: [] },
         {
-            provide: LOCALE_ID,
+            provide: LOCALE_ID$1,
             useFactory: _localeFactory,
-            deps: [[new Inject(LOCALE_ID), new Optional(), new SkipSelf()]]
+            deps: [[new Inject(LOCALE_ID$1), new Optional(), new SkipSelf()]]
         },
     ];
     /**
@@ -49043,7 +49120,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.0-rc.0+377.sha-f5b0c8a.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.0-rc.0+378.sha-5e0f982.with-local-changes');
 
     /**
      * @license
