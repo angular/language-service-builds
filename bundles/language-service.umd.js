@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.1.0-beta.0+8.sha-6d861f2.with-local-changes
+ * @license Angular v8.1.0-beta.0+10.sha-aca339e.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -15394,8 +15394,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    // Default selector used by `<ng-content>` if none specified
-    var DEFAULT_NG_CONTENT_SELECTOR = '*';
     // Selector attribute name of `<ng-content>`
     var NG_CONTENT_SELECT_ATTR$1 = 'select';
     // Attribute name of `ngProjectAs`.
@@ -15486,12 +15484,12 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             this._pureFunctionSlots = 0;
             // Number of binding slots
             this._bindingSlots = 0;
-            // Whether the template includes <ng-content> tags.
-            this._hasNgContent = false;
-            // Selectors found in the <ng-content> tags in the template.
-            this._ngContentSelectors = [];
+            // Projection slots found in the template. Projection slots can distribute projected
+            // nodes based on a selector, or can just use the wildcard selector to match
+            // all nodes which aren't matching any selector.
+            this._ngContentReservedSlots = [];
             // Number of non-default selectors found in all parent templates of this template. We need to
-            // track it to properly adjust projection bucket index in the `projection` instruction.
+            // track it to properly adjust projection slot index in the `projection` instruction.
             this._ngContentSelectorsOffset = 0;
             // These should be handled in the template or element directly.
             this.visitReference = invalid$1;
@@ -15565,15 +15563,17 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             // Nested templates must be processed before creation instructions so template()
             // instructions can be generated with the correct internal const count.
             this._nestedTemplateFns.forEach(function (buildTemplateFn) { return buildTemplateFn(); });
-            // Output the `projectionDef` instruction when some `<ng-content>` are present.
-            // The `projectionDef` instruction only emitted for the component template and it is skipped for
-            // nested templates (<ng-template> tags).
-            if (this.level === 0 && this._hasNgContent) {
+            // Output the `projectionDef` instruction when some `<ng-content>` tags are present.
+            // The `projectionDef` instruction is only emitted for the component template and
+            // is skipped for nested templates (<ng-template> tags).
+            if (this.level === 0 && this._ngContentReservedSlots.length) {
                 var parameters = [];
-                // Only selectors with a non-default value are generated
-                if (this._ngContentSelectors.length) {
-                    var r3Selectors = this._ngContentSelectors.map(function (s) { return parseSelectorToR3Selector(s); });
-                    parameters.push(this.constantPool.getConstLiteral(asLiteral(r3Selectors), true));
+                // By default the `projectionDef` instructions creates one slot for the wildcard
+                // selector if no parameters are passed. Therefore we only want to allocate a new
+                // array for the projection slots if the default projection slot is not sufficient.
+                if (this._ngContentReservedSlots.length > 1 || this._ngContentReservedSlots[0] !== '*') {
+                    var r3ReservedSlots = this._ngContentReservedSlots.map(function (s) { return s !== '*' ? parseSelectorToR3Selector(s) : s; });
+                    parameters.push(this.constantPool.getConstLiteral(asLiteral(r3ReservedSlots), true));
                 }
                 // Since we accumulate ngContent selectors while processing template elements,
                 // we *prepend* `projectionDef` to creation instructions block, to put it before
@@ -15751,13 +15751,11 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             this.i18n = null; // reset local i18n context
         };
         TemplateDefinitionBuilder.prototype.visitContent = function (ngContent) {
-            this._hasNgContent = true;
             var slot = this.allocateDataSlot();
-            var selectorIndex = ngContent.selector === DEFAULT_NG_CONTENT_SELECTOR ?
-                0 :
-                this._ngContentSelectors.push(ngContent.selector) + this._ngContentSelectorsOffset;
+            var projectionSlotIdx = this._ngContentSelectorsOffset + this._ngContentReservedSlots.length;
             var parameters = [literal(slot)];
             var attributes = [];
+            this._ngContentReservedSlots.push(ngContent.selector);
             ngContent.attributes.forEach(function (attribute) {
                 var name = attribute.name, value = attribute.value;
                 if (name === NG_PROJECT_AS_ATTR_NAME) {
@@ -15768,10 +15766,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 }
             });
             if (attributes.length > 0) {
-                parameters.push(literal(selectorIndex), literalArr(attributes));
+                parameters.push(literal(projectionSlotIdx), literalArr(attributes));
             }
-            else if (selectorIndex !== 0) {
-                parameters.push(literal(selectorIndex));
+            else if (projectionSlotIdx !== 0) {
+                parameters.push(literal(projectionSlotIdx));
             }
             this.creationInstruction(ngContent.sourceSpan, Identifiers$1.projection, parameters);
         };
@@ -16128,11 +16126,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             // template definition. e.g. <div *ngIf="showing">{{ foo }}</div>  <div #foo></div>
             this._nestedTemplateFns.push(function () {
                 var _a;
-                var templateFunctionExpr = templateVisitor.buildTemplateFunction(template.children, template.variables, _this._ngContentSelectors.length + _this._ngContentSelectorsOffset, template.i18n);
+                var templateFunctionExpr = templateVisitor.buildTemplateFunction(template.children, template.variables, _this._ngContentReservedSlots.length + _this._ngContentSelectorsOffset, template.i18n);
                 _this.constantPool.statements.push(templateFunctionExpr.toDeclStmt(templateName, null));
-                if (templateVisitor._hasNgContent) {
-                    _this._hasNgContent = true;
-                    (_a = _this._ngContentSelectors).push.apply(_a, __spread(templateVisitor._ngContentSelectors));
+                if (templateVisitor._ngContentReservedSlots.length) {
+                    (_a = _this._ngContentReservedSlots).push.apply(_a, __spread(templateVisitor._ngContentReservedSlots));
                 }
             });
             // e.g. template(1, MyComp_Template_1)
@@ -16222,8 +16219,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         TemplateDefinitionBuilder.prototype.getConstCount = function () { return this._dataIndex; };
         TemplateDefinitionBuilder.prototype.getVarCount = function () { return this._pureFunctionSlots; };
         TemplateDefinitionBuilder.prototype.getNgContentSelectors = function () {
-            return this._hasNgContent ?
-                this.constantPool.getConstLiteral(asLiteral(this._ngContentSelectors), true) :
+            return this._ngContentReservedSlots.length ?
+                this.constantPool.getConstLiteral(asLiteral(this._ngContentReservedSlots), true) :
                 null;
         };
         TemplateDefinitionBuilder.prototype.bindingContext = function () { return "" + this._bindingContext++; };
@@ -17882,7 +17879,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.1.0-beta.0+8.sha-6d861f2.with-local-changes');
+    var VERSION$1 = new Version('8.1.0-beta.0+10.sha-aca339e.with-local-changes');
 
     /**
      * @license
@@ -39661,27 +39658,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         }
         return null;
     }
-    /**
-     * Checks a given node against matching projection selectors and returns
-     * selector index (or 0 if none matched).
-     *
-     * This function takes into account the parsed ngProjectAs selector from the node's attributes.
-     * If present, it will check whether the ngProjectAs selector matches any of the projection
-     * selectors.
-     */
-    function matchingProjectionSelectorIndex(tNode, selectors) {
-        var ngProjectAsAttrVal = getProjectAsAttrValue(tNode);
-        for (var i = 0; i < selectors.length; i++) {
-            // If we ran into an `ngProjectAs` attribute, we should match its parsed selector
-            // to the list of selectors, otherwise we fall back to matching against the node.
-            if (ngProjectAsAttrVal === null ?
-                isNodeMatchingSelectorList(tNode, selectors[i], /* isProjectionMode */ true) :
-                isSelectorInSelectorList(ngProjectAsAttrVal, selectors[i])) {
-                return i + 1; // first matching selector "captures" a given node
-            }
-        }
-        return 0;
-    }
     function getNameOnlyMarkerIndex(nodeAttrs) {
         for (var i = 0; i < nodeAttrs.length; i++) {
             var nodeAttr = nodeAttrs[i];
@@ -44527,6 +44503,35 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     }
 
     /**
+     * Checks a given node against matching projection slots and returns the
+     * determined slot index. Returns "null" if no slot matched the given node.
+     *
+     * This function takes into account the parsed ngProjectAs selector from the
+     * node's attributes. If present, it will check whether the ngProjectAs selector
+     * matches any of the projection slot selectors.
+     */
+    function matchingProjectionSlotIndex(tNode, projectionSlots) {
+        var wildcardNgContentIndex = null;
+        var ngProjectAsAttrVal = getProjectAsAttrValue(tNode);
+        for (var i = 0; i < projectionSlots.length; i++) {
+            var slotValue = projectionSlots[i];
+            // The last wildcard projection slot should match all nodes which aren't matching
+            // any selector. This is necessary to be backwards compatible with view engine.
+            if (slotValue === '*') {
+                wildcardNgContentIndex = i;
+                continue;
+            }
+            // If we ran into an `ngProjectAs` attribute, we should match its parsed selector
+            // to the list of selectors, otherwise we fall back to matching against the node.
+            if (ngProjectAsAttrVal === null ?
+                isNodeMatchingSelectorList(tNode, slotValue, /* isProjectionMode */ true) :
+                isSelectorInSelectorList(ngProjectAsAttrVal, slotValue)) {
+                return i; // first matching selector "captures" a given node
+            }
+        }
+        return wildcardNgContentIndex;
+    }
+    /**
      * Instruction to distribute projectable nodes among <ng-content> occurrences in a given template.
      * It takes all the selectors from the entire component's template and decides where
      * each projected node belongs (it re-distributes nodes among "buckets" where each "bucket" is
@@ -44544,28 +44549,34 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * - we can't have only a parsed as we can't re-construct textual form from it (as entered by a
      * template author).
      *
-     * @param selectors A collection of parsed CSS selectors
-     * @param rawSelectors A collection of CSS selectors in the raw, un-parsed form
+     * @param projectionSlots? A collection of projection slots. A projection slot can be based
+     *        on a parsed CSS selectors or set to the wildcard selector ("*") in order to match
+     *        all nodes which do not match any selector. If not specified, a single wildcard
+     *        selector projection slot will be defined.
      *
      * @codeGenApi
      */
-    function ɵɵprojectionDef(selectors) {
+    function ɵɵprojectionDef(projectionSlots) {
         var componentNode = findComponentView(getLView())[T_HOST];
         if (!componentNode.projection) {
-            var noOfNodeBuckets = selectors ? selectors.length + 1 : 1;
+            // If no explicit projection slots are defined, fall back to a single
+            // projection slot with the wildcard selector.
+            var numProjectionSlots = projectionSlots ? projectionSlots.length : 1;
             var projectionHeads = componentNode.projection =
-                new Array(noOfNodeBuckets).fill(null);
+                new Array(numProjectionSlots).fill(null);
             var tails = projectionHeads.slice();
             var componentChild = componentNode.child;
             while (componentChild !== null) {
-                var bucketIndex = selectors ? matchingProjectionSelectorIndex(componentChild, selectors) : 0;
-                if (tails[bucketIndex]) {
-                    tails[bucketIndex].projectionNext = componentChild;
+                var slotIndex = projectionSlots ? matchingProjectionSlotIndex(componentChild, projectionSlots) : 0;
+                if (slotIndex !== null) {
+                    if (tails[slotIndex]) {
+                        tails[slotIndex].projectionNext = componentChild;
+                    }
+                    else {
+                        projectionHeads[slotIndex] = componentChild;
+                    }
+                    tails[slotIndex] = componentChild;
                 }
-                else {
-                    projectionHeads[bucketIndex] = componentChild;
-                }
-                tails[bucketIndex] = componentChild;
                 componentChild = componentChild.next;
             }
         }
@@ -47133,7 +47144,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.1.0-beta.0+8.sha-6d861f2.with-local-changes');
+    var VERSION$2 = new Version$1('8.1.0-beta.0+10.sha-aca339e.with-local-changes');
 
     /**
      * @license
@@ -50026,10 +50037,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             _this.ngModule = ngModule;
             _this.componentType = componentDef.type;
             _this.selector = componentDef.selectors[0][0];
-            // The component definition does not include the wildcard ('*') selector in its list.
-            // It is implicitly expected as the first item in the projectable nodes array.
             _this.ngContentSelectors =
-                componentDef.ngContentSelectors ? __spread(['*'], componentDef.ngContentSelectors) : [];
+                componentDef.ngContentSelectors ? componentDef.ngContentSelectors : [];
             _this.isBoundToModule = !!ngModule;
             return _this;
         }
@@ -60676,7 +60685,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.1.0-beta.0+8.sha-6d861f2.with-local-changes');
+    var VERSION$3 = new Version$1('8.1.0-beta.0+10.sha-aca339e.with-local-changes');
 
     /**
      * @license
