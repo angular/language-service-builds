@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.1.0-beta.0+18.sha-dd8cf19.with-local-changes
+ * @license Angular v8.1.0-beta.0+20.sha-680d385.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -17894,7 +17894,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.1.0-beta.0+18.sha-dd8cf19.with-local-changes');
+    var VERSION$1 = new Version('8.1.0-beta.0+20.sha-680d385.with-local-changes');
 
     /**
      * @license
@@ -30329,6 +30329,64 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     var SWITCH_COMPILE_INJECTABLE__PRE_R3__ = render2CompileInjectable;
     var SWITCH_COMPILE_INJECTABLE = SWITCH_COMPILE_INJECTABLE__PRE_R3__;
 
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    function ngDevModeResetPerfCounters() {
+        var newCounters = {
+            firstTemplatePass: 0,
+            tNode: 0,
+            tView: 0,
+            rendererCreateTextNode: 0,
+            rendererSetText: 0,
+            rendererCreateElement: 0,
+            rendererAddEventListener: 0,
+            rendererSetAttribute: 0,
+            rendererRemoveAttribute: 0,
+            rendererSetProperty: 0,
+            rendererSetClassName: 0,
+            rendererAddClass: 0,
+            rendererRemoveClass: 0,
+            rendererSetStyle: 0,
+            rendererRemoveStyle: 0,
+            rendererDestroy: 0,
+            rendererDestroyNode: 0,
+            rendererMoveNode: 0,
+            rendererRemoveNode: 0,
+            rendererAppendChild: 0,
+            rendererInsertBefore: 0,
+            rendererCreateComment: 0,
+            styleMap: 0,
+            styleMapCacheMiss: 0,
+            classMap: 0,
+            classMapCacheMiss: 0,
+            stylingProp: 0,
+            stylingPropCacheMiss: 0,
+            stylingApply: 0,
+            stylingApplyCacheMiss: 0,
+        };
+        // Make sure to refer to ngDevMode as ['ngDevMode'] for closure.
+        _global$1['ngDevMode'] = newCounters;
+        return newCounters;
+    }
+    /**
+     * This checks to see if the `ngDevMode` has been set. If yes,
+     * then we honor it, otherwise we default to dev mode with additional checks.
+     *
+     * The idea is that unless we are doing production build where we explicitly
+     * set `ngDevMode == false` we should be helping the developer by providing
+     * as much early warning and errors as possible.
+     *
+     * NOTE: changes to the `ngDevMode` name must be synced with `compiler-cli/src/tooling.ts`.
+     */
+    if (typeof ngDevMode === 'undefined' || ngDevMode) {
+        ngDevModeResetPerfCounters();
+    }
+
     /** Called when directives inject each other (creating a circular dependency) */
     function throwCyclicDependencyError(token) {
         throw new Error("Cannot instantiate cyclic dependency! " + token);
@@ -30553,8 +30611,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             // is the `ngModule`.
             var defType = (ngModule === undefined) ? defOrWrappedDef : ngModule;
             // Check for circular dependencies.
-            // TODO(FW-1307): Re-add ngDevMode when closure can handle it
-            if (parents.indexOf(defType) !== -1) {
+            if (ngDevMode && parents.indexOf(defType) !== -1) {
                 var defName = stringify$1(defType);
                 throw new Error("Circular dependency in DI detected for type " + defName + ". Dependency path: " + parents.map(function (defType) { return stringify$1(defType); }).join(' > ') + " > " + defName + ".");
             }
@@ -30577,8 +30634,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             if (def.imports != null && !isDuplicate) {
                 // Before processing defType's imports, add it to the set of parents. This way, if it ends
                 // up deeply importing itself, this can be detected.
-                // TODO(FW-1307): Re-add ngDevMode when closure can handle it
-                parents.push(defType);
+                ngDevMode && parents.push(defType);
                 // Add it to the set of dedups. This way we can detect multiple imports of the same module
                 dedupStack.push(defType);
                 var importTypesWithProviders_1;
@@ -30595,8 +30651,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 }
                 finally {
                     // Remove it from the parents set when finished.
-                    // TODO(FW-1307): Re-add ngDevMode when closure can handle it
-                    parents.pop();
+                    ngDevMode && parents.pop();
                 }
                 // Imports which are declared with providers (TypeWithProviders) need to be processed
                 // after all imported modules are processed. This is similar to how View Engine
@@ -32215,64 +32270,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
          */
         ViewEncapsulation[ViewEncapsulation["ShadowDom"] = 3] = "ShadowDom";
     })(ViewEncapsulation$1 || (ViewEncapsulation$1 = {}));
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    function ngDevModeResetPerfCounters() {
-        var newCounters = {
-            firstTemplatePass: 0,
-            tNode: 0,
-            tView: 0,
-            rendererCreateTextNode: 0,
-            rendererSetText: 0,
-            rendererCreateElement: 0,
-            rendererAddEventListener: 0,
-            rendererSetAttribute: 0,
-            rendererRemoveAttribute: 0,
-            rendererSetProperty: 0,
-            rendererSetClassName: 0,
-            rendererAddClass: 0,
-            rendererRemoveClass: 0,
-            rendererSetStyle: 0,
-            rendererRemoveStyle: 0,
-            rendererDestroy: 0,
-            rendererDestroyNode: 0,
-            rendererMoveNode: 0,
-            rendererRemoveNode: 0,
-            rendererAppendChild: 0,
-            rendererInsertBefore: 0,
-            rendererCreateComment: 0,
-            styleMap: 0,
-            styleMapCacheMiss: 0,
-            classMap: 0,
-            classMapCacheMiss: 0,
-            stylingProp: 0,
-            stylingPropCacheMiss: 0,
-            stylingApply: 0,
-            stylingApplyCacheMiss: 0,
-        };
-        // Make sure to refer to ngDevMode as ['ngDevMode'] for closure.
-        _global$1['ngDevMode'] = newCounters;
-        return newCounters;
-    }
-    /**
-     * This checks to see if the `ngDevMode` has been set. If yes,
-     * then we honor it, otherwise we default to dev mode with additional checks.
-     *
-     * The idea is that unless we are doing production build where we explicitly
-     * set `ngDevMode == false` we should be helping the developer by providing
-     * as much early warning and errors as possible.
-     *
-     * NOTE: changes to the `ngDevMode` name must be synced with `compiler-cli/src/tooling.ts`.
-     */
-    if (typeof ngDevMode === 'undefined' || ngDevMode) {
-        ngDevModeResetPerfCounters();
-    }
 
     /**
      * @license
@@ -38441,7 +38438,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.1.0-beta.0+18.sha-dd8cf19.with-local-changes');
+    var VERSION$2 = new Version$1('8.1.0-beta.0+20.sha-680d385.with-local-changes');
 
     /**
      * @license
@@ -42325,7 +42322,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
     };
     function getPromiseCtor(promiseCtor) {
         if (!promiseCtor) {
-            promiseCtor = config.Promise || Promise;
+            promiseCtor = Promise;
         }
         if (!promiseCtor) {
             throw new Error('no Promise impl found');
@@ -49178,7 +49175,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.1.0-beta.0+18.sha-dd8cf19.with-local-changes');
+    var VERSION$3 = new Version$1('8.1.0-beta.0+20.sha-680d385.with-local-changes');
 
     /**
      * @license
