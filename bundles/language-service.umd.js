@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.1.0-beta.0+12.sha-f936590.with-local-changes
+ * @license Angular v8.1.0-beta.0+23.sha-fcdd784.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -3363,7 +3363,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         Identifiers.elementEnd = { name: 'ɵɵelementEnd', moduleName: CORE$1 };
         Identifiers.elementProperty = { name: 'ɵɵelementProperty', moduleName: CORE$1 };
         Identifiers.select = { name: 'ɵɵselect', moduleName: CORE$1 };
-        Identifiers.componentHostSyntheticProperty = { name: 'ɵɵcomponentHostSyntheticProperty', moduleName: CORE$1 };
+        Identifiers.updateSyntheticHostBinding = { name: 'ɵɵupdateSyntheticHostBinding', moduleName: CORE$1 };
         Identifiers.componentHostSyntheticListener = { name: 'ɵɵcomponentHostSyntheticListener', moduleName: CORE$1 };
         Identifiers.elementAttribute = { name: 'ɵɵelementAttribute', moduleName: CORE$1 };
         Identifiers.attribute = { name: 'ɵɵattribute', moduleName: CORE$1 };
@@ -17401,17 +17401,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                         sanitizerFn = resolveSanitizationFn(securityContexts[0], isAttribute);
                     }
                 }
-                var isInstructionWithoutElementIndex = instruction === Identifiers$1.property || instruction === Identifiers$1.attribute;
-                var instructionParams = isInstructionWithoutElementIndex ?
-                    [
-                        literal(bindingName),
-                        bindingExpr.currValExpr,
-                    ] :
-                    [
-                        elVarExp,
-                        literal(bindingName),
-                        importExpr(Identifiers$1.bind).callFn([bindingExpr.currValExpr]),
-                    ];
+                var instructionParams = [literal(bindingName), bindingExpr.currValExpr];
                 if (sanitizerFn) {
                     instructionParams.push(sanitizerFn);
                 }
@@ -17500,7 +17490,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 // host bindings that have a synthetic property (e.g. @foo) should always be rendered
                 // in the context of the component and not the parent. Therefore there is a special
                 // compatibility instruction available for this purpose.
-                instruction = Identifiers$1.componentHostSyntheticProperty;
+                instruction = Identifiers$1.updateSyntheticHostBinding;
             }
             else {
                 instruction = Identifiers$1.property;
@@ -17894,7 +17884,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.1.0-beta.0+12.sha-f936590.with-local-changes');
+    var VERSION$1 = new Version('8.1.0-beta.0+23.sha-fcdd784.with-local-changes');
 
     /**
      * @license
@@ -29670,18 +29660,15 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    function getGlobal() {
-        var __globalThis = typeof globalThis !== 'undefined' && globalThis;
-        var __window = typeof window !== 'undefined' && window;
-        var __self = typeof self !== 'undefined' && typeof WorkerGlobalScope !== 'undefined' &&
-            self instanceof WorkerGlobalScope && self;
-        var __global = typeof global !== 'undefined' && global;
-        // Always use __globalThis if available, which is the spec-defined global variable across all
-        // environments, then fallback to __global first, because in Node tests both __global and
-        // __window may be defined and _global should be __global in that case.
-        return __globalThis || __global || __window || __self;
-    }
-    var _global$1 = getGlobal();
+    var __globalThis = typeof globalThis !== 'undefined' && globalThis;
+    var __window$1 = typeof window !== 'undefined' && window;
+    var __self$1 = typeof self !== 'undefined' && typeof WorkerGlobalScope !== 'undefined' &&
+        self instanceof WorkerGlobalScope && self;
+    var __global$1 = typeof global !== 'undefined' && global;
+    // Always use __globalThis if available, which is the spec-defined global variable across all
+    // environments, then fallback to __global first, because in Node tests both __global and
+    // __window may be defined and _global should be __global in that case.
+    var _global$1 = __globalThis || __global$1 || __window$1 || __self$1;
 
     /**
      * @license
@@ -30329,6 +30316,64 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     var SWITCH_COMPILE_INJECTABLE__PRE_R3__ = render2CompileInjectable;
     var SWITCH_COMPILE_INJECTABLE = SWITCH_COMPILE_INJECTABLE__PRE_R3__;
 
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    function ngDevModeResetPerfCounters() {
+        var newCounters = {
+            firstTemplatePass: 0,
+            tNode: 0,
+            tView: 0,
+            rendererCreateTextNode: 0,
+            rendererSetText: 0,
+            rendererCreateElement: 0,
+            rendererAddEventListener: 0,
+            rendererSetAttribute: 0,
+            rendererRemoveAttribute: 0,
+            rendererSetProperty: 0,
+            rendererSetClassName: 0,
+            rendererAddClass: 0,
+            rendererRemoveClass: 0,
+            rendererSetStyle: 0,
+            rendererRemoveStyle: 0,
+            rendererDestroy: 0,
+            rendererDestroyNode: 0,
+            rendererMoveNode: 0,
+            rendererRemoveNode: 0,
+            rendererAppendChild: 0,
+            rendererInsertBefore: 0,
+            rendererCreateComment: 0,
+            styleMap: 0,
+            styleMapCacheMiss: 0,
+            classMap: 0,
+            classMapCacheMiss: 0,
+            stylingProp: 0,
+            stylingPropCacheMiss: 0,
+            stylingApply: 0,
+            stylingApplyCacheMiss: 0,
+        };
+        // Make sure to refer to ngDevMode as ['ngDevMode'] for closure.
+        _global$1['ngDevMode'] = newCounters;
+        return newCounters;
+    }
+    /**
+     * This checks to see if the `ngDevMode` has been set. If yes,
+     * then we honor it, otherwise we default to dev mode with additional checks.
+     *
+     * The idea is that unless we are doing production build where we explicitly
+     * set `ngDevMode == false` we should be helping the developer by providing
+     * as much early warning and errors as possible.
+     *
+     * NOTE: changes to the `ngDevMode` name must be synced with `compiler-cli/src/tooling.ts`.
+     */
+    if (typeof ngDevMode === 'undefined' || ngDevMode) {
+        ngDevModeResetPerfCounters();
+    }
+
     /** Called when directives inject each other (creating a circular dependency) */
     function throwCyclicDependencyError(token) {
         throw new Error("Cannot instantiate cyclic dependency! " + token);
@@ -30553,8 +30598,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             // is the `ngModule`.
             var defType = (ngModule === undefined) ? defOrWrappedDef : ngModule;
             // Check for circular dependencies.
-            // TODO(FW-1307): Re-add ngDevMode when closure can handle it
-            if (parents.indexOf(defType) !== -1) {
+            if (ngDevMode && parents.indexOf(defType) !== -1) {
                 var defName = stringify$1(defType);
                 throw new Error("Circular dependency in DI detected for type " + defName + ". Dependency path: " + parents.map(function (defType) { return stringify$1(defType); }).join(' > ') + " > " + defName + ".");
             }
@@ -30577,8 +30621,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             if (def.imports != null && !isDuplicate) {
                 // Before processing defType's imports, add it to the set of parents. This way, if it ends
                 // up deeply importing itself, this can be detected.
-                // TODO(FW-1307): Re-add ngDevMode when closure can handle it
-                parents.push(defType);
+                ngDevMode && parents.push(defType);
                 // Add it to the set of dedups. This way we can detect multiple imports of the same module
                 dedupStack.push(defType);
                 var importTypesWithProviders_1;
@@ -30595,8 +30638,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 }
                 finally {
                     // Remove it from the parents set when finished.
-                    // TODO(FW-1307): Re-add ngDevMode when closure can handle it
-                    parents.pop();
+                    ngDevMode && parents.pop();
                 }
                 // Imports which are declared with providers (TypeWithProviders) need to be processed
                 // after all imported modules are processed. This is similar to how View Engine
@@ -32215,64 +32257,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
          */
         ViewEncapsulation[ViewEncapsulation["ShadowDom"] = 3] = "ShadowDom";
     })(ViewEncapsulation$1 || (ViewEncapsulation$1 = {}));
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    function ngDevModeResetPerfCounters() {
-        var newCounters = {
-            firstTemplatePass: 0,
-            tNode: 0,
-            tView: 0,
-            rendererCreateTextNode: 0,
-            rendererSetText: 0,
-            rendererCreateElement: 0,
-            rendererAddEventListener: 0,
-            rendererSetAttribute: 0,
-            rendererRemoveAttribute: 0,
-            rendererSetProperty: 0,
-            rendererSetClassName: 0,
-            rendererAddClass: 0,
-            rendererRemoveClass: 0,
-            rendererSetStyle: 0,
-            rendererRemoveStyle: 0,
-            rendererDestroy: 0,
-            rendererDestroyNode: 0,
-            rendererMoveNode: 0,
-            rendererRemoveNode: 0,
-            rendererAppendChild: 0,
-            rendererInsertBefore: 0,
-            rendererCreateComment: 0,
-            styleMap: 0,
-            styleMapCacheMiss: 0,
-            classMap: 0,
-            classMapCacheMiss: 0,
-            stylingProp: 0,
-            stylingPropCacheMiss: 0,
-            stylingApply: 0,
-            stylingApplyCacheMiss: 0,
-        };
-        // Make sure to refer to ngDevMode as ['ngDevMode'] for closure.
-        _global$1['ngDevMode'] = newCounters;
-        return newCounters;
-    }
-    /**
-     * This checks to see if the `ngDevMode` has been set. If yes,
-     * then we honor it, otherwise we default to dev mode with additional checks.
-     *
-     * The idea is that unless we are doing production build where we explicitly
-     * set `ngDevMode == false` we should be helping the developer by providing
-     * as much early warning and errors as possible.
-     *
-     * NOTE: changes to the `ngDevMode` name must be synced with `compiler-cli/src/tooling.ts`.
-     */
-    if (typeof ngDevMode === 'undefined' || ngDevMode) {
-        ngDevModeResetPerfCounters();
-    }
 
     /**
      * @license
@@ -38441,7 +38425,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.1.0-beta.0+12.sha-f936590.with-local-changes');
+    var VERSION$2 = new Version$1('8.1.0-beta.0+23.sha-fcdd784.with-local-changes');
 
     /**
      * @license
@@ -41482,11 +41466,14 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         // These property accesses can be ignored because ngI18nClosureMode will be set to false
         // when optimizing code and the whole if statement will be dropped.
         // Make sure to refer to ngI18nClosureMode as ['ngI18nClosureMode'] for closure.
-        // tslint:disable-next-line:no-toplevel-property-access
-        _global$1['ngI18nClosureMode'] =
-            // TODO(FW-1250): validate that this actually, you know, works.
+        // NOTE: we need to have it in IIFE so that the tree-shaker is happy.
+        (function () {
             // tslint:disable-next-line:no-toplevel-property-access
-            typeof goog !== 'undefined' && typeof goog.getMsg === 'function';
+            _global$1['ngI18nClosureMode'] =
+                // TODO(FW-1250): validate that this actually, you know, works.
+                // tslint:disable-next-line:no-toplevel-property-access
+                typeof goog !== 'undefined' && typeof goog.getMsg === 'function';
+        })();
     }
 
     /**
@@ -42325,7 +42312,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
     };
     function getPromiseCtor(promiseCtor) {
         if (!promiseCtor) {
-            promiseCtor = Promise;
+            promiseCtor = config.Promise || Promise;
         }
         if (!promiseCtor) {
             throw new Error('no Promise impl found');
@@ -43505,6 +43492,9 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    function symbolIterator() {
+        return this._results[getSymbolIterator()]();
+    }
     /**
      * An unmodifiable list of items that Angular keeps up to date when the state
      * of the application changes.
@@ -43537,6 +43527,14 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this._results = [];
             this.changes = new EventEmitter();
             this.length = 0;
+            // This function should be declared on the prototype, but doing so there will cause the class
+            // declaration to have side-effects and become not tree-shakable. For this reason we do it in
+            // the constructor.
+            // [getSymbolIterator()](): Iterator<T> { ... }
+            var symbol = getSymbolIterator();
+            var proto = QueryList.prototype;
+            if (!proto[symbol])
+                proto[symbol] = symbolIterator;
         }
         /**
          * See
@@ -43580,7 +43578,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
          * Returns a copy of the internal results list as an Array.
          */
         QueryList.prototype.toArray = function () { return this._results.slice(); };
-        QueryList.prototype[getSymbolIterator()] = function () { return this._results[getSymbolIterator()](); };
         QueryList.prototype.toString = function () { return this._results.toString(); };
         /**
          * Updates the stored data of the query list, and resets the `dirty` flag to `false`, so that
@@ -49178,7 +49175,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.1.0-beta.0+12.sha-f936590.with-local-changes');
+    var VERSION$3 = new Version$1('8.1.0-beta.0+23.sha-fcdd784.with-local-changes');
 
     /**
      * @license
