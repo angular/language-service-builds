@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.1.0-beta.0+23.sha-fcdd784.with-local-changes
+ * @license Angular v8.1.0-beta.0+33.sha-4ecff42.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -17884,7 +17884,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.1.0-beta.0+23.sha-fcdd784.with-local-changes');
+    var VERSION$1 = new Version('8.1.0-beta.0+33.sha-4ecff42.with-local-changes');
 
     /**
      * @license
@@ -30324,7 +30324,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * found in the LICENSE file at https://angular.io/license
      */
     function ngDevModeResetPerfCounters() {
+        var locationString = typeof location !== 'undefined' ? location.toString() : '';
         var newCounters = {
+            namedConstructors: locationString.indexOf('ngDevMode=namedConstructors') != -1,
             firstTemplatePass: 0,
             tNode: 0,
             tView: 0,
@@ -30357,7 +30359,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             stylingApplyCacheMiss: 0,
         };
         // Make sure to refer to ngDevMode as ['ngDevMode'] for closure.
-        _global$1['ngDevMode'] = newCounters;
+        var allowNgDevModeTrue = locationString.indexOf('ngDevMode=false') === -1;
+        _global$1['ngDevMode'] = allowNgDevModeTrue && newCounters;
         return newCounters;
     }
     /**
@@ -34539,6 +34542,43 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * THIS FILE CONTAINS CODE WHICH SHOULD BE TREE SHAKEN AND NEVER CALLED FROM PRODUCTION CODE!!!
+     */
+    /**
+     * Creates an `Array` construction with a given name. This is useful when
+     * looking for memory consumption to see what time of array it is.
+     *
+     *
+     * @param name Name to give to the constructor
+     * @returns A subclass of `Array` if possible. This can only be done in
+     *          environments which support `class` construct.
+     */
+    function createNamedArrayType(name) {
+        // This should never be called in prod mode, so let's verify that is the case.
+        if (ngDevMode) {
+            try {
+                // We need to do it this way so that TypeScript does not down-level the below code.
+                var FunctionConstructor = createNamedArrayType.constructor;
+                return (new FunctionConstructor('Array', "return class ABC extends Array{}"))(Array);
+            }
+            catch (e) {
+                // If it does not work just give up and fall back to regular Array.
+                return Array;
+            }
+        }
+        else {
+            throw new Error('Looks like we are in \'prod mode\', but we are creating a named Array type, which is wrong! Check your code');
+        }
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     function normalizeDebugBindingName(name) {
         // Attribute names with `$` (eg `x-y$`) are valid per spec, but unsupported by some browsers
         name = camelCaseToDashCase(name.replace(/[$@]/g, '_'));
@@ -34564,41 +34604,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         }
     }
 
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * Marks that the next string is for element.
-     *
-     * See `I18nMutateOpCodes` documentation.
-     */
-    var ELEMENT_MARKER = {
-        marker: 'element'
-    };
-    /**
-     * Marks that the next string is for comment.
-     *
-     * See `I18nMutateOpCodes` documentation.
-     */
-    var COMMENT_MARKER = {
-        marker: 'comment'
-    };
-
-    var _stylingMode$1 = 0;
-    function runtimeIsNewStylingInUse() {
-        return _stylingMode$1 > 0 /* UseOld */;
-    }
-    var _currentSanitizer;
-    function setCurrentStyleSanitizer(sanitizer) {
-        _currentSanitizer = sanitizer;
-    }
-    function getCurrentStyleSanitizer() {
-        return _currentSanitizer;
-    }
+    // Note: This hack is necessary so we don't erroneously get a circular dependency
 
     /**
      * @license
@@ -34607,9 +34613,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    function attachDebugObject(obj, debug) {
-        Object.defineProperty(obj, 'debug', { value: debug, enumerable: false });
-    }
 
     /**
      * @license
@@ -34766,6 +34769,61 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     }
     function getProp(context, index) {
         return context[index + 1 /* PropertyOffset */];
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * Marks that the next string is for element.
+     *
+     * See `I18nMutateOpCodes` documentation.
+     */
+    var ELEMENT_MARKER = {
+        marker: 'element'
+    };
+    /**
+     * Marks that the next string is for comment.
+     *
+     * See `I18nMutateOpCodes` documentation.
+     */
+    var COMMENT_MARKER = {
+        marker: 'comment'
+    };
+
+    var _stylingMode$1 = 0;
+    function runtimeIsNewStylingInUse() {
+        return _stylingMode$1 > 0 /* UseOld */;
+    }
+    var _currentSanitizer;
+    function setCurrentStyleSanitizer(sanitizer) {
+        _currentSanitizer = sanitizer;
+    }
+    function getCurrentStyleSanitizer() {
+        return _currentSanitizer;
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    function attachDebugObject(obj, debug) {
+        Object.defineProperty(obj, 'debug', { value: debug, enumerable: false });
     }
 
     /**
@@ -35533,6 +35591,102 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * }
      * ```
      */
+    var LViewArray = ngDevMode && createNamedArrayType('LView');
+    var LVIEW_EMPTY; // can't initialize here or it will not be tree shaken, because `LView`
+    // constructor could have side-effects.
+    /**
+     * This function clones a blueprint and creates LView.
+     *
+     * Simple slice will keep the same type, and we need it to be LView
+     */
+    function cloneToLView(list) {
+        if (LVIEW_EMPTY === undefined)
+            LVIEW_EMPTY = new LViewArray();
+        return LVIEW_EMPTY.concat(list);
+    }
+    /**
+     * This class is a debug version of Object literal so that we can have constructor name show up in
+     * debug tools in ngDevMode.
+     */
+    var TViewConstructor = /** @class */ (function () {
+        function TView(id, //
+        blueprint, //
+        template, //
+        viewQuery, //
+        node, //
+        data, //
+        bindingStartIndex, //
+        viewQueryStartIndex, //
+        expandoStartIndex, //
+        expandoInstructions, //
+        firstTemplatePass, //
+        staticViewQueries, //
+        staticContentQueries, //
+        preOrderHooks, //
+        preOrderCheckHooks, //
+        contentHooks, //
+        contentCheckHooks, //
+        viewHooks, //
+        viewCheckHooks, //
+        destroyHooks, //
+        cleanup, //
+        contentQueries, //
+        components, //
+        directiveRegistry, //
+        pipeRegistry, //
+        firstChild, //
+        schemas) {
+            this.id = id;
+            this.blueprint = blueprint;
+            this.template = template;
+            this.viewQuery = viewQuery;
+            this.node = node;
+            this.data = data;
+            this.bindingStartIndex = bindingStartIndex;
+            this.viewQueryStartIndex = viewQueryStartIndex;
+            this.expandoStartIndex = expandoStartIndex;
+            this.expandoInstructions = expandoInstructions;
+            this.firstTemplatePass = firstTemplatePass;
+            this.staticViewQueries = staticViewQueries;
+            this.staticContentQueries = staticContentQueries;
+            this.preOrderHooks = preOrderHooks;
+            this.preOrderCheckHooks = preOrderCheckHooks;
+            this.contentHooks = contentHooks;
+            this.contentCheckHooks = contentCheckHooks;
+            this.viewHooks = viewHooks;
+            this.viewCheckHooks = viewCheckHooks;
+            this.destroyHooks = destroyHooks;
+            this.cleanup = cleanup;
+            this.contentQueries = contentQueries;
+            this.components = components;
+            this.directiveRegistry = directiveRegistry;
+            this.pipeRegistry = pipeRegistry;
+            this.firstChild = firstChild;
+            this.schemas = schemas;
+        }
+        return TView;
+    }());
+    var TViewData = ngDevMode && createNamedArrayType('TViewData');
+    var TVIEWDATA_EMPTY; // can't initialize here or it will not be tree shaken, because `LView`
+    // constructor could have side-effects.
+    /**
+     * This function clones a blueprint and creates TData.
+     *
+     * Simple slice will keep the same type, and we need it to be TData
+     */
+    function cloneToTViewData(list) {
+        if (TVIEWDATA_EMPTY === undefined)
+            TVIEWDATA_EMPTY = new TViewData();
+        return TVIEWDATA_EMPTY.concat(list);
+    }
+    var LViewBlueprint = ngDevMode && createNamedArrayType('LViewBlueprint');
+    var MatchesArray = ngDevMode && createNamedArrayType('MatchesArray');
+    var TViewComponents = ngDevMode && createNamedArrayType('TViewComponents');
+    var TNodeLocalNames = ngDevMode && createNamedArrayType('TNodeLocalNames');
+    var TNodeInitialInputs = ngDevMode && createNamedArrayType('TNodeInitialInputs');
+    var TNodeInitialData = ngDevMode && createNamedArrayType('TNodeInitialData');
+    var LCleanup = ngDevMode && createNamedArrayType('LCleanup');
+    var TCleanup = ngDevMode && createNamedArrayType('TCleanup');
     function attachLViewDebug(lView) {
         attachDebugObject(lView, new LViewDebug(lView));
     }
@@ -35948,24 +36102,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         return I18nUpdateOpCodesDebug;
     }());
 
-    // Note: This hack is necessary so we don't erroneously get a circular dependency
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-
     var ɵ0$8 = function () { return Promise.resolve(null); };
     /**
      * A permanent marker promise which signifies that the current CD tree is
@@ -36092,7 +36228,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         return native;
     }
     function createLView(parentLView, tView, context, flags, host, tHostNode, rendererFactory, renderer, sanitizer, injector) {
-        var lView = tView.blueprint.slice();
+        var lView = ngDevMode ? cloneToLView(tView.blueprint) : tView.blueprint.slice();
         lView[HOST] = host;
         lView[FLAGS] = flags | 4 /* CreationMode */ | 128 /* Attached */ | 8 /* FirstLViewPass */;
         resetPreOrderHookFlags(lView);
@@ -36264,38 +36400,68 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         // that has a host binding, we will update the blueprint with that def's hostVars count.
         var initialViewLength = bindingStartIndex + vars;
         var blueprint = createViewBlueprint(bindingStartIndex, initialViewLength);
-        return blueprint[TVIEW] = {
-            id: viewIndex,
-            blueprint: blueprint,
-            template: templateFn,
-            viewQuery: viewQuery,
-            node: null,
-            data: blueprint.slice().fill(null, bindingStartIndex),
-            bindingStartIndex: bindingStartIndex,
-            viewQueryStartIndex: initialViewLength,
-            expandoStartIndex: initialViewLength,
-            expandoInstructions: null,
-            firstTemplatePass: true,
-            staticViewQueries: false,
-            staticContentQueries: false,
-            preOrderHooks: null,
-            preOrderCheckHooks: null,
-            contentHooks: null,
-            contentCheckHooks: null,
-            viewHooks: null,
-            viewCheckHooks: null,
-            destroyHooks: null,
-            cleanup: null,
-            contentQueries: null,
-            components: null,
-            directiveRegistry: typeof directives === 'function' ? directives() : directives,
-            pipeRegistry: typeof pipes === 'function' ? pipes() : pipes,
-            firstChild: null,
-            schemas: schemas,
-        };
+        return blueprint[TVIEW] = ngDevMode ?
+            new TViewConstructor(viewIndex, // id: number,
+            blueprint, // blueprint: LView,
+            templateFn, // template: ComponentTemplate<{}>|null,
+            viewQuery, // viewQuery: ViewQueriesFunction<{}>|null,
+            null, // node: TViewNode|TElementNode|null,
+            cloneToTViewData(blueprint).fill(null, bindingStartIndex), // data: TData,
+            bindingStartIndex, // bindingStartIndex: number,
+            initialViewLength, // viewQueryStartIndex: number,
+            initialViewLength, // expandoStartIndex: number,
+            null, // expandoInstructions: ExpandoInstructions|null,
+            true, // firstTemplatePass: boolean,
+            false, // staticViewQueries: boolean,
+            false, // staticContentQueries: boolean,
+            null, // preOrderHooks: HookData|null,
+            null, // preOrderCheckHooks: HookData|null,
+            null, // contentHooks: HookData|null,
+            null, // contentCheckHooks: HookData|null,
+            null, // viewHooks: HookData|null,
+            null, // viewCheckHooks: HookData|null,
+            null, // destroyHooks: HookData|null,
+            null, // cleanup: any[]|null,
+            null, // contentQueries: number[]|null,
+            null, // components: number[]|null,
+            typeof directives === 'function' ?
+                directives() :
+                directives, // directiveRegistry: DirectiveDefList|null,
+            typeof pipes === 'function' ? pipes() : pipes, // pipeRegistry: PipeDefList|null,
+            null, // firstChild: TNode|null,
+            schemas) :
+            {
+                id: viewIndex,
+                blueprint: blueprint,
+                template: templateFn,
+                viewQuery: viewQuery,
+                node: null,
+                data: blueprint.slice().fill(null, bindingStartIndex),
+                bindingStartIndex: bindingStartIndex,
+                viewQueryStartIndex: initialViewLength,
+                expandoStartIndex: initialViewLength,
+                expandoInstructions: null,
+                firstTemplatePass: true,
+                staticViewQueries: false,
+                staticContentQueries: false,
+                preOrderHooks: null,
+                preOrderCheckHooks: null,
+                contentHooks: null,
+                contentCheckHooks: null,
+                viewHooks: null,
+                viewCheckHooks: null,
+                destroyHooks: null,
+                cleanup: null,
+                contentQueries: null,
+                components: null,
+                directiveRegistry: typeof directives === 'function' ? directives() : directives,
+                pipeRegistry: typeof pipes === 'function' ? pipes() : pipes,
+                firstChild: null,
+                schemas: schemas,
+            };
     }
     function createViewBlueprint(bindingStartIndex, initialViewLength) {
-        var blueprint = new Array(initialViewLength)
+        var blueprint = new (ngDevMode ? LViewBlueprint : Array)(initialViewLength)
             .fill(null, 0, bindingStartIndex)
             .fill(NO_CHANGE, bindingStartIndex);
         blueprint[BINDING_INDEX] = bindingStartIndex;
@@ -36439,7 +36605,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         var tView = getLView()[TVIEW];
         ngDevMode &&
             assertEqual(tView.firstTemplatePass, true, 'Should only be called in first template pass.');
-        (tView.components || (tView.components = [])).push(previousOrParentTNode.index);
+        (tView.components || (tView.components = ngDevMode ? new TViewComponents() : [])).push(previousOrParentTNode.index);
     }
     /**
      * Initializes the flags on the current node, setting all indices to the initial index,
@@ -36462,6 +36628,11 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         tView.blueprint.push(nodeInjectorFactory);
         viewData.push(nodeInjectorFactory);
     }
+    //////////////////////////
+    //// ViewContainer & View
+    //////////////////////////
+    // Not sure why I need to do `any` here but TS complains later.
+    var LContainerArray = ngDevMode && createNamedArrayType('LContainer');
     /**
      * Goes over dynamic embedded views (ones created through ViewContainerRef APIs) and refreshes
      * them
@@ -36680,10 +36851,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     var CLEAN_PROMISE = _CLEAN_PROMISE;
     function getCleanup(view) {
         // top level variables should not be exported for performance reasons (PERF_NOTES.md)
-        return view[CLEANUP] || (view[CLEANUP] = []);
+        return view[CLEANUP] || (view[CLEANUP] = ngDevMode ? new LCleanup() : []);
     }
     function getTViewCleanup(view) {
-        return view[TVIEW].cleanup || (view[TVIEW].cleanup = []);
+        return view[TVIEW].cleanup || (view[TVIEW].cleanup = ngDevMode ? new TCleanup() : []);
     }
     /** Handles an error thrown in an LView. */
     function handleError(lView, error) {
@@ -38425,7 +38596,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.1.0-beta.0+23.sha-fcdd784.with-local-changes');
+    var VERSION$2 = new Version$1('8.1.0-beta.0+33.sha-4ecff42.with-local-changes');
 
     /**
      * @license
@@ -49175,7 +49346,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.1.0-beta.0+23.sha-fcdd784.with-local-changes');
+    var VERSION$3 = new Version$1('8.1.0-beta.0+33.sha-4ecff42.with-local-changes');
 
     /**
      * @license
