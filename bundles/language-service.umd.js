@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.1.0-beta.0+38.sha-00cc905.with-local-changes
+ * @license Angular v8.1.0-beta.0+40.sha-8852b79.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -3361,7 +3361,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         Identifiers.element = { name: 'ɵɵelement', moduleName: CORE$1 };
         Identifiers.elementStart = { name: 'ɵɵelementStart', moduleName: CORE$1 };
         Identifiers.elementEnd = { name: 'ɵɵelementEnd', moduleName: CORE$1 };
-        Identifiers.elementProperty = { name: 'ɵɵelementProperty', moduleName: CORE$1 };
         Identifiers.select = { name: 'ɵɵselect', moduleName: CORE$1 };
         Identifiers.updateSyntheticHostBinding = { name: 'ɵɵupdateSyntheticHostBinding', moduleName: CORE$1 };
         Identifiers.componentHostSyntheticListener = { name: 'ɵɵcomponentHostSyntheticListener', moduleName: CORE$1 };
@@ -17897,7 +17896,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.1.0-beta.0+38.sha-00cc905.with-local-changes');
+    var VERSION$1 = new Version('8.1.0-beta.0+40.sha-8852b79.with-local-changes');
 
     /**
      * @license
@@ -38609,7 +38608,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.1.0-beta.0+38.sha-00cc905.with-local-changes');
+    var VERSION$2 = new Version$1('8.1.0-beta.0+40.sha-8852b79.with-local-changes');
 
     /**
      * @license
@@ -49359,7 +49358,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.1.0-beta.0+38.sha-00cc905.with-local-changes');
+    var VERSION$3 = new Version$1('8.1.0-beta.0+40.sha-8852b79.with-local-changes');
 
     /**
      * @license
