@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.1.0-beta.0+37.sha-337b6fe.with-local-changes
+ * @license Angular v8.1.0-beta.0+39.sha-d1df0a9.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -3346,7 +3346,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         Identifiers.element = { name: 'ɵɵelement', moduleName: CORE$1 };
         Identifiers.elementStart = { name: 'ɵɵelementStart', moduleName: CORE$1 };
         Identifiers.elementEnd = { name: 'ɵɵelementEnd', moduleName: CORE$1 };
-        Identifiers.elementProperty = { name: 'ɵɵelementProperty', moduleName: CORE$1 };
         Identifiers.select = { name: 'ɵɵselect', moduleName: CORE$1 };
         Identifiers.updateSyntheticHostBinding = { name: 'ɵɵupdateSyntheticHostBinding', moduleName: CORE$1 };
         Identifiers.componentHostSyntheticListener = { name: 'ɵɵcomponentHostSyntheticListener', moduleName: CORE$1 };
@@ -14794,6 +14793,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     (function (TagType) {
         TagType[TagType["ELEMENT"] = 0] = "ELEMENT";
         TagType[TagType["TEMPLATE"] = 1] = "TEMPLATE";
+        TagType[TagType["PROJECTION"] = 2] = "PROJECTION";
     })(TagType || (TagType = {}));
     /**
      * Generates an object that is used as a shared state between parent and all child contexts.
@@ -14881,6 +14881,12 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         I18nContext.prototype.appendElement = function (node, index, closed) {
             this.appendTag(TagType.ELEMENT, node, index, closed);
         };
+        I18nContext.prototype.appendProjection = function (node, index) {
+            // add open and close tags at the same time,
+            // since we process projected content separately
+            this.appendTag(TagType.PROJECTION, node, index, false);
+            this.appendTag(TagType.PROJECTION, node, index, true);
+        };
         /**
          * Generates an instance of a child context based on the root one,
          * when we enter a nested template within I18n section.
@@ -14965,6 +14971,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     function serializePlaceholderValue(value) {
         var element = function (data, closed) { return wrapTag('#', data, closed); };
         var template = function (data, closed) { return wrapTag('*', data, closed); };
+        var projection = function (data, closed) { return wrapTag('!', data, closed); };
         switch (value.type) {
             case TagType.ELEMENT:
                 // close element tag
@@ -14979,6 +14986,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 return element(value);
             case TagType.TEMPLATE:
                 return template(value, value.closed);
+            case TagType.PROJECTION:
+                return projection(value, value.closed);
             default:
                 return value;
         }
@@ -15772,6 +15781,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 parameters.push(literal(projectionSlotIdx));
             }
             this.creationInstruction(ngContent.sourceSpan, Identifiers$1.projection, parameters);
+            if (this.i18n) {
+                this.i18n.appendProjection(ngContent.i18n, slot);
+            }
         };
         TemplateDefinitionBuilder.prototype.getNamespaceInstruction = function (namespaceKey) {
             switch (namespaceKey) {
@@ -17869,7 +17881,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.1.0-beta.0+37.sha-337b6fe.with-local-changes');
+    var VERSION$1 = new Version('8.1.0-beta.0+39.sha-d1df0a9.with-local-changes');
 
     /**
      * @license
@@ -43298,29 +43310,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         return bindingUpdated(lView, bindingIndex, value) ? value : NO_CHANGE;
     }
     /**
-    * **TODO: Remove this function after `property` is in use**
-    * Update a property on an element.
-    *
-    * If the property name also exists as an input property on one of the element's directives,
-    * the component property will be set instead of the element property. This check must
-    * be conducted at runtime so child components that add new @Inputs don't have to be re-compiled.
-    *
-    * @param index The index of the element to update in the data array
-    * @param propName Name of property. Because it is going to DOM, this is not subject to
-    *        renaming as part of minification.
-    * @param value New value to write.
-    * @param sanitizer An optional function used to sanitize the value.
-    * @param nativeOnly Whether or not we should only set native properties and skip input check
-    * (this is necessary for host property bindings)
-     *
-     * @codeGenApi
-    */
-    function ɵɵelementProperty(index, propName, value, sanitizer, nativeOnly) {
-        if (value !== NO_CHANGE) {
-            elementPropertyInternal(index, propName, value, sanitizer, nativeOnly);
-        }
-    }
-    /**
      * Updates a synthetic host binding (e.g. `[@foo]`) on a component.
      *
      * This instruction is for compatibility purposes and is designed to ensure that a
@@ -44748,6 +44737,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             }
         }
     }
+    var delayProjection = false;
+    function setDelayProjection(value) {
+        delayProjection = value;
+    }
     /**
      * Inserts previously re-distributed projected nodes. This instruction must be preceded by a call
      * to the projectionDef instruction.
@@ -44768,8 +44761,11 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             tProjectionNode.projection = selectorIndex;
         // `<ng-content>` has no content
         setIsNotParent();
-        // re-distribution of projectable nodes is stored on a component's view level
-        appendProjectedNodes(lView, tProjectionNode, selectorIndex, findComponentView(lView));
+        // We might need to delay the projection of nodes if they are in the middle of an i18n block
+        if (!delayProjection) {
+            // re-distribution of projectable nodes is stored on a component's view level
+            appendProjectedNodes(lView, tProjectionNode, selectorIndex, findComponentView(lView));
+        }
     }
 
     /**
@@ -47311,7 +47307,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.1.0-beta.0+37.sha-337b6fe.with-local-changes');
+    var VERSION$2 = new Version$1('8.1.0-beta.0+39.sha-d1df0a9.with-local-changes');
 
     /**
      * @license
@@ -50551,7 +50547,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     var MARKER = "\uFFFD";
     var ICU_BLOCK_REGEXP = /^\s*(�\d+:?\d*�)\s*,\s*(select|plural)\s*,/;
     var SUBTEMPLATE_REGEXP = /�\/?\*(\d+:\d+)�/gi;
-    var PH_REGEXP = /�(\/?[#*]\d+):?\d*�/gi;
+    var PH_REGEXP = /�(\/?[#*!]\d+):?\d*�/gi;
     var BINDING_REGEXP = /�(\d+):?\d*�/gi;
     var ICU_REGEXP = /({\s*�\d+:?\d*�\s*,\s*\S{6}\s*,[\s\S]*})/gi;
     // i18nPostprocess consts
@@ -50791,6 +50787,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *   and end of DOM element that were embedded in the original translation block. The placeholder
      *   `index` points to the element index in the template instructions set. An optional `block` that
      *   matches the sub-template in which it was declared.
+     * - `�!{index}(:{block})�`/`�/!{index}(:{block})�`: *Projection Placeholder*:  Marks the
+     *   beginning and end of <ng-content> that was embedded in the original translation block.
+     *   The placeholder `index` points to the element index in the template instructions set.
+     *   An optional `block` that matches the sub-template in which it was declared.
      * - `�*{index}:{block}�`/`�/*{index}:{block}�`: *Sub-template Placeholder*: Sub-templates must be
      *   split up and translated separately in each angular template function. The `index` points to the
      *   `template` instruction index. A `block` that matches the sub-template in which it was declared.
@@ -50805,6 +50805,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         var tView = getLView()[TVIEW];
         ngDevMode && assertDefined(tView, "tView should be defined");
         i18nIndexStack[++i18nIndexStackPointer] = index;
+        // We need to delay projections until `i18nEnd`
+        setDelayProjection(true);
         if (tView.firstTemplatePass && tView.data[index + HEADER_OFFSET] === null) {
             i18nStartFirstPass(tView, index, message, subTemplateIndex);
         }
@@ -50843,7 +50845,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 // Odd indexes are placeholders (elements and sub-templates)
                 if (value.charAt(0) === '/') {
                     // It is a closing tag
-                    if (value.charAt(1) === '#') {
+                    if (value.charAt(1) === "#" /* ELEMENT */) {
                         var phIndex = parseInt(value.substr(2), 10);
                         parentIndex = parentIndexStack[--parentIndexPointer];
                         createOpCodes.push(phIndex << 3 /* SHIFT_REF */ | 5 /* ElementEnd */);
@@ -50853,7 +50855,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                     var phIndex = parseInt(value.substr(1), 10);
                     // The value represents a placeholder that we move to the designated index
                     createOpCodes.push(phIndex << 3 /* SHIFT_REF */ | 0 /* Select */, parentIndex << 17 /* SHIFT_PARENT */ | 1 /* AppendChild */);
-                    if (value.charAt(0) === '#') {
+                    if (value.charAt(0) === "#" /* ELEMENT */) {
                         parentIndexStack[++parentIndexPointer] = parentIndex = phIndex;
                     }
                 }
@@ -50936,6 +50938,12 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 cursor.next = nextNode;
             }
             cursor = cursor.next;
+        }
+        // If the placeholder to append is a projection, we need to move the projected nodes instead
+        if (tNode.type === 1 /* Projection */) {
+            var tProjectionNode = tNode;
+            appendProjectedNodes(viewData, tProjectionNode, tProjectionNode.projection, findComponentView(viewData));
+            return tNode;
         }
         appendChild(getNativeByTNode(tNode, viewData), tNode, viewData);
         var slotValue = viewData[tNode.index];
@@ -51053,6 +51061,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         var tView = getLView()[TVIEW];
         ngDevMode && assertDefined(tView, "tView should be defined");
         i18nEndFirstPass(tView);
+        // Stop delaying projections
+        setDelayProjection(false);
     }
     /**
      * See `i18nEnd` above.
@@ -52808,7 +52818,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
     };
     function getPromiseCtor(promiseCtor) {
         if (!promiseCtor) {
-            promiseCtor = Promise;
+            promiseCtor = config.Promise || Promise;
         }
         if (!promiseCtor) {
             throw new Error('no Promise impl found');
@@ -54650,7 +54660,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         'ɵɵlistener': ɵɵlistener,
         'ɵɵload': ɵɵload,
         'ɵɵprojection': ɵɵprojection,
-        'ɵɵelementProperty': ɵɵelementProperty,
         'ɵɵupdateSyntheticHostBinding': ɵɵupdateSyntheticHostBinding,
         'ɵɵcomponentHostSyntheticListener': ɵɵcomponentHostSyntheticListener,
         'ɵɵpipeBind1': ɵɵpipeBind1,
@@ -60871,7 +60880,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.1.0-beta.0+37.sha-337b6fe.with-local-changes');
+    var VERSION$3 = new Version$1('8.1.0-beta.0+39.sha-d1df0a9.with-local-changes');
 
     /**
      * @license
