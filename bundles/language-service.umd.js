@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.1.0-beta.0+39.sha-d1df0a9.with-local-changes
+ * @license Angular v8.1.0-beta.0+38.sha-00cc905.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -3346,6 +3346,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         Identifiers.element = { name: 'ɵɵelement', moduleName: CORE$1 };
         Identifiers.elementStart = { name: 'ɵɵelementStart', moduleName: CORE$1 };
         Identifiers.elementEnd = { name: 'ɵɵelementEnd', moduleName: CORE$1 };
+        Identifiers.elementProperty = { name: 'ɵɵelementProperty', moduleName: CORE$1 };
         Identifiers.select = { name: 'ɵɵselect', moduleName: CORE$1 };
         Identifiers.updateSyntheticHostBinding = { name: 'ɵɵupdateSyntheticHostBinding', moduleName: CORE$1 };
         Identifiers.componentHostSyntheticListener = { name: 'ɵɵcomponentHostSyntheticListener', moduleName: CORE$1 };
@@ -17881,7 +17882,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.1.0-beta.0+39.sha-d1df0a9.with-local-changes');
+    var VERSION$1 = new Version('8.1.0-beta.0+38.sha-00cc905.with-local-changes');
 
     /**
      * @license
@@ -43310,6 +43311,29 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         return bindingUpdated(lView, bindingIndex, value) ? value : NO_CHANGE;
     }
     /**
+    * **TODO: Remove this function after `property` is in use**
+    * Update a property on an element.
+    *
+    * If the property name also exists as an input property on one of the element's directives,
+    * the component property will be set instead of the element property. This check must
+    * be conducted at runtime so child components that add new @Inputs don't have to be re-compiled.
+    *
+    * @param index The index of the element to update in the data array
+    * @param propName Name of property. Because it is going to DOM, this is not subject to
+    *        renaming as part of minification.
+    * @param value New value to write.
+    * @param sanitizer An optional function used to sanitize the value.
+    * @param nativeOnly Whether or not we should only set native properties and skip input check
+    * (this is necessary for host property bindings)
+     *
+     * @codeGenApi
+    */
+    function ɵɵelementProperty(index, propName, value, sanitizer, nativeOnly) {
+        if (value !== NO_CHANGE) {
+            elementPropertyInternal(index, propName, value, sanitizer, nativeOnly);
+        }
+    }
+    /**
      * Updates a synthetic host binding (e.g. `[@foo]`) on a component.
      *
      * This instruction is for compatibility purposes and is designed to ensure that a
@@ -47307,7 +47331,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.1.0-beta.0+39.sha-d1df0a9.with-local-changes');
+    var VERSION$2 = new Version$1('8.1.0-beta.0+38.sha-00cc905.with-local-changes');
 
     /**
      * @license
@@ -52818,7 +52842,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
     };
     function getPromiseCtor(promiseCtor) {
         if (!promiseCtor) {
-            promiseCtor = config.Promise || Promise;
+            promiseCtor = Promise;
         }
         if (!promiseCtor) {
             throw new Error('no Promise impl found');
@@ -54660,6 +54684,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         'ɵɵlistener': ɵɵlistener,
         'ɵɵload': ɵɵload,
         'ɵɵprojection': ɵɵprojection,
+        'ɵɵelementProperty': ɵɵelementProperty,
         'ɵɵupdateSyntheticHostBinding': ɵɵupdateSyntheticHostBinding,
         'ɵɵcomponentHostSyntheticListener': ɵɵcomponentHostSyntheticListener,
         'ɵɵpipeBind1': ɵɵpipeBind1,
@@ -60880,7 +60905,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.1.0-beta.0+39.sha-d1df0a9.with-local-changes');
+    var VERSION$3 = new Version$1('8.1.0-beta.0+38.sha-00cc905.with-local-changes');
 
     /**
      * @license
