@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.1.0-next.1+2.sha-ea2d453.with-local-changes
+ * @license Angular v8.1.0-next.1+3.sha-b51d8dd.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -16241,8 +16241,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             attrs.forEach(function (input) {
                 if (input instanceof BoundAttribute) {
                     var value_4 = input.value.visit(_this._valueConverter);
-                    _this.allocateBindingSlots(value_4);
-                    _this.updateInstruction(templateIndex, template.sourceSpan, Identifiers$1.property, function () { return [literal(input.name), _this.convertPropertyBinding(context, value_4, true)]; });
+                    if (value_4 !== undefined) {
+                        _this.allocateBindingSlots(value_4);
+                        _this.updateInstruction(templateIndex, template.sourceSpan, Identifiers$1.property, function () { return [literal(input.name), _this.convertPropertyBinding(context, value_4, true)]; });
+                    }
                 }
             });
         };
@@ -17881,7 +17883,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.1.0-next.1+2.sha-ea2d453.with-local-changes');
+    var VERSION$1 = new Version('8.1.0-next.1+3.sha-b51d8dd.with-local-changes');
 
     /**
      * @license
@@ -47307,7 +47309,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.1.0-next.1+2.sha-ea2d453.with-local-changes');
+    var VERSION$2 = new Version$1('8.1.0-next.1+3.sha-b51d8dd.with-local-changes');
 
     /**
      * @license
@@ -60880,7 +60882,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.1.0-next.1+2.sha-ea2d453.with-local-changes');
+    var VERSION$3 = new Version$1('8.1.0-next.1+3.sha-b51d8dd.with-local-changes');
 
     /**
      * @license
