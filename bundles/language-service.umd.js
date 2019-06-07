@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.1.0-next.1+18.sha-c038675.with-local-changes
+ * @license Angular v8.1.0-next.1+14.sha-297222f.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -16292,9 +16292,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         };
         TemplateDefinitionBuilder.prototype.updateInstruction = function (nodeIndex, span, reference, paramsOrFn) {
             if (this._lastNodeIndexWithFlush < nodeIndex) {
-                if (nodeIndex > 0) {
-                    this.instructionFn(this._updateCodeFns, span, Identifiers$1.select, [literal(nodeIndex)]);
-                }
+                this.instructionFn(this._updateCodeFns, span, Identifiers$1.select, [literal(nodeIndex)]);
                 this._lastNodeIndexWithFlush = nodeIndex;
             }
             this.instructionFn(this._updateCodeFns, span, reference, paramsOrFn || []);
@@ -17899,7 +17897,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.1.0-next.1+18.sha-c038675.with-local-changes');
+    var VERSION$1 = new Version('8.1.0-next.1+14.sha-297222f.with-local-changes');
 
     /**
      * @license
@@ -36117,18 +36115,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         return I18nUpdateOpCodesDebug;
     }());
 
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    function selectInternal(lView, index) {
-        // Flush the initial hooks for elements in the view that have been added up to this point.
-        executePreOrderHooks(lView, lView[TVIEW], getCheckNoChangesMode(), index);
-    }
-
     var ɵ0$8 = function () { return Promise.resolve(null); };
     /**
      * A permanent marker promise which signifies that the current CD tree is
@@ -36341,7 +36327,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 setPreviousOrParentTNode(null, true);
                 oldView = enterView(viewToRender, viewToRender[T_HOST]);
                 resetPreOrderHookFlags(viewToRender);
-                executeTemplate(viewToRender, tView.template, getRenderFlags(viewToRender), context);
+                executeTemplate(tView.template, getRenderFlags(viewToRender), context);
                 // This must be set to false immediately after the first creation run because in an
                 // ngFor loop, all the views will be created together before update mode runs and turns
                 // off firstTemplatePass. If we don't set it here, instances will perform directive
@@ -36366,13 +36352,13 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             }
             if (creationModeIsActive) {
                 // creation mode pass
-                templateFn && executeTemplate(hostView, templateFn, 1 /* Create */, context);
+                templateFn && executeTemplate(templateFn, 1 /* Create */, context);
                 refreshDescendantViews(hostView);
                 hostView[FLAGS] &= ~4 /* CreationMode */;
             }
             // update mode pass
             resetPreOrderHookFlags(hostView);
-            templateFn && executeTemplate(hostView, templateFn, 2 /* Update */, context);
+            templateFn && executeTemplate(templateFn, 2 /* Update */, context);
             refreshDescendantViews(hostView);
         }
         finally {
@@ -36382,14 +36368,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             leaveView(oldView);
         }
     }
-    function executeTemplate(lView, templateFn, rf, context) {
+    function executeTemplate(templateFn, rf, context) {
         ɵɵnamespaceHTML();
         try {
-            if (rf & 2 /* Update */) {
-                // When we're updating, have an inherent ɵɵselect(0) so we don't have to generate that
-                // instruction for most update blocks
-                selectInternal(lView, 0);
-            }
             templateFn(rf, context);
         }
         finally {
@@ -36862,7 +36843,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         try {
             resetPreOrderHookFlags(hostView);
             creationMode && executeViewQueryFn(1 /* Create */, hostTView, component);
-            executeTemplate(hostView, templateFn, getRenderFlags(hostView), component);
+            executeTemplate(templateFn, getRenderFlags(hostView), component);
             refreshDescendantViews(hostView);
             // Only check view queries again in creation mode if there are static view queries
             if (!creationMode || hostTView.staticViewQueries) {
@@ -37596,6 +37577,14 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         // https://github.com/ReactiveX/rxjs/blob/master/CHANGELOG.md#610-2018-05-03
         return !!obj && typeof obj.subscribe === 'function';
     }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
 
     /**
      * @license
@@ -38620,7 +38609,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.1.0-next.1+18.sha-c038675.with-local-changes');
+    var VERSION$2 = new Version$1('8.1.0-next.1+14.sha-297222f.with-local-changes');
 
     /**
      * @license
@@ -49400,7 +49389,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.1.0-next.1+18.sha-c038675.with-local-changes');
+    var VERSION$3 = new Version$1('8.1.0-next.1+14.sha-297222f.with-local-changes');
 
     /**
      * @license
