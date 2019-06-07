@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.1.0-next.1+9.sha-04587a3.with-local-changes
+ * @license Angular v8.1.0-next.1+12.sha-8b6fbf8.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -17882,7 +17882,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.1.0-next.1+9.sha-04587a3.with-local-changes');
+    var VERSION$1 = new Version('8.1.0-next.1+12.sha-8b6fbf8.with-local-changes');
 
     /**
      * @license
@@ -32664,8 +32664,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * be extra careful not to introduce megamorphic reads in it.
      */
     function renderStringify(value) {
-        if (typeof value === 'function')
-            return value.name || value;
         if (typeof value === 'string')
             return value;
         if (value == null)
@@ -32678,8 +32676,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * used for error messages.
      */
     function stringifyForError(value) {
+        if (typeof value === 'function')
+            return value.name || value.toString();
         if (typeof value === 'object' && value != null && typeof value.type === 'function') {
-            return value.type.name || value.type;
+            return value.type.name || value.type.toString();
         }
         return renderStringify(value);
     }
@@ -47325,7 +47325,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.1.0-next.1+9.sha-04587a3.with-local-changes');
+    var VERSION$2 = new Version$1('8.1.0-next.1+12.sha-8b6fbf8.with-local-changes');
 
     /**
      * @license
@@ -60929,7 +60929,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.1.0-next.1+9.sha-04587a3.with-local-changes');
+    var VERSION$3 = new Version$1('8.1.0-next.1+12.sha-8b6fbf8.with-local-changes');
 
     /**
      * @license
