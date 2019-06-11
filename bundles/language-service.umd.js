@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.1.0-next.1+43.sha-b086676.with-local-changes
+ * @license Angular v8.1.0-next.1+49.sha-052ef65.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -7483,6 +7483,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         var actionStmts = [];
         flattenStatements(actionWithoutBuiltins.visit(visitor, _Mode.Statement), actionStmts);
         prependTemporaryDecls(visitor.temporaryCount, bindingId, actionStmts);
+        if (visitor.usesImplicitReceiver) {
+            localResolver.notifyImplicitReceiverUse();
+        }
         var lastIndex = actionStmts.length - 1;
         var preventDefaultVar = null;
         if (lastIndex >= 0) {
@@ -7530,6 +7533,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         var visitor = new _AstToIrVisitor(localResolver, implicitReceiver, bindingId, interpolationFunction);
         var outputExpr = expressionWithoutBuiltins.visit(visitor, _Mode.Expression);
         var stmts = getStatementsFromVisitor(visitor, bindingId);
+        if (visitor.usesImplicitReceiver) {
+            localResolver.notifyImplicitReceiverUse();
+        }
         if (visitor.temporaryCount === 0 && form == BindingForm.TrySimple) {
             return new ConvertPropertyBindingResult([], outputExpr);
         }
@@ -7555,6 +7561,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     function convertUpdateArguments(localResolver, contextVariableExpression, expressionWithArgumentsToExtract, bindingId) {
         var visitor = new _AstToIrVisitor(localResolver, contextVariableExpression, bindingId, undefined);
         var outputExpr = expressionWithArgumentsToExtract.visit(visitor, _Mode.Expression);
+        if (visitor.usesImplicitReceiver) {
+            localResolver.notifyImplicitReceiverUse();
+        }
         var stmts = getStatementsFromVisitor(visitor, bindingId);
         // Removing the first argument, because it was a length for ViewEngine, not Ivy.
         var args = outputExpr.args.slice(1);
@@ -7654,6 +7663,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             this._resultMap = new Map();
             this._currentTemporary = 0;
             this.temporaryCount = 0;
+            this.usesImplicitReceiver = false;
         }
         _AstToIrVisitor.prototype.visitBinary = function (ast, mode) {
             var op;
@@ -7733,6 +7743,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         };
         _AstToIrVisitor.prototype.visitImplicitReceiver = function (ast, mode) {
             ensureExpressionMode(mode, ast);
+            this.usesImplicitReceiver = true;
             return this._implicitReceiver;
         };
         _AstToIrVisitor.prototype.visitInterpolation = function (ast, mode) {
@@ -7796,11 +7807,15 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             }
             else {
                 var args = this.visitAll(ast.args, _Mode.Expression);
+                var prevUsesImplicitReceiver = this.usesImplicitReceiver;
                 var result = null;
                 var receiver = this._visit(ast.receiver, _Mode.Expression);
                 if (receiver === this._implicitReceiver) {
                     var varExpr = this._getLocal(ast.name);
                     if (varExpr) {
+                        // Restore the previous "usesImplicitReceiver" state since the implicit
+                        // receiver has been replaced with a resolved local expression.
+                        this.usesImplicitReceiver = prevUsesImplicitReceiver;
                         result = varExpr.callFn(args);
                     }
                 }
@@ -7823,9 +7838,15 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             }
             else {
                 var result = null;
+                var prevUsesImplicitReceiver = this.usesImplicitReceiver;
                 var receiver = this._visit(ast.receiver, _Mode.Expression);
                 if (receiver === this._implicitReceiver) {
                     result = this._getLocal(ast.name);
+                    if (result) {
+                        // Restore the previous "usesImplicitReceiver" state since the implicit
+                        // receiver has been replaced with a resolved local expression.
+                        this.usesImplicitReceiver = prevUsesImplicitReceiver;
+                    }
                 }
                 if (result == null) {
                     result = receiver.prop(ast.name);
@@ -7835,6 +7856,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         };
         _AstToIrVisitor.prototype.visitPropertyWrite = function (ast, mode) {
             var receiver = this._visit(ast.receiver, _Mode.Expression);
+            var prevUsesImplicitReceiver = this.usesImplicitReceiver;
             var varExpr = null;
             if (receiver === this._implicitReceiver) {
                 var localExpr = this._getLocal(ast.name);
@@ -7844,6 +7866,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                         // to a 'context.property' value and will be used as the target of the
                         // write expression.
                         varExpr = localExpr;
+                        // Restore the previous "usesImplicitReceiver" state since the implicit
+                        // receiver has been replaced with a resolved local expression.
+                        this.usesImplicitReceiver = prevUsesImplicitReceiver;
                     }
                     else {
                         // Otherwise it's an error.
@@ -8064,6 +8089,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     var DefaultLocalResolver = /** @class */ (function () {
         function DefaultLocalResolver() {
         }
+        DefaultLocalResolver.prototype.notifyImplicitReceiverUse = function () { };
         DefaultLocalResolver.prototype.getLocal = function (name) {
             if (name === EventHandlerVars.event.name) {
                 return EventHandlerVars.event;
@@ -15413,14 +15439,17 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     function renderFlagCheckIfStmt(flags, statements) {
         return ifStmt(variable(RENDER_FLAGS).bitwiseAnd(literal(flags), null, false), statements);
     }
-    function prepareEventListenerParameters(eventAst, bindingContext, handlerName, scope) {
+    function prepareEventListenerParameters(eventAst, handlerName, scope) {
         if (handlerName === void 0) { handlerName = null; }
         if (scope === void 0) { scope = null; }
         var type = eventAst.type, name = eventAst.name, target = eventAst.target, phase = eventAst.phase, handler = eventAst.handler;
         if (target && !GLOBAL_TARGET_RESOLVERS.has(target)) {
             throw new Error("Unexpected global target '" + target + "' defined for '" + name + "' event.\n        Supported list of global targets: " + Array.from(GLOBAL_TARGET_RESOLVERS.keys()) + ".");
         }
-        var bindingExpr = convertActionBinding(scope, bindingContext, handler, 'b', function () { return error('Unexpected interpolation'); }, eventAst.handlerSpan);
+        var implicitReceiverExpr = (scope === null || scope.bindingLevel === 0) ?
+            variable(CONTEXT_NAME) :
+            scope.getOrCreateSharedContextVar(0);
+        var bindingExpr = convertActionBinding(scope, implicitReceiverExpr, handler, 'b', function () { return error('Unexpected interpolation'); }, eventAst.handlerSpan);
         var statements = [];
         if (scope) {
             statements.push.apply(statements, __spread(scope.restoreViewStatement()));
@@ -15499,6 +15528,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             // Number of non-default selectors found in all parent templates of this template. We need to
             // track it to properly adjust projection slot index in the `projection` instruction.
             this._ngContentSelectorsOffset = 0;
+            // Expression that should be used as implicit receiver when converting template
+            // expressions to output AST.
+            this._implicitReceiverExpr = null;
             // These should be handled in the template or element directly.
             this.visitReference = invalid$1;
             this.visitVariable = invalid$1;
@@ -15612,6 +15644,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         };
         // LocalResolver
         TemplateDefinitionBuilder.prototype.getLocal = function (name) { return this._bindingScope.get(name); };
+        // LocalResolver
+        TemplateDefinitionBuilder.prototype.notifyImplicitReceiverUse = function () { this._bindingScope.notifyImplicitReceiverUse(); };
         TemplateDefinitionBuilder.prototype.i18nTranslate = function (message, params, ref, transformFn) {
             var _a;
             if (params === void 0) { params = {}; }
@@ -15749,7 +15783,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             var _a = this.i18n, index = _a.index, bindings = _a.bindings;
             if (bindings.size) {
                 bindings.forEach(function (binding) {
-                    _this.updateInstruction(index, span, Identifiers$1.i18nExp, function () { return [_this.convertPropertyBinding(variable(CONTEXT_NAME), binding)]; });
+                    _this.updateInstruction(index, span, Identifiers$1.i18nExp, function () { return [_this.convertPropertyBinding(binding)]; });
                 });
                 this.updateInstruction(index, span, Identifiers$1.i18nApply, [literal(index)]);
             }
@@ -15892,7 +15926,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             if (currentNamespace !== wasInNamespace) {
                 this.addNamespaceInstruction(currentNamespace, element);
             }
-            var implicit = variable(CONTEXT_NAME);
             if (this.i18n) {
                 this.i18n.appendElement(element.i18n, elementIndex);
             }
@@ -15934,7 +15967,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                                 i18nAttrArgs_1.push(literal(attr.name), _this.i18nTranslate(message, params));
                                 converted.expressions.forEach(function (expression) {
                                     hasBindings_1 = true;
-                                    _this.updateInstruction(elementIndex, element.sourceSpan, Identifiers$1.i18nExp, function () { return [_this.convertExpressionBinding(implicit, expression)]; });
+                                    _this.updateInstruction(elementIndex, element.sourceSpan, Identifiers$1.i18nExp, function () { return [_this.convertExpressionBinding(expression)]; });
                                 });
                             }
                         }
@@ -15954,7 +15987,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 // designed to run inside of `elementStart` and `elementEnd`. The update instructions
                 // (things like `styleProp`, `classProp`, etc..) are applied later on in this
                 // file
-                this.processStylingInstruction(elementIndex, implicit, stylingBuilder.buildStylingInstruction(element.sourceSpan, this.constantPool), true);
+                this.processStylingInstruction(elementIndex, stylingBuilder.buildStylingInstruction(element.sourceSpan, this.constantPool), true);
                 // Generate Listeners (outputs)
                 element.outputs.forEach(function (outputAst) {
                     _this.creationInstruction(outputAst.sourceSpan, Identifiers$1.listener, _this.prepareListenerParameter(element.name, outputAst, elementIndex));
@@ -15974,7 +16007,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             for (var i = 0; i <= limit; i++) {
                 var instruction_1 = stylingInstructions[i];
                 this._bindingSlots += instruction_1.allocateBindingSlots;
-                this.processStylingInstruction(elementIndex, implicit, instruction_1, false);
+                this.processStylingInstruction(elementIndex, instruction_1, false);
             }
             // the reason why `undefined` is used is because the renderer understands this as a
             // special value to symbolize that there is no RHS to this binding
@@ -16000,7 +16033,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                     _this.updateInstruction(elementIndex, input.sourceSpan, Identifiers$1.property, function () {
                         return [
                             literal(bindingName_1),
-                            (hasValue_1 ? _this.convertPropertyBinding(implicit, value_1, /* skipBindFn */ true) :
+                            (hasValue_1 ? _this.convertPropertyBinding(value_1, /* skipBindFn */ true) :
                                 emptyValueBindInstruction),
                         ];
                     });
@@ -16037,7 +16070,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                             }
                             else {
                                 // [prop]="value"
-                                _this.boundUpdateInstruction(Identifiers$1.property, elementIndex, attrName_1, input, implicit, value_2, params_2);
+                                _this.boundUpdateInstruction(Identifiers$1.property, elementIndex, attrName_1, input, value_2, params_2);
                             }
                         }
                         else if (inputType === 1 /* Attribute */) {
@@ -16048,15 +16081,14 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                             else {
                                 var boundValue = value_2 instanceof Interpolation ? value_2.expressions[0] : value_2;
                                 // [attr.name]="value" or attr.name="{{value}}"
-                                _this.boundUpdateInstruction(Identifiers$1.attribute, elementIndex, attrName_1, input, implicit, boundValue, params_2);
+                                _this.boundUpdateInstruction(Identifiers$1.attribute, elementIndex, attrName_1, input, boundValue, params_2);
                             }
                         }
                         else {
                             // class prop
                             _this.updateInstruction(elementIndex, input.sourceSpan, Identifiers$1.classProp, function () {
                                 return __spread([
-                                    literal(elementIndex), literal(attrName_1),
-                                    _this.convertPropertyBinding(implicit, value_2)
+                                    literal(elementIndex), literal(attrName_1), _this.convertPropertyBinding(value_2)
                                 ], params_2);
                             });
                         }
@@ -16084,10 +16116,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
          * Adds an update instruction for a bound property or attribute, such as `[prop]="value"` or
          * `[attr.title]="value"`
          */
-        TemplateDefinitionBuilder.prototype.boundUpdateInstruction = function (instruction, elementIndex, attrName, input, implicit, value, params) {
+        TemplateDefinitionBuilder.prototype.boundUpdateInstruction = function (instruction, elementIndex, attrName, input, value, params) {
             var _this = this;
             this.updateInstruction(elementIndex, input.sourceSpan, instruction, function () {
-                return __spread([literal(attrName), _this.convertPropertyBinding(implicit, value, true)], params);
+                return __spread([literal(attrName), _this.convertPropertyBinding(value, true)], params);
             });
         };
         /**
@@ -16096,9 +16128,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
          */
         TemplateDefinitionBuilder.prototype.interpolatedUpdateInstruction = function (instruction, elementIndex, attrName, input, value, params) {
             var _this = this;
-            this.updateInstruction(elementIndex, input.sourceSpan, instruction, function () {
-                return __spread([literal(attrName)], _this.getUpdateInstructionArguments(variable(CONTEXT_NAME), value), params);
-            });
+            this.updateInstruction(elementIndex, input.sourceSpan, instruction, function () { return __spread([literal(attrName)], _this.getUpdateInstructionArguments(value), params); });
         };
         TemplateDefinitionBuilder.prototype.visitTemplate = function (template) {
             var _this = this;
@@ -16149,12 +16179,11 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 return trimTrailingNulls(parameters);
             });
             // handle property bindings e.g. ɵɵproperty('ngForOf', ctx.items), et al;
-            var context = variable(CONTEXT_NAME);
-            this.templatePropertyBindings(template, templateIndex, context, template.templateAttrs);
+            this.templatePropertyBindings(template, templateIndex, template.templateAttrs);
             // Only add normal input/output binding instructions on explicit ng-template elements.
             if (template.tagName === NG_TEMPLATE_TAG_NAME) {
                 // Add the input bindings
-                this.templatePropertyBindings(template, templateIndex, context, template.inputs);
+                this.templatePropertyBindings(template, templateIndex, template.inputs);
                 // Generate listeners for directive output
                 template.outputs.forEach(function (outputAst) {
                     _this.creationInstruction(outputAst.sourceSpan, Identifiers$1.listener, _this.prepareListenerParameter('ng_template', outputAst, templateIndex));
@@ -16177,12 +16206,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             var value = text.value.visit(this._valueConverter);
             this.allocateBindingSlots(value);
             if (value instanceof Interpolation) {
-                this.updateInstruction(nodeIndex, text.sourceSpan, getTextInterpolationExpression(value), function () { return _this.getUpdateInstructionArguments(variable(CONTEXT_NAME), value); });
+                this.updateInstruction(nodeIndex, text.sourceSpan, getTextInterpolationExpression(value), function () { return _this.getUpdateInstructionArguments(value); });
             }
             else {
-                this.updateInstruction(nodeIndex, text.sourceSpan, Identifiers$1.textBinding, function () {
-                    return [literal(nodeIndex), _this.convertPropertyBinding(variable(CONTEXT_NAME), value)];
-                });
+                this.updateInstruction(nodeIndex, text.sourceSpan, Identifiers$1.textBinding, function () { return [literal(nodeIndex), _this.convertPropertyBinding(value)]; });
             }
         };
         TemplateDefinitionBuilder.prototype.visitText = function (text) {
@@ -16235,14 +16262,14 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 null;
         };
         TemplateDefinitionBuilder.prototype.bindingContext = function () { return "" + this._bindingContext++; };
-        TemplateDefinitionBuilder.prototype.templatePropertyBindings = function (template, templateIndex, context, attrs) {
+        TemplateDefinitionBuilder.prototype.templatePropertyBindings = function (template, templateIndex, attrs) {
             var _this = this;
             attrs.forEach(function (input) {
                 if (input instanceof BoundAttribute) {
                     var value_4 = input.value.visit(_this._valueConverter);
                     if (value_4 !== undefined) {
                         _this.allocateBindingSlots(value_4);
-                        _this.updateInstruction(templateIndex, template.sourceSpan, Identifiers$1.property, function () { return [literal(input.name), _this.convertPropertyBinding(context, value_4, true)]; });
+                        _this.updateInstruction(templateIndex, template.sourceSpan, Identifiers$1.property, function () { return [literal(input.name), _this.convertPropertyBinding(value_4, true)]; });
                     }
                 }
             });
@@ -16258,11 +16285,11 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 return instruction(span, reference, params).toStmt();
             });
         };
-        TemplateDefinitionBuilder.prototype.processStylingInstruction = function (elementIndex, implicit, instruction, createMode) {
+        TemplateDefinitionBuilder.prototype.processStylingInstruction = function (elementIndex, instruction, createMode) {
             var _this = this;
             if (instruction) {
                 var paramsFn = function () {
-                    return instruction.buildParams(function (value) { return _this.convertPropertyBinding(implicit, value, true); });
+                    return instruction.buildParams(function (value) { return _this.convertPropertyBinding(value, true); });
                 };
                 if (createMode) {
                     this.creationInstruction(instruction.sourceSpan, instruction.reference, paramsFn);
@@ -16292,17 +16319,29 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         TemplateDefinitionBuilder.prototype.allocateBindingSlots = function (value) {
             this._bindingSlots += value instanceof Interpolation ? value.expressions.length : 1;
         };
-        TemplateDefinitionBuilder.prototype.convertExpressionBinding = function (implicit, value) {
-            var convertedPropertyBinding = convertPropertyBinding(this, implicit, value, this.bindingContext(), BindingForm.TrySimple);
+        /**
+         * Gets an expression that refers to the implicit receiver. The implicit
+         * receiver is always the root level context.
+         */
+        TemplateDefinitionBuilder.prototype.getImplicitReceiverExpr = function () {
+            if (this._implicitReceiverExpr) {
+                return this._implicitReceiverExpr;
+            }
+            return this._implicitReceiverExpr = this.level === 0 ?
+                variable(CONTEXT_NAME) :
+                this._bindingScope.getOrCreateSharedContextVar(0);
+        };
+        TemplateDefinitionBuilder.prototype.convertExpressionBinding = function (value) {
+            var convertedPropertyBinding = convertPropertyBinding(this, this.getImplicitReceiverExpr(), value, this.bindingContext(), BindingForm.TrySimple);
             var valExpr = convertedPropertyBinding.currValExpr;
             return importExpr(Identifiers$1.bind).callFn([valExpr]);
         };
-        TemplateDefinitionBuilder.prototype.convertPropertyBinding = function (implicit, value, skipBindFn) {
+        TemplateDefinitionBuilder.prototype.convertPropertyBinding = function (value, skipBindFn) {
             var _a;
             var interpolationFn = value instanceof Interpolation ? interpolate : function () { return error('Unexpected interpolation'); };
-            var convertedPropertyBinding = convertPropertyBinding(this, implicit, value, this.bindingContext(), BindingForm.TrySimple, interpolationFn);
-            (_a = this._tempVariables).push.apply(_a, __spread(convertedPropertyBinding.stmts));
+            var convertedPropertyBinding = convertPropertyBinding(this, this.getImplicitReceiverExpr(), value, this.bindingContext(), BindingForm.TrySimple, interpolationFn);
             var valExpr = convertedPropertyBinding.currValExpr;
+            (_a = this._tempVariables).push.apply(_a, __spread(convertedPropertyBinding.stmts));
             return value instanceof Interpolation || skipBindFn ? valExpr :
                 importExpr(Identifiers$1.bind).callFn([valExpr]);
         };
@@ -16310,12 +16349,11 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
          * Gets a list of argument expressions to pass to an update instruction expression. Also updates
          * the temp variables state with temp variables that were identified as needing to be created
          * while visiting the arguments.
-         * @param contextExpression The expression for the context variable used to create arguments
          * @param value The original expression we will be resolving an arguments list from.
          */
-        TemplateDefinitionBuilder.prototype.getUpdateInstructionArguments = function (contextExpression, value) {
+        TemplateDefinitionBuilder.prototype.getUpdateInstructionArguments = function (value) {
             var _a;
-            var _b = convertUpdateArguments(this, contextExpression, value, this.bindingContext()), args = _b.args, stmts = _b.stmts;
+            var _b = convertUpdateArguments(this, this.getImplicitReceiverExpr(), value, this.bindingContext()), args = _b.args, stmts = _b.stmts;
             (_a = this._tempVariables).push.apply(_a, __spread(stmts));
             return args;
         };
@@ -16440,8 +16478,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                     sanitizeIdentifier(eventName);
                 var handlerName = _this.templateName + "_" + tagName + "_" + bindingFnName + "_" + index + "_listener";
                 var scope = _this._bindingScope.nestedScope(_this._bindingScope.bindingLevel);
-                var context = variable(CONTEXT_NAME);
-                return prepareEventListenerParameters(outputAst, context, handlerName, scope);
+                return prepareEventListenerParameters(outputAst, handlerName, scope);
             };
         };
         return TemplateDefinitionBuilder;
@@ -16661,12 +16698,34 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             });
             return this;
         };
+        // Implemented as part of LocalResolver.
         BindingScope.prototype.getLocal = function (name) { return this.get(name); };
+        // Implemented as part of LocalResolver.
+        BindingScope.prototype.notifyImplicitReceiverUse = function () {
+            if (this.bindingLevel !== 0) {
+                // Since the implicit receiver is accessed in an embedded view, we need to
+                // ensure that we declare a shared context variable for the current template
+                // in the update variables.
+                this.map.get(SHARED_CONTEXT_KEY + 0).declare = true;
+            }
+        };
         BindingScope.prototype.nestedScope = function (level) {
             var newScope = new BindingScope(level, this);
             if (level > 0)
                 newScope.generateSharedContextVar(0);
             return newScope;
+        };
+        /**
+         * Gets or creates a shared context variable and returns its expression. Note that
+         * this does not mean that the shared variable will be declared. Variables in the
+         * binding scope will be only declared if they are used.
+         */
+        BindingScope.prototype.getOrCreateSharedContextVar = function (retrievalLevel) {
+            var bindingKey = SHARED_CONTEXT_KEY + retrievalLevel;
+            if (!this.map.has(bindingKey)) {
+                this.generateSharedContextVar(retrievalLevel);
+            }
+            return this.map.get(bindingKey).lhs;
         };
         BindingScope.prototype.getSharedContextName = function (retrievalLevel) {
             var sharedCtxObj = this.map.get(SHARED_CONTEXT_KEY + retrievalLevel);
@@ -17371,7 +17430,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         // Calculate host event bindings
         var eventBindings = bindingParser.createDirectiveHostEventAsts(directiveSummary, hostBindingSourceSpan);
         if (eventBindings && eventBindings.length) {
-            var listeners = createHostListeners(bindingContext, eventBindings, name);
+            var listeners = createHostListeners(eventBindings, name);
             createStatements.push.apply(createStatements, __spread(listeners));
         }
         // Calculate the host property bindings
@@ -17498,14 +17557,14 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         }
         return { bindingName: bindingName, instruction: instruction, isAttribute: !!attrMatches };
     }
-    function createHostListeners(bindingContext, eventBindings, name) {
+    function createHostListeners(eventBindings, name) {
         return eventBindings.map(function (binding) {
             var bindingName = binding.name && sanitizeIdentifier(binding.name);
             var bindingFnName = binding.type === 1 /* Animation */ ?
                 prepareSyntheticListenerFunctionName(bindingName, binding.targetOrPhase) :
                 bindingName;
             var handlerName = name && bindingName ? name + "_" + bindingFnName + "_HostBindingHandler" : null;
-            var params = prepareEventListenerParameters(BoundEvent.fromParsedEvent(binding), bindingContext, handlerName);
+            var params = prepareEventListenerParameters(BoundEvent.fromParsedEvent(binding), handlerName);
             var instruction = binding.type == 1 /* Animation */ ? Identifiers$1.componentHostSyntheticListener : Identifiers$1.listener;
             return importExpr(instruction).callFn(params).toStmt();
         });
@@ -17884,7 +17943,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.1.0-next.1+43.sha-b086676.with-local-changes');
+    var VERSION$1 = new Version('8.1.0-next.1+49.sha-052ef65.with-local-changes');
 
     /**
      * @license
@@ -29516,7 +29575,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      */
     function ɵɵdefineInjectable(opts) {
         return {
-            providedIn: opts.providedIn || null, factory: opts.factory, value: undefined,
+            token: opts.token, providedIn: opts.providedIn || null, factory: opts.factory,
+            value: undefined,
         };
     }
     /**
@@ -29551,7 +29611,15 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @param type A type which may have its own (non-inherited) `ngInjectableDef`.
      */
     function getInjectableDef(type) {
-        return type && type.hasOwnProperty(NG_INJECTABLE_DEF) ? type[NG_INJECTABLE_DEF] : null;
+        var def = type[NG_INJECTABLE_DEF];
+        // The definition read above may come from a base class. `hasOwnProperty` is not sufficient to
+        // distinguish this case, as in older browsers (e.g. IE10) static property inheritance is
+        // implemented by copying the properties.
+        //
+        // Instead, the ngInjectableDef's token is compared to the type, and if they don't match then the
+        // property was not defined directly on the type itself, and was likely inherited. The definition
+        // is only returned if the type matches the def.token.
+        return def && def.token === type ? def : null;
     }
     /**
      * Read the `ngInjectableDef` for `type` or read the `ngInjectableDef` from one of its ancestors.
@@ -29773,6 +29841,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             }
             else if (options !== undefined) {
                 this.ngInjectableDef = ɵɵdefineInjectable({
+                    token: this,
                     providedIn: options.providedIn || 'root',
                     factory: options.factory,
                 });
@@ -30894,7 +30963,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         // just instantiates the zero-arg constructor.
         var inheritedInjectableDef = getInheritedInjectableDef(token);
         if (inheritedInjectableDef !== null) {
-            return inheritedInjectableDef.factory;
+            return function () { return inheritedInjectableDef.factory(token); };
         }
         else {
             return function () { return new token(); };
@@ -31026,6 +31095,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         Injector.NULL = new NullInjector();
         /** @nocollapse */
         Injector.ngInjectableDef = ɵɵdefineInjectable({
+            token: Injector,
             providedIn: 'any',
             factory: function () { return ɵɵinject(INJECTOR); },
         });
@@ -32411,7 +32481,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             // be retrieved through the node injector, so this isn't a problem.
             if (!type.hasOwnProperty(NG_INJECTABLE_DEF)) {
                 type[NG_INJECTABLE_DEF] =
-                    ɵɵdefineInjectable({ factory: componentDefinition.factory });
+                    ɵɵdefineInjectable({ token: type, factory: componentDefinition.factory });
             }
         });
         return def;
@@ -47338,7 +47408,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.1.0-next.1+43.sha-b086676.with-local-changes');
+    var VERSION$2 = new Version$1('8.1.0-next.1+49.sha-052ef65.with-local-changes');
 
     /**
      * @license
@@ -48340,6 +48410,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         };
         /** @nocollapse */
         IterableDiffers.ngInjectableDef = ɵɵdefineInjectable({
+            token: IterableDiffers,
             providedIn: 'root',
             factory: function () { return new IterableDiffers([new DefaultIterableDifferFactory()]); }
         });
@@ -48416,6 +48487,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         };
         /** @nocollapse */
         KeyValueDiffers.ngInjectableDef = ɵɵdefineInjectable({
+            token: KeyValueDiffers,
             providedIn: 'root',
             factory: function () { return new KeyValueDiffers([new DefaultKeyValueDifferFactory()]); }
         });
@@ -52153,7 +52225,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         else {
             pipeDef = tView.data[adjustedIndex];
         }
-        var pipeInstance = pipeDef.factory(null);
+        var pipeInstance = pipeDef.factory();
         store(index, pipeInstance);
         return pipeInstance;
     }
@@ -60941,7 +61013,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.1.0-next.1+43.sha-b086676.with-local-changes');
+    var VERSION$3 = new Version$1('8.1.0-next.1+49.sha-052ef65.with-local-changes');
 
     /**
      * @license
