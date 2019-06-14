@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.0.1+4.sha-3bbc89b.with-local-changes
+ * @license Angular v8.0.1+10.sha-7f21449.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -17833,7 +17833,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.0.1+4.sha-3bbc89b.with-local-changes');
+    var VERSION$1 = new Version('8.0.1+10.sha-7f21449.with-local-changes');
 
     /**
      * @license
@@ -37520,7 +37520,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.0.1+4.sha-3bbc89b.with-local-changes');
+    var VERSION$2 = new Version$1('8.0.1+10.sha-7f21449.with-local-changes');
 
     /**
      * @license
@@ -48012,39 +48012,29 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         };
         proxy.getQuickInfoAtPosition = function (fileName, position) {
             var base = oldLS.getQuickInfoAtPosition(fileName, position);
-            // TODO(vicb): the tags property has been removed in TS 2.2
-            tryOperation('get quick info', function () {
-                var e_2, _a;
-                var ours = ls.getHoverAt(fileName, position);
-                if (ours) {
-                    var displayParts = [];
-                    try {
-                        for (var _b = __values(ours.text), _c = _b.next(); !_c.done; _c = _b.next()) {
-                            var part = _c.value;
-                            displayParts.push({ kind: part.language || 'angular', text: part.text });
-                        }
-                    }
-                    catch (e_2_1) { e_2 = { error: e_2_1 }; }
-                    finally {
-                        try {
-                            if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-                        }
-                        finally { if (e_2) throw e_2.error; }
-                    }
-                    var tags = base && base.tags;
-                    base = {
-                        displayParts: displayParts,
-                        documentation: [],
-                        kind: 'angular',
-                        kindModifiers: 'what does this do?',
-                        textSpan: { start: ours.span.start, length: ours.span.end - ours.span.start },
+            var ours = ls.getHoverAt(fileName, position);
+            if (!ours) {
+                return base;
+            }
+            var result = {
+                kind: ts.ScriptElementKind.unknown,
+                kindModifiers: ts.ScriptElementKindModifier.none,
+                textSpan: {
+                    start: ours.span.start,
+                    length: ours.span.end - ours.span.start,
+                },
+                displayParts: ours.text.map(function (part) {
+                    return {
+                        text: part.text,
+                        kind: part.language || 'angular',
                     };
-                    if (tags) {
-                        base.tags = tags;
-                    }
-                }
-            });
-            return base;
+                }),
+                documentation: [],
+            };
+            if (base && base.tags) {
+                result.tags = base.tags;
+            }
+            return result;
         };
         proxy.getSemanticDiagnostics = function (fileName) {
             var result = oldLS.getSemanticDiagnostics(fileName);
@@ -48067,7 +48057,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 return base;
             }
             return tryOperation('get definition', function () {
-                var e_3, _a;
+                var e_2, _a;
                 var ours = ls.getDefinitionAt(fileName, position);
                 var combined;
                 if (ours && ours.length) {
@@ -48086,12 +48076,12 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                             });
                         }
                     }
-                    catch (e_3_1) { e_3 = { error: e_3_1 }; }
+                    catch (e_2_1) { e_2 = { error: e_2_1 }; }
                     finally {
                         try {
                             if (ours_1_1 && !ours_1_1.done && (_a = ours_1.return)) _a.call(ours_1);
                         }
-                        finally { if (e_3) throw e_3.error; }
+                        finally { if (e_2) throw e_2.error; }
                     }
                 }
                 else {
@@ -48110,7 +48100,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.0.1+4.sha-3bbc89b.with-local-changes');
+    var VERSION$3 = new Version$1('8.0.1+10.sha-7f21449.with-local-changes');
 
     /**
      * @license
