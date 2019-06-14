@@ -52922,7 +52922,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
     };
     function getPromiseCtor(promiseCtor) {
         if (!promiseCtor) {
-            promiseCtor = config.Promise || Promise;
+            promiseCtor = Promise;
         }
         if (!promiseCtor) {
             throw new Error('no Promise impl found');
