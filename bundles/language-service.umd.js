@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.1.0-next.2+11.sha-8f5c396.with-local-changes
+ * @license Angular v8.1.0-next.2+13.sha-a4601ec.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -17958,7 +17958,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.1.0-next.2+11.sha-8f5c396.with-local-changes');
+    var VERSION$1 = new Version('8.1.0-next.2+13.sha-a4601ec.with-local-changes');
 
     /**
      * @license
@@ -34378,7 +34378,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         // This special case happens when there is a @host on the inject and when we are searching
         // on the host element node.
         var isHostSpecialCase = (flags & InjectFlags.Host) && hostTElementNode === tNode;
-        var injectableIdx = locateDirectiveOrProvider(tNode, lView, token, canAccessViewProviders, isHostSpecialCase);
+        var injectableIdx = locateDirectiveOrProvider(tNode, currentTView, token, canAccessViewProviders, isHostSpecialCase);
         if (injectableIdx !== null) {
             return getNodeInjectable(currentTView.data, lView, injectableIdx, tNode);
         }
@@ -34390,14 +34390,13 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Searches for the given token among the node's directives and providers.
      *
      * @param tNode TNode on which directives are present.
-     * @param lView The view we are currently processing
+     * @param tView The tView we are currently processing
      * @param token Provider token or type of a directive to look for.
      * @param canAccessViewProviders Whether view providers should be considered.
      * @param isHostSpecialCase Whether the host special case applies.
      * @returns Index of a found directive or provider, or null when none found.
      */
-    function locateDirectiveOrProvider(tNode, lView, token, canAccessViewProviders, isHostSpecialCase) {
-        var tView = lView[TVIEW];
+    function locateDirectiveOrProvider(tNode, tView, token, canAccessViewProviders, isHostSpecialCase) {
         var nodeProviderIndexes = tNode.providerIndexes;
         var tInjectables = tView.data;
         var injectablesStart = nodeProviderIndexes & 65535 /* ProvidersStartIndexMask */;
@@ -38694,7 +38693,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.1.0-next.2+11.sha-8f5c396.with-local-changes');
+    var VERSION$2 = new Version$1('8.1.0-next.2+13.sha-a4601ec.with-local-changes');
 
     /**
      * @license
@@ -49369,39 +49368,29 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         };
         proxy.getQuickInfoAtPosition = function (fileName, position) {
             var base = oldLS.getQuickInfoAtPosition(fileName, position);
-            // TODO(vicb): the tags property has been removed in TS 2.2
-            tryOperation('get quick info', function () {
-                var e_2, _a;
-                var ours = ls.getHoverAt(fileName, position);
-                if (ours) {
-                    var displayParts = [];
-                    try {
-                        for (var _b = __values(ours.text), _c = _b.next(); !_c.done; _c = _b.next()) {
-                            var part = _c.value;
-                            displayParts.push({ kind: part.language || 'angular', text: part.text });
-                        }
-                    }
-                    catch (e_2_1) { e_2 = { error: e_2_1 }; }
-                    finally {
-                        try {
-                            if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-                        }
-                        finally { if (e_2) throw e_2.error; }
-                    }
-                    var tags = base && base.tags;
-                    base = {
-                        displayParts: displayParts,
-                        documentation: [],
-                        kind: 'angular',
-                        kindModifiers: 'what does this do?',
-                        textSpan: { start: ours.span.start, length: ours.span.end - ours.span.start },
+            var ours = ls.getHoverAt(fileName, position);
+            if (!ours) {
+                return base;
+            }
+            var result = {
+                kind: ts.ScriptElementKind.unknown,
+                kindModifiers: ts.ScriptElementKindModifier.none,
+                textSpan: {
+                    start: ours.span.start,
+                    length: ours.span.end - ours.span.start,
+                },
+                displayParts: ours.text.map(function (part) {
+                    return {
+                        text: part.text,
+                        kind: part.language || 'angular',
                     };
-                    if (tags) {
-                        base.tags = tags;
-                    }
-                }
-            });
-            return base;
+                }),
+                documentation: [],
+            };
+            if (base && base.tags) {
+                result.tags = base.tags;
+            }
+            return result;
         };
         proxy.getSemanticDiagnostics = function (fileName) {
             var result = oldLS.getSemanticDiagnostics(fileName);
@@ -49478,7 +49467,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.1.0-next.2+11.sha-8f5c396.with-local-changes');
+    var VERSION$3 = new Version$1('8.1.0-next.2+13.sha-a4601ec.with-local-changes');
 
     /**
      * @license
