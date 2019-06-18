@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.1.0-next.2+35.sha-65544ac.with-local-changes
+ * @license Angular v8.1.0-next.2+37.sha-beaab27.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -15783,7 +15783,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             var _a = this.i18n, index = _a.index, bindings = _a.bindings;
             if (bindings.size) {
                 bindings.forEach(function (binding) {
-                    _this.updateInstruction(index, span, Identifiers$1.i18nExp, function () { return [_this.convertPropertyBinding(binding)]; });
+                    _this.updateInstruction(index, span, Identifiers$1.i18nExp, function () { return [_this.convertPropertyBinding(binding, /* skipBindFn */ true)]; });
                 });
                 this.updateInstruction(index, span, Identifiers$1.i18nApply, [literal(index)]);
             }
@@ -15967,7 +15967,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                                 i18nAttrArgs_1.push(literal(attr.name), _this.i18nTranslate(message, params));
                                 converted.expressions.forEach(function (expression) {
                                     hasBindings_1 = true;
-                                    _this.updateInstruction(elementIndex, element.sourceSpan, Identifiers$1.i18nExp, function () { return [_this.convertExpressionBinding(expression)]; });
+                                    _this.updateInstruction(elementIndex, element.sourceSpan, Identifiers$1.i18nExp, function () { return [_this.convertExpressionBinding(expression, /* skipBindFn */ true)]; });
                                 });
                             }
                         }
@@ -16119,7 +16119,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         TemplateDefinitionBuilder.prototype.boundUpdateInstruction = function (instruction, elementIndex, attrName, input, value, params) {
             var _this = this;
             this.updateInstruction(elementIndex, input.sourceSpan, instruction, function () {
-                return __spread([literal(attrName), _this.convertPropertyBinding(value, true)], params);
+                return __spread([
+                    literal(attrName), _this.convertPropertyBinding(value, /* skipBindFn */ true)
+                ], params);
             });
         };
         /**
@@ -16269,7 +16271,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                     var value_4 = input.value.visit(_this._valueConverter);
                     if (value_4 !== undefined) {
                         _this.allocateBindingSlots(value_4);
-                        _this.updateInstruction(templateIndex, template.sourceSpan, Identifiers$1.property, function () { return [literal(input.name), _this.convertPropertyBinding(value_4, true)]; });
+                        _this.updateInstruction(templateIndex, template.sourceSpan, Identifiers$1.property, function () {
+                            return [literal(input.name),
+                                _this.convertPropertyBinding(value_4, /* skipBindFn */ true)];
+                        });
                     }
                 }
             });
@@ -16288,9 +16293,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         TemplateDefinitionBuilder.prototype.processStylingInstruction = function (elementIndex, instruction, createMode) {
             var _this = this;
             if (instruction) {
-                var paramsFn = function () {
-                    return instruction.buildParams(function (value) { return _this.convertPropertyBinding(value, true); });
-                };
+                var paramsFn = function () { return instruction.buildParams(function (value) { return _this.convertPropertyBinding(value, /* skipBindFn */ true); }); };
                 if (createMode) {
                     this.creationInstruction(instruction.sourceSpan, instruction.reference, paramsFn);
                 }
@@ -16331,10 +16334,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 variable(CONTEXT_NAME) :
                 this._bindingScope.getOrCreateSharedContextVar(0);
         };
-        TemplateDefinitionBuilder.prototype.convertExpressionBinding = function (value) {
+        TemplateDefinitionBuilder.prototype.convertExpressionBinding = function (value, skipBindFn) {
             var convertedPropertyBinding = convertPropertyBinding(this, this.getImplicitReceiverExpr(), value, this.bindingContext(), BindingForm.TrySimple);
             var valExpr = convertedPropertyBinding.currValExpr;
-            return importExpr(Identifiers$1.bind).callFn([valExpr]);
+            return skipBindFn ? valExpr : importExpr(Identifiers$1.bind).callFn([valExpr]);
         };
         TemplateDefinitionBuilder.prototype.convertPropertyBinding = function (value, skipBindFn) {
             var _a;
@@ -17943,7 +17946,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.1.0-next.2+35.sha-65544ac.with-local-changes');
+    var VERSION$1 = new Version('8.1.0-next.2+37.sha-beaab27.with-local-changes');
 
     /**
      * @license
@@ -47470,7 +47473,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.1.0-next.2+35.sha-65544ac.with-local-changes');
+    var VERSION$2 = new Version$1('8.1.0-next.2+37.sha-beaab27.with-local-changes');
 
     /**
      * @license
@@ -51551,11 +51554,12 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Stores the values of the bindings during each update cycle in order to determine if we need to
      * update the translated nodes.
      *
-     * @param expression The binding's new value or NO_CHANGE
+     * @param value The binding's value
      *
      * @codeGenApi
      */
-    function ɵɵi18nExp(expression) {
+    function ɵɵi18nExp(value) {
+        var expression = ɵɵbind(value);
         if (expression !== NO_CHANGE) {
             changeMask = changeMask | (1 << shiftsCounter);
         }
@@ -61069,7 +61073,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.1.0-next.2+35.sha-65544ac.with-local-changes');
+    var VERSION$3 = new Version$1('8.1.0-next.2+37.sha-beaab27.with-local-changes');
 
     /**
      * @license
