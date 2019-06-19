@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.1.0-next.3+2.sha-c34abf2.with-local-changes
+ * @license Angular v8.1.0-next.3+3.sha-4ec5081.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -17961,7 +17961,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.1.0-next.3+2.sha-c34abf2.with-local-changes');
+    var VERSION$1 = new Version('8.1.0-next.3+3.sha-4ec5081.with-local-changes');
 
     /**
      * @license
@@ -29007,56 +29007,12 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    function getTemplateDiagnostics(fileName, astProvider, templates) {
+    function getDeclarationDiagnostics(declarations, modules) {
         var e_1, _a;
         var results = [];
-        var _loop_1 = function (template) {
-            var ast = astProvider.getTemplateAst(template, fileName);
-            if (ast) {
-                if (ast.parseErrors && ast.parseErrors.length) {
-                    results.push.apply(results, __spread(ast.parseErrors.map(function (e) { return ({
-                        kind: DiagnosticKind$1.Error,
-                        span: offsetSpan$1(spanOf$2(e.span), template.span.start),
-                        message: e.msg
-                    }); })));
-                }
-                else if (ast.templateAst && ast.htmlAst) {
-                    var info = {
-                        templateAst: ast.templateAst,
-                        htmlAst: ast.htmlAst,
-                        offset: template.span.start,
-                        query: template.query,
-                        members: template.members
-                    };
-                    var expressionDiagnostics = getTemplateExpressionDiagnostics(info);
-                    results.push.apply(results, __spread(expressionDiagnostics));
-                }
-                if (ast.errors) {
-                    results.push.apply(results, __spread(ast.errors.map(function (e) { return ({ kind: e.kind, span: e.span || template.span, message: e.message }); })));
-                }
-            }
-        };
-        try {
-            for (var templates_1 = __values(templates), templates_1_1 = templates_1.next(); !templates_1_1.done; templates_1_1 = templates_1.next()) {
-                var template = templates_1_1.value;
-                _loop_1(template);
-            }
-        }
-        catch (e_1_1) { e_1 = { error: e_1_1 }; }
-        finally {
-            try {
-                if (templates_1_1 && !templates_1_1.done && (_a = templates_1.return)) _a.call(templates_1);
-            }
-            finally { if (e_1) throw e_1.error; }
-        }
-        return results;
-    }
-    function getDeclarationDiagnostics(declarations, modules) {
-        var e_2, _a;
-        var results = [];
         var directives = undefined;
-        var _loop_2 = function (declaration) {
-            var e_3, _a;
+        var _loop_1 = function (declaration) {
+            var e_2, _a;
             var report = function (message, span) {
                 results.push({
                     kind: DiagnosticKind$1.Error,
@@ -29069,12 +29025,12 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                     report(error.message, error.span);
                 }
             }
-            catch (e_3_1) { e_3 = { error: e_3_1 }; }
+            catch (e_2_1) { e_2 = { error: e_2_1 }; }
             finally {
                 try {
                     if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
-                finally { if (e_3) throw e_3.error; }
+                finally { if (e_2) throw e_2.error; }
             }
             if (declaration.metadata) {
                 if (declaration.metadata.isComponent) {
@@ -29105,15 +29061,15 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         try {
             for (var declarations_1 = __values(declarations), declarations_1_1 = declarations_1.next(); !declarations_1_1.done; declarations_1_1 = declarations_1.next()) {
                 var declaration = declarations_1_1.value;
-                _loop_2(declaration);
+                _loop_1(declaration);
             }
         }
-        catch (e_2_1) { e_2 = { error: e_2_1 }; }
+        catch (e_1_1) { e_1 = { error: e_1_1 }; }
         finally {
             try {
                 if (declarations_1_1 && !declarations_1_1.done && (_a = declarations_1.return)) _a.call(declarations_1);
             }
-            finally { if (e_2) throw e_2.error; }
+            finally { if (e_1) throw e_1.error; }
         }
         return results;
     }
@@ -29169,7 +29125,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             var results = [];
             var templates = this.host.getTemplates(fileName);
             if (templates && templates.length) {
-                results.push.apply(results, __spread(getTemplateDiagnostics(fileName, this, templates)));
+                results.push.apply(results, __spread(this.getTemplateDiagnostics(fileName, templates)));
             }
             var declarations = this.host.getDeclarations(fileName);
             if (declarations && declarations.length) {
@@ -29179,101 +29135,79 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             return uniqueBySpan(results);
         };
         LanguageServiceImpl.prototype.getPipesAt = function (fileName, position) {
-            var templateInfo = this.getTemplateAstAtPosition(fileName, position);
+            var templateInfo = this.host.getTemplateAstAtPosition(fileName, position);
             if (templateInfo) {
                 return templateInfo.pipes;
             }
             return [];
         };
         LanguageServiceImpl.prototype.getCompletionsAt = function (fileName, position) {
-            var templateInfo = this.getTemplateAstAtPosition(fileName, position);
+            var templateInfo = this.host.getTemplateAstAtPosition(fileName, position);
             if (templateInfo) {
                 return getTemplateCompletions(templateInfo);
             }
         };
         LanguageServiceImpl.prototype.getDefinitionAt = function (fileName, position) {
-            var templateInfo = this.getTemplateAstAtPosition(fileName, position);
+            var templateInfo = this.host.getTemplateAstAtPosition(fileName, position);
             if (templateInfo) {
                 return getDefinition(templateInfo);
             }
         };
         LanguageServiceImpl.prototype.getHoverAt = function (fileName, position) {
-            var templateInfo = this.getTemplateAstAtPosition(fileName, position);
+            var templateInfo = this.host.getTemplateAstAtPosition(fileName, position);
             if (templateInfo) {
                 return getHover(templateInfo);
             }
         };
-        LanguageServiceImpl.prototype.getTemplateAstAtPosition = function (fileName, position) {
-            var template = this.host.getTemplateAt(fileName, position);
-            if (template) {
-                var astResult = this.getTemplateAst(template, fileName);
-                if (astResult && astResult.htmlAst && astResult.templateAst && astResult.directive &&
-                    astResult.directives && astResult.pipes && astResult.expressionParser)
-                    return {
-                        position: position,
-                        fileName: fileName,
-                        template: template,
-                        htmlAst: astResult.htmlAst,
-                        directive: astResult.directive,
-                        directives: astResult.directives,
-                        pipes: astResult.pipes,
-                        templateAst: astResult.templateAst,
-                        expressionParser: astResult.expressionParser
-                    };
-            }
-            return undefined;
-        };
-        LanguageServiceImpl.prototype.getTemplateAst = function (template, contextFile) {
-            var _this = this;
-            var result = undefined;
-            try {
-                var resolvedMetadata = this.metadataResolver.getNonNormalizedDirectiveMetadata(template.type);
-                var metadata = resolvedMetadata && resolvedMetadata.metadata;
-                if (metadata) {
-                    var rawHtmlParser = new HtmlParser();
-                    var htmlParser = new I18NHtmlParser(rawHtmlParser);
-                    var expressionParser = new Parser$1(new Lexer());
-                    var config = new CompilerConfig();
-                    var parser = new TemplateParser(config, this.host.resolver.getReflector(), expressionParser, new DomElementSchemaRegistry(), htmlParser, null, []);
-                    var htmlResult = htmlParser.parse(template.source, '', { tokenizeExpansionForms: true });
-                    var analyzedModules = this.host.getAnalyzedModules();
-                    var errors = undefined;
-                    var ngModule = analyzedModules.ngModuleByPipeOrDirective.get(template.type);
-                    if (!ngModule) {
-                        // Reported by the the declaration diagnostics.
-                        ngModule = findSuitableDefaultModule(analyzedModules);
+        LanguageServiceImpl.prototype.getTemplateDiagnostics = function (fileName, templates) {
+            var e_1, _a;
+            var results = [];
+            var _loop_1 = function (template) {
+                var ast = this_1.host.getTemplateAst(template, fileName);
+                if (ast) {
+                    if (ast.parseErrors && ast.parseErrors.length) {
+                        results.push.apply(results, __spread(ast.parseErrors.map(function (e) { return ({
+                            kind: DiagnosticKind$1.Error,
+                            span: offsetSpan$1(spanOf$2(e.span), template.span.start),
+                            message: e.msg
+                        }); })));
                     }
-                    if (ngModule) {
-                        var resolvedDirectives = ngModule.transitiveModule.directives.map(function (d) { return _this.host.resolver.getNonNormalizedDirectiveMetadata(d.reference); });
-                        var directives = removeMissing(resolvedDirectives).map(function (d) { return d.metadata.toSummary(); });
-                        var pipes = ngModule.transitiveModule.pipes.map(function (p) { return _this.host.resolver.getOrLoadPipeMetadata(p.reference).toSummary(); });
-                        var schemas = ngModule.schemas;
-                        var parseResult = parser.tryParseHtml(htmlResult, metadata, directives, pipes, schemas);
-                        result = {
-                            htmlAst: htmlResult.rootNodes,
-                            templateAst: parseResult.templateAst,
-                            directive: metadata, directives: directives, pipes: pipes,
-                            parseErrors: parseResult.errors, expressionParser: expressionParser, errors: errors
+                    else if (ast.templateAst && ast.htmlAst) {
+                        var info = {
+                            templateAst: ast.templateAst,
+                            htmlAst: ast.htmlAst,
+                            offset: template.span.start,
+                            query: template.query,
+                            members: template.members
                         };
+                        var expressionDiagnostics = getTemplateExpressionDiagnostics(info);
+                        results.push.apply(results, __spread(expressionDiagnostics));
+                    }
+                    if (ast.errors) {
+                        results.push.apply(results, __spread(ast.errors.map(function (e) { return ({ kind: e.kind, span: e.span || template.span, message: e.message }); })));
                     }
                 }
-            }
-            catch (e) {
-                var span = template.span;
-                if (e.fileName == contextFile) {
-                    span = template.query.getSpanAt(e.line, e.column) || span;
+            };
+            var this_1 = this;
+            try {
+                for (var templates_1 = __values(templates), templates_1_1 = templates_1.next(); !templates_1_1.done; templates_1_1 = templates_1.next()) {
+                    var template = templates_1_1.value;
+                    _loop_1(template);
                 }
-                result = { errors: [{ kind: DiagnosticKind$1.Error, message: e.message, span: span }] };
             }
-            return result || {};
+            catch (e_1_1) { e_1 = { error: e_1_1 }; }
+            finally {
+                try {
+                    if (templates_1_1 && !templates_1_1.done && (_a = templates_1.return)) _a.call(templates_1);
+                }
+                finally { if (e_1) throw e_1.error; }
+            }
+            return results;
         };
         return LanguageServiceImpl;
     }());
-    function removeMissing(values) {
-        return values.filter(function (e) { return !!e; });
-    }
     function uniqueBySpan(elements) {
-        var e_1, _a;
+        var e_2, _a;
         if (elements) {
             var result = [];
             var map = new Map();
@@ -29292,38 +29226,15 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                     }
                 }
             }
-            catch (e_1_1) { e_1 = { error: e_1_1 }; }
+            catch (e_2_1) { e_2 = { error: e_2_1 }; }
             finally {
                 try {
                     if (elements_1_1 && !elements_1_1.done && (_a = elements_1.return)) _a.call(elements_1);
                 }
-                finally { if (e_1) throw e_1.error; }
+                finally { if (e_2) throw e_2.error; }
             }
             return result;
         }
-    }
-    function findSuitableDefaultModule(modules) {
-        var e_2, _a;
-        var result = undefined;
-        var resultSize = 0;
-        try {
-            for (var _b = __values(modules.ngModules), _c = _b.next(); !_c.done; _c = _b.next()) {
-                var module_1 = _c.value;
-                var moduleSize = module_1.transitiveModule.directives.length;
-                if (moduleSize > resultSize) {
-                    result = module_1;
-                    resultSize = moduleSize;
-                }
-            }
-        }
-        catch (e_2_1) { e_2 = { error: e_2_1 }; }
-        finally {
-            try {
-                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-            }
-            finally { if (e_2) throw e_2.error; }
-        }
-        return result;
     }
 
     /**
@@ -38696,7 +38607,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.1.0-next.3+2.sha-c34abf2.with-local-changes');
+    var VERSION$2 = new Version$1('8.1.0-next.3+3.sha-4ec5081.with-local-changes');
 
     /**
      * @license
@@ -48662,7 +48573,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
     function createLanguageServiceFromTypescript(host, service) {
         var ngHost = new TypeScriptServiceHost(host, service);
         var ngServer = createLanguageService(ngHost);
-        ngHost.setSite(ngServer);
         return ngServer;
     }
     /**
@@ -48707,7 +48617,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this.modulesOutOfDate = true;
             this.fileVersions = new Map();
         }
-        TypeScriptServiceHost.prototype.setSite = function (service) { this.service = service; };
         Object.defineProperty(TypeScriptServiceHost.prototype, "resolver", {
             /**
              * Angular LanguageServiceHost implementation
@@ -48965,7 +48874,11 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                     },
                     get query() {
                         if (!queryCache) {
-                            var pipes_1 = t.service.getPipesAt(fileName, node.getStart());
+                            var pipes_1 = [];
+                            var templateInfo = t.getTemplateAstAtPosition(fileName, node.getStart());
+                            if (templateInfo) {
+                                pipes_1 = templateInfo.pipes;
+                            }
                             queryCache = getSymbolQuery(t.program, t.checker, sourceFile, function () { return getPipesTable(sourceFile, t.program, t.checker, pipes_1); });
                         }
                         return queryCache;
@@ -49220,9 +49133,98 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             }
             return find(sourceFile);
         };
+        TypeScriptServiceHost.prototype.getTemplateAstAtPosition = function (fileName, position) {
+            var template = this.getTemplateAt(fileName, position);
+            if (template) {
+                var astResult = this.getTemplateAst(template, fileName);
+                if (astResult && astResult.htmlAst && astResult.templateAst && astResult.directive &&
+                    astResult.directives && astResult.pipes && astResult.expressionParser)
+                    return {
+                        position: position,
+                        fileName: fileName,
+                        template: template,
+                        htmlAst: astResult.htmlAst,
+                        directive: astResult.directive,
+                        directives: astResult.directives,
+                        pipes: astResult.pipes,
+                        templateAst: astResult.templateAst,
+                        expressionParser: astResult.expressionParser
+                    };
+            }
+            return undefined;
+        };
+        TypeScriptServiceHost.prototype.getTemplateAst = function (template, contextFile) {
+            var _this = this;
+            var result = undefined;
+            try {
+                var resolvedMetadata = this.resolver.getNonNormalizedDirectiveMetadata(template.type);
+                var metadata = resolvedMetadata && resolvedMetadata.metadata;
+                if (metadata) {
+                    var rawHtmlParser = new HtmlParser();
+                    var htmlParser = new I18NHtmlParser(rawHtmlParser);
+                    var expressionParser = new Parser$1(new Lexer());
+                    var config = new CompilerConfig();
+                    var parser = new TemplateParser(config, this.resolver.getReflector(), expressionParser, new DomElementSchemaRegistry(), htmlParser, null, []);
+                    var htmlResult = htmlParser.parse(template.source, '', { tokenizeExpansionForms: true });
+                    var analyzedModules = this.getAnalyzedModules();
+                    var errors = undefined;
+                    var ngModule = analyzedModules.ngModuleByPipeOrDirective.get(template.type);
+                    if (!ngModule) {
+                        // Reported by the the declaration diagnostics.
+                        ngModule = findSuitableDefaultModule(analyzedModules);
+                    }
+                    if (ngModule) {
+                        var directives = ngModule.transitiveModule.directives
+                            .map(function (d) { return _this.resolver.getNonNormalizedDirectiveMetadata(d.reference); })
+                            .filter(function (d) { return d; })
+                            .map(function (d) { return d.metadata.toSummary(); });
+                        var pipes = ngModule.transitiveModule.pipes.map(function (p) { return _this.resolver.getOrLoadPipeMetadata(p.reference).toSummary(); });
+                        var schemas = ngModule.schemas;
+                        var parseResult = parser.tryParseHtml(htmlResult, metadata, directives, pipes, schemas);
+                        result = {
+                            htmlAst: htmlResult.rootNodes,
+                            templateAst: parseResult.templateAst,
+                            directive: metadata, directives: directives, pipes: pipes,
+                            parseErrors: parseResult.errors, expressionParser: expressionParser, errors: errors
+                        };
+                    }
+                }
+            }
+            catch (e) {
+                var span = template.span;
+                if (e.fileName == contextFile) {
+                    span = template.query.getSpanAt(e.line, e.column) || span;
+                }
+                result = { errors: [{ kind: DiagnosticKind$1.Error, message: e.message, span: span }] };
+            }
+            return result || {};
+        };
         TypeScriptServiceHost.missingTemplate = [undefined, undefined];
         return TypeScriptServiceHost;
     }());
+    function findSuitableDefaultModule(modules) {
+        var e_5, _a;
+        var result = undefined;
+        var resultSize = 0;
+        try {
+            for (var _b = __values(modules.ngModules), _c = _b.next(); !_c.done; _c = _b.next()) {
+                var module_2 = _c.value;
+                var moduleSize = module_2.transitiveModule.directives.length;
+                if (moduleSize > resultSize) {
+                    result = module_2;
+                    resultSize = moduleSize;
+                }
+            }
+        }
+        catch (e_5_1) { e_5 = { error: e_5_1 }; }
+        finally {
+            try {
+                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+            }
+            finally { if (e_5) throw e_5.error; }
+        }
+        return result;
+    }
     function findTsConfig(fileName) {
         var dir = path.dirname(fileName);
         while (fs.existsSync(dir)) {
@@ -49331,7 +49333,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         }
         var serviceHost = new TypeScriptServiceHost(info.languageServiceHost, oldLS);
         var ls = createLanguageService(serviceHost);
-        serviceHost.setSite(ls);
         projectHostMap.set(info.project, serviceHost);
         proxy.getCompletionsAtPosition = function (fileName, position, options) {
             var base = oldLS.getCompletionsAtPosition(fileName, position, options) || {
@@ -49470,7 +49471,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.1.0-next.3+2.sha-c34abf2.with-local-changes');
+    var VERSION$3 = new Version$1('8.1.0-next.3+3.sha-4ec5081.with-local-changes');
 
     /**
      * @license
