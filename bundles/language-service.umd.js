@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.1.0-next.3+16.sha-f221908.with-local-changes
+ * @license Angular v8.1.0-next.3+15.sha-70ad91e.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -17018,7 +17018,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         var interpolationConfig = options.interpolationConfig, preserveWhitespaces = options.preserveWhitespaces;
         var bindingParser = makeBindingParser(interpolationConfig);
         var htmlParser = new HtmlParser();
-        var parseResult = htmlParser.parse(template, templateUrl, __assign({ leadingTriviaChars: LEADING_TRIVIA_CHARS }, options, { tokenizeExpansionForms: true }));
+        var parseResult = htmlParser.parse(template, templateUrl, __assign({}, options, { tokenizeExpansionForms: true, leadingTriviaChars: LEADING_TRIVIA_CHARS }));
         if (parseResult.errors && parseResult.errors.length > 0) {
             return { errors: parseResult.errors, nodes: [], styleUrls: [], styles: [] };
         }
@@ -17986,7 +17986,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.1.0-next.3+16.sha-f221908.with-local-changes');
+    var VERSION$1 = new Version('8.1.0-next.3+15.sha-70ad91e.with-local-changes');
 
     /**
      * @license
@@ -47424,7 +47424,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.1.0-next.3+16.sha-f221908.with-local-changes');
+    var VERSION$2 = new Version$1('8.1.0-next.3+15.sha-70ad91e.with-local-changes');
 
     /**
      * @license
@@ -57314,8 +57314,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var SWITCH_IVY_ENABLED__POST_R3__ = true;
-    var ivyEnabled = SWITCH_IVY_ENABLED__POST_R3__;
 
     var _SEPARATOR = '#';
     var FACTORY_CLASS_SUFFIX = 'NgFactory';
@@ -57348,8 +57346,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this._config = config || DEFAULT_CONFIG;
         }
         SystemJsNgModuleLoader.prototype.load = function (path) {
-            var legacyOfflineMode = !ivyEnabled && this._compiler instanceof Compiler;
-            return legacyOfflineMode ? this.loadFactory(path) : this.loadAndCompile(path);
+            return this.loadAndCompile(path);
         };
         SystemJsNgModuleLoader.prototype.loadAndCompile = function (path) {
             var _this = this;
@@ -61114,7 +61111,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.1.0-next.3+16.sha-f221908.with-local-changes');
+    var VERSION$3 = new Version$1('8.1.0-next.3+15.sha-70ad91e.with-local-changes');
 
     /**
      * @license
