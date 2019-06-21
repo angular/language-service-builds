@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.1.0-next.3+24.sha-3fb78aa.with-local-changes
+ * @license Angular v8.1.0-next.3+25.sha-7ff628f.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -3392,7 +3392,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         Identifiers.templateCreate = { name: 'ɵɵtemplate', moduleName: CORE$1 };
         Identifiers.text = { name: 'ɵɵtext', moduleName: CORE$1 };
         Identifiers.textBinding = { name: 'ɵɵtextBinding', moduleName: CORE$1 };
-        Identifiers.bind = { name: 'ɵɵbind', moduleName: CORE$1 };
         Identifiers.enableBindings = { name: 'ɵɵenableBindings', moduleName: CORE$1 };
         Identifiers.disableBindings = { name: 'ɵɵdisableBindings', moduleName: CORE$1 };
         Identifiers.allocHostVars = { name: 'ɵɵallocHostVars', moduleName: CORE$1 };
@@ -15801,7 +15800,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             var _a = this.i18n, index = _a.index, bindings = _a.bindings;
             if (bindings.size) {
                 bindings.forEach(function (binding) {
-                    _this.updateInstruction(index, span, Identifiers$1.i18nExp, function () { return [_this.convertPropertyBinding(binding, /* skipBindFn */ true)]; });
+                    _this.updateInstruction(index, span, Identifiers$1.i18nExp, function () { return [_this.convertPropertyBinding(binding)]; });
                 });
                 this.updateInstruction(index, span, Identifiers$1.i18nApply, [literal(index)]);
             }
@@ -15985,7 +15984,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                                 i18nAttrArgs_1.push(literal(attr.name), _this.i18nTranslate(message, params));
                                 converted.expressions.forEach(function (expression) {
                                     hasBindings_1 = true;
-                                    _this.updateInstruction(elementIndex, element.sourceSpan, Identifiers$1.i18nExp, function () { return [_this.convertExpressionBinding(expression, /* skipBindFn */ true)]; });
+                                    _this.updateInstruction(elementIndex, element.sourceSpan, Identifiers$1.i18nExp, function () { return [_this.convertExpressionBinding(expression)]; });
                                 });
                             }
                         }
@@ -16051,8 +16050,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                     propertyBindings.push({
                         name: prepareSyntheticPropertyName(input.name),
                         input: input,
-                        value: function () { return hasValue_1 ? _this.convertPropertyBinding(value_1, /* skipBindFn */ true) :
-                            emptyValueBindInstruction; }
+                        value: function () { return hasValue_1 ? _this.convertPropertyBinding(value_1) : emptyValueBindInstruction; }
                     });
                 }
                 else {
@@ -16088,11 +16086,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                             else {
                                 // [prop]="value"
                                 // Collect all the properties so that we can chain into a single function at the end.
-                                propertyBindings.push({
-                                    name: attrName_1,
-                                    input: input,
-                                    value: function () { return _this.convertPropertyBinding(value_2, true); }, params: params_2
-                                });
+                                propertyBindings.push({ name: attrName_1, input: input, value: function () { return _this.convertPropertyBinding(value_2); }, params: params_2 });
                             }
                         }
                         else if (inputType === 1 /* Attribute */) {
@@ -16144,9 +16138,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         TemplateDefinitionBuilder.prototype.boundUpdateInstruction = function (instruction, elementIndex, attrName, input, value, params) {
             var _this = this;
             this.updateInstruction(elementIndex, input.sourceSpan, instruction, function () {
-                return __spread([
-                    literal(attrName), _this.convertPropertyBinding(value, /* skipBindFn */ true)
-                ], params);
+                return __spread([literal(attrName), _this.convertPropertyBinding(value)], params);
             });
         };
         /**
@@ -16297,11 +16289,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                     var value_4 = input.value.visit(_this._valueConverter);
                     if (value_4 !== undefined) {
                         _this.allocateBindingSlots(value_4);
-                        propertyBindings.push({
-                            name: input.name,
-                            input: input,
-                            value: function () { return _this.convertPropertyBinding(value_4, /* skipBindFn */ true); }
-                        });
+                        propertyBindings.push({ name: input.name, input: input, value: function () { return _this.convertPropertyBinding(value_4); } });
                     }
                 }
             });
@@ -16323,7 +16311,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         TemplateDefinitionBuilder.prototype.processStylingInstruction = function (elementIndex, instruction, createMode) {
             var _this = this;
             if (instruction) {
-                var paramsFn = function () { return instruction.buildParams(function (value) { return _this.convertPropertyBinding(value, /* skipBindFn */ true); }); };
+                var paramsFn = function () { return instruction.buildParams(function (value) { return _this.convertPropertyBinding(value); }); };
                 if (createMode) {
                     this.creationInstruction(instruction.sourceSpan, instruction.reference, paramsFn);
                 }
@@ -16379,19 +16367,17 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 variable(CONTEXT_NAME) :
                 this._bindingScope.getOrCreateSharedContextVar(0);
         };
-        TemplateDefinitionBuilder.prototype.convertExpressionBinding = function (value, skipBindFn) {
+        TemplateDefinitionBuilder.prototype.convertExpressionBinding = function (value) {
             var convertedPropertyBinding = convertPropertyBinding(this, this.getImplicitReceiverExpr(), value, this.bindingContext(), BindingForm.TrySimple);
-            var valExpr = convertedPropertyBinding.currValExpr;
-            return skipBindFn ? valExpr : importExpr(Identifiers$1.bind).callFn([valExpr]);
+            return convertedPropertyBinding.currValExpr;
         };
-        TemplateDefinitionBuilder.prototype.convertPropertyBinding = function (value, skipBindFn) {
+        TemplateDefinitionBuilder.prototype.convertPropertyBinding = function (value) {
             var _a;
             var interpolationFn = value instanceof Interpolation ? interpolate : function () { return error('Unexpected interpolation'); };
             var convertedPropertyBinding = convertPropertyBinding(this, this.getImplicitReceiverExpr(), value, this.bindingContext(), BindingForm.TrySimple, interpolationFn);
             var valExpr = convertedPropertyBinding.currValExpr;
             (_a = this._tempVariables).push.apply(_a, __spread(convertedPropertyBinding.stmts));
-            return value instanceof Interpolation || skipBindFn ? valExpr :
-                importExpr(Identifiers$1.bind).callFn([valExpr]);
+            return valExpr;
         };
         /**
          * Gets a list of argument expressions to pass to an update instruction expression. Also updates
@@ -18004,7 +17990,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.1.0-next.3+24.sha-3fb78aa.with-local-changes');
+    var VERSION$1 = new Version('8.1.0-next.3+25.sha-7ff628f.with-local-changes');
 
     /**
      * @license
@@ -38654,7 +38640,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.1.0-next.3+24.sha-3fb78aa.with-local-changes');
+    var VERSION$2 = new Version$1('8.1.0-next.3+25.sha-7ff628f.with-local-changes');
 
     /**
      * @license
@@ -49518,7 +49504,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.1.0-next.3+24.sha-3fb78aa.with-local-changes');
+    var VERSION$3 = new Version$1('8.1.0-next.3+25.sha-7ff628f.with-local-changes');
 
     /**
      * @license
