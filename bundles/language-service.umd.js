@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.1.0-next.3+44.sha-fcb03ab.with-local-changes
+ * @license Angular v8.1.0-next.3+45.sha-23c0171.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -16016,6 +16016,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             // TODO (matsko): revisit this once FW-959 is approached
             var emptyValueBindInstruction = literal(undefined);
             var propertyBindings = [];
+            var attributeBindings = [];
             // Generate element input bindings
             allOtherInputs.forEach(function (input) {
                 var inputType = input.type;
@@ -16080,9 +16081,14 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                                 _this.interpolatedUpdateInstruction(getAttributeInterpolationExpression(value_2), elementIndex, attrName_1, input, value_2, params_2);
                             }
                             else {
-                                var boundValue = value_2 instanceof Interpolation ? value_2.expressions[0] : value_2;
+                                var boundValue_1 = value_2 instanceof Interpolation ? value_2.expressions[0] : value_2;
                                 // [attr.name]="value" or attr.name="{{value}}"
-                                _this.boundUpdateInstruction(Identifiers$1.attribute, elementIndex, attrName_1, input, boundValue, params_2);
+                                // Collect the attribute bindings so that they can be chained at the end.
+                                attributeBindings.push({
+                                    name: attrName_1,
+                                    input: input,
+                                    value: function () { return _this.convertPropertyBinding(boundValue_1); }, params: params_2
+                                });
                             }
                         }
                         else {
@@ -16097,7 +16103,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 }
             });
             if (propertyBindings.length > 0) {
-                this.propertyInstructionChain(elementIndex, propertyBindings);
+                this.updateInstructionChain(elementIndex, Identifiers$1.property, propertyBindings);
+            }
+            if (attributeBindings.length > 0) {
+                this.updateInstructionChain(elementIndex, Identifiers$1.attribute, attributeBindings);
             }
             // Traverse element child nodes
             visitAll(this, element.children);
@@ -16279,7 +16288,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 }
             });
             if (propertyBindings.length > 0) {
-                this.propertyInstructionChain(templateIndex, propertyBindings);
+                this.updateInstructionChain(templateIndex, Identifiers$1.property, propertyBindings);
             }
         };
         // Bindings must only be resolved after all local refs have been visited, so all
@@ -16312,16 +16321,12 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             this.addSelectInstructionIfNecessary(nodeIndex, span);
             this.instructionFn(this._updateCodeFns, span, reference, paramsOrFn || []);
         };
-        TemplateDefinitionBuilder.prototype.updateInstructionChain = function (nodeIndex, span, reference, callsOrFn) {
+        TemplateDefinitionBuilder.prototype.updateInstructionChain = function (nodeIndex, reference, bindings) {
+            var span = bindings.length ? bindings[0].input.sourceSpan : null;
             this.addSelectInstructionIfNecessary(nodeIndex, span);
             this._updateCodeFns.push(function () {
-                var calls = typeof callsOrFn === 'function' ? callsOrFn() : callsOrFn;
-                return chainedInstruction(span, reference, calls || []).toStmt();
-            });
-        };
-        TemplateDefinitionBuilder.prototype.propertyInstructionChain = function (nodeIndex, propertyBindings) {
-            this.updateInstructionChain(nodeIndex, propertyBindings.length ? propertyBindings[0].input.sourceSpan : null, Identifiers$1.property, function () {
-                return propertyBindings.map(function (property) { return __spread([literal(property.name), property.value()], (property.params || [])); });
+                var calls = bindings.map(function (property) { return __spread([literal(property.name), property.value()], (property.params || [])); });
+                return chainedInstruction(span, reference, calls).toStmt();
             });
         };
         TemplateDefinitionBuilder.prototype.addSelectInstructionIfNecessary = function (nodeIndex, span) {
@@ -17975,7 +17980,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.1.0-next.3+44.sha-fcb03ab.with-local-changes');
+    var VERSION$1 = new Version('8.1.0-next.3+45.sha-23c0171.with-local-changes');
 
     /**
      * @license
@@ -41847,8 +41852,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         // TODO(FW-1340): Refactor to remove the use of other instructions here.
         var bound = bind(lView, value);
         if (bound !== NO_CHANGE) {
-            return elementAttributeInternal(index, name, bound, lView, sanitizer, namespace);
+            elementAttributeInternal(index, name, bound, lView, sanitizer, namespace);
         }
+        return ɵɵattribute;
     }
 
     /**
@@ -47439,7 +47445,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.1.0-next.3+44.sha-fcb03ab.with-local-changes');
+    var VERSION$2 = new Version$1('8.1.0-next.3+45.sha-23c0171.with-local-changes');
 
     /**
      * @license
@@ -57329,8 +57335,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var SWITCH_IVY_ENABLED__POST_R3__ = true;
-    var ivyEnabled = SWITCH_IVY_ENABLED__POST_R3__;
 
     var _SEPARATOR = '#';
     var FACTORY_CLASS_SUFFIX = 'NgFactory';
@@ -57363,8 +57367,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this._config = config || DEFAULT_CONFIG;
         }
         SystemJsNgModuleLoader.prototype.load = function (path) {
-            var legacyOfflineMode = !ivyEnabled && this._compiler instanceof Compiler;
-            return legacyOfflineMode ? this.loadFactory(path) : this.loadAndCompile(path);
+            return this.loadAndCompile(path);
         };
         SystemJsNgModuleLoader.prototype.loadAndCompile = function (path) {
             var _this = this;
@@ -61129,7 +61132,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.1.0-next.3+44.sha-fcb03ab.with-local-changes');
+    var VERSION$3 = new Version$1('8.1.0-next.3+45.sha-23c0171.with-local-changes');
 
     /**
      * @license
