@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.1.0-next.3+40.sha-a4fc98c.with-local-changes
+ * @license Angular v8.1.0-next.3+44.sha-fcb03ab.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -17975,7 +17975,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.1.0-next.3+40.sha-a4fc98c.with-local-changes');
+    var VERSION$1 = new Version('8.1.0-next.3+44.sha-fcb03ab.with-local-changes');
 
     /**
      * @license
@@ -47281,6 +47281,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         }
         return null;
     }
+    /** Returns a Renderer2 (or throws when application was bootstrapped with Renderer3) */
     function getOrCreateRenderer2(view) {
         var renderer = view[RENDERER];
         if (isProceduralRenderer(renderer)) {
@@ -47290,9 +47291,14 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             throw new Error('Cannot inject Renderer2 when the application uses Renderer3!');
         }
     }
-    /** Returns a Renderer2 (or throws when application was bootstrapped with Renderer3) */
+    /** Injects a Renderer2 for the current component. */
     function injectRenderer2() {
-        return getOrCreateRenderer2(getLView());
+        // We need the Renderer to be based on the component that it's being injected into, however since
+        // DI happens before we've entered its view, `getLView` will return the parent view instead.
+        var lView = getLView();
+        var tNode = getPreviousOrParentTNode();
+        var nodeAtIndex = getComponentViewByIndex(tNode.index, lView);
+        return getOrCreateRenderer2(isLView(nodeAtIndex) ? nodeAtIndex : lView);
     }
 
     /**
@@ -47433,7 +47439,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.1.0-next.3+40.sha-a4fc98c.with-local-changes');
+    var VERSION$2 = new Version$1('8.1.0-next.3+44.sha-fcb03ab.with-local-changes');
 
     /**
      * @license
@@ -61123,7 +61129,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.1.0-next.3+40.sha-a4fc98c.with-local-changes');
+    var VERSION$3 = new Version$1('8.1.0-next.3+44.sha-fcb03ab.with-local-changes');
 
     /**
      * @license
