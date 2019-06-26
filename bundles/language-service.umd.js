@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.1.0-next.3+101.sha-e01d697.with-local-changes
+ * @license Angular v8.1.0-next.3+106.sha-2be061a.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -15801,10 +15801,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             if (bindings.size) {
                 var chainBindings_1 = [];
                 bindings.forEach(function (binding) {
-                    chainBindings_1.push({
-                        sourceSpan: span,
-                        value: function () { return _this.convertPropertyBinding(binding); }
-                    });
+                    chainBindings_1.push({ sourceSpan: span, value: function () { return _this.convertPropertyBinding(binding); } });
                 });
                 this.updateInstructionChain(index, Identifiers$1.i18nExp, chainBindings_1);
                 this.updateInstruction(index, span, Identifiers$1.i18nApply, [literal(index)]);
@@ -16099,7 +16096,11 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                             else {
                                 // [prop]="value"
                                 // Collect all the properties so that we can chain into a single function at the end.
-                                propertyBindings.push({ name: attrName_1, sourceSpan: input.sourceSpan, value: function () { return _this.convertPropertyBinding(value_2); }, params: params_2 });
+                                propertyBindings.push({
+                                    name: attrName_1,
+                                    sourceSpan: input.sourceSpan,
+                                    value: function () { return _this.convertPropertyBinding(value_2); }, params: params_2
+                                });
                             }
                         }
                         else if (inputType === 1 /* Attribute */) {
@@ -16300,7 +16301,11 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                     var value_4 = input.value.visit(_this._valueConverter);
                     if (value_4 !== undefined) {
                         _this.allocateBindingSlots(value_4);
-                        propertyBindings.push({ name: input.name, sourceSpan: input.sourceSpan, value: function () { return _this.convertPropertyBinding(value_4); } });
+                        propertyBindings.push({
+                            name: input.name,
+                            sourceSpan: input.sourceSpan,
+                            value: function () { return _this.convertPropertyBinding(value_4); }
+                        });
                     }
                 }
             });
@@ -18003,7 +18008,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.1.0-next.3+101.sha-e01d697.with-local-changes');
+    var VERSION$1 = new Version('8.1.0-next.3+106.sha-2be061a.with-local-changes');
 
     /**
      * @license
@@ -37467,8 +37472,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         }
     }
     /**
-     * `executeActionOnProjection` performs an operation on the projection specified by `action` (insert,
-     * detach, destroy)
+     * `executeActionOnProjection` performs an operation on the projection specified by `action`
+     * (insert, detach, destroy).
      *
      * Inserting a projection requires us to locate the projected nodes from the parent component. The
      * complication is that those nodes themselves could be re-projected from their parent component.
@@ -37531,8 +37536,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         }
     }
     /**
-     * `executeActionOnElementContainer` performs an operation on the ng-container node and its child nodes
-     * as specified by the `action` (insert, detach, destroy)
+     * `executeActionOnElementContainer` performs an operation on the ng-container node and its child
+     * nodes as specified by the `action` (insert, detach, destroy).
      *
      * @param renderer Renderer to use
      * @param action action to perform (insert, detach, destroy)
@@ -38659,7 +38664,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.1.0-next.3+101.sha-e01d697.with-local-changes');
+    var VERSION$2 = new Version$1('8.1.0-next.3+106.sha-2be061a.with-local-changes');
 
     /**
      * @license
@@ -49526,7 +49531,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.1.0-next.3+101.sha-e01d697.with-local-changes');
+    var VERSION$3 = new Version$1('8.1.0-next.3+106.sha-2be061a.with-local-changes');
 
     /**
      * @license
