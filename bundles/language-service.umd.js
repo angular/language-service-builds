@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.1.0-rc.0+1.sha-d7b4172.with-local-changes
+ * @license Angular v8.1.0-rc.0+3.sha-6c0cca0.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18008,7 +18008,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.1.0-rc.0+1.sha-d7b4172.with-local-changes');
+    var VERSION$1 = new Version('8.1.0-rc.0+3.sha-6c0cca0.with-local-changes');
 
     /**
      * @license
@@ -33106,12 +33106,19 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     }
     var _currentNamespace = null;
     /**
-     * Sets the namespace used to create elements no `null`, which forces element creation to use
+     * Sets the namespace used to create elements to `null`, which forces element creation to use
      * `createElement` rather than `createElementNS`.
      *
      * @codeGenApi
      */
     function ɵɵnamespaceHTML() {
+        namespaceHTMLInternal();
+    }
+    /**
+     * Sets the namespace used to create elements to `null`, which forces element creation to use
+     * `createElement` rather than `createElementNS`.
+     */
+    function namespaceHTMLInternal() {
         _currentNamespace = null;
     }
     function getNamespace() {
@@ -38664,7 +38671,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.1.0-rc.0+1.sha-d7b4172.with-local-changes');
+    var VERSION$2 = new Version$1('8.1.0-rc.0+3.sha-6c0cca0.with-local-changes');
 
     /**
      * @license
@@ -41596,6 +41603,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             var rootViewInjector = ngModule ? createChainedInjector(injector, ngModule.injector) : injector;
             var rendererFactory = rootViewInjector.get(RendererFactory2, domRendererFactory3);
             var sanitizer = rootViewInjector.get(Sanitizer, null);
+            // Ensure that the namespace for the root node is correct,
+            // otherwise the browser might not render out the element properly.
+            namespaceHTMLInternal();
             var hostRNode = isInternalRootView ?
                 elementCreate(this.selector, rendererFactory.createRenderer(null, this.componentDef)) :
                 locateHostElement(rendererFactory, rootSelectorOrNode);
@@ -45708,6 +45718,8 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    var SWITCH_IVY_ENABLED__PRE_R3__ = false;
+    var ivyEnabled = SWITCH_IVY_ENABLED__PRE_R3__;
 
     /**
      * @license
@@ -45747,7 +45759,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this._config = config || DEFAULT_CONFIG;
         }
         SystemJsNgModuleLoader.prototype.load = function (path) {
-            var legacyOfflineMode = this._compiler instanceof Compiler;
+            var legacyOfflineMode = !ivyEnabled && this._compiler instanceof Compiler;
             return legacyOfflineMode ? this.loadFactory(path) : this.loadAndCompile(path);
         };
         SystemJsNgModuleLoader.prototype.loadAndCompile = function (path) {
@@ -49529,7 +49541,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.1.0-rc.0+1.sha-d7b4172.with-local-changes');
+    var VERSION$3 = new Version$1('8.1.0-rc.0+3.sha-6c0cca0.with-local-changes');
 
     /**
      * @license
