@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.1.0-rc.0+12.sha-d171006.with-local-changes
+ * @license Angular v8.1.0-rc.0+14.sha-4f38419.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -17993,7 +17993,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.1.0-rc.0+12.sha-d171006.with-local-changes');
+    var VERSION$1 = new Version('8.1.0-rc.0+14.sha-4f38419.with-local-changes');
 
     /**
      * @license
@@ -43256,20 +43256,20 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         }
     }
     /**
-     * `executeActionOnElementContainer` performs an operation on the ng-container node and its child
-     * nodes as specified by the `action` (insert, detach, destroy).
+     * `executeActionOnElementContainerOrIcuContainer` performs an operation on the ng-container node
+     * and its child nodes as specified by the `action` (insert, detach, destroy).
      *
      * @param renderer Renderer to use
      * @param action action to perform (insert, detach, destroy)
      * @param lView The LView which needs to be inserted, detached, destroyed.
-     * @param tElementContainerNode The TNode associated with the ElementContainer.
+     * @param tNode The TNode associated with the `ElementContainer` or `IcuContainer`.
      * @param renderParent parent DOM element for insertion/removal.
      * @param beforeNode Before which node the insertions should happen.
      */
-    function executeActionOnElementContainer(renderer, action, lView, tElementContainerNode, renderParent, beforeNode) {
-        var node = lView[tElementContainerNode.index];
+    function executeActionOnElementContainerOrIcuContainer(renderer, action, lView, tNode, renderParent, beforeNode) {
+        var node = lView[tNode.index];
         executeActionOnElementOrContainer(action, renderer, renderParent, node, beforeNode);
-        var childTNode = tElementContainerNode.child;
+        var childTNode = tNode.child;
         while (childTNode) {
             executeActionOnNode(renderer, action, lView, childTNode, renderParent, beforeNode);
             childTNode = childTNode.next;
@@ -43277,8 +43277,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     }
     function executeActionOnNode(renderer, action, lView, tNode, renderParent, beforeNode) {
         var elementContainerRootTNodeType = tNode.type;
-        if (elementContainerRootTNodeType === 4 /* ElementContainer */) {
-            executeActionOnElementContainer(renderer, action, lView, tNode, renderParent, beforeNode);
+        if (elementContainerRootTNodeType === 4 /* ElementContainer */ ||
+            elementContainerRootTNodeType === 5 /* IcuContainer */) {
+            executeActionOnElementContainerOrIcuContainer(renderer, action, lView, tNode, renderParent, beforeNode);
         }
         else if (elementContainerRootTNodeType === 1 /* Projection */) {
             executeActionOnProjection(renderer, action, lView, tNode, renderParent, beforeNode);
@@ -47476,7 +47477,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.1.0-rc.0+12.sha-d171006.with-local-changes');
+    var VERSION$2 = new Version$1('8.1.0-rc.0+14.sha-4f38419.with-local-changes');
 
     /**
      * @license
@@ -61175,7 +61176,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.1.0-rc.0+12.sha-d171006.with-local-changes');
+    var VERSION$3 = new Version$1('8.1.0-rc.0+14.sha-4f38419.with-local-changes');
 
     /**
      * @license
