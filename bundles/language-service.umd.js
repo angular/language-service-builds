@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.1.0-next.3+86.sha-4fe0e75.with-local-changes
+ * @license Angular v8.1.0-rc.0+2.sha-f2360aa.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -15801,10 +15801,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             if (bindings.size) {
                 var chainBindings_1 = [];
                 bindings.forEach(function (binding) {
-                    chainBindings_1.push({
-                        sourceSpan: span,
-                        value: function () { return _this.convertPropertyBinding(binding); }
-                    });
+                    chainBindings_1.push({ sourceSpan: span, value: function () { return _this.convertPropertyBinding(binding); } });
                 });
                 this.updateInstructionChain(index, Identifiers$1.i18nExp, chainBindings_1);
                 this.updateInstruction(index, span, Identifiers$1.i18nApply, [literal(index)]);
@@ -16099,7 +16096,11 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                             else {
                                 // [prop]="value"
                                 // Collect all the properties so that we can chain into a single function at the end.
-                                propertyBindings.push({ name: attrName_1, sourceSpan: input.sourceSpan, value: function () { return _this.convertPropertyBinding(value_2); }, params: params_2 });
+                                propertyBindings.push({
+                                    name: attrName_1,
+                                    sourceSpan: input.sourceSpan,
+                                    value: function () { return _this.convertPropertyBinding(value_2); }, params: params_2
+                                });
                             }
                         }
                         else if (inputType === 1 /* Attribute */) {
@@ -16300,7 +16301,11 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                     var value_4 = input.value.visit(_this._valueConverter);
                     if (value_4 !== undefined) {
                         _this.allocateBindingSlots(value_4);
-                        propertyBindings.push({ name: input.name, sourceSpan: input.sourceSpan, value: function () { return _this.convertPropertyBinding(value_4); } });
+                        propertyBindings.push({
+                            name: input.name,
+                            sourceSpan: input.sourceSpan,
+                            value: function () { return _this.convertPropertyBinding(value_4); }
+                        });
                     }
                 }
             });
@@ -18003,7 +18008,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.1.0-next.3+86.sha-4fe0e75.with-local-changes');
+    var VERSION$1 = new Version('8.1.0-rc.0+2.sha-f2360aa.with-local-changes');
 
     /**
      * @license
@@ -33077,8 +33082,11 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * the direction of traversal (up or down the view tree) a bit clearer.
      *
      * @param newView New state to become active
+     * @param safeToRunHooks Whether the runtime is in a state where running lifecycle hooks is valid.
+     * This is not always the case (for example, the application may have crashed and `leaveView` is
+     * being executed while unwinding the call stack).
      */
-    function leaveView(newView) {
+    function leaveView(newView, safeToRunHooks) {
         var tView = lView[TVIEW];
         if (isCreationMode(lView)) {
             lView[FLAGS] &= ~4 /* CreationMode */;
@@ -33086,7 +33094,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         else {
             try {
                 resetPreOrderHookFlags(lView);
-                executeHooks(lView, tView.viewHooks, tView.viewCheckHooks, checkNoChangesMode, 2 /* AfterViewInitHooksToBeRun */, undefined);
+                safeToRunHooks && executeHooks(lView, tView.viewHooks, tView.viewCheckHooks, checkNoChangesMode, 2 /* AfterViewInitHooksToBeRun */, undefined);
             }
             finally {
                 // Views are clean and in update mode after being checked, so these bits are cleared
@@ -33098,12 +33106,19 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     }
     var _currentNamespace = null;
     /**
-     * Sets the namespace used to create elements no `null`, which forces element creation to use
+     * Sets the namespace used to create elements to `null`, which forces element creation to use
      * `createElement` rather than `createElementNS`.
      *
      * @codeGenApi
      */
     function ɵɵnamespaceHTML() {
+        namespaceHTMLInternal();
+    }
+    /**
+     * Sets the namespace used to create elements to `null`, which forces element creation to use
+     * `createElement` rather than `createElementNS`.
+     */
+    function namespaceHTMLInternal() {
         _currentNamespace = null;
     }
     function getNamespace() {
@@ -36375,6 +36390,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             tickRootContext(getRootContext(viewToRender));
         }
         else {
+            // Will become true if the `try` block executes with no errors.
+            var safeToRunHooks = false;
             try {
                 setPreviousOrParentTNode(null, true);
                 oldView = enterView(viewToRender, viewToRender[T_HOST]);
@@ -36386,9 +36403,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 // matching, etc again and again.
                 viewToRender[TVIEW].firstTemplatePass = false;
                 refreshDescendantViews(viewToRender);
+                safeToRunHooks = true;
             }
             finally {
-                leaveView(oldView);
+                leaveView(oldView, safeToRunHooks);
                 setPreviousOrParentTNode(_previousOrParentTNode, _isParent);
             }
         }
@@ -36398,6 +36416,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         var oldView = enterView(hostView, hostView[T_HOST]);
         var normalExecutionPath = !getCheckNoChangesMode();
         var creationModeIsActive = isCreationMode(hostView);
+        // Will become true if the `try` block executes with no errors.
+        var safeToRunHooks = false;
         try {
             if (normalExecutionPath && !creationModeIsActive && rendererFactory.begin) {
                 rendererFactory.begin();
@@ -36412,12 +36432,13 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             resetPreOrderHookFlags(hostView);
             templateFn && executeTemplate(hostView, templateFn, 2 /* Update */, context);
             refreshDescendantViews(hostView);
+            safeToRunHooks = true;
         }
         finally {
             if (normalExecutionPath && !creationModeIsActive && rendererFactory.end) {
                 rendererFactory.end();
             }
-            leaveView(oldView);
+            leaveView(oldView, safeToRunHooks);
         }
     }
     function executeTemplate(lView, templateFn, rf, context) {
@@ -36897,6 +36918,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         var oldView = enterView(hostView, hostView[T_HOST]);
         var templateFn = hostTView.template;
         var creationMode = isCreationMode(hostView);
+        // Will become true if the `try` block executes with no errors.
+        var safeToRunHooks = false;
         try {
             resetPreOrderHookFlags(hostView);
             creationMode && executeViewQueryFn(1 /* Create */, hostTView, component);
@@ -36906,9 +36929,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             if (!creationMode || hostTView.staticViewQueries) {
                 executeViewQueryFn(2 /* Update */, hostTView, component);
             }
+            safeToRunHooks = true;
         }
         finally {
-            leaveView(oldView);
+            leaveView(oldView, safeToRunHooks);
         }
     }
     function executeViewQueryFn(flags, tView, component) {
@@ -37455,8 +37479,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         }
     }
     /**
-     * `executeActionOnProjection` performs an operation on the projection specified by `action` (insert,
-     * detach, destroy)
+     * `executeActionOnProjection` performs an operation on the projection specified by `action`
+     * (insert, detach, destroy).
      *
      * Inserting a projection requires us to locate the projected nodes from the parent component. The
      * complication is that those nodes themselves could be re-projected from their parent component.
@@ -37519,8 +37543,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         }
     }
     /**
-     * `executeActionOnElementContainer` performs an operation on the ng-container node and its child nodes
-     * as specified by the `action` (insert, detach, destroy)
+     * `executeActionOnElementContainer` performs an operation on the ng-container node and its child
+     * nodes as specified by the `action` (insert, detach, destroy).
      *
      * @param renderer Renderer to use
      * @param action action to perform (insert, detach, destroy)
@@ -38647,7 +38671,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.1.0-next.3+86.sha-4fe0e75.with-local-changes');
+    var VERSION$2 = new Version$1('8.1.0-rc.0+2.sha-f2360aa.with-local-changes');
 
     /**
      * @license
@@ -41579,6 +41603,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             var rootViewInjector = ngModule ? createChainedInjector(injector, ngModule.injector) : injector;
             var rendererFactory = rootViewInjector.get(RendererFactory2, domRendererFactory3);
             var sanitizer = rootViewInjector.get(Sanitizer, null);
+            // Ensure that the namespace for the root node is correct,
+            // otherwise the browser might not render out the element properly.
+            namespaceHTMLInternal();
             var hostRNode = isInternalRootView ?
                 elementCreate(this.selector, rendererFactory.createRenderer(null, this.componentDef)) :
                 locateHostElement(rendererFactory, rootSelectorOrNode);
@@ -41606,6 +41633,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             var oldLView = enterView(rootLView, null);
             var component;
             var tElementNode;
+            // Will become true if the `try` block executes with no errors.
+            var safeToRunHooks = false;
             try {
                 var componentView = createRootComponentView(hostRNode, this.componentDef, rootLView, rendererFactory, renderer);
                 tElementNode = getTNode(0, rootLView);
@@ -41622,9 +41651,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 component = createRootComponent(componentView, this.componentDef, rootLView, rootContext, [LifecycleHooksFeature]);
                 addToViewTree(rootLView, componentView);
                 refreshDescendantViews(rootLView);
+                safeToRunHooks = true;
             }
             finally {
-                leaveView(oldLView);
+                leaveView(oldLView, safeToRunHooks);
             }
             var componentRef = new ComponentRef$1(this.componentType, component, createElementRef(ElementRef, tElementNode, rootLView), rootLView, tElementNode);
             if (isInternalRootView) {
@@ -49511,7 +49541,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.1.0-next.3+86.sha-4fe0e75.with-local-changes');
+    var VERSION$3 = new Version$1('8.1.0-rc.0+2.sha-f2360aa.with-local-changes');
 
     /**
      * @license
