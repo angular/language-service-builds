@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.1.0-rc.0+16.sha-15e3978.with-local-changes
+ * @license Angular v8.1.0-rc.0+19.sha-8133215.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -5120,6 +5120,20 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             elOrTpl.outputs.forEach(function (o) { attributesMap[o.name] = ''; });
         }
         return attributesMap;
+    }
+    /** Returns a call expression to a chained instruction, e.g. `property(params[0])(params[1])`. */
+    function chainedInstruction(reference, calls, span) {
+        var expression = importExpr(reference, null, span);
+        if (calls.length > 0) {
+            for (var i = 0; i < calls.length; i++) {
+                expression = expression.callFn(calls[i], span);
+            }
+        }
+        else {
+            // Add a blank invocation, in case the `calls` array is empty.
+            expression = expression.callFn([], span);
+        }
+        return expression;
     }
 
     /**
@@ -16354,7 +16368,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                     }
                     return fnParams;
                 });
-                return chainedInstruction(span, reference, calls).toStmt();
+                return chainedInstruction(reference, calls, span).toStmt();
             });
         };
         TemplateDefinitionBuilder.prototype.addSelectInstructionIfNecessary = function (nodeIndex, span) {
@@ -16620,19 +16634,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     }
     function instruction(span, reference, params) {
         return importExpr(reference, null, span).callFn(params, span);
-    }
-    function chainedInstruction(span, reference, calls) {
-        var expression = importExpr(reference, null, span);
-        if (calls.length > 0) {
-            for (var i = 0; i < calls.length; i++) {
-                expression = expression.callFn(calls[i], span);
-            }
-        }
-        else {
-            // Add a blank invocation, in case the `calls` array is empty.
-            expression = expression.callFn([], span);
-        }
-        return expression;
     }
     // e.g. x(2);
     function generateNextContextExpr(relativeLevelDiff) {
@@ -17500,6 +17501,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         }
         // Calculate the host property bindings
         var bindings = bindingParser.createBoundHostProperties(directiveSummary, hostBindingSourceSpan);
+        var propertyBindings = [];
+        var attributeBindings = [];
+        var syntheticHostBindings = [];
         (bindings || []).forEach(function (binding) {
             var name = binding.name;
             var stylingInputWasSet = styleBuilder.registerInputBasedOnName(name, binding.expression, binding.sourceSpan);
@@ -17538,9 +17542,29 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                     instructionParams.push(literal(true));
                 }
                 updateStatements.push.apply(updateStatements, __spread(bindingExpr.stmts));
-                updateStatements.push(importExpr(instruction).callFn(instructionParams).toStmt());
+                if (instruction === Identifiers$1.property) {
+                    propertyBindings.push(instructionParams);
+                }
+                else if (instruction === Identifiers$1.attribute) {
+                    attributeBindings.push(instructionParams);
+                }
+                else if (instruction === Identifiers$1.updateSyntheticHostBinding) {
+                    syntheticHostBindings.push(instructionParams);
+                }
+                else {
+                    updateStatements.push(importExpr(instruction).callFn(instructionParams).toStmt());
+                }
             }
         });
+        if (propertyBindings.length > 0) {
+            updateStatements.push(chainedInstruction(Identifiers$1.property, propertyBindings).toStmt());
+        }
+        if (attributeBindings.length > 0) {
+            updateStatements.push(chainedInstruction(Identifiers$1.attribute, attributeBindings).toStmt());
+        }
+        if (syntheticHostBindings.length > 0) {
+            updateStatements.push(chainedInstruction(Identifiers$1.updateSyntheticHostBinding, syntheticHostBindings).toStmt());
+        }
         // since we're dealing with directives/components and both have hostBinding
         // functions, we need to generate a special hostAttrs instruction that deals
         // with both the assignment of styling as well as static attributes to the host
@@ -18008,7 +18032,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.1.0-rc.0+16.sha-15e3978.with-local-changes');
+    var VERSION$1 = new Version('8.1.0-rc.0+19.sha-8133215.with-local-changes');
 
     /**
      * @license
@@ -38672,7 +38696,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.1.0-rc.0+16.sha-15e3978.with-local-changes');
+    var VERSION$2 = new Version$1('8.1.0-rc.0+19.sha-8133215.with-local-changes');
 
     /**
      * @license
@@ -42569,7 +42593,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
     };
     function getPromiseCtor(promiseCtor) {
         if (!promiseCtor) {
-            promiseCtor = Promise;
+            promiseCtor = config.Promise || Promise;
         }
         if (!promiseCtor) {
             throw new Error('no Promise impl found');
@@ -49542,7 +49566,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.1.0-rc.0+16.sha-15e3978.with-local-changes');
+    var VERSION$3 = new Version$1('8.1.0-rc.0+19.sha-8133215.with-local-changes');
 
     /**
      * @license
