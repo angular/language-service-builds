@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.1.0-rc.0+24.sha-c12b6fa.with-local-changes
+ * @license Angular v8.1.0-rc.0+25.sha-7ca611c.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18017,7 +18017,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.1.0-rc.0+24.sha-c12b6fa.with-local-changes');
+    var VERSION$1 = new Version('8.1.0-rc.0+25.sha-7ca611c.with-local-changes');
 
     /**
      * @license
@@ -43226,26 +43226,30 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @param renderer Renderer to use
      * @param action action to perform (insert, detach, destroy)
      * @param lView The LView which needs to be inserted, detached, destroyed.
+     * @param tProjectionNode projection TNode to process
      * @param renderParent parent DOM element for insertion/removal.
      * @param beforeNode Before which node the insertions should happen.
      */
     function executeActionOnProjection(renderer, action, lView, tProjectionNode, renderParent, beforeNode) {
         var componentLView = findComponentView(lView);
         var componentNode = componentLView[T_HOST];
+        ngDevMode && assertDefined(componentNode.projection, 'Element nodes for which projection is processed must have projection defined.');
         var nodeToProject = componentNode.projection[tProjectionNode.projection];
-        if (Array.isArray(nodeToProject)) {
-            for (var i = 0; i < nodeToProject.length; i++) {
-                var rNode = nodeToProject[i];
-                ngDevMode && assertDomNode(rNode);
-                executeActionOnElementOrContainer(action, renderer, renderParent, rNode, beforeNode);
+        if (nodeToProject !== undefined) {
+            if (Array.isArray(nodeToProject)) {
+                for (var i = 0; i < nodeToProject.length; i++) {
+                    var rNode = nodeToProject[i];
+                    ngDevMode && assertDomNode(rNode);
+                    executeActionOnElementOrContainer(action, renderer, renderParent, rNode, beforeNode);
+                }
             }
-        }
-        else {
-            var projectionTNode = nodeToProject;
-            var projectedComponentLView = componentLView[PARENT];
-            while (projectionTNode !== null) {
-                executeActionOnNode(renderer, action, projectedComponentLView, projectionTNode, renderParent, beforeNode);
-                projectionTNode = projectionTNode.projectionNext;
+            else {
+                var projectionTNode = nodeToProject;
+                var projectedComponentLView = componentLView[PARENT];
+                while (projectionTNode !== null) {
+                    executeActionOnNode(renderer, action, projectedComponentLView, projectionTNode, renderParent, beforeNode);
+                    projectionTNode = projectionTNode.projectionNext;
+                }
             }
         }
     }
@@ -43301,12 +43305,11 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         }
     }
     function executeActionOnNode(renderer, action, lView, tNode, renderParent, beforeNode) {
-        var elementContainerRootTNodeType = tNode.type;
-        if (elementContainerRootTNodeType === 4 /* ElementContainer */ ||
-            elementContainerRootTNodeType === 5 /* IcuContainer */) {
+        var nodeType = tNode.type;
+        if (nodeType === 4 /* ElementContainer */ || nodeType === 5 /* IcuContainer */) {
             executeActionOnElementContainerOrIcuContainer(renderer, action, lView, tNode, renderParent, beforeNode);
         }
-        else if (elementContainerRootTNodeType === 1 /* Projection */) {
+        else if (nodeType === 1 /* Projection */) {
             executeActionOnProjection(renderer, action, lView, tNode, renderParent, beforeNode);
         }
         else {
@@ -47502,7 +47505,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.1.0-rc.0+24.sha-c12b6fa.with-local-changes');
+    var VERSION$2 = new Version$1('8.1.0-rc.0+25.sha-7ca611c.with-local-changes');
 
     /**
      * @license
@@ -57402,6 +57405,8 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    var SWITCH_IVY_ENABLED__POST_R3__ = true;
+    var ivyEnabled = SWITCH_IVY_ENABLED__POST_R3__;
 
     var _SEPARATOR = '#';
     var FACTORY_CLASS_SUFFIX = 'NgFactory';
@@ -57434,7 +57439,8 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this._config = config || DEFAULT_CONFIG;
         }
         SystemJsNgModuleLoader.prototype.load = function (path) {
-            return this.loadAndCompile(path);
+            var legacyOfflineMode = !ivyEnabled && this._compiler instanceof Compiler;
+            return legacyOfflineMode ? this.loadFactory(path) : this.loadAndCompile(path);
         };
         SystemJsNgModuleLoader.prototype.loadAndCompile = function (path) {
             var _this = this;
@@ -61199,7 +61205,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.1.0-rc.0+24.sha-c12b6fa.with-local-changes');
+    var VERSION$3 = new Version$1('8.1.0-rc.0+25.sha-7ca611c.with-local-changes');
 
     /**
      * @license
