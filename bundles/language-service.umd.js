@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.1.0-rc.0+29.sha-f83dfd6.with-local-changes
+ * @license Angular v8.1.0-rc.0+37.sha-a4a423a.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18017,7 +18017,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.1.0-rc.0+29.sha-f83dfd6.with-local-changes');
+    var VERSION$1 = new Version('8.1.0-rc.0+37.sha-a4a423a.with-local-changes');
 
     /**
      * @license
@@ -25754,11 +25754,11 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             else if (type.flags & ts.TypeFlags.Union) {
                 // If all the constituent types of a union are the same kind, it is also that kind.
                 var candidate = null;
-                var unionType = type;
-                if (unionType.types.length > 0) {
-                    candidate = typeKindOf(unionType.types[0]);
+                var unionType_1 = type;
+                if (unionType_1.types.length > 0) {
+                    candidate = typeKindOf(unionType_1.types[0]);
                     try {
-                        for (var _b = __values(unionType.types), _c = _b.next(); !_c.done; _c = _b.next()) {
+                        for (var _b = __values(unionType_1.types), _c = _b.next(); !_c.done; _c = _b.next()) {
                             var subType = _c.value;
                             if (candidate != typeKindOf(subType)) {
                                 return BuiltinType$1.Other;
@@ -26307,9 +26307,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                     }
                     return recordEntry(typeReference, node);
                 case ts.SyntaxKind.UnionType:
-                    var unionType = node;
+                    var unionType_1 = node;
                     // Remove null and undefined from the list of unions.
-                    var references = unionType.types
+                    var references = unionType_1.types
                         .filter(function (n) { return n.kind != ts.SyntaxKind.NullKeyword &&
                         n.kind != ts.SyntaxKind.UndefinedKeyword; })
                         .map(function (n) { return _this.evaluateNode(n); });
@@ -47505,7 +47505,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.1.0-rc.0+29.sha-f83dfd6.with-local-changes');
+    var VERSION$2 = new Version$1('8.1.0-rc.0+37.sha-a4a423a.with-local-changes');
 
     /**
      * @license
@@ -61205,7 +61205,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.1.0-rc.0+29.sha-f83dfd6.with-local-changes');
+    var VERSION$3 = new Version$1('8.1.0-rc.0+37.sha-a4a423a.with-local-changes');
 
     /**
      * @license
