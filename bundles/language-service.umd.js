@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.1.0-rc.0+44.sha-95a9d67.with-local-changes
+ * @license Angular v8.2.0-next.0+11.sha-6aaca21.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -3425,15 +3425,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         Identifiers.textInterpolate8 = { name: 'ɵɵtextInterpolate8', moduleName: CORE$1 };
         Identifiers.textInterpolateV = { name: 'ɵɵtextInterpolateV', moduleName: CORE$1 };
         Identifiers.restoreView = { name: 'ɵɵrestoreView', moduleName: CORE$1 };
-        Identifiers.interpolation1 = { name: 'ɵɵinterpolation1', moduleName: CORE$1 };
-        Identifiers.interpolation2 = { name: 'ɵɵinterpolation2', moduleName: CORE$1 };
-        Identifiers.interpolation3 = { name: 'ɵɵinterpolation3', moduleName: CORE$1 };
-        Identifiers.interpolation4 = { name: 'ɵɵinterpolation4', moduleName: CORE$1 };
-        Identifiers.interpolation5 = { name: 'ɵɵinterpolation5', moduleName: CORE$1 };
-        Identifiers.interpolation6 = { name: 'ɵɵinterpolation6', moduleName: CORE$1 };
-        Identifiers.interpolation7 = { name: 'ɵɵinterpolation7', moduleName: CORE$1 };
-        Identifiers.interpolation8 = { name: 'ɵɵinterpolation8', moduleName: CORE$1 };
-        Identifiers.interpolationV = { name: 'ɵɵinterpolationV', moduleName: CORE$1 };
         Identifiers.pureFunction0 = { name: 'ɵɵpureFunction0', moduleName: CORE$1 };
         Identifiers.pureFunction1 = { name: 'ɵɵpureFunction1', moduleName: CORE$1 };
         Identifiers.pureFunction2 = { name: 'ɵɵpureFunction2', moduleName: CORE$1 };
@@ -7011,6 +7002,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         }
         ASTWithSource.prototype.visit = function (visitor, context) {
             if (context === void 0) { context = null; }
+            if (visitor.visitASTWithSource) {
+                return visitor.visitASTWithSource(this, context);
+            }
             return this.ast.visit(visitor, context);
         };
         ASTWithSource.prototype.toString = function () { return this.source + " in " + this.location; };
@@ -18108,7 +18102,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.1.0-rc.0+44.sha-95a9d67.with-local-changes');
+    var VERSION$1 = new Version('8.2.0-next.0+11.sha-6aaca21.with-local-changes');
 
     /**
      * @license
@@ -38238,6 +38232,12 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         return ComponentRef;
     }());
     /**
+     * Base class for a factory that can create a component dynamically.
+     * Instantiate a factory for a given type of component with `resolveComponentFactory()`.
+     * Use the resulting `ComponentFactory.create()` method to create a component of that type.
+     *
+     * @see [Dynamic Components](guide/dynamic-component-loader)
+     *
      * @publicApi
      */
     var ComponentFactory = /** @class */ (function () {
@@ -38268,6 +38268,12 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         return _NullComponentFactoryResolver;
     }());
     /**
+     * A simple registry that maps `Components` to generated `ComponentFactory` classes
+     * that can be used to create instances of components.
+     * Use to obtain the factory for a given component type,
+     * then use the factory's `create()` method to create a component of that type.
+     *
+     * @see [Dynamic Components](guide/dynamic-component-loader)
      * @publicApi
      */
     var ComponentFactoryResolver = /** @class */ (function () {
@@ -38791,7 +38797,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.1.0-rc.0+44.sha-95a9d67.with-local-changes');
+    var VERSION$2 = new Version$1('8.2.0-next.0+11.sha-6aaca21.with-local-changes');
 
     /**
      * @license
@@ -43754,7 +43760,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * that create event emitters. When the title is clicked, the emitter
      * emits an open or close event to toggle the current visibility state.
      *
-     * ```
+     * ```html
      * @Component({
      *   selector: 'zippy',
      *   template: `
@@ -43783,16 +43789,9 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Access the event object with the `$event` argument passed to the output event
      * handler:
      *
-     * ```
+     * ```html
      * <zippy (open)="onOpen($event)" (close)="onClose($event)"></zippy>
      * ```
-     *
-     * ### Notes
-     *
-     * Uses Rx.Observable but provides an adapter to make it work as specified here:
-     * https://github.com/jhusain/observable-spec
-     *
-     * Once a reference implementation of the spec is available, switch to it.
      *
      * @publicApi
      */
@@ -44110,9 +44109,10 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
     var HostBinding = makePropDecorator('HostBinding', ɵ8);
     var ɵ9 = function (eventName, args) { return ({ eventName: eventName, args: args }); };
     /**
-     * Binds a DOM event to a host listener and supplies configuration metadata.
+     * Decorator that binds a DOM event to a host listener and supplies configuration metadata.
      * Angular invokes the supplied handler method when the host element emits the specified event,
      * and updates the bound element with the result.
+     *
      * If the handler method returns false, applies `preventDefault` on the bound element.
      *
      * @usageNotes
@@ -44120,7 +44120,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * The following example declares a directive
      * that attaches a click listener to a button and counts clicks.
      *
-     * ```
+     * ```ts
      * @Directive({selector: 'button[counting]'})
      * class CountClicks {
      *   numberOfClicks = 0;
@@ -49662,7 +49662,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.1.0-rc.0+44.sha-95a9d67.with-local-changes');
+    var VERSION$3 = new Version$1('8.2.0-next.0+11.sha-6aaca21.with-local-changes');
 
     /**
      * @license
