@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.2.0-next.0+5.sha-4b05ebc.with-local-changes
+ * @license Angular v8.2.0-next.0+7.sha-40aaa42.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18099,7 +18099,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.2.0-next.0+5.sha-4b05ebc.with-local-changes');
+    var VERSION$1 = new Version('8.2.0-next.0+7.sha-40aaa42.with-local-changes');
 
     /**
      * @license
@@ -38229,6 +38229,12 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         return ComponentRef;
     }());
     /**
+     * Base class for a factory that can create a component dynamically.
+     * Instantiate a factory for a given type of component with `resolveComponentFactory()`.
+     * Use the resulting `ComponentFactory.create()` method to create a component of that type.
+     *
+     * @see [Dynamic Components](guide/dynamic-component-loader)
+     *
      * @publicApi
      */
     var ComponentFactory = /** @class */ (function () {
@@ -38259,6 +38265,12 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         return _NullComponentFactoryResolver;
     }());
     /**
+     * A simple registry that maps `Components` to generated `ComponentFactory` classes
+     * that can be used to create instances of components.
+     * Use to obtain the factory for a given component type,
+     * then use the factory's `create()` method to create a component of that type.
+     *
+     * @see [Dynamic Components](guide/dynamic-component-loader)
      * @publicApi
      */
     var ComponentFactoryResolver = /** @class */ (function () {
@@ -38782,7 +38794,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.2.0-next.0+5.sha-4b05ebc.with-local-changes');
+    var VERSION$2 = new Version$1('8.2.0-next.0+7.sha-40aaa42.with-local-changes');
 
     /**
      * @license
@@ -43745,7 +43757,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * that create event emitters. When the title is clicked, the emitter
      * emits an open or close event to toggle the current visibility state.
      *
-     * ```
+     * ```html
      * @Component({
      *   selector: 'zippy',
      *   template: `
@@ -43774,16 +43786,9 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Access the event object with the `$event` argument passed to the output event
      * handler:
      *
-     * ```
+     * ```html
      * <zippy (open)="onOpen($event)" (close)="onClose($event)"></zippy>
      * ```
-     *
-     * ### Notes
-     *
-     * Uses Rx.Observable but provides an adapter to make it work as specified here:
-     * https://github.com/jhusain/observable-spec
-     *
-     * Once a reference implementation of the spec is available, switch to it.
      *
      * @publicApi
      */
@@ -44101,9 +44106,10 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
     var HostBinding = makePropDecorator('HostBinding', ɵ8);
     var ɵ9 = function (eventName, args) { return ({ eventName: eventName, args: args }); };
     /**
-     * Binds a DOM event to a host listener and supplies configuration metadata.
+     * Decorator that binds a DOM event to a host listener and supplies configuration metadata.
      * Angular invokes the supplied handler method when the host element emits the specified event,
      * and updates the bound element with the result.
+     *
      * If the handler method returns false, applies `preventDefault` on the bound element.
      *
      * @usageNotes
@@ -44111,7 +44117,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * The following example declares a directive
      * that attaches a click listener to a button and counts clicks.
      *
-     * ```
+     * ```ts
      * @Directive({selector: 'button[counting]'})
      * class CountClicks {
      *   numberOfClicks = 0;
@@ -45830,6 +45836,8 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    var SWITCH_IVY_ENABLED__PRE_R3__ = false;
+    var ivyEnabled = SWITCH_IVY_ENABLED__PRE_R3__;
 
     /**
      * @license
@@ -45869,7 +45877,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this._config = config || DEFAULT_CONFIG;
         }
         SystemJsNgModuleLoader.prototype.load = function (path) {
-            var legacyOfflineMode = this._compiler instanceof Compiler;
+            var legacyOfflineMode = !ivyEnabled && this._compiler instanceof Compiler;
             return legacyOfflineMode ? this.loadFactory(path) : this.loadAndCompile(path);
         };
         SystemJsNgModuleLoader.prototype.loadAndCompile = function (path) {
@@ -49651,7 +49659,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.2.0-next.0+5.sha-4b05ebc.with-local-changes');
+    var VERSION$3 = new Version$1('8.2.0-next.0+7.sha-40aaa42.with-local-changes');
 
     /**
      * @license
