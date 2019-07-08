@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.2.0-next.0+3.sha-1d3e227.with-local-changes
+ * @license Angular v8.2.0-next.0+4.sha-e30f494.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -3425,15 +3425,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         Identifiers.textInterpolate8 = { name: 'ɵɵtextInterpolate8', moduleName: CORE$1 };
         Identifiers.textInterpolateV = { name: 'ɵɵtextInterpolateV', moduleName: CORE$1 };
         Identifiers.restoreView = { name: 'ɵɵrestoreView', moduleName: CORE$1 };
-        Identifiers.interpolation1 = { name: 'ɵɵinterpolation1', moduleName: CORE$1 };
-        Identifiers.interpolation2 = { name: 'ɵɵinterpolation2', moduleName: CORE$1 };
-        Identifiers.interpolation3 = { name: 'ɵɵinterpolation3', moduleName: CORE$1 };
-        Identifiers.interpolation4 = { name: 'ɵɵinterpolation4', moduleName: CORE$1 };
-        Identifiers.interpolation5 = { name: 'ɵɵinterpolation5', moduleName: CORE$1 };
-        Identifiers.interpolation6 = { name: 'ɵɵinterpolation6', moduleName: CORE$1 };
-        Identifiers.interpolation7 = { name: 'ɵɵinterpolation7', moduleName: CORE$1 };
-        Identifiers.interpolation8 = { name: 'ɵɵinterpolation8', moduleName: CORE$1 };
-        Identifiers.interpolationV = { name: 'ɵɵinterpolationV', moduleName: CORE$1 };
         Identifiers.pureFunction0 = { name: 'ɵɵpureFunction0', moduleName: CORE$1 };
         Identifiers.pureFunction1 = { name: 'ɵɵpureFunction1', moduleName: CORE$1 };
         Identifiers.pureFunction2 = { name: 'ɵɵpureFunction2', moduleName: CORE$1 };
@@ -18108,7 +18099,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.2.0-next.0+3.sha-1d3e227.with-local-changes');
+    var VERSION$1 = new Version('8.2.0-next.0+4.sha-e30f494.with-local-changes');
 
     /**
      * @license
@@ -38791,7 +38782,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.2.0-next.0+3.sha-1d3e227.with-local-changes');
+    var VERSION$2 = new Version$1('8.2.0-next.0+4.sha-e30f494.with-local-changes');
 
     /**
      * @license
@@ -49662,7 +49653,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.2.0-next.0+3.sha-1d3e227.with-local-changes');
+    var VERSION$3 = new Version$1('8.2.0-next.0+4.sha-e30f494.with-local-changes');
 
     /**
      * @license
