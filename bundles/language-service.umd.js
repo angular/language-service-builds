@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.2.0-next.0+20.sha-7724f74.with-local-changes
+ * @license Angular v8.2.0-next.0+24.sha-2b44be9.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -3365,6 +3365,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         Identifiers.classProp = { name: 'ɵɵclassProp', moduleName: CORE$1 };
         Identifiers.elementContainerStart = { name: 'ɵɵelementContainerStart', moduleName: CORE$1 };
         Identifiers.elementContainerEnd = { name: 'ɵɵelementContainerEnd', moduleName: CORE$1 };
+        Identifiers.elementContainer = { name: 'ɵɵelementContainer', moduleName: CORE$1 };
         Identifiers.styling = { name: 'ɵɵstyling', moduleName: CORE$1 };
         Identifiers.styleMap = { name: 'ɵɵstyleMap', moduleName: CORE$1 };
         Identifiers.classMap = { name: 'ɵɵclassMap', moduleName: CORE$1 };
@@ -16051,20 +16052,16 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             if (this.i18n) {
                 this.i18n.appendElement(element.i18n, elementIndex);
             }
-            var hasChildren = function () {
-                if (!isI18nRootElement && _this.i18n) {
-                    // we do not append text node instructions and ICUs inside i18n section,
-                    // so we exclude them while calculating whether current element has children
-                    return !hasTextChildrenOnly(element.children);
-                }
-                return element.children.length > 0;
-            };
-            var createSelfClosingInstruction = !stylingBuilder.hasBindings && !isNgContainer$1 &&
-                element.outputs.length === 0 && i18nAttrs.length === 0 && !hasChildren();
+            // Note that we do not append text node instructions and ICUs inside i18n section,
+            // so we exclude them while calculating whether current element has children
+            var hasChildren = (!isI18nRootElement && this.i18n) ? !hasTextChildrenOnly(element.children) :
+                element.children.length > 0;
+            var createSelfClosingInstruction = !stylingBuilder.hasBindings &&
+                element.outputs.length === 0 && i18nAttrs.length === 0 && !hasChildren;
             var createSelfClosingI18nInstruction = !createSelfClosingInstruction &&
                 !stylingBuilder.hasBindings && hasTextChildrenOnly(element.children);
             if (createSelfClosingInstruction) {
-                this.creationInstruction(element.sourceSpan, Identifiers$1.element, trimTrailingNulls(parameters));
+                this.creationInstruction(element.sourceSpan, isNgContainer$1 ? Identifiers$1.elementContainer : Identifiers$1.element, trimTrailingNulls(parameters));
             }
             else {
                 this.creationInstruction(element.sourceSpan, isNgContainer$1 ? Identifiers$1.elementContainerStart : Identifiers$1.elementStart, trimTrailingNulls(parameters));
@@ -18087,7 +18084,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.2.0-next.0+20.sha-7724f74.with-local-changes');
+    var VERSION$1 = new Version('8.2.0-next.0+24.sha-2b44be9.with-local-changes');
 
     /**
      * @license
@@ -40228,24 +40225,30 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * When elements are created dynamically after a view blueprint is created (e.g. through
      * i18nApply() or ComponentFactory.create), we need to adjust the blueprint for future
      * template passes.
+     *
+     * @param view The LView containing the blueprint to adjust
+     * @param numSlotsToAlloc The number of slots to alloc in the LView, should be >0
      */
     function allocExpando(view, numSlotsToAlloc) {
-        var tView = view[TVIEW];
-        if (tView.firstTemplatePass) {
-            for (var i = 0; i < numSlotsToAlloc; i++) {
-                tView.blueprint.push(null);
-                tView.data.push(null);
-                view.push(null);
-            }
-            // We should only increment the expando start index if there aren't already directives
-            // and injectors saved in the "expando" section
-            if (!tView.expandoInstructions) {
-                tView.expandoStartIndex += numSlotsToAlloc;
-            }
-            else {
-                // Since we're adding the dynamic nodes into the expando section, we need to let the host
-                // bindings know that they should skip x slots
-                tView.expandoInstructions.push(numSlotsToAlloc);
+        ngDevMode && assertGreaterThan(numSlotsToAlloc, 0, 'The number of slots to alloc should be greater than 0');
+        if (numSlotsToAlloc > 0) {
+            var tView = view[TVIEW];
+            if (tView.firstTemplatePass) {
+                for (var i = 0; i < numSlotsToAlloc; i++) {
+                    tView.blueprint.push(null);
+                    tView.data.push(null);
+                    view.push(null);
+                }
+                // We should only increment the expando start index if there aren't already directives
+                // and injectors saved in the "expando" section
+                if (!tView.expandoInstructions) {
+                    tView.expandoStartIndex += numSlotsToAlloc;
+                }
+                else {
+                    // Since we're adding the dynamic nodes into the expando section, we need to let the host
+                    // bindings know that they should skip x slots
+                    tView.expandoInstructions.push(numSlotsToAlloc);
+                }
             }
         }
     }
@@ -44455,6 +44458,20 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         previousOrParentTNode.onElementCreationFns && applyOnCreateInstructions(previousOrParentTNode);
         registerPostOrderHooks(tView, previousOrParentTNode);
     }
+    /**
+     * Creates an empty logical container using {@link elementContainerStart}
+     * and {@link elementContainerEnd}
+     *
+     * @param index Index of the element in the LView array
+     * @param attrs Set of attributes to be used when matching directives.
+     * @param localRefs A set of local reference bindings on the element.
+     *
+     * @codeGenApi
+     */
+    function ɵɵelementContainer(index, attrs, localRefs) {
+        ɵɵelementContainerStart(index, attrs, localRefs);
+        ɵɵelementContainerEnd();
+    }
 
     /**
      * @license
@@ -48250,7 +48267,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.2.0-next.0+20.sha-7724f74.with-local-changes');
+    var VERSION$2 = new Version$1('8.2.0-next.0+24.sha-2b44be9.with-local-changes');
 
     /**
      * @license
@@ -51851,7 +51868,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 }
             }
         }
-        allocExpando(viewData, i18nVarsCount);
+        if (i18nVarsCount > 0) {
+            allocExpando(viewData, i18nVarsCount);
+        }
         ngDevMode &&
             attachI18nOpCodesDebug(createOpCodes, updateOpCodes, icuExpressions.length ? icuExpressions : null, viewData);
         // NOTE: local var needed to properly assert the type of `TI18n`.
@@ -55589,6 +55608,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         'ɵɵelement': ɵɵelement,
         'ɵɵelementContainerStart': ɵɵelementContainerStart,
         'ɵɵelementContainerEnd': ɵɵelementContainerEnd,
+        'ɵɵelementContainer': ɵɵelementContainer,
         'ɵɵpureFunction0': ɵɵpureFunction0,
         'ɵɵpureFunction1': ɵɵpureFunction1,
         'ɵɵpureFunction2': ɵɵpureFunction2,
@@ -58495,7 +58515,9 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             configurable: true
         });
         Object.defineProperty(DebugNode__POST_R3__.prototype, "context", {
-            get: function () { return getContext$1(this.nativeNode); },
+            get: function () {
+                return getComponent(this.nativeNode) || getContext$1(this.nativeNode);
+            },
             enumerable: true,
             configurable: true
         });
@@ -61953,7 +61975,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.2.0-next.0+20.sha-7724f74.with-local-changes');
+    var VERSION$3 = new Version$1('8.2.0-next.0+24.sha-2b44be9.with-local-changes');
 
     /**
      * @license
