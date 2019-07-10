@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.2.0-next.1+2.sha-6da1446.with-local-changes
+ * @license Angular v8.2.0-next.1+1.sha-76e3b57.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18084,7 +18084,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.2.0-next.1+2.sha-6da1446.with-local-changes');
+    var VERSION$1 = new Version('8.2.0-next.1+1.sha-76e3b57.with-local-changes');
 
     /**
      * @license
@@ -48267,7 +48267,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.2.0-next.1+2.sha-6da1446.with-local-changes');
+    var VERSION$2 = new Version$1('8.2.0-next.1+1.sha-76e3b57.with-local-changes');
 
     /**
      * @license
@@ -51809,7 +51809,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         var updateOpCodes = [];
         var icuExpressions = [];
         var templateTranslation = getTranslationForTemplate(message, subTemplateIndex);
-        var msgParts = replaceNgsp$1(templateTranslation).split(PH_REGEXP);
+        var msgParts = templateTranslation.split(PH_REGEXP);
         for (var i = 0; i < msgParts.length; i++) {
             var value = msgParts[i];
             if (i & 1) {
@@ -52604,17 +52604,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 icuCase.remove.push(nestTIcuIndex << 3 /* SHIFT_REF */ | 6 /* RemoveNestedIcu */, nestedIcuNodeIndex << 3 /* SHIFT_REF */ | 3 /* Remove */);
             }
         }
-    }
-    /**
-     * Angular Dart introduced &ngsp; as a placeholder for non-removable space, see:
-     * https://github.com/dart-lang/angular/blob/0bb611387d29d65b5af7f9d2515ab571fd3fbee4/_tests/test/compiler/preserve_whitespace_test.dart#L25-L32
-     * In Angular Dart &ngsp; is converted to the 0xE500 PUA (Private Use Areas) unicode character
-     * and later on replaced by a space. We are re-implementing the same idea here, since translations
-     * might contain this special character.
-     */
-    var NGSP_UNICODE_REGEXP = /\uE500/g;
-    function replaceNgsp$1(value) {
-        return value.replace(NGSP_UNICODE_REGEXP, ' ');
     }
     var TRANSLATIONS = {};
     var LOCALIZE_PH_REGEXP = /\{\$(.*?)\}/g;
@@ -61986,7 +61975,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.2.0-next.1+2.sha-6da1446.with-local-changes');
+    var VERSION$3 = new Version$1('8.2.0-next.1+1.sha-76e3b57.with-local-changes');
 
     /**
      * @license
