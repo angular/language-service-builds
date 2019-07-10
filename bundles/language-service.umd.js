@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.2.0-next.1+1.sha-76e3b57.with-local-changes
+ * @license Angular v8.2.0-next.1+3.sha-dee16a4.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -4917,8 +4917,13 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @param name The placeholder name that should be formatted
      * @returns Formatted placeholder name
      */
-    function formatI18nPlaceholderName(name) {
-        var chunks = toPublicName(name).split('_');
+    function formatI18nPlaceholderName(name, useCamelCase) {
+        if (useCamelCase === void 0) { useCamelCase = true; }
+        var publicName = toPublicName(name);
+        if (!useCamelCase) {
+            return publicName;
+        }
+        var chunks = publicName.split('_');
         if (chunks.length === 1) {
             // if no "_" found - just lowercase the value
             return name.toLowerCase();
@@ -15509,14 +15514,26 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var formatPh = function (value) { return "{$" + formatI18nPlaceholderName(value) + "}"; };
     /**
-     * This visitor walks over i18n tree and generates its string representation,
-     * including ICUs and placeholders in {$PLACEHOLDER} format.
+     * This visitor walks over i18n tree and generates its string representation, including ICUs and
+     * placeholders in `{$placeholder}` (for plain messages) or `{PLACEHOLDER}` (inside ICUs) format.
      */
     var SerializerVisitor = /** @class */ (function () {
         function SerializerVisitor() {
+            /**
+             * Flag that indicates that we are processing elements of an ICU.
+             *
+             * This flag is needed due to the fact that placeholders in ICUs and in other messages are
+             * represented differently in Closure:
+             * - {$placeholder} in non-ICU case
+             * - {PLACEHOLDER} inside ICU
+             */
+            this.insideIcu = false;
         }
+        SerializerVisitor.prototype.formatPh = function (value) {
+            var formatted = formatI18nPlaceholderName(value, /* useCamelCase */ !this.insideIcu);
+            return this.insideIcu ? "{" + formatted + "}" : "{$" + formatted + "}";
+        };
         SerializerVisitor.prototype.visitText = function (text, context) { return text.value; };
         SerializerVisitor.prototype.visitContainer = function (container, context) {
             var _this = this;
@@ -15524,17 +15541,22 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         };
         SerializerVisitor.prototype.visitIcu = function (icu, context) {
             var _this = this;
+            this.insideIcu = true;
             var strCases = Object.keys(icu.cases).map(function (k) { return k + " {" + icu.cases[k].visit(_this) + "}"; });
-            return "{" + icu.expressionPlaceholder + ", " + icu.type + ", " + strCases.join(' ') + "}";
+            var result = "{" + icu.expressionPlaceholder + ", " + icu.type + ", " + strCases.join(' ') + "}";
+            this.insideIcu = false;
+            return result;
         };
         SerializerVisitor.prototype.visitTagPlaceholder = function (ph, context) {
             var _this = this;
             return ph.isVoid ?
-                formatPh(ph.startName) :
-                "" + formatPh(ph.startName) + ph.children.map(function (child) { return child.visit(_this); }).join('') + formatPh(ph.closeName);
+                this.formatPh(ph.startName) :
+                "" + this.formatPh(ph.startName) + ph.children.map(function (child) { return child.visit(_this); }).join('') + this.formatPh(ph.closeName);
         };
-        SerializerVisitor.prototype.visitPlaceholder = function (ph, context) { return formatPh(ph.name); };
-        SerializerVisitor.prototype.visitIcuPlaceholder = function (ph, context) { return formatPh(ph.name); };
+        SerializerVisitor.prototype.visitPlaceholder = function (ph, context) { return this.formatPh(ph.name); };
+        SerializerVisitor.prototype.visitIcuPlaceholder = function (ph, context) {
+            return this.formatPh(ph.name);
+        };
         return SerializerVisitor;
     }());
     var serializerVisitor$1 = new SerializerVisitor();
@@ -15774,15 +15796,20 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             // Closure Compiler requires const names to start with `MSG_` but disallows any other const to
             // start with `MSG_`. We define a variable starting with `MSG_` just for the `goog.getMsg` call
             var closureVar = this.i18nGenerateClosureVar(message.id);
-            var _params = {};
-            if (params && Object.keys(params).length) {
-                Object.keys(params).forEach(function (key) { return _params[formatI18nPlaceholderName(key)] = params[key]; });
-            }
+            var formattedParams = this.i18nFormatPlaceholderNames(params, /* useCamelCase */ true);
             var meta = metaFromI18nMessage(message);
             var content = getSerializedI18nContent(message);
-            var statements = getTranslationDeclStmts(_ref, closureVar, content, meta, _params, transformFn);
+            var statements = getTranslationDeclStmts(_ref, closureVar, content, meta, formattedParams, transformFn);
             (_a = this.constantPool.statements).push.apply(_a, __spread(statements));
             return _ref;
+        };
+        TemplateDefinitionBuilder.prototype.i18nFormatPlaceholderNames = function (params, useCamelCase) {
+            if (params === void 0) { params = {}; }
+            var _params = {};
+            if (params && Object.keys(params).length) {
+                Object.keys(params).forEach(function (key) { return _params[formatI18nPlaceholderName(key, useCamelCase)] = params[key]; });
+            }
+            return _params;
         };
         TemplateDefinitionBuilder.prototype.i18nAppendBindings = function (expressions) {
             var _this = this;
@@ -16352,6 +16379,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             }
         };
         TemplateDefinitionBuilder.prototype.visitIcu = function (icu) {
+            var _this = this;
             var initWasInvoked = false;
             // if an ICU was created outside of i18n block, we still treat
             // it as a translatable entity and invoke i18nStart and i18nEnd
@@ -16365,18 +16393,27 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             var placeholders = this.i18nBindProps(icu.placeholders);
             // output ICU directly and keep ICU reference in context
             var message = icu.i18n;
+            // we always need post-processing function for ICUs, to make sure that:
+            // - all placeholders in a form of {PLACEHOLDER} are replaced with actual values (note:
+            // `goog.getMsg` does not process ICUs and uses the `{PLACEHOLDER}` format for placeholders
+            // inside ICUs)
+            // - all ICU vars (such as `VAR_SELECT` or `VAR_PLURAL`) are replaced with correct values
             var transformFn = function (raw) {
-                return instruction(null, Identifiers$1.i18nPostprocess, [raw, mapLiteral(vars, true)]);
+                var params = __assign({}, vars, placeholders);
+                var formatted = _this.i18nFormatPlaceholderNames(params, /* useCamelCase */ false);
+                return instruction(null, Identifiers$1.i18nPostprocess, [raw, mapLiteral(formatted, true)]);
             };
             // in case the whole i18n message is a single ICU - we do not need to
             // create a separate top-level translation, we can use the root ref instead
             // and make this ICU a top-level translation
+            // note: ICU placeholders are replaced with actual values in `i18nPostprocess` function
+            // separately, so we do not pass placeholders into `i18nTranslate` function.
             if (isSingleI18nIcu(i18n.meta)) {
-                this.i18nTranslate(message, placeholders, i18n.ref, transformFn);
+                this.i18nTranslate(message, /* placeholders */ {}, i18n.ref, transformFn);
             }
             else {
                 // output ICU directly and keep ICU reference in context
-                var ref = this.i18nTranslate(message, placeholders, undefined, transformFn);
+                var ref = this.i18nTranslate(message, /* placeholders */ {}, /* ref */ undefined, transformFn);
                 i18n.appendIcu(icuFromI18nMessage(message).name, ref);
             }
             if (initWasInvoked) {
@@ -18084,7 +18121,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.2.0-next.1+1.sha-76e3b57.with-local-changes');
+    var VERSION$1 = new Version('8.2.0-next.1+3.sha-dee16a4.with-local-changes');
 
     /**
      * @license
@@ -48267,7 +48304,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.2.0-next.1+1.sha-76e3b57.with-local-changes');
+    var VERSION$2 = new Version$1('8.2.0-next.1+3.sha-dee16a4.with-local-changes');
 
     /**
      * @license
@@ -51526,6 +51563,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     var PP_MULTI_VALUE_PLACEHOLDERS_REGEXP = /\[(�.+?�?)\]/;
     var PP_PLACEHOLDERS_REGEXP = /\[(�.+?�?)\]|(�\/?\*\d+:\d+�)/g;
     var PP_ICU_VARS_REGEXP = /({\s*)(VAR_(PLURAL|SELECT)(_\d+)?)(\s*,)/g;
+    var PP_ICU_PLACEHOLDERS_REGEXP = /{([A-Z0-9_]+)}/g;
     var PP_ICUS_REGEXP = /�I18N_EXP_(ICU(_\d+)?)�/g;
     var PP_CLOSE_TEMPLATE_REGEXP = /\/\*/;
     var PP_TEMPLATE_ID_REGEXP = /\d+\:(\d+)/;
@@ -51809,7 +51847,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         var updateOpCodes = [];
         var icuExpressions = [];
         var templateTranslation = getTranslationForTemplate(message, subTemplateIndex);
-        var msgParts = templateTranslation.split(PH_REGEXP);
+        var msgParts = replaceNgsp$1(templateTranslation).split(PH_REGEXP);
         for (var i = 0; i < msgParts.length; i++) {
             var value = msgParts[i];
             if (i & 1) {
@@ -51934,7 +51972,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * 1. Resolve all multi-value cases (like [�*1:1��#2:1�|�#4:1�|�5�])
      * 2. Replace all ICU vars (like "VAR_PLURAL")
-     * 3. Replace all ICU references with corresponding values (like �ICU_EXP_ICU_1�)
+     * 3. Replace all placeholders used inside ICUs in a form of {PLACEHOLDER}
+     * 4. Replace all ICU references with corresponding values (like �ICU_EXP_ICU_1�)
      *    in case multiple ICUs have the same placeholder name
      *
      * @param message Raw translation string for post processing
@@ -52008,7 +52047,13 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             return replacements.hasOwnProperty(key) ? "" + start + replacements[key] + end : match;
         });
         /**
-         * Step 3: replace all ICU references with corresponding values (like �ICU_EXP_ICU_1�) in case
+         * Step 3: replace all placeholders used inside ICUs in a form of {PLACEHOLDER}
+         */
+        result = result.replace(PP_ICU_PLACEHOLDERS_REGEXP, function (match, key) {
+            return replacements.hasOwnProperty(key) ? replacements[key] : match;
+        });
+        /**
+         * Step 4: replace all ICU references with corresponding values (like �ICU_EXP_ICU_1�) in case
          * multiple ICUs have the same placeholder name
          */
         result = result.replace(PP_ICUS_REGEXP, function (match, key) {
@@ -52604,6 +52649,17 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 icuCase.remove.push(nestTIcuIndex << 3 /* SHIFT_REF */ | 6 /* RemoveNestedIcu */, nestedIcuNodeIndex << 3 /* SHIFT_REF */ | 3 /* Remove */);
             }
         }
+    }
+    /**
+     * Angular Dart introduced &ngsp; as a placeholder for non-removable space, see:
+     * https://github.com/dart-lang/angular/blob/0bb611387d29d65b5af7f9d2515ab571fd3fbee4/_tests/test/compiler/preserve_whitespace_test.dart#L25-L32
+     * In Angular Dart &ngsp; is converted to the 0xE500 PUA (Private Use Areas) unicode character
+     * and later on replaced by a space. We are re-implementing the same idea here, since translations
+     * might contain this special character.
+     */
+    var NGSP_UNICODE_REGEXP = /\uE500/g;
+    function replaceNgsp$1(value) {
+        return value.replace(NGSP_UNICODE_REGEXP, ' ');
     }
     var TRANSLATIONS = {};
     var LOCALIZE_PH_REGEXP = /\{\$(.*?)\}/g;
@@ -58173,8 +58229,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var SWITCH_IVY_ENABLED__POST_R3__ = true;
-    var ivyEnabled = SWITCH_IVY_ENABLED__POST_R3__;
 
     var _SEPARATOR = '#';
     var FACTORY_CLASS_SUFFIX = 'NgFactory';
@@ -58207,8 +58261,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this._config = config || DEFAULT_CONFIG;
         }
         SystemJsNgModuleLoader.prototype.load = function (path) {
-            var legacyOfflineMode = !ivyEnabled && this._compiler instanceof Compiler;
-            return legacyOfflineMode ? this.loadFactory(path) : this.loadAndCompile(path);
+            return this.loadAndCompile(path);
         };
         SystemJsNgModuleLoader.prototype.loadAndCompile = function (path) {
             var _this = this;
@@ -61975,7 +62028,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.2.0-next.1+1.sha-76e3b57.with-local-changes');
+    var VERSION$3 = new Version$1('8.2.0-next.1+3.sha-dee16a4.with-local-changes');
 
     /**
      * @license
