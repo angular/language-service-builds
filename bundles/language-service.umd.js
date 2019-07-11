@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.2.0-next.1+21.sha-a55c6df.with-local-changes
+ * @license Angular v8.2.0-next.1+22.sha-7c62a8f.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18121,7 +18121,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.2.0-next.1+21.sha-a55c6df.with-local-changes');
+    var VERSION$1 = new Version('8.2.0-next.1+22.sha-7c62a8f.with-local-changes');
 
     /**
      * @license
@@ -48304,7 +48304,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.2.0-next.1+21.sha-a55c6df.with-local-changes');
+    var VERSION$2 = new Version$1('8.2.0-next.1+22.sha-7c62a8f.with-local-changes');
 
     /**
      * @license
@@ -53853,7 +53853,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
     };
     function getPromiseCtor(promiseCtor) {
         if (!promiseCtor) {
-            promiseCtor = config.Promise || Promise;
+            promiseCtor = Promise;
         }
         if (!promiseCtor) {
             throw new Error('no Promise impl found');
@@ -62031,7 +62031,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.2.0-next.1+21.sha-a55c6df.with-local-changes');
+    var VERSION$3 = new Version$1('8.2.0-next.1+22.sha-7c62a8f.with-local-changes');
 
     /**
      * @license
