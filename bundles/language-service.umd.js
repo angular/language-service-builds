@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.2.0-next.1+25.sha-6f50aad.with-local-changes
+ * @license Angular v8.2.0-next.1+27.sha-565a58e.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18136,7 +18136,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.2.0-next.1+25.sha-6f50aad.with-local-changes');
+    var VERSION$1 = new Version('8.2.0-next.1+27.sha-565a58e.with-local-changes');
 
     /**
      * @license
@@ -34320,8 +34320,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @param di The node injector in which a directive will be added
      * @param token The type or the injection token to be made public
      */
-    function diPublicInInjector(injectorIndex, view, token) {
-        bloomAdd(injectorIndex, view[TVIEW], token);
+    function diPublicInInjector(injectorIndex, tView, token) {
+        bloomAdd(injectorIndex, tView, token);
     }
     /**
      * Returns the value associated to the given token from the NodeInjectors => ModuleInjector.
@@ -38115,7 +38115,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         var tNode = getOrCreateTNode(tView, null, 0, 3 /* Element */, null, null);
         var componentView = createLView(rootView, getOrCreateTView(def), null, def.onPush ? 64 /* Dirty */ : 16 /* CheckAlways */, rootView[HEADER_OFFSET], tNode, rendererFactory, renderer, sanitizer);
         if (tView.firstTemplatePass) {
-            diPublicInInjector(getOrCreateNodeInjectorForNode(tNode, rootView), rootView, def.type);
+            diPublicInInjector(getOrCreateNodeInjectorForNode(tNode, rootView), tView, def.type);
             tNode.flags = 1 /* isComponent */;
             initNodeFlags(tNode, rootView.length, 1);
             queueComponentIndexForCheck(tNode);
@@ -38822,7 +38822,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.2.0-next.1+25.sha-6f50aad.with-local-changes');
+    var VERSION$2 = new Version$1('8.2.0-next.1+27.sha-565a58e.with-local-changes');
 
     /**
      * @license
@@ -49689,7 +49689,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.2.0-next.1+25.sha-6f50aad.with-local-changes');
+    var VERSION$3 = new Version$1('8.2.0-next.1+27.sha-565a58e.with-local-changes');
 
     /**
      * @license
