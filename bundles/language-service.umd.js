@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.2.0-next.1+35.sha-d545bbe.with-local-changes
+ * @license Angular v8.2.0-next.1+36.sha-63e458d.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -15536,18 +15536,19 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     var SerializerVisitor = /** @class */ (function () {
         function SerializerVisitor() {
             /**
-             * Flag that indicates that we are processing elements of an ICU.
+             * Keeps track of ICU nesting level, allowing to detect that we are processing elements of an ICU.
              *
-             * This flag is needed due to the fact that placeholders in ICUs and in other messages are
-             * represented differently in Closure:
+             * This is needed due to the fact that placeholders in ICUs and in other messages are represented
+             * differently in Closure:
              * - {$placeholder} in non-ICU case
              * - {PLACEHOLDER} inside ICU
              */
-            this.insideIcu = false;
+            this.icuNestingLevel = 0;
         }
         SerializerVisitor.prototype.formatPh = function (value) {
-            var formatted = formatI18nPlaceholderName(value, /* useCamelCase */ !this.insideIcu);
-            return this.insideIcu ? "{" + formatted + "}" : "{$" + formatted + "}";
+            var isInsideIcu = this.icuNestingLevel > 0;
+            var formatted = formatI18nPlaceholderName(value, /* useCamelCase */ !isInsideIcu);
+            return isInsideIcu ? "{" + formatted + "}" : "{$" + formatted + "}";
         };
         SerializerVisitor.prototype.visitText = function (text, context) { return text.value; };
         SerializerVisitor.prototype.visitContainer = function (container, context) {
@@ -15556,10 +15557,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         };
         SerializerVisitor.prototype.visitIcu = function (icu, context) {
             var _this = this;
-            this.insideIcu = true;
+            this.icuNestingLevel++;
             var strCases = Object.keys(icu.cases).map(function (k) { return k + " {" + icu.cases[k].visit(_this) + "}"; });
             var result = "{" + icu.expressionPlaceholder + ", " + icu.type + ", " + strCases.join(' ') + "}";
-            this.insideIcu = false;
+            this.icuNestingLevel--;
             return result;
         };
         SerializerVisitor.prototype.visitTagPlaceholder = function (ph, context) {
@@ -18136,7 +18137,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.2.0-next.1+35.sha-d545bbe.with-local-changes');
+    var VERSION$1 = new Version('8.2.0-next.1+36.sha-63e458d.with-local-changes');
 
     /**
      * @license
@@ -38822,7 +38823,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.2.0-next.1+35.sha-d545bbe.with-local-changes');
+    var VERSION$2 = new Version$1('8.2.0-next.1+36.sha-63e458d.with-local-changes');
 
     /**
      * @license
@@ -49689,7 +49690,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.2.0-next.1+35.sha-d545bbe.with-local-changes');
+    var VERSION$3 = new Version$1('8.2.0-next.1+36.sha-63e458d.with-local-changes');
 
     /**
      * @license
