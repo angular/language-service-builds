@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.2.0-next.0+23.sha-989ebcb.with-local-changes
+ * @license Angular v8.2.0-next.1+52.sha-31ea254.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -4932,8 +4932,13 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @param name The placeholder name that should be formatted
      * @returns Formatted placeholder name
      */
-    function formatI18nPlaceholderName(name) {
-        var chunks = toPublicName(name).split('_');
+    function formatI18nPlaceholderName(name, useCamelCase) {
+        if (useCamelCase === void 0) { useCamelCase = true; }
+        var publicName = toPublicName(name);
+        if (!useCamelCase) {
+            return publicName;
+        }
+        var chunks = publicName.split('_');
         if (chunks.length === 1) {
             // if no "_" found - just lowercase the value
             return name.toLowerCase();
@@ -15524,14 +15529,27 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var formatPh = function (value) { return "{$" + formatI18nPlaceholderName(value) + "}"; };
     /**
-     * This visitor walks over i18n tree and generates its string representation,
-     * including ICUs and placeholders in {$PLACEHOLDER} format.
+     * This visitor walks over i18n tree and generates its string representation, including ICUs and
+     * placeholders in `{$placeholder}` (for plain messages) or `{PLACEHOLDER}` (inside ICUs) format.
      */
     var SerializerVisitor = /** @class */ (function () {
         function SerializerVisitor() {
+            /**
+             * Keeps track of ICU nesting level, allowing to detect that we are processing elements of an ICU.
+             *
+             * This is needed due to the fact that placeholders in ICUs and in other messages are represented
+             * differently in Closure:
+             * - {$placeholder} in non-ICU case
+             * - {PLACEHOLDER} inside ICU
+             */
+            this.icuNestingLevel = 0;
         }
+        SerializerVisitor.prototype.formatPh = function (value) {
+            var isInsideIcu = this.icuNestingLevel > 0;
+            var formatted = formatI18nPlaceholderName(value, /* useCamelCase */ !isInsideIcu);
+            return isInsideIcu ? "{" + formatted + "}" : "{$" + formatted + "}";
+        };
         SerializerVisitor.prototype.visitText = function (text, context) { return text.value; };
         SerializerVisitor.prototype.visitContainer = function (container, context) {
             var _this = this;
@@ -15539,17 +15557,22 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         };
         SerializerVisitor.prototype.visitIcu = function (icu, context) {
             var _this = this;
+            this.icuNestingLevel++;
             var strCases = Object.keys(icu.cases).map(function (k) { return k + " {" + icu.cases[k].visit(_this) + "}"; });
-            return "{" + icu.expressionPlaceholder + ", " + icu.type + ", " + strCases.join(' ') + "}";
+            var result = "{" + icu.expressionPlaceholder + ", " + icu.type + ", " + strCases.join(' ') + "}";
+            this.icuNestingLevel--;
+            return result;
         };
         SerializerVisitor.prototype.visitTagPlaceholder = function (ph, context) {
             var _this = this;
             return ph.isVoid ?
-                formatPh(ph.startName) :
-                "" + formatPh(ph.startName) + ph.children.map(function (child) { return child.visit(_this); }).join('') + formatPh(ph.closeName);
+                this.formatPh(ph.startName) :
+                "" + this.formatPh(ph.startName) + ph.children.map(function (child) { return child.visit(_this); }).join('') + this.formatPh(ph.closeName);
         };
-        SerializerVisitor.prototype.visitPlaceholder = function (ph, context) { return formatPh(ph.name); };
-        SerializerVisitor.prototype.visitIcuPlaceholder = function (ph, context) { return formatPh(ph.name); };
+        SerializerVisitor.prototype.visitPlaceholder = function (ph, context) { return this.formatPh(ph.name); };
+        SerializerVisitor.prototype.visitIcuPlaceholder = function (ph, context) {
+            return this.formatPh(ph.name);
+        };
         return SerializerVisitor;
     }());
     var serializerVisitor$1 = new SerializerVisitor();
@@ -15789,15 +15812,20 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             // Closure Compiler requires const names to start with `MSG_` but disallows any other const to
             // start with `MSG_`. We define a variable starting with `MSG_` just for the `goog.getMsg` call
             var closureVar = this.i18nGenerateClosureVar(message.id);
-            var _params = {};
-            if (params && Object.keys(params).length) {
-                Object.keys(params).forEach(function (key) { return _params[formatI18nPlaceholderName(key)] = params[key]; });
-            }
+            var formattedParams = this.i18nFormatPlaceholderNames(params, /* useCamelCase */ true);
             var meta = metaFromI18nMessage(message);
             var content = getSerializedI18nContent(message);
-            var statements = getTranslationDeclStmts(_ref, closureVar, content, meta, _params, transformFn);
+            var statements = getTranslationDeclStmts(_ref, closureVar, content, meta, formattedParams, transformFn);
             (_a = this.constantPool.statements).push.apply(_a, __spread(statements));
             return _ref;
+        };
+        TemplateDefinitionBuilder.prototype.i18nFormatPlaceholderNames = function (params, useCamelCase) {
+            if (params === void 0) { params = {}; }
+            var _params = {};
+            if (params && Object.keys(params).length) {
+                Object.keys(params).forEach(function (key) { return _params[formatI18nPlaceholderName(key, useCamelCase)] = params[key]; });
+            }
+            return _params;
         };
         TemplateDefinitionBuilder.prototype.i18nAppendBindings = function (expressions) {
             var _this = this;
@@ -16367,6 +16395,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             }
         };
         TemplateDefinitionBuilder.prototype.visitIcu = function (icu) {
+            var _this = this;
             var initWasInvoked = false;
             // if an ICU was created outside of i18n block, we still treat
             // it as a translatable entity and invoke i18nStart and i18nEnd
@@ -16380,18 +16409,27 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             var placeholders = this.i18nBindProps(icu.placeholders);
             // output ICU directly and keep ICU reference in context
             var message = icu.i18n;
+            // we always need post-processing function for ICUs, to make sure that:
+            // - all placeholders in a form of {PLACEHOLDER} are replaced with actual values (note:
+            // `goog.getMsg` does not process ICUs and uses the `{PLACEHOLDER}` format for placeholders
+            // inside ICUs)
+            // - all ICU vars (such as `VAR_SELECT` or `VAR_PLURAL`) are replaced with correct values
             var transformFn = function (raw) {
-                return instruction(null, Identifiers$1.i18nPostprocess, [raw, mapLiteral(vars, true)]);
+                var params = __assign({}, vars, placeholders);
+                var formatted = _this.i18nFormatPlaceholderNames(params, /* useCamelCase */ false);
+                return instruction(null, Identifiers$1.i18nPostprocess, [raw, mapLiteral(formatted, true)]);
             };
             // in case the whole i18n message is a single ICU - we do not need to
             // create a separate top-level translation, we can use the root ref instead
             // and make this ICU a top-level translation
+            // note: ICU placeholders are replaced with actual values in `i18nPostprocess` function
+            // separately, so we do not pass placeholders into `i18nTranslate` function.
             if (isSingleI18nIcu(i18n.meta)) {
-                this.i18nTranslate(message, placeholders, i18n.ref, transformFn);
+                this.i18nTranslate(message, /* placeholders */ {}, i18n.ref, transformFn);
             }
             else {
                 // output ICU directly and keep ICU reference in context
-                var ref = this.i18nTranslate(message, placeholders, undefined, transformFn);
+                var ref = this.i18nTranslate(message, /* placeholders */ {}, /* ref */ undefined, transformFn);
                 i18n.appendIcu(icuFromI18nMessage(message).name, ref);
             }
             if (initWasInvoked) {
@@ -18099,7 +18137,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.2.0-next.0+23.sha-989ebcb.with-local-changes');
+    var VERSION$1 = new Version('8.2.0-next.1+52.sha-31ea254.with-local-changes');
 
     /**
      * @license
@@ -33199,15 +33237,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * Sets the namespace used to create elements to `null`, which forces element creation to use
      * `createElement` rather than `createElementNS`.
-     *
-     * @codeGenApi
-     */
-    function ɵɵnamespaceHTML() {
-        namespaceHTMLInternal();
-    }
-    /**
-     * Sets the namespace used to create elements to `null`, which forces element creation to use
-     * `createElement` rather than `createElementNS`.
      */
     function namespaceHTMLInternal() {
         _currentNamespace = null;
@@ -34292,8 +34321,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @param di The node injector in which a directive will be added
      * @param token The type or the injection token to be made public
      */
-    function diPublicInInjector(injectorIndex, view, token) {
-        bloomAdd(injectorIndex, view[TVIEW], token);
+    function diPublicInInjector(injectorIndex, tView, token) {
+        bloomAdd(injectorIndex, tView, token);
     }
     /**
      * Returns the value associated to the given token from the NodeInjectors => ModuleInjector.
@@ -36533,7 +36562,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         }
     }
     function executeTemplate(lView, templateFn, rf, context) {
-        ɵɵnamespaceHTML();
+        namespaceHTMLInternal();
         try {
             if (rf & 2 /* Update */) {
                 // When we're updating, have an inherent ɵɵselect(0) so we don't have to generate that
@@ -38087,7 +38116,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         var tNode = getOrCreateTNode(tView, null, 0, 3 /* Element */, null, null);
         var componentView = createLView(rootView, getOrCreateTView(def), null, def.onPush ? 64 /* Dirty */ : 16 /* CheckAlways */, rootView[HEADER_OFFSET], tNode, rendererFactory, renderer, sanitizer);
         if (tView.firstTemplatePass) {
-            diPublicInInjector(getOrCreateNodeInjectorForNode(tNode, rootView), rootView, def.type);
+            diPublicInInjector(getOrCreateNodeInjectorForNode(tNode, rootView), tView, def.type);
             tNode.flags = 1 /* isComponent */;
             initNodeFlags(tNode, rootView.length, 1);
             queueComponentIndexForCheck(tNode);
@@ -38794,7 +38823,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.2.0-next.0+23.sha-989ebcb.with-local-changes');
+    var VERSION$2 = new Version$1('8.2.0-next.1+52.sha-31ea254.with-local-changes');
 
     /**
      * @license
@@ -49661,7 +49690,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.2.0-next.0+23.sha-989ebcb.with-local-changes');
+    var VERSION$3 = new Version$1('8.2.0-next.1+52.sha-31ea254.with-local-changes');
 
     /**
      * @license
