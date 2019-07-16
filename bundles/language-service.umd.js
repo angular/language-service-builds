@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.2.0-next.1+52.sha-31ea254.with-local-changes
+ * @license Angular v8.2.0-next.1+60.sha-09576e9.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -3441,6 +3441,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         Identifiers.pipeBind3 = { name: 'ɵɵpipeBind3', moduleName: CORE$1 };
         Identifiers.pipeBind4 = { name: 'ɵɵpipeBind4', moduleName: CORE$1 };
         Identifiers.pipeBindV = { name: 'ɵɵpipeBindV', moduleName: CORE$1 };
+        Identifiers.hostProperty = { name: 'ɵɵhostProperty', moduleName: CORE$1 };
         Identifiers.property = { name: 'ɵɵproperty', moduleName: CORE$1 };
         Identifiers.propertyInterpolate = { name: 'ɵɵpropertyInterpolate', moduleName: CORE$1 };
         Identifiers.propertyInterpolate1 = { name: 'ɵɵpropertyInterpolate1', moduleName: CORE$1 };
@@ -17609,7 +17610,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         var propertyBindings = [];
         var attributeBindings = [];
         var syntheticHostBindings = [];
-        (bindings || []).forEach(function (binding) {
+        bindings && bindings.forEach(function (binding) {
             var name = binding.name;
             var stylingInputWasSet = styleBuilder.registerInputBasedOnName(name, binding.expression, binding.sourceSpan);
             if (!stylingInputWasSet) {
@@ -17638,16 +17639,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 if (sanitizerFn) {
                     instructionParams.push(sanitizerFn);
                 }
-                if (!isAttribute) {
-                    if (!sanitizerFn) {
-                        // append `null` in front of `nativeOnly` flag if no sanitizer fn defined
-                        instructionParams.push(literal(null));
-                    }
-                    // host bindings must have nativeOnly prop set to true
-                    instructionParams.push(literal(true));
-                }
                 updateStatements.push.apply(updateStatements, __spread(bindingExpr.stmts));
-                if (instruction === Identifiers$1.property) {
+                if (instruction === Identifiers$1.hostProperty) {
                     propertyBindings.push(instructionParams);
                 }
                 else if (instruction === Identifiers$1.attribute) {
@@ -17662,7 +17655,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             }
         });
         if (propertyBindings.length > 0) {
-            updateStatements.push(chainedInstruction(Identifiers$1.property, propertyBindings).toStmt());
+            updateStatements.push(chainedInstruction(Identifiers$1.hostProperty, propertyBindings).toStmt());
         }
         if (attributeBindings.length > 0) {
             updateStatements.push(chainedInstruction(Identifiers$1.attribute, attributeBindings).toStmt());
@@ -17746,7 +17739,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 instruction = Identifiers$1.updateSyntheticHostBinding;
             }
             else {
-                instruction = Identifiers$1.property;
+                instruction = Identifiers$1.hostProperty;
             }
         }
         return { bindingName: bindingName, instruction: instruction, isAttribute: !!attrMatches };
@@ -18137,7 +18130,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.2.0-next.1+52.sha-31ea254.with-local-changes');
+    var VERSION$1 = new Version('8.2.0-next.1+60.sha-09576e9.with-local-changes');
 
     /**
      * @license
@@ -37851,6 +37844,14 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     /**
      * Returns the component instance associated with a given DOM host element.
      * Elements which don't represent components return `null`.
@@ -38823,7 +38824,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.2.0-next.1+52.sha-31ea254.with-local-changes');
+    var VERSION$2 = new Version$1('8.2.0-next.1+60.sha-09576e9.with-local-changes');
 
     /**
      * @license
@@ -45865,8 +45866,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var SWITCH_IVY_ENABLED__PRE_R3__ = false;
-    var ivyEnabled = SWITCH_IVY_ENABLED__PRE_R3__;
 
     /**
      * @license
@@ -45906,7 +45905,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this._config = config || DEFAULT_CONFIG;
         }
         SystemJsNgModuleLoader.prototype.load = function (path) {
-            var legacyOfflineMode = !ivyEnabled && this._compiler instanceof Compiler;
+            var legacyOfflineMode = this._compiler instanceof Compiler;
             return legacyOfflineMode ? this.loadFactory(path) : this.loadAndCompile(path);
         };
         SystemJsNgModuleLoader.prototype.loadAndCompile = function (path) {
@@ -46763,7 +46762,16 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         return defaultKeyValueDiffers;
     }
     function _localeFactory(locale) {
-        return locale || 'en-US';
+        if (locale) {
+            return locale;
+        }
+        // Use `goog.LOCALE` as default value for `LOCALE_ID` token for Closure Compiler.
+        // Note: default `goog.LOCALE` value is `en`, when Angular used `en-US`. In order to preserve
+        // backwards compatibility, we use Angular default value over Closure Compiler's one.
+        if (ngI18nClosureMode && typeof goog !== 'undefined' && goog.LOCALE !== 'en') {
+            return goog.LOCALE;
+        }
+        return 'en-US';
     }
     /**
      * A built-in [dependency injection token](guide/glossary#di-token)
@@ -49690,7 +49698,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.2.0-next.1+52.sha-31ea254.with-local-changes');
+    var VERSION$3 = new Version$1('8.2.0-next.1+60.sha-09576e9.with-local-changes');
 
     /**
      * @license
