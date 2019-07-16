@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.2.0-next.1+61.sha-f166b6d.with-local-changes
+ * @license Angular v8.2.0-next.1+62.sha-0110de2.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18115,7 +18115,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.2.0-next.1+61.sha-f166b6d.with-local-changes');
+    var VERSION$1 = new Version('8.2.0-next.1+62.sha-0110de2.with-local-changes');
 
     /**
      * @license
@@ -48335,7 +48335,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.2.0-next.1+61.sha-f166b6d.with-local-changes');
+    var VERSION$2 = new Version$1('8.2.0-next.1+62.sha-0110de2.with-local-changes');
 
     /**
      * @license
@@ -58286,6 +58286,8 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    var SWITCH_IVY_ENABLED__POST_R3__ = true;
+    var ivyEnabled = SWITCH_IVY_ENABLED__POST_R3__;
 
     var _SEPARATOR = '#';
     var FACTORY_CLASS_SUFFIX = 'NgFactory';
@@ -58318,7 +58320,8 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this._config = config || DEFAULT_CONFIG;
         }
         SystemJsNgModuleLoader.prototype.load = function (path) {
-            return this.loadAndCompile(path);
+            var legacyOfflineMode = !ivyEnabled && this._compiler instanceof Compiler;
+            return legacyOfflineMode ? this.loadFactory(path) : this.loadAndCompile(path);
         };
         SystemJsNgModuleLoader.prototype.loadAndCompile = function (path) {
             var _this = this;
@@ -61236,8 +61239,9 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this.host = host;
             this.tsService = tsService;
             this._staticSymbolCache = new StaticSymbolCache();
-            this._typeCache = [];
             this.modulesOutOfDate = true;
+            this.fileToComponent = new Map();
+            this.collectedErrors = new Map();
             this.fileVersions = new Map();
         }
         Object.defineProperty(TypeScriptServiceHost.prototype, "resolver", {
@@ -61372,7 +61376,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 this.analyzedModules = null;
                 this._reflector = null;
                 this.templateReferences = null;
-                this.fileToComponent = null;
+                this.fileToComponent.clear();
                 this.ensureAnalyzedModules();
                 this.modulesOutOfDate = false;
             }
@@ -61437,15 +61441,13 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         };
         TypeScriptServiceHost.prototype.clearCaches = function () {
             this._checker = null;
-            this._typeCache = [];
             this._resolver = null;
-            this.collectedErrors = null;
+            this.collectedErrors.clear();
             this.modulesOutOfDate = true;
         };
         TypeScriptServiceHost.prototype.ensureTemplateMap = function () {
             var e_2, _a, e_3, _b;
-            if (!this.fileToComponent || !this.templateReferences) {
-                var fileToComponent = new Map();
+            if (!this.templateReferences) {
                 var templateReference = [];
                 var ngModuleSummary = this.getAnalyzedModules();
                 var urlResolver = createOfflineCompileUrlResolver();
@@ -61458,7 +61460,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                                 var metadata = this.resolver.getNonNormalizedDirectiveMetadata(directive.reference).metadata;
                                 if (metadata.isComponent && metadata.template && metadata.template.templateUrl) {
                                     var templateName = urlResolver.resolve(this.reflector.componentModuleUrl(directive.reference), metadata.template.templateUrl);
-                                    fileToComponent.set(templateName, directive.reference);
+                                    this.fileToComponent.set(templateName, directive.reference);
                                     templateReference.push(templateName);
                                 }
                             }
@@ -61479,7 +61481,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                     }
                     finally { if (e_2) throw e_2.error; }
                 }
-                this.fileToComponent = fileToComponent;
                 this.templateReferences = templateReference;
             }
         };
@@ -61578,11 +61579,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         });
         TypeScriptServiceHost.prototype.collectError = function (error, filePath) {
             if (filePath) {
-                var errorMap = this.collectedErrors;
-                if (!errorMap || !this.collectedErrors) {
-                    errorMap = this.collectedErrors = new Map();
-                }
-                var errors = errorMap.get(filePath);
+                var errors = this.collectedErrors.get(filePath);
                 if (!errors) {
                     errors = [];
                     this.collectedErrors.set(filePath, errors);
@@ -61676,7 +61673,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             return [declaration, callTarget];
         };
         TypeScriptServiceHost.prototype.getCollectedErrors = function (defaultSpan, sourceFile) {
-            var errors = (this.collectedErrors && this.collectedErrors.get(sourceFile.fileName));
+            var errors = this.collectedErrors.get(sourceFile.fileName);
             return (errors && errors.map(function (e) {
                 var line = e.line || (e.position && e.position.line);
                 var column = e.column || (e.position && e.position.column);
@@ -62094,7 +62091,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.2.0-next.1+61.sha-f166b6d.with-local-changes');
+    var VERSION$3 = new Version$1('8.2.0-next.1+62.sha-0110de2.with-local-changes');
 
     /**
      * @license
