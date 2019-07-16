@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.2.0-next.1+62.sha-0110de2.with-local-changes
+ * @license Angular v8.2.0-next.1+63.sha-1ac0775.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18115,7 +18115,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.2.0-next.1+62.sha-0110de2.with-local-changes');
+    var VERSION$1 = new Version('8.2.0-next.1+63.sha-1ac0775.with-local-changes');
 
     /**
      * @license
@@ -43368,8 +43368,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @codeGenApi
      */
     function ɵɵcontainer(index) {
-        var tNode = containerInternal(index, null, null);
         var lView = getLView();
+        var tNode = containerInternal(lView, index, null, null);
         if (lView[TVIEW].firstTemplatePass) {
             tNode.tViews = [];
         }
@@ -43399,7 +43399,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         var lView = getLView();
         var tView = lView[TVIEW];
         // TODO: consider a separate node type for templates
-        var tContainerNode = containerInternal(index, tagName || null, attrs || null);
+        var tContainerNode = containerInternal(lView, index, tagName || null, attrs || null);
         if (tView.firstTemplatePass) {
             tContainerNode.tViews = createTView(-1, templateFn, consts, vars, tView.directiveRegistry, tView.pipeRegistry, null, null);
         }
@@ -43479,17 +43479,15 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             }
         }
     }
-    function containerInternal(index, tagName, attrs) {
-        var lView = getLView();
+    function containerInternal(lView, nodeIndex, tagName, attrs) {
         ngDevMode && assertEqual(lView[BINDING_INDEX], lView[TVIEW].bindingStartIndex, 'container nodes should be created before any bindings');
-        var adjustedIndex = index + HEADER_OFFSET;
-        ngDevMode && assertDataInRange(lView, index + HEADER_OFFSET);
+        var adjustedIndex = nodeIndex + HEADER_OFFSET;
+        ngDevMode && assertDataInRange(lView, nodeIndex + HEADER_OFFSET);
         ngDevMode && ngDevMode.rendererCreateComment++;
-        var comment = lView[index + HEADER_OFFSET] =
+        var comment = lView[adjustedIndex] =
             lView[RENDERER].createComment(ngDevMode ? 'container' : '');
-        var tNode = getOrCreateTNode(lView[TVIEW], lView[T_HOST], index, 0 /* Container */, tagName, attrs);
-        var lContainer = lView[adjustedIndex] =
-            createLContainer(lView[adjustedIndex], lView, comment, tNode);
+        var tNode = getOrCreateTNode(lView[TVIEW], lView[T_HOST], nodeIndex, 0 /* Container */, tagName, attrs);
+        var lContainer = lView[adjustedIndex] = createLContainer(comment, lView, comment, tNode);
         appendChild(comment, tNode, lView);
         // Containers are added to the current view tree instead of their embedded views
         // because views can be removed and re-inserted.
@@ -48335,7 +48333,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.2.0-next.1+62.sha-0110de2.with-local-changes');
+    var VERSION$2 = new Version$1('8.2.0-next.1+63.sha-1ac0775.with-local-changes');
 
     /**
      * @license
@@ -58286,8 +58284,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var SWITCH_IVY_ENABLED__POST_R3__ = true;
-    var ivyEnabled = SWITCH_IVY_ENABLED__POST_R3__;
 
     var _SEPARATOR = '#';
     var FACTORY_CLASS_SUFFIX = 'NgFactory';
@@ -58320,8 +58316,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this._config = config || DEFAULT_CONFIG;
         }
         SystemJsNgModuleLoader.prototype.load = function (path) {
-            var legacyOfflineMode = !ivyEnabled && this._compiler instanceof Compiler;
-            return legacyOfflineMode ? this.loadFactory(path) : this.loadAndCompile(path);
+            return this.loadAndCompile(path);
         };
         SystemJsNgModuleLoader.prototype.loadAndCompile = function (path) {
             var _this = this;
@@ -62091,7 +62086,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.2.0-next.1+62.sha-0110de2.with-local-changes');
+    var VERSION$3 = new Version$1('8.2.0-next.1+63.sha-1ac0775.with-local-changes');
 
     /**
      * @license
