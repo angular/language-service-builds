@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.2.0-next.1+56.sha-8853f13.with-local-changes
+ * @license Angular v8.2.0-next.1+60.sha-09576e9.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -3426,6 +3426,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         Identifiers.pipeBind3 = { name: 'ɵɵpipeBind3', moduleName: CORE$1 };
         Identifiers.pipeBind4 = { name: 'ɵɵpipeBind4', moduleName: CORE$1 };
         Identifiers.pipeBindV = { name: 'ɵɵpipeBindV', moduleName: CORE$1 };
+        Identifiers.hostProperty = { name: 'ɵɵhostProperty', moduleName: CORE$1 };
         Identifiers.property = { name: 'ɵɵproperty', moduleName: CORE$1 };
         Identifiers.propertyInterpolate = { name: 'ɵɵpropertyInterpolate', moduleName: CORE$1 };
         Identifiers.propertyInterpolate1 = { name: 'ɵɵpropertyInterpolate1', moduleName: CORE$1 };
@@ -17594,7 +17595,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         var propertyBindings = [];
         var attributeBindings = [];
         var syntheticHostBindings = [];
-        (bindings || []).forEach(function (binding) {
+        bindings && bindings.forEach(function (binding) {
             var name = binding.name;
             var stylingInputWasSet = styleBuilder.registerInputBasedOnName(name, binding.expression, binding.sourceSpan);
             if (!stylingInputWasSet) {
@@ -17623,16 +17624,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 if (sanitizerFn) {
                     instructionParams.push(sanitizerFn);
                 }
-                if (!isAttribute) {
-                    if (!sanitizerFn) {
-                        // append `null` in front of `nativeOnly` flag if no sanitizer fn defined
-                        instructionParams.push(literal(null));
-                    }
-                    // host bindings must have nativeOnly prop set to true
-                    instructionParams.push(literal(true));
-                }
                 updateStatements.push.apply(updateStatements, __spread(bindingExpr.stmts));
-                if (instruction === Identifiers$1.property) {
+                if (instruction === Identifiers$1.hostProperty) {
                     propertyBindings.push(instructionParams);
                 }
                 else if (instruction === Identifiers$1.attribute) {
@@ -17647,7 +17640,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             }
         });
         if (propertyBindings.length > 0) {
-            updateStatements.push(chainedInstruction(Identifiers$1.property, propertyBindings).toStmt());
+            updateStatements.push(chainedInstruction(Identifiers$1.hostProperty, propertyBindings).toStmt());
         }
         if (attributeBindings.length > 0) {
             updateStatements.push(chainedInstruction(Identifiers$1.attribute, attributeBindings).toStmt());
@@ -17731,7 +17724,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 instruction = Identifiers$1.updateSyntheticHostBinding;
             }
             else {
-                instruction = Identifiers$1.property;
+                instruction = Identifiers$1.hostProperty;
             }
         }
         return { bindingName: bindingName, instruction: instruction, isAttribute: !!attrMatches };
@@ -18122,7 +18115,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.2.0-next.1+56.sha-8853f13.with-local-changes');
+    var VERSION$1 = new Version('8.2.0-next.1+60.sha-09576e9.with-local-changes');
 
     /**
      * @license
@@ -41943,20 +41936,18 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *        renaming as part of minification.
      * @param value New value to write.
      * @param sanitizer An optional function used to sanitize the value.
-     * @param nativeOnly Whether or not we should only set native properties and skip input check
-     * (this is necessary for host property bindings)
      * @returns This function returns itself so that it may be chained
      * (e.g. `property('name', ctx.name)('title', ctx.title)`)
      *
      * @codeGenApi
      */
-    function ɵɵproperty(propName, value, sanitizer, nativeOnly) {
+    function ɵɵproperty(propName, value, sanitizer) {
         var index = getSelectedIndex();
         ngDevMode && assertNotEqual(index, -1, 'selected index cannot be -1');
         var lView = getLView();
         var bindReconciledValue = bind(lView, value);
         if (bindReconciledValue !== NO_CHANGE) {
-            elementPropertyInternal(index, propName, bindReconciledValue, sanitizer, nativeOnly);
+            elementPropertyInternal(index, propName, bindReconciledValue, sanitizer);
         }
         return ɵɵproperty;
     }
@@ -41970,39 +41961,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         var bindingIndex = lView[BINDING_INDEX]++;
         storeBindingMetadata(lView);
         return bindingUpdated(lView, bindingIndex, value) ? value : NO_CHANGE;
-    }
-    /**
-     * Updates a synthetic host binding (e.g. `[@foo]`) on a component.
-     *
-     * This instruction is for compatibility purposes and is designed to ensure that a
-     * synthetic host binding (e.g. `@HostBinding('@foo')`) properly gets rendered in
-     * the component's renderer. Normally all host bindings are evaluated with the parent
-     * component's renderer, but, in the case of animation @triggers, they need to be
-     * evaluated with the sub component's renderer (because that's where the animation
-     * triggers are defined).
-     *
-     * Do not use this instruction as a replacement for `elementProperty`. This instruction
-     * only exists to ensure compatibility with the ViewEngine's host binding behavior.
-     *
-     * @param index The index of the element to update in the data array
-     * @param propName Name of property. Because it is going to DOM, this is not subject to
-     *        renaming as part of minification.
-     * @param value New value to write.
-     * @param sanitizer An optional function used to sanitize the value.
-     * @param nativeOnly Whether or not we should only set native properties and skip input check
-     * (this is necessary for host property bindings)
-     *
-     * @codeGenApi
-     */
-    function ɵɵupdateSyntheticHostBinding(propName, value, sanitizer, nativeOnly) {
-        var index = getSelectedIndex();
-        var lView = getLView();
-        // TODO(benlesh): remove bind call here.
-        var bound = bind(lView, value);
-        if (bound !== NO_CHANGE) {
-            elementPropertyInternal(index, propName, bound, sanitizer, nativeOnly, loadComponentRenderer);
-        }
-        return ɵɵupdateSyntheticHostBinding;
     }
 
     /**
@@ -46520,6 +46478,69 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * Update a property on a host element. Only applies to native node properties, not inputs.
+     *
+     * Operates on the element selected by index via the {@link select} instruction.
+     *
+     * @param propName Name of property. Because it is going to DOM, this is not subject to
+     *        renaming as part of minification.
+     * @param value New value to write.
+     * @param sanitizer An optional function used to sanitize the value.
+     * @returns This function returns itself so that it may be chained
+     * (e.g. `property('name', ctx.name)('title', ctx.title)`)
+     *
+     * @codeGenApi
+     */
+    function ɵɵhostProperty(propName, value, sanitizer) {
+        var index = getSelectedIndex();
+        ngDevMode && assertNotEqual(index, -1, 'selected index cannot be -1');
+        var lView = getLView();
+        var bindReconciledValue = bind(lView, value);
+        if (bindReconciledValue !== NO_CHANGE) {
+            elementPropertyInternal(index, propName, bindReconciledValue, sanitizer, true);
+        }
+        return ɵɵhostProperty;
+    }
+    /**
+     * Updates a synthetic host binding (e.g. `[@foo]`) on a component.
+     *
+     * This instruction is for compatibility purposes and is designed to ensure that a
+     * synthetic host binding (e.g. `@HostBinding('@foo')`) properly gets rendered in
+     * the component's renderer. Normally all host bindings are evaluated with the parent
+     * component's renderer, but, in the case of animation @triggers, they need to be
+     * evaluated with the sub component's renderer (because that's where the animation
+     * triggers are defined).
+     *
+     * Do not use this instruction as a replacement for `elementProperty`. This instruction
+     * only exists to ensure compatibility with the ViewEngine's host binding behavior.
+     *
+     * @param index The index of the element to update in the data array
+     * @param propName Name of property. Because it is going to DOM, this is not subject to
+     *        renaming as part of minification.
+     * @param value New value to write.
+     * @param sanitizer An optional function used to sanitize the value.
+     *
+     * @codeGenApi
+     */
+    function ɵɵupdateSyntheticHostBinding(propName, value, sanitizer) {
+        var index = getSelectedIndex();
+        var lView = getLView();
+        // TODO(benlesh): remove bind call here.
+        var bound = bind(lView, value);
+        if (bound !== NO_CHANGE) {
+            elementPropertyInternal(index, propName, bound, sanitizer, true, loadComponentRenderer);
+        }
+        return ɵɵupdateSyntheticHostBinding;
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
 
     /**
      * @license
@@ -48314,7 +48335,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.2.0-next.1+56.sha-8853f13.with-local-changes');
+    var VERSION$2 = new Version$1('8.2.0-next.1+60.sha-09576e9.with-local-changes');
 
     /**
      * @license
@@ -55698,6 +55719,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         'ɵɵpipeBind4': ɵɵpipeBind4,
         'ɵɵpipeBindV': ɵɵpipeBindV,
         'ɵɵprojectionDef': ɵɵprojectionDef,
+        'ɵɵhostProperty': ɵɵhostProperty,
         'ɵɵproperty': ɵɵproperty,
         'ɵɵpropertyInterpolate': ɵɵpropertyInterpolate,
         'ɵɵpropertyInterpolate1': ɵɵpropertyInterpolate1,
@@ -58264,6 +58286,8 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    var SWITCH_IVY_ENABLED__POST_R3__ = true;
+    var ivyEnabled = SWITCH_IVY_ENABLED__POST_R3__;
 
     var _SEPARATOR = '#';
     var FACTORY_CLASS_SUFFIX = 'NgFactory';
@@ -58296,7 +58320,8 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this._config = config || DEFAULT_CONFIG;
         }
         SystemJsNgModuleLoader.prototype.load = function (path) {
-            return this.loadAndCompile(path);
+            var legacyOfflineMode = !ivyEnabled && this._compiler instanceof Compiler;
+            return legacyOfflineMode ? this.loadFactory(path) : this.loadAndCompile(path);
         };
         SystemJsNgModuleLoader.prototype.loadAndCompile = function (path) {
             var _this = this;
@@ -59138,7 +59163,16 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         return defaultKeyValueDiffers;
     }
     function _localeFactory(locale) {
-        return locale || 'en-US';
+        if (locale) {
+            return locale;
+        }
+        // Use `goog.LOCALE` as default value for `LOCALE_ID` token for Closure Compiler.
+        // Note: default `goog.LOCALE` value is `en`, when Angular used `en-US`. In order to preserve
+        // backwards compatibility, we use Angular default value over Closure Compiler's one.
+        if (ngI18nClosureMode && typeof goog !== 'undefined' && goog.LOCALE !== 'en') {
+            return goog.LOCALE;
+        }
+        return 'en-US';
     }
     /**
      * A built-in [dependency injection token](guide/glossary#di-token)
@@ -62063,7 +62097,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.2.0-next.1+56.sha-8853f13.with-local-changes');
+    var VERSION$3 = new Version$1('8.2.0-next.1+60.sha-09576e9.with-local-changes');
 
     /**
      * @license
