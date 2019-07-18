@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.2.0-next.2+8.sha-78e7fdd.with-local-changes
+ * @license Angular v8.2.0-next.2+22.sha-60f58bf.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -4868,7 +4868,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         var node = meta instanceof Message ? meta.nodes.find(function (node) { return node instanceof Container; }) : meta;
         if (node) {
             node
-                .children.filter(function (child) { return child instanceof Placeholder; })
+                .children
+                .filter(function (child) { return child instanceof Placeholder; })
                 .forEach(function (child, idx) {
                 var content = wrapI18nPlaceholder(startIdx + idx, contextId);
                 updatePlaceholderMap(placeholders, child.name, content);
@@ -8958,7 +8959,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                     results.push(visitAll$1(t, children, context));
             }
             cb(visit);
-            return [].concat.apply([], results);
+            return Array.prototype.concat.apply([], results);
         };
         return RecursiveVisitor;
     }());
@@ -10736,7 +10737,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                     results.push(templateVisitAll(t, children, context));
             }
             cb(visit);
-            return [].concat.apply([], results);
+            return Array.prototype.concat.apply([], results);
         };
         return RecursiveTemplateAstVisitor;
     }(NullTemplateVisitor));
@@ -16925,10 +16926,12 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             if (!this.map.has(bindingKey)) {
                 this.generateSharedContextVar(retrievalLevel);
             }
+            // Shared context variables are always generated as "ReadVarExpr".
             return this.map.get(bindingKey).lhs;
         };
         BindingScope.prototype.getSharedContextName = function (retrievalLevel) {
             var sharedCtxObj = this.map.get(SHARED_CONTEXT_KEY + retrievalLevel);
+            // Shared context variables are always generated as "ReadVarExpr".
             return sharedCtxObj && sharedCtxObj.declare ? sharedCtxObj.lhs : null;
         };
         BindingScope.prototype.maybeGenerateSharedContextVar = function (value) {
@@ -18117,7 +18120,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.2.0-next.2+8.sha-78e7fdd.with-local-changes');
+    var VERSION$1 = new Version('8.2.0-next.2+22.sha-60f58bf.with-local-changes');
 
     /**
      * @license
@@ -30690,6 +30693,51 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * found in the LICENSE file at https://angular.io/license
      */
     /**
+    * Equivalent to ES6 spread, add each item to an array.
+    *
+    * @param items The items to add
+    * @param arr The array to which you want to add the items
+    */
+    function addAllToArray(items, arr) {
+        for (var i = 0; i < items.length; i++) {
+            arr.push(items[i]);
+        }
+    }
+    /**
+     * Flattens an array.
+     */
+    function flatten$2(list, dst) {
+        if (dst === undefined)
+            dst = list;
+        for (var i = 0; i < list.length; i++) {
+            var item = list[i];
+            if (Array.isArray(item)) {
+                // we need to inline it.
+                if (dst === list) {
+                    // Our assumption that the list was already flat was wrong and
+                    // we need to clone flat since we need to write to it.
+                    dst = list.slice(0, i);
+                }
+                flatten$2(item, dst);
+            }
+            else if (dst !== list) {
+                dst.push(item);
+            }
+        }
+        return dst;
+    }
+    function deepForEach(input, fn) {
+        input.forEach(function (value) { return Array.isArray(value) ? deepForEach(value, fn) : fn(value); });
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
      * An internal token whose presence in an injector indicates that the injector should treat itself
      * as a root scoped injector when processing requests for unknown tokens which may indicate
      * they are provided in the root scope.
@@ -31110,9 +31158,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             value: value,
             multi: multi ? [] : undefined,
         };
-    }
-    function deepForEach(input, fn) {
-        input.forEach(function (value) { return Array.isArray(value) ? deepForEach(value, fn) : fn(value); });
     }
     function isValueProvider(value) {
         return value !== null && typeof value == 'object' && USE_VALUE$2 in value;
@@ -36163,7 +36208,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             var saveLView = getLView();
             setTNodeAndViewData(tNode, lData);
             try {
-                value = lData[index] = factory.factory(null, tData, lData, tNode);
+                value = lData[index] = factory.factory(undefined, tData, lData, tNode);
             }
             finally {
                 if (factory.injectImpl)
@@ -38543,7 +38588,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     var sanitizeUsingSanitizerObject = function (prop, value, mode) {
         var sanitizer = getCurrentStyleSanitizer();
         if (sanitizer) {
-            if (mode & 2 /* SanitizeOnly */) {
+            if (mode !== undefined && mode & 2 /* SanitizeOnly */) {
                 return sanitizer.sanitize(SecurityContext$1.STYLE, value);
             }
             else {
@@ -39431,9 +39476,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             if (hasMaps) {
                 activeStylingMapFeature();
             }
-            var mapFn = function (renderer, element, prop, value, bindingIndex) {
-                fn(prop, value, bindingIndex || null);
-            };
+            var mapFn = function (renderer, element, prop, value, bindingIndex) { fn(prop, value, bindingIndex || null); };
             var sanitizer = this._isClassBased ? null : (this._sanitizer ||
                 getCurrentOrLViewSanitizer(this._data));
             applyStyling(this.context, null, mockElement, this._data, true, mapFn, sanitizer);
@@ -48335,7 +48378,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.2.0-next.2+8.sha-78e7fdd.with-local-changes');
+    var VERSION$2 = new Version$1('8.2.0-next.2+22.sha-60f58bf.with-local-changes');
 
     /**
      * @license
@@ -51532,48 +51575,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             default:
                 return 'other';
         }
-    }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-    * Equivalent to ES6 spread, add each item to an array.
-    *
-    * @param items The items to add
-    * @param arr The array to which you want to add the items
-    */
-    function addAllToArray(items, arr) {
-        for (var i = 0; i < items.length; i++) {
-            arr.push(items[i]);
-        }
-    }
-    /**
-     * Flattens an array.
-     */
-    function flatten$2(list, dst) {
-        if (dst === undefined)
-            dst = list;
-        for (var i = 0; i < list.length; i++) {
-            var item = list[i];
-            if (Array.isArray(item)) {
-                // we need to inline it.
-                if (dst === list) {
-                    // Our assumption that the list was already flat was wrong and
-                    // we need to clone flat since we need to write to it.
-                    dst = list.slice(0, i);
-                }
-                flatten$2(item, dst);
-            }
-            else if (dst !== list) {
-                dst.push(item);
-            }
-        }
-        return dst;
     }
 
     /**
@@ -55966,9 +55967,10 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                     verifySemanticsOfNgModuleImport(mod, moduleType);
                     verifySemanticsOfNgModuleDef(mod, false, moduleType);
                 });
-            ngModule.bootstrap && ngModule.bootstrap.forEach(verifyCorrectBootstrapType);
-            ngModule.bootstrap && ngModule.bootstrap.forEach(verifyComponentIsPartOfNgModule);
-            ngModule.entryComponents && ngModule.entryComponents.forEach(verifyComponentIsPartOfNgModule);
+            ngModule.bootstrap && deepForEach(ngModule.bootstrap, verifyCorrectBootstrapType);
+            ngModule.bootstrap && deepForEach(ngModule.bootstrap, verifyComponentIsPartOfNgModule);
+            ngModule.entryComponents &&
+                deepForEach(ngModule.entryComponents, verifyComponentIsPartOfNgModule);
         }
         // Throw Error if any errors were detected.
         if (errors.length) {
@@ -56030,7 +56032,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 // We know we are component
                 var component = getAnnotation(type, 'Component');
                 if (component && component.entryComponents) {
-                    component.entryComponents.forEach(verifyComponentIsPartOfNgModule);
+                    deepForEach(component.entryComponents, verifyComponentIsPartOfNgModule);
                 }
             }
         }
@@ -58866,14 +58868,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         };
         return DebugElement__POST_R3__;
     }(DebugNode__POST_R3__));
-    /**
-     * Walk the TNode tree to find matches for the predicate.
-     *
-     * @param parentElement the element from which the walk is started
-     * @param predicate the predicate to match
-     * @param matches the list of positive matches
-     * @param elementsOnly whether only elements should be searched
-     */
     function _queryAllR3(parentElement, predicate, matches, elementsOnly) {
         var context = loadLContext(parentElement.nativeNode);
         var parentTNode = context.lView[TVIEW].data[context.nodeIndex];
@@ -58887,7 +58881,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * @param predicate the predicate to match
      * @param matches the list of positive matches
      * @param elementsOnly whether only elements should be searched
-     * @param rootNativeNode the root native node on which prediccate shouold not be matched
+     * @param rootNativeNode the root native node on which predicate should not be matched
      */
     function _queryNodeChildrenR3(tNode, lView, predicate, matches, elementsOnly, rootNativeNode) {
         var e_1, _a;
@@ -58972,7 +58966,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * @param predicate the predicate to match
      * @param matches the list of positive matches
      * @param elementsOnly whether only elements should be searched
-     * @param rootNativeNode the root native node on which prediccate shouold not be matched
+     * @param rootNativeNode the root native node on which predicate should not be matched
      */
     function _queryNodeChildrenInContainerR3(lContainer, predicate, matches, elementsOnly, rootNativeNode) {
         for (var i = CONTAINER_HEADER_OFFSET; i < lContainer.length; i++) {
@@ -58987,13 +58981,21 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * @param predicate the predicate to match
      * @param matches the list of positive matches
      * @param elementsOnly whether only elements should be searched
-     * @param rootNativeNode the root native node on which prediccate shouold not be matched
+     * @param rootNativeNode the root native node on which predicate should not be matched
      */
     function _addQueryMatchR3(nativeNode, predicate, matches, elementsOnly, rootNativeNode) {
         if (rootNativeNode !== nativeNode) {
             var debugNode = getDebugNode(nativeNode);
-            if (debugNode && (elementsOnly ? debugNode instanceof DebugElement__POST_R3__ : true) &&
-                predicate(debugNode)) {
+            if (!debugNode) {
+                return;
+            }
+            // Type of the "predicate and "matches" array are set based on the value of
+            // the "elementsOnly" parameter. TypeScript is not able to properly infer these
+            // types with generics, so we manually cast the parameters accordingly.
+            if (elementsOnly && debugNode instanceof DebugElement__POST_R3__ && predicate(debugNode)) {
+                matches.push(debugNode);
+            }
+            else if (!elementsOnly && predicate(debugNode)) {
                 matches.push(debugNode);
             }
         }
@@ -62091,7 +62093,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.2.0-next.2+8.sha-78e7fdd.with-local-changes');
+    var VERSION$3 = new Version$1('8.2.0-next.2+22.sha-60f58bf.with-local-changes');
 
     /**
      * @license
