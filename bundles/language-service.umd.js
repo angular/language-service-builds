@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.2.0-next.2+33.sha-9c954eb.with-local-changes
+ * @license Angular v8.2.0-next.2+35.sha-cb848b9.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18062,7 +18062,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.2.0-next.2+33.sha-9c954eb.with-local-changes');
+    var VERSION$1 = new Version('8.2.0-next.2+35.sha-cb848b9.with-local-changes');
 
     /**
      * @license
@@ -32580,11 +32580,11 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     var SANITIZER = 13;
     var CHILD_HEAD = 14;
     var CHILD_TAIL = 15;
-    var CONTENT_QUERIES = 16;
-    var DECLARATION_VIEW = 17;
+    var DECLARATION_VIEW = 16;
+    var DECLARATION_LCONTAINER = 17;
     var PREORDER_HOOK_FLAGS = 18;
     /** Size of LView's header. Necessary to adjust for it when setting slots.  */
-    var HEADER_OFFSET = 20;
+    var HEADER_OFFSET = 19;
 
     /**
      * @license
@@ -32653,8 +32653,11 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Uglify will inline these when minifying so there shouldn't be a cost.
      */
     var ACTIVE_INDEX = 2;
-    // PARENT, NEXT, QUERIES and T_HOST are indices 3, 4, 5 and 6.
+    // PARENT and NEXT are indices 3 and 4
     // As we already have these constants in LView, we don't need to re-create them.
+    var MOVED_VIEWS = 5;
+    // T_HOST is index 6
+    // We already have this constants in LView, we don't need to re-create it.
     var NATIVE = 7;
     /**
      * Size of LContainer's header. Represents the index after which all views in the
@@ -32724,6 +32727,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     function assertLView(value) {
         assertDefined(value, 'LView must be defined');
         assertEqual(isLView(value), true, 'Expecting LView');
+    }
+    function assertFirstTemplatePass(tView, errMessage) {
+        assertEqual(tView.firstTemplatePass, true, errMessage);
     }
 
     /**
@@ -33090,10 +33096,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     function viewAttachedToChangeDetector(view) {
         return (view[FLAGS] & 128 /* Attached */) === 128 /* Attached */;
     }
-    /** Returns a boolean for whether the view is attached to a container. */
-    function viewAttachedToContainer(view) {
-        return isLContainer(view[PARENT]);
-    }
     /**
      * Resets the pre-order hook flags of the view.
      * @param lView the LView on which the flags are reset
@@ -33177,8 +33179,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     var bindingRootIndex = -1;
     function setBindingRoot(value) {
         bindingRootIndex = value;
-    }
-    function setCurrentQueryIndex(value) {
     }
     /**
      * Swap the current state with a new state.
@@ -35447,11 +35447,11 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         function TView(id, //
         blueprint, //
         template, //
+        queries, //
         viewQuery, //
         node, //
         data, //
         bindingStartIndex, //
-        viewQueryStartIndex, //
         expandoStartIndex, //
         expandoInstructions, //
         firstTemplatePass, //
@@ -35474,11 +35474,11 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             this.id = id;
             this.blueprint = blueprint;
             this.template = template;
+            this.queries = queries;
             this.viewQuery = viewQuery;
             this.node = node;
             this.data = data;
             this.bindingStartIndex = bindingStartIndex;
-            this.viewQueryStartIndex = viewQueryStartIndex;
             this.expandoStartIndex = expandoStartIndex;
             this.expandoInstructions = expandoInstructions;
             this.firstTemplatePass = firstTemplatePass;
@@ -35732,8 +35732,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                     next: toDebug(this._raw_lView[NEXT]),
                     childTail: toDebug(this._raw_lView[CHILD_TAIL]),
                     declarationView: toDebug(this._raw_lView[DECLARATION_VIEW]),
-                    contentQueries: this._raw_lView[CONTENT_QUERIES],
-                    queries: this._raw_lView[QUERIES],
+                    queries: null,
                     tHost: this._raw_lView[T_HOST],
                     bindingIndex: this._raw_lView[BINDING_INDEX],
                 };
@@ -35815,8 +35814,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(LContainerDebug.prototype, "queries", {
-            get: function () { return this._raw_lContainer[QUERIES]; },
+        Object.defineProperty(LContainerDebug.prototype, "movedViews", {
+            get: function () { return this._raw_lContainer[MOVED_VIEWS]; },
             enumerable: true,
             configurable: true
         });
@@ -36129,15 +36128,19 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         finally {
         }
     }
-    /** Refreshes content queries for all directives in the given view. */
+    /** Refreshes all content queries declared by directives in a given view */
     function refreshContentQueries(tView, lView) {
-        if (tView.contentQueries != null) {
-            for (var i = 0; i < tView.contentQueries.length; i++) {
-                var directiveDefIdx = tView.contentQueries[i];
-                var directiveDef = tView.data[directiveDefIdx];
-                ngDevMode &&
-                    assertDefined(directiveDef.contentQueries, 'contentQueries function should be defined');
-                directiveDef.contentQueries(2 /* Update */, lView[directiveDefIdx], directiveDefIdx);
+        var contentQueries = tView.contentQueries;
+        if (contentQueries !== null) {
+            for (var i = 0; i < contentQueries.length; i += 2) {
+                var queryStartIdx = contentQueries[i];
+                var directiveDefIdx = contentQueries[i + 1];
+                if (directiveDefIdx !== -1) {
+                    var directiveDef = tView.data[directiveDefIdx];
+                    ngDevMode &&
+                        assertDefined(directiveDef.contentQueries, 'contentQueries function should be defined');
+                    directiveDef.contentQueries(2 /* Update */, lView[directiveDefIdx], directiveDefIdx);
+                }
             }
         }
     }
@@ -36362,11 +36365,11 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             new TViewConstructor(viewIndex, // id: number,
             blueprint, // blueprint: LView,
             templateFn, // template: ComponentTemplate<{}>|null,
+            null, // queries: TQueries|null
             viewQuery, // viewQuery: ViewQueriesFunction<{}>|null,
             null, // node: TViewNode|TElementNode|null,
             cloneToTViewData(blueprint).fill(null, bindingStartIndex), // data: TData,
             bindingStartIndex, // bindingStartIndex: number,
-            initialViewLength, // viewQueryStartIndex: number,
             initialViewLength, // expandoStartIndex: number,
             null, // expandoInstructions: ExpandoInstructions|null,
             true, // firstTemplatePass: boolean,
@@ -36392,11 +36395,11 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 id: viewIndex,
                 blueprint: blueprint,
                 template: templateFn,
+                queries: null,
                 viewQuery: viewQuery,
                 node: null,
                 data: blueprint.slice().fill(null, bindingStartIndex),
                 bindingStartIndex: bindingStartIndex,
-                viewQueryStartIndex: initialViewLength,
                 expandoStartIndex: initialViewLength,
                 expandoInstructions: null,
                 firstTemplatePass: true,
@@ -36830,8 +36833,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     }
     function executeViewQueryFn(flags, tView, component) {
         var viewQuery = tView.viewQuery;
-        if (viewQuery) {
-            setCurrentQueryIndex(tView.viewQueryStartIndex);
+        if (viewQuery !== null) {
             viewQuery(flags, component);
         }
     }
@@ -37181,6 +37183,13 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             lViewOrLContainer = next;
         }
     }
+    function detachMovedView(declarationContainer, lView) {
+        ngDevMode && assertLContainer(declarationContainer);
+        ngDevMode && assertDefined(declarationContainer[MOVED_VIEWS], 'A projected view should belong to a non-empty projected views collection');
+        var projectedViews = declarationContainer[MOVED_VIEWS];
+        var declaredViewIndex = projectedViews.indexOf(lView);
+        projectedViews.splice(declaredViewIndex, 1);
+    }
     /**
      * A standalone function which destroys an LView,
      * conducting cleanup (e.g. removing listeners, calling onDestroys).
@@ -37247,9 +37256,18 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 ngDevMode && ngDevMode.rendererDestroy++;
                 view[RENDERER].destroy();
             }
-            // For embedded views still attached to a container: remove query result from this view.
-            if (viewAttachedToContainer(view) && view[QUERIES]) {
-                view[QUERIES].removeView();
+            var declarationContainer = view[DECLARATION_LCONTAINER];
+            // we are dealing with an embedded view that is still inserted into a container
+            if (declarationContainer !== null && isLContainer(view[PARENT])) {
+                // and this is a projected view
+                if (declarationContainer !== view[PARENT]) {
+                    detachMovedView(declarationContainer, view);
+                }
+                // For embedded views still attached to a container: remove query result from this view.
+                var lQueries = view[QUERIES];
+                if (lQueries !== null) {
+                    lQueries.detachView(view[TVIEW]);
+                }
             }
         }
     }
@@ -37474,15 +37492,17 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     }
     function executeActionOnNode(renderer, action, lView, tNode, renderParent, beforeNode) {
         var nodeType = tNode.type;
-        if (nodeType === 4 /* ElementContainer */ || nodeType === 5 /* IcuContainer */) {
-            executeActionOnElementContainerOrIcuContainer(renderer, action, lView, tNode, renderParent, beforeNode);
-        }
-        else if (nodeType === 1 /* Projection */) {
-            executeActionOnProjection(renderer, action, lView, tNode, renderParent, beforeNode);
-        }
-        else {
-            ngDevMode && assertNodeOfPossibleTypes(tNode, 3 /* Element */, 0 /* Container */);
-            executeActionOnElementOrContainer(action, renderer, renderParent, lView[tNode.index], beforeNode);
+        if (!(tNode.flags & 32 /* isDetached */)) {
+            if (nodeType === 4 /* ElementContainer */ || nodeType === 5 /* IcuContainer */) {
+                executeActionOnElementContainerOrIcuContainer(renderer, action, lView, tNode, renderParent, beforeNode);
+            }
+            else if (nodeType === 1 /* Projection */) {
+                executeActionOnProjection(renderer, action, lView, tNode, renderParent, beforeNode);
+            }
+            else {
+                ngDevMode && assertNodeOfPossibleTypes(tNode, 3 /* Element */, 0 /* Container */);
+                executeActionOnElementOrContainer(action, renderer, renderParent, lView[tNode.index], beforeNode);
+            }
         }
     }
 
@@ -38617,7 +38637,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.2.0-next.2+33.sha-9c954eb.with-local-changes');
+    var VERSION$2 = new Version$1('8.2.0-next.2+35.sha-cb848b9.with-local-changes');
 
     /**
      * @license
@@ -43749,7 +43769,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
          * on change detection, it will not notify of changes to the queries, unless a new change
          * occurs.
          *
-         * @param resultsTree The results tree to store
+         * @param resultsTree The query results to store
          */
         QueryList.prototype.reset = function (resultsTree) {
             this._results = flatten$2(resultsTree);
@@ -43795,6 +43815,90 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    var TQueries_ = /** @class */ (function () {
+        function TQueries_(queries) {
+            if (queries === void 0) { queries = []; }
+            this.queries = queries;
+        }
+        TQueries_.prototype.elementStart = function (tView, tNode) {
+            var e_1, _a;
+            ngDevMode && assertFirstTemplatePass(tView, 'Queries should collect results on the first template pass only');
+            try {
+                for (var _b = __values(this.queries), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var query = _c.value;
+                    query.elementStart(tView, tNode);
+                }
+            }
+            catch (e_1_1) { e_1 = { error: e_1_1 }; }
+            finally {
+                try {
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                }
+                finally { if (e_1) throw e_1.error; }
+            }
+        };
+        TQueries_.prototype.elementEnd = function (tNode) {
+            var e_2, _a;
+            try {
+                for (var _b = __values(this.queries), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var query = _c.value;
+                    query.elementEnd(tNode);
+                }
+            }
+            catch (e_2_1) { e_2 = { error: e_2_1 }; }
+            finally {
+                try {
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                }
+                finally { if (e_2) throw e_2.error; }
+            }
+        };
+        TQueries_.prototype.embeddedTView = function (tNode) {
+            var queriesForTemplateRef = null;
+            for (var i = 0; i < this.length; i++) {
+                var childQueryIndex = queriesForTemplateRef !== null ? queriesForTemplateRef.length : 0;
+                var tqueryClone = this.getByIndex(i).embeddedTView(tNode, childQueryIndex);
+                if (tqueryClone) {
+                    tqueryClone.indexInDeclarationView = i;
+                    if (queriesForTemplateRef !== null) {
+                        queriesForTemplateRef.push(tqueryClone);
+                    }
+                    else {
+                        queriesForTemplateRef = [tqueryClone];
+                    }
+                }
+            }
+            return queriesForTemplateRef !== null ? new TQueries_(queriesForTemplateRef) : null;
+        };
+        TQueries_.prototype.template = function (tView, tNode) {
+            var e_3, _a;
+            ngDevMode && assertFirstTemplatePass(tView, 'Queries should collect results on the first template pass only');
+            try {
+                for (var _b = __values(this.queries), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var query = _c.value;
+                    query.template(tView, tNode);
+                }
+            }
+            catch (e_3_1) { e_3 = { error: e_3_1 }; }
+            finally {
+                try {
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                }
+                finally { if (e_3) throw e_3.error; }
+            }
+        };
+        TQueries_.prototype.getByIndex = function (index) {
+            ngDevMode && assertDataInRange(this.queries, index);
+            return this.queries[index];
+        };
+        Object.defineProperty(TQueries_.prototype, "length", {
+            get: function () { return this.queries.length; },
+            enumerable: true,
+            configurable: true
+        });
+        TQueries_.prototype.track = function (tquery) { this.queries.push(tquery); };
+        return TQueries_;
+    }());
 
     /**
      * @license
@@ -49441,7 +49545,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.2.0-next.2+33.sha-9c954eb.with-local-changes');
+    var VERSION$3 = new Version$1('8.2.0-next.2+35.sha-cb848b9.with-local-changes');
 
     /**
      * @license
