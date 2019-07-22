@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.2.0-next.2+36.sha-8f084d7.with-local-changes
+ * @license Angular v8.2.0-next.2+38.sha-ebc71f7.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -3717,6 +3717,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         };
         return ParseSourceSpan;
     }());
+    var EMPTY_PARSE_LOCATION = new ParseLocation(new ParseSourceFile('', ''), 0, 0, 0);
+    var EMPTY_SOURCE_SPAN = new ParseSourceSpan(EMPTY_PARSE_LOCATION, EMPTY_PARSE_LOCATION);
     var ParseErrorLevel;
     (function (ParseErrorLevel) {
         ParseErrorLevel[ParseErrorLevel["WARNING"] = 0] = "WARNING";
@@ -6983,14 +6985,26 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         };
         return FunctionCall;
     }(AST));
+    /**
+     * Records the absolute position of a text span in a source file, where `start` and `end` are the
+     * starting and ending byte offsets, respectively, of the text span in a source file.
+     */
+    var AbsoluteSourceSpan = /** @class */ (function () {
+        function AbsoluteSourceSpan(start, end) {
+            this.start = start;
+            this.end = end;
+        }
+        return AbsoluteSourceSpan;
+    }());
     var ASTWithSource = /** @class */ (function (_super) {
         __extends(ASTWithSource, _super);
-        function ASTWithSource(ast, source, location, errors) {
+        function ASTWithSource(ast, source, location, absoluteOffset, errors) {
             var _this = _super.call(this, new ParseSpan(0, source == null ? 0 : source.length)) || this;
             _this.ast = ast;
             _this.source = source;
             _this.location = location;
             _this.errors = errors;
+            _this.sourceSpan = new AbsoluteSourceSpan(absoluteOffset, absoluteOffset + _this.span.end);
             return _this;
         }
         ASTWithSource.prototype.visit = function (visitor, context) {
@@ -11216,7 +11230,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 Object.keys(dirMeta.hostProperties).forEach(function (propName) {
                     var expression = dirMeta.hostProperties[propName];
                     if (typeof expression === 'string') {
-                        _this.parsePropertyBinding(propName, expression, true, sourceSpan, [], boundProps_1);
+                        _this.parsePropertyBinding(propName, expression, true, sourceSpan, sourceSpan.start.offset, [], boundProps_1);
                     }
                     else {
                         _this._reportError("Value of the host property binding \"" + propName + "\" needs to be a string representing an expression but got \"" + expression + "\" (" + typeof expression + ")", sourceSpan);
@@ -11253,7 +11267,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         BindingParser.prototype.parseInterpolation = function (value, sourceSpan) {
             var sourceInfo = sourceSpan.start.toString();
             try {
-                var ast = this._exprParser.parseInterpolation(value, sourceInfo, this._interpolationConfig);
+                var ast = this._exprParser.parseInterpolation(value, sourceInfo, sourceSpan.start.offset, this._interpolationConfig);
                 if (ast)
                     this._reportExpressionParserErrors(ast.errors, sourceSpan);
                 this._checkPipes(ast, sourceSpan);
@@ -11261,11 +11275,11 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             }
             catch (e) {
                 this._reportError("" + e, sourceSpan);
-                return this._exprParser.wrapLiteralPrimitive('ERROR', sourceInfo);
+                return this._exprParser.wrapLiteralPrimitive('ERROR', sourceInfo, sourceSpan.start.offset);
             }
         };
         // Parse an inline template binding. ie `<tag *tplKey="<tplValue>">`
-        BindingParser.prototype.parseInlineTemplateBinding = function (tplKey, tplValue, sourceSpan, targetMatchableAttrs, targetProps, targetVars) {
+        BindingParser.prototype.parseInlineTemplateBinding = function (tplKey, tplValue, sourceSpan, absoluteOffset, targetMatchableAttrs, targetProps, targetVars) {
             var bindings = this._parseTemplateBindings(tplKey, tplValue, sourceSpan);
             for (var i = 0; i < bindings.length; i++) {
                 var binding = bindings[i];
@@ -11277,7 +11291,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 }
                 else {
                     targetMatchableAttrs.push([binding.key, '']);
-                    this.parseLiteralAttr(binding.key, null, sourceSpan, targetMatchableAttrs, targetProps);
+                    this.parseLiteralAttr(binding.key, null, sourceSpan, absoluteOffset, targetMatchableAttrs, targetProps);
                 }
             }
         };
@@ -11285,7 +11299,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             var _this = this;
             var sourceInfo = sourceSpan.start.toString();
             try {
-                var bindingsResult = this._exprParser.parseTemplateBindings(tplKey, tplValue, sourceInfo);
+                var bindingsResult = this._exprParser.parseTemplateBindings(tplKey, tplValue, sourceInfo, sourceSpan.start.offset);
                 this._reportExpressionParserErrors(bindingsResult.errors, sourceSpan);
                 bindingsResult.templateBindings.forEach(function (binding) {
                     if (binding.expression) {
@@ -11300,20 +11314,20 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 return [];
             }
         };
-        BindingParser.prototype.parseLiteralAttr = function (name, value, sourceSpan, targetMatchableAttrs, targetProps) {
+        BindingParser.prototype.parseLiteralAttr = function (name, value, sourceSpan, absoluteOffset, targetMatchableAttrs, targetProps) {
             if (isAnimationLabel(name)) {
                 name = name.substring(1);
                 if (value) {
                     this._reportError("Assigning animation triggers via @prop=\"exp\" attributes with an expression is invalid." +
                         " Use property bindings (e.g. [@prop]=\"exp\") or use an attribute without a value (e.g. @prop) instead.", sourceSpan, ParseErrorLevel.ERROR);
                 }
-                this._parseAnimation(name, value, sourceSpan, targetMatchableAttrs, targetProps);
+                this._parseAnimation(name, value, sourceSpan, absoluteOffset, targetMatchableAttrs, targetProps);
             }
             else {
-                targetProps.push(new ParsedProperty(name, this._exprParser.wrapLiteralPrimitive(value, ''), ParsedPropertyType.LITERAL_ATTR, sourceSpan));
+                targetProps.push(new ParsedProperty(name, this._exprParser.wrapLiteralPrimitive(value, '', absoluteOffset), ParsedPropertyType.LITERAL_ATTR, sourceSpan));
             }
         };
-        BindingParser.prototype.parsePropertyBinding = function (name, expression, isHost, sourceSpan, targetMatchableAttrs, targetProps) {
+        BindingParser.prototype.parsePropertyBinding = function (name, expression, isHost, sourceSpan, absoluteOffset, targetMatchableAttrs, targetProps) {
             var isAnimationProp = false;
             if (name.startsWith(ANIMATE_PROP_PREFIX)) {
                 isAnimationProp = true;
@@ -11324,10 +11338,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 name = name.substring(1);
             }
             if (isAnimationProp) {
-                this._parseAnimation(name, expression, sourceSpan, targetMatchableAttrs, targetProps);
+                this._parseAnimation(name, expression, sourceSpan, absoluteOffset, targetMatchableAttrs, targetProps);
             }
             else {
-                this._parsePropertyAst(name, this._parseBinding(expression, isHost, sourceSpan), sourceSpan, targetMatchableAttrs, targetProps);
+                this._parsePropertyAst(name, this._parseBinding(expression, isHost, sourceSpan, absoluteOffset), sourceSpan, targetMatchableAttrs, targetProps);
             }
         };
         BindingParser.prototype.parsePropertyInterpolation = function (name, value, sourceSpan, targetMatchableAttrs, targetProps) {
@@ -11342,20 +11356,20 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             targetMatchableAttrs.push([name, ast.source]);
             targetProps.push(new ParsedProperty(name, ast, ParsedPropertyType.DEFAULT, sourceSpan));
         };
-        BindingParser.prototype._parseAnimation = function (name, expression, sourceSpan, targetMatchableAttrs, targetProps) {
+        BindingParser.prototype._parseAnimation = function (name, expression, sourceSpan, absoluteOffset, targetMatchableAttrs, targetProps) {
             // This will occur when a @trigger is not paired with an expression.
             // For animations it is valid to not have an expression since */void
             // states will be applied by angular when the element is attached/detached
-            var ast = this._parseBinding(expression || 'undefined', false, sourceSpan);
+            var ast = this._parseBinding(expression || 'undefined', false, sourceSpan, absoluteOffset);
             targetMatchableAttrs.push([name, ast.source]);
             targetProps.push(new ParsedProperty(name, ast, ParsedPropertyType.ANIMATION, sourceSpan));
         };
-        BindingParser.prototype._parseBinding = function (value, isHostBinding, sourceSpan) {
+        BindingParser.prototype._parseBinding = function (value, isHostBinding, sourceSpan, absoluteOffset) {
             var sourceInfo = (sourceSpan && sourceSpan.start || '(unknown)').toString();
             try {
                 var ast = isHostBinding ?
-                    this._exprParser.parseSimpleBinding(value, sourceInfo, this._interpolationConfig) :
-                    this._exprParser.parseBinding(value, sourceInfo, this._interpolationConfig);
+                    this._exprParser.parseSimpleBinding(value, sourceInfo, absoluteOffset, this._interpolationConfig) :
+                    this._exprParser.parseBinding(value, sourceInfo, absoluteOffset, this._interpolationConfig);
                 if (ast)
                     this._reportExpressionParserErrors(ast.errors, sourceSpan);
                 this._checkPipes(ast, sourceSpan);
@@ -11363,7 +11377,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             }
             catch (e) {
                 this._reportError("" + e, sourceSpan);
-                return this._exprParser.wrapLiteralPrimitive('ERROR', sourceInfo);
+                return this._exprParser.wrapLiteralPrimitive('ERROR', sourceInfo, absoluteOffset);
             }
         };
         BindingParser.prototype.createBoundElementProperty = function (elementSelector, boundProp, skipValidation, mapPropertyName) {
@@ -11461,21 +11475,22 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         };
         BindingParser.prototype._parseAction = function (value, sourceSpan) {
             var sourceInfo = (sourceSpan && sourceSpan.start || '(unknown').toString();
+            var absoluteOffset = (sourceSpan && sourceSpan.start) ? sourceSpan.start.offset : 0;
             try {
-                var ast = this._exprParser.parseAction(value, sourceInfo, this._interpolationConfig);
+                var ast = this._exprParser.parseAction(value, sourceInfo, absoluteOffset, this._interpolationConfig);
                 if (ast) {
                     this._reportExpressionParserErrors(ast.errors, sourceSpan);
                 }
                 if (!ast || ast.ast instanceof EmptyExpr) {
                     this._reportError("Empty expressions are not allowed", sourceSpan);
-                    return this._exprParser.wrapLiteralPrimitive('ERROR', sourceInfo);
+                    return this._exprParser.wrapLiteralPrimitive('ERROR', sourceInfo, absoluteOffset);
                 }
                 this._checkPipes(ast, sourceSpan);
                 return ast;
             }
             catch (e) {
                 this._reportError("" + e, sourceSpan);
-                return this._exprParser.wrapLiteralPrimitive('ERROR', sourceInfo);
+                return this._exprParser.wrapLiteralPrimitive('ERROR', sourceInfo, absoluteOffset);
             }
         };
         BindingParser.prototype._reportError = function (message, sourceSpan, level) {
@@ -11883,7 +11898,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                     }
                     hasInlineTemplates = true;
                     var parsedVariables_1 = [];
-                    _this._bindingParser.parseInlineTemplateBinding(templateKey, templateValue, attr.sourceSpan, templateMatchableAttrs, templateElementOrDirectiveProps, parsedVariables_1);
+                    _this._bindingParser.parseInlineTemplateBinding(templateKey, templateValue, attr.sourceSpan, attr.sourceSpan.start.offset, templateMatchableAttrs, templateElementOrDirectiveProps, parsedVariables_1);
                     templateElementVars.push.apply(templateElementVars, __spread(parsedVariables_1.map(function (v) { return VariableAst.fromParsedVariable(v); })));
                 }
                 if (!hasBinding && !hasTemplateBinding) {
@@ -11947,13 +11962,14 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             var name = this._normalizeAttributeName(attr.name);
             var value = attr.value;
             var srcSpan = attr.sourceSpan;
+            var absoluteOffset = attr.valueSpan ? attr.valueSpan.start.offset : srcSpan.start.offset;
             var boundEvents = [];
             var bindParts = name.match(BIND_NAME_REGEXP);
             var hasBinding = false;
             if (bindParts !== null) {
                 hasBinding = true;
                 if (bindParts[KW_BIND_IDX] != null) {
-                    this._bindingParser.parsePropertyBinding(bindParts[IDENT_KW_IDX], value, false, srcSpan, targetMatchableAttrs, targetProps);
+                    this._bindingParser.parsePropertyBinding(bindParts[IDENT_KW_IDX], value, false, srcSpan, absoluteOffset, targetMatchableAttrs, targetProps);
                 }
                 else if (bindParts[KW_LET_IDX]) {
                     if (isTemplateElement) {
@@ -11972,18 +11988,18 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                     this._bindingParser.parseEvent(bindParts[IDENT_KW_IDX], value, srcSpan, attr.valueSpan || srcSpan, targetMatchableAttrs, boundEvents);
                 }
                 else if (bindParts[KW_BINDON_IDX]) {
-                    this._bindingParser.parsePropertyBinding(bindParts[IDENT_KW_IDX], value, false, srcSpan, targetMatchableAttrs, targetProps);
+                    this._bindingParser.parsePropertyBinding(bindParts[IDENT_KW_IDX], value, false, srcSpan, absoluteOffset, targetMatchableAttrs, targetProps);
                     this._parseAssignmentEvent(bindParts[IDENT_KW_IDX], value, srcSpan, attr.valueSpan || srcSpan, targetMatchableAttrs, boundEvents);
                 }
                 else if (bindParts[KW_AT_IDX]) {
-                    this._bindingParser.parseLiteralAttr(name, value, srcSpan, targetMatchableAttrs, targetProps);
+                    this._bindingParser.parseLiteralAttr(name, value, srcSpan, absoluteOffset, targetMatchableAttrs, targetProps);
                 }
                 else if (bindParts[IDENT_BANANA_BOX_IDX]) {
-                    this._bindingParser.parsePropertyBinding(bindParts[IDENT_BANANA_BOX_IDX], value, false, srcSpan, targetMatchableAttrs, targetProps);
+                    this._bindingParser.parsePropertyBinding(bindParts[IDENT_BANANA_BOX_IDX], value, false, srcSpan, absoluteOffset, targetMatchableAttrs, targetProps);
                     this._parseAssignmentEvent(bindParts[IDENT_BANANA_BOX_IDX], value, srcSpan, attr.valueSpan || srcSpan, targetMatchableAttrs, boundEvents);
                 }
                 else if (bindParts[IDENT_PROPERTY_IDX]) {
-                    this._bindingParser.parsePropertyBinding(bindParts[IDENT_PROPERTY_IDX], value, false, srcSpan, targetMatchableAttrs, targetProps);
+                    this._bindingParser.parsePropertyBinding(bindParts[IDENT_PROPERTY_IDX], value, false, srcSpan, absoluteOffset, targetMatchableAttrs, targetProps);
                 }
                 else if (bindParts[IDENT_EVENT_IDX]) {
                     this._bindingParser.parseEvent(bindParts[IDENT_EVENT_IDX], value, srcSpan, attr.valueSpan || srcSpan, targetMatchableAttrs, boundEvents);
@@ -11993,7 +12009,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 hasBinding = this._bindingParser.parsePropertyInterpolation(name, value, srcSpan, targetMatchableAttrs, targetProps);
             }
             if (!hasBinding) {
-                this._bindingParser.parseLiteralAttr(name, value, srcSpan, targetMatchableAttrs, targetProps);
+                this._bindingParser.parseLiteralAttr(name, value, srcSpan, absoluteOffset, targetMatchableAttrs, targetProps);
             }
             targetEvents.push.apply(targetEvents, __spread(boundEvents.map(function (e) { return BoundEventAst.fromParsedEvent(e); })));
             return hasBinding;
@@ -13299,33 +13315,33 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             this._lexer = _lexer;
             this.errors = [];
         }
-        Parser.prototype.parseAction = function (input, location, interpolationConfig) {
+        Parser.prototype.parseAction = function (input, location, absoluteOffset, interpolationConfig) {
             if (interpolationConfig === void 0) { interpolationConfig = DEFAULT_INTERPOLATION_CONFIG; }
             this._checkNoInterpolation(input, location, interpolationConfig);
             var sourceToLex = this._stripComments(input);
             var tokens = this._lexer.tokenize(this._stripComments(input));
-            var ast = new _ParseAST(input, location, tokens, sourceToLex.length, true, this.errors, input.length - sourceToLex.length)
+            var ast = new _ParseAST(input, location, absoluteOffset, tokens, sourceToLex.length, true, this.errors, input.length - sourceToLex.length)
                 .parseChain();
-            return new ASTWithSource(ast, input, location, this.errors);
+            return new ASTWithSource(ast, input, location, absoluteOffset, this.errors);
         };
-        Parser.prototype.parseBinding = function (input, location, interpolationConfig) {
+        Parser.prototype.parseBinding = function (input, location, absoluteOffset, interpolationConfig) {
             if (interpolationConfig === void 0) { interpolationConfig = DEFAULT_INTERPOLATION_CONFIG; }
-            var ast = this._parseBindingAst(input, location, interpolationConfig);
-            return new ASTWithSource(ast, input, location, this.errors);
+            var ast = this._parseBindingAst(input, location, absoluteOffset, interpolationConfig);
+            return new ASTWithSource(ast, input, location, absoluteOffset, this.errors);
         };
-        Parser.prototype.parseSimpleBinding = function (input, location, interpolationConfig) {
+        Parser.prototype.parseSimpleBinding = function (input, location, absoluteOffset, interpolationConfig) {
             if (interpolationConfig === void 0) { interpolationConfig = DEFAULT_INTERPOLATION_CONFIG; }
-            var ast = this._parseBindingAst(input, location, interpolationConfig);
+            var ast = this._parseBindingAst(input, location, absoluteOffset, interpolationConfig);
             var errors = SimpleExpressionChecker.check(ast);
             if (errors.length > 0) {
                 this._reportError("Host binding expression cannot contain " + errors.join(' '), input, location);
             }
-            return new ASTWithSource(ast, input, location, this.errors);
+            return new ASTWithSource(ast, input, location, absoluteOffset, this.errors);
         };
         Parser.prototype._reportError = function (message, input, errLocation, ctxLocation) {
             this.errors.push(new ParserError(message, input, errLocation, ctxLocation));
         };
-        Parser.prototype._parseBindingAst = function (input, location, interpolationConfig) {
+        Parser.prototype._parseBindingAst = function (input, location, absoluteOffset, interpolationConfig) {
             // Quotes expressions use 3rd-party expression language. We don't want to use
             // our lexer or parser for that, so we check for that ahead of time.
             var quote = this._parseQuote(input, location);
@@ -13335,7 +13351,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             this._checkNoInterpolation(input, location, interpolationConfig);
             var sourceToLex = this._stripComments(input);
             var tokens = this._lexer.tokenize(sourceToLex);
-            return new _ParseAST(input, location, tokens, sourceToLex.length, false, this.errors, input.length - sourceToLex.length)
+            return new _ParseAST(input, location, absoluteOffset, tokens, sourceToLex.length, false, this.errors, input.length - sourceToLex.length)
                 .parseChain();
         };
         Parser.prototype._parseQuote = function (input, location) {
@@ -13350,12 +13366,12 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             var uninterpretedExpression = input.substring(prefixSeparatorIndex + 1);
             return new Quote(new ParseSpan(0, input.length), prefix, uninterpretedExpression, location);
         };
-        Parser.prototype.parseTemplateBindings = function (tplKey, tplValue, location) {
+        Parser.prototype.parseTemplateBindings = function (tplKey, tplValue, location, absoluteOffset) {
             var tokens = this._lexer.tokenize(tplValue);
-            return new _ParseAST(tplValue, location, tokens, tplValue.length, false, this.errors, 0)
+            return new _ParseAST(tplValue, location, absoluteOffset, tokens, tplValue.length, false, this.errors, 0)
                 .parseTemplateBindings(tplKey);
         };
-        Parser.prototype.parseInterpolation = function (input, location, interpolationConfig) {
+        Parser.prototype.parseInterpolation = function (input, location, absoluteOffset, interpolationConfig) {
             if (interpolationConfig === void 0) { interpolationConfig = DEFAULT_INTERPOLATION_CONFIG; }
             var split = this.splitInterpolation(input, location, interpolationConfig);
             if (split == null)
@@ -13365,11 +13381,11 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 var expressionText = split.expressions[i];
                 var sourceToLex = this._stripComments(expressionText);
                 var tokens = this._lexer.tokenize(sourceToLex);
-                var ast = new _ParseAST(input, location, tokens, sourceToLex.length, false, this.errors, split.offsets[i] + (expressionText.length - sourceToLex.length))
+                var ast = new _ParseAST(input, location, absoluteOffset, tokens, sourceToLex.length, false, this.errors, split.offsets[i] + (expressionText.length - sourceToLex.length))
                     .parseChain();
                 expressions.push(ast);
             }
-            return new ASTWithSource(new Interpolation(new ParseSpan(0, input == null ? 0 : input.length), split.strings, expressions), input, location, this.errors);
+            return new ASTWithSource(new Interpolation(new ParseSpan(0, input == null ? 0 : input.length), split.strings, expressions), input, location, absoluteOffset, this.errors);
         };
         Parser.prototype.splitInterpolation = function (input, location, interpolationConfig) {
             if (interpolationConfig === void 0) { interpolationConfig = DEFAULT_INTERPOLATION_CONFIG; }
@@ -13403,8 +13419,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             }
             return new SplitInterpolation(strings, expressions, offsets);
         };
-        Parser.prototype.wrapLiteralPrimitive = function (input, location) {
-            return new ASTWithSource(new LiteralPrimitive(new ParseSpan(0, input == null ? 0 : input.length), input), input, location, this.errors);
+        Parser.prototype.wrapLiteralPrimitive = function (input, location, absoluteOffset) {
+            return new ASTWithSource(new LiteralPrimitive(new ParseSpan(0, input == null ? 0 : input.length), input), input, location, absoluteOffset, this.errors);
         };
         Parser.prototype._stripComments = function (input) {
             var i = this._commentStart(input);
@@ -13445,9 +13461,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         return Parser;
     }());
     var _ParseAST = /** @class */ (function () {
-        function _ParseAST(input, location, tokens, inputLength, parseAction, errors, offset) {
+        function _ParseAST(input, location, absoluteOffset, tokens, inputLength, parseAction, errors, offset) {
             this.input = input;
             this.location = location;
+            this.absoluteOffset = absoluteOffset;
             this.tokens = tokens;
             this.inputLength = inputLength;
             this.parseAction = parseAction;
@@ -13930,7 +13947,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                     var start_1 = this.inputIndex;
                     var ast = this.parsePipe();
                     var source = this.input.substring(start_1 - this.offset, this.inputIndex - this.offset);
-                    expression = new ASTWithSource(ast, source, this.location, this.errors);
+                    expression =
+                        new ASTWithSource(ast, source, this.location, this.absoluteOffset, this.errors);
                 }
                 bindings.push(new TemplateBinding(this.span(start), key, isVar, name_2, expression));
                 if (this.peekKeywordAs() && !isVar) {
@@ -14620,7 +14638,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                         var templateValue = attribute.value;
                         var templateKey = normalizedName.substring(TEMPLATE_ATTR_PREFIX$1.length);
                         var parsedVariables = [];
-                        this.bindingParser.parseInlineTemplateBinding(templateKey, templateValue, attribute.sourceSpan, [], templateParsedProperties, parsedVariables);
+                        var absoluteOffset = attribute.valueSpan ? attribute.valueSpan.start.offset :
+                            attribute.sourceSpan.start.offset;
+                        this.bindingParser.parseInlineTemplateBinding(templateKey, templateValue, attribute.sourceSpan, absoluteOffset, [], templateParsedProperties, parsedVariables);
                         templateVariables.push.apply(templateVariables, __spread(parsedVariables.map(function (v) { return new Variable(v.name, v.value, v.sourceSpan); })));
                     }
                     else {
@@ -14742,12 +14762,13 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             var name = normalizeAttributeName(attribute.name);
             var value = attribute.value;
             var srcSpan = attribute.sourceSpan;
+            var absoluteOffset = attribute.valueSpan ? attribute.valueSpan.start.offset : srcSpan.start.offset;
             var bindParts = name.match(BIND_NAME_REGEXP$1);
             var hasBinding = false;
             if (bindParts) {
                 hasBinding = true;
                 if (bindParts[KW_BIND_IDX$1] != null) {
-                    this.bindingParser.parsePropertyBinding(bindParts[IDENT_KW_IDX$1], value, false, srcSpan, matchableAttributes, parsedProperties);
+                    this.bindingParser.parsePropertyBinding(bindParts[IDENT_KW_IDX$1], value, false, srcSpan, absoluteOffset, matchableAttributes, parsedProperties);
                 }
                 else if (bindParts[KW_LET_IDX$1]) {
                     if (isTemplateElement) {
@@ -14768,18 +14789,18 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                     addEvents(events, boundEvents);
                 }
                 else if (bindParts[KW_BINDON_IDX$1]) {
-                    this.bindingParser.parsePropertyBinding(bindParts[IDENT_KW_IDX$1], value, false, srcSpan, matchableAttributes, parsedProperties);
+                    this.bindingParser.parsePropertyBinding(bindParts[IDENT_KW_IDX$1], value, false, srcSpan, absoluteOffset, matchableAttributes, parsedProperties);
                     this.parseAssignmentEvent(bindParts[IDENT_KW_IDX$1], value, srcSpan, attribute.valueSpan, matchableAttributes, boundEvents);
                 }
                 else if (bindParts[KW_AT_IDX$1]) {
-                    this.bindingParser.parseLiteralAttr(name, value, srcSpan, matchableAttributes, parsedProperties);
+                    this.bindingParser.parseLiteralAttr(name, value, srcSpan, absoluteOffset, matchableAttributes, parsedProperties);
                 }
                 else if (bindParts[IDENT_BANANA_BOX_IDX$1]) {
-                    this.bindingParser.parsePropertyBinding(bindParts[IDENT_BANANA_BOX_IDX$1], value, false, srcSpan, matchableAttributes, parsedProperties);
+                    this.bindingParser.parsePropertyBinding(bindParts[IDENT_BANANA_BOX_IDX$1], value, false, srcSpan, absoluteOffset, matchableAttributes, parsedProperties);
                     this.parseAssignmentEvent(bindParts[IDENT_BANANA_BOX_IDX$1], value, srcSpan, attribute.valueSpan, matchableAttributes, boundEvents);
                 }
                 else if (bindParts[IDENT_PROPERTY_IDX$1]) {
-                    this.bindingParser.parsePropertyBinding(bindParts[IDENT_PROPERTY_IDX$1], value, false, srcSpan, matchableAttributes, parsedProperties);
+                    this.bindingParser.parsePropertyBinding(bindParts[IDENT_PROPERTY_IDX$1], value, false, srcSpan, absoluteOffset, matchableAttributes, parsedProperties);
                 }
                 else if (bindParts[IDENT_EVENT_IDX$1]) {
                     var events = [];
@@ -18047,7 +18068,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.2.0-next.2+36.sha-8f084d7.with-local-changes');
+    var VERSION$1 = new Version('8.2.0-next.2+38.sha-ebc71f7.with-local-changes');
 
     /**
      * @license
@@ -28660,7 +28681,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 var selectorInfo = getSelectors(this.info);
                 var selectors = selectorInfo.selectors;
                 var selector_1 = selectors.filter(function (s) { return s.attrs.some(function (attr, i) { return i % 2 == 0 && attr == key_1; }); })[0];
-                var templateBindingResult = this.info.expressionParser.parseTemplateBindings(key_1, this.attr.value, null);
+                var templateBindingResult = this.info.expressionParser.parseTemplateBindings(key_1, this.attr.value, null, 0);
                 // find the template binding that contains the position
                 if (!this.attr.valueSpan)
                     return;
@@ -46727,7 +46748,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.2.0-next.2+36.sha-8f084d7.with-local-changes');
+    var VERSION$2 = new Version$1('8.2.0-next.2+38.sha-ebc71f7.with-local-changes');
 
     /**
      * @license
@@ -52234,7 +52255,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
     };
     function getPromiseCtor(promiseCtor) {
         if (!promiseCtor) {
-            promiseCtor = config.Promise || Promise;
+            promiseCtor = Promise;
         }
         if (!promiseCtor) {
             throw new Error('no Promise impl found');
@@ -60520,7 +60541,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.2.0-next.2+36.sha-8f084d7.with-local-changes');
+    var VERSION$3 = new Version$1('8.2.0-next.2+38.sha-ebc71f7.with-local-changes');
 
     /**
      * @license
