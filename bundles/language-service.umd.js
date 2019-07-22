@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.2.0-next.2+39.sha-b9a94c6.with-local-changes
+ * @license Angular v8.2.0-next.2+42.sha-c845a7b.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18083,7 +18083,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.2.0-next.2+39.sha-b9a94c6.with-local-changes');
+    var VERSION$1 = new Version('8.2.0-next.2+42.sha-c845a7b.with-local-changes');
 
     /**
      * @license
@@ -30557,6 +30557,24 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     function deepForEach(input, fn) {
         input.forEach(function (value) { return Array.isArray(value) ? deepForEach(value, fn) : fn(value); });
     }
+    function addToArray(arr, index, value) {
+        // perf: array.push is faster than array.splice!
+        if (index >= arr.length) {
+            arr.push(value);
+        }
+        else {
+            arr.splice(index, 0, value);
+        }
+    }
+    function removeFromArray(arr, index) {
+        // perf: array.pop is faster than array.splice!
+        if (index >= arr.length - 1) {
+            return arr.pop();
+        }
+        else {
+            return arr.splice(index, 1)[0];
+        }
+    }
 
     /**
      * @license
@@ -38658,7 +38676,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.2.0-next.2+39.sha-b9a94c6.with-local-changes');
+    var VERSION$2 = new Version$1('8.2.0-next.2+42.sha-c845a7b.with-local-changes');
 
     /**
      * @license
@@ -40568,24 +40586,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     }
     function renderDetachView$1(view) {
         visitRootRenderNodes(view, 3 /* RemoveChild */, null, null, undefined);
-    }
-    function addToArray(arr, index, value) {
-        // perf: array.push is faster than array.splice!
-        if (index >= arr.length) {
-            arr.push(value);
-        }
-        else {
-            arr.splice(index, 0, value);
-        }
-    }
-    function removeFromArray(arr, index) {
-        // perf: array.pop is faster than array.splice!
-        if (index >= arr.length - 1) {
-            arr.pop();
-        }
-        else {
-            arr.splice(index, 1);
-        }
     }
 
     /**
@@ -45753,8 +45753,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var SWITCH_IVY_ENABLED__PRE_R3__ = false;
-    var ivyEnabled = SWITCH_IVY_ENABLED__PRE_R3__;
 
     /**
      * @license
@@ -45794,7 +45792,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this._config = config || DEFAULT_CONFIG;
         }
         SystemJsNgModuleLoader.prototype.load = function (path) {
-            var legacyOfflineMode = !ivyEnabled && this._compiler instanceof Compiler;
+            var legacyOfflineMode = this._compiler instanceof Compiler;
             return legacyOfflineMode ? this.loadFactory(path) : this.loadAndCompile(path);
         };
         SystemJsNgModuleLoader.prototype.loadAndCompile = function (path) {
@@ -49566,7 +49564,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.2.0-next.2+39.sha-b9a94c6.with-local-changes');
+    var VERSION$3 = new Version$1('8.2.0-next.2+42.sha-c845a7b.with-local-changes');
 
     /**
      * @license
