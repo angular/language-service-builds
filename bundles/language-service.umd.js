@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.2.0-next.2+43.sha-5a8eb92.with-local-changes
+ * @license Angular v8.2.0-next.2+45.sha-54ef63b.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18068,7 +18068,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.2.0-next.2+43.sha-5a8eb92.with-local-changes');
+    var VERSION$1 = new Version('8.2.0-next.2+45.sha-54ef63b.with-local-changes');
 
     /**
      * @license
@@ -41218,34 +41218,40 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * being passed as an argument.
      */
     function executeActionOnElementOrContainer(action, renderer, parent, lNodeToHandle, beforeNode) {
-        ngDevMode && assertDefined(lNodeToHandle, '\'lNodeToHandle\' is undefined');
-        var lContainer;
-        var isComponent = false;
-        // We are expecting an RNode, but in the case of a component or LContainer the `RNode` is wrapped
-        // in an array which needs to be unwrapped. We need to know if it is a component and if
-        // it has LContainer so that we can process all of those cases appropriately.
-        if (isLContainer(lNodeToHandle)) {
-            lContainer = lNodeToHandle;
-        }
-        else if (isLView(lNodeToHandle)) {
-            isComponent = true;
-            ngDevMode && assertDefined(lNodeToHandle[HOST], 'HOST must be defined for a component LView');
-            lNodeToHandle = lNodeToHandle[HOST];
-        }
-        var rNode = unwrapRNode(lNodeToHandle);
-        ngDevMode && assertDomNode(rNode);
-        if (action === 0 /* Insert */) {
-            nativeInsertBefore(renderer, parent, rNode, beforeNode || null);
-        }
-        else if (action === 1 /* Detach */) {
-            nativeRemoveNode(renderer, rNode, isComponent);
-        }
-        else if (action === 2 /* Destroy */) {
-            ngDevMode && ngDevMode.rendererDestroyNode++;
-            renderer.destroyNode(rNode);
-        }
-        if (lContainer != null) {
-            executeActionOnContainer(renderer, action, lContainer, parent, beforeNode);
+        // If this slot was allocated for a text node dynamically created by i18n, the text node itself
+        // won't be created until i18nApply() in the update block, so this node should be skipped.
+        // For more info, see "ICU expressions should work inside an ngTemplateOutlet inside an ngFor"
+        // in `i18n_spec.ts`.
+        if (lNodeToHandle != null) {
+            var lContainer = void 0;
+            var isComponent = false;
+            // We are expecting an RNode, but in the case of a component or LContainer the `RNode` is
+            // wrapped
+            // in an array which needs to be unwrapped. We need to know if it is a component and if
+            // it has LContainer so that we can process all of those cases appropriately.
+            if (isLContainer(lNodeToHandle)) {
+                lContainer = lNodeToHandle;
+            }
+            else if (isLView(lNodeToHandle)) {
+                isComponent = true;
+                ngDevMode && assertDefined(lNodeToHandle[HOST], 'HOST must be defined for a component LView');
+                lNodeToHandle = lNodeToHandle[HOST];
+            }
+            var rNode = unwrapRNode(lNodeToHandle);
+            ngDevMode && assertDomNode(rNode);
+            if (action === 0 /* Insert */) {
+                nativeInsertBefore(renderer, parent, rNode, beforeNode || null);
+            }
+            else if (action === 1 /* Detach */) {
+                nativeRemoveNode(renderer, rNode, isComponent);
+            }
+            else if (action === 2 /* Destroy */) {
+                ngDevMode && ngDevMode.rendererDestroyNode++;
+                renderer.destroyNode(rNode);
+            }
+            if (lContainer != null) {
+                executeActionOnContainer(renderer, action, lContainer, parent, beforeNode);
+            }
         }
     }
     function createTextNode(value, renderer) {
@@ -46766,7 +46772,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.2.0-next.2+43.sha-5a8eb92.with-local-changes');
+    var VERSION$2 = new Version$1('8.2.0-next.2+45.sha-54ef63b.with-local-changes');
 
     /**
      * @license
@@ -60541,7 +60547,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.2.0-next.2+43.sha-5a8eb92.with-local-changes');
+    var VERSION$3 = new Version$1('8.2.0-next.2+45.sha-54ef63b.with-local-changes');
 
     /**
      * @license
