@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.2.0-next.2+46.sha-0e68c7e.with-local-changes
+ * @license Angular v8.2.0-next.2+47.sha-f50dede.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18068,7 +18068,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.2.0-next.2+46.sha-0e68c7e.with-local-changes');
+    var VERSION$1 = new Version('8.2.0-next.2+47.sha-f50dede.with-local-changes');
 
     /**
      * @license
@@ -33048,14 +33048,14 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      */
     /**
     * True if `value` is `LView`.
-    * @param value wrapped value of `RNode`, `LView`, `LContainer`, `StylingContext`
+    * @param value wrapped value of `RNode`, `LView`, `LContainer`
     */
     function isLView(value) {
         return Array.isArray(value) && typeof value[TYPE] === 'object';
     }
     /**
      * True if `value` is `LContainer`.
-     * @param value wrapped value of `RNode`, `LView`, `LContainer`, `StylingContext`
+     * @param value wrapped value of `RNode`, `LView`, `LContainer`
      */
     function isLContainer(value) {
         return Array.isArray(value) && value[TYPE] === true;
@@ -33462,18 +33462,15 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * found in the LICENSE file at https://angular.io/license
      */
     /**
-     * For efficiency reasons we often put several different data types (`RNode`, `LView`, `LContainer`,
-     * `StylingContext`) in same location in `LView`. This is because we don't want to pre-allocate
-     * space for it because the storage is sparse. This file contains utilities for dealing with such
-     * data types.
+     * For efficiency reasons we often put several different data types (`RNode`, `LView`, `LContainer`)
+     * in same location in `LView`. This is because we don't want to pre-allocate space for it
+     * because the storage is sparse. This file contains utilities for dealing with such data types.
      *
      * How do we know what is stored at a given location in `LView`.
      * - `Array.isArray(value) === false` => `RNode` (The normal storage value)
      * - `Array.isArray(value) === true` => then the `value[0]` represents the wrapped value.
      *   - `typeof value[TYPE] === 'object'` => `LView`
      *      - This happens when we have a component at a given location
-     *   - `typeof value[TYPE] === 'number'` => `StylingContext`
-     *      - This happens when we have style/class binding at a given location.
      *   - `typeof value[TYPE] === true` => `LContainer`
      *      - This happens when we have `LContainer` binding at a given location.
      *
@@ -35095,6 +35092,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     }
 
     var MAP_BASED_ENTRY_PROP_NAME = '--MAP--';
+    var TEMPLATE_DIRECTIVE_INDEX = 0;
     /**
      * Creates a new instance of the `TStylingContext`.
      *
@@ -35110,17 +35108,14 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         // (this means that when map-based values are applied then sanitization will
         // be checked against each property).
         var mapBasedConfig = 1 /* SanitizationRequired */;
-        var context = [
-            initialStyling || null,
+        return [
+            initialStyling || [''],
             0 /* Initial */,
-            // the LastDirectiveIndex value in the context is used to track which directive is the last
-            // to call `stylingApply()`. The `-1` value implies that no directive has been set yet.
-            -1,
+            TEMPLATE_DIRECTIVE_INDEX,
             mapBasedConfig,
             0,
             MAP_BASED_ENTRY_PROP_NAME,
         ];
-        return context;
     }
     /**
      * Sets the provided directive as the last directive index in the provided `TStylingContext`.
@@ -35135,12 +35130,18 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * styling (which is when the last styling apply function is executed).
      */
     function updateLastDirectiveIndex(context, lastDirectiveIndex) {
-        var currentValue = context[2 /* LastDirectiveIndexPosition */];
-        if (lastDirectiveIndex !== currentValue) {
-            context[2 /* LastDirectiveIndexPosition */] = lastDirectiveIndex;
-            if (currentValue === 0 && lastDirectiveIndex > 0) {
+        if (lastDirectiveIndex === TEMPLATE_DIRECTIVE_INDEX) {
+            var currentValue = context[2 /* LastDirectiveIndexPosition */];
+            if (currentValue > TEMPLATE_DIRECTIVE_INDEX) {
+                // This means that a directive or two contained a host bindings function, but
+                // now the template function also contains styling. When this combination of sources
+                // comes up then we need to tell the context to store the state between updates
+                // (because host bindings evaluation happens after template binding evaluation).
                 markContextToPersistState(context);
             }
+        }
+        else {
+            context[2 /* LastDirectiveIndexPosition */] = lastDirectiveIndex;
         }
     }
     function getConfig(context) {
@@ -35272,6 +35273,23 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     function getMapValue(map, index) {
         return map[index + 1 /* ValueOffset */];
     }
+    function forceClassesAsString(classes) {
+        if (classes && typeof classes !== 'string') {
+            classes = Object.keys(classes).join(' ');
+        }
+        return classes || '';
+    }
+    function forceStylesAsString(styles) {
+        var str = '';
+        if (styles) {
+            var props = Object.keys(styles);
+            for (var i = 0; i < props.length; i++) {
+                var prop = props[i];
+                str = concatString(str, prop + ":" + styles[prop], ';');
+            }
+        }
+        return str;
+    }
 
     /**
      * @license
@@ -35293,306 +35311,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     var domRendererFactory3 = {
         createRenderer: function (hostElement, rendererType) { return document; }
     };
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /** Returns the matching `LContext` data for a given DOM node, directive or component instance.
-     *
-     * This function will examine the provided DOM element, component, or directive instance\'s
-     * monkey-patched property to derive the `LContext` data. Once called then the monkey-patched
-     * value will be that of the newly created `LContext`.
-     *
-     * If the monkey-patched value is the `LView` instance then the context value for that
-     * target will be created and the monkey-patch reference will be updated. Therefore when this
-     * function is called it may mutate the provided element\'s, component\'s or any of the associated
-     * directive\'s monkey-patch values.
-     *
-     * If the monkey-patch value is not detected then the code will walk up the DOM until an element
-     * is found which contains a monkey-patch reference. When that occurs then the provided element
-     * will be updated with a new context (which is then returned). If the monkey-patch value is not
-     * detected for a component/directive instance then it will throw an error (all components and
-     * directives should be automatically monkey-patched by ivy).
-     *
-     * @param target Component, Directive or DOM Node.
-     */
-    function getLContext(target) {
-        var mpValue = readPatchedData(target);
-        if (mpValue) {
-            // only when it's an array is it considered an LView instance
-            // ... otherwise it's an already constructed LContext instance
-            if (Array.isArray(mpValue)) {
-                var lView = mpValue;
-                var nodeIndex = void 0;
-                var component = undefined;
-                var directives = undefined;
-                if (isComponentInstance(target)) {
-                    nodeIndex = findViaComponent(lView, target);
-                    if (nodeIndex == -1) {
-                        throw new Error('The provided component was not found in the application');
-                    }
-                    component = target;
-                }
-                else if (isDirectiveInstance(target)) {
-                    nodeIndex = findViaDirective(lView, target);
-                    if (nodeIndex == -1) {
-                        throw new Error('The provided directive was not found in the application');
-                    }
-                    directives = getDirectivesAtNodeIndex(nodeIndex, lView, false);
-                }
-                else {
-                    nodeIndex = findViaNativeElement(lView, target);
-                    if (nodeIndex == -1) {
-                        return null;
-                    }
-                }
-                // the goal is not to fill the entire context full of data because the lookups
-                // are expensive. Instead, only the target data (the element, component, container, ICU
-                // expression or directive details) are filled into the context. If called multiple times
-                // with different target values then the missing target data will be filled in.
-                var native = unwrapRNode(lView[nodeIndex]);
-                var existingCtx = readPatchedData(native);
-                var context = (existingCtx && !Array.isArray(existingCtx)) ?
-                    existingCtx :
-                    createLContext(lView, nodeIndex, native);
-                // only when the component has been discovered then update the monkey-patch
-                if (component && context.component === undefined) {
-                    context.component = component;
-                    attachPatchData(context.component, context);
-                }
-                // only when the directives have been discovered then update the monkey-patch
-                if (directives && context.directives === undefined) {
-                    context.directives = directives;
-                    for (var i = 0; i < directives.length; i++) {
-                        attachPatchData(directives[i], context);
-                    }
-                }
-                attachPatchData(context.native, context);
-                mpValue = context;
-            }
-        }
-        else {
-            var rElement = target;
-            ngDevMode && assertDomNode(rElement);
-            // if the context is not found then we need to traverse upwards up the DOM
-            // to find the nearest element that has already been monkey patched with data
-            var parent_1 = rElement;
-            while (parent_1 = parent_1.parentNode) {
-                var parentContext = readPatchedData(parent_1);
-                if (parentContext) {
-                    var lView = void 0;
-                    if (Array.isArray(parentContext)) {
-                        lView = parentContext;
-                    }
-                    else {
-                        lView = parentContext.lView;
-                    }
-                    // the edge of the app was also reached here through another means
-                    // (maybe because the DOM was changed manually).
-                    if (!lView) {
-                        return null;
-                    }
-                    var index = findViaNativeElement(lView, rElement);
-                    if (index >= 0) {
-                        var native = unwrapRNode(lView[index]);
-                        var context = createLContext(lView, index, native);
-                        attachPatchData(native, context);
-                        mpValue = context;
-                        break;
-                    }
-                }
-            }
-        }
-        return mpValue || null;
-    }
-    /**
-     * Creates an empty instance of a `LContext` context
-     */
-    function createLContext(lView, nodeIndex, native) {
-        return {
-            lView: lView,
-            nodeIndex: nodeIndex,
-            native: native,
-            component: undefined,
-            directives: undefined,
-            localRefs: undefined,
-        };
-    }
-    /**
-     * Assigns the given data to the given target (which could be a component,
-     * directive or DOM node instance) using monkey-patching.
-     */
-    function attachPatchData(target, data) {
-        target[MONKEY_PATCH_KEY_NAME] = data;
-    }
-    function isComponentInstance(instance) {
-        return instance && instance.constructor && instance.constructor.ngComponentDef;
-    }
-    function isDirectiveInstance(instance) {
-        return instance && instance.constructor && instance.constructor.ngDirectiveDef;
-    }
-    /**
-     * Locates the element within the given LView and returns the matching index
-     */
-    function findViaNativeElement(lView, target) {
-        var tNode = lView[TVIEW].firstChild;
-        while (tNode) {
-            var native = getNativeByTNodeOrNull(tNode, lView);
-            if (native === target) {
-                return tNode.index;
-            }
-            tNode = traverseNextElement(tNode);
-        }
-        return -1;
-    }
-    /**
-     * Locates the next tNode (child, sibling or parent).
-     */
-    function traverseNextElement(tNode) {
-        if (tNode.child) {
-            return tNode.child;
-        }
-        else if (tNode.next) {
-            return tNode.next;
-        }
-        else {
-            // Let's take the following template: <div><span>text</span></div><component/>
-            // After checking the text node, we need to find the next parent that has a "next" TNode,
-            // in this case the parent `div`, so that we can find the component.
-            while (tNode.parent && !tNode.parent.next) {
-                tNode = tNode.parent;
-            }
-            return tNode.parent && tNode.parent.next;
-        }
-    }
-    /**
-     * Locates the component within the given LView and returns the matching index
-     */
-    function findViaComponent(lView, componentInstance) {
-        var componentIndices = lView[TVIEW].components;
-        if (componentIndices) {
-            for (var i = 0; i < componentIndices.length; i++) {
-                var elementComponentIndex = componentIndices[i];
-                var componentView = getComponentViewByIndex(elementComponentIndex, lView);
-                if (componentView[CONTEXT] === componentInstance) {
-                    return elementComponentIndex;
-                }
-            }
-        }
-        else {
-            var rootComponentView = getComponentViewByIndex(HEADER_OFFSET, lView);
-            var rootComponent = rootComponentView[CONTEXT];
-            if (rootComponent === componentInstance) {
-                // we are dealing with the root element here therefore we know that the
-                // element is the very first element after the HEADER data in the lView
-                return HEADER_OFFSET;
-            }
-        }
-        return -1;
-    }
-    /**
-     * Locates the directive within the given LView and returns the matching index
-     */
-    function findViaDirective(lView, directiveInstance) {
-        // if a directive is monkey patched then it will (by default)
-        // have a reference to the LView of the current view. The
-        // element bound to the directive being search lives somewhere
-        // in the view data. We loop through the nodes and check their
-        // list of directives for the instance.
-        var tNode = lView[TVIEW].firstChild;
-        while (tNode) {
-            var directiveIndexStart = tNode.directiveStart;
-            var directiveIndexEnd = tNode.directiveEnd;
-            for (var i = directiveIndexStart; i < directiveIndexEnd; i++) {
-                if (lView[i] === directiveInstance) {
-                    return tNode.index;
-                }
-            }
-            tNode = traverseNextElement(tNode);
-        }
-        return -1;
-    }
-    /**
-     * Returns a list of directives extracted from the given view based on the
-     * provided list of directive index values.
-     *
-     * @param nodeIndex The node index
-     * @param lView The target view data
-     * @param includeComponents Whether or not to include components in returned directives
-     */
-    function getDirectivesAtNodeIndex(nodeIndex, lView, includeComponents) {
-        var tNode = lView[TVIEW].data[nodeIndex];
-        var directiveStartIndex = tNode.directiveStart;
-        if (directiveStartIndex == 0)
-            return EMPTY_ARRAY$2;
-        var directiveEndIndex = tNode.directiveEnd;
-        if (!includeComponents && tNode.flags & 1 /* isComponent */)
-            directiveStartIndex++;
-        return lView.slice(directiveStartIndex, directiveEndIndex);
-    }
-    function getComponentAtNodeIndex(nodeIndex, lView) {
-        var tNode = lView[TVIEW].data[nodeIndex];
-        var directiveStartIndex = tNode.directiveStart;
-        return tNode.flags & 1 /* isComponent */ ? lView[directiveStartIndex] : null;
-    }
-    /**
-     * Returns a map of local references (local reference name => element or directive instance) that
-     * exist on a given element.
-     */
-    function discoverLocalRefs(lView, nodeIndex) {
-        var tNode = lView[TVIEW].data[nodeIndex];
-        if (tNode && tNode.localNames) {
-            var result = {};
-            var localIndex = tNode.index + 1;
-            for (var i = 0; i < tNode.localNames.length; i += 2) {
-                result[tNode.localNames[i]] = lView[localIndex];
-                localIndex++;
-            }
-            return result;
-        }
-        return null;
-    }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    var ANIMATION_PROP_PREFIX = '@';
-    function isAnimationProp(name) {
-        return name[0] === ANIMATION_PROP_PREFIX;
-    }
-    function forceClassesAsString(classes) {
-        if (classes && typeof classes !== 'string') {
-            classes = Object.keys(classes).join(' ');
-        }
-        return classes || '';
-    }
-    function forceStylesAsString(styles) {
-        var str = '';
-        if (styles) {
-            var props = Object.keys(styles);
-            for (var i = 0; i < props.length; i++) {
-                var prop = props[i];
-                str += (i ? ';' : '') + (prop + ":" + styles[prop]);
-            }
-        }
-        return str;
-    }
 
     /**
      * Assigns all attribute values to the provided element via the inferred renderer.
@@ -35680,6 +35398,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     function isNameOnlyAttributeMarker(marker) {
         return marker === 3 /* Bindings */ || marker === 4 /* Template */ ||
             marker === 6 /* I18n */;
+    }
+    var ANIMATION_PROP_PREFIX = '@';
+    function isAnimationProp(name) {
+        return name[0] === ANIMATION_PROP_PREFIX;
     }
 
     /**
@@ -36559,6 +36281,269 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         catch (e) {
             return '[ERROR] Exception while trying to serialize the value';
         }
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /** Returns the matching `LContext` data for a given DOM node, directive or component instance.
+     *
+     * This function will examine the provided DOM element, component, or directive instance\'s
+     * monkey-patched property to derive the `LContext` data. Once called then the monkey-patched
+     * value will be that of the newly created `LContext`.
+     *
+     * If the monkey-patched value is the `LView` instance then the context value for that
+     * target will be created and the monkey-patch reference will be updated. Therefore when this
+     * function is called it may mutate the provided element\'s, component\'s or any of the associated
+     * directive\'s monkey-patch values.
+     *
+     * If the monkey-patch value is not detected then the code will walk up the DOM until an element
+     * is found which contains a monkey-patch reference. When that occurs then the provided element
+     * will be updated with a new context (which is then returned). If the monkey-patch value is not
+     * detected for a component/directive instance then it will throw an error (all components and
+     * directives should be automatically monkey-patched by ivy).
+     *
+     * @param target Component, Directive or DOM Node.
+     */
+    function getLContext(target) {
+        var mpValue = readPatchedData(target);
+        if (mpValue) {
+            // only when it's an array is it considered an LView instance
+            // ... otherwise it's an already constructed LContext instance
+            if (Array.isArray(mpValue)) {
+                var lView = mpValue;
+                var nodeIndex = void 0;
+                var component = undefined;
+                var directives = undefined;
+                if (isComponentInstance(target)) {
+                    nodeIndex = findViaComponent(lView, target);
+                    if (nodeIndex == -1) {
+                        throw new Error('The provided component was not found in the application');
+                    }
+                    component = target;
+                }
+                else if (isDirectiveInstance(target)) {
+                    nodeIndex = findViaDirective(lView, target);
+                    if (nodeIndex == -1) {
+                        throw new Error('The provided directive was not found in the application');
+                    }
+                    directives = getDirectivesAtNodeIndex(nodeIndex, lView, false);
+                }
+                else {
+                    nodeIndex = findViaNativeElement(lView, target);
+                    if (nodeIndex == -1) {
+                        return null;
+                    }
+                }
+                // the goal is not to fill the entire context full of data because the lookups
+                // are expensive. Instead, only the target data (the element, component, container, ICU
+                // expression or directive details) are filled into the context. If called multiple times
+                // with different target values then the missing target data will be filled in.
+                var native = unwrapRNode(lView[nodeIndex]);
+                var existingCtx = readPatchedData(native);
+                var context = (existingCtx && !Array.isArray(existingCtx)) ?
+                    existingCtx :
+                    createLContext(lView, nodeIndex, native);
+                // only when the component has been discovered then update the monkey-patch
+                if (component && context.component === undefined) {
+                    context.component = component;
+                    attachPatchData(context.component, context);
+                }
+                // only when the directives have been discovered then update the monkey-patch
+                if (directives && context.directives === undefined) {
+                    context.directives = directives;
+                    for (var i = 0; i < directives.length; i++) {
+                        attachPatchData(directives[i], context);
+                    }
+                }
+                attachPatchData(context.native, context);
+                mpValue = context;
+            }
+        }
+        else {
+            var rElement = target;
+            ngDevMode && assertDomNode(rElement);
+            // if the context is not found then we need to traverse upwards up the DOM
+            // to find the nearest element that has already been monkey patched with data
+            var parent_1 = rElement;
+            while (parent_1 = parent_1.parentNode) {
+                var parentContext = readPatchedData(parent_1);
+                if (parentContext) {
+                    var lView = void 0;
+                    if (Array.isArray(parentContext)) {
+                        lView = parentContext;
+                    }
+                    else {
+                        lView = parentContext.lView;
+                    }
+                    // the edge of the app was also reached here through another means
+                    // (maybe because the DOM was changed manually).
+                    if (!lView) {
+                        return null;
+                    }
+                    var index = findViaNativeElement(lView, rElement);
+                    if (index >= 0) {
+                        var native = unwrapRNode(lView[index]);
+                        var context = createLContext(lView, index, native);
+                        attachPatchData(native, context);
+                        mpValue = context;
+                        break;
+                    }
+                }
+            }
+        }
+        return mpValue || null;
+    }
+    /**
+     * Creates an empty instance of a `LContext` context
+     */
+    function createLContext(lView, nodeIndex, native) {
+        return {
+            lView: lView,
+            nodeIndex: nodeIndex,
+            native: native,
+            component: undefined,
+            directives: undefined,
+            localRefs: undefined,
+        };
+    }
+    /**
+     * Assigns the given data to the given target (which could be a component,
+     * directive or DOM node instance) using monkey-patching.
+     */
+    function attachPatchData(target, data) {
+        target[MONKEY_PATCH_KEY_NAME] = data;
+    }
+    function isComponentInstance(instance) {
+        return instance && instance.constructor && instance.constructor.ngComponentDef;
+    }
+    function isDirectiveInstance(instance) {
+        return instance && instance.constructor && instance.constructor.ngDirectiveDef;
+    }
+    /**
+     * Locates the element within the given LView and returns the matching index
+     */
+    function findViaNativeElement(lView, target) {
+        var tNode = lView[TVIEW].firstChild;
+        while (tNode) {
+            var native = getNativeByTNodeOrNull(tNode, lView);
+            if (native === target) {
+                return tNode.index;
+            }
+            tNode = traverseNextElement(tNode);
+        }
+        return -1;
+    }
+    /**
+     * Locates the next tNode (child, sibling or parent).
+     */
+    function traverseNextElement(tNode) {
+        if (tNode.child) {
+            return tNode.child;
+        }
+        else if (tNode.next) {
+            return tNode.next;
+        }
+        else {
+            // Let's take the following template: <div><span>text</span></div><component/>
+            // After checking the text node, we need to find the next parent that has a "next" TNode,
+            // in this case the parent `div`, so that we can find the component.
+            while (tNode.parent && !tNode.parent.next) {
+                tNode = tNode.parent;
+            }
+            return tNode.parent && tNode.parent.next;
+        }
+    }
+    /**
+     * Locates the component within the given LView and returns the matching index
+     */
+    function findViaComponent(lView, componentInstance) {
+        var componentIndices = lView[TVIEW].components;
+        if (componentIndices) {
+            for (var i = 0; i < componentIndices.length; i++) {
+                var elementComponentIndex = componentIndices[i];
+                var componentView = getComponentViewByIndex(elementComponentIndex, lView);
+                if (componentView[CONTEXT] === componentInstance) {
+                    return elementComponentIndex;
+                }
+            }
+        }
+        else {
+            var rootComponentView = getComponentViewByIndex(HEADER_OFFSET, lView);
+            var rootComponent = rootComponentView[CONTEXT];
+            if (rootComponent === componentInstance) {
+                // we are dealing with the root element here therefore we know that the
+                // element is the very first element after the HEADER data in the lView
+                return HEADER_OFFSET;
+            }
+        }
+        return -1;
+    }
+    /**
+     * Locates the directive within the given LView and returns the matching index
+     */
+    function findViaDirective(lView, directiveInstance) {
+        // if a directive is monkey patched then it will (by default)
+        // have a reference to the LView of the current view. The
+        // element bound to the directive being search lives somewhere
+        // in the view data. We loop through the nodes and check their
+        // list of directives for the instance.
+        var tNode = lView[TVIEW].firstChild;
+        while (tNode) {
+            var directiveIndexStart = tNode.directiveStart;
+            var directiveIndexEnd = tNode.directiveEnd;
+            for (var i = directiveIndexStart; i < directiveIndexEnd; i++) {
+                if (lView[i] === directiveInstance) {
+                    return tNode.index;
+                }
+            }
+            tNode = traverseNextElement(tNode);
+        }
+        return -1;
+    }
+    /**
+     * Returns a list of directives extracted from the given view based on the
+     * provided list of directive index values.
+     *
+     * @param nodeIndex The node index
+     * @param lView The target view data
+     * @param includeComponents Whether or not to include components in returned directives
+     */
+    function getDirectivesAtNodeIndex(nodeIndex, lView, includeComponents) {
+        var tNode = lView[TVIEW].data[nodeIndex];
+        var directiveStartIndex = tNode.directiveStart;
+        if (directiveStartIndex == 0)
+            return EMPTY_ARRAY$2;
+        var directiveEndIndex = tNode.directiveEnd;
+        if (!includeComponents && tNode.flags & 1 /* isComponent */)
+            directiveStartIndex++;
+        return lView.slice(directiveStartIndex, directiveEndIndex);
+    }
+    function getComponentAtNodeIndex(nodeIndex, lView) {
+        var tNode = lView[TVIEW].data[nodeIndex];
+        var directiveStartIndex = tNode.directiveStart;
+        return tNode.flags & 1 /* isComponent */ ? lView[directiveStartIndex] : null;
+    }
+    /**
+     * Returns a map of local references (local reference name => element or directive instance) that
+     * exist on a given element.
+     */
+    function discoverLocalRefs(lView, nodeIndex) {
+        var tNode = lView[TVIEW].data[nodeIndex];
+        if (tNode && tNode.localNames) {
+            var result = {};
+            var localIndex = tNode.index + 1;
+            for (var i = 0; i < tNode.localNames.length; i += 2) {
+                result[tNode.localNames[i]] = lView[localIndex];
+                localIndex++;
+            }
+            return result;
+        }
+        return null;
     }
 
     // Note: This hack is necessary so we don't erroneously get a circular dependency
@@ -38105,9 +38090,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         projectionNext, //
         child, //
         parent, //
-        stylingTemplate, //
         projection, //
-        onElementCreationFns, //
         styles, //
         classes) {
             this.tView_ = tView_;
@@ -38131,9 +38114,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             this.projectionNext = projectionNext;
             this.child = child;
             this.parent = parent;
-            this.stylingTemplate = stylingTemplate;
             this.projection = projection;
-            this.onElementCreationFns = onElementCreationFns;
             this.styles = styles;
             this.classes = classes;
         }
@@ -39271,10 +39252,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         null, // projectionNext: ITNode|null
         null, // child: ITNode|null
         tParent, // parent: TElementNode|TContainerNode|null
-        null, // stylingTemplate: StylingContext|null
         null, // projection: number|(ITNode|RNode[])[]|null
-        null, // onElementCreationFns: Function[]|null
-        null, // newStyles: TStylingContext|null
+        null, // styles: TStylingContext|null
         null) :
             {
                 type: type,
@@ -39297,9 +39276,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 projectionNext: null,
                 child: null,
                 parent: tParent,
-                stylingTemplate: null,
                 projection: null,
-                onElementCreationFns: null,
                 styles: null,
                 classes: null,
             };
@@ -40222,59 +40199,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     function renderInitialStyling(renderer, native, tNode) {
         renderStylingMap(renderer, native, tNode.classes, true);
         renderStylingMap(renderer, native, tNode.styles, false);
-    }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    function applyOnCreateInstructions(tNode) {
-        // there may be some instructions that need to run in a specific
-        // order because the CREATE block in a directive runs before the
-        // CREATE block in a template. To work around this instructions
-        // can get access to the function array below and defer any code
-        // to run after the element is created.
-        var fns;
-        if (fns = tNode.onElementCreationFns) {
-            for (var i = 0; i < fns.length; i++) {
-                fns[i]();
-            }
-            tNode.onElementCreationFns = null;
-        }
-    }
-    /**
-     * Unwraps a parent injector location number to find the view offset from the current injector,
-     * then walks up the declaration view tree until the TNode of the parent injector is found.
-     *
-     * @param location The location of the parent injector, which contains the view offset
-     * @param startView The LView instance from which to start walking up the view tree
-     * @param startTNode The TNode instance of the starting element
-     * @returns The TNode of the parent injector
-     */
-    function getParentInjectorTNode(location, startView, startTNode) {
-        if (startTNode.parent && startTNode.parent.injectorIndex !== -1) {
-            // view offset is 0
-            var injectorIndex = startTNode.parent.injectorIndex;
-            var parentTNode_1 = startTNode.parent;
-            while (parentTNode_1.parent != null && injectorIndex == parentTNode_1.injectorIndex) {
-                parentTNode_1 = parentTNode_1.parent;
-            }
-            return parentTNode_1;
-        }
-        var viewOffset = getParentInjectorViewOffset(location);
-        // view offset is 1
-        var parentView = startView;
-        var parentTNode = startView[T_HOST];
-        // view offset is superior to 1
-        while (viewOffset > 1) {
-            parentView = parentView[DECLARATION_VIEW];
-            parentTNode = parentView[T_HOST];
-            viewOffset--;
-        }
-        return parentTNode;
     }
 
     /**
@@ -42238,19 +42162,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @codeGenApi
      */
     function ɵɵstyling() {
-        var lView = getLView();
-        var tView = lView[TVIEW];
+        var tView = getLView()[TVIEW];
         if (tView.firstTemplatePass) {
-            var tNode_1 = getPreviousOrParentTNode();
-            var directiveStylingIndex_1 = getActiveDirectiveStylingIndex();
-            // temporary workaround until `select(n)` is fully compatible
-            if (directiveStylingIndex_1) {
-                var fns = tNode_1.onElementCreationFns = tNode_1.onElementCreationFns || [];
-                fns.push(function () { return updateLastDirectiveIndex$1(tNode_1, directiveStylingIndex_1); });
-            }
-            else {
-                updateLastDirectiveIndex$1(tNode_1, directiveStylingIndex_1);
-            }
+            updateLastDirectiveIndex$1(getPreviousOrParentTNode(), getActiveDirectiveStylingIndex());
         }
     }
     /**
@@ -42528,16 +42442,12 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         return value;
     }
     /**
-     * Temporary function to bridge styling functionality between this new
-     * refactor (which is here inside of `styling_next/`) and the old
-     * implementation (which lives inside of `styling/`).
+     * Flushes all styling code to the element.
      *
-     * The new styling refactor ensures that styling flushing is called
-     * automatically when a template function exits or a follow-up element
-     * is visited (i.e. when `select(n)` is called). Because the `select(n)`
-     * instruction is not fully implemented yet (it doesn't actually execute
-     * host binding instruction code at the right time), this means that a
-     * styling apply function is still needed.
+     * This function is designed to be called from the template and hostBindings
+     * functions and may be called multiple times depending whether multiple
+     * sources of styling exist. If called multiple times, only the last call
+     * to `stlyingApply()` will render styling to the element.
      *
      * @codeGenApi
      */
@@ -42582,14 +42492,22 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             }
         }
         if (classes && classes.length > 1 /* ValuesStartPosition */) {
-            classes[0 /* RawValuePosition */] = stylingMapToString(classes, true);
-            tNode.classes = classes;
+            if (!tNode.classes) {
+                tNode.classes = classes;
+            }
+            updateRawValueOnContext(tNode.classes, stylingMapToString(classes, true));
         }
         if (styles && styles.length > 1 /* ValuesStartPosition */) {
-            styles[0 /* RawValuePosition */] = stylingMapToString(styles, false);
-            tNode.styles = styles;
+            if (!tNode.styles) {
+                tNode.styles = styles;
+            }
+            updateRawValueOnContext(tNode.styles, stylingMapToString(styles, false));
         }
         return hasAdditionalInitialStyling;
+    }
+    function updateRawValueOnContext(context, value) {
+        var stylingMapArr = getStylingMapArray(context);
+        stylingMapArr[0 /* RawValuePosition */] = value;
     }
     function getActiveDirectiveStylingIndex() {
         // whenever a directive's hostBindings function is called a uniqueId value
@@ -42761,9 +42679,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             setPreviousOrParentTNode(previousOrParentTNode, false);
         }
         var tNode = previousOrParentTNode;
-        // this is required for all host-level styling-related instructions to run
-        // in the correct order
-        tNode.onElementCreationFns && applyOnCreateInstructions(tNode);
         ngDevMode && assertNodeType(tNode, 3 /* Element */);
         var lView = getLView();
         var tView = lView[TVIEW];
@@ -42940,9 +42855,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             setPreviousOrParentTNode(previousOrParentTNode, false);
         }
         ngDevMode && assertNodeType(previousOrParentTNode, 4 /* ElementContainer */);
-        // this is required for all host-level styling-related instructions to run
-        // in the correct order
-        previousOrParentTNode.onElementCreationFns && applyOnCreateInstructions(previousOrParentTNode);
         registerPostOrderHooks(tView, previousOrParentTNode);
         if (tView.firstTemplatePass && tView.queries !== null &&
             isContentQueryHost(previousOrParentTNode)) {
@@ -44996,14 +44908,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     /**
      * Returns the component instance associated with a given DOM host element.
      * Elements which don't represent components return `null`.
@@ -45299,13 +45203,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             setActiveHostElement(elementIndex);
             var expando = tView.expandoInstructions;
             invokeHostBindingsInCreationMode(componentDef, expando, component, rootTNode, tView.firstTemplatePass);
-            rootTNode.onElementCreationFns && applyOnCreateInstructions(rootTNode);
             setActiveHostElement(null);
-        }
-        if (rootTNode.classes !== null || rootTNode.styles !== null) {
-            var native = componentView[HOST];
-            var renderer = componentView[RENDERER];
-            renderInitialStyling(renderer, native, rootTNode);
         }
         return component;
     }
@@ -46011,6 +45909,45 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         }
         return NgModuleFactory;
     }());
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * Unwraps a parent injector location number to find the view offset from the current injector,
+     * then walks up the declaration view tree until the TNode of the parent injector is found.
+     *
+     * @param location The location of the parent injector, which contains the view offset
+     * @param startView The LView instance from which to start walking up the view tree
+     * @param startTNode The TNode instance of the starting element
+     * @returns The TNode of the parent injector
+     */
+    function getParentInjectorTNode(location, startView, startTNode) {
+        if (startTNode.parent && startTNode.parent.injectorIndex !== -1) {
+            // view offset is 0
+            var injectorIndex = startTNode.parent.injectorIndex;
+            var parentTNode_1 = startTNode.parent;
+            while (parentTNode_1.parent != null && injectorIndex == parentTNode_1.injectorIndex) {
+                parentTNode_1 = parentTNode_1.parent;
+            }
+            return parentTNode_1;
+        }
+        var viewOffset = getParentInjectorViewOffset(location);
+        // view offset is 1
+        var parentView = startView;
+        var parentTNode = startView[T_HOST];
+        // view offset is superior to 1
+        while (viewOffset > 1) {
+            parentView = parentView[DECLARATION_VIEW];
+            parentTNode = parentView[T_HOST];
+            viewOffset--;
+        }
+        return parentTNode;
+    }
 
     /**
      * @license
@@ -46774,7 +46711,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.2.0-next.2+46.sha-0e68c7e.with-local-changes');
+    var VERSION$2 = new Version$1('8.2.0-next.2+47.sha-f50dede.with-local-changes');
 
     /**
      * @license
@@ -56759,8 +56696,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var SWITCH_IVY_ENABLED__POST_R3__ = true;
-    var ivyEnabled = SWITCH_IVY_ENABLED__POST_R3__;
 
     var _SEPARATOR = '#';
     var FACTORY_CLASS_SUFFIX = 'NgFactory';
@@ -56793,8 +56728,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this._config = config || DEFAULT_CONFIG;
         }
         SystemJsNgModuleLoader.prototype.load = function (path) {
-            var legacyOfflineMode = !ivyEnabled && this._compiler instanceof Compiler;
-            return legacyOfflineMode ? this.loadFactory(path) : this.loadAndCompile(path);
+            return this.loadAndCompile(path);
         };
         SystemJsNgModuleLoader.prototype.loadAndCompile = function (path) {
             var _this = this;
@@ -59524,23 +59458,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      */
 
     /**
-     * Combines the binding value and a factory for an animation player.
-     *
-     * Used to bind a player to an element template binding (currently only
-     * `[style]`, `[style.prop]`, `[class]` and `[class.name]` bindings
-     * supported). The provided `factoryFn` function will be run once all
-     * the associated bindings have been evaluated on the element and is
-     * designed to return a player which will then be placed on the element.
-     *
-     * @param factoryFn The function that is used to create a player
-     *   once all the rendering-related (styling values) have been
-     *   processed for the element binding.
-     * @param value The raw value that will be exposed to the binding
-     *   so that the binding can update its internal values when
-     *   any changes are evaluated.
-     */
-
-    /**
      * @license
      * Copyright Google Inc. All Rights Reserved.
      *
@@ -60549,7 +60466,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.2.0-next.2+46.sha-0e68c7e.with-local-changes');
+    var VERSION$3 = new Version$1('8.2.0-next.2+47.sha-f50dede.with-local-changes');
 
     /**
      * @license
