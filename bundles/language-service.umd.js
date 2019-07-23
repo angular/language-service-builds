@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.2.0-next.2+32.sha-f14693b.with-local-changes
+ * @license Angular v8.2.0-next.2+46.sha-0e68c7e.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -3732,6 +3732,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         };
         return ParseSourceSpan;
     }());
+    var EMPTY_PARSE_LOCATION = new ParseLocation(new ParseSourceFile('', ''), 0, 0, 0);
+    var EMPTY_SOURCE_SPAN = new ParseSourceSpan(EMPTY_PARSE_LOCATION, EMPTY_PARSE_LOCATION);
     var ParseErrorLevel;
     (function (ParseErrorLevel) {
         ParseErrorLevel[ParseErrorLevel["WARNING"] = 0] = "WARNING";
@@ -6998,14 +7000,26 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         };
         return FunctionCall;
     }(AST));
+    /**
+     * Records the absolute position of a text span in a source file, where `start` and `end` are the
+     * starting and ending byte offsets, respectively, of the text span in a source file.
+     */
+    var AbsoluteSourceSpan = /** @class */ (function () {
+        function AbsoluteSourceSpan(start, end) {
+            this.start = start;
+            this.end = end;
+        }
+        return AbsoluteSourceSpan;
+    }());
     var ASTWithSource = /** @class */ (function (_super) {
         __extends(ASTWithSource, _super);
-        function ASTWithSource(ast, source, location, errors) {
+        function ASTWithSource(ast, source, location, absoluteOffset, errors) {
             var _this = _super.call(this, new ParseSpan(0, source == null ? 0 : source.length)) || this;
             _this.ast = ast;
             _this.source = source;
             _this.location = location;
             _this.errors = errors;
+            _this.sourceSpan = new AbsoluteSourceSpan(absoluteOffset, absoluteOffset + _this.span.end);
             return _this;
         }
         ASTWithSource.prototype.visit = function (visitor, context) {
@@ -11231,7 +11245,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 Object.keys(dirMeta.hostProperties).forEach(function (propName) {
                     var expression = dirMeta.hostProperties[propName];
                     if (typeof expression === 'string') {
-                        _this.parsePropertyBinding(propName, expression, true, sourceSpan, [], boundProps_1);
+                        _this.parsePropertyBinding(propName, expression, true, sourceSpan, sourceSpan.start.offset, [], boundProps_1);
                     }
                     else {
                         _this._reportError("Value of the host property binding \"" + propName + "\" needs to be a string representing an expression but got \"" + expression + "\" (" + typeof expression + ")", sourceSpan);
@@ -11268,7 +11282,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         BindingParser.prototype.parseInterpolation = function (value, sourceSpan) {
             var sourceInfo = sourceSpan.start.toString();
             try {
-                var ast = this._exprParser.parseInterpolation(value, sourceInfo, this._interpolationConfig);
+                var ast = this._exprParser.parseInterpolation(value, sourceInfo, sourceSpan.start.offset, this._interpolationConfig);
                 if (ast)
                     this._reportExpressionParserErrors(ast.errors, sourceSpan);
                 this._checkPipes(ast, sourceSpan);
@@ -11276,11 +11290,11 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             }
             catch (e) {
                 this._reportError("" + e, sourceSpan);
-                return this._exprParser.wrapLiteralPrimitive('ERROR', sourceInfo);
+                return this._exprParser.wrapLiteralPrimitive('ERROR', sourceInfo, sourceSpan.start.offset);
             }
         };
         // Parse an inline template binding. ie `<tag *tplKey="<tplValue>">`
-        BindingParser.prototype.parseInlineTemplateBinding = function (tplKey, tplValue, sourceSpan, targetMatchableAttrs, targetProps, targetVars) {
+        BindingParser.prototype.parseInlineTemplateBinding = function (tplKey, tplValue, sourceSpan, absoluteOffset, targetMatchableAttrs, targetProps, targetVars) {
             var bindings = this._parseTemplateBindings(tplKey, tplValue, sourceSpan);
             for (var i = 0; i < bindings.length; i++) {
                 var binding = bindings[i];
@@ -11292,7 +11306,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 }
                 else {
                     targetMatchableAttrs.push([binding.key, '']);
-                    this.parseLiteralAttr(binding.key, null, sourceSpan, targetMatchableAttrs, targetProps);
+                    this.parseLiteralAttr(binding.key, null, sourceSpan, absoluteOffset, targetMatchableAttrs, targetProps);
                 }
             }
         };
@@ -11300,7 +11314,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             var _this = this;
             var sourceInfo = sourceSpan.start.toString();
             try {
-                var bindingsResult = this._exprParser.parseTemplateBindings(tplKey, tplValue, sourceInfo);
+                var bindingsResult = this._exprParser.parseTemplateBindings(tplKey, tplValue, sourceInfo, sourceSpan.start.offset);
                 this._reportExpressionParserErrors(bindingsResult.errors, sourceSpan);
                 bindingsResult.templateBindings.forEach(function (binding) {
                     if (binding.expression) {
@@ -11315,20 +11329,20 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 return [];
             }
         };
-        BindingParser.prototype.parseLiteralAttr = function (name, value, sourceSpan, targetMatchableAttrs, targetProps) {
+        BindingParser.prototype.parseLiteralAttr = function (name, value, sourceSpan, absoluteOffset, targetMatchableAttrs, targetProps) {
             if (isAnimationLabel(name)) {
                 name = name.substring(1);
                 if (value) {
                     this._reportError("Assigning animation triggers via @prop=\"exp\" attributes with an expression is invalid." +
                         " Use property bindings (e.g. [@prop]=\"exp\") or use an attribute without a value (e.g. @prop) instead.", sourceSpan, ParseErrorLevel.ERROR);
                 }
-                this._parseAnimation(name, value, sourceSpan, targetMatchableAttrs, targetProps);
+                this._parseAnimation(name, value, sourceSpan, absoluteOffset, targetMatchableAttrs, targetProps);
             }
             else {
-                targetProps.push(new ParsedProperty(name, this._exprParser.wrapLiteralPrimitive(value, ''), ParsedPropertyType.LITERAL_ATTR, sourceSpan));
+                targetProps.push(new ParsedProperty(name, this._exprParser.wrapLiteralPrimitive(value, '', absoluteOffset), ParsedPropertyType.LITERAL_ATTR, sourceSpan));
             }
         };
-        BindingParser.prototype.parsePropertyBinding = function (name, expression, isHost, sourceSpan, targetMatchableAttrs, targetProps) {
+        BindingParser.prototype.parsePropertyBinding = function (name, expression, isHost, sourceSpan, absoluteOffset, targetMatchableAttrs, targetProps) {
             var isAnimationProp = false;
             if (name.startsWith(ANIMATE_PROP_PREFIX)) {
                 isAnimationProp = true;
@@ -11339,10 +11353,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 name = name.substring(1);
             }
             if (isAnimationProp) {
-                this._parseAnimation(name, expression, sourceSpan, targetMatchableAttrs, targetProps);
+                this._parseAnimation(name, expression, sourceSpan, absoluteOffset, targetMatchableAttrs, targetProps);
             }
             else {
-                this._parsePropertyAst(name, this._parseBinding(expression, isHost, sourceSpan), sourceSpan, targetMatchableAttrs, targetProps);
+                this._parsePropertyAst(name, this._parseBinding(expression, isHost, sourceSpan, absoluteOffset), sourceSpan, targetMatchableAttrs, targetProps);
             }
         };
         BindingParser.prototype.parsePropertyInterpolation = function (name, value, sourceSpan, targetMatchableAttrs, targetProps) {
@@ -11357,20 +11371,20 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             targetMatchableAttrs.push([name, ast.source]);
             targetProps.push(new ParsedProperty(name, ast, ParsedPropertyType.DEFAULT, sourceSpan));
         };
-        BindingParser.prototype._parseAnimation = function (name, expression, sourceSpan, targetMatchableAttrs, targetProps) {
+        BindingParser.prototype._parseAnimation = function (name, expression, sourceSpan, absoluteOffset, targetMatchableAttrs, targetProps) {
             // This will occur when a @trigger is not paired with an expression.
             // For animations it is valid to not have an expression since */void
             // states will be applied by angular when the element is attached/detached
-            var ast = this._parseBinding(expression || 'undefined', false, sourceSpan);
+            var ast = this._parseBinding(expression || 'undefined', false, sourceSpan, absoluteOffset);
             targetMatchableAttrs.push([name, ast.source]);
             targetProps.push(new ParsedProperty(name, ast, ParsedPropertyType.ANIMATION, sourceSpan));
         };
-        BindingParser.prototype._parseBinding = function (value, isHostBinding, sourceSpan) {
+        BindingParser.prototype._parseBinding = function (value, isHostBinding, sourceSpan, absoluteOffset) {
             var sourceInfo = (sourceSpan && sourceSpan.start || '(unknown)').toString();
             try {
                 var ast = isHostBinding ?
-                    this._exprParser.parseSimpleBinding(value, sourceInfo, this._interpolationConfig) :
-                    this._exprParser.parseBinding(value, sourceInfo, this._interpolationConfig);
+                    this._exprParser.parseSimpleBinding(value, sourceInfo, absoluteOffset, this._interpolationConfig) :
+                    this._exprParser.parseBinding(value, sourceInfo, absoluteOffset, this._interpolationConfig);
                 if (ast)
                     this._reportExpressionParserErrors(ast.errors, sourceSpan);
                 this._checkPipes(ast, sourceSpan);
@@ -11378,7 +11392,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             }
             catch (e) {
                 this._reportError("" + e, sourceSpan);
-                return this._exprParser.wrapLiteralPrimitive('ERROR', sourceInfo);
+                return this._exprParser.wrapLiteralPrimitive('ERROR', sourceInfo, absoluteOffset);
             }
         };
         BindingParser.prototype.createBoundElementProperty = function (elementSelector, boundProp, skipValidation, mapPropertyName) {
@@ -11476,21 +11490,22 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         };
         BindingParser.prototype._parseAction = function (value, sourceSpan) {
             var sourceInfo = (sourceSpan && sourceSpan.start || '(unknown').toString();
+            var absoluteOffset = (sourceSpan && sourceSpan.start) ? sourceSpan.start.offset : 0;
             try {
-                var ast = this._exprParser.parseAction(value, sourceInfo, this._interpolationConfig);
+                var ast = this._exprParser.parseAction(value, sourceInfo, absoluteOffset, this._interpolationConfig);
                 if (ast) {
                     this._reportExpressionParserErrors(ast.errors, sourceSpan);
                 }
                 if (!ast || ast.ast instanceof EmptyExpr) {
                     this._reportError("Empty expressions are not allowed", sourceSpan);
-                    return this._exprParser.wrapLiteralPrimitive('ERROR', sourceInfo);
+                    return this._exprParser.wrapLiteralPrimitive('ERROR', sourceInfo, absoluteOffset);
                 }
                 this._checkPipes(ast, sourceSpan);
                 return ast;
             }
             catch (e) {
                 this._reportError("" + e, sourceSpan);
-                return this._exprParser.wrapLiteralPrimitive('ERROR', sourceInfo);
+                return this._exprParser.wrapLiteralPrimitive('ERROR', sourceInfo, absoluteOffset);
             }
         };
         BindingParser.prototype._reportError = function (message, sourceSpan, level) {
@@ -11898,7 +11913,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                     }
                     hasInlineTemplates = true;
                     var parsedVariables_1 = [];
-                    _this._bindingParser.parseInlineTemplateBinding(templateKey, templateValue, attr.sourceSpan, templateMatchableAttrs, templateElementOrDirectiveProps, parsedVariables_1);
+                    _this._bindingParser.parseInlineTemplateBinding(templateKey, templateValue, attr.sourceSpan, attr.sourceSpan.start.offset, templateMatchableAttrs, templateElementOrDirectiveProps, parsedVariables_1);
                     templateElementVars.push.apply(templateElementVars, __spread(parsedVariables_1.map(function (v) { return VariableAst.fromParsedVariable(v); })));
                 }
                 if (!hasBinding && !hasTemplateBinding) {
@@ -11962,13 +11977,14 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             var name = this._normalizeAttributeName(attr.name);
             var value = attr.value;
             var srcSpan = attr.sourceSpan;
+            var absoluteOffset = attr.valueSpan ? attr.valueSpan.start.offset : srcSpan.start.offset;
             var boundEvents = [];
             var bindParts = name.match(BIND_NAME_REGEXP);
             var hasBinding = false;
             if (bindParts !== null) {
                 hasBinding = true;
                 if (bindParts[KW_BIND_IDX] != null) {
-                    this._bindingParser.parsePropertyBinding(bindParts[IDENT_KW_IDX], value, false, srcSpan, targetMatchableAttrs, targetProps);
+                    this._bindingParser.parsePropertyBinding(bindParts[IDENT_KW_IDX], value, false, srcSpan, absoluteOffset, targetMatchableAttrs, targetProps);
                 }
                 else if (bindParts[KW_LET_IDX]) {
                     if (isTemplateElement) {
@@ -11987,18 +12003,18 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                     this._bindingParser.parseEvent(bindParts[IDENT_KW_IDX], value, srcSpan, attr.valueSpan || srcSpan, targetMatchableAttrs, boundEvents);
                 }
                 else if (bindParts[KW_BINDON_IDX]) {
-                    this._bindingParser.parsePropertyBinding(bindParts[IDENT_KW_IDX], value, false, srcSpan, targetMatchableAttrs, targetProps);
+                    this._bindingParser.parsePropertyBinding(bindParts[IDENT_KW_IDX], value, false, srcSpan, absoluteOffset, targetMatchableAttrs, targetProps);
                     this._parseAssignmentEvent(bindParts[IDENT_KW_IDX], value, srcSpan, attr.valueSpan || srcSpan, targetMatchableAttrs, boundEvents);
                 }
                 else if (bindParts[KW_AT_IDX]) {
-                    this._bindingParser.parseLiteralAttr(name, value, srcSpan, targetMatchableAttrs, targetProps);
+                    this._bindingParser.parseLiteralAttr(name, value, srcSpan, absoluteOffset, targetMatchableAttrs, targetProps);
                 }
                 else if (bindParts[IDENT_BANANA_BOX_IDX]) {
-                    this._bindingParser.parsePropertyBinding(bindParts[IDENT_BANANA_BOX_IDX], value, false, srcSpan, targetMatchableAttrs, targetProps);
+                    this._bindingParser.parsePropertyBinding(bindParts[IDENT_BANANA_BOX_IDX], value, false, srcSpan, absoluteOffset, targetMatchableAttrs, targetProps);
                     this._parseAssignmentEvent(bindParts[IDENT_BANANA_BOX_IDX], value, srcSpan, attr.valueSpan || srcSpan, targetMatchableAttrs, boundEvents);
                 }
                 else if (bindParts[IDENT_PROPERTY_IDX]) {
-                    this._bindingParser.parsePropertyBinding(bindParts[IDENT_PROPERTY_IDX], value, false, srcSpan, targetMatchableAttrs, targetProps);
+                    this._bindingParser.parsePropertyBinding(bindParts[IDENT_PROPERTY_IDX], value, false, srcSpan, absoluteOffset, targetMatchableAttrs, targetProps);
                 }
                 else if (bindParts[IDENT_EVENT_IDX]) {
                     this._bindingParser.parseEvent(bindParts[IDENT_EVENT_IDX], value, srcSpan, attr.valueSpan || srcSpan, targetMatchableAttrs, boundEvents);
@@ -12008,7 +12024,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 hasBinding = this._bindingParser.parsePropertyInterpolation(name, value, srcSpan, targetMatchableAttrs, targetProps);
             }
             if (!hasBinding) {
-                this._bindingParser.parseLiteralAttr(name, value, srcSpan, targetMatchableAttrs, targetProps);
+                this._bindingParser.parseLiteralAttr(name, value, srcSpan, absoluteOffset, targetMatchableAttrs, targetProps);
             }
             targetEvents.push.apply(targetEvents, __spread(boundEvents.map(function (e) { return BoundEventAst.fromParsedEvent(e); })));
             return hasBinding;
@@ -12454,18 +12470,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         }).toLowerCase();
     }
 
-    /**
-    * @license
-    * Copyright Google Inc. All Rights Reserved.
-    *
-    * Use of this source code is governed by an MIT-style license that can be
-    * found in the LICENSE file at https://angular.io/license
-    */
-    var _stylingMode = 0;
-    function compilerIsNewStylingInUse() {
-        return _stylingMode > 0 /* UseOld */;
-    }
-
     var IMPORTANT_FLAG = '!important';
     /**
      * Produces creation/update instructions for all styling bindings (class and style)
@@ -12492,7 +12496,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *   classMap(...)
      *   styleProp(...)
      *   classProp(...)
-     *   stylingApp(...)
+     *   stylingApply(...)
      * }
      *
      * The creation/update methods within the builder class produce these instructions.
@@ -12587,6 +12591,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             if (isEmptyExpression(value)) {
                 return null;
             }
+            name = normalizePropName(name);
             var _a = parseProperty(name), property = _a.property, hasOverrideFlag = _a.hasOverrideFlag, bindingUnit = _a.unit;
             var entry = {
                 name: property,
@@ -12697,42 +12702,12 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
          * responsible for registering style/class bindings to an element.
          */
         StylingBuilder.prototype.buildStylingInstruction = function (sourceSpan, constantPool) {
-            var _this = this;
             if (this.hasBindings) {
                 return {
                     sourceSpan: sourceSpan,
                     allocateBindingSlots: 0,
                     reference: Identifiers$1.styling,
-                    params: function () {
-                        // a string array of every style-based binding
-                        var styleBindingProps = _this._singleStyleInputs ? _this._singleStyleInputs.map(function (i) { return literal(i.name); }) : [];
-                        // a string array of every class-based binding
-                        var classBindingNames = _this._singleClassInputs ? _this._singleClassInputs.map(function (i) { return literal(i.name); }) : [];
-                        // to salvage space in the AOT generated code, there is no point in passing
-                        // in `null` into a param if any follow-up params are not used. Therefore,
-                        // only when a trailing param is used then it will be filled with nulls in between
-                        // (otherwise a shorter amount of params will be filled). The code below helps
-                        // determine how many params are required in the expression code.
-                        //
-                        // min params => styling()
-                        // max params => styling(classBindings, styleBindings, sanitizer)
-                        //
-                        var params = [];
-                        var expectedNumberOfArgs = 0;
-                        if (_this._useDefaultSanitizer) {
-                            expectedNumberOfArgs = 3;
-                        }
-                        else if (styleBindingProps.length) {
-                            expectedNumberOfArgs = 2;
-                        }
-                        else if (classBindingNames.length) {
-                            expectedNumberOfArgs = 1;
-                        }
-                        addParam(params, classBindingNames.length > 0, getConstantLiteralFromArray(constantPool, classBindingNames), 1, expectedNumberOfArgs);
-                        addParam(params, styleBindingProps.length > 0, getConstantLiteralFromArray(constantPool, styleBindingProps), 2, expectedNumberOfArgs);
-                        addParam(params, _this._useDefaultSanitizer, importExpr(Identifiers$1.defaultStyleSanitizer), 3, expectedNumberOfArgs);
-                        return params;
-                    }
+                    params: function () { return []; },
                 };
             }
             return null;
@@ -12762,12 +12737,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             return null;
         };
         StylingBuilder.prototype._buildMapBasedInstruction = function (valueConverter, isClassBased, stylingInput) {
-            var totalBindingSlotsRequired = 0;
-            if (compilerIsNewStylingInUse()) {
-                // the old implementation does not reserve slot values for
-                // binding entries. The new one does.
-                totalBindingSlotsRequired++;
-            }
+            // each styling binding value is stored in the LView
+            var totalBindingSlotsRequired = 1;
             // these values must be outside of the update block so that they can
             // be evaluated (the AST visit call) during creation time so that any
             // pipes can be picked up in time before the template is built
@@ -12792,29 +12763,24 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             };
         };
         StylingBuilder.prototype._buildSingleInputs = function (reference, inputs, mapIndex, allowUnits, valueConverter, getInterpolationExpressionFn) {
-            var totalBindingSlotsRequired = 0;
             return inputs.map(function (input) {
-                var bindingIndex = mapIndex.get(input.name);
                 var value = input.value.visit(valueConverter);
+                // each styling binding value is stored in the LView
+                var totalBindingSlotsRequired = 1;
                 if (value instanceof Interpolation) {
                     totalBindingSlotsRequired += value.expressions.length;
                     if (getInterpolationExpressionFn) {
                         reference = getInterpolationExpressionFn(value);
                     }
                 }
-                if (compilerIsNewStylingInUse()) {
-                    // the old implementation does not reserve slot values for
-                    // binding entries. The new one does.
-                    totalBindingSlotsRequired++;
-                }
                 return {
                     sourceSpan: input.sourceSpan,
                     supportsInterpolation: !!getInterpolationExpressionFn,
                     allocateBindingSlots: totalBindingSlotsRequired, reference: reference,
                     params: function (convertFn) {
-                        // min params => stylingProp(elmIndex, bindingIndex, value)
-                        // max params => stylingProp(elmIndex, bindingIndex, value, overrideFlag)
-                        var params = [literal(bindingIndex)];
+                        // params => stylingProp(propName, value)
+                        var params = [];
+                        params.push(literal(input.name));
                         var convertResult = convertFn(value);
                         if (Array.isArray(convertResult)) {
                             params.push.apply(params, __spread(convertResult));
@@ -12822,16 +12788,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                         else {
                             params.push(convertResult);
                         }
-                        if (allowUnits) {
-                            if (input.unit) {
-                                params.push(literal(input.unit));
-                            }
-                            else if (input.hasOverrideFlag) {
-                                params.push(NULL_EXPR);
-                            }
-                        }
-                        if (input.hasOverrideFlag) {
-                            params.push(literal(true));
+                        if (allowUnits && input.unit) {
+                            params.push(literal(input.unit));
                         }
                         return params;
                     }
@@ -12873,7 +12831,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         StylingBuilder.prototype.buildUpdateLevelInstructions = function (valueConverter) {
             var instructions = [];
             if (this.hasBindings) {
-                if (compilerIsNewStylingInUse() && this._useDefaultSanitizer) {
+                if (this._useDefaultSanitizer) {
                     instructions.push(this._buildSanitizerFn());
                 }
                 var styleMapInstruction = this.buildStyleMapInstruction(valueConverter);
@@ -12911,18 +12869,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      */
     function getConstantLiteralFromArray(constantPool, values) {
         return values.length ? constantPool.getConstLiteral(literalArr(values), true) : NULL_EXPR;
-    }
-    /**
-     * Simple helper function that adds a parameter or does nothing at all depending on the provided
-     * predicate and totalExpectedArgs values
-     */
-    function addParam(params, predicate, value, argNumber, totalExpectedArgs) {
-        if (predicate && value) {
-            params.push(value);
-        }
-        else if (argNumber < totalExpectedArgs) {
-            params.push(NULL_EXPR);
-        }
     }
     function parseProperty(name) {
         var hasOverrideFlag = false;
@@ -12995,6 +12941,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             default:
                 return Identifiers$1.stylePropInterpolateV;
         }
+    }
+    function normalizePropName(prop) {
+        return hyphenate(prop);
     }
 
     /**
@@ -13381,33 +13330,33 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             this._lexer = _lexer;
             this.errors = [];
         }
-        Parser.prototype.parseAction = function (input, location, interpolationConfig) {
+        Parser.prototype.parseAction = function (input, location, absoluteOffset, interpolationConfig) {
             if (interpolationConfig === void 0) { interpolationConfig = DEFAULT_INTERPOLATION_CONFIG; }
             this._checkNoInterpolation(input, location, interpolationConfig);
             var sourceToLex = this._stripComments(input);
             var tokens = this._lexer.tokenize(this._stripComments(input));
-            var ast = new _ParseAST(input, location, tokens, sourceToLex.length, true, this.errors, input.length - sourceToLex.length)
+            var ast = new _ParseAST(input, location, absoluteOffset, tokens, sourceToLex.length, true, this.errors, input.length - sourceToLex.length)
                 .parseChain();
-            return new ASTWithSource(ast, input, location, this.errors);
+            return new ASTWithSource(ast, input, location, absoluteOffset, this.errors);
         };
-        Parser.prototype.parseBinding = function (input, location, interpolationConfig) {
+        Parser.prototype.parseBinding = function (input, location, absoluteOffset, interpolationConfig) {
             if (interpolationConfig === void 0) { interpolationConfig = DEFAULT_INTERPOLATION_CONFIG; }
-            var ast = this._parseBindingAst(input, location, interpolationConfig);
-            return new ASTWithSource(ast, input, location, this.errors);
+            var ast = this._parseBindingAst(input, location, absoluteOffset, interpolationConfig);
+            return new ASTWithSource(ast, input, location, absoluteOffset, this.errors);
         };
-        Parser.prototype.parseSimpleBinding = function (input, location, interpolationConfig) {
+        Parser.prototype.parseSimpleBinding = function (input, location, absoluteOffset, interpolationConfig) {
             if (interpolationConfig === void 0) { interpolationConfig = DEFAULT_INTERPOLATION_CONFIG; }
-            var ast = this._parseBindingAst(input, location, interpolationConfig);
+            var ast = this._parseBindingAst(input, location, absoluteOffset, interpolationConfig);
             var errors = SimpleExpressionChecker.check(ast);
             if (errors.length > 0) {
                 this._reportError("Host binding expression cannot contain " + errors.join(' '), input, location);
             }
-            return new ASTWithSource(ast, input, location, this.errors);
+            return new ASTWithSource(ast, input, location, absoluteOffset, this.errors);
         };
         Parser.prototype._reportError = function (message, input, errLocation, ctxLocation) {
             this.errors.push(new ParserError(message, input, errLocation, ctxLocation));
         };
-        Parser.prototype._parseBindingAst = function (input, location, interpolationConfig) {
+        Parser.prototype._parseBindingAst = function (input, location, absoluteOffset, interpolationConfig) {
             // Quotes expressions use 3rd-party expression language. We don't want to use
             // our lexer or parser for that, so we check for that ahead of time.
             var quote = this._parseQuote(input, location);
@@ -13417,7 +13366,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             this._checkNoInterpolation(input, location, interpolationConfig);
             var sourceToLex = this._stripComments(input);
             var tokens = this._lexer.tokenize(sourceToLex);
-            return new _ParseAST(input, location, tokens, sourceToLex.length, false, this.errors, input.length - sourceToLex.length)
+            return new _ParseAST(input, location, absoluteOffset, tokens, sourceToLex.length, false, this.errors, input.length - sourceToLex.length)
                 .parseChain();
         };
         Parser.prototype._parseQuote = function (input, location) {
@@ -13432,12 +13381,12 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             var uninterpretedExpression = input.substring(prefixSeparatorIndex + 1);
             return new Quote(new ParseSpan(0, input.length), prefix, uninterpretedExpression, location);
         };
-        Parser.prototype.parseTemplateBindings = function (tplKey, tplValue, location) {
+        Parser.prototype.parseTemplateBindings = function (tplKey, tplValue, location, absoluteOffset) {
             var tokens = this._lexer.tokenize(tplValue);
-            return new _ParseAST(tplValue, location, tokens, tplValue.length, false, this.errors, 0)
+            return new _ParseAST(tplValue, location, absoluteOffset, tokens, tplValue.length, false, this.errors, 0)
                 .parseTemplateBindings(tplKey);
         };
-        Parser.prototype.parseInterpolation = function (input, location, interpolationConfig) {
+        Parser.prototype.parseInterpolation = function (input, location, absoluteOffset, interpolationConfig) {
             if (interpolationConfig === void 0) { interpolationConfig = DEFAULT_INTERPOLATION_CONFIG; }
             var split = this.splitInterpolation(input, location, interpolationConfig);
             if (split == null)
@@ -13447,11 +13396,11 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 var expressionText = split.expressions[i];
                 var sourceToLex = this._stripComments(expressionText);
                 var tokens = this._lexer.tokenize(sourceToLex);
-                var ast = new _ParseAST(input, location, tokens, sourceToLex.length, false, this.errors, split.offsets[i] + (expressionText.length - sourceToLex.length))
+                var ast = new _ParseAST(input, location, absoluteOffset, tokens, sourceToLex.length, false, this.errors, split.offsets[i] + (expressionText.length - sourceToLex.length))
                     .parseChain();
                 expressions.push(ast);
             }
-            return new ASTWithSource(new Interpolation(new ParseSpan(0, input == null ? 0 : input.length), split.strings, expressions), input, location, this.errors);
+            return new ASTWithSource(new Interpolation(new ParseSpan(0, input == null ? 0 : input.length), split.strings, expressions), input, location, absoluteOffset, this.errors);
         };
         Parser.prototype.splitInterpolation = function (input, location, interpolationConfig) {
             if (interpolationConfig === void 0) { interpolationConfig = DEFAULT_INTERPOLATION_CONFIG; }
@@ -13485,8 +13434,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             }
             return new SplitInterpolation(strings, expressions, offsets);
         };
-        Parser.prototype.wrapLiteralPrimitive = function (input, location) {
-            return new ASTWithSource(new LiteralPrimitive(new ParseSpan(0, input == null ? 0 : input.length), input), input, location, this.errors);
+        Parser.prototype.wrapLiteralPrimitive = function (input, location, absoluteOffset) {
+            return new ASTWithSource(new LiteralPrimitive(new ParseSpan(0, input == null ? 0 : input.length), input), input, location, absoluteOffset, this.errors);
         };
         Parser.prototype._stripComments = function (input) {
             var i = this._commentStart(input);
@@ -13527,9 +13476,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         return Parser;
     }());
     var _ParseAST = /** @class */ (function () {
-        function _ParseAST(input, location, tokens, inputLength, parseAction, errors, offset) {
+        function _ParseAST(input, location, absoluteOffset, tokens, inputLength, parseAction, errors, offset) {
             this.input = input;
             this.location = location;
+            this.absoluteOffset = absoluteOffset;
             this.tokens = tokens;
             this.inputLength = inputLength;
             this.parseAction = parseAction;
@@ -14012,7 +13962,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                     var start_1 = this.inputIndex;
                     var ast = this.parsePipe();
                     var source = this.input.substring(start_1 - this.offset, this.inputIndex - this.offset);
-                    expression = new ASTWithSource(ast, source, this.location, this.errors);
+                    expression =
+                        new ASTWithSource(ast, source, this.location, this.absoluteOffset, this.errors);
                 }
                 bindings.push(new TemplateBinding(this.span(start), key, isVar, name_2, expression));
                 if (this.peekKeywordAs() && !isVar) {
@@ -14702,7 +14653,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                         var templateValue = attribute.value;
                         var templateKey = normalizedName.substring(TEMPLATE_ATTR_PREFIX$1.length);
                         var parsedVariables = [];
-                        this.bindingParser.parseInlineTemplateBinding(templateKey, templateValue, attribute.sourceSpan, [], templateParsedProperties, parsedVariables);
+                        var absoluteOffset = attribute.valueSpan ? attribute.valueSpan.start.offset :
+                            attribute.sourceSpan.start.offset;
+                        this.bindingParser.parseInlineTemplateBinding(templateKey, templateValue, attribute.sourceSpan, absoluteOffset, [], templateParsedProperties, parsedVariables);
                         templateVariables.push.apply(templateVariables, __spread(parsedVariables.map(function (v) { return new Variable(v.name, v.value, v.sourceSpan); })));
                     }
                     else {
@@ -14824,12 +14777,13 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             var name = normalizeAttributeName(attribute.name);
             var value = attribute.value;
             var srcSpan = attribute.sourceSpan;
+            var absoluteOffset = attribute.valueSpan ? attribute.valueSpan.start.offset : srcSpan.start.offset;
             var bindParts = name.match(BIND_NAME_REGEXP$1);
             var hasBinding = false;
             if (bindParts) {
                 hasBinding = true;
                 if (bindParts[KW_BIND_IDX$1] != null) {
-                    this.bindingParser.parsePropertyBinding(bindParts[IDENT_KW_IDX$1], value, false, srcSpan, matchableAttributes, parsedProperties);
+                    this.bindingParser.parsePropertyBinding(bindParts[IDENT_KW_IDX$1], value, false, srcSpan, absoluteOffset, matchableAttributes, parsedProperties);
                 }
                 else if (bindParts[KW_LET_IDX$1]) {
                     if (isTemplateElement) {
@@ -14850,18 +14804,18 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                     addEvents(events, boundEvents);
                 }
                 else if (bindParts[KW_BINDON_IDX$1]) {
-                    this.bindingParser.parsePropertyBinding(bindParts[IDENT_KW_IDX$1], value, false, srcSpan, matchableAttributes, parsedProperties);
+                    this.bindingParser.parsePropertyBinding(bindParts[IDENT_KW_IDX$1], value, false, srcSpan, absoluteOffset, matchableAttributes, parsedProperties);
                     this.parseAssignmentEvent(bindParts[IDENT_KW_IDX$1], value, srcSpan, attribute.valueSpan, matchableAttributes, boundEvents);
                 }
                 else if (bindParts[KW_AT_IDX$1]) {
-                    this.bindingParser.parseLiteralAttr(name, value, srcSpan, matchableAttributes, parsedProperties);
+                    this.bindingParser.parseLiteralAttr(name, value, srcSpan, absoluteOffset, matchableAttributes, parsedProperties);
                 }
                 else if (bindParts[IDENT_BANANA_BOX_IDX$1]) {
-                    this.bindingParser.parsePropertyBinding(bindParts[IDENT_BANANA_BOX_IDX$1], value, false, srcSpan, matchableAttributes, parsedProperties);
+                    this.bindingParser.parsePropertyBinding(bindParts[IDENT_BANANA_BOX_IDX$1], value, false, srcSpan, absoluteOffset, matchableAttributes, parsedProperties);
                     this.parseAssignmentEvent(bindParts[IDENT_BANANA_BOX_IDX$1], value, srcSpan, attribute.valueSpan, matchableAttributes, boundEvents);
                 }
                 else if (bindParts[IDENT_PROPERTY_IDX$1]) {
-                    this.bindingParser.parsePropertyBinding(bindParts[IDENT_PROPERTY_IDX$1], value, false, srcSpan, matchableAttributes, parsedProperties);
+                    this.bindingParser.parsePropertyBinding(bindParts[IDENT_PROPERTY_IDX$1], value, false, srcSpan, absoluteOffset, matchableAttributes, parsedProperties);
                 }
                 else if (bindParts[IDENT_EVENT_IDX$1]) {
                     var events = [];
@@ -17224,9 +17178,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     // This regex matches any binding names that contain the "attr." prefix, e.g. "attr.required"
     // If there is a match, the first matching group will contain the attribute name to bind.
     var ATTR_REGEX = /attr\.([^\]]+)/;
-    function getStylingPrefix(name) {
-        return name.substring(0, 5); // style or class
-    }
     function baseDirectiveFields(meta, constantPool, bindingParser) {
         var definitionMap = new DefinitionMap();
         // e.g. `type: MyDirective`
@@ -17568,14 +17519,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     }
     // Return a host binding function or null if one is not necessary.
     function createHostBindingsFunction(hostBindingsMetadata, typeSourceSpan, bindingParser, constantPool, selector, name) {
-        // Initialize hostVarsCount to number of bound host properties (interpolations illegal),
-        // except 'style' and 'class' properties, since they should *not* allocate host var slots
-        var hostVarsCount = Object.keys(hostBindingsMetadata.properties)
-            .filter(function (name) {
-            var prefix = getStylingPrefix(name);
-            return prefix !== 'style' && prefix !== 'class';
-        })
-            .length;
+        // Initialize hostVarsCount to number of bound host properties (interpolations illegal)
+        var hostVarsCount = Object.keys(hostBindingsMetadata.properties).length;
         var elVarExp = variable('elIndex');
         var bindingContext = variable(CONTEXT_NAME);
         var styleBuilder = new StylingBuilder(elVarExp, bindingContext);
@@ -17694,7 +17639,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             // the update block of a component/directive templateFn/hostBindingsFn so that the bindings
             // are evaluated and updated for the element.
             styleBuilder.buildUpdateLevelInstructions(getValueConverter()).forEach(function (instruction) {
-                totalHostVarsCount += instruction.allocateBindingSlots;
+                // we subtract a value of `1` here because the binding slot was already
+                // allocated at the top of this method when all the input bindings were
+                // counted.
+                totalHostVarsCount += Math.max(instruction.allocateBindingSlots - 1, 0);
                 updateStatements.push(createStylingStmt(instruction, bindingContext, bindingFn));
             });
         }
@@ -18135,7 +18083,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.2.0-next.2+32.sha-f14693b.with-local-changes');
+    var VERSION$1 = new Version('8.2.0-next.2+46.sha-0e68c7e.with-local-changes');
 
     /**
      * @license
@@ -28748,7 +28696,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 var selectorInfo = getSelectors(this.info);
                 var selectors = selectorInfo.selectors;
                 var selector_1 = selectors.filter(function (s) { return s.attrs.some(function (attr, i) { return i % 2 == 0 && attr == key_1; }); })[0];
-                var templateBindingResult = this.info.expressionParser.parseTemplateBindings(key_1, this.attr.value, null);
+                var templateBindingResult = this.info.expressionParser.parseTemplateBindings(key_1, this.attr.value, null, 0);
                 // find the template binding that contains the position
                 if (!this.attr.valueSpan)
                     return;
@@ -30530,10 +30478,15 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             styleMapCacheMiss: 0,
             classMap: 0,
             classMapCacheMiss: 0,
-            stylingProp: 0,
-            stylingPropCacheMiss: 0,
-            stylingApply: 0,
-            stylingApplyCacheMiss: 0,
+            styleProp: 0,
+            stylePropCacheMiss: 0,
+            classProp: 0,
+            classPropCacheMiss: 0,
+            flushStyling: 0,
+            classesApplied: 0,
+            stylesApplied: 0,
+            stylingWritePersistedState: 0,
+            stylingReadPersistedState: 0,
         };
         // Make sure to refer to ngDevMode as ['ngDevMode'] for closure.
         var allowNgDevModeTrue = locationString.indexOf('ngDevMode=false') === -1;
@@ -30603,6 +30556,24 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     }
     function deepForEach(input, fn) {
         input.forEach(function (value) { return Array.isArray(value) ? deepForEach(value, fn) : fn(value); });
+    }
+    function addToArray(arr, index, value) {
+        // perf: array.push is faster than array.splice!
+        if (index >= arr.length) {
+            arr.push(value);
+        }
+        else {
+            arr.splice(index, 0, value);
+        }
+    }
+    function removeFromArray(arr, index) {
+        // perf: array.pop is faster than array.splice!
+        if (index >= arr.length - 1) {
+            return arr.pop();
+        }
+        else {
+            return arr.splice(index, 1)[0];
+        }
     }
 
     /**
@@ -32648,11 +32619,11 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     var SANITIZER = 13;
     var CHILD_HEAD = 14;
     var CHILD_TAIL = 15;
-    var CONTENT_QUERIES = 16;
-    var DECLARATION_VIEW = 17;
+    var DECLARATION_VIEW = 16;
+    var DECLARATION_LCONTAINER = 17;
     var PREORDER_HOOK_FLAGS = 18;
     /** Size of LView's header. Necessary to adjust for it when setting slots.  */
-    var HEADER_OFFSET = 20;
+    var HEADER_OFFSET = 19;
 
     /**
      * @license
@@ -32721,8 +32692,11 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Uglify will inline these when minifying so there shouldn't be a cost.
      */
     var ACTIVE_INDEX = 2;
-    // PARENT, NEXT, QUERIES and T_HOST are indices 3, 4, 5 and 6.
+    // PARENT and NEXT are indices 3 and 4
     // As we already have these constants in LView, we don't need to re-create them.
+    var MOVED_VIEWS = 5;
+    // T_HOST is index 6
+    // We already have this constants in LView, we don't need to re-create it.
     var NATIVE = 7;
     /**
      * Size of LContainer's header. Represents the index after which all views in the
@@ -32752,13 +32726,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      */
     function isLContainer(value) {
         return Array.isArray(value) && value[TYPE] === true;
-    }
-    /**
-     * True if `value` is `StylingContext`.
-     * @param value wrapped value of `RNode`, `LView`, `LContainer`, `StylingContext`
-     */
-    function isStylingContext(value) {
-        return Array.isArray(value) && typeof value[TYPE] === 'number';
     }
     function isComponent(tNode) {
         return (tNode.flags & 1 /* isComponent */) === 1 /* isComponent */;
@@ -32799,6 +32766,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     function assertLView(value) {
         assertDefined(value, 'LView must be defined');
         assertEqual(isLView(value), true, 'Expecting LView');
+    }
+    function assertFirstTemplatePass(tView, errMessage) {
+        assertEqual(tView.firstTemplatePass, true, errMessage);
     }
 
     /**
@@ -33041,6 +33011,18 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     }
 
     /**
+    * @license
+    * Copyright Google Inc. All Rights Reserved.
+    *
+    * Use of this source code is governed by an MIT-style license that can be
+    * found in the LICENSE file at https://angular.io/license
+    */
+    var _stateStorage = new Map();
+    function resetAllStylingState() {
+        _stateStorage.clear();
+    }
+
+    /**
      * @license
      * Copyright Google Inc. All Rights Reserved.
      *
@@ -33080,7 +33062,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      */
     /**
      * Returns `RNode`.
-     * @param value wrapped value of `RNode`, `LView`, `LContainer`, `StylingContext`
+     * @param value wrapped value of `RNode`, `LView`, `LContainer`
      */
     function unwrapRNode(value) {
         while (Array.isArray(value)) {
@@ -33152,10 +33134,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      */
     function viewAttachedToChangeDetector(view) {
         return (view[FLAGS] & 128 /* Attached */) === 128 /* Attached */;
-    }
-    /** Returns a boolean for whether the view is attached to a container. */
-    function viewAttachedToContainer(view) {
-        return isLContainer(view[PARENT]);
     }
     /**
      * Resets the pre-order hook flags of the view.
@@ -33241,8 +33219,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     function setBindingRoot(value) {
         bindingRootIndex = value;
     }
-    function setCurrentQueryIndex(value) {
-    }
     /**
      * Swap the current state with a new state.
      *
@@ -33273,6 +33249,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     function resetComponentState() {
         isParent = false;
         previousOrParentTNode = null;
+        setCurrentStyleSanitizer(null);
+        resetAllStylingState();
     }
     /**
      * Used in lieu of enterView to make it clear when we are exiting a child view. This makes
@@ -33311,6 +33289,13 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     }
     function getNamespace() {
         return _currentNamespace;
+    }
+    var _currentSanitizer;
+    function setCurrentStyleSanitizer(sanitizer) {
+        _currentSanitizer = sanitizer;
+    }
+    function getCurrentStyleSanitizer() {
+        return _currentSanitizer;
     }
 
     /**
@@ -33682,6 +33667,78 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         return '<unknown>';
     }
 
+    function getConfig(context) {
+        return context[1 /* ConfigPosition */];
+    }
+    function getProp(context, index) {
+        return context[index + 2 /* PropOffset */];
+    }
+    function getPropConfig(context, index) {
+        return context[index + 0 /* ConfigAndGuardOffset */] &
+            1 /* Mask */;
+    }
+    function isSanitizationRequired(context, index) {
+        return (getPropConfig(context, index) & 1 /* SanitizationRequired */) > 0;
+    }
+    function getGuardMask(context, index) {
+        var configGuardValue = context[index + 0 /* ConfigAndGuardOffset */];
+        return configGuardValue >> 1 /* TotalBits */;
+    }
+    function getValuesCount(context, index) {
+        return context[index + 1 /* ValuesCountOffset */];
+    }
+    function getBindingValue(context, index, offset) {
+        return context[index + 3 /* BindingsStartOffset */ + offset];
+    }
+    function getDefaultValue(context, index) {
+        var valuesCount = getValuesCount(context, index);
+        return context[index + 3 /* BindingsStartOffset */ + valuesCount - 1];
+    }
+    function isContextLocked(context) {
+        return (getConfig(context) & 1 /* Locked */) > 0;
+    }
+    function getPropValuesStartPosition(context) {
+        return 6 /* MapBindingsBindingsStartPosition */ +
+            context[4 /* MapBindingsValuesCountPosition */];
+    }
+    /**
+     * Determines whether the provided styling value is truthy or falsy.
+     */
+    function isStylingValueDefined(value) {
+        // the reason why null is compared against is because
+        // a CSS class value that is set to `false` must be
+        // respected (otherwise it would be treated as falsy).
+        // Empty string values are because developers usually
+        // set a value to an empty string to remove it.
+        return value != null && value !== '';
+    }
+    /**
+     * Returns an instance of `StylingMapArray`.
+     *
+     * This function is designed to find an instance of `StylingMapArray` in case it is stored
+     * inside of an instance of `TStylingContext`. When a styling context is created it
+     * will copy over an initial styling values from the tNode (which are stored as a
+     * `StylingMapArray` on the `tNode.classes` or `tNode.styles` values).
+     */
+    function getStylingMapArray(value) {
+        return isStylingContext(value) ?
+            value[0 /* InitialStylingValuePosition */] :
+            value;
+    }
+    function isStylingContext(value) {
+        // the StylingMapArray is in the format of [initial, prop, string, prop, string]
+        // and this is the defining value to distinguish between arrays
+        return Array.isArray(value) &&
+            value.length >= 6 /* MapBindingsBindingsStartPosition */ &&
+            typeof value[1] !== 'string';
+    }
+    function getMapProp(map, index) {
+        return map[index + 0 /* PropOffset */];
+    }
+    function getMapValue(map, index) {
+        return map[index + 1 /* ValueOffset */];
+    }
+
     /**
      * @license
      * Copyright Google Inc. All Rights Reserved.
@@ -33974,15 +34031,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    /**
-     * The default directive styling index value for template-based bindings.
-     *
-     * All host-level bindings (e.g. `hostStyleProp` and `hostStyleMap`) are
-     * assigned a directive styling index value based on the current directive
-     * uniqueId and the directive super-class inheritance depth. But for template
-     * bindings they always have the same directive styling index value.
-     */
-    var DEFAULT_TEMPLATE_DIRECTIVE_INDEX = 0;
 
     /**
      * @license
@@ -33991,115 +34039,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    function createEmptyStylingContext(wrappedElement, sanitizer, initialStyles, initialClasses) {
-        var context = [
-            wrappedElement || null,
-            0,
-            [],
-            initialStyles || [null, null],
-            initialClasses || [null, null],
-            [0, 0],
-            [0],
-            [0],
-            null,
-            null,
-        ];
-        // whenever a context is created there is always a `null` directive
-        // that is registered (which is a placeholder for the "template").
-        allocateOrUpdateDirectiveIntoContext(context, DEFAULT_TEMPLATE_DIRECTIVE_INDEX);
-        return context;
-    }
-    /**
-     * Allocates (registers) a directive into the directive registry within the provided styling
-     * context.
-     *
-     * For each and every `[style]`, `[style.prop]`, `[class]`, `[class.name]` binding
-     * (as well as static style and class attributes) a directive, component or template
-     * is marked as the owner. When an owner is determined (this happens when the template
-     * is first passed over) the directive owner is allocated into the styling context. When
-     * this happens, each owner gets its own index value. This then ensures that once any
-     * style and/or class binding are assigned into the context then they are marked to
-     * that directive's index value.
-     *
-     * @param context the target StylingContext
-     * @param directiveRef the directive that will be allocated into the context
-     * @returns the index where the directive was inserted into
-     */
-    function allocateOrUpdateDirectiveIntoContext(context, directiveIndex, singlePropValuesIndex, styleSanitizer) {
-        if (singlePropValuesIndex === void 0) { singlePropValuesIndex = -1; }
-        var directiveRegistry = context[2 /* DirectiveRegistryPosition */];
-        var index = directiveIndex * 2 /* Size */;
-        // we preemptively make space into the directives array and then
-        // assign values slot-by-slot to ensure that if the directive ordering
-        // changes then it will still function
-        var limit = index + 2 /* Size */;
-        for (var i = directiveRegistry.length; i < limit; i += 2 /* Size */) {
-            // -1 is used to signal that the directive has been allocated, but
-            // no actual style or class bindings have been registered yet...
-            directiveRegistry.push(-1, null);
-        }
-        var propValuesStartPosition = index + 0 /* SinglePropValuesIndexOffset */;
-        if (singlePropValuesIndex >= 0 && directiveRegistry[propValuesStartPosition] === -1) {
-            directiveRegistry[propValuesStartPosition] = singlePropValuesIndex;
-            directiveRegistry[index + 1 /* StyleSanitizerOffset */] =
-                styleSanitizer || null;
-        }
-    }
-    /**
-     * Used clone a copy of a pre-computed template of a styling context.
-     *
-     * A pre-computed template is designed to be computed once for a given element
-     * (instructions.ts has logic for caching this).
-     */
-    function allocStylingContext(element, templateStyleContext) {
-        // each instance gets a copy
-        var context = templateStyleContext.slice();
-        // the HEADER values contain arrays which also need
-        // to be copied over into the new context
-        for (var i = 0; i < 10 /* SingleStylesStartPosition */; i++) {
-            var value = templateStyleContext[i];
-            if (Array.isArray(value)) {
-                context[i] = value.slice();
-            }
-        }
-        context[0 /* ElementPosition */] = element;
-        // this will prevent any other directives from extending the context
-        context[1 /* MasterFlagPosition */] |= 16 /* BindingAllocationLocked */;
-        return context;
-    }
-    /**
-     * Retrieve the `StylingContext` at a given index.
-     *
-     * This method lazily creates the `StylingContext`. This is because in most cases
-     * we have styling without any bindings. Creating `StylingContext` eagerly would mean that
-     * every style declaration such as `<div style="color: red">` would result `StyleContext`
-     * which would create unnecessary memory pressure.
-     *
-     * @param index Index of the style allocation. See: `styling`.
-     * @param viewData The view to search for the styling context
-     */
-    function getStylingContextFromLView(index, viewData) {
-        var storageIndex = index;
-        var slotValue = viewData[storageIndex];
-        var wrapper = viewData;
-        while (Array.isArray(slotValue)) {
-            wrapper = slotValue;
-            slotValue = slotValue[HOST];
-        }
-        if (isStylingContext(wrapper)) {
-            return wrapper;
-        }
-        else {
-            // This is an LView or an LContainer
-            var stylingTemplate = getTNode(index - HEADER_OFFSET, viewData).stylingTemplate;
-            if (wrapper !== viewData) {
-                storageIndex = HOST;
-            }
-            return wrapper[storageIndex] = stylingTemplate ?
-                allocStylingContext(slotValue, stylingTemplate) :
-                createEmptyStylingContext(slotValue);
-        }
-    }
 
     /**
      * @license
@@ -34875,461 +34814,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    /** A special value which designates that a value has not changed. */
-    var NO_CHANGE = {};
 
-    /**
-     * Combines the binding value and a factory for an animation player.
-     *
-     * Used to bind a player to an element template binding (currently only
-     * `[style]`, `[style.prop]`, `[class]` and `[class.name]` bindings
-     * supported). The provided `factoryFn` function will be run once all
-     * the associated bindings have been evaluated on the element and is
-     * designed to return a player which will then be placed on the element.
-     *
-     * @param factoryFn The function that is used to create a player
-     *   once all the rendering-related (styling values) have been
-     *   processed for the element binding.
-     * @param value The raw value that will be exposed to the binding
-     *   so that the binding can update its internal values when
-     *   any changes are evaluated.
-     */
-
-    /**
-     * Runs through the initial class values present in the provided
-     * context and renders them via the provided renderer on the element.
-     *
-     * @param element the element the styling will be applied to
-     * @param context the source styling context which contains the initial class values
-     * @param renderer the renderer instance that will be used to apply the class
-     * @returns the index that the classes were applied up until
-     */
-    function renderInitialClasses(element, context, renderer, startIndex) {
-        var initialClasses = context[4 /* InitialClassValuesPosition */];
-        var i = startIndex || 2 /* KeyValueStartPosition */;
-        while (i < initialClasses.length) {
-            var value = initialClasses[i + 1 /* ValueOffset */];
-            if (value) {
-                setClass(element, initialClasses[i + 0 /* PropOffset */], true, renderer, null);
-            }
-            i += 3 /* Size */;
-        }
-        return i;
-    }
-    /**
-     * Runs through the initial styles values present in the provided
-     * context and renders them via the provided renderer on the element.
-     *
-     * @param element the element the styling will be applied to
-     * @param context the source styling context which contains the initial class values
-     * @param renderer the renderer instance that will be used to apply the class
-     * @returns the index that the styles were applied up until
-     */
-    function renderInitialStyles(element, context, renderer, startIndex) {
-        var initialStyles = context[3 /* InitialStyleValuesPosition */];
-        var i = startIndex || 2 /* KeyValueStartPosition */;
-        while (i < initialStyles.length) {
-            var value = initialStyles[i + 1 /* ValueOffset */];
-            if (value) {
-                setStyle(element, initialStyles[i + 0 /* PropOffset */], value, renderer, null);
-            }
-            i += 3 /* Size */;
-        }
-        return i;
-    }
-    /**
-     * Assigns a style value to a style property for the given element.
-     *
-     * This function renders a given CSS prop/value entry using the
-     * provided renderer. If a `store` value is provided then
-     * that will be used a render context instead of the provided
-     * renderer.
-     *
-     * @param native the DOM Element
-     * @param prop the CSS style property that will be rendered
-     * @param value the CSS style value that will be rendered
-     * @param renderer
-     * @param store an optional key/value map that will be used as a context to render styles on
-     */
-    function setStyle(native, prop, value, renderer, sanitizer, store, playerBuilder) {
-        value =
-            sanitizer && value ? sanitizer(prop, value, 3 /* ValidateAndSanitize */) : value;
-        if (store || playerBuilder) {
-            if (store) {
-                store.setValue(prop, value);
-            }
-            if (playerBuilder) {
-                playerBuilder.setValue(prop, value);
-            }
-        }
-        else if (value) {
-            value = value.toString(); // opacity, z-index and flexbox all have number values which may not
-            // assign as numbers
-            ngDevMode && ngDevMode.rendererSetStyle++;
-            isProceduralRenderer(renderer) ?
-                renderer.setStyle(native, prop, value, RendererStyleFlags3.DashCase) :
-                native.style.setProperty(prop, value);
-        }
-        else {
-            ngDevMode && ngDevMode.rendererRemoveStyle++;
-            isProceduralRenderer(renderer) ?
-                renderer.removeStyle(native, prop, RendererStyleFlags3.DashCase) :
-                native.style.removeProperty(prop);
-        }
-    }
-    /**
-     * Adds/removes the provided className value to the provided element.
-     *
-     * This function renders a given CSS class value using the provided
-     * renderer (by adding or removing it from the provided element).
-     * If a `store` value is provided then that will be used a render
-     * context instead of the provided renderer.
-     *
-     * @param native the DOM Element
-     * @param prop the CSS style property that will be rendered
-     * @param value the CSS style value that will be rendered
-     * @param renderer
-     * @param store an optional key/value map that will be used as a context to render styles on
-     */
-    function setClass(native, className, add, renderer, store, playerBuilder) {
-        if (store || playerBuilder) {
-            if (store) {
-                store.setValue(className, add);
-            }
-            if (playerBuilder) {
-                playerBuilder.setValue(className, add);
-            }
-            // DOMTokenList will throw if we try to add or remove an empty string.
-        }
-        else if (className !== '') {
-            if (add) {
-                ngDevMode && ngDevMode.rendererAddClass++;
-                isProceduralRenderer(renderer) ? renderer.addClass(native, className) :
-                    native['classList'].add(className);
-            }
-            else {
-                ngDevMode && ngDevMode.rendererRemoveClass++;
-                isProceduralRenderer(renderer) ? renderer.removeClass(native, className) :
-                    native['classList'].remove(className);
-            }
-        }
-    }
-    function isClassBasedValue(context, index) {
-        var adjustedIndex = index >= 10 /* SingleStylesStartPosition */ ? (index + 0 /* FlagsOffset */) : index;
-        return (context[adjustedIndex] & 2 /* Class */) == 2 /* Class */;
-    }
-    function getValue(context, index) {
-        return context[index + 2 /* ValueOffset */];
-    }
-    function getProp(context, index) {
-        return context[index + 1 /* PropertyOffset */];
-    }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * Marks that the next string is for element.
-     *
-     * See `I18nMutateOpCodes` documentation.
-     */
-    var ELEMENT_MARKER = {
-        marker: 'element'
-    };
-    /**
-     * Marks that the next string is for comment.
-     *
-     * See `I18nMutateOpCodes` documentation.
-     */
-    var COMMENT_MARKER = {
-        marker: 'comment'
-    };
-
-    var _stylingMode$1 = 0;
-    function runtimeIsNewStylingInUse() {
-        return _stylingMode$1 > 0 /* UseOld */;
-    }
-    var _currentSanitizer;
-    function setCurrentStyleSanitizer(sanitizer) {
-        _currentSanitizer = sanitizer;
-    }
-    function getCurrentStyleSanitizer() {
-        return _currentSanitizer;
-    }
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    function attachDebugObject(obj, debug) {
-        Object.defineProperty(obj, 'debug', { value: debug, enumerable: false });
-    }
-
-    /**
-    * @license
-    * Copyright Google Inc. All Rights Reserved.
-    *
-    * Use of this source code is governed by an MIT-style license that can be
-    * found in the LICENSE file at https://angular.io/license
-    */
-    function getConfig(context) {
-        return context[0 /* ConfigPosition */];
-    }
-    function getProp$1(context, index) {
-        return context[index + 2 /* PropOffset */];
-    }
-    function getPropConfig(context, index) {
-        return context[index + 0 /* ConfigAndGuardOffset */] &
-            1 /* Mask */;
-    }
-    function isSanitizationRequired(context, index) {
-        return (getPropConfig(context, index) & 1 /* SanitizationRequired */) > 0;
-    }
-    function getGuardMask(context, index) {
-        var configGuardValue = context[index + 0 /* ConfigAndGuardOffset */];
-        return configGuardValue >> 1 /* TotalBits */;
-    }
-    function setGuardMask(context, index, maskValue) {
-        var config = getPropConfig(context, index);
-        var guardMask = maskValue << 1 /* TotalBits */;
-        context[index + 0 /* ConfigAndGuardOffset */] = config | guardMask;
-    }
-    function getValuesCount(context, index) {
-        return context[index + 1 /* ValuesCountOffset */];
-    }
-    function getBindingValue(context, index, offset) {
-        return context[index + 3 /* BindingsStartOffset */ + offset];
-    }
-    function getDefaultValue(context, index) {
-        var valuesCount = getValuesCount(context, index);
-        return context[index + 3 /* BindingsStartOffset */ + valuesCount - 1];
-    }
-    function isContextLocked(context) {
-        return (getConfig(context) & 1 /* Locked */) > 0;
-    }
-    function getPropValuesStartPosition(context) {
-        return 5 /* MapBindingsBindingsStartPosition */ +
-            context[3 /* MapBindingsValuesCountPosition */];
-    }
-    /**
-     * Determines whether the provided styling value is truthy or falsy.
-     */
-    function isStylingValueDefined(value) {
-        // the reason why null is compared against is because
-        // a CSS class value that is set to `false` must be
-        // respected (otherwise it would be treated as falsy).
-        // Empty string values are because developers usually
-        // set a value to an empty string to remove it.
-        return value != null && value !== '';
-    }
-    /**
-     * Returns the current style sanitizer function for the given view.
-     *
-     * The default style sanitizer (which lives inside of `LView`) will
-     * be returned depending on whether the `styleSanitizer` instruction
-     * was called or not prior to any styling instructions running.
-     */
-    function getCurrentOrLViewSanitizer(lView) {
-        var sanitizer = (getCurrentStyleSanitizer() || lView[SANITIZER]);
-        if (sanitizer && typeof sanitizer !== 'function') {
-            setCurrentStyleSanitizer(sanitizer);
-            return sanitizeUsingSanitizerObject;
-        }
-        return sanitizer;
-    }
-    /**
-     * Style sanitization function that internally uses a `Sanitizer` instance to handle style
-     * sanitization.
-     */
-    var sanitizeUsingSanitizerObject = function (prop, value, mode) {
-        var sanitizer = getCurrentStyleSanitizer();
-        if (sanitizer) {
-            if (mode !== undefined && mode & 2 /* SanitizeOnly */) {
-                return sanitizer.sanitize(SecurityContext$1.STYLE, value);
-            }
-            else {
-                return true;
-            }
-        }
-        return value;
-    };
-
-    /**
-     * --------
-     *
-     * This file contains the core logic for styling in Angular.
-     *
-     * All styling bindings (i.e. `[style]`, `[style.prop]`, `[class]` and `[class.name]`)
-     * will have their values be applied through the logic in this file.
-     *
-     * When a binding is encountered (e.g. `<div [style.width]="w">`) then
-     * the binding data will be populated into a `TStylingContext` data-structure.
-     * There is only one `TStylingContext` per `TNode` and each element instance
-     * will update its style/class binding values in concert with the styling
-     * context.
-     *
-     * To learn more about the algorithm see `TStylingContext`.
-     *
-     * --------
-     */
-    var DEFAULT_BINDING_VALUE = null;
-    var DEFAULT_SIZE_VALUE = 1;
-    // The first bit value reflects a map-based binding value's bit.
-    // The reason why it's always activated for every entry in the map
-    // is so that if any map-binding values update then all other prop
-    // based bindings will pass the guard check automatically without
-    // any extra code or flags.
-    var DEFAULT_GUARD_MASK_VALUE = 1;
-    var deferredBindingQueue = [];
-    /**
-     * Flushes the collection of deferred bindings and causes each entry
-     * to be registered into the context.
-     */
-    function flushDeferredBindings() {
-        var i = 0;
-        while (i < deferredBindingQueue.length) {
-            var context = deferredBindingQueue[i++];
-            var count = deferredBindingQueue[i++];
-            var prop = deferredBindingQueue[i++];
-            var bindingIndex = deferredBindingQueue[i++];
-            var sanitizationRequired = deferredBindingQueue[i++];
-            registerBinding(context, count, prop, bindingIndex, sanitizationRequired);
-        }
-        deferredBindingQueue.length = 0;
-    }
-    /**
-     * Registers the provided binding (prop + bindingIndex) into the context.
-     *
-     * This function is shared between bindings that are assigned immediately
-     * (via `updateBindingData`) and at a deferred stage. When called, it will
-     * figure out exactly where to place the binding data in the context.
-     *
-     * It is needed because it will either update or insert a styling property
-     * into the context at the correct spot.
-     *
-     * When called, one of two things will happen:
-     *
-     * 1) If the property already exists in the context then it will just add
-     *    the provided `bindingValue` to the end of the binding sources region
-     *    for that particular property.
-     *
-     *    - If the binding value is a number then it will be added as a new
-     *      binding index source next to the other binding sources for the property.
-     *
-     *    - Otherwise, if the binding value is a string/boolean/null type then it will
-     *      replace the default value for the property if the default value is `null`.
-     *
-     * 2) If the property does not exist then it will be inserted into the context.
-     *    The styling context relies on all properties being stored in alphabetical
-     *    order, so it knows exactly where to store it.
-     *
-     *    When inserted, a default `null` value is created for the property which exists
-     *    as the default value for the binding. If the bindingValue property is inserted
-     *    and it is either a string, number or null value then that will replace the default
-     *    value.
-     *
-     * Note that this function is also used for map-based styling bindings. They are treated
-     * much the same as prop-based bindings, but, because they do not have a property value
-     * (since it's a map), all map-based entries are stored in an already populated area of
-     * the context at the top (which is reserved for map-based entries).
-     */
-    function registerBinding(context, countId, prop, bindingValue, sanitizationRequired) {
-        // prop-based bindings (e.g `<div [style.width]="w" [class.foo]="f">`)
-        if (prop) {
-            var found = false;
-            var i = getPropValuesStartPosition(context);
-            while (i < context.length) {
-                var valuesCount = getValuesCount(context, i);
-                var p = getProp$1(context, i);
-                found = prop <= p;
-                if (found) {
-                    // all style/class bindings are sorted by property name
-                    if (prop < p) {
-                        allocateNewContextEntry(context, i, prop, sanitizationRequired);
-                    }
-                    addBindingIntoContext(context, false, i, bindingValue, countId);
-                    break;
-                }
-                i += 3 /* BindingsStartOffset */ + valuesCount;
-            }
-            if (!found) {
-                allocateNewContextEntry(context, context.length, prop, sanitizationRequired);
-                addBindingIntoContext(context, false, i, bindingValue, countId);
-            }
-        }
-        else {
-            // map-based bindings (e.g `<div [style]="s" [class]="{className:true}">`)
-            // there is no need to allocate the map-based binding region into the context
-            // since it is already there when the context is first created.
-            addBindingIntoContext(context, true, 2 /* MapBindingsPosition */, bindingValue, countId);
-        }
-    }
-    function allocateNewContextEntry(context, index, prop, sanitizationRequired) {
-        // 1,2: splice index locations
-        // 3: each entry gets a config value (guard mask + flags)
-        // 4. each entry gets a size value (which is always one because there is always a default binding
-        // value)
-        // 5. the property that is getting allocated into the context
-        // 6. the default binding value (usually `null`)
-        var config = sanitizationRequired ? 1 /* SanitizationRequired */ :
-            0 /* Default */;
-        context.splice(index, 0, config, DEFAULT_SIZE_VALUE, prop, DEFAULT_BINDING_VALUE);
-        setGuardMask(context, index, DEFAULT_GUARD_MASK_VALUE);
-    }
-    /**
-     * Inserts a new binding value into a styling property tuple in the `TStylingContext`.
-     *
-     * A bindingValue is inserted into a context during the first update pass
-     * of a template or host bindings function. When this occurs, two things
-     * happen:
-     *
-     * - If the bindingValue value is a number then it is treated as a bindingIndex
-     *   value (a index in the `LView`) and it will be inserted next to the other
-     *   binding index entries.
-     *
-     * - Otherwise the binding value will update the default value for the property
-     *   and this will only happen if the default value is `null`.
-     *
-     * Note that this function also handles map-based bindings and will insert them
-     * at the top of the context.
-     */
-    function addBindingIntoContext(context, isMapBased, index, bindingValue, countId) {
-        var valuesCount = getValuesCount(context, index);
-        var lastValueIndex = index + 3 /* BindingsStartOffset */ + valuesCount;
-        if (!isMapBased) {
-            // prop-based values all have default values, but map-based entries do not.
-            // we want to access the index for the default value in this case and not just
-            // the bindings...
-            lastValueIndex--;
-        }
-        if (typeof bindingValue === 'number') {
-            context.splice(lastValueIndex, 0, bindingValue);
-            context[index + 1 /* ValuesCountOffset */]++;
-            // now that a new binding index has been added to the property
-            // the guard mask bit value (at the `countId` position) needs
-            // to be included into the existing mask value.
-            var guardMask = getGuardMask(context, index) | (1 << countId);
-            setGuardMask(context, index, guardMask);
-        }
-        else if (typeof bindingValue === 'string' && context[lastValueIndex] == null) {
-            context[lastValueIndex] = bindingValue;
-        }
-    }
     /**
      * Runs through the provided styling context and applies each value to
      * the provided element (via the renderer) if one or more values are present.
@@ -35343,7 +34828,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * If there are any map-based entries present (which are applied to the
      * element via the `[style]` and `[class]` bindings) then those entries
-     * will be applied as well. However, the code for that is not apart of
+     * will be applied as well. However, the code for that is not a part of
      * this function. Instead, each time a property is visited, then the
      * code below will call an external function called `stylingMapsSyncFn`
      * and, if present, it will keep the application of styling values in
@@ -35357,10 +34842,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * `applyClasses` and `applyStyles` to actually apply styling values).
      */
     function applyStyling(context, renderer, element, bindingData, bitMaskValue, applyStylingFn, sanitizer) {
-        deferredBindingQueue.length && flushDeferredBindings();
         var bitMask = normalizeBitMaskValue(bitMaskValue);
         var stylingMapsSyncFn = getStylingMapsSyncFn();
-        var mapsGuardMask = getGuardMask(context, 2 /* MapBindingsPosition */);
+        var mapsGuardMask = getGuardMask(context, 3 /* MapBindingsPosition */);
         var applyAllValues = (bitMask & mapsGuardMask) > 0;
         var mapsMode = applyAllValues ? 1 /* ApplyAllValues */ : 0 /* TraverseValues */;
         var i = getPropValuesStartPosition(context);
@@ -35369,7 +34853,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             var guardMask = getGuardMask(context, i);
             if (bitMask & guardMask) {
                 var valueApplied = false;
-                var prop = getProp$1(context, i);
+                var prop = getProp(context, i);
                 var valuesCountUpToDefault = valuesCount - 1;
                 var defaultValue = getBindingValue(context, i, valuesCountUpToDefault);
                 // case 1: apply prop-based values
@@ -35432,6 +34916,123 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     function setStylingMapsSyncFn(fn) {
         _activeStylingMapApplyFn = fn;
     }
+    /**
+     * Assigns a style value to a style property for the given element.
+     */
+    var setStyle = function (renderer, native, prop, value) {
+        // the reason why this may be `null` is either because
+        // it's a container element or it's a part of a test
+        // environment that doesn't have styling. In either
+        // case it's safe not to apply styling to the element.
+        var nativeStyle = native.style;
+        if (value) {
+            // opacity, z-index and flexbox all have number values
+            // and these need to be converted into strings so that
+            // they can be assigned properly.
+            value = value.toString();
+            ngDevMode && ngDevMode.rendererSetStyle++;
+            renderer && isProceduralRenderer(renderer) ?
+                renderer.setStyle(native, prop, value, RendererStyleFlags3.DashCase) :
+                (nativeStyle && nativeStyle.setProperty(prop, value));
+        }
+        else {
+            ngDevMode && ngDevMode.rendererRemoveStyle++;
+            renderer && isProceduralRenderer(renderer) ?
+                renderer.removeStyle(native, prop, RendererStyleFlags3.DashCase) :
+                (nativeStyle && nativeStyle.removeProperty(prop));
+        }
+    };
+    /**
+     * Adds/removes the provided className value to the provided element.
+     */
+    var setClass = function (renderer, native, className, value) {
+        if (className !== '') {
+            // the reason why this may be `null` is either because
+            // it's a container element or it's a part of a test
+            // environment that doesn't have styling. In either
+            // case it's safe not to apply styling to the element.
+            var classList = native.classList;
+            if (value) {
+                ngDevMode && ngDevMode.rendererAddClass++;
+                renderer && isProceduralRenderer(renderer) ? renderer.addClass(native, className) :
+                    (classList && classList.add(className));
+            }
+            else {
+                ngDevMode && ngDevMode.rendererRemoveClass++;
+                renderer && isProceduralRenderer(renderer) ? renderer.removeClass(native, className) :
+                    (classList && classList.remove(className));
+            }
+        }
+    };
+    /**
+     * Iterates over all provided styling entries and renders them on the element.
+     *
+     * This function is used alongside a `StylingMapArray` entry. This entry is not
+     * the same as the `TStylingContext` and is only really used when an element contains
+     * initial styling values (e.g. `<div style="width:200px">`), but no style/class bindings
+     * are present. If and when that happens then this function will be called to render all
+     * initial styling values on an element.
+     */
+    function renderStylingMap(renderer, element, stylingValues, isClassBased) {
+        var stylingMapArr = getStylingMapArray(stylingValues);
+        if (stylingMapArr) {
+            for (var i = 1 /* ValuesStartPosition */; i < stylingMapArr.length; i += 2 /* TupleSize */) {
+                var prop = getMapProp(stylingMapArr, i);
+                var value = getMapValue(stylingMapArr, i);
+                if (isClassBased) {
+                    setClass(renderer, element, prop, value, null);
+                }
+                else {
+                    setStyle(renderer, element, prop, value, null);
+                }
+            }
+        }
+    }
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /** A special value which designates that a value has not changed. */
+    var NO_CHANGE = {};
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * Marks that the next string is for element.
+     *
+     * See `I18nMutateOpCodes` documentation.
+     */
+    var ELEMENT_MARKER = {
+        marker: 'element'
+    };
+    /**
+     * Marks that the next string is for comment.
+     *
+     * See `I18nMutateOpCodes` documentation.
+     */
+    var COMMENT_MARKER = {
+        marker: 'comment'
+    };
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    function attachDebugObject(obj, debug) {
+        Object.defineProperty(obj, 'debug', { value: debug, enumerable: false });
+    }
 
     /**
      * --------
@@ -35464,8 +35065,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      *
      * # The Algorithm
      * Whenever a map-based binding updates (which is when the identity of the
-     * map-value changes) then the map is iterated over and a `LStylingMap` array
-     * is produced. The `LStylingMap` instance is stored in the binding location
+     * map-value changes) then the map is iterated over and a `StylingMapArray` array
+     * is produced. The `StylingMapArray` instance is stored in the binding location
      * where the `BINDING_INDEX` is situated when the `styleMap()` or `classMap()`
      * instruction were called. Once the binding changes, then the internal `bitMask`
      * value is marked as dirty.
@@ -35525,7 +35126,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         var targetPropValueWasApplied = false;
         // once the map-based styling code is activate it is never deactivated. For this reason a
         // check to see if the current styling context has any map based bindings is required.
-        var totalMaps = getValuesCount(context, 2 /* MapBindingsPosition */);
+        var totalMaps = getValuesCount(context, 3 /* MapBindingsPosition */);
         if (totalMaps) {
             var runTheSyncAlgorithm = true;
             var loopUntilEnd = !targetProp;
@@ -35557,16 +35158,16 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      */
     function innerSyncStylingMap(context, renderer, element, data, applyStylingFn, sanitizer, mode, targetProp, currentMapIndex, defaultValue) {
         var targetPropValueWasApplied = false;
-        var totalMaps = getValuesCount(context, 2 /* MapBindingsPosition */);
+        var totalMaps = getValuesCount(context, 3 /* MapBindingsPosition */);
         if (currentMapIndex < totalMaps) {
-            var bindingIndex = getBindingValue(context, 2 /* MapBindingsPosition */, currentMapIndex);
-            var lStylingMap = data[bindingIndex];
+            var bindingIndex = getBindingValue(context, 3 /* MapBindingsPosition */, currentMapIndex);
+            var stylingMapArr = data[bindingIndex];
             var cursor = getCurrentSyncCursor(currentMapIndex);
-            while (cursor < lStylingMap.length) {
-                var prop = getMapProp(lStylingMap, cursor);
+            while (cursor < stylingMapArr.length) {
+                var prop = getMapProp(stylingMapArr, cursor);
                 var iteratedTooFar = targetProp && prop > targetProp;
                 var isTargetPropMatched = !iteratedTooFar && prop === targetProp;
-                var value = getMapValue(lStylingMap, cursor);
+                var value = getMapValue(stylingMapArr, cursor);
                 var valueIsDefined = isStylingValueDefined(value);
                 // the recursive code is designed to keep applying until
                 // it reaches or goes past the target prop. If and when
@@ -35578,6 +35179,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 var innerProp = iteratedTooFar ? targetProp : prop;
                 var valueApplied = innerSyncStylingMap(context, renderer, element, data, applyStylingFn, sanitizer, innerMode, innerProp, currentMapIndex + 1, defaultValue);
                 if (iteratedTooFar) {
+                    if (!targetPropValueWasApplied) {
+                        targetPropValueWasApplied = valueApplied;
+                    }
                     break;
                 }
                 if (!valueApplied && isValueAllowedToBeApplied(mode, isTargetPropMatched)) {
@@ -35594,13 +35198,22 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 cursor += 2 /* TupleSize */;
             }
             setCurrentSyncCursor(currentMapIndex, cursor);
+            // this is a fallback case in the event that the styling map is `null` for this
+            // binding but there are other map-based bindings that need to be evaluated
+            // afterwards. If the `prop` value is falsy then the intention is to cycle
+            // through all of the properties in the remaining maps as well. If the current
+            // styling map is too short then there are no values to iterate over. In either
+            // case the follow-up maps need to be iterated over.
+            if (stylingMapArr.length === 1 /* ValuesStartPosition */ || !targetProp) {
+                return innerSyncStylingMap(context, renderer, element, data, applyStylingFn, sanitizer, mode, targetProp, currentMapIndex + 1, defaultValue);
+            }
         }
         return targetPropValueWasApplied;
     }
     /**
      * Enables support for map-based styling bindings (e.g. `[style]` and `[class]` bindings).
      */
-    function activeStylingMapFeature() {
+    function activateStylingMapFeature() {
         setStylingMapsSyncFn(syncStylingMap);
     }
     /**
@@ -35609,18 +35222,20 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * If an inner map is iterated on then this is done so for one
      * of two reasons:
      *
-     * - The target property was detected and the inner map
-     *   must now "catch up" (pointer-wise) up to where the current
-     *   map's cursor is situated.
+     * - value is being applied:
+     *   if the value is being applied from this current styling
+     *   map then there is no need to apply it in a deeper map.
      *
-     * - The target property was not detected in the current map
-     *   and must be found in an inner map. This can only be allowed
-     *   if the current map iteration is not set to skip the target
-     *   property.
+     * - value is being not applied:
+     *   apply the value if it is found in a deeper map.
+     *
+     * When these reasons are encountered the flags will for the
+     * inner map mode will be configured.
      */
     function resolveInnerMapMode(currentMode, valueIsDefined, isExactMatch) {
         var innerMode = currentMode;
-        if (!valueIsDefined && isExactMatch && !(currentMode & 4 /* SkipTargetProp */)) {
+        if (!valueIsDefined && !(currentMode & 4 /* SkipTargetProp */) &&
+            (isExactMatch || (currentMode & 1 /* ApplyAllValues */))) {
             // case 1: set the mode to apply the targeted prop value if it
             // ends up being encountered in another map value
             innerMode |= 2 /* ApplyTargetProp */;
@@ -35686,11 +35301,19 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     function setCurrentSyncCursor(mapIndex, indexValue) {
         MAP_CURSORS[mapIndex] = indexValue;
     }
-    function getMapProp(map, index) {
-        return map[index + 0 /* PropOffset */];
-    }
-    function getMapValue(map, index) {
-        return map[index + 1 /* ValueOffset */];
+    /**
+     * Converts the provided styling map array into a key value map.
+     */
+    function stylingMapToStringMap(map) {
+        var stringMap = {};
+        if (map) {
+            for (var i = 1 /* ValuesStartPosition */; i < map.length; i += 2 /* TupleSize */) {
+                var prop = getMapProp(map, i);
+                var value = getMapValue(map, i);
+                stringMap[prop] = value;
+            }
+        }
+        return stringMap;
     }
 
     /**
@@ -35717,7 +35340,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             get: function () {
                 var context = this.context;
                 var entries = {};
-                var start = 2 /* MapBindingsPosition */;
+                var start = 3 /* MapBindingsPosition */;
                 var i = start;
                 while (i < context.length) {
                     var valuesCount = getValuesCount(context, i);
@@ -35725,7 +35348,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                     // but contain no actual binding values. In this situation there is no point in
                     // classifying this as an "entry" since no real data is stored here yet.
                     if (valuesCount) {
-                        var prop = getProp$1(context, i);
+                        var prop = getProp(context, i);
                         var guardMask = getGuardMask(context, i);
                         var defaultValue = getDefaultValue(context, i);
                         var sanitizationRequired = isSanitizationRequired(context, i);
@@ -35796,13 +35419,12 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             // element is only used when the styling algorithm attempts to
             // style the value (and we mock out the stylingApplyFn anyway).
             var mockElement = {};
-            var hasMaps = getValuesCount(this.context, 2 /* MapBindingsPosition */) > 0;
+            var hasMaps = getValuesCount(this.context, 3 /* MapBindingsPosition */) > 0;
             if (hasMaps) {
-                activeStylingMapFeature();
+                activateStylingMapFeature();
             }
             var mapFn = function (renderer, element, prop, value, bindingIndex) { fn(prop, value, bindingIndex || null); };
-            var sanitizer = this._isClassBased ? null : (this._sanitizer ||
-                getCurrentOrLViewSanitizer(this._data));
+            var sanitizer = this._isClassBased ? null : (this._sanitizer || getCurrentStyleSanitizer());
             applyStyling(this.context, null, mockElement, this._data, true, mapFn, sanitizer);
         };
         return NodeStylingDebug;
@@ -35864,11 +35486,11 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         function TView(id, //
         blueprint, //
         template, //
+        queries, //
         viewQuery, //
         node, //
         data, //
         bindingStartIndex, //
-        viewQueryStartIndex, //
         expandoStartIndex, //
         expandoInstructions, //
         firstTemplatePass, //
@@ -35891,11 +35513,11 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             this.id = id;
             this.blueprint = blueprint;
             this.template = template;
+            this.queries = queries;
             this.viewQuery = viewQuery;
             this.node = node;
             this.data = data;
             this.bindingStartIndex = bindingStartIndex;
-            this.viewQueryStartIndex = viewQueryStartIndex;
             this.expandoStartIndex = expandoStartIndex;
             this.expandoInstructions = expandoInstructions;
             this.firstTemplatePass = firstTemplatePass;
@@ -35943,8 +35565,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         stylingTemplate, //
         projection, //
         onElementCreationFns, //
-        newStyles, //
-        newClasses) {
+        styles, //
+        classes) {
             this.tView_ = tView_;
             this.type = type;
             this.index = index;
@@ -35969,8 +35591,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             this.stylingTemplate = stylingTemplate;
             this.projection = projection;
             this.onElementCreationFns = onElementCreationFns;
-            this.newStyles = newStyles;
-            this.newClasses = newClasses;
+            this.styles = styles;
+            this.classes = classes;
         }
         Object.defineProperty(TNode.prototype, "type_", {
             get: function () {
@@ -36149,8 +35771,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                     next: toDebug(this._raw_lView[NEXT]),
                     childTail: toDebug(this._raw_lView[CHILD_TAIL]),
                     declarationView: toDebug(this._raw_lView[DECLARATION_VIEW]),
-                    contentQueries: this._raw_lView[CONTENT_QUERIES],
-                    queries: this._raw_lView[QUERIES],
+                    queries: null,
                     tHost: this._raw_lView[T_HOST],
                     bindingIndex: this._raw_lView[BINDING_INDEX],
                 };
@@ -36189,13 +35810,13 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             while (tNodeCursor) {
                 var rawValue = lView[tNode.index];
                 var native = unwrapRNode(rawValue);
-                var componentLViewDebug = isStylingContext(rawValue) ? null : toDebug(readLViewValue(rawValue));
-                var styles = null;
-                var classes = null;
-                if (runtimeIsNewStylingInUse()) {
-                    styles = tNode.newStyles ? new NodeStylingDebug(tNode.newStyles, lView, false) : null;
-                    classes = tNode.newClasses ? new NodeStylingDebug(tNode.newClasses, lView, true) : null;
-                }
+                var componentLViewDebug = toDebug(readLViewValue(rawValue));
+                var styles = isStylingContext(tNode.styles) ?
+                    new NodeStylingDebug(tNode.styles, lView) :
+                    null;
+                var classes = isStylingContext(tNode.classes) ?
+                    new NodeStylingDebug(tNode.classes, lView, true) :
+                    null;
                 debugNodes.push({
                     html: toHtml(native),
                     native: native, styles: styles, classes: classes,
@@ -36232,8 +35853,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(LContainerDebug.prototype, "queries", {
-            get: function () { return this._raw_lContainer[QUERIES]; },
+        Object.defineProperty(LContainerDebug.prototype, "movedViews", {
+            get: function () { return this._raw_lContainer[MOVED_VIEWS]; },
             enumerable: true,
             configurable: true
         });
@@ -36501,6 +36122,12 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         if (creationMode && tView.staticContentQueries) {
             refreshContentQueries(tView, lView);
         }
+        // We must materialize query results before child components are processed
+        // in case a child component has projected a container. The LContainer needs
+        // to exist so the embedded views are properly attached by the container.
+        if (!creationMode || tView.staticViewQueries) {
+            executeViewQueryFn(2 /* Update */, tView, lView[CONTEXT]);
+        }
         refreshChildComponents(tView.components);
     }
     /** Sets the host bindings for the current view. */
@@ -36546,15 +36173,19 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         finally {
         }
     }
-    /** Refreshes content queries for all directives in the given view. */
+    /** Refreshes all content queries declared by directives in a given view */
     function refreshContentQueries(tView, lView) {
-        if (tView.contentQueries != null) {
-            for (var i = 0; i < tView.contentQueries.length; i++) {
-                var directiveDefIdx = tView.contentQueries[i];
-                var directiveDef = tView.data[directiveDefIdx];
-                ngDevMode &&
-                    assertDefined(directiveDef.contentQueries, 'contentQueries function should be defined');
-                directiveDef.contentQueries(2 /* Update */, lView[directiveDefIdx], directiveDefIdx);
+        var contentQueries = tView.contentQueries;
+        if (contentQueries !== null) {
+            for (var i = 0; i < contentQueries.length; i += 2) {
+                var queryStartIdx = contentQueries[i];
+                var directiveDefIdx = contentQueries[i + 1];
+                if (directiveDefIdx !== -1) {
+                    var directiveDef = tView.data[directiveDefIdx];
+                    ngDevMode &&
+                        assertDefined(directiveDef.contentQueries, 'contentQueries function should be defined');
+                    directiveDef.contentQueries(2 /* Update */, lView[directiveDefIdx], directiveDefIdx);
+                }
             }
         }
     }
@@ -36779,11 +36410,11 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             new TViewConstructor(viewIndex, // id: number,
             blueprint, // blueprint: LView,
             templateFn, // template: ComponentTemplate<{}>|null,
+            null, // queries: TQueries|null
             viewQuery, // viewQuery: ViewQueriesFunction<{}>|null,
             null, // node: TViewNode|TElementNode|null,
             cloneToTViewData(blueprint).fill(null, bindingStartIndex), // data: TData,
             bindingStartIndex, // bindingStartIndex: number,
-            initialViewLength, // viewQueryStartIndex: number,
             initialViewLength, // expandoStartIndex: number,
             null, // expandoInstructions: ExpandoInstructions|null,
             true, // firstTemplatePass: boolean,
@@ -36809,11 +36440,11 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 id: viewIndex,
                 blueprint: blueprint,
                 template: templateFn,
+                queries: null,
                 viewQuery: viewQuery,
                 node: null,
                 data: blueprint.slice().fill(null, bindingStartIndex),
                 bindingStartIndex: bindingStartIndex,
-                viewQueryStartIndex: initialViewLength,
                 expandoStartIndex: initialViewLength,
                 expandoInstructions: null,
                 firstTemplatePass: true,
@@ -36895,35 +36526,32 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     function createTNode(tView, tParent, type, adjustedIndex, tagName, attrs) {
         ngDevMode && ngDevMode.tNode++;
         var injectorIndex = tParent ? tParent.injectorIndex : -1;
-        return ngDevMode ?
-            new TNodeConstructor(tView, // tView_: TView
-            type, // type: TNodeType
-            adjustedIndex, // index: number
-            injectorIndex, // injectorIndex: number
-            -1, // directiveStart: number
-            -1, // directiveEnd: number
-            -1, // propertyMetadataStartIndex: number
-            -1, // propertyMetadataEndIndex: number
-            0, // flags: TNodeFlags
-            0, // providerIndexes: TNodeProviderIndexes
-            tagName, // tagName: string|null
-            attrs, // attrs: (string|AttributeMarker|(string|SelectorFlags)[])[]|null
-            null, // localNames: (string|number)[]|null
-            undefined, // initialInputs: (string[]|null)[]|null|undefined
-            undefined, // inputs: PropertyAliases|null|undefined
-            undefined, // outputs: PropertyAliases|null|undefined
-            null, // tViews: ITView|ITView[]|null
-            null, // next: ITNode|null
-            null, // projectionNext: ITNode|null
-            null, // child: ITNode|null
-            tParent, // parent: TElementNode|TContainerNode|null
-            null, // stylingTemplate: StylingContext|null
-            null, // projection: number|(ITNode|RNode[])[]|null
-            null, // onElementCreationFns: Function[]|null
-            // TODO (matsko): rename this to `styles` once the old styling impl is gone
-            null, // newStyles: TStylingContext|null
-            // TODO (matsko): rename this to `classes` once the old styling impl is gone
-            null) :
+        return ngDevMode ? new TNodeConstructor(tView, // tView_: TView
+        type, // type: TNodeType
+        adjustedIndex, // index: number
+        injectorIndex, // injectorIndex: number
+        -1, // directiveStart: number
+        -1, // directiveEnd: number
+        -1, // propertyMetadataStartIndex: number
+        -1, // propertyMetadataEndIndex: number
+        0, // flags: TNodeFlags
+        0, // providerIndexes: TNodeProviderIndexes
+        tagName, // tagName: string|null
+        attrs, // attrs: (string|AttributeMarker|(string|SelectorFlags)[])[]|null
+        null, // localNames: (string|number)[]|null
+        undefined, // initialInputs: (string[]|null)[]|null|undefined
+        undefined, // inputs: PropertyAliases|null|undefined
+        undefined, // outputs: PropertyAliases|null|undefined
+        null, // tViews: ITView|ITView[]|null
+        null, // next: ITNode|null
+        null, // projectionNext: ITNode|null
+        null, // child: ITNode|null
+        tParent, // parent: TElementNode|TContainerNode|null
+        null, // stylingTemplate: StylingContext|null
+        null, // projection: number|(ITNode|RNode[])[]|null
+        null, // onElementCreationFns: Function[]|null
+        null, // newStyles: TStylingContext|null
+        null) :
             {
                 type: type,
                 index: adjustedIndex,
@@ -36948,10 +36576,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 stylingTemplate: null,
                 projection: null,
                 onElementCreationFns: null,
-                // TODO (matsko): rename this to `styles` once the old styling impl is gone
-                newStyles: null,
-                // TODO (matsko): rename this to `classes` once the old styling impl is gone
-                newClasses: null,
+                styles: null,
+                classes: null,
             };
     }
     /**
@@ -37240,10 +36866,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             creationMode && executeViewQueryFn(1 /* Create */, hostTView, component);
             executeTemplate(hostView, templateFn, getRenderFlags(hostView), component);
             refreshDescendantViews(hostView);
-            // Only check view queries again in creation mode if there are static view queries
-            if (!creationMode || hostTView.staticViewQueries) {
-                executeViewQueryFn(2 /* Update */, hostTView, component);
-            }
             safeToRunHooks = true;
         }
         finally {
@@ -37252,8 +36874,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     }
     function executeViewQueryFn(flags, tView, component) {
         var viewQuery = tView.viewQuery;
-        if (viewQuery) {
-            setCurrentQueryIndex(tView.viewQueryStartIndex);
+        if (viewQuery !== null) {
             viewQuery(flags, component);
         }
     }
@@ -37270,6 +36891,19 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         var injector = lView[INJECTOR$1];
         var errorHandler = injector ? injector.get(ErrorHandler, null) : null;
         errorHandler && errorHandler.handleError(error);
+    }
+    /**
+     * Renders all initial styling (class and style values) on to the element from the tNode.
+     *
+     * All initial styling data (i.e. any values extracted from the `style` or `class` attributes
+     * on an element) are collected into the `tNode.styles` and `tNode.classes` data structures.
+     * These values are populated during the creation phase of an element and are then later
+     * applied once the element is instantiated. This function applies each of the static
+     * style and class entries to the element.
+     */
+    function renderInitialStyling(renderer, native, tNode) {
+        renderStylingMap(renderer, native, tNode.classes, true);
+        renderStylingMap(renderer, native, tNode.styles, false);
     }
 
     /**
@@ -37507,34 +37141,40 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * being passed as an argument.
      */
     function executeActionOnElementOrContainer(action, renderer, parent, lNodeToHandle, beforeNode) {
-        ngDevMode && assertDefined(lNodeToHandle, '\'lNodeToHandle\' is undefined');
-        var lContainer;
-        var isComponent = false;
-        // We are expecting an RNode, but in the case of a component or LContainer the `RNode` is wrapped
-        // in an array which needs to be unwrapped. We need to know if it is a component and if
-        // it has LContainer so that we can process all of those cases appropriately.
-        if (isLContainer(lNodeToHandle)) {
-            lContainer = lNodeToHandle;
-        }
-        else if (isLView(lNodeToHandle)) {
-            isComponent = true;
-            ngDevMode && assertDefined(lNodeToHandle[HOST], 'HOST must be defined for a component LView');
-            lNodeToHandle = lNodeToHandle[HOST];
-        }
-        var rNode = unwrapRNode(lNodeToHandle);
-        ngDevMode && assertDomNode(rNode);
-        if (action === 0 /* Insert */) {
-            nativeInsertBefore(renderer, parent, rNode, beforeNode || null);
-        }
-        else if (action === 1 /* Detach */) {
-            nativeRemoveNode(renderer, rNode, isComponent);
-        }
-        else if (action === 2 /* Destroy */) {
-            ngDevMode && ngDevMode.rendererDestroyNode++;
-            renderer.destroyNode(rNode);
-        }
-        if (lContainer != null) {
-            executeActionOnContainer(renderer, action, lContainer, parent, beforeNode);
+        // If this slot was allocated for a text node dynamically created by i18n, the text node itself
+        // won't be created until i18nApply() in the update block, so this node should be skipped.
+        // For more info, see "ICU expressions should work inside an ngTemplateOutlet inside an ngFor"
+        // in `i18n_spec.ts`.
+        if (lNodeToHandle != null) {
+            var lContainer = void 0;
+            var isComponent = false;
+            // We are expecting an RNode, but in the case of a component or LContainer the `RNode` is
+            // wrapped
+            // in an array which needs to be unwrapped. We need to know if it is a component and if
+            // it has LContainer so that we can process all of those cases appropriately.
+            if (isLContainer(lNodeToHandle)) {
+                lContainer = lNodeToHandle;
+            }
+            else if (isLView(lNodeToHandle)) {
+                isComponent = true;
+                ngDevMode && assertDefined(lNodeToHandle[HOST], 'HOST must be defined for a component LView');
+                lNodeToHandle = lNodeToHandle[HOST];
+            }
+            var rNode = unwrapRNode(lNodeToHandle);
+            ngDevMode && assertDomNode(rNode);
+            if (action === 0 /* Insert */) {
+                nativeInsertBefore(renderer, parent, rNode, beforeNode || null);
+            }
+            else if (action === 1 /* Detach */) {
+                nativeRemoveNode(renderer, rNode, isComponent);
+            }
+            else if (action === 2 /* Destroy */) {
+                ngDevMode && ngDevMode.rendererDestroyNode++;
+                renderer.destroyNode(rNode);
+            }
+            if (lContainer != null) {
+                executeActionOnContainer(renderer, action, lContainer, parent, beforeNode);
+            }
         }
     }
     /**
@@ -37589,6 +37229,13 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             }
             lViewOrLContainer = next;
         }
+    }
+    function detachMovedView(declarationContainer, lView) {
+        ngDevMode && assertLContainer(declarationContainer);
+        ngDevMode && assertDefined(declarationContainer[MOVED_VIEWS], 'A projected view should belong to a non-empty projected views collection');
+        var projectedViews = declarationContainer[MOVED_VIEWS];
+        var declaredViewIndex = projectedViews.indexOf(lView);
+        projectedViews.splice(declaredViewIndex, 1);
     }
     /**
      * A standalone function which destroys an LView,
@@ -37656,9 +37303,18 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 ngDevMode && ngDevMode.rendererDestroy++;
                 view[RENDERER].destroy();
             }
-            // For embedded views still attached to a container: remove query result from this view.
-            if (viewAttachedToContainer(view) && view[QUERIES]) {
-                view[QUERIES].removeView();
+            var declarationContainer = view[DECLARATION_LCONTAINER];
+            // we are dealing with an embedded view that is still inserted into a container
+            if (declarationContainer !== null && isLContainer(view[PARENT])) {
+                // and this is a projected view
+                if (declarationContainer !== view[PARENT]) {
+                    detachMovedView(declarationContainer, view);
+                }
+                // For embedded views still attached to a container: remove query result from this view.
+                var lQueries = view[QUERIES];
+                if (lQueries !== null) {
+                    lQueries.detachView(view[TVIEW]);
+                }
             }
         }
     }
@@ -37883,15 +37539,17 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     }
     function executeActionOnNode(renderer, action, lView, tNode, renderParent, beforeNode) {
         var nodeType = tNode.type;
-        if (nodeType === 4 /* ElementContainer */ || nodeType === 5 /* IcuContainer */) {
-            executeActionOnElementContainerOrIcuContainer(renderer, action, lView, tNode, renderParent, beforeNode);
-        }
-        else if (nodeType === 1 /* Projection */) {
-            executeActionOnProjection(renderer, action, lView, tNode, renderParent, beforeNode);
-        }
-        else {
-            ngDevMode && assertNodeOfPossibleTypes(tNode, 3 /* Element */, 0 /* Container */);
-            executeActionOnElementOrContainer(action, renderer, renderParent, lView[tNode.index], beforeNode);
+        if (!(tNode.flags & 32 /* isDetached */)) {
+            if (nodeType === 4 /* ElementContainer */ || nodeType === 5 /* IcuContainer */) {
+                executeActionOnElementContainerOrIcuContainer(renderer, action, lView, tNode, renderParent, beforeNode);
+            }
+            else if (nodeType === 1 /* Projection */) {
+                executeActionOnProjection(renderer, action, lView, tNode, renderParent, beforeNode);
+            }
+            else {
+                ngDevMode && assertNodeOfPossibleTypes(tNode, 3 /* Element */, 0 /* Container */);
+                executeActionOnElementOrContainer(action, renderer, renderParent, lView[tNode.index], beforeNode);
+            }
         }
     }
 
@@ -38350,10 +38008,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             invokeHostBindingsInCreationMode(componentDef, expando, component, rootTNode, tView.firstTemplatePass);
             rootTNode.onElementCreationFns && applyOnCreateInstructions(rootTNode);
         }
-        if (rootTNode.stylingTemplate) {
+        if (rootTNode.classes !== null || rootTNode.styles !== null) {
             var native = componentView[HOST];
-            renderInitialClasses(native, rootTNode.stylingTemplate, componentView[RENDERER]);
-            renderInitialStyles(native, rootTNode.stylingTemplate, componentView[RENDERER]);
+            var renderer = componentView[RENDERER];
+            renderInitialStyling(renderer, native, rootTNode);
         }
         return component;
     }
@@ -39026,7 +38684,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.2.0-next.2+32.sha-f14693b.with-local-changes');
+    var VERSION$2 = new Version$1('8.2.0-next.2+46.sha-0e68c7e.with-local-changes');
 
     /**
      * @license
@@ -40936,24 +40594,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     }
     function renderDetachView$1(view) {
         visitRootRenderNodes(view, 3 /* RemoveChild */, null, null, undefined);
-    }
-    function addToArray(arr, index, value) {
-        // perf: array.push is faster than array.splice!
-        if (index >= arr.length) {
-            arr.push(value);
-        }
-        else {
-            arr.splice(index, 0, value);
-        }
-    }
-    function removeFromArray(arr, index) {
-        // perf: array.pop is faster than array.splice!
-        if (index >= arr.length - 1) {
-            arr.pop();
-        }
-        else {
-            arr.splice(index, 1);
-        }
     }
 
     /**
@@ -44158,7 +43798,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
          * on change detection, it will not notify of changes to the queries, unless a new change
          * occurs.
          *
-         * @param resultsTree The results tree to store
+         * @param resultsTree The query results to store
          */
         QueryList.prototype.reset = function (resultsTree) {
             this._results = flatten$2(resultsTree);
@@ -44204,6 +43844,90 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    var TQueries_ = /** @class */ (function () {
+        function TQueries_(queries) {
+            if (queries === void 0) { queries = []; }
+            this.queries = queries;
+        }
+        TQueries_.prototype.elementStart = function (tView, tNode) {
+            var e_1, _a;
+            ngDevMode && assertFirstTemplatePass(tView, 'Queries should collect results on the first template pass only');
+            try {
+                for (var _b = __values(this.queries), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var query = _c.value;
+                    query.elementStart(tView, tNode);
+                }
+            }
+            catch (e_1_1) { e_1 = { error: e_1_1 }; }
+            finally {
+                try {
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                }
+                finally { if (e_1) throw e_1.error; }
+            }
+        };
+        TQueries_.prototype.elementEnd = function (tNode) {
+            var e_2, _a;
+            try {
+                for (var _b = __values(this.queries), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var query = _c.value;
+                    query.elementEnd(tNode);
+                }
+            }
+            catch (e_2_1) { e_2 = { error: e_2_1 }; }
+            finally {
+                try {
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                }
+                finally { if (e_2) throw e_2.error; }
+            }
+        };
+        TQueries_.prototype.embeddedTView = function (tNode) {
+            var queriesForTemplateRef = null;
+            for (var i = 0; i < this.length; i++) {
+                var childQueryIndex = queriesForTemplateRef !== null ? queriesForTemplateRef.length : 0;
+                var tqueryClone = this.getByIndex(i).embeddedTView(tNode, childQueryIndex);
+                if (tqueryClone) {
+                    tqueryClone.indexInDeclarationView = i;
+                    if (queriesForTemplateRef !== null) {
+                        queriesForTemplateRef.push(tqueryClone);
+                    }
+                    else {
+                        queriesForTemplateRef = [tqueryClone];
+                    }
+                }
+            }
+            return queriesForTemplateRef !== null ? new TQueries_(queriesForTemplateRef) : null;
+        };
+        TQueries_.prototype.template = function (tView, tNode) {
+            var e_3, _a;
+            ngDevMode && assertFirstTemplatePass(tView, 'Queries should collect results on the first template pass only');
+            try {
+                for (var _b = __values(this.queries), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var query = _c.value;
+                    query.template(tView, tNode);
+                }
+            }
+            catch (e_3_1) { e_3 = { error: e_3_1 }; }
+            finally {
+                try {
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                }
+                finally { if (e_3) throw e_3.error; }
+            }
+        };
+        TQueries_.prototype.getByIndex = function (index) {
+            ngDevMode && assertDataInRange(this.queries, index);
+            return this.queries[index];
+        };
+        Object.defineProperty(TQueries_.prototype, "length", {
+            get: function () { return this.queries.length; },
+            enumerable: true,
+            configurable: true
+        });
+        TQueries_.prototype.track = function (tquery) { this.queries.push(tquery); };
+        return TQueries_;
+    }());
 
     /**
      * @license
@@ -46518,67 +46242,16 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(DebugElement__POST_R3__.prototype, "classes", {
+        Object.defineProperty(DebugElement__POST_R3__.prototype, "styles", {
             get: function () {
-                var classes = {};
-                var element = this.nativeElement;
-                if (element) {
-                    var lContext = loadLContextFromNode(element);
-                    var stylingContext = getStylingContextFromLView(lContext.nodeIndex, lContext.lView);
-                    if (stylingContext) {
-                        for (var i = 10 /* SingleStylesStartPosition */; i < stylingContext.length; i += 4 /* Size */) {
-                            if (isClassBasedValue(stylingContext, i)) {
-                                var className = getProp(stylingContext, i);
-                                var value = getValue(stylingContext, i);
-                                if (typeof value == 'boolean') {
-                                    // we want to ignore `null` since those don't overwrite the values.
-                                    classes[className] = value;
-                                }
-                            }
-                        }
-                    }
-                    else {
-                        // Fallback, just read DOM.
-                        var eClasses = element.classList;
-                        for (var i = 0; i < eClasses.length; i++) {
-                            classes[eClasses[i]] = true;
-                        }
-                    }
-                }
-                return classes;
+                return _getStylingDebugInfo(this.nativeElement, false);
             },
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(DebugElement__POST_R3__.prototype, "styles", {
+        Object.defineProperty(DebugElement__POST_R3__.prototype, "classes", {
             get: function () {
-                var styles = {};
-                var element = this.nativeElement;
-                if (element) {
-                    var lContext = loadLContextFromNode(element);
-                    var stylingContext = getStylingContextFromLView(lContext.nodeIndex, lContext.lView);
-                    if (stylingContext) {
-                        for (var i = 10 /* SingleStylesStartPosition */; i < stylingContext.length; i += 4 /* Size */) {
-                            if (!isClassBasedValue(stylingContext, i)) {
-                                var styleName = getProp(stylingContext, i);
-                                var value = getValue(stylingContext, i);
-                                if (value !== null) {
-                                    // we want to ignore `null` since those don't overwrite the values.
-                                    styles[styleName] = value;
-                                }
-                            }
-                        }
-                    }
-                    else {
-                        // Fallback, just read DOM.
-                        var eStyles = element.style;
-                        for (var i = 0; i < eStyles.length; i++) {
-                            var name_1 = eStyles.item(i);
-                            styles[name_1] = eStyles.getPropertyValue(name_1);
-                        }
-                    }
-                }
-                return styles;
+                return _getStylingDebugInfo(this.nativeElement, true);
             },
             enumerable: true,
             configurable: true
@@ -46635,6 +46308,25 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         };
         return DebugElement__POST_R3__;
     }(DebugNode__POST_R3__));
+    function _getStylingDebugInfo(element, isClassBased) {
+        if (element) {
+            var context = loadLContextFromNode(element);
+            var lView = context.lView;
+            var tData = lView[TVIEW].data;
+            var tNode = tData[context.nodeIndex];
+            if (isClassBased) {
+                return isStylingContext(tNode.classes) ?
+                    new NodeStylingDebug(tNode.classes, lView, true).values :
+                    stylingMapToStringMap(tNode.classes);
+            }
+            else {
+                return isStylingContext(tNode.styles) ?
+                    new NodeStylingDebug(tNode.styles, lView, false).values :
+                    stylingMapToStringMap(tNode.styles);
+            }
+        }
+        return {};
+    }
     function _queryAllR3(parentElement, predicate, matches, elementsOnly) {
         var context = loadLContext(parentElement.nativeNode);
         var parentTNode = context.lView[TVIEW].data[context.nodeIndex];
@@ -48857,6 +48549,23 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      */
 
     /**
+     * Combines the binding value and a factory for an animation player.
+     *
+     * Used to bind a player to an element template binding (currently only
+     * `[style]`, `[style.prop]`, `[class]` and `[class.name]` bindings
+     * supported). The provided `factoryFn` function will be run once all
+     * the associated bindings have been evaluated on the element and is
+     * designed to return a player which will then be placed on the element.
+     *
+     * @param factoryFn The function that is used to create a player
+     *   once all the rendering-related (styling values) have been
+     *   processed for the element binding.
+     * @param value The raw value that will be exposed to the binding
+     *   so that the binding can update its internal values when
+     *   any changes are evaluated.
+     */
+
+    /**
      * @license
      * Copyright Google Inc. All Rights Reserved.
      *
@@ -49865,7 +49574,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.2.0-next.2+32.sha-f14693b.with-local-changes');
+    var VERSION$3 = new Version$1('8.2.0-next.2+46.sha-0e68c7e.with-local-changes');
 
     /**
      * @license
