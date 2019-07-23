@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.2.0-next.2+50.sha-b31a292.with-local-changes
+ * @license Angular v8.2.0-next.2+53.sha-9eefe25.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -2257,9 +2257,20 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             return _this;
         }
         _ApplySourceSpanTransformer.prototype._clone = function (obj) {
+            var e_1, _a;
             var clone = Object.create(obj.constructor.prototype);
-            for (var prop in obj) {
-                clone[prop] = obj[prop];
+            try {
+                for (var _b = __values(Object.keys(obj)), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var prop = _c.value;
+                    clone[prop] = obj[prop];
+                }
+            }
+            catch (e_1_1) { e_1 = { error: e_1_1 }; }
+            finally {
+                try {
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                }
+                finally { if (e_1) throw e_1.error; }
             }
             return clone;
         };
@@ -2337,7 +2348,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         return out;
     }
     function serializeTags(tags) {
-        var e_1, _a;
+        var e_2, _a;
         if (tags.length === 0)
             return '';
         var out = '*\n';
@@ -2350,12 +2361,12 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 out += '\n';
             }
         }
-        catch (e_1_1) { e_1 = { error: e_1_1 }; }
+        catch (e_2_1) { e_2 = { error: e_2_1 }; }
         finally {
             try {
                 if (tags_1_1 && !tags_1_1.done && (_a = tags_1.return)) _a.call(tags_1);
             }
-            finally { if (e_1) throw e_1.error; }
+            finally { if (e_2) throw e_2.error; }
         }
         out += ' ';
         return out;
@@ -18095,7 +18106,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.2.0-next.2+50.sha-b31a292.with-local-changes');
+    var VERSION$1 = new Version('8.2.0-next.2+53.sha-9eefe25.with-local-changes');
 
     /**
      * @license
@@ -38611,7 +38622,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.2.0-next.2+50.sha-b31a292.with-local-changes');
+    var VERSION$2 = new Version$1('8.2.0-next.2+53.sha-9eefe25.with-local-changes');
 
     /**
      * @license
@@ -41390,10 +41401,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         return array;
     }
     /**
-     * Default {@link RootContext} for all components rendered with {@link renderComponent}.
-     */
-    var ROOT_CONTEXT = new InjectionToken('ROOT_CONTEXT_TOKEN', { providedIn: 'root', factory: function () { return createRootContext(ɵɵinject(SCHEDULER)); } });
-    /**
      * A change detection scheduler token for {@link RootContext}. This token is the default value used
      * for the default `RootContext` found in the {@link ROOT_CONTEXT} token.
      */
@@ -41453,7 +41460,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             configurable: true
         });
         ComponentFactory.prototype.create = function (injector, projectableNodes, rootSelectorOrNode, ngModule) {
-            var isInternalRootView = rootSelectorOrNode === undefined;
             ngModule = ngModule || this.ngModule;
             var rootViewInjector = ngModule ? createChainedInjector(injector, ngModule.injector) : injector;
             var rendererFactory = rootViewInjector.get(RendererFactory2, domRendererFactory3);
@@ -41461,9 +41467,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             // Ensure that the namespace for the root node is correct,
             // otherwise the browser might not render out the element properly.
             namespaceHTMLInternal();
-            var hostRNode = isInternalRootView ?
-                elementCreate(this.selector, rendererFactory.createRenderer(null, this.componentDef)) :
-                locateHostElement(rendererFactory, rootSelectorOrNode);
+            var hostRNode = rootSelectorOrNode ?
+                locateHostElement(rendererFactory, rootSelectorOrNode) :
+                elementCreate(this.selector, rendererFactory.createRenderer(null, this.componentDef));
             var rootFlags = this.componentDef.onPush ? 64 /* Dirty */ | 512 /* IsRoot */ :
                 16 /* CheckAlways */ | 512 /* IsRoot */;
             // Check whether this Component needs to be isolated from other components, i.e. whether it
@@ -41472,9 +41478,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             // relied upon externally.
             var isIsolated = typeof rootSelectorOrNode === 'string' &&
                 /^#root-ng-internal-isolated-\d+/.test(rootSelectorOrNode);
-            var rootContext = (isInternalRootView || isIsolated) ?
-                createRootContext() :
-                rootViewInjector.get(ROOT_CONTEXT);
+            var rootContext = createRootContext();
             var renderer = rendererFactory.createRenderer(hostRNode, this.componentDef);
             if (rootSelectorOrNode && hostRNode) {
                 ngDevMode && ngDevMode.rendererSetAttribute++;
@@ -41512,7 +41516,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 leaveView(oldLView, safeToRunHooks);
             }
             var componentRef = new ComponentRef$1(this.componentType, component, createElementRef(ElementRef, tElementNode, rootLView), rootLView, tElementNode);
-            if (isInternalRootView || isIsolated) {
+            if (!rootSelectorOrNode || isIsolated) {
                 // The host element of the internal or isolated root view is attached to the component's host
                 // view node.
                 componentRef.hostView._tViewNode.child = tElementNode;
@@ -45621,8 +45625,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var SWITCH_IVY_ENABLED__PRE_R3__ = false;
-    var ivyEnabled = SWITCH_IVY_ENABLED__PRE_R3__;
 
     /**
      * @license
@@ -45662,7 +45664,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this._config = config || DEFAULT_CONFIG;
         }
         SystemJsNgModuleLoader.prototype.load = function (path) {
-            var legacyOfflineMode = !ivyEnabled && this._compiler instanceof Compiler;
+            var legacyOfflineMode = this._compiler instanceof Compiler;
             return legacyOfflineMode ? this.loadFactory(path) : this.loadAndCompile(path);
         };
         SystemJsNgModuleLoader.prototype.loadAndCompile = function (path) {
@@ -46218,9 +46220,20 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                     _queryNodeChildrenR3(componentView[TVIEW].firstChild, componentView, predicate, matches, elementsOnly, rootNativeNode);
                 }
             }
-            else if (tNode.child) {
-                // Otherwise, its children have to be processed.
-                _queryNodeChildrenR3(tNode.child, lView, predicate, matches, elementsOnly, rootNativeNode);
+            else {
+                if (tNode.child) {
+                    // Otherwise, its children have to be processed.
+                    _queryNodeChildrenR3(tNode.child, lView, predicate, matches, elementsOnly, rootNativeNode);
+                }
+                // We also have to query the DOM directly in order to catch elements inserted through
+                // Renderer2. Note that this is __not__ optimal, because we're walking similar trees multiple
+                // times. ViewEngine could do it more efficiently, because all the insertions go through
+                // Renderer2, however that's not the case in Ivy. This approach is being used because:
+                // 1. Matching the ViewEngine behavior would mean potentially introducing a depedency
+                //    from `Renderer2` to Ivy which could bring Ivy code into ViewEngine.
+                // 2. We would have to make `Renderer3` "know" about debug nodes.
+                // 3. It allows us to capture nodes that were inserted directly via the DOM.
+                nativeNode && _queryNativeNodeDescendants(nativeNode, predicate, matches, elementsOnly);
             }
             // In all cases, if a dynamic container exists for this node, each view inside it has to be
             // processed.
@@ -46311,11 +46324,40 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             // Type of the "predicate and "matches" array are set based on the value of
             // the "elementsOnly" parameter. TypeScript is not able to properly infer these
             // types with generics, so we manually cast the parameters accordingly.
-            if (elementsOnly && debugNode instanceof DebugElement__POST_R3__ && predicate(debugNode)) {
+            if (elementsOnly && debugNode instanceof DebugElement__POST_R3__ && predicate(debugNode) &&
+                matches.indexOf(debugNode) === -1) {
                 matches.push(debugNode);
             }
-            else if (!elementsOnly && predicate(debugNode)) {
+            else if (!elementsOnly && predicate(debugNode) &&
+                matches.indexOf(debugNode) === -1) {
                 matches.push(debugNode);
+            }
+        }
+    }
+    /**
+     * Match all the descendants of a DOM node against a predicate.
+     *
+     * @param nativeNode the current native node
+     * @param predicate the predicate to match
+     * @param matches the list of positive matches
+     * @param elementsOnly whether only elements should be searched
+     */
+    function _queryNativeNodeDescendants(parentNode, predicate, matches, elementsOnly) {
+        var nodes = parentNode.childNodes;
+        var length = nodes.length;
+        for (var i = 0; i < length; i++) {
+            var node = nodes[i];
+            var debugNode = getDebugNode(node);
+            if (debugNode) {
+                if (elementsOnly && debugNode instanceof DebugElement__POST_R3__ && predicate(debugNode) &&
+                    matches.indexOf(debugNode) === -1) {
+                    matches.push(debugNode);
+                }
+                else if (!elementsOnly && predicate(debugNode) &&
+                    matches.indexOf(debugNode) === -1) {
+                    matches.push(debugNode);
+                }
+                _queryNativeNodeDescendants(node, predicate, matches, elementsOnly);
             }
         }
     }
@@ -49417,7 +49459,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.2.0-next.2+50.sha-b31a292.with-local-changes');
+    var VERSION$3 = new Version$1('8.2.0-next.2+53.sha-9eefe25.with-local-changes');
 
     /**
      * @license
