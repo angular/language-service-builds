@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.1.2+15.sha-a9f3547.with-local-changes
+ * @license Angular v8.1.2+24.sha-77143b5.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -2257,9 +2257,20 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             return _this;
         }
         _ApplySourceSpanTransformer.prototype._clone = function (obj) {
+            var e_1, _a;
             var clone = Object.create(obj.constructor.prototype);
-            for (var prop in obj) {
-                clone[prop] = obj[prop];
+            try {
+                for (var _b = __values(Object.keys(obj)), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var prop = _c.value;
+                    clone[prop] = obj[prop];
+                }
+            }
+            catch (e_1_1) { e_1 = { error: e_1_1 }; }
+            finally {
+                try {
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                }
+                finally { if (e_1) throw e_1.error; }
             }
             return clone;
         };
@@ -2337,7 +2348,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         return out;
     }
     function serializeTags(tags) {
-        var e_1, _a;
+        var e_2, _a;
         if (tags.length === 0)
             return '';
         var out = '*\n';
@@ -2350,12 +2361,12 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 out += '\n';
             }
         }
-        catch (e_1_1) { e_1 = { error: e_1_1 }; }
+        catch (e_2_1) { e_2 = { error: e_2_1 }; }
         finally {
             try {
                 if (tags_1_1 && !tags_1_1.done && (_a = tags_1.return)) _a.call(tags_1);
             }
-            finally { if (e_1) throw e_1.error; }
+            finally { if (e_2) throw e_2.error; }
         }
         out += ' ';
         return out;
@@ -18008,7 +18019,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.1.2+15.sha-a9f3547.with-local-changes');
+    var VERSION$1 = new Version('8.1.2+24.sha-77143b5.with-local-changes');
 
     /**
      * @license
@@ -38676,7 +38687,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.1.2+15.sha-a9f3547.with-local-changes');
+    var VERSION$2 = new Version$1('8.1.2+24.sha-77143b5.with-local-changes');
 
     /**
      * @license
@@ -49537,7 +49548,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.1.2+15.sha-a9f3547.with-local-changes');
+    var VERSION$3 = new Version$1('8.1.2+24.sha-77143b5.with-local-changes');
 
     /**
      * @license
