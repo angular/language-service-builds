@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.2.0-next.2+70.sha-b696413.with-local-changes
+ * @license Angular v8.2.0-next.2+85.sha-c7542a1.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -17415,11 +17415,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         return { expression: expression, type: type, statements: statements };
     }
     function prepareQueryParams(query, constantPool) {
-        var parameters = [
-            getQueryPredicate(query, constantPool),
-            literal(query.descendants),
-            query.read || literal(null),
-        ];
+        var parameters = [getQueryPredicate(query, constantPool), literal(query.descendants)];
+        if (query.read) {
+            parameters.push(query.read);
+        }
         return parameters;
     }
     // Turn a directive selector into an R3-compatible selector for directive def
@@ -17454,10 +17453,11 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         try {
             for (var queries_1 = __values(queries), queries_1_1 = queries_1.next(); !queries_1_1.done; queries_1_1 = queries_1.next()) {
                 var query = queries_1_1.value;
-                // creation, e.g. r3.contentQuery(dirIndex, somePredicate, true, null);
-                var args = __spread([variable('dirIndex')], prepareQueryParams(query, constantPool));
                 var queryInstruction = query.static ? Identifiers$1.staticContentQuery : Identifiers$1.contentQuery;
-                createStatements.push(importExpr(queryInstruction).callFn(args).toStmt());
+                // creation, e.g. r3.contentQuery(dirIndex, somePredicate, true, null);
+                createStatements.push(importExpr(queryInstruction)
+                    .callFn(__spread([variable('dirIndex')], prepareQueryParams(query, constantPool)))
+                    .toStmt());
                 // update, e.g. (r3.queryRefresh(tmp = r3.loadContentQuery()) && (ctx.someDir = tmp));
                 var temporary = tempAllocator();
                 var getQueryList = importExpr(Identifiers$1.loadContentQuery).callFn([]);
@@ -18106,7 +18106,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.2.0-next.2+70.sha-b696413.with-local-changes');
+    var VERSION$1 = new Version('8.2.0-next.2+85.sha-c7542a1.with-local-changes');
 
     /**
      * @license
@@ -38622,7 +38622,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.2.0-next.2+70.sha-b696413.with-local-changes');
+    var VERSION$2 = new Version$1('8.2.0-next.2+85.sha-c7542a1.with-local-changes');
 
     /**
      * @license
@@ -49462,7 +49462,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.2.0-next.2+70.sha-b696413.with-local-changes');
+    var VERSION$3 = new Version$1('8.2.0-next.2+85.sha-c7542a1.with-local-changes');
 
     /**
      * @license
