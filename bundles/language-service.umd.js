@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.2.0-next.2+93.sha-3a2b195.with-local-changes
+ * @license Angular v8.2.0-next.2+94.sha-6ece7db.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -14631,8 +14631,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         }
         // HTML visitor
         HtmlAstToIvyAst.prototype.visitElement = function (element) {
-            var _this = this;
             var e_1, _a;
+            var _this = this;
             var preparsedElement = preparseElement(element);
             if (preparsedElement.type === PreparsedElementType.SCRIPT) {
                 return null;
@@ -15983,8 +15983,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             this.creationInstruction(element.sourceSpan, nsInstruction);
         };
         TemplateDefinitionBuilder.prototype.visitElement = function (element) {
-            var _this = this;
             var e_1, _a;
+            var _this = this;
             var elementIndex = this.allocateDataSlot();
             var stylingBuilder = new StylingBuilder(literal(elementIndex), null);
             var isNonBindableMode = false;
@@ -18111,7 +18111,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.2.0-next.2+93.sha-3a2b195.with-local-changes');
+    var VERSION$1 = new Version('8.2.0-next.2+94.sha-6ece7db.with-local-changes');
 
     /**
      * @license
@@ -21890,8 +21890,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             return metadataSymbols;
         };
         StaticSymbolResolver.prototype._createSymbolsOf = function (filePath) {
-            var _this = this;
             var e_2, _a;
+            var _this = this;
             if (this.resolvedFilePaths.has(filePath)) {
                 return;
             }
@@ -23107,7 +23107,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                                     var spreadArray = simplifyEagerly(item.expression);
                                     if (Array.isArray(spreadArray)) {
                                         try {
-                                            for (var spreadArray_1 = __values(spreadArray), spreadArray_1_1 = spreadArray_1.next(); !spreadArray_1_1.done; spreadArray_1_1 = spreadArray_1.next()) {
+                                            for (var spreadArray_1 = (e_3 = void 0, __values(spreadArray)), spreadArray_1_1 = spreadArray_1.next(); !spreadArray_1_1.done; spreadArray_1_1 = spreadArray_1.next()) {
                                                 var spreadItem = spreadArray_1_1.value;
                                                 result_2.push(spreadItem);
                                             }
@@ -24480,8 +24480,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             return this.getType(ast.value);
         };
         AstType.prototype.visitLiteralArray = function (ast) {
-            var _this_1 = this;
             var _a;
+            var _this_1 = this;
             // A type literal is an array type of the union of the elements
             return this.query.getArrayType((_a = this.query).getTypeUnion.apply(_a, __spread(ast.expressions.map(function (element) { return _this_1.getType(element); }))));
         };
@@ -24760,7 +24760,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                     });
                 };
                 try {
-                    for (var _b = __values(current.variables), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    for (var _b = (e_2 = void 0, __values(current.variables)), _c = _b.next(); !_c.done; _c = _b.next()) {
                         var variable = _c.value;
                         _loop_2(variable);
                     }
@@ -24895,8 +24895,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             return ast.sourceSpan.start.offset;
         };
         ExpressionDiagnosticsVisitor.prototype.diagnoseExpression = function (ast, offset, includeEvent) {
-            var _this = this;
             var _a;
+            var _this = this;
             var scope = this.getExpressionScope(this.path, includeEvent);
             (_a = this.diagnostics).push.apply(_a, __spread(getExpressionDiagnostics(scope, ast, this.info.query, {
                 event: includeEvent
@@ -26896,7 +26896,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                                 var hasDecoratorData = false;
                                 var hasParameterData = false;
                                 try {
-                                    for (var parameters_1 = __values(parameters), parameters_1_1 = parameters_1.next(); !parameters_1_1.done; parameters_1_1 = parameters_1.next()) {
+                                    for (var parameters_1 = (e_2 = void 0, __values(parameters)), parameters_1_1 = parameters_1.next(); !parameters_1_1.done; parameters_1_1 = parameters_1.next()) {
                                         var parameter = parameters_1_1.value;
                                         var parameterData = getDecorators(parameter.decorators);
                                         parameterDecoratorData.push(parameterData);
@@ -29174,7 +29174,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 });
             };
             try {
-                for (var _b = __values(declaration.errors), _c = _b.next(); !_c.done; _c = _b.next()) {
+                for (var _b = (e_2 = void 0, __values(declaration.errors)), _c = _b.next(); !_c.done; _c = _b.next()) {
                     var error = _c.value;
                     report(error.message, error.span);
                 }
@@ -38627,7 +38627,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.2.0-next.2+93.sha-3a2b195.with-local-changes');
+    var VERSION$2 = new Version$1('8.2.0-next.2+94.sha-6ece7db.with-local-changes');
 
     /**
      * @license
@@ -45492,8 +45492,8 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
          * detection pass during which all change detection must complete.
          */
         ApplicationRef.prototype.tick = function () {
-            var _this = this;
             var e_1, _a, e_2, _b;
+            var _this = this;
             if (this._runningTick) {
                 throw new Error('ApplicationRef.tick is called recursively');
             }
@@ -45882,8 +45882,8 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             }
         };
         DebugElement__PRE_R3__.prototype.insertChildrenAfter = function (child, newChildren) {
-            var _this = this;
             var _a;
+            var _this = this;
             var siblingIndex = this.childNodes.indexOf(child);
             if (siblingIndex !== -1) {
                 (_a = this.childNodes).splice.apply(_a, __spread([siblingIndex + 1, 0], newChildren));
@@ -48772,8 +48772,8 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             configurable: true
         });
         TypeScriptServiceHost.prototype.validate = function () {
-            var _this = this;
             var e_1, _a;
+            var _this = this;
             var program = this.program;
             if (this.lastProgram !== program) {
                 // Invalidate file that have changed in the static symbol resolver
@@ -48829,7 +48829,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                     for (var _c = __values(ngModuleSummary.ngModules), _d = _c.next(); !_d.done; _d = _c.next()) {
                         var module_1 = _d.value;
                         try {
-                            for (var _e = __values(module_1.declaredDirectives), _f = _e.next(); !_f.done; _f = _e.next()) {
+                            for (var _e = (e_3 = void 0, __values(module_1.declaredDirectives)), _f = _e.next(); !_f.done; _f = _e.next()) {
                                 var directive = _f.value;
                                 var metadata = this.resolver.getNonNormalizedDirectiveMetadata(directive.reference).metadata;
                                 if (metadata.isComponent && metadata.template && metadata.template.templateUrl) {
@@ -49465,7 +49465,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.2.0-next.2+93.sha-3a2b195.with-local-changes');
+    var VERSION$3 = new Version$1('8.2.0-next.2+94.sha-6ece7db.with-local-changes');
 
     /**
      * @license
