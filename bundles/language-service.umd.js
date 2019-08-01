@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.2.0-next.2+126.sha-975917b.with-local-changes
+ * @license Angular v9.0.0-next.0+13.sha-184d270.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18111,7 +18111,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.2.0-next.2+126.sha-975917b.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.0+13.sha-184d270.with-local-changes');
 
     /**
      * @license
@@ -38632,7 +38632,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.2.0-next.2+126.sha-975917b.with-local-changes');
+    var VERSION$2 = new Version$1('9.0.0-next.0+13.sha-184d270.with-local-changes');
 
     /**
      * @license
@@ -45680,7 +45680,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this._config = config || DEFAULT_CONFIG;
         }
         SystemJsNgModuleLoader.prototype.load = function (path) {
-            var legacyOfflineMode = !ivyEnabled && this._compiler instanceof Compiler;
+            var legacyOfflineMode = this._compiler instanceof Compiler;
             return legacyOfflineMode ? this.loadFactory(path) : this.loadAndCompile(path);
         };
         SystemJsNgModuleLoader.prototype.loadAndCompile = function (path) {
@@ -46178,11 +46178,26 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             return matches;
         };
         DebugElement__POST_R3__.prototype.triggerEventHandler = function (eventName, eventObj) {
+            var node = this.nativeNode;
+            var invokedListeners = [];
             this.listeners.forEach(function (listener) {
                 if (listener.name === eventName) {
-                    listener.callback(eventObj);
+                    var callback = listener.callback;
+                    callback(eventObj);
+                    invokedListeners.push(callback);
                 }
             });
+            // We need to check whether `eventListeners` exists, because it's something
+            // that Zone.js only adds to `EventTarget` in browser environments.
+            if (typeof node.eventListeners === 'function') {
+                // Note that in Ivy we wrap event listeners with a call to `event.preventDefault` in some
+                // cases. We use `Function` as a special token that gives us access to the actual event
+                // listener.
+                node.eventListeners(eventName).forEach(function (listener) {
+                    var unwrappedListener = listener(Function);
+                    return invokedListeners.indexOf(unwrappedListener) === -1 && unwrappedListener(eventObj);
+                });
+            }
         };
         return DebugElement__POST_R3__;
     }(DebugNode__POST_R3__));
@@ -48669,21 +48684,28 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this.ensureTemplateMap();
             return this.templateReferences || [];
         };
+        /**
+         * Get the Angular template in the file, if any. If TS file is provided then
+         * return the inline template, otherwise return the external template.
+         * @param fileName Either TS or HTML file
+         * @param position Only used if file is TS
+         */
         TypeScriptServiceHost.prototype.getTemplateAt = function (fileName, position) {
-            var sourceFile = this.getSourceFile(fileName);
-            if (sourceFile) {
-                this.context = sourceFile.fileName;
-                var node = this.findNode(sourceFile, position);
-                if (node) {
-                    return this.getSourceFromNode(fileName, this.host.getScriptVersion(sourceFile.fileName), node);
+            if (fileName.endsWith('.ts')) {
+                var sourceFile = this.getSourceFile(fileName);
+                if (sourceFile) {
+                    this.context = sourceFile.fileName;
+                    var node = this.findNode(sourceFile, position);
+                    if (node) {
+                        return this.getSourceFromNode(fileName, this.host.getScriptVersion(sourceFile.fileName), node);
+                    }
                 }
             }
             else {
                 this.ensureTemplateMap();
-                // TODO: Cannocalize the file?
-                var componentType = this.fileToComponent.get(fileName);
-                if (componentType) {
-                    return this.getSourceFromType(fileName, this.host.getScriptVersion(fileName), componentType);
+                var componentSymbol = this.fileToComponent.get(fileName);
+                if (componentSymbol) {
+                    return this.getSourceFromType(fileName, this.host.getScriptVersion(fileName), componentSymbol);
                 }
             }
             return undefined;
@@ -48714,15 +48736,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         };
         TypeScriptServiceHost.prototype.getTemplates = function (fileName) {
             var _this = this;
-            this.ensureTemplateMap();
-            var componentType = this.fileToComponent.get(fileName);
-            if (componentType) {
-                var templateSource = this.getTemplateAt(fileName, 0);
-                if (templateSource) {
-                    return [templateSource];
-                }
-            }
-            else {
+            if (fileName.endsWith('.ts')) {
                 var version_1 = this.host.getScriptVersion(fileName);
                 var result_1 = [];
                 // Find each template string in the file
@@ -48742,9 +48756,22 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 }
                 return result_1.length ? result_1 : undefined;
             }
+            else {
+                this.ensureTemplateMap();
+                var componentSymbol = this.fileToComponent.get(fileName);
+                if (componentSymbol) {
+                    var templateSource = this.getTemplateAt(fileName, 0);
+                    if (templateSource) {
+                        return [templateSource];
+                    }
+                }
+            }
         };
         TypeScriptServiceHost.prototype.getDeclarations = function (fileName) {
             var _this = this;
+            if (!fileName.endsWith('.ts')) {
+                return [];
+            }
             var result = [];
             var sourceFile = this.getSourceFile(fileName);
             if (sourceFile) {
@@ -48762,6 +48789,9 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             return result;
         };
         TypeScriptServiceHost.prototype.getSourceFile = function (fileName) {
+            if (!fileName.endsWith('.ts')) {
+                throw new Error("Non-TS source file requested: " + fileName);
+            }
             return this.tsService.getProgram().getSourceFile(fileName);
         };
         TypeScriptServiceHost.prototype.updateAnalyzedModules = function () {
@@ -48949,7 +48979,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                     // The host's getCurrentDirectory() is not reliable as it is always "" in
                     // tsserver. We don't need the exact base directory, just one that contains
                     // a source file.
-                    var source = this.tsService.getProgram().getSourceFile(this.context);
+                    var source = this.getSourceFile(this.context);
                     if (!source) {
                         throw new Error('Internal error: no context could be determined');
                     }
@@ -49485,7 +49515,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.2.0-next.2+126.sha-975917b.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.0+13.sha-184d270.with-local-changes');
 
     /**
      * @license
