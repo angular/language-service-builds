@@ -61,12 +61,6 @@ export declare class TypeScriptServiceHost implements LanguageServiceHost {
      */
     readonly resolver: CompileMetadataResolver;
     getTemplateReferences(): string[];
-    /**
-     * Get the Angular template in the file, if any. If TS file is provided then
-     * return the inline template, otherwise return the external template.
-     * @param fileName Either TS or HTML file
-     * @param position Only used if file is TS
-     */
     getTemplateAt(fileName: string, position: number): TemplateSource | undefined;
     getAnalyzedModules(): NgAnalyzedModules;
     private ensureAnalyzedModules;

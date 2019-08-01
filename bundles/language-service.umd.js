@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.0+11.sha-d0d875a.with-local-changes
+ * @license Angular v9.0.0-next.0+8.sha-c1ae612.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18096,7 +18096,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.0+11.sha-d0d875a.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.0+8.sha-c1ae612.with-local-changes');
 
     /**
      * @license
@@ -42797,7 +42797,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         if (tView.firstTemplatePass) {
             ngDevMode && ngDevMode.firstTemplatePass++;
             resolveDirectives(tView, lView, tContainerNode, localRefs || null);
-            var embeddedTView = tContainerNode.tViews = createTView(-1, templateFn, consts, vars, tView.directiveRegistry, tView.pipeRegistry, null, tView.schemas);
+            var embeddedTView = tContainerNode.tViews = createTView(-1, templateFn, consts, vars, tView.directiveRegistry, tView.pipeRegistry, null, null);
             if (tView.queries !== null) {
                 tView.queries.template(tView, tContainerNode);
                 embeddedTView.queries = tView.queries.embeddedTView(tContainerNode);
@@ -46819,7 +46819,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-next.0+11.sha-d0d875a.with-local-changes');
+    var VERSION$2 = new Version$1('9.0.0-next.0+8.sha-c1ae612.with-local-changes');
 
     /**
      * @license
@@ -56795,8 +56795,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this._config = config || DEFAULT_CONFIG;
         }
         SystemJsNgModuleLoader.prototype.load = function (path) {
-            var legacyOfflineMode = !ivyEnabled && this._compiler instanceof Compiler;
-            return legacyOfflineMode ? this.loadFactory(path) : this.loadAndCompile(path);
+            return this.loadAndCompile(path);
         };
         SystemJsNgModuleLoader.prototype.loadAndCompile = function (path) {
             var _this = this;
@@ -59768,28 +59767,21 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this.ensureTemplateMap();
             return this.templateReferences || [];
         };
-        /**
-         * Get the Angular template in the file, if any. If TS file is provided then
-         * return the inline template, otherwise return the external template.
-         * @param fileName Either TS or HTML file
-         * @param position Only used if file is TS
-         */
         TypeScriptServiceHost.prototype.getTemplateAt = function (fileName, position) {
-            if (fileName.endsWith('.ts')) {
-                var sourceFile = this.getSourceFile(fileName);
-                if (sourceFile) {
-                    this.context = sourceFile.fileName;
-                    var node = this.findNode(sourceFile, position);
-                    if (node) {
-                        return this.getSourceFromNode(fileName, this.host.getScriptVersion(sourceFile.fileName), node);
-                    }
+            var sourceFile = this.getSourceFile(fileName);
+            if (sourceFile) {
+                this.context = sourceFile.fileName;
+                var node = this.findNode(sourceFile, position);
+                if (node) {
+                    return this.getSourceFromNode(fileName, this.host.getScriptVersion(sourceFile.fileName), node);
                 }
             }
             else {
                 this.ensureTemplateMap();
-                var componentSymbol = this.fileToComponent.get(fileName);
-                if (componentSymbol) {
-                    return this.getSourceFromType(fileName, this.host.getScriptVersion(fileName), componentSymbol);
+                // TODO: Cannocalize the file?
+                var componentType = this.fileToComponent.get(fileName);
+                if (componentType) {
+                    return this.getSourceFromType(fileName, this.host.getScriptVersion(fileName), componentType);
                 }
             }
             return undefined;
@@ -59820,7 +59812,15 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         };
         TypeScriptServiceHost.prototype.getTemplates = function (fileName) {
             var _this = this;
-            if (fileName.endsWith('.ts')) {
+            this.ensureTemplateMap();
+            var componentType = this.fileToComponent.get(fileName);
+            if (componentType) {
+                var templateSource = this.getTemplateAt(fileName, 0);
+                if (templateSource) {
+                    return [templateSource];
+                }
+            }
+            else {
                 var version_1 = this.host.getScriptVersion(fileName);
                 var result_1 = [];
                 // Find each template string in the file
@@ -59840,22 +59840,9 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 }
                 return result_1.length ? result_1 : undefined;
             }
-            else {
-                this.ensureTemplateMap();
-                var componentSymbol = this.fileToComponent.get(fileName);
-                if (componentSymbol) {
-                    var templateSource = this.getTemplateAt(fileName, 0);
-                    if (templateSource) {
-                        return [templateSource];
-                    }
-                }
-            }
         };
         TypeScriptServiceHost.prototype.getDeclarations = function (fileName) {
             var _this = this;
-            if (!fileName.endsWith('.ts')) {
-                return [];
-            }
             var result = [];
             var sourceFile = this.getSourceFile(fileName);
             if (sourceFile) {
@@ -59873,9 +59860,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             return result;
         };
         TypeScriptServiceHost.prototype.getSourceFile = function (fileName) {
-            if (!fileName.endsWith('.ts')) {
-                throw new Error("Non-TS source file requested: " + fileName);
-            }
             return this.tsService.getProgram().getSourceFile(fileName);
         };
         TypeScriptServiceHost.prototype.updateAnalyzedModules = function () {
@@ -60063,7 +60047,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                     // The host's getCurrentDirectory() is not reliable as it is always "" in
                     // tsserver. We don't need the exact base directory, just one that contains
                     // a source file.
-                    var source = this.getSourceFile(this.context);
+                    var source = this.tsService.getProgram().getSourceFile(this.context);
                     if (!source) {
                         throw new Error('Internal error: no context could be determined');
                     }
@@ -60599,7 +60583,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-next.0+11.sha-d0d875a.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.0+8.sha-c1ae612.with-local-changes');
 
     /**
      * @license
