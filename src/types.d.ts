@@ -203,9 +203,9 @@ export interface Completion {
 /**
  * A sequence of completions.
  *
- * @publicApi
+ * @deprecated
  */
-export declare type Completions = Completion[] | undefined;
+export declare type Completions = Completion[];
 /**
  * A file and span.
  */
@@ -264,7 +264,7 @@ export interface Diagnostic {
 /**
  * A sequence of diagnostic message.
  *
- * @publicApi
+ * @deprecated
  */
 export declare type Diagnostics = Diagnostic[];
 /**
@@ -330,15 +330,15 @@ export interface LanguageService {
     /**
      * Returns a list of all error for all templates in the given file.
      */
-    getDiagnostics(fileName: string): Diagnostics | undefined;
+    getDiagnostics(fileName: string): Diagnostic[];
     /**
      * Return the completions at the given position.
      */
-    getCompletionsAt(fileName: string, position: number): Completions | undefined;
+    getCompletionsAt(fileName: string, position: number): Completion[] | undefined;
     /**
      * Return the definition location for the symbol at position.
      */
-    getDefinitionAt(fileName: string, position: number): Definition | undefined;
+    getDefinitionAt(fileName: string, position: number): Location[] | undefined;
     /**
      * Return the hover information for the symbol at position.
      */
