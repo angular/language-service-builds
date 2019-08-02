@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.0+13.sha-184d270.with-local-changes
+ * @license Angular v9.0.0-next.0+19.sha-a2183dd.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18111,7 +18111,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.0+13.sha-184d270.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.0+19.sha-a2183dd.with-local-changes');
 
     /**
      * @license
@@ -30601,9 +30601,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             throwError(msg);
         }
     }
-    function assertPreviousIsParent(isParent) {
-        assertEqual(isParent, true, 'previousOrParentTNode should be a parent');
-    }
     function assertLContainer(value) {
         assertDefined(value, 'LContainer must be defined');
         assertEqual(isLContainer(value), true, 'Expecting LContainer');
@@ -30616,7 +30613,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         assertEqual(isLView(value), true, 'Expecting LView');
     }
     function assertFirstTemplatePass(tView, errMessage) {
-        assertEqual(tView.firstTemplatePass, true, errMessage);
+        assertEqual(tView.firstTemplatePass, true, errMessage || 'Should only be called in first template pass.');
     }
 
     /**
@@ -34471,21 +34468,23 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * A lighter version of postProcessDirective() that is used for the root component.
      */
-    function postProcessBaseDirective(lView, previousOrParentTNode, directive) {
-        var native = getNativeByTNode(previousOrParentTNode, lView);
+    function postProcessBaseDirective(lView, hostTNode, directive) {
         ngDevMode && assertEqual(lView[BINDING_INDEX], lView[TVIEW].bindingStartIndex, 'directives should be created before any bindings');
-        ngDevMode && assertPreviousIsParent(getIsParent());
         attachPatchData(directive, lView);
+        var native = getNativeByTNode(hostTNode, lView);
         if (native) {
             attachPatchData(native, lView);
         }
     }
-    /** Stores index of component's host element so it will be queued for view refresh during CD. */
-    function queueComponentIndexForCheck(previousOrParentTNode) {
-        var tView = getLView()[TVIEW];
-        ngDevMode &&
-            assertEqual(tView.firstTemplatePass, true, 'Should only be called in first template pass.');
-        (tView.components || (tView.components = ngDevMode ? new TViewComponents() : [])).push(previousOrParentTNode.index);
+    /**
+     * Marks a given TNode as a component's host. This consists of:
+     * - setting appropriate TNode flags;
+     * - storing index of component's host element so it will be queued for view refresh during CD.
+    */
+    function markAsComponentHost(tView, hostTNode) {
+        ngDevMode && assertFirstTemplatePass(tView);
+        hostTNode.flags = 1 /* isComponent */;
+        (tView.components || (tView.components = ngDevMode ? new TViewComponents() : [])).push(hostTNode.index);
     }
     /**
      * Initializes the flags on the current node, setting all indices to the initial index,
@@ -38283,10 +38282,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         var componentView = createLView(rootView, getOrCreateTView(def), null, def.onPush ? 64 /* Dirty */ : 16 /* CheckAlways */, rootView[HEADER_OFFSET], tNode, rendererFactory, renderer, sanitizer);
         if (tView.firstTemplatePass) {
             diPublicInInjector(getOrCreateNodeInjectorForNode(tNode, rootView), tView, def.type);
-            tNode.flags = 1 /* isComponent */;
+            markAsComponentHost(tView, tNode);
             initNodeFlags(tNode, rootView.length, 1);
-            queueComponentIndexForCheck(tNode);
         }
+        addToViewTree(rootView, componentView);
         // Store component view at node index, with node as the HOST
         return rootView[HEADER_OFFSET] = componentView;
     }
@@ -38632,7 +38631,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-next.0+13.sha-184d270.with-local-changes');
+    var VERSION$2 = new Version$1('9.0.0-next.0+19.sha-a2183dd.with-local-changes');
 
     /**
      * @license
@@ -41519,7 +41518,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 // executed here?
                 // Angular 5 reference: https://stackblitz.com/edit/lifecycle-hooks-vcref
                 component = createRootComponent(componentView, this.componentDef, rootLView, rootContext, [LifecycleHooksFeature]);
-                addToViewTree(rootLView, componentView);
                 refreshDescendantViews(rootLView);
                 safeToRunHooks = true;
             }
@@ -42414,7 +42412,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
     };
     function getPromiseCtor(promiseCtor) {
         if (!promiseCtor) {
-            promiseCtor = config.Promise || Promise;
+            promiseCtor = Promise;
         }
         if (!promiseCtor) {
             throw new Error('no Promise impl found');
@@ -49515,7 +49513,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-next.0+13.sha-184d270.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.0+19.sha-a2183dd.with-local-changes');
 
     /**
      * @license
