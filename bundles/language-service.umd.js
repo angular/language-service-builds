@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.0+63.sha-a8e2ee1.with-local-changes
+ * @license Angular v9.0.0-next.0+67.sha-9106271.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18111,7 +18111,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.0+63.sha-a8e2ee1.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.0+67.sha-9106271.with-local-changes');
 
     /**
      * @license
@@ -31185,6 +31185,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         }
         return null;
     }
+    /** Checks whether a given view is in creation mode */
+    function isCreationMode(view) {
+        return (view[FLAGS] & 4 /* CreationMode */) === 4 /* CreationMode */;
+    }
     /**
      * Returns a boolean for whether the view is attached to the change detection tree.
      *
@@ -31236,11 +31240,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     function getIsParent() {
         // top level variables should not be exported for performance reasons (PERF_NOTES.md)
         return isParent;
-    }
-    /** Checks whether a given view is in creation mode */
-    function isCreationMode(view) {
-        if (view === void 0) { view = lView; }
-        return (view[FLAGS] & 4 /* CreationMode */) === 4 /* CreationMode */;
     }
     /**
      * State of the current view being processed.
@@ -31337,17 +31336,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             }
         }
         enterView(newView, null);
-    }
-    var _currentNamespace = null;
-    /**
-     * Sets the namespace used to create elements to `null`, which forces element creation to use
-     * `createElement` rather than `createElementNS`.
-     */
-    function namespaceHTMLInternal() {
-        _currentNamespace = null;
-    }
-    function getNamespace() {
-        return _currentNamespace;
     }
     var _currentSanitizer;
     function setCurrentStyleSanitizer(sanitizer) {
@@ -31568,21 +31556,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         return isLContainer(parent) ? parent[PARENT] : parent;
     }
     /**
-     * Retrieve the root view from any component or `LView` by walking the parent `LView` until
-     * reaching the root `LView`.
-     *
-     * @param componentOrLView any component or `LView`
-     */
-    function getRootView(componentOrLView) {
-        ngDevMode && assertDefined(componentOrLView, 'component');
-        var lView = isLView(componentOrLView) ? componentOrLView : readPatchedLView(componentOrLView);
-        while (lView && !(lView[FLAGS] & 512 /* IsRoot */)) {
-            lView = getLViewParent(lView);
-        }
-        ngDevMode && assertLView(lView);
-        return lView;
-    }
-    /**
      * Given an `LView`, find the closest declaration view which is not an embedded view.
      *
      * This method searches for the `LView` associated with the component which declared the `LView`.
@@ -31602,19 +31575,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         }
         ngDevMode && assertLView(lView);
         return lView;
-    }
-    /**
-     * Returns the `RootContext` instance that is associated with
-     * the application where the target is situated. It does this by walking the parent views until it
-     * gets to the root view, then getting the context off of that.
-     *
-     * @param viewOrComponent the `LView` or component to get the root context for.
-     */
-    function getRootContext(viewOrComponent) {
-        var rootView = getRootView(viewOrComponent);
-        ngDevMode &&
-            assertDefined(rootView[CONTEXT], 'RootView has no context. Perhaps it is disconnected?');
-        return rootView[CONTEXT];
     }
 
     /**
@@ -34102,25 +34062,17 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * Creates a native element from a tag name, using a renderer.
      * @param name the tag name
-     * @param overriddenRenderer Optional A renderer to override the default one
+     * @param renderer A renderer to use
      * @returns the element created
      */
-    function elementCreate(name, overriddenRenderer) {
-        var native;
-        var rendererToUse = overriddenRenderer || getLView()[RENDERER];
-        var namespace = getNamespace();
-        if (isProceduralRenderer(rendererToUse)) {
-            native = rendererToUse.createElement(name, namespace);
+    function elementCreate(name, renderer, namespace) {
+        if (isProceduralRenderer(renderer)) {
+            return renderer.createElement(name, namespace);
         }
         else {
-            if (namespace === null) {
-                native = rendererToUse.createElement(name);
-            }
-            else {
-                native = rendererToUse.createElementNS(namespace, name);
-            }
+            return namespace === null ? renderer.createElement(name) :
+                renderer.createElementNS(namespace, name);
         }
-        return native;
     }
     function createLView(parentLView, tView, context, flags, host, tHostNode, rendererFactory, renderer, sanitizer, injector) {
         var lView = ngDevMode ? cloneToLView(tView.blueprint) : tView.blueprint.slice();
@@ -34188,7 +34140,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         return lView[T_HOST] = tNode;
     }
     /**
-     * Used for rendering embedded views (e.g. dynamically created views)
+     * Used for rendering views in a LContainer (embedded views or root component views for dynamically
+     * created components).
      *
      * Dynamically created views must store/retrieve their TViews differently from component views
      * because their template functions are nested in the template functions of their hosts, creating
@@ -34202,24 +34155,21 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         var _isParent = getIsParent();
         var _previousOrParentTNode = getPreviousOrParentTNode();
         var oldView;
-        if (viewToRender[FLAGS] & 512 /* IsRoot */) {
-            // This is a root view inside the view tree
-            tickRootContext(getRootContext(viewToRender));
+        // Will become true if the `try` block executes with no errors.
+        var safeToRunHooks = false;
+        try {
+            oldView = enterView(viewToRender, viewToRender[T_HOST]);
+            resetPreOrderHookFlags(viewToRender);
+            var templateFn = tView.template;
+            if (templateFn !== null) {
+                executeTemplate(viewToRender, templateFn, getRenderFlags(viewToRender), context);
+            }
+            refreshDescendantViews(viewToRender);
+            safeToRunHooks = true;
         }
-        else {
-            // Will become true if the `try` block executes with no errors.
-            var safeToRunHooks = false;
-            try {
-                oldView = enterView(viewToRender, viewToRender[T_HOST]);
-                resetPreOrderHookFlags(viewToRender);
-                executeTemplate(viewToRender, tView.template, getRenderFlags(viewToRender), context);
-                refreshDescendantViews(viewToRender);
-                safeToRunHooks = true;
-            }
-            finally {
-                leaveView(oldView, safeToRunHooks);
-                setPreviousOrParentTNode(_previousOrParentTNode, _isParent);
-            }
+        finally {
+            leaveView(oldView, safeToRunHooks);
+            setPreviousOrParentTNode(_previousOrParentTNode, _isParent);
         }
     }
     function renderComponentOrTemplate(hostView, context, templateFn) {
@@ -34253,7 +34203,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         }
     }
     function executeTemplate(lView, templateFn, rf, context) {
-        namespaceHTMLInternal();
         try {
             if (rf & 2 /* Update */) {
                 // When we're updating, have an inherent ɵɵselect(0) so we don't have to generate that
@@ -38679,7 +38628,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-next.0+63.sha-a8e2ee1.with-local-changes');
+    var VERSION$2 = new Version$1('9.0.0-next.0+67.sha-9106271.with-local-changes');
 
     /**
      * @license
@@ -41522,12 +41471,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             var rootViewInjector = ngModule ? createChainedInjector(injector, ngModule.injector) : injector;
             var rendererFactory = rootViewInjector.get(RendererFactory2, domRendererFactory3);
             var sanitizer = rootViewInjector.get(Sanitizer, null);
-            // Ensure that the namespace for the root node is correct,
-            // otherwise the browser might not render out the element properly.
-            namespaceHTMLInternal();
             var hostRNode = rootSelectorOrNode ?
                 locateHostElement(rendererFactory, rootSelectorOrNode) :
-                elementCreate(this.selector, rendererFactory.createRenderer(null, this.componentDef));
+                elementCreate(this.selector, rendererFactory.createRenderer(null, this.componentDef), null);
             var rootFlags = this.componentDef.onPush ? 64 /* Dirty */ | 512 /* IsRoot */ :
                 16 /* CheckAlways */ | 512 /* IsRoot */;
             // Check whether this Component needs to be isolated from other components, i.e. whether it
@@ -49507,7 +49453,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-next.0+63.sha-a8e2ee1.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.0+67.sha-9106271.with-local-changes');
 
     /**
      * @license
