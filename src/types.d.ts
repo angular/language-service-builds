@@ -8,6 +8,7 @@
 /// <amd-module name="@angular/language-service/src/types" />
 import { CompileDirectiveMetadata, CompileMetadataResolver, CompilePipeSummary, NgAnalyzedModules, StaticSymbol } from '@angular/compiler';
 import { BuiltinType, DeclarationKind, Definition, PipeInfo, Pipes, Signature, Span, Symbol, SymbolDeclaration, SymbolQuery, SymbolTable } from '@angular/compiler-cli/src/language_services';
+import * as tss from 'typescript/lib/tsserverlibrary';
 import { AstResult, TemplateInfo } from './common';
 export { BuiltinType, DeclarationKind, Definition, PipeInfo, Pipes, Signature, Span, Symbol, SymbolDeclaration, SymbolQuery, SymbolTable };
 /**
@@ -203,9 +204,9 @@ export interface Completion {
 /**
  * A sequence of completions.
  *
- * @publicApi
+ * @deprecated
  */
-export declare type Completions = Completion[] | undefined;
+export declare type Completions = Completion[];
 /**
  * A file and span.
  */
@@ -264,7 +265,7 @@ export interface Diagnostic {
 /**
  * A sequence of diagnostic message.
  *
- * @publicApi
+ * @deprecated
  */
 export declare type Diagnostics = Diagnostic[];
 /**
@@ -330,19 +331,19 @@ export interface LanguageService {
     /**
      * Returns a list of all error for all templates in the given file.
      */
-    getDiagnostics(fileName: string): Diagnostics | undefined;
+    getDiagnostics(fileName: string): Diagnostic[];
     /**
      * Return the completions at the given position.
      */
-    getCompletionsAt(fileName: string, position: number): Completions | undefined;
+    getCompletionsAt(fileName: string, position: number): Completion[] | undefined;
     /**
      * Return the definition location for the symbol at position.
      */
-    getDefinitionAt(fileName: string, position: number): Definition | undefined;
+    getDefinitionAt(fileName: string, position: number): tss.DefinitionInfoAndBoundSpan | undefined;
     /**
      * Return the hover information for the symbol at position.
      */
-    getHoverAt(fileName: string, position: number): Hover | undefined;
+    getHoverAt(fileName: string, position: number): tss.QuickInfo | undefined;
     /**
      * Return the pipes that are available at the given position.
      */

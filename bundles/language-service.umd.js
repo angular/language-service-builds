@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.0+19.sha-a2183dd.with-local-changes
+ * @license Angular v9.0.0-next.0+72.sha-4b8cdd4.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18111,7 +18111,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.0+19.sha-a2183dd.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.0+72.sha-4b8cdd4.with-local-changes');
 
     /**
      * @license
@@ -29149,9 +29149,45 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    function getDefinition(info) {
-        var result = locateSymbol(info);
-        return result && result.symbol.definition;
+    /**
+     * Convert Angular Span to TypeScript TextSpan. Angular Span has 'start' and
+     * 'end' whereas TS TextSpan has 'start' and 'length'.
+     * @param span Angular Span
+     */
+    function ngSpanToTsTextSpan(span) {
+        return {
+            start: span.start,
+            length: span.end - span.start,
+        };
+    }
+    function getDefinitionAndBoundSpan(info) {
+        var symbolInfo = locateSymbol(info);
+        if (!symbolInfo) {
+            return;
+        }
+        var textSpan = ngSpanToTsTextSpan(symbolInfo.span);
+        var symbol = symbolInfo.symbol;
+        var container = symbol.container, locations = symbol.definition;
+        if (!locations || !locations.length) {
+            // symbol.definition is really the locations of the symbol. There could be
+            // more than one. No meaningful info could be provided without any location.
+            return { textSpan: textSpan };
+        }
+        var containerKind = container ? container.kind : ts.ScriptElementKind.unknown;
+        var containerName = container ? container.name : '';
+        var definitions = locations.map(function (location) {
+            return {
+                kind: symbol.kind,
+                name: symbol.name,
+                containerKind: containerKind,
+                containerName: containerName,
+                textSpan: ngSpanToTsTextSpan(location.span),
+                fileName: location.fileName,
+            };
+        });
+        return {
+            definitions: definitions, textSpan: textSpan,
+        };
     }
 
     /**
@@ -29235,19 +29271,38 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    // Reverse mappings of enum would generate strings
+    var SYMBOL_SPACE = ts.SymbolDisplayPartKind[ts.SymbolDisplayPartKind.space];
+    var SYMBOL_PUNC = ts.SymbolDisplayPartKind[ts.SymbolDisplayPartKind.punctuation];
     function getHover(info) {
-        var result = locateSymbol(info);
-        if (result) {
-            return { text: hoverTextOf(result.symbol), span: result.span };
+        var symbolInfo = locateSymbol(info);
+        if (!symbolInfo) {
+            return;
         }
-    }
-    function hoverTextOf(symbol) {
-        var result = [{ text: symbol.kind }, { text: ' ' }, { text: symbol.name, language: symbol.language }];
-        var container = symbol.container;
-        if (container) {
-            result.push({ text: ' of ' }, { text: container.name, language: container.language });
-        }
-        return result;
+        var symbol = symbolInfo.symbol, span = symbolInfo.span;
+        var containerDisplayParts = symbol.container ?
+            [
+                { text: symbol.container.name, kind: symbol.container.kind },
+                { text: '.', kind: SYMBOL_PUNC },
+            ] :
+            [];
+        return {
+            kind: symbol.kind,
+            kindModifiers: '',
+            textSpan: {
+                start: span.start,
+                length: span.end - span.start,
+            },
+            // this would generate a string like '(property) ClassX.propY'
+            // 'kind' in displayParts does not really matter because it's dropped when
+            // displayParts get converted to string.
+            displayParts: __spread([
+                { text: '(', kind: SYMBOL_PUNC }, { text: symbol.kind, kind: symbol.kind },
+                { text: ')', kind: SYMBOL_PUNC }, { text: ' ', kind: SYMBOL_SPACE }
+            ], containerDisplayParts, [
+                { text: symbol.name, kind: symbol.kind },
+            ]),
+        };
     }
 
     /**
@@ -29269,11 +29324,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         function LanguageServiceImpl(host) {
             this.host = host;
         }
-        Object.defineProperty(LanguageServiceImpl.prototype, "metadataResolver", {
-            get: function () { return this.host.resolver; },
-            enumerable: true,
-            configurable: true
-        });
         LanguageServiceImpl.prototype.getTemplateReferences = function () { return this.host.getTemplateReferences(); };
         LanguageServiceImpl.prototype.getDiagnostics = function (fileName) {
             var results = [];
@@ -29304,7 +29354,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         LanguageServiceImpl.prototype.getDefinitionAt = function (fileName, position) {
             var templateInfo = this.host.getTemplateAstAtPosition(fileName, position);
             if (templateInfo) {
-                return getDefinition(templateInfo);
+                return getDefinitionAndBoundSpan(templateInfo);
             }
         };
         LanguageServiceImpl.prototype.getHoverAt = function (fileName, position) {
@@ -29362,33 +29412,31 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     }());
     function uniqueBySpan(elements) {
         var e_2, _a;
-        if (elements) {
-            var result = [];
-            var map = new Map();
-            try {
-                for (var elements_1 = __values(elements), elements_1_1 = elements_1.next(); !elements_1_1.done; elements_1_1 = elements_1.next()) {
-                    var element = elements_1_1.value;
-                    var span = element.span;
-                    var set = map.get(span.start);
-                    if (!set) {
-                        set = new Set();
-                        map.set(span.start, set);
-                    }
-                    if (!set.has(span.end)) {
-                        set.add(span.end);
-                        result.push(element);
-                    }
+        var result = [];
+        var map = new Map();
+        try {
+            for (var elements_1 = __values(elements), elements_1_1 = elements_1.next(); !elements_1_1.done; elements_1_1 = elements_1.next()) {
+                var element = elements_1_1.value;
+                var span = element.span;
+                var set = map.get(span.start);
+                if (!set) {
+                    set = new Set();
+                    map.set(span.start, set);
+                }
+                if (!set.has(span.end)) {
+                    set.add(span.end);
+                    result.push(element);
                 }
             }
-            catch (e_2_1) { e_2 = { error: e_2_1 }; }
-            finally {
-                try {
-                    if (elements_1_1 && !elements_1_1.done && (_a = elements_1.return)) _a.call(elements_1);
-                }
-                finally { if (e_2) throw e_2.error; }
-            }
-            return result;
         }
+        catch (e_2_1) { e_2 = { error: e_2_1 }; }
+        finally {
+            try {
+                if (elements_1_1 && !elements_1_1.done && (_a = elements_1.return)) _a.call(elements_1);
+            }
+            finally { if (e_2) throw e_2.error; }
+        }
+        return result;
     }
 
     /**
@@ -31137,6 +31185,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         }
         return null;
     }
+    /** Checks whether a given view is in creation mode */
+    function isCreationMode(view) {
+        return (view[FLAGS] & 4 /* CreationMode */) === 4 /* CreationMode */;
+    }
     /**
      * Returns a boolean for whether the view is attached to the change detection tree.
      *
@@ -31188,11 +31240,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     function getIsParent() {
         // top level variables should not be exported for performance reasons (PERF_NOTES.md)
         return isParent;
-    }
-    /** Checks whether a given view is in creation mode */
-    function isCreationMode(view) {
-        if (view === void 0) { view = lView; }
-        return (view[FLAGS] & 4 /* CreationMode */) === 4 /* CreationMode */;
     }
     /**
      * State of the current view being processed.
@@ -31289,17 +31336,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             }
         }
         enterView(newView, null);
-    }
-    var _currentNamespace = null;
-    /**
-     * Sets the namespace used to create elements to `null`, which forces element creation to use
-     * `createElement` rather than `createElementNS`.
-     */
-    function namespaceHTMLInternal() {
-        _currentNamespace = null;
-    }
-    function getNamespace() {
-        return _currentNamespace;
     }
     var _currentSanitizer;
     function setCurrentStyleSanitizer(sanitizer) {
@@ -31520,21 +31556,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         return isLContainer(parent) ? parent[PARENT] : parent;
     }
     /**
-     * Retrieve the root view from any component or `LView` by walking the parent `LView` until
-     * reaching the root `LView`.
-     *
-     * @param componentOrLView any component or `LView`
-     */
-    function getRootView(componentOrLView) {
-        ngDevMode && assertDefined(componentOrLView, 'component');
-        var lView = isLView(componentOrLView) ? componentOrLView : readPatchedLView(componentOrLView);
-        while (lView && !(lView[FLAGS] & 512 /* IsRoot */)) {
-            lView = getLViewParent(lView);
-        }
-        ngDevMode && assertLView(lView);
-        return lView;
-    }
-    /**
      * Given an `LView`, find the closest declaration view which is not an embedded view.
      *
      * This method searches for the `LView` associated with the component which declared the `LView`.
@@ -31554,19 +31575,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         }
         ngDevMode && assertLView(lView);
         return lView;
-    }
-    /**
-     * Returns the `RootContext` instance that is associated with
-     * the application where the target is situated. It does this by walking the parent views until it
-     * gets to the root view, then getting the context off of that.
-     *
-     * @param viewOrComponent the `LView` or component to get the root context for.
-     */
-    function getRootContext(viewOrComponent) {
-        var rootView = getRootView(viewOrComponent);
-        ngDevMode &&
-            assertDefined(rootView[CONTEXT], 'RootView has no context. Perhaps it is disconnected?');
-        return rootView[CONTEXT];
     }
 
     /**
@@ -34054,25 +34062,17 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * Creates a native element from a tag name, using a renderer.
      * @param name the tag name
-     * @param overriddenRenderer Optional A renderer to override the default one
+     * @param renderer A renderer to use
      * @returns the element created
      */
-    function elementCreate(name, overriddenRenderer) {
-        var native;
-        var rendererToUse = overriddenRenderer || getLView()[RENDERER];
-        var namespace = getNamespace();
-        if (isProceduralRenderer(rendererToUse)) {
-            native = rendererToUse.createElement(name, namespace);
+    function elementCreate(name, renderer, namespace) {
+        if (isProceduralRenderer(renderer)) {
+            return renderer.createElement(name, namespace);
         }
         else {
-            if (namespace === null) {
-                native = rendererToUse.createElement(name);
-            }
-            else {
-                native = rendererToUse.createElementNS(namespace, name);
-            }
+            return namespace === null ? renderer.createElement(name) :
+                renderer.createElementNS(namespace, name);
         }
-        return native;
     }
     function createLView(parentLView, tView, context, flags, host, tHostNode, rendererFactory, renderer, sanitizer, injector) {
         var lView = ngDevMode ? cloneToLView(tView.blueprint) : tView.blueprint.slice();
@@ -34140,7 +34140,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         return lView[T_HOST] = tNode;
     }
     /**
-     * Used for rendering embedded views (e.g. dynamically created views)
+     * Used for rendering views in a LContainer (embedded views or root component views for dynamically
+     * created components).
      *
      * Dynamically created views must store/retrieve their TViews differently from component views
      * because their template functions are nested in the template functions of their hosts, creating
@@ -34154,24 +34155,21 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         var _isParent = getIsParent();
         var _previousOrParentTNode = getPreviousOrParentTNode();
         var oldView;
-        if (viewToRender[FLAGS] & 512 /* IsRoot */) {
-            // This is a root view inside the view tree
-            tickRootContext(getRootContext(viewToRender));
+        // Will become true if the `try` block executes with no errors.
+        var safeToRunHooks = false;
+        try {
+            oldView = enterView(viewToRender, viewToRender[T_HOST]);
+            resetPreOrderHookFlags(viewToRender);
+            var templateFn = tView.template;
+            if (templateFn !== null) {
+                executeTemplate(viewToRender, templateFn, getRenderFlags(viewToRender), context);
+            }
+            refreshDescendantViews(viewToRender);
+            safeToRunHooks = true;
         }
-        else {
-            // Will become true if the `try` block executes with no errors.
-            var safeToRunHooks = false;
-            try {
-                oldView = enterView(viewToRender, viewToRender[T_HOST]);
-                resetPreOrderHookFlags(viewToRender);
-                executeTemplate(viewToRender, tView.template, getRenderFlags(viewToRender), context);
-                refreshDescendantViews(viewToRender);
-                safeToRunHooks = true;
-            }
-            finally {
-                leaveView(oldView, safeToRunHooks);
-                setPreviousOrParentTNode(_previousOrParentTNode, _isParent);
-            }
+        finally {
+            leaveView(oldView, safeToRunHooks);
+            setPreviousOrParentTNode(_previousOrParentTNode, _isParent);
         }
     }
     function renderComponentOrTemplate(hostView, context, templateFn) {
@@ -34205,7 +34203,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         }
     }
     function executeTemplate(lView, templateFn, rf, context) {
-        namespaceHTMLInternal();
         try {
             if (rf & 2 /* Update */) {
                 // When we're updating, have an inherent ɵɵselect(0) so we don't have to generate that
@@ -38631,7 +38628,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-next.0+19.sha-a2183dd.with-local-changes');
+    var VERSION$2 = new Version$1('9.0.0-next.0+72.sha-4b8cdd4.with-local-changes');
 
     /**
      * @license
@@ -41474,12 +41471,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             var rootViewInjector = ngModule ? createChainedInjector(injector, ngModule.injector) : injector;
             var rendererFactory = rootViewInjector.get(RendererFactory2, domRendererFactory3);
             var sanitizer = rootViewInjector.get(Sanitizer, null);
-            // Ensure that the namespace for the root node is correct,
-            // otherwise the browser might not render out the element properly.
-            namespaceHTMLInternal();
             var hostRNode = rootSelectorOrNode ?
                 locateHostElement(rendererFactory, rootSelectorOrNode) :
-                elementCreate(this.selector, rendererFactory.createRenderer(null, this.componentDef));
+                elementCreate(this.selector, rendererFactory.createRenderer(null, this.componentDef), null);
             var rootFlags = this.componentDef.onPush ? 64 /* Dirty */ | 512 /* IsRoot */ :
                 16 /* CheckAlways */ | 512 /* IsRoot */;
             // Check whether this Component needs to be isolated from other components, i.e. whether it
@@ -42412,7 +42406,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
     };
     function getPromiseCtor(promiseCtor) {
         if (!promiseCtor) {
-            promiseCtor = Promise;
+            promiseCtor = config.Promise || Promise;
         }
         if (!promiseCtor) {
             throw new Error('no Promise impl found');
@@ -43467,11 +43461,15 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * found in the LICENSE file at https://angular.io/license
      */
     /**
-     * Use in directives and components to emit custom events synchronously
-     * or asynchronously, and register handlers for those events by subscribing
-     * to an instance.
+     * Use in components with the `@Output` directive to emit custom events
+     * synchronously or asynchronously, and register handlers for those events
+     * by subscribing to an instance.
      *
      * @usageNotes
+     *
+     * Extends
+     * [RxJS `Subject`](https://rxjs.dev/api/index/class/Subject)
+     * for Angular by adding the `emit()` method.
      *
      * In the following example, a component defines two output properties
      * that create event emitters. When the title is clicked, the emitter
@@ -43510,6 +43508,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * <zippy (open)="onOpen($event)" (close)="onClose($event)"></zippy>
      * ```
      *
+     * @see [Observables in Angular](guide/observables-in-angular)
      * @publicApi
      */
     var EventEmitter = /** @class */ (function (_super) {
@@ -45678,7 +45677,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this._config = config || DEFAULT_CONFIG;
         }
         SystemJsNgModuleLoader.prototype.load = function (path) {
-            var legacyOfflineMode = this._compiler instanceof Compiler;
+            var legacyOfflineMode = !ivyEnabled && this._compiler instanceof Compiler;
             return legacyOfflineMode ? this.loadFactory(path) : this.loadAndCompile(path);
         };
         SystemJsNgModuleLoader.prototype.loadAndCompile = function (path) {
@@ -49348,7 +49347,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         return diagnosticChainToDiagnosticChain(message);
     }
     function diagnosticToDiagnostic(d, file) {
-        var result = {
+        return {
             file: file,
             start: d.span.start,
             length: d.span.end - d.span.start,
@@ -49357,152 +49356,98 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             code: 0,
             source: 'ng'
         };
-        return result;
     }
     function create(info) {
-        var oldLS = info.languageService;
-        var proxy = Object.assign({}, oldLS);
-        var logger = info.project.projectService.logger;
-        function tryOperation(attempting, callback) {
-            try {
-                return callback();
+        var project = info.project, tsLS = info.languageService, tsLSHost = info.languageServiceHost, config = info.config;
+        // This plugin could operate under two different modes:
+        // 1. TS + Angular
+        //    Plugin augments TS language service to provide additional Angular
+        //    information. This only works with inline templates and is meant to be
+        //    used as a local plugin (configured via tsconfig.json)
+        // 2. Angular only
+        //    Plugin only provides information on Angular templates, no TS info at all.
+        //    This effectively disables native TS features and is meant for internal
+        //    use only.
+        var angularOnly = config ? config.angularOnly === true : false;
+        var ngLSHost = new TypeScriptServiceHost(tsLSHost, tsLS);
+        var ngLS = createLanguageService(ngLSHost);
+        projectHostMap.set(project, ngLSHost);
+        function getCompletionsAtPosition(fileName, position, options) {
+            if (!angularOnly) {
+                var results_1 = tsLS.getCompletionsAtPosition(fileName, position, options);
+                if (results_1 && results_1.entries.length) {
+                    // If TS could answer the query, then return results immediately.
+                    return results_1;
+                }
             }
-            catch (e) {
-                logger.info("Failed to " + attempting + ": " + e.toString());
-                logger.info("Stack trace: " + e.stack);
-                return null;
+            var results = ngLS.getCompletionsAt(fileName, position);
+            if (!results || !results.length) {
+                return;
             }
-        }
-        var serviceHost = new TypeScriptServiceHost(info.languageServiceHost, oldLS);
-        var ls = createLanguageService(serviceHost);
-        projectHostMap.set(info.project, serviceHost);
-        proxy.getCompletionsAtPosition = function (fileName, position, options) {
-            var base = oldLS.getCompletionsAtPosition(fileName, position, options) || {
+            return {
                 isGlobalCompletion: false,
                 isMemberCompletion: false,
                 isNewIdentifierLocation: false,
-                entries: []
+                entries: results.map(completionToEntry),
             };
-            tryOperation('get completions', function () {
-                var e_1, _a;
-                var results = ls.getCompletionsAt(fileName, position);
-                if (results && results.length) {
-                    if (base === undefined) {
-                        base = {
-                            isGlobalCompletion: false,
-                            isMemberCompletion: false,
-                            isNewIdentifierLocation: false,
-                            entries: []
-                        };
-                    }
-                    try {
-                        for (var results_1 = __values(results), results_1_1 = results_1.next(); !results_1_1.done; results_1_1 = results_1.next()) {
-                            var entry = results_1_1.value;
-                            base.entries.push(completionToEntry(entry));
-                        }
-                    }
-                    catch (e_1_1) { e_1 = { error: e_1_1 }; }
-                    finally {
-                        try {
-                            if (results_1_1 && !results_1_1.done && (_a = results_1.return)) _a.call(results_1);
-                        }
-                        finally { if (e_1) throw e_1.error; }
-                    }
+        }
+        function getQuickInfoAtPosition(fileName, position) {
+            if (!angularOnly) {
+                var result = tsLS.getQuickInfoAtPosition(fileName, position);
+                if (result) {
+                    // If TS could answer the query, then return results immediately.
+                    return result;
                 }
-            });
-            return base;
-        };
-        proxy.getQuickInfoAtPosition = function (fileName, position) {
-            var base = oldLS.getQuickInfoAtPosition(fileName, position);
-            var ours = ls.getHoverAt(fileName, position);
-            if (!ours) {
-                return base;
             }
-            var result = {
-                kind: ts.ScriptElementKind.unknown,
-                kindModifiers: ts.ScriptElementKindModifier.none,
-                textSpan: {
-                    start: ours.span.start,
-                    length: ours.span.end - ours.span.start,
-                },
-                displayParts: ours.text.map(function (part) {
-                    return {
-                        text: part.text,
-                        kind: part.language || 'angular',
-                    };
-                }),
-                documentation: [],
-            };
-            if (base && base.tags) {
-                result.tags = base.tags;
+            return ngLS.getHoverAt(fileName, position);
+        }
+        function getSemanticDiagnostics(fileName) {
+            var results = [];
+            if (!angularOnly) {
+                var tsResults = tsLS.getSemanticDiagnostics(fileName);
+                results.push.apply(results, __spread(tsResults));
             }
-            return result;
-        };
-        proxy.getSemanticDiagnostics = function (fileName) {
-            var result = oldLS.getSemanticDiagnostics(fileName);
-            var base = result || [];
-            tryOperation('get diagnostics', function () {
-                logger.info("Computing Angular semantic diagnostics...");
-                var ours = ls.getDiagnostics(fileName);
-                if (ours && ours.length) {
-                    var file_1 = oldLS.getProgram().getSourceFile(fileName);
-                    if (file_1) {
-                        base.push.apply(base, ours.map(function (d) { return diagnosticToDiagnostic(d, file_1); }));
-                    }
+            // For semantic diagnostics we need to combine both TS + Angular results
+            var ngResults = ngLS.getDiagnostics(fileName);
+            if (!ngResults.length) {
+                return results;
+            }
+            var sourceFile = fileName.endsWith('.ts') ? ngLSHost.getSourceFile(fileName) : undefined;
+            results.push.apply(results, __spread(ngResults.map(function (d) { return diagnosticToDiagnostic(d, sourceFile); })));
+            return results;
+        }
+        function getDefinitionAtPosition(fileName, position) {
+            if (!angularOnly) {
+                var results = tsLS.getDefinitionAtPosition(fileName, position);
+                if (results) {
+                    // If TS could answer the query, then return results immediately.
+                    return results;
                 }
-            });
-            return base;
-        };
-        proxy.getDefinitionAtPosition = function (fileName, position) {
-            var base = oldLS.getDefinitionAtPosition(fileName, position);
-            if (base && base.length) {
-                return base;
             }
-            var ours = ls.getDefinitionAt(fileName, position);
-            if (ours && ours.length) {
-                return ours.map(function (loc) {
-                    return {
-                        fileName: loc.fileName,
-                        textSpan: {
-                            start: loc.span.start,
-                            length: loc.span.end - loc.span.start,
-                        },
-                        name: '',
-                        kind: ts.ScriptElementKind.unknown,
-                        containerName: loc.fileName,
-                        containerKind: ts.ScriptElementKind.unknown,
-                    };
-                });
+            var result = ngLS.getDefinitionAt(fileName, position);
+            if (!result || !result.definitions || !result.definitions.length) {
+                return;
             }
-        };
-        proxy.getDefinitionAndBoundSpan = function (fileName, position) {
-            var base = oldLS.getDefinitionAndBoundSpan(fileName, position);
-            if (base && base.definitions && base.definitions.length) {
-                return base;
+            return result.definitions;
+        }
+        function getDefinitionAndBoundSpan(fileName, position) {
+            if (!angularOnly) {
+                var result = tsLS.getDefinitionAndBoundSpan(fileName, position);
+                if (result) {
+                    // If TS could answer the query, then return results immediately.
+                    return result;
+                }
             }
-            var ours = ls.getDefinitionAt(fileName, position);
-            if (ours && ours.length) {
-                return {
-                    definitions: ours.map(function (loc) {
-                        return {
-                            fileName: loc.fileName,
-                            textSpan: {
-                                start: loc.span.start,
-                                length: loc.span.end - loc.span.start,
-                            },
-                            name: '',
-                            kind: ts.ScriptElementKind.unknown,
-                            containerName: loc.fileName,
-                            containerKind: ts.ScriptElementKind.unknown,
-                        };
-                    }),
-                    textSpan: {
-                        start: ours[0].span.start,
-                        length: ours[0].span.end - ours[0].span.start,
-                    },
-                };
-            }
-        };
+            return ngLS.getDefinitionAt(fileName, position);
+        }
+        var proxy = Object.assign(
+        // First clone the original TS language service
+        {}, tsLS, 
+        // Then override the methods supported by Angular language service
+        {
+            getCompletionsAtPosition: getCompletionsAtPosition, getQuickInfoAtPosition: getQuickInfoAtPosition, getSemanticDiagnostics: getSemanticDiagnostics,
+            getDefinitionAtPosition: getDefinitionAtPosition, getDefinitionAndBoundSpan: getDefinitionAndBoundSpan,
+        });
         return proxy;
     }
 
@@ -49513,7 +49458,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-next.0+19.sha-a2183dd.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.0+72.sha-4b8cdd4.with-local-changes');
 
     /**
      * @license
