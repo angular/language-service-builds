@@ -6,8 +6,6 @@
  * found in the LICENSE file at https://angular.io/license
  */
 /// <amd-module name="@angular/language-service/src/definitions" />
-import * as tss from 'typescript/lib/tsserverlibrary';
+import * as ts from 'typescript';
 import { TemplateInfo } from './common';
-import { Location } from './types';
-export declare function getDefinition(info: TemplateInfo): Location[] | undefined;
-export declare function ngLocationToTsDefinitionInfo(loc: Location): tss.DefinitionInfo;
+export declare function getDefinitionAndBoundSpan(info: TemplateInfo): ts.DefinitionInfoAndBoundSpan | undefined;
