@@ -1,5 +1,5 @@
 /**
- * @license Angular v8.2.0+33.sha-a48376b.with-local-changes
+ * @license Angular v8.2.0+34.sha-cfaefa9.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18111,7 +18111,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('8.2.0+33.sha-a48376b.with-local-changes');
+    var VERSION$1 = new Version('8.2.0+34.sha-cfaefa9.with-local-changes');
 
     /**
      * @license
@@ -38627,7 +38627,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('8.2.0+33.sha-a48376b.with-local-changes');
+    var VERSION$2 = new Version$1('8.2.0+34.sha-cfaefa9.with-local-changes');
 
     /**
      * @license
@@ -41655,6 +41655,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * The locale id that the application is using by default (for translations and ICU expressions).
+     */
+    var DEFAULT_LOCALE_ID = 'en-US';
 
     /**
      * @license
@@ -41668,7 +41672,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * This is the ivy version of `LOCALE_ID` that was defined as an injection token for the view engine
      * but is now defined as a global value.
      */
-    var DEFAULT_LOCALE_ID = 'en-US';
     var LOCALE_ID = DEFAULT_LOCALE_ID;
     /**
      * Sets the locale id that will be used for translations and ICU expressions.
@@ -41678,7 +41681,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @param localeId
      */
     function setLocaleId(localeId) {
-        LOCALE_ID = localeId.toLowerCase().replace(/_/g, '-');
+        assertDefined(localeId, "Expected localeId to be defined");
+        if (typeof localeId === 'string') {
+            LOCALE_ID = localeId.toLowerCase().replace(/_/g, '-');
+        }
     }
 
     /**
@@ -44293,6 +44299,16 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    var SWITCH_IVY_ENABLED__PRE_R3__ = false;
+    var ivyEnabled = SWITCH_IVY_ENABLED__PRE_R3__;
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     function _throwError() {
         throw new Error("Runtime compiler is not loaded");
     }
@@ -45154,9 +45170,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 if (!exceptionHandler) {
                     throw new Error('No ErrorHandler. Is platform module (BrowserModule) included?');
                 }
-                // If the `LOCALE_ID` provider is defined at bootstrap we set the value for runtime i18n (ivy)
-                var localeId = moduleRef.injector.get(LOCALE_ID$1, DEFAULT_LOCALE_ID);
-                setLocaleId(localeId);
                 moduleRef.onDestroy(function () { return remove(_this._modules, moduleRef); });
                 ngZone.runOutsideAngular(function () { return ngZone.onError.subscribe({ next: function (error) { exceptionHandler.handleError(error); } }); });
                 return _callAndReportToErrorHandler(exceptionHandler, ngZone, function () {
@@ -45628,16 +45641,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    var SWITCH_IVY_ENABLED__PRE_R3__ = false;
-    var ivyEnabled = SWITCH_IVY_ENABLED__PRE_R3__;
 
     /**
      * @license
@@ -46543,15 +46546,21 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
     }
     function _localeFactory(locale) {
         if (locale) {
+            if (ivyEnabled) {
+                setLocaleId(locale);
+            }
             return locale;
         }
         // Use `goog.LOCALE` as default value for `LOCALE_ID` token for Closure Compiler.
         // Note: default `goog.LOCALE` value is `en`, when Angular used `en-US`. In order to preserve
         // backwards compatibility, we use Angular default value over Closure Compiler's one.
         if (ngI18nClosureMode && typeof goog !== 'undefined' && goog.LOCALE !== 'en') {
+            if (ivyEnabled) {
+                setLocaleId(goog.LOCALE);
+            }
             return goog.LOCALE;
         }
-        return 'en-US';
+        return DEFAULT_LOCALE_ID;
     }
     /**
      * A built-in [dependency injection token](guide/glossary#di-token)
@@ -49476,7 +49485,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('8.2.0+33.sha-a48376b.with-local-changes');
+    var VERSION$3 = new Version$1('8.2.0+34.sha-cfaefa9.with-local-changes');
 
     /**
      * @license
