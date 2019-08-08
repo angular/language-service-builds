@@ -6,6 +6,6 @@
  * found in the LICENSE file at https://angular.io/license
  */
 /// <amd-module name="@angular/language-service/src/hover" />
+import * as ts from 'typescript';
 import { TemplateInfo } from './common';
-import { Hover } from './types';
-export declare function getHover(info: TemplateInfo): Hover | undefined;
+export declare function getHover(info: TemplateInfo): ts.QuickInfo | undefined;

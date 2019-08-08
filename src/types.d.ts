@@ -8,6 +8,7 @@
 /// <amd-module name="@angular/language-service/src/types" />
 import { CompileDirectiveMetadata, CompileMetadataResolver, CompilePipeSummary, NgAnalyzedModules, StaticSymbol } from '@angular/compiler';
 import { BuiltinType, DeclarationKind, Definition, PipeInfo, Pipes, Signature, Span, Symbol, SymbolDeclaration, SymbolQuery, SymbolTable } from '@angular/compiler-cli/src/language_services';
+import * as tss from 'typescript/lib/tsserverlibrary';
 import { AstResult, TemplateInfo } from './common';
 export { BuiltinType, DeclarationKind, Definition, PipeInfo, Pipes, Signature, Span, Symbol, SymbolDeclaration, SymbolQuery, SymbolTable };
 /**
@@ -338,11 +339,11 @@ export interface LanguageService {
     /**
      * Return the definition location for the symbol at position.
      */
-    getDefinitionAt(fileName: string, position: number): Location[] | undefined;
+    getDefinitionAt(fileName: string, position: number): tss.DefinitionInfoAndBoundSpan | undefined;
     /**
      * Return the hover information for the symbol at position.
      */
-    getHoverAt(fileName: string, position: number): Hover | undefined;
+    getHoverAt(fileName: string, position: number): tss.QuickInfo | undefined;
     /**
      * Return the pipes that are available at the given position.
      */
