@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.1+5.sha-695f322.with-local-changes
+ * @license Angular v9.0.0-next.1+8.sha-7533338.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18111,7 +18111,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.1+5.sha-695f322.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.1+8.sha-7533338.with-local-changes');
 
     /**
      * @license
@@ -38662,7 +38662,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-next.1+5.sha-695f322.with-local-changes');
+    var VERSION$2 = new Version$1('9.0.0-next.1+8.sha-7533338.with-local-changes');
 
     /**
      * @license
@@ -45711,7 +45711,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this._config = config || DEFAULT_CONFIG;
         }
         SystemJsNgModuleLoader.prototype.load = function (path) {
-            var legacyOfflineMode = this._compiler instanceof Compiler;
+            var legacyOfflineMode = !ivyEnabled && this._compiler instanceof Compiler;
             return legacyOfflineMode ? this.loadFactory(path) : this.loadAndCompile(path);
         };
         SystemJsNgModuleLoader.prototype.loadAndCompile = function (path) {
@@ -49492,7 +49492,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-next.1+5.sha-695f322.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.1+8.sha-7533338.with-local-changes');
 
     /**
      * @license
