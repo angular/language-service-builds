@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.1.with-local-changes
+ * @license Angular v9.0.0-next.1+7.sha-9896d43.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18111,7 +18111,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.1.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.1+7.sha-9896d43.with-local-changes');
 
     /**
      * @license
@@ -20372,8 +20372,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             else {
                 // Directive
                 if (!selector) {
-                    this._reportError(syntaxError("Directive " + stringifyType(directiveType) + " has no selector, please add it!"), directiveType);
-                    selector = 'error';
+                    selector = null;
                 }
             }
             var providers = [];
@@ -20437,6 +20436,17 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         CompileMetadataResolver.prototype.isDirective = function (type) {
             return !!this._loadSummary(type, CompileSummaryKind.Directive) ||
                 this._directiveResolver.isDirective(type);
+        };
+        CompileMetadataResolver.prototype.isAbstractDirective = function (type) {
+            var summary = this._loadSummary(type, CompileSummaryKind.Directive);
+            if (summary) {
+                return !summary.selector;
+            }
+            var meta = this.getNonNormalizedDirectiveMetadata(type);
+            if (!meta) {
+                return false;
+            }
+            return !meta.metadata.selector;
         };
         CompileMetadataResolver.prototype.isPipe = function (type) {
             return !!this._loadSummary(type, CompileSummaryKind.Pipe) ||
@@ -20585,6 +20595,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                     }
                     var declaredIdentifier = _this._getIdentifierMetadata(declaredType);
                     if (_this.isDirective(declaredType)) {
+                        if (_this.isAbstractDirective(declaredType)) {
+                            _this._reportError(syntaxError("Directive " + stringifyType(declaredType) + " has no selector, please add it!"), declaredType);
+                        }
                         transitiveModule.addDirective(declaredIdentifier);
                         declaredDirectives.push(declaredIdentifier);
                         _this._addTypeToModule(declaredType, moduleType);
@@ -22476,18 +22489,20 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         return files;
     }
     function analyzeFile(host, staticSymbolResolver, metadataResolver, fileName) {
+        var abstractDirectives = [];
         var directives = [];
         var pipes = [];
         var injectables = [];
         var ngModules = [];
         var hasDecorators = staticSymbolResolver.hasDecorators(fileName);
         var exportsNonSourceFiles = false;
+        var isDeclarationFile = fileName.endsWith('.d.ts');
         // Don't analyze .d.ts files that have no decorators as a shortcut
         // to speed up the analysis. This prevents us from
         // resolving the references in these files.
         // Note: exportsNonSourceFiles is only needed when compiling with summaries,
         // which is not the case when .d.ts files are treated as input files.
-        if (!fileName.endsWith('.d.ts') || hasDecorators) {
+        if (!isDeclarationFile || hasDecorators) {
             staticSymbolResolver.getSymbolsOf(fileName).forEach(function (symbol) {
                 var resolvedSymbol = staticSymbolResolver.resolveSymbol(symbol);
                 var symbolMeta = resolvedSymbol.metadata;
@@ -22498,7 +22513,25 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 if (symbolMeta.__symbolic === 'class') {
                     if (metadataResolver.isDirective(symbol)) {
                         isNgSymbol = true;
-                        directives.push(symbol);
+                        if (!isDeclarationFile) {
+                            // This directive either has a selector or doesn't. Selector-less directives get tracked
+                            // in abstractDirectives, not directives. The compiler doesn't deal with selector-less
+                            // directives at all, really, other than to persist their metadata. This is done so that
+                            // apps will have an easier time migrating to Ivy, which requires the selector-less
+                            // annotations to be applied.
+                            if (!metadataResolver.isAbstractDirective(symbol)) {
+                                // The directive is an ordinary directive.
+                                directives.push(symbol);
+                            }
+                            else {
+                                // The directive has no selector and is an "abstract" directive, so track it
+                                // accordingly.
+                                abstractDirectives.push(symbol);
+                            }
+                        }
+                        else {
+                            directives.push(symbol);
+                        }
                     }
                     else if (metadataResolver.isPipe(symbol)) {
                         isNgSymbol = true;
@@ -22526,7 +22559,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             });
         }
         return {
-            fileName: fileName, directives: directives, pipes: pipes, ngModules: ngModules, injectables: injectables, exportsNonSourceFiles: exportsNonSourceFiles,
+            fileName: fileName, directives: directives, abstractDirectives: abstractDirectives, pipes: pipes,
+            ngModules: ngModules, injectables: injectables, exportsNonSourceFiles: exportsNonSourceFiles,
         };
     }
     function isValueExportingNonSourceFile(host, metadata) {
@@ -38628,7 +38662,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-next.1.with-local-changes');
+    var VERSION$2 = new Version$1('9.0.0-next.1+7.sha-9896d43.with-local-changes');
 
     /**
      * @license
@@ -45677,7 +45711,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this._config = config || DEFAULT_CONFIG;
         }
         SystemJsNgModuleLoader.prototype.load = function (path) {
-            var legacyOfflineMode = this._compiler instanceof Compiler;
+            var legacyOfflineMode = !ivyEnabled && this._compiler instanceof Compiler;
             return legacyOfflineMode ? this.loadFactory(path) : this.loadAndCompile(path);
         };
         SystemJsNgModuleLoader.prototype.loadAndCompile = function (path) {
@@ -49458,7 +49492,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-next.1.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.1+7.sha-9896d43.with-local-changes');
 
     /**
      * @license
