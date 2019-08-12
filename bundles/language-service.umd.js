@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.1+23.sha-4ea3e7e.with-local-changes
+ * @license Angular v9.0.0-next.1+24.sha-914900a.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -3457,7 +3457,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         Identifiers.i18nApply = { name: 'ɵɵi18nApply', moduleName: CORE$1 };
         Identifiers.i18nPostprocess = { name: 'ɵɵi18nPostprocess', moduleName: CORE$1 };
         Identifiers.i18nLocalize = { name: 'ɵɵi18nLocalize', moduleName: CORE$1 };
-        Identifiers.load = { name: 'ɵɵload', moduleName: CORE$1 };
         Identifiers.pipe = { name: 'ɵɵpipe', moduleName: CORE$1 };
         Identifiers.projection = { name: 'ɵɵprojection', moduleName: CORE$1 };
         Identifiers.projectionDef = { name: 'ɵɵprojectionDef', moduleName: CORE$1 };
@@ -18108,7 +18107,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.1+23.sha-4ea3e7e.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.1+24.sha-914900a.with-local-changes');
 
     /**
      * @license
@@ -31630,7 +31629,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         return view[TVIEW].data[index + HEADER_OFFSET];
     }
     /** Retrieves a value from any `LView` or `TData`. */
-    function loadInternal(view, index) {
+    function load(view, index) {
         ngDevMode && assertDataInRange(view, index + HEADER_OFFSET);
         return view[index + HEADER_OFFSET];
     }
@@ -42820,7 +42819,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     function ɵɵcontainerRefreshStart(index) {
         var lView = getLView();
         var tView = lView[TVIEW];
-        var previousOrParentTNode = loadInternal(tView.data, index);
+        var previousOrParentTNode = load(tView.data, index);
         ngDevMode && assertNodeType(previousOrParentTNode, 0 /* Container */);
         setPreviousOrParentTNode(previousOrParentTNode, true);
         lView[index + HEADER_OFFSET][ACTIVE_INDEX] = 0;
@@ -42903,15 +42902,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      */
     function ɵɵreference(index) {
         var contextLView = getContextLView();
-        return loadInternal(contextLView, index);
-    }
-    /**
-     * Retrieves a value from current `viewData`.
-     *
-     * @codeGenApi
-     */
-    function ɵɵload(index) {
-        return loadInternal(getLView(), index);
+        return load(contextLView, index);
     }
 
     /**
@@ -46808,7 +46799,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-next.1+23.sha-4ea3e7e.with-local-changes');
+    var VERSION$2 = new Version$1('9.0.0-next.1+24.sha-914900a.with-local-changes');
 
     /**
      * @license
@@ -50678,7 +50669,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         if (removedPhRNode) {
             nativeRemoveNode(viewData[RENDERER], removedPhRNode);
         }
-        var slotValue = ɵɵload(index);
+        var slotValue = load(viewData, index);
         if (isLContainer(slotValue)) {
             var lContainer = slotValue;
             if (removedPhTNode.type !== 0 /* Container */) {
@@ -51575,7 +51566,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @codeGenApi
      */
     function ɵɵpipeBind1(index, slotOffset, v1) {
-        var pipeInstance = ɵɵload(index);
+        var pipeInstance = load(getLView(), index);
         return unwrapValue(isPure(index) ? ɵɵpureFunction1(slotOffset, pipeInstance.transform, v1, pipeInstance) :
             pipeInstance.transform(v1));
     }
@@ -51593,7 +51584,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @codeGenApi
      */
     function ɵɵpipeBind2(index, slotOffset, v1, v2) {
-        var pipeInstance = ɵɵload(index);
+        var pipeInstance = load(getLView(), index);
         return unwrapValue(isPure(index) ? ɵɵpureFunction2(slotOffset, pipeInstance.transform, v1, v2, pipeInstance) :
             pipeInstance.transform(v1, v2));
     }
@@ -51612,7 +51603,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @codeGenApi
      */
     function ɵɵpipeBind3(index, slotOffset, v1, v2, v3) {
-        var pipeInstance = ɵɵload(index);
+        var pipeInstance = load(getLView(), index);
         return unwrapValue(isPure(index) ?
             ɵɵpureFunction3(slotOffset, pipeInstance.transform, v1, v2, v3, pipeInstance) :
             pipeInstance.transform(v1, v2, v3));
@@ -51633,7 +51624,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @codeGenApi
      */
     function ɵɵpipeBind4(index, slotOffset, v1, v2, v3, v4) {
-        var pipeInstance = ɵɵload(index);
+        var pipeInstance = load(getLView(), index);
         return unwrapValue(isPure(index) ?
             ɵɵpureFunction4(slotOffset, pipeInstance.transform, v1, v2, v3, v4, pipeInstance) :
             pipeInstance.transform(v1, v2, v3, v4));
@@ -51651,7 +51642,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @codeGenApi
      */
     function ɵɵpipeBindV(index, slotOffset, values) {
-        var pipeInstance = ɵɵload(index);
+        var pipeInstance = load(getLView(), index);
         return unwrapValue(isPure(index) ? ɵɵpureFunctionV(slotOffset, pipeInstance.transform, values, pipeInstance) :
             pipeInstance.transform.apply(pipeInstance, values));
     }
@@ -54166,7 +54157,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         'ɵɵgetCurrentView': ɵɵgetCurrentView,
         'ɵɵrestoreView': ɵɵrestoreView,
         'ɵɵlistener': ɵɵlistener,
-        'ɵɵload': ɵɵload,
         'ɵɵprojection': ɵɵprojection,
         'ɵɵupdateSyntheticHostBinding': ɵɵupdateSyntheticHostBinding,
         'ɵɵcomponentHostSyntheticListener': ɵɵcomponentHostSyntheticListener,
@@ -60544,7 +60534,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-next.1+23.sha-4ea3e7e.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.1+24.sha-914900a.with-local-changes');
 
     /**
      * @license
