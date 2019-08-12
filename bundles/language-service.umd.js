@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.1+21.sha-7b94145.with-local-changes
+ * @license Angular v9.0.0-next.1+22.sha-6eb9c2f.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18109,7 +18109,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.1+21.sha-7b94145.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.1+22.sha-6eb9c2f.with-local-changes');
 
     /**
      * @license
@@ -42410,11 +42410,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @codeGenApi
      */
     function ɵɵattributeInterpolate1(attrName, prefix, v0, suffix, sanitizer, namespace) {
-        var index = getSelectedIndex();
         var lView = getLView();
         var interpolatedValue = interpolation1(lView, prefix, v0, suffix);
         if (interpolatedValue !== NO_CHANGE) {
-            elementAttributeInternal(index, attrName, interpolatedValue, lView, sanitizer, namespace);
+            elementAttributeInternal(getSelectedIndex(), attrName, interpolatedValue, lView, sanitizer, namespace);
         }
         return ɵɵattributeInterpolate1;
     }
@@ -42445,11 +42444,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @codeGenApi
      */
     function ɵɵattributeInterpolate2(attrName, prefix, v0, i0, v1, suffix, sanitizer, namespace) {
-        var index = getSelectedIndex();
         var lView = getLView();
         var interpolatedValue = interpolation2(lView, prefix, v0, i0, v1, suffix);
         if (interpolatedValue !== NO_CHANGE) {
-            elementAttributeInternal(index, attrName, interpolatedValue, lView, sanitizer, namespace);
+            elementAttributeInternal(getSelectedIndex(), attrName, interpolatedValue, lView, sanitizer, namespace);
         }
         return ɵɵattributeInterpolate2;
     }
@@ -42483,11 +42481,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @codeGenApi
      */
     function ɵɵattributeInterpolate3(attrName, prefix, v0, i0, v1, i1, v2, suffix, sanitizer, namespace) {
-        var index = getSelectedIndex();
         var lView = getLView();
         var interpolatedValue = interpolation3(lView, prefix, v0, i0, v1, i1, v2, suffix);
         if (interpolatedValue !== NO_CHANGE) {
-            elementAttributeInternal(index, attrName, interpolatedValue, lView, sanitizer, namespace);
+            elementAttributeInternal(getSelectedIndex(), attrName, interpolatedValue, lView, sanitizer, namespace);
         }
         return ɵɵattributeInterpolate3;
     }
@@ -42523,11 +42520,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @codeGenApi
      */
     function ɵɵattributeInterpolate4(attrName, prefix, v0, i0, v1, i1, v2, i2, v3, suffix, sanitizer, namespace) {
-        var index = getSelectedIndex();
         var lView = getLView();
         var interpolatedValue = interpolation4(lView, prefix, v0, i0, v1, i1, v2, i2, v3, suffix);
         if (interpolatedValue !== NO_CHANGE) {
-            elementAttributeInternal(index, attrName, interpolatedValue, lView, sanitizer, namespace);
+            elementAttributeInternal(getSelectedIndex(), attrName, interpolatedValue, lView, sanitizer, namespace);
         }
         return ɵɵattributeInterpolate4;
     }
@@ -42565,11 +42561,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @codeGenApi
      */
     function ɵɵattributeInterpolate5(attrName, prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, suffix, sanitizer, namespace) {
-        var index = getSelectedIndex();
         var lView = getLView();
         var interpolatedValue = interpolation5(lView, prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, suffix);
         if (interpolatedValue !== NO_CHANGE) {
-            elementAttributeInternal(index, attrName, interpolatedValue, lView, sanitizer, namespace);
+            elementAttributeInternal(getSelectedIndex(), attrName, interpolatedValue, lView, sanitizer, namespace);
         }
         return ɵɵattributeInterpolate5;
     }
@@ -42609,11 +42604,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @codeGenApi
      */
     function ɵɵattributeInterpolate6(attrName, prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, i4, v5, suffix, sanitizer, namespace) {
-        var index = getSelectedIndex();
         var lView = getLView();
         var interpolatedValue = interpolation6(lView, prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, i4, v5, suffix);
         if (interpolatedValue !== NO_CHANGE) {
-            elementAttributeInternal(index, attrName, interpolatedValue, lView, sanitizer, namespace);
+            elementAttributeInternal(getSelectedIndex(), attrName, interpolatedValue, lView, sanitizer, namespace);
         }
         return ɵɵattributeInterpolate6;
     }
@@ -42703,11 +42697,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @codeGenApi
      */
     function ɵɵattributeInterpolate8(attrName, prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, i4, v5, i5, v6, i6, v7, suffix, sanitizer, namespace) {
-        var index = getSelectedIndex();
         var lView = getLView();
         var interpolatedValue = interpolation8(lView, prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, i4, v5, i5, v6, i6, v7, suffix);
         if (interpolatedValue !== NO_CHANGE) {
-            elementAttributeInternal(index, attrName, interpolatedValue, lView, sanitizer, namespace);
+            elementAttributeInternal(getSelectedIndex(), attrName, interpolatedValue, lView, sanitizer, namespace);
         }
         return ɵɵattributeInterpolate8;
     }
@@ -42738,11 +42731,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @codeGenApi
      */
     function ɵɵattributeInterpolateV(attrName, values, sanitizer, namespace) {
-        var index = getSelectedIndex();
         var lView = getLView();
         var interpolated = interpolationV(lView, values);
         if (interpolated !== NO_CHANGE) {
-            elementAttributeInternal(index, attrName, interpolated, lView, sanitizer, namespace);
+            elementAttributeInternal(getSelectedIndex(), attrName, interpolated, lView, sanitizer, namespace);
         }
         return ɵɵattributeInterpolateV;
     }
@@ -44281,10 +44273,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @codeGenApi
      */
     function ɵɵpropertyInterpolate1(propName, prefix, v0, suffix, sanitizer) {
-        var index = getSelectedIndex();
         var interpolatedValue = interpolation1(getLView(), prefix, v0, suffix);
         if (interpolatedValue !== NO_CHANGE) {
-            elementPropertyInternal(index, propName, interpolatedValue, sanitizer);
+            elementPropertyInternal(getSelectedIndex(), propName, interpolatedValue, sanitizer);
         }
         return ɵɵpropertyInterpolate1;
     }
@@ -44319,10 +44310,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @codeGenApi
      */
     function ɵɵpropertyInterpolate2(propName, prefix, v0, i0, v1, suffix, sanitizer) {
-        var index = getSelectedIndex();
         var interpolatedValue = interpolation2(getLView(), prefix, v0, i0, v1, suffix);
         if (interpolatedValue !== NO_CHANGE) {
-            elementPropertyInternal(index, propName, interpolatedValue, sanitizer);
+            elementPropertyInternal(getSelectedIndex(), propName, interpolatedValue, sanitizer);
         }
         return ɵɵpropertyInterpolate2;
     }
@@ -44360,10 +44350,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @codeGenApi
      */
     function ɵɵpropertyInterpolate3(propName, prefix, v0, i0, v1, i1, v2, suffix, sanitizer) {
-        var index = getSelectedIndex();
         var interpolatedValue = interpolation3(getLView(), prefix, v0, i0, v1, i1, v2, suffix);
         if (interpolatedValue !== NO_CHANGE) {
-            elementPropertyInternal(index, propName, interpolatedValue, sanitizer);
+            elementPropertyInternal(getSelectedIndex(), propName, interpolatedValue, sanitizer);
         }
         return ɵɵpropertyInterpolate3;
     }
@@ -44403,10 +44392,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @codeGenApi
      */
     function ɵɵpropertyInterpolate4(propName, prefix, v0, i0, v1, i1, v2, i2, v3, suffix, sanitizer) {
-        var index = getSelectedIndex();
         var interpolatedValue = interpolation4(getLView(), prefix, v0, i0, v1, i1, v2, i2, v3, suffix);
         if (interpolatedValue !== NO_CHANGE) {
-            elementPropertyInternal(index, propName, interpolatedValue, sanitizer);
+            elementPropertyInternal(getSelectedIndex(), propName, interpolatedValue, sanitizer);
         }
         return ɵɵpropertyInterpolate4;
     }
@@ -44448,10 +44436,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @codeGenApi
      */
     function ɵɵpropertyInterpolate5(propName, prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, suffix, sanitizer) {
-        var index = getSelectedIndex();
         var interpolatedValue = interpolation5(getLView(), prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, suffix);
         if (interpolatedValue !== NO_CHANGE) {
-            elementPropertyInternal(index, propName, interpolatedValue, sanitizer);
+            elementPropertyInternal(getSelectedIndex(), propName, interpolatedValue, sanitizer);
         }
         return ɵɵpropertyInterpolate5;
     }
@@ -44495,10 +44482,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @codeGenApi
      */
     function ɵɵpropertyInterpolate6(propName, prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, i4, v5, suffix, sanitizer) {
-        var index = getSelectedIndex();
         var interpolatedValue = interpolation6(getLView(), prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, i4, v5, suffix);
         if (interpolatedValue !== NO_CHANGE) {
-            elementPropertyInternal(index, propName, interpolatedValue, sanitizer);
+            elementPropertyInternal(getSelectedIndex(), propName, interpolatedValue, sanitizer);
         }
         return ɵɵpropertyInterpolate6;
     }
@@ -44544,10 +44530,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @codeGenApi
      */
     function ɵɵpropertyInterpolate7(propName, prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, i4, v5, i5, v6, suffix, sanitizer) {
-        var index = getSelectedIndex();
         var interpolatedValue = interpolation7(getLView(), prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, i4, v5, i5, v6, suffix);
         if (interpolatedValue !== NO_CHANGE) {
-            elementPropertyInternal(index, propName, interpolatedValue, sanitizer);
+            elementPropertyInternal(getSelectedIndex(), propName, interpolatedValue, sanitizer);
         }
         return ɵɵpropertyInterpolate7;
     }
@@ -44595,10 +44580,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @codeGenApi
      */
     function ɵɵpropertyInterpolate8(propName, prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, i4, v5, i5, v6, i6, v7, suffix, sanitizer) {
-        var index = getSelectedIndex();
         var interpolatedValue = interpolation8(getLView(), prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, i4, v5, i5, v6, i6, v7, suffix);
         if (interpolatedValue !== NO_CHANGE) {
-            elementPropertyInternal(index, propName, interpolatedValue, sanitizer);
+            elementPropertyInternal(getSelectedIndex(), propName, interpolatedValue, sanitizer);
         }
         return ɵɵpropertyInterpolate8;
     }
@@ -44633,10 +44617,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @codeGenApi
      */
     function ɵɵpropertyInterpolateV(propName, values, sanitizer) {
-        var index = getSelectedIndex();
         var interpolatedValue = interpolationV(getLView(), values);
         if (interpolatedValue !== NO_CHANGE) {
-            elementPropertyInternal(index, propName, interpolatedValue, sanitizer);
+            elementPropertyInternal(getSelectedIndex(), propName, interpolatedValue, sanitizer);
         }
         return ɵɵpropertyInterpolateV;
     }
@@ -44736,11 +44719,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @codeGenApi
      */
     function ɵɵtextInterpolate1(prefix, v0, suffix) {
-        var index = getSelectedIndex();
         var lView = getLView();
         var interpolated = interpolation1(lView, prefix, v0, suffix);
         if (interpolated !== NO_CHANGE) {
-            textBindingInternal(lView, index, interpolated);
+            textBindingInternal(lView, getSelectedIndex(), interpolated);
         }
         return ɵɵtextInterpolate1;
     }
@@ -44764,11 +44746,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @codeGenApi
      */
     function ɵɵtextInterpolate2(prefix, v0, i0, v1, suffix) {
-        var index = getSelectedIndex();
         var lView = getLView();
         var interpolated = interpolation2(lView, prefix, v0, i0, v1, suffix);
         if (interpolated !== NO_CHANGE) {
-            textBindingInternal(lView, index, interpolated);
+            textBindingInternal(lView, getSelectedIndex(), interpolated);
         }
         return ɵɵtextInterpolate2;
     }
@@ -44793,11 +44774,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @codeGenApi
      */
     function ɵɵtextInterpolate3(prefix, v0, i0, v1, i1, v2, suffix) {
-        var index = getSelectedIndex();
         var lView = getLView();
         var interpolated = interpolation3(lView, prefix, v0, i0, v1, i1, v2, suffix);
         if (interpolated !== NO_CHANGE) {
-            textBindingInternal(lView, index, interpolated);
+            textBindingInternal(lView, getSelectedIndex(), interpolated);
         }
         return ɵɵtextInterpolate3;
     }
@@ -44822,11 +44802,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @codeGenApi
      */
     function ɵɵtextInterpolate4(prefix, v0, i0, v1, i1, v2, i2, v3, suffix) {
-        var index = getSelectedIndex();
         var lView = getLView();
         var interpolated = interpolation4(lView, prefix, v0, i0, v1, i1, v2, i2, v3, suffix);
         if (interpolated !== NO_CHANGE) {
-            textBindingInternal(lView, index, interpolated);
+            textBindingInternal(lView, getSelectedIndex(), interpolated);
         }
         return ɵɵtextInterpolate4;
     }
@@ -44851,11 +44830,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @codeGenApi
      */
     function ɵɵtextInterpolate5(prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, suffix) {
-        var index = getSelectedIndex();
         var lView = getLView();
         var interpolated = interpolation5(lView, prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, suffix);
         if (interpolated !== NO_CHANGE) {
-            textBindingInternal(lView, index, interpolated);
+            textBindingInternal(lView, getSelectedIndex(), interpolated);
         }
         return ɵɵtextInterpolate5;
     }
@@ -44882,11 +44860,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @codeGenApi
      */
     function ɵɵtextInterpolate6(prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, i4, v5, suffix) {
-        var index = getSelectedIndex();
         var lView = getLView();
         var interpolated = interpolation6(lView, prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, i4, v5, suffix);
         if (interpolated !== NO_CHANGE) {
-            textBindingInternal(lView, index, interpolated);
+            textBindingInternal(lView, getSelectedIndex(), interpolated);
         }
         return ɵɵtextInterpolate6;
     }
@@ -44911,11 +44888,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @codeGenApi
      */
     function ɵɵtextInterpolate7(prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, i4, v5, i5, v6, suffix) {
-        var index = getSelectedIndex();
         var lView = getLView();
         var interpolated = interpolation7(lView, prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, i4, v5, i5, v6, suffix);
         if (interpolated !== NO_CHANGE) {
-            textBindingInternal(lView, index, interpolated);
+            textBindingInternal(lView, getSelectedIndex(), interpolated);
         }
         return ɵɵtextInterpolate7;
     }
@@ -44940,11 +44916,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @codeGenApi
      */
     function ɵɵtextInterpolate8(prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, i4, v5, i5, v6, i6, v7, suffix) {
-        var index = getSelectedIndex();
         var lView = getLView();
         var interpolated = interpolation8(lView, prefix, v0, i0, v1, i1, v2, i2, v3, i3, v4, i4, v5, i5, v6, i6, v7, suffix);
         if (interpolated !== NO_CHANGE) {
-            textBindingInternal(lView, index, interpolated);
+            textBindingInternal(lView, getSelectedIndex(), interpolated);
         }
         return ɵɵtextInterpolate8;
     }
@@ -44973,11 +44948,10 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * @codeGenApi
      */
     function ɵɵtextInterpolateV(values) {
-        var index = getSelectedIndex();
         var lView = getLView();
         var interpolated = interpolationV(lView, values);
         if (interpolated !== NO_CHANGE) {
-            textBindingInternal(lView, index, interpolated);
+            textBindingInternal(lView, getSelectedIndex(), interpolated);
         }
         return ɵɵtextInterpolateV;
     }
@@ -46835,7 +46809,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-next.1+21.sha-7b94145.with-local-changes');
+    var VERSION$2 = new Version$1('9.0.0-next.1+22.sha-6eb9c2f.with-local-changes');
 
     /**
      * @license
@@ -60580,7 +60554,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-next.1+21.sha-7b94145.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.1+22.sha-6eb9c2f.with-local-changes');
 
     /**
      * @license
