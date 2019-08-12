@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.1+22.sha-6eb9c2f.with-local-changes
+ * @license Angular v9.0.0-next.1+23.sha-4ea3e7e.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -3524,9 +3524,8 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         Identifiers.viewQuery = { name: 'ɵɵviewQuery', moduleName: CORE$1 };
         Identifiers.staticViewQuery = { name: 'ɵɵstaticViewQuery', moduleName: CORE$1 };
         Identifiers.staticContentQuery = { name: 'ɵɵstaticContentQuery', moduleName: CORE$1 };
-        Identifiers.loadViewQuery = { name: 'ɵɵloadViewQuery', moduleName: CORE$1 };
+        Identifiers.loadQuery = { name: 'ɵɵloadQuery', moduleName: CORE$1 };
         Identifiers.contentQuery = { name: 'ɵɵcontentQuery', moduleName: CORE$1 };
-        Identifiers.loadContentQuery = { name: 'ɵɵloadContentQuery', moduleName: CORE$1 };
         Identifiers.NgOnChangesFeature = { name: 'ɵɵNgOnChangesFeature', moduleName: CORE$1 };
         Identifiers.InheritDefinitionFeature = { name: 'ɵɵInheritDefinitionFeature', moduleName: CORE$1 };
         Identifiers.ProvidersFeature = { name: 'ɵɵProvidersFeature', moduleName: CORE$1 };
@@ -17476,9 +17475,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
                 createStatements.push(importExpr(queryInstruction)
                     .callFn(__spread([variable('dirIndex')], prepareQueryParams(query, constantPool)))
                     .toStmt());
-                // update, e.g. (r3.queryRefresh(tmp = r3.loadContentQuery()) && (ctx.someDir = tmp));
+                // update, e.g. (r3.queryRefresh(tmp = r3.loadQuery()) && (ctx.someDir = tmp));
                 var temporary = tempAllocator();
-                var getQueryList = importExpr(Identifiers$1.loadContentQuery).callFn([]);
+                var getQueryList = importExpr(Identifiers$1.loadQuery).callFn([]);
                 var refresh = importExpr(Identifiers$1.queryRefresh).callFn([temporary.set(getQueryList)]);
                 var updateDirective = variable(CONTEXT_NAME)
                     .prop(query.propertyName)
@@ -17543,9 +17542,9 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             // creation, e.g. r3.viewQuery(somePredicate, true);
             var queryDefinition = importExpr(queryInstruction).callFn(prepareQueryParams(query, constantPool));
             createStatements.push(queryDefinition.toStmt());
-            // update, e.g. (r3.queryRefresh(tmp = r3.loadViewQuery()) && (ctx.someDir = tmp));
+            // update, e.g. (r3.queryRefresh(tmp = r3.loadQuery()) && (ctx.someDir = tmp));
             var temporary = tempAllocator();
-            var getQueryList = importExpr(Identifiers$1.loadViewQuery).callFn([]);
+            var getQueryList = importExpr(Identifiers$1.loadQuery).callFn([]);
             var refresh = importExpr(Identifiers$1.queryRefresh).callFn([temporary.set(getQueryList)]);
             var updateDirective = variable(CONTEXT_NAME)
                 .prop(query.propertyName)
@@ -18124,7 +18123,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.1+22.sha-6eb9c2f.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.1+23.sha-4ea3e7e.with-local-changes');
 
     /**
      * @license
@@ -38641,7 +38640,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-next.1+22.sha-6eb9c2f.with-local-changes');
+    var VERSION$2 = new Version$1('9.0.0-next.1+23.sha-4ea3e7e.with-local-changes');
 
     /**
      * @license
@@ -49471,7 +49470,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-next.1+22.sha-6eb9c2f.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.1+23.sha-4ea3e7e.with-local-changes');
 
     /**
      * @license
