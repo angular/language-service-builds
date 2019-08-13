@@ -7,13 +7,12 @@
  */
 /// <amd-module name="@angular/language-service/src/reflector_host" />
 import { StaticSymbolResolverHost } from '@angular/compiler';
-import { CompilerOptions } from '@angular/compiler-cli/src/language_services';
 import * as ts from 'typescript';
 export declare class ReflectorHost implements StaticSymbolResolverHost {
-    private options;
+    private readonly serviceHost;
     private hostAdapter;
     private metadataReaderCache;
-    constructor(getProgram: () => ts.Program, serviceHost: ts.LanguageServiceHost, options: CompilerOptions);
+    constructor(getProgram: () => ts.Program, serviceHost: ts.LanguageServiceHost);
     getMetadataFor(modulePath: string): {
         [key: string]: any;
     }[] | undefined;

@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.1+24.sha-914900a.with-local-changes
+ * @license Angular v9.0.0-next.2+12.sha-e4d5102.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -19,7 +19,7 @@ module.exports = function(provided) {
   return result;
 }
 
-define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs) { 'use strict';
+define(['exports', 'path', 'typescript'], function (exports, path, ts) { 'use strict';
 
     /*! *****************************************************************************
     Copyright (c) Microsoft Corporation. All rights reserved.
@@ -18122,7 +18122,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.1+24.sha-914900a.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.2+12.sha-e4d5102.with-local-changes');
 
     /**
      * @license
@@ -29208,6 +29208,39 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    function getTemplateDiagnostics(template, ast) {
+        var results = [];
+        if (ast.parseErrors && ast.parseErrors.length) {
+            results.push.apply(results, __spread(ast.parseErrors.map(function (e) {
+                return {
+                    kind: DiagnosticKind$1.Error,
+                    span: offsetSpan$1(spanOf$2(e.span), template.span.start),
+                    message: e.msg,
+                };
+            })));
+        }
+        else if (ast.templateAst && ast.htmlAst) {
+            var info = {
+                templateAst: ast.templateAst,
+                htmlAst: ast.htmlAst,
+                offset: template.span.start,
+                query: template.query,
+                members: template.members,
+            };
+            var expressionDiagnostics = getTemplateExpressionDiagnostics(info);
+            results.push.apply(results, __spread(expressionDiagnostics));
+        }
+        if (ast.errors) {
+            results.push.apply(results, __spread(ast.errors.map(function (e) {
+                return {
+                    kind: e.kind,
+                    span: e.span || template.span,
+                    message: e.message,
+                };
+            })));
+        }
+        return results;
+    }
     function getDeclarationDiagnostics(declarations, modules) {
         var e_1, _a;
         var results = [];
@@ -29274,6 +29307,31 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         }
         return results;
     }
+    function diagnosticChainToDiagnosticChain(chain) {
+        return {
+            messageText: chain.message,
+            category: ts.DiagnosticCategory.Error,
+            code: 0,
+            next: chain.next ? diagnosticChainToDiagnosticChain(chain.next) : undefined
+        };
+    }
+    function diagnosticMessageToDiagnosticMessageText(message) {
+        if (typeof message === 'string') {
+            return message;
+        }
+        return diagnosticChainToDiagnosticChain(message);
+    }
+    function ngDiagnosticToTsDiagnostic(d, file) {
+        return {
+            file: file,
+            start: d.span.start,
+            length: d.span.end - d.span.start,
+            messageText: diagnosticMessageToDiagnosticMessageText(d.message),
+            category: ts.DiagnosticCategory.Error,
+            code: 0,
+            source: 'ng',
+        };
+    }
 
     /**
      * @license
@@ -29337,17 +29395,33 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
         }
         LanguageServiceImpl.prototype.getTemplateReferences = function () { return this.host.getTemplateReferences(); };
         LanguageServiceImpl.prototype.getDiagnostics = function (fileName) {
+            var e_1, _a;
             var results = [];
             var templates = this.host.getTemplates(fileName);
-            if (templates && templates.length) {
-                results.push.apply(results, __spread(this.getTemplateDiagnostics(fileName, templates)));
+            try {
+                for (var templates_1 = __values(templates), templates_1_1 = templates_1.next(); !templates_1_1.done; templates_1_1 = templates_1.next()) {
+                    var template = templates_1_1.value;
+                    var ast = this.host.getTemplateAst(template, fileName);
+                    results.push.apply(results, __spread(getTemplateDiagnostics(template, ast)));
+                }
+            }
+            catch (e_1_1) { e_1 = { error: e_1_1 }; }
+            finally {
+                try {
+                    if (templates_1_1 && !templates_1_1.done && (_a = templates_1.return)) _a.call(templates_1);
+                }
+                finally { if (e_1) throw e_1.error; }
             }
             var declarations = this.host.getDeclarations(fileName);
             if (declarations && declarations.length) {
                 var summary = this.host.getAnalyzedModules();
                 results.push.apply(results, __spread(getDeclarationDiagnostics(declarations, summary)));
             }
-            return uniqueBySpan(results);
+            if (!results.length) {
+                return [];
+            }
+            var sourceFile = fileName.endsWith('.ts') ? this.host.getSourceFile(fileName) : undefined;
+            return uniqueBySpan(results).map(function (d) { return ngDiagnosticToTsDiagnostic(d, sourceFile); });
         };
         LanguageServiceImpl.prototype.getPipesAt = function (fileName, position) {
             var templateInfo = this.host.getTemplateAstAtPosition(fileName, position);
@@ -29373,51 +29447,6 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
             if (templateInfo) {
                 return getHover(templateInfo);
             }
-        };
-        LanguageServiceImpl.prototype.getTemplateDiagnostics = function (fileName, templates) {
-            var e_1, _a;
-            var results = [];
-            var _loop_1 = function (template) {
-                var ast = this_1.host.getTemplateAst(template, fileName);
-                if (ast) {
-                    if (ast.parseErrors && ast.parseErrors.length) {
-                        results.push.apply(results, __spread(ast.parseErrors.map(function (e) { return ({
-                            kind: DiagnosticKind$1.Error,
-                            span: offsetSpan$1(spanOf$2(e.span), template.span.start),
-                            message: e.msg
-                        }); })));
-                    }
-                    else if (ast.templateAst && ast.htmlAst) {
-                        var info = {
-                            templateAst: ast.templateAst,
-                            htmlAst: ast.htmlAst,
-                            offset: template.span.start,
-                            query: template.query,
-                            members: template.members
-                        };
-                        var expressionDiagnostics = getTemplateExpressionDiagnostics(info);
-                        results.push.apply(results, __spread(expressionDiagnostics));
-                    }
-                    if (ast.errors) {
-                        results.push.apply(results, __spread(ast.errors.map(function (e) { return ({ kind: e.kind, span: e.span || template.span, message: e.message }); })));
-                    }
-                }
-            };
-            var this_1 = this;
-            try {
-                for (var templates_1 = __values(templates), templates_1_1 = templates_1.next(); !templates_1_1.done; templates_1_1 = templates_1.next()) {
-                    var template = templates_1_1.value;
-                    _loop_1(template);
-                }
-            }
-            catch (e_1_1) { e_1 = { error: e_1_1 }; }
-            finally {
-                try {
-                    if (templates_1_1 && !templates_1_1.done && (_a = templates_1.return)) _a.call(templates_1);
-                }
-                finally { if (e_1) throw e_1.error; }
-            }
-            return results;
         };
         return LanguageServiceImpl;
     }());
@@ -38639,7 +38668,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-next.1+24.sha-914900a.with-local-changes');
+    var VERSION$2 = new Version$1('9.0.0-next.2+12.sha-e4d5102.with-local-changes');
 
     /**
      * @license
@@ -45688,7 +45717,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this._config = config || DEFAULT_CONFIG;
         }
         SystemJsNgModuleLoader.prototype.load = function (path) {
-            var legacyOfflineMode = this._compiler instanceof Compiler;
+            var legacyOfflineMode = !ivyEnabled && this._compiler instanceof Compiler;
             return legacyOfflineMode ? this.loadFactory(path) : this.loadAndCompile(path);
         };
         SystemJsNgModuleLoader.prototype.loadAndCompile = function (path) {
@@ -48579,8 +48608,8 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         return ReflectorModuleModuleResolutionHost;
     }());
     var ReflectorHost = /** @class */ (function () {
-        function ReflectorHost(getProgram, serviceHost, options) {
-            this.options = options;
+        function ReflectorHost(getProgram, serviceHost) {
+            this.serviceHost = serviceHost;
             this.metadataReaderCache = createMetadataReaderCache();
             this.hostAdapter = new ReflectorModuleModuleResolutionHost(serviceHost, getProgram);
         }
@@ -48589,13 +48618,24 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         };
         ReflectorHost.prototype.moduleNameToFileName = function (moduleName, containingFile) {
             if (!containingFile) {
-                if (moduleName.indexOf('.') === 0) {
+                if (moduleName.startsWith('.')) {
                     throw new Error('Resolution of relative paths requires a containing file.');
                 }
+                // serviceHost.getCurrentDirectory() returns the directory where tsconfig.json
+                // is located. This is not the same as process.cwd() because the language
+                // service host sets the "project root path" as its current directory.
+                var currentDirectory = this.serviceHost.getCurrentDirectory();
+                if (!currentDirectory) {
+                    // If current directory is empty then the file must belong to an inferred
+                    // project (no tsconfig.json), in which case it's not possible to resolve
+                    // the module without the caller explicitly providing a containing file.
+                    throw new Error("Could not resolve '" + moduleName + "' without a containing file.");
+                }
                 // Any containing file gives the same result for absolute imports
-                containingFile = path.join(this.options.basePath, 'index.ts').replace(/\\/g, '/');
+                containingFile = path.join(currentDirectory, 'index.ts');
             }
-            var resolved = ts.resolveModuleName(moduleName, containingFile, this.options, this.hostAdapter)
+            var compilerOptions = this.serviceHost.getCompilationSettings();
+            var resolved = ts.resolveModuleName(moduleName, containingFile, compilerOptions, this.hostAdapter)
                 .resolvedModule;
             return resolved ? resolved.resolvedFileName : null;
         };
@@ -48702,7 +48742,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             if (fileName.endsWith('.ts')) {
                 var sourceFile = this.getSourceFile(fileName);
                 if (sourceFile) {
-                    this.context = sourceFile.fileName;
                     var node = this.findNode(sourceFile, position);
                     if (node) {
                         return this.getSourceFromNode(fileName, this.host.getScriptVersion(sourceFile.fileName), node);
@@ -48744,14 +48783,14 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         };
         TypeScriptServiceHost.prototype.getTemplates = function (fileName) {
             var _this = this;
+            var results = [];
             if (fileName.endsWith('.ts')) {
                 var version_1 = this.host.getScriptVersion(fileName);
-                var result_1 = [];
                 // Find each template string in the file
                 var visit_1 = function (child) {
                     var templateSource = _this.getSourceFromNode(fileName, version_1, child);
                     if (templateSource) {
-                        result_1.push(templateSource);
+                        results.push(templateSource);
                     }
                     else {
                         ts.forEachChild(child, visit_1);
@@ -48759,10 +48798,8 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 };
                 var sourceFile = this.getSourceFile(fileName);
                 if (sourceFile) {
-                    this.context = sourceFile.path || sourceFile.fileName;
                     ts.forEachChild(sourceFile, visit_1);
                 }
-                return result_1.length ? result_1 : undefined;
             }
             else {
                 this.ensureTemplateMap();
@@ -48770,10 +48807,11 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 if (componentSymbol) {
                     var templateSource = this.getTemplateAt(fileName, 0);
                     if (templateSource) {
-                        return [templateSource];
+                        results.push(templateSource);
                     }
                 }
             }
+            return results;
         };
         TypeScriptServiceHost.prototype.getDeclarations = function (fileName) {
             var _this = this;
@@ -48973,38 +49011,10 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         Object.defineProperty(TypeScriptServiceHost.prototype, "reflectorHost", {
             get: function () {
                 var _this = this;
-                var result = this._reflectorHost;
-                if (!result) {
-                    if (!this.context) {
-                        // Make up a context by finding the first script and using that as the base dir.
-                        var scriptFileNames = this.host.getScriptFileNames();
-                        if (0 === scriptFileNames.length) {
-                            throw new Error('Internal error: no script file names found');
-                        }
-                        this.context = scriptFileNames[0];
-                    }
-                    // Use the file context's directory as the base directory.
-                    // The host's getCurrentDirectory() is not reliable as it is always "" in
-                    // tsserver. We don't need the exact base directory, just one that contains
-                    // a source file.
-                    var source = this.getSourceFile(this.context);
-                    if (!source) {
-                        throw new Error('Internal error: no context could be determined');
-                    }
-                    var tsConfigPath = findTsConfig(source.fileName);
-                    var basePath = path.dirname(tsConfigPath || this.context);
-                    var options = { basePath: basePath, genDir: basePath };
-                    var compilerOptions = this.host.getCompilationSettings();
-                    if (compilerOptions && compilerOptions.baseUrl) {
-                        options.baseUrl = compilerOptions.baseUrl;
-                    }
-                    if (compilerOptions && compilerOptions.paths) {
-                        options.paths = compilerOptions.paths;
-                    }
-                    result = this._reflectorHost =
-                        new ReflectorHost(function () { return _this.tsService.getProgram(); }, this.host, options);
+                if (!this._reflectorHost) {
+                    this._reflectorHost = new ReflectorHost(function () { return _this.tsService.getProgram(); }, this.host);
                 }
-                return result;
+                return this._reflectorHost;
             },
             enumerable: true,
             configurable: true
@@ -49277,18 +49287,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         }
         return result;
     }
-    function findTsConfig(fileName) {
-        var dir = path.dirname(fileName);
-        while (fs.existsSync(dir)) {
-            var candidate = path.join(dir, 'tsconfig.json');
-            if (fs.existsSync(candidate))
-                return candidate;
-            var parentDir = path.dirname(dir);
-            if (parentDir === dir)
-                break;
-            dir = parentDir;
-        }
-    }
     function spanOf$3(node) {
         return { start: node.getStart(), end: node.getEnd() };
     }
@@ -49343,31 +49341,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             kindModifiers: ''
         };
     }
-    function diagnosticChainToDiagnosticChain(chain) {
-        return {
-            messageText: chain.message,
-            category: ts.DiagnosticCategory.Error,
-            code: 0,
-            next: chain.next ? diagnosticChainToDiagnosticChain(chain.next) : undefined
-        };
-    }
-    function diagnosticMessageToDiagnosticMessageText(message) {
-        if (typeof message === 'string') {
-            return message;
-        }
-        return diagnosticChainToDiagnosticChain(message);
-    }
-    function diagnosticToDiagnostic(d, file) {
-        return {
-            file: file,
-            start: d.span.start,
-            length: d.span.end - d.span.start,
-            messageText: diagnosticMessageToDiagnosticMessageText(d.message),
-            category: ts.DiagnosticCategory.Error,
-            code: 0,
-            source: 'ng'
-        };
-    }
     function create(info) {
         var project = info.project, tsLS = info.languageService, tsLSHost = info.languageServiceHost, config = info.config;
         // This plugin could operate under two different modes:
@@ -49415,16 +49388,10 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         function getSemanticDiagnostics(fileName) {
             var results = [];
             if (!angularOnly) {
-                var tsResults = tsLS.getSemanticDiagnostics(fileName);
-                results.push.apply(results, __spread(tsResults));
+                results.push.apply(results, __spread(tsLS.getSemanticDiagnostics(fileName)));
             }
             // For semantic diagnostics we need to combine both TS + Angular results
-            var ngResults = ngLS.getDiagnostics(fileName);
-            if (!ngResults.length) {
-                return results;
-            }
-            var sourceFile = fileName.endsWith('.ts') ? ngLSHost.getSourceFile(fileName) : undefined;
-            results.push.apply(results, __spread(ngResults.map(function (d) { return diagnosticToDiagnostic(d, sourceFile); })));
+            results.push.apply(results, __spread(ngLS.getDiagnostics(fileName)));
             return results;
         }
         function getDefinitionAtPosition(fileName, position) {
@@ -49469,7 +49436,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-next.1+24.sha-914900a.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.2+12.sha-e4d5102.with-local-changes');
 
     /**
      * @license

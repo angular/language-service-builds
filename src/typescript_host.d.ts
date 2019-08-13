@@ -9,7 +9,7 @@
 import { CompileMetadataResolver, HtmlParser, NgAnalyzedModules, ParseTreeResult, ResourceLoader } from '@angular/compiler';
 import * as ts from 'typescript';
 import { AstResult, TemplateInfo } from './common';
-import { Declarations, LanguageService, LanguageServiceHost, TemplateSource, TemplateSources } from './types';
+import { Declarations, LanguageService, LanguageServiceHost, TemplateSource } from './types';
 /**
  * Create a `LanguageServiceHost`
  */
@@ -47,7 +47,6 @@ export declare class TypeScriptServiceHost implements LanguageServiceHost {
     private _reflector;
     private _reflectorHost;
     private _checker;
-    private context;
     private lastProgram;
     private modulesOutOfDate;
     private analyzedModules;
@@ -70,7 +69,7 @@ export declare class TypeScriptServiceHost implements LanguageServiceHost {
     getTemplateAt(fileName: string, position: number): TemplateSource | undefined;
     getAnalyzedModules(): NgAnalyzedModules;
     private ensureAnalyzedModules;
-    getTemplates(fileName: string): TemplateSources;
+    getTemplates(fileName: string): TemplateSource[];
     getDeclarations(fileName: string): Declarations;
     getSourceFile(fileName: string): ts.SourceFile | undefined;
     updateAnalyzedModules(): void;

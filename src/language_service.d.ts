@@ -6,10 +6,11 @@
  * found in the LICENSE file at https://angular.io/license
  */
 /// <amd-module name="@angular/language-service/src/language_service" />
-import { LanguageService, LanguageServiceHost } from './types';
+import { LanguageService } from './types';
+import { TypeScriptServiceHost } from './typescript_host';
 /**
  * Create an instance of an Angular `LanguageService`.
  *
  * @publicApi
  */
-export declare function createLanguageService(host: LanguageServiceHost): LanguageService;
+export declare function createLanguageService(host: TypeScriptServiceHost): LanguageService;
