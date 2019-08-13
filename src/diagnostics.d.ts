@@ -7,9 +7,12 @@
  */
 /// <amd-module name="@angular/language-service/src/diagnostics" />
 import { NgAnalyzedModules } from '@angular/compiler';
+import * as ts from 'typescript';
 import { AstResult } from './common';
-import { Declarations, Diagnostics, TemplateSource } from './types';
+import { Declarations, Diagnostic, Diagnostics, TemplateSource } from './types';
 export interface AstProvider {
     getTemplateAst(template: TemplateSource, fileName: string): AstResult;
 }
+export declare function getTemplateDiagnostics(template: TemplateSource, ast: AstResult): Diagnostics;
 export declare function getDeclarationDiagnostics(declarations: Declarations, modules: NgAnalyzedModules): Diagnostics;
+export declare function ngDiagnosticToTsDiagnostic(d: Diagnostic, file: ts.SourceFile | undefined): ts.Diagnostic;
