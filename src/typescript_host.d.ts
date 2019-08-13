@@ -47,7 +47,6 @@ export declare class TypeScriptServiceHost implements LanguageServiceHost {
     private _reflector;
     private _reflectorHost;
     private _checker;
-    private context;
     private lastProgram;
     private modulesOutOfDate;
     private analyzedModules;
