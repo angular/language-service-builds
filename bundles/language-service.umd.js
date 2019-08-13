@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.2+7.sha-a95f860.with-local-changes
+ * @license Angular v9.0.0-next.2+8.sha-a91ab15.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -19,7 +19,7 @@ module.exports = function(provided) {
   return result;
 }
 
-define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs) { 'use strict';
+define(['exports', 'path', 'typescript'], function (exports, path, ts) { 'use strict';
 
     /*! *****************************************************************************
     Copyright (c) Microsoft Corporation. All rights reserved.
@@ -18107,7 +18107,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.2+7.sha-a95f860.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.2+8.sha-a91ab15.with-local-changes');
 
     /**
      * @license
@@ -46799,7 +46799,7 @@ define(['exports', 'path', 'typescript', 'fs'], function (exports, path, ts, fs)
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-next.2+7.sha-a95f860.with-local-changes');
+    var VERSION$2 = new Version$1('9.0.0-next.2+8.sha-a91ab15.with-local-changes');
 
     /**
      * @license
@@ -52225,7 +52225,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
     };
     function getPromiseCtor(promiseCtor) {
         if (!promiseCtor) {
-            promiseCtor = Promise;
+            promiseCtor = config.Promise || Promise;
         }
         if (!promiseCtor) {
             throw new Error('no Promise impl found');
@@ -59644,8 +59644,8 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         return ReflectorModuleModuleResolutionHost;
     }());
     var ReflectorHost = /** @class */ (function () {
-        function ReflectorHost(getProgram, serviceHost, options) {
-            this.options = options;
+        function ReflectorHost(getProgram, serviceHost) {
+            this.serviceHost = serviceHost;
             this.metadataReaderCache = createMetadataReaderCache();
             this.hostAdapter = new ReflectorModuleModuleResolutionHost(serviceHost, getProgram);
         }
@@ -59654,13 +59654,24 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         };
         ReflectorHost.prototype.moduleNameToFileName = function (moduleName, containingFile) {
             if (!containingFile) {
-                if (moduleName.indexOf('.') === 0) {
+                if (moduleName.startsWith('.')) {
                     throw new Error('Resolution of relative paths requires a containing file.');
                 }
+                // serviceHost.getCurrentDirectory() returns the directory where tsconfig.json
+                // is located. This is not the same as process.cwd() because the language
+                // service host sets the "project root path" as its current directory.
+                var currentDirectory = this.serviceHost.getCurrentDirectory();
+                if (!currentDirectory) {
+                    // If current directory is empty then the file must belong to an inferred
+                    // project (no tsconfig.json), in which case it's not possible to resolve
+                    // the module without the caller explicitly providing a containing file.
+                    throw new Error("Could not resolve '" + moduleName + "' without a containing file.");
+                }
                 // Any containing file gives the same result for absolute imports
-                containingFile = path.join(this.options.basePath, 'index.ts').replace(/\\/g, '/');
+                containingFile = path.join(currentDirectory, 'index.ts');
             }
-            var resolved = ts.resolveModuleName(moduleName, containingFile, this.options, this.hostAdapter)
+            var compilerOptions = this.serviceHost.getCompilationSettings();
+            var resolved = ts.resolveModuleName(moduleName, containingFile, compilerOptions, this.hostAdapter)
                 .resolvedModule;
             return resolved ? resolved.resolvedFileName : null;
         };
@@ -59767,7 +59778,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             if (fileName.endsWith('.ts')) {
                 var sourceFile = this.getSourceFile(fileName);
                 if (sourceFile) {
-                    this.context = sourceFile.fileName;
                     var node = this.findNode(sourceFile, position);
                     if (node) {
                         return this.getSourceFromNode(fileName, this.host.getScriptVersion(sourceFile.fileName), node);
@@ -59824,7 +59834,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 };
                 var sourceFile = this.getSourceFile(fileName);
                 if (sourceFile) {
-                    this.context = sourceFile.path || sourceFile.fileName;
                     ts.forEachChild(sourceFile, visit_1);
                 }
                 return result_1.length ? result_1 : undefined;
@@ -60038,38 +60047,10 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         Object.defineProperty(TypeScriptServiceHost.prototype, "reflectorHost", {
             get: function () {
                 var _this = this;
-                var result = this._reflectorHost;
-                if (!result) {
-                    if (!this.context) {
-                        // Make up a context by finding the first script and using that as the base dir.
-                        var scriptFileNames = this.host.getScriptFileNames();
-                        if (0 === scriptFileNames.length) {
-                            throw new Error('Internal error: no script file names found');
-                        }
-                        this.context = scriptFileNames[0];
-                    }
-                    // Use the file context's directory as the base directory.
-                    // The host's getCurrentDirectory() is not reliable as it is always "" in
-                    // tsserver. We don't need the exact base directory, just one that contains
-                    // a source file.
-                    var source = this.getSourceFile(this.context);
-                    if (!source) {
-                        throw new Error('Internal error: no context could be determined');
-                    }
-                    var tsConfigPath = findTsConfig(source.fileName);
-                    var basePath = path.dirname(tsConfigPath || this.context);
-                    var options = { basePath: basePath, genDir: basePath };
-                    var compilerOptions = this.host.getCompilationSettings();
-                    if (compilerOptions && compilerOptions.baseUrl) {
-                        options.baseUrl = compilerOptions.baseUrl;
-                    }
-                    if (compilerOptions && compilerOptions.paths) {
-                        options.paths = compilerOptions.paths;
-                    }
-                    result = this._reflectorHost =
-                        new ReflectorHost(function () { return _this.tsService.getProgram(); }, this.host, options);
+                if (!this._reflectorHost) {
+                    this._reflectorHost = new ReflectorHost(function () { return _this.tsService.getProgram(); }, this.host);
                 }
-                return result;
+                return this._reflectorHost;
             },
             enumerable: true,
             configurable: true
@@ -60342,18 +60323,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         }
         return result;
     }
-    function findTsConfig(fileName) {
-        var dir = path.dirname(fileName);
-        while (fs.existsSync(dir)) {
-            var candidate = path.join(dir, 'tsconfig.json');
-            if (fs.existsSync(candidate))
-                return candidate;
-            var parentDir = path.dirname(dir);
-            if (parentDir === dir)
-                break;
-            dir = parentDir;
-        }
-    }
     function spanOf$3(node) {
         return { start: node.getStart(), end: node.getEnd() };
     }
@@ -60534,7 +60503,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-next.2+7.sha-a95f860.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.2+8.sha-a91ab15.with-local-changes');
 
     /**
      * @license
