@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.2+26.sha-984d23f.with-local-changes
+ * @license Angular v9.0.0-next.2+21.sha-7a75f78.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18122,7 +18122,7 @@ define(['exports', 'path', 'typescript'], function (exports, path, ts) { 'use st
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.2+26.sha-984d23f.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.2+21.sha-7a75f78.with-local-changes');
 
     /**
      * @license
@@ -29393,13 +29393,9 @@ define(['exports', 'path', 'typescript'], function (exports, path, ts) { 'use st
         function LanguageServiceImpl(host) {
             this.host = host;
         }
-        LanguageServiceImpl.prototype.getTemplateReferences = function () {
-            this.host.getAnalyzedModules(); // same role as 'synchronizeHostData'
-            return this.host.getTemplateReferences();
-        };
+        LanguageServiceImpl.prototype.getTemplateReferences = function () { return this.host.getTemplateReferences(); };
         LanguageServiceImpl.prototype.getDiagnostics = function (fileName) {
             var e_1, _a;
-            var analyzedModules = this.host.getAnalyzedModules(); // same role as 'synchronizeHostData'
             var results = [];
             var templates = this.host.getTemplates(fileName);
             try {
@@ -29418,7 +29414,8 @@ define(['exports', 'path', 'typescript'], function (exports, path, ts) { 'use st
             }
             var declarations = this.host.getDeclarations(fileName);
             if (declarations && declarations.length) {
-                results.push.apply(results, __spread(getDeclarationDiagnostics(declarations, analyzedModules)));
+                var summary = this.host.getAnalyzedModules();
+                results.push.apply(results, __spread(getDeclarationDiagnostics(declarations, summary)));
             }
             if (!results.length) {
                 return [];
@@ -29427,7 +29424,6 @@ define(['exports', 'path', 'typescript'], function (exports, path, ts) { 'use st
             return uniqueBySpan(results).map(function (d) { return ngDiagnosticToTsDiagnostic(d, sourceFile); });
         };
         LanguageServiceImpl.prototype.getPipesAt = function (fileName, position) {
-            this.host.getAnalyzedModules(); // same role as 'synchronizeHostData'
             var templateInfo = this.host.getTemplateAstAtPosition(fileName, position);
             if (templateInfo) {
                 return templateInfo.pipes;
@@ -29435,21 +29431,18 @@ define(['exports', 'path', 'typescript'], function (exports, path, ts) { 'use st
             return [];
         };
         LanguageServiceImpl.prototype.getCompletionsAt = function (fileName, position) {
-            this.host.getAnalyzedModules(); // same role as 'synchronizeHostData'
             var templateInfo = this.host.getTemplateAstAtPosition(fileName, position);
             if (templateInfo) {
                 return getTemplateCompletions(templateInfo);
             }
         };
         LanguageServiceImpl.prototype.getDefinitionAt = function (fileName, position) {
-            this.host.getAnalyzedModules(); // same role as 'synchronizeHostData'
             var templateInfo = this.host.getTemplateAstAtPosition(fileName, position);
             if (templateInfo) {
                 return getDefinitionAndBoundSpan(templateInfo);
             }
         };
         LanguageServiceImpl.prototype.getHoverAt = function (fileName, position) {
-            this.host.getAnalyzedModules(); // same role as 'synchronizeHostData'
             var templateInfo = this.host.getTemplateAstAtPosition(fileName, position);
             if (templateInfo) {
                 return getHover(templateInfo);
@@ -38642,7 +38635,7 @@ define(['exports', 'path', 'typescript'], function (exports, path, ts) { 'use st
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-next.2+26.sha-984d23f.with-local-changes');
+    var VERSION$2 = new Version$1('9.0.0-next.2+21.sha-7a75f78.with-local-changes');
 
     /**
      * @license
@@ -45689,7 +45682,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this._config = config || DEFAULT_CONFIG;
         }
         SystemJsNgModuleLoader.prototype.load = function (path) {
-            var legacyOfflineMode = !ivyEnabled && this._compiler instanceof Compiler;
+            var legacyOfflineMode = this._compiler instanceof Compiler;
             return legacyOfflineMode ? this.loadFactory(path) : this.loadAndCompile(path);
         };
         SystemJsNgModuleLoader.prototype.loadAndCompile = function (path) {
@@ -48664,38 +48657,24 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * @publicApi
      */
     var TypeScriptServiceHost = /** @class */ (function () {
-        function TypeScriptServiceHost(host, tsLS) {
-            var _this = this;
+        function TypeScriptServiceHost(host, tsService) {
             this.host = host;
-            this.tsLS = tsLS;
-            this.staticSymbolCache = new StaticSymbolCache();
+            this.tsService = tsService;
+            this._staticSymbolCache = new StaticSymbolCache();
+            this.modulesOutOfDate = true;
             this.fileToComponent = new Map();
             this.collectedErrors = new Map();
             this.fileVersions = new Map();
-            this.lastProgram = undefined;
-            this.templateReferences = [];
-            this.analyzedModules = {
-                files: [],
-                ngModuleByPipeOrDirective: new Map(),
-                ngModules: [],
-            };
-            // Data members below are prefixed with '_' because they have corresponding
-            // getters. These properties get invalidated when caches are cleared.
-            this._resolver = null;
-            this._reflector = null;
-            this.summaryResolver = new AotSummaryResolver({
-                loadSummary: function (filePath) { return null; },
-                isSourceFile: function (sourceFilePath) { return true; },
-                toSummaryFileName: function (sourceFilePath) { return sourceFilePath; },
-                fromSummaryFileName: function (filePath) { return filePath; },
-            }, this.staticSymbolCache);
-            this.reflectorHost = new ReflectorHost(function () { return tsLS.getProgram(); }, host);
-            this.staticSymbolResolver = new StaticSymbolResolver(this.reflectorHost, this.staticSymbolCache, this.summaryResolver, function (e, filePath) { return _this.collectError(e, filePath); });
         }
         Object.defineProperty(TypeScriptServiceHost.prototype, "resolver", {
+            /**
+             * Angular LanguageServiceHost implementation
+             */
             get: function () {
                 var _this = this;
-                if (!this._resolver) {
+                this.validate();
+                var result = this._resolver;
+                if (!result) {
                     var moduleResolver = new NgModuleResolver(this.reflector);
                     var directiveResolver = new DirectiveResolver(this.reflector);
                     var pipeResolver = new PipeResolver(this.reflector);
@@ -48705,19 +48684,19 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                     var htmlParser = new DummyHtmlParser();
                     // This tracks the CompileConfig in codegen.ts. Currently these options
                     // are hard-coded.
-                    var config = new CompilerConfig({
-                        defaultEncapsulation: ViewEncapsulation$1.Emulated,
-                        useJit: false,
-                    });
+                    var config = new CompilerConfig({ defaultEncapsulation: ViewEncapsulation$1.Emulated, useJit: false });
                     var directiveNormalizer = new DirectiveNormalizer(resourceLoader, urlResolver, htmlParser, config);
-                    this._resolver = new CompileMetadataResolver(config, htmlParser, moduleResolver, directiveResolver, pipeResolver, new JitSummaryResolver(), elementSchemaRegistry, directiveNormalizer, new Console(), this.staticSymbolCache, this.reflector, function (error, type) { return _this.collectError(error, type && type.filePath); });
+                    result = this._resolver = new CompileMetadataResolver(config, htmlParser, moduleResolver, directiveResolver, pipeResolver, new JitSummaryResolver(), elementSchemaRegistry, directiveNormalizer, new Console(), this._staticSymbolCache, this.reflector, function (error, type) { return _this.collectError(error, type && type.filePath); });
                 }
-                return this._resolver;
+                return result;
             },
             enumerable: true,
             configurable: true
         });
-        TypeScriptServiceHost.prototype.getTemplateReferences = function () { return __spread(this.templateReferences); };
+        TypeScriptServiceHost.prototype.getTemplateReferences = function () {
+            this.ensureTemplateMap();
+            return this.templateReferences || [];
+        };
         /**
          * Get the Angular template in the file, if any. If TS file is provided then
          * return the inline template, otherwise return the external template.
@@ -48730,79 +48709,51 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 if (sourceFile) {
                     var node = this.findNode(sourceFile, position);
                     if (node) {
-                        return this.getSourceFromNode(fileName, node);
+                        return this.getSourceFromNode(fileName, this.host.getScriptVersion(sourceFile.fileName), node);
                     }
                 }
             }
             else {
+                this.ensureTemplateMap();
                 var componentSymbol = this.fileToComponent.get(fileName);
                 if (componentSymbol) {
-                    return this.getSourceFromType(fileName, componentSymbol);
+                    return this.getSourceFromType(fileName, this.host.getScriptVersion(fileName), componentSymbol);
                 }
             }
             return undefined;
         };
-        /**
-         * Checks whether the program has changed and returns all analyzed modules.
-         * If program has changed, invalidate all caches and update fileToComponent
-         * and templateReferences.
-         * In addition to returning information about NgModules, this method plays the
-         * same role as 'synchronizeHostData' in tsserver.
-         */
         TypeScriptServiceHost.prototype.getAnalyzedModules = function () {
-            var e_1, _a, e_2, _b;
-            if (this.upToDate()) {
-                return this.analyzedModules;
-            }
-            // Invalidate caches
-            this.templateReferences = [];
-            this.fileToComponent.clear();
-            this.collectedErrors.clear();
-            var analyzeHost = { isSourceFile: function (filePath) { return true; } };
-            var programFiles = this.program.getSourceFiles().map(function (sf) { return sf.fileName; });
-            this.analyzedModules =
-                analyzeNgModules(programFiles, analyzeHost, this.staticSymbolResolver, this.resolver);
-            // update template references and fileToComponent
-            var urlResolver = createOfflineCompileUrlResolver();
-            try {
-                for (var _c = __values(this.analyzedModules.ngModules), _d = _c.next(); !_d.done; _d = _c.next()) {
-                    var ngModule = _d.value;
-                    try {
-                        for (var _e = (e_2 = void 0, __values(ngModule.declaredDirectives)), _f = _e.next(); !_f.done; _f = _e.next()) {
-                            var directive = _f.value;
-                            var metadata = this.resolver.getNonNormalizedDirectiveMetadata(directive.reference).metadata;
-                            if (metadata.isComponent && metadata.template && metadata.template.templateUrl) {
-                                var templateName = urlResolver.resolve(this.reflector.componentModuleUrl(directive.reference), metadata.template.templateUrl);
-                                this.fileToComponent.set(templateName, directive.reference);
-                                this.templateReferences.push(templateName);
-                            }
-                        }
-                    }
-                    catch (e_2_1) { e_2 = { error: e_2_1 }; }
-                    finally {
-                        try {
-                            if (_f && !_f.done && (_b = _e.return)) _b.call(_e);
-                        }
-                        finally { if (e_2) throw e_2.error; }
-                    }
+            this.updateAnalyzedModules();
+            return this.ensureAnalyzedModules();
+        };
+        TypeScriptServiceHost.prototype.ensureAnalyzedModules = function () {
+            var analyzedModules = this.analyzedModules;
+            if (!analyzedModules) {
+                if (this.host.getScriptFileNames().length === 0) {
+                    analyzedModules = {
+                        files: [],
+                        ngModuleByPipeOrDirective: new Map(),
+                        ngModules: [],
+                    };
                 }
-            }
-            catch (e_1_1) { e_1 = { error: e_1_1 }; }
-            finally {
-                try {
-                    if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
+                else {
+                    var analyzeHost = { isSourceFile: function (filePath) { return true; } };
+                    var programFiles = this.program.getSourceFiles().map(function (sf) { return sf.fileName; });
+                    analyzedModules =
+                        analyzeNgModules(programFiles, analyzeHost, this.staticSymbolResolver, this.resolver);
                 }
-                finally { if (e_1) throw e_1.error; }
+                this.analyzedModules = analyzedModules;
             }
-            return this.analyzedModules;
+            return analyzedModules;
         };
         TypeScriptServiceHost.prototype.getTemplates = function (fileName) {
             var _this = this;
             var results = [];
             if (fileName.endsWith('.ts')) {
-                // Find every template string in the file
+                var version_1 = this.host.getScriptVersion(fileName);
+                // Find each template string in the file
                 var visit_1 = function (child) {
-                    var templateSource = _this.getSourceFromNode(fileName, child);
+                    var templateSource = _this.getSourceFromNode(fileName, version_1, child);
                     if (templateSource) {
                         results.push(templateSource);
                     }
@@ -48816,6 +48767,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 }
             }
             else {
+                this.ensureTemplateMap();
                 var componentSymbol = this.fileToComponent.get(fileName);
                 if (componentSymbol) {
                     var templateSource = this.getTemplateAt(fileName, 0);
@@ -48851,136 +48803,187 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             if (!fileName.endsWith('.ts')) {
                 throw new Error("Non-TS source file requested: " + fileName);
             }
-            return this.program.getSourceFile(fileName);
+            return this.tsService.getProgram().getSourceFile(fileName);
+        };
+        TypeScriptServiceHost.prototype.updateAnalyzedModules = function () {
+            this.validate();
+            if (this.modulesOutOfDate) {
+                this.analyzedModules = null;
+                this._reflector = null;
+                this.templateReferences = null;
+                this.fileToComponent.clear();
+                this.ensureAnalyzedModules();
+                this.modulesOutOfDate = false;
+            }
         };
         Object.defineProperty(TypeScriptServiceHost.prototype, "program", {
+            get: function () { return this.tsService.getProgram(); },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(TypeScriptServiceHost.prototype, "checker", {
             get: function () {
-                var program = this.tsLS.getProgram();
-                if (!program) {
-                    // Program is very very unlikely to be undefined.
-                    throw new Error('No program in language service!');
+                var checker = this._checker;
+                if (!checker) {
+                    checker = this._checker = this.program.getTypeChecker();
                 }
-                return program;
+                return checker;
             },
             enumerable: true,
             configurable: true
         });
-        /**
-         * Checks whether the program has changed, and invalidate caches if it has.
-         * Returns true if modules are up-to-date, false otherwise.
-         * This should only be called by getAnalyzedModules().
-         */
-        TypeScriptServiceHost.prototype.upToDate = function () {
-            var e_3, _a;
+        TypeScriptServiceHost.prototype.validate = function () {
+            var e_1, _a;
             var _this = this;
             var program = this.program;
-            if (this.lastProgram === program) {
-                return true;
-            }
-            this._resolver = null;
-            this._reflector = null;
-            // Invalidate file that have changed in the static symbol resolver
-            var seen = new Set();
-            try {
-                for (var _b = __values(program.getSourceFiles()), _c = _b.next(); !_c.done; _c = _b.next()) {
-                    var sourceFile = _c.value;
-                    var fileName = sourceFile.fileName;
-                    seen.add(fileName);
-                    var version = this.host.getScriptVersion(fileName);
-                    var lastVersion = this.fileVersions.get(fileName);
-                    if (version !== lastVersion) {
-                        this.fileVersions.set(fileName, version);
-                        this.staticSymbolResolver.invalidateFile(fileName);
+            if (this.lastProgram !== program) {
+                // Invalidate file that have changed in the static symbol resolver
+                var invalidateFile = function (fileName) {
+                    return _this._staticSymbolResolver.invalidateFile(fileName);
+                };
+                this.clearCaches();
+                var seen_1 = new Set();
+                try {
+                    for (var _b = __values(this.program.getSourceFiles()), _c = _b.next(); !_c.done; _c = _b.next()) {
+                        var sourceFile = _c.value;
+                        var fileName = sourceFile.fileName;
+                        seen_1.add(fileName);
+                        var version = this.host.getScriptVersion(fileName);
+                        var lastVersion = this.fileVersions.get(fileName);
+                        if (version != lastVersion) {
+                            this.fileVersions.set(fileName, version);
+                            if (this._staticSymbolResolver) {
+                                invalidateFile(fileName);
+                            }
+                        }
                     }
                 }
-            }
-            catch (e_3_1) { e_3 = { error: e_3_1 }; }
-            finally {
-                try {
-                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                catch (e_1_1) { e_1 = { error: e_1_1 }; }
+                finally {
+                    try {
+                        if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                    }
+                    finally { if (e_1) throw e_1.error; }
                 }
-                finally { if (e_3) throw e_3.error; }
+                // Remove file versions that are no longer in the file and invalidate them.
+                var missing = Array.from(this.fileVersions.keys()).filter(function (f) { return !seen_1.has(f); });
+                missing.forEach(function (f) { return _this.fileVersions.delete(f); });
+                if (this._staticSymbolResolver) {
+                    missing.forEach(invalidateFile);
+                }
+                this.lastProgram = program;
             }
-            // Remove file versions that are no longer in the file and invalidate them.
-            var missing = Array.from(this.fileVersions.keys()).filter(function (f) { return !seen.has(f); });
-            missing.forEach(function (f) {
-                _this.fileVersions.delete(f);
-                _this.staticSymbolResolver.invalidateFile(f);
-            });
-            this.lastProgram = program;
-            return false;
         };
-        /**
-         * Return the template source given the Class declaration node for the template.
-         * @param fileName Name of the file that contains the template. Could be TS or HTML.
-         * @param source Source text of the template.
-         * @param span Source span of the template.
-         * @param classSymbol Angular symbol for the class declaration.
-         * @param declaration TypeScript symbol for the class declaration.
-         * @param node If file is TS this is the template node, otherwise it's the class declaration node.
-         * @param sourceFile Source file of the class declaration.
-         */
-        TypeScriptServiceHost.prototype.getSourceFromDeclaration = function (fileName, source, span, classSymbol, declaration, node, sourceFile) {
+        TypeScriptServiceHost.prototype.clearCaches = function () {
+            this._checker = null;
+            this._resolver = null;
+            this.collectedErrors.clear();
+            this.modulesOutOfDate = true;
+        };
+        TypeScriptServiceHost.prototype.ensureTemplateMap = function () {
+            var e_2, _a, e_3, _b;
+            if (!this.templateReferences) {
+                var templateReference = [];
+                var ngModuleSummary = this.getAnalyzedModules();
+                var urlResolver = createOfflineCompileUrlResolver();
+                try {
+                    for (var _c = __values(ngModuleSummary.ngModules), _d = _c.next(); !_d.done; _d = _c.next()) {
+                        var module_1 = _d.value;
+                        try {
+                            for (var _e = (e_3 = void 0, __values(module_1.declaredDirectives)), _f = _e.next(); !_f.done; _f = _e.next()) {
+                                var directive = _f.value;
+                                var metadata = this.resolver.getNonNormalizedDirectiveMetadata(directive.reference).metadata;
+                                if (metadata.isComponent && metadata.template && metadata.template.templateUrl) {
+                                    var templateName = urlResolver.resolve(this.reflector.componentModuleUrl(directive.reference), metadata.template.templateUrl);
+                                    this.fileToComponent.set(templateName, directive.reference);
+                                    templateReference.push(templateName);
+                                }
+                            }
+                        }
+                        catch (e_3_1) { e_3 = { error: e_3_1 }; }
+                        finally {
+                            try {
+                                if (_f && !_f.done && (_b = _e.return)) _b.call(_e);
+                            }
+                            finally { if (e_3) throw e_3.error; }
+                        }
+                    }
+                }
+                catch (e_2_1) { e_2 = { error: e_2_1 }; }
+                finally {
+                    try {
+                        if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
+                    }
+                    finally { if (e_2) throw e_2.error; }
+                }
+                this.templateReferences = templateReference;
+            }
+        };
+        TypeScriptServiceHost.prototype.getSourceFromDeclaration = function (fileName, version, source, span, type, declaration, node, sourceFile) {
             var queryCache = undefined;
-            var self = this;
-            var program = this.program;
-            var typeChecker = program.getTypeChecker();
+            var t = this;
             if (declaration) {
                 return {
-                    version: this.host.getScriptVersion(fileName),
+                    version: version,
                     source: source,
                     span: span,
-                    type: classSymbol,
+                    type: type,
                     get members() {
-                        return getClassMembersFromDeclaration(program, typeChecker, sourceFile, declaration);
+                        return getClassMembersFromDeclaration(t.program, t.checker, sourceFile, declaration);
                     },
                     get query() {
                         if (!queryCache) {
-                            var templateInfo = self.getTemplateAst(this, fileName);
-                            var pipes_1 = templateInfo && templateInfo.pipes || [];
-                            queryCache = getSymbolQuery(program, typeChecker, sourceFile, function () { return getPipesTable(sourceFile, program, typeChecker, pipes_1); });
+                            var pipes_1 = [];
+                            var templateInfo = t.getTemplateAstAtPosition(fileName, node.getStart());
+                            if (templateInfo) {
+                                pipes_1 = templateInfo.pipes;
+                            }
+                            queryCache = getSymbolQuery(t.program, t.checker, sourceFile, function () { return getPipesTable(sourceFile, t.program, t.checker, pipes_1); });
                         }
                         return queryCache;
                     }
                 };
             }
         };
-        /**
-         * Return the TemplateSource for the inline template.
-         * @param fileName TS file that contains the template
-         * @param node Potential template node
-         */
-        TypeScriptServiceHost.prototype.getSourceFromNode = function (fileName, node) {
+        TypeScriptServiceHost.prototype.getSourceFromNode = function (fileName, version, node) {
+            var result = undefined;
             switch (node.kind) {
                 case ts.SyntaxKind.NoSubstitutionTemplateLiteral:
                 case ts.SyntaxKind.StringLiteral:
-                    var _a = __read(this.getTemplateClassDeclFromNode(node), 1), declaration = _a[0];
+                    var _a = __read(this.getTemplateClassDeclFromNode(node), 2), declaration = _a[0], decorator = _a[1];
                     if (declaration && declaration.name) {
                         var sourceFile = this.getSourceFile(fileName);
                         if (sourceFile) {
-                            return this.getSourceFromDeclaration(fileName, this.stringOf(node) || '', shrink(spanOf$3(node)), this.reflector.getStaticSymbol(sourceFile.fileName, declaration.name.text), declaration, node, sourceFile);
+                            return this.getSourceFromDeclaration(fileName, version, this.stringOf(node) || '', shrink(spanOf$3(node)), this.reflector.getStaticSymbol(sourceFile.fileName, declaration.name.text), declaration, node, sourceFile);
                         }
                     }
                     break;
             }
-            return;
+            return result;
         };
-        /**
-         * Return the TemplateSource for the template associated with the classSymbol.
-         * @param fileName Template file (HTML)
-         * @param classSymbol
-         */
-        TypeScriptServiceHost.prototype.getSourceFromType = function (fileName, classSymbol) {
-            var declaration = this.getTemplateClassFromStaticSymbol(classSymbol);
+        TypeScriptServiceHost.prototype.getSourceFromType = function (fileName, version, type) {
+            var result = undefined;
+            var declaration = this.getTemplateClassFromStaticSymbol(type);
             if (declaration) {
                 var snapshot = this.host.getScriptSnapshot(fileName);
                 if (snapshot) {
                     var source = snapshot.getText(0, snapshot.getLength());
-                    return this.getSourceFromDeclaration(fileName, source, { start: 0, end: source.length }, classSymbol, declaration, declaration, declaration.getSourceFile());
+                    result = this.getSourceFromDeclaration(fileName, version, source, { start: 0, end: source.length }, type, declaration, declaration, declaration.getSourceFile());
                 }
             }
-            return;
+            return result;
         };
+        Object.defineProperty(TypeScriptServiceHost.prototype, "reflectorHost", {
+            get: function () {
+                var _this = this;
+                if (!this._reflectorHost) {
+                    this._reflectorHost = new ReflectorHost(function () { return _this.tsService.getProgram(); }, this.host);
+                }
+                return this._reflectorHost;
+            },
+            enumerable: true,
+            configurable: true
+        });
         TypeScriptServiceHost.prototype.collectError = function (error, filePath) {
             if (filePath) {
                 var errors = this.collectedErrors.get(filePath);
@@ -48991,13 +48994,31 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 errors.push(error);
             }
         };
+        Object.defineProperty(TypeScriptServiceHost.prototype, "staticSymbolResolver", {
+            get: function () {
+                var _this = this;
+                var result = this._staticSymbolResolver;
+                if (!result) {
+                    this._summaryResolver = new AotSummaryResolver({
+                        loadSummary: function (filePath) { return null; },
+                        isSourceFile: function (sourceFilePath) { return true; },
+                        toSummaryFileName: function (sourceFilePath) { return sourceFilePath; },
+                        fromSummaryFileName: function (filePath) { return filePath; },
+                    }, this._staticSymbolCache);
+                    result = this._staticSymbolResolver = new StaticSymbolResolver(this.reflectorHost, this._staticSymbolCache, this._summaryResolver, function (e, filePath) { return _this.collectError(e, filePath); });
+                }
+                return result;
+            },
+            enumerable: true,
+            configurable: true
+        });
         Object.defineProperty(TypeScriptServiceHost.prototype, "reflector", {
             get: function () {
                 var _this = this;
                 var result = this._reflector;
                 if (!result) {
                     var ssr = this.staticSymbolResolver;
-                    result = this._reflector = new StaticReflector(this.summaryResolver, ssr, [], [], function (e, filePath) { return _this.collectError(e, filePath); });
+                    result = this._reflector = new StaticReflector(this._summaryResolver, ssr, [], [], function (e, filePath) { return _this.collectError(e, filePath); });
                 }
                 return result;
             },
@@ -49006,18 +49027,18 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         });
         TypeScriptServiceHost.prototype.getTemplateClassFromStaticSymbol = function (type) {
             var source = this.getSourceFile(type.filePath);
-            if (!source) {
-                return;
-            }
-            var declarationNode = ts.forEachChild(source, function (child) {
-                if (child.kind === ts.SyntaxKind.ClassDeclaration) {
-                    var classDeclaration = child;
-                    if (classDeclaration.name && classDeclaration.name.text === type.name) {
-                        return classDeclaration;
+            if (source) {
+                var declarationNode = ts.forEachChild(source, function (child) {
+                    if (child.kind === ts.SyntaxKind.ClassDeclaration) {
+                        var classDeclaration = child;
+                        if (classDeclaration.name != null && classDeclaration.name.text === type.name) {
+                            return classDeclaration;
+                        }
                     }
-                }
-            });
-            return declarationNode;
+                });
+                return declarationNode;
+            }
+            return undefined;
         };
         /**
          * Given a template string node, see if it is an Angular template string, and if so return the
@@ -49083,7 +49104,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                             if (classDeclaration.name) {
                                 var call = decorator.expression;
                                 var target = call.expression;
-                                var type = this.program.getTypeChecker().getTypeAtLocation(target);
+                                var type = this.checker.getTypeAtLocation(target);
                                 if (type) {
                                     var staticSymbol = this.reflector.getStaticSymbol(sourceFile.fileName, classDeclaration.name.text);
                                     try {
@@ -49172,11 +49193,12 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                     var config = new CompilerConfig();
                     var parser = new TemplateParser(config, this.resolver.getReflector(), expressionParser, new DomElementSchemaRegistry(), htmlParser, null, []);
                     var htmlResult = htmlParser.parse(template.source, '', { tokenizeExpansionForms: true });
+                    var analyzedModules = this.getAnalyzedModules();
                     var errors = undefined;
-                    var ngModule = this.analyzedModules.ngModuleByPipeOrDirective.get(template.type);
+                    var ngModule = analyzedModules.ngModuleByPipeOrDirective.get(template.type);
                     if (!ngModule) {
                         // Reported by the the declaration diagnostics.
-                        ngModule = findSuitableDefaultModule(this.analyzedModules);
+                        ngModule = findSuitableDefaultModule(analyzedModules);
                     }
                     if (ngModule) {
                         var directives = ngModule.transitiveModule.directives
@@ -49213,10 +49235,10 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         var resultSize = 0;
         try {
             for (var _b = __values(modules.ngModules), _c = _b.next(); !_c.done; _c = _b.next()) {
-                var module_1 = _c.value;
-                var moduleSize = module_1.transitiveModule.directives.length;
+                var module_2 = _c.value;
+                var moduleSize = module_2.transitiveModule.directives.length;
                 if (moduleSize > resultSize) {
-                    result = module_1;
+                    result = module_2;
                     resultSize = moduleSize;
                 }
             }
@@ -49271,7 +49293,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
     function getExternalFiles(project) {
         var host = projectHostMap.get(project);
         if (host) {
-            host.getAnalyzedModules();
             var externalFiles = host.getTemplateReferences();
             return externalFiles;
         }
@@ -49380,7 +49401,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-next.2+26.sha-984d23f.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.2+21.sha-7a75f78.with-local-changes');
 
     /**
      * @license

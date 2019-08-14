@@ -6,7 +6,7 @@
  * found in the LICENSE file at https://angular.io/license
  */
 /// <amd-module name="@angular/language-service/src/types" />
-import { CompileDirectiveMetadata, CompilePipeSummary, NgAnalyzedModules, StaticSymbol } from '@angular/compiler';
+import { CompileDirectiveMetadata, CompileMetadataResolver, CompilePipeSummary, NgAnalyzedModules, StaticSymbol } from '@angular/compiler';
 import { BuiltinType, DeclarationKind, Definition, PipeInfo, Pipes, Signature, Span, Symbol, SymbolDeclaration, SymbolQuery, SymbolTable } from '@angular/compiler-cli/src/language_services';
 import * as tss from 'typescript/lib/tsserverlibrary';
 import { AstResult, TemplateInfo } from './common';
@@ -144,6 +144,10 @@ export declare type Declarations = Declaration[];
  * @publicApi
  */
 export interface LanguageServiceHost {
+    /**
+     * The resolver to use to find compiler metadata.
+     */
+    readonly resolver: CompileMetadataResolver;
     /**
      * Returns the template information for templates in `fileName` at the given location. If
      * `fileName` refers to a template file then the `position` should be ignored. If the `position`
