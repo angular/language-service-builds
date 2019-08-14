@@ -7,5 +7,6 @@
  */
 /// <amd-module name="@angular/language-service/src/completions" />
 import { TemplateInfo } from './common';
-import { Completions } from './types';
+import { Completion, Completions } from './types';
 export declare function getTemplateCompletions(templateInfo: TemplateInfo): Completions | undefined;
+export declare function ngCompletionToTsCompletionEntry(completion: Completion): ts.CompletionEntry;
