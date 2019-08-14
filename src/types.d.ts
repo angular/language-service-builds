@@ -6,7 +6,7 @@
  * found in the LICENSE file at https://angular.io/license
  */
 /// <amd-module name="@angular/language-service/src/types" />
-import { CompileDirectiveMetadata, NgAnalyzedModules, StaticSymbol } from '@angular/compiler';
+import { CompileDirectiveMetadata, CompilePipeSummary, NgAnalyzedModules, StaticSymbol } from '@angular/compiler';
 import { BuiltinType, DeclarationKind, Definition, PipeInfo, Pipes, Signature, Span, Symbol, SymbolDeclaration, SymbolQuery, SymbolTable } from '@angular/compiler-cli/src/language_services';
 import * as tss from 'typescript/lib/tsserverlibrary';
 import { AstResult, TemplateInfo } from './common';
@@ -323,7 +323,7 @@ export interface LanguageService {
     /**
      * Returns a list of all the external templates referenced by the project.
      */
-    getTemplateReferences(): string[];
+    getTemplateReferences(): string[] | undefined;
     /**
      * Returns a list of all error for all templates in the given file.
      */
@@ -331,7 +331,7 @@ export interface LanguageService {
     /**
      * Return the completions at the given position.
      */
-    getCompletionsAt(fileName: string, position: number): tss.CompletionInfo | undefined;
+    getCompletionsAt(fileName: string, position: number): Completion[] | undefined;
     /**
      * Return the definition location for the symbol at position.
      */
@@ -340,4 +340,8 @@ export interface LanguageService {
      * Return the hover information for the symbol at position.
      */
     getHoverAt(fileName: string, position: number): tss.QuickInfo | undefined;
+    /**
+     * Return the pipes that are available at the given position.
+     */
+    getPipesAt(fileName: string, position: number): CompilePipeSummary[];
 }
