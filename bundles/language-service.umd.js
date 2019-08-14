@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.2+31.sha-5a562d8.with-local-changes
+ * @license Angular v9.0.0-next.2+30.sha-d6bbc4d.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18107,7 +18107,7 @@ define(['exports', 'path', 'typescript'], function (exports, path, ts) { 'use st
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.2+31.sha-5a562d8.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.2+30.sha-d6bbc4d.with-local-changes');
 
     /**
      * @license
@@ -28940,14 +28940,6 @@ define(['exports', 'path', 'typescript'], function (exports, path, ts) { 'use st
     function lowerName(name) {
         return name && (name[0].toLowerCase() + name.substr(1));
     }
-    function ngCompletionToTsCompletionEntry(completion) {
-        return {
-            name: completion.name,
-            kind: completion.kind,
-            kindModifiers: '',
-            sortText: completion.sort,
-        };
-    }
 
     /**
      * @license
@@ -29359,34 +29351,6 @@ define(['exports', 'path', 'typescript'], function (exports, path, ts) { 'use st
             source: 'ng',
         };
     }
-    function uniqueBySpan(elements) {
-        var e_3, _a;
-        var result = [];
-        var map = new Map();
-        try {
-            for (var elements_1 = __values(elements), elements_1_1 = elements_1.next(); !elements_1_1.done; elements_1_1 = elements_1.next()) {
-                var element = elements_1_1.value;
-                var span = element.span;
-                var set = map.get(span.start);
-                if (!set) {
-                    set = new Set();
-                    map.set(span.start, set);
-                }
-                if (!set.has(span.end)) {
-                    set.add(span.end);
-                    result.push(element);
-                }
-            }
-        }
-        catch (e_3_1) { e_3 = { error: e_3_1 }; }
-        finally {
-            try {
-                if (elements_1_1 && !elements_1_1.done && (_a = elements_1.return)) _a.call(elements_1);
-            }
-            finally { if (e_3) throw e_3.error; }
-        }
-        return result;
-    }
 
     /**
      * @license
@@ -29481,22 +29445,20 @@ define(['exports', 'path', 'typescript'], function (exports, path, ts) { 'use st
             var sourceFile = fileName.endsWith('.ts') ? this.host.getSourceFile(fileName) : undefined;
             return uniqueBySpan(results).map(function (d) { return ngDiagnosticToTsDiagnostic(d, sourceFile); });
         };
+        LanguageServiceImpl.prototype.getPipesAt = function (fileName, position) {
+            this.host.getAnalyzedModules(); // same role as 'synchronizeHostData'
+            var templateInfo = this.host.getTemplateAstAtPosition(fileName, position);
+            if (templateInfo) {
+                return templateInfo.pipes;
+            }
+            return [];
+        };
         LanguageServiceImpl.prototype.getCompletionsAt = function (fileName, position) {
             this.host.getAnalyzedModules(); // same role as 'synchronizeHostData'
             var templateInfo = this.host.getTemplateAstAtPosition(fileName, position);
-            if (!templateInfo) {
-                return;
+            if (templateInfo) {
+                return getTemplateCompletions(templateInfo);
             }
-            var results = getTemplateCompletions(templateInfo);
-            if (!results || !results.length) {
-                return;
-            }
-            return {
-                isGlobalCompletion: false,
-                isMemberCompletion: false,
-                isNewIdentifierLocation: false,
-                entries: results.map(ngCompletionToTsCompletionEntry),
-            };
         };
         LanguageServiceImpl.prototype.getDefinitionAt = function (fileName, position) {
             this.host.getAnalyzedModules(); // same role as 'synchronizeHostData'
@@ -29514,6 +29476,34 @@ define(['exports', 'path', 'typescript'], function (exports, path, ts) { 'use st
         };
         return LanguageServiceImpl;
     }());
+    function uniqueBySpan(elements) {
+        var e_2, _a;
+        var result = [];
+        var map = new Map();
+        try {
+            for (var elements_1 = __values(elements), elements_1_1 = elements_1.next(); !elements_1_1.done; elements_1_1 = elements_1.next()) {
+                var element = elements_1_1.value;
+                var span = element.span;
+                var set = map.get(span.start);
+                if (!set) {
+                    set = new Set();
+                    map.set(span.start, set);
+                }
+                if (!set.has(span.end)) {
+                    set.add(span.end);
+                    result.push(element);
+                }
+            }
+        }
+        catch (e_2_1) { e_2 = { error: e_2_1 }; }
+        finally {
+            try {
+                if (elements_1_1 && !elements_1_1.done && (_a = elements_1.return)) _a.call(elements_1);
+            }
+            finally { if (e_2) throw e_2.error; }
+        }
+        return result;
+    }
 
     /**
      * @license
@@ -46843,7 +46833,7 @@ define(['exports', 'path', 'typescript'], function (exports, path, ts) { 'use st
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-next.2+31.sha-5a562d8.with-local-changes');
+    var VERSION$2 = new Version$1('9.0.0-next.2+30.sha-d6bbc4d.with-local-changes');
 
     /**
      * @license
@@ -60100,12 +60090,12 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         Object.defineProperty(TypeScriptServiceHost.prototype, "reflector", {
             get: function () {
                 var _this = this;
-                if (!this._reflector) {
-                    this._reflector = new StaticReflector(this.summaryResolver, this.staticSymbolResolver, [], // knownMetadataClasses
-                    [], // knownMetadataFunctions
-                    function (e, filePath) { return _this.collectError(e, filePath); });
+                var result = this._reflector;
+                if (!result) {
+                    var ssr = this.staticSymbolResolver;
+                    result = this._reflector = new StaticReflector(this.summaryResolver, ssr, [], [], function (e, filePath) { return _this.collectError(e, filePath); });
                 }
-                return this._reflector;
+                return result;
             },
             enumerable: true,
             configurable: true
@@ -60247,69 +60237,68 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         };
         TypeScriptServiceHost.prototype.getTemplateAstAtPosition = function (fileName, position) {
             var template = this.getTemplateAt(fileName, position);
-            if (!template) {
-                return;
+            if (template) {
+                var astResult = this.getTemplateAst(template, fileName);
+                if (astResult && astResult.htmlAst && astResult.templateAst && astResult.directive &&
+                    astResult.directives && astResult.pipes && astResult.expressionParser)
+                    return {
+                        position: position,
+                        fileName: fileName,
+                        template: template,
+                        htmlAst: astResult.htmlAst,
+                        directive: astResult.directive,
+                        directives: astResult.directives,
+                        pipes: astResult.pipes,
+                        templateAst: astResult.templateAst,
+                        expressionParser: astResult.expressionParser
+                    };
             }
-            var astResult = this.getTemplateAst(template, fileName);
-            if (astResult && astResult.htmlAst && astResult.templateAst && astResult.directive &&
-                astResult.directives && astResult.pipes && astResult.expressionParser) {
-                return {
-                    position: position,
-                    fileName: fileName,
-                    template: template,
-                    htmlAst: astResult.htmlAst,
-                    directive: astResult.directive,
-                    directives: astResult.directives,
-                    pipes: astResult.pipes,
-                    templateAst: astResult.templateAst,
-                    expressionParser: astResult.expressionParser
-                };
-            }
+            return undefined;
         };
         TypeScriptServiceHost.prototype.getTemplateAst = function (template, contextFile) {
             var _this = this;
+            var result = undefined;
             try {
                 var resolvedMetadata = this.resolver.getNonNormalizedDirectiveMetadata(template.type);
                 var metadata = resolvedMetadata && resolvedMetadata.metadata;
-                if (!metadata) {
-                    return {};
+                if (metadata) {
+                    var rawHtmlParser = new HtmlParser();
+                    var htmlParser = new I18NHtmlParser(rawHtmlParser);
+                    var expressionParser = new Parser$1(new Lexer());
+                    var config = new CompilerConfig();
+                    var parser = new TemplateParser(config, this.resolver.getReflector(), expressionParser, new DomElementSchemaRegistry(), htmlParser, null, []);
+                    var htmlResult = htmlParser.parse(template.source, '', { tokenizeExpansionForms: true });
+                    var errors = undefined;
+                    var ngModule = this.analyzedModules.ngModuleByPipeOrDirective.get(template.type);
+                    if (!ngModule) {
+                        // Reported by the the declaration diagnostics.
+                        ngModule = findSuitableDefaultModule(this.analyzedModules);
+                    }
+                    if (ngModule) {
+                        var directives = ngModule.transitiveModule.directives
+                            .map(function (d) { return _this.resolver.getNonNormalizedDirectiveMetadata(d.reference); })
+                            .filter(function (d) { return d; })
+                            .map(function (d) { return d.metadata.toSummary(); });
+                        var pipes = ngModule.transitiveModule.pipes.map(function (p) { return _this.resolver.getOrLoadPipeMetadata(p.reference).toSummary(); });
+                        var schemas = ngModule.schemas;
+                        var parseResult = parser.tryParseHtml(htmlResult, metadata, directives, pipes, schemas);
+                        result = {
+                            htmlAst: htmlResult.rootNodes,
+                            templateAst: parseResult.templateAst,
+                            directive: metadata, directives: directives, pipes: pipes,
+                            parseErrors: parseResult.errors, expressionParser: expressionParser, errors: errors
+                        };
+                    }
                 }
-                var rawHtmlParser = new HtmlParser();
-                var htmlParser = new I18NHtmlParser(rawHtmlParser);
-                var expressionParser = new Parser$1(new Lexer());
-                var config = new CompilerConfig();
-                var parser = new TemplateParser(config, this.resolver.getReflector(), expressionParser, new DomElementSchemaRegistry(), htmlParser, null, []);
-                var htmlResult = htmlParser.parse(template.source, '', { tokenizeExpansionForms: true });
-                var errors = undefined;
-                var ngModule = this.analyzedModules.ngModuleByPipeOrDirective.get(template.type) ||
-                    // Reported by the the declaration diagnostics.
-                    findSuitableDefaultModule(this.analyzedModules);
-                if (!ngModule) {
-                    return {};
-                }
-                var directives = ngModule.transitiveModule.directives
-                    .map(function (d) { return _this.resolver.getNonNormalizedDirectiveMetadata(d.reference); })
-                    .filter(function (d) { return d; })
-                    .map(function (d) { return d.metadata.toSummary(); });
-                var pipes = ngModule.transitiveModule.pipes.map(function (p) { return _this.resolver.getOrLoadPipeMetadata(p.reference).toSummary(); });
-                var schemas = ngModule.schemas;
-                var parseResult = parser.tryParseHtml(htmlResult, metadata, directives, pipes, schemas);
-                return {
-                    htmlAst: htmlResult.rootNodes,
-                    templateAst: parseResult.templateAst,
-                    directive: metadata, directives: directives, pipes: pipes,
-                    parseErrors: parseResult.errors, expressionParser: expressionParser, errors: errors
-                };
             }
             catch (e) {
-                var span = e.fileName === contextFile && template.query.getSpanAt(e.line, e.column) || template.span;
-                return {
-                    errors: [{
-                            kind: DiagnosticKind$1.Error,
-                            message: e.message, span: span,
-                        }],
-                };
+                var span = template.span;
+                if (e.fileName == contextFile) {
+                    span = template.query.getSpanAt(e.line, e.column) || span;
+                }
+                result = { errors: [{ kind: DiagnosticKind$1.Error, message: e.message, span: span }] };
             }
+            return result || {};
         };
         TypeScriptServiceHost.missingTemplate = [undefined, undefined];
         return TypeScriptServiceHost;
@@ -60383,6 +60372,15 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             return externalFiles;
         }
     }
+    function completionToEntry(c) {
+        return {
+            // TODO: remove any and fix type error.
+            kind: c.kind,
+            name: c.name,
+            sortText: c.sort,
+            kindModifiers: ''
+        };
+    }
     function create(info) {
         var project = info.project, tsLS = info.languageService, tsLSHost = info.languageServiceHost, config = info.config;
         // This plugin could operate under two different modes:
@@ -60400,13 +60398,22 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         projectHostMap.set(project, ngLSHost);
         function getCompletionsAtPosition(fileName, position, options) {
             if (!angularOnly) {
-                var results = tsLS.getCompletionsAtPosition(fileName, position, options);
-                if (results && results.entries.length) {
+                var results_1 = tsLS.getCompletionsAtPosition(fileName, position, options);
+                if (results_1 && results_1.entries.length) {
                     // If TS could answer the query, then return results immediately.
-                    return results;
+                    return results_1;
                 }
             }
-            return ngLS.getCompletionsAt(fileName, position);
+            var results = ngLS.getCompletionsAt(fileName, position);
+            if (!results || !results.length) {
+                return;
+            }
+            return {
+                isGlobalCompletion: false,
+                isMemberCompletion: false,
+                isNewIdentifierLocation: false,
+                entries: results.map(completionToEntry),
+            };
         }
         function getQuickInfoAtPosition(fileName, position) {
             if (!angularOnly) {
@@ -60469,7 +60476,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version$1('9.0.0-next.2+31.sha-5a562d8.with-local-changes');
+    var VERSION$3 = new Version$1('9.0.0-next.2+30.sha-d6bbc4d.with-local-changes');
 
     /**
      * @license
