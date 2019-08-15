@@ -56,13 +56,6 @@ export declare class TypeScriptServiceHost implements LanguageServiceHost {
     private readonly resolver;
     getTemplateReferences(): string[];
     /**
-     * Get the Angular template in the file, if any. If TS file is provided then
-     * return the inline template, otherwise return the external template.
-     * @param fileName Either TS or HTML file
-     * @param position Only used if file is TS
-     */
-    getTemplateAt(fileName: string, position: number): TemplateSource | undefined;
-    /**
      * Checks whether the program has changed and returns all analyzed modules.
      * If program has changed, invalidate all caches and update fileToComponent
      * and templateReferences.
@@ -70,10 +63,14 @@ export declare class TypeScriptServiceHost implements LanguageServiceHost {
      * same role as 'synchronizeHostData' in tsserver.
      */
     getAnalyzedModules(): NgAnalyzedModules;
+    /**
+     * Find all templates in the specified `file`.
+     * @param fileName TS or HTML file
+     */
     getTemplates(fileName: string): TemplateSource[];
     getDeclarations(fileName: string): Declarations;
     getSourceFile(fileName: string): ts.SourceFile | undefined;
-    private readonly program;
+    readonly program: ts.Program;
     /**
      * Checks whether the program has changed, and invalidate caches if it has.
      * Returns true if modules are up-to-date, false otherwise.
@@ -81,41 +78,34 @@ export declare class TypeScriptServiceHost implements LanguageServiceHost {
      */
     private upToDate;
     /**
-     * Return the template source given the Class declaration node for the template.
-     * @param fileName Name of the file that contains the template. Could be TS or HTML.
-     * @param source Source text of the template.
-     * @param span Source span of the template.
-     * @param classSymbol Angular symbol for the class declaration.
-     * @param declaration TypeScript symbol for the class declaration.
-     * @param node If file is TS this is the template node, otherwise it's the class declaration node.
-     * @param sourceFile Source file of the class declaration.
-     */
-    private getSourceFromDeclaration;
-    /**
-     * Return the TemplateSource for the inline template.
-     * @param fileName TS file that contains the template
+     * Return the TemplateSource if `node` is a template node.
+     *
+     * For example,
+     *
+     * @Component({
+     *   template: '<div></div>' <-- template node
+     * })
+     * class AppComponent {}
+     *           ^---- class declaration node
+     *
+     *
      * @param node Potential template node
      */
-    private getSourceFromNode;
+    private getInternalTemplate;
     /**
-     * Return the TemplateSource for the template associated with the classSymbol.
-     * @param fileName Template file (HTML)
-     * @param classSymbol
+     * Return the external template for `fileName`.
+     * @param fileName HTML file
      */
-    private getSourceFromType;
+    private getExternalTemplate;
     private collectError;
     private readonly reflector;
-    private getTemplateClassFromStaticSymbol;
-    private static missingTemplate;
-    /**
-     * Given a template string node, see if it is an Angular template string, and if so return the
-     * containing class.
-     */
-    private getTemplateClassDeclFromNode;
     private getCollectedErrors;
     private getDeclarationFromNode;
-    private stringOf;
-    private findNode;
+    /**
+     * Return the parsed template for the template at the specified `position`.
+     * @param fileName TS or HTML file
+     * @param position Position of the template in the TS file, otherwise ignored.
+     */
     getTemplateAstAtPosition(fileName: string, position: number): TemplateInfo | undefined;
-    getTemplateAst(template: TemplateSource, contextFile: string): AstResult;
+    getTemplateAst(template: TemplateSource): AstResult;
 }
