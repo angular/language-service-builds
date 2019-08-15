@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.2+38.sha-40b2874.with-local-changes
+ * @license Angular v9.0.0-next.2+40.sha-3cf2005.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18603,7 +18603,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.2+38.sha-40b2874.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.2+40.sha-3cf2005.with-local-changes');
 
     /**
      * @license
@@ -34440,7 +34440,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
     }
     function ɵɵinject(token, flags) {
         if (flags === void 0) { flags = InjectFlags.Default; }
-        return (_injectImplementation || injectInjectorOnly)(token, flags);
+        return (_injectImplementation || injectInjectorOnly)(resolveForwardRef$1(token), flags);
     }
     /**
      * Injects `root` tokens in limp mode.
@@ -34506,7 +34506,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
                 // Intentionally left behind: With dev tools open the debugger will stop here. There is no
                 // reason why correctly written application should cause this exception.
                 // TODO(misko): uncomment the next line once `ngDevMode` works with closure.
-                // if(ngDevMode) debugger;
+                // if (ngDevMode) debugger;
                 var error = new Error("NullInjectorError: No provider for " + stringify$1(token) + "!");
                 error.name = 'NullInjectorError';
                 throw error;
@@ -37527,9 +37527,75 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var BRAND = '__SANITIZER_TRUSTED_BRAND__';
-    function allowSanitizationBypass(value, type) {
-        return (value instanceof String && value[BRAND] === type);
+    var SafeValueImpl = /** @class */ (function () {
+        function SafeValueImpl(changingThisBreaksApplicationSecurity) {
+            this.changingThisBreaksApplicationSecurity = changingThisBreaksApplicationSecurity;
+            // empty
+        }
+        SafeValueImpl.prototype.toString = function () {
+            return "SafeValue must use [property]=binding: " + this.changingThisBreaksApplicationSecurity +
+                " (see http://g.co/ng/security#xss)";
+        };
+        return SafeValueImpl;
+    }());
+    var SafeHtmlImpl = /** @class */ (function (_super) {
+        __extends(SafeHtmlImpl, _super);
+        function SafeHtmlImpl() {
+            return _super !== null && _super.apply(this, arguments) || this;
+        }
+        SafeHtmlImpl.prototype.getTypeName = function () { return "HTML" /* Html */; };
+        return SafeHtmlImpl;
+    }(SafeValueImpl));
+    var SafeStyleImpl = /** @class */ (function (_super) {
+        __extends(SafeStyleImpl, _super);
+        function SafeStyleImpl() {
+            return _super !== null && _super.apply(this, arguments) || this;
+        }
+        SafeStyleImpl.prototype.getTypeName = function () { return "Style" /* Style */; };
+        return SafeStyleImpl;
+    }(SafeValueImpl));
+    var SafeScriptImpl = /** @class */ (function (_super) {
+        __extends(SafeScriptImpl, _super);
+        function SafeScriptImpl() {
+            return _super !== null && _super.apply(this, arguments) || this;
+        }
+        SafeScriptImpl.prototype.getTypeName = function () { return "Script" /* Script */; };
+        return SafeScriptImpl;
+    }(SafeValueImpl));
+    var SafeUrlImpl = /** @class */ (function (_super) {
+        __extends(SafeUrlImpl, _super);
+        function SafeUrlImpl() {
+            return _super !== null && _super.apply(this, arguments) || this;
+        }
+        SafeUrlImpl.prototype.getTypeName = function () { return "URL" /* Url */; };
+        return SafeUrlImpl;
+    }(SafeValueImpl));
+    var SafeResourceUrlImpl = /** @class */ (function (_super) {
+        __extends(SafeResourceUrlImpl, _super);
+        function SafeResourceUrlImpl() {
+            return _super !== null && _super.apply(this, arguments) || this;
+        }
+        SafeResourceUrlImpl.prototype.getTypeName = function () { return "ResourceURL" /* ResourceUrl */; };
+        return SafeResourceUrlImpl;
+    }(SafeValueImpl));
+    function unwrapSafeValue(value) {
+        return value instanceof SafeValueImpl ?
+            value.changingThisBreaksApplicationSecurity :
+            '';
+    }
+    function allowSanitizationBypassAndThrow(value, type) {
+        var actualType = getSanitizationBypassType(value);
+        if (actualType != null && actualType !== type) {
+            // Allow ResourceURLs in URL contexts, they are strictly more trusted.
+            if (actualType === "ResourceURL" /* ResourceUrl */ && type === "URL" /* Url */)
+                return true;
+            throw new Error("Required a safe " + type + ", got a " + actualType + " (see http://g.co/ng/security#xss)");
+        }
+        return actualType === type;
+    }
+    function getSanitizationBypassType(value) {
+        return value instanceof SafeValueImpl && value.getTypeName() ||
+            null;
     }
 
     /**
@@ -38067,16 +38133,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         SecurityContext[SecurityContext["URL"] = 4] = "URL";
         SecurityContext[SecurityContext["RESOURCE_URL"] = 5] = "RESOURCE_URL";
     })(SecurityContext$1 || (SecurityContext$1 = {}));
-    /**
-     * Sanitizer is used by the views to sanitize potentially dangerous values.
-     *
-     * @publicApi
-     */
-    var Sanitizer = /** @class */ (function () {
-        function Sanitizer() {
-        }
-        return Sanitizer;
-    }());
 
     /**
      * @license
@@ -38197,8 +38253,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         if (sanitizer) {
             return sanitizer.sanitize(SecurityContext$1.HTML, unsafeHtml) || '';
         }
-        if (allowSanitizationBypass(unsafeHtml, "Html" /* Html */)) {
-            return unsafeHtml.toString();
+        if (allowSanitizationBypassAndThrow(unsafeHtml, "HTML" /* Html */)) {
+            return unwrapSafeValue(unsafeHtml);
         }
         return _sanitizeHtml(document, renderStringify(unsafeHtml));
     }
@@ -38222,8 +38278,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         if (sanitizer) {
             return sanitizer.sanitize(SecurityContext$1.STYLE, unsafeStyle) || '';
         }
-        if (allowSanitizationBypass(unsafeStyle, "Style" /* Style */)) {
-            return unsafeStyle.toString();
+        if (allowSanitizationBypassAndThrow(unsafeStyle, "Style" /* Style */)) {
+            return unwrapSafeValue(unsafeStyle);
         }
         return _sanitizeStyle(renderStringify(unsafeStyle));
     }
@@ -38248,8 +38304,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         if (sanitizer) {
             return sanitizer.sanitize(SecurityContext$1.URL, unsafeUrl) || '';
         }
-        if (allowSanitizationBypass(unsafeUrl, "Url" /* Url */)) {
-            return unsafeUrl.toString();
+        if (allowSanitizationBypassAndThrow(unsafeUrl, "URL" /* Url */)) {
+            return unwrapSafeValue(unsafeUrl);
         }
         return _sanitizeUrl(renderStringify(unsafeUrl));
     }
@@ -38269,8 +38325,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         if (sanitizer) {
             return sanitizer.sanitize(SecurityContext$1.RESOURCE_URL, unsafeResourceUrl) || '';
         }
-        if (allowSanitizationBypass(unsafeResourceUrl, "ResourceUrl" /* ResourceUrl */)) {
-            return unsafeResourceUrl.toString();
+        if (allowSanitizationBypassAndThrow(unsafeResourceUrl, "ResourceURL" /* ResourceUrl */)) {
+            return unwrapSafeValue(unsafeResourceUrl);
         }
         throw new Error('unsafe value used in a resource URL context (see http://g.co/ng/security#xss)');
     }
@@ -38291,8 +38347,8 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         if (sanitizer) {
             return sanitizer.sanitize(SecurityContext$1.SCRIPT, unsafeScript) || '';
         }
-        if (allowSanitizationBypass(unsafeScript, "Script" /* Script */)) {
-            return unsafeScript.toString();
+        if (allowSanitizationBypassAndThrow(unsafeScript, "Script" /* Script */)) {
+            return unwrapSafeValue(unsafeScript);
         }
         throw new Error('unsafe value used in a script context');
     }
@@ -47724,7 +47780,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
                 resolvedValue = renderStringify(value) + suffix;
             }
             else {
-                // sanitization happens by dealing with a String value
+                // sanitization happens by dealing with a string value
                 // this means that the string value will be passed through
                 // into the style rendering later (which is where the value
                 // will be sanitized before it is applied)
@@ -51141,6 +51197,30 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * found in the LICENSE file at https://angular.io/license
      */
     /**
+     * Sanitizer is used by the views to sanitize potentially dangerous values.
+     *
+     * @publicApi
+     */
+    var Sanitizer = /** @class */ (function () {
+        function Sanitizer() {
+        }
+        /** @nocollapse */
+        Sanitizer.ngInjectableDef = ɵɵdefineInjectable({
+            token: Sanitizer,
+            providedIn: 'root',
+            factory: function () { return null; },
+        });
+        return Sanitizer;
+    }());
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
      * @description Represents the version of Angular
      *
      * @publicApi
@@ -51157,7 +51237,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-next.2+38.sha-40b2874.with-local-changes');
+    var VERSION$2 = new Version$1('9.0.0-next.2+40.sha-3cf2005.with-local-changes');
 
     /**
      * @license
@@ -61125,7 +61205,8 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this._config = config || DEFAULT_CONFIG;
         }
         SystemJsNgModuleLoader.prototype.load = function (path) {
-            return this.loadAndCompile(path);
+            var legacyOfflineMode = !ivyEnabled && this._compiler instanceof Compiler;
+            return legacyOfflineMode ? this.loadFactory(path) : this.loadAndCompile(path);
         };
         SystemJsNgModuleLoader.prototype.loadAndCompile = function (path) {
             var _this = this;
@@ -64349,7 +64430,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version('9.0.0-next.2+38.sha-40b2874.with-local-changes');
+    var VERSION$3 = new Version('9.0.0-next.2+40.sha-3cf2005.with-local-changes');
 
     /**
      * @license
@@ -81000,7 +81081,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.2+38.sha-40b2874.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.2+40.sha-3cf2005.with-local-changes');
 
     /**
      * @license
