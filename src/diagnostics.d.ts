@@ -9,13 +9,24 @@
 import { NgAnalyzedModules } from '@angular/compiler';
 import * as ts from 'typescript';
 import { AstResult } from './common';
-import { Declarations, Diagnostic, Diagnostics, Span, TemplateSource } from './types';
-export interface AstProvider {
-    getTemplateAst(template: TemplateSource, fileName: string): AstResult;
-}
-export declare function getTemplateDiagnostics(template: TemplateSource, ast: AstResult): Diagnostics;
-export declare function getDeclarationDiagnostics(declarations: Declarations, modules: NgAnalyzedModules): Diagnostics;
-export declare function ngDiagnosticToTsDiagnostic(d: Diagnostic, file: ts.SourceFile | undefined): ts.Diagnostic;
+import * as ng from './types';
+/**
+ * Return diagnostic information for the parsed AST of the template.
+ * @param template source of the template and class information
+ * @param ast contains HTML and template AST
+ */
+export declare function getTemplateDiagnostics(template: ng.TemplateSource, ast: AstResult): ng.Diagnostic[];
+export declare function getDeclarationDiagnostics(declarations: ng.Declaration[], modules: NgAnalyzedModules): ng.Diagnostic[];
+/**
+ * Convert ng.Diagnostic to ts.Diagnostic.
+ * @param d diagnostic
+ * @param file
+ */
+export declare function ngDiagnosticToTsDiagnostic(d: ng.Diagnostic, file: ts.SourceFile | undefined): ts.Diagnostic;
+/**
+ * Return elements filtered by unique span.
+ * @param elements
+ */
 export declare function uniqueBySpan<T extends {
-    span: Span;
+    span: ng.Span;
 }>(elements: T[]): T[];

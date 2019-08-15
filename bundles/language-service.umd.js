@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.2+43.sha-6a0b1d5.with-local-changes
+ * @license Angular v9.0.0-next.2+44.sha-69ce1c2.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18618,7 +18618,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.2+43.sha-6a0b1d5.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.2+44.sha-69ce1c2.with-local-changes');
 
     /**
      * @license
@@ -33564,6 +33564,11 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    /**
+     * Return diagnostic information for the parsed AST of the template.
+     * @param template source of the template and class information
+     * @param ast contains HTML and template AST
+     */
     function getTemplateDiagnostics(template, ast) {
         var results = [];
         if (ast.parseErrors && ast.parseErrors.length) {
@@ -33576,14 +33581,13 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
             })));
         }
         else if (ast.templateAst && ast.htmlAst) {
-            var info = {
+            var expressionDiagnostics = getTemplateExpressionDiagnostics({
                 templateAst: ast.templateAst,
                 htmlAst: ast.htmlAst,
                 offset: template.span.start,
                 query: template.query,
                 members: template.members,
-            };
-            var expressionDiagnostics = getTemplateExpressionDiagnostics(info);
+            });
             results.push.apply(results, __spread(expressionDiagnostics));
         }
         if (ast.errors) {
@@ -33597,99 +33601,146 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         }
         return results;
     }
+    /**
+     * Generate an error message that indicates a directive is not part of any
+     * NgModule.
+     * @param name class name
+     * @param isComponent true if directive is an Angular Component
+     */
+    function missingDirective(name, isComponent) {
+        var type = isComponent ? 'Component' : 'Directive';
+        return type + " '" + name + "' is not included in a module and will not be " +
+            'available inside a template. Consider adding it to a NgModule declaration.';
+    }
     function getDeclarationDiagnostics(declarations, modules) {
-        var e_1, _a;
-        var results = [];
-        var directives = undefined;
-        var _loop_1 = function (declaration) {
-            var e_2, _a;
-            var report = function (message, span) {
-                results.push({
-                    kind: DiagnosticKind$1.Error,
-                    span: span || declaration.declarationSpan, message: message
-                });
-            };
-            try {
-                for (var _b = (e_2 = void 0, __values(declaration.errors)), _c = _b.next(); !_c.done; _c = _b.next()) {
-                    var error = _c.value;
-                    report(error.message, error.span);
-                }
-            }
-            catch (e_2_1) { e_2 = { error: e_2_1 }; }
-            finally {
-                try {
-                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-                }
-                finally { if (e_2) throw e_2.error; }
-            }
-            if (declaration.metadata) {
-                if (declaration.metadata.isComponent) {
-                    if (!modules.ngModuleByPipeOrDirective.has(declaration.type)) {
-                        report("Component '" + declaration.type.name + "' is not included in a module and will not be available inside a template. Consider adding it to a NgModule declaration");
-                    }
-                    var _d = declaration.metadata.template, template = _d.template, templateUrl = _d.templateUrl;
-                    if (template === null && !templateUrl) {
-                        report("Component '" + declaration.type.name + "' must have a template or templateUrl");
-                    }
-                    else if (template && templateUrl) {
-                        report("Component '" + declaration.type.name + "' must not have both template and templateUrl");
-                    }
-                }
-                else {
-                    if (!directives) {
-                        directives = new Set();
-                        modules.ngModules.forEach(function (module) {
-                            module.declaredDirectives.forEach(function (directive) { directives.add(directive.reference); });
-                        });
-                    }
-                    if (!directives.has(declaration.type)) {
-                        report("Directive '" + declaration.type.name + "' is not included in a module and will not be available inside a template. Consider adding it to a NgModule declaration");
-                    }
-                }
-            }
-        };
+        var e_1, _a, e_2, _b, e_3, _c, e_4, _d;
+        var directives = new Set();
         try {
-            for (var declarations_1 = __values(declarations), declarations_1_1 = declarations_1.next(); !declarations_1_1.done; declarations_1_1 = declarations_1.next()) {
-                var declaration = declarations_1_1.value;
-                _loop_1(declaration);
+            for (var _e = __values(modules.ngModules), _f = _e.next(); !_f.done; _f = _e.next()) {
+                var ngModule = _f.value;
+                try {
+                    for (var _g = (e_2 = void 0, __values(ngModule.declaredDirectives)), _h = _g.next(); !_h.done; _h = _g.next()) {
+                        var directive = _h.value;
+                        directives.add(directive.reference);
+                    }
+                }
+                catch (e_2_1) { e_2 = { error: e_2_1 }; }
+                finally {
+                    try {
+                        if (_h && !_h.done && (_b = _g.return)) _b.call(_g);
+                    }
+                    finally { if (e_2) throw e_2.error; }
+                }
             }
         }
         catch (e_1_1) { e_1 = { error: e_1_1 }; }
         finally {
             try {
-                if (declarations_1_1 && !declarations_1_1.done && (_a = declarations_1.return)) _a.call(declarations_1);
+                if (_f && !_f.done && (_a = _e.return)) _a.call(_e);
             }
             finally { if (e_1) throw e_1.error; }
         }
+        var results = [];
+        try {
+            for (var declarations_1 = __values(declarations), declarations_1_1 = declarations_1.next(); !declarations_1_1.done; declarations_1_1 = declarations_1.next()) {
+                var declaration = declarations_1_1.value;
+                var errors = declaration.errors, metadata = declaration.metadata, type = declaration.type, declarationSpan = declaration.declarationSpan;
+                try {
+                    for (var errors_1 = (e_4 = void 0, __values(errors)), errors_1_1 = errors_1.next(); !errors_1_1.done; errors_1_1 = errors_1.next()) {
+                        var error = errors_1_1.value;
+                        results.push({
+                            kind: DiagnosticKind$1.Error,
+                            message: error.message,
+                            span: error.span,
+                        });
+                    }
+                }
+                catch (e_4_1) { e_4 = { error: e_4_1 }; }
+                finally {
+                    try {
+                        if (errors_1_1 && !errors_1_1.done && (_d = errors_1.return)) _d.call(errors_1);
+                    }
+                    finally { if (e_4) throw e_4.error; }
+                }
+                if (!metadata) {
+                    continue; // declaration is not an Angular directive
+                }
+                if (metadata.isComponent) {
+                    if (!modules.ngModuleByPipeOrDirective.has(declaration.type)) {
+                        results.push({
+                            kind: DiagnosticKind$1.Error,
+                            message: missingDirective(type.name, metadata.isComponent),
+                            span: declarationSpan,
+                        });
+                    }
+                    var _j = metadata.template, template = _j.template, templateUrl = _j.templateUrl;
+                    if (template === null && !templateUrl) {
+                        results.push({
+                            kind: DiagnosticKind$1.Error,
+                            message: "Component '" + type.name + "' must have a template or templateUrl",
+                            span: declarationSpan,
+                        });
+                    }
+                    else if (template && templateUrl) {
+                        results.push({
+                            kind: DiagnosticKind$1.Error,
+                            message: "Component '" + type.name + "' must not have both template and templateUrl",
+                            span: declarationSpan,
+                        });
+                    }
+                }
+                else if (!directives.has(declaration.type)) {
+                    results.push({
+                        kind: DiagnosticKind$1.Error,
+                        message: missingDirective(type.name, metadata.isComponent),
+                        span: declarationSpan,
+                    });
+                }
+            }
+        }
+        catch (e_3_1) { e_3 = { error: e_3_1 }; }
+        finally {
+            try {
+                if (declarations_1_1 && !declarations_1_1.done && (_c = declarations_1.return)) _c.call(declarations_1);
+            }
+            finally { if (e_3) throw e_3.error; }
+        }
         return results;
     }
-    function diagnosticChainToDiagnosticChain(chain) {
+    /**
+     * Return a recursive data structure that chains diagnostic messages.
+     * @param chain
+     */
+    function chainDiagnostics(chain) {
         return {
             messageText: chain.message,
             category: ts.DiagnosticCategory.Error,
             code: 0,
-            next: chain.next ? diagnosticChainToDiagnosticChain(chain.next) : undefined
+            next: chain.next ? chainDiagnostics(chain.next) : undefined
         };
     }
-    function diagnosticMessageToDiagnosticMessageText(message) {
-        if (typeof message === 'string') {
-            return message;
-        }
-        return diagnosticChainToDiagnosticChain(message);
-    }
+    /**
+     * Convert ng.Diagnostic to ts.Diagnostic.
+     * @param d diagnostic
+     * @param file
+     */
     function ngDiagnosticToTsDiagnostic(d, file) {
         return {
             file: file,
             start: d.span.start,
             length: d.span.end - d.span.start,
-            messageText: diagnosticMessageToDiagnosticMessageText(d.message),
+            messageText: typeof d.message === 'string' ? d.message : chainDiagnostics(d.message),
             category: ts.DiagnosticCategory.Error,
             code: 0,
             source: 'ng',
         };
     }
+    /**
+     * Return elements filtered by unique span.
+     * @param elements
+     */
     function uniqueBySpan(elements) {
-        var e_3, _a;
+        var e_5, _a;
         var result = [];
         var map = new Map();
         try {
@@ -33707,12 +33758,12 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
                 }
             }
         }
-        catch (e_3_1) { e_3 = { error: e_3_1 }; }
+        catch (e_5_1) { e_5 = { error: e_5_1 }; }
         finally {
             try {
                 if (elements_1_1 && !elements_1_1.done && (_a = elements_1.return)) _a.call(elements_1);
             }
-            finally { if (e_3) throw e_3.error; }
+            finally { if (e_5) throw e_5.error; }
         }
         return result;
     }
@@ -43065,7 +43116,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-next.2+43.sha-6a0b1d5.with-local-changes');
+    var VERSION$2 = new Version$1('9.0.0-next.2+44.sha-69ce1c2.with-local-changes');
 
     /**
      * @license
@@ -50112,7 +50163,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this._config = config || DEFAULT_CONFIG;
         }
         SystemJsNgModuleLoader.prototype.load = function (path) {
-            var legacyOfflineMode = this._compiler instanceof Compiler;
+            var legacyOfflineMode = !ivyEnabled && this._compiler instanceof Compiler;
             return legacyOfflineMode ? this.loadFactory(path) : this.loadAndCompile(path);
         };
         SystemJsNgModuleLoader.prototype.loadAndCompile = function (path) {
@@ -53353,7 +53404,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version('9.0.0-next.2+43.sha-6a0b1d5.with-local-changes');
+    var VERSION$3 = new Version('9.0.0-next.2+44.sha-69ce1c2.with-local-changes');
 
     /**
      * @license
@@ -69991,7 +70042,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.2+43.sha-6a0b1d5.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.2+44.sha-69ce1c2.with-local-changes');
 
     /**
      * @license
