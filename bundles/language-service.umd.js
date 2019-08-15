@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.2+44.sha-69ce1c2.with-local-changes
+ * @license Angular v9.0.0-next.2+46.sha-964d726.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18603,7 +18603,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.2+44.sha-69ce1c2.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.2+46.sha-964d726.with-local-changes');
 
     /**
      * @license
@@ -51288,7 +51288,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-next.2+44.sha-69ce1c2.with-local-changes');
+    var VERSION$2 = new Version$1('9.0.0-next.2+46.sha-964d726.with-local-changes');
 
     /**
      * @license
@@ -64481,7 +64481,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version('9.0.0-next.2+44.sha-69ce1c2.with-local-changes');
+    var VERSION$3 = new Version('9.0.0-next.2+46.sha-964d726.with-local-changes');
 
     /**
      * @license
@@ -66664,7 +66664,13 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 return null;
             }
             var exportMap = new Map();
-            exports.forEach(function (declaration, name) { exportMap.set(declaration.node, name); });
+            exports.forEach(function (declaration, name) {
+                // It's okay to skip inline declarations, since by definition they're not target-able with a
+                // ts.Declaration anyway.
+                if (declaration.node !== null) {
+                    exportMap.set(declaration.node, name);
+                }
+            });
             return exportMap;
         };
         return AbsoluteModuleStrategy;
@@ -68613,7 +68619,13 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                     return DynamicValue.fromUnknownIdentifier(node);
                 }
             }
-            var result = this.visitDeclaration(decl.node, __assign({}, context, joinModuleContext(context, node, decl)));
+            var declContext = __assign({}, context, joinModuleContext(context, node, decl));
+            // The identifier's declaration is either concrete (a ts.Declaration exists for it) or inline
+            // (a direct reference to a ts.Expression).
+            // TODO(alxhub): remove cast once TS is upgraded in g3.
+            var result = decl.node !== null ?
+                this.visitDeclaration(decl.node, declContext) :
+                this.visitExpression(decl.expression, declContext);
             if (result instanceof Reference$1) {
                 // Only record identifiers to non-synthetic references. Synthetic references may not have the
                 // same value at runtime as they do at compile time, so it's not legal to refer to them by the
@@ -68712,7 +68724,12 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             }
             var map = new Map();
             declarations.forEach(function (decl, name) {
-                var value = _this.visitDeclaration(decl.node, __assign({}, context, joinModuleContext(context, node, decl)));
+                var declContext = __assign({}, context, joinModuleContext(context, node, decl));
+                // Visit both concrete and inline declarations.
+                // TODO(alxhub): remove cast once TS is upgraded in g3.
+                var value = decl.node !== null ?
+                    _this.visitDeclaration(decl.node, declContext) :
+                    _this.visitExpression(decl.expression, declContext);
                 map.set(name, value);
             });
             return map;
@@ -81119,7 +81136,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.2+44.sha-69ce1c2.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.2+46.sha-964d726.with-local-changes');
 
     /**
      * @license
