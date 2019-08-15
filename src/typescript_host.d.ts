@@ -43,6 +43,8 @@ export declare class TypeScriptServiceHost implements LanguageServiceHost {
     private readonly summaryResolver;
     private readonly reflectorHost;
     private readonly staticSymbolResolver;
+    private readonly reflector;
+    private readonly resolver;
     private readonly staticSymbolCache;
     private readonly fileToComponent;
     private readonly collectedErrors;
@@ -50,10 +52,11 @@ export declare class TypeScriptServiceHost implements LanguageServiceHost {
     private lastProgram;
     private templateReferences;
     private analyzedModules;
-    private _resolver;
-    private _reflector;
     constructor(host: ts.LanguageServiceHost, tsLS: ts.LanguageService);
-    private readonly resolver;
+    /**
+     * Creates a new metadata resolver. This should only be called once.
+     */
+    private createMetadataResolver;
     getTemplateReferences(): string[];
     /**
      * Checks whether the program has changed and returns all analyzed modules.
@@ -98,7 +101,6 @@ export declare class TypeScriptServiceHost implements LanguageServiceHost {
      */
     private getExternalTemplate;
     private collectError;
-    private readonly reflector;
     private getCollectedErrors;
     private getDeclarationFromNode;
     /**

@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.2+42.sha-373d966.with-local-changes
+ * @license Angular v9.0.0-next.2+43.sha-6a0b1d5.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18603,7 +18603,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.2+42.sha-373d966.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.2+43.sha-6a0b1d5.with-local-changes');
 
     /**
      * @license
@@ -51237,7 +51237,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-next.2+42.sha-373d966.with-local-changes');
+    var VERSION$2 = new Version$1('9.0.0-next.2+43.sha-6a0b1d5.with-local-changes');
 
     /**
      * @license
@@ -61205,8 +61205,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this._config = config || DEFAULT_CONFIG;
         }
         SystemJsNgModuleLoader.prototype.load = function (path) {
-            var legacyOfflineMode = !ivyEnabled && this._compiler instanceof Compiler;
-            return legacyOfflineMode ? this.loadFactory(path) : this.loadAndCompile(path);
+            return this.loadAndCompile(path);
         };
         SystemJsNgModuleLoader.prototype.loadAndCompile = function (path) {
             var _this = this;
@@ -64430,7 +64429,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version('9.0.0-next.2+42.sha-373d966.with-local-changes');
+    var VERSION$3 = new Version('9.0.0-next.2+43.sha-6a0b1d5.with-local-changes');
 
     /**
      * @license
@@ -80487,10 +80486,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 ngModuleByPipeOrDirective: new Map(),
                 ngModules: [],
             };
-            // Data members below are prefixed with '_' because they have corresponding
-            // getters. These properties get invalidated when caches are cleared.
-            this._resolver = null;
-            this._reflector = null;
             this.summaryResolver = new AotSummaryResolver({
                 loadSummary: function (filePath) { return null; },
                 isSourceFile: function (sourceFilePath) { return true; },
@@ -80499,32 +80494,35 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             }, this.staticSymbolCache);
             this.reflectorHost = new ReflectorHost(function () { return tsLS.getProgram(); }, host);
             this.staticSymbolResolver = new StaticSymbolResolver(this.reflectorHost, this.staticSymbolCache, this.summaryResolver, function (e, filePath) { return _this.collectError(e, filePath); });
+            this.reflector = new StaticReflector(this.summaryResolver, this.staticSymbolResolver, [], // knownMetadataClasses
+            [], // knownMetadataFunctions
+            function (e, filePath) { return _this.collectError(e, filePath); });
+            this.resolver = this.createMetadataResolver();
         }
-        Object.defineProperty(TypeScriptServiceHost.prototype, "resolver", {
-            get: function () {
-                var _this = this;
-                if (!this._resolver) {
-                    var moduleResolver = new NgModuleResolver(this.reflector);
-                    var directiveResolver = new DirectiveResolver(this.reflector);
-                    var pipeResolver = new PipeResolver(this.reflector);
-                    var elementSchemaRegistry = new DomElementSchemaRegistry();
-                    var resourceLoader = new DummyResourceLoader();
-                    var urlResolver = createOfflineCompileUrlResolver();
-                    var htmlParser = new DummyHtmlParser();
-                    // This tracks the CompileConfig in codegen.ts. Currently these options
-                    // are hard-coded.
-                    var config = new CompilerConfig({
-                        defaultEncapsulation: ViewEncapsulation$1.Emulated,
-                        useJit: false,
-                    });
-                    var directiveNormalizer = new DirectiveNormalizer(resourceLoader, urlResolver, htmlParser, config);
-                    this._resolver = new CompileMetadataResolver(config, htmlParser, moduleResolver, directiveResolver, pipeResolver, new JitSummaryResolver(), elementSchemaRegistry, directiveNormalizer, new Console(), this.staticSymbolCache, this.reflector, function (error, type) { return _this.collectError(error, type && type.filePath); });
-                }
-                return this._resolver;
-            },
-            enumerable: true,
-            configurable: true
-        });
+        /**
+         * Creates a new metadata resolver. This should only be called once.
+         */
+        TypeScriptServiceHost.prototype.createMetadataResolver = function () {
+            var _this = this;
+            if (this.resolver) {
+                return this.resolver; // There should only be a single instance
+            }
+            var moduleResolver = new NgModuleResolver(this.reflector);
+            var directiveResolver = new DirectiveResolver(this.reflector);
+            var pipeResolver = new PipeResolver(this.reflector);
+            var elementSchemaRegistry = new DomElementSchemaRegistry();
+            var resourceLoader = new DummyResourceLoader();
+            var urlResolver = createOfflineCompileUrlResolver();
+            var htmlParser = new DummyHtmlParser();
+            // This tracks the CompileConfig in codegen.ts. Currently these options
+            // are hard-coded.
+            var config = new CompilerConfig({
+                defaultEncapsulation: ViewEncapsulation$1.Emulated,
+                useJit: false,
+            });
+            var directiveNormalizer = new DirectiveNormalizer(resourceLoader, urlResolver, htmlParser, config);
+            return new CompileMetadataResolver(config, htmlParser, moduleResolver, directiveResolver, pipeResolver, new JitSummaryResolver(), elementSchemaRegistry, directiveNormalizer, new Console(), this.staticSymbolCache, this.reflector, function (error, type) { return _this.collectError(error, type && type.filePath); });
+        };
         TypeScriptServiceHost.prototype.getTemplateReferences = function () { return __spread(this.templateReferences); };
         /**
          * Checks whether the program has changed and returns all analyzed modules.
@@ -80662,8 +80660,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             if (this.lastProgram === program) {
                 return true;
             }
-            this._resolver = null;
-            this._reflector = null;
             // Invalidate file that have changed in the static symbol resolver
             var seen = new Set();
             try {
@@ -80764,22 +80760,13 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 errors.push(error);
             }
         };
-        Object.defineProperty(TypeScriptServiceHost.prototype, "reflector", {
-            get: function () {
-                var _this = this;
-                if (!this._reflector) {
-                    this._reflector = new StaticReflector(this.summaryResolver, this.staticSymbolResolver, [], // knownMetadataClasses
-                    [], // knownMetadataFunctions
-                    function (e, filePath) { return _this.collectError(e, filePath); });
-                }
-                return this._reflector;
-            },
-            enumerable: true,
-            configurable: true
-        });
         TypeScriptServiceHost.prototype.getCollectedErrors = function (defaultSpan, sourceFile) {
             var errors = this.collectedErrors.get(sourceFile.fileName);
-            return (errors && errors.map(function (e) {
+            if (!errors) {
+                return [];
+            }
+            // TODO: Add better typings for the errors
+            return errors.map(function (e) {
                 var line = e.line || (e.position && e.position.line);
                 var column = e.column || (e.position && e.position.column);
                 var span = spanAt$1(sourceFile, line, column) || defaultSpan;
@@ -80787,8 +80774,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                     return errorToDiagnosticWithChain(e, span);
                 }
                 return { message: e.message, span: span };
-            })) ||
-                [];
+            });
         };
         TypeScriptServiceHost.prototype.getDeclarationFromNode = function (sourceFile, node) {
             var e_4, _a;
@@ -80895,7 +80881,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 var htmlParser = new I18NHtmlParser(rawHtmlParser);
                 var expressionParser = new Parser$1(new Lexer());
                 var config = new CompilerConfig();
-                var parser = new TemplateParser(config, this.resolver.getReflector(), expressionParser, new DomElementSchemaRegistry(), htmlParser, null, []);
+                var parser = new TemplateParser(config, this.reflector, expressionParser, new DomElementSchemaRegistry(), htmlParser, null, []);
                 var htmlResult = htmlParser.parse(template.source, '', { tokenizeExpansionForms: true });
                 var errors = undefined;
                 var ngModule = this.analyzedModules.ngModuleByPipeOrDirective.get(template.type) ||
@@ -81081,7 +81067,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.2+42.sha-373d966.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.2+43.sha-6a0b1d5.with-local-changes');
 
     /**
      * @license
