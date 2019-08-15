@@ -8,6 +8,7 @@
 /// <amd-module name="@angular/language-service/src/utils" />
 import { CompileTypeMetadata, ParseSourceSpan, TemplateAst, TemplateAstPath } from '@angular/compiler';
 import { DiagnosticTemplateInfo } from '@angular/compiler-cli/src/language_services';
+import * as ts from 'typescript';
 import { SelectorInfo, TemplateInfo } from './common';
 import { Span } from './types';
 export interface SpanHolder {
@@ -32,3 +33,9 @@ export declare function uniqueByName<T extends {
 export declare function isTypescriptVersion(low: string, high?: string): boolean;
 export declare function diagnosticInfoFromTemplateInfo(info: TemplateInfo): DiagnosticTemplateInfo;
 export declare function findTemplateAstAt(ast: TemplateAst[], position: number, allowWidening?: boolean): TemplateAstPath;
+/**
+ * Return the node that most tightly encompass the specified `position`.
+ * @param node
+ * @param position
+ */
+export declare function findTighestNode(node: ts.Node, position: number): ts.Node | undefined;
