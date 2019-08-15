@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.2+38.sha-40b2874.with-local-changes
+ * @license Angular v9.0.0-next.2+40.sha-3cf2005.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18618,7 +18618,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.2+38.sha-40b2874.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.2+40.sha-3cf2005.with-local-changes');
 
     /**
      * @license
@@ -34435,7 +34435,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
     }
     function ɵɵinject(token, flags) {
         if (flags === void 0) { flags = InjectFlags.Default; }
-        return (_injectImplementation || injectInjectorOnly)(token, flags);
+        return (_injectImplementation || injectInjectorOnly)(resolveForwardRef$1(token), flags);
     }
     /**
      * Injects `root` tokens in limp mode.
@@ -34501,7 +34501,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
                 // Intentionally left behind: With dev tools open the debugger will stop here. There is no
                 // reason why correctly written application should cause this exception.
                 // TODO(misko): uncomment the next line once `ngDevMode` works with closure.
-                // if(ngDevMode) debugger;
+                // if (ngDevMode) debugger;
                 var error = new Error("NullInjectorError: No provider for " + stringify$1(token) + "!");
                 error.name = 'NullInjectorError';
                 throw error;
@@ -36328,6 +36328,57 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    var SafeValueImpl = /** @class */ (function () {
+        function SafeValueImpl(changingThisBreaksApplicationSecurity) {
+            this.changingThisBreaksApplicationSecurity = changingThisBreaksApplicationSecurity;
+            // empty
+        }
+        SafeValueImpl.prototype.toString = function () {
+            return "SafeValue must use [property]=binding: " + this.changingThisBreaksApplicationSecurity +
+                " (see http://g.co/ng/security#xss)";
+        };
+        return SafeValueImpl;
+    }());
+    var SafeHtmlImpl = /** @class */ (function (_super) {
+        __extends(SafeHtmlImpl, _super);
+        function SafeHtmlImpl() {
+            return _super !== null && _super.apply(this, arguments) || this;
+        }
+        SafeHtmlImpl.prototype.getTypeName = function () { return "HTML" /* Html */; };
+        return SafeHtmlImpl;
+    }(SafeValueImpl));
+    var SafeStyleImpl = /** @class */ (function (_super) {
+        __extends(SafeStyleImpl, _super);
+        function SafeStyleImpl() {
+            return _super !== null && _super.apply(this, arguments) || this;
+        }
+        SafeStyleImpl.prototype.getTypeName = function () { return "Style" /* Style */; };
+        return SafeStyleImpl;
+    }(SafeValueImpl));
+    var SafeScriptImpl = /** @class */ (function (_super) {
+        __extends(SafeScriptImpl, _super);
+        function SafeScriptImpl() {
+            return _super !== null && _super.apply(this, arguments) || this;
+        }
+        SafeScriptImpl.prototype.getTypeName = function () { return "Script" /* Script */; };
+        return SafeScriptImpl;
+    }(SafeValueImpl));
+    var SafeUrlImpl = /** @class */ (function (_super) {
+        __extends(SafeUrlImpl, _super);
+        function SafeUrlImpl() {
+            return _super !== null && _super.apply(this, arguments) || this;
+        }
+        SafeUrlImpl.prototype.getTypeName = function () { return "URL" /* Url */; };
+        return SafeUrlImpl;
+    }(SafeValueImpl));
+    var SafeResourceUrlImpl = /** @class */ (function (_super) {
+        __extends(SafeResourceUrlImpl, _super);
+        function SafeResourceUrlImpl() {
+            return _super !== null && _super.apply(this, arguments) || this;
+        }
+        SafeResourceUrlImpl.prototype.getTypeName = function () { return "ResourceURL" /* ResourceUrl */; };
+        return SafeResourceUrlImpl;
+    }(SafeValueImpl));
 
     /**
      * @license
@@ -36497,16 +36548,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
         SecurityContext[SecurityContext["URL"] = 4] = "URL";
         SecurityContext[SecurityContext["RESOURCE_URL"] = 5] = "RESOURCE_URL";
     })(SecurityContext$1 || (SecurityContext$1 = {}));
-    /**
-     * Sanitizer is used by the views to sanitize potentially dangerous values.
-     *
-     * @publicApi
-     */
-    var Sanitizer = /** @class */ (function () {
-        function Sanitizer() {
-        }
-        return Sanitizer;
-    }());
 
     /**
      * @license
@@ -42984,6 +43025,30 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * found in the LICENSE file at https://angular.io/license
      */
     /**
+     * Sanitizer is used by the views to sanitize potentially dangerous values.
+     *
+     * @publicApi
+     */
+    var Sanitizer = /** @class */ (function () {
+        function Sanitizer() {
+        }
+        /** @nocollapse */
+        Sanitizer.ngInjectableDef = ɵɵdefineInjectable({
+            token: Sanitizer,
+            providedIn: 'root',
+            factory: function () { return null; },
+        });
+        return Sanitizer;
+    }());
+
+    /**
+     * @license
+     * Copyright Google Inc. All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
      * @description Represents the version of Angular
      *
      * @publicApi
@@ -43000,7 +43065,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-next.2+38.sha-40b2874.with-local-changes');
+    var VERSION$2 = new Version$1('9.0.0-next.2+40.sha-3cf2005.with-local-changes');
 
     /**
      * @license
@@ -53288,7 +53353,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version('9.0.0-next.2+38.sha-40b2874.with-local-changes');
+    var VERSION$3 = new Version('9.0.0-next.2+40.sha-3cf2005.with-local-changes');
 
     /**
      * @license
@@ -69939,7 +70004,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.2+38.sha-40b2874.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.2+40.sha-3cf2005.with-local-changes');
 
     /**
      * @license
