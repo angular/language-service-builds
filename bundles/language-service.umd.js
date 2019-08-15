@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.2+46.sha-964d726.with-local-changes
+ * @license Angular v9.0.0-next.2+47.sha-4c3b791.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18603,7 +18603,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.2+46.sha-964d726.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.2+47.sha-4c3b791.with-local-changes');
 
     /**
      * @license
@@ -36737,11 +36737,14 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * @param lView
      */
     function getNativeByTNodeOrNull(tNode, lView) {
-        ngDevMode && assertTNodeForLView(tNode, lView);
         var index = tNode.index;
-        var node = index == -1 ? null : unwrapRNode(lView[index]);
-        ngDevMode && node !== null && assertDomNode(node);
-        return node;
+        if (index !== -1) {
+            ngDevMode && assertTNodeForLView(tNode, lView);
+            var node = unwrapRNode(lView[index]);
+            ngDevMode && node !== null && assertDomNode(node);
+            return node;
+        }
+        return null;
     }
     /**
      * A helper function that returns `true` if a given `TNode` has any matching directives.
@@ -41404,19 +41407,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
     //// Render
     //////////////////////////
     /**
-     * Used for creating the LView of a dynamic embedded view, either through
-     * ViewContainerRef.createEmbeddedView() or TemplateRef.createEmbeddedView().
-     */
-    function createEmbeddedViewAndNode(tView, context, declarationView, injectorIndex) {
-        var lView = createLView(declarationView, tView, context, 16 /* CheckAlways */, null, null);
-        lView[DECLARATION_VIEW] = declarationView;
-        assignTViewNodeToLView(tView, null, -1, lView);
-        if (tView.firstTemplatePass) {
-            tView.node.injectorIndex = injectorIndex;
-        }
-        return lView;
-    }
-    /**
      * Processes a view in the creation mode. This includes a number of steps in a specific order:
      * - creating view query functions (if any);
      * - executing a template function in the creation mode;
@@ -43944,7 +43934,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
                 }
                 TemplateRef_.prototype.createEmbeddedView = function (context) {
                     var embeddedTView = this._declarationTContainer.tViews;
-                    var lView = createEmbeddedViewAndNode(embeddedTView, context, this._declarationView, this._declarationTContainer.injectorIndex);
+                    var lView = createLView(this._declarationView, embeddedTView, context, 16 /* CheckAlways */, null, embeddedTView.node);
                     var declarationLContainer = this._declarationView[this._declarationTContainer.index];
                     ngDevMode && assertLContainer(declarationLContainer);
                     lView[DECLARATION_LCONTAINER] = declarationLContainer;
@@ -47267,6 +47257,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
             ngDevMode && ngDevMode.firstTemplatePass++;
             resolveDirectives(tView, lView, tContainerNode, localRefs || null);
             var embeddedTView = tContainerNode.tViews = createTView(-1, templateFn, consts, vars, tView.directiveRegistry, tView.pipeRegistry, null, tView.schemas);
+            var embeddedTViewNode = createTNode(tView, null, 2 /* View */, -1, null, null);
+            embeddedTViewNode.injectorIndex = tContainerNode.injectorIndex;
+            embeddedTView.node = embeddedTViewNode;
             if (tView.queries !== null) {
                 tView.queries.template(tView, tContainerNode);
                 embeddedTView.queries = tView.queries.embeddedTView(tContainerNode);
@@ -51288,7 +51281,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-next.2+46.sha-964d726.with-local-changes');
+    var VERSION$2 = new Version$1('9.0.0-next.2+47.sha-4c3b791.with-local-changes');
 
     /**
      * @license
@@ -64481,7 +64474,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version('9.0.0-next.2+46.sha-964d726.with-local-changes');
+    var VERSION$3 = new Version('9.0.0-next.2+47.sha-4c3b791.with-local-changes');
 
     /**
      * @license
@@ -81136,7 +81129,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.2+46.sha-964d726.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.2+47.sha-4c3b791.with-local-changes');
 
     /**
      * @license
