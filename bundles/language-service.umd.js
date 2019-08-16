@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.2+47.sha-4c3b791.with-local-changes
+ * @license Angular v9.0.0-next.2+48.sha-ee48623.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18603,7 +18603,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.2+47.sha-4c3b791.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.2+48.sha-ee48623.with-local-changes');
 
     /**
      * @license
@@ -33632,11 +33632,11 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
                 var errors = declaration.errors, metadata = declaration.metadata, type = declaration.type, declarationSpan = declaration.declarationSpan;
                 try {
                     for (var errors_1 = (e_4 = void 0, __values(errors)), errors_1_1 = errors_1.next(); !errors_1_1.done; errors_1_1 = errors_1.next()) {
-                        var error = errors_1_1.value;
+                        var error_1 = errors_1_1.value;
                         results.push({
                             kind: DiagnosticKind$1.Error,
-                            message: error.message,
-                            span: error.span,
+                            message: error_1.message,
+                            span: error_1.span,
                         });
                     }
                 }
@@ -34558,9 +34558,9 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
                 // reason why correctly written application should cause this exception.
                 // TODO(misko): uncomment the next line once `ngDevMode` works with closure.
                 // if (ngDevMode) debugger;
-                var error = new Error("NullInjectorError: No provider for " + stringify$1(token) + "!");
-                error.name = 'NullInjectorError';
-                throw error;
+                var error_1 = new Error("NullInjectorError: No provider for " + stringify$1(token) + "!");
+                error_1.name = 'NullInjectorError';
+                throw error_1;
             }
             return notFoundValue;
         };
@@ -51281,7 +51281,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-next.2+47.sha-4c3b791.with-local-changes');
+    var VERSION$2 = new Version$1('9.0.0-next.2+48.sha-ee48623.with-local-changes');
 
     /**
      * @license
@@ -59186,15 +59186,15 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 var compiler = getCompilerFacade();
                 if (ngComponentDef === null) {
                     if (componentNeedsResolution(metadata)) {
-                        var error = ["Component '" + type.name + "' is not resolved:"];
+                        var error_1 = ["Component '" + type.name + "' is not resolved:"];
                         if (metadata.templateUrl) {
-                            error.push(" - templateUrl: " + metadata.templateUrl);
+                            error_1.push(" - templateUrl: " + metadata.templateUrl);
                         }
                         if (metadata.styleUrls && metadata.styleUrls.length) {
-                            error.push(" - styleUrls: " + JSON.stringify(metadata.styleUrls));
+                            error_1.push(" - styleUrls: " + JSON.stringify(metadata.styleUrls));
                         }
-                        error.push("Did you run and wait for 'resolveComponentResources()'?");
-                        throw new Error(error.join('\n'));
+                        error_1.push("Did you run and wait for 'resolveComponentResources()'?");
+                        throw new Error(error_1.join('\n'));
                     }
                     var templateUrl = metadata.templateUrl || "ng:///" + type.name + "/template.html";
                     var meta = __assign({}, directiveMetadata(type, metadata), { typeSourceSpan: compiler.createParseSourceSpan('Component', type.name, templateUrl), template: metadata.template || '', preserveWhitespaces: metadata.preserveWhitespaces || false, styles: metadata.styles || EMPTY_ARRAY$1, animations: metadata.animations, directives: [], changeDetection: metadata.changeDetection, pipes: new Map(), encapsulation: metadata.encapsulation || ViewEncapsulation$1.Emulated, interpolation: metadata.interpolation, viewProviders: metadata.viewProviders || null });
@@ -64474,7 +64474,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version('9.0.0-next.2+47.sha-4c3b791.with-local-changes');
+    var VERSION$3 = new Version('9.0.0-next.2+48.sha-ee48623.with-local-changes');
 
     /**
      * @license
@@ -81129,7 +81129,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.2+47.sha-4c3b791.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.2+48.sha-ee48623.with-local-changes');
 
     /**
      * @license
