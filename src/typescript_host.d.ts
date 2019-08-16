@@ -9,7 +9,7 @@
 import { HtmlParser, NgAnalyzedModules, ParseTreeResult, ResourceLoader } from '@angular/compiler';
 import * as ts from 'typescript';
 import { AstResult, TemplateInfo } from './common';
-import { Declaration, LanguageService, LanguageServiceHost, TemplateSource } from './types';
+import { Declarations, LanguageService, LanguageServiceHost, TemplateSource } from './types';
 /**
  * Create a `LanguageServiceHost`
  */
@@ -71,14 +71,7 @@ export declare class TypeScriptServiceHost implements LanguageServiceHost {
      * @param fileName TS or HTML file
      */
     getTemplates(fileName: string): TemplateSource[];
-    /**
-     * Return metadata about all class declarations in the file that are Angular
-     * directives. Potential matches are `@NgModule`, `@Component`, `@Directive`,
-     * `@Pipes`, etc. class declarations.
-     *
-     * @param fileName TS file
-     */
-    getDeclarations(fileName: string): Declaration[];
+    getDeclarations(fileName: string): Declarations;
     getSourceFile(fileName: string): ts.SourceFile | undefined;
     readonly program: ts.Program;
     /**
@@ -98,6 +91,7 @@ export declare class TypeScriptServiceHost implements LanguageServiceHost {
      * class AppComponent {}
      *           ^---- class declaration node
      *
+     *
      * @param node Potential template node
      */
     private getInternalTemplate;
@@ -108,6 +102,7 @@ export declare class TypeScriptServiceHost implements LanguageServiceHost {
     private getExternalTemplate;
     private collectError;
     private getCollectedErrors;
+    private getDeclarationFromNode;
     /**
      * Return the parsed template for the template at the specified `position`.
      * @param fileName TS or HTML file
