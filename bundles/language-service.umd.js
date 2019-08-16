@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.2+48.sha-ee48623.with-local-changes
+ * @license Angular v9.0.0-next.2+51.sha-71ada48.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18603,7 +18603,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.2+48.sha-ee48623.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.2+51.sha-71ada48.with-local-changes');
 
     /**
      * @license
@@ -32202,9 +32202,57 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * @param node
      * @param position
      */
-    function findTighestNode(node, position) {
+    function findTightestNode(node, position) {
         if (node.getStart() <= position && position < node.getEnd()) {
-            return node.forEachChild(function (c) { return findTighestNode(c, position); }) || node;
+            return node.forEachChild(function (c) { return findTightestNode(c, position); }) || node;
+        }
+    }
+    /**
+     * Return metadata about `node` if it looks like an Angular directive class.
+     * In this case, potential matches are `@NgModule`, `@Component`, `@Directive`,
+     * `@Pipe`, etc.
+     * These class declarations all share some common attributes, namely their
+     * decorator takes exactly one parameter and the parameter must be an object
+     * literal.
+     *
+     * For example,
+     *     v---------- `decoratorId`
+     * @NgModule({
+     *   declarations: [],
+     * })
+     * class AppModule {}
+     *          ^----- `classDecl`
+     *
+     * @param node Potential node that represents an Angular directive.
+     */
+    function getDirectiveClassLike(node) {
+        var e_3, _a;
+        if (!ts.isClassDeclaration(node) || !node.name || !node.decorators) {
+            return;
+        }
+        try {
+            for (var _b = __values(node.decorators), _c = _b.next(); !_c.done; _c = _b.next()) {
+                var d = _c.value;
+                var expr = d.expression;
+                if (!ts.isCallExpression(expr) || expr.arguments.length !== 1 ||
+                    !ts.isIdentifier(expr.expression)) {
+                    continue;
+                }
+                var arg = expr.arguments[0];
+                if (ts.isObjectLiteralExpression(arg)) {
+                    return {
+                        decoratorId: expr.expression,
+                        classDecl: node,
+                    };
+                }
+            }
+        }
+        catch (e_3_1) { e_3 = { error: e_3_1 }; }
+        finally {
+            try {
+                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+            }
+            finally { if (e_3) throw e_3.error; }
         }
     }
 
@@ -50602,7 +50650,6 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * @codeGenApi
      */
     function ɵɵInheritDefinitionFeature(definition) {
-        var e_1, _a;
         var superType = getSuperType(definition.type);
         while (superType) {
             var superDef = undefined;
@@ -50663,20 +50710,11 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
                 // Run parent features
                 var features = superDef.features;
                 if (features) {
-                    try {
-                        for (var features_1 = (e_1 = void 0, __values(features)), features_1_1 = features_1.next(); !features_1_1.done; features_1_1 = features_1.next()) {
-                            var feature = features_1_1.value;
-                            if (feature && feature.ngInherit) {
-                                feature(definition);
-                            }
+                    for (var i = 0; i < features.length; i++) {
+                        var feature = features[i];
+                        if (feature && feature.ngInherit) {
+                            feature(definition);
                         }
-                    }
-                    catch (e_1_1) { e_1 = { error: e_1_1 }; }
-                    finally {
-                        try {
-                            if (features_1_1 && !features_1_1.done && (_a = features_1.return)) _a.call(features_1);
-                        }
-                        finally { if (e_1) throw e_1.error; }
                     }
                 }
             }
@@ -51281,7 +51319,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-next.2+48.sha-ee48623.with-local-changes');
+    var VERSION$2 = new Version$1('9.0.0-next.2+51.sha-71ada48.with-local-changes');
 
     /**
      * @license
@@ -58080,36 +58118,14 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             this.queries = queries;
         }
         TQueries_.prototype.elementStart = function (tView, tNode) {
-            var e_1, _a;
             ngDevMode && assertFirstTemplatePass(tView, 'Queries should collect results on the first template pass only');
-            try {
-                for (var _b = __values(this.queries), _c = _b.next(); !_c.done; _c = _b.next()) {
-                    var query = _c.value;
-                    query.elementStart(tView, tNode);
-                }
-            }
-            catch (e_1_1) { e_1 = { error: e_1_1 }; }
-            finally {
-                try {
-                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-                }
-                finally { if (e_1) throw e_1.error; }
+            for (var i = 0; i < this.queries.length; i++) {
+                this.queries[i].elementStart(tView, tNode);
             }
         };
         TQueries_.prototype.elementEnd = function (tNode) {
-            var e_2, _a;
-            try {
-                for (var _b = __values(this.queries), _c = _b.next(); !_c.done; _c = _b.next()) {
-                    var query = _c.value;
-                    query.elementEnd(tNode);
-                }
-            }
-            catch (e_2_1) { e_2 = { error: e_2_1 }; }
-            finally {
-                try {
-                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-                }
-                finally { if (e_2) throw e_2.error; }
+            for (var i = 0; i < this.queries.length; i++) {
+                this.queries[i].elementEnd(tNode);
             }
         };
         TQueries_.prototype.embeddedTView = function (tNode) {
@@ -58130,20 +58146,9 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             return queriesForTemplateRef !== null ? new TQueries_(queriesForTemplateRef) : null;
         };
         TQueries_.prototype.template = function (tView, tNode) {
-            var e_3, _a;
             ngDevMode && assertFirstTemplatePass(tView, 'Queries should collect results on the first template pass only');
-            try {
-                for (var _b = __values(this.queries), _c = _b.next(); !_c.done; _c = _b.next()) {
-                    var query = _c.value;
-                    query.template(tView, tNode);
-                }
-            }
-            catch (e_3_1) { e_3 = { error: e_3_1 }; }
-            finally {
-                try {
-                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-                }
-                finally { if (e_3) throw e_3.error; }
+            for (var i = 0; i < this.queries.length; i++) {
+                this.queries[i].template(tView, tNode);
             }
         };
         TQueries_.prototype.getByIndex = function (index) {
@@ -58342,7 +58347,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * starting with a provided LView.
      */
     function collectQueryResults(lView, queryIndex, result) {
-        var e_4, _a;
         var tQuery = lView[TVIEW].queries.getByIndex(queryIndex);
         var tQueryMatches = tQuery.matches;
         if (tQueryMatches !== null) {
@@ -58368,18 +58372,9 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                     // collect matches for views created from this declaration container and inserted into
                     // different containers
                     if (declarationLContainer[MOVED_VIEWS] !== null) {
-                        try {
-                            for (var _b = (e_4 = void 0, __values(declarationLContainer[MOVED_VIEWS])), _c = _b.next(); !_c.done; _c = _b.next()) {
-                                var embeddedLView = _c.value;
-                                collectQueryResults(embeddedLView, childQueryIndex, result);
-                            }
-                        }
-                        catch (e_4_1) { e_4 = { error: e_4_1 }; }
-                        finally {
-                            try {
-                                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-                            }
-                            finally { if (e_4) throw e_4.error; }
+                        var embeddedLViews = declarationLContainer[MOVED_VIEWS];
+                        for (var i_2 = 0; i_2 < embeddedLViews.length; i_2++) {
+                            collectQueryResults(embeddedLViews[i_2], childQueryIndex, result);
                         }
                     }
                 }
@@ -64474,7 +64469,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version('9.0.0-next.2+48.sha-ee48623.with-local-changes');
+    var VERSION$3 = new Version('9.0.0-next.2+51.sha-71ada48.with-local-changes');
 
     /**
      * @license
@@ -80671,26 +80666,51 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
             }
             return results;
         };
+        /**
+         * Return metadata about all class declarations in the file that are Angular
+         * directives. Potential matches are `@NgModule`, `@Component`, `@Directive`,
+         * `@Pipes`, etc. class declarations.
+         *
+         * @param fileName TS file
+         */
         TypeScriptServiceHost.prototype.getDeclarations = function (fileName) {
             var _this = this;
             if (!fileName.endsWith('.ts')) {
                 return [];
             }
-            var result = [];
             var sourceFile = this.getSourceFile(fileName);
-            if (sourceFile) {
-                var visit_2 = function (child) {
-                    var declaration = _this.getDeclarationFromNode(sourceFile, child);
-                    if (declaration) {
-                        result.push(declaration);
-                    }
-                    else {
-                        ts.forEachChild(child, visit_2);
-                    }
-                };
-                ts.forEachChild(sourceFile, visit_2);
+            if (!sourceFile) {
+                return [];
             }
-            return result;
+            var results = [];
+            var visit = function (child) {
+                var candidate = getDirectiveClassLike(child);
+                if (candidate) {
+                    var decoratorId = candidate.decoratorId, classDecl = candidate.classDecl;
+                    var declarationSpan = spanOf$3(decoratorId);
+                    var className = classDecl.name.text;
+                    var classSymbol = _this.reflector.getStaticSymbol(sourceFile.fileName, className);
+                    // Ask the resolver to check if candidate is actually Angular directive
+                    if (!_this.resolver.isDirective(classSymbol)) {
+                        return;
+                    }
+                    var data = _this.resolver.getNonNormalizedDirectiveMetadata(classSymbol);
+                    if (!data) {
+                        return;
+                    }
+                    results.push({
+                        type: classSymbol,
+                        declarationSpan: declarationSpan,
+                        metadata: data.metadata,
+                        errors: _this.getCollectedErrors(declarationSpan, sourceFile),
+                    });
+                }
+                else {
+                    child.forEachChild(visit);
+                }
+            };
+            ts.forEachChild(sourceFile, visit);
+            return results;
         };
         TypeScriptServiceHost.prototype.getSourceFile = function (fileName) {
             if (!fileName.endsWith('.ts')) {
@@ -80763,7 +80783,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
          * })
          * class AppComponent {}
          *           ^---- class declaration node
-         *
          *
          * @param node Potential template node
          */
@@ -80838,58 +80857,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 return { message: e.message, span: span };
             });
         };
-        TypeScriptServiceHost.prototype.getDeclarationFromNode = function (sourceFile, node) {
-            var e_4, _a;
-            if (node.kind == ts.SyntaxKind.ClassDeclaration && node.decorators &&
-                node.name) {
-                try {
-                    for (var _b = __values(node.decorators), _c = _b.next(); !_c.done; _c = _b.next()) {
-                        var decorator = _c.value;
-                        if (decorator.expression && decorator.expression.kind == ts.SyntaxKind.CallExpression) {
-                            var classDeclaration = node;
-                            if (classDeclaration.name) {
-                                var call = decorator.expression;
-                                var target = call.expression;
-                                var type = this.program.getTypeChecker().getTypeAtLocation(target);
-                                if (type) {
-                                    var staticSymbol = this.reflector.getStaticSymbol(sourceFile.fileName, classDeclaration.name.text);
-                                    try {
-                                        if (this.resolver.isDirective(staticSymbol)) {
-                                            var metadata = this.resolver.getNonNormalizedDirectiveMetadata(staticSymbol).metadata;
-                                            var declarationSpan = spanOf$3(target);
-                                            return {
-                                                type: staticSymbol,
-                                                declarationSpan: declarationSpan,
-                                                metadata: metadata,
-                                                errors: this.getCollectedErrors(declarationSpan, sourceFile)
-                                            };
-                                        }
-                                    }
-                                    catch (e) {
-                                        if (e.message) {
-                                            this.collectError(e, sourceFile.fileName);
-                                            var declarationSpan = spanOf$3(target);
-                                            return {
-                                                type: staticSymbol,
-                                                declarationSpan: declarationSpan,
-                                                errors: this.getCollectedErrors(declarationSpan, sourceFile)
-                                            };
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                catch (e_4_1) { e_4 = { error: e_4_1 }; }
-                finally {
-                    try {
-                        if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-                    }
-                    finally { if (e_4) throw e_4.error; }
-                }
-            }
-        };
         /**
          * Return the parsed template for the template at the specified `position`.
          * @param fileName TS or HTML file
@@ -80903,7 +80870,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                     return;
                 }
                 // Find the node that most closely matches the position
-                var node = findTighestNode(sourceFile, position);
+                var node = findTightestNode(sourceFile, position);
                 if (!node) {
                     return;
                 }
@@ -80980,7 +80947,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         return TypeScriptServiceHost;
     }());
     function findSuitableDefaultModule(modules) {
-        var e_5, _a;
+        var e_4, _a;
         var result = undefined;
         var resultSize = 0;
         try {
@@ -80993,12 +80960,12 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 }
             }
         }
-        catch (e_5_1) { e_5 = { error: e_5_1 }; }
+        catch (e_4_1) { e_4 = { error: e_4_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
             }
-            finally { if (e_5) throw e_5.error; }
+            finally { if (e_4) throw e_4.error; }
         }
         return result;
     }
@@ -81129,7 +81096,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.2+48.sha-ee48623.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.2+51.sha-71ada48.with-local-changes');
 
     /**
      * @license
