@@ -38,4 +38,28 @@ export declare function findTemplateAstAt(ast: TemplateAst[], position: number, 
  * @param node
  * @param position
  */
-export declare function findTighestNode(node: ts.Node, position: number): ts.Node | undefined;
+export declare function findTightestNode(node: ts.Node, position: number): ts.Node | undefined;
+interface DirectiveClassLike {
+    decoratorId: ts.Identifier;
+    classDecl: ts.ClassDeclaration;
+}
+/**
+ * Return metadata about `node` if it looks like an Angular directive class.
+ * In this case, potential matches are `@NgModule`, `@Component`, `@Directive`,
+ * `@Pipe`, etc.
+ * These class declarations all share some common attributes, namely their
+ * decorator takes exactly one parameter and the parameter must be an object
+ * literal.
+ *
+ * For example,
+ *     v---------- `decoratorId`
+ * @NgModule({
+ *   declarations: [],
+ * })
+ * class AppModule {}
+ *          ^----- `classDecl`
+ *
+ * @param node Potential node that represents an Angular directive.
+ */
+export declare function getDirectiveClassLike(node: ts.Node): DirectiveClassLike | undefined;
+export {};
