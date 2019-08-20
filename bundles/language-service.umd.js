@@ -1,5 +1,5 @@
 /**
- * @license Angular v9.0.0-next.2+71.sha-388578f.with-local-changes
+ * @license Angular v9.0.0-next.2+73.sha-ec4381d.with-local-changes
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -18615,7 +18615,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$1 = new Version('9.0.0-next.2+71.sha-388578f.with-local-changes');
+    var VERSION$1 = new Version('9.0.0-next.2+73.sha-ec4381d.with-local-changes');
 
     /**
      * @license
@@ -43257,7 +43257,7 @@ define(['exports', 'path', 'typescript', 'os', 'fs'], function (exports, path, t
     /**
      * @publicApi
      */
-    var VERSION$2 = new Version$1('9.0.0-next.2+71.sha-388578f.with-local-changes');
+    var VERSION$2 = new Version$1('9.0.0-next.2+73.sha-ec4381d.with-local-changes');
 
     /**
      * @license
@@ -53512,7 +53512,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$3 = new Version('9.0.0-next.2+71.sha-388578f.with-local-changes');
+    var VERSION$3 = new Version('9.0.0-next.2+73.sha-ec4381d.with-local-changes');
 
     /**
      * @license
@@ -68294,14 +68294,6 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-
-    /**
-     * @license
-     * Copyright Google Inc. All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     /**
      * Maximum number of files that are emitable via calling ts.Program.emit
      * passing individual targetSourceFiles.
@@ -68373,7 +68365,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
                 }
             }
             this.loweringMetadataTransform =
-                new LowerMetadataTransform(options.enableIvy ? R3_LOWER_FIELDS : LOWER_FIELDS);
+                new LowerMetadataTransform(options.enableIvy !== false ? R3_LOWER_FIELDS : LOWER_FIELDS);
             this.metadataCache = this.createMetadataCache([this.loweringMetadataTransform]);
         }
         AngularCompilerProgram.prototype.createMetadataCache = function (transformers) {
@@ -68470,7 +68462,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
         };
         AngularCompilerProgram.prototype.emit = function (parameters) {
             if (parameters === void 0) { parameters = {}; }
-            if (this.options.enableIvy) {
+            if (this.options.enableIvy !== false) {
                 throw new Error('Cannot run legacy compiler in ngtsc mode');
             }
             return this._emitRender2(parameters);
@@ -70209,7 +70201,7 @@ ${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join('\n  ')}` : '';
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var VERSION$4 = new Version$1('9.0.0-next.2+71.sha-388578f.with-local-changes');
+    var VERSION$4 = new Version$1('9.0.0-next.2+73.sha-ec4381d.with-local-changes');
 
     /**
      * @license
